@@ -4,7 +4,7 @@ require "fileutils"
 require "time"
 require "ace/support/markdown"
 require_relative "../configuration"
-require_relative "../molecules/git_executor"
+require_relative "../molecules/git_committer"
 require_relative "../molecules/idea_enhancer"
 require_relative "../atoms/clipboard_reader"
 require_relative "../molecules/attachment_manager"
@@ -343,7 +343,7 @@ module Ace
         end
 
         def commit_idea(path, metadata)
-          executor = Molecules::GitExecutor.new(debug: @debug)
+          committer = Molecules::GitCommitter.new(debug: @debug)
 
           # Build commit message
           title = metadata[:title] || "idea"
@@ -351,7 +351,7 @@ module Ace
           message = build_commit_message(title, location)
 
           # Execute commit
-          result = executor.execute_commit(path, message)
+          result = committer.execute_commit(path, message)
 
           if result.success?
             puts "Git commit successful: #{result.message}" if @debug

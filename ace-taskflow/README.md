@@ -245,6 +245,46 @@ taskflow:
 **Default**: `retros`
 **Applies to**: All releases, doctor validation, and CLI commands
 
+### Status Information
+
+Get taskflow status with task activity awareness:
+
+```bash
+# Get current status (markdown output)
+ace-taskflow status
+
+# Get status as JSON
+ace-taskflow status --json
+
+# Customize activity display limits
+ace-taskflow status --recently-done-limit 5 --up-next-limit 10
+
+# Include draft tasks in Up Next section
+ace-taskflow status --include-drafts
+
+# Disable task activity section entirely
+ace-taskflow status --no-include-activity
+```
+
+The status command provides:
+- **Release info**: Active release with done/total counts and codename
+- **Task info**: Resolved task from branch pattern (ID, title, status, estimate)
+- **Task Activity**: Recently completed, in-progress, and upcoming tasks
+
+For git state (branch, PR), use `ace-git status`.
+
+#### Release Codename Extraction
+
+The codename shown in the release header (e.g., "v.0.9.0: 15/31 tasks • Mono-Repo Multiple Gems") is extracted from the release directory's `README.md` file. The first markdown header is parsed:
+
+```markdown
+# v.0.9.0 Mono-Repo Multiple Gems
+```
+
+The descriptive part after the version (e.g., "Mono-Repo Multiple Gems") becomes the codename. If no README.md exists or the header doesn't match the expected pattern, no codename is displayed.
+
+Requires the `ace-git` gem for task pattern detection from branch names.
+
 ### Release Management (Coming Soon)
 
 Future releases will include release management features:
@@ -283,6 +323,26 @@ taskflow:
 - **idea.directory**: Where to save idea files (default: `./ideas`)
 - **idea.template**: Template for formatting ideas (supports `%{content}`, `%{timestamp}`, `%{title}`, `%{tags}`)
 - **idea.timestamp_format**: Format for timestamps (default: `%Y-%m-%d %H:%M:%S`)
+
+### Status Activity Configuration
+
+The status command's Task Activity section can be configured in `.ace/taskflow/config.yml`:
+
+```yaml
+status:
+  activity:
+    recently_done_limit: 3      # Max recently completed tasks to show (default: 3, 0 to disable)
+    up_next_limit: 3            # Max upcoming tasks to show (default: 3, 0 to disable)
+    include_drafts: false       # Include draft tasks in Up Next (default: false)
+```
+
+These defaults can be overridden via CLI flags:
+- `--recently-done-limit N`: Show N recently completed tasks
+- `--up-next-limit N`: Show N upcoming tasks
+- `--include-drafts`: Include draft tasks in the Up Next section
+- `--no-include-activity`: Disable the entire Task Activity section
+
+Set a limit to `0` to disable that section entirely.
 
 ## Architecture
 

@@ -7,20 +7,27 @@ require_relative "support/test_factory"
 require_relative "support/llm_mock_helper"
 require_relative "support/shell_mock_helper"
 require_relative "support/tree_assertions_helper"
+require_relative "support/mock_repo_context"
 
 # Base test case for ace-taskflow tests
 class AceTaskflowTestCase < Ace::TestSupport::BaseTestCase
   include LlmMockHelper
   include TreeAssertionsHelper
 
-  # Reset cached configuration before each test to ensure test isolation
+  # Reset cached configuration and data before each test to ensure test isolation
   # This is important since ADR-022 caches gem defaults and configuration for performance
+  # Also clears TaskLoader and ReleaseResolver caches to prevent stale data between tests
   def setup
     super
     require "ace/taskflow"
     require "ace/taskflow/molecules/config_loader"
+    require "ace/taskflow/molecules/task_loader"
+    require "ace/taskflow/molecules/release_resolver"
     Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
     Ace::Taskflow.reset_configuration!
+    # Clear per-command caches to ensure test isolation
+    Ace::Taskflow::Molecules::TaskLoader.clear_cache!
+    Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
   end
 
   # Make TestFactory module methods available as instance methods

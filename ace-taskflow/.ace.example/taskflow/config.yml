@@ -58,6 +58,14 @@ taskflow:
   params:
     subtasks: enabled            # Subtask display: enabled, disabled
 
+  # Status command settings (ace-taskflow status)
+  status:
+    # Task activity section settings
+    activity:
+      recently_done_limit: 3     # Max recently completed tasks to show (default: 3)
+      up_next_limit: 3           # Max upcoming tasks to show (default: 3)
+      include_drafts: false      # Include draft tasks in "Up Next" (default: false)
+
   # Idea configuration
   idea:
     directory: "./ideas"         # Where to save ideas locally

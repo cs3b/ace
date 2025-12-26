@@ -14,7 +14,7 @@ module Ace
           @test_dir = Dir.mktmpdir("retros_command_test")
           Dir.chdir(@test_dir)
 
-          # Create basic structure
+          # Create basic structure (_archive directory for completed retros per config)
           FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros")
           FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros/_archive")
 

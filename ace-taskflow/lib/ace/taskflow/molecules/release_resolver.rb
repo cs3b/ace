@@ -10,13 +10,50 @@ module Ace
       class ReleaseResolver
         attr_reader :root_path
 
+        # Class-level cache for per-command memoization
+        # Keyed by root_path to support multiple taskflow roots
+        # Cleared at CLI command start to ensure fresh data each invocation
+        @release_cache = {}
+        @cache_mutex = Mutex.new
+
+        class << self
+          attr_accessor :release_cache, :cache_mutex
+
+          # Clear all cached data (call at start of each CLI command)
+          def clear_cache!
+            cache_mutex.synchronize { @release_cache = {} }
+          end
+        end
+
         def initialize(root_path = nil)
           @root_path = root_path || default_root_path
         end
 
         # Find all releases across backlog, pending, active, and done
+        # Uses class-level cache to avoid re-scanning directories within same command
         # @return [Array<Hash>] Array of release info hashes
         def find_all
+          cache_key = root_path
+
+          # Check cache first (thread-safe)
+          self.class.cache_mutex.synchronize do
+            return self.class.release_cache[cache_key].dup if self.class.release_cache.key?(cache_key)
+          end
+
+          # Load from filesystem
+          releases = find_all_uncached
+
+          # Store in cache (thread-safe)
+          self.class.cache_mutex.synchronize do
+            self.class.release_cache[cache_key] = releases
+          end
+
+          releases.dup
+        end
+
+        private
+
+        def find_all_uncached
           releases = []
 
           # Find active releases (in root)
@@ -56,6 +93,8 @@ module Ace
 
           releases
         end
+
+        public
 
         # Find active release(s)
         # @return [Array<Hash>] Array of active release info

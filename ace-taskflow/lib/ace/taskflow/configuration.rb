@@ -109,6 +109,32 @@ module Ace
         config["terminal_statuses"] || %w[done cancelled suspended superseded]
       end
 
+      # Status command activity settings (ADR-022 compliant)
+      # These are used by TaskActivityAnalyzer for the "ace-taskflow status" command
+      #
+      # Config key path uses "status" to match the command name.
+      #   config.dig("status", "activity", ...) → used for status command settings
+
+      # Get recently done limit for status activity display
+      # @return [Integer] Maximum number of recently completed tasks to show (0 to disable)
+      def recently_done_limit
+        value = config.dig("status", "activity", "recently_done_limit")
+        value.nil? ? 3 : [value.to_i, 0].max
+      end
+
+      # Get up next limit for status activity display
+      # @return [Integer] Maximum number of upcoming tasks to show (0 to disable)
+      def up_next_limit
+        value = config.dig("status", "activity", "up_next_limit")
+        value.nil? ? 3 : [value.to_i, 0].max
+      end
+
+      # Check if draft tasks should be included in "Up Next" section
+      # @return [Boolean] Whether to include drafts in up next
+      def include_drafts_in_up_next?
+        config.dig("status", "activity", "include_drafts") || false
+      end
+
       # Get idea-specific configuration
       def idea_config
         config["idea"] || default_idea_config

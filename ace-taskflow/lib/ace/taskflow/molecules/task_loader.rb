@@ -23,6 +23,34 @@ module Ace
         # Single task: 119-feature.s.md (no dot before hyphen)
         SINGLE_TASK_PATTERN = /^(\d+)-[^.][^\/]*\.s\.md$/
 
+        # Class-level cache for per-command memoization
+        # Cleared at CLI command start to ensure fresh data each invocation
+        # Thread-safe via mutex for potential parallel operations
+        @task_cache = {}
+        @cache_mutex = Mutex.new
+
+        class << self
+          attr_accessor :task_cache, :cache_mutex
+
+          # Clear all cached data (call at start of each CLI command)
+          def clear_cache!
+            cache_mutex.synchronize { @task_cache = {} }
+          end
+
+          # Invalidate cache entries containing the given path
+          # Call this when a task file is modified to ensure fresh data
+          # @param path [String] Path to the modified file or its parent directory
+          def invalidate_cache_for_path(path)
+            return unless path
+
+            cache_mutex.synchronize do
+              # Remove any cache entries that could contain this path
+              # Cache keys are release paths, so find which release contains this file
+              @task_cache.delete_if { |key, _| path.start_with?(key) || key.start_with?(File.dirname(path)) }
+            end
+          end
+        end
+
         def initialize(root_path = nil)
           @root_path = root_path || default_root_path
           @config = Configuration.new
@@ -76,9 +104,33 @@ module Ace
         end
 
         # Load all tasks from a release
+        # Uses class-level cache to avoid re-reading files within same command
         # @param release_path [String] Path to the release
         # @return [Array<Hash>] Array of task data
         def load_tasks_from_release(release_path)
+          cache_key = release_path
+
+          # Check cache first (thread-safe)
+          self.class.cache_mutex.synchronize do
+            return self.class.task_cache[cache_key].dup if self.class.task_cache.key?(cache_key)
+          end
+
+          # Load from filesystem
+          tasks = load_tasks_from_release_uncached(release_path)
+
+          # Store in cache (thread-safe)
+          self.class.cache_mutex.synchronize do
+            self.class.task_cache[cache_key] = tasks
+          end
+
+          tasks.dup
+        end
+
+        private
+
+        # Actual implementation without caching
+        # Optimized: single file read per task (removed has_task_frontmatter? + load_task double-read)
+        def load_tasks_from_release_uncached(release_path)
           tasks = []
           task_dir = File.join(release_path, @config.task_dir)
 
@@ -92,11 +144,11 @@ module Ace
             # This includes orchestrators (121.00-*.s.md) and subtasks (121.01-*.s.md)
             md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
-            # Load ALL task files with valid frontmatter (supports hierarchical tasks)
+            # Load task files - single read per file (load_task returns nil on parse errors)
+            # Check for required frontmatter fields (id, status) to filter non-task files
             md_files.each do |file|
-              next unless has_task_frontmatter?(file)
               task_data = load_task(file)
-              tasks << task_data if task_data
+              tasks << task_data if task_data && task_data[:id] && task_data[:status]
             end
           end
 
@@ -107,11 +159,10 @@ module Ace
               # Find ALL .s.md files in the task folder
               md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
-              # Load ALL task files with valid frontmatter
+              # Load task files - single read per file
               md_files.each do |file|
-                next unless has_task_frontmatter?(file)
                 task_data = load_task(file)
-                tasks << task_data if task_data
+                tasks << task_data if task_data && task_data[:id] && task_data[:status]
               end
             end
           end
@@ -121,6 +172,8 @@ module Ace
 
           tasks
         end
+
+        public
 
         # Build parent-child relationships between orchestrators and subtasks
         # @param tasks [Array<Hash>] Array of tasks to process (modified in place)
@@ -342,6 +395,10 @@ module Ace
 
           # Save with backup and validation enabled
           result = editor.save!(backup: true, validate_before: true)
+
+          # Invalidate cache since file was modified
+          self.class.invalidate_cache_for_path(task_path) if result[:success]
+
           result[:success]
         rescue StandardError => e
           # Enhanced error logging for better debugging
@@ -363,6 +420,10 @@ module Ace
 
           # Save with backup and validation enabled
           result = editor.save!(backup: true, validate_before: true)
+
+          # Invalidate cache since file was modified
+          self.class.invalidate_cache_for_path(task_path) if result[:success]
+
           result[:success]
         rescue StandardError => e
           # Enhanced error logging for better debugging
@@ -399,6 +460,8 @@ module Ace
           )
 
           if result[:success]
+            # Invalidate cache since file was modified
+            self.class.invalidate_cache_for_path(task_path)
             {
               success: true,
               message: "Task updated successfully",

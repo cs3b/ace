@@ -4,6 +4,77 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.182] - 2025-12-25
+
+### ace-taskflow v0.24.1 → v0.24.2
+
+**Changed**
+- **BREAKING**: Renamed `context` subcommand to `status` for semantic clarity
+- **BREAKING**: Config keys renamed from `context.activity.*` to `status.activity.*`
+
+**Fixed**
+- Zero-limit CLI options now correctly propagate (using `options.key?` instead of truthiness)
+- Updated stale comments referencing "context" to "status"
+
+## [0.9.181] - 2025-12-24
+
+### ace-taskflow v0.24.0 → v0.24.1
+
+**Added**
+- Task activity awareness in `ace-taskflow status` command (formerly `context`)
+  - Recently Done: Shows last 3 completed tasks with relative timestamps (e.g., "2h ago")
+  - In Progress: Shows other in-progress tasks (excluding current task)
+  - Up Next: Shows next 3 pending tasks in priority order
+  - Includes worktree indicators for parallel work awareness
+
+**Fixed**
+- Release statistics in context command now show accurate done/total counts
+  - Previously showed incorrect 0% progress due to different counting methodology
+  - Now reuses StatsFormatter from tasks command for consistent statistics
+  - Format changed to "## Release: v.X.Y.Z: done/total tasks • Codename"
+
+## [0.9.180] - 2025-12-23
+
+### ace-taskflow v0.23.1 → v0.24.0
+
+**Added**
+- Parent task context display for subtasks in `ace-taskflow status` command
+  - Shows parent orchestrator task with full details when current task is a subtask
+  - Adds `### Parent Task` header for clear visual separation
+  - Automatically extracts parent number from `parent_id` field
+
+**Fixed**
+- Parent task context not showing for subtasks (incorrect field access: `task[:parent]` → `task[:parent_id]`)
+- Regex pattern bug for end-of-string matching (`\\z` → `\z`)
+- Private method access for task command invocation using `send(:show_task)`
+
+## [0.9.179] - 2025-12-22
+
+### ace-git v0.1.0 → v0.3.2
+
+**Complete ace-git Package with CLI and Workflows**
+
+#### CLI Commands (v0.3.0+)
+- `ace-git diff [RANGE]` - Generate git diff with filtering
+- `ace-git context` - Show repository context (branch, PR, task pattern)
+- `ace-git branch` - Show current branch with tracking status
+- `ace-git pr [NUMBER]` - Fetch and display PR metadata via GitHub CLI
+
+#### Workflows (v0.1.0+)
+- `wfi://rebase` - CHANGELOG-preserving rebase operations
+- `wfi://create-pr` - Pull request creation with templates
+- `wfi://squash-pr` - Version-based commit squashing (with logical grouping strategy)
+- `wfi://update-pr-description` - Automated PR title/description generation
+
+#### Version History
+- **v0.3.2**: Error propagation for invalid diff ranges
+- **v0.3.1**: CLI help improvements, compact PR output format
+- **v0.3.0**: Full CLI executable with diff, context, branch, pr commands
+- **v0.2.2**: Squash workflow enhancement (logical grouping over single-commit)
+- **v0.2.1**: Dependency update (ace-support-core ~> 0.11)
+- **v0.2.0**: PR description workflow (`wfi://update-pr-description`)
+- **v0.1.0**: Initial release with rebase, create-pr, squash-pr workflows
+
 ## [0.9.177] - 2025-12-22
 
 ### ace-git-secrets v0.2.0

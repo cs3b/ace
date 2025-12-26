@@ -6,6 +6,12 @@ module Ace
   module Taskflow
     class CLI
       def self.start(args)
+        # Clear per-command caches to ensure fresh data each invocation
+        # This is the canonical place to reset caches - any command that
+        # loads tasks or releases will benefit from caching within that
+        # single command, but won't carry stale data between commands
+        clear_caches!
+
         subcommand = args.shift
 
         case subcommand
@@ -33,6 +39,14 @@ module Ace
         when "retros"
           require_relative "commands/retros_command"
           Commands::RetrosCommand.new.execute(args)
+        when "status"
+          require_relative "commands/status_command"
+          Commands::StatusCommand.new.execute(args)
+        when "context"
+          # Deprecated alias for backward compatibility - redirect to status
+          warn "[DEPRECATED] 'ace-taskflow context' is deprecated, use 'ace-taskflow status' instead"
+          require_relative "commands/status_command"
+          Commands::StatusCommand.new.execute(args)
         when "doctor"
           require_relative "commands/doctor_command"
           Commands::DoctorCommand.new.execute(args)
@@ -81,28 +95,29 @@ module Ace
       def self.show_help
         puts "Usage: ace-taskflow <subcommand> [options]"
         puts ""
-        puts "Task Management:"
-        puts "  task     - Operations on single tasks"
-        puts "  tasks    - Browse and list multiple tasks"
+        puts "Configuration:"
+        puts "  config   - Show current configuration"
         puts ""
-        puts "Release Management:"
-        puts "  release  - Operations on single releases"
-        puts "  releases - Browse and list multiple releases"
+        puts "Status and Maintenance:"
+        puts "  status   - Show current taskflow status and activity"
+        puts "  doctor   - Run health checks and auto-fix issues"
+        puts "  migrate  - Migrate folder structure to new naming convention"
         puts ""
         puts "Idea Management:"
         puts "  idea     - Operations on single ideas"
         puts "  ideas    - Browse and list multiple ideas"
         puts ""
+        puts "Release Management:"
+        puts "  release  - Operations on single releases"
+        puts "  releases - Browse and list multiple releases"
+        puts ""
         puts "Retrospective Management:"
         puts "  retro    - Operations on single retrospective notes"
         puts "  retros   - Browse and list multiple retrospective notes"
         puts ""
-        puts "System Maintenance:"
-        puts "  doctor   - Run health checks and auto-fix issues"
-        puts "  migrate  - Migrate folder structure to new naming convention"
-        puts ""
-        puts "Configuration:"
-        puts "  config   - Show current configuration"
+        puts "Task Management:"
+        puts "  task     - Operations on single tasks"
+        puts "  tasks    - Browse and list multiple tasks"
         puts ""
         puts "Options:"
         puts "  -h, --help     Show this help message"
@@ -121,6 +136,16 @@ module Ace
         puts ""
         puts "For subcommand help:"
         puts "  ace-taskflow <subcommand> --help"
+      end
+
+      # Clear per-command caches in loaders
+      # Called at the start of each CLI invocation to ensure fresh data
+      def self.clear_caches!
+        require_relative "molecules/task_loader"
+        require_relative "molecules/release_resolver"
+
+        Molecules::TaskLoader.clear_cache!
+        Molecules::ReleaseResolver.clear_cache!
       end
     end
   end

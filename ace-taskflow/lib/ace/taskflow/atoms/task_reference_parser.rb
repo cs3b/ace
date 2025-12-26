@@ -310,6 +310,20 @@ module Ace
           subtask_suffix = parsed[:subtask] ? ".#{parsed[:subtask]}" : ""
           "#{release}+task.#{padded_number}#{subtask_suffix}"
         end
+
+        # Extract the task number from a full canonical task ID
+        # @since 0.24.0
+        # @param id [String] The task ID (e.g., "v.0.9.0+task.140.02" -> "140.02")
+        # @return [String, nil] The task number (e.g., "140.02") or nil if invalid format
+        def self.extract_number(id)
+          return nil if id.nil?
+          id_str = id.to_s
+          # Extract task suffix - focuses on +task.NN or +task.NN.NN pattern
+          # More flexible: doesn't enforce specific versioning scheme (semver, calver, etc.)
+          return nil unless id_str.match?(/\+task\.\d+(?:\.\d+)?\z/)
+          # Extract just the task number after +task. using non-greedy match
+          id_str[/\+task\.(.+?)\z/, 1]
+        end
       end
     end
   end
