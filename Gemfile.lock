@@ -122,8 +122,9 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.25.0)
+    ace-review (0.26.0)
       ace-context (~> 0.9)
+      ace-git (~> 0.3)
       ace-git-diff (~> 0.1)
       ace-llm (~> 0.1)
       ace-nav (~> 0.9)
@@ -164,7 +165,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.24.3)
+    ace-taskflow (0.24.4)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
       ace-support-mac-clipboard (~> 0.1.0)

@@ -70,9 +70,9 @@ module Ace
         # @option options [Boolean] :include_bots Include bot comments (default: false)
         # @return [Hash] Result with :success, :comments, :reviews, :review_threads, :error
         def self.fetch(pr_identifier, options = {})
-          # Parse identifier to get gh CLI format
-          parsed = Ace::Review::Molecules::PrIdentifierParser.parse(pr_identifier)
-          gh_format = parsed[:gh_format]
+          # Parse identifier to get gh CLI format using ace-git
+          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          gh_format = parsed.gh_format
 
           # Default timeout for PR operations
           timeout = options[:timeout] || 30
@@ -93,7 +93,8 @@ module Ace
             reviews = extract_reviews(data, options)
 
             # Fetch review threads via GraphQL (inline code comments)
-            review_threads = fetch_review_threads(parsed, options)
+            # Convert parsed to hash for fetch_review_threads which expects hash access
+            review_threads = fetch_review_threads(parsed.to_h, options)
 
             {
               success: true,
@@ -104,7 +105,7 @@ module Ace
               pr_title: data["title"],
               pr_author: data.dig("author", "login"),
               identifier: gh_format,
-              parsed: parsed,
+              parsed: parsed.to_h,
               raw_data: data
             }
           else
@@ -216,19 +217,27 @@ module Ace
 
         # Fetch review threads via GraphQL API
         #
-        # @param parsed [Hash] Parsed PR identifier with :owner, :repo, :number
+        # @param parsed [Hash] Parsed PR identifier with :repo (owner/repo format), :number
         # @param options [Hash] Fetch options
         # @return [Array<Hash>] Structured review threads, empty array on failure
         def self.fetch_review_threads(parsed, options = {})
-          owner = parsed[:owner]
-          repo = parsed[:repo]
+          repo_full = parsed[:repo]
           number = parsed[:number]
 
-          # Skip if we don't have owner/repo info (local PR number only)
-          unless owner && repo && number
+          # Skip if we don't have repo info (local PR number only)
+          unless repo_full && number
             warn "Debug: Skipping review threads fetch - missing owner/repo (PR identifier may be local number only)"
             return []
           end
+
+          # Parse owner/repo from combined format (e.g., "owner/repo")
+          parts = repo_full.split("/", 2)
+          unless parts.length == 2
+            warn "Debug: Skipping review threads fetch - invalid repo format: #{repo_full}"
+            return []
+          end
+          owner = parts[0]
+          repo = parts[1]
 
           timeout = options[:timeout] || 30
           include_resolved = options[:include_resolved] || false

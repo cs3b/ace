@@ -16,9 +16,9 @@ module Ace
         # @option options [Hash] :metadata Review metadata (preset, model, timestamp)
         # @return [Hash] Result with :success, :comment_url, :preview, :error
         def self.post_comment(pr_identifier, review_text, options = {})
-          # Parse identifier
-          parsed = Ace::Review::Molecules::PrIdentifierParser.parse(pr_identifier)
-          gh_format = parsed[:gh_format]
+          # Parse identifier using ace-git
+          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          gh_format = parsed.gh_format
 
           # Check PR state before posting
           state_check = check_pr_state(gh_format)
@@ -41,7 +41,7 @@ module Ace
           result = post_via_gh(gh_format, formatted_comment)
 
           if result[:success]
-            comment_url = extract_comment_url(result[:stdout], parsed)
+            comment_url = extract_comment_url(result[:stdout], parsed.to_h)
             {
               success: true,
               comment_url: comment_url,

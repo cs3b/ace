@@ -2,8 +2,6 @@
 
 require "test_helper"
 require "ace/review"
-require "ace/review/atoms/task_auto_detector"
-require "ace/review/molecules/git_branch_reader"
 require "ace/review/molecules/task_resolver"
 require "ace/review/molecules/task_report_saver"
 require "tmpdir"
@@ -21,21 +19,21 @@ class AutoSaveIntegrationTest < Minitest::Test
     FileUtils.rm_rf(@tmpdir)
   end
 
-  # Test TaskAutoDetector patterns
+  # Test TaskPatternExtractor patterns (from ace-git)
 
   def test_extracts_task_id_from_standard_branch
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch("121-feature-name")
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch("121-feature-name")
     assert_equal "121", task_id
   end
 
   def test_extracts_subtask_id_from_branch
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch("121.01-archive-prompts")
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch("121.01-archive-prompts")
     assert_equal "121.01", task_id
   end
 
   def test_extracts_from_feature_branch_pattern
     patterns = ['^feature/(\d+)-']
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch(
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(
       "feature/123-add-login",
       patterns: patterns
     )
@@ -43,41 +41,39 @@ class AutoSaveIntegrationTest < Minitest::Test
   end
 
   def test_returns_nil_for_main_branch
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch("main")
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch("main")
     assert_nil task_id
   end
 
   def test_returns_nil_for_detached_head
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch("HEAD")
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch("HEAD")
     assert_nil task_id
   end
 
   def test_returns_nil_for_non_matching_branch
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch("feature-no-number")
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch("feature-no-number")
     assert_nil task_id
   end
 
   def test_returns_nil_for_empty_branch
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch("")
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch("")
     assert_nil task_id
   end
 
   def test_returns_nil_for_nil_branch
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch(nil)
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(nil)
     assert_nil task_id
   end
 
-  # Test GitBranchReader integration
+  # Test BranchReader integration (from ace-git)
 
   def test_branch_detection_integration
-    # Mock branch reader to return a task branch
-    mock_result = ["126.03-auto-save-detection\n", "", mock_status(true)]
-
-    Open3.stub :capture3, mock_result do
-      branch = Ace::Review::Molecules::GitBranchReader.current_branch
+    # Mock ace-git BranchReader to return a task branch
+    Ace::Git::Molecules::BranchReader.stub :current_branch, "126.03-auto-save-detection" do
+      branch = Ace::Git::Molecules::BranchReader.current_branch
       assert_equal "126.03-auto-save-detection", branch
 
-      task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch(branch)
+      task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(branch)
       assert_equal "126.03", task_id
     end
   end
@@ -168,7 +164,7 @@ class AutoSaveIntegrationTest < Minitest::Test
     # 4. Save report
 
     branch_name = "126.03-auto-save-detection"
-    task_id = Ace::Review::Atoms::TaskAutoDetector.extract_from_branch(branch_name)
+    task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(branch_name)
     assert_equal "126.03", task_id
 
     # In real flow, TaskResolver would find the task directory
@@ -187,13 +183,5 @@ class AutoSaveIntegrationTest < Minitest::Test
 
     assert result[:success], "Full flow should succeed"
     assert File.exist?(result[:path]), "Review should be saved"
-  end
-
-  private
-
-  def mock_status(success)
-    status = Minitest::Mock.new
-    status.expect :success?, success
-    status
   end
 end

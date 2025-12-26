@@ -3,7 +3,6 @@
 require "test_helper"
 require "ace/review/molecules/gh_pr_comment_fetcher"
 require "ace/review/molecules/gh_cli_executor"
-require "ace/review/molecules/pr_identifier_parser"
 
 module Ace
   module Review
@@ -16,10 +15,9 @@ module Ace
 
         # Test: Fetch comments successfully
         def test_fetch_success
-          parsed = {
-            owner: "test", repo: "repo", number: 123,
-            gh_format: "test/repo#123"
-          }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: "test/repo", gh_format: "test/repo#123"
+          )
 
           response_json = {
             number: 123,
@@ -45,7 +43,7 @@ module Ace
             ]
           }.to_json
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             result = { success: true, stdout: response_json, stderr: "", exit_code: 0 }
             GhCliExecutor.stub(:execute, result) do
               response = @fetcher.fetch("123")
@@ -90,7 +88,9 @@ module Ace
 
         # Test: Bot filtering
         def test_filters_bot_comments
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
           response_json = {
             number: 123,
@@ -103,7 +103,7 @@ module Ace
             reviews: []
           }.to_json
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             result = { success: true, stdout: response_json, stderr: "", exit_code: 0 }
             GhCliExecutor.stub(:execute, result) do
               response = @fetcher.fetch("123")
@@ -117,9 +117,11 @@ module Ace
 
         # Test: JSON parse error
         def test_fetch_json_parse_error
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             result = { success: true, stdout: "invalid json", stderr: "", exit_code: 0 }
             GhCliExecutor.stub(:execute, result) do
               response = @fetcher.fetch("123")
@@ -132,9 +134,11 @@ module Ace
 
         # Test: Authentication error re-raised
         def test_fetch_reraises_authentication_error
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             assert_raises(Ace::Review::Errors::GhAuthenticationError) do
               GhCliExecutor.stub(:execute, ->(*_args) {
                 raise Ace::Review::Errors::GhAuthenticationError
@@ -147,9 +151,11 @@ module Ace
 
         # Test: CLI not installed error re-raised
         def test_fetch_reraises_cli_not_installed
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             assert_raises(Ace::Review::Errors::GhCliNotInstalledError) do
               GhCliExecutor.stub(:execute, ->(*_args) {
                 raise Ace::Review::Errors::GhCliNotInstalledError
@@ -162,10 +168,9 @@ module Ace
 
         # Test: Fetch includes review threads
         def test_fetch_includes_review_threads
-          parsed = {
-            owner: "test", repo: "repo", number: 123,
-            gh_format: "test/repo#123"
-          }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: "test/repo", gh_format: "test/repo#123"
+          )
 
           pr_response_json = {
             number: 123,
@@ -214,7 +219,7 @@ module Ace
             end
           end
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             GhCliExecutor.stub(:execute, execute_stub) do
               response = @fetcher.fetch("123")
 
@@ -329,7 +334,8 @@ module Ace
 
         # Test: fetch_review_threads surfaces GraphQL errors as warnings
         def test_fetch_review_threads_graphql_errors_warning
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "test/repo#123" }
+          # Note: ace-git PrIdentifierParser uses combined repo format (owner/repo)
+          parsed = { repo: "test/repo", number: "123", gh_format: "test/repo#123" }
 
           # GraphQL response with errors but partial data
           graphql_response = {
@@ -360,7 +366,8 @@ module Ace
 
         # Test: fetch_review_threads surfaces JSON parse errors as warnings
         def test_fetch_review_threads_json_error_warning
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "test/repo#123" }
+          # Note: ace-git PrIdentifierParser uses combined repo format (owner/repo)
+          parsed = { repo: "test/repo", number: "123", gh_format: "test/repo#123" }
 
           # Invalid JSON response
           result = { success: true, stdout: "not valid json{", stderr: "", exit_code: 0 }

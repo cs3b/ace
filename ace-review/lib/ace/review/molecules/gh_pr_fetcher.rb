@@ -17,9 +17,9 @@ module Ace
         # @option options [Integer] :timeout Timeout in seconds for gh CLI (default: 30)
         # @return [Hash] Result with :success, :diff, :error
         def self.fetch_diff(pr_identifier, options = {})
-          # Parse identifier to get gh CLI format
-          parsed = Ace::Review::Molecules::PrIdentifierParser.parse(pr_identifier)
-          gh_format = parsed[:gh_format]
+          # Parse identifier to get gh CLI format using ace-git
+          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          gh_format = parsed.gh_format
 
           # Default timeout for PR diff operations
           timeout = options[:timeout] || 30
@@ -34,7 +34,7 @@ module Ace
               success: true,
               diff: result[:stdout],
               identifier: gh_format,
-              parsed: parsed
+              parsed: parsed.to_h
             }
           else
             handle_fetch_error(result, pr_identifier)
@@ -56,9 +56,9 @@ module Ace
         # @option options [Integer] :timeout Timeout in seconds for gh CLI (default: 30)
         # @return [Hash] Result with :success, :metadata, :error
         def self.fetch_metadata(pr_identifier, options = {})
-          # Parse identifier
-          parsed = Ace::Review::Molecules::PrIdentifierParser.parse(pr_identifier)
-          gh_format = parsed[:gh_format]
+          # Parse identifier using ace-git
+          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          gh_format = parsed.gh_format
 
           # Default timeout for PR operations
           timeout = options[:timeout] || 30
@@ -76,7 +76,7 @@ module Ace
               success: true,
               metadata: metadata,
               identifier: gh_format,
-              parsed: parsed
+              parsed: parsed.to_h
             }
           else
             handle_fetch_error(result, pr_identifier)

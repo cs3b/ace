@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.0] - 2025-12-26
+
+### Changed
+
+- **Migrate to ace-git**: Replace duplicated Git/GitHub code with ace-git dependency
+  - Removed `Ace::Review::Molecules::GitBranchReader` - now uses `Ace::Git::Molecules::BranchReader`
+  - Removed `Ace::Review::Atoms::TaskAutoDetector` - now uses `Ace::Git::Atoms::TaskPatternExtractor`
+  - Removed `Ace::Review::Molecules::PrIdentifierParser` - now uses `Ace::Git::Atoms::PrIdentifierParser`
+  - Added `ace-git (~> 0.3)` as runtime dependency
+  - Eliminates code duplication and centralizes Git operations in ace-git package
+
+### Removed
+
+- Deleted `lib/ace/review/molecules/git_branch_reader.rb`
+- Deleted `lib/ace/review/atoms/task_auto_detector.rb`
+- Deleted `lib/ace/review/molecules/pr_identifier_parser.rb`
+- Deleted corresponding test files
+
 ## [0.25.0] - 2025-12-17
 
 ### Added

@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.184] - 2025-12-26
+
+### ace-review v0.25.0 → v0.26.0
+
+**Changed**
+- Migrate to ace-git for Git/GitHub operations
+  - Replace `GitBranchReader`, `TaskAutoDetector`, `PrIdentifierParser` with ace-git equivalents
+  - Add `ace-git (~> 0.3)` dependency
+  - Remove 6 duplicated files (3 lib + 3 test)
+
 ## [0.9.183] - 2025-12-26
 
 ### ace-taskflow v0.24.3 → v0.24.4
