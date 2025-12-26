@@ -6,8 +6,10 @@ module Ace
       module Atoms
         # Git command execution atom
         #
-        # Provides a thin wrapper around ace-git-diff's CommandExecutor
+        # Provides a thin wrapper around ace-git's CommandExecutor
         # for safe git command execution with proper error handling.
+        # This adapter maintains backward compatibility with the original API
+        # while delegating to the consolidated ace-git package.
         #
         # @example Execute a git worktree command
         #   GitCommand.execute("worktree", "add", "/path/to/worktree", "-b", "feature-branch")
@@ -22,7 +24,7 @@ module Ace
           DEFAULT_TIMEOUT = 30
 
           class << self
-            # Execute a git command safely using ace-git-diff's CommandExecutor
+            # Execute a git command safely using ace-git's CommandExecutor
             #
             # @param args [Array<String>] Command arguments (command and its arguments)
             # @param timeout [Integer] Timeout in seconds (default: 30)
@@ -32,47 +34,22 @@ module Ace
             #   result = GitCommand.execute("worktree", "list")
             #   # => { success: true, output: "/path/to/worktree abc123 [branch-name]\n", error: "", exit_code: 0 }
             def execute(*args, timeout: DEFAULT_TIMEOUT)
-              begin
-              require "ace/git/diff/atoms/command_executor"
-            rescue LoadError
-              # Try alternative path for local development
-              require "ace/git_diff/atoms/command_executor"
-            end
-
               # Ensure all arguments are strings
               string_args = args.map(&:to_s)
 
-              # Execute via ace-git-diff's CommandExecutor for safety
-              # Note: CommandExecutor doesn't support timeout parameter
-              result = Ace::GitDiff::Atoms::CommandExecutor.execute("git", *string_args)
+              # Delegate to ace-git's CommandExecutor
+              # Note: CommandExecutor expects "git" as first argument
+              result = Ace::Git::Atoms::CommandExecutor.execute("git", *string_args, timeout:)
 
-              # Normalize result format
+              # Normalize ace-git result keys for legacy compatibility
               {
                 success: result[:success],
                 output: result[:output].to_s,
                 error: result[:error].to_s,
                 exit_code: result[:exit_code] || 0
               }
-            rescue LoadError
-              # Fallback if ace-git-diff is not available - use system git directly
-              begin
-                require "open3"
-                stdout, stderr, status = Open3.capture3("git", *string_args)
-                {
-                  success: status.success?,
-                  output: stdout,
-                  error: stderr,
-                  exit_code: status.exitstatus
-                }
-              rescue StandardError => e
-                {
-                  success: false,
-                  output: "",
-                  error: "Failed to execute git command: #{e.message}",
-                  exit_code: 1
-                }
-              end
             rescue StandardError => e
+              # Handle unexpected exceptions from ace-git to maintain defensive behavior
               {
                 success: false,
                 output: "",
@@ -90,33 +67,23 @@ module Ace
             # @example
             #   result = GitCommand.worktree("add", "/path/to/worktree", "-b", "feature-branch")
             def worktree(*args, timeout: DEFAULT_TIMEOUT)
-              execute("worktree", *args, timeout: timeout)
+              execute("worktree", *args, timeout:)
             end
 
             # Check if git repository exists
             #
             # @return [Boolean] true if current directory is a git repository
             def git_repository?
-              result = execute("rev-parse", "--git-dir", timeout: 5)
-              result[:success] && !result[:output].strip.empty?
+              Ace::Git::Atoms::CommandExecutor.in_git_repo?
             end
 
             # Get current git branch name or commit SHA if in detached HEAD state
             #
             # @return [String, nil] Current branch name, commit SHA (if detached), or nil on error
             def current_branch
-              result = execute("branch", "--show-current", timeout: 5)
-              return nil unless result[:success]
-
-              branch = result[:output].strip
-              return branch unless branch.empty?
-
-              # Detached HEAD - return commit SHA
-              sha_result = execute("rev-parse", "HEAD", timeout: 5)
-              return nil unless sha_result[:success]
-
-              sha = sha_result[:output].strip
-              sha.empty? ? nil : sha
+              # ace-git's current_branch now handles detached HEAD state
+              # and returns SHA directly when detached
+              Ace::Git::Atoms::CommandExecutor.current_branch
             end
 
             # Check if a git ref (branch, tag, commit SHA) exists
@@ -130,13 +97,11 @@ module Ace
 
             # Get git repository root directory
             #
+            # Delegates to ace-git's CommandExecutor for repository root detection
+            #
             # @return [String, nil] Path to git repository root or nil if not in a git repo
             def git_root
-              result = execute("rev-parse", "--show-toplevel", timeout: 5)
-              return nil unless result[:success]
-
-              root = result[:output].strip
-              root.empty? ? nil : root
+              Ace::Git::Atoms::CommandExecutor.repo_root
             end
           end
         end

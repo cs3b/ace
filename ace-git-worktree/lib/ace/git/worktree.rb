@@ -9,6 +9,9 @@ unless Open3.const_defined?(:CommandTimeout)
   end
 end
 
+# Core ace-git dependency for Git operations
+require "ace/git"
+
 require_relative "worktree/version"
 
 module Ace
@@ -48,7 +51,6 @@ module Ace
 
       require_relative "worktree/molecules/config_loader"
       require_relative "worktree/molecules/task_fetcher"
-      require_relative "worktree/molecules/pr_fetcher"
       require_relative "worktree/molecules/pr_creator"
       require_relative "worktree/molecules/task_committer"
       require_relative "worktree/molecules/task_pusher"
