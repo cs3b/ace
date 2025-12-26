@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.1] - 2025-12-26
+
+### Fixed
+
+- **Complete ace-git migration in SubjectExtractor**: Replace remaining ace-context references with ace-git equivalents
+  - `Ace::Context::Atoms::GitExtractor.tracking_branch` → `Ace::Git::Molecules::BranchReader.tracking_branch`
+  - `Ace::Context::Atoms::PrIdentifierParser.parse` → `Ace::Git::Atoms::PrIdentifierParser.parse`
+  - Fixes `uninitialized constant` errors when using ace-review after ace-context v0.16 migration
+
 ## [0.26.0] - 2025-12-26
 
 ### Changed
