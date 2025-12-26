@@ -179,7 +179,7 @@ module Ace
         # Extract comment URL from gh CLI output
         #
         # @param output [String] gh CLI stdout
-        # @param parsed [Hash] Parsed PR identifier
+        # @param parsed [Hash] Parsed PR identifier with :repo (owner/repo format), :number
         # @return [String] Comment URL
         def self.extract_comment_url(output, parsed)
           # gh pr comment returns the comment URL on success
@@ -190,7 +190,10 @@ module Ace
             url_match[1]
           else
             # Fallback: construct URL from parsed identifier
-            "https://github.com/#{parsed[:owner]}/#{parsed[:repo]}/pull/#{parsed[:number]}"
+            # ace-git's ParseResult provides :repo in "owner/repo" combined format
+            repo = parsed[:repo] || parsed[:gh_format].to_s.split("#").first
+            number = parsed[:number]
+            "https://github.com/#{repo}/pull/#{number}"
           end
         end
 
