@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.186] - 2025-12-26
+
+### ace-taskflow v0.24.4 → v0.24.5
+
+**Technical**
+- Add explicit PR review instructions to work-on-subtasks workflow
+  - Use `ace-review --preset code --pr <number>` for subtask PRs targeting orchestrator branch
+  - Document how to get PR number from `ace-git status`
+  - Explain why `--pr` flag is required (ensures review against correct target branch)
+
 ## [0.9.185] - 2025-12-26
 
 ### ace-prompt v0.5.1 → v0.6.0
