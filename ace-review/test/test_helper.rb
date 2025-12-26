@@ -24,14 +24,14 @@ class AceReviewTest < Minitest::Test
 
     # Stub ace-context to prevent expensive shell command execution during tests
     stub_ace_context
-    # Stub git-extractor to prevent expensive git command execution during tests
-    stub_git_extractor
+    # Stub git operations to prevent expensive git command execution during tests
+    stub_branch_reader
   end
 
   def teardown
-    # Restore original ace-context and git-extractor methods
+    # Restore original ace-context and git methods
     restore_ace_context
-    restore_git_extractor
+    restore_branch_reader
 
     Dir.chdir(@original_pwd)
     FileUtils.remove_entry(@test_dir)
@@ -55,20 +55,21 @@ class AceReviewTest < Minitest::Test
     Ace::TestSupport::Fixtures::ContextMocks.restore_load_auto(@original_context_methods)
   end
 
-  # Stub Ace::Context::Atoms::GitExtractor to prevent expensive git command execution
-  def stub_git_extractor
-    return unless defined?(Ace::Context::Atoms::GitExtractor)
+  # Stub Ace::Git::Molecules::BranchReader to prevent expensive git command execution
+  def stub_branch_reader
+    return unless defined?(Ace::Git::Molecules::BranchReader)
 
-    # Use shared fixtures from ace-support-test-helpers
-    @original_git_methods = {}
-    Ace::TestSupport::Fixtures::ContextMocks.stub_git_extractor(@original_git_methods)
+    @original_tracking_branch = Ace::Git::Molecules::BranchReader.method(:tracking_branch)
+    Ace::Git::Molecules::BranchReader.define_singleton_method(:tracking_branch) do |executor: nil|
+      "origin/main"
+    end
   end
 
-  # Restore original GitExtractor methods
-  def restore_git_extractor
-    return unless @original_git_methods
+  # Restore original BranchReader methods
+  def restore_branch_reader
+    return unless @original_tracking_branch
 
-    Ace::TestSupport::Fixtures::ContextMocks.restore_git_extractor(@original_git_methods)
+    Ace::Git::Molecules::BranchReader.define_singleton_method(:tracking_branch, @original_tracking_branch)
   end
 
   # Helper to create a test configuration file
