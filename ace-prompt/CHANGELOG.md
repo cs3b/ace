@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2025-12-26
+
+### Changed
+- **Migrate to ace-git** (Task 140.04): Replace local `GitBranchReader` molecule with `Ace::Git::Molecules::BranchReader` for unified git operations across ace-* gems
+- Add ace-git ~> 0.3 dependency for shared git operations
+
+### Added
+- Test for nil/failure path when `BranchReader.current_branch` returns nil (graceful fallback to project-level prompt)
+
+### Removed
+- `Ace::Prompt::Molecules::GitBranchReader` - functionality now provided by ace-git
+
 ## [0.5.1] - 2025-12-09
 
 ### Fixed
