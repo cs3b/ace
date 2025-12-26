@@ -640,21 +640,15 @@ class ContextLoaderTest < AceTestCase
           pr: "123"
       YAML
 
-      # Create a simple status object with success? method
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { true }
+      # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+      mock_response = {
+        success: true,
+        diff: PrMockFixtures::MOCK_DIFF_STANDARD,
+        identifier: "123",
+        source: "pr:123"
+      }
 
-      # Stub Open3.popen3 to intercept gh pr diff calls
-      # The block receives stdin, stdout, stderr, wait_thr
-      Open3.stub(:popen3, ->(*args, &block) {
-        stdin = StringIO.new
-        stdout = StringIO.new(PrMockFixtures::MOCK_DIFF_STANDARD)
-        stderr = StringIO.new("")
-        wait_thr = Minitest::Mock.new
-        wait_thr.expect(:pid, 12345)
-        wait_thr.expect(:value, mock_status)
-        block.call(stdin, stdout, stderr, wait_thr) if block
-      }) do
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
         loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
@@ -682,22 +676,14 @@ class ContextLoaderTest < AceTestCase
 
       call_count = 0
 
-      # Create simple status objects
-      mock_status = Object.new
-      mock_status.define_singleton_method(:success?) { true }
-
-      # Stub Open3.popen3 to intercept gh pr diff calls
-      Open3.stub(:popen3, ->(*args, &block) {
+      # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+      mock_fetch = lambda do |id, **_opts|
         diff = call_count == 0 ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
         call_count += 1
-        stdin = StringIO.new
-        stdout = StringIO.new(diff)
-        stderr = StringIO.new("")
-        wait_thr = Minitest::Mock.new
-        wait_thr.expect(:pid, 12345)
-        wait_thr.expect(:value, mock_status)
-        block.call(stdin, stdout, stderr, wait_thr) if block
-      }) do
+        { success: true, diff: diff, identifier: id, source: "pr:#{id}" }
+      end
+
+      Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
         loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
@@ -901,6 +887,102 @@ class ContextLoaderTest < AceTestCase
 
       refute loader.send(:has_processed_section_content?, context),
              "Should return false when sections have no processed content"
+    end
+  end
+
+  # Tests for generate_diff_safe error handling
+  # Verifies that ace-git errors are captured and surfaced in content instead of crashing
+
+  def test_generate_diff_safe_handles_ace_git_error
+    with_temp_dir do
+      yaml_config = <<~YAML
+        context:
+          diffs:
+            - "HEAD~1..HEAD"
+      YAML
+
+      # Stub DiffOrchestrator.generate to raise Ace::Git::Error
+      error_stub = ->(_args) { raise Ace::Git::Error, "Git operation failed" }
+
+      Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        context = loader.load_inline_yaml(yaml_config)
+
+        # Should capture error in formatted content, not crash
+        # Errors appear in <errors> section or "## Errors" heading
+        assert context.content.include?("Git diff failed"),
+               "Content should include git error message: #{context.content[0..500]}"
+      end
+    end
+  end
+
+  def test_generate_diff_safe_handles_timeout_error
+    with_temp_dir do
+      yaml_config = <<~YAML
+        context:
+          diffs:
+            - "origin/main...HEAD"
+      YAML
+
+      # Stub DiffOrchestrator.generate to raise TimeoutError (subclass of Ace::Git::Error)
+      error_stub = ->(_args) { raise Ace::Git::TimeoutError, "Operation timed out after 30s" }
+
+      Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        context = loader.load_inline_yaml(yaml_config)
+
+        # Should capture timeout error in content (TimeoutError inherits from Error)
+        assert context.content.include?("timed out"),
+               "Content should include timeout error message: #{context.content[0..500]}"
+      end
+    end
+  end
+
+  def test_generate_diff_safe_handles_argument_error
+    with_temp_dir do
+      yaml_config = <<~YAML
+        context:
+          diffs:
+            - "invalid..range..format"
+      YAML
+
+      # Stub DiffOrchestrator.generate to raise ArgumentError
+      error_stub = ->(_args) { raise ArgumentError, "Invalid range format" }
+
+      Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        context = loader.load_inline_yaml(yaml_config)
+
+        # Should capture argument error with "Invalid diff range" prefix
+        assert context.content.include?("Invalid diff range"),
+               "Content should include invalid range error message: #{context.content[0..500]}"
+      end
+    end
+  end
+
+  def test_generate_diff_safe_does_not_crash_on_git_error
+    with_temp_dir do
+      yaml_config = <<~YAML
+        context:
+          diffs:
+            - "HEAD~1..HEAD"
+      YAML
+
+      # Stub DiffOrchestrator.generate to raise Ace::Git::GitError
+      error_stub = ->(_args) { raise Ace::Git::GitError, "git diff command failed" }
+
+      Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+
+        # Should not raise - error should be captured and returned in context
+        context = loader.load_inline_yaml(yaml_config)
+
+        # Context should be valid with error surfaced in content
+        assert context, "Should return a context"
+        assert context.content, "Should have content"
+        assert context.content.include?("git diff command failed"),
+               "Content should include the error message"
+      end
     end
   end
 

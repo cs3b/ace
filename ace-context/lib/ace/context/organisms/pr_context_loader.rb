@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/gh_pr_executor"
+require "ace/git"
 
 module Ace
   module Context
@@ -9,7 +9,7 @@ module Ace
       #
       # Responsible for:
       # - Normalizing PR references (string, array, hash formats)
-      # - Fetching diffs via GhPrExecutor
+      # - Fetching diffs via Ace::Git::Molecules::PrMetadataFetcher
       # - Integrating results into context sections
       # - Error handling and surfacing
       #
@@ -19,10 +19,10 @@ module Ace
       #
       class PrContextLoader
         # @param options [Hash] Configuration options
-        # @option options [Integer] :timeout Timeout for gh commands (default: 30)
+        # @option options [Integer] :timeout Timeout for gh commands (default from ace-git config)
         # @option options [Boolean] :debug Enable debug output
         def initialize(options = {})
-          @timeout = options[:timeout] || Molecules::GhPrExecutor::DEFAULT_TIMEOUT
+          @timeout = options[:timeout] || Ace::Git.network_timeout
           @debug = options[:debug] || false
         end
 
@@ -82,8 +82,7 @@ module Ace
         # @param pr_ref [String] Single PR reference
         # @return [Hash, nil] Diff result or nil on skip
         def fetch_single_diff(context, pr_ref)
-          executor = Molecules::GhPrExecutor.new(pr_ref, timeout: @timeout)
-          result = executor.fetch_diff
+          result = Ace::Git::Molecules::PrMetadataFetcher.fetch_diff(pr_ref, timeout: @timeout)
 
           if result[:success]
             {
@@ -93,15 +92,14 @@ module Ace
               source: :pr
             }
           else
-            nil # Should not reach here; errors raise exceptions
+            record_error(context, "PR fetch failed for '#{pr_ref}': #{result[:error]}")
+            { range: pr_range_identifier(pr_ref), output: "Error: #{result[:error]}", success: false, error: result[:error], source: :pr }
           end
-        rescue Molecules::GhPrExecutor::GhNotInstalledError,
-               Molecules::GhPrExecutor::GhAuthenticationError,
-               Molecules::GhPrExecutor::PrNotFoundError,
-               Molecules::GhPrExecutor::GhCommandError,
-               Molecules::GhPrExecutor::TimeoutError => e
+        rescue Ace::Git::Error => e
+          # Catches all ace-git errors: GitError, GhNotInstalledError, GhAuthenticationError,
+          # PrNotFoundError, TimeoutError (all inherit from Ace::Git::Error)
           record_error(context, "PR fetch failed for '#{pr_ref}': #{e.message}")
-          { range: "pr:#{pr_ref}", success: false, error: e.message, source: :pr }
+          { range: pr_range_identifier(pr_ref), output: "Error: #{e.message}", success: false, error: e.message, source: :pr }
         rescue ArgumentError => e
           record_error(context, "Invalid PR identifier '#{pr_ref}': #{e.message}")
           nil
@@ -114,6 +112,13 @@ module Ace
         def record_error(context, message)
           context.metadata[:errors] ||= []
           context.metadata[:errors] << message
+        end
+
+        # Generate standardized PR range identifier for error responses
+        # @param pr_ref [String] PR reference
+        # @return [String] Range identifier in "pr:ref" format
+        def pr_range_identifier(pr_ref)
+          "pr:#{pr_ref}"
         end
 
         # Surface errors to content for callers who don't inspect metadata

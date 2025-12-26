@@ -92,8 +92,10 @@ module Ace
 
           # Determine what range to diff based on configuration and git state
           def determine_range(config, executor)
-            # If ranges specified in config, use first one
-            return config.ranges.first if config.ranges.any?
+            # If ranges specified in config, use first non-empty one
+            # Empty/blank ranges are treated as "no range" (working tree diff)
+            non_empty_ranges = config.ranges.reject { |r| r.nil? || r.strip.empty? }
+            return non_empty_ranges.first if non_empty_ranges.any?
 
             # If since specified, convert to range
             if config.since

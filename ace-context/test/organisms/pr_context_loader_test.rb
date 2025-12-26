@@ -77,18 +77,15 @@ module Ace
         def test_process_with_successful_pr_fetch
           mock_diff = PrMockFixtures::MOCK_DIFF_STANDARD
 
-          mock_status = Object.new
-          mock_status.define_singleton_method(:success?) { true }
+          # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+          mock_response = {
+            success: true,
+            diff: mock_diff,
+            identifier: "123",
+            source: "pr:123"
+          }
 
-          Open3.stub(:popen3, ->(*_args, &block) {
-            stdin = StringIO.new
-            stdout = StringIO.new(mock_diff)
-            stderr = StringIO.new("")
-            wait_thr = Minitest::Mock.new
-            wait_thr.expect(:pid, 12345)
-            wait_thr.expect(:value, mock_status)
-            block.call(stdin, stdout, stderr, wait_thr) if block
-          }) do
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
             loader = PrContextLoader.new
             result = loader.process(@context, "123")
 
@@ -101,20 +98,15 @@ module Ace
 
         def test_process_with_multiple_prs
           call_count = 0
-          mock_status = Object.new
-          mock_status.define_singleton_method(:success?) { true }
 
-          Open3.stub(:popen3, ->(*_args, &block) {
+          # Stub ace-git public API (PrMetadataFetcher.fetch_diff) instead of Open3.capture3
+          mock_fetch = lambda do |id, **_opts|
             diff = call_count == 0 ? PrMockFixtures::MOCK_DIFF_PR_123 : PrMockFixtures::MOCK_DIFF_PR_456
             call_count += 1
-            stdin = StringIO.new
-            stdout = StringIO.new(diff)
-            stderr = StringIO.new("")
-            wait_thr = Minitest::Mock.new
-            wait_thr.expect(:pid, 12345)
-            wait_thr.expect(:value, mock_status)
-            block.call(stdin, stdout, stderr, wait_thr) if block
-          }) do
+            { success: true, diff: diff, identifier: id, source: "pr:#{id}" }
+          end
+
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
             loader = PrContextLoader.new
             result = loader.process(@context, ["123", "456"])
 
@@ -124,19 +116,13 @@ module Ace
         end
 
         def test_process_records_errors_in_metadata
-          mock_status = Object.new
-          mock_status.define_singleton_method(:success?) { false }
-          mock_status.define_singleton_method(:exitstatus) { 1 }
+          # Stub ace-git public API to return failure
+          mock_response = {
+            success: false,
+            error: "PR not found"
+          }
 
-          Open3.stub(:popen3, ->(*_args, &block) {
-            stdin = StringIO.new
-            stdout = StringIO.new("")
-            stderr = StringIO.new("Error: PR not found")
-            wait_thr = Minitest::Mock.new
-            wait_thr.expect(:pid, 12345)
-            wait_thr.expect(:value, mock_status)
-            block.call(stdin, stdout, stderr, wait_thr) if block
-          }) do
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
             loader = PrContextLoader.new
             result = loader.process(@context, "999999")
 
@@ -147,19 +133,13 @@ module Ace
         end
 
         def test_process_surfaces_errors_to_content
-          mock_status = Object.new
-          mock_status.define_singleton_method(:success?) { false }
-          mock_status.define_singleton_method(:exitstatus) { 1 }
+          # Stub ace-git public API to return failure
+          mock_response = {
+            success: false,
+            error: "PR not found"
+          }
 
-          Open3.stub(:popen3, ->(*_args, &block) {
-            stdin = StringIO.new
-            stdout = StringIO.new("")
-            stderr = StringIO.new("Error: PR not found")
-            wait_thr = Minitest::Mock.new
-            wait_thr.expect(:pid, 12345)
-            wait_thr.expect(:value, mock_status)
-            block.call(stdin, stdout, stderr, wait_thr) if block
-          }) do
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
             loader = PrContextLoader.new
             loader.process(@context, "999999")
 
@@ -180,6 +160,92 @@ module Ace
           # Should handle gracefully, recording error
           refute result
           assert @context.metadata[:errors]
+        end
+
+        # --- ace-git error type handling tests ---
+
+        def test_process_handles_gh_not_installed_error
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::GhNotInstalledError, "gh not installed" }
+
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+            loader = PrContextLoader.new
+            result = loader.process(@context, "123")
+
+            refute result, "Should return false when gh not installed"
+            assert @context.metadata[:errors], "Should have errors in metadata"
+            assert @context.metadata[:errors].any? { |e| e.include?("gh not installed") }
+          end
+        end
+
+        def test_process_handles_gh_authentication_error
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::GhAuthenticationError, "not authenticated" }
+
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+            loader = PrContextLoader.new
+            result = loader.process(@context, "123")
+
+            refute result, "Should return false when not authenticated"
+            assert @context.metadata[:errors], "Should have errors in metadata"
+            assert @context.metadata[:errors].any? { |e| e.include?("not authenticated") }
+          end
+        end
+
+        def test_process_handles_pr_not_found_error
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::PrNotFoundError, "PR #999 not found" }
+
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+            loader = PrContextLoader.new
+            result = loader.process(@context, "999")
+
+            refute result, "Should return false when PR not found"
+            assert @context.metadata[:errors], "Should have errors in metadata"
+            assert @context.metadata[:errors].any? { |e| e.include?("PR #999 not found") }
+          end
+        end
+
+        def test_process_handles_timeout_error
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::TimeoutError, "command timed out after 30s" }
+
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+            loader = PrContextLoader.new
+            result = loader.process(@context, "123")
+
+            refute result, "Should return false on timeout"
+            assert @context.metadata[:errors], "Should have errors in metadata"
+            assert @context.metadata[:errors].any? { |e| e.include?("timed out") }
+          end
+        end
+
+        def test_process_handles_generic_gh_failure
+          # Tests the else branch in fetch_single_diff (lines 94-97)
+          # Generic gh failures return {success: false} instead of raising
+          mock_response = {
+            success: false,
+            error: "gh pr command failed: network error"
+          }
+
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
+            loader = PrContextLoader.new
+            result = loader.process(@context, "123")
+
+            refute result, "Should return false on generic failure"
+            assert @context.metadata[:errors], "Should have errors in metadata"
+            assert @context.metadata[:errors].any? { |e| e.include?("network error") }
+          end
+        end
+
+        def test_process_handles_base_git_error
+          # Tests the base GitError rescue (for errors not in the specific list)
+          mock_fetch = ->(_id, **_opts) { raise Ace::Git::GitError, "unexpected git operation failed" }
+
+          Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
+            loader = PrContextLoader.new
+            result = loader.process(@context, "123")
+
+            refute result, "Should return false on GitError"
+            assert @context.metadata[:errors], "Should have errors in metadata"
+            assert @context.metadata[:errors].any? { |e| e.include?("unexpected git operation failed") }
+          end
         end
       end
     end
