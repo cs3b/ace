@@ -7,6 +7,157 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING**: Renamed `context` to `status` throughout
+  - CLI: `ace-git status` (no `context` alias)
+  - Config: `git.status.*` (not `git.context.*`)
+  - Classes: `StatusCommand`, `StatusFormatter`, `RepoStatus`, `RepoStatusLoader`
+  - Files: `status_command.rb`, `status_formatter.rb`, `repo_status.rb`, `repo_status_loader.rb`
+  - Output header: "# Repository Status" (was "# Repository Context")
+  - Output format and JSON structure unchanged
+
+### Removed
+
+- **TimeFormatter.add_relative_times**: Removed unused method (YAGNI cleanup)
+  - Method was marked "kept for potential future use" but never used in production
+  - StatusFormatter.format_merged_time_compact is the actual method used
+  - Related tests removed: test_add_relative_times_adds_merged_ago_field, test_add_relative_times_handles_missing_merged_at
+
+## [0.3.5] - 2025-12-24
+
+### Fixed
+
+- **TimeFormatter "0y ago" Bug**: Fixed relative time display for 11-12 month intervals
+  - Previously showed "0y ago" for 360-364 day intervals due to rounding error
+  - Now correctly shows "12mo ago" for intervals less than 365 days
+  - Added regression tests for month/year boundary cases
+
+- **Nil Title Handling**: ContextFormatter now handles missing PR titles gracefully
+  - Shows "(no title)" instead of empty string when PR title is nil
+
+- **Git Color Output**: GitStatusFetcher now disables colors with `-c color.status=false`
+  - Ensures clean output for LLM context regardless of user's git configuration
+
+### Added
+
+- **CLI Alias**: Added `-n` alias for `--no-pr` option in `ace-git status`
+- **Open PR Limit**: `fetch_open_prs` now accepts `limit` parameter (default: 10)
+  - Keeps latency predictable on repositories with many open PRs
+
+### Changed
+
+- **Constants**: Extracted `DEFAULT_COMMITS_LIMIT` constant for consistency
+  - Referenced by both CLI options and RepoContextLoader defaults
+- **Hash Key Normalization**: ContextFormatter now expects symbol keys for pr_activity
+  - Documented expected key types in method comments
+
+## [0.3.4] - 2025-12-24
+
+### Changed
+
+- **PR Workflow Improvements**: Enhanced create-pr and update-pr-description workflows
+  - Added target branch detection based on task hierarchy from `ace-taskflow status`
+  - Subtasks now correctly target parent task branch instead of main
+  - PR title format: `<task-id>: <description>` when task ID present (e.g., `140.10: Add feature`)
+  - Auto-fix for PRs incorrectly targeting main when parent branch exists
+
+## [0.3.3] - 2025-12-24
+
+### Added
+
+- **PR Activity Awareness**: `ace-git status` now shows recent PR activity
+  - Recently merged PRs (last 3) with relative timestamps (e.g., "1d ago")
+  - Open PRs from other team members (excluding current branch)
+  - New `--no-pr` flag to skip PR lookups for faster output
+  - TimeFormatter atom for relative time display
+
+- **Enhanced Context Output**: Improved UX and readability
+  - Git status (`git status -sb`) displayed in Position section
+  - Recent commits section (configurable via `--commits N`, default: 3)
+  - Task ID shown in Position header: `## Position (task: 140.10)`
+
+### Changed
+
+- **Simplified Position Section**: Combined Position and Working Tree into single section
+  - Raw `git status -sb` output used directly (no custom formatting)
+  - Cleaner, more compact output matching git conventions
+
+### Fixed
+
+- Removed code fences from status output that confused display
+- Added proper spacing after section headers for readability
+
+## [0.3.2] - 2025-12-22
+
+### Fixed
+
+- **Error Propagation**: `ace-git diff` now properly reports git errors for invalid ranges
+  - Previously returned "(no changes)" silently when git failed
+  - Now shows actual git error message and exits with code 1
+  - Added `handle_result` helper in DiffGenerator for consistent error handling
+
+## [0.3.1] - 2025-12-22
+
+### Added
+
+- **Examples in Main Help**: `ace-git --help` now shows common usage examples
+- **Explicit Diff Command**: `ace-git diff --help` shows full help with options
+- **SYNTAX Section**: Clear `[RANGE] [OPTIONS]` documentation in diff help
+
+### Changed
+
+- **Compact PR Output**: Reduced PR section from ~11 lines to ~4 lines
+  - Header line with PR #, title, and status in brackets
+  - Key-value lines for branch, author, URL
+  - Applies to both `ace-git context` and `ace-git pr` commands
+
+## [0.3.0] - 2025-12-22
+
+### Added
+
+- **CLI Executable** (`ace-git`): Full CLI with Thor for all git operations
+  - `ace-git diff [RANGE]` - Generate git diff with filtering (migrated from ace-git-diff)
+  - `ace-git context` - Show repository context (branch, PR, task pattern)
+  - `ace-git branch` - Show current branch information with tracking status
+  - `ace-git pr [NUMBER]` - Fetch and display PR metadata via GitHub CLI
+  - All commands support `--format json` for machine-readable output
+
+- **Migrated Components** (from ace-git-diff):
+  - Atoms: CommandExecutor, DateResolver, DiffParser, PatternFilter
+  - Molecules: ConfigLoader, DiffFilter, DiffGenerator
+  - Organisms: DiffOrchestrator
+  - Models: DiffConfig, DiffResult
+  - Full backward compatibility with ace-git-diff functionality
+
+- **New Components**:
+  - `TaskPatternExtractor` atom: Extract task IDs from branch names (e.g., "140-feature" -> "140")
+  - `PrIdentifierParser` atom: Parse PR identifiers (number, owner/repo#number, GitHub URLs)
+  - `RepositoryStateDetector` atom: Detect repository state (:clean, :dirty, :rebasing, :merging)
+  - `RepositoryChecker` atom: Check repository type (normal, detached, bare, worktree)
+  - `GitScopeFilter` atom: Filter files by git scope (staged, tracked, changed)
+  - `BranchReader` molecule: Read branch info with tracking status
+  - `PrMetadataFetcher` molecule: Fetch PR metadata via gh CLI
+  - `RepoContextLoader` organism: Orchestrate complete context loading
+  - `RepoContext` model: Structured repository context with markdown/JSON output
+
+- **Dependencies**:
+  - Added `thor` (~> 1.3) for CLI framework
+  - Updated `ace-support-core` to ~> 0.11
+
+### Changed
+
+- Package now includes CLI executable (previously workflow-only)
+- Updated gemspec to include exe directory and thor dependency
+- Summary updated to reflect unified git operations
+
+### Migration Notes
+
+- This version consolidates functionality from ace-git-diff
+- ace-git-diff will be deprecated in favor of ace-git
+- Use `ace-git diff` instead of `ace-git-diff` for equivalent functionality
+- Existing ace-git workflows (wfi://rebase, wfi://create-pr, wfi://squash-pr) remain unchanged
+
 ## [0.2.2] - 2025-12-13
 
 ### Changed

@@ -1,4 +1,10 @@
 # frozen_string_literal: true
 
-require "minitest/autorun"
-require "yaml"
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+
+require "ace/test_support"
+require "ace/git"
+
+# Base test case for ace-git tests
+class AceGitTestCase < AceTestCase
+end
