@@ -7,45 +7,27 @@ class GitCommandTest < Minitest::Test
 
   def setup
     @git_command = Ace::Git::Worktree::Atoms::GitCommand
+    @ace_git_executor = Ace::Git::Atoms::CommandExecutor
   end
 
-  def test_current_branch_returns_branch_name
-    # Stub execute to return a branch name
-    @git_command.stub :execute, ->(*args, **opts) {
-      if args.include?("--show-current")
-        { success: true, output: "feature-branch\n", error: "", exit_code: 0 }
-      else
-        { success: false, output: "", error: "unexpected", exit_code: 1 }
-      end
-    } do
+  def test_current_branch_delegates_to_ace_git
+    # current_branch now simply delegates to ace-git's CommandExecutor
+    @ace_git_executor.stub :current_branch, "feature-branch" do
       result = @git_command.current_branch
       assert_equal "feature-branch", result
     end
   end
 
   def test_current_branch_returns_sha_when_detached
-    call_count = 0
-    @git_command.stub :execute, ->(*args, **opts) {
-      call_count += 1
-      if args.include?("--show-current")
-        # Empty output indicates detached HEAD
-        { success: true, output: "", error: "", exit_code: 0 }
-      elsif args.include?("rev-parse") && args.include?("HEAD")
-        { success: true, output: "abc123def456\n", error: "", exit_code: 0 }
-      else
-        { success: false, output: "", error: "unexpected", exit_code: 1 }
-      end
-    } do
+    # ace-git now handles detached HEAD and returns SHA directly
+    @ace_git_executor.stub :current_branch, "abc123def456" do
       result = @git_command.current_branch
       assert_equal "abc123def456", result
-      assert_equal 2, call_count, "Should call execute twice for detached HEAD"
     end
   end
 
   def test_current_branch_returns_nil_on_failure
-    @git_command.stub :execute, ->(*args, **opts) {
-      { success: false, output: "", error: "not a git repository", exit_code: 128 }
-    } do
+    @ace_git_executor.stub :current_branch, nil do
       result = @git_command.current_branch
       assert_nil result
     end
@@ -78,26 +60,16 @@ class GitCommandTest < Minitest::Test
   end
 
   def test_git_repository_check
-    @git_command.stub :execute, ->(*args, **opts) {
-      if args.include?("--git-dir")
-        { success: true, output: ".git\n", error: "", exit_code: 0 }
-      else
-        { success: false, output: "", error: "unexpected", exit_code: 1 }
-      end
-    } do
+    # Stub ace-git's in_git_repo? method
+    @ace_git_executor.stub :in_git_repo?, true do
       result = @git_command.git_repository?
       assert result, "Should return true when in git repository"
     end
   end
 
   def test_git_root_returns_path
-    @git_command.stub :execute, ->(*args, **opts) {
-      if args.include?("--show-toplevel")
-        { success: true, output: "/path/to/repo\n", error: "", exit_code: 0 }
-      else
-        { success: false, output: "", error: "unexpected", exit_code: 1 }
-      end
-    } do
+    # Stub ace-git's repo_root method
+    @ace_git_executor.stub :repo_root, "/path/to/repo" do
       result = @git_command.git_root
       assert_equal "/path/to/repo", result
     end
@@ -111,6 +83,54 @@ class GitCommandTest < Minitest::Test
     } do
       @git_command.worktree("add", "/path", "-b", "branch")
       assert_equal ["worktree", "add", "/path", "-b", "branch"], executed_args
+    end
+  end
+
+  def test_execute_delegates_to_ace_git_command_executor
+    # Verify execute properly delegates to ace-git's CommandExecutor
+    @ace_git_executor.stub :execute, ->(*args, **opts) {
+      { success: true, output: "test output", error: "", exit_code: 0 }
+    } do
+      result = @git_command.execute("status")
+      assert result[:success]
+      assert_equal "test output", result[:output]
+    end
+  end
+
+  def test_execute_passes_timeout_to_command_executor
+    # Verify timeout parameter is correctly forwarded to ace-git's CommandExecutor
+    captured_opts = nil
+    @ace_git_executor.stub :execute, ->(*args, **opts) {
+      captured_opts = opts
+      { success: true, output: "", error: "", exit_code: 0 }
+    } do
+      @git_command.execute("status", timeout: 60)
+      assert_equal 60, captured_opts[:timeout], "Timeout should be passed to CommandExecutor"
+    end
+  end
+
+  def test_execute_uses_default_timeout
+    # Verify default timeout is used when not specified
+    captured_opts = nil
+    @ace_git_executor.stub :execute, ->(*args, **opts) {
+      captured_opts = opts
+      { success: true, output: "", error: "", exit_code: 0 }
+    } do
+      @git_command.execute("status")
+      assert_equal Ace::Git::Worktree::Atoms::GitCommand::DEFAULT_TIMEOUT, captured_opts[:timeout],
+                   "Default timeout should be used"
+    end
+  end
+
+  def test_worktree_passes_timeout_to_execute
+    # Verify worktree method forwards timeout correctly
+    captured_opts = nil
+    @ace_git_executor.stub :execute, ->(*args, **opts) {
+      captured_opts = opts
+      { success: true, output: "", error: "", exit_code: 0 }
+    } do
+      @git_command.worktree("list", timeout: 45)
+      assert_equal 45, captured_opts[:timeout], "Timeout should be passed through worktree method"
     end
   end
 end
