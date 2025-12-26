@@ -894,8 +894,8 @@ class ReviewManagerTest < AceReviewTest
       return false if section == "defaults" && key == "auto_save_release_fallback"
       nil
     } do
-      # Stub GitBranchReader to return nil (no branch)
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, nil do
+      # Stub ace-git BranchReader to return nil (no branch)
+      Ace::Git::Molecules::BranchReader.stub :current_branch, nil do
         result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
         # Falls back to release, but release fallback is disabled
         assert_nil result, "Should return nil when no branch and release fallback disabled"
@@ -920,7 +920,7 @@ class ReviewManagerTest < AceReviewTest
       return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
       nil
     } do
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+      Ace::Git::Molecules::BranchReader.stub :current_branch, "126-feature" do
         Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
           { path: task_dir, task_id: task_id } if task_id == "126"
         } do
@@ -947,7 +947,7 @@ class ReviewManagerTest < AceReviewTest
       return false if section == "defaults" && key == "auto_save_release_fallback"
       nil
     } do
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+      Ace::Git::Molecules::BranchReader.stub :current_branch, "126-feature" do
         Ace::Review::Molecules::TaskResolver.stub :resolve, nil do
           output = capture_io do
             result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
@@ -973,7 +973,7 @@ class ReviewManagerTest < AceReviewTest
       nil
     } do
       # Branch doesn't match pattern (no task ID extractable)
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "main" do
+      Ace::Git::Molecules::BranchReader.stub :current_branch, "main" do
         result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
         # No task ID from "main", release fallback disabled
         assert_nil result
@@ -992,8 +992,8 @@ class ReviewManagerTest < AceReviewTest
       return false if section == "defaults" && key == "auto_save_release_fallback"
       nil
     } do
-      # Detached HEAD returns nil from GitBranchReader
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, nil do
+      # Detached HEAD returns nil from ace-git BranchReader
+      Ace::Git::Molecules::BranchReader.stub :current_branch, nil do
         result = @manager.send(:auto_save_review_if_enabled, review_data, review_file, options)
         assert_nil result, "Should handle detached HEAD gracefully"
       end
@@ -1014,7 +1014,7 @@ class ReviewManagerTest < AceReviewTest
       nil
     } do
       # No branch available
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, nil do
+      Ace::Git::Molecules::BranchReader.stub :current_branch, nil do
         Ace::Review::Molecules::TaskReportSaver.stub :save_to_release, ->(file, data) {
           { success: true, path: expected_path }
         } do
@@ -1039,7 +1039,7 @@ class ReviewManagerTest < AceReviewTest
       return true if section == "defaults" && key == "auto_save_release_fallback"
       nil
     } do
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+      Ace::Git::Molecules::BranchReader.stub :current_branch, "126-feature" do
         # Task resolution returns nil (not found)
         Ace::Review::Molecules::TaskResolver.stub :resolve, nil do
           Ace::Review::Molecules::TaskReportSaver.stub :save_to_release, ->(file, data) {
@@ -1072,7 +1072,7 @@ class ReviewManagerTest < AceReviewTest
       return true if section == "defaults" && key == "auto_save_release_fallback"
       nil
     } do
-      Ace::Review::Molecules::GitBranchReader.stub :current_branch, "126-feature" do
+      Ace::Git::Molecules::BranchReader.stub :current_branch, "126-feature" do
         Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
           { path: task_dir, task_id: task_id } if task_id == "126"
         } do

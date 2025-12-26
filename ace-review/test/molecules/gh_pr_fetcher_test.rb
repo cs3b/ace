@@ -3,7 +3,6 @@
 require 'test_helper'
 require 'ace/review/molecules/gh_pr_fetcher'
 require 'ace/review/molecules/gh_cli_executor'
-require 'ace/review/molecules/pr_identifier_parser'
 
 module Ace
   module Review
@@ -16,12 +15,11 @@ module Ace
 
         # Test: Fetch diff successfully
         def test_fetch_diff_success
-          # Mock parser
-          parsed = {
-            owner: "test", repo: "repo", number: 123,
-            gh_format: "test/repo#123"
-          }
-          PrIdentifierParser.stub(:parse, parsed) do
+          # Mock parser - ace-git PrIdentifierParser returns a Data object
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: "test/repo", gh_format: "test/repo#123"
+          )
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             # Mock executor
             result = { success: true, stdout: "diff content", stderr: "", exit_code: 0 }
             GhCliExecutor.stub(:execute, result) do
@@ -30,7 +28,7 @@ module Ace
               assert response[:success]
               assert_equal "diff content", response[:diff]
               assert_equal "test/repo#123", response[:identifier]
-              assert_equal parsed, response[:parsed]
+              assert_equal parsed.to_h, response[:parsed]
             end
           end
         end
@@ -38,10 +36,12 @@ module Ace
   
         # Test: Fetch metadata successfully
         def test_fetch_metadata_success
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
           metadata_json = '{"number":123,"state":"OPEN","isDraft":false,"title":"Test PR"}'
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             result = { success: true, stdout: metadata_json, stderr: "", exit_code: 0 }
             GhCliExecutor.stub(:execute, result) do
               response = @fetcher.fetch_metadata("123")
@@ -56,9 +56,11 @@ module Ace
 
         # Test: Fetch metadata with JSON parse error
         def test_fetch_metadata_json_parse_error
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             result = { success: true, stdout: "invalid json", stderr: "", exit_code: 0 }
             GhCliExecutor.stub(:execute, result) do
               response = @fetcher.fetch_metadata("123")
@@ -71,10 +73,12 @@ module Ace
 
         # Test: Fetch both diff and metadata
         def test_fetch_pr_complete
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
           metadata_json = '{"number":123,"state":"OPEN"}'
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             call_count = 0
             GhCliExecutor.stub(:execute, ->(*args) {
               call_count += 1
@@ -95,11 +99,13 @@ module Ace
 
         # Test: Retry logic with transient failure
         def test_retry_with_backoff_succeeds_on_retry
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
           # Stub sleep to avoid actual delay in tests
           Ace::Review::Atoms::RetryWithBackoff.stub :sleep, ->(_time) {} do
-            PrIdentifierParser.stub(:parse, parsed) do
+            Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
               attempt = 0
               GhCliExecutor.stub(:execute, ->(*args) {
                 attempt += 1
@@ -167,9 +173,11 @@ module Ace
 
         # Test: Authentication error re-raised
         def test_fetch_diff_reraises_authentication_error
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             assert_raises(Ace::Review::Errors::GhAuthenticationError) do
               GhCliExecutor.stub(:execute, ->(*args) {
                 raise Ace::Review::Errors::GhAuthenticationError
@@ -182,9 +190,11 @@ module Ace
 
         # Test: CLI not installed error re-raised
         def test_fetch_diff_reraises_cli_not_installed
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             assert_raises(Ace::Review::Errors::GhCliNotInstalledError) do
               GhCliExecutor.stub(:execute, ->(*args) {
                 raise Ace::Review::Errors::GhCliNotInstalledError
@@ -197,9 +207,11 @@ module Ace
 
         # Test: Standard error caught and wrapped
         def test_fetch_diff_catches_standard_error
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             GhCliExecutor.stub(:execute, ->(*args) {
               raise StandardError, "unexpected error"
             }) do
@@ -219,9 +231,11 @@ module Ace
           # This ensures backoff never exceeds max_backoff
 
           # We test the logic works by checking code path
-          parsed = { owner: "test", repo: "repo", number: 123, gh_format: "123" }
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "123", repo: nil, gh_format: "123"
+          )
 
-          PrIdentifierParser.stub(:parse, parsed) do
+          Ace::Git::Atoms::PrIdentifierParser.stub(:parse, parsed) do
             # Succeed immediately to avoid long sleep times in tests
             result = { success: true, stdout: "diff", stderr: "", exit_code: 0 }
 

@@ -22,9 +22,9 @@ module Ace
             return { success: false, error: "Commit SHA or message required" }
           end
 
-          # Parse identifier
-          parsed = Ace::Review::Molecules::PrIdentifierParser.parse(pr_identifier)
-          gh_format = parsed[:gh_format]
+          # Parse identifier using ace-git
+          parsed = Ace::Git::Atoms::PrIdentifierParser.parse(pr_identifier)
+          gh_format = parsed.gh_format
 
           # Build message
           short_sha = commit_sha.to_s[0..6]

@@ -156,8 +156,12 @@ module Ace
             }
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", nil, message: "Custom message without SHA")
 
               assert result[:success]
@@ -176,8 +180,12 @@ module Ace
             end
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234")
 
               assert result[:success]
@@ -195,8 +203,12 @@ module Ace
             }
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234", message: "Custom fix message")
 
               assert result[:success]
@@ -228,8 +240,12 @@ module Ace
             }
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, custom_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("69", "abc1234567890full")
 
               assert result[:success]
@@ -246,8 +262,12 @@ module Ace
             }
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "invalid", repo: nil, gh_format: "invalid"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "invalid" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply("invalid", "abc123")
 
               refute result[:success]
@@ -277,8 +297,12 @@ module Ace
             end
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
               assert result[:success]
@@ -297,8 +321,12 @@ module Ace
             }
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123")
 
               assert result[:success]
@@ -316,8 +344,12 @@ module Ace
             }
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
               refute result[:success]
@@ -344,8 +376,12 @@ module Ace
             end
           end
 
+          parsed = Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+            number: "69", repo: nil, gh_format: "69"
+          )
+
           GhCliExecutor.stub :execute, mock_executor do
-            PrIdentifierParser.stub :parse, { gh_format: "69" } do
+            Ace::Git::Atoms::PrIdentifierParser.stub :parse, parsed do
               result = GhCommentResolver.reply_and_resolve("69", "abc123", thread_id: "PRRT_test123")
 
               # Reply succeeded, but thread resolution failed
