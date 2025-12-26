@@ -1,0 +1,197 @@
+# ace-git Usage Guide
+
+Unified git operations for the ACE toolkit.
+
+## Installation
+
+```bash
+# In Gemfile
+gem 'ace-git'
+
+# Or install directly
+gem install ace-git
+```
+
+## Commands
+
+### `ace-git diff [RANGE]`
+
+Generate git diff with configurable filtering and formatting.
+
+```bash
+# Smart defaults (unstaged changes OR branch diff)
+ace-git diff
+ace-git diff --since "7d"
+
+# Specific range
+ace-git diff HEAD~10..HEAD
+ace-git diff origin/main...HEAD
+
+# Time-based filtering
+ace-git diff --since "1 week ago"
+ace-git diff --since "2025-01-01"
+
+# Path filtering (glob patterns)
+ace-git diff --paths "lib/**/*.rb" "src/**/*.js"
+ace-git diff --exclude "test/**/*" "vendor/**/*"
+
+# Save to file
+ace-git diff --output changes.diff
+ace-git diff HEAD~5..HEAD --output /tmp/my-changes.diff
+
+# Summary format (human-readable)
+ace-git diff --format summary
+
+# Raw unfiltered diff
+ace-git diff --raw
+```
+
+**Options:**
+- `--format, -f` - Output format: `diff` (default), `summary`
+- `--since, -s` - Changes since date/duration (e.g., "7d", "1 week ago")
+- `--paths, -p` - Include only these glob patterns
+- `--exclude, -e` - Exclude these glob patterns
+- `--output, -o` - Write diff to file instead of stdout
+- `--config, -c` - Load config from specific file
+- `--raw` - Raw unfiltered output (no exclusions)
+
+### `ace-git status`
+
+Display comprehensive repository context including current branch, associated PR information, recent commits, and PR activity (merged/open PRs).
+
+```bash
+# Full status output (markdown)
+ace-git status
+
+# Skip PR lookups (faster, local-only)
+ace-git status --no-pr
+ace-git status -n
+
+# Control recent commits shown
+ace-git status --commits 5    # Show 5 recent commits
+ace-git status --commits 0    # Disable recent commits
+
+# JSON output
+ace-git status --format json
+
+# Include PR diff in output
+ace-git status --with-diff
+```
+
+**Options:**
+- `--format, -f` - Output format: `markdown` (default), `json`
+- `--no-pr, -n` - Skip PR metadata and activity lookups (faster)
+- `--commits N` - Number of recent commits to show (default: 3 from config)
+- `--with-diff` - Include PR diff in output
+
+**Output includes:**
+- Current branch name with git status -sb output
+- Remote tracking status (ahead/behind)
+- Detected task pattern (from branch name)
+- Recent commits (configurable count)
+- Associated PR metadata (if found)
+- PR activity: recently merged PRs and open PRs
+
+### `ace-git branch`
+
+Display current branch name and remote tracking status.
+
+```bash
+ace-git branch
+# Output: 140-feature-name (tracking: origin/140-feature-name)
+
+ace-git branch --format json
+# Output: {"name":"140-feature-name","tracking":"origin/140-feature-name"}
+```
+
+**Options:**
+- `--format, -f` - Output format: `text` (default), `json`
+
+### `ace-git pr [NUMBER]`
+
+Fetch and display PR metadata using GitHub CLI.
+
+```bash
+# Auto-detect PR from current branch
+ace-git pr
+
+# Specific PR number
+ace-git pr 123
+
+# Cross-repository PR
+ace-git pr owner/repo#456
+
+# JSON output
+ace-git pr --format json
+```
+
+**Options:**
+- `--format, -f` - Output format: `markdown` (default), `json`
+- `--with-diff` - Include PR diff in output
+
+**PR Number Formats:**
+- Simple number: `123`
+- Qualified: `owner/repo#456`
+- GitHub URL: `https://github.com/owner/repo/pull/789`
+
+**Requirements:** GitHub CLI (`gh`) must be installed and authenticated.
+
+```bash
+# Install gh
+brew install gh
+
+# Authenticate
+gh auth login
+```
+
+## Configuration
+
+ace-git uses the ACE configuration cascade:
+
+- **Global config:** `~/.ace/git/config.yml`
+- **Project config:** `.ace/git/config.yml`
+- **Example config:** `ace-git/.ace.example/git/config.yml`
+
+### Example Configuration
+
+```yaml
+# .ace/git/config.yml
+diff:
+  exclude_patterns:
+    - "vendor/**/*"
+    - "node_modules/**/*"
+    - "*.lock"
+  exclude_whitespace: true
+  exclude_renames: false
+  max_lines: 10000
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `exclude_patterns` | Array | See below | Glob patterns to exclude from diff |
+| `exclude_whitespace` | Boolean | `true` | Ignore whitespace-only changes |
+| `exclude_renames` | Boolean | `false` | Exclude renamed files from diff |
+| `exclude_moves` | Boolean | `false` | Exclude moved files from diff |
+| `max_lines` | Integer | `10000` | Maximum lines in diff output |
+| `timeout` | Integer | `30` | Command timeout in seconds |
+
+**Default exclude_patterns** (from `.ace.example/git/config.yml`):
+- Lock files: `**/*.lock`, `package-lock.json`, `yarn.lock`, `Gemfile.lock`
+- Vendored deps: `vendor/**/*`, `node_modules/**/*`
+- Build artifacts: `coverage/**/*`, `dist/**/*`, `build/**/*`, `.cache/**/*`
+- Test fixtures: `**/fixtures/**/*`, `**/testdata/**/*`
+
+Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are typically important to review.
+
+## Exit Codes
+
+- `0` - Success
+- `1` - Error (configuration error, git error, etc.)
+
+## Related Tools
+
+- **ace-git-diff** - *Deprecated: Use `ace-git diff` instead*
+- **ace-git-commit** - Smart git commit generation
+- **ace-git-worktree** - Git worktree management

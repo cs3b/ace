@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/git"
+require_relative "../lib/ace/git/cli"
+
+# Thor.start returns nil for help and other commands, or the command's return value
+result = Ace::Git::CLI.start(ARGV)
+
+# Exit with the result code if it's an integer, otherwise 0
+exit(result.is_a?(Integer) ? result : 0)

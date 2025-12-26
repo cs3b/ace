@@ -4,8 +4,15 @@ Git workflow instructions for ACE projects - comprehensive guidance for rebase o
 
 ## Overview
 
-ace-git is a workflow-first gem that provides three essential git workflows for developers and AI agents:
+ace-git is a workflow-first gem that provides essential git workflows and context commands for developers and AI agents:
 
+**CLI Commands:**
+- **Status** (`ace-git status`): Repository context with branch, PR, and activity information
+- **Diff** (`ace-git diff`): Smart diff with filtering and configuration
+- **Branch** (`ace-git branch`): Current branch with tracking status
+- **PR** (`ace-git pr`): PR metadata lookup
+
+**Workflows:**
 - **Rebase Workflow** (`wfi://rebase`): Changelog-preserving rebase operations
 - **PR Creation Workflow** (`wfi://create-pr`): Pull request creation with structured templates
 - **Squash Workflow** (`wfi://squash-pr`): Version-based commit squashing for clean history
