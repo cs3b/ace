@@ -1,6 +1,6 @@
 test_suite:
   # Maximum parallel processes
-  max_parallel: 10
+  max_parallel: 20
 
   # Packages to test in order of priority
   packages:
@@ -81,6 +81,26 @@ test_suite:
 
     - name: ace-git
       path: ace-git
+      group: tools
+      priority: 3
+
+    - name: ace-git-secrets
+      path: ace-git-secrets
+      group: tools
+      priority: 3
+
+    - name: ace-handbook
+      path: ace-handbook
+      group: tools
+      priority: 3
+
+    - name: ace-integration-claude
+      path: ace-integration-claude
+      group: tools
+      priority: 3
+
+    - name: ace-prompt
+      path: ace-prompt
       group: tools
       priority: 3
 

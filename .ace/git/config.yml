@@ -1,0 +1,5 @@
+git:
+  status:
+    commits_limit: 7      # Recent commits
+    merged_prs_limit: 5   # Recently merged PRs
+    open_prs_limit: 10    # Open PRs from others
