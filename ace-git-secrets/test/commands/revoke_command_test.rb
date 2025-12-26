@@ -33,11 +33,11 @@ class RevokeCommandTest < GitSecretsTestCase
     mock_api_client = MockApiClient.new
     mock_api_client.github_response = { success: false, message: "Mocked - no real revocation" }
 
-    # Test using direct token instead of scanning to avoid gitleaks dependency
+    # Test using direct token with proper GitHub PAT format
     Ace::Git::Secrets::Atoms::ServiceApiClient.stub :new, ->(**_opts) { mock_api_client } do
       output, = capture_io do
         Ace::Git::Secrets::Commands::RevokeCommand.execute(
-          token: "literal:[REDACTED:github-pat]"
+          token: "ghp_test_example_token_for_revoke_1234567890AB"
         )
       end
 
@@ -72,11 +72,11 @@ class RevokeCommandTest < GitSecretsTestCase
     mock_api_client = MockApiClient.new
     mock_api_client.github_response = { success: true, message: "Token revoked" }
 
-    # Test using direct token instead of scanning to avoid gitleaks dependency
+    # Test using direct token with proper GitHub PAT format
     Ace::Git::Secrets::Atoms::ServiceApiClient.stub :new, ->(**_opts) { mock_api_client } do
       output, = capture_io do
         Ace::Git::Secrets::Commands::RevokeCommand.execute(
-          token: "literal:[REDACTED:github-pat]",
+          token: "ghp_test_example_token_for_filter_1234567890AB",
           service: "github"
         )
       end

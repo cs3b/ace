@@ -42,7 +42,7 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
     secret_content = <<~CONTENT
       # Configuration
       DATABASE_URL=postgres://localhost:5432/mydb
-      GITHUB_TOKEN=literal:[REDACTED:github-pat]
+      GITHUB_TOKEN=ghp_test_token_for_full_scan_workflow_1234567890AB
     CONTENT
 
     create_commit(@temp_repo, "config.env", secret_content, "Add config with secret")
@@ -51,7 +51,8 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
     report = nil
     capture_io do
       auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-        repository_path: @temp_repo
+        repository_path: @temp_repo,
+        gitleaks_config: test_gitleaks_config
       )
       report = auditor.audit(min_confidence: "low")
     end
@@ -65,71 +66,78 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
 
     # Also verify CLI output for user-facing behavior
     # Note: With new output behavior, summary goes to stdout and full report to file
-    cli_output, = capture_io do
-      exit_code = Ace::Git::Secrets::Commands::ScanCommand.execute(
-        format: "table",
-        confidence: "low"
-      )
-      assert_equal 1, exit_code, "Scan should return 1 when secrets found"
+    with_test_gitleaks_config do
+      cli_output, = capture_io do
+        exit_code = Ace::Git::Secrets::Commands::ScanCommand.execute(
+          format: "table",
+          confidence: "low"
+        )
+        assert_equal 1, exit_code, "Scan should return 1 when secrets found"
+      end
+
+      # Summary output includes token counts and alert
+      assert_match(/Tokens found:/i, cli_output)
+      assert_match(/SECURITY ALERT/i, cli_output)
+
+      # Verify the saved report file contains the details
+      cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
+      json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
+      assert json_files.any?, "Report file should be saved"
     end
-
-    # Summary output includes token counts and alert
-    assert_match(/Tokens found:/i, cli_output)
-    assert_match(/SECURITY ALERT/i, cli_output)
-
-    # Verify the saved report file contains the details
-    cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
-    json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
-    assert json_files.any?, "Report file should be saved"
   end
 
   def test_scan_with_json_output
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    create_commit(@temp_repo, "secret.txt", "TOKEN=ghp_test_token_json_output_1234567890AB", "Add secret")
 
-    output, = capture_io do
-      Ace::Git::Secrets::Commands::ScanCommand.execute(
-        report_format: "json"
-      )
+    with_test_gitleaks_config do
+      output, = capture_io do
+        Ace::Git::Secrets::Commands::ScanCommand.execute(
+          report_format: "json"
+        )
+      end
+
+      # New behavior: JSON saved to file, summary to stdout
+      assert_match(/Report saved:.*\.json/, output)
+
+      # Parse JSON from saved file
+      cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
+      json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
+      assert json_files.any?, "JSON report file should exist"
+
+      json_content = File.read(json_files.first)
+      json_data = JSON.parse(json_content)
+      # At least one token should be found
+      assert json_data["summary"]["total_tokens"] >= 1, "Should find at least one token"
     end
-
-    # New behavior: JSON saved to file, summary to stdout
-    assert_match(/Report saved:.*\.json/, output)
-
-    # Parse JSON from saved file
-    cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
-    json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
-    assert json_files.any?, "JSON report file should exist"
-
-    json_content = File.read(json_files.first)
-    json_data = JSON.parse(json_content)
-    # At least one token should be found
-    assert json_data["summary"]["total_tokens"] >= 1, "Should find at least one token"
   end
 
   def test_scan_verbose_format_json_outputs_to_stdout
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    create_commit(@temp_repo, "secret.txt", "TOKEN=ghp_test_token_verbose_json_1234567890AB", "Add secret")
 
-    output, = capture_io do
-      Ace::Git::Secrets::Commands::ScanCommand.execute(
-        format: "json",
-        verbose: true
-      )
+    with_test_gitleaks_config do
+      output, = capture_io do
+        Ace::Git::Secrets::Commands::ScanCommand.execute(
+          format: "json",
+          verbose: true
+        )
+      end
+
+      # In verbose mode with --format json, the full JSON report goes to stdout
+      assert_match(/"scan_metadata"/, output)
+      assert_match(/"tokens"/, output)
     end
-
-    # In verbose mode with --format json, the full JSON report goes to stdout
-    assert_match(/"scan_metadata"/, output)
-    assert_match(/"tokens"/, output)
   end
 
   def test_scan_with_confidence_filtering
     # Create secrets with different confidence levels
-    create_commit(@temp_repo, "high.txt", "TOKEN=literal:[REDACTED:github-pat]", "High confidence")
+    create_commit(@temp_repo, "high.txt", "TOKEN=ghp_test_token_confidence_filter_1234567890AB", "High confidence")
 
     # High confidence only
     high_report = nil
     capture_io do
       auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-        repository_path: @temp_repo
+        repository_path: @temp_repo,
+        gitleaks_config: test_gitleaks_config
       )
       high_report = auditor.audit(min_confidence: "high")
     end
@@ -139,13 +147,14 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
 
   def test_scan_respects_since_option
     # Create a commit
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    create_commit(@temp_repo, "secret.txt", "TOKEN=ghp_test_token_since_option_1234567890AB", "Add secret")
 
     # Test that since option is accepted without errors
     report = nil
     capture_io do
       auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-        repository_path: @temp_repo
+        repository_path: @temp_repo,
+        gitleaks_config: test_gitleaks_config
       )
       # Use a date format that gitleaks accepts
       report = auditor.audit(since: "2020-01-01")
@@ -165,7 +174,7 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
 
     # Create secret in test directory
     Dir.chdir(@temp_repo) do
-      File.write("test/mock_tokens.json", '{"token": "literal:[REDACTED:github-pat]"}')
+      File.write("test/mock_tokens.json", '{"token": "ghp_test_whitelist_filter_1234567890AB"}')
       system("git add test/mock_tokens.json")
       system("git commit -q -m 'Test fixture'")
     end
@@ -179,6 +188,7 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
     capture_io do
       auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
         repository_path: @temp_repo,
+        gitleaks_config: test_gitleaks_config,
         whitelist: whitelist
       )
       report = auditor.audit
@@ -196,29 +206,31 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
 
     # Create secret in test directory (will be whitelisted)
     Dir.chdir(@temp_repo) do
-      File.write("test/mock_tokens.json", '{"token": "literal:[REDACTED:github-pat]"}')
+      File.write("test/mock_tokens.json", '{"token": "ghp_test_whitelist_display_1234567890AB"}')
       system("git add test/mock_tokens.json")
       system("git commit -q -m 'Test fixture'")
     end
 
     # Also create a real secret (will NOT be whitelisted)
-    create_commit(@temp_repo, "config.env", "API_KEY=literal:[REDACTED:generic-api-key]", "Add real config")
+    create_commit(@temp_repo, "config.env", "API_KEY=ghp_test_real_secret_display_1234567890AB", "Add real config")
 
     # Set up whitelist via config stub
     config_with_whitelist = Ace::Git::Secrets.config.merge(
       "whitelist" => [{ "file" => "test/*", "reason" => "Test fixtures" }]
     )
 
-    Ace::Git::Secrets.stub :config, config_with_whitelist do
-      output, = capture_io do
-        exit_code = Ace::Git::Secrets::Commands::ScanCommand.execute({})
-        # Should find the real token (exit code 1)
-        assert_equal 1, exit_code
-      end
+    with_test_gitleaks_config do
+      Ace::Git::Secrets.stub :config, config_with_whitelist do
+        output, = capture_io do
+          exit_code = Ace::Git::Secrets::Commands::ScanCommand.execute({})
+          # Should find the real token (exit code 1)
+          assert_equal 1, exit_code
+        end
 
-      # Output should mention whitelisted tokens
-      # (count may vary due to git history, so we just check the message format)
-      assert_match(/Whitelisted.*token.*excluded by whitelist/i, output)
+        # Output should mention whitelisted tokens
+        # (count may vary due to git history, so we just check the message format)
+        assert_match(/Whitelisted.*token.*excluded by whitelist/i, output)
+      end
     end
   end
 
@@ -232,7 +244,7 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
     Ace::Git::Secrets::Atoms::ServiceApiClient.stub :new, ->(**_) { mock_client } do
       output, = capture_io do
         exit_code = Ace::Git::Secrets::Commands::RevokeCommand.execute(
-          token: "literal:[REDACTED:github-pat]"
+          token: "ghp_test_revoke_integration_1234567890AB"
         )
         assert_equal 0, exit_code
       end
@@ -244,38 +256,42 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
 
   def test_rewrite_dry_run_integration
     # Ensure the file is not in an excluded directory
-    create_commit(@temp_repo, "config.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    create_commit(@temp_repo, "config.txt", "TOKEN=ghp_test_rewrite_dry_run_1234567890AB", "Add secret")
 
     # First verify the token is detected
     capture_io do
       scanner = Ace::Git::Secrets::Molecules::HistoryScanner.new(
-        repository_path: @temp_repo
+        repository_path: @temp_repo,
+        gitleaks_config: test_gitleaks_config
       )
       report = scanner.scan(min_confidence: "high")
       assert report.tokens.any?, "Should detect the GitHub token"
     end
 
     # Use helper to stub git-filter-repo availability
-    with_rewriter_availability(true) do
-      output, = capture_io do
-        exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
-          dry_run: true
-        )
-        assert_equal 0, exit_code
-      end
+    with_test_gitleaks_config do
+      with_rewriter_availability(true) do
+        output, = capture_io do
+          exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+            dry_run: true
+          )
+          assert_equal 0, exit_code
+        end
 
-      assert_match(/DRY RUN/i, output)
-      assert_match(/ghp_/i, output)
+        assert_match(/DRY RUN/i, output)
+        assert_match(/ghp_/i, output)
+      end
     end
   end
 
   def test_scan_json_output_includes_raw_values_for_revocation
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    create_commit(@temp_repo, "secret.txt", "TOKEN=ghp_test_json_raw_values_1234567890AB", "Add secret")
 
     report = nil
     capture_io do
       auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-        repository_path: @temp_repo
+        repository_path: @temp_repo,
+        gitleaks_config: test_gitleaks_config
       )
       report = auditor.audit
     end
@@ -295,37 +311,39 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
   def test_scan_file_workflow_saves_with_raw_values_for_revocation
     # This test guards the contract between scan output and revoke/rewrite-history input
     # Critical: saved reports must include raw_value for downstream commands to function
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    create_commit(@temp_repo, "secret.txt", "TOKEN=ghp_test_scan_file_workflow_1234567890AB", "Add secret")
 
     # Run scan to generate report file
-    capture_io do
-      Ace::Git::Secrets::Commands::ScanCommand.execute(
-        report_format: "json"
-      )
+    with_test_gitleaks_config do
+      capture_io do
+        Ace::Git::Secrets::Commands::ScanCommand.execute(
+          report_format: "json"
+        )
+      end
+
+      # Find the saved report file
+      cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
+      json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
+      assert json_files.any?, "Scan should save a JSON report file"
+
+      scan_file = json_files.first
+
+      # Verify saved report structure (even if empty, structure should be correct)
+      saved_data = JSON.parse(File.read(scan_file))
+      assert saved_data.key?("tokens"), "Report must have tokens key"
+      assert saved_data.key?("scan_metadata"), "Report must have scan_metadata"
+
+      # If tokens were found, verify they have raw_value
+      if saved_data["tokens"].any?
+        token = saved_data["tokens"].first
+        assert token.key?("raw_value"), "Saved report must include raw_value"
+        assert token["raw_value"].start_with?("ghp_"), "raw_value should be the actual token"
+
+        # Verify token_type is set (gitleaks uses "github-pat")
+        assert token.key?("token_type"), "Token must have token_type"
+      end
+      # Note: Revoke via scan file tested separately in revoke_command_test.rb
     end
-
-    # Find the saved report file
-    cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
-    json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
-    assert json_files.any?, "Scan should save a JSON report file"
-
-    scan_file = json_files.first
-
-    # Verify saved report structure (even if empty, structure should be correct)
-    saved_data = JSON.parse(File.read(scan_file))
-    assert saved_data.key?("tokens"), "Report must have tokens key"
-    assert saved_data.key?("scan_metadata"), "Report must have scan_metadata"
-
-    # If tokens were found, verify they have raw_value
-    if saved_data["tokens"].any?
-      token = saved_data["tokens"].first
-      assert token.key?("raw_value"), "Saved report must include raw_value"
-      assert token["raw_value"].start_with?("ghp_"), "raw_value should be the actual token"
-
-      # Verify token_type is set (gitleaks uses "github-pat")
-      assert token.key?("token_type"), "Token must have token_type"
-    end
-    # Note: Revoke via scan file tested separately in revoke_command_test.rb
   end
 
   def test_revoke_scan_file_fails_gracefully_without_raw_values
