@@ -44,11 +44,13 @@ class CLITest < GitSecretsTestCase
     # Use high-entropy token that gitleaks will detect
     create_commit(@temp_repo, "secret.txt", "API_KEY=literal:[REDACTED:github-pat]", "Add secret")
 
-    capture_io do
-      Ace::Git::Secrets::CLI.start(["scan"])
-    end
+    with_test_gitleaks_config do
+      capture_io do
+        Ace::Git::Secrets::CLI.start(["scan"])
+      end
 
-    assert_equal 1, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 1, Ace::Git::Secrets::CLI.last_exit_code
+    end
   end
 
   def test_version_command
@@ -120,11 +122,13 @@ class CLITest < GitSecretsTestCase
     # Use high-entropy token that gitleaks will detect
     create_commit(@temp_repo, "secret.txt", "API_KEY=literal:[REDACTED:github-pat]", "Add secret")
 
-    capture_io do
-      Ace::Git::Secrets::CLI.start(["check-release"])
-    end
+    with_test_gitleaks_config do
+      capture_io do
+        Ace::Git::Secrets::CLI.start(["check-release"])
+      end
 
-    assert_equal 1, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 1, Ace::Git::Secrets::CLI.last_exit_code
+    end
   end
 
   def test_verbose_option_exists

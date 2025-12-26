@@ -19,15 +19,17 @@ class RewriteCommandTest < GitSecretsTestCase
     # Use high-entropy token that gitleaks will detect
     create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
 
-    with_rewriter_availability(true) do
-      output, = capture_io do
-        exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
-          dry_run: true
-        )
-        assert_equal 0, exit_code
-      end
+    with_test_gitleaks_config do
+      with_rewriter_availability(true) do
+        output, = capture_io do
+          exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+            dry_run: true
+          )
+          assert_equal 0, exit_code
+        end
 
-      assert_match(/DRY RUN/i, output)
+        assert_match(/DRY RUN/i, output)
+      end
     end
   end
 
@@ -45,12 +47,14 @@ class RewriteCommandTest < GitSecretsTestCase
     begin
       $stdin = mock_stdin
 
-      with_rewriter_availability(true) do
-        output, = capture_io do
-          exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
-            force: false,
-            backup: false
-          )
+      with_test_gitleaks_config do
+        with_rewriter_availability(true) do
+          output, = capture_io do
+            exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+              force: false,
+              backup: false
+            )
+          end
         end
       end
     ensure
@@ -66,15 +70,17 @@ class RewriteCommandTest < GitSecretsTestCase
     # Use high-entropy token that gitleaks will detect
     create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
 
-    with_rewriter_availability(false) do
-      output, = capture_io do
-        exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
-          force: true
-        )
-        assert_equal 1, exit_code
-      end
+    with_test_gitleaks_config do
+      with_rewriter_availability(false) do
+        output, = capture_io do
+          exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+            force: true
+          )
+          assert_equal 1, exit_code
+        end
 
-      assert_match(/git-filter-repo is required/i, output)
+        assert_match(/git-filter-repo is required/i, output)
+      end
     end
   end
 

@@ -121,19 +121,27 @@ module Ace
       # @note Thread Safety: This method uses the same mutex as config to ensure
       #   thread-safe initialization. Like config, it should be preloaded before
       #   spawning threads (the CLI does this automatically via CLI.start).
+      # @note Environment Variable: Set ACE_GITLEAKS_CONFIG_PATH to override
+      #   automatic config discovery (useful for testing).
       # @return [String, nil] Path to gitleaks config, or nil if not found
       def self.gitleaks_config_path
         @config_mutex.synchronize do
           @gitleaks_config_path ||= begin
-            # Check user config first (project .ace/)
-            user_path = find_user_gitleaks_config
-            if user_path && File.exist?(user_path)
-              user_path
+            # Check environment variable override first (useful for testing)
+            env_path = ENV["ACE_GITLEAKS_CONFIG_PATH"]
+            if env_path && File.exist?(env_path)
+              env_path
             else
-              # Fall back to gem defaults
-              gem_root = File.expand_path("../../..", __dir__)
-              example_path = File.join(gem_root, ".ace.example", "git-secrets", "gitleaks.toml")
-              File.exist?(example_path) ? example_path : nil
+              # Check user config first (project .ace/)
+              user_path = find_user_gitleaks_config
+              if user_path && File.exist?(user_path)
+                user_path
+              else
+                # Fall back to gem defaults
+                gem_root = File.expand_path("../../..", __dir__)
+                example_path = File.join(gem_root, ".ace.example", "git-secrets", "gitleaks.toml")
+                File.exist?(example_path) ? example_path : nil
+              end
             end
           end
         end

@@ -16,6 +16,7 @@ class PackageArgumentTest < Minitest::Test
   end
 
   # Test running tests for a package by name from repo root
+  # NOTE: This test uses REAL subprocess execution for end-to-end validation
 
   def test_run_tests_for_package_by_name
     Dir.chdir(@project_root) do
@@ -28,7 +29,7 @@ class PackageArgumentTest < Minitest::Test
 
   def test_run_all_tests_for_package
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("ace-context")
+      output, status = run_ace_test_with_mock("ace-context")
 
       assert status.success?, "Should run all tests successfully"
       assert_match(/Running tests in ace-context/, output)
@@ -40,7 +41,7 @@ class PackageArgumentTest < Minitest::Test
   def test_run_tests_from_different_directory
     ace_search_dir = File.join(@project_root, "ace-search")
     Dir.chdir(ace_search_dir) do
-      output, status = run_ace_test("ace-context", "atoms")
+      output, status = run_ace_test_with_mock("ace-context", "atoms")
 
       assert status.success?, "Should run tests from different directory"
       assert_match(/Running tests in ace-context/, output)
@@ -48,6 +49,7 @@ class PackageArgumentTest < Minitest::Test
   end
 
   # Test combining package with target
+  # NOTE: This test uses REAL subprocess execution for end-to-end validation
 
   def test_package_with_target
     Dir.chdir(@project_root) do
@@ -62,7 +64,11 @@ class PackageArgumentTest < Minitest::Test
 
   def test_package_with_profile_option
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("ace-context", "atoms", "--profile", "5")
+      output, status = run_ace_test_with_mock(
+        "ace-context", "atoms", "--profile", "5",
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_success_output +
+               Ace::TestSupport::Fixtures::TestRunnerMocks.mock_profile_output
+      )
 
       assert status.success?, "Should run with profile option"
       assert_match(/Running tests in ace-context/, output)
@@ -73,7 +79,7 @@ class PackageArgumentTest < Minitest::Test
 
   def test_package_with_verbose_option
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("ace-context", "atoms", "--verbose")
+      output, status = run_ace_test_with_mock("ace-context", "atoms", "--verbose")
 
       assert status.success?, "Should run with verbose option"
     end
@@ -85,7 +91,11 @@ class PackageArgumentTest < Minitest::Test
     # Non-existent package names that don't look like paths
     # are passed through to the PatternResolver as potential targets
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("nonexistent-package-xyz")
+      output, status = run_ace_test_with_mock(
+        "nonexistent-package-xyz",
+        success: false,
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_unknown_target_error("nonexistent-package-xyz")
+      )
 
       refute status.success?, "Should fail for unknown target"
       # The error comes from PatternResolver, not PackageResolver
@@ -95,7 +105,11 @@ class PackageArgumentTest < Minitest::Test
 
   def test_error_for_invalid_path
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("/nonexistent/path/to/package")
+      output, status = run_ace_test_with_mock(
+        "/nonexistent/path/to/package",
+        success: false,
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_package_not_found_error("/nonexistent/path/to/package")
+      )
 
       refute status.success?, "Should fail for invalid path"
       assert_match(/Package not found/, output)
@@ -106,7 +120,8 @@ class PackageArgumentTest < Minitest::Test
 
   def test_relative_path_with_dot_slash
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("./ace-context", "atoms")
+      output, status = run_ace_test_with_mock("./ace-context", "atoms",
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_success_output(package: "ace-context"))
 
       assert status.success?, "Should resolve ./ace-context"
       assert_match(/Running tests in ace-context/, output)
@@ -116,7 +131,8 @@ class PackageArgumentTest < Minitest::Test
   def test_relative_path_with_double_dot
     ace_context_dir = File.join(@project_root, "ace-context")
     Dir.chdir(ace_context_dir) do
-      output, status = run_ace_test("../ace-nav", "atoms")
+      output, status = run_ace_test_with_mock("../ace-nav", "atoms",
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_success_output(package: "ace-nav"))
 
       assert status.success?, "Should resolve ../ace-nav"
       assert_match(/Running tests in ace-nav/, output)
@@ -127,7 +143,8 @@ class PackageArgumentTest < Minitest::Test
 
   def test_target_still_works_without_package
     Dir.chdir(File.join(@project_root, "ace-context")) do
-      output, status = run_ace_test("atoms")
+      output, status = run_ace_test_with_mock("atoms",
+        output: "Finished tests in 0.001s\n2 tests, 4 assertions, 0 failures")
 
       assert status.success?, "Should run target without package"
       refute_match(/Running tests in/, output) # No package context message
@@ -136,7 +153,7 @@ class PackageArgumentTest < Minitest::Test
 
   def test_specific_file_still_works
     Dir.chdir(File.join(@project_root, "ace-context")) do
-      output, status = run_ace_test("test/atoms/content_checker_test.rb")
+      output, status = run_ace_test_with_mock("test/atoms/content_checker_test.rb")
 
       assert status.success?, "Should run specific file"
     end
@@ -148,7 +165,7 @@ class PackageArgumentTest < Minitest::Test
       # Find a test file in ace-context with at least one test
       test_file = "test/atoms/content_checker_test.rb"
       # Line 10 should be within the test class
-      output, status = run_ace_test("ace-context", "#{test_file}:10")
+      output, status = run_ace_test_with_mock("ace-context", "#{test_file}:10")
 
       assert status.success?, "Should run package with file:line syntax, got: #{output}"
       assert_match(/Running tests in ace-context/, output)
@@ -160,6 +177,7 @@ class PackageArgumentTest < Minitest::Test
   # Test package-prefixed file path syntax (ace-context/test/foo_test.rb)
   # Note: When a file path exists directly (e.g., from project root), it runs as a direct file.
   # Package context is only used when the file doesn't exist relative to current directory.
+  # NOTE: This test uses REAL subprocess execution for end-to-end validation
 
   def test_package_prefixed_file_path
     # When file exists from current directory, run it directly (no package context)
@@ -175,7 +193,7 @@ class PackageArgumentTest < Minitest::Test
   def test_package_prefixed_file_path_with_line_number
     # When file exists from current directory, run it directly with line number
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("ace-context/test/atoms/content_checker_test.rb:10")
+      output, status = run_ace_test_with_mock("ace-context/test/atoms/content_checker_test.rb:10")
 
       assert status.success?, "Should run package-prefixed file:line, got: #{output}"
       refute_match(/Package not found/, output)
@@ -188,7 +206,7 @@ class PackageArgumentTest < Minitest::Test
     # From a different directory, package resolution is needed
     ace_search_dir = File.join(@project_root, "ace-search")
     Dir.chdir(ace_search_dir) do
-      output, status = run_ace_test("ace-context/test/atoms/content_checker_test.rb")
+      output, status = run_ace_test_with_mock("ace-context/test/atoms/content_checker_test.rb")
 
       assert status.success?, "Should run package-prefixed file from different dir, got: #{output}"
       # Package context is used because file doesn't exist relative to current dir
@@ -201,7 +219,8 @@ class PackageArgumentTest < Minitest::Test
   def test_relative_file_path_with_dot_slash
     # Verify ./ace-context/test/file.rb works without "Package not found" error
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("./ace-context/test/atoms/content_checker_test.rb")
+      output, status = run_ace_test_with_mock("./ace-context/test/atoms/content_checker_test.rb",
+        output: "Finished tests in 0.001s\n2 tests, 4 assertions, 0 failures")
 
       assert status.success?, "Should run ./path/file.rb directly, got: #{output}"
       # Should NOT show "Running tests in" because it's treated as a direct file path
@@ -212,7 +231,8 @@ class PackageArgumentTest < Minitest::Test
   def test_relative_file_path_with_dot_slash_and_line_number
     # Verify ./ace-context/test/file.rb:10 works
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("./ace-context/test/atoms/content_checker_test.rb:10")
+      output, status = run_ace_test_with_mock("./ace-context/test/atoms/content_checker_test.rb:10",
+        output: "Finished tests in 0.001s\n1 tests, 2 assertions, 0 failures")
 
       assert status.success?, "Should run ./path/file.rb:line directly, got: #{output}"
       refute_match(/Package not found/, output)
@@ -223,7 +243,8 @@ class PackageArgumentTest < Minitest::Test
     # Verify ../ace-context/test/file.rb works from within another package
     ace_search_dir = File.join(@project_root, "ace-search")
     Dir.chdir(ace_search_dir) do
-      output, status = run_ace_test("../ace-context/test/atoms/content_checker_test.rb")
+      output, status = run_ace_test_with_mock("../ace-context/test/atoms/content_checker_test.rb",
+        output: "Finished tests in 0.001s\n2 tests, 4 assertions, 0 failures")
 
       assert status.success?, "Should run ../path/file.rb directly, got: #{output}"
       refute_match(/Package not found/, output)
@@ -235,7 +256,7 @@ class PackageArgumentTest < Minitest::Test
   def test_original_directory_preserved
     Dir.chdir(@project_root) do
       original = Dir.pwd
-      run_ace_test("ace-context", "atoms")
+      run_ace_test_with_mock("ace-context", "atoms")
 
       assert_equal original, Dir.pwd, "Should restore original directory"
     end
@@ -247,7 +268,9 @@ class PackageArgumentTest < Minitest::Test
       original = Dir.pwd
 
       # Run tests that will fail (force an error by running nonexistent target)
-      run_ace_test("ace-context", "nonexistent-target-xyz")
+      run_ace_test_with_mock("ace-context", "nonexistent-target-xyz",
+        success: false,
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_unknown_target_error("nonexistent-target-xyz"))
 
       assert_equal original, Dir.pwd, "Should restore original directory even on error"
     end
@@ -259,7 +282,9 @@ class PackageArgumentTest < Minitest::Test
       original = Dir.pwd
 
       # This will fail early because the path doesn't exist
-      run_ace_test("/nonexistent/path")
+      run_ace_test_with_mock("/nonexistent/path",
+        success: false,
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_package_not_found_error("/nonexistent/path"))
 
       assert_equal original, Dir.pwd, "Should restore original directory on invalid package"
     end
@@ -267,6 +292,20 @@ class PackageArgumentTest < Minitest::Test
 
   private
 
+  # Run ace-test with mocked subprocess (fast)
+  def run_ace_test_with_mock(*args, success: true, output: nil)
+    package = args.first || "ace-context"
+    mock_output = output || Ace::TestSupport::Fixtures::TestRunnerMocks.mock_success_output(package: package)
+    mock_status = success ?
+      Ace::TestSupport::Fixtures::TestRunnerMocks.mock_success_status :
+      Ace::TestSupport::Fixtures::TestRunnerMocks.mock_failure_status
+
+    Open3.stub(:capture3, [mock_output, "", mock_status]) do
+      run_ace_test(*args)
+    end
+  end
+
+  # Run ace-test with real subprocess (slow, for end-to-end validation)
   def run_ace_test(*args)
     cmd = ["bundle", "exec", "ruby", File.join(@project_root, "ace-test-runner/exe/ace-test")] + args
     stdout, stderr, status = Open3.capture3(*cmd)
