@@ -18,6 +18,9 @@ module Ace
         # @example Dry run
         #   CreateCommand.new.run(["--task", "081", "--dry-run"])
         class CreateCommand
+          # Pattern for validating PR numbers (digits only)
+          PR_NUMBER_PATTERN = /^\d+$/.freeze
+
           # Initialize a new CreateCommand
           def initialize
             @manager = Ace::Git::Worktree::Organisms::WorktreeManager.new
@@ -51,8 +54,16 @@ module Ace
               puts
               show_help
               1
-            rescue StandardError => e
+            rescue Ace::Git::PrNotFoundError,
+                   Ace::Git::GhAuthenticationError,
+                   Ace::Git::GhNotInstalledError,
+                   Ace::Git::TimeoutError => e
               puts "Error: #{e.message}"
+              1
+            rescue Ace::Git::Error => e
+              # Catch other ace-git specific errors
+              puts "Error: #{e.message}"
+              puts "Debug: #{e.class}" if ENV["DEBUG"]
               1
             end
           end
@@ -386,35 +397,64 @@ module Ace
           # @return [Integer] Exit code
           def create_pr_worktree(options)
             @options = options
-            pr_number = options[:pr].to_i
+            pr_input = options[:pr].to_s.strip
+
+            # Validate PR number is numeric to provide clear error message
+            unless pr_input.match?(PR_NUMBER_PATTERN)
+              puts "Error: Invalid PR number '#{pr_input}'. Please provide a numeric PR number."
+              return 1
+            end
+
+            pr_number = pr_input.to_i
+
+            # Validate PR number is within reasonable bounds
+            if pr_number <= 0 || pr_number > 999_999
+              puts "Error: PR number must be between 1 and 999999."
+              return 1
+            end
+
             puts "Creating worktree for PR ##{pr_number}..."
 
-            # Check gh CLI availability
-            require_relative "../molecules/pr_fetcher"
-            fetcher = Molecules::PrFetcher.new
-
-            unless fetcher.gh_available?
+            # Check gh CLI availability using ace-git's PrMetadataFetcher
+            unless Ace::Git::Molecules::PrMetadataFetcher.gh_installed?
               puts "Error: gh CLI is required for PR worktree creation."
               puts
-              puts fetcher.gh_not_available_message
+              puts gh_not_available_message
+              return 1
+            end
+
+            unless Ace::Git::Molecules::PrMetadataFetcher.gh_authenticated?
+              puts "Error: gh CLI is not authenticated."
+              puts
+              puts "Authenticate with: gh auth login"
               return 1
             end
 
             # Fetch PR data
             puts "Fetching PR information..."
             begin
-              pr_data = fetcher.fetch(pr_number)
+              result = Ace::Git::Molecules::PrMetadataFetcher.fetch_metadata(pr_number.to_s)
 
-              # Display fork warning if applicable
-              if pr_data[:is_cross_repository]
-                puts "⚠️  This PR is from a fork"
-                puts "   Repository owner: #{pr_data[:head_repository_owner]}" if pr_data[:head_repository_owner]
-                puts
+              unless result[:success]
+                puts "Error: #{result[:error]}"
+                return 1
               end
+
+              metadata = result[:metadata]
+
+              # Convert to pr_data format expected by worktree creator
+              pr_data = pr_data_from_metadata(metadata)
 
               # Show PR details
               puts "PR ##{pr_data[:number]}: #{pr_data[:title]}"
               puts "Branch: #{pr_data[:head_branch]} -> #{pr_data[:base_branch]}"
+
+              # Warn about fork PRs
+              if pr_data[:is_cross_repository]
+                puts
+                puts "Warning: This PR is from a fork (#{pr_data[:head_repository_owner]})."
+                puts "You will not be able to push to the PR branch directly."
+              end
               puts
 
               # Prepare creation options
@@ -436,22 +476,11 @@ module Ace
                 display_warnings(result[:warnings]) if result[:warnings]
                 1
               end
-            rescue Molecules::PrFetcher::PrNotFoundError => e
-              puts "Error: #{e.message}"
-              puts
-              puts "Suggestions:"
-              puts "  1. Verify the PR number is correct"
-              puts "  2. Check if the PR exists: gh pr view #{pr_number}"
-              puts "  3. Ensure you're in the correct repository"
-              1
-            rescue Molecules::PrFetcher::NetworkError => e
-              puts "Error: #{e.message}"
-              puts
-              puts "Troubleshooting:"
-              puts "  1. Check your internet connection"
-              puts "  2. Verify GitHub authentication: gh auth status"
-              puts "  3. Re-authenticate if needed: gh auth login"
-              1
+            rescue Ace::Git::PrNotFoundError, Ace::Git::GhAuthenticationError,
+                   Ace::Git::GhNotInstalledError => e
+              # Let specific ace-git errors be handled by handle_pr_fetch_error
+              # Other errors will bubble up to the top-level rescue in run()
+              handle_pr_fetch_error(e, pr_number)
             end
           end
 
@@ -770,6 +799,105 @@ module Ace
 
             puts ""
             puts "cd #{worktree_path}"
+          end
+
+          # Convert PR metadata from gh CLI to internal pr_data format
+          #
+          # Anti-corruption layer that translates gh CLI JSON output to internal format.
+          # This isolates worktree creation from gh CLI output structure changes.
+          #
+          # Expected metadata schema from ace-git PrMetadataFetcher (via gh pr view --json):
+          #   {
+          #     "number" => Integer,
+          #     "title" => String,
+          #     "headRefName" => String (PR source branch),
+          #     "baseRefName" => String (PR target branch),
+          #     "isCrossRepository" => Boolean (true for fork PRs),
+          #     "headRepositoryOwner" => { "login" => String } (fork owner info)
+          #   }
+          #
+          # @param metadata [Hash] PR metadata from gh CLI
+          # @return [Hash] pr_data format expected by worktree creator
+          def pr_data_from_metadata(metadata)
+            {
+              number: metadata["number"],
+              title: metadata["title"],
+              head_branch: metadata["headRefName"],
+              base_branch: metadata["baseRefName"],
+              is_cross_repository: metadata["isCrossRepository"] || false,
+              head_repository_owner: metadata.dig("headRepositoryOwner", "login") || "unknown"
+            }
+          end
+
+          # Handle errors during PR metadata fetch
+          #
+          # @param error [Exception] The error that occurred
+          # @param pr_number [Integer] PR number for context in error messages
+          # @return [Integer] Exit code (always 1 for errors)
+          def handle_pr_fetch_error(error, pr_number)
+            case error
+            when Ace::Git::PrNotFoundError
+              handle_pr_not_found(error, pr_number)
+            when Ace::Git::GhAuthenticationError
+              handle_gh_auth_error(error)
+            when Ace::Git::GhNotInstalledError
+              handle_gh_not_installed(error)
+            else
+              handle_unknown_error(error)
+            end
+            1
+          end
+
+          # Handle PR not found error with helpful suggestions
+          def handle_pr_not_found(error, pr_number)
+            puts "Error: #{error.message}"
+            puts
+            puts "Suggestions:"
+            puts "  1. Verify the PR number is correct"
+            puts "  2. Check if the PR exists: gh pr view #{pr_number}"
+            puts "  3. Ensure you're in the correct repository"
+          end
+
+          # Handle GitHub authentication error with troubleshooting steps
+          def handle_gh_auth_error(error)
+            puts "Error: #{error.message}"
+            puts
+            puts "Troubleshooting:"
+            puts "  1. Verify GitHub authentication: gh auth status"
+            puts "  2. Re-authenticate if needed: gh auth login"
+            puts "  3. Check repository access permissions"
+          end
+
+          # Handle gh CLI not installed error with installation guidance
+          def handle_gh_not_installed(error)
+            puts "Error: #{error.message}"
+            puts
+            puts gh_not_available_message
+          end
+
+          # Handle unknown/unexpected errors with debug info
+          def handle_unknown_error(error)
+            puts "Error: #{error.message}"
+            if ENV["DEBUG"]
+              puts "Debug: #{error.class}"
+              puts "Debug: #{error.backtrace&.first}" if error.backtrace
+            end
+          end
+
+          # Get helpful error message when gh CLI is unavailable
+          #
+          # @return [String] User-friendly error message with installation guidance
+          def gh_not_available_message
+            <<~MESSAGE
+              gh CLI is required for PR worktrees but is not installed.
+
+              Install gh CLI:
+              - macOS: brew install gh
+              - Linux: See https://github.com/cli/cli#installation
+              - Windows: See https://github.com/cli/cli#installation
+
+              After installation, authenticate with: gh auth login
+            MESSAGE
           end
         end
       end

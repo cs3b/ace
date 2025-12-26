@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Error Handling**: Removed `StandardError` from inner rescue clause in `create_pr_worktree`
+  - Specific ace-git errors now bubble up correctly to top-level handler
+  - Prevents silently swallowing unexpected errors
+- **Code Organization**: Extracted error handling methods from `handle_pr_fetch_error`
+  - `handle_pr_not_found`, `handle_gh_auth_error`, `handle_gh_not_installed`, `handle_unknown_error`
+  - Improved code readability and maintainability
+- **Debug Output**: Added backtrace info for unknown errors when `ENV["DEBUG"]` is set
+- **Documentation**: Added schema documentation for `pr_data_from_metadata` method
+- **Defensive Access**: Added fallback to "unknown" for `headRepositoryOwner` dig access
+- **README**: Added version compatibility table for ace-git dependency
+
+## [0.6.0] - 2025-12-26
+
+### Added
+- **Fork PR Detection**: PR worktree creation now detects and warns about fork PRs
+  - Shows warning when PR is from a fork (`isCrossRepository`)
+  - Displays fork owner info (`headRepositoryOwner`)
+  - Informs user they cannot push to fork PR branches directly
+- **PR Number Validation**: Extracted `PR_NUMBER_PATTERN` constant for consistent validation
+- **Debug Output**: Added `ENV["DEBUG"]` support for unexpected error diagnostics
+- **Test Coverage**: Added CLI integration tests for `--pr` flag and timeout parameter tests
+
+### Changed
+- **Dependency Update**: Replaced ace-git-diff dependency with ace-git (~> 0.3)
+  - GitCommand atom now delegates to `Ace::Git::Atoms::CommandExecutor` from ace-git
+  - Creates unified Git operations across ACE ecosystem packages
+  - Maintains full backward compatibility for existing code
+- **PR Worktree Creation**: Migrated to use `Ace::Git::Molecules::PrMetadataFetcher`
+  - More robust PR metadata fetching with better error handling
+  - Consistent with ace-git's PR operations used across other packages
+- **Simplified GitCommand**: `current_branch` now delegates directly to ace-git
+  - ace-git handles detached HEAD state internally (returns SHA)
+  - Removed local workaround code (~20 lines)
+- **Ruby 3 Syntax**: Updated to use keyword argument forwarding (`timeout:`)
+- **Test Helpers**: Promoted `with_git_stubs` to shared `test_helper.rb`
+
+### Removed
+- Deleted `molecules/pr_fetcher.rb` - replaced by ace-git's `PrMetadataFetcher`
+- Deleted corresponding `test/molecules/pr_fetcher_test.rb`
+
 ## [0.5.0] - 2025-12-17
 
 ### Added

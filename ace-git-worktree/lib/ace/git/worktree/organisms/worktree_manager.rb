@@ -121,7 +121,7 @@ module Ace
           # Create a worktree for a Pull Request
           #
           # @param pr_number [Integer] PR number
-          # @param pr_data [Hash] PR data from PrFetcher
+          # @param pr_data [Hash] PR data from Ace::Git::Molecules::PrMetadataFetcher
           # @param options [Hash] Options for creation
           # @return [Hash] Creation result
           #

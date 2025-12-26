@@ -5,6 +5,7 @@ require_relative "../test_helper"
 class WorktreeListerTest < Minitest::Test
   def setup
     @lister = Ace::Git::Worktree::Molecules::WorktreeLister.new
+    @git_command = Ace::Git::Worktree::Atoms::GitCommand
   end
 
   def test_list_all_success
@@ -30,7 +31,7 @@ class WorktreeListerTest < Minitest::Test
       exit_code: 0
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    @git_command.stub(:worktree, mock_result) do
       worktrees = @lister.list_all
 
       assert_equal 3, worktrees.length
@@ -58,7 +59,7 @@ class WorktreeListerTest < Minitest::Test
       exit_code: 128
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    @git_command.stub(:worktree, mock_result) do
       worktrees = @lister.list_all
       assert_empty worktrees
     end
@@ -86,7 +87,7 @@ class WorktreeListerTest < Minitest::Test
       exit_code: 0
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    @git_command.stub(:worktree, mock_result) do
       # Search by branch name
       worktrees = @lister.search("feature")
       assert_equal 1, worktrees.length
@@ -126,7 +127,7 @@ class WorktreeListerTest < Minitest::Test
       exit_code: 0
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    @git_command.stub(:worktree, mock_result) do
       worktrees = @lister.list_all
 
       assert_equal 3, worktrees.length
@@ -163,7 +164,7 @@ class WorktreeListerTest < Minitest::Test
       exit_code: 0
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    @git_command.stub(:worktree, mock_result) do
       worktrees = @lister.list_all
 
       assert_equal 3, worktrees.length
@@ -187,7 +188,7 @@ class WorktreeListerTest < Minitest::Test
       exit_code: 0
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    @git_command.stub(:worktree, mock_result) do
       worktrees = @lister.list_all
       assert_empty worktrees
     end
@@ -211,7 +212,7 @@ class WorktreeListerTest < Minitest::Test
         exit_code: 0
       }
 
-      Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+      @git_command.stub(:worktree, mock_result) do
         # Should not crash or execute malicious commands
         worktrees = @lister.search(dangerous_filter)
         assert_empty worktrees
@@ -237,7 +238,7 @@ class WorktreeListerTest < Minitest::Test
         exit_code: 0
       }
 
-      Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+      @git_command.stub(:worktree, mock_result) do
         # Should handle malformed output gracefully
         worktrees = @lister.list_all
         # May return empty array or partial results, but should not crash
@@ -247,8 +248,15 @@ class WorktreeListerTest < Minitest::Test
   end
 
   def test_command_timeout_handling
-    # Mock command timeout
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, -> (*_args) { raise StandardError, "Command timed out" }) do
+    # Mock command timeout by returning error result
+    mock_result = {
+      success: false,
+      output: "",
+      error: "Command timed out",
+      exit_code: -1
+    }
+
+    @git_command.stub(:worktree, mock_result) do
       worktrees = @lister.list_all
       assert_empty worktrees
     end
@@ -268,7 +276,7 @@ class WorktreeListerTest < Minitest::Test
       exit_code: 0
     }
 
-    Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+    @git_command.stub(:worktree, mock_result) do
       worktrees = @lister.list_all
       worktree = worktrees.first
 

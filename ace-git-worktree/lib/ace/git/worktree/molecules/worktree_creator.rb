@@ -641,7 +641,7 @@ module Ace
             # Verify branch exists locally
             require_relative "../atoms/git_command"
             check_result = Atoms::GitCommand.execute(
-              ["show-ref", "--verify", "--quiet", "refs/heads/#{branch_name}"],
+              "show-ref", "--verify", "--quiet", "refs/heads/#{branch_name}",
               timeout: @timeout
             )
 

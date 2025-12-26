@@ -85,8 +85,15 @@ ace-git-worktree create --pr 26 --dry-run
 **Features:**
 - Automatically fetches PR metadata and branch information
 - Creates worktree with remote tracking
-- Detects and warns about fork PRs
+- **Fork PR Detection**: Detects cross-repository PRs and warns about read-only limitations
 - Configurable naming conventions
+
+**Fork PR Warning:**
+When creating a worktree for a PR from a forked repository, you'll see:
+```
+⚠️  This PR is from a fork (user/repo). You can review the code but cannot push directly.
+```
+This prevents confusion when trying to push changes to a read-only fork branch.
 
 **Default Behavior:**
 - Directory: `.ace-wt/ace-pr-26/`
@@ -400,12 +407,19 @@ ace-git-worktree follows the ATOM architecture pattern:
 
 ### Required Dependencies
 
-- **ace-support-core** (~> 0.9.0) - Configuration cascade management
-- **ace-git-diff** (~> 0.1.0) - Safe git command execution
+- **ace-support-core** (>= 0.9.0) - Configuration cascade management
+- **ace-git** (~> 0.3.6) - Unified git operations with PR metadata, command execution, and diff support
+
+### Compatibility
+
+| ace-git-worktree | ace-git | Notes |
+|------------------|---------|-------|
+| 0.6.0+           | ~> 0.3  | Uses ace-git for git operations and PR metadata |
+| 0.5.x            | N/A     | Pre-ace-git (used internal git commands) |
 
 ### Optional Dependencies
 
-- **ace-taskflow** (~> 0.9.0) - Task metadata and status management
+- **ace-taskflow** (>= 0.10.0) - Task metadata and status management
   - Required for task-aware worktree operations
   - Used for fetching task information and updating status
   - Not required for traditional worktree operations
@@ -641,7 +655,7 @@ ace-git-worktree integrates seamlessly with other ACE tools:
 
 - **ace-taskflow**: Task metadata fetching and status updates
 - **ace-git-commit**: Consistent commit message generation
-- **ace-git-diff**: Safe git command execution
+- **ace-git**: Unified git operations (command execution, PR metadata, diff generation)
 - **ace-support-core**: Configuration cascade management
 
 ## Examples
