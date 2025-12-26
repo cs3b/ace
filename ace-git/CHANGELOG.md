@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **PrMetadataFetcher**: Extracted `PR_FIELDS` constant for maintainability
+  - Field list now defined as frozen constant array
+  - Easier to review and modify PR metadata fields
 - **BREAKING**: Renamed `context` to `status` throughout
   - CLI: `ace-git status` (no `context` alias)
   - Config: `git.status.*` (not `git.context.*`)
@@ -23,6 +26,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Method was marked "kept for potential future use" but never used in production
   - StatusFormatter.format_merged_time_compact is the actual method used
   - Related tests removed: test_add_relative_times_adds_merged_ago_field, test_add_relative_times_handles_missing_merged_at
+
+## [0.3.6] - 2025-12-26
+
+### Added
+
+- **PrMetadataFetcher**: Expanded PR metadata with fork detection fields
+  - `isCrossRepository`: Boolean indicating if PR is from a fork
+  - `headRepositoryOwner`: Object with fork owner's `login` field
+  - Enables ace-git-worktree to detect and handle forked PR workflows
+
+- **BranchReader.detached?**: New method to explicitly check if HEAD is detached
+  - Returns true when in detached HEAD state
+  - Separate from current_branch for clearer API
+
+### Changed
+
+- **CommandExecutor.current_branch**: Now returns commit SHA when in detached HEAD state
+  - Previously returned literal string "HEAD" for detached state
+  - Consumers no longer need workarounds to get the SHA
+  - Use `BranchReader.detached?` instead for explicit detached state detection
 
 ## [0.3.5] - 2025-12-24
 
