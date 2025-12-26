@@ -17,7 +17,7 @@ update:
 ## Prerequisites
 
 - Orchestrator task selected (has `subtasks:` in frontmatter or `*.00-*.s.md` filename)
-- Access to ace-git-worktree for worktree management
+- Access to ace-git-worktree for worktree management (see `ace-git-worktree/docs/usage.md`)
 - Understanding of the parent-subtask relationship
 
 ## Critical: Worktree Isolation
@@ -157,7 +157,7 @@ ace-git-worktree create --task 122.01
 
 **Capture the worktree path** from output:
 ```
-Worktree path: /Users/mc/Ps/ace-task.122.01
+Worktree path: <WORKTREE_PATH>  # e.g., /path/to/ace-task.122.01
 ```
 
 **If worktree exists:** The tool will report it. Reuse existing worktree (don't recreate).
@@ -173,19 +173,19 @@ Execute work-on-task workflow for subtask 122.01
 
 ## CRITICAL: Worktree Location
 
-**Worktree path:** /Users/mc/Ps/ace-task.122.01
+**Worktree path:** <WORKTREE_PATH>
 
 ALL work MUST happen in this directory. Before ANY file operations:
-1. Run: `cd /Users/mc/Ps/ace-task.122.01`
+1. Run: `cd <WORKTREE_PATH>`
 2. Verify: `pwd` shows the worktree path
 3. Verify: `git branch` shows the subtask branch (122.01-*)
 
-❌ DO NOT work in /Users/mc/Ps/ace-task.122 (orchestrator)
-✅ ALL changes in /Users/mc/Ps/ace-task.122.01 (worktree)
+❌ DO NOT work in <ORCHESTRATOR_PATH> (orchestrator)
+✅ ALL changes in <WORKTREE_PATH> (worktree)
 
 ## Steps
 
-1. `cd /Users/mc/Ps/ace-task.122.01`
+1. `cd <WORKTREE_PATH>`
 2. Read task: `ace-taskflow task 122.01`
 3. Implement changes per task file
 4. Run tests: `ace-test`
@@ -195,7 +195,7 @@ ALL work MUST happen in this directory. Before ANY file operations:
 
 **Verification:** After subagent returns, check commits are on subtask branch:
 ```bash
-git -C /path/to/worktree log --oneline -3
+git -C <WORKTREE_PATH> log --oneline -3
 ```
 
 #### 3.3 Create Pull Request
@@ -204,7 +204,7 @@ After subagent completes successfully:
 
 ```bash
 # From worktree directory
-cd /Users/mc/Ps/ace-task.122.01/
+cd <WORKTREE_PATH>
 
 # Create PR targeting parent branch
 gh pr create \
@@ -251,7 +251,7 @@ For each PR:
 ```markdown
 Apply review feedback to subtask 122.01
 
-Working directory: /Users/mc/Ps/ace-task.122.01/
+Working directory: <WORKTREE_PATH>
 
 Review feedback to address:
 {review feedback here}
@@ -286,7 +286,7 @@ Use `AskUserQuestion` tool for this validation step.
 
 ```bash
 # In worktree directory
-cd /Users/mc/Ps/ace-task.122.01/
+cd <WORKTREE_PATH>
 ace-test
 
 # If failures:
@@ -299,7 +299,7 @@ ace-test
 ```markdown
 Fix failing tests in subtask 122.01
 
-Working directory: /Users/mc/Ps/ace-task.122.01/
+Working directory: <WORKTREE_PATH>
 
 Failing tests:
 {test output here}
@@ -427,7 +427,7 @@ If subtask status == done:
 
 ```
 If worktree path exists:
-  - Report: "Resuming work in existing worktree: /Users/mc/Ps/ace-task.122.01/"
+  - Report: "Resuming work in existing worktree: <WORKTREE_PATH>"
   - Do NOT cleanup/recreate (prevents data loss)
   - Continue with subagent delegation
 ```
@@ -529,8 +529,8 @@ User: "Work on orchestrator task 122"
 1. Load task 122, detect orchestrator (has subtasks)
 2. Redirect to work-on-subtasks workflow
 3. Process subtask 122.01:
-   - Create worktree /Users/mc/Ps/ace-task.122.01/
-   - Delegate to subagent
+   - Create worktree (e.g., ../ace-task.122.01/)
+   - Delegate to subagent with worktree path
    - Create PR 122.01-* -> 122-*
    - Review cycle
    - User validates

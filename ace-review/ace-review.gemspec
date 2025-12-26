@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-core', '~> 0.9'
   spec.add_dependency 'ace-context', '~> 0.9'
   spec.add_dependency 'ace-git', '~> 0.3'
-  spec.add_dependency 'ace-git-diff', '~> 0.1'
+  # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git
   spec.add_dependency 'ace-nav', '~> 0.9'
   spec.add_dependency 'ace-llm', '~> 0.1'
   spec.add_dependency 'ace-taskflow', '~> 0.19'

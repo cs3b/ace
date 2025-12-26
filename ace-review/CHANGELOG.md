@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `Ace::Review::Molecules::PrIdentifierParser` - now uses `Ace::Git::Atoms::PrIdentifierParser`
   - Added `ace-git (~> 0.3)` as runtime dependency
   - Eliminates code duplication and centralizes Git operations in ace-git package
+- **Fail fast on ace-git load**: Remove defensive begin/rescue around ace-git require since it's a hard dependency
+
+### Fixed
+
+- **GhCommentPoster fallback URL**: Fix URL construction when gh CLI output doesn't include URL
+  - Now correctly uses ace-git's combined `:repo` format (owner/repo) instead of legacy separate `:owner`/`:repo` keys
 
 ### Removed
 
@@ -24,6 +30,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deleted `lib/ace/review/atoms/task_auto_detector.rb`
 - Deleted `lib/ace/review/molecules/pr_identifier_parser.rb`
 - Deleted corresponding test files
+- Removed `ace-git-diff` dependency (functionality migrated to ace-git)
+
+### Added
+
+- `mock_parse_result` test helper in test_helper.rb for consistent ParseResult mock creation
+- Tests for GhCommentPoster.extract_comment_url fallback path scenarios
 
 ## [0.25.0] - 2025-12-17
 
