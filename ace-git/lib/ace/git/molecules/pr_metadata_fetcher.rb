@@ -17,6 +17,21 @@ module Ace
         # This prevents shell metacharacters from reaching command execution
         VALID_IDENTIFIER_PATTERN = /\A[\w\/.\-#@:]+\z/
 
+        # Fields to fetch for PR metadata
+        # Extracted as constant for maintainability
+        PR_FIELDS = %w[
+          number
+          state
+          isDraft
+          title
+          author
+          headRefName
+          baseRefName
+          url
+          isCrossRepository
+          headRepositoryOwner
+        ].freeze
+
         class << self
           # Check if gh CLI is installed
           # @return [Boolean] True if gh is installed
@@ -70,9 +85,8 @@ module Ace
             # Validate identifier characters before command execution (defense in depth)
             validate_identifier_characters(parsed.gh_format)
 
-            fields = "number,state,isDraft,title,author,headRefName,baseRefName,url"
             result = execute_gh_command(
-              ["gh", "pr", "view", parsed.gh_format, "--json", fields],
+              ["gh", "pr", "view", parsed.gh_format, "--json", PR_FIELDS.join(",")],
               timeout: timeout
             )
 

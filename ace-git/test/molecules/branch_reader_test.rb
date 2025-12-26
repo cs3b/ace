@@ -4,34 +4,54 @@ require_relative "../test_helper"
 require "ace/git/molecules/branch_reader"
 
 class BranchReaderTest < AceGitTestCase
-  def test_current_branch_returns_branch_name
+  def test_current_branch_delegates_to_executor
     executor = Object.new
-    def executor.execute(*_args)
-      { success: true, output: "feature/test-branch\n" }
+    def executor.current_branch
+      "feature/test-branch"
     end
 
     result = Ace::Git::Molecules::BranchReader.current_branch(executor: executor)
     assert_equal "feature/test-branch", result
   end
 
-  def test_current_branch_returns_nil_on_failure
+  def test_current_branch_returns_nil_when_executor_returns_nil
     executor = Object.new
-    def executor.execute(*_args)
-      { success: false, output: "", error: "not a git repo" }
+    def executor.current_branch
+      nil
     end
 
     result = Ace::Git::Molecules::BranchReader.current_branch(executor: executor)
     assert_nil result
   end
 
-  def test_current_branch_returns_nil_on_empty_output
+  def test_detached_returns_true_when_abbrev_ref_is_head
     executor = Object.new
     def executor.execute(*_args)
-      { success: true, output: "" }
+      { success: true, output: "HEAD\n" }
     end
 
-    result = Ace::Git::Molecules::BranchReader.current_branch(executor: executor)
-    assert_nil result
+    result = Ace::Git::Molecules::BranchReader.detached?(executor: executor)
+    assert result, "Should return true when in detached HEAD state"
+  end
+
+  def test_detached_returns_false_when_on_branch
+    executor = Object.new
+    def executor.execute(*_args)
+      { success: true, output: "main\n" }
+    end
+
+    result = Ace::Git::Molecules::BranchReader.detached?(executor: executor)
+    refute result, "Should return false when on a branch"
+  end
+
+  def test_detached_returns_false_on_failure
+    executor = Object.new
+    def executor.execute(*_args)
+      { success: false, output: "", error: "not a git repo" }
+    end
+
+    result = Ace::Git::Molecules::BranchReader.detached?(executor: executor)
+    refute result, "Should return false on failure"
   end
 
   def test_tracking_branch_delegates_to_executor
@@ -69,6 +89,10 @@ class BranchReaderTest < AceGitTestCase
 
   def test_full_info_returns_complete_branch_info
     executor = Object.new
+    def executor.current_branch
+      "main"
+    end
+
     def executor.execute(cmd, *args)
       if args.include?("--abbrev-ref")
         { success: true, output: "main\n" }
@@ -96,8 +120,8 @@ class BranchReaderTest < AceGitTestCase
 
   def test_full_info_returns_error_when_not_in_git_repo
     executor = Object.new
-    def executor.execute(*_args)
-      { success: false, output: "", error: "not a git repo" }
+    def executor.current_branch
+      nil  # Not in git repo
     end
 
     result = Ace::Git::Molecules::BranchReader.full_info(executor: executor)
@@ -107,6 +131,10 @@ class BranchReaderTest < AceGitTestCase
 
   def test_full_info_detects_detached_head
     executor = Object.new
+    def executor.current_branch
+      "abc123def456"  # SHA when detached
+    end
+
     def executor.execute(cmd, *args)
       if args.include?("--abbrev-ref")
         { success: true, output: "HEAD\n" }  # Detached HEAD
@@ -123,7 +151,7 @@ class BranchReaderTest < AceGitTestCase
 
     result = Ace::Git::Molecules::BranchReader.full_info(executor: executor)
 
-    assert_equal "HEAD", result[:name]
+    assert_equal "abc123def456", result[:name], "Should return SHA for name when detached"
     assert_equal true, result[:detached]
   end
 
