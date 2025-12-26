@@ -6,9 +6,9 @@ require "tmpdir"
 
 class PresetDiffIntegrationTest < AceReviewTest
   def setup
-    super  # IMPORTANT: Calls parent to stub ace-context and git-extractor for fast tests
+    super  # IMPORTANT: Calls parent to stub ace-context and BranchReader for fast tests
     @extractor = Ace::Review::Molecules::SubjectExtractor.new
-    # Git operations are mocked via stub_git_extractor in AceReviewTest
+    # Git operations are mocked via stub_branch_reader in AceReviewTest
     # No need for real git repo since extraction is fully mocked
   end
 
@@ -123,7 +123,7 @@ class PresetDiffIntegrationTest < AceReviewTest
   end
 
   def test_extracts_from_string_special_keywords
-    # Git operations are mocked - GitExtractor.staged_diff returns mock data
+    # Git operations are mocked - ace-context handles git diffs via ace-git
     result = @extractor.extract("staged")
 
     assert_kind_of String, result
