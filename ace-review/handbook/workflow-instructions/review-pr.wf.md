@@ -26,6 +26,8 @@ Review a GitHub Pull Request using ace-review, read the synthesis report, and cr
 ace-review --pr $ARGUMENTS
 ```
 
+**Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
+
 Wait for the review to complete. Note the synthesis report path from the output.
 
 The review includes:

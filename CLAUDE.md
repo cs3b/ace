@@ -8,8 +8,6 @@ Agents should recognize these command patterns:
 
 - `@.claude/commands/ace/load-context.md` → Use ace-context
 - `@.claude/commands/*` → Follow specific command instructions
-- `@search` → Use search agent from `.claude/agents/`
-- `@research` → Use research agent from `.claude/agents/`
 
 ## Tool Usage
 
@@ -31,6 +29,25 @@ Agents should recognize these command patterns:
 
 - `ace-nav wfi://load-context` → Read output file path, then read that file
 - `ace-nav --sources` → List available resource sources
+
+### ace-* CLI Tools: Output Handling
+
+**IMPORTANT**: Do NOT use shell output manipulation with ace-* tools:
+
+- **Avoid**: `tail -f`, `head`, `grep`, pipes on long output, redirects
+- **Allowed**: Using `Read` tool on file paths referenced in command output
+- **Why**: ace-* tools produce concise output by design and provide file paths for detailed content
+- **Pattern**: Run the command directly, then use `Read` tool on any referenced file paths
+
+**Anti-pattern examples to AVOID**:
+❌ `ace-review --pr 90 | tail -20`
+❌ `tail -f /tmp/claude/.../output`
+❌ `ace-context project | head -100`
+
+**Correct patterns**:
+✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
+✅ `ace-context project` → output is already concise; read referenced files as needed
+✅ `ace-nav wfi://workflow` → returns file path, then `Read` that file
 
 ## Testing Constraints
 
