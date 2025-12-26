@@ -15,13 +15,8 @@ rescue LoadError
   # Will raise MissingDependencyError when needed
 end
 
-# Try to load ace-git if available (required for git operations)
-begin
-  require "ace/git"
-rescue LoadError
-  # ace-git is required for git operations
-  # Will raise MissingDependencyError when needed
-end
+# Load ace-git (required dependency for git operations)
+require "ace/git"
 
 require_relative "review/version"
 require_relative "review/errors"

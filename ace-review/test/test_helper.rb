@@ -84,6 +84,22 @@ class AceReviewTest < Minitest::Test
     File.write(".ace/review/presets/#{name}.yml", content)
   end
 
+  # Helper to create a mock ParseResult from ace-git
+  # Provides consistent mock creation across tests, isolating from ace-git internal changes
+  #
+  # @param number [String, Integer] PR number
+  # @param repo [String, nil] Repository in "owner/repo" format (nil for local-only PRs)
+  # @param gh_format [String, nil] gh CLI format (defaults to repo#number or just number)
+  # @return [Ace::Git::Atoms::PrIdentifierParser::ParseResult]
+  def mock_parse_result(number:, repo: nil, gh_format: nil)
+    gh_format ||= repo ? "#{repo}##{number}" : number.to_s
+    Ace::Git::Atoms::PrIdentifierParser::ParseResult.new(
+      number: number.to_s,
+      repo: repo,
+      gh_format: gh_format
+    )
+  end
+
   private
 
   def default_test_config
