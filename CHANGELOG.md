@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.183] - 2025-12-26
+
+### ace-taskflow v0.24.3 → v0.24.4
+
+**Technical**
+- Clarify worktree isolation in work-on-subtasks workflow
+- Add ace-git-worktree usage instructions for subagent delegation
+- Add anti-patterns for directory handling in orchestrator workflows
+
 ## [0.9.182] - 2025-12-25
 
 ### ace-taskflow v0.24.1 → v0.24.2

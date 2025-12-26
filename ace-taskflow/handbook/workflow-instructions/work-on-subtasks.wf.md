@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: work-on-subtasks workflow instruction for orchestrator tasks
 update:
   frequency: on-change
-  last-updated: '2025-11-27'
+  last-updated: '2025-12-26'
 ---
 
 # Work on Subtasks Workflow Instruction
@@ -19,6 +19,46 @@ update:
 - Orchestrator task selected (has `subtasks:` in frontmatter or `*.00-*.s.md` filename)
 - Access to ace-git-worktree for worktree management
 - Understanding of the parent-subtask relationship
+
+## Critical: Worktree Isolation
+
+**ALL implementation work MUST happen in the subtask worktree, NOT the orchestrator worktree.**
+
+### Use ace-git-worktree
+
+```bash
+# Create worktree (handles everything automatically)
+ace-git-worktree create --task 140.03
+```
+
+This command:
+1. Marks task `in-progress` (commits to orchestrator branch, pushes)
+2. Creates worktree at sibling path (e.g., `../ace-task.140.03/`)
+3. Creates subtask branch from orchestrator
+4. Outputs the worktree path
+
+**After creation, ALL work happens in the worktree path.**
+
+### What happens where:
+
+| Action | Location | Handled by |
+|--------|----------|------------|
+| Mark task in-progress | Orchestrator | `ace-git-worktree create` |
+| Implementation work | **Worktree** | Subagent |
+| Commits | **Worktree** | Subagent |
+| Create PR | Worktree | Orchestrator agent |
+
+### Anti-patterns
+
+```bash
+# ❌ WRONG - Subagent working in orchestrator directory
+cd /path/to/ace-task.140      # orchestrator - WRONG
+vim ace-review/lib/...         # changes here go to wrong branch!
+
+# ✅ CORRECT - Subagent working in worktree
+cd /path/to/ace-task.140.03   # worktree from tool output
+vim ace-review/lib/...         # changes on subtask branch
+```
 
 ## Critical: Branch Management
 
@@ -50,15 +90,19 @@ For experienced users, here's the condensed workflow:
 
 1. **Load orchestrator** - Get orchestrator task and list pending subtasks
 2. **For each pending subtask:**
-   - Create/reuse worktree: `.ace-wt/task.{id}/`
-   - Launch subagent to execute work-on-task in worktree
-   - Create PR targeting parent branch
+   - Create worktree: `ace-git-worktree create --task {id}` (creates `../ace-task.{id}/`)
+   - **Switch to worktree** for all implementation work
+   - Launch subagent with **explicit worktree path** in prompt
+   - Verify commits are on subtask branch (not orchestrator)
+   - Create PR targeting orchestrator branch
    - Run review cycle (x2 max)
    - User validates manually
    - Run tests
    - Mark subtask done
 3. **Summarize progress** after each subtask
 4. **Wait for user feedback** between subtasks
+
+**Remember:** Worktree creation marks task in-progress on orchestrator branch. All other work happens in the worktree.
 
 ## Detailed Process Steps
 
@@ -97,52 +141,62 @@ ace-taskflow tasks --filter "122.*" --filter status:pending
 
 For each pending subtask (e.g., `122.01`):
 
-#### 3.1 Check/Create Worktree
+#### 3.1 Create Worktree
+
+Use `ace-git-worktree` to create the worktree. Run from orchestrator:
 
 ```bash
-# Check if worktree exists
-ace-git-worktree list --show-tasks | grep "task.122.01"
-
-# If exists: reuse (don't cleanup - prevents data loss)
-# If not: create new worktree
 ace-git-worktree create --task 122.01
 ```
 
-**Worktree details:**
-- Path: `.ace-wt/task.122.01/`
-- Branch: `122.01-{slug}`
+**This automatically:**
+1. Marks task as `in-progress` (commits to orchestrator branch)
+2. Pushes status change to origin
+3. Creates worktree with subtask branch
+4. Outputs the worktree path
 
-**Edge case - worktree exists:**
-- Report: "Resuming work in existing worktree"
-- Do NOT cleanup/recreate (prevents data loss)
-- Separate `ace-git-worktree prune` handles cleanup
+**Capture the worktree path** from output:
+```
+Worktree path: /Users/mc/Ps/ace-task.122.01
+```
+
+**If worktree exists:** The tool will report it. Reuse existing worktree (don't recreate).
 
 #### 3.2 Delegate to Subagent
 
-Use Task tool to delegate work:
+**CRITICAL: Subagent MUST work in the worktree.**
+
+Use Task tool with the **exact worktree path** from step 3.1:
 
 ```markdown
-**Task tool prompt:**
-Execute work-on-task workflow for subtask: 122.01
+Execute work-on-task workflow for subtask 122.01
 
-Working directory: .ace-wt/task.122.01/
+## CRITICAL: Worktree Location
 
-Follow the complete work-on-task workflow:
-1. Navigate to worktree: cd .ace-wt/task.122.01/
-2. Read and execute: ace-nav wfi://work-on-task
-3. Execute all implementation steps from the task file
-4. Run tests: ace-test
-5. Update task status to done when complete
-6. Return summary:
-   - Key changes made
-   - Files modified
-   - Test results
-   - Any issues encountered
+**Worktree path:** /Users/mc/Ps/ace-task.122.01
 
-**Subagent type:** general-purpose
+ALL work MUST happen in this directory. Before ANY file operations:
+1. Run: `cd /Users/mc/Ps/ace-task.122.01`
+2. Verify: `pwd` shows the worktree path
+3. Verify: `git branch` shows the subtask branch (122.01-*)
+
+❌ DO NOT work in /Users/mc/Ps/ace-task.122 (orchestrator)
+✅ ALL changes in /Users/mc/Ps/ace-task.122.01 (worktree)
+
+## Steps
+
+1. `cd /Users/mc/Ps/ace-task.122.01`
+2. Read task: `ace-taskflow task 122.01`
+3. Implement changes per task file
+4. Run tests: `ace-test`
+5. Commit on subtask branch
+6. Return: changes made, files modified, test results
 ```
 
-**Important:** Subagent works entirely within the worktree context.
+**Verification:** After subagent returns, check commits are on subtask branch:
+```bash
+git -C /path/to/worktree log --oneline -3
+```
 
 #### 3.3 Create Pull Request
 
@@ -150,7 +204,7 @@ After subagent completes successfully:
 
 ```bash
 # From worktree directory
-cd .ace-wt/task.122.01/
+cd /Users/mc/Ps/ace-task.122.01/
 
 # Create PR targeting parent branch
 gh pr create \
@@ -197,7 +251,7 @@ For each PR:
 ```markdown
 Apply review feedback to subtask 122.01
 
-Working directory: .ace-wt/task.122.01/
+Working directory: /Users/mc/Ps/ace-task.122.01/
 
 Review feedback to address:
 {review feedback here}
@@ -232,7 +286,7 @@ Use `AskUserQuestion` tool for this validation step.
 
 ```bash
 # In worktree directory
-cd .ace-wt/task.122.01/
+cd /Users/mc/Ps/ace-task.122.01/
 ace-test
 
 # If failures:
@@ -245,7 +299,7 @@ ace-test
 ```markdown
 Fix failing tests in subtask 122.01
 
-Working directory: .ace-wt/task.122.01/
+Working directory: /Users/mc/Ps/ace-task.122.01/
 
 Failing tests:
 {test output here}
@@ -373,7 +427,7 @@ If subtask status == done:
 
 ```
 If worktree path exists:
-  - Report: "Resuming work in existing worktree: .ace-wt/task.122.01/"
+  - Report: "Resuming work in existing worktree: /Users/mc/Ps/ace-task.122.01/"
   - Do NOT cleanup/recreate (prevents data loss)
   - Continue with subagent delegation
 ```
@@ -475,7 +529,7 @@ User: "Work on orchestrator task 122"
 1. Load task 122, detect orchestrator (has subtasks)
 2. Redirect to work-on-subtasks workflow
 3. Process subtask 122.01:
-   - Create worktree .ace-wt/task.122.01/
+   - Create worktree /Users/mc/Ps/ace-task.122.01/
    - Delegate to subagent
    - Create PR 122.01-* -> 122-*
    - Review cycle
