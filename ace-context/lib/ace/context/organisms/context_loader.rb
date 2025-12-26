@@ -9,13 +9,12 @@ require 'ace/core/molecules/project_root_finder'
 require 'ace/core/atoms/command_executor'
 require 'ace/core/atoms/template_parser'
 require 'ace/core/atoms/file_reader'
+require 'ace/git'
 require_relative '../molecules/preset_manager'
 require_relative '../molecules/section_processor'
 require_relative '../molecules/section_formatter'
-require_relative '../molecules/gh_pr_executor'
 require_relative 'pr_context_loader'
 require_relative '../models/context_data'
-require_relative '../atoms/git_extractor'
 require_relative '../atoms/content_checker'
 
 module Ace
@@ -909,21 +908,12 @@ module Ace
           if config['diffs'] && config['diffs'].any?
             data[:diffs] ||= []
             config['diffs'].each do |diff_range|
-              result = Atoms::GitExtractor.extract_diff(diff_range)
-              if result[:success]
-                data[:diffs] << {
-                  range: diff_range,
-                  output: result[:output],
-                  success: true
-                }
-              else
-                data[:diffs] << {
-                  range: diff_range,
-                  output: "",
-                  success: false,
-                  error: result[:error]
-                }
-                data[:errors] << "Git diff failed for '#{diff_range}': #{result[:error]}"
+              result = generate_diff_safe(diff_range)
+              data[:diffs] << result.slice(:range, :output, :success, :error, :error_type)
+
+              unless result[:success]
+                error_prefix = result[:error_type] == :git_error ? "Git diff failed" : "Invalid diff range"
+                data[:errors] << "#{error_prefix} for '#{diff_range}': #{result[:error]}"
               end
             end
           end
@@ -1122,22 +1112,13 @@ module Ace
           processed_diffs = []
 
           ranges.each do |diff_range|
-            result = Atoms::GitExtractor.extract_diff(diff_range)
-            if result[:success]
-              processed_diffs << {
-                range: diff_range,
-                output: result[:output],
-                success: true
-              }
-            else
-              processed_diffs << {
-                range: diff_range,
-                output: "",
-                success: false,
-                error: result[:error]
-              }
+            result = generate_diff_safe(diff_range)
+            processed_diffs << result.slice(:range, :output, :success, :error)
+
+            unless result[:success]
               context.metadata[:errors] ||= []
-              context.metadata[:errors] << "Section '#{section_name}': Git diff failed for '#{diff_range}': #{result[:error]}"
+              error_prefix = result[:error_type] == :git_error ? "Git diff failed" : "Invalid diff range"
+              context.metadata[:errors] << "Section '#{section_name}': #{error_prefix} for '#{diff_range}': #{result[:error]}"
             end
           end
 
@@ -1285,6 +1266,35 @@ module Ace
 
         def project_root
           @project_root ||= Ace::Core::Molecules::ProjectRootFinder.find_or_current
+        end
+
+        # Generate diff with ace-git and return standardized result hash
+        # Handles GitError and ArgumentError with standardized error handling
+        # @param diff_range [String] Git range to diff
+        # @return [Hash] Result with :range, :output, :success, and optional :error
+        def generate_diff_safe(diff_range)
+          diff_result = Ace::Git::Organisms::DiffOrchestrator.generate(ranges: [diff_range])
+          {
+            range: diff_range,
+            output: diff_result.content,
+            success: true
+          }
+        rescue Ace::Git::Error => e
+          {
+            range: diff_range,
+            output: "",
+            success: false,
+            error: e.message,
+            error_type: :git_error
+          }
+        rescue ArgumentError => e
+          {
+            range: diff_range,
+            output: "",
+            success: false,
+            error: e.message,
+            error_type: :invalid_range
+          }
         end
       end
     end

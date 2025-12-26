@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.188] - 2025-12-26
+
+### ace-git v0.3.5
+
+**Fixed**
+- Empty/whitespace-only diff ranges are now filtered out instead of causing errors
+  - `DiffGenerator.determine_range` now uses `reject { |r| r.nil? || r.strip.empty? }` for range filtering
+  - Empty ranges fall back to smart defaults (working tree diff)
+
+**Technical**
+- Added comprehensive tests for empty range handling scenarios
+
+### ace-context v0.19.2 → v0.20.0
+
+**Changed**
+- Migrated to ace-git package for Git/GitHub operations
+  - Replaced `ace-git-diff` dependency with `ace-git` (~> 0.3)
+  - Removed internal `GitExtractor`, `PrIdentifierParser`, `GhPrExecutor` - now uses ace-git equivalents
+  - Uses centralized ace-git error types and timeout configuration
+
+**Technical**
+- Improved error handling: catch `Ace::Git::Error` base class instead of specific `Ace::Git::GitError`
+- Added adapter tests for ace-git error type handling (`GhNotInstalledError`, `GhAuthenticationError`, `PrNotFoundError`, `TimeoutError`)
+- Reduced code duplication by centralizing Git operations in ace-git
+
+## [0.9.187] - 2025-12-26
+
+### ace-review v0.26.0 → v0.26.1
+
+**Fixed**
+- Complete ace-git migration in SubjectExtractor
+  - Replace `Ace::Context::Atoms::GitExtractor.tracking_branch` → `Ace::Git::Molecules::BranchReader.tracking_branch`
+  - Replace `Ace::Context::Atoms::PrIdentifierParser.parse` → `Ace::Git::Atoms::PrIdentifierParser.parse`
+  - Fixes `uninitialized constant` errors when using ace-review after ace-context v0.16 migration
+
 ## [0.9.186] - 2025-12-26
 
 ### ace-taskflow v0.24.4 → v0.24.5

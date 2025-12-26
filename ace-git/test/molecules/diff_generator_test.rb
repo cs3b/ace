@@ -227,4 +227,70 @@ class DiffGeneratorTest < AceGitTestCase
     Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
     assert_equal Ace::Git.git_timeout, executor.timeout, "Should use config timeout when not specified"
   end
+
+  def test_generate_treats_empty_range_as_working_diff
+    # Empty string ranges should be treated as "no range" and fall through
+    # to smart defaults (working tree diff when there are unstaged changes)
+    config = Ace::Git::Models::DiffConfig.from_hash("ranges" => [""])
+
+    executor = Object.new
+    def executor.has_unstaged_changes?
+      true
+    end
+
+    def executor.execute(*args, timeout: nil)
+      @last_args = args
+      { success: true, output: "working diff" }
+    end
+
+    def executor.last_args
+      @last_args
+    end
+
+    result = Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
+    assert_equal "working diff", result
+    # Should NOT include the empty string as a range argument
+    refute_includes executor.last_args, ""
+  end
+
+  def test_generate_treats_whitespace_only_range_as_working_diff
+    # Whitespace-only ranges should also be treated as "no range"
+    config = Ace::Git::Models::DiffConfig.from_hash("ranges" => ["  \t  "])
+
+    executor = Object.new
+    def executor.has_unstaged_changes?
+      true
+    end
+
+    def executor.execute(*args, timeout: nil)
+      @last_args = args
+      { success: true, output: "working diff" }
+    end
+
+    def executor.last_args
+      @last_args
+    end
+
+    result = Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
+    assert_equal "working diff", result
+  end
+
+  def test_generate_uses_first_non_empty_range
+    # If mix of empty and non-empty ranges, use first non-empty
+    config = Ace::Git::Models::DiffConfig.from_hash("ranges" => ["", "HEAD~1..HEAD", ""])
+
+    executor = Object.new
+    def executor.execute(*args, timeout: nil)
+      @last_args = args
+      { success: true, output: "range diff" }
+    end
+
+    def executor.last_args
+      @last_args
+    end
+
+    result = Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
+    assert_equal "range diff", result
+    assert_includes executor.last_args, "HEAD~1..HEAD"
+  end
 end
