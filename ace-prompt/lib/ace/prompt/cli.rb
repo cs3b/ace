@@ -234,7 +234,7 @@ module Ace
       # @return [String, nil] Path to the-prompt.md in task's prompts directory, or nil for default
       def resolve_task_prompt_path(task_option)
         require_relative "atoms/task_path_resolver"
-        require_relative "molecules/git_branch_reader"
+        require "ace/git"
 
         # If task ID is explicitly provided, use it
         if task_option
@@ -249,8 +249,8 @@ module Ace
         # Check if auto-detection is enabled in config
         return nil unless Ace::Prompt.config.dig("task", "detection")
 
-        # Try to extract task ID from current branch (via molecule for I/O)
-        branch = Molecules::GitBranchReader.current_branch
+        # Try to extract task ID from current branch (via ace-git for I/O)
+        branch = Ace::Git::Molecules::BranchReader.current_branch
         return nil unless branch
 
         extracted_task_id = Atoms::TaskPathResolver.extract_from_branch(branch)

@@ -31,7 +31,6 @@ require_relative "prompt/molecules/template_resolver"
 require_relative "prompt/molecules/template_manager"
 require_relative "prompt/molecules/context_loader"
 require_relative "prompt/molecules/enhancement_tracker"
-require_relative "prompt/molecules/git_branch_reader"
 
 # Organisms
 require_relative "prompt/organisms/prompt_processor"

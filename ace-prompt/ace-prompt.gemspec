@@ -39,6 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-core', '~> 0.10'
   spec.add_dependency 'ace-nav', '~> 0.8'
   spec.add_dependency 'ace-context', '~> 0.8'
+  spec.add_dependency 'ace-git', '~> 0.3' # Unified git operations (task 140.04)
   spec.add_dependency 'ace-llm', '~> 0.8'
   spec.add_dependency 'ace-taskflow', '~> 0.9'
   spec.add_dependency 'thor', '~> 1.3'

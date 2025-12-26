@@ -3,6 +3,7 @@
 require "test_helper"
 require "tmpdir"
 require "fileutils"
+require "ace/git"
 
 class CLIIntegrationTest < Minitest::Test
   def setup
@@ -571,7 +572,7 @@ class CLIIntegrationTest < Minitest::Test
     tmpdir = @tmpdir
     Ace::Prompt.stub :config, config_with_detection do
       Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
-        Ace::Prompt::Molecules::GitBranchReader.stub :current_branch, "121-feature-branch" do
+        Ace::Git::Molecules::BranchReader.stub :current_branch, "121-feature-branch" do
           Ace::Prompt::Atoms::TaskPathResolver.stub :extract_from_branch, "121" do
             Ace::Prompt::Atoms::TaskPathResolver.stub :resolve, mock_result do
               output, _error = run_cli(["process"])
@@ -580,6 +581,32 @@ class CLIIntegrationTest < Minitest::Test
               assert_match(/Auto-detected task prompt/, output)
             end
           end
+        end
+      end
+    end
+  end
+
+  def test_process_with_auto_detection_when_branch_returns_nil
+    # Create project prompt file as fallback
+    File.write(@prompt_file, "Project-level prompt content", encoding: "utf-8")
+
+    # Enable task detection in config
+    config_with_detection = Ace::Prompt.default_config.merge(
+      "task" => { "detection" => true }
+    )
+
+    tmpdir = @tmpdir
+    Ace::Prompt.stub :config, config_with_detection do
+      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+        # Simulate ace-git returning nil (not in git repo or error)
+        Ace::Git::Molecules::BranchReader.stub :current_branch, nil do
+          output, _error = run_cli(["process"])
+
+          # Should fall back to project-level prompt
+          assert_match(/Project-level prompt content/, output)
+
+          # Verify archive created in project directory
+          assert File.directory?(@archive_dir)
         end
       end
     end
