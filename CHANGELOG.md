@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.185] - 2025-12-26
+
+### ace-prompt v0.5.1 → v0.6.0
+
+**Changed**
+- Migrate to ace-git for branch reading (Task 140.04)
+  - Replace local `GitBranchReader` molecule with `Ace::Git::Molecules::BranchReader`
+  - Add `ace-git (~> 0.3)` dependency for unified git operations
+
+**Added**
+- Test for nil/failure path when branch detection fails (graceful fallback to project-level prompt)
+
+**Removed**
+- `Ace::Prompt::Molecules::GitBranchReader` - functionality now provided by ace-git
+
 ## [0.9.184] - 2025-12-26
 
 ### ace-review v0.25.0 → v0.26.0

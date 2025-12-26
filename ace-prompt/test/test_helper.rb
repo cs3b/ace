@@ -10,6 +10,10 @@ $LOAD_PATH.unshift(ace_support_core_path) if Dir.exist?(ace_support_core_path)
 ace_context_path = File.expand_path("../../ace-context/lib", __dir__)
 $LOAD_PATH.unshift(ace_context_path) if Dir.exist?(ace_context_path)
 
+# Load ace-git for stubbing Ace::Git::Molecules::BranchReader in tests
+ace_git_path = File.expand_path("../../ace-git/lib", __dir__)
+$LOAD_PATH.unshift(ace_git_path) if Dir.exist?(ace_git_path)
+
 require "ace/prompt"
 
 require "minitest/autorun"
