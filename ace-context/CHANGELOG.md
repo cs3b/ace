@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.20.0] - 2025-12-26
+
+### Changed
+
+* **Migrated to ace-git Package**: Replaced internal Git/GitHub components with ace-git dependency
+  * Replaced `ace-git-diff` (~> 0.1.0) dependency with `ace-git` (~> 0.3)
+  * Removed internal `Atoms::GitExtractor` - now uses `Ace::Git::Organisms::DiffOrchestrator`
+  * Removed internal `Atoms::PrIdentifierParser` - now uses `Ace::Git::Atoms::PrIdentifierParser`
+  * Removed internal `Molecules::GhPrExecutor` - now uses `Ace::Git::Molecules::PrMetadataFetcher`
+  * Uses centralized ace-git error types (`Ace::Git::GhNotInstalledError`, etc.)
+  * Timeout configuration now comes from ace-git config (`Ace::Git.network_timeout`)
+
+### Removed
+
+* **Internal Git Modules**: Deleted in favor of ace-git package equivalents
+  * `lib/ace/context/atoms/git_extractor.rb` - Use `Ace::Git::Organisms::DiffOrchestrator` instead
+  * `lib/ace/context/atoms/pr_identifier_parser.rb` - Use `Ace::Git::Atoms::PrIdentifierParser` instead
+  * `lib/ace/context/molecules/gh_pr_executor.rb` - Use `Ace::Git::Molecules::PrMetadataFetcher` instead
+
+### Technical
+
+* Reduced code duplication by centralizing Git operations in ace-git
+* Simplified ace-context responsibility to focus on context loading
+* All existing functionality preserved with API compatibility
+* Improved error handling: use specific `Ace::Git::GitError` instead of `StandardError` in diff processing
+* Added adapter tests for ace-git error type handling (`GhNotInstalledError`, `GhAuthenticationError`, `PrNotFoundError`, `TimeoutError`)
+
 ## [0.19.2] - 2025-12-16
 
 ### Fixed

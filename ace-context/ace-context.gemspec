@@ -37,7 +37,9 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'ace-support-core', '~> 0.10'
-  spec.add_dependency 'ace-git-diff', '~> 0.1.0'
+  # ace-git: Centralized Git/GitHub operations (diffs, PR metadata, branch info)
+  # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)
+  spec.add_dependency 'ace-git', '~> 0.3'
 
   # Development dependencies managed in root Gemfile
 end
