@@ -5,6 +5,7 @@ require "open3"
 require "timeout"
 require "ace/core/atoms/deep_merger"
 require "ace/core/atoms/process_terminator"
+require "ace/git"
 require_relative "../errors"
 
 module Ace
@@ -27,7 +28,6 @@ module Ace
         # @param options [Hash] Configuration options
         # @option options [Integer] :taskflow_timeout Timeout for ace-taskflow subprocess (default: 10s)
         def initialize(options = {})
-          @git = Ace::Context::Atoms::GitExtractor
           @taskflow_timeout = options[:taskflow_timeout] || TASKFLOW_TIMEOUT
         end
 
@@ -143,7 +143,7 @@ module Ace
           when "working", "unstaged"
             { "diffs" => [""] }
           when "pr", "pull-request"
-            tracking = @git.tracking_branch
+            tracking = Ace::Git::Molecules::BranchReader.tracking_branch
             range = tracking ? "#{tracking}...HEAD" : "origin/main...HEAD"
             { "diffs" => [range] }
           else
@@ -195,10 +195,10 @@ module Ace
             if pr_refs.empty?
               raise ArgumentError, "No valid PR references provided. Usage: pr:REF (e.g., pr:123, pr:owner/repo#456)"
             end
-            # Pre-validate PR refs for early error feedback using ace-context's parser
+            # Pre-validate PR refs for early error feedback using ace-git's parser
             # Supports: simple numbers (123), qualified refs (owner/repo#456), GitHub URLs
             pr_refs.each do |ref|
-              Ace::Context::Atoms::PrIdentifierParser.parse(ref)
+              Ace::Git::Atoms::PrIdentifierParser.parse(ref)
             end
             { "context" => { "pr" => pr_refs } }
           when /^pr:$/
