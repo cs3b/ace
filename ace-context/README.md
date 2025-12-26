@@ -329,8 +329,8 @@ Each preset can define its default output mode in the `params.output` field.
 
 - **PresetManager** - Loads markdown presets from `.ace/context/`
 - **ContextLoader** - Processes presets and loads context
-- **FileAggregator** - Handles file patterns and glob expansion (via ace-core)
-- **OutputFormatter** - Formats context for output (via ace-core)
+- **FileAggregator** - Handles file patterns and glob expansion (via ace-support-core)
+- **OutputFormatter** - Formats context for output (via ace-support-core)
 
 ### Preset Structure
 
@@ -339,11 +339,33 @@ Presets use YAML frontmatter with a unified `context:` section:
 1. **context.params** - Tool configuration (output, max_size, timeout)
 2. **context** - Content specification (embed_document_source, files, commands, diffs, exclude)
 
+## Dependencies
+
+ace-context relies on:
+- **ace-support-core** - Configuration cascade and shared utilities
+- **ace-git** - Git and GitHub operations (diffs, PR metadata, branch info)
+
+### ace-git Integration (v0.20.0+)
+
+As of v0.20.0, ace-context uses ace-git for all Git and GitHub operations. The internal `GitExtractor`, `PrIdentifierParser`, and `GhPrExecutor` modules have been removed in favor of centralized functionality in ace-git. This reduces code duplication and provides consistent error handling across ACE packages.
+
+**Configuring Timeouts**
+
+Timeouts for git operations can be configured via `.ace/git/config.yml`:
+
+```yaml
+# .ace/git/config.yml
+git:
+  timeout: 30           # Local git operations (diff, status, log)
+  network_timeout: 60   # Network operations (gh CLI, PR fetches)
+```
+
 ## Development
 
 This gem is part of the ace-meta project and uses:
-- ace-core for configuration and file operations
-- ace-test-support for testing utilities
+- ace-support-core for configuration and file operations
+- ace-git for Git/GitHub operations
+- ace-support-test-helpers for testing utilities
 
 ## Testing
 
