@@ -5,22 +5,12 @@ module Ace
     module Worktree
       # Configuration module
       #
-      # Provides default configuration and constants for the ace-git-worktree gem.
-      # This module serves as a central place for configuration settings.
+      # Provides constants and utility methods for the ace-git-worktree gem.
+      # Configuration values are loaded from .ace/git/worktree.yml via ace-core cascade.
+      # Default values are defined in WorktreeConfig::DEFAULT_CONFIG.
       module Configuration
         # Gem name and identifier
         GEM_NAME = "ace-git-worktree"
-
-        # Default configuration values
-        DEFAULT_ROOT_PATH = ".ace-wt"
-        DEFAULT_DIRECTORY_FORMAT = "task.{id}"
-        DEFAULT_BRANCH_FORMAT = "{id}-{slug}"
-        DEFAULT_COMMIT_MESSAGE_FORMAT = "chore(task-{id}): mark as in-progress, creating worktree"
-
-        # Default timeout values (in seconds)
-        DEFAULT_GIT_TIMEOUT = 30
-        DEFAULT_MISE_TIMEOUT = 5
-        DEFAULT_TASK_TIMEOUT = 10
 
         # File and directory names
         MISE_CONFIG_FILE = "mise.toml"
@@ -31,11 +21,6 @@ module Ace
 
         # Template variable patterns
         TEMPLATE_VARIABLES = %w[id task_id release slug].freeze
-
-        # Validation constraints
-        MAX_SLUG_LENGTH = 50
-        MIN_SLUG_LENGTH = 3
-        MAX_PATH_LENGTH = 4096
 
         # Git branch name restrictions
         FORBIDDEN_BRANCH_CHARS = /[~\^:\*\?\[\]]/
@@ -98,28 +83,6 @@ module Ace
           metadata_add_failed: "Failed to add worktree metadata",
           uncommitted_changes: "Worktree has uncommitted changes"
         }.freeze
-
-        # Load default configuration
-        #
-        # @return [Hash] Default configuration hash
-        def self.default_configuration
-          {
-            "root_path" => DEFAULT_ROOT_PATH,
-            "mise_trust_auto" => true,
-            "task" => {
-              "directory_format" => DEFAULT_DIRECTORY_FORMAT,
-              "branch_format" => DEFAULT_BRANCH_FORMAT,
-              "auto_mark_in_progress" => true,
-              "auto_commit_task" => true,
-              "commit_message_format" => DEFAULT_COMMIT_MESSAGE_FORMAT,
-              "add_worktree_metadata" => true
-            },
-            "cleanup" => {
-              "on_merge" => false,
-              "on_delete" => true
-            }
-          }
-        end
 
         # Validate template variables
         #
