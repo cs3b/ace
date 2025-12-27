@@ -2,6 +2,13 @@
 
 require "test_helper"
 
+# Try to load ace-git for integration tests
+begin
+  require "ace/git"
+rescue LoadError
+  # ace-git not available in this context
+end
+
 # Contract tests for Git-related mock structures
 #
 # These tests ensure that mock fixtures match the actual API of git-related commands.
@@ -136,12 +143,12 @@ class GitContractTest < AceTestCase
 
   # Integration test: Verify stub_git_command works correctly
   def test_stub_git_command_integration
-    skip "ace-git-diff not available" unless defined?(Ace::GitDiff::Atoms::CommandExecutor)
+    skip "ace-git not available" unless defined?(Ace::Git::Atoms::CommandExecutor)
 
     Ace::TestSupport::Fixtures::GitMocks.stub_git_command(output: "test output", exit_status: 0) do
       # In a real test, this would execute a command
       # Here we just verify the stub is active
-      result = Ace::GitDiff::Atoms::CommandExecutor.execute(["git", "status"])
+      result = Ace::Git::Atoms::CommandExecutor.execute(["git", "status"])
 
       assert result[:success], "Stubbed command should return success"
       assert_equal "test output", result[:output], "Stubbed command should return mocked output"

@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-require "ace/git_diff"
+require "ace/git"
 
 module Ace
   module GitCommit
     module Atoms
       # GitExecutor handles low-level git command execution
-      # Now delegates to ace-git-diff for command execution
+      # Delegates to ace-git for command execution
       class GitExecutor
         # Execute a git command and return output
         # @param args [Array<String>] Git command arguments
@@ -15,7 +15,7 @@ module Ace
         # @raise [GitError] If command fails
         def execute(*args, capture_stderr: false)
           cmd = ["git"] + args
-          result = Ace::GitDiff::Atoms::CommandExecutor.execute(*cmd)
+          result = Ace::Git::Atoms::CommandExecutor.execute(*cmd)
 
           unless result[:success]
             error_msg = "Git command failed: #{cmd.join(' ')}"
@@ -34,26 +34,26 @@ module Ace
         # Check if we're in a git repository
         # @return [Boolean] True if in a git repo
         def in_repository?
-          Ace::GitDiff::Atoms::CommandExecutor.in_git_repo?
+          Ace::Git::Atoms::CommandExecutor.in_git_repo?
         end
 
         # Get repository root
         # @return [String] Repository root path
         def repository_root
-          Ace::GitDiff::Atoms::CommandExecutor.repo_root
+          Ace::Git::Atoms::CommandExecutor.repo_root
         end
 
         # Check if there are any changes
         # @return [Boolean] True if there are changes
         def has_changes?
-          Ace::GitDiff::Atoms::CommandExecutor.has_unstaged_changes? ||
-            Ace::GitDiff::Atoms::CommandExecutor.has_staged_changes?
+          Ace::Git::Atoms::CommandExecutor.has_unstaged_changes? ||
+            Ace::Git::Atoms::CommandExecutor.has_staged_changes?
         end
 
         # Check if there are staged changes
         # @return [Boolean] True if there are staged changes
         def has_staged_changes?
-          Ace::GitDiff::Atoms::CommandExecutor.has_staged_changes?
+          Ace::Git::Atoms::CommandExecutor.has_staged_changes?
         end
       end
     end

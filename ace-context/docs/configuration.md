@@ -377,7 +377,7 @@ The `diff` format supports additional options:
 
 - **`ranges`**: Array of git range strings (same as simple format)
 - **`since`**: Single reference point (automatically expands to `since...HEAD`)
-- **`paths`**: Path filtering (reserved for future ace-git-diff integration)
+- **`paths`**: Path filtering (reserved for future ace-git integration)
 
 **Use simple format when**: You only need basic git ranges
 **Use complex format when**: You need path filtering or other advanced options (future)

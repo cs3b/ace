@@ -5,6 +5,14 @@ All notable changes to ace-test-support will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.3] - 2025-12-27
+
+### Changed
+
+- **Contract Test Enhancement**: Added guarded require for ace-git in git contract tests
+  - Enables integration test to exercise CommandExecutor stub with ace-git when available
+  - Part of ace-git-diff to ace-git migration
+
 ## [0.9.2] - 2025-10-08
 
 ### Changed

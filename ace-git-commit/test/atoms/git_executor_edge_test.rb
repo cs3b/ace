@@ -6,7 +6,7 @@ require "tmpdir"
 class GitExecutorEdgeTest < TestCase
   def setup
     @git = Ace::GitCommit::Atoms::GitExecutor.new
-    @cmd_executor = Ace::GitDiff::Atoms::CommandExecutor
+    @cmd_executor = Ace::Git::Atoms::CommandExecutor
   end
 
   # Most edge cases can be tested with mocks
