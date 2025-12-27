@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-01'
+  last-updated: '2025-12-27'
 ---
 
 # ACE (Agent Coding Environment)
@@ -20,7 +20,10 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Eac
 - **ace-core**: Configuration management and shared utilities
 - **ace-context**: Project context loading with smart caching
 - **ace-docs**: Documentation management with frontmatter-based tracking
+- **ace-git**: Unified Git operations (status, diff, branch, PR context)
 - **ace-git-commit**: Smart git commit generation with LLM integration
+- **ace-git-secrets**: Token detection and security remediation
+- **ace-git-worktree**: Git worktree management
 - **ace-lint**: Code quality linting (markdown, YAML, frontmatter)
 - **ace-llm**: Multi-provider AI model integration with CLI-based providers
 - **ace-nav**: Resource discovery and navigation with wfi:// protocol

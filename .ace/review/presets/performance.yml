@@ -30,6 +30,6 @@ instructions:
 context: "project"
 
 subject:
-  # Use diff key for consistent filtering via ace-git-diff
+  # Use diff key for consistent filtering via ace-git
   diff:
     - "HEAD~3..HEAD"

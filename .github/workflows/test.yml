@@ -30,7 +30,6 @@ jobs:
           - ace-nav
           - ace-taskflow
           - ace-git-commit
-          - ace-git-diff
           - ace-llm
           - ace-llm-providers-cli
           - ace-search

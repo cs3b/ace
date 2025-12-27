@@ -38,7 +38,7 @@ instructions:
 context: "project"
 
 subject:
-  # Use diff key for consistent filtering via ace-git-diff
+  # Use diff key for consistent filtering via ace-git
   diff:
     ranges:
       - "HEAD~1..HEAD"

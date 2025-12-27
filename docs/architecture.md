@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-01'
+  last-updated: '2025-12-27'
 ---
 
 # ACE - System Architecture
@@ -70,7 +70,10 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-support-core**: Configuration management foundation
 * **ace-context**: Project context loading with protocol support
 * **ace-docs**: Documentation management with frontmatter-based tracking
+* **ace-git**: Unified Git operations and PR context
 * **ace-git-commit**: Smart git commit generation with LLM integration
+* **ace-git-secrets**: Security scanning and token remediation
+* **ace-git-worktree**: Worktree management
 * **ace-lint**: Code quality linting (markdown, YAML, frontmatter)
 * **ace-llm**: Multi-provider AI model integration with CLI-based providers
 * **ace-nav**: Resource discovery and navigation with wfi:// protocol
