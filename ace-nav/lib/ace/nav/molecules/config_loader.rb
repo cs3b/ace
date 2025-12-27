@@ -5,27 +5,20 @@ require "pathname"
 require_relative "source_registry"
 require "ace/core/molecules/project_root_finder"
 require "ace/core/molecules/directory_traverser"
+require "ace/core/atoms/deep_merger"
 
 module Ace
   module Nav
     module Molecules
       # Loads configuration from .ace/nav/*.yml files and protocols
+      # ADR-022: Defaults come from .ace.example/nav/config.yml
+      #
+      # TODO: Refactor to use Ace::Core.config for user config cascade instead of
+      # manual path discovery (find_config_dir). This requires enhancing ace-support-core
+      # to support ADR-022 pattern: Ace::Core.config.for_gem('nav') that loads
+      # gem defaults from .ace.example/ and merges with user cascade.
       class ConfigLoader
-        DEFAULT_CONFIG = {
-          "cache" => {
-            "enabled" => false,
-            "directory" => ".cache/ace-nav",
-            "ttl" => 3600
-          },
-          "fuzzy" => {
-            "enabled" => true,
-            "threshold" => 0.6
-          },
-          "output" => {
-            "color" => true,
-            "verbose" => false
-          }
-        }.freeze
+        class Error < StandardError; end
 
         def initialize(config_dir = nil, source_registry: nil)
           @config_dir = find_config_dir(config_dir)
@@ -35,8 +28,52 @@ module Ace
         end
 
         # Load main settings configuration
+        # ADR-022: Loads defaults from .ace.example/, merges user config
+        # @return [Hash] Configuration with defaults and user overrides
         def load_settings
-          load_config("settings.yml", DEFAULT_CONFIG)
+          # Return cached if already loaded
+          return @configs["settings"] if @configs.key?("settings")
+
+          # Load defaults from gem's .ace.example/nav/config.yml
+          gem_defaults = load_example_config
+
+          # Load user config from .ace/nav/config.yml cascade
+          # Fallback to settings.yml for backward compatibility (deprecated)
+          user_config = if @config_dir
+                          config_path = File.join(@config_dir, "config.yml")
+                          legacy_path = File.join(@config_dir, "settings.yml")
+
+                          if File.exist?(config_path)
+                            load_yaml_file(config_path)
+                          elsif File.exist?(legacy_path)
+                            warn "DEPRECATION: #{legacy_path} is deprecated, rename to config.yml"
+                            load_yaml_file(legacy_path)
+                          else
+                            {}
+                          end
+                        else
+                          {}
+                        end
+
+          # Deep merge: user config over gem defaults
+          @configs["settings"] = Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+        end
+
+        # Load defaults from .ace.example/nav/config.yml
+        # ADR-022: .ace.example/ is the single source of truth for defaults
+        # @return [Hash] Default configuration from example file
+        def load_example_config
+          # Use relative path from this file to gem root (4 levels up from molecules/)
+          gem_root = File.expand_path("../../../..", __dir__)
+          example_path = File.join(gem_root, ".ace.example", "nav", "config.yml")
+
+          # ADR-022: Missing .ace.example/ file is a packaging error, not a fallback case
+          unless File.exist?(example_path)
+            raise Error, "Default config not found: #{example_path}. " \
+                         "This is a gem packaging error - .ace.example/ must be included in the gem."
+          end
+
+          load_yaml_file(example_path)
         end
 
         # Load protocol-specific configuration
@@ -151,42 +188,12 @@ module Ace
           search_paths.find { |path| Dir.exist?(path) }
         end
 
-        def load_config(filename, default_config)
-          # Return cached if already loaded
-          return @configs[filename] if @configs.key?(filename)
-
-          config = if @config_dir
-                     config_path = File.join(@config_dir, filename)
-                     if File.exist?(config_path)
-                       load_yaml_file(config_path)
-                     else
-                       default_config
-                     end
-                   else
-                     default_config
-                   end
-
-          @configs[filename] = deep_merge(default_config, config)
-        end
-
         def load_yaml_file(path)
           content = File.read(path)
           YAML.safe_load(content, permitted_classes: [Symbol]) || {}
         rescue StandardError => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
           {}
-        end
-
-        def deep_merge(hash1, hash2)
-          return hash2 unless hash1.is_a?(Hash) && hash2.is_a?(Hash)
-
-          hash1.merge(hash2) do |_key, old_val, new_val|
-            if old_val.is_a?(Hash) && new_val.is_a?(Hash)
-              deep_merge(old_val, new_val)
-            else
-              new_val
-            end
-          end
         end
 
         def default_protocol_config(protocol)
