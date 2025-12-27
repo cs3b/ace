@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-12-27
+
+### Added
+- **ADR-022 Configuration Pattern**: Migrate configuration to load defaults from `.ace.example/` and merge with user overrides
+  - Defaults loaded from `.ace.example/test-runner/config.yml` at runtime
+  - User config from `.ace/test/runner.yml` merged over defaults (deep merge)
+  - Removed hardcoded defaults from Ruby code
+  - New `normalize_config` method for consistent configuration normalization
+
+### Fixed
+- **Test Isolation**: Improved test isolation for config-dependent tests
+  - Tests now properly stub configuration loading to avoid interference
+  - Better cleanup of configuration state between tests
+
+### Technical
+- Optimized integration tests with stubbing and better config handling
+
 ## [0.3.0] - 2025-12-20
 
 ### Added

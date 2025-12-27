@@ -2,16 +2,20 @@
 
 require "yaml"
 require "ostruct"
-
-begin
-  require "ace/core"
-rescue LoadError
-  # ace-core not available, will use fallback config loading
-end
+require "ace/core/atoms/deep_merger"
 
 module Ace
   module TestRunner
     module Molecules
+      # Load configuration using ace-core patterns
+      # Follows ADR-022: Configuration Default and Override Pattern
+      #
+      # Configuration priority (highest to lowest):
+      # 1. CLI options (handled by merge_with_options)
+      # 2. Explicit config_path if provided
+      # 3. Project config: .ace/test/runner.yml (nearest wins via cascade)
+      # 4. User config: ~/.ace/test/runner.yml
+      # 5. Gem defaults: ace-test-runner/.ace.example/test-runner/config.yml
       class ConfigLoader
         DEFAULT_CONFIG_PATHS = [
           ".ace/test/runner.yml",
@@ -24,39 +28,48 @@ module Ace
           "test-runner.yaml"
         ].freeze
 
-        DEFAULT_CONFIG = {
-          version: 1,
-          patterns: {
-            # Support both test/unit/atoms and test/atoms structures
-            atoms: "test/{unit/,}atoms/**/*_test.rb",
-            molecules: "test/{unit/,}molecules/**/*_test.rb",
-            organisms: "test/{unit/,}organisms/**/*_test.rb",
-            models: "test/{unit/,}models/**/*_test.rb",
-            integration: "test/integration/**/*_test.rb",
-            system: "test/system/**/*_test.rb"
-          },
-          groups: {
-            unit: %w[atoms molecules organisms models],
-            all: %w[unit integration system],
-            quick: %w[atoms molecules]
-          },
-          defaults: {
-            reporter: "progress",
-            color: "auto",
-            fail_fast: false,
-            save_reports: true,
-            report_dir: "test-reports"
-          },
-          failure_limits: {
-            max_display: 7
-          }
-        }.freeze
+        # Load gem defaults from .ace.example/test-runner/config.yml
+        # This file is shipped with the gem and is the single source of truth
+        # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
+        # @return [Hash] Default configuration from gem
+        # @raise [RuntimeError] If default config file is missing (gem packaging error)
+        def self.load_gem_defaults
+          @gem_defaults ||= begin
+            gem_root = File.expand_path("../../../..", __dir__)
+            default_file = File.join(gem_root, ".ace.example", "test-runner", "config.yml")
+
+            unless File.exist?(default_file)
+              raise "Default config not found: #{default_file}. " \
+                    "This is a gem packaging error - .ace.example/ must be included in the gem."
+            end
+
+            content = YAML.safe_load_file(default_file, permitted_classes: [], symbolize_names: true, aliases: true)
+            content || {}
+          end
+        end
+
+        # Reset cached gem defaults (for testing)
+        def self.reset_gem_defaults!
+          @gem_defaults = nil
+        end
 
         def load(config_path = nil)
-          config = if config_path && File.exist?(config_path)
-            load_from_file(config_path)
+          # Start with gem defaults
+          config = deep_copy(self.class.load_gem_defaults)
+
+          if config_path && File.exist?(config_path)
+            # Explicit config path provided - merge over defaults
+            user_config = load_from_file(config_path)
+            config = Ace::Core::Atoms::DeepMerger.merge(config, user_config)
           else
-            find_and_load_config || deep_copy(DEFAULT_CONFIG)
+            # Apply cascade: home config, then walk up from current directory
+            cascade_configs.each do |path|
+              if File.exist?(path)
+                puts "Loading configuration from: #{path}" if ENV["DEBUG"]
+                user_config = load_from_file(path)
+                config = Ace::Core::Atoms::DeepMerger.merge(config, user_config)
+              end
+            end
           end
 
           validate_config(config)
@@ -98,36 +111,37 @@ module Ace
 
         private
 
-        def find_and_load_config
-          # Try ace-core configuration cascade first
-          if defined?(Ace::Core::ConfigDiscovery)
-            discovery = Ace::Core::ConfigDiscovery.new
+        # Build cascade paths from home directory up through current directory hierarchy
+        # Returns paths in order from lowest to highest priority
+        def cascade_configs
+          paths = []
+
+          # User-level config (lowest priority in cascade)
+          home_config = File.join(Dir.home, ".ace", "test", "runner.yml")
+          paths << home_config
+
+          # Walk from current directory up, collecting project configs
+          project_paths = []
+          current = Dir.pwd
+          while current != "/" && current != File.dirname(current)
             DEFAULT_CONFIG_PATHS.each do |rel_path|
-              # Strip .ace/ prefix since ConfigDiscovery searches .ace directories automatically
-              search_path = rel_path.sub(/^\.ace\//, '')
-              config_file = discovery.find_config_file(search_path)
-              if config_file && File.exist?(config_file)
-                puts "Loading configuration from: #{config_file}" if ENV["DEBUG"]
-                return load_from_file(config_file)
-              end
+              full_path = File.join(current, rel_path)
+              project_paths << full_path if File.exist?(full_path)
             end
+            current = File.dirname(current)
           end
 
-          # Fallback to current directory only
-          config_file = DEFAULT_CONFIG_PATHS.find { |path| File.exist?(path) }
-          return nil unless config_file
+          # Add project paths in reverse order (furthest ancestor first, current last)
+          paths.concat(project_paths.reverse)
 
-          puts "Loading configuration from: #{config_file}" if ENV["DEBUG"]
-          load_from_file(config_file)
+          paths.uniq
         end
 
         def load_from_file(path)
-          content = File.read(path)
-          YAML.safe_load(content, permitted_classes: [Symbol], symbolize_names: true)
+          YAML.safe_load_file(path, permitted_classes: [], symbolize_names: true, aliases: true) || {}
         rescue StandardError => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
-          warn "Using default configuration"
-          deep_copy(DEFAULT_CONFIG)
+          {}
         end
 
         def validate_config(config)
@@ -144,18 +158,12 @@ module Ace
         end
 
         def normalize_config(config)
-          # Ensure all sections exist
-          config[:patterns] ||= deep_copy(DEFAULT_CONFIG[:patterns])
-          config[:groups] ||= deep_copy(DEFAULT_CONFIG[:groups])
-          config[:defaults] ||= deep_copy(DEFAULT_CONFIG[:defaults])
-          config[:failure_limits] ||= deep_copy(DEFAULT_CONFIG[:failure_limits])
+          # Ensure all sections exist as hashes (defaults already merged in load)
+          config[:patterns] ||= {}
+          config[:groups] ||= {}
+          config[:defaults] ||= {}
+          config[:failure_limits] ||= {}
           config[:execution] ||= {}
-
-          # Merge with defaults for missing values
-          config[:patterns] = deep_copy(DEFAULT_CONFIG[:patterns]).merge(config[:patterns])
-          config[:groups] = deep_copy(DEFAULT_CONFIG[:groups]).merge(config[:groups])
-          config[:defaults] = deep_copy(DEFAULT_CONFIG[:defaults]).merge(config[:defaults])
-          config[:failure_limits] = deep_copy(DEFAULT_CONFIG[:failure_limits]).merge(config[:failure_limits])
 
           config
         end

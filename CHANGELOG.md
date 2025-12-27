@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.202] - 2025-12-27
+
+### ace-test-runner v0.3.0 → v0.4.0
+
+**Added**
+- Migrate configuration to ADR-022 pattern
+  - Defaults loaded from `.ace.example/test-runner/config.yml` at runtime
+  - User config from `.ace/test/runner.yml` merged over defaults (deep merge)
+  - Removed hardcoded defaults from Ruby code
+  - New `normalize_config` method for consistent configuration normalization
+
+**Fixed**
+- Improved test isolation for config-dependent tests
+
+**Technical**
+- Optimized integration tests with stubbing and better config handling
+
 ## [0.9.201] - 2025-12-27
 
 ### ace-nav v0.10.2 → v0.11.0
