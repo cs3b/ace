@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.201] - 2025-12-27
+
+### ace-nav v0.10.2 → v0.11.0
+
+**Added**
+- Migrate configuration to ADR-022 pattern
+  - Defaults loaded from `.ace.example/nav/config.yml` at runtime
+  - User overrides via `.ace/nav/config.yml` cascade
+  - Deep merge of user config over defaults
+  - Single source of truth for default values
+
+**Fixed**
+- Address review feedback for ADR-022 migration
+
 ## [0.9.200] - 2025-12-27
 
 ### ace-git-worktree v0.6.1 → v0.7.0
