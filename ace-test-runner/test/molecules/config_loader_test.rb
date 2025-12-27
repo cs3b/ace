@@ -8,10 +8,28 @@ require "yaml"
 class ConfigLoaderTest < Minitest::Test
   def setup
     @loader = Ace::TestRunner::Molecules::ConfigLoader.new
+    # Reset cached defaults to ensure clean state
+    Ace::TestRunner::Molecules::ConfigLoader.reset_gem_defaults!
+  end
+
+  def teardown
+    # Reset after each test
+    Ace::TestRunner::Molecules::ConfigLoader.reset_gem_defaults!
+  end
+
+  def test_load_gem_defaults
+    defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_equal 1, defaults[:version]
+    assert defaults[:patterns].is_a?(Hash)
+    assert defaults[:groups].is_a?(Hash)
+    assert defaults[:defaults].is_a?(Hash)
+    assert defaults[:failure_limits].is_a?(Hash)
   end
 
   def test_load_default_config_when_no_file_exists
-    File.stub :exist?, false do
+    # Stub cascade_configs to prevent loading actual user/project config files
+    @loader.stub :cascade_configs, [] do
       config = @loader.load
       assert_equal 1, config[:version]
       assert config[:patterns].is_a?(Hash)
@@ -22,19 +40,18 @@ class ConfigLoaderTest < Minitest::Test
 
   def test_load_from_specific_file
     Tempfile.create(["test-runner", ".yml"]) do |file|
-      config_data = {
-        version: 1,
-        patterns: {
+      # Use string keys to match YAML file format (symbolize_names converts on load)
+      config_content = <<~YAML
+        version: 1
+        patterns:
           custom: "test/custom/**/*_test.rb"
-        },
-        groups: {
-          custom_group: ["custom"]
-        },
-        defaults: {
-          reporter: "markdown"
-        }
-      }
-      file.write(YAML.dump(config_data))
+        groups:
+          custom_group:
+            - custom
+        defaults:
+          reporter: markdown
+      YAML
+      file.write(config_content)
       file.rewind
 
       config = @loader.load(file.path)
@@ -46,13 +63,13 @@ class ConfigLoaderTest < Minitest::Test
 
   def test_merge_with_default_config
     Tempfile.create(["test-runner", ".yml"]) do |file|
-      config_data = {
-        version: 1,
-        patterns: {
+      # Use string keys to match YAML file format (symbolize_names converts on load)
+      config_content = <<~YAML
+        version: 1
+        patterns:
           custom: "test/custom/**/*_test.rb"
-        }
-      }
-      file.write(YAML.dump(config_data))
+      YAML
+      file.write(config_content)
       file.rewind
 
       config = @loader.load(file.path)
@@ -112,20 +129,49 @@ class ConfigLoaderTest < Minitest::Test
     assert normalized[:patterns]
     assert normalized[:groups]
     assert normalized[:defaults]
+    assert normalized[:failure_limits]
   end
 
-  def test_find_config_in_default_paths
-    # Test that it searches for config in default locations
-    Ace::TestRunner::Molecules::ConfigLoader::DEFAULT_CONFIG_PATHS.each do |path|
-      File.stub :exist?, ->(p) { p == path } do
-        File.stub :read, "version: 1\npatterns: {}" do
-          YAML.stub :safe_load, { version: 1, patterns: {} } do
-            config = @loader.send(:find_and_load_config)
-            assert config
-            break
-          end
-        end
-      end
-    end
+  def test_gem_defaults_include_expected_patterns
+    defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_equal "test/{unit/,}atoms/**/*_test.rb", defaults[:patterns][:atoms]
+    assert_equal "test/{unit/,}molecules/**/*_test.rb", defaults[:patterns][:molecules]
+    assert_equal "test/{unit/,}organisms/**/*_test.rb", defaults[:patterns][:organisms]
+  end
+
+  def test_gem_defaults_include_expected_groups
+    defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_includes defaults[:groups][:unit], "atoms"
+    assert_includes defaults[:groups][:unit], "molecules"
+    assert_includes defaults[:groups][:quick], "atoms"
+  end
+
+  def test_gem_defaults_include_expected_defaults
+    defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_equal "progress", defaults[:defaults][:reporter]
+    assert_equal "auto", defaults[:defaults][:color]
+    assert_equal false, defaults[:defaults][:fail_fast]
+    assert_equal true, defaults[:defaults][:save_reports]
+    assert_equal "test-reports", defaults[:defaults][:report_dir]
+  end
+
+  def test_gem_defaults_include_failure_limits
+    defaults = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_equal 7, defaults[:failure_limits][:max_display]
+  end
+
+  def test_reset_gem_defaults_clears_cache
+    # Load defaults first
+    defaults1 = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
+
+    # Reset and load again - should still work
+    Ace::TestRunner::Molecules::ConfigLoader.reset_gem_defaults!
+    defaults2 = Ace::TestRunner::Molecules::ConfigLoader.load_gem_defaults
+
+    assert_equal defaults1[:version], defaults2[:version]
   end
 end
