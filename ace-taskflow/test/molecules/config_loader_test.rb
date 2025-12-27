@@ -364,4 +364,43 @@ class ConfigLoaderTest < AceTaskflowTestCase
     end
   end
 
+  def test_status_activity_section_is_extracted
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+
+    with_test_project do |dir|
+      config_dir = File.join(dir, ".ace", "taskflow")
+      FileUtils.mkdir_p(config_dir)
+      File.write(File.join(config_dir, "config.yml"), <<~YAML)
+        taskflow:
+          status:
+            activity:
+              recently_done_limit: 5
+              up_next_limit: 10
+              include_drafts: true
+      YAML
+
+      Dir.chdir(dir) do
+        config = Ace::Taskflow::Molecules::ConfigLoader.load
+
+        # Verify status section is properly extracted
+        assert_kind_of Hash, config["status"]
+        assert_equal 5, config["status"]["activity"]["recently_done_limit"]
+        assert_equal 10, config["status"]["activity"]["up_next_limit"]
+        assert_equal true, config["status"]["activity"]["include_drafts"]
+      end
+    end
+  end
+
+  def test_gem_defaults_have_status_section
+    Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+    defaults = Ace::Taskflow::Molecules::ConfigLoader.load_gem_defaults
+
+    # Verify status activity defaults are present
+    assert_kind_of Hash, defaults["status"]
+    assert_kind_of Hash, defaults["status"]["activity"]
+    assert_equal 3, defaults["status"]["activity"]["recently_done_limit"]
+    assert_equal 3, defaults["status"]["activity"]["up_next_limit"]
+    assert_equal false, defaults["status"]["activity"]["include_drafts"]
+  end
+
 end

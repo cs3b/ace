@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "ace/core/atoms/deep_merger"
 
 module Ace
   module Taskflow
@@ -29,7 +30,7 @@ module Ace
                     "This is a gem packaging error - .ace.example/ must be included in the gem."
             end
 
-            content = YAML.load_file(default_file)
+            content = YAML.safe_load_file(default_file, permitted_classes: [], aliases: true)
             extract_taskflow_config(content&.dig("taskflow") || {})
           end
         end
@@ -40,6 +41,7 @@ module Ace
         end
 
         # Load configuration from cascade
+        # Uses Ace::Core::Atoms::DeepMerger for consistent merging
         # @return [Hash] Merged configuration
         def self.load
           config = load_gem_defaults.dup
@@ -47,7 +49,7 @@ module Ace
           # Look for config files in cascade order
           find_config_paths.each do |path|
             if File.exist?(path)
-              config = deep_merge(config, load_file(path))
+              config = Ace::Core::Atoms::DeepMerger.merge(config, load_file(path))
             end
           end
 
@@ -134,7 +136,7 @@ module Ace
         end
 
         def self.load_file(path)
-          content = YAML.load_file(path)
+          content = YAML.safe_load_file(path, permitted_classes: [], aliases: true)
           return {} unless content.is_a?(Hash)
 
           # Extract taskflow section if present
@@ -196,23 +198,10 @@ module Ace
           config["tasks"] = taskflow_section["tasks"] if taskflow_section["tasks"]
           config["release"] = taskflow_section["release"] if taskflow_section["release"]
           config["params"] = taskflow_section["params"] if taskflow_section["params"]
+          config["status"] = taskflow_section["status"] if taskflow_section["status"]
           config["terminal_statuses"] = taskflow_section["terminal_statuses"] if taskflow_section["terminal_statuses"]
 
           config
-        end
-
-        def self.deep_merge(hash1, hash2)
-          result = hash1.dup
-
-          hash2.each do |key, value|
-            if result[key].is_a?(Hash) && value.is_a?(Hash)
-              result[key] = deep_merge(result[key], value)
-            else
-              result[key] = value
-            end
-          end
-
-          result
         end
       end
     end
