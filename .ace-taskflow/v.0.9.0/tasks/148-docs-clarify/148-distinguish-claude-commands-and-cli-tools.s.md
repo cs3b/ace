@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.148
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 4h
 dependencies: []
 ---
 
@@ -18,7 +18,7 @@ dependencies: []
 ### Expected Behavior
 
 Documentation should clearly distinguish between:
-1. **Claude commands** (e.g., `/ace:fix-test`, `/ace:commit`) - Only run from within Claude agents/conversations
+1. **Claude commands** (e.g., `/ace:commit`, `/ace:work-on-task`) - Only run from within Claude agents/conversations
 2. **CLI tools** (e.g., `ace-taskflow`, `ace-test`, `ace-context`) - Run from bash/fish terminal
 
 Users should be able to:
@@ -72,56 +72,141 @@ Every command reference should include:
 - [ ] **Consistency**: All documentation files follow same convention for command type indication
 - [ ] **Examples Included**: Command references show proper usage in correct context with examples
 
-### Validation Questions
-
-- [ ] **Requirement Clarity**: Which documentation files need updates? (CLAUDE.md, READMEs, guides, workflow instructions?)
-- [ ] **Visual Conventions**: Should we use additional markers beyond `/` prefix? (badges, icons, formatting?)
-- [ ] **Scope Coverage**: Do we need to audit all existing docs or focus on frequently accessed files?
-- [ ] **User Guidance**: Should we add a "Command Reference Guide" explaining the distinction?
-- [ ] **Tooling Support**: Should ace-nav or other tools help users discover command types?
-
 ## Objective
 
 Eliminate user confusion about where to run commands by providing clear, consistent documentation that distinguishes between Claude agent commands (slash commands for agent conversations) and CLI tools (terminal commands). This improves developer experience and reduces errors from running commands in wrong environments.
 
+## Technical Approach
+
+### Architecture Pattern
+- Documentation-only changes following existing markdown conventions
+- No code changes required - purely documentation updates
+- Pattern: Add explicit context markers to all command references
+
+### Documentation Style Convention
+
+**For Claude Commands (Agent Slash Commands):**
+```markdown
+### `/ace:command-name` (Claude Command)
+
+Run from Claude Code conversation:
+```
+/ace:command-name [arguments]
+```
+```
+
+**For CLI Tools (Terminal Commands):**
+```markdown
+### `ace-tool-name` (CLI Tool)
+
+Run from terminal:
+```bash
+ace-tool-name [arguments]
+```
+```
+
 ## Scope of Work
-
-**User Experience Scope**:
-- Documentation readers learning ace-meta tools
-- Developers executing commands in daily workflow
-- Users troubleshooting command execution errors
-
-**System Behavior Scope**:
-- Documentation structure and formatting
-- Command reference patterns
-- Environment context indicators
-- Usage examples and guides
-
-**Interface Scope**:
-- All CLAUDE.md files (project and user-level)
-- README files in relevant packages
-- Workflow instruction files
-- Command help documentation
 
 ### Deliverables
 
-#### Behavioral Specifications
-- Documentation style guide for command types
-- Environment context indicators (slash prefix, labels, examples)
-- Consistent formatting patterns across all docs
+#### Modify
 
-#### Validation Artifacts
-- Documentation audit results
-- Updated files following new conventions
-- User feedback on clarity improvements
+1. **CLAUDE.md** (project root)
+   - Add "Command Types" section explaining the distinction
+   - Update existing CLI tool references with explicit "Run from terminal" context
+   - Reference Claude commands with `/ace:` prefix where appropriate
+
+2. **README.md** (project root)
+   - Enhance "AI Integration - Claude Code" section
+   - Add clear side-by-side comparison table of Claude commands vs CLI tools
+   - Update usage examples with environment context
+
+3. **docs/tools.md**
+   - Add section header clarifying these are "CLI Tools (Terminal)"
+   - Add note about Claude commands being documented separately
+   - Cross-reference to README.md AI Integration section
+
+#### Create
+
+4. **docs/command-reference.md** (new file)
+   - Comprehensive reference showing both command types
+   - Clear visual distinction with context markers
+   - Examples for each command type
+   - Quick reference table
+
+## Implementation Plan
+
+### Planning Steps
+
+* [ ] Review existing documentation patterns across codebase
+* [ ] Identify all locations where commands are referenced
+* [ ] Design consistent formatting pattern for both command types
+
+### Execution Steps
+
+- [ ] Step 1: Update CLAUDE.md with command types section and context markers
+  > TEST: Verify CLAUDE.md clarity
+  > Type: Documentation Review
+  > Assert: Command types clearly distinguished with examples
+  > Command: grep -E "(Claude Command|CLI Tool|Run from)" CLAUDE.md
+
+- [ ] Step 2: Enhance README.md AI Integration section with comparison table
+  > TEST: Verify README clarity
+  > Type: Documentation Review
+  > Assert: Both command types explained with examples
+  > Command: grep -E "(/ace:|ace-)" README.md | head -20
+
+- [ ] Step 3: Update docs/tools.md with context header and cross-reference
+  > TEST: Verify tools.md context
+  > Type: Documentation Review
+  > Assert: CLI tools context is explicit
+  > Command: head -30 docs/tools.md
+
+- [ ] Step 4: Create docs/command-reference.md with comprehensive reference
+  > TEST: Verify command reference exists
+  > Type: File Existence Check
+  > Assert: New reference file created with both command types
+  > Command: ls -la docs/command-reference.md
+
+- [ ] Step 5: Verify documentation consistency across all updated files
+  > TEST: Cross-file consistency
+  > Type: Pattern Verification
+  > Assert: Same conventions used across all files
+  > Command: grep -l "Claude Command" CLAUDE.md README.md docs/
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Documentation updates may conflict with ongoing documentation work
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Check for related PRs before starting work
+  - **Rollback:** Revert documentation changes if conflicts arise
+
+### Integration Risks
+- **Risk:** New conventions may differ from external expectations
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Follow common industry patterns for CLI/agent distinction
+  - **Monitoring:** User feedback on documentation clarity
+
+## Acceptance Criteria
+
+- [x] **Behavioral specification validated** - Clear requirements defined
+- [ ] **Documentation Clarity**: All command references include explicit environment context
+- [ ] **Visual Distinction**: Claude commands clearly marked with `/` prefix, CLI tools as shell commands
+- [ ] **User Understanding**: Readers can identify command environment at a glance
+- [ ] **Consistency**: All documentation files follow same conventions
+- [ ] **Examples Included**: Command references show proper usage with examples
 
 ## Out of Scope
 
-- ❌ **Implementation Details**: Specific file editing tools or automation scripts
-- ❌ **Technology Decisions**: Documentation generation tools or systems
-- ❌ **Code Changes**: Modifications to actual commands or tools
-- ❌ **Future Enhancements**: Interactive command discovery or IDE integrations
+- **Implementation Details**: Specific file editing tools or automation scripts
+- **Technology Decisions**: Documentation generation tools or systems
+- **Code Changes**: Modifications to actual commands or tools
+- **Future Enhancements**: Interactive command discovery or IDE integrations
 
 ## References
 
-- Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251002-213245-clarify-distinction-between-claude-commands-and-cl/idea.s.md`
+- Source idea: `.ace-taskflow/v.0.9.0/ideas/` (archived)
+- Related: docs/tools.md, README.md, CLAUDE.md
