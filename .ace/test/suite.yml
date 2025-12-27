@@ -74,11 +74,6 @@ test_suite:
       group: tools
       priority: 3
 
-    - name: ace-git-diff
-      path: ace-git-diff
-      group: tools
-      priority: 3
-
     - name: ace-git
       path: ace-git
       group: tools

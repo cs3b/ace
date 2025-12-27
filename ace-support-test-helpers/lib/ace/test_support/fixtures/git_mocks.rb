@@ -20,17 +20,17 @@ module Ace
           }
         end
 
-        # Stub git command execution via ace-git-diff CommandExecutor
+        # Stub git command execution via ace-git CommandExecutor
         # @param output [String] The command output
         # @param error [String] The error output
         # @param exit_status [Integer] The exit status code
         # @yield Block where the stub is active
         def self.stub_git_command(output: "", error: "", exit_status: 0)
-          return unless defined?(Ace::GitDiff::Atoms::CommandExecutor)
+          return unless defined?(Ace::Git::Atoms::CommandExecutor)
 
           mock_result = mock_command_result(output: output, error: error, exit_status: exit_status)
 
-          Ace::GitDiff::Atoms::CommandExecutor.stub(:execute, mock_result) do
+          Ace::Git::Atoms::CommandExecutor.stub(:execute, mock_result) do
             yield
           end
         end

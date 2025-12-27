@@ -86,7 +86,7 @@ git:
 
 - **ace-taskflow**: Task metadata fetching and status updates
 - **ace-git-commit**: Consistent commit message generation
-- **ace-git-diff**: Safe git command execution
+- **ace-git**: Safe git command execution
 - **ace-core**: Configuration cascade management
 
 ## Expected Parameters

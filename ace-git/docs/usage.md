@@ -192,6 +192,5 @@ Note: `test/**/*` and `spec/**/*` are NOT excluded by default - test changes are
 
 ## Related Tools
 
-- **ace-git-diff** - *Deprecated: Use `ace-git diff` instead*
 - **ace-git-commit** - Smart git commit generation
 - **ace-git-worktree** - Git worktree management

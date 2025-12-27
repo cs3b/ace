@@ -249,7 +249,6 @@ Workflows are automatically available in Claude Code via handbook integration:
 
 Works seamlessly with:
 - **ace-git-commit**: Commit message generation
-- **ace-git-diff**: Diff viewing and analysis
 - **ace-git-worktree**: Worktree management
 - **ace-taskflow**: Version and task management
 
@@ -293,7 +292,6 @@ MIT License. See LICENSE file for details.
 
 - [ace-support-core](../ace-support-core) - Core configuration and utilities
 - [ace-git-commit](../ace-git-commit) - Commit message generation
-- [ace-git-diff](../ace-git-diff) - Diff operations
 - [ace-git-worktree](../ace-git-worktree) - Worktree management
 - [ace-taskflow](../ace-taskflow) - Task and version management
 - [ace-nav](../ace-nav) - Protocol-based resource navigation

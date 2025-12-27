@@ -20,7 +20,7 @@ context:
     - task-manager next --limit 3
     - release-manager current
     - eza -R -1 -L 2 --git-ignore --absolute $PROJECT_ROOT_PATH
-  # Optional: Include diffs (delegated to ace-git-diff for consistent filtering)
+  # Optional: Include diffs (delegated to ace-git for consistent filtering)
   # diffs:
   #   - origin/main...HEAD
   # Or use ranges with options (respects global .ace/diff/config.yml):
