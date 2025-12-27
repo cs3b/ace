@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.199] - 2025-12-27
+
+### ace-taskflow v0.24.6 → v0.25.0
+
+**Added**
+- Migrate configuration to ADR-022 pattern with `.ace.example/` defaults
+  - Load defaults from `.ace.example/taskflow/` at runtime
+  - Merge user config over defaults using deep merge
+  - Support backward compatibility for renamed keys
+
+**Fixed**
+- Improve warning message clarity for missing example config
+- Address PR review feedback for configuration loading
+- Restore richer idea.template format with full metadata structure
+
 ## [0.9.198] - 2025-12-27
 
 ### ace-taskflow v0.24.5 → v0.24.6

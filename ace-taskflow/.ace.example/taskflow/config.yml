@@ -68,8 +68,28 @@ taskflow:
 
   # Idea configuration
   idea:
-    directory: "./ideas"         # Where to save ideas locally
+    directory: "ideas"           # Where to save ideas locally
+    template: |
+      # %{title}
+
+      ## Description
+      %{content}
+
+      ## Metadata
+      - **Captured**: %{timestamp}
+      - **Author**: %{author}
+      - **Status**: unprocessed
+    file_naming:
+      pattern: "%{timestamp}-%{title}"
+      timestamp_format: "%Y%m%d-%H%M%S"
+
+  # Task configuration
+  task:
+    directory: "."               # Task directory within release (default: .)
+    use_release_dirs: true       # Use version directories for tasks (default: true)
+    tasks_subdir: "t"            # Subdirectory for tasks within release (default: t)
 
   # Release configuration
   release:
-    current: "0.1.0"            # Your current release version
+    current: "."                 # Current release directory (default: .)
+    completed: "done"            # Completed release directory (default: done)
