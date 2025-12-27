@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2025-12-27
+
 ### Changed
 - **Error Handling**: Removed `StandardError` from inner rescue clause in `create_pr_worktree`
   - Specific ace-git errors now bubble up correctly to top-level handler
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation**: Added schema documentation for `pr_data_from_metadata` method
 - **Defensive Access**: Added fallback to "unknown" for `headRepositoryOwner` dig access
 - **README**: Added version compatibility table for ace-git dependency
+- **Dependency**: Updated ace-git dependency constraint to `~> 0.4`
 
 ## [0.6.0] - 2025-12-26
 

@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.197] - 2025-12-27
+
+### ace-git-commit v0.12.3 → v0.12.4
+
+**Changed**
+- Dependency migration from ace-git-diff to ace-git
+  - GitExecutor now delegates to `Ace::Git::Atoms::CommandExecutor`
+
+### ace-git-worktree v0.6.0 → v0.6.1
+
+**Changed**
+- Improved error handling in `create_pr_worktree`
+- Extracted error handling methods for better maintainability
+- Added debug backtrace output for unknown errors
+- Updated ace-git dependency to `~> 0.4`
+
 ## [0.9.196] - 2025-12-27
 
 ### ace-git v0.3.6 → v0.4.0
