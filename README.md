@@ -157,20 +157,56 @@ Each gem has its own README in its directory.
 
 ## 🤖 AI Integration
 
-### Claude Code
+ACE provides two types of commands: **Claude Commands** (slash commands for Claude Code chat) and **CLI Tools** (terminal commands).
 
-This repository includes native Claude Code integration through `.claude/commands/`:
+### Command Types at a Glance
 
-- `/ace:load-context [preset|file-path|protocol]` - Load project context from presets, files, or protocols
-- `/ace:work-on-task [task-id]` - Work on a task
-- `/ace:commit [intention]` - Smart commit changes
-- `/ace:draft-release` - Draft a release
+| Type | Where to Run | Prefix | Example |
+|------|--------------|--------|---------|
+| **Claude Commands** | Claude Code chat | `/ace:` | `/ace:work-on-task 121` |
+| **CLI Tools** | Terminal (bash/fish) | `ace-` | `ace-taskflow task 121` |
 
-Simply type the command in Claude Code to execute workflows.
+### Claude Commands (Slash Commands)
+
+Run in Claude Code conversation by typing directly in chat:
+
+| Command | Purpose |
+|---------|---------|
+| `/ace:load-context [preset]` | Load project context with AI assistance |
+| `/ace:work-on-task [id]` | Work on a task with full agent context |
+| `/ace:commit` | Generate intelligent commit with LLM |
+| `/ace:review-pr [pr-number]` | Review PR with AI analysis |
+| `/ace:draft-task` | Draft a new task specification |
+| `/ace:draft-release` | Draft a release with changelog |
+
+These commands invoke AI-assisted workflows that leverage Claude's understanding of your codebase.
+
+### CLI Tools (Terminal Commands)
+
+Run in your terminal for deterministic operations:
+
+```bash
+# Task management
+ace-taskflow task 148        # Show task details
+ace-taskflow tasks --current # List current tasks
+
+# Git operations
+ace-git-commit --staged      # Generate commit message
+ace-git status               # Full repo context
+
+# Code review
+ace-review --preset pr       # Run code review preset
+
+# Testing
+ace-test atoms               # Run atom tests
+ace-test-suite               # Full test suite
+```
+
+See [docs/tools.md](docs/tools.md) for complete CLI reference.
 
 ### wfi:// Protocol
 
-Navigate workflows directly:
+Navigate workflows directly from terminal:
 
 ```bash
 ace-nav wfi://work-on-task

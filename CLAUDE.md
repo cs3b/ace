@@ -2,6 +2,43 @@
 
 Agent guidance for the Coding Agent Workflow Toolkit (Meta) repository.
 
+## Command Types
+
+This project has two distinct types of commands. Understanding the difference is essential:
+
+### Claude Commands (Slash Commands)
+
+**Run from:** Claude Code conversation (type directly in chat)
+**Prefix:** `/ace:` or `/meta-`
+**Purpose:** Invoke AI-assisted workflows with full agent context
+
+Examples:
+- `/ace:work-on-task 148` - Work on a specific task with full context
+- `/ace:commit` - Generate intelligent commit with LLM assistance
+- `/ace:review-pr 90` - Review a pull request with AI analysis
+- `/ace:draft-task` - Draft a new task specification
+
+### CLI Tools (Terminal Commands)
+
+**Run from:** Terminal (bash/fish shell)
+**Prefix:** `ace-` (hyphenated)
+**Purpose:** Deterministic operations for direct execution
+
+Examples:
+```bash
+ace-taskflow task 148       # Show task details
+ace-git-commit --staged     # Generate commit message
+ace-review --preset pr      # Run code review preset
+ace-test atoms              # Run atom tests
+```
+
+### Quick Reference
+
+| Type | Environment | Prefix | Example |
+|------|-------------|--------|---------|
+| Claude Command | Chat | `/ace:` | `/ace:work-on-task 121` |
+| CLI Tool | Terminal | `ace-` | `ace-taskflow task 121` |
+
 ## Command Recognition
 
 Agents should recognize these command patterns:
@@ -9,9 +46,11 @@ Agents should recognize these command patterns:
 - `@.claude/commands/ace/load-context.md` → Use ace-context
 - `@.claude/commands/*` → Follow specific command instructions
 
-## Tool Usage
+## CLI Tool Usage
 
-### ace-context: Load Context
+The following are CLI tools that run in your terminal (bash/fish). See also: [docs/tools.md](docs/tools.md) for complete reference.
+
+### ace-context (CLI Tool)
 
 **Purpose**: Load project context from presets, files, or protocols
 **Command**: `ace-context [input]`
@@ -20,7 +59,7 @@ Agents should recognize these command patterns:
 - `ace-context project` (default context)
 - `ace-context wfi://load-context` (protocol)
 
-### ace-nav: Navigate Resources
+### ace-nav (CLI Tool)
 
 **Purpose**: Resource discovery with protocol support
 **Command**: `ace-nav [protocol://resource]`
@@ -30,7 +69,7 @@ Agents should recognize these command patterns:
 - `ace-nav wfi://load-context` → Read output file path, then read that file
 - `ace-nav --sources` → List available resource sources
 
-### ace-* CLI Tools: Output Handling
+### ace-* CLI Tools: Output Handling (Terminal)
 
 **IMPORTANT**: Do NOT use shell output manipulation with ace-* tools:
 
@@ -55,8 +94,9 @@ Agents should recognize these command patterns:
 
 **ALWAYS use `ace-test`** instead:
 
-### ace-test
+### ace-test (CLI Tool)
 
+Run from terminal:
 - `ace-test` - Run all tests in current package
 - `ace-test test/file_test.rb` - Run single test file
 - `ace-test atoms` - Run test group
@@ -70,7 +110,9 @@ Agents should recognize these command patterns:
 ✅ `cd ace-review && ace-test`
 ✅ `ace-test test/molecules/gh_pr_fetcher_test.rb`
 
-### **ace-test-suite**: Validate entire monorepo (final check before commits)
+### ace-test-suite (CLI Tool)
+
+Validate entire monorepo (final check before commits).
 
 - `ace-test-suite` - Run all tests across all packages
 
