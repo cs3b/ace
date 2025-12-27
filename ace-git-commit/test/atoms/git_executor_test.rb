@@ -5,7 +5,7 @@ require_relative "../test_helper"
 class GitExecutorTest < TestCase
   def setup
     @git = Ace::GitCommit::Atoms::GitExecutor.new
-    @cmd_executor = Ace::GitDiff::Atoms::CommandExecutor
+    @cmd_executor = Ace::Git::Atoms::CommandExecutor
   end
 
   def test_execute_runs_git_command_successfully

@@ -240,7 +240,7 @@ module Ace
             commit_result[:success]
           end
 
-          # Execute git command using ace-git-diff if available
+          # Execute git command using ace-git if available
           #
           # @param args [Array<String>] Command arguments
           # @return [Hash] Result with :success, :output, :error, :exit_code

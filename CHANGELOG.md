@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.194] - 2025-12-27
+
+### PR #93 Review Feedback
+
+**Changed**
+- Updated stale ace-git-diff references to ace-git across 9 documentation files
+  - ace-review/README.md, ace-git/README.md, ace-git/docs/usage.md
+  - ace-git-worktree agent docs and code comments
+  - ace-context configuration docs and example presets
+  - Review preset YAML comments
+
+### ace-support-test-helpers v0.9.2 → v0.9.3
+
+**Changed**
+- Added guarded require for ace-git in git contract tests
+  - Enables integration test to exercise CommandExecutor stub when ace-git is available
+  - Part of ace-git-diff to ace-git migration
+
+### ace-git-commit (Unreleased)
+
+**Changed**
+- Added CHANGELOG entry documenting dependency migration from ace-git-diff to ace-git
+
 ## [0.9.193] - 2025-12-27
 
 ### ace-docs v0.10.0 → v0.10.1

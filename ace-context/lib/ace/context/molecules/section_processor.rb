@@ -348,7 +348,7 @@ module Ace
                 since_ref = diff_config[:since] || diff_config['since']
                 normalized[:ranges] = ["#{since_ref}...HEAD"]
               end
-              # Note: paths filtering will be handled by ace-git-diff when implemented
+              # Note: paths filtering will be handled by ace-git when implemented
             elsif diff_config.is_a?(String)
               # Single range string
               normalized[:ranges] = [diff_config]

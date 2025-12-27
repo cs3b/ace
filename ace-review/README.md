@@ -414,7 +414,7 @@ Since v0.9.6, ace-review uses ace-context for unified content aggregation. Both 
 ```yaml
 # ✅ CORRECT: Use these keys (both diff: and diffs: work identically)
 files: ["lib/**/*.rb", "docs/*.md"]      # File paths and glob patterns
-diff: {ranges: ["origin/main...HEAD"]}   # Git diff via ace-git-diff
+diff: {ranges: ["origin/main...HEAD"]}   # Git diff via ace-git
 commands: ["git log --oneline -5"]       # Shell commands to execute
 presets: [project, architecture]         # ace-context preset names
 ```
