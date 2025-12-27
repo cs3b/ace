@@ -4,6 +4,23 @@
 
 This guide shows how to install Claude Code commands using the unified handbook CLI. Each workflow file in `dev-handbook/workflow-instructions/*.wf.md` gets a corresponding command in the Claude Code interface.
 
+## CLAUDE.md Template
+
+A template for project-level CLAUDE.md files is available at:
+
+```
+integrations/claude/templates/CLAUDE.md.tmpl
+```
+
+This template provides:
+- Clear distinction between **Claude Commands** (slash commands) and **CLI Tools** (terminal)
+- Common ace-* tool patterns and examples
+- Output handling best practices
+- Testing constraints and patterns
+- Agent integration section
+
+Copy and customize the template for your project, replacing placeholders like `{{project-name}}` and `{{command-prefix}}`.
+
 ## Automated Installation (Recommended)
 
 Use the handbook CLI to manage Claude integration:
