@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.200] - 2025-12-27
+
+### ace-git-worktree v0.6.1 → v0.7.0
+
+**Changed**
+- Migrate configuration to ADR-022 pattern
+  - Removed unused `DEFAULT_*` constants from Configuration module
+  - Configuration now fully delegated to ace-support-core cascade and `.ace.example` defaults
+  - Default values remain available via `WorktreeConfig::DEFAULT_CONFIG` model
+
 ## [0.9.199] - 2025-12-27
 
 ### ace-taskflow v0.24.6 → v0.25.0

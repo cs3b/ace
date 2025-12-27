@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-12-27
+
+### Changed
+- **Configuration**: Migrate to ADR-022 configuration pattern
+  - Removed unused `DEFAULT_*` constants from Configuration module
+  - Configuration now fully delegated to ace-support-core cascade and `.ace.example` defaults
+  - Reduces code duplication (~40 LOC) and aligns with project-wide configuration standards
+  - Default values remain available via `WorktreeConfig::DEFAULT_CONFIG` model
+
 ## [0.6.1] - 2025-12-27
 
 ### Changed
