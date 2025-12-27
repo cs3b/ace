@@ -1,0 +1,109 @@
+---
+id: v.0.9.0+task.158
+status: pending
+priority: high
+estimate: 1h
+dependencies: []
+---
+
+# Fix ace-taskflow task move --backlog command bug
+
+## Behavioral Specification
+
+### User Experience
+
+- **Input**: `ace-taskflow task move <TASK_REF> --backlog`
+- **Process**: Task directory is moved from release to `_backlog/tasks/`
+- **Output**: Confirmation message with new path
+
+### Expected Behavior
+
+When a user runs `ace-taskflow task move 141 --backlog`, the command should:
+1. Locate task 141 in the current release
+2. Move the entire task directory to `_backlog/tasks/`
+3. Print success message with the new location
+
+Currently, the command fails with: `undefined method 'backlog_dir' for an instance of Hash`
+
+### Root Cause Analysis
+
+The bug is in `TaskManager#resolve_release_path` (line 1168):
+
+```ruby
+when "backlog"
+  File.join(@root_path, @config.backlog_dir)
+```
+
+`@config` is assigned from `Molecules::ConfigLoader.load` which returns a **Hash**, but `backlog_dir` is a method on the **Configuration** class, not a Hash.
+
+**Two patterns exist in the codebase:**
+1. `Ace::Taskflow::Configuration` - class with methods like `backlog_dir`, `task_dir`
+2. `Molecules::ConfigLoader.load` - returns raw Hash
+
+`TaskManager` uses the ConfigLoader pattern but calls Configuration methods.
+
+### Interface Contract
+
+```bash
+# CLI Interface
+ace-taskflow task move <TASK_REF> --backlog
+
+# Expected success output
+Moved task v.0.9.0+task.141 to backlog
+New path: .ace-taskflow/_backlog/tasks/141-ci-mq-ace/
+
+# Error handling
+- Task not found: "Error: Task '999' not found"
+- Already in backlog: "Error: Task is already in backlog"
+```
+
+### Success Criteria
+
+- [ ] `ace-taskflow task move <TASK_REF> --backlog` works without error
+- [ ] Task directory is moved to correct backlog location
+- [ ] Success message shows new path
+- [ ] No regression in other move operations (--child-of, --release)
+
+### Validation Questions
+
+- [ ] Should `TaskManager` use `Configuration` object instead of raw Hash?
+- [ ] Are there other places in TaskManager calling config methods on a Hash?
+- [ ] Is this related to Task 143 (unified configuration)?
+
+## Objective
+
+Fix the broken `--backlog` option so tasks can be moved to backlog via CLI.
+
+## Scope of Work
+
+### Fix Options
+
+**Option A: Use Configuration object in TaskManager**
+- Change `@config = config || Molecules::ConfigLoader.load` to use Configuration
+- Ensures method-based access works consistently
+
+**Option B: Use Hash access in resolve_release_path**
+- Change `@config.backlog_dir` to `@config.dig("directories", "backlog") || "_backlog"`
+- Minimal change, but inconsistent with other code paths
+
+**Recommendation**: Option A for consistency with other organisms
+
+### Files to Modify
+
+- `ace-taskflow/lib/ace/taskflow/organisms/task_manager.rb` - Fix config access
+
+### Files to Check for Similar Issues
+
+- `ace-taskflow/lib/ace/taskflow/organisms/task_migrator.rb:91`
+- Any other organism using `@config.backlog_dir` or similar
+
+## Out of Scope
+
+- Full configuration refactor (covered by Task 143)
+- Changes to ConfigLoader behavior
+- New features for move command
+
+## References
+
+- Task 143: Unified configuration loading and merging defaults across ace-* packages
+- Related: ace-taskflow configuration architecture in `docs/ace-gems.g.md`
