@@ -184,13 +184,14 @@ DEBUG: Absolute chdir: /Users/you/project
 
 Follows the ATOM pattern:
 - **Atoms**: Pure functions (ripgrep_executor, fd_executor, pattern_analyzer, result_parser, tool_checker)
-- **Molecules**: Composed operations (preset_manager, git_scope_filter, dwim_analyzer, time_filter, fzf_integrator)
+- **Molecules**: Composed operations (preset_manager, dwim_analyzer, time_filter, fzf_integrator)
 - **Organisms**: Business logic (unified_searcher, result_formatter, result_aggregator)
 - **Models**: Data structures (search_result, search_options, search_preset)
 
 ## Dependencies
 
 - **ace-core**: Configuration cascade and shared utilities
+- **ace-git**: Git operations (scope filtering, staged/modified files)
 - **ripgrep** (external): Content search backend
 - **fd** (external): File search backend
 - **fzf** (external, optional): Interactive selection

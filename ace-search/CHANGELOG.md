@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2025-12-27
+
+### Changed
+
+- **Dependency Migration**: Migrated GitScopeFilter to ace-git package
+  - Now uses `Ace::Git::Atoms::GitScopeFilter` from ace-git (~> 0.3)
+  - Removed local `Ace::Search::Molecules::GitScopeFilter` implementation
+  - Centralizes Git file scope operations across ACE ecosystem
+
 ## [0.11.4] - 2025-11-16
 
 ### Changed

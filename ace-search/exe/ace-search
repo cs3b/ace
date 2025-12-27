@@ -16,7 +16,6 @@ require_relative "../lib/ace/search/atoms/search_path_resolver"
 require_relative "../lib/ace/search/atoms/debug_logger"
 
 require_relative "../lib/ace/search/molecules/preset_manager"
-require_relative "../lib/ace/search/molecules/git_scope_filter"
 require_relative "../lib/ace/search/molecules/dwim_analyzer"
 require_relative "../lib/ace/search/molecules/time_filter"
 require_relative "../lib/ace/search/molecules/fzf_integrator"
