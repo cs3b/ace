@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3] - 2025-12-27
+
+### Changed
+
+- **Add verification step to review workflows**: New Step 3 in `review.wf.md` and `review-pr.wf.md` requires verifying Critical/High priority action items before presenting to user
+  - Categorize items as VALID/INVALID/EDGE CASE/SUGGESTION
+  - Filter out false positives from LLM reviewers
+  - Prevents wasted investigation time on non-issues
+
 ## [0.26.2] - 2025-12-26
 
 ### Technical

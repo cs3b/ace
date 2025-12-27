@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.195] - 2025-12-27
+
+### ace-review v0.26.2 → v0.26.3
+
+**Changed**
+- Add verification step to review workflows (review.wf.md, review-pr.wf.md)
+  - New Step 3 verifies Critical/High priority items before presenting to user
+  - Categorizes as VALID/INVALID/EDGE CASE/SUGGESTION
+  - Filters out LLM false positives to prevent wasted investigation time
+
 ## [0.9.194] - 2025-12-27
 
 ### PR #93 Review Feedback
