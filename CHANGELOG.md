@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.196] - 2025-12-27
+
+### ace-git v0.3.6 → v0.4.0
+
+**Changed**
+- **BREAKING**: Renamed `context` to `status` throughout
+  - CLI: `ace-git status` (no `context` alias)
+  - Config: `git.status.*` (not `git.context.*`)
+  - Classes/files renamed: StatusCommand, StatusFormatter, RepoStatus, RepoStatusLoader
+- Extracted `PR_FIELDS` constant in PrMetadataFetcher for maintainability
+
+**Removed**
+- `TimeFormatter.add_relative_times` - unused method (YAGNI cleanup)
+
+### ace-git-worktree
+
+**Changed**
+- Updated ace-git dependency constraint to `~> 0.4`
+
 ## [0.9.195] - 2025-12-27
 
 ### ace-review v0.26.2 → v0.26.3
