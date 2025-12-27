@@ -6,10 +6,15 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-24'
+  last-updated: '2025-12-27'
 ---
 
-# ACE Tools Reference
+# ACE CLI Tools Reference
+
+> **Note**: This document covers **CLI tools** that run in your terminal (bash/fish).
+> For **Claude Commands** (slash commands like `/ace:work-on-task`), see the [README.md AI Integration section](../README.md#-ai-integration) or [command-reference.md](command-reference.md).
+
+All tools below are run from your terminal using the `ace-` prefix.
 
 | Tool | Purpose | Key Commands |
 |------|---------|--------------|
