@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4] - 2025-12-27
+
 ### Changed
 - **Dependency Migration**: Migrated from `ace-git-diff (~> 0.1)` to `ace-git (~> 0.3)`
   - GitExecutor now delegates to `Ace::Git::Atoms::CommandExecutor`
