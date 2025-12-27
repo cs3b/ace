@@ -158,8 +158,8 @@ module Ace
 
         def build_diff_options
           {
-            include_renames: !@options[:exclude_renames],
-            include_moves: !@options[:exclude_moves]
+            exclude_renames: @options[:exclude_renames] || false,
+            exclude_moves: @options[:exclude_moves] || false
           }
         end
 
