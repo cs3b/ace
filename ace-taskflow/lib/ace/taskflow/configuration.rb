@@ -136,18 +136,21 @@ module Ace
       end
 
       # Get idea-specific configuration
+      # Defaults come from .ace.example/taskflow/config.yml via ConfigLoader
       def idea_config
-        config["idea"] || default_idea_config
+        config["idea"] || {}
       end
 
       # Get task-specific configuration
+      # Defaults come from .ace.example/taskflow/config.yml via ConfigLoader
       def task_config
-        config["task"] || default_task_config
+        config["task"] || {}
       end
 
       # Get release-specific configuration
+      # Defaults come from .ace.example/taskflow/config.yml via ConfigLoader
       def release_config
-        config["release"] || default_release_config
+        config["release"] || {}
       end
 
       # Reload configuration
@@ -182,98 +185,25 @@ module Ace
         FileUtils.mkdir_p(File.join(root_directory, config_obj.done_dir))
 
         # Create initial .ace/taskflow/config.yml if not exists
+        # Copy from gem's .ace.example/ as the source of truth (ADR-022)
         taskflow_dir = File.join(Dir.pwd, ".ace", "taskflow")
         FileUtils.mkdir_p(taskflow_dir)
 
         config_file = File.join(taskflow_dir, "config.yml")
         unless File.exist?(config_file)
-          File.write(config_file, default_config_yaml)
+          # Copy from gem's .ace.example/ directory
+          gem_root = File.expand_path("../../..", __dir__)
+          example_config = File.join(gem_root, ".ace.example", "taskflow", "config.yml")
+
+          if File.exist?(example_config)
+            FileUtils.cp(example_config, config_file)
+          else
+            warn "Warning: Default config template not found at #{example_config} for ace-taskflow. " \
+                 "This may indicate a gem packaging issue."
+          end
         end
 
         true
-      end
-
-      private
-
-      def default_idea_config
-        {
-          "directory" => "ideas",
-          "template" => "# %{title}\n\n%{content}\n\n---\nCaptured: %{timestamp}",
-          "file_naming" => {
-            "pattern" => "%{timestamp}-%{title}",
-            "timestamp_format" => "%Y%m%d-%H%M%S"
-          }
-        }
-      end
-
-      def default_task_config
-        {
-          "directory" => ".",
-          "use_release_dirs" => true,
-          "tasks_subdir" => "t"
-        }
-      end
-
-      def default_release_config
-        {
-          "current" => ".",
-          "completed" => "done"
-        }
-      end
-
-      def default_config_yaml
-        <<~YAML
-          # ace-taskflow configuration
-
-          taskflow:
-            # Root directory for all taskflow data
-            root: ".ace-taskflow"
-
-            # Task directory name
-            task_dir: "t"
-
-            # Directory structure (underscore prefix for system directories)
-            directories:
-              completed: "_archive"         # Completed tasks/ideas
-              backlog: "_backlog"           # Future releases
-              deferred: "_deferred"         # Tasks to revisit later
-              parked: "_parked"             # Ideas that are good but not now
-
-            # Release management
-            active_strategy: "lowest"          # How to pick primary active release
-            allow_multiple_active: true        # Allow multiple active releases
-
-            # Qualified references
-            references:
-              allow_qualified: true            # Enable v.0.9.0+018 syntax
-              allow_cross_release: true        # Can reference other releases
-
-            # Default releases
-            defaults:
-              idea_location: "active"          # Where ideas go by default
-              task_location: "active"          # Where new tasks go by default
-
-            # Display parameters
-            params:
-              subtasks: enabled               # Show subtasks in task list (enabled/disabled)
-
-            # Idea configuration
-            idea:
-              directory: "ideas"
-              template: |
-                # %{title}
-
-                ## Description
-                %{content}
-
-                ## Metadata
-                - **Captured**: %{timestamp}
-                - **Author**: %{author}
-                - **Status**: unprocessed
-              file_naming:
-                pattern: "%{timestamp}-%{title}"
-                timestamp_format: "%Y%m%d-%H%M%S"
-        YAML
       end
     end
 

@@ -5,6 +5,22 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.25.0] - 2025-12-27
+
+### Added
+
+- Migrate configuration to ADR-022 pattern with `.ace.example/` defaults
+  - Load defaults from `.ace.example/taskflow/` at runtime
+  - Merge user config over defaults using deep merge
+  - Support backward compatibility for renamed keys
+
+### Fixed
+
+- Improve warning message clarity for missing example config
+- Address PR review feedback for configuration loading
+- Add warning when example config not found
+- Restore richer idea.template format with full metadata structure
+
 ## [0.24.6] - 2025-12-27
 
 ### Fixed
