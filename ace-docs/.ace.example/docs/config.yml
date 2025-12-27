@@ -3,8 +3,8 @@
 # as per ace-gems.g.md standards
 # Place this file at .ace/docs/config.yml in your project
 #
-# Note: Diff filtering is now handled by ace-git-diff
-# Configure global diff settings at .ace/diff/config.yml
+# Note: Diff filtering is now handled by ace-git
+# Configure global diff settings at .ace/git/config.yml
 # Individual documents can specify paths/filters in their frontmatter
 
 # Cache directory for analysis reports

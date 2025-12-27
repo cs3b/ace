@@ -4,14 +4,14 @@ require "open3"
 require "date"
 require "fileutils"
 require "yaml"
-require "ace/git_diff"
+require "ace/git"
 require "ace/core/molecules/project_root_finder"
 
 module Ace
   module Docs
     module Molecules
       # Analyzes git history and file changes for documents
-      # Delegates diff operations to ace-git-diff for consistency
+      # Delegates diff operations to ace-git for consistency
       class ChangeDetector
         # Get git diff for a document since a specific date or commit
         # @param document [Document] The document to analyze
@@ -238,20 +238,51 @@ module Ace
         end
 
         def self.generate_git_diff(since, options = {})
-          # Delegate to ace-git-diff for consistent filtering and configuration
-          diff_options = {
-            since: since,
-            paths: options[:paths],
-            exclude_renames: !options[:include_renames],
-            detect_moves: options[:include_moves]
-          }
+          # Warn about deprecated option keys (migrated from ace-git-diff to ace-git)
+          warn_deprecated_options(options)
 
-          result = Ace::GitDiff::Organisms::DiffOrchestrator.generate(diff_options)
+          # Delegate to ace-git for consistent filtering and configuration
+          diff_options = build_diff_options(since, options)
+
+          result = Ace::Git::Organisms::DiffOrchestrator.generate(diff_options)
           result.content
         rescue StandardError => e
-          warn "ace-git-diff failed: #{e.message}" if ENV["DEBUG"]
+          warn "ace-git failed: #{e.message}" if ENV["DEBUG"]
           ""
         end
+
+        # Build standardized diff options for ace-git API
+        # Centralizes option construction and default handling
+        # @param since [String] Date or commit to diff from
+        # @param options [Hash] Raw options (may contain paths, exclude_renames, exclude_moves)
+        # @return [Hash] Options formatted for ace-git DiffOrchestrator
+        def self.build_diff_options(since, options = {})
+          # Map legacy keys to new keys if new keys are not provided
+          exclude_renames = options.fetch(:exclude_renames) do
+            options.key?(:include_renames) ? !options[:include_renames] : false
+          end
+
+          exclude_moves = options.fetch(:exclude_moves) do
+            options.key?(:include_moves) ? !options[:include_moves] : false
+          end
+
+          {
+            since: since,
+            paths: options[:paths],
+            exclude_renames: exclude_renames,
+            exclude_moves: exclude_moves
+          }
+        end
+        private_class_method :build_diff_options
+
+        # Warn about deprecated option keys from ace-git-diff API
+        def self.warn_deprecated_options(options)
+          return unless options.key?(:include_renames) || options.key?(:include_moves)
+
+          warn "[ace-docs] DEPRECATED: Use exclude_renames/exclude_moves instead of " \
+               "include_renames/include_moves. These keys will be removed in v1.0."
+        end
+        private_class_method :warn_deprecated_options
 
         def self.resolve_since_to_commit(since)
           # If it looks like a commit SHA, use as-is

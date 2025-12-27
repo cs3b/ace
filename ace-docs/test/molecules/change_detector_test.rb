@@ -3,7 +3,7 @@
 require "test_helper"
 require "ace/docs/molecules/change_detector"
 require "ace/docs/models/document"
-require "ace/git_diff"
+require "ace/git"
 require "tmpdir"
 require "fileutils"
 
@@ -22,9 +22,9 @@ module Ace
             }
           )
 
-          # Mock ace-git-diff to return empty diff (no changes)
-          empty_result = Ace::GitDiff::Models::DiffResult.empty
-          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, empty_result do
+          # Mock ace-git to return empty diff (no changes)
+          empty_result = Ace::Git::Models::DiffResult.empty
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, empty_result do
             result = ChangeDetector.get_diff_for_document(document)
 
             assert_equal "test.md", result[:document_path]
@@ -46,14 +46,14 @@ module Ace
             }
           )
 
-          # Mock ace-git-diff to return a diff showing changes
+          # Mock ace-git to return a diff showing changes
           mock_diff = "diff --git a/test.md b/test.md\n+Updated content\n+More content"
-          mock_result = Ace::GitDiff::Models::DiffResult.new(
+          mock_result = Ace::Git::Models::DiffResult.new(
             content: mock_diff,
             stats: { additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3 },
             files: ["test.md"]
           )
-          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, mock_result do
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
             result = ChangeDetector.get_diff_for_document(document, since: "HEAD~1")
 
             assert_equal "test.md", result[:document_path]
@@ -127,14 +127,14 @@ module Ace
 
           # Mock git to return empty diff
           ChangeDetector.stub :execute_git_command, "" do
-            # Test with renames excluded
+            # Test with renames excluded (using new exclude_* key pattern)
             result = ChangeDetector.get_diff_for_document(
               document,
               since: "HEAD~1",
-              options: { include_renames: false }
+              options: { exclude_renames: true }
             )
 
-            assert_equal false, result[:options][:include_renames]
+            assert_equal true, result[:options][:exclude_renames]
           end
         end
 
@@ -326,27 +326,27 @@ module Ace
             }
           )
 
-          # Mock ace-git-diff to return different diffs based on paths
+          # Mock ace-git to return different diffs based on paths
           code_diff = "diff --git a/lib/test.rb b/lib/test.rb\n+  def hello\n+  end"
           docs_diff = "diff --git a/README.md b/README.md\n+Updated docs"
 
           call_count = 0
-          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, ->(options) {
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(options) {
             call_count += 1
             if call_count == 1 || (options[:paths] && options[:paths].include?("lib/**/*.rb"))
-              Ace::GitDiff::Models::DiffResult.new(
+              Ace::Git::Models::DiffResult.new(
                 content: code_diff,
                 stats: { additions: 2, deletions: 0, files: 1, total_changes: 2, line_count: 3 },
                 files: ["lib/test.rb"]
               )
             elsif call_count == 2 || (options[:paths] && options[:paths].include?("**/*.md"))
-              Ace::GitDiff::Models::DiffResult.new(
+              Ace::Git::Models::DiffResult.new(
                 content: docs_diff,
                 stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
                 files: ["README.md"]
               )
             else
-              Ace::GitDiff::Models::DiffResult.empty
+              Ace::Git::Models::DiffResult.empty
             end
           } do
             result = ChangeDetector.get_diff_for_document(document)
@@ -379,24 +379,24 @@ module Ace
             }
           )
 
-          # Mock ace-git-diff to return different diffs based on file paths
+          # Mock ace-git to return different diffs based on file paths
           call_count = 0
-          Ace::GitDiff::Organisms::DiffOrchestrator.stub :generate, ->(options) {
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(options) {
             call_count += 1
             if call_count == 1 || (options[:paths] && options[:paths].include?("**/*.rb"))
-              Ace::GitDiff::Models::DiffResult.new(
+              Ace::Git::Models::DiffResult.new(
                 content: "diff --git a/app.rb b/app.rb\n+modified app",
                 stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
                 files: ["app.rb"]
               )
             elsif call_count == 2 || (options[:paths] && options[:paths].include?("**/*.yml"))
-              Ace::GitDiff::Models::DiffResult.new(
+              Ace::Git::Models::DiffResult.new(
                 content: "diff --git a/config.yml b/config.yml\n+new_value",
                 stats: { additions: 1, deletions: 0, files: 1, total_changes: 1, line_count: 2 },
                 files: ["config.yml"]
               )
             else
-              Ace::GitDiff::Models::DiffResult.empty
+              Ace::Git::Models::DiffResult.empty
             end
           } do
             diffs = ChangeDetector.get_diffs_for_subjects(document, "HEAD", {})
@@ -468,6 +468,218 @@ module Ace
             assert result[:has_changes]
             assert result[:diff].include?("test.rb")
           end
+        end
+
+        # Tests for ace-git option mapping (PR #92 review feedback)
+        def test_generate_git_diff_passes_exclude_renames_option
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            ChangeDetector.generate_git_diff("HEAD~1", exclude_renames: true)
+          end
+
+          assert_equal true, captured_options[:exclude_renames],
+            "Should pass exclude_renames: true to ace-git"
+        end
+
+        def test_generate_git_diff_passes_exclude_moves_option
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            ChangeDetector.generate_git_diff("HEAD~1", exclude_moves: true)
+          end
+
+          assert_equal true, captured_options[:exclude_moves],
+            "Should pass exclude_moves: true to ace-git"
+        end
+
+        def test_generate_git_diff_defaults_exclude_renames_to_false
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            # No options passed - should default to false (include renames)
+            ChangeDetector.generate_git_diff("HEAD~1")
+          end
+
+          assert_equal false, captured_options[:exclude_renames],
+            "Should default exclude_renames to false (include renames by default)"
+        end
+
+        def test_generate_git_diff_defaults_exclude_moves_to_false
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            # No options passed - should default to false (include moves)
+            ChangeDetector.generate_git_diff("HEAD~1")
+          end
+
+          assert_equal false, captured_options[:exclude_moves],
+            "Should default exclude_moves to false (include moves by default)"
+        end
+
+        def test_generate_git_diff_passes_paths_option
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            ChangeDetector.generate_git_diff("HEAD~1", paths: ["lib/**/*.rb", "test/**/*.rb"])
+          end
+
+          assert_equal ["lib/**/*.rb", "test/**/*.rb"], captured_options[:paths],
+            "Should pass paths option to ace-git"
+        end
+
+        # Tests for legacy option key deprecation
+        def test_generate_git_diff_warns_on_legacy_include_renames_key
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
+            _stdout, stderr = capture_io do
+              ChangeDetector.generate_git_diff("HEAD~1", include_renames: true)
+            end
+
+            assert_match(/DEPRECATED.*exclude_renames.*include_renames/i, stderr,
+              "Should warn when legacy include_renames key is used")
+          end
+        end
+
+        def test_generate_git_diff_warns_on_legacy_include_moves_key
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
+            _stdout, stderr = capture_io do
+              ChangeDetector.generate_git_diff("HEAD~1", include_moves: false)
+            end
+
+            assert_match(/DEPRECATED.*exclude_moves.*include_moves/i, stderr,
+              "Should warn when legacy include_moves key is used")
+          end
+        end
+
+        def test_generate_git_diff_no_warning_for_new_exclude_keys
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
+            _stdout, stderr = capture_io do
+              ChangeDetector.generate_git_diff("HEAD~1", exclude_renames: true, exclude_moves: true)
+            end
+
+            refute_match(/DEPRECATED/i, stderr,
+              "Should not warn when using new exclude_* keys")
+          end
+        end
+
+        # Tests for legacy key mapping behavior (PR #92 review - critical fix)
+        def test_legacy_include_renames_false_maps_to_exclude_renames_true
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            _stdout, _stderr = capture_io do
+              ChangeDetector.generate_git_diff("HEAD~1", include_renames: false)
+            end
+          end
+
+          assert_equal true, captured_options[:exclude_renames],
+            "include_renames: false should map to exclude_renames: true"
+        end
+
+        def test_legacy_include_renames_true_maps_to_exclude_renames_false
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            _stdout, _stderr = capture_io do
+              ChangeDetector.generate_git_diff("HEAD~1", include_renames: true)
+            end
+          end
+
+          assert_equal false, captured_options[:exclude_renames],
+            "include_renames: true should map to exclude_renames: false"
+        end
+
+        def test_legacy_include_moves_false_maps_to_exclude_moves_true
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            _stdout, _stderr = capture_io do
+              ChangeDetector.generate_git_diff("HEAD~1", include_moves: false)
+            end
+          end
+
+          assert_equal true, captured_options[:exclude_moves],
+            "include_moves: false should map to exclude_moves: true"
+        end
+
+        def test_legacy_include_moves_true_maps_to_exclude_moves_false
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            _stdout, _stderr = capture_io do
+              ChangeDetector.generate_git_diff("HEAD~1", include_moves: true)
+            end
+          end
+
+          assert_equal false, captured_options[:exclude_moves],
+            "include_moves: true should map to exclude_moves: false"
+        end
+
+        def test_new_exclude_keys_take_precedence_over_legacy_keys
+          captured_options = nil
+          mock_result = Ace::Git::Models::DiffResult.empty
+
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(opts) {
+            captured_options = opts
+            mock_result
+          } do
+            _stdout, _stderr = capture_io do
+              # Both keys provided - new keys should take precedence
+              ChangeDetector.generate_git_diff("HEAD~1",
+                include_renames: true,    # would map to exclude_renames: false
+                exclude_renames: true,    # explicit new key should win
+                include_moves: false,     # would map to exclude_moves: true
+                exclude_moves: false      # explicit new key should win
+              )
+            end
+          end
+
+          assert_equal true, captured_options[:exclude_renames],
+            "Explicit exclude_renames should take precedence over legacy include_renames"
+          assert_equal false, captured_options[:exclude_moves],
+            "Explicit exclude_moves should take precedence over legacy include_moves"
         end
       end
     end
