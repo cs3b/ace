@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-12-27
+
+### Added
+
+- **ADR-022 Configuration Pattern**: Migrate configuration to unified default/override pattern
+  - Defaults loaded from `.ace.example/nav/config.yml` at runtime
+  - User overrides via `.ace/nav/config.yml` cascade
+  - Deep merge of user config over defaults
+  - Single source of truth for default values
+
+### Fixed
+
+- Address review feedback for ADR-022 migration
+
+### Changed
+
+- Update infrastructure gem references (ace-core → ace-support-core)
+- Consolidate test support infrastructure
+
 ## [0.10.2] - 2025-11-01
 
 ### Changed

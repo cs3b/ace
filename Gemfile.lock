@@ -98,7 +98,7 @@ PATH
 PATH
   remote: ace-nav
   specs:
-    ace-nav (0.10.2)
+    ace-nav (0.11.0)
       ace-support-core (~> 0.1)
 
 PATH
