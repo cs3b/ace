@@ -20,7 +20,7 @@ defaults:
 # Synthesis configuration for multi-model review reports
 synthesis:
   enabled: true  # Set to false to disable automatic synthesis
-  model: "claude:opus"  # Model to use for synthesis
+  model: "google:flash-preview"  # Model to use for synthesis
 
 # Storage configuration
 # storage:
