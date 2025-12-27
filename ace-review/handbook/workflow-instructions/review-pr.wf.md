@@ -5,7 +5,7 @@ argument-hint: "[pr-number]"
 allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
 update:
   frequency: on-change
-  last-updated: '2025-12-08'
+  last-updated: '2025-12-27'
 ---
 
 # Review PR and Plan Feedback Workflow
@@ -41,19 +41,57 @@ Read the synthesis report path shown in the command output.
 
 Note which feedback items come from **Developer Feedback** - these are from PR comments and should be resolved after implementation.
 
-### Step 3: Create Feedback Plan
+### Step 3: Verify Action Items
 
-Based on the synthesis report's **Prioritized Action Items**, create a plan:
+Before presenting action items to the user, verify each Critical and High priority item.
 
-1. List all action items by priority (Critical → High → Medium → Low)
-2. For each item, note:
+**For each item:**
+
+1. **Check the claim** - Use grep/read to verify the issue exists:
+   - If claim is "X doesn't exist" → `grep -rn "class X" lib/`
+   - If claim is "method missing" → check the actual file
+   - If claim is "file not deleted" → `ls path/to/file`
+
+2. **Categorize the result:**
+
+   | Status | Meaning | Action |
+   |--------|---------|--------|
+   | ✅ VALID | Issue confirmed in code | Include in plan |
+   | ❌ INVALID | False positive, code is correct | Exclude from plan |
+   | ⚠️ EDGE CASE | Known limitation, not a bug | Note as limitation |
+   | 📝 SUGGESTION | Code improvement, not required | Include as optional |
+
+3. **Document verification** - Note what was checked and the result
+
+**Example verification:**
+```bash
+# Claim: "TaskPatternExtractor is undefined"
+grep -rn "class TaskPatternExtractor" ace-git/lib/
+# Result: Found at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10
+# Status: ❌ INVALID - class exists
+```
+
+**Skip verification for:**
+- Low priority items (verify only if time permits)
+- Documentation-only suggestions
+- Style/formatting recommendations
+- Developer Feedback items (these are human-verified)
+
+### Step 4: Create Feedback Plan
+
+Based on the synthesis report's **Prioritized Action Items** and **verification results**, create a plan:
+
+1. List only VALID, SUGGESTION, and Developer Feedback items by priority (Critical → High → Medium → Low)
+2. Note any INVALID items that were filtered out
+3. For each item, note:
    - Location (file:line)
    - Description of the issue
    - Recommended fix
+   - Verification evidence (for LLM items)
    - **Source**: LLM review or Developer Feedback (PR comment)
-3. Identify which items to implement now vs capture as ideas for later
+4. Identify which items to implement now vs capture as ideas for later
 
-### Step 4: Present Plan and Wait for Confirmation
+### Step 5: Present Plan and Wait for Confirmation
 
 Present the plan to the user with a summary:
 - Number of items per priority level
@@ -67,13 +105,13 @@ Use AskUserQuestion to confirm:
 
 Only proceed with implementation after user confirmation.
 
-### Step 5: Implement Fixes
+### Step 6: Implement Fixes
 
 Implement the confirmed fixes. After each fix:
 - Commit with a clear message referencing the issue
 - Note the commit SHA for PR comment resolution
 
-### Step 6: Resolve PR Comments (for Developer Feedback items)
+### Step 7: Resolve PR Comments (for Developer Feedback items)
 
 After implementing fixes for items sourced from **Developer Feedback**:
 
@@ -107,6 +145,8 @@ Note: The thread IDs are included in `review-dev-feedback.md` in the format `(th
 ## Output / Success Criteria
 
 - [ ] PR review completed with synthesis report
+- [ ] Action items verified (Critical/High priority)
+- [ ] False positives identified and excluded
 - [ ] Feedback plan created and confirmed by user
 - [ ] Confirmed items implemented
 - [ ] PR comments addressed with commit references
