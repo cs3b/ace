@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.191] - 2025-12-27
+
+### ace-search v0.11.4 → v0.12.0
+
+**Changed**
+- Migrated GitScopeFilter to ace-git package
+  - Now uses `Ace::Git::Atoms::GitScopeFilter` from ace-git (~> 0.3)
+  - Removed local `Ace::Search::Molecules::GitScopeFilter` implementation
+  - Centralizes Git file scope operations across ACE ecosystem
+
 ## [0.9.190] - 2025-12-26
 
 ### ace-review v0.26.2

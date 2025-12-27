@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/git"
+
 module Ace
   module Search
     module Organisms
@@ -138,7 +140,7 @@ module Ace
         def apply_git_scope_filter(files, options)
           return files unless options[:scope]
 
-          git_files = Molecules::GitScopeFilter.get_files(options[:scope].to_sym)
+          git_files = Ace::Git::Atoms::GitScopeFilter.get_files(options[:scope].to_sym)
           git_file_set = Set.new(git_files)
 
           files.select { |f| git_file_set.include?(f[:path]) }
