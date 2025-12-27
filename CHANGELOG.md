@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.198] - 2025-12-27
+
+### ace-taskflow v0.24.5 → v0.24.6
+
+**Fixed**
+- Prevent hidden `.s.md` filenames when `file_slug` is empty
+  - IdeaWriter now checks for empty/blank slugs before using them
+  - Falls back to `idea.s.md` for proper discoverability
+
 ## [0.9.197] - 2025-12-27
 
 ### ace-git-commit v0.12.3 → v0.12.4

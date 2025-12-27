@@ -109,7 +109,7 @@ module Ace
           # Write idea file in directory with hierarchical naming convention
           # Use {file-slug}.s.md format if available (NO timestamp in filename)
           # Otherwise use generic "idea.s.md" for fallback compatibility
-          filename = if metadata[:file_slug]
+          filename = if metadata[:file_slug] && !metadata[:file_slug].to_s.strip.empty?
                        "#{metadata[:file_slug]}.s.md"
                      else
                        "idea.s.md"

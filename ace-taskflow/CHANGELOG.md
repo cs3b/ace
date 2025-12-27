@@ -5,6 +5,15 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.6] - 2025-12-27
+
+### Fixed
+
+- Prevent hidden `.s.md` filenames when `file_slug` is empty
+  - IdeaWriter now checks `!file_slug.to_s.strip.empty?` before using slug
+  - Falls back to `idea.s.md` when slug is empty/blank
+  - Fixes issue where ideas were created with hidden filenames not discoverable by `ace-taskflow ideas`
+
 ## [0.24.5] - 2025-12-26
 
 ### Technical
