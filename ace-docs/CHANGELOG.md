@@ -7,7 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2025-12-27
+
 ### Fixed
+
+- **CLI Option Mapping Regression**: Fixed `--exclude-renames`/`--exclude-moves` flags being silently ignored
+  - AnalyzeCommand.build_diff_options was emitting legacy `include_*` keys instead of new `exclude_*` keys
+  - CLI flags now correctly propagate to ace-git DiffOrchestrator
+
+### Changed
+
+- **Deprecation Warning for Legacy Option Keys**: Added warning when using `include_renames`/`include_moves`
+  - Callers should migrate to `exclude_renames`/`exclude_moves` keys
+  - Warning: `[DEPRECATED] Use exclude_renames/exclude_moves instead of include_renames/include_moves`
+
+- **Centralized Option Construction**: Extracted `build_diff_options` helper method in ChangeDetector
+  - Centralizes ace-git option mapping logic
+  - Improves maintainability and reduces duplication
+
+### Technical
+
+- Added 5 command-level tests for CLI option propagation (analyze_command_test.rb)
+- Added 3 tests for legacy option key deprecation warnings
+- Updated test using legacy `include_renames` key to use new `exclude_renames` key
+
+## [0.10.0] - 2025-12-27
+
+### Changed
+
+- **Dependency Migration**: Migrated from ace-git-diff to ace-git
+  - Updated dependency from `ace-git-diff (~> 0.1)` to `ace-git (~> 0.3)`
+  - Changed `require "ace/git_diff"` to `require "ace/git"`
+  - Updated namespace from `Ace::GitDiff::*` to `Ace::Git::*`
+  - Part of ace-git consolidation (ace-git-diff merged into ace-git)
+
+### Fixed
+
+- **Option Mapping for ace-git API**: Fixed incorrect option names passed to DiffOrchestrator
+  - Changed `detect_moves` (invalid) to `exclude_moves` (ace-git API)
+  - Fixed `exclude_renames` default to `false` (was inverting caller intent when nil)
+  - Renames and moves are now correctly included by default
 
 - **Test Isolation**: Fixed DocumentRegistry and StatusCommand test failures caused by ProjectRootFinder discovering actual project files
   - Added `project_root` parameter to DocumentRegistry.new and StatusCommand.new for test isolation
@@ -22,6 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed tests to properly create Document instances instead of using instance_variable_set
   - All 7 prompt tests now pass (was 3 failures)
   - Root cause: Tests were modifying @frontmatter without updating @ace_docs_config
+
+### Technical
+
+- Integrated standardized prompt caching system from ace-support-core
+- Added 5 tests for ace-git option mapping (exclude_renames, exclude_moves, paths)
 
 ## [0.9.0] - 2025-11-16
 
