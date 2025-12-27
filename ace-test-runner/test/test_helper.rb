@@ -2,6 +2,7 @@
 
 require "ace/test_runner"
 require "ace/test_support"  # Load shared test helpers and fixtures
+require "ace/core/molecules/project_root_finder"
 require "minitest/autorun"
 
 # Try to use spec reporter for better output if available
