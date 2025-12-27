@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.193] - 2025-12-27
+
+### ace-docs v0.10.0 → v0.10.1
+
+**Fixed**
+- CLI option mapping regression: `--exclude-renames`/`--exclude-moves` flags were being silently ignored
+  - AnalyzeCommand.build_diff_options was emitting legacy `include_*` keys
+  - CLI flags now correctly propagate to ace-git DiffOrchestrator
+
+**Changed**
+- Added deprecation warning for legacy `include_renames`/`include_moves` option keys
+- Extracted `build_diff_options` helper method in ChangeDetector for centralized option construction
+
+**Technical**
+- Added 5 command-level tests for CLI option propagation
+- Added 3 tests for legacy option key deprecation warnings
+
+## [0.9.192] - 2025-12-27
+
+### ace-docs v0.9.0 → v0.10.0
+
+**Changed**
+- Migrated from ace-git-diff to ace-git
+  - Updated dependency from `ace-git-diff (~> 0.1)` to `ace-git (~> 0.3)`
+  - Changed namespace from `Ace::GitDiff::*` to `Ace::Git::*`
+  - Part of ace-git consolidation (Task 140.09)
+
+**Fixed**
+- Test isolation for DocumentRegistry and StatusCommand
+- Test correctness for DocumentAnalysisPrompt assertions
+
+**Technical**
+- Integrated standardized prompt caching system from ace-support-core
+
 ## [0.9.191] - 2025-12-27
 
 ### ace-search v0.11.4 → v0.12.0
