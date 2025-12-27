@@ -13,7 +13,6 @@ require "ace/search/atoms/search_path_resolver"
 require "ace/search/atoms/debug_logger"
 
 require "ace/search/molecules/preset_manager"
-require "ace/search/molecules/git_scope_filter"
 require "ace/search/molecules/dwim_analyzer"
 require "ace/search/molecules/time_filter"
 require "ace/search/molecules/fzf_integrator"
