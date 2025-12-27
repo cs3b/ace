@@ -43,7 +43,7 @@ module Ace
             }
           }
 
-          File.write(File.join(nav_dir, "settings.yml"), custom_settings.to_yaml)
+          File.write(File.join(nav_dir, "config.yml"), custom_settings.to_yaml)
 
           # Reload with custom settings
           config_loader = ConfigLoader.new(nav_dir)
@@ -133,13 +133,13 @@ module Ace
           nav_dir = File.join(@test_dir, ".ace", "nav")
           FileUtils.mkdir_p(nav_dir)
 
-          File.write(File.join(nav_dir, "settings.yml"), {}.to_yaml)
+          File.write(File.join(nav_dir, "config.yml"), {}.to_yaml)
           File.write(File.join(nav_dir, "custom.yml"), {}.to_yaml)
 
           config_loader = ConfigLoader.new(nav_dir)
           configs = config_loader.available_configs
 
-          assert_includes configs, "settings"
+          assert_includes configs, "config"
           assert_includes configs, "custom"
         end
 
@@ -208,7 +208,7 @@ module Ace
             }
           }
 
-          File.write(File.join(nav_dir, "settings.yml"), custom_settings.to_yaml)
+          File.write(File.join(nav_dir, "config.yml"), custom_settings.to_yaml)
 
           config_loader = ConfigLoader.new(nav_dir)
           settings = config_loader.load_settings
@@ -225,6 +225,48 @@ module Ace
 
           # Sources are loaded by SourceRegistry (tested separately)
           assert_kind_of Array, sources
+        end
+
+        def test_raises_error_when_example_config_missing
+          config_loader = ConfigLoader.new
+
+          # Stub load_example_config to simulate missing file
+          def config_loader.load_example_config
+            raise ConfigLoader::Error, "Default config not found: /fake/path. " \
+                                        "This is a gem packaging error - .ace.example/ must be included in the gem."
+          end
+
+          error = assert_raises(ConfigLoader::Error) do
+            config_loader.load_settings
+          end
+
+          assert_match(/gem packaging error/, error.message)
+          assert_match(/ace\.example/, error.message)
+        end
+
+        def test_loads_legacy_settings_yml_with_deprecation_warning
+          # Create legacy settings.yml file (not config.yml)
+          nav_dir = File.join(@test_dir, ".ace", "nav")
+          FileUtils.mkdir_p(nav_dir)
+
+          legacy_settings = {
+            "cache" => {
+              "enabled" => true
+            }
+          }
+
+          File.write(File.join(nav_dir, "settings.yml"), legacy_settings.to_yaml)
+
+          config_loader = ConfigLoader.new(nav_dir)
+
+          # Capture stderr for deprecation warning
+          _out, err = capture_io do
+            settings = config_loader.load_settings
+            assert_equal true, settings["cache"]["enabled"]
+          end
+
+          assert_match(/DEPRECATION/, err)
+          assert_match(/settings\.yml is deprecated/, err)
         end
       end
     end
