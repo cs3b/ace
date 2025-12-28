@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2025-12-28
+
+### Added
+- **ADR-022 Configuration Pattern**: Migrate to gem defaults from `.ace.example/` with user override support
+  - Load defaults from `.ace.example/prompt/config.yml` at runtime
+  - Deep merge with user config via ace-core cascade
+  - Follows "gem defaults < user config" priority
+
 ## [0.6.0] - 2025-12-26
 
 ### Changed
