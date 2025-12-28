@@ -37,7 +37,7 @@ debug:
 # Enhancement configuration
 # Controls LLM-powered prompt enhancement via `ace-prompt -e`
 enhance:
-  enabled: false          # Enable enhancement by default
+  enabled: false          # Whether enhancement is enabled by default
   model: glite            # Model alias or provider:model (e.g., groq:llama-3.3-70b-versatile)
   temperature: 0.3        # Lower = more focused, higher = more creative
   system_prompt: prompt://prompt-enhance-instructions.system  # System prompt for enhancement

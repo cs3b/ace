@@ -86,22 +86,21 @@ module Ace
         end
 
         # Load gem defaults from .ace.example/git/commit.yml
+        # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
         # @return [Hash] Default configuration from gem
+        # @raise [Ace::GitCommit::Error] If default config file is missing (gem packaging error)
         def load_gem_defaults
           gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
           defaults_path = File.join(gem_root, ".ace.example", "git", "commit.yml")
 
-          if File.exist?(defaults_path)
-            content = YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true)
-            content&.dig("git") || {}
-          else
-            warn "Warning: Default config not found: #{defaults_path}" if Ace::GitCommit.debug?
-            {}
+          unless File.exist?(defaults_path)
+            raise Ace::GitCommit::Error, "Default config not found: #{defaults_path}. " \
+                  "This is a gem packaging error - .ace.example/ must be included in the gem."
           end
-        rescue StandardError => e
-          warn "Error loading gem defaults: #{e.message}" if Ace::GitCommit.debug?
-          {}
+
+          content = YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true)
+          content&.dig("git") || {}
         end
 
         # Validate we're in a git repository
