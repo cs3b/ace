@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.206] - 2025-12-28
+
+### Added
+
+**ace-review v0.27.1 → v0.27.2**
+- Prioritize developer feedback in synthesis: Human reviewer comments now receive special handling
+- New "Developer Action Required" section appears before Consensus Findings
+- Each unresolved comment gets its own subsection with exact text preserved
+- Priority boosting ensures developer feedback is never ranked lower than Medium
+
+## [0.9.205] - 2025-12-28
+
+### Added
+
+**ace-config v0.2.0** (new gem)
+- Initial release of ace-config gem extracted from ace-support-core
+- Generic configuration cascade with customizable folder names
+- `Ace::Config.create` and `Ace::Config.virtual_resolver` factory methods
+- Deep merging with configurable array strategies (:replace, :concat, :union)
+- Project root detection, path expansion, YAML parsing
+- Memoization for `resolve()` and `get()` methods
+- Windows compatibility via `File::ALT_SEPARATOR` support
+- Zero runtime dependencies (stdlib only)
+
+## [0.9.204] - 2025-12-28
+
+### Fixed
+
+**ace-review v0.27.0 → v0.27.1**
+- Fixed: Auto-discover repo for inline PR comments - when running `ace-review --pr <number>` (local PR number), inline code comments were silently not fetched because GraphQL requires owner/repo format. Now automatically discovers repository via `gh repo view`
+- Fixed: Upgraded warning messages from Debug to Warning level for better visibility
+
 ## [0.9.203] - 2025-12-28
 
 ### Package Version Bumps (ADR-022 Configuration Pattern)
