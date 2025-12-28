@@ -25,19 +25,27 @@ class Ace::TestPrompt < Minitest::Test
     assert_respond_to Ace::Prompt, :config
   end
 
-  def test_default_config_returns_hash
-    config = Ace::Prompt.default_config
+  def test_config_returns_hash_with_defaults
+    # Reset to get fresh config from gem defaults
+    Ace::Prompt.reset_config!
+    Ace::Core.stub :get, nil do
+      config = Ace::Prompt.config
 
-    assert config.is_a?(Hash)
-    assert config.key?("context")
-    assert config["context"].is_a?(Hash)
-    assert config["context"].key?("enabled")
+      assert config.is_a?(Hash)
+      assert config.key?("context")
+      assert config["context"].is_a?(Hash)
+      assert config["context"].key?("enabled")
+    end
   end
 
-  def test_default_config_context_disabled
-    config = Ace::Prompt.default_config
+  def test_config_context_disabled_by_default
+    # Reset to get fresh config from gem defaults
+    Ace::Prompt.reset_config!
+    Ace::Core.stub :get, nil do
+      config = Ace::Prompt.config
 
-    assert_equal false, config["context"]["enabled"]
+      assert_equal false, config["context"]["enabled"]
+    end
   end
 
   def test_config_returns_hash

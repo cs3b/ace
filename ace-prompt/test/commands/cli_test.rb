@@ -118,11 +118,18 @@ class CLITest < Minitest::Test
 
     # Mock config to return defaults (no user config found)
     # This ensures test is isolated from actual .ace/prompt/config.yml
-    default_config = Ace::Prompt.default_config
-    Ace::Prompt.stub(:config, default_config) do
+    # Create a config that simulates gem defaults (context.enabled = false)
+    mock_config = {
+      "context" => { "enabled" => false },
+      "enhance" => { "enabled" => false, "model" => "glite", "temperature" => 0.3 },
+      "task" => { "detection" => false },
+      "security" => { "max_file_size_mb" => 10 },
+      "debug" => { "enabled" => false, "context_loading" => false }
+    }
+    Ace::Prompt.stub(:config, mock_config) do
       result = cli.send(:determine_context_enabled, options)
 
-      # Default should be false based on default_config
+      # Default should be false based on gem defaults
       assert_equal false, result
     end
   end

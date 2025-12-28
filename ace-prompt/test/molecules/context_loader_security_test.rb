@@ -11,11 +11,11 @@ class ContextLoaderSecurityTest < Minitest::Test
     @prompt_dir = File.join(@project_root, ".cache", "ace-prompt", "prompts")
     FileUtils.mkdir_p(@prompt_dir)
 
-    # Reset config cache
+    # Reset config cache and get fresh config from gem defaults
     Ace::Prompt.reset_config!
 
-    # Store defaults for use in tests
-    @default_config = Ace::Prompt.default_config
+    # Store defaults for use in tests (now loaded via config method from gem defaults)
+    @default_config = Ace::Prompt.config
   end
 
   def teardown

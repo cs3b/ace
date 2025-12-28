@@ -46,68 +46,48 @@ module Ace
   module Prompt
 
     # Load ace-prompt configuration using ace-core config cascade
-    # Follows ace-* pattern: ./.ace/prompt/config.yml → ~/.ace/prompt/config.yml
+    # Follows ADR-022: Configuration Default and Override Pattern
+    # Priority: gem defaults < user config
     # @return [Hash] Configuration hash with defaults merged
     def self.config
       @config ||= begin
-        # Use Ace::Core.get for namespace resolution (searches .ace/prompt/config.yml)
+        require 'yaml'
+        require 'ace/core/atoms/deep_merger'
+
+        # Load gem defaults from .ace.example/prompt/config.yml
+        gem_defaults = load_gem_defaults
+
+        # Load user config via ace-core cascade
         user_config = Ace::Core.get("prompt", file: "config") || {}
-        merge_config(default_config, user_config)
+
+        # Merge gem defaults with user config
+        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
       rescue StandardError => e
         warn "Warning: Could not load ace-prompt config: #{e.message}"
-        default_config
+        load_gem_defaults || {}
       end
     end
 
-    # Default configuration when no config file exists
-    # @return [Hash] Default configuration
-    def self.default_config
-      {
-        "context" => {
-          "enabled" => false
-        },
-        "enhance" => {
-          "enabled" => false,
-          "model" => DEFAULT_MODEL,
-          "temperature" => 0.3,
-          "system_prompt" => "prompt://prompt-enhance-instructions.system"
-        },
-        "task" => {
-          "detection" => false,
-          "branch_patterns" => ['^(\d+(?:\.\d+)?)-']
-        },
-        "security" => {
-          "max_file_size_mb" => 10
-        },
-        "debug" => {
-          "enabled" => false,
-          "context_loading" => false
-        }
-      }
-    end
+    # Load gem defaults from .ace.example/prompt/config.yml
+    # @return [Hash] Default configuration from gem
+    def self.load_gem_defaults
+      gem_root = Gem.loaded_specs["ace-prompt"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace.example", "prompt", "config.yml")
 
-    # Deep merge user config with defaults
-    # @param defaults [Hash] Default configuration
-    # @param user_config [Hash] User configuration
-    # @return [Hash] Merged configuration
-    def self.merge_config(defaults, user_config)
-      defaults.each_with_object({}) do |(key, default_value), result|
-        user_value = user_config[key]
-        result[key] = if default_value.is_a?(Hash) && user_value.is_a?(Hash)
-                        merge_config(default_value, user_value)
-                      elsif user_value.nil?
-                        default_value
-                      else
-                        user_value
-                      end
+      if File.exist?(defaults_path)
+        YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+      else
+        {}
       end
+    rescue StandardError
+      {}
     end
+    private_class_method :load_gem_defaults
 
     # Reset config cache (useful for testing)
     def self.reset_config!
       @config = nil
     end
-
-    private_class_method :merge_config
   end
 end
