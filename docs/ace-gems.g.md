@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-01'
+  last-updated: '2025-12-28'
 ---
 
 # ACE Gem Development Guide
@@ -90,20 +90,88 @@ ace-integration-platform/
 
 ## Configuration
 
-Use ace-support-core config cascade. **Never hardcode paths**.
+**ADR-022 Pattern: Load Gem Defaults + Merge User Overrides**
+
+All ACE gems must follow the unified configuration pattern established in ADR-022. This pattern ensures:
+- Defaults are loaded from `.ace.example/` (single source of truth)
+- User overrides are merged via `Ace::Core::Atoms::DeepMerger`
+- Test isolation via `reset_config!` method
+
+### Implementation Pattern
 
 ```ruby
-# Single-purpose (flat): .ace/gem/config.yml
-verbose: false
-
 # lib/ace/gem.rb
-def self.config
-  @config ||= Ace::Core.config.get('ace', 'gem') || defaults
-end
+require "yaml"
+require "ace/core/atoms/deep_merger"
 
-# Multi-tool: .ace/lint/config.yml (nested) + .ace/lint/kramdown.yml (flat)
-Ace::Core.config.get('ace', 'lint')           # General
+module Ace
+  module Gem
+    def self.config
+      @config ||= begin
+        defaults = load_gem_defaults
+        user_config = Ace::Core.config.get("ace", "gem") || {}
+        Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)
+      end
+    end
+
+    def self.load_gem_defaults
+      gem_root = ::Gem.loaded_specs["ace-gem"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace.example", "gem", "config.yml")
+
+      # .ace.example/ MUST be included in gem - missing file is a packaging error
+      unless File.exist?(defaults_path)
+        raise "Default config not found: #{defaults_path}. " \
+              "This is a gem packaging error - .ace.example/ must be included in the gem."
+      end
+
+      YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+    end
+    private_class_method :load_gem_defaults
+
+    def self.reset_config!
+      @config = nil
+    end
+  end
+end
+```
+
+### Multi-Tool Configuration
+
+For gems with multiple tools (like ace-lint):
+
+```ruby
+# .ace/lint/config.yml (nested) + .ace/lint/kramdown.yml (flat)
+Ace::Core.config.get('ace', 'lint')              # General settings
 Ace::Core.config.get('ace', 'lint', 'kramdown')  # Tool-specific
+```
+
+### Anti-Patterns
+
+**DO NOT:**
+
+```ruby
+# Hardcoded defaults (BAD)
+DEFAULT_CONFIG = {
+  "root" => ".ace-taskflow",
+  "directories" => { "completed" => "_archive" }
+}.freeze
+
+def self.config
+  @config ||= DEFAULT_CONFIG.merge(user_config)  # Wrong!
+end
+```
+
+**DO:**
+
+```ruby
+# Load from .ace.example/ (GOOD)
+def self.config
+  @config ||= Ace::Core::Atoms::DeepMerger.merge(
+    load_gem_defaults,  # From .ace.example/gem/config.yml
+    user_config         # From .ace/gem/config.yml cascade
+  )
+end
 ```
 
 Note: Module name remains `Ace::Core` even though gem is `ace-support-core`.
