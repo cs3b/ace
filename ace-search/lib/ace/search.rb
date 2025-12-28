@@ -34,23 +34,22 @@ module Ace
     end
 
     # Load gem defaults from .ace.example/search/config.yml
+    # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
     # @return [Hash] Default configuration from gem
+    # @raise [Error] If default config file is missing (gem packaging error)
     def self.load_gem_defaults
       gem_root = Gem.loaded_specs["ace-search"]&.gem_dir ||
                  File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace.example", "search", "config.yml")
 
-      if File.exist?(defaults_path)
-        content = YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
-        # Extract the ace.search section
-        content.dig("ace", "search") || {}
-      else
-        warn "Warning: Default config not found: #{defaults_path}" if debug?
-        {}
+      unless File.exist?(defaults_path)
+        raise Error, "Default config not found: #{defaults_path}. " \
+              "This is a gem packaging error - .ace.example/ must be included in the gem."
       end
-    rescue StandardError => e
-      warn "Error loading gem defaults: #{e.message}" if debug?
-      {}
+
+      content = YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+      # Extract the ace.search section
+      content.dig("ace", "search") || {}
     end
     private_class_method :load_gem_defaults
   end
