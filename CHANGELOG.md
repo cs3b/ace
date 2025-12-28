@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.203] - 2025-12-28
+
+### Package Version Bumps (ADR-022 Configuration Pattern)
+
+Six packages updated to implement ADR-022 configuration default and override pattern:
+
+**ace-git-commit v0.12.4 → v0.13.0**
+- Added: ADR-022 configuration pattern with `.ace.example/git/commit.yml` defaults
+- Fixed: Path expansion in `load_gem_defaults` (4 levels instead of 5)
+- Fixed: Debug check consistency (`== "1"` pattern)
+
+**ace-docs v0.10.1 → v0.11.0**
+- Added: ADR-022 configuration pattern with `.ace.example/docs/config.yml` defaults
+- Changed: Migrated from ace-git-diff to ace-git
+
+**ace-lint v0.3.3 → v0.4.0**
+- Added: ADR-022 configuration pattern with `.ace.example/lint/config.yml` defaults
+
+**ace-prompt v0.6.0 → v0.7.0**
+- Added: ADR-022 configuration pattern with `.ace.example/prompt/config.yml` defaults
+
+**ace-review v0.26.3 → v0.27.0**
+- Added: ADR-022 configuration pattern with `.ace.example/review/config.yml` defaults
+- Fixed: Debug check consistency (`== "1"` pattern)
+
+**ace-search v0.12.0 → v0.13.0**
+- Added: ADR-022 configuration pattern with `.ace.example/search/config.yml` defaults
+- Fixed: Debug check consistency (`== "1"` pattern)
+
 ## [0.9.202] - 2025-12-27
 
 ### ace-test-runner v0.3.0 → v0.4.0

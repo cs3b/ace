@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-12-28
+
+### Added
+- **ADR-022 Configuration Pattern**: Migrate to gem defaults from `.ace.example/` with user override support
+  - Load defaults from `.ace.example/lint/config.yml` and `.ace.example/lint/kramdown.yml` at runtime
+  - Deep merge with user config via ace-core cascade
+  - Follows "gem defaults < user config" priority
+
 ## [0.3.3] - 2025-11-16
 
 ### Changed
