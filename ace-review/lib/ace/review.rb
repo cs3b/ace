@@ -84,19 +84,21 @@ module Ace
       private
 
       # Load gem defaults from .ace.example/review/config.yml
+      # ADR-022: .ace.example/ is the single source of truth for defaults
       # @return [Hash] Default configuration from gem
+      # @raise [RuntimeError] If default config file is missing (gem packaging error)
       def load_gem_defaults
         gem_root = Gem.loaded_specs["ace-review"]&.gem_dir ||
                    File.expand_path("../..", __dir__)
         defaults_path = File.join(gem_root, ".ace.example", "review", "config.yml")
 
-        if File.exist?(defaults_path)
-          YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
-        else
-          {}
+        # ADR-022: Missing .ace.example/ file is a packaging error, not a fallback case
+        unless File.exist?(defaults_path)
+          raise "Default config not found: #{defaults_path}. " \
+                "This is a gem packaging error - .ace.example/ must be included in the gem."
         end
-      rescue StandardError
-        {}
+
+        YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
       end
 
       public

@@ -62,6 +62,7 @@ module Ace
         # Load defaults from .ace.example/nav/config.yml
         # ADR-022: .ace.example/ is the single source of truth for defaults
         # @return [Hash] Default configuration from example file
+        # @raise [Error] If default config file is missing or invalid (gem packaging error)
         def load_example_config
           # Use relative path from this file to gem root (4 levels up from molecules/)
           gem_root = File.expand_path("../../../..", __dir__)
@@ -73,7 +74,8 @@ module Ace
                          "This is a gem packaging error - .ace.example/ must be included in the gem."
           end
 
-          load_yaml_file(example_path)
+          # ADR-022: Parse errors in .ace.example/ are also packaging errors - don't mask them
+          load_yaml_file_strict(example_path)
         end
 
         # Load protocol-specific configuration
@@ -194,6 +196,19 @@ module Ace
         rescue StandardError => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
           {}
+        end
+
+        # Load YAML without masking parse errors - for .ace.example/ defaults
+        # ADR-022: Parse errors in gem defaults indicate packaging issues
+        # @param path [String] Path to YAML file
+        # @return [Hash] Parsed YAML content
+        # @raise [Error] If file cannot be parsed
+        def load_yaml_file_strict(path)
+          content = File.read(path)
+          YAML.safe_load(content, permitted_classes: [Symbol]) || {}
+        rescue Psych::SyntaxError => e
+          raise Error, "Invalid YAML in default config #{path}: #{e.message}. " \
+                       "This is a gem packaging error."
         end
 
         def default_protocol_config(protocol)
