@@ -6,6 +6,22 @@ Accepted
 Date: 2025-12-13
 Supersedes: ADR-019-configuration-architecture
 
+### Status Update (December 2025)
+
+**Task 143 Implementation Complete**
+
+Task 143 (Unified Configuration Loading and Merging Defaults Across ACE Packages) has been completed, migrating the following packages to the ADR-022 pattern:
+
+- 143.01: ace-taskflow - Full ConfigLoader rewrite with `load_gem_defaults` + DeepMerger
+- 143.02: ace-git-worktree - Uses ace-taskflow's ConfigLoader (no separate config)
+- 143.03: ace-nav - Migrated to load defaults from `.ace.example/nav/config.yml`
+- 143.04: ace-test-runner - Full ConfigLoader with gem defaults pattern
+- 143.05: ace-git-commit, ace-docs, ace-lint, ace-prompt, ace-review, ace-search - All migrated
+
+**Note on `.ace-defaults/` Rename**
+
+ADR-022 originally proposed renaming `.ace.example/` to `.ace-defaults/`. This rename is **deferred to Task 157.08** as part of the ace-config extraction work. The current implementation uses `.ace.example/` as the default source location.
+
 ## Context
 
 ADR-019 established ace-support-core's configuration cascade for ACE gems but left ambiguity around:
@@ -234,6 +250,76 @@ line_width: 120
 
 - **ace-support-core**: ConfigFinder and config cascade implementation
 - **docs/ace-gems.g.md**: Configuration patterns guide
+
+## Compliance Status (December 2025)
+
+### Compliant Packages
+
+The following packages have been migrated to the ADR-022 pattern:
+
+| Package | Subtask | Implementation |
+|---------|---------|----------------|
+| ace-taskflow | 143.01 | Full ConfigLoader with `load_gem_defaults` + DeepMerger |
+| ace-git-worktree | 143.02 | Uses ace-taskflow's ConfigLoader |
+| ace-nav | 143.03 | ConfigLoader with gem defaults pattern |
+| ace-test-runner | 143.04 | ConfigLoader with gem defaults pattern |
+| ace-git-commit | 143.05 | `load_gem_defaults` + DeepMerger in orchestrator |
+| ace-docs | 143.05 | `load_gem_defaults` + DeepMerger in module |
+| ace-lint | 143.05 | `load_gem_defaults` + DeepMerger in module |
+| ace-prompt | 143.05 | `load_gem_defaults` + DeepMerger in module |
+| ace-review | 143.05 | `load_gem_defaults` + DeepMerger in module |
+| ace-search | 143.05 | `load_gem_defaults` + DeepMerger in module |
+| ace-git | Pre-143 | Already compliant with pattern |
+| ace-git-secrets | Pre-143 | Already compliant with pattern |
+
+### Deferred Packages
+
+| Package | Reason |
+|---------|--------|
+| ace-llm | ENV-based configuration, requires separate task |
+| ace-llm-providers-cli | ENV-based configuration, requires separate task |
+
+### Implementation Pattern Summary
+
+The actual implementation pattern used across Task 143:
+
+```ruby
+# In lib/ace/gem.rb or lib/ace/gem/molecules/config_loader.rb
+require "ace/core/atoms/deep_merger"
+
+def self.load_gem_defaults
+  gem_root = Gem.loaded_specs["ace-gem"]&.gem_dir ||
+             File.expand_path("../..", __dir__)
+  defaults_path = File.join(gem_root, ".ace.example", "gem", "config.yml")
+
+  # .ace.example/ MUST be included in gem - missing file is a packaging error
+  unless File.exist?(defaults_path)
+    raise "Default config not found: #{defaults_path}. " \
+          "This is a gem packaging error - .ace.example/ must be included in the gem."
+  end
+
+  YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+end
+
+def self.config
+  @config ||= begin
+    defaults = load_gem_defaults
+    user_config = Ace::Core.config.get("ace", "gem") || {}
+    Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)
+  end
+end
+
+def self.reset_config!
+  @config = nil
+end
+```
+
+Key implementation details:
+- Uses `Ace::Core::Atoms::DeepMerger.merge` for consistent deep merging
+- Loads defaults from `.ace.example/gem/config.yml`
+- User config comes from `Ace::Core.config.get("ace", "gem")` cascade
+- Provides `reset_config!` for test isolation
+- Raises or warns on missing default file (varies by gem criticality)
 
 ---
 
