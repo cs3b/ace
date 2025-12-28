@@ -29,6 +29,30 @@ The output format is NOT a suggestion. It is a strict requirement. Follow it exa
 
 ---
 
+## DEVELOPER FEEDBACK PRIORITY
+
+Developer Feedback is NOT just another model - it represents explicit requests from human reviewers. Their comments carry special weight because they are the actual stakeholders reviewing the code.
+
+**Special handling required:**
+1. EVERY unresolved comment must appear in "Developer Action Required" section
+2. EVERY comment with a question mark (?) must be elevated to action items
+3. Preserve the EXACT text of developer comments - do not paraphrase or summarize
+4. Preserve ALL file:line references from developer comments
+5. Keywords like "should we", "what about", "why" indicate questions requiring response
+
+**Prioritization:**
+- Unresolved developer comments → Critical/High Priority action items
+- "Changes Requested" reviews → Critical/Blocking
+- Questions from reviewers → High Priority (require response)
+- Suggestions from reviewers → Medium Priority
+
+**Developer comments can NEVER be:**
+- Summarized into one generic bullet
+- Dropped because they don't match AI model findings
+- Ranked lower than Medium Priority in action items
+
+---
+
 ## REQUIRED OUTPUT STRUCTURE
 
 Your output MUST contain these exact sections in this exact order:
@@ -40,6 +64,22 @@ Your output MUST contain these exact sections in this exact order:
 - **Synthesis Model**: [the model generating this synthesis]
 - **Generated**: [current date from project context]
 - **Source Reports**: [count]
+
+## Developer Action Required
+
+[All unresolved items from Developer Feedback report. If no Developer Feedback report exists, write "No developer feedback in this review session."]
+
+For EACH unresolved developer comment (do not combine or summarize):
+
+### [Brief Summary] (file:line)
+
+- **Reviewer**: @[username]
+- **Status**: Unresolved
+- **Full Comment**: [Copy the EXACT text - never paraphrase]
+- **Type**: Question/Request/Suggestion
+- **Required Action**: [What needs to be done to address this]
+
+[Repeat for EVERY unresolved comment - each must have its own subsection]
 
 ## Consensus Findings
 
@@ -120,7 +160,23 @@ For each:
 
 ## Prioritized Action Items
 
-Combine all findings into a prioritized list:
+Combine all findings into a prioritized list.
+
+**PRIORITY BOOSTING RULES (MANDATORY):**
+
+1. **Critical/Blocking** MUST include:
+   - "Changes Requested" reviews from developers
+   - Unresolved questions blocking merge
+   - Any developer comment marked as blocking
+
+2. **High Priority** MUST include:
+   - ALL unresolved developer comments (even if not matched by AI models)
+   - Questions from reviewers (indicated by ?)
+   - Comments with action keywords: "should", "fix", "change", "need", "must"
+
+3. **Developer feedback can NEVER be ranked lower than Medium Priority**
+   - Even suggestions from developers go to Medium, not Low
+   - Low Priority is reserved for AI model suggestions only
 
 ### Critical/Blocking
 1. [action item] ([file:line])
@@ -135,7 +191,7 @@ Combine all findings into a prioritized list:
 6. ...
 
 ### Low Priority
-7. [action item]
+7. [action item] - AI model suggestions only, no developer feedback here
 8. ...
 
 ## Summary Statistics
@@ -156,11 +212,21 @@ Combine all findings into a prioritized list:
 3. **ALL metrics** - Performance numbers, counts, ratings (e.g., "~10ms overhead")
 4. **ALL suggested patterns** - Constant definitions, helper methods, architectural suggestions
 5. **ALL file assessments** - If a model rates files or provides per-file feedback
+6. **ALL developer comments** - EVERY unresolved comment must appear in "Developer Action Required"
+
+**CRITICAL - Developer Feedback Completeness:**
+- Each unresolved developer comment = one subsection in "Developer Action Required"
+- If 5 unresolved comments exist, there must be 5 subsections (not 1 summary)
+- Copy exact comment text - NEVER paraphrase or summarize
+- Preserve exact file:line references from each comment
+- Questions (containing ?) must be marked as Type: Question
+- Each comment must appear BOTH in "Developer Action Required" AND in "Prioritized Action Items"
 
 When merging overlapping findings:
 - Use the MOST COMPLETE code example (attribute to source model)
 - Combine all line number references
 - Preserve all specific details from each model
+- Developer feedback takes precedence when it conflicts with AI model suggestions
 
 ## WHAT NOT TO DO
 
@@ -172,11 +238,25 @@ When merging overlapping findings:
 ❌ Do not drop line numbers
 ❌ Do not skip models in the Unique Insights section
 
+**CRITICAL - Developer Feedback Anti-Patterns:**
+❌ Do not combine multiple developer comments into one bullet point
+❌ Do not paraphrase developer comments - copy exact text
+❌ Do not rank developer feedback as "Low Priority"
+❌ Do not omit developer comments because AI models didn't find the same issue
+❌ Do not drop file:line references from developer comments
+
 ## PRE-SUBMISSION VERIFICATION
 
 Before outputting, verify:
-- [ ] Used exact section headers: "Consensus Findings", "Strong Recommendations", "Unique Insights", etc.
+- [ ] Used exact section headers: "Developer Action Required", "Consensus Findings", "Strong Recommendations", "Unique Insights", etc.
 - [ ] Every code example from source reports is included
 - [ ] All line numbers are preserved
 - [ ] Every model has a subsection in "Unique Insights"
 - [ ] No finding from any source report is missing
+
+**Developer Feedback Checklist:**
+- [ ] Count of subsections in "Developer Action Required" matches count of unresolved comments
+- [ ] Each developer comment is copied verbatim (not paraphrased)
+- [ ] All file:line references from developer comments are preserved
+- [ ] Every unresolved developer comment appears in "Prioritized Action Items" at Medium or higher
+- [ ] No developer feedback ranked as "Low Priority"

@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.2] - 2025-12-28
+
+### Added
+- **Prioritize developer feedback in synthesis**: Human reviewer comments now receive special handling
+  - New "Developer Action Required" section appears before Consensus Findings
+  - Each unresolved comment gets its own subsection with exact text preserved
+  - Priority boosting ensures developer feedback is never ranked lower than Medium
+  - Added completeness requirements to prevent summarization of dev comments
+  - Added anti-patterns and verification checklist for developer feedback
+
+## [0.27.1] - 2025-12-28
+
+### Fixed
+- **Auto-discover repo for inline PR comments**: When running `ace-review --pr <number>` (local PR number), inline code comments were silently not fetched because GraphQL requires owner/repo format. Now automatically discovers repository via `gh repo view --json owner,name`
+- **Improved warning messages**: Upgraded warning messages from Debug to Warning level for better visibility when inline comments cannot be fetched
+
 ## [0.27.0] - 2025-12-28
 
 ### Added

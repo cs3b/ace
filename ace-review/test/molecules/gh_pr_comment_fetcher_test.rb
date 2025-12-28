@@ -319,17 +319,111 @@ module Ace
           assert_equal 2, threads.size
         end
 
-        # Test: fetch_review_threads returns empty array without owner/repo
+        # Test: fetch_review_threads returns empty array without owner/repo when discovery fails
         def test_fetch_review_threads_empty_without_owner_repo
           parsed = { number: 123, gh_format: "123" }  # No owner/repo
 
-          # Should output debug warning
+          # Stub repo discovery to fail
+          repo_discovery_result = { success: false, stdout: "", stderr: "not a github repo", exit_code: 1 }
+
+          # Should output warning after discovery fails
           output = capture_io do
-            threads = @fetcher.send(:fetch_review_threads, parsed, {})
-            assert_equal [], threads
+            GhCliExecutor.stub(:execute, repo_discovery_result) do
+              threads = @fetcher.send(:fetch_review_threads, parsed, {})
+              assert_equal [], threads
+            end
           end
 
-          assert_match(/missing owner\/repo/, output[1])
+          assert_match(/Cannot fetch inline code comments.*repository info not available/, output[1])
+        end
+
+        # Test: fetch_review_threads discovers repo from git remote when not in identifier
+        def test_fetch_review_threads_discovers_repo_from_remote
+          parsed = { number: "123", gh_format: "123" }  # No owner/repo in identifier
+
+          # Mock repo discovery success
+          repo_discovery_response = '{"owner":{"login":"testowner"},"name":"testrepo"}'
+
+          # Mock GraphQL response with review threads
+          graphql_response = {
+            "data" => {
+              "repository" => {
+                "pullRequest" => {
+                  "reviewThreads" => {
+                    "nodes" => [
+                      {
+                        "id" => "PRRT_discovered",
+                        "isResolved" => false,
+                        "path" => "discovered.rb",
+                        "line" => 42,
+                        "comments" => {
+                          "nodes" => [{
+                            "id" => "C_disc",
+                            "body" => "Comment from discovered repo",
+                            "author" => { "login" => "reviewer" },
+                            "createdAt" => "2025-12-28T10:00:00Z"
+                          }]
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }.to_json
+
+          call_count = 0
+          output = capture_io do
+            GhCliExecutor.stub(:execute, lambda { |cmd, args, **_opts|
+              call_count += 1
+              if args.include?("owner,name")
+                # Repo discovery call
+                { success: true, stdout: repo_discovery_response, stderr: "", exit_code: 0 }
+              else
+                # GraphQL call
+                { success: true, stdout: graphql_response, stderr: "", exit_code: 0 }
+              end
+            }) do
+              threads = @fetcher.send(:fetch_review_threads, parsed, {})
+              assert_equal 1, threads.size
+              assert_equal "PRRT_discovered", threads.first[:id]
+              assert_equal "discovered.rb", threads.first[:path]
+            end
+          end
+
+          # Should have called both repo discovery and GraphQL
+          assert_equal 2, call_count
+        end
+
+        # Test: discover_repo_from_remote returns nil on failure
+        def test_discover_repo_from_remote_returns_nil_on_failure
+          failure_result = { success: false, stdout: "", stderr: "error", exit_code: 1 }
+
+          GhCliExecutor.stub(:execute, failure_result) do
+            result = @fetcher.send(:discover_repo_from_remote, {})
+            assert_nil result
+          end
+        end
+
+        # Test: discover_repo_from_remote returns nil on invalid JSON
+        def test_discover_repo_from_remote_returns_nil_on_invalid_json
+          invalid_result = { success: true, stdout: "not json", stderr: "", exit_code: 0 }
+
+          GhCliExecutor.stub(:execute, invalid_result) do
+            result = @fetcher.send(:discover_repo_from_remote, {})
+            assert_nil result
+          end
+        end
+
+        # Test: discover_repo_from_remote returns owner/name format
+        def test_discover_repo_from_remote_returns_owner_name
+          valid_response = '{"owner":{"login":"cs3b"},"name":"ace-meta"}'
+          valid_result = { success: true, stdout: valid_response, stderr: "", exit_code: 0 }
+
+          GhCliExecutor.stub(:execute, valid_result) do
+            result = @fetcher.send(:discover_repo_from_remote, {})
+            assert_equal "cs3b/ace-meta", result
+          end
         end
 
         # Test: fetch_review_threads surfaces GraphQL errors as warnings
