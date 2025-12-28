@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-12-28
+
+### Added
+- **ADR-022 Configuration Pattern**: Migrate to gem defaults from `.ace.example/` with user override support
+  - Load defaults from `.ace.example/git/commit.yml` at runtime
+  - Deep merge with user config via ace-core cascade
+  - Follows "gem defaults < user config" priority
+
+### Fixed
+- **Path Expansion**: Fixed gem root resolution in `load_gem_defaults` (4 levels instead of 5)
+- **Debug Check Consistency**: Standardized `debug?` method to use `== "1"` pattern across all gems
+
 ## [0.12.4] - 2025-12-27
 
 ### Changed

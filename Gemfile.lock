@@ -8,7 +8,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.10.1)
+    ace-docs (0.11.0)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-core (~> 0.11)
@@ -22,7 +22,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.12.4)
+    ace-git-commit (0.13.0)
       ace-git (~> 0.3)
       ace-llm (~> 0.15.0)
       ace-support-core (~> 0.10)
@@ -64,7 +64,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.3.3)
+    ace-lint (0.4.0)
       ace-support-core (~> 0.11)
       colorize (~> 1.1)
       kramdown (~> 2.4)
@@ -104,7 +104,7 @@ PATH
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.6.0)
+    ace-prompt (0.7.0)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
@@ -116,7 +116,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.26.3)
+    ace-review (0.27.0)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -127,7 +127,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.12.0)
+    ace-search (0.13.0)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
 
