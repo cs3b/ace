@@ -22,5 +22,11 @@ module Ace
     class Error < StandardError; end
     class GitError < Error; end
     class ConfigurationError < Error; end
+
+    # Check if debug mode is enabled
+    # @return [Boolean] True if debug mode is enabled
+    def self.debug?
+      ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
+    end
   end
 end
