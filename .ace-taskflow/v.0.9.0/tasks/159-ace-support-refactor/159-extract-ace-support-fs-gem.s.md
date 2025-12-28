@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.159
-status: pending
+status: in-progress
 priority: medium
 estimate: 1d
 dependencies: []
+worktree:
+  branch: 159-extract-ace-support-fs-gem-pathexpander-projectrootfinder-directorytraverser
+  path: "../ace-task.159"
+  created_at: '2025-12-28 20:59:52'
+  updated_at: '2025-12-28 20:59:52'
 ---
 
 # Extract ace-support-fs gem (PathExpander, ProjectRootFinder, DirectoryTraverser)
