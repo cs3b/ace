@@ -35,44 +35,94 @@ module Ace
   module Lint
     class Error < StandardError; end
 
+    # Check if debug mode is enabled
+    # @return [Boolean] True if debug mode is enabled
+    def self.debug?
+      ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
+    end
+
     # Load general ace-lint configuration using ace-core config cascade
-    # Follows ace-* pattern: ./.ace/lint/config.yml → ~/.ace/lint/config.yml
+    # Follows ADR-022: Configuration Default and Override Pattern
+    # Priority: gem defaults < user config
     # @return [Hash] Configuration hash
     def self.config
       @config ||= begin
-        base_config = Ace::Core.config
-        base_config.get('ace', 'lint') || {}
+        require 'yaml'
+        require 'ace/core/atoms/deep_merger'
+
+        # Load gem defaults from .ace.example/lint/config.yml
+        gem_defaults = load_gem_defaults
+
+        # Load user config via ace-core cascade
+        user_config = Ace::Core.config.get('ace', 'lint') || {}
+
+        # Merge gem defaults with user config
+        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
       rescue StandardError => e
-        warn "Warning: Could not load ace-lint config: #{e.message}"
-        {}
+        warn "Warning: Could not load ace-lint config: #{e.message}" if debug?
+        load_gem_defaults || {}
       end
     end
 
+    # Load gem defaults from .ace.example/lint/config.yml
+    # @return [Hash] Default configuration from gem
+    def self.load_gem_defaults
+      gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace.example", "lint", "config.yml")
+
+      if File.exist?(defaults_path)
+        YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+      else
+        warn "Warning: Default config not found: #{defaults_path}" if debug?
+        {}
+      end
+    rescue StandardError => e
+      warn "Error loading gem defaults: #{e.message}" if debug?
+      {}
+    end
+    private_class_method :load_gem_defaults
+
     # Load kramdown-specific configuration
+    # Follows ADR-022: Configuration Default and Override Pattern
     # Config location: .ace/lint/kramdown.yml
     # @return [Hash] Kramdown configuration
     def self.kramdown_config
       @kramdown_config ||= begin
+        require 'yaml'
+        require 'ace/core/atoms/deep_merger'
+
+        # Load gem defaults from .ace.example/lint/kramdown.yml
+        gem_defaults = load_kramdown_gem_defaults
+
+        # Load user config via ace-core cascade
         base_config = Ace::Core.config
-        base_config.get('ace', 'lint', 'kramdown') || default_kramdown_config
+        user_config = base_config.get('ace', 'lint', 'kramdown') || {}
+
+        # Merge gem defaults with user config
+        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
       rescue StandardError => e
         warn "Warning: Could not load kramdown config: #{e.message}"
-        default_kramdown_config
+        load_kramdown_gem_defaults || {}
       end
     end
 
-    # Default kramdown configuration when no config file exists
-    # @return [Hash] Default kramdown configuration
-    def self.default_kramdown_config
-      {
-        'input' => 'GFM',
-        'line_width' => 120,
-        'auto_ids' => false,
-        'hard_wrap' => false,
-        'parse_block_html' => true,
-        'parse_span_html' => true
-      }
+    # Load gem defaults from .ace.example/lint/kramdown.yml
+    # @return [Hash] Default kramdown configuration from gem
+    def self.load_kramdown_gem_defaults
+      gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace.example", "lint", "kramdown.yml")
+
+      if File.exist?(defaults_path)
+        YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+      else
+        {}
+      end
+    rescue StandardError
+      {}
     end
+    private_class_method :load_kramdown_gem_defaults
 
     # Reset config cache (useful for testing)
     def self.reset_config!

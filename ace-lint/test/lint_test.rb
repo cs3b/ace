@@ -19,19 +19,20 @@ class Ace::TestLint < Minitest::Test
     assert_kind_of Hash, kramdown_config
   end
 
-  def test_default_kramdown_config_has_expected_keys
-    # Should have expected default configuration
-    default_config = Ace::Lint.default_kramdown_config
-    assert_equal 'GFM', default_config['input']
-    assert_equal 120, default_config['line_width']
-    assert_equal false, default_config['auto_ids']
+  def test_kramdown_config_has_expected_keys
+    # Should have expected configuration (from gem defaults)
+    # Reset to ensure we get fresh config
+    Ace::Lint.reset_config!
+    config = Ace::Lint.kramdown_config
+    assert_equal 'GFM', config['input']
+    assert_equal 120, config['line_width']
+    assert_equal false, config['auto_ids']
   end
 
   def test_module_loading
     # Should be able to access required components
     assert_respond_to Ace::Lint, :config
     assert_respond_to Ace::Lint, :kramdown_config
-    assert_respond_to Ace::Lint, :default_kramdown_config
     assert_respond_to Ace::Lint, :reset_config!
   end
 end

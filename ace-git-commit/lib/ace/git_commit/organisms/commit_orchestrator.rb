@@ -54,42 +54,54 @@ module Ace
 
         private
 
-        # Load configuration
+        # Load configuration with gem defaults and user overrides
+        # Follows ADR-022: Configuration Default and Override Pattern
+        # Priority: gem defaults < user config
         # @return [Hash] Configuration
         def load_config
-          # Load git/commit.yml configuration using ace-core
+          require 'yaml'
+          require 'ace/core/atoms/deep_merger'
           require 'ace/core/organisms/config_resolver'
 
+          # Load gem defaults from .ace.example/git/commit.yml
+          gem_defaults = load_gem_defaults
+
+          # Load user config via existing cascade
           resolver = Ace::Core::Organisms::ConfigResolver.new(
             file_patterns: ["git/commit.yml", "git/commit.yaml"]
           )
-
-          config = resolver.resolve
-
-          if config && config.data && !config.data.empty?
+          resolved = resolver.resolve
+          user_config = if resolved && resolved.data && !resolved.data.empty?
             # Extract git section if present, otherwise use root
-            config.data["git"] || config.data
+            resolved.data["git"] || resolved.data
           else
-            default_config
+            {}
           end
+
+          # Merge gem defaults with user config
+          Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
         rescue StandardError => e
-          warn "Error loading git commit config: #{e.message}" if ENV["DEBUG"]
-          default_config
+          warn "Error loading git commit config: #{e.message}" if Ace::GitCommit.debug?
+          load_gem_defaults || {}
         end
 
-        # Default configuration
-        # @return [Hash] Default config
-        def default_config
-          {
-            "model" => "glite",
-            "conventions" => {
-              "format" => "conventional",
-              "scopes" => {
-                "enabled" => true,
-                "detect_from_paths" => true
-              }
-            }
-          }
+        # Load gem defaults from .ace.example/git/commit.yml
+        # @return [Hash] Default configuration from gem
+        def load_gem_defaults
+          gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
+                     File.expand_path("../../../..", __dir__)
+          defaults_path = File.join(gem_root, ".ace.example", "git", "commit.yml")
+
+          if File.exist?(defaults_path)
+            content = YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true)
+            content&.dig("git") || {}
+          else
+            warn "Warning: Default config not found: #{defaults_path}" if Ace::GitCommit.debug?
+            {}
+          end
+        rescue StandardError => e
+          warn "Error loading gem defaults: #{e.message}" if Ace::GitCommit.debug?
+          {}
         end
 
         # Validate we're in a git repository
