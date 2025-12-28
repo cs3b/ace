@@ -17,8 +17,9 @@ class Ace::TestSearch < AceSearchTestCase
     assert_respond_to Ace::Search, :config
   end
 
-  def test_default_config_returns_hash
-    config = Ace::Search.default_config
+  def test_config_returns_hash_with_defaults
+    # Config now loads from gem defaults (via load_gem_defaults)
+    config = Ace::Search.config
 
     assert config.is_a?(Hash)
     assert config.key?("case_insensitive")

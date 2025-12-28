@@ -15,39 +15,43 @@ module Ace
     end
 
     # Get configuration using ace-core config cascade
+    # Follows ADR-022: Configuration Default and Override Pattern
+    # Priority: gem defaults < user config
     # @return [Hash] Configuration hash with defaults merged
     def self.config
       @config ||= begin
-        loaded_config = Ace::Core.config.get("ace", "docs") || {}
-        default_config.merge(loaded_config)
+        require 'yaml'
+        require 'ace/core/atoms/deep_merger'
+
+        # Load gem defaults from .ace.example/docs/config.yml
+        gem_defaults = load_gem_defaults
+
+        # Load user config via ace-core cascade
+        user_config = Ace::Core.config.get("ace", "docs") || {}
+
+        # Merge gem defaults with user config
+        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
       end
     end
 
-    # Default configuration values
-    # @return [Hash] Default configuration
-    def self.default_config
-      {
-        # Cache settings
-        "cache_dir" => ".cache/ace-docs",
+    # Load gem defaults from .ace.example/docs/config.yml
+    # @return [Hash] Default configuration from gem
+    def self.load_gem_defaults
+      gem_root = Gem.loaded_specs["ace-docs"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace.example", "docs", "config.yml")
 
-        # Analysis settings
-        "llm_temperature" => 0.3,
-        "llm_timeout" => 600, # Timeout in seconds (10 minutes minimum)
-        "llm_model" => "glite", # Default to glite (fast model)
-        "max_diff_lines_warning" => 100_000,
-
-        # Validation settings
-        "validation_enabled" => true,
-        "ace_lint_path" => "ace-lint",
-
-        # Document settings
-        "default_freshness_days" => {
-          "current" => 14,
-          "stale" => 30,
-          "outdated" => 60
-        }
-      }
+      if File.exist?(defaults_path)
+        YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+      else
+        warn "Warning: Default config not found: #{defaults_path}" if debug?
+        {}
+      end
+    rescue StandardError => e
+      warn "Error loading gem defaults: #{e.message}" if debug?
+      {}
     end
+    private_class_method :load_gem_defaults
 
     # Reset configuration (primarily for testing)
     def self.reset_config!

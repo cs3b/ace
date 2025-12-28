@@ -14,7 +14,7 @@
 #
 # Environment Variables:
 # ---------------------
-# ACE_DEBUG / DEBUG       - Enable debug output (set to "true")
+# ACE_DEBUG / DEBUG       - Enable debug output (set to "1")
 # ACE_REVIEW_DEBUG        - Enable detailed composition debugging (set to "1")
 
 # Default settings applied to all reviews unless overridden

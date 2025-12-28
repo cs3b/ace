@@ -17,8 +17,23 @@ class CLIIntegrationTest < Minitest::Test
     # Reset config cache to ensure clean state
     Ace::Prompt.reset_config!
 
-    # Store default config for use in tests
-    @default_config = Ace::Prompt.default_config
+    # Store a mock default config for test isolation
+    # This represents the gem defaults without loading project config
+    @default_config = {
+      "context" => { "enabled" => false },
+      "enhance" => {
+        "enabled" => false,
+        "model" => "glite",
+        "temperature" => 0.3,
+        "system_prompt" => "prompt://prompt-enhance-instructions.system"
+      },
+      "task" => {
+        "detection" => false,
+        "branch_patterns" => ['^(\d+(?:\.\d+)?)-']
+      },
+      "security" => { "max_file_size_mb" => 10 },
+      "debug" => { "enabled" => false, "context_loading" => false }
+    }
   end
 
   def teardown
@@ -564,8 +579,8 @@ class CLIIntegrationTest < Minitest::Test
       error: nil
     }
 
-    # Enable task detection in config
-    config_with_detection = Ace::Prompt.default_config.merge(
+    # Enable task detection in config (merge with test's default config)
+    config_with_detection = @default_config.merge(
       "task" => { "detection" => true }
     )
 
@@ -590,8 +605,8 @@ class CLIIntegrationTest < Minitest::Test
     # Create project prompt file as fallback
     File.write(@prompt_file, "Project-level prompt content", encoding: "utf-8")
 
-    # Enable task detection in config
-    config_with_detection = Ace::Prompt.default_config.merge(
+    # Enable task detection in config (merge with test's default config)
+    config_with_detection = @default_config.merge(
       "task" => { "detection" => true }
     )
 

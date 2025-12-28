@@ -60,67 +60,46 @@ module Ace
 
     class << self
       # Configuration accessor
+      # Follows ADR-022: Configuration Default and Override Pattern
+      # Priority: gem defaults < user config
       def config
         @config ||= begin
-          Ace::Core.get("review", file: "config") || default_config
-        rescue StandardError
-          default_config
+          require 'yaml'
+          require 'ace/core/atoms/deep_merger'
+
+          # Load gem defaults from .ace.example/review/config.yml
+          gem_defaults = load_gem_defaults
+
+          # Load user config via ace-core cascade
+          user_config = Ace::Core.get("review", file: "config") || {}
+
+          # Merge gem defaults with user config
+          Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+        rescue StandardError => e
+          warn "Warning: Could not load ace-review config: #{e.message}" if debug?
+          load_gem_defaults || {}
         end
       end
 
-      # Default configuration
-      def default_config
-        {
-          "defaults" => {
-            "preset" => "code",
-            "model" => "google:gemini-2.5-flash",
-            "output_format" => "markdown",
-            "context" => "project",
-            "max_concurrent_models" => 3
-          },
-          "presets" => default_presets
-        }
+      private
+
+      # Load gem defaults from .ace.example/review/config.yml
+      # @return [Hash] Default configuration from gem
+      def load_gem_defaults
+        gem_root = Gem.loaded_specs["ace-review"]&.gem_dir ||
+                   File.expand_path("../..", __dir__)
+        defaults_path = File.join(gem_root, ".ace.example", "review", "config.yml")
+
+        if File.exist?(defaults_path)
+          YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+        else
+          {}
+        end
+      rescue StandardError
+        {}
       end
 
-      # Default presets if no configuration file exists
-      def default_presets
-        {
-          "pr" => {
-            "description" => "Pull request review",
-            "system_prompt" => {
-              "base" => "prompt://base/system",
-              "format" => "prompt://format/standard",
-              "guidelines" => [
-                "prompt://guidelines/tone",
-                "prompt://guidelines/icons"
-              ]
-            },
-            "context" => "project",
-            "subject" => {
-              "commands" => [
-                "git diff origin/main...HEAD",
-                "git log origin/main..HEAD --oneline"
-              ]
-            }
-          },
-          "security" => {
-            "description" => "Security-focused review",
-            "system_prompt" => {
-              "base" => "prompt://base/system",
-              "format" => "prompt://format/detailed",
-              "focus" => ["prompt://focus/quality/security"],
-              "guidelines" => [
-                "prompt://guidelines/tone",
-                "prompt://guidelines/icons"
-              ]
-            },
-            "context" => "project",
-            "subject" => {
-              "commands" => ["git diff HEAD~5..HEAD"]
-            }
-          }
-        }
-      end
+      public
 
       # Get configuration value with dot notation
       def get(*keys)
@@ -136,7 +115,7 @@ module Ace
 
       # Check if running in debug mode
       def debug?
-        ENV["ACE_DEBUG"] == "true" || ENV["DEBUG"] == "true"
+        ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
       end
     end
   end
