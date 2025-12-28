@@ -1,4 +1,9 @@
 PATH
+  remote: ace-config
+  specs:
+    ace-config (0.2.0)
+
+PATH
   remote: ace-context
   specs:
     ace-context (0.20.0)
@@ -116,7 +121,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.27.0)
+    ace-review (0.27.2)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -279,6 +284,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  ace-config!
   ace-context!
   ace-docs!
   ace-git!
