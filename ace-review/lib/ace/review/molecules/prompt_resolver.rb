@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "pathname"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 
 module Ace
   module Review
@@ -77,7 +77,7 @@ module Ace
 
         def find_project_root
           # Use ProjectRootFinder to support both main repos and git worktrees
-          Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
         end
 
         def resolve_protocol_uri(uri)

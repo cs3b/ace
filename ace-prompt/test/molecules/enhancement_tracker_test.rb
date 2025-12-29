@@ -79,14 +79,14 @@ class EnhancementTrackerTest < Minitest::Test
   end
 
   def test_cached_returns_false_when_not_cached
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       hash = "nonexistent123"
       refute Ace::Prompt::Molecules::EnhancementTracker.cached?(hash)
     end
   end
 
   def test_store_cache_and_get_cached
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Enhanced prompt content"
       hash = Ace::Prompt::Molecules::EnhancementTracker.content_hash(content)
 
@@ -104,7 +104,7 @@ class EnhancementTrackerTest < Minitest::Test
   end
 
   def test_get_cached_returns_nil_for_nonexistent
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       hash = "nonexistent456"
       result = Ace::Prompt::Molecules::EnhancementTracker.get_cached(hash)
       assert_nil result
@@ -112,14 +112,14 @@ class EnhancementTrackerTest < Minitest::Test
   end
 
   def test_next_iteration_returns_1_when_no_archive_dir
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration("20251129-143000")
       assert_equal 1, iteration
     end
   end
 
   def test_next_iteration_returns_1_when_no_enhancement_files
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       # Create archive directory but no enhancement files
       archive_dir = File.join(@test_dir, ".cache/ace-prompt/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
@@ -133,7 +133,7 @@ class EnhancementTrackerTest < Minitest::Test
   end
 
   def test_next_iteration_increments_from_existing
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       timestamp = "20251129-143000"
       archive_dir = File.join(@test_dir, ".cache/ace-prompt/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
@@ -148,7 +148,7 @@ class EnhancementTrackerTest < Minitest::Test
   end
 
   def test_next_iteration_handles_gaps_in_numbering
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       timestamp = "20251129-143000"
       archive_dir = File.join(@test_dir, ".cache/ace-prompt/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
@@ -178,7 +178,7 @@ class EnhancementTrackerTest < Minitest::Test
   end
 
   def test_cache_directory_created_automatically
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Test content"
       hash = Ace::Prompt::Molecules::EnhancementTracker.content_hash(content)
 

@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "molecules/config_finder"
-require_relative "molecules/project_root_finder"
-require_relative "molecules/directory_traverser"
+require "ace/support/fs"
 
 module Ace
   module Core
@@ -34,7 +33,7 @@ module Ace
       # Get the project root directory
       # @return [String, nil] Project root path or nil if not in a project
       def project_root
-        Molecules::ProjectRootFinder.find(start_path: @start_path)
+        Ace::Support::Fs::Molecules::ProjectRootFinder.find(start_path: @start_path)
       end
 
       # Check if we're in a project
@@ -46,7 +45,7 @@ module Ace
       # Get all configuration search paths in order
       # @return [Array<String>] Ordered list of config directories being searched
       def config_search_paths
-        traverser = Molecules::DirectoryTraverser.new(start_path: @start_path)
+        traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(start_path: @start_path)
         paths = traverser.find_config_directories
 
         # Add home directory

@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.207] - 2025-12-29
+
+### Changed
+
+**Task 161: Migrate dependent gems to ace-support-fs**
+
+Complete migration from `Ace::Core::Molecules::ProjectRootFinder` and `Ace::Core::Molecules::DirectoryTraverser` to use `Ace::Support::Fs::*` directly across all dependent gems.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-test-runner | 0.4.0 → 0.5.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-search | 0.13.0 → 0.14.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-docs | 0.11.0 → 0.12.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-nav | 0.11.0 → 0.12.0 | Migrate DirectoryTraverser and ProjectRootFinder to ace-support-fs |
+| ace-context | 0.20.0 → 0.21.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-review | 0.27.2 → 0.28.0 | Migrate file system operations to ace-support-fs |
+| ace-prompt | 0.7.0 → 0.8.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-support-core | 0.11.1 → 0.12.0 | Remove backward compat aliases, update internal deps |
+
+### Removed
+
+**ace-support-core v0.12.0** (BREAKING)
+- Removed `Ace::Core::Atoms::PathExpander` alias
+- Removed `Ace::Core::Molecules::ProjectRootFinder` alias
+- Removed `Ace::Core::Molecules::DirectoryTraverser` alias
+- Use `Ace::Support::Fs::*` directly instead
+
 ## [0.9.206] - 2025-12-28
 
 ### Added

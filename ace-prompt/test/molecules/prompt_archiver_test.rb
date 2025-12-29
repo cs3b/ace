@@ -8,7 +8,7 @@ class PromptArchiverTest < Minitest::Test
     @original_root = Dir.pwd
 
     # Mock ProjectRootFinder to return our tmpdir
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       # Set up archive directory
       @archive_dir = File.join(@tmpdir, ".cache/ace-prompt/prompts/archive")
       @symlink_path = File.join(@tmpdir, ".cache/ace-prompt/prompts/_previous.md")
@@ -24,7 +24,7 @@ class PromptArchiverTest < Minitest::Test
     content = "Test prompt content"
     timestamp = "20251127-143000"
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content,
         timestamp: timestamp
@@ -42,7 +42,7 @@ class PromptArchiverTest < Minitest::Test
     content = "Test content"
     timestamp = "20251127-143000"
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content,
         timestamp: timestamp
@@ -59,7 +59,7 @@ class PromptArchiverTest < Minitest::Test
   end
 
   def test_handles_nil_content
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(content: nil)
 
       refute result[:success]
@@ -68,7 +68,7 @@ class PromptArchiverTest < Minitest::Test
   end
 
   def test_handles_empty_content
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(content: "")
 
       assert result[:success]
@@ -82,7 +82,7 @@ class PromptArchiverTest < Minitest::Test
     content2 = "Second content"
     timestamp = "20251127-143000"
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result1 = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content1,
         timestamp: timestamp
@@ -109,7 +109,7 @@ class PromptArchiverTest < Minitest::Test
   def test_handles_unicode_content
     content = "日本語 Привет café 🎉"
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(content: content)
 
       assert result[:success]
@@ -120,7 +120,7 @@ class PromptArchiverTest < Minitest::Test
   def test_handles_large_content
     content = "x" * 100_000
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(content: content)
 
       assert result[:success]
@@ -134,7 +134,7 @@ class PromptArchiverTest < Minitest::Test
     timestamp1 = "20251127-140000"
     timestamp2 = "20251127-150000"
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result1 = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content1,
         timestamp: timestamp1
@@ -158,7 +158,7 @@ class PromptArchiverTest < Minitest::Test
     FileUtils.rm_rf(@archive_dir)
     content = "Test"
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(content: content)
 
       assert result[:success]

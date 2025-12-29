@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 
 module Ace
   module Prompt
@@ -15,7 +15,7 @@ module Ace
         # @param path [String, nil] Optional custom path (default: standard location)
         # @return [Hash] Hash with :content, :path, :success, :error keys
         def self.call(path: nil)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           prompt_path = path || File.join(project_root, DEFAULT_PROMPT_PATH)
           prompt_path = File.expand_path(prompt_path)
 

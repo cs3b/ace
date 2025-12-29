@@ -405,8 +405,9 @@ module Ace
           # Find all preset directories in cascade
           if defined?(Ace::Core)
             require "ace/core"
+            require "ace/support/fs"
             finder = Ace::Core::Molecules::ConfigFinder.new
-            traverser = Ace::Core::Molecules::DirectoryTraverser.new
+            traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
             config_dirs = traverser.find_config_directories
 
             # Check each config directory for review/presets
