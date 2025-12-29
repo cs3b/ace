@@ -104,7 +104,7 @@ module Ace
           dirs = []
 
           # Use DirectoryTraverser to find all config directories
-          traverser = Molecules::DirectoryTraverser.new(
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(
             config_dir: @config_dir,
             start_path: @start_path
           )

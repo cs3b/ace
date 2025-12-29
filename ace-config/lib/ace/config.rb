@@ -3,18 +3,18 @@
 require_relative "config/version"
 require_relative "config/errors"
 
+# Use ace-support-fs for path/project utilities
+require "ace/support/fs"
+
 # Load atoms first (no dependencies)
 require_relative "config/atoms/deep_merger"
 require_relative "config/atoms/yaml_parser"
-require_relative "config/atoms/path_expander"
 
 # Load models (depend on atoms)
 require_relative "config/models/cascade_path"
 require_relative "config/models/config"
 
 # Load molecules (depend on atoms, models)
-require_relative "config/molecules/project_root_finder"
-require_relative "config/molecules/directory_traverser"
 require_relative "config/molecules/yaml_loader"
 require_relative "config/molecules/config_finder"
 
@@ -118,9 +118,9 @@ module Ace
       #
       # @param source_dir [String] Source document directory
       # @param project_root [String] Project root directory
-      # @return [Atoms::PathExpander] Path expander instance
+      # @return [Ace::Support::Fs::Atoms::PathExpander] Path expander instance
       def path_expander(source_dir:, project_root:)
-        Atoms::PathExpander.new(source_dir: source_dir, project_root: project_root)
+        Ace::Support::Fs::Atoms::PathExpander.new(source_dir: source_dir, project_root: project_root)
       end
 
       # Find project root from a starting path
@@ -129,7 +129,7 @@ module Ace
       # @param markers [Array<String>] Project root markers
       # @return [String, nil] Project root path or nil
       def find_project_root(start_path: nil, markers: DEFAULT_PROJECT_MARKERS)
-        Molecules::ProjectRootFinder.find(start_path: start_path, markers: markers)
+        Ace::Support::Fs::Molecules::ProjectRootFinder.find(start_path: start_path, markers: markers)
       end
 
       # Create a virtual config resolver for path-based lookups
@@ -180,7 +180,7 @@ module Ace
       #
       # @return [void]
       def reset_config!
-        Molecules::ProjectRootFinder.clear_cache!
+        Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
       end
     end
   end

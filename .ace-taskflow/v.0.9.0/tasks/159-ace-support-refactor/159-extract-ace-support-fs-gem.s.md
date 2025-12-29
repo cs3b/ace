@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.159
-status: in-progress
+status: done
 priority: medium
 estimate: 1d
 dependencies: []
@@ -8,10 +8,21 @@ worktree:
   branch: 159-extract-ace-support-fs-gem-pathexpander-projectrootfinder-directorytraverser
   path: "../ace-task.159"
   created_at: '2025-12-28 20:59:52'
-  updated_at: '2025-12-28 20:59:52'
+  updated_at: '2025-12-28 23:38:00'
 ---
 
 # Extract ace-support-fs gem (PathExpander, ProjectRootFinder, DirectoryTraverser)
+
+## Design Decisions (Resolved)
+
+1. **Error handling**: Use exception-based approach (raise `PathError`) - ace-config pattern
+2. **Error classes**: Define own `Ace::Support::Fs::PathError` for gem independence
+3. **PathExpander.for_file API**: Accept optional `project_root:` parameter - ace-config pattern
+4. **DirectoryTraverser attribute**: Use `config_dir` (not `config_dir_name`), update all usages (no deprecation)
+5. **Windows support**: No - we don't support or test on Windows
+6. **Testability helpers**: Yes - include `class_get_env` for ENV access stubbing
+7. **Thread-safety**: Use ace-config pattern (Mutex + instance variables, not class variables)
+8. **Marker constant**: Use `DEFAULT_MARKERS` (ace-config style)
 
 ## Description
 
@@ -26,12 +37,12 @@ Create a new `ace-support-fs` gem to consolidate filesystem operations currently
 
 ## Acceptance Criteria
 
-- [ ] New `ace-support-fs` gem created with merged implementations
-- [ ] Backward compatibility layer in `ace-support-core` (re-exports)
-- [ ] `ace-config` updated to use `ace-support-fs` instead of duplicating
-- [ ] All 166 ace-config tests pass
-- [ ] All consuming packages still work (no breaking changes)
-- [ ] Tests migrated/merged from both source packages
+- [x] New `ace-support-fs` gem created with merged implementations
+- [x] Backward compatibility layer in `ace-support-core` (re-exports)
+- [x] `ace-config` updated to use `ace-support-fs` instead of duplicating
+- [x] All 166 ace-config tests pass
+- [x] All consuming packages still work (no breaking changes)
+- [x] Tests migrated/merged from both source packages
 
 ## Implementation Notes
 
@@ -74,20 +85,47 @@ ace-support-fs/
 4. Update `ace-config` to depend on `ace-support-fs`
 5. Update consuming packages (optional with backward compat layer)
 
-### Affected Packages
+### Affected Packages (from research)
 
-- ace-docs (2 files)
-- ace-prompt (5 files)
+**Direct ProjectRootFinder consumers (require + use `Ace::Core::Molecules::ProjectRootFinder`):**
+- ace-prompt (8 files: 5 lib, 3 test helpers)
 - ace-context (1 file)
 - ace-search (1 file)
 - ace-review (2 files)
-- ace-test-runner (1 file)
+- ace-test-runner (2 files)
+- ace-docs (2 files)
+- ace-nav (1 file)
+- ace-support-core internal (5 files)
+- ace-config internal (uses own copy)
 
-### Complications
+**Direct PathExpander consumers:**
+- ace-git-worktree (4 files)
+- ace-support-core internal (5 files)
+- ace-config (uses own copy)
 
-- Circular dependency: `PathExpander.for_file` lazy-loads `ProjectRootFinder`
-- Thread-safety differences between implementations (both safe, different patterns)
-- Protocol resolver integration differs (one raises, one returns hash)
+**Test files with stub patterns (90+ occurrences):**
+- Many tests stub `Ace::Core::Molecules::ProjectRootFinder.find_or_current`
+- Backward compat layer critical to avoid breaking tests
+
+### Complications (refined from research)
+
+1. **Circular dependency**: `PathExpander.for_file` lazy-loads `ProjectRootFinder` via `require_relative`
+   - Solution: In ace-support-fs, both classes are in same gem - can use standard require
+
+2. **Thread-safety patterns differ**:
+   - ace-support-core: Uses class variable `@@cache` and `@@protocol_resolver`
+   - ace-config: Uses instance variable `@cache` with `Mutex.new` and class-level accessors
+   - **ace-config pattern is better** - proper thread-safe singleton pattern
+
+3. **Protocol resolver error handling differs**:
+   - ace-support-core: Returns hash `{error: "...", uri: "...", message: "..."}`
+   - ace-config: Raises `PathError` exception
+   - Need to decide canonical approach (see Review Questions)
+
+4. **Marker constant naming differs**:
+   - ace-support-core: `PROJECT_MARKERS`
+   - ace-config: `DEFAULT_MARKERS`
+   - Minor, but need consistent naming
 
 ## References
 
