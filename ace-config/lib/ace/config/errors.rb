@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/support/fs"
+
 module Ace
   module Config
     # Base error class for all ace-config errors

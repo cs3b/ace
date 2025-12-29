@@ -45,7 +45,7 @@ module Ace
 
       def test_project_root_finder_cached_performance
         with_temp_config(".git" => "") do |tmpdir|
-          finder = Molecules::ProjectRootFinder.new(start_path: tmpdir)
+          finder = Ace::Support::Fs::Molecules::ProjectRootFinder.new(start_path: tmpdir)
 
           # First call populates cache
           finder.stub(:env_project_root, nil) do

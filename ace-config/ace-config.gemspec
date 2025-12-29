@@ -16,7 +16,9 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
-  # No runtime dependencies - stdlib only
+  # Runtime dependencies
+  spec.add_dependency "ace-support-fs", "~> 0.1"
+
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
 

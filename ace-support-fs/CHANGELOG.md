@@ -1,0 +1,43 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2025-12-28
+
+### Added
+
+- Initial release extracting filesystem utilities from ace-support-core and ace-config
+- **PathExpander** atom with:
+  - Instance-based API (`for_file`, `for_cli`) for context-aware path resolution
+  - Protocol URI support (wfi://, guide://, tmpl://, etc.) with pluggable resolver
+  - Environment variable expansion ($VAR and ${VAR} formats)
+  - Source-relative (./) and project-relative path resolution
+  - Thread-safe protocol resolver registration with Mutex
+  - Backward-compatible class methods (expand, join, dirname, basename, etc.)
+  - Testability helper (`class_get_env` for ENV stubbing in tests)
+- **ProjectRootFinder** molecule with:
+  - Project root detection by marker files (.git, Gemfile, package.json, etc.)
+  - Thread-safe caching with Mutex
+  - PROJECT_ROOT_PATH environment variable support
+  - Instance and class method APIs
+  - Testability helper (`env_project_root` for ENV stubbing)
+- **DirectoryTraverser** molecule with:
+  - Config directory discovery from current to project root
+  - Cascade priority building for nearest-wins resolution
+  - Home directory inclusion with lower priority
+  - Configurable config directory name (default: `.ace`)
+- **PathError** exception class for protocol resolution failures
+
+### Design Decisions
+
+- Exception-based error handling (raise PathError) following ace-config pattern
+- Thread-safety with instance variables + Mutex (not class variables)
+- DEFAULT_MARKERS constant for project root markers
+- `config_dir` parameter name (not `config_dir_name`)
+- `class_get_env` for testability without subprocess overhead
+- No Windows support (not tested or supported)
