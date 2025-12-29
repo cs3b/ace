@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Runtime dependency on `ace-support-fs` for filesystem utilities (PathExpander, ProjectRootFinder, DirectoryTraverser)
 - `class_get_env` class method on PathExpander for consistent ENV access pattern across class and instance methods
 - Documentation section on directory naming conventions (`.ace-defaults/` vs `.ace/` vs `.ace.example/`)
 - `glob_to_regex` now supports bracket character classes (`[a-z]`, `[abc]`)

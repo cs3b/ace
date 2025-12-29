@@ -11,7 +11,7 @@ module Ace
     class TestCase < Minitest::Test
       # Clear any caches before each test
       def setup
-        Molecules::ProjectRootFinder.clear_cache!
+        Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
         super
       end
 

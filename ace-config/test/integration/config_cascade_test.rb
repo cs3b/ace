@@ -116,10 +116,10 @@ module Ace
       def test_find_project_root
         with_temp_config(".git" => "") do |tmpdir|
           # Clear cache before testing to ensure fresh lookup
-          Molecules::ProjectRootFinder.clear_cache!
+          Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
 
           # Create finder and stub ENV to avoid PROJECT_ROOT_PATH interference
-          finder = Molecules::ProjectRootFinder.new(start_path: tmpdir)
+          finder = Ace::Support::Fs::Molecules::ProjectRootFinder.new(start_path: tmpdir)
           finder.stub(:env_project_root, nil) do
             root = finder.find
 

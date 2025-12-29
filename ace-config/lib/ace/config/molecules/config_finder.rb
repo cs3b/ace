@@ -35,7 +35,7 @@ module Ace
           @gem_path = gem_path
           @file_patterns = file_patterns
           @use_traversal = use_traversal
-          @start_path = start_path ? Atoms::PathExpander.expand(start_path) : Dir.pwd
+          @start_path = start_path ? Ace::Support::Fs::Atoms::PathExpander.expand(start_path) : Dir.pwd
           @search_paths = build_search_paths
         end
 
@@ -125,7 +125,7 @@ module Ace
         # @return [Array<String>] Expanded search paths
         def build_search_paths
           if @use_traversal
-            traverser = DirectoryTraverser.new(
+            traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(
               config_dir: @config_dir,
               start_path: @start_path
             )
@@ -212,8 +212,8 @@ module Ace
         # @param path [String] Path to check
         # @return [Symbol] Config type
         def determine_type(path)
-          expanded = Atoms::PathExpander.expand(path)
-          home = Atoms::PathExpander.expand("~")
+          expanded = Ace::Support::Fs::Atoms::PathExpander.expand(path)
+          home = Ace::Support::Fs::Atoms::PathExpander.expand("~")
 
           # Use @start_path (stable) instead of Dir.pwd (mutable)
           if expanded.start_with?(@start_path)
