@@ -2,18 +2,19 @@ PATH
   remote: ace-config
   specs:
     ace-config (0.2.0)
+      ace-support-fs (~> 0.1)
 
 PATH
   remote: ace-context
   specs:
-    ace-context (0.20.0)
+    ace-context (0.21.0)
       ace-git (~> 0.3)
       ace-support-core (~> 0.10)
 
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.11.0)
+    ace-docs (0.12.0)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-core (~> 0.11)
@@ -103,13 +104,13 @@ PATH
 PATH
   remote: ace-nav
   specs:
-    ace-nav (0.11.0)
+    ace-nav (0.12.0)
       ace-support-core (~> 0.1)
 
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.7.0)
+    ace-prompt (0.8.0)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
@@ -121,7 +122,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.27.2)
+    ace-review (0.28.0)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -132,14 +133,20 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.13.0)
+    ace-search (0.14.0)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.11.1)
+    ace-support-core (0.12.0)
+      ace-support-fs (~> 0.1)
+
+PATH
+  remote: ace-support-fs
+  specs:
+    ace-support-fs (0.1.0)
 
 PATH
   remote: ace-support-mac-clipboard
@@ -174,7 +181,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.4.0)
+    ace-test-runner (0.5.0)
       ace-support-core (~> 0.1)
       ace-support-test-helpers (~> 0.1)
       minitest (~> 5.0)
@@ -302,6 +309,7 @@ DEPENDENCIES
   ace-review!
   ace-search!
   ace-support-core!
+  ace-support-fs!
   ace-support-mac-clipboard!
   ace-support-markdown!
   ace-support-test-helpers!

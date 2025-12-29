@@ -7,9 +7,9 @@ presets:
 description: "Multi-model PR review - concurrent execution across claude:opus, codex, and gpro"
 
 models:
-  - claude:sonnet              # Deep reasoning, architecture analysis
-  - codex:mini  # Code-focused, implementation details
-  - google:flash-preview
-  - xai:fast
+  - claude:opus              # Deep reasoning, architecture analysis
+  - codex:max  # Code-focused, implementation details
+  - google:pro-preview
+  - xai:grok-4-latest
   # - openrouter:minimax
   # - togetherai:qwen-coder

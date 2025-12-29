@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "project_root_finder"
+require "ace/support/fs"
 require "fileutils"
 require "yaml"
 
@@ -26,7 +26,7 @@ module Ace
             raise ArgumentError, "operation cannot be nil or empty" if operation.nil? || operation.strip.empty?
 
             begin
-              root = project_root || ProjectRootFinder.find_or_current
+              root = project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
               timestamp = timestamp_formatter ? timestamp_formatter.call(Time.now) : Time.now.strftime("%Y%m%d-%H%M%S")
               session_name = "#{operation}-#{timestamp}"
               session_dir = File.join(base_cache_path(root, gem_name), session_name)

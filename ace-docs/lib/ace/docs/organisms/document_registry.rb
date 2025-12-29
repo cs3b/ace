@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 require_relative "../molecules/document_loader"
 require_relative "../models/document"
 require_relative "../atoms/type_inferrer"
@@ -93,7 +93,7 @@ module Ace
           return File.dirname(File.dirname(File.dirname(config_path))) if config_path
 
           # Otherwise use ProjectRootFinder to support both main repos and git worktrees
-          Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
         end
 
         def find_config_path

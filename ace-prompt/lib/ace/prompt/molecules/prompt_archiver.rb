@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 require_relative "../atoms/timestamp_generator"
 
 module Ace
@@ -23,7 +23,7 @@ module Ace
         def self.call(content:, timestamp: nil, archive_dir: nil, symlink_path: nil)
           return { success: false, error: "Error: Content to archive cannot be nil" } if content.nil?
 
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           archive_dir ||= File.join(project_root, DEFAULT_ARCHIVE_DIR)
           FileUtils.mkdir_p(archive_dir)
 

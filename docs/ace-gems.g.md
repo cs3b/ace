@@ -271,12 +271,28 @@ require 'ace/gem'
 Ace::Gem::CLI.start(ARGV)
 ```
 
-## Mono-Repo Binstubs (Development)
+## Mono-Repo Dependency Management
+
+### Gemfile vs Gemspec
+
+**Key Principle**: Individual gems should NOT have their own `Gemfile`. The mono-repo uses a single root `Gemfile` for all development.
+
+| File | Location | Purpose |
+|------|----------|---------|
+| `Gemfile` | Root only | Development dependencies for entire mono-repo |
+| `*.gemspec` | Each gem | Runtime dependencies for gem distribution |
+
+**Why no per-gem Gemfile?**
+- All gems developed together in mono-repo context
+- Root Gemfile includes all gems as path dependencies
+- `ace-test` and binstubs use root Gemfile
+- CI uses root Gemfile
+- Simplifies dependency management and version consistency
 
 ### bin/ vs exe/ Distinction
 - **bin/**: Mono-repo development binstubs for running executables without installation
 - **exe/**: Gem distribution executables that get installed with the gem
-- **Pattern**: bin/ wrappers use root Gemfile, exe/ uses gem's own dependencies
+- **Pattern**: bin/ wrappers use root Gemfile, exe/ uses gem's own gemspec dependencies
 
 ### Mono-Repo Binstub Pattern
 ```ruby
@@ -413,6 +429,7 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - **Integration packages**: Bundle templates, documentation, and custom commands with workflows
 
 ❌ **DON'T**:
+- Include `Gemfile` in individual gems (use root Gemfile only)
 - Hardcode config paths or create custom ConfigLoader
 - Use nested test structure
 - Skip example configs or CHANGELOG updates

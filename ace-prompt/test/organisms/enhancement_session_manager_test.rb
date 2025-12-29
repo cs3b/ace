@@ -78,7 +78,7 @@ class EnhancementSessionManagerTest < Minitest::Test
     File.write(prompt_path, system_prompt)
 
     # Stub ace-context to avoid actual preset loading
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       # Create a mock context data object
       mock_context_data = Object.new
       def mock_context_data.content
@@ -118,7 +118,7 @@ class EnhancementSessionManagerTest < Minitest::Test
     prompt_path = File.join(@test_dir, "system.md")
     File.write(prompt_path, system_prompt)
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       # Stub ace-context to raise an error (simulates API failure)
       # Also stub CLI fallback to fail
       Ace::Context.stub :load_preset, ->(*_args) { raise StandardError, "Context loading failed" } do
@@ -158,7 +158,7 @@ class EnhancementSessionManagerTest < Minitest::Test
     prompt_path = File.join(@test_dir, "system.md")
     File.write(prompt_path, system_prompt)
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
 
       # Should fall back to body without context
@@ -190,7 +190,7 @@ class EnhancementSessionManagerTest < Minitest::Test
     prompt_path = File.join(@test_dir, "system.md")
     File.write(prompt_path, system_prompt)
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       # Create a mock context data object with empty content
       mock_context_data = Object.new
       def mock_context_data.content

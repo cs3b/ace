@@ -2,7 +2,7 @@
 
 require_relative '../atoms/file_reader'
 require_relative '../atoms/glob_expander'
-require_relative 'project_root_finder'
+require "ace/support/fs"
 
 module Ace
   module Core
@@ -11,7 +11,7 @@ module Ace
       class FileAggregator
         def initialize(options = {})
           @max_size = options[:max_size] || Atoms::FileReader::MAX_FILE_SIZE
-          @base_dir = options[:base_dir] || ProjectRootFinder.find_or_current
+          @base_dir = options[:base_dir] || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           @exclude_patterns = options[:exclude] || []
         end
 

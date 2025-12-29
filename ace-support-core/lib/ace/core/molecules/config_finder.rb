@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/path_expander"
+require "ace/support/fs"
 require_relative "../models/cascade_path"
-require_relative "directory_traverser"
-require_relative "project_root_finder"
 
 module Ace
   module Core
@@ -43,7 +41,7 @@ module Ace
           if @use_traversal
             @search_paths = build_traversal_paths
           else
-            @search_paths = search_paths.map { |p| Atoms::PathExpander.expand(p) }
+            @search_paths = search_paths.map { |p| Ace::Support::Fs::Atoms::PathExpander.expand(p) }
           end
         end
 
@@ -86,7 +84,7 @@ module Ace
         # @return [String, nil] Path to the first found config file
         def find_file(filename)
           # Use traversal to find all possible locations
-          traverser = DirectoryTraverser.new
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
           config_dirs = traverser.find_config_directories
 
           # Check each config directory in order (closest first)
@@ -109,7 +107,7 @@ module Ace
           files = []
 
           # Use traversal to find all possible locations
-          traverser = DirectoryTraverser.new
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
           config_dirs = traverser.find_config_directories
 
           # Check each config directory
@@ -136,7 +134,7 @@ module Ace
         # Build search paths using directory traversal
         # @return [Array<String>] Expanded search paths
         def build_traversal_paths
-          traverser = DirectoryTraverser.new
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
           paths = traverser.find_config_directories
 
           # Add home directory if not already included
@@ -203,8 +201,8 @@ module Ace
         # @param path [String] Path to check
         # @return [Symbol] Config type
         def determine_type(path)
-          expanded = Atoms::PathExpander.expand(path)
-          home = Atoms::PathExpander.expand("~")
+          expanded = Ace::Support::Fs::Atoms::PathExpander.expand(path)
+          home = Ace::Support::Fs::Atoms::PathExpander.expand("~")
 
           if expanded.start_with?(Dir.pwd)
             :local

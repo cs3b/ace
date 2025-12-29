@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../molecules/directory_traverser"
-require_relative "../molecules/project_root_finder"
+require "ace/support/fs"
 
 module Ace
   module Core
@@ -90,8 +89,8 @@ module Ace
           dirs = []
 
           # Use DirectoryTraverser to find all .ace directories
-          traverser = Molecules::DirectoryTraverser.new(
-            config_dir_name: ".ace",
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(
+            config_dir: ".ace",
             start_path: @start_path
           )
 
