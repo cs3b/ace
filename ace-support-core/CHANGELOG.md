@@ -5,6 +5,21 @@ All notable changes to ace-core will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.12.0] - 2025-12-29
+
+### Changed
+- Migrate internal components to use `Ace::Support::Fs` directly instead of local aliases
+- Update ConfigFinder, EnvLoader, EnvironmentManager, FileAggregator, PromptCacheManager, and VirtualConfigResolver to import from ace-support-fs
+
+### Removed
+- **BREAKING**: Remove backward compatibility aliases for filesystem utilities
+  - Removed `Ace::Core::Atoms::PathExpander` (use `Ace::Support::Fs::Atoms::PathExpander`)
+  - Removed `Ace::Core::Molecules::ProjectRootFinder` (use `Ace::Support::Fs::Molecules::ProjectRootFinder`)
+  - Removed `Ace::Core::Molecules::DirectoryTraverser` (use `Ace::Support::Fs::Molecules::DirectoryTraverser`)
+  - Removed related test files for backward compatibility wrappers
+
 ## [0.11.1] - 2025-11-17
 
 ### Added
@@ -18,8 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optional validation support with `validate: false` parameter for flexibility
   - Field type validation ensuring data integrity
   - Enhanced test coverage: 17 tests, 55 assertions covering all new functionality
-
-## [Unreleased]
 
 ### Changed
 

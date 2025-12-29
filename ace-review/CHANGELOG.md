@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.0] - 2025-12-29
+
+### Changed
+- Migrate file system operations from `Ace::Core::Molecules` to `Ace::Support::Fs::Molecules` for direct ace-support-fs usage
+
 ## [0.27.2] - 2025-12-28
 
 ### Added

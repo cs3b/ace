@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.21.0] - 2025-12-29
+
+### Changed
+
+* Migrate ProjectRootFinder dependency from `Ace::Core::Molecules` to `Ace::Support::Fs::Molecules` for direct ace-support-fs usage
+
 ## [0.20.0] - 2025-12-26
 
 ### Changed

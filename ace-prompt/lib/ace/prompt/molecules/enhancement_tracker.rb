@@ -2,7 +2,7 @@
 
 require "fileutils"
 require "digest"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 
 module Ace
   module Prompt
@@ -42,7 +42,7 @@ module Ace
         # @param hash [String] Content hash
         # @return [Boolean] True if cached
         def self.cached?(hash)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           cache_path = File.join(project_root, CACHE_DIR, "#{hash}.md")
           File.exist?(cache_path)
         end
@@ -52,7 +52,7 @@ module Ace
         # @param hash [String] Content hash
         # @return [String, nil] Cached content or nil if not found
         def self.get_cached(hash)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           cache_path = File.join(project_root, CACHE_DIR, "#{hash}.md")
           return nil unless File.exist?(cache_path)
 
@@ -68,7 +68,7 @@ module Ace
         # @param content [String] Content to cache
         # @return [Boolean] True if successful
         def self.store_cache(hash, content)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           cache_dir = File.join(project_root, CACHE_DIR)
           FileUtils.mkdir_p(cache_dir)
 
@@ -85,7 +85,7 @@ module Ace
         # @param timestamp [String] Timestamp (e.g., "20251129-143000")
         # @return [Integer] Next iteration number (1, 2, 3, etc.)
         def self.next_iteration(timestamp)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           archive_dir = File.join(project_root, ARCHIVE_DIR)
 
           return 1 unless Dir.exist?(archive_dir)

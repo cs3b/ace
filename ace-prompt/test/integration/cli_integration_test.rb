@@ -50,7 +50,7 @@ class CLIIntegrationTest < Minitest::Test
 
     result = nil
     Ace::Prompt.stub :config, test_config do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
         result = run_cli(args)
       end
     end
@@ -64,7 +64,7 @@ class CLIIntegrationTest < Minitest::Test
 
     exit_code = nil
     Ace::Prompt.stub :config, test_config do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
         exit_code = run_cli_for_exit_code(args)
       end
     end
@@ -586,7 +586,7 @@ class CLIIntegrationTest < Minitest::Test
 
     tmpdir = @tmpdir
     Ace::Prompt.stub :config, config_with_detection do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
         Ace::Git::Molecules::BranchReader.stub :current_branch, "121-feature-branch" do
           Ace::Prompt::Atoms::TaskPathResolver.stub :extract_from_branch, "121" do
             Ace::Prompt::Atoms::TaskPathResolver.stub :resolve, mock_result do
@@ -612,7 +612,7 @@ class CLIIntegrationTest < Minitest::Test
 
     tmpdir = @tmpdir
     Ace::Prompt.stub :config, config_with_detection do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
         # Simulate ace-git returning nil (not in git repo or error)
         Ace::Git::Molecules::BranchReader.stub :current_branch, nil do
           output, _error = run_cli(["process"])

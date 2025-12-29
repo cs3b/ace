@@ -3,8 +3,7 @@
 require "yaml"
 require "pathname"
 require_relative "source_registry"
-require "ace/core/molecules/project_root_finder"
-require "ace/core/molecules/directory_traverser"
+require "ace/support/fs"
 require "ace/core/atoms/deep_merger"
 
 module Ace
@@ -154,7 +153,7 @@ module Ace
           dirs = []
 
           # Use directory traverser to find all .ace directories up to project root
-          traverser = Ace::Core::Molecules::DirectoryTraverser.new(start_path: Dir.pwd)
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(start_path: Dir.pwd)
           config_dirs = traverser.find_config_directories
 
           # Check each .ace directory for a protocols subdirectory
