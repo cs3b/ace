@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.1] - 2025-12-30
+
+### Changed
+
+- **Workflow presentation format**: Improved review results presentation in `review.wf.md` and `review-pr.wf.md`
+  - Separate "No Action Needed" section (no numbering) for INVALID and VERIFIED CORRECT items
+  - Numbered "Action Items" table with priority column
+  - New priority threshold selection: All, Medium+, High+, Critical only
+  - Clearer categorization step (Step 5) before presentation
+
 ## [0.29.0] - 2025-12-30
 
 ### Changed
