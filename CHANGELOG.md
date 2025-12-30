@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.208] - 2025-12-30
+
+### Changed
+
+**ace-support-core v0.12.0 → v0.13.0**
+- Configuration cascade now powered by ace-config gem
+- Configuration resolution delegated to ace-config with `.ace` and `.ace-defaults` directories
+- Added resolver caching for improved performance (avoids repeated FS traversal)
+- Added `Ace::Core.reset_config!` to clear cached resolver for test isolation
+
+### Deprecated
+
+**ace-support-core v0.13.0**
+- `Ace::Core.config(search_paths:, file_patterns:)` parameters are deprecated - use `Ace::Config.create(config_dir:, defaults_dir:)` for custom paths
+- `Ace::Core::Organisms::ConfigResolver.new(search_paths:)` is deprecated - use new API with `config_dir:` and `defaults_dir:` parameters
+- Both will be removed in a future minor version
+
+### Added
+
+**ace-support-core v0.13.0**
+- Runtime dependencies: ace-config (~> 0.2), ace-support-fs (~> 0.1)
+- Migration fallback: `.ace.example` fallback for gem defaults during migration period
+- Test coverage: 10 new tests for deprecation warnings and caching
+
 ## [0.9.207] - 2025-12-29
 
 ### Changed

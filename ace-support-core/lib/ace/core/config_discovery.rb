@@ -1,11 +1,12 @@
 # frozen_string_literal: true
 
-require_relative "molecules/config_finder"
+require "ace/config"
 require "ace/support/fs"
 
 module Ace
   module Core
     # Public API for configuration discovery across the project hierarchy
+    # Wraps ace-config with ace-specific defaults (.ace config directory)
     class ConfigDiscovery
       attr_reader :start_path
 
@@ -13,7 +14,12 @@ module Ace
       # @param start_path [String] Starting path for discovery (default: current directory)
       def initialize(start_path: nil)
         @start_path = start_path || Dir.pwd
-        @finder = Molecules::ConfigFinder.new(use_traversal: true)
+        @finder = ::Ace::Config::Molecules::ConfigFinder.new(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          use_traversal: true,
+          start_path: @start_path
+        )
       end
 
       # Find the first matching config file in the cascade
@@ -33,7 +39,7 @@ module Ace
       # Get the project root directory
       # @return [String, nil] Project root path or nil if not in a project
       def project_root
-        Ace::Support::Fs::Molecules::ProjectRootFinder.find(start_path: @start_path)
+        ::Ace::Support::Fs::Molecules::ProjectRootFinder.find(start_path: @start_path)
       end
 
       # Check if we're in a project
@@ -45,14 +51,7 @@ module Ace
       # Get all configuration search paths in order
       # @return [Array<String>] Ordered list of config directories being searched
       def config_search_paths
-        traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(start_path: @start_path)
-        paths = traverser.find_config_directories
-
-        # Add home directory
-        home_config = File.expand_path("~/.ace")
-        paths << home_config unless paths.include?(home_config)
-
-        paths
+        @finder.search_paths
       end
 
       # Get relative path from project root
@@ -65,7 +64,7 @@ module Ace
         expanded = File.expand_path(path)
         return nil unless expanded.start_with?(root)
 
-        require 'pathname'
+        require "pathname"
         Pathname.new(expanded).relative_path_from(Pathname.new(root)).to_s
       end
 
@@ -77,7 +76,7 @@ module Ace
         files = find_all_config_files(filename)
         return nil if files.empty?
 
-        require 'yaml'
+        require "yaml"
         config = {}
 
         # Load in reverse order so higher priority overwrites lower
@@ -92,7 +91,7 @@ module Ace
                 proj_root = project_root
                 file_config = resolve_relative_paths(file_config, base_dir, proj_root)
               end
-              config = deep_merge(config, file_config)
+              config = ::Ace::Config::Atoms::DeepMerger.merge(config, file_config)
             end
           rescue => e
             warn "Error loading config from #{file}: #{e.message}"
@@ -134,20 +133,6 @@ module Ace
 
       private
 
-      # Simple deep merge for hashes
-      # @param base [Hash] Base hash
-      # @param overlay [Hash] Hash to merge in
-      # @return [Hash] Merged hash
-      def deep_merge(base, overlay)
-        base.merge(overlay) do |_key, old_val, new_val|
-          if old_val.is_a?(Hash) && new_val.is_a?(Hash)
-            deep_merge(old_val, new_val)
-          else
-            new_val
-          end
-        end
-      end
-
       # Recursively resolve relative paths in a configuration structure
       # @param obj [Object] Configuration object (hash, array, or value)
       # @param base_dir [String] Base directory to resolve paths against
@@ -161,7 +146,7 @@ module Ace
           obj.map { |v| resolve_relative_paths(v, base_dir, project_root) }
         when String
           # Check if this looks like a relative path with dots
-          if obj.start_with?('./') || obj.start_with?('../')
+          if obj.start_with?("./") || obj.start_with?("../")
             # Resolve relative to the config file's directory
             File.expand_path(File.join(base_dir, obj))
           elsif project_root && looks_like_project_path?(obj)
@@ -181,12 +166,12 @@ module Ace
       # @return [Boolean] true if it looks like a project path
       def looks_like_project_path?(str)
         # Don't treat absolute paths, URLs, or special values as project paths
-        return false if str.start_with?('/', 'http://', 'https://', '~')
-        return false if str.include?(':') # URLs, Windows paths
+        return false if str.start_with?("/", "http://", "https://", "~")
+        return false if str.include?(":") # URLs, Windows paths
 
         # Check if it looks like a path (contains slash or common project directories)
         # or matches common project directory names
-        str.include?('/') || str.match?(/^(ace-|lib|src|bin|test|spec|app|config|vendor|node_modules)/)
+        str.include?("/") || str.match?(/^(ace-|lib|src|bin|test|spec|app|config|vendor|node_modules)/)
       end
     end
   end

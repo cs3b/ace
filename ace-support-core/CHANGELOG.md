@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2025-12-30
+
+### Changed
+- **Configuration Cascade Migration**: Now powered by ace-config gem
+  - Configuration resolution delegated to ace-config with `.ace` and `.ace-defaults` directories
+  - Added resolver caching for improved performance (avoids repeated FS traversal)
+  - Added `Ace::Core.reset_config!` to clear cached resolver for test isolation
+
+### Deprecated
+- `Ace::Core.config(search_paths:, file_patterns:)` parameters are deprecated
+  - Use `Ace::Config.create(config_dir:, defaults_dir:)` for custom paths
+  - Deprecated parameters emit warning and are ignored
+  - **Will be removed in a future minor version**
+- `Ace::Core::Organisms::ConfigResolver.new(search_paths:)` is deprecated
+  - Backward-compatible wrapper maintains old behavior with deprecation warning
+  - Use new API with `config_dir:` and `defaults_dir:` parameters
+  - **Will be removed in a future minor version**
+
+### Added
+- **Runtime Dependencies**: ace-config (~> 0.2), ace-support-fs (~> 0.1)
+  - ace-config provides generic configuration cascade management
+  - ace-support-fs provides filesystem utilities (added in v0.12.0)
+- **Migration Fallback**: `.ace.example` fallback for gem defaults during migration period
+- **Test Coverage**: Added deprecation warning and caching tests (10 new tests)
+
+### Migration Guide
+
+**Old API (deprecated, will be removed soon):**
+```ruby
+# Custom search paths (deprecated)
+config = Ace::Core.config(search_paths: ['./.custom', '~/.myapp'])
+
+# ConfigResolver with search_paths (deprecated)
+resolver = Ace::Core::Organisms::ConfigResolver.new(
+  search_paths: ['./.ace', '~/.ace', '/defaults'],
+  file_patterns: ['*.yml']
+)
+```
+
+**New API (recommended):**
+```ruby
+# Use Ace::Config directly for custom paths
+resolver = Ace::Config.create(
+  config_dir: ".custom",
+  defaults_dir: ".custom-defaults"
+)
+config = resolver.resolve
+
+# Standard ace configuration (no changes needed)
+config = Ace::Core.config  # Uses .ace and .ace-defaults
+```
+
 ## [0.12.0] - 2025-12-29
 
 ### Changed
