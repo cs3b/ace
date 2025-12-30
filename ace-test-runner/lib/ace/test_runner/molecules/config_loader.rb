@@ -2,7 +2,7 @@
 
 require "yaml"
 require "ostruct"
-require "ace/core/atoms/deep_merger"
+require "ace/config"
 
 module Ace
   module TestRunner
@@ -60,14 +60,14 @@ module Ace
           if config_path && File.exist?(config_path)
             # Explicit config path provided - merge over defaults
             user_config = load_from_file(config_path)
-            config = Ace::Core::Atoms::DeepMerger.merge(config, user_config)
+            config = Ace::Config::Atoms::DeepMerger.merge(config, user_config)
           else
             # Apply cascade: home config, then walk up from current directory
             cascade_configs.each do |path|
               if File.exist?(path)
                 puts "Loading configuration from: #{path}" if ENV["DEBUG"]
                 user_config = load_from_file(path)
-                config = Ace::Core::Atoms::DeepMerger.merge(config, user_config)
+                config = Ace::Config::Atoms::DeepMerger.merge(config, user_config)
               end
             end
           end

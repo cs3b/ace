@@ -17,10 +17,9 @@ module Ace
           @waiting_packages = []
           @failed_packages = []
 
-          # Use ace-core's project root detection
-          require "ace/core/config_discovery"
-          discovery = Ace::Core::ConfigDiscovery.new
-          @project_root = discovery.project_root
+          # Use ace-config's project root detection
+          require "ace/config"
+          @project_root = Ace::Config.find_project_root
 
           # Resolve package paths relative to project root
           resolve_package_paths! if @project_root

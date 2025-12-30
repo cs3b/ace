@@ -8,6 +8,7 @@ PATH
   remote: ace-context
   specs:
     ace-context (0.22.0)
+      ace-config (~> 0.2)
       ace-git (~> 0.3)
       ace-support-core (~> 0.10)
 
@@ -15,6 +16,7 @@ PATH
   remote: ace-docs
   specs:
     ace-docs (0.13.0)
+      ace-config (~> 0.2)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-core (~> 0.11)
@@ -71,7 +73,7 @@ PATH
   remote: ace-lint
   specs:
     ace-lint (0.5.0)
-      ace-support-core (~> 0.11)
+      ace-config (~> 0.2)
       colorize (~> 1.1)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
@@ -124,6 +126,7 @@ PATH
   remote: ace-review
   specs:
     ace-review (0.29.0)
+      ace-config (~> 0.2)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -135,8 +138,8 @@ PATH
   remote: ace-search
   specs:
     ace-search (0.15.0)
+      ace-config (~> 0.2)
       ace-git (~> 0.3)
-      ace-support-core (~> 0.11)
 
 PATH
   remote: ace-support-core
@@ -185,7 +188,7 @@ PATH
   remote: ace-test-runner
   specs:
     ace-test-runner (0.6.0)
-      ace-support-core (~> 0.1)
+      ace-config (~> 0.2)
       ace-support-test-helpers (~> 0.1)
       minitest (~> 5.0)
       minitest-reporters (~> 1.6)

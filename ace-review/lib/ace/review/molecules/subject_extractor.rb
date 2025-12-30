@@ -3,8 +3,8 @@
 require "yaml"
 require "open3"
 require "timeout"
-require "ace/core/atoms/deep_merger"
-require "ace/core/atoms/process_terminator"
+require "ace/config"
+require "ace/core/atoms/process_terminator" # Keep from ace-support-core for process cleanup
 require "ace/git"
 require_relative "../errors"
 
@@ -76,13 +76,13 @@ module Ace
         private
 
         # Deep merge configs with array concatenation, dedup, and recursive hash merging
-        # Delegates to Ace::Core::Atoms::DeepMerger with :coerce_union strategy
+        # Delegates to Ace::Config::Atoms::DeepMerger with :coerce_union strategy
         #
         # @param base [Hash] base configuration hash
         # @param overlay [Hash] overlay configuration hash
         # @return [Hash] merged configuration (new hash, does not mutate inputs)
         def deep_merge_arrays(base, overlay)
-          Ace::Core::Atoms::DeepMerger.merge(base, overlay, array_strategy: :coerce_union)
+          Ace::Config::Atoms::DeepMerger.merge(base, overlay, array_strategy: :coerce_union)
         end
 
         # Resolve a single subject to ace-context config
