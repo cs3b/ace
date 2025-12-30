@@ -56,51 +56,26 @@ module Ace
 
         # Load configuration with gem defaults and user overrides
         # Follows ADR-022: Configuration Default and Override Pattern
-        # Priority: gem defaults < user config
+        # Uses Ace::Config.create() for configuration cascade resolution
         # @return [Hash] Configuration
         def load_config
-          require 'yaml'
-          require 'ace/core/atoms/deep_merger'
-          require 'ace/core/organisms/config_resolver'
-
-          # Load gem defaults from .ace-defaults/git/commit.yml
-          gem_defaults = load_gem_defaults
-
-          # Load user config via existing cascade
-          resolver = Ace::Core::Organisms::ConfigResolver.new(
-            file_patterns: ["git/commit.yml", "git/commit.yaml"]
-          )
-          resolved = resolver.resolve
-          user_config = if resolved && resolved.data && !resolved.data.empty?
-            # Extract git section if present, otherwise use root
-            resolved.data["git"] || resolved.data
-          else
-            {}
-          end
-
-          # Merge gem defaults with user config
-          Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
-        rescue StandardError => e
-          warn "Error loading git commit config: #{e.message}" if Ace::GitCommit.debug?
-          load_gem_defaults || {}
-        end
-
-        # Load gem defaults from .ace-defaults/git/commit.yml
-        # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
-        # @return [Hash] Default configuration from gem
-        # @raise [Ace::GitCommit::Error] If default config file is missing (gem packaging error)
-        def load_gem_defaults
           gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
-          defaults_path = File.join(gem_root, ".ace-defaults", "git", "commit.yml")
 
-          unless File.exist?(defaults_path)
-            raise Ace::GitCommit::Error, "Default config not found: #{defaults_path}. " \
-                  "This is a gem packaging error - .ace-defaults/ must be included in the gem."
-          end
+          resolver = Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root
+          )
 
-          content = YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true)
-          content&.dig("git") || {}
+          # Resolve config for git/commit namespace
+          config = resolver.resolve_for(["git/commit.yml", "git/commit.yaml"])
+
+          # Extract git section if present, otherwise use root
+          config.data["git"] || config.data
+        rescue StandardError => e
+          warn "Error loading git commit config: #{e.message}" if Ace::GitCommit.debug?
+          {}
         end
 
         # Validate we're in a git repository

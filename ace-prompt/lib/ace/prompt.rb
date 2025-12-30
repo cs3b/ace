@@ -2,8 +2,8 @@
 
 require_relative "prompt/version"
 
-# Load ace-core for config management
-require "ace/core"
+# Load ace-config for configuration cascade management
+require "ace/config"
 
 module Ace
   module Prompt
@@ -45,46 +45,29 @@ require_relative "prompt/cli"
 module Ace
   module Prompt
 
-    # Load ace-prompt configuration using ace-core config cascade
+    # Load ace-prompt configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Priority: gem defaults < user config
+    # Uses Ace::Config.create() for configuration cascade resolution
     # @return [Hash] Configuration hash with defaults merged
     def self.config
       @config ||= begin
-        require 'yaml'
-        require 'ace/core/atoms/deep_merger'
+        gem_root = Gem.loaded_specs["ace-prompt"]&.gem_dir ||
+                   File.expand_path("../..", __dir__)
 
-        # Load gem defaults from .ace-defaults/prompt/config.yml
-        gem_defaults = load_gem_defaults
+        resolver = Ace::Config.create(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          gem_path: gem_root
+        )
 
-        # Load user config via ace-core cascade
-        user_config = Ace::Core.get("prompt", file: "config") || {}
-
-        # Merge gem defaults with user config
-        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+        # Resolve config for prompt namespace
+        config = resolver.resolve_for(["prompt/config.yml", "prompt/config.yaml"])
+        config.data
       rescue StandardError => e
         warn "Warning: Could not load ace-prompt config: #{e.message}"
-        load_gem_defaults || {}
+        {}
       end
     end
-
-    # Load gem defaults from .ace-defaults/prompt/config.yml
-    # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
-    # @return [Hash] Default configuration from gem
-    # @raise [Error] If default config file is missing (gem packaging error)
-    def self.load_gem_defaults
-      gem_root = Gem.loaded_specs["ace-prompt"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
-      defaults_path = File.join(gem_root, ".ace-defaults", "prompt", "config.yml")
-
-      unless File.exist?(defaults_path)
-        raise Error, "Default config not found: #{defaults_path}. " \
-              "This is a gem packaging error - .ace-defaults/ must be included in the gem."
-      end
-
-      YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
-    end
-    private_class_method :load_gem_defaults
 
     # Reset config cache (useful for testing)
     def self.reset_config!

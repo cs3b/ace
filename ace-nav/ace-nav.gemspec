@@ -32,7 +32,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-support-core", "~> 0.1"
+  spec.add_dependency "ace-config", "~> 0.2"
+  spec.add_dependency "ace-support-fs", "~> 0.1"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.1"

@@ -59,7 +59,7 @@ class ConfigCascadeTest < GitSecretsTestCase
   end
 
   def test_deep_merge_preserves_nested_defaults
-    # Test deep merge via ace-support-core's DeepMerger
+    # Test deep merge via ace-config's DeepMerger
     base = {
       "output" => { "format" => "table", "mask_tokens" => true },
       "whitelist" => []
@@ -68,7 +68,7 @@ class ConfigCascadeTest < GitSecretsTestCase
       "output" => { "format" => "json" }
     }
 
-    result = Ace::Core::Atoms::DeepMerger.merge(base, override)
+    result = Ace::Config::Atoms::DeepMerger.merge(base, override)
 
     assert_equal "json", result["output"]["format"], "Override should take precedence"
     assert_equal true, result["output"]["mask_tokens"], "Non-overridden nested values should be preserved"

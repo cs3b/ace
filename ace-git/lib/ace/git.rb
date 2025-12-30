@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/core"
-require "yaml"
+require "ace/config"
 require_relative "git/version"
 
 module Ace
@@ -27,7 +26,7 @@ module Ace
 
     # Get configuration for ace-git
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Priority: user config (from cascade) merged over gem defaults
+    # Uses Ace::Config.create() for configuration cascade resolution
     # Thread-safe: uses mutex for initialization
     # @return [Hash] merged configuration hash
     # @example Get current configuration
@@ -41,79 +40,39 @@ module Ace
 
       # Thread-safe initialization
       @config_mutex.synchronize do
-        @config ||= Ace::Core::Atoms::DeepMerger.merge(default_config, user_config)
+        @config ||= load_config
       end
     end
 
-    # User configuration from .ace/git/config.yml cascade
-    # Searches for git/config.yml in .ace directories (project → home)
-    # Flattened to match default_config structure (see extract_git_config)
-    # @return [Hash] user configuration (may be empty)
-    # @example Check for user overrides
-    #   if Ace::Git.user_config["verbose"]
-    #     puts "Verbose mode enabled by user"
-    #   end
-    def self.user_config
-      # Fast path: return cached user_config if already loaded
-      return @user_config if defined?(@user_config) && @user_config
+    # Load configuration using Ace::Config cascade
+    # Resolves gem defaults from .ace-defaults/ and user overrides from .ace/
+    # @return [Hash] Merged and transformed configuration
+    def self.load_config
+      gem_root = Gem.loaded_specs["ace-git"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
 
-      require 'ace/core/organisms/config_resolver'
-
-      # Search for git/config.yml in .ace cascade
-      resolver = Ace::Core::Organisms::ConfigResolver.new(
-        file_patterns: ["git/config.yml", "git/config.yaml"]
+      resolver = Ace::Config.create(
+        config_dir: ".ace",
+        defaults_dir: ".ace-defaults",
+        gem_path: gem_root
       )
 
-      config = resolver.resolve
-      return {} unless config&.data
+      # Resolve config for git namespace
+      config = resolver.resolve_for(["git/config.yml", "git/config.yaml"])
 
-      # Extract git section if present (for backwards compat with ace/*.yml format)
+      # Extract and flatten the git section for backward compatibility
       raw_config = config.data["git"] || config.data
-      # Flatten user config to match default_config structure
-      # This ensures nested diff: keys are merged correctly
-      @user_config = extract_git_config(raw_config)
-    rescue Errno::ENOENT
-      # File doesn't exist - this is fine, return empty config silently
-      {}
-    rescue Psych::SyntaxError => e
-      # YAML syntax errors should be visible to help users debug
-      warn "ace-git: YAML syntax error in .ace/git/config.yml"
+      extract_git_config(raw_config)
+    rescue Ace::Config::YamlParseError => e
+      warn "ace-git: YAML syntax error in configuration"
       warn "  #{e.message}"
-      {}
+      # Return empty config on parse error - gem defaults should still work
+      extract_git_config({})
     rescue StandardError => e
-      # Other errors (permissions, etc.) - warn but continue
-      warn "ace-git: Failed to load config from .ace/git/config.yml: #{e.message}"
-      {}
+      warn "ace-git: Failed to load configuration: #{e.message}"
+      extract_git_config({})
     end
-
-    # Load gem defaults from .ace-defaults/git/config.yml
-    # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
-    # @return [Hash] Default configuration from gem
-    # @raise [RuntimeError] If default config file is missing (gem packaging error)
-    # @example Get defaults without user overrides
-    #   defaults = Ace::Git.default_config
-    #   puts defaults["exclude_whitespace"]  # => true
-    def self.default_config
-      @default_config ||= load_gem_defaults
-    end
-
-    # Load defaults from .ace-defaults/git/config.yml
-    # Handles both development (relative path) and installed gem (Gem.loaded_specs) scenarios
-    # @return [Hash] Default configuration
-    def self.load_gem_defaults
-      # Try to find gem root via RubyGems for installed gems, fallback to relative path for dev
-      gem_spec = Gem.loaded_specs["ace-git"]
-      gem_root = gem_spec ? gem_spec.gem_dir : File.expand_path("../..", __dir__)
-      default_file = File.join(gem_root, ".ace-defaults", "git", "config.yml")
-
-      unless File.exist?(default_file)
-        raise "Default config not found: #{default_file}. " \
-              "This is a gem packaging error - .ace-defaults/ must be included in the gem."
-      end
-
-      content = YAML.safe_load_file(default_file, permitted_classes: [], permitted_symbols: [], aliases: true)
-      extract_git_config(content&.dig("git") || {})
-    end
+    private_class_method :load_config
 
     # Extract git configuration from YAML structure
     #
@@ -179,8 +138,6 @@ module Ace
     def self.reset_config!
       @config_mutex.synchronize do
         @config = nil
-        @default_config = nil
-        @user_config = nil
       end
     end
 

@@ -29,15 +29,15 @@ PATH
   remote: ace-git-commit
   specs:
     ace-git-commit (0.14.0)
+      ace-config (~> 0.2)
       ace-git (~> 0.3)
       ace-llm (~> 0.16)
-      ace-support-core (~> 0.10)
 
 PATH
   remote: ace-git-secrets
   specs:
     ace-git-secrets (0.3.0)
-      ace-support-core (~> 0.11)
+      ace-config (~> 0.2)
       faraday (~> 2.7, >= 2.7.4)
       faraday-retry (~> 2.2)
       thor (~> 1.3)
@@ -46,15 +46,15 @@ PATH
   remote: ace-git-worktree
   specs:
     ace-git-worktree (0.8.0)
+      ace-config (~> 0.2)
       ace-git (~> 0.4)
-      ace-support-core (>= 0.9.0)
       ace-taskflow (>= 0.10.0)
 
 PATH
   remote: ace-git
   specs:
     ace-git (0.5.0)
-      ace-support-core (~> 0.11)
+      ace-config (~> 0.2)
       thor (~> 1.3)
 
 PATH
@@ -105,17 +105,18 @@ PATH
   remote: ace-nav
   specs:
     ace-nav (0.13.0)
-      ace-support-core (~> 0.1)
+      ace-config (~> 0.2)
+      ace-support-fs (~> 0.1)
 
 PATH
   remote: ace-prompt
   specs:
     ace-prompt (0.9.0)
+      ace-config (~> 0.2)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
       ace-nav (~> 0.8)
-      ace-support-core (~> 0.10)
       ace-taskflow (~> 0.9)
       thor (~> 1.3)
 
@@ -173,6 +174,7 @@ PATH
   remote: ace-taskflow
   specs:
     ace-taskflow (0.26.0)
+      ace-config (~> 0.2)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
       ace-support-mac-clipboard (~> 0.1.0)

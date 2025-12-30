@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "ace/config"
 
 module Ace
   module Git
@@ -8,7 +9,7 @@ module Ace
       module Molecules
         # Configuration loader molecule
         #
-        # Loads and merges worktree configuration using the ace-core cascade system.
+        # Loads and merges worktree configuration using ace-config cascade system.
         # Handles configuration validation and provides access to merged configuration.
         #
         # @example Load configuration for current project
@@ -19,9 +20,6 @@ module Ace
         #   loader = ConfigLoader.new("/path/to/project")
         #   config = loader.load
         class ConfigLoader
-          # Configuration namespace for ace-core
-          CONFIG_NAMESPACE = ["git", "worktree"].freeze
-
           # Initialize a new ConfigLoader
           #
           # @param project_root [String] Project root directory
@@ -39,8 +37,8 @@ module Ace
           #   config.root_path # => ".ace-wt"
           #   config.mise_trust_auto? # => true
           def load
-            # Load configuration from ace-core cascade
-            config_hash = load_from_ace_core
+            # Load configuration using ace-config cascade
+            config_hash = load_config
 
             # Create configuration object
             config = Models::WorktreeConfig.new(config_hash, @project_root)
@@ -55,7 +53,7 @@ module Ace
           #
           # @return [WorktreeConfig] Configuration without validation
           def load_without_validation
-            config_hash = load_from_ace_core
+            config_hash = load_config
             Models::WorktreeConfig.new(config_hash, @project_root)
           end
 
@@ -85,47 +83,33 @@ module Ace
 
           private
 
-          # Load configuration using ace-core cascade
+          # Load configuration using ace-config cascade
           #
-          # @return [Hash] Configuration hash from ace-core or direct YAML loading
-          def load_from_ace_core
+          # @return [Hash] Configuration hash from ace-config
+          def load_config
             return @config_hash if @config_hash
 
-            begin
-              require "ace/core"
-              config_hash = Ace::Core.get(*CONFIG_NAMESPACE)
-              if config_hash.nil? || config_hash.empty?
-                @config_hash = load_direct_from_yaml
-              else
-                @config_hash = config_hash
-              end
-            rescue LoadError
-              # ace-core not available, try direct YAML loading
-              @config_hash = load_direct_from_yaml
-            rescue StandardError => e
-              # Error loading configuration, try direct YAML loading as fallback
-              warn "Warning: Error loading worktree configuration via ace-core: #{e.message}"
-              @config_hash = load_direct_from_yaml
-            end
-          end
+            gem_root = Gem.loaded_specs["ace-git-worktree"]&.gem_dir ||
+                       File.expand_path("../../../../..", __dir__)
 
-          # Load configuration directly from YAML files
-          #
-          # @return [Hash] Configuration hash from YAML files
-          def load_direct_from_yaml
-            config_files.each do |file|
-              if File.exist?(file)
-                begin
-                  yaml_content = YAML.load_file(file)
-                  if yaml_content && yaml_content["git"] && yaml_content["git"]["worktree"]
-                    return yaml_content
-                  end
-                rescue StandardError => e
-                  warn "Warning: Error parsing #{file}: #{e.message}"
-                end
-              end
+            resolver = Ace::Config.create(
+              config_dir: ".ace",
+              defaults_dir: ".ace-defaults",
+              gem_path: gem_root
+            )
+
+            # Resolve config for git/worktree namespace
+            config = resolver.resolve_for(["git/worktree.yml", "git/worktree.yaml"])
+
+            # Extract git.worktree section or use full data
+            @config_hash = if config.data["git"]&.is_a?(Hash)
+              config.data
+            else
+              config.data
             end
-            {}
+          rescue StandardError => e
+            warn "Warning: Error loading worktree configuration: #{e.message}"
+            @config_hash = {}
           end
 
           # Validate loaded configuration

@@ -4,7 +4,7 @@ require "yaml"
 require "pathname"
 require_relative "source_registry"
 require "ace/support/fs"
-require "ace/core/atoms/deep_merger"
+require "ace/config"
 
 module Ace
   module Nav
@@ -55,7 +55,7 @@ module Ace
                         end
 
           # Deep merge: user config over gem defaults
-          @configs["settings"] = Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+          @configs["settings"] = Ace::Config::Atoms::DeepMerger.merge(gem_defaults, user_config)
         end
 
         # Load defaults from .ace-defaults/nav/config.yml

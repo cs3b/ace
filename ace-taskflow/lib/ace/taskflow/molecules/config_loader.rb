@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "yaml"
-require "ace/core/atoms/deep_merger"
+require "ace/config"
 
 module Ace
   module Taskflow
     module Molecules
-      # Load configuration using ace-core patterns
+      # Load configuration using ace-config cascade
       # Follows ADR-022: Configuration Default and Override Pattern
       #
       # Configuration priority (highest to lowest):
@@ -41,7 +41,7 @@ module Ace
         end
 
         # Load configuration from cascade
-        # Uses Ace::Core::Atoms::DeepMerger for consistent merging
+        # Uses Ace::Config::Atoms::DeepMerger for consistent merging
         # @return [Hash] Merged configuration
         def self.load
           config = load_gem_defaults.dup
@@ -49,7 +49,7 @@ module Ace
           # Look for config files in cascade order
           find_config_paths.each do |path|
             if File.exist?(path)
-              config = Ace::Core::Atoms::DeepMerger.merge(config, load_file(path))
+              config = Ace::Config::Atoms::DeepMerger.merge(config, load_file(path))
             end
           end
 
@@ -84,7 +84,7 @@ module Ace
         # @return [String] Root directory path
         # @raise [RuntimeError] If not in a project or taskflow directory not found
         def self.find_root
-          # 1. Find project root using ace-core
+          # 1. Find project root using ace-core (provides ace-specific defaults)
           require "ace/core/config_discovery"
           project_root = Ace::Core::ConfigDiscovery.project_root
 

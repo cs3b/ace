@@ -2,8 +2,8 @@
 
 require_relative "secrets/version"
 
-# Load ace-core for config management
-require "ace/core"
+# Load ace-config for configuration cascade management
+require "ace/config"
 
 # Models
 require_relative "secrets/models/detected_token"
@@ -43,8 +43,9 @@ module Ace
       # Mutex for thread-safe config loading
       @config_mutex = Mutex.new
 
-      # Load ace-git-secrets configuration using ace-core config cascade
+      # Load ace-git-secrets configuration using ace-config cascade
       # Follows ADR-022: Load defaults from .ace-defaults/, merge user overrides from .ace/
+      # Uses Ace::Config.create() for configuration cascade resolution
       #
       # @note Thread Safety: This method is thread-safe via Mutex synchronization.
       #   The config is loaded once and cached for subsequent calls.
@@ -58,40 +59,25 @@ module Ace
       def self.config
         @config_mutex.synchronize do
           @config ||= begin
-            # Load defaults from .ace-defaults/git-secrets/config.yml
-            defaults = load_example_config
+            gem_root = Gem.loaded_specs["ace-git-secrets"]&.gem_dir ||
+                       File.expand_path("../../..", __dir__)
 
-            # Load user overrides from .ace/git-secrets/config.yml
-            # ADR-022: Uses resolve_for to find files, then extracts "git-secrets" key
-            resolver = Ace::Core::Organisms::ConfigResolver.new
-            resolved = resolver.resolve_for(["git-secrets/config.yml", "git-secrets/config.yaml"])
-            user_config = resolved.get("git-secrets") || resolved.data || {}
+            resolver = Ace::Config.create(
+              config_dir: ".ace",
+              defaults_dir: ".ace-defaults",
+              gem_path: gem_root
+            )
 
-            # Deep merge user config over defaults
-            # Uses ace-support-core's DeepMerger for consistency across gems
-            Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)
+            # Resolve config for git-secrets namespace
+            config = resolver.resolve_for(["git-secrets/config.yml", "git-secrets/config.yaml"])
+
+            # Extract git-secrets section if present
+            config.data["git-secrets"] || config.data
           rescue StandardError => e
             warn "Warning: Could not load ace-git-secrets config: #{e.message}"
             fallback_defaults
           end
         end
-      end
-
-      # Load defaults from .ace-defaults/git-secrets/config.yml
-      # ADR-022: .ace-defaults/ is the single source of truth for defaults
-      # @return [Hash] Default configuration from example file
-      def self.load_example_config
-        gem_root = File.expand_path("../../..", __dir__)
-        example_path = File.join(gem_root, ".ace-defaults", "git-secrets", "config.yml")
-
-        # ADR-022: Missing .ace-defaults/ file is a packaging error, not a fallback case
-        unless File.exist?(example_path)
-          raise Error, "Default config not found: #{example_path}. " \
-                       "This is a gem packaging error - .ace-defaults/ must be included in the gem."
-        end
-
-        require "yaml"
-        YAML.safe_load(File.read(example_path), permitted_classes: [], permitted_symbols: [], aliases: false) || {}
       end
 
       # Fallback defaults when config loading fails

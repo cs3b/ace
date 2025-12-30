@@ -8,7 +8,7 @@ module Ace
       # Migrated from ace-git-diff
       class ConfigLoader
         class << self
-          # Load configuration using ace-core cascade with deep merge
+          # Load configuration using ace-config cascade with deep merge
           # Priority: instance_config merged over global config (which is already defaults + user)
           # @param instance_config [Hash] Instance-level configuration (highest priority)
           # @return [Models::DiffConfig] Merged configuration
@@ -20,7 +20,7 @@ module Ace
             global_diff_config = extract_diff_config(global_config)
 
             # Deep merge instance config over global (instance overrides, but preserves unset defaults)
-            config_hash = Ace::Core::Atoms::DeepMerger.merge(global_diff_config, instance_config)
+            config_hash = Ace::Config::Atoms::DeepMerger.merge(global_diff_config, instance_config)
 
             Models::DiffConfig.from_hash(config_hash)
           end
@@ -39,10 +39,10 @@ module Ace
 
             # Deep merge gem config over global
             gem_diff_config = extract_diff_config(gem_config)
-            config_hash = Ace::Core::Atoms::DeepMerger.merge(global_diff_config, gem_diff_config)
+            config_hash = Ace::Config::Atoms::DeepMerger.merge(global_diff_config, gem_diff_config)
 
             # Deep merge instance config over result
-            config_hash = Ace::Core::Atoms::DeepMerger.merge(config_hash, instance_config)
+            config_hash = Ace::Config::Atoms::DeepMerger.merge(config_hash, instance_config)
 
             Models::DiffConfig.from_hash(config_hash)
           end
@@ -70,7 +70,7 @@ module Ace
               diff_config = config["diff"] || config[:diff]
               if diff_config.is_a?(Hash)
                 # Merge nested diff over top-level to preserve defaults not overridden
-                return Ace::Core::Atoms::DeepMerger.merge(top_level_diff, diff_config)
+                return Ace::Config::Atoms::DeepMerger.merge(top_level_diff, diff_config)
               end
             end
 
