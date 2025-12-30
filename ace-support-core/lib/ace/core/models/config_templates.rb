@@ -21,7 +21,7 @@ module Ace
 
           # Prefer local path for development
           path = info[:source] == :gem ? info[:path] : (info[:path] || info[:gem_path])
-          File.join(path, ".ace-defaults")
+          resolve_defaults_dir(path)
         end
 
         def gem_info
@@ -74,9 +74,21 @@ module Ace
 
         private
 
+        # Prefers .ace-defaults (new standard) but falls back to .ace.example
+        # Migration fallback - remove after task 157.09
+        def resolve_defaults_dir(gem_path)
+          new_path = File.join(gem_path, ".ace-defaults")
+          return new_path if Dir.exist?(new_path)
+
+          legacy_path = File.join(gem_path, ".ace.example")
+          return legacy_path if Dir.exist?(legacy_path)
+
+          new_path # Default to new standard even if not found
+        end
+
         def has_example_dir?(gem_dir)
-          example_dir = File.join(gem_dir, ".ace-defaults")
-          File.directory?(example_dir)
+          Dir.exist?(File.join(gem_dir, ".ace-defaults")) ||
+            Dir.exist?(File.join(gem_dir, ".ace.example"))
         end
       end
     end

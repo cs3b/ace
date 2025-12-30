@@ -20,7 +20,7 @@ Task 143 (Unified Configuration Loading and Merging Defaults Across ACE Packages
 
 **Note on `.ace-defaults/` Rename**
 
-ADR-022 originally proposed renaming `.ace.example/` to `.ace-defaults/`. This rename is **deferred to Task 157.08** as part of the ace-config extraction work. The current implementation uses `.ace-defaults/` as the default source location.
+ADR-022 originally proposed renaming `.ace.example/` to `.ace-defaults/`. This rename was **completed in Task 157.08** as part of the ace-config extraction work. All gems now use `.ace-defaults/` as the standard source location, with a fallback to `.ace.example/` during the transition period (to be removed after Task 157.09).
 
 ## Context
 

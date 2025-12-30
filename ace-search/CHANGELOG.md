@@ -185,14 +185,4 @@ From dev-tools/exe/search (0.8.0):
 - fd (external) for file search
 - fzf (external, optional) for interactive selection
 
----
-
-## [Unreleased]
-
-## [0.15.0] - 2025-12-30
-
-### Changed
-
-* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
-
 [0.9.0]: https://github.com/your-org/ace-meta/releases/tag/ace-search-v0.9.0
