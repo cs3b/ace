@@ -309,19 +309,9 @@ module Ace
         )
       end
 
-      # Resolve defaults directory with fallback for migration period
-      # Prefers .ace-defaults (new standard) but falls back to .ace.example
+      # Defaults directory for gem configuration
       def resolve_defaults_dir
-        gem_path = gem_root_path
-        return ".ace-defaults" unless gem_path
-
-        if Dir.exist?(File.join(gem_path, ".ace-defaults"))
-          ".ace-defaults"
-        elsif Dir.exist?(File.join(gem_path, ".ace.example"))
-          ".ace.example" # Migration fallback - remove after task 157.09
-        else
-          ".ace-defaults"
-        end
+        ".ace-defaults"
       end
 
       # Get gem root path for loading bundled defaults

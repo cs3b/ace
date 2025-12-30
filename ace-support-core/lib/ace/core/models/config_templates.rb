@@ -74,21 +74,12 @@ module Ace
 
         private
 
-        # Prefers .ace-defaults (new standard) but falls back to .ace.example
-        # Migration fallback - remove after task 157.09
         def resolve_defaults_dir(gem_path)
-          new_path = File.join(gem_path, ".ace-defaults")
-          return new_path if Dir.exist?(new_path)
-
-          legacy_path = File.join(gem_path, ".ace.example")
-          return legacy_path if Dir.exist?(legacy_path)
-
-          new_path # Default to new standard even if not found
+          File.join(gem_path, ".ace-defaults")
         end
 
         def has_example_dir?(gem_dir)
-          Dir.exist?(File.join(gem_dir, ".ace-defaults")) ||
-            Dir.exist?(File.join(gem_dir, ".ace.example"))
+          Dir.exist?(File.join(gem_dir, ".ace-defaults"))
         end
       end
     end
