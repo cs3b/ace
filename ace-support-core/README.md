@@ -6,11 +6,18 @@ Part of the ace-support-* pattern for library-only infrastructure gems (no CLI t
 
 ## Features
 
-- **Configuration Cascade**: Search and merge configs from `./.ace` → `~/.ace` → gem defaults
-- **Deep Merging**: Intelligent merging of nested configuration with configurable array strategies
+- **Configuration Cascade**: Powered by ace-config gem with `./.ace` → `~/.ace` → gem defaults resolution
+- **Deep Merging**: Intelligent merging of nested configuration with configurable merge strategies
 - **Environment Variables**: Load and manage .env files with proper precedence
+- **Filesystem Utilities**: Path resolution and project root finding via ace-support-fs
 - **ATOM Architecture**: Clean separation of concerns using Atoms, Molecules, Organisms pattern
-- **Zero Dependencies**: Uses only Ruby standard library for maximum compatibility
+
+**Note**: During migration, gem defaults are loaded from `.ace.example/` (legacy) or `.ace-defaults/` (new standard). The fallback to `.ace.example` will be removed after all gems complete migration.
+
+## Dependencies
+
+- **ace-config** (~> 0.2): Generic configuration cascade management
+- **ace-support-fs** (~> 0.1): Filesystem utilities (PathExpander, ProjectRootFinder, DirectoryTraverser)
 
 ## Installation
 
@@ -58,17 +65,22 @@ env.set('MY_VAR', 'value')
 env.get('MY_VAR', 'default')
 ```
 
-### Custom Configuration Paths
+### Custom Configuration
 
 ```ruby
-# Use custom search paths
-config = Ace::Core.config(search_paths: ['./.custom', '~/.myapp'])
+# Create a resolver with custom directories
+resolver = Ace::Config.create(
+  config_dir: ".myapp",           # Custom config directory (default: .ace)
+  defaults_dir: ".myapp-defaults", # Custom defaults directory
+  gem_path: __dir__               # Gem root for bundled defaults (optional)
+)
+config = resolver.resolve
 
-# Or create a resolver with custom settings
+# Or use the ConfigResolver directly for more control
 resolver = Ace::Core::Organisms::ConfigResolver.new(
-  search_paths: ['./.ace', '~/.ace', '/etc/ace'],
-  file_patterns: ['config.yml', '*/config.yml'],
-  merge_strategy: :deep
+  config_dir: ".ace",
+  defaults_dir: ".ace-defaults",  # Or ".ace.example" for legacy gems
+  gem_path: __dir__
 )
 config = resolver.resolve
 ```

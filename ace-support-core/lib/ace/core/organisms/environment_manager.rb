@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "../molecules/env_loader"
+require "ace/config"
 require "ace/support/fs"
-require_relative "config_resolver"
 
 module Ace
   module Core
@@ -94,7 +94,10 @@ module Ace
         # Load configuration
         # @return [Models::Config] Configuration
         def load_config
-          resolver = ConfigResolver.new
+          resolver = ::Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults"
+          )
           resolver.resolve
         end
 
