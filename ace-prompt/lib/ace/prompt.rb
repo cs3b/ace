@@ -44,6 +44,11 @@ require_relative "prompt/cli"
 # Reopen module for additional methods
 module Ace
   module Prompt
+    # Check if debug mode is enabled
+    # @return [Boolean] True if debug mode is enabled
+    def self.debug?
+      ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
+    end
 
     # Load ace-prompt configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
@@ -64,7 +69,7 @@ module Ace
         config = resolver.resolve_for(["prompt/config.yml", "prompt/config.yaml"])
         config.data
       rescue StandardError => e
-        warn "Warning: Could not load ace-prompt config: #{e.message}"
+        warn "Warning: Could not load ace-prompt config: #{e.message}" if debug?
         {}
       end
     end

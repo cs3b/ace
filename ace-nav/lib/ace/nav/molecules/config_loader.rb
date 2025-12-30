@@ -39,7 +39,15 @@ module Ace
           )
 
           # Get gem defaults first
-          gem_defaults = resolver.resolve_for(["nav/config.yml"]).data
+          gem_defaults = begin
+            resolver.resolve_for(["nav/config.yml"]).data
+          rescue Ace::Config::YamlParseError => e
+            warn "Warning: Failed to parse nav config: #{e.message}" if debug?
+            load_gem_defaults_only(gem_root)
+          rescue StandardError => e
+            warn "Warning: Could not load ace-nav config: #{e.message}" if debug?
+            load_gem_defaults_only(gem_root)
+          end
 
           # Load user config from @config_dir if explicitly set (for testing/override)
           # or use the cascade from resolver
@@ -190,6 +198,24 @@ module Ace
         rescue StandardError => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
           {}
+        end
+
+        # Load only gem defaults (for fallback on config errors)
+        # @param gem_root [String] Path to gem root directory
+        # @return [Hash] Gem defaults or empty hash
+        def load_gem_defaults_only(gem_root)
+          default_file = File.join(gem_root, ".ace-defaults", "nav", "config.yml")
+          return {} unless File.exist?(default_file)
+
+          YAML.safe_load_file(default_file, permitted_classes: [], aliases: true) || {}
+        rescue StandardError
+          {}
+        end
+
+        # Check if debug mode is enabled
+        # @return [Boolean] True if debug mode is enabled
+        def debug?
+          ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
         end
 
         def default_protocol_config(protocol)
