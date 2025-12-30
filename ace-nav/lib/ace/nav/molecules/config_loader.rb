@@ -10,12 +10,7 @@ module Ace
   module Nav
     module Molecules
       # Loads configuration from .ace/nav/*.yml files and protocols
-      # ADR-022: Defaults come from .ace-defaults/nav/config.yml
-      #
-      # TODO: Refactor to use Ace::Core.config for user config cascade instead of
-      # manual path discovery (find_config_dir). This requires enhancing ace-support-core
-      # to support ADR-022 pattern: Ace::Core.config.for_gem('nav') that loads
-      # gem defaults from .ace-defaults/ and merges with user cascade.
+      # ADR-022: Uses Ace::Config.create() for gem defaults + user cascade
       class ConfigLoader
         class Error < StandardError; end
 
@@ -27,54 +22,36 @@ module Ace
         end
 
         # Load main settings configuration
-        # ADR-022: Loads defaults from .ace-defaults/, merges user config
+        # ADR-022: Uses Ace::Config.create() for gem defaults + user cascade
         # @return [Hash] Configuration with defaults and user overrides
         def load_settings
           # Return cached if already loaded
           return @configs["settings"] if @configs.key?("settings")
 
-          # Load defaults from gem's .ace-defaults/nav/config.yml
-          gem_defaults = load_example_config
+          # Load gem defaults via Ace::Config
+          gem_root = Gem.loaded_specs["ace-nav"]&.gem_dir ||
+                     File.expand_path("../../../..", __dir__)
 
-          # Load user config from .ace/nav/config.yml cascade
-          # Fallback to settings.yml for backward compatibility (deprecated)
+          resolver = Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root
+          )
+
+          # Get gem defaults first
+          gem_defaults = resolver.resolve_for(["nav/config.yml"]).data
+
+          # Load user config from @config_dir if explicitly set (for testing/override)
+          # or use the cascade from resolver
           user_config = if @config_dir
-                          config_path = File.join(@config_dir, "config.yml")
-                          legacy_path = File.join(@config_dir, "settings.yml")
-
-                          if File.exist?(config_path)
-                            load_yaml_file(config_path)
-                          elsif File.exist?(legacy_path)
-                            warn "DEPRECATION: #{legacy_path} is deprecated, rename to config.yml"
-                            load_yaml_file(legacy_path)
-                          else
-                            {}
-                          end
+                          load_user_config_from_dir(@config_dir)
                         else
+                          # No explicit config_dir - defaults already include cascade
                           {}
                         end
 
           # Deep merge: user config over gem defaults
           @configs["settings"] = Ace::Config::Atoms::DeepMerger.merge(gem_defaults, user_config)
-        end
-
-        # Load defaults from .ace-defaults/nav/config.yml
-        # ADR-022: .ace-defaults/ is the single source of truth for defaults
-        # @return [Hash] Default configuration from example file
-        # @raise [Error] If default config file is missing or invalid (gem packaging error)
-        def load_example_config
-          # Use relative path from this file to gem root (4 levels up from molecules/)
-          gem_root = File.expand_path("../../../..", __dir__)
-          example_path = File.join(gem_root, ".ace-defaults", "nav", "config.yml")
-
-          # ADR-022: Missing .ace-defaults/ file is a packaging error, not a fallback case
-          unless File.exist?(example_path)
-            raise Error, "Default config not found: #{example_path}. " \
-                         "This is a gem packaging error - .ace-defaults/ must be included in the gem."
-          end
-
-          # ADR-022: Parse errors in .ace-defaults/ are also packaging errors - don't mask them
-          load_yaml_file_strict(example_path)
         end
 
         # Load protocol-specific configuration
@@ -149,6 +126,24 @@ module Ace
 
         private
 
+        # Load user config from explicit config directory
+        # Supports legacy settings.yml with deprecation warning
+        # @param config_dir [String] Path to .ace/nav directory
+        # @return [Hash] User configuration
+        def load_user_config_from_dir(config_dir)
+          config_path = File.join(config_dir, "config.yml")
+          legacy_path = File.join(config_dir, "settings.yml")
+
+          if File.exist?(config_path)
+            load_yaml_file(config_path)
+          elsif File.exist?(legacy_path)
+            warn "DEPRECATION: #{legacy_path} is deprecated, rename to config.yml"
+            load_yaml_file(legacy_path)
+          else
+            {}
+          end
+        end
+
         def discover_project_protocol_dirs
           dirs = []
 
@@ -195,19 +190,6 @@ module Ace
         rescue StandardError => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
           {}
-        end
-
-        # Load YAML without masking parse errors - for .ace-defaults/ defaults
-        # ADR-022: Parse errors in gem defaults indicate packaging issues
-        # @param path [String] Path to YAML file
-        # @return [Hash] Parsed YAML content
-        # @raise [Error] If file cannot be parsed
-        def load_yaml_file_strict(path)
-          content = File.read(path)
-          YAML.safe_load(content, permitted_classes: [Symbol]) || {}
-        rescue Psych::SyntaxError => e
-          raise Error, "Invalid YAML in default config #{path}: #{e.message}. " \
-                       "This is a gem packaging error."
         end
 
         def default_protocol_config(protocol)

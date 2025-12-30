@@ -6,7 +6,7 @@ require "ace/config"
 module Ace
   module Taskflow
     module Molecules
-      # Load configuration using ace-config cascade
+      # Load configuration using Ace::Config.create() API
       # Follows ADR-022: Configuration Default and Override Pattern
       #
       # Configuration priority (highest to lowest):
@@ -15,24 +15,10 @@ module Ace
       # 3. User config: ~/.ace/taskflow/config.yml
       # 4. Gem defaults: ace-taskflow/.ace-defaults/taskflow/config.yml
       class ConfigLoader
-        # Load gem defaults from .ace-defaults/taskflow/config.yml
-        # This file is shipped with the gem and is the single source of truth
-        # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
+        # Load gem defaults (cached for performance)
         # @return [Hash] Default configuration from gem
-        # @raise [RuntimeError] If default config file is missing (gem packaging error)
         def self.load_gem_defaults
-          @gem_defaults ||= begin
-            gem_root = File.expand_path("../../../..", __dir__)
-            default_file = File.join(gem_root, ".ace-defaults", "taskflow", "config.yml")
-
-            unless File.exist?(default_file)
-              raise "Default config not found: #{default_file}. " \
-                    "This is a gem packaging error - .ace-defaults/ must be included in the gem."
-            end
-
-            content = YAML.safe_load_file(default_file, permitted_classes: [], aliases: true)
-            extract_taskflow_config(content&.dig("taskflow") || {})
-          end
+          @gem_defaults ||= load_config_from_resolver
         end
 
         # Reset cached gem defaults (for testing)
@@ -41,20 +27,50 @@ module Ace
         end
 
         # Load configuration from cascade
-        # Uses Ace::Config::Atoms::DeepMerger for consistent merging
+        # Uses Ace::Config.create() for consistent cascade handling
         # @return [Hash] Merged configuration
         def self.load
-          config = load_gem_defaults.dup
-
-          # Look for config files in cascade order
-          find_config_paths.each do |path|
-            if File.exist?(path)
-              config = Ace::Config::Atoms::DeepMerger.merge(config, load_file(path))
-            end
-          end
-
-          config
+          # Always reload to pick up user overrides (don't use cached defaults)
+          load_config_from_resolver
         end
+
+        # Internal: Load config from resolver
+        # @return [Hash] Configuration from cascade
+        def self.load_config_from_resolver
+          gem_root = Gem.loaded_specs["ace-taskflow"]&.gem_dir ||
+                     File.expand_path("../../../..", __dir__)
+
+          resolver = Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root
+          )
+
+          config = resolver.resolve_for(["taskflow/config.yml"]).data
+          taskflow_section = config["taskflow"] || config
+          extract_taskflow_config(taskflow_section)
+        rescue Ace::Config::YamlParseError => e
+          warn "Warning: Failed to parse taskflow config: #{e.message}"
+          # Fall back to gem defaults only
+          load_gem_defaults_only
+        end
+        private_class_method :load_config_from_resolver
+
+        # Load only gem defaults (for fallback on errors)
+        def self.load_gem_defaults_only
+          gem_root = Gem.loaded_specs["ace-taskflow"]&.gem_dir ||
+                     File.expand_path("../../../..", __dir__)
+          default_file = File.join(gem_root, ".ace-defaults", "taskflow", "config.yml")
+
+          return {} unless File.exist?(default_file)
+
+          content = YAML.safe_load_file(default_file, permitted_classes: [], aliases: true)
+          taskflow_section = content&.dig("taskflow") || {}
+          extract_taskflow_config(taskflow_section)
+        rescue StandardError
+          {}
+        end
+        private_class_method :load_gem_defaults_only
 
         # Load specific configuration section
         # @param section [String] Section name (e.g., "taskflow", "idea")
@@ -114,41 +130,8 @@ module Ace
           taskflow_root
         end
 
-        private
-
-        def self.find_config_paths
-          paths = []
-
-          # Start from current directory and walk up
-          current = Dir.pwd
-          while current != "/" && current != File.dirname(current)
-            config = File.join(current, ".ace", "taskflow", "config.yml")
-            paths << config if File.exist?(config)
-            current = File.dirname(current)
-          end
-
-          # Add home directory config
-          home_config = File.join(Dir.home, ".ace", "taskflow", "config.yml")
-          paths << home_config if File.exist?(home_config)
-
-          # Reverse to apply from home to current (cascade)
-          paths.reverse
-        end
-
-        def self.load_file(path)
-          content = YAML.safe_load_file(path, permitted_classes: [], aliases: true)
-          return {} unless content.is_a?(Hash)
-
-          # Extract taskflow section if present
-          if content["taskflow"]
-            extract_taskflow_config(content["taskflow"])
-          else
-            {}
-          end
-        rescue StandardError
-          {}
-        end
-
+        # Extract taskflow configuration with backward compatibility mapping
+        # Supports both new format (taskflow.root) and old format (taskflow.directories.root)
         def self.extract_taskflow_config(taskflow_section)
           config = {}
 
