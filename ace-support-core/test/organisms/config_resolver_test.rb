@@ -86,9 +86,10 @@ class ConfigResolverTest < AceTestCase
       config = Ace::Core::Organisms::ConfigResolver.create_default(config_path)
 
       assert File.exist?(config_path)
-      refute_nil config.get("ace", "version")
-      assert_match(/\A\d+\.\d+\.\d+/, config.get("ace", "version"))
-      assert config.get("ace", "config_cascade", "enabled")
+      # ace-config uses "config" namespace (not "ace") for its defaults
+      refute_nil config.get("config", "version")
+      assert_match(/\A\d+\.\d+\.\d+/, config.get("config", "version"))
+      assert config.get("config", "cascade", "enabled")
     end
   end
 end

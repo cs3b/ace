@@ -140,7 +140,8 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.12.0)
+    ace-support-core (0.13.0)
+      ace-config (~> 0.2)
       ace-support-fs (~> 0.1)
 
 PATH
