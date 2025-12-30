@@ -3,6 +3,7 @@
 require "yaml"
 require "date"
 require "pathname"
+require "ace/config"
 require_relative "../atoms/env_reader"
 
 module Ace
@@ -182,62 +183,87 @@ module Ace
 
         private
 
-        # Get default configuration paths
+        # Get gem root for config resolution
+        # @return [String] Path to gem root directory
+        def gem_root
+          Gem.loaded_specs["ace-llm"]&.gem_dir ||
+            File.expand_path("../../../..", __dir__)
+        end
+
+        # Get default configuration paths (legacy support for custom paths)
         # @return [Array<String>] Default paths to search
         def default_config_paths
-          paths = []
-
-          # Project-specific .ace directory
-          ace_dir = find_ace_directory
-          paths << File.join(ace_dir, "llm", "providers") if ace_dir
-
-          # User config directory
-          user_config = File.expand_path("~/.config/ace-llm/providers")
-          paths << user_config if File.directory?(user_config)
-
-          # Gem's built-in providers (from .ace-defaults/ - single source of truth)
-          gem_providers = File.expand_path("../../../../.ace-defaults/llm/providers", __dir__)
-          paths << gem_providers if File.directory?(gem_providers)
-
-          paths
+          # When using Ace::Config, paths are handled by the resolver
+          # This method kept for backward compatibility with custom config_paths
+          [File.join(gem_root, ".ace-defaults", "llm", "providers")]
         end
 
-        # Find .ace directory in project hierarchy
-        # @return [String, nil] Path to .ace directory or nil
-        def find_ace_directory
-          current = Pathname.pwd
-
-          while current.parent != current
-            ace_dir = current.join(".ace")
-            return ace_dir.to_s if ace_dir.directory?
-            current = current.parent
+        # Load all provider configurations using Ace::Config cascade
+        # ADR-022: Uses deep merge - project configs extend gem defaults
+        def load_all_configurations
+          # If custom config_paths were provided, use legacy loading
+          if @config_paths != default_config_paths
+            load_all_configurations_legacy
+            return
           end
 
-          nil
+          # Use Ace::Config for standard cascade (deep merge)
+          resolver = Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root
+          )
+
+          # Get all provider file names from gem defaults (source of truth)
+          defaults_dir = File.join(gem_root, ".ace-defaults", "llm", "providers")
+          provider_files = Dir.glob(File.join(defaults_dir, "*.{yml,yaml}")).map { |f| File.basename(f) }
+
+          provider_files.each do |filename|
+            load_provider_with_cascade(resolver, filename)
+          end
+        rescue StandardError => e
+          warn "Error loading provider configurations: #{e.message}"
+          # Fallback to legacy loading on error
+          load_all_configurations_legacy
         end
 
-        # Load all provider configurations from config paths
-        def load_all_configurations
+        # Load a single provider with cascade (deep merge)
+        # @param resolver [Ace::Config::Organisms::ConfigResolver] Config resolver
+        # @param filename [String] Provider config filename (e.g., "anthropic.yml")
+        def load_provider_with_cascade(resolver, filename)
+          config = resolver.resolve_for(["llm/providers/#{filename}"]).data
+
+          # Validate required fields
+          unless config["name"] && config["class"]
+            warn "Invalid provider configuration in #{filename}: missing 'name' or 'class'"
+            return
+          end
+
+          provider_name = normalize_provider_name(config["name"])
+          @providers[provider_name] = config
+        rescue Ace::Config::YamlParseError => e
+          warn "Error parsing provider config #{filename}: #{e.message}"
+        rescue StandardError => e
+          warn "Error loading provider #{filename}: #{e.message}"
+        end
+
+        # Legacy loading for custom config paths (first-found-wins)
+        def load_all_configurations_legacy
           @config_paths.each do |path|
             next unless File.directory?(path)
 
-            # Load both .yml and .yaml files
             Dir.glob([File.join(path, "*.yml"), File.join(path, "*.yaml")]).each do |file|
-              load_configuration_file(file)
+              load_configuration_file_legacy(file)
             end
           end
         end
 
-        # Load a single configuration file
+        # Legacy: Load a single configuration file (first-found-wins)
         # @param file_path [String] Path to YAML configuration file
-        # @note Uses YAML.safe_load with string keys only (Date permitted for timestamp fields).
-        #       Provider configs are trusted sources (.ace/ cascade or gem directories).
-        #       The aliases: true enables YAML anchor/alias support for DRY configs.
-        def load_configuration_file(file_path)
+        def load_configuration_file_legacy(file_path)
           content = File.read(file_path)
           config = YAML.safe_load(content, permitted_classes: [Date], aliases: true)
 
-          # Validate required fields
           unless config["name"] && config["class"]
             warn "Invalid provider configuration in #{file_path}: missing 'name' or 'class'"
             return
@@ -245,7 +271,7 @@ module Ace
 
           provider_name = normalize_provider_name(config["name"])
 
-          # Don't override if already loaded (first found wins)
+          # Don't override if already loaded (first found wins - legacy behavior)
           unless @providers.key?(provider_name)
             @providers[provider_name] = config
           end
