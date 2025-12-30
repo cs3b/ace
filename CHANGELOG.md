@@ -39,6 +39,22 @@ All packages now use `Ace::Config.create()` API instead of `Ace::Core` for confi
 
 - Update provider config path references from `.ace.example` to `.ace-defaults`
 
+**Migrate 9 packages from `resolve_for` to `resolve_namespace`**
+
+Use the new `resolve_namespace` API for cleaner config loading. This eliminates manual pattern construction and removes deprecation warnings.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-docs | 0.13.0 → 0.13.1 | Use `resolve_namespace("docs")` |
+| ace-git | 0.5.0 → 0.5.1 | Use `resolve_namespace("git")` |
+| ace-git-commit | 0.14.0 → 0.14.1 | Use `resolve_namespace("git", filename: "commit")` |
+| ace-git-secrets | 0.3.0 → 0.3.1 | Use `resolve_namespace("git-secrets")` |
+| ace-git-worktree | 0.8.0 → 0.8.1 | Use `resolve_namespace("git", filename: "worktree")` |
+| ace-lint | 0.5.0 → 0.5.1 | Use `resolve_namespace("lint")` and `resolve_namespace("lint", filename: "kramdown")` |
+| ace-prompt | 0.9.0 → 0.9.1 | Use `resolve_namespace("prompt")` |
+| ace-review | 0.29.0 → 0.29.2 | Use `resolve_namespace("review")` |
+| ace-search | 0.15.0 → 0.15.1 | Use `resolve_namespace("search")` |
+
 ## [0.9.210] - 2025-12-30
 
 ### Changed
@@ -49,6 +65,14 @@ All packages now use `Ace::Config.create()` API instead of `Ace::Core` for confi
 - Add runtime dependency on `ace-support-fs` for filesystem utilities
 - Add `class_get_env` class method on PathExpander for consistent ENV access pattern
 - Reorganize ConfigResolver methods: all public methods grouped together before private section
+
+### Added
+
+**ace-config v0.2.0 → v0.3.0 (Task 157.14)**
+
+- `resolve_namespace(*segments, filename: "config")` method to ConfigResolver for simplified namespace-based config resolution
+- Automatically builds `.yml/.yaml` file patterns from path segments
+- Reduces boilerplate across ace-* gems for config loading
 
 ## [0.9.209] - 2025-12-30
 

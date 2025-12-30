@@ -155,6 +155,52 @@ config = Ace::Config.create
 result = config.resolve_for(["database.yml", "database.yaml"])
 ```
 
+## Namespace Resolution
+
+The `resolve_namespace` method provides a convenient API for resolving configuration by namespace path, automatically generating `.yml` and `.yaml` patterns:
+
+```ruby
+resolver = Ace::Config.create
+
+# Single namespace
+# Resolves: docs/config.yml, docs/config.yaml
+config = resolver.resolve_namespace("docs")
+
+# Nested namespaces
+# Resolves: git/worktree/config.yml, git/worktree/config.yaml
+config = resolver.resolve_namespace("git", "worktree")
+
+# Custom filename
+# Resolves: lint/kramdown.yml, lint/kramdown.yaml
+config = resolver.resolve_namespace("lint", filename: "kramdown")
+
+# Root config with custom filename
+# Resolves: settings.yml, settings.yaml
+config = resolver.resolve_namespace(filename: "settings")
+```
+
+### When to Use
+
+Use `resolve_namespace` when:
+- Your configuration follows a namespace-based structure (e.g., `ace/docs/config.yml`)
+- You want to reduce boilerplate for common config resolution patterns
+- You need both `.yml` and `.yaml` extension support automatically
+
+Use `resolve_file` when:
+- You need full control over file patterns
+- You're working with non-standard file names
+- You need glob patterns (e.g., `presets/*.yml`)
+
+### Limitations
+
+**No glob support**: `resolve_namespace` does not support glob patterns. For pattern matching (e.g., `presets/*.yml`), use `resolve_file` instead.
+
+**Security**: Namespace segments are validated for security. Path traversal (`..`) and absolute paths (`/`) are rejected with an `ArgumentError`. If you're processing untrusted input, this validation provides defense-in-depth, but always sanitize user input at your application boundary.
+
+### Implementation Note
+
+`resolve_namespace` is **not memoized** - it re-reads files on each call. For repeated access to the same configuration, consider caching the result:
+
 ## Virtual Config Resolver
 
 The VirtualConfigResolver provides a filesystem-like view of config files across the cascade:

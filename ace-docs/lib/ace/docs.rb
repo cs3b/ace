@@ -30,7 +30,7 @@ module Ace
         )
 
         # Resolve config for docs namespace
-        config = resolver.resolve_for(["docs/config.yml", "docs/config.yaml"])
+        config = resolver.resolve_namespace("docs")
         config.data
       rescue StandardError => e
         warn "Warning: Could not load ace-docs config: #{e.message}" if debug?

@@ -1,7 +1,7 @@
 PATH
   remote: ace-config
   specs:
-    ace-config (0.2.1)
+    ace-config (0.3.0)
       ace-support-fs (~> 0.1)
 
 PATH
@@ -16,7 +16,7 @@ PATH
   remote: ace-docs
   specs:
     ace-docs (0.13.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-core (~> 0.11)
@@ -31,7 +31,7 @@ PATH
   remote: ace-git-commit
   specs:
     ace-git-commit (0.14.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-git (~> 0.3)
       ace-llm (~> 0.16)
 
@@ -73,7 +73,7 @@ PATH
   remote: ace-lint
   specs:
     ace-lint (0.5.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       colorize (~> 1.1)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
@@ -108,14 +108,14 @@ PATH
   remote: ace-nav
   specs:
     ace-nav (0.13.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-support-fs (~> 0.1)
 
 PATH
   remote: ace-prompt
   specs:
     ace-prompt (0.9.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
@@ -127,7 +127,7 @@ PATH
   remote: ace-review
   specs:
     ace-review (0.29.2)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -139,7 +139,7 @@ PATH
   remote: ace-search
   specs:
     ace-search (0.15.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-git (~> 0.3)
 
 PATH
@@ -178,7 +178,7 @@ PATH
   remote: ace-taskflow
   specs:
     ace-taskflow (0.26.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
       ace-support-mac-clipboard (~> 0.1.0)
@@ -189,7 +189,7 @@ PATH
   remote: ace-test-runner
   specs:
     ace-test-runner (0.6.1)
-      ace-config (~> 0.2)
+      ace-config (~> 0.3)
       ace-support-test-helpers (~> 0.1)
       minitest (~> 5.0)
       minitest-reporters (~> 1.6)

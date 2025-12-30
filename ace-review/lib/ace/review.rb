@@ -70,7 +70,7 @@ module Ace
           )
 
           # Resolve config for review namespace
-          config = resolver.resolve_for(["review/config.yml", "review/config.yaml"])
+          config = resolver.resolve_namespace("review")
           config.data
         rescue StandardError => e
           warn "Warning: Could not load ace-review config: #{e.message}" if debug?

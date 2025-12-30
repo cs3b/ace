@@ -57,7 +57,7 @@ module Ace
         )
 
         # Resolve config for lint namespace
-        config = resolver.resolve_for(["lint/config.yml", "lint/config.yaml"])
+        config = resolver.resolve_namespace("lint")
         config.data
       rescue StandardError => e
         warn "Warning: Could not load ace-lint config: #{e.message}" if debug?
@@ -81,7 +81,7 @@ module Ace
         )
 
         # Resolve kramdown-specific config
-        config = resolver.resolve_for(["lint/kramdown.yml", "lint/kramdown.yaml"])
+        config = resolver.resolve_namespace("lint", filename: "kramdown")
         config.data
       rescue StandardError => e
         warn "Warning: Could not load kramdown config: #{e.message}" if debug?

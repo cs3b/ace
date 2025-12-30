@@ -66,7 +66,7 @@ module Ace
         )
 
         # Resolve config for prompt namespace
-        config = resolver.resolve_for(["prompt/config.yml", "prompt/config.yaml"])
+        config = resolver.resolve_namespace("prompt")
         config.data
       rescue StandardError => e
         warn "Warning: Could not load ace-prompt config: #{e.message}" if debug?

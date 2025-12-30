@@ -69,7 +69,7 @@ module Ace
           )
 
           # Resolve config for git/commit namespace
-          config = resolver.resolve_for(["git/commit.yml", "git/commit.yaml"])
+          config = resolver.resolve_namespace("git", filename: "commit")
 
           # Extract git section if present, otherwise use root
           config.data["git"] || config.data

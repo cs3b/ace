@@ -69,7 +69,7 @@ module Ace
             )
 
             # Resolve config for git-secrets namespace
-            config = resolver.resolve_for(["git-secrets/config.yml", "git-secrets/config.yaml"])
+            config = resolver.resolve_namespace("git-secrets")
 
             # Extract git-secrets section if present
             config.data["git-secrets"] || config.data

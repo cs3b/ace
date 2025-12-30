@@ -99,7 +99,7 @@ module Ace
             )
 
             # Resolve config for git/worktree namespace
-            config = resolver.resolve_for(["git/worktree.yml", "git/worktree.yaml"])
+            config = resolver.resolve_namespace("git", filename: "worktree")
 
             @config_hash = config.data
           rescue StandardError => e

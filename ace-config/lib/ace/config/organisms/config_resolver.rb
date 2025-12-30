@@ -48,6 +48,60 @@ module Ace
           resolve.get(*keys)
         end
 
+        # Resolve configuration for a namespace path (not memoized)
+        #
+        # Builds file patterns from path segments and automatically appends
+        # .yml/.yaml extensions. This is a convenience wrapper around resolve_for.
+        #
+        # @param segments [Array<String>] Path segments (e.g., "docs", "config")
+        # @param filename [String] Filename without extension (default: "config")
+        # @return [Models::Config] Resolved configuration
+        #
+        # @example Single segment with default filename
+        #   resolve_namespace("docs")
+        #   # Resolves: ["docs/config.yml", "docs/config.yaml"]
+        #
+        # @example Multiple segments
+        #   resolve_namespace("git", "worktree")
+        #   # Resolves: ["git/worktree/config.yml", "git/worktree/config.yaml"]
+        #
+        # @example Custom filename
+        #   resolve_namespace("lint", filename: "kramdown")
+        #   # Resolves: ["lint/kramdown.yml", "lint/kramdown.yaml"]
+        #
+        # @example Root config with custom filename
+        #   resolve_namespace(filename: "settings")
+        #   # Resolves: ["settings.yml", "settings.yaml"]
+        # @see #resolve_file For pattern-based resolution
+        # @see #resolve For default configuration cascade
+        def resolve_namespace(*segments, filename: "config")
+          # Sanitize segments:
+          # - flatten: handle nested arrays like resolve_namespace(["git", "worktree"])
+          # - compact: remove nil values
+          # - stringify + strip: handle symbols and whitespace
+          # - reject empty: filter out empty strings after stripping
+          clean_segments = segments.flatten.compact.map { |s| s.to_s.strip }.reject(&:empty?)
+
+          # Security: Validate segments don't contain path traversal or absolute paths
+          validate_namespace_segments!(clean_segments)
+
+          # Strip .yml/.yaml extension if user accidentally included it
+          clean_filename = filename.to_s.sub(/\.ya?ml\z/i, "")
+
+          # Security: Validate filename doesn't contain path traversal
+          validate_namespace_segments!([clean_filename])
+
+          # Generate both .yml and .yaml patterns using File.join for cross-platform compatibility
+          patterns = if clean_segments.empty?
+            ["#{clean_filename}.yml", "#{clean_filename}.yaml"]
+          else
+            base_path = File.join(*clean_segments)
+            [File.join(base_path, "#{clean_filename}.yml"), File.join(base_path, "#{clean_filename}.yaml")]
+          end
+
+          resolve_file(patterns)
+        end
+
         # Resolve configuration for specific file patterns (not memoized)
         #
         # Unlike `resolve`, this method always re-reads files to support
@@ -56,7 +110,7 @@ module Ace
         #
         # @param patterns [Array<String>, String] File patterns to search for
         # @return [Models::Config] Resolved configuration
-        def resolve_for(patterns)
+        def resolve_file(patterns)
           # Create finder with specified patterns
           finder = Molecules::ConfigFinder.new(
             config_dir: config_dir,
@@ -90,6 +144,14 @@ module Ace
             source: sources,
             merge_strategy: merge_strategy
           )
+        end
+
+        # @deprecated Use {#resolve_file} instead
+        # @param patterns [Array<String>, String] File patterns to search for
+        # @return [Models::Config] Resolved configuration
+        def resolve_for(patterns)
+          warn "[DEPRECATED] resolve_for() is deprecated. Use resolve_file() instead.", uplevel: 1
+          resolve_file(patterns)
         end
 
         # Get config from specific type
@@ -170,6 +232,21 @@ module Ace
             gem_path: gem_path,
             file_patterns: file_patterns
           )
+        end
+
+        # Validate namespace segments for security
+        # Prevents path traversal attacks via ".." and absolute paths
+        # @param segments [Array<String>] Segments to validate
+        # @raise [ArgumentError] If any segment contains invalid characters
+        def validate_namespace_segments!(segments)
+          segments.each do |segment|
+            if segment.include?("..")
+              raise ArgumentError, "Invalid namespace segment: #{segment.inspect} (path traversal not allowed)"
+            end
+            if segment.start_with?("/")
+              raise ArgumentError, "Invalid namespace segment: #{segment.inspect} (absolute paths not allowed)"
+            end
+          end
         end
 
         # Create default config structure

@@ -28,7 +28,7 @@ module Ace
         )
 
         # Resolve config for search namespace
-        config = resolver.resolve_for(["search/config.yml", "search/config.yaml"])
+        config = resolver.resolve_namespace("search")
         # Extract the ace.search section from defaults (for backward compatibility)
         raw_data = config.data
         raw_data.dig("ace", "search") || raw_data

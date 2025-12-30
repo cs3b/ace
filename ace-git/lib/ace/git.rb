@@ -58,7 +58,7 @@ module Ace
       )
 
       # Resolve config for git namespace
-      config = resolver.resolve_for(["git/config.yml", "git/config.yaml"])
+      config = resolver.resolve_namespace("git")
 
       # Extract and flatten the git section for backward compatibility
       raw_config = config.data["git"] || config.data
