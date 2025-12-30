@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.5.1] - 2025-12-30
+
+### Changed
+
+* Replace ace-support-core dependency with ace-config for configuration cascade
+* Migrate from Ace::Core to Ace::Config.create() API
+
 ## [0.5.0] - 2025-12-30
 
 ### Changed

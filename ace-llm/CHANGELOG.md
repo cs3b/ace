@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2025-12-30
+
+### Changed
+
+* Add ace-config dependency for configuration cascade management
+* Refactor ClientRegistry to use Ace::Config.create() with deep merge
+
 ## [0.16.0] - 2025-12-30
 
 ### Changed

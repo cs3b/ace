@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2025-12-30
+
+### Changed
+
+* Replace ace-support-core dependency with ace-config for configuration cascade
+* Migrate from Ace::Core to Ace::Config.create() API
+
 ## [0.9.0] - 2025-12-30
 
 ### Changed
