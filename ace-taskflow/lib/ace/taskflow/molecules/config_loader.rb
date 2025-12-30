@@ -13,21 +13,21 @@ module Ace
       # 1. CLI options (handled by commands)
       # 2. Project config: .ace/taskflow/config.yml (nearest wins)
       # 3. User config: ~/.ace/taskflow/config.yml
-      # 4. Gem defaults: ace-taskflow/.ace.example/taskflow/config.yml
+      # 4. Gem defaults: ace-taskflow/.ace-defaults/taskflow/config.yml
       class ConfigLoader
-        # Load gem defaults from .ace.example/taskflow/config.yml
+        # Load gem defaults from .ace-defaults/taskflow/config.yml
         # This file is shipped with the gem and is the single source of truth
-        # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
+        # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
         # @return [Hash] Default configuration from gem
         # @raise [RuntimeError] If default config file is missing (gem packaging error)
         def self.load_gem_defaults
           @gem_defaults ||= begin
             gem_root = File.expand_path("../../../..", __dir__)
-            default_file = File.join(gem_root, ".ace.example", "taskflow", "config.yml")
+            default_file = File.join(gem_root, ".ace-defaults", "taskflow", "config.yml")
 
             unless File.exist?(default_file)
               raise "Default config not found: #{default_file}. " \
-                    "This is a gem packaging error - .ace.example/ must be included in the gem."
+                    "This is a gem packaging error - .ace-defaults/ must be included in the gem."
             end
 
             content = YAML.safe_load_file(default_file, permitted_classes: [], aliases: true)

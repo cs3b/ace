@@ -233,7 +233,7 @@ module Ace
           # Stub load_example_config to simulate missing file
           def config_loader.load_example_config
             raise ConfigLoader::Error, "Default config not found: /fake/path. " \
-                                        "This is a gem packaging error - .ace.example/ must be included in the gem."
+                                        "This is a gem packaging error - .ace-defaults/ must be included in the gem."
           end
 
           error = assert_raises(ConfigLoader::Error) do
@@ -241,7 +241,7 @@ module Ace
           end
 
           assert_match(/gem packaging error/, error.message)
-          assert_match(/ace\.example/, error.message)
+          assert_match(/ace-defaults/, error.message)
         end
 
         def test_loads_legacy_settings_yml_with_deprecation_warning

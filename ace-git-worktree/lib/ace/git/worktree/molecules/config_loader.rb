@@ -73,7 +73,7 @@ module Ace
           def config_files
             [
               File.join(@project_root, ".ace", "git", "worktree.yml"),
-              File.join(@project_root, ".ace.example", "git", "worktree.yml"),
+              File.join(@project_root, ".ace-defaults", "git", "worktree.yml"),
               File.expand_path("~/.ace/git/worktree.yml")
             ]
           end

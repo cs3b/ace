@@ -259,11 +259,11 @@ context:
 
 ### Example Presets
 
-The gem includes example presets in `.ace.example/context/`:
+The gem includes example presets in `.ace-defaults/context/`:
 
 ```bash
 # Copy examples to your project
-cp -r $(gem which ace-context | xargs dirname)/../.ace.example .ace
+cp -r $(gem which ace-context | xargs dirname)/../.ace-defaults .ace
 ```
 
 Example presets included:

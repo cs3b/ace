@@ -63,7 +63,7 @@ module Ace
           require 'ace/core/atoms/deep_merger'
           require 'ace/core/organisms/config_resolver'
 
-          # Load gem defaults from .ace.example/git/commit.yml
+          # Load gem defaults from .ace-defaults/git/commit.yml
           gem_defaults = load_gem_defaults
 
           # Load user config via existing cascade
@@ -85,18 +85,18 @@ module Ace
           load_gem_defaults || {}
         end
 
-        # Load gem defaults from .ace.example/git/commit.yml
-        # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
+        # Load gem defaults from .ace-defaults/git/commit.yml
+        # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
         # @return [Hash] Default configuration from gem
         # @raise [Ace::GitCommit::Error] If default config file is missing (gem packaging error)
         def load_gem_defaults
           gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
-          defaults_path = File.join(gem_root, ".ace.example", "git", "commit.yml")
+          defaults_path = File.join(gem_root, ".ace-defaults", "git", "commit.yml")
 
           unless File.exist?(defaults_path)
             raise Ace::GitCommit::Error, "Default config not found: #{defaults_path}. " \
-                  "This is a gem packaging error - .ace.example/ must be included in the gem."
+                  "This is a gem packaging error - .ace-defaults/ must be included in the gem."
           end
 
           content = YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true)

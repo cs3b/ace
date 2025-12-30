@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+
 ## [0.14.0] - 2025-12-29
 
 ### Changed
@@ -182,11 +189,10 @@ From dev-tools/exe/search (0.8.0):
 
 ## [Unreleased]
 
-### Planned
+## [0.15.0] - 2025-12-30
 
-- Additional presets for common search patterns
-- Performance optimizations for large codebases
-- Enhanced result aggregation strategies
-- Plugin system for custom formatters
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
 
 [0.9.0]: https://github.com/your-org/ace-meta/releases/tag/ace-search-v0.9.0

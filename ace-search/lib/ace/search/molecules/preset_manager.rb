@@ -63,7 +63,7 @@ module Ace
 
           # Check gem example presets
           gem_root = File.expand_path("../../../../..", __FILE__)
-          gem_preset_dir = File.join(gem_root, ".ace.example/search/presets")
+          gem_preset_dir = File.join(gem_root, ".ace-defaults/search/presets")
           dirs << gem_preset_dir if Dir.exist?(gem_preset_dir)
 
           dirs

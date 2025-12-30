@@ -52,7 +52,7 @@ ACE gems follow a strict naming pattern to clarify their purpose:
 ### Standard ACE Gem (CLI Tools)
 ```
 ace-gem/
-├── .ace.example/gem/config.yml    # REQUIRED
+├── .ace-defaults/gem/config.yml    # REQUIRED
 ├── lib/ace/gem/
 │   ├── atoms/, molecules/, organisms/, models/  # ATOM architecture
 │   ├── commands/                  # Thor CLI commands
@@ -71,7 +71,7 @@ ace-gem/
 ### Integration Package Gem (ace-integration-* pattern)
 ```
 ace-integration-platform/
-├── .ace.example/nav/protocols/wfi-sources/ace-integration-platform.yml  # ace-nav discovery
+├── .ace-defaults/nav/protocols/wfi-sources/ace-integration-platform.yml  # ace-nav discovery
 ├── lib/ace/integration/platform.rb     # Gem entry point
 ├── lib/ace/integration/platform/version.rb  # Version constant
 ├── handbook/workflow-instructions/    # Integration workflows
@@ -93,7 +93,7 @@ ace-integration-platform/
 **ADR-022 Pattern: Load Gem Defaults + Merge User Overrides**
 
 All ACE gems must follow the unified configuration pattern established in ADR-022. This pattern ensures:
-- Defaults are loaded from `.ace.example/` (single source of truth)
+- Defaults are loaded from `.ace-defaults/` (single source of truth)
 - User overrides are merged via `Ace::Core::Atoms::DeepMerger`
 - Test isolation via `reset_config!` method
 
@@ -117,12 +117,12 @@ module Ace
     def self.load_gem_defaults
       gem_root = ::Gem.loaded_specs["ace-gem"]&.gem_dir ||
                  File.expand_path("../..", __dir__)
-      defaults_path = File.join(gem_root, ".ace.example", "gem", "config.yml")
+      defaults_path = File.join(gem_root, ".ace-defaults", "gem", "config.yml")
 
-      # .ace.example/ MUST be included in gem - missing file is a packaging error
+      # .ace-defaults/ MUST be included in gem - missing file is a packaging error
       unless File.exist?(defaults_path)
         raise "Default config not found: #{defaults_path}. " \
-              "This is a gem packaging error - .ace.example/ must be included in the gem."
+              "This is a gem packaging error - .ace-defaults/ must be included in the gem."
       end
 
       YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
@@ -165,10 +165,10 @@ end
 **DO:**
 
 ```ruby
-# Load from .ace.example/ (GOOD)
+# Load from .ace-defaults/ (GOOD)
 def self.config
   @config ||= Ace::Core::Atoms::DeepMerger.merge(
-    load_gem_defaults,  # From .ace.example/gem/config.yml
+    load_gem_defaults,  # From .ace-defaults/gem/config.yml
     user_config         # From .ace/gem/config.yml cascade
   )
 end
@@ -420,7 +420,7 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - Use `Ace::Core.config.get('ace', 'gem')` for config (module name unchanged)
 - Include handbook/ with agents and workflows
 - Flat test structure: `test/atoms/` not `test/ace/gem/atoms/`
-- Provide .ace.example/ configs
+- Provide .ace-defaults/ configs
 - Maintain CHANGELOG.md in Keep a Changelog format
 - Add ace-support-core dependency for configuration support
 - Follow naming conventions: ace-* for CLI tools, ace-support-* for libraries

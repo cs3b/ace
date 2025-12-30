@@ -86,8 +86,8 @@ module Ace
       {}
     end
 
-    # Load gem defaults from .ace.example/git/config.yml
-    # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
+    # Load gem defaults from .ace-defaults/git/config.yml
+    # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
     # @return [Hash] Default configuration from gem
     # @raise [RuntimeError] If default config file is missing (gem packaging error)
     # @example Get defaults without user overrides
@@ -97,18 +97,18 @@ module Ace
       @default_config ||= load_gem_defaults
     end
 
-    # Load defaults from .ace.example/git/config.yml
+    # Load defaults from .ace-defaults/git/config.yml
     # Handles both development (relative path) and installed gem (Gem.loaded_specs) scenarios
     # @return [Hash] Default configuration
     def self.load_gem_defaults
       # Try to find gem root via RubyGems for installed gems, fallback to relative path for dev
       gem_spec = Gem.loaded_specs["ace-git"]
       gem_root = gem_spec ? gem_spec.gem_dir : File.expand_path("../..", __dir__)
-      default_file = File.join(gem_root, ".ace.example", "git", "config.yml")
+      default_file = File.join(gem_root, ".ace-defaults", "git", "config.yml")
 
       unless File.exist?(default_file)
         raise "Default config not found: #{default_file}. " \
-              "This is a gem packaging error - .ace.example/ must be included in the gem."
+              "This is a gem packaging error - .ace-defaults/ must be included in the gem."
       end
 
       content = YAML.safe_load_file(default_file, permitted_classes: [], permitted_symbols: [], aliases: true)

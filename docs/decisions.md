@@ -54,10 +54,10 @@ This document provides actionable decisions from Architecture Decision Records (
 **Details**: [ADR-015](decisions/ADR-015-mono-repo-ace-gems-migration.md)
 
 ### ACE Gem Configuration Default and Override Pattern
-**Decision**: All ace-* gems load defaults from `.ace.example/` files and merge with user overrides from `.ace/` cascade using `Ace::Core::Atoms::DeepMerger`.
+**Decision**: All ace-* gems load defaults from `.ace-defaults/` files and merge with user overrides from `.ace/` cascade using `Ace::Core::Atoms::DeepMerger`.
 **Impact**: When creating or modifying gems:
-- Put complete defaults in `.ace.example/gem-name/config.yml` (single source of truth)
-- Implement `load_gem_defaults` method to load from `.ace.example/` at runtime
+- Put complete defaults in `.ace-defaults/gem-name/config.yml` (single source of truth)
+- Implement `load_gem_defaults` method to load from `.ace-defaults/` at runtime
 - Use `Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)` for consistent merging
 - Provide `reset_config!` method for test isolation
 - Support backward compatibility for renamed keys with deprecation path

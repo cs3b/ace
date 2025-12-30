@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.209] - 2025-12-30
+
+### Changed
+
+**Task 157.08: Rename `.ace.example/` to `.ace-defaults/`**
+
+Standardize gem defaults directory naming from `.ace.example` to `.ace-defaults` for clarity. The new naming makes it clearer these are bundled defaults shipped with gems, not user-provided examples.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-context | 0.21.0 → 0.22.0 | Rename defaults directory |
+| ace-docs | 0.12.0 → 0.13.0 | Rename defaults directory |
+| ace-git | 0.4.0 → 0.5.0 | Rename defaults directory |
+| ace-git-commit | 0.13.0 → 0.14.0 | Rename defaults directory |
+| ace-git-secrets | 0.2.0 → 0.3.0 | Rename defaults directory |
+| ace-git-worktree | 0.7.0 → 0.8.0 | Rename defaults directory |
+| ace-handbook | 0.1.0 → 0.2.0 | Rename defaults directory |
+| ace-integration-claude | 0.1.0 → 0.2.0 | Rename defaults directory |
+| ace-lint | 0.4.0 → 0.5.0 | Rename defaults directory |
+| ace-llm | 0.15.1 → 0.16.0 | Rename defaults directory |
+| ace-llm-providers-cli | 0.10.2 → 0.11.0 | Rename defaults directory, update ace-llm dep |
+| ace-nav | 0.12.0 → 0.13.0 | Rename defaults directory |
+| ace-prompt | 0.8.0 → 0.9.0 | Rename defaults directory |
+| ace-review | 0.28.0 → 0.29.0 | Rename defaults directory |
+| ace-search | 0.14.0 → 0.15.0 | Rename defaults directory |
+| ace-support-core | 0.13.0 → 0.14.0 | Rename defaults directory |
+| ace-taskflow | 0.25.0 → 0.26.0 | Rename defaults directory |
+| ace-test-runner | 0.5.0 → 0.6.0 | Rename defaults directory |
+
 ## [0.9.208] - 2025-12-30
 
 ### Changed

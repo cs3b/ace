@@ -3,7 +3,7 @@
 # ADR-022: This file is the single source of truth for defaults
 #
 # Configuration cascade:
-#   1. .ace.example/nav/config.yml (gem defaults - this file)
+#   1. .ace-defaults/nav/config.yml (gem defaults - this file)
 #   2. ~/.ace/nav/config.yml (user defaults)
 #   3. .ace/nav/config.yml (project overrides)
 

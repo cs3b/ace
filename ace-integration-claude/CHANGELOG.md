@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+
 ### Added
 - CLAUDE.md template (`integrations/claude/templates/CLAUDE.md.tmpl`) for project setup
   - Clear distinction between Claude Commands (slash commands) and CLI Tools (terminal)

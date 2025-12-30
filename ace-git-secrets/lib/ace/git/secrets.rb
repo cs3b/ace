@@ -44,7 +44,7 @@ module Ace
       @config_mutex = Mutex.new
 
       # Load ace-git-secrets configuration using ace-core config cascade
-      # Follows ADR-022: Load defaults from .ace.example/, merge user overrides from .ace/
+      # Follows ADR-022: Load defaults from .ace-defaults/, merge user overrides from .ace/
       #
       # @note Thread Safety: This method is thread-safe via Mutex synchronization.
       #   The config is loaded once and cached for subsequent calls.
@@ -58,7 +58,7 @@ module Ace
       def self.config
         @config_mutex.synchronize do
           @config ||= begin
-            # Load defaults from .ace.example/git-secrets/config.yml
+            # Load defaults from .ace-defaults/git-secrets/config.yml
             defaults = load_example_config
 
             # Load user overrides from .ace/git-secrets/config.yml
@@ -77,17 +77,17 @@ module Ace
         end
       end
 
-      # Load defaults from .ace.example/git-secrets/config.yml
-      # ADR-022: .ace.example/ is the single source of truth for defaults
+      # Load defaults from .ace-defaults/git-secrets/config.yml
+      # ADR-022: .ace-defaults/ is the single source of truth for defaults
       # @return [Hash] Default configuration from example file
       def self.load_example_config
         gem_root = File.expand_path("../../..", __dir__)
-        example_path = File.join(gem_root, ".ace.example", "git-secrets", "config.yml")
+        example_path = File.join(gem_root, ".ace-defaults", "git-secrets", "config.yml")
 
-        # ADR-022: Missing .ace.example/ file is a packaging error, not a fallback case
+        # ADR-022: Missing .ace-defaults/ file is a packaging error, not a fallback case
         unless File.exist?(example_path)
           raise Error, "Default config not found: #{example_path}. " \
-                       "This is a gem packaging error - .ace.example/ must be included in the gem."
+                       "This is a gem packaging error - .ace-defaults/ must be included in the gem."
         end
 
         require "yaml"
@@ -95,7 +95,7 @@ module Ace
       end
 
       # Fallback defaults when config loading fails
-      # Note: Should rarely be used - .ace.example/ should always be present
+      # Note: Should rarely be used - .ace-defaults/ should always be present
       # @return [Hash] Minimal fallback configuration
       def self.fallback_defaults
         {
@@ -109,14 +109,14 @@ module Ace
       end
 
       # Get file exclusions from config
-      # ADR-022: Exclusions come from .ace.example/, merged with user config
+      # ADR-022: Exclusions come from .ace-defaults/, merged with user config
       # @return [Array<String>] Glob patterns for files to exclude
       def self.exclusions
         config["exclusions"] || []
       end
 
       # Resolve gitleaks config path with cascade
-      # Checks: .ace/git-secrets/gitleaks.toml -> .ace.example/git-secrets/gitleaks.toml
+      # Checks: .ace/git-secrets/gitleaks.toml -> .ace-defaults/git-secrets/gitleaks.toml
       #
       # @note Thread Safety: This method uses the same mutex as config to ensure
       #   thread-safe initialization. Like config, it should be preloaded before
@@ -139,7 +139,7 @@ module Ace
               else
                 # Fall back to gem defaults
                 gem_root = File.expand_path("../../..", __dir__)
-                example_path = File.join(gem_root, ".ace.example", "git-secrets", "gitleaks.toml")
+                example_path = File.join(gem_root, ".ace-defaults", "git-secrets", "gitleaks.toml")
                 File.exist?(example_path) ? example_path : nil
               end
             end

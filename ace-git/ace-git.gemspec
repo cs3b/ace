@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
                           lib/**/*
                           exe/*
                           handbook/**/*
-                          .ace.example/**/*
+                          .ace-defaults/**/*
                           *.md
                           LICENSE
                           Rakefile

@@ -10,12 +10,12 @@ module Ace
   module Nav
     module Molecules
       # Loads configuration from .ace/nav/*.yml files and protocols
-      # ADR-022: Defaults come from .ace.example/nav/config.yml
+      # ADR-022: Defaults come from .ace-defaults/nav/config.yml
       #
       # TODO: Refactor to use Ace::Core.config for user config cascade instead of
       # manual path discovery (find_config_dir). This requires enhancing ace-support-core
       # to support ADR-022 pattern: Ace::Core.config.for_gem('nav') that loads
-      # gem defaults from .ace.example/ and merges with user cascade.
+      # gem defaults from .ace-defaults/ and merges with user cascade.
       class ConfigLoader
         class Error < StandardError; end
 
@@ -27,13 +27,13 @@ module Ace
         end
 
         # Load main settings configuration
-        # ADR-022: Loads defaults from .ace.example/, merges user config
+        # ADR-022: Loads defaults from .ace-defaults/, merges user config
         # @return [Hash] Configuration with defaults and user overrides
         def load_settings
           # Return cached if already loaded
           return @configs["settings"] if @configs.key?("settings")
 
-          # Load defaults from gem's .ace.example/nav/config.yml
+          # Load defaults from gem's .ace-defaults/nav/config.yml
           gem_defaults = load_example_config
 
           # Load user config from .ace/nav/config.yml cascade
@@ -58,22 +58,22 @@ module Ace
           @configs["settings"] = Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
         end
 
-        # Load defaults from .ace.example/nav/config.yml
-        # ADR-022: .ace.example/ is the single source of truth for defaults
+        # Load defaults from .ace-defaults/nav/config.yml
+        # ADR-022: .ace-defaults/ is the single source of truth for defaults
         # @return [Hash] Default configuration from example file
         # @raise [Error] If default config file is missing or invalid (gem packaging error)
         def load_example_config
           # Use relative path from this file to gem root (4 levels up from molecules/)
           gem_root = File.expand_path("../../../..", __dir__)
-          example_path = File.join(gem_root, ".ace.example", "nav", "config.yml")
+          example_path = File.join(gem_root, ".ace-defaults", "nav", "config.yml")
 
-          # ADR-022: Missing .ace.example/ file is a packaging error, not a fallback case
+          # ADR-022: Missing .ace-defaults/ file is a packaging error, not a fallback case
           unless File.exist?(example_path)
             raise Error, "Default config not found: #{example_path}. " \
-                         "This is a gem packaging error - .ace.example/ must be included in the gem."
+                         "This is a gem packaging error - .ace-defaults/ must be included in the gem."
           end
 
-          # ADR-022: Parse errors in .ace.example/ are also packaging errors - don't mask them
+          # ADR-022: Parse errors in .ace-defaults/ are also packaging errors - don't mask them
           load_yaml_file_strict(example_path)
         end
 
@@ -197,7 +197,7 @@ module Ace
           {}
         end
 
-        # Load YAML without masking parse errors - for .ace.example/ defaults
+        # Load YAML without masking parse errors - for .ace-defaults/ defaults
         # ADR-022: Parse errors in gem defaults indicate packaging issues
         # @param path [String] Path to YAML file
         # @return [Hash] Parsed YAML content

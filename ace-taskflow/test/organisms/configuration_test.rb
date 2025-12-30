@@ -45,7 +45,7 @@ class ConfigurationTest < AceTaskflowTestCase
           # Verify config was created from gem's example
           assert File.exist?(config_file), "config.yml should be created from example"
 
-          # Verify it has expected content from .ace.example/
+          # Verify it has expected content from .ace-defaults/
           content = File.read(config_file)
           assert_match(/taskflow:/, content, "config should have taskflow root key")
           assert_match(/root:/, content, "config should have root setting")

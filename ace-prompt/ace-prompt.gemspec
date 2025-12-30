@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
                           lib/**/*
                           config/**/*
                           exe/*
+                          .ace-defaults/**/*
                           *.md
                           LICENSE.txt
                           Rakefile

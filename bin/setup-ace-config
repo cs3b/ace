@@ -61,49 +61,60 @@ create_structure() {
 }
 
 # Copy example configs from a gem
+# Looks for .ace-defaults/ (preferred) or .ace.example/ (legacy fallback)
 copy_gem_config() {
     local gem_name="$1"
-    local example_dir="${gem_name}/ace.example"
+    local defaults_dir="${gem_name}/.ace-defaults"
+    local example_dir="${gem_name}/.ace.example"
+    local source_dir=""
 
-    if [ -d "$example_dir" ]; then
+    # Prefer .ace-defaults/, fall back to .ace.example/
+    if [ -d "$defaults_dir" ]; then
+        source_dir="$defaults_dir"
+    elif [ -d "$example_dir" ]; then
+        source_dir="$example_dir"
+    fi
+
+    if [ -n "$source_dir" ]; then
         print_info "Copying configuration from $gem_name"
 
         # Use rsync if available for better control, otherwise use cp
         if command -v rsync &> /dev/null; then
-            rsync -av --exclude='*.md' "$example_dir/" "$ACE_DIR/" > /dev/null 2>&1
+            rsync -av --exclude='*.md' "$source_dir/" "$ACE_DIR/" > /dev/null 2>&1
         else
-            cp -r "$example_dir"/* "$ACE_DIR/" 2>/dev/null || true
+            cp -r "$source_dir"/* "$ACE_DIR/" 2>/dev/null || true
         fi
 
         print_success "  Copied $gem_name configuration"
 
         # List what was copied if verbose
         if [ "$VERBOSE" = "true" ]; then
-            find "$example_dir" -type f -name "*.yml" -o -name "*.yaml" | while read -r file; do
-                rel_path="${file#$example_dir/}"
+            find "$source_dir" -type f -name "*.yml" -o -name "*.yaml" | while read -r file; do
+                rel_path="${file#$source_dir/}"
                 echo "    - $rel_path"
             done
         fi
     else
-        [ "$VERBOSE" = "true" ] && print_warning "  No example config found for $gem_name"
+        [ "$VERBOSE" = "true" ] && print_warning "  No defaults config found for $gem_name"
     fi
 }
 
 # Copy all gem configurations
 copy_all_configs() {
-    print_info "Copying example configurations from all ace-* gems..."
+    print_info "Copying default configurations from all ace-* gems..."
 
     local gem_count=0
     for gem_dir in ace-*/; do
-        if [ -d "${gem_dir}ace.example" ]; then
+        # Check for .ace-defaults/ (preferred) or .ace.example/ (legacy)
+        if [ -d "${gem_dir}.ace-defaults" ] || [ -d "${gem_dir}.ace.example" ]; then
             copy_gem_config "${gem_dir%/}"
             ((gem_count++))
         fi
     done
 
     if [ $gem_count -eq 0 ]; then
-        print_warning "No ace.example directories found in any gems"
-        print_info "You may need to set up example configs first"
+        print_warning "No .ace-defaults directories found in any gems"
+        print_info "You may need to set up default configs first"
     else
         print_success "Copied configurations from $gem_count gems"
     fi

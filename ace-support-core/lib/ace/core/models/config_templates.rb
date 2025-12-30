@@ -21,7 +21,7 @@ module Ace
 
           # Prefer local path for development
           path = info[:source] == :gem ? info[:path] : (info[:path] || info[:gem_path])
-          File.join(path, ".ace.example")
+          File.join(path, ".ace-defaults")
         end
 
         def gem_info
@@ -75,7 +75,7 @@ module Ace
         private
 
         def has_example_dir?(gem_dir)
-          example_dir = File.join(gem_dir, ".ace.example")
+          example_dir = File.join(gem_dir, ".ace-defaults")
           File.directory?(example_dir)
         end
       end

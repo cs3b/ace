@@ -318,7 +318,7 @@ module Ace
         if Dir.exist?(File.join(gem_path, ".ace-defaults"))
           ".ace-defaults"
         elsif Dir.exist?(File.join(gem_path, ".ace.example"))
-          ".ace.example" # Migration fallback - remove after task 157.08
+          ".ace.example" # Migration fallback - remove after task 157.09
         else
           ".ace-defaults"
         end

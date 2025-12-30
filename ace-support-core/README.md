@@ -79,7 +79,7 @@ config = resolver.resolve
 # Or use the ConfigResolver directly for more control
 resolver = Ace::Core::Organisms::ConfigResolver.new(
   config_dir: ".ace",
-  defaults_dir: ".ace-defaults",  # Or ".ace.example" for legacy gems
+  defaults_dir: ".ace-defaults",  # Or ".ace-defaults" for legacy gems
   gem_path: __dir__
 )
 config = resolver.resolve

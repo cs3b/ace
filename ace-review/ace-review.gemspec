@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
-  spec.files = Dir.glob('{lib,exe}/**/*') + %w[
+  spec.files = Dir.glob('{lib,exe,.ace-defaults}/**/*') + %w[
     ace-review.gemspec
     README.md
     CHANGELOG.md

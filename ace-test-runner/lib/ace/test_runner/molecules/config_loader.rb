@@ -15,7 +15,7 @@ module Ace
       # 2. Explicit config_path if provided
       # 3. Project config: .ace/test/runner.yml (nearest wins via cascade)
       # 4. User config: ~/.ace/test/runner.yml
-      # 5. Gem defaults: ace-test-runner/.ace.example/test-runner/config.yml
+      # 5. Gem defaults: ace-test-runner/.ace-defaults/test-runner/config.yml
       class ConfigLoader
         DEFAULT_CONFIG_PATHS = [
           ".ace/test/runner.yml",
@@ -28,19 +28,19 @@ module Ace
           "test-runner.yaml"
         ].freeze
 
-        # Load gem defaults from .ace.example/test-runner/config.yml
+        # Load gem defaults from .ace-defaults/test-runner/config.yml
         # This file is shipped with the gem and is the single source of truth
-        # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
+        # Per ADR-022: gem MUST include .ace-defaults/ - missing file is a packaging error
         # @return [Hash] Default configuration from gem
         # @raise [RuntimeError] If default config file is missing (gem packaging error)
         def self.load_gem_defaults
           @gem_defaults ||= begin
             gem_root = File.expand_path("../../../..", __dir__)
-            default_file = File.join(gem_root, ".ace.example", "test-runner", "config.yml")
+            default_file = File.join(gem_root, ".ace-defaults", "test-runner", "config.yml")
 
             unless File.exist?(default_file)
               raise "Default config not found: #{default_file}. " \
-                    "This is a gem packaging error - .ace.example/ must be included in the gem."
+                    "This is a gem packaging error - .ace-defaults/ must be included in the gem."
             end
 
             content = YAML.safe_load_file(default_file, permitted_classes: [], symbolize_names: true, aliases: true)
