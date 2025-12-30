@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.210] - 2025-12-30
+
+### Changed
+
+**ace-config 0.2.1**: Add Date class support and release accumulated improvements
+
+- Add `Date` class to permitted YAML classes for parsing date values in config files
+- Add runtime dependency on `ace-support-fs` for filesystem utilities
+- Add `class_get_env` class method on PathExpander for consistent ENV access pattern
+- Reorganize ConfigResolver methods: all public methods grouped together before private section
+
 ## [0.9.209] - 2025-12-30
 
 ### Changed
