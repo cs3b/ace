@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.212] - 2025-12-30
+
+### Changed
+
+**ace-config Migration**: Update 16 packages with ace-config dependency and API migration
+
+All packages now use `Ace::Config.create()` API instead of `Ace::Core` for configuration cascade management.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-context | 0.22.1 | +ace-config, API migration |
+| ace-docs | 0.13.1 | +ace-config, API migration |
+| ace-git | 0.5.1 | Replace ace-support-core with ace-config |
+| ace-git-commit | 0.14.1 | Replace ace-support-core with ace-config |
+| ace-git-secrets | 0.3.1 | Replace ace-support-core with ace-config |
+| ace-git-worktree | 0.8.1 | Replace ace-support-core with ace-config |
+| ace-lint | 0.5.1 | Replace ace-support-core with ace-config |
+| ace-llm | 0.16.1 | +ace-config, ClientRegistry refactor |
+| ace-llm-providers-cli | 0.11.1 | Replace ace-support-core with ace-config |
+| ace-nav | 0.13.1 | Replace ace-support-core with ace-config + ace-support-fs |
+| ace-prompt | 0.9.1 | Replace ace-support-core with ace-config |
+| ace-review | 0.29.2 | +ace-config (keep ace-support-core for ProcessTerminator) |
+| ace-search | 0.15.1 | Replace ace-support-core with ace-config |
+| ace-support-core | 0.14.1 | +ace-config dependency |
+| ace-taskflow | 0.26.1 | Replace ace-support-core with ace-config |
+| ace-test-runner | 0.6.1 | Replace ace-support-core with ace-config |
+
 ## [0.9.211] - 2025-12-30
 
 ### Changed
