@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.211] - 2025-12-30
+
+### Changed
+
+**ace-llm-models-dev 0.3.3**: Update provider config paths for .ace-defaults rename
+
+- Update provider config path references from `.ace.example` to `.ace-defaults`
+
 ## [0.9.210] - 2025-12-30
 
 ### Changed
