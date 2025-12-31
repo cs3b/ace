@@ -30,12 +30,16 @@ module Ace
         end
 
         # Merge preset with options
+        # Uses Config.merge() for consistent merge strategy support
         def merge_with_options(preset_name, options = {})
           preset = get(preset_name)
           return options unless preset
 
-          # Deep merge preset with options, with options taking precedence
-          Ace::Config::Atoms::DeepMerger.merge(preset, options)
+          # Wrap preset in Config object to use Config.merge() consistently
+          # This enables future per-key merge strategies via _merge directive
+          Ace::Config::Models::Config.new(preset, source: "preset:#{preset_name}")
+            .merge(options)
+            .to_h
         end
 
         private

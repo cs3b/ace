@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-config', '~> 0.2'
+  spec.add_dependency 'ace-config', '~> 0.4'
   spec.add_dependency 'thor', '~> 1.3'
 
   # Development dependencies

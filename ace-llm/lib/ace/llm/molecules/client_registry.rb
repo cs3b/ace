@@ -231,7 +231,7 @@ module Ace
         # @param resolver [Ace::Config::Organisms::ConfigResolver] Config resolver
         # @param filename [String] Provider config filename (e.g., "anthropic.yml")
         def load_provider_with_cascade(resolver, filename)
-          config = resolver.resolve_for(["llm/providers/#{filename}"]).data
+          config = resolver.resolve_file(["llm/providers/#{filename}"]).data
 
           # Validate required fields
           unless config["name"] && config["class"]

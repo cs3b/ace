@@ -40,7 +40,7 @@ module Ace
 
           # Get gem defaults first
           gem_defaults = begin
-            resolver.resolve_for(["nav/config.yml"]).data
+            resolver.resolve_namespace("nav").data
           rescue Ace::Config::YamlParseError => e
             warn "Warning: Failed to parse nav config: #{e.message}" if debug?
             load_gem_defaults_only(gem_root)

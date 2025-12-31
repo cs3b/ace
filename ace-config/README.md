@@ -77,6 +77,14 @@ Ace::Config.path_expander(source_dir: dir, project_root: root)
 
 # Find project root
 Ace::Config.find_project_root(start_path: nil, markers: [...])
+
+# Quick merge helper - merge defaults with overrides, return hash
+Ace::Config::Models::Config.wrap(
+  defaults,             # Base configuration (Hash or nil)
+  overrides,            # Override values (Hash)
+  source: "wrap",       # Source label for debugging
+  merge_strategy: :replace  # Array merge strategy
+)
 ```
 
 ### Resolver Methods

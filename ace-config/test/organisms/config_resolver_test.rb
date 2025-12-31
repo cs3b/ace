@@ -426,11 +426,64 @@ module Ace
           end
         end
 
+        def test_resolve_namespace_rejects_empty_filename_after_extension_strip
+          with_temp_config(".git" => "") do |_tmpdir|
+            resolver = ConfigResolver.new
+
+            # filename: ".yml" becomes empty after extension stripping
+            error = assert_raises(ArgumentError) do
+              resolver.resolve_namespace("docs", filename: ".yml")
+            end
+            assert_match(/filename cannot be empty/i, error.message)
+
+            # Same for .yaml
+            error = assert_raises(ArgumentError) do
+              resolver.resolve_namespace("docs", filename: ".yaml")
+            end
+            assert_match(/filename cannot be empty/i, error.message)
+          end
+        end
+
+        def test_resolve_namespace_rejects_windows_drive_letter_paths
+          with_temp_config(".git" => "") do |_tmpdir|
+            resolver = ConfigResolver.new
+
+            error = assert_raises(ArgumentError) do
+              resolver.resolve_namespace("C:", "Windows", "System32")
+            end
+            assert_match(/absolute paths not allowed/i, error.message)
+          end
+        end
+
+        def test_resolve_namespace_rejects_windows_unc_paths
+          with_temp_config(".git" => "") do |_tmpdir|
+            resolver = ConfigResolver.new
+
+            error = assert_raises(ArgumentError) do
+              resolver.resolve_namespace("\\\\server", "share")
+            end
+            assert_match(/absolute paths not allowed/i, error.message)
+          end
+        end
+
+        def test_resolve_namespace_rejects_windows_backslash_prefix
+          with_temp_config(".git" => "") do |_tmpdir|
+            resolver = ConfigResolver.new
+
+            error = assert_raises(ArgumentError) do
+              resolver.resolve_namespace("\\Windows", "System32")
+            end
+            assert_match(/absolute paths not allowed/i, error.message)
+          end
+        end
+
         # Allow up to 2x overhead for the convenience wrapper
         ACCEPTABLE_OVERHEAD_MULTIPLIER = 2.0
 
         def test_resolve_namespace_performance_vs_resolve_file
-          skip "Performance test - run locally" if ENV["CI"]
+          # Skip in CI - timing-based tests are inherently flaky on shared runners
+          skip "Performance test skipped in CI" if ENV["CI"]
+
           with_temp_config(
             ".git" => "",
             ".ace" => {

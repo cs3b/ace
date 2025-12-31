@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.213] - 2025-12-30
+
+### Added
+
+**ace-config 0.4.0**: Add `merge()` method to Config model
+
+- `merge()` method on Config model as the primary API for merging configuration data
+- `with()` remains as an alias for backward compatibility
+- Provides more intuitive API for gems merging CLI options or runtime overrides
+
 ## [0.9.212] - 2025-12-30
 
 ### Changed

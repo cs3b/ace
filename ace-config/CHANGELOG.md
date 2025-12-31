@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-12-30
+
+### Added
+- `merge()` method on Config model as the primary method for merging configuration data
+- `with()` remains as an alias for backward compatibility
+
 ## [0.3.0] - 2025-12-30
 
 ### Added

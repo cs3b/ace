@@ -37,7 +37,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-config', '~> 0.2'
+  spec.add_dependency 'ace-config', '~> 0.4'
   spec.add_dependency 'ace-support-core', '~> 0.10' # For FileAggregator, OutputFormatter, etc.
   # ace-git: Centralized Git/GitHub operations (diffs, PR metadata, branch info)
   # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)

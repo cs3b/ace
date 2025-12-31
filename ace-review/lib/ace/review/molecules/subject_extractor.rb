@@ -60,29 +60,36 @@ module Ace
 
         # Merge multiple subjects into unified ace-context config
         # Does NOT extract content - returns merged config for direct use with ace-context
+        # Uses Config.merge() with :coerce_union strategy for consistent merge behavior
         # @param subjects [Array<String, Hash>] array of subject configurations
         # @return [Hash, nil] merged ace-context config hash or nil if empty
         def merge_typed_subject_configs(subjects)
           return nil unless subjects.is_a?(Array) && subjects.any?
 
-          merged_config = subjects.reduce({}) do |merged, subject|
-            config = resolve_single_subject(subject)
-            deep_merge_arrays(merged, config)
+          # Use Config objects with :coerce_union strategy to progressively merge subjects
+          # This enables future per-key merge strategies via _merge directive
+          initial_config = Ace::Config::Models::Config.new({}, merge_strategy: :coerce_union)
+
+          merged_config = subjects.reduce(initial_config) do |acc, subject|
+            config_hash = resolve_single_subject(subject)
+            acc.merge(config_hash)
           end
 
-          merged_config.empty? ? nil : merged_config
+          merged_config.empty? ? nil : merged_config.to_h
         end
 
         private
 
         # Deep merge configs with array concatenation, dedup, and recursive hash merging
-        # Delegates to Ace::Config::Atoms::DeepMerger with :coerce_union strategy
+        # Uses Config.merge() with :coerce_union strategy for consistent merge behavior
         #
         # @param base [Hash] base configuration hash
         # @param overlay [Hash] overlay configuration hash
         # @return [Hash] merged configuration (new hash, does not mutate inputs)
         def deep_merge_arrays(base, overlay)
-          Ace::Config::Atoms::DeepMerger.merge(base, overlay, array_strategy: :coerce_union)
+          Ace::Config::Models::Config.new(base, merge_strategy: :coerce_union)
+            .merge(overlay)
+            .to_h
         end
 
         # Resolve a single subject to ace-context config

@@ -235,18 +235,26 @@ module Ace
 
         # If first arg looks like a namespace, resolve it
         if namespace_or_keys.is_a?(String) && namespace_or_keys.match?(/^[a-z]+$/)
-          # Use resolve_for instead of deprecated resolve_namespace
-          patterns = if file
-            ["#{namespace_or_keys}/#{file}.yml", "#{namespace_or_keys}/#{file}.yaml"]
+          config = if file
+            # Use resolve_namespace for single-file case (cleaner API)
+            resolver.resolve_namespace(namespace_or_keys, filename: file)
           else
-            ["#{namespace_or_keys}/*.yml", "#{namespace_or_keys}/*.yaml"]
+            # Use resolve_file for glob pattern case (resolve_namespace doesn't support globs)
+            resolver.resolve_file(namespace_glob_patterns(namespace_or_keys))
           end
-          config = resolver.resolve_for(patterns)
           keys.empty? ? config.data : config.get(*keys)
         else
           # Traditional key path lookup
           resolver.get(namespace_or_keys, *keys)
         end
+      end
+
+      # Build glob patterns for all YAML files in a namespace directory
+      # @param namespace [String] Namespace name
+      # @return [Array<String>] Glob patterns for .yml and .yaml files
+      # @api private
+      def namespace_glob_patterns(namespace)
+        ["#{namespace}/*.yml", "#{namespace}/*.yaml"]
       end
 
       # Load environment variables

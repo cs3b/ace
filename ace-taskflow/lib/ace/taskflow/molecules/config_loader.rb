@@ -46,7 +46,7 @@ module Ace
             gem_path: gem_root
           )
 
-          config = resolver.resolve_for(["taskflow/config.yml"]).data
+          config = resolver.resolve_namespace("taskflow").data
           taskflow_section = config["taskflow"] || config
           extract_taskflow_config(taskflow_section)
         rescue Ace::Config::YamlParseError => e

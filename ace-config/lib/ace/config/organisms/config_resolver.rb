@@ -80,13 +80,18 @@ module Ace
           # - compact: remove nil values
           # - stringify + strip: handle symbols and whitespace
           # - reject empty: filter out empty strings after stripping
-          clean_segments = segments.flatten.compact.map { |s| s.to_s.strip }.reject(&:empty?)
+          clean_segments = segments.flatten.compact.map(&:to_s).map(&:strip).reject(&:empty?)
 
           # Security: Validate segments don't contain path traversal or absolute paths
           validate_namespace_segments!(clean_segments)
 
           # Strip .yml/.yaml extension if user accidentally included it
           clean_filename = filename.to_s.sub(/\.ya?ml\z/i, "")
+
+          # Security: Reject empty filenames (e.g., filename: ".yml" becomes empty after stripping)
+          if clean_filename.empty?
+            raise ArgumentError, "Invalid filename: #{filename.inspect} (filename cannot be empty)"
+          end
 
           # Security: Validate filename doesn't contain path traversal
           validate_namespace_segments!([clean_filename])
@@ -235,7 +240,7 @@ module Ace
         end
 
         # Validate namespace segments for security
-        # Prevents path traversal attacks via ".." and absolute paths
+        # Prevents path traversal attacks via ".." and absolute paths (Unix and Windows)
         # @param segments [Array<String>] Segments to validate
         # @raise [ArgumentError] If any segment contains invalid characters
         def validate_namespace_segments!(segments)
@@ -244,6 +249,10 @@ module Ace
               raise ArgumentError, "Invalid namespace segment: #{segment.inspect} (path traversal not allowed)"
             end
             if segment.start_with?("/")
+              raise ArgumentError, "Invalid namespace segment: #{segment.inspect} (absolute paths not allowed)"
+            end
+            # Windows-style absolute paths: drive letters (C:) or UNC paths (\\server)
+            if segment.start_with?("\\") || segment.match?(/\A[A-Za-z]:/)
               raise ArgumentError, "Invalid namespace segment: #{segment.inspect} (absolute paths not allowed)"
             end
           end

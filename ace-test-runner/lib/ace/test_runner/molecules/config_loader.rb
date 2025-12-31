@@ -29,7 +29,7 @@ module Ace
             gem_path: gem_root
           )
 
-          config = resolver.resolve_for(["test-runner/config.yml"]).data
+          config = resolver.resolve_namespace("test-runner").data
           deep_symbolize_keys(config)
         end
 
@@ -49,7 +49,7 @@ module Ace
           )
 
           # Get merged config from cascade
-          config = resolver.resolve_for(["test-runner/config.yml", "test/runner.yml"]).data
+          config = resolver.resolve_file(["test-runner/config.yml", "test/runner.yml"]).data
 
           # If explicit config_path provided, merge it on top
           if config_path && File.exist?(config_path)
