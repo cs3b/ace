@@ -34,7 +34,7 @@ module Ace
         config = resolver.resolve_namespace("docs")
         config.data
       rescue StandardError => e
-        warn "Warning: Could not load ace-docs config: #{e.message}" if debug?
+        warn "ace-docs: Could not load config: #{e.class} - #{e.message}" if debug?
         # Fall back to gem defaults instead of empty hash to prevent silent config erasure
         load_gem_defaults_fallback
       end

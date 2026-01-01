@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-01-01
+
+### Fixed
+
+- Restore historical freshness thresholds for monthly documents (30/45 days instead of 14/30)
+- Add frequency-specific threshold configuration in `.ace-defaults/docs/config.yml`
+- Migrate DocumentRegistry to use ace-config cascade for configuration loading
+
 ## [0.13.1] - 2025-12-30
 
 ### Changed
