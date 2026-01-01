@@ -2,7 +2,7 @@
 
 require "ace/test_runner"
 require "ace/test_support"  # Load shared test helpers and fixtures
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 require "minitest/autorun"
 
 # Try to use spec reporter for better output if available
@@ -51,7 +51,7 @@ module TestHelper
   # Delegates to the shared ProjectRootFinder to avoid reimplementing root detection logic.
   # @return [String] Absolute path to mono-repo root
   def find_mono_repo_root
-    Ace::Core::Molecules::ProjectRootFinder.find
+    Ace::Support::Fs::Molecules::ProjectRootFinder.find
   end
 end
 

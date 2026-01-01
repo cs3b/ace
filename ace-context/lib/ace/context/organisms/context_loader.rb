@@ -5,7 +5,7 @@ require 'ace/core'
 require 'ace/core/molecules/context_merger'
 require 'ace/core/molecules/file_aggregator'
 require 'ace/core/molecules/output_formatter'
-require 'ace/core/molecules/project_root_finder'
+require 'ace/support/fs'
 require 'ace/core/atoms/command_executor'
 require 'ace/core/atoms/template_parser'
 require 'ace/core/atoms/file_reader'
@@ -1265,7 +1265,7 @@ module Ace
         end
 
         def project_root
-          @project_root ||= Ace::Core::Molecules::ProjectRootFinder.find_or_current
+          @project_root ||= Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
         end
 
         # Generate diff with ace-git and return standardized result hash

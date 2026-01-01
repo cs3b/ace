@@ -16,17 +16,30 @@ module Ace
         # @example Commit with custom message
         #   success = committer.commit_with_message(["task.081.md"], "Custom commit message")
         class TaskCommitter
-          # Default timeout for git commands
-          DEFAULT_TIMEOUT = 30
+          # Fallback timeout for git commands
+          # Used only when config is unavailable
+          FALLBACK_TIMEOUT = 30
 
           # Initialize a new TaskCommitter
           #
-          # @param timeout [Integer] Command timeout in seconds
+          # @param timeout [Integer, nil] Command timeout in seconds (uses config default if nil)
           # @param use_ace_git_commit [Boolean] Whether to use ace-git-commit if available
-          def initialize(timeout: DEFAULT_TIMEOUT, use_ace_git_commit: true)
-            @timeout = timeout
+          def initialize(timeout: nil, use_ace_git_commit: true)
+            @timeout = timeout || config_timeout
             @use_ace_git_commit = use_ace_git_commit
           end
+
+          private
+
+          # Get timeout from config or fallback
+          # @return [Integer] Timeout in seconds
+          def config_timeout
+            Ace::Git::Worktree.commit_timeout
+          rescue StandardError
+            FALLBACK_TIMEOUT
+          end
+
+          public
 
           # Commit task changes with automatic message generation
           #
@@ -260,7 +273,7 @@ module Ace
           # @param args [Array<String>] Command arguments
           # @param timeout [Integer] Command timeout
           # @return [Hash] Result with :success, :output, :error, :exit_code
-          def execute_command(command, *args, timeout: DEFAULT_TIMEOUT)
+          def execute_command(command, *args, timeout: FALLBACK_TIMEOUT)
             require "open3"
 
             full_command = [command] + args

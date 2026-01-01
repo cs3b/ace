@@ -136,19 +136,19 @@ module Ace
       end
 
       # Get idea-specific configuration
-      # Defaults come from .ace.example/taskflow/config.yml via ConfigLoader
+      # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def idea_config
         config["idea"] || {}
       end
 
       # Get task-specific configuration
-      # Defaults come from .ace.example/taskflow/config.yml via ConfigLoader
+      # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def task_config
         config["task"] || {}
       end
 
       # Get release-specific configuration
-      # Defaults come from .ace.example/taskflow/config.yml via ConfigLoader
+      # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def release_config
         config["release"] || {}
       end
@@ -185,15 +185,15 @@ module Ace
         FileUtils.mkdir_p(File.join(root_directory, config_obj.done_dir))
 
         # Create initial .ace/taskflow/config.yml if not exists
-        # Copy from gem's .ace.example/ as the source of truth (ADR-022)
+        # Copy from gem's .ace-defaults/ as the source of truth (ADR-022)
         taskflow_dir = File.join(Dir.pwd, ".ace", "taskflow")
         FileUtils.mkdir_p(taskflow_dir)
 
         config_file = File.join(taskflow_dir, "config.yml")
         unless File.exist?(config_file)
-          # Copy from gem's .ace.example/ directory
+          # Copy from gem's .ace-defaults/ directory
           gem_root = File.expand_path("../../..", __dir__)
-          example_config = File.join(gem_root, ".ace.example", "taskflow", "config.yml")
+          example_config = File.join(gem_root, ".ace-defaults", "taskflow", "config.yml")
 
           if File.exist?(example_config)
             FileUtils.cp(example_config, config_file)

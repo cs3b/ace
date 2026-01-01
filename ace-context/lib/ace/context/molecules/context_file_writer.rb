@@ -9,13 +9,12 @@ module Ace
   module Context
     module Molecules
       # ContextFileWriter handles writing context to files with caching and chunking
+      # Configuration values (cache_dir, chunk_limit) are loaded from Ace::Context.config
+      # following ADR-022 pattern.
       class ContextFileWriter
-        DEFAULT_CACHE_DIR = '.cache/ace-context'
-        DEFAULT_CHUNK_LIMIT = 150_000
-
         def initialize(cache_dir: nil, chunk_limit: nil)
-          @cache_dir = cache_dir || DEFAULT_CACHE_DIR
-          @chunk_limit = chunk_limit || DEFAULT_CHUNK_LIMIT
+          @cache_dir = cache_dir || Ace::Context.cache_dir
+          @chunk_limit = chunk_limit || Ace::Context.chunk_limit
           @chunker = Ace::Core::Molecules::ContextChunker.new(@chunk_limit)
         end
 

@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
                           lib/**/*
                           exe/*
                           handbook/**/*
-                          .ace.example/**/*
+                          .ace-defaults/**/*
                           *.md
                           LICENSE
                           Rakefile
@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-core', '~> 0.11'
+  spec.add_dependency 'ace-config', '~> 0.4'
   spec.add_dependency 'thor', '~> 1.3'
 
   # Development dependencies

@@ -111,14 +111,17 @@ class GitCommandTest < Minitest::Test
 
   def test_execute_uses_default_timeout
     # Verify default timeout is used when not specified
+    # Uses config-driven timeout with FALLBACK_TIMEOUT as safety net
     captured_opts = nil
     @ace_git_executor.stub :execute, ->(*args, **opts) {
       captured_opts = opts
       { success: true, output: "", error: "", exit_code: 0 }
     } do
       @git_command.execute("status")
-      assert_equal Ace::Git::Worktree::Atoms::GitCommand::DEFAULT_TIMEOUT, captured_opts[:timeout],
-                   "Default timeout should be used"
+      # Default timeout should be either from config or fallback (30)
+      expected_timeout = @git_command.default_timeout
+      assert_equal expected_timeout, captured_opts[:timeout],
+                   "Default timeout from config should be used"
     end
   end
 

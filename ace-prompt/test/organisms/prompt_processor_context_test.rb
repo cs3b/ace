@@ -15,7 +15,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_process_without_context_flag_returns_body_only
     create_prompt_with_frontmatter
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: false)
 
       assert result[:success]
@@ -27,7 +27,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_process_with_context_flag_but_no_frontmatter_returns_body
     create_prompt_without_frontmatter
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
       assert result[:success]
@@ -38,7 +38,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_process_archives_original_content_before_context_expansion
     create_prompt_with_frontmatter
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: false)
 
       assert result[:success]
@@ -54,7 +54,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_extract_frontmatter_from_prompt
     create_prompt_with_frontmatter
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       # Read the prompt
       prompt_path = File.join(@tmpdir, '.cache', 'ace-prompt', 'prompts', 'the-prompt.md')
       content = File.read(prompt_path)
@@ -71,7 +71,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_complex_frontmatter_with_multiple_context_sources
     create_complex_frontmatter_prompt
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
       assert result[:success]
@@ -84,7 +84,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_invalid_context_specification_handling
     create_prompt_with_invalid_context
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
       assert result[:success]
@@ -98,7 +98,7 @@ class PromptProcessorContextTest < Minitest::Test
 
     # Mock ContextLoader to return empty string (simulating failure)
     Ace::Prompt::Molecules::ContextLoader.stub(:call, "") do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
         result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
         assert result[:success]
@@ -111,7 +111,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_context_with_enabled_false_in_frontmatter
     create_prompt_with_context_disabled
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
       assert result[:success]
@@ -126,7 +126,7 @@ class PromptProcessorContextTest < Minitest::Test
     # Mock successful context loading that includes the original content
     mock_context_content = "# Project Context\nThis is the project context.\n\n## Original Prompt\nReview this project."
     Ace::Prompt::Molecules::ContextLoader.stub(:call, mock_context_content) do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
         result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
         assert result[:success]
@@ -141,7 +141,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_empty_frontmatter_context_block
     create_prompt_with_empty_context
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
       assert result[:success]
@@ -153,7 +153,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_malformed_yaml_frontmatter
     create_prompt_with_malformed_frontmatter
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
       assert result[:success]
@@ -168,7 +168,7 @@ class PromptProcessorContextTest < Minitest::Test
   def test_context_with_only_commands
     create_prompt_with_command_context
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(context: true)
 
       assert result[:success]

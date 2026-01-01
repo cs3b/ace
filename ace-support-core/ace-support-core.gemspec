@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
                           lib/**/*
                           config/**/*
+                          .ace-defaults/**/*
                           *.md
                           LICENSE.txt
                           Rakefile
@@ -34,6 +35,8 @@ Gem::Specification.new do |spec|
   spec.executables = []
   spec.require_paths = ['lib']
 
-  # No runtime dependencies - using only Ruby stdlib
+  # Runtime dependencies
+  spec.add_dependency 'ace-config', '~> 0.4'
+  spec.add_dependency 'ace-support-fs', '~> 0.1'
   # Development dependencies are managed in the root Gemfile
 end

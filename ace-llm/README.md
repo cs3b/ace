@@ -168,7 +168,7 @@ default_options:
 Provider configurations are loaded from (in order):
 1. Project `.ace/llm/providers/` directory
 2. User config `~/.config/ace-llm/providers/`
-3. Gem built-in `.ace.example/llm/providers/` directory
+3. Gem built-in `.ace-defaults/llm/providers/` directory
 
 First configuration found wins if there are duplicates.
 

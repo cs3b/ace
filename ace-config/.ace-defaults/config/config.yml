@@ -1,0 +1,23 @@
+# ace-config default configuration
+# This file provides defaults for the ace-config gem itself
+
+config:
+  # Default configuration folder name
+  config_dir: ".ace"
+
+  # Default gem defaults folder name
+  defaults_dir: ".ace-defaults"
+
+  # Cascade settings
+  cascade:
+    enabled: true
+    merge_strategy: replace
+
+  # Default project root markers
+  project_markers:
+    - .git
+    - Gemfile
+    - package.json
+    - Cargo.toml
+    - pyproject.toml
+    - go.mod

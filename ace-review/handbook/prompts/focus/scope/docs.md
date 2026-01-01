@@ -1,3 +1,9 @@
+---
+name: docs
+description: Documentation review scope focus
+last-updated: '2026-01-01'
+---
+
 # Documentation Scope Focus
 
 ## FOCUS COMBINATION: Documentation

@@ -29,7 +29,7 @@ instructions:
         description: "All ruby files and config examples for Ace Context package"
         files:
           - "ace-review/lib/**/*.rb"
-          - "ace-review/.ace.example/**/*"
+          - "ace-review/.ace-defaults/**/*"
 
 subject:
   context:

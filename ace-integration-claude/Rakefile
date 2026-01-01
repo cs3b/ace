@@ -1,9 +1,12 @@
 # frozen_string_literal: true
 
 require "bundler/gem_tasks"
+require "rake/testtask"
 
-task :spec do
-  # No tests for workflow-only package
+Rake::TestTask.new(:test) do |t|
+  t.libs << "test" << "lib"
+  t.test_files = FileList["test/**/*_test.rb"]
 end
 
-task default: :spec
+task spec: :test
+task default: :test

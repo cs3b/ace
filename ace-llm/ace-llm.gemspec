@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   spec.files = Dir.glob(%w[
     lib/**/*.rb
     exe/*
-    .ace.example/**/*
+    .ace-defaults/**/*
     README.md
     CHANGELOG.md
     LICENSE.txt
@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
+  spec.add_dependency "ace-config", "~> 0.4"
   spec.add_dependency "ace-support-core", "~> 0.10"
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "addressable", "~> 2.8"

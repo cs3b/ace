@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-12-30
+
+### Changed
+
+- Replace ace-support-core dependency with ace-config for configuration cascade
+- Migrate from Ace::Core to Ace::Config.create() API
+- Migrate from `resolve_for` to `resolve_namespace` for cleaner config loading
+
+## [0.3.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+
 ## [0.2.0] - 2025-12-22
 
 ### Added

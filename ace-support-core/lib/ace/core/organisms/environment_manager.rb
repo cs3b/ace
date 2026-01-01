@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require_relative "../molecules/env_loader"
-require_relative "../atoms/path_expander"
-require_relative "config_resolver"
+require "ace/config"
+require "ace/support/fs"
 
 module Ace
   module Core
@@ -15,7 +15,7 @@ module Ace
         # @param root_path [String] Project root path
         # @param config [Models::Config, nil] Configuration to use
         def initialize(root_path: Dir.pwd, config: nil)
-          @root_path = Atoms::PathExpander.expand(root_path)
+          @root_path = Ace::Support::Fs::Atoms::PathExpander.expand(root_path)
           @config = config || load_config
         end
 
@@ -45,7 +45,7 @@ module Ace
         # @param keys [Array<String>] Specific keys to save (nil = all)
         # @return [Hash] Variables that were saved
         def save(filepath = ".env", keys: nil)
-          filepath = File.join(root_path, filepath) unless Atoms::PathExpander.absolute?(filepath)
+          filepath = File.join(root_path, filepath) unless Ace::Support::Fs::Atoms::PathExpander.absolute?(filepath)
 
           vars_to_save = if keys
                            ENV.to_h.select { |k, _| keys.include?(k) }
@@ -94,7 +94,10 @@ module Ace
         # Load configuration
         # @return [Models::Config] Configuration
         def load_config
-          resolver = ConfigResolver.new
+          resolver = ::Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults"
+          )
           resolver.resolve
         end
 
@@ -118,8 +121,8 @@ module Ace
         # @return [String, nil] Full path if exists
         def resolve_dotenv_path(filename)
           # Try as absolute path first
-          if Atoms::PathExpander.absolute?(filename)
-            expanded = Atoms::PathExpander.expand(filename)
+          if Ace::Support::Fs::Atoms::PathExpander.absolute?(filename)
+            expanded = Ace::Support::Fs::Atoms::PathExpander.expand(filename)
             return expanded if File.exist?(expanded)
           end
 

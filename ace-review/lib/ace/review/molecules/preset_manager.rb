@@ -295,15 +295,8 @@ module Ace
         end
 
         def find_project_root
-          # Try ace-core first
-          if defined?(Ace::Core)
-            require "ace/core"
-            discovery = Ace::Core::ConfigDiscovery.new
-            return discovery.project_root if discovery.project_root
-          end
-
-          # Fallback to current directory
-          Dir.pwd
+          # Use ace-config for project root discovery
+          Ace::Config.find_project_root || Dir.pwd
         end
 
         def resolve_config_path(custom_path)
@@ -312,26 +305,23 @@ module Ace
             return path.absolute? ? custom_path : File.join(project_root, custom_path)
           end
 
-          # Use ace-core ConfigFinder to locate config in cascade
-          if defined?(Ace::Core)
-            require "ace/core"
-            finder = Ace::Core::Molecules::ConfigFinder.new
+          # Use ace-config ConfigFinder to locate config in cascade
+          finder = Ace::Config.finder
 
-            # Try review/config.yml first, then fallbacks
-            config_patterns = [
-              "review/config.yml",
-              "review.yml"  # Fallback to old naming
-            ]
+          # Try review/config.yml first, then fallbacks
+          config_patterns = [
+            "review/config.yml",
+            "review.yml"  # Fallback to old naming
+          ]
 
-            config_patterns.each do |pattern|
-              path = finder.find_file(pattern)
-              return path if path
-            end
-
-            # Legacy support for .coding-agent/code-review.yml
-            legacy_path = File.join(project_root, ".coding-agent/code-review.yml")
-            return legacy_path if File.exist?(legacy_path)
+          config_patterns.each do |pattern|
+            path = finder.find_file(pattern)
+            return path if path
           end
+
+          # Legacy support for .coding-agent/code-review.yml
+          legacy_path = File.join(project_root, ".coding-agent/code-review.yml")
+          return legacy_path if File.exist?(legacy_path)
 
           # Fallback to .ace/review/config.yml for tests and standalone usage
           fallback_path = File.join(project_root, ".ace/review/config.yml")
@@ -358,17 +348,14 @@ module Ace
             raise ArgumentError, validation[:error]
           end
 
-          # Use ace-core ConfigFinder to find preset in cascade
-          if defined?(Ace::Core)
-            require "ace/core"
-            finder = Ace::Core::Molecules::ConfigFinder.new
-            preset_file = finder.find_file("review/presets/#{preset_name}.yml")
+          # Use ace-config ConfigFinder to find preset in cascade
+          finder = Ace::Config.finder
+          preset_file = finder.find_file("review/presets/#{preset_name}.yml")
 
-            if preset_file && File.exist?(preset_file)
-              content = File.read(preset_file)
-              preset_data = YAML.safe_load(content, permitted_classes: [Symbol])
-              return deep_stringify_keys(preset_data)
-            end
+          if preset_file && File.exist?(preset_file)
+            content = File.read(preset_file)
+            preset_data = YAML.safe_load(content, permitted_classes: [Symbol])
+            return deep_stringify_keys(preset_data)
           end
 
           # Fallback to .ace/review/presets for tests and standalone usage
@@ -402,37 +389,34 @@ module Ace
         def file_presets
           presets = []
 
-          # Find all preset directories in cascade
-          if defined?(Ace::Core)
-            require "ace/core"
-            finder = Ace::Core::Molecules::ConfigFinder.new
-            traverser = Ace::Core::Molecules::DirectoryTraverser.new
-            config_dirs = traverser.find_config_directories
+          # Find all preset directories in cascade using ace-support-fs
+          require "ace/support/fs"
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
+          config_dirs = traverser.find_config_directories
 
-            # Check each config directory for review/presets
-            config_dirs.each do |dir|
-              preset_dir = File.join(dir, "review/presets")
-              next unless Dir.exist?(preset_dir)
+          # Check each config directory for review/presets
+          config_dirs.each do |dir|
+            preset_dir = File.join(dir, "review/presets")
+            next unless Dir.exist?(preset_dir)
 
-              Dir.glob("#{preset_dir}/*.yml").each do |file|
-                presets << File.basename(file, ".yml")
-              end
+            Dir.glob("#{preset_dir}/*.yml").each do |file|
+              presets << File.basename(file, ".yml")
             end
+          end
 
-            # Check home directory
-            home_preset_dir = File.expand_path("~/.ace/review/presets")
-            if Dir.exist?(home_preset_dir)
-              Dir.glob("#{home_preset_dir}/*.yml").each do |file|
-                presets << File.basename(file, ".yml")
-              end
+          # Check home directory
+          home_preset_dir = File.expand_path("~/.ace/review/presets")
+          if Dir.exist?(home_preset_dir)
+            Dir.glob("#{home_preset_dir}/*.yml").each do |file|
+              presets << File.basename(file, ".yml")
             end
-          else
-            # Fallback to direct path if ace-core not available
-            preset_dir = File.join(project_root, ".ace/review/presets")
-            if Dir.exist?(preset_dir)
-              Dir.glob("#{preset_dir}/*.yml").each do |file|
-                presets << File.basename(file, ".yml")
-              end
+          end
+
+          # Also check project fallback
+          preset_dir = File.join(project_root, ".ace/review/presets")
+          if Dir.exist?(preset_dir)
+            Dir.glob("#{preset_dir}/*.yml").each do |file|
+              presets << File.basename(file, ".yml")
             end
           end
 

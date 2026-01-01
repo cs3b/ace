@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/core/molecules/project_root_finder'
+require 'ace/support/fs'
 
 module Ace
   module Search
@@ -61,7 +61,7 @@ module Ace
         #
         # @return [String, nil] Project root path or nil
         def find_project_root
-          finder = Ace::Core::Molecules::ProjectRootFinder.new
+          finder = Ace::Support::Fs::Molecules::ProjectRootFinder.new
           finder.find
         end
 
