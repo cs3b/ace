@@ -7,15 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2025-12-31
+
+### Technical
+- Add comprehensive edge case and custom path tests (Task 157.10)
+
+## [0.4.0] - 2025-12-30
+
 ### Added
+- `merge()` method on Config model as the primary method for merging configuration data
+- `with()` remains as an alias for backward compatibility
+
+## [0.3.0] - 2025-12-30
+
+### Added
+- `resolve_namespace(*segments, filename: "config")` method to ConfigResolver for simplified namespace-based config resolution
+  - Uses `File.join` for cross-platform path construction
+  - Sanitizes segments (flatten, compact, stringify, strip whitespace, reject empty)
+  - Documented in README and usage.md
 - Runtime dependency on `ace-support-fs` for filesystem utilities (PathExpander, ProjectRootFinder, DirectoryTraverser)
 - `class_get_env` class method on PathExpander for consistent ENV access pattern across class and instance methods
 - Documentation section on directory naming conventions (`.ace-defaults/` vs `.ace/` vs `.ace.example/`)
 - `glob_to_regex` now supports bracket character classes (`[a-z]`, `[abc]`)
 - Documentation for `resolve_for` clarifying it's intentionally not memoized
+- `Date` class to permitted YAML classes for parsing date values in config files
 
 ### Changed
 - Reorganized ConfigResolver methods: all public methods grouped together before private section
+
+### Breaking Changes
+- None
 
 ### Fixed
 - Gemfile.lock version mismatch (was 0.1.0, now correctly shows 0.2.0)

@@ -146,14 +146,127 @@ my-gem/
     └── my_gem.rb
 ```
 
+## Config.wrap() - Quick Merge Pattern
+
+For the common pattern of merging gem defaults with user overrides, use `Config.wrap()`:
+
+```ruby
+require "ace/config"
+
+# Instead of this:
+config = Ace::Config::Models::Config.new(defaults, source: "my-gem")
+result = config.merge(user_overrides).to_h
+
+# Use this:
+result = Ace::Config::Models::Config.wrap(defaults, user_overrides, source: "my-gem")
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `base` | Hash, nil | required | Base configuration to start with |
+| `overrides` | Hash | `{}` | Values to merge on top |
+| `source:` | String | `"wrap"` | Source label for debugging |
+| `merge_strategy:` | Symbol | `:replace` | Array merge strategy (`:replace`, `:concat`, `:union`) |
+
+### Examples
+
+```ruby
+# Basic merge
+defaults = { "timeout" => 30, "retries" => 3 }
+user_config = { "timeout" => 60 }
+
+result = Ace::Config::Models::Config.wrap(defaults, user_config)
+# => { "timeout" => 60, "retries" => 3 }
+
+# With merge strategy for arrays
+defaults = { "plugins" => ["core"] }
+user_config = { "plugins" => ["extra"] }
+
+# Replace (default)
+Ace::Config::Models::Config.wrap(defaults, user_config)
+# => { "plugins" => ["extra"] }
+
+# Union
+Ace::Config::Models::Config.wrap(defaults, user_config, merge_strategy: :union)
+# => { "plugins" => ["core", "extra"] }
+
+# Handling nil base
+Ace::Config::Models::Config.wrap(nil, { "key" => "value" })
+# => { "key" => "value" }
+```
+
+### When to Use
+
+Use `Config.wrap()` when you need a one-liner to merge configuration hashes. It's particularly useful in gem module methods that compute configuration:
+
+```ruby
+module MyGem
+  def self.config
+    @config ||= Ace::Config::Models::Config.wrap(
+      load_gem_defaults,
+      resolve_user_config,
+      source: "my-gem"
+    )
+  end
+end
+```
+
 ## Specific File Patterns
 
 Resolve configuration for specific files:
 
 ```ruby
 config = Ace::Config.create
-result = config.resolve_for(["database.yml", "database.yaml"])
+result = config.resolve_file(["database.yml", "database.yaml"])
 ```
+
+## Namespace Resolution
+
+The `resolve_namespace` method provides a convenient API for resolving configuration by namespace path, automatically generating `.yml` and `.yaml` patterns:
+
+```ruby
+resolver = Ace::Config.create
+
+# Single namespace
+# Resolves: docs/config.yml, docs/config.yaml
+config = resolver.resolve_namespace("docs")
+
+# Nested namespaces
+# Resolves: git/worktree/config.yml, git/worktree/config.yaml
+config = resolver.resolve_namespace("git", "worktree")
+
+# Custom filename
+# Resolves: lint/kramdown.yml, lint/kramdown.yaml
+config = resolver.resolve_namespace("lint", filename: "kramdown")
+
+# Root config with custom filename
+# Resolves: settings.yml, settings.yaml
+config = resolver.resolve_namespace(filename: "settings")
+```
+
+### When to Use
+
+Use `resolve_namespace` when:
+- Your configuration follows a namespace-based structure (e.g., `ace/docs/config.yml`)
+- You want to reduce boilerplate for common config resolution patterns
+- You need both `.yml` and `.yaml` extension support automatically
+
+Use `resolve_file` when:
+- You need full control over file patterns
+- You're working with non-standard file names
+- You need glob patterns (e.g., `presets/*.yml`)
+
+### Limitations
+
+**No glob support**: `resolve_namespace` does not support glob patterns. For pattern matching (e.g., `presets/*.yml`), use `resolve_file` instead.
+
+**Security**: Namespace segments are validated for security. Path traversal (`..`) and absolute paths (`/`) are rejected with an `ArgumentError`. If you're processing untrusted input, this validation provides defense-in-depth, but always sanitize user input at your application boundary.
+
+### Implementation Note
+
+`resolve_namespace` is **not memoized** - it re-reads files on each call. For repeated access to the same configuration, consider caching the result:
 
 ## Virtual Config Resolver
 
@@ -246,7 +359,7 @@ module Ace
       @config ||= begin
         defaults = load_gem_defaults
         user_config = Ace::Config.create(config_dir: ".ace")
-                       .resolve_for(["taskflow/config.yml"])
+                       .resolve_namespace("taskflow")
                        .data
 
         Ace::Config::Atoms::DeepMerger.merge(defaults, user_config)
@@ -289,5 +402,53 @@ end
 
 - Configuration resolution is memoized; call `reset!` to refresh
 - Project root detection is cached; call `Ace::Config.reset_config!` to clear
-- Use `resolve_for` with specific patterns for faster resolution
+- Use `resolve_file` with specific patterns for faster resolution
 - VirtualConfigResolver builds a map once; call `reload!` if files change
+
+## Migration Guide
+
+### From resolve_for to resolve_file/resolve_namespace
+
+The `resolve_for` method has been deprecated in favor of clearer alternatives:
+
+| Old API | New API | Use When |
+|---------|---------|----------|
+| `resolve_for(["docs/config.yml"])` | `resolve_namespace("docs")` | Single namespace with default filename |
+| `resolve_for(["lint/kramdown.yml"])` | `resolve_namespace("lint", filename: "kramdown")` | Single namespace with custom filename |
+| `resolve_for(["presets/*.yml"])` | `resolve_file(["presets/*.yml"])` | Glob patterns or complex patterns |
+
+**Examples:**
+
+```ruby
+# BEFORE (deprecated)
+config.resolve_for(["docs/config.yml", "docs/config.yaml"])
+
+# AFTER (preferred)
+config.resolve_namespace("docs")
+```
+
+```ruby
+# BEFORE (deprecated)
+config.resolve_for(["git/worktree/config.yml"])
+
+# AFTER (preferred)
+config.resolve_namespace("git", "worktree")
+```
+
+```ruby
+# BEFORE (deprecated) - glob patterns
+config.resolve_for(["presets/*.yml", "presets/*.yaml"])
+
+# AFTER (same API, renamed for clarity)
+config.resolve_file(["presets/*.yml", "presets/*.yaml"])
+```
+
+### When to Use Each Method
+
+- **`resolve_namespace`**: Use for namespace-based configuration paths where you want both `.yml` and `.yaml` extensions automatically handled. Provides path security validation.
+
+- **`resolve_file`**: Use for explicit file patterns, glob patterns, or when you need full control over which files are matched.
+
+### Deprecation Timeline
+
+The `resolve_for` method emits deprecation warnings and will be removed in a future major version. Update your code to use `resolve_namespace` or `resolve_file` as appropriate.

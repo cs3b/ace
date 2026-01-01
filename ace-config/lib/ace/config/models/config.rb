@@ -60,10 +60,10 @@ module Ace
           data.each(&block)
         end
 
-        # Create new config with additional data
+        # Create new config with additional data merged in
         # @param other_data [Hash] Data to merge
         # @return [Config] New configuration instance
-        def with(other_data)
+        def merge(other_data)
           merged_data = Atoms::DeepMerger.merge(
             data,
             other_data,
@@ -75,6 +75,45 @@ module Ace
             source: "#{source}+merged",
             merge_strategy: merge_strategy
           )
+        end
+
+        # Alias for backward compatibility
+        alias_method :with, :merge
+
+        # Factory method to wrap a hash and merge additional data, returning a hash
+        # Provides a convenient one-liner for the common pattern:
+        #   Config.new(base, source: "...").merge(overrides).to_h
+        #
+        # @param base [Hash, nil] Base configuration data (nil coerced to empty hash)
+        # @param overrides [Hash, nil] Data to merge on top of base (default: {}, nil coerced to empty hash)
+        # @param source [String] Source identifier for debugging (default: "wrap")
+        # @param merge_strategy [Symbol] How to merge arrays (default: :replace)
+        # @return [Hash] Merged configuration as a plain hash
+        #
+        # @example Single hash wrapping
+        #   Config.wrap(defaults)
+        #   # => { "key" => "default_value" }
+        #
+        # @example Merge two hashes
+        #   Config.wrap(defaults, overrides)
+        #   # => { "key" => "override_value", "other" => "default" }
+        #
+        # @example With options
+        #   Config.wrap(defaults, overrides, source: "git_config", merge_strategy: :union)
+        #
+        # @example Handling nil inputs (type coercion)
+        #   Config.wrap(nil)           # => {}
+        #   Config.wrap({}, nil)       # => {}
+        #   Config.wrap(nil, nil)      # => {}
+        #
+        def self.wrap(base, overrides = {}, source: "wrap", merge_strategy: :replace)
+          # Type coercion: ensure base and overrides are hashes to prevent unexpected behavior
+          base_hash = base.is_a?(Hash) ? base : {}
+          overrides_hash = overrides.is_a?(Hash) ? overrides : {}
+
+          new(base_hash, source: source, merge_strategy: merge_strategy)
+            .merge(overrides_hash)
+            .to_h
         end
 
         def ==(other)

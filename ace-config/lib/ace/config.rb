@@ -8,6 +8,7 @@ require "ace/support/fs"
 
 # Load atoms first (no dependencies)
 require_relative "config/atoms/deep_merger"
+require_relative "config/atoms/path_validator"
 require_relative "config/atoms/yaml_parser"
 
 # Load models (depend on atoms)
@@ -73,6 +74,7 @@ module Ace
       # @param defaults_dir [String] Gem defaults folder name (default: ".ace-defaults")
       # @param gem_path [String, nil] Optional gem root for defaults
       # @param merge_strategy [Symbol] Array merge strategy (:replace, :concat, :union)
+      # @param cache_namespaces [Boolean] Whether to cache resolve_namespace results (default: false)
       # @return [Organisms::ConfigResolver] Configuration resolver instance
       #
       # @example Create with defaults
@@ -86,17 +88,24 @@ module Ace
       #     gem_path: File.expand_path("..", __dir__)
       #   )
       #
+      # @example Create with namespace caching for performance
+      #   config = Ace::Config.create(cache_namespaces: true)
+      #   config.resolve_namespace("my_gem")  # reads from disk
+      #   config.resolve_namespace("my_gem")  # returns cached result
+      #
       def create(
         config_dir: DEFAULT_CONFIG_DIR,
         defaults_dir: DEFAULT_DEFAULTS_DIR,
         gem_path: nil,
-        merge_strategy: :replace
+        merge_strategy: :replace,
+        cache_namespaces: false
       )
         Organisms::ConfigResolver.new(
           config_dir: config_dir,
           defaults_dir: defaults_dir,
           gem_path: gem_path,
-          merge_strategy: merge_strategy
+          merge_strategy: merge_strategy,
+          cache_namespaces: cache_namespaces
         )
       end
 
