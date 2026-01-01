@@ -8,17 +8,22 @@ module Ace
     module Molecules
       # Safely execute gh CLI commands with error handling
       class GhCliExecutor
+        # Default timeout for gh CLI operations
+        DEFAULT_GH_TIMEOUT = 30
+
         # Execute a gh CLI command
         #
         # @param subcommand [String] The gh subcommand (e.g., "pr", "api")
         # @param args [Array<String>] Arguments to pass to the subcommand
         # @param options [Hash] Additional options
-        # @option options [Integer] :timeout Timeout in seconds (default: 30)
+        # @option options [Integer] :timeout Timeout in seconds (default: from config or 30)
         # @return [Hash] Result with :success, :stdout, :stderr, :exit_code
         def self.execute(subcommand, args = [], options = {})
           check_installed
 
-          timeout_seconds = options[:timeout] || 30
+          timeout_seconds = options[:timeout] ||
+                            Ace::Review.get("defaults", "gh_timeout") ||
+                            DEFAULT_GH_TIMEOUT
           command = ["gh", subcommand] + args
 
           run_command(command, timeout_seconds)
@@ -56,14 +61,18 @@ module Ace
           end
         end
 
+        # Default timeout for simple operations
+        DEFAULT_SIMPLE_TIMEOUT = 10
+
         # Execute a simple gh command without error checking
         # Used internally to avoid infinite recursion in check_installed
         #
         # @param command [String] The gh subcommand
         # @param args [Array<String>] Arguments
-        # @param timeout_seconds [Integer] Timeout in seconds (default: 10)
+        # @param timeout_seconds [Integer] Timeout in seconds (default: from config or 10)
         # @return [Hash] Result hash
-        def self.execute_simple(command, args = [], timeout_seconds = 10)
+        def self.execute_simple(command, args = [], timeout_seconds = nil)
+          timeout_seconds ||= Ace::Review.get("defaults", "gh_simple_timeout") || DEFAULT_SIMPLE_TIMEOUT
           cmd = ["gh", command] + args
           run_command(cmd, timeout_seconds)
         rescue Timeout::Error

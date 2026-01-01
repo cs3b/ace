@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3] - 2026-01-01
+
+### Fixed
+
+- **Configurable timeout for gh CLI operations**: `execute_simple` and `execute` methods now use configurable timeout from config instead of hardcoded values
+  - Added `gh_simple_timeout` config option (default: 10s) for simple commands like `--version`, `auth status`
+  - `execute` now reads `gh_timeout` from config (default: 30s) instead of hardcoded fallback
+  - Follows ADR-022 pattern with `Ace::Review.get("defaults", "key")` for config access
+
 ## [0.29.2] - 2025-12-30
 
 ### Changed
