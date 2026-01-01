@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.22.2] - 2026-01-01
+
+### Changed
+
+* Add thread-safe configuration initialization with Mutex pattern
+* Add configurable timeouts from gem config file
+
 ## [0.22.1] - 2025-12-30
 
 ### Changed
