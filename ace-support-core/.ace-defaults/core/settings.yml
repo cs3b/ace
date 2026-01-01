@@ -1,5 +1,20 @@
-# Example ace-core configuration
+# ace-support-core configuration
 # Copy to .ace/core/settings.yml in your project and customize
+#
+# Configuration cascade (ADR-022):
+#   1. .ace-defaults/core/settings.yml (gem defaults - this file)
+#   2. ~/.ace/core/settings.yml (user defaults)
+#   3. .ace/core/settings.yml (project overrides)
+
+# Core component settings
+core:
+  # CommandExecutor settings
+  command_executor:
+    timeout: 30  # Default timeout in seconds for command execution
+
+  # ContextChunker settings
+  context_chunker:
+    chunk_limit: 150000  # Maximum lines before chunking content
 
 ace:
   # Project identification
