@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.158
-status: pending
+status: in-progress
 priority: high
 estimate: 1h
 dependencies: []
+worktree:
+  branch: 158-fix-ace-taskflow-task-move-backlog-command-bug
+  path: "../ace-task.158"
+  created_at: '2026-01-01 23:10:44'
+  updated_at: '2026-01-01 23:10:44'
 ---
 
 # Fix ace-taskflow task move --backlog command bug
