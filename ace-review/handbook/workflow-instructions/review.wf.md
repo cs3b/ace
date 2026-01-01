@@ -5,7 +5,7 @@ argument-hint: "[preset] [subjects...]"
 allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
 update:
   frequency: on-change
-  last-updated: '2025-12-27'
+  last-updated: '2025-12-30'
 ---
 
 # Code Review Workflow
@@ -94,33 +94,50 @@ grep -rn "class TaskPatternExtractor" ace-git/lib/
 - Documentation-only suggestions
 - Style/formatting recommendations
 
-### Step 4: Create Feedback Plan
+### Step 4: Categorize Results
 
-Based on the synthesis report's **Prioritized Action Items** and **verification results**, create a plan:
+Based on verification results, categorize each item:
 
-1. List only VALID and SUGGESTION items by priority (Critical → High → Medium → Low)
-2. Note any INVALID items that were filtered out
-3. For each VALID item, note:
-   - Location (file:line)
-   - Description of the issue
-   - Recommended fix
-   - Verification evidence
-4. Identify which items to implement now vs capture as ideas for later
+**Goes to "No Action Needed" (no numbering):**
+- INVALID - False positives, LLM hallucinations, code is correct
+- VERIFIED CORRECT - LLM suggested to verify, but verification confirmed code is correct
 
-### Step 5: Present Plan and Wait for Confirmation
+**Goes to "Action Items" (numbered with priority):**
+- VALID - Issue confirmed, needs fixing
+- SUGGESTION - Optional improvement
 
-Present the plan to the user with a summary:
-- Number of items per priority level
-- Estimated scope of changes
-- Any items recommended to defer
+### Step 5: Present Results
 
-Use AskUserQuestion to confirm:
-- "Which items should I implement?"
-- Options: All items, High priority only, Custom selection
+Present results in two separate sections:
+
+#### No Action Needed
+
+List items that don't require changes (no numbering):
+- Description + why it's invalid/correct
+- Verification evidence
+
+#### Action Items
+
+Numbered table of items that need fixing:
+
+| # | Priority | Issue | File | Fix |
+|---|----------|-------|------|-----|
+| 1 | Critical | ... | `file:line` | ... |
+| 2 | High | ... | `file:line` | ... |
+
+### Step 6: Ask for Priority Threshold
+
+Use AskUserQuestion:
+- "Which priority level should I implement?"
+- Options:
+  - All items
+  - Medium and higher (skip Low)
+  - High and higher (skip Low, Medium)
+  - Critical only
 
 Only proceed with implementation after user confirmation.
 
-### Step 6: Implement Fixes
+### Step 7: Implement Fixes
 
 Implement the confirmed fixes. After each fix:
 - Commit with a clear message referencing the issue

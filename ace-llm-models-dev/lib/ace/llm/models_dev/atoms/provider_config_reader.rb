@@ -11,7 +11,7 @@ module Ace
         # Reads provider configuration files with cascade support:
         # - Project: .ace/llm/providers/
         # - User: ~/.ace/llm/providers/
-        # - Gem: ace-llm/.ace.example/llm/providers/ (single source of truth)
+        # - Gem: ace-llm/.ace-defaults/llm/providers/ (single source of truth)
         class ProviderConfigReader
           class << self
             # Find all provider config directories in cascade order
@@ -159,18 +159,18 @@ module Ace
             end
 
             def gem_config_dir
-              # Find ace-llm gem's providers directory (from .ace.example/ - single source of truth)
+              # Find ace-llm gem's providers directory (from .ace-defaults/ - single source of truth)
               if defined?(Ace::LLM)
                 # Try to find via gem spec
                 spec = Gem::Specification.find_by_name("ace-llm") rescue nil
-                return File.join(spec.gem_dir, ".ace.example", "llm", "providers") if spec
+                return File.join(spec.gem_dir, ".ace-defaults", "llm", "providers") if spec
               end
 
               # Fallback: look relative to this gem in mono-repo development
               # This enables development without installing ace-llm as a gem.
               # Production/installed gem use goes through Gem::Specification above.
               ace_llm_path = find_ace_llm_path
-              File.join(ace_llm_path, ".ace.example", "llm", "providers") if ace_llm_path
+              File.join(ace_llm_path, ".ace-defaults", "llm", "providers") if ace_llm_path
             end
 
             def find_project_root_dir

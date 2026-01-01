@@ -11,5 +11,6 @@ models:
   - codex:max  # Code-focused, implementation details
   - google:pro-preview
   - xai:grok-4-latest
-  # - openrouter:minimax
-  # - togetherai:qwen-coder
+  - openrouter:minimax
+  - togetherai:qwen-coder
+  - togetherai:deepseek
