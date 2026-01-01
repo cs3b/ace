@@ -4,6 +4,22 @@
 # Configuration cascade: ./.ace/prompt/config.yml → ~/.ace/prompt/config.yml
 # Values in project config take precedence over home directory config.
 
+# Paths configuration
+# All paths are relative to project root
+paths:
+  cache_dir: ".cache/ace-prompt"           # Base cache directory
+  prompt_file: "prompts/the-prompt.md"     # Main prompt file (relative to cache_dir)
+  enhance_cache: "enhance-cache"           # Enhancement cache directory (relative to cache_dir)
+  archive_dir: "prompts/archive"           # Archive directory (relative to cache_dir)
+  previous_symlink: "prompts/_previous.md" # Previous prompt symlink (relative to cache_dir)
+
+# Default model and temperature settings
+defaults:
+  model: "glite"
+  temperature:
+    min: 0.0
+    max: 2.0
+
 # Context loading configuration
 # When enabled, ace-prompt will load project context via ace-context
 # based on frontmatter in the prompt file.
