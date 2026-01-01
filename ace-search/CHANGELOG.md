@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-01-01
+
+### Changed
+
+* Add configurable timeout in `.ace-defaults/search/config.yml`
+* Centralize fd executor timeout from config instead of hardcoded value
+
 ## [0.15.1] - 2025-12-30
 
 ### Changed

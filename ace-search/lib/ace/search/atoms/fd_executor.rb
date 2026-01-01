@@ -19,7 +19,9 @@ module Ace
         # @return [Hash] Command result with success status and output
         def execute(pattern = nil, options = {})
           command = build_command(pattern, options)
-          timeout_seconds = options.fetch(:timeout, 120)
+          # Read timeout from options (runtime override), then config, then fallback to 120 seconds
+          default_timeout = Ace::Search.config["timeout"] || 120
+          timeout_seconds = options.fetch(:timeout, default_timeout)
 
           # Debug output
           DebugLogger.section("FdExecutor") do
