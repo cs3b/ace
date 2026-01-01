@@ -124,6 +124,8 @@ module Ace
         end
 
         # Get the freshness status
+        # Uses configurable thresholds from .ace-defaults/docs/config.yml
+        # Follows ADR-022 pattern for configuration loading
         def freshness_status
           return :unknown unless last_updated
 
@@ -131,27 +133,29 @@ module Ace
           last_updated_date = last_updated.is_a?(Time) ? last_updated.to_date : last_updated
           days_since_update = (Date.today - last_updated_date).to_i
 
+          thresholds = freshness_thresholds
+
           case update_frequency
           when "daily"
             if days_since_update == 0
               :current
-            elsif days_since_update <= 2
+            elsif days_since_update <= thresholds[:daily_stale]
               :stale
             else
               :outdated
             end
           when "weekly"
-            if days_since_update <= 7
+            if days_since_update <= thresholds[:weekly_current]
               :current
-            elsif days_since_update <= 14
+            elsif days_since_update <= thresholds[:weekly_stale]
               :stale
             else
               :outdated
             end
           when "monthly"
-            if days_since_update <= 30
+            if days_since_update <= thresholds[:monthly_current]
               :current
-            elsif days_since_update <= 45
+            elsif days_since_update <= thresholds[:monthly_stale]
               :stale
             else
               :outdated
@@ -161,6 +165,30 @@ module Ace
           else
             :unknown
           end
+        end
+
+        # Get freshness thresholds from configuration
+        # Falls back to historical defaults if config not available
+        # Supports frequency-specific thresholds from .ace-defaults/docs/config.yml
+        # @return [Hash] Threshold values for different update frequencies
+        def freshness_thresholds
+          config_thresholds = Ace::Docs.config["default_freshness_days"] || {}
+
+          # Extract frequency-specific thresholds with historical defaults
+          daily_config = config_thresholds["daily"] || {}
+          weekly_config = config_thresholds["weekly"] || {}
+          monthly_config = config_thresholds["monthly"] || {}
+
+          {
+            # Daily frequency: current=today (0 days), stale within 2 days
+            daily_stale: daily_config["stale"] || 2,
+            # Weekly frequency: historical defaults 7/14 days
+            weekly_current: weekly_config["current"] || 7,
+            weekly_stale: weekly_config["stale"] || 14,
+            # Monthly frequency: historical defaults 30/45 days
+            monthly_current: monthly_config["current"] || 30,
+            monthly_stale: monthly_config["stale"] || 45
+          }
         end
 
         # Get the focus hints for LLM analysis

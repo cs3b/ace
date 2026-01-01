@@ -55,10 +55,19 @@ validation_enabled: true
 ace_lint_path: ace-lint  # Path to ace-lint executable
 
 # Document freshness thresholds (in days)
+# Frequency-specific thresholds that match historical defaults
 default_freshness_days:
-  current: 14    # Documents updated within 2 weeks
-  stale: 30      # Documents updated within 1 month
-  outdated: 60   # Documents older than 2 months
+  # Daily documents: updated today is current, up to 2 days is stale
+  daily:
+    stale: 2
+  # Weekly documents: 7 days current, 14 days stale
+  weekly:
+    current: 7
+    stale: 14
+  # Monthly documents: 30 days current, 45 days stale
+  monthly:
+    current: 30
+    stale: 45
 
 # Document type definitions
 document_types:

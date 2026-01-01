@@ -14,11 +14,19 @@ module Ace
           @temp_dir = Dir.mktmpdir("ace-docs-test")
           @original_dir = Dir.pwd
           Dir.chdir(@temp_dir)
+
+          # Reset config cache so each test gets fresh config resolution
+          Ace::Docs.reset_config!
+          Ace::Config.reset_config!
         end
 
         def teardown
           Dir.chdir(@original_dir)
           FileUtils.rm_rf(@temp_dir) if @temp_dir
+
+          # Clean up config cache after each test
+          Ace::Docs.reset_config!
+          Ace::Config.reset_config!
         end
 
         def test_initialize_with_no_config

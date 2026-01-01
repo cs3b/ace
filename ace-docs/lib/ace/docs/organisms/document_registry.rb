@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "yaml"
 require "ace/support/fs"
 require_relative "../molecules/document_loader"
 require_relative "../models/document"
@@ -13,10 +12,13 @@ module Ace
       class DocumentRegistry
         attr_reader :documents, :config
 
-        def initialize(config_path: nil, project_root: nil)
+        # Initialize the document registry
+        # @param config_path [String, nil] Deprecated, kept for backward compatibility
+        # @param project_root [String, nil] Project root directory
+        # @param config [Hash, nil] Optional config override (for testing)
+        def initialize(config_path: nil, project_root: nil, config: nil)
           @project_root = project_root || determine_project_root(config_path)
-          @config_path = config_path || find_config_path
-          @config = load_configuration
+          @config = config || Ace::Docs.config
           @documents = []
           discover_documents
         end
@@ -94,85 +96,6 @@ module Ace
 
           # Otherwise use ProjectRootFinder to support both main repos and git worktrees
           Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-        end
-
-        def find_config_path
-          # Look for config in standard locations
-          config_locations = [
-            ".ace/docs/config.yml",
-            ".ace/docs/config.yaml",
-            "ace-docs.yml",
-            "ace-docs.yaml"
-          ]
-
-          # Start from project root and walk up to find config
-          current_dir = @project_root
-
-          while current_dir && current_dir != "/" && current_dir != File.dirname(current_dir)
-            config_locations.each do |location|
-              path = File.join(current_dir, location)
-              return path if File.exist?(path)
-            end
-
-            # Move up one directory
-            current_dir = File.dirname(current_dir)
-          end
-
-          # Also check home directory as last resort
-          config_locations.each do |location|
-            path = File.join(Dir.home, location)
-            return path if File.exist?(path)
-          end
-
-          nil
-        end
-
-        def load_configuration
-          return default_configuration unless @config_path && File.exist?(@config_path)
-
-          begin
-            YAML.safe_load_file(@config_path, permitted_classes: [Symbol]) || default_configuration
-          rescue StandardError => e
-            warn "Error loading configuration from #{@config_path}: #{e.message}"
-            default_configuration
-          end
-        end
-
-        def default_configuration
-          {
-            "document_types" => {
-              "context" => {
-                "paths" => ["docs/*.md"],
-                "defaults" => {
-                  "update_frequency" => "weekly",
-                  "max_lines" => 150
-                }
-              },
-              "guide" => {
-                "paths" => ["dev-handbook/guides/**/*.md", "**/*.g.md"],
-                "defaults" => {
-                  "update_frequency" => "monthly",
-                  "max_lines" => 500
-                }
-              },
-              "workflow" => {
-                "paths" => ["**/*.wf.md", "dev-handbook/workflow-instructions/**/*.md"],
-                "defaults" => {
-                  "update_frequency" => "on-change"
-                }
-              },
-              "api" => {
-                "paths" => ["*/docs/api/*.md", "*/api-docs/**/*.md"],
-                "defaults" => {
-                  "update_frequency" => "on-change"
-                }
-              }
-            },
-            "global_rules" => {
-              "max_lines" => 1000,
-              "required_frontmatter" => ["doc-type", "purpose"]
-            }
-          }
         end
 
         def discover_documents
