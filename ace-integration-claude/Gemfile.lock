@@ -1,0 +1,41 @@
+PATH
+  remote: .
+  specs:
+    ace-integration-claude (0.2.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    cgi (0.4.2)
+    date (3.4.1)
+    erb (4.0.4)
+      cgi (>= 0.3.3)
+    io-console (0.8.1)
+    irb (1.14.3)
+      rdoc (>= 4.0.0)
+      reline (>= 0.4.2)
+    minitest (5.26.0)
+    psych (5.2.2)
+      date
+      stringio
+    rake (13.3.1)
+    rdoc (6.14.0)
+      erb
+      psych (>= 4.0.0)
+    reline (0.6.0)
+      io-console (~> 0.5)
+    stringio (3.1.2)
+
+PLATFORMS
+  arm64-darwin-25
+  ruby
+
+DEPENDENCIES
+  ace-integration-claude!
+  bundler (~> 2.0)
+  irb
+  minitest (~> 5.16)
+  rake (~> 13.0)
+
+BUNDLED WITH
+   2.6.9
