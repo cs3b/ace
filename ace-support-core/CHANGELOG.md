@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-01-01
+
+### Changed
+
+* Add configurable timeouts and limits in `.ace-defaults/core/config.yml`
+* Add `configured_timeout` to CommandExecutor for timeout configuration
+
 ## [0.14.1] - 2025-12-30
 
 ### Changed
