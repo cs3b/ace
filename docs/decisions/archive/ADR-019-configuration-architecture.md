@@ -5,7 +5,7 @@ Superseded by ADR-022
 Date: October 14, 2025
 Superseded: December 13, 2025
 
-> **Note**: This ADR has been superseded by [ADR-022](ADR-022-configuration-default-and-override-pattern.md) which adds explicit guidance for default configuration loading from `.ace.example/` files and backward-compatible config key changes.
+> **Note**: This ADR has been superseded by [ADR-022](ADR-022-configuration-default-and-override-pattern.md) which adds explicit guidance for default configuration loading from `.ace-defaults/` files and backward-compatible config key changes.
 
 ## Context
 
@@ -48,7 +48,7 @@ spec.add_dependency "ace-support-core", "~> 0.9"
 
 **Example config** (in gem):
 ```
-ace-gem/.ace.example/gem-name/config.yml
+ace-gem/.ace-defaults/gem-name/config.yml
 ```
 
 ### Loading Pattern
@@ -143,7 +143,7 @@ kramdown = Ace::Core.config.get('ace', 'lint', 'kramdown')
 - ✅ Use `Ace::Core.config.get('ace', 'gem')` for loading
 - ✅ Provide `default_config` method
 - ✅ Handle loading errors gracefully
-- ✅ Create `.ace.example/gem/` with example config
+- ✅ Create `.ace-defaults/gem/` with example config
 - ✅ Provide `reset_config!` for testing
 - ✅ Document config in gem's README
 - ✅ Use flat structure for main/tool configs
@@ -153,7 +153,7 @@ kramdown = Ace::Core.config.get('ace', 'lint', 'kramdown')
 - ❌ Create custom ConfigLoader classes
 - ❌ Put config files in project root: `.gem.yml`
 - ❌ Fail if config missing (use defaults)
-- ❌ Skip example configs in `.ace.example/`
+- ❌ Skip example configs in `.ace-defaults/`
 
 ## Consequences
 
@@ -164,7 +164,7 @@ kramdown = Ace::Core.config.get('ace', 'lint', 'kramdown')
 - **Cascade Support**: Project overrides user config
 - **Error Handling**: Graceful fallback to defaults
 - **Testability**: `reset_config!` enables clean tests
-- **Discoverability**: `.ace.example/` shows available options
+- **Discoverability**: `.ace-defaults/` shows available options
 
 ### Negative
 
@@ -298,10 +298,10 @@ Uses ace-core config cascade: `.ace/gem/config.yml`
 - verbose: false
 - timeout: 30
 
-See [.ace.example/gem/config.yml](.ace.example/gem/config.yml) for all options.
+See [.ace-defaults/gem/config.yml](.ace-defaults/gem/config.yml) for all options.
 ```
 
-### .ace.example/gem/config.yml (Complete)
+### .ace-defaults/gem/config.yml (Complete)
 
 ```yaml
 # Example configuration for ace-gem

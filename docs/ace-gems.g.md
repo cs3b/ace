@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-28'
+  last-updated: '2025-12-31'
 ---
 
 # ACE Gem Development Guide
@@ -52,7 +52,7 @@ ACE gems follow a strict naming pattern to clarify their purpose:
 ### Standard ACE Gem (CLI Tools)
 ```
 ace-gem/
-├── .ace.example/gem/config.yml    # REQUIRED
+├── .ace-defaults/gem/config.yml    # REQUIRED
 ├── lib/ace/gem/
 │   ├── atoms/, molecules/, organisms/, models/  # ATOM architecture
 │   ├── commands/                  # Thor CLI commands
@@ -71,7 +71,7 @@ ace-gem/
 ### Integration Package Gem (ace-integration-* pattern)
 ```
 ace-integration-platform/
-├── .ace.example/nav/protocols/wfi-sources/ace-integration-platform.yml  # ace-nav discovery
+├── .ace-defaults/nav/protocols/wfi-sources/ace-integration-platform.yml  # ace-nav discovery
 ├── lib/ace/integration/platform.rb     # Gem entry point
 ├── lib/ace/integration/platform/version.rb  # Version constant
 ├── handbook/workflow-instructions/    # Integration workflows
@@ -93,39 +93,39 @@ ace-integration-platform/
 **ADR-022 Pattern: Load Gem Defaults + Merge User Overrides**
 
 All ACE gems must follow the unified configuration pattern established in ADR-022. This pattern ensures:
-- Defaults are loaded from `.ace.example/` (single source of truth)
-- User overrides are merged via `Ace::Core::Atoms::DeepMerger`
+- Defaults are loaded from `.ace-defaults/` (single source of truth)
+- User overrides are merged via ace-config's `Config.wrap()` or `DeepMerger`
 - Test isolation via `reset_config!` method
 
-### Implementation Pattern
+### Implementation Pattern (using ace-config)
 
 ```ruby
 # lib/ace/gem.rb
-require "yaml"
-require "ace/core/atoms/deep_merger"
+require "ace/config"
 
 module Ace
   module Gem
     def self.config
       @config ||= begin
         defaults = load_gem_defaults
-        user_config = Ace::Core.config.get("ace", "gem") || {}
-        Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)
+        user_config = Ace::Config.create
+                        .resolve_namespace("gem")
+                        .to_h
+        Ace::Config::Models::Config.wrap(defaults, user_config, source: "gem")
       end
     end
 
     def self.load_gem_defaults
       gem_root = ::Gem.loaded_specs["ace-gem"]&.gem_dir ||
                  File.expand_path("../..", __dir__)
-      defaults_path = File.join(gem_root, ".ace.example", "gem", "config.yml")
+      defaults_path = File.join(gem_root, ".ace-defaults", "gem", "config.yml")
 
-      # .ace.example/ MUST be included in gem - missing file is a packaging error
       unless File.exist?(defaults_path)
         raise "Default config not found: #{defaults_path}. " \
-              "This is a gem packaging error - .ace.example/ must be included in the gem."
+              "This is a gem packaging error - .ace-defaults/ must be included in the gem."
       end
 
-      YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+      YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
     end
     private_class_method :load_gem_defaults
 
@@ -142,8 +142,9 @@ For gems with multiple tools (like ace-lint):
 
 ```ruby
 # .ace/lint/config.yml (nested) + .ace/lint/kramdown.yml (flat)
-Ace::Core.config.get('ace', 'lint')              # General settings
-Ace::Core.config.get('ace', 'lint', 'kramdown')  # Tool-specific
+resolver = Ace::Config.create
+resolver.resolve_namespace("lint")                     # General settings
+resolver.resolve_namespace("lint", filename: "kramdown")  # Tool-specific
 ```
 
 ### Anti-Patterns
@@ -165,16 +166,16 @@ end
 **DO:**
 
 ```ruby
-# Load from .ace.example/ (GOOD)
+# Load from .ace-defaults/ + use ace-config (GOOD)
 def self.config
-  @config ||= Ace::Core::Atoms::DeepMerger.merge(
-    load_gem_defaults,  # From .ace.example/gem/config.yml
-    user_config         # From .ace/gem/config.yml cascade
+  @config ||= Ace::Config::Models::Config.wrap(
+    load_gem_defaults,  # From .ace-defaults/gem/config.yml
+    user_config         # From .ace/gem/config.yml cascade via ace-config
   )
 end
 ```
 
-Note: Module name remains `Ace::Core` even though gem is `ace-support-core`.
+See [ace-config documentation](../ace-config/README.md) for complete API reference.
 
 ## Prompt Caching Pattern
 
@@ -410,19 +411,21 @@ end
 ## Gemspec
 
 ```ruby
-spec.add_dependency "ace-support-core", "~> 0.10"
+spec.add_dependency "ace-config", "~> 0.4"  # Configuration cascade
+spec.add_dependency "ace-support-core", "~> 0.10"  # Core utilities (if needed)
 spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 ```
 
 ## Essential Patterns
 
 ✅ **DO**:
-- Use `Ace::Core.config.get('ace', 'gem')` for config (module name unchanged)
+- Use `Ace::Config.create.resolve_namespace('gem')` for config cascade
+- Use `Ace::Config::Models::Config.wrap()` for merging defaults + overrides
 - Include handbook/ with agents and workflows
 - Flat test structure: `test/atoms/` not `test/ace/gem/atoms/`
-- Provide .ace.example/ configs
+- Provide .ace-defaults/ configs
 - Maintain CHANGELOG.md in Keep a Changelog format
-- Add ace-support-core dependency for configuration support
+- Add ace-config dependency for configuration support
 - Follow naming conventions: ace-* for CLI tools, ace-support-* for libraries
 - **Integration packages**: Use `integrations/` directory for integration assets (official pattern)
 - **Integration packages**: Include ace-nav protocol registration for workflow discovery
@@ -436,6 +439,7 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 
 ## Examples
 
+**ace-config**: Generic configuration cascade with customizable folder names (reference for new gems)
 **ace-lint**: Config patterns (flat+nested), complete structure
 **ace-docs**: Handbook integration, usage.md
 **ace-taskflow**: Comprehensive agents+workflows

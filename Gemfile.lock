@@ -1,20 +1,22 @@
 PATH
   remote: ace-config
   specs:
-    ace-config (0.2.0)
+    ace-config (0.4.1)
       ace-support-fs (~> 0.1)
 
 PATH
   remote: ace-context
   specs:
-    ace-context (0.21.0)
+    ace-context (0.22.1)
+      ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-support-core (~> 0.10)
 
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.12.0)
+    ace-docs (0.13.1)
+      ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-core (~> 0.11)
@@ -28,16 +30,16 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.13.0)
+    ace-git-commit (0.14.1)
+      ace-config (~> 0.4)
       ace-git (~> 0.3)
-      ace-llm (~> 0.15.0)
-      ace-support-core (~> 0.10)
+      ace-llm (~> 0.16)
 
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.2.0)
-      ace-support-core (~> 0.11)
+    ace-git-secrets (0.3.1)
+      ace-config (~> 0.4)
       faraday (~> 2.7, >= 2.7.4)
       faraday-retry (~> 2.2)
       thor (~> 1.3)
@@ -45,33 +47,33 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.7.0)
+    ace-git-worktree (0.8.1)
+      ace-config (~> 0.4)
       ace-git (~> 0.4)
-      ace-support-core (>= 0.9.0)
       ace-taskflow (>= 0.10.0)
 
 PATH
   remote: ace-git
   specs:
-    ace-git (0.4.0)
-      ace-support-core (~> 0.11)
+    ace-git (0.5.1)
+      ace-config (~> 0.4)
       thor (~> 1.3)
 
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.1.0)
+    ace-handbook (0.2.0)
 
 PATH
   remote: ace-integration-claude
   specs:
-    ace-integration-claude (0.1.0)
+    ace-integration-claude (0.2.0)
 
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.4.0)
-      ace-support-core (~> 0.11)
+    ace-lint (0.5.1)
+      ace-config (~> 0.4)
       colorize (~> 1.1)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
@@ -80,7 +82,7 @@ PATH
 PATH
   remote: ace-llm-models-dev
   specs:
-    ace-llm-models-dev (0.3.2)
+    ace-llm-models-dev (0.3.3)
       faraday (~> 2.0)
       faraday-retry (~> 2.0)
       thor (~> 1.3)
@@ -88,13 +90,14 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.10.2)
-      ace-llm (~> 0.15.0)
+    ace-llm-providers-cli (0.11.1)
+      ace-llm (~> 0.16)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.15.1)
+    ace-llm (0.16.1)
+      ace-config (~> 0.4)
       ace-support-core (~> 0.10)
       addressable (~> 2.8)
       faraday (~> 2.0)
@@ -104,25 +107,27 @@ PATH
 PATH
   remote: ace-nav
   specs:
-    ace-nav (0.12.0)
-      ace-support-core (~> 0.1)
+    ace-nav (0.13.1)
+      ace-config (~> 0.4)
+      ace-support-fs (~> 0.1)
 
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.8.0)
+    ace-prompt (0.9.1)
+      ace-config (~> 0.4)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
       ace-nav (~> 0.8)
-      ace-support-core (~> 0.10)
       ace-taskflow (~> 0.9)
       thor (~> 1.3)
 
 PATH
   remote: ace-review
   specs:
-    ace-review (0.28.0)
+    ace-review (0.29.2)
+      ace-config (~> 0.4)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -133,15 +138,15 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.14.0)
+    ace-search (0.15.1)
+      ace-config (~> 0.4)
       ace-git (~> 0.3)
-      ace-support-core (~> 0.11)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.13.0)
-      ace-config (~> 0.2)
+    ace-support-core (0.14.1)
+      ace-config (~> 0.4)
       ace-support-fs (~> 0.1)
 
 PATH
@@ -172,7 +177,8 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.25.0)
+    ace-taskflow (0.26.1)
+      ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
       ace-support-mac-clipboard (~> 0.1.0)
@@ -182,8 +188,8 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.5.0)
-      ace-support-core (~> 0.1)
+    ace-test-runner (0.6.1)
+      ace-config (~> 0.4)
       ace-support-test-helpers (~> 0.1)
       minitest (~> 5.0)
       minitest-reporters (~> 1.6)
