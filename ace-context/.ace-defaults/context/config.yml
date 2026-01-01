@@ -1,0 +1,14 @@
+# ACE Context Configuration
+# Complete default configuration - users only need to override what differs
+# This is the single source of truth for ace-context defaults (per ADR-022)
+#
+# To override, create .ace/context/config.yml in your project root
+
+context:
+  # Cache directory for context output files
+  # Default: .cache/ace-context (relative to project root)
+  cache_dir: ".cache/ace-context"
+
+  # Maximum characters before chunking output into multiple files
+  # Default: 150000 characters (~150KB of text)
+  chunk_limit: 150000
