@@ -14,6 +14,16 @@ git:
     # This is where worktree directories will be created
     root_path: ".ace-wt"
 
+    # Timeout settings (in seconds)
+    # These control timeout for various git and shell operations
+    timeouts:
+      default: 30      # Default timeout for general git operations
+      max: 300         # Maximum allowed timeout for any operation
+      hook: 30         # Timeout for after_create hook commands
+      list: 30         # Timeout for worktree list operations
+      commit: 30       # Timeout for git commit operations
+      remove: 30       # Timeout for worktree removal operations
+
     # Automatically navigate to worktree after creation
     # If true, provides enhanced navigation experience after worktree creation
     auto_navigate: true

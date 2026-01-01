@@ -16,15 +16,28 @@ module Ace
         # @example Force remove with changes
         #   success = remover.remove("/path/to/worktree", force: true)
         class WorktreeRemover
-          # Default timeout for git commands
-          DEFAULT_TIMEOUT = 30
+          # Fallback timeout for git commands
+          # Used only when config is unavailable
+          FALLBACK_TIMEOUT = 30
 
           # Initialize a new WorktreeRemover
           #
-          # @param timeout [Integer] Command timeout in seconds
-          def initialize(timeout: DEFAULT_TIMEOUT)
-            @timeout = timeout
+          # @param timeout [Integer, nil] Command timeout in seconds (uses config default if nil)
+          def initialize(timeout: nil)
+            @timeout = timeout || config_timeout
           end
+
+          private
+
+          # Get timeout from config or fallback
+          # @return [Integer] Timeout in seconds
+          def config_timeout
+            Ace::Git::Worktree.remove_timeout
+          rescue StandardError
+            FALLBACK_TIMEOUT
+          end
+
+          public
 
           # Remove a worktree by path
           #

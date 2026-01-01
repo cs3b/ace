@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-01-01
+
+### Changed
+
+* Centralize timeout configuration in gem config file
+* Add `default_timeout` and `max_timeout` to `.ace-defaults/git/worktree.yml`
+
 ## [0.8.1] - 2025-12-30
 
 ### Changed
