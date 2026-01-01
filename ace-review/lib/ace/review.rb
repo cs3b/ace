@@ -1,11 +1,7 @@
 # frozen_string_literal: true
 
-# Try to load ace-core if available
-begin
-  require "ace/core"
-rescue LoadError
-  # ace-core is optional for basic functionality
-end
+# Load ace-config for configuration cascade management
+require "ace/config"
 
 # Try to load ace-context if available (required for full functionality)
 begin
@@ -61,44 +57,43 @@ module Ace
     class << self
       # Configuration accessor
       # Follows ADR-022: Configuration Default and Override Pattern
-      # Priority: gem defaults < user config
+      # Uses Ace::Config.create() for configuration cascade resolution
       def config
         @config ||= begin
-          require 'yaml'
-          require 'ace/core/atoms/deep_merger'
+          gem_root = Gem.loaded_specs["ace-review"]&.gem_dir ||
+                     File.expand_path("../..", __dir__)
 
-          # Load gem defaults from .ace.example/review/config.yml
-          gem_defaults = load_gem_defaults
+          resolver = Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root
+          )
 
-          # Load user config via ace-core cascade
-          user_config = Ace::Core.get("review", file: "config") || {}
-
-          # Merge gem defaults with user config
-          Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+          # Resolve config for review namespace
+          config = resolver.resolve_namespace("review")
+          config.data
         rescue StandardError => e
           warn "Warning: Could not load ace-review config: #{e.message}" if debug?
-          load_gem_defaults || {}
+          # Fall back to gem defaults instead of empty hash to prevent silent config erasure
+          load_gem_defaults_fallback
         end
       end
 
       private
 
-      # Load gem defaults from .ace.example/review/config.yml
-      # ADR-022: .ace.example/ is the single source of truth for defaults
-      # @return [Hash] Default configuration from gem
-      # @raise [RuntimeError] If default config file is missing (gem packaging error)
-      def load_gem_defaults
+      # Load gem defaults directly as fallback when cascade resolution fails
+      # This ensures configuration is never silently erased due to YAML errors
+      # or user config issues
+      def load_gem_defaults_fallback
         gem_root = Gem.loaded_specs["ace-review"]&.gem_dir ||
                    File.expand_path("../..", __dir__)
-        defaults_path = File.join(gem_root, ".ace.example", "review", "config.yml")
+        defaults_path = File.join(gem_root, ".ace-defaults", "review", "config.yml")
 
-        # ADR-022: Missing .ace.example/ file is a packaging error, not a fallback case
-        unless File.exist?(defaults_path)
-          raise "Default config not found: #{defaults_path}. " \
-                "This is a gem packaging error - .ace.example/ must be included in the gem."
-        end
+        return {} unless File.exist?(defaults_path)
 
-        YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
+        YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
+      rescue StandardError
+        {} # Only return empty hash if even defaults fail to load
       end
 
       public
