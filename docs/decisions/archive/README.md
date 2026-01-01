@@ -30,7 +30,7 @@ Archived ADRs preserve historical context and help understand the evolution of t
 
 ### ADR-019: Configuration Architecture
 - **Archived**: December 13, 2025
-- **Reason**: Superseded by ADR-022 which adds explicit guidance for default configuration loading from `.ace.example/` files
+- **Reason**: Superseded by ADR-022 which adds explicit guidance for default configuration loading from `.ace-defaults/` files
 - **Current State**: Use ADR-022 for configuration patterns in ace-* gems
 
 ## Migration Context

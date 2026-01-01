@@ -45,7 +45,7 @@ ace-taskflow idea enhance 20251202-115955-cli-enhance
 **Configuration Sources (in precedence order):**
 1. Explicit CLI arguments (highest priority)
 2. `.ace/` project/user configuration files
-3. Gem-defined defaults in `.ace.example/gem/config.yml`
+3. Gem-defined defaults in `.ace-defaults/gem/config.yml`
 
 **Summary Format:**
 - Single line, key=value pairs, space-separated
@@ -66,7 +66,7 @@ ace-taskflow idea enhance 20251202-115955-cli-enhance
 ### Success Criteria
 
 - [ ] **Configuration Transparency**: Every ace-* command displays a 1-3 line config summary at start
-- [ ] **Standardized Defaults**: Each ace-* gem defines CLI defaults in `.ace.example/gem/config.yml` under `cli_defaults` key
+- [ ] **Standardized Defaults**: Each ace-* gem defines CLI defaults in `.ace-defaults/gem/config.yml` under `cli_defaults` key
 - [ ] **Cascade Integration**: Configuration resolution uses ace-support-core cascade correctly (CLI > project > gem defaults)
 - [ ] **Summary Suppression**: `--no-summary` or `--quiet` flag successfully suppresses config output
 - [ ] **Machine Readability**: Summary format is parseable by agents (key=value format)
@@ -103,7 +103,7 @@ Improve transparency, predictability, and debuggability of ace-* CLI tools by st
 - **Interface Scope**:
   - All ace-* CLI commands receive summary capability
   - New `--no-summary`/`--quiet` flag support
-  - `.ace.example/gem/config.yml` structure for CLI defaults
+  - `.ace-defaults/gem/config.yml` structure for CLI defaults
   - Configuration summary output format
 
 ### Deliverables
@@ -132,4 +132,4 @@ Improve transparency, predictability, and debuggability of ace-* CLI tools by st
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251202-115955-cli-enhance/standardize-parameter-configuration-and-output-summary.s.md`
 - Related: ace-support-core configuration cascade documentation
-- Related: Existing `.ace.example/` configuration patterns
+- Related: Existing `.ace-defaults/` configuration patterns
