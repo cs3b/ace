@@ -1,14 +1,17 @@
 # frozen_string_literal: true
 
+require "ace/config"
+
 module Ace
   module Git
     module Molecules
       # Load and merge diff configuration from cascade
       # Follows ADR-022: Configuration Default and Override Pattern
+      # Uses Config.merge() for consistent merge strategy support
       # Migrated from ace-git-diff
       class ConfigLoader
         class << self
-          # Load configuration using ace-core cascade with deep merge
+          # Load configuration using ace-config cascade with deep merge
           # Priority: instance_config merged over global config (which is already defaults + user)
           # @param instance_config [Hash] Instance-level configuration (highest priority)
           # @return [Models::DiffConfig] Merged configuration
@@ -19,8 +22,11 @@ module Ace
             # Extract diff config from the global config (handles diff: namespace)
             global_diff_config = extract_diff_config(global_config)
 
-            # Deep merge instance config over global (instance overrides, but preserves unset defaults)
-            config_hash = Ace::Core::Atoms::DeepMerger.merge(global_diff_config, instance_config)
+            # Use Config.merge() for consistent merge strategy support
+            # This enables future per-key merge strategies via _merge directive
+            config_hash = Ace::Config::Models::Config.new(global_diff_config, source: "git_global")
+              .merge(instance_config)
+              .to_h
 
             Models::DiffConfig.from_hash(config_hash)
           end
@@ -36,13 +42,14 @@ module Ace
 
             # Extract diff config from global (handles diff: namespace)
             global_diff_config = extract_diff_config(global_config)
-
-            # Deep merge gem config over global
             gem_diff_config = extract_diff_config(gem_config)
-            config_hash = Ace::Core::Atoms::DeepMerger.merge(global_diff_config, gem_diff_config)
 
-            # Deep merge instance config over result
-            config_hash = Ace::Core::Atoms::DeepMerger.merge(config_hash, instance_config)
+            # Use Config.merge() cascade: global -> gem -> instance
+            # This enables future per-key merge strategies via _merge directive
+            config_hash = Ace::Config::Models::Config.new(global_diff_config, source: "git_global")
+              .merge(gem_diff_config)
+              .merge(instance_config)
+              .to_h
 
             Models::DiffConfig.from_hash(config_hash)
           end
@@ -69,8 +76,10 @@ module Ace
             if config.key?("diff") || config.key?(:diff)
               diff_config = config["diff"] || config[:diff]
               if diff_config.is_a?(Hash)
-                # Merge nested diff over top-level to preserve defaults not overridden
-                return Ace::Core::Atoms::DeepMerger.merge(top_level_diff, diff_config)
+                # Merge nested diff over top-level using Config.merge()
+                return Ace::Config::Models::Config.new(top_level_diff, source: "git_diff_extract")
+                  .merge(diff_config)
+                  .to_h
               end
             end
 

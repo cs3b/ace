@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.22.1] - 2025-12-30
+
+### Changed
+
+* Add ace-config dependency for configuration cascade management
+* Migrate from Ace::Core to Ace::Config API for preset loading
+
+## [0.22.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
 ## [0.21.0] - 2025-12-29
 
 ### Changed

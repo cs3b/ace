@@ -96,7 +96,7 @@ module Ace
 
               CONFIGURATION FILES:
                   .ace/git/worktree.yml          Project-specific configuration
-                  .ace.example/git/worktree.yml  Example configuration template
+                  .ace-defaults/git/worktree.yml  Example configuration template
                   ~/.ace/git/worktree.yml         User-specific configuration
 
               CONFIGURATION OPTIONS:
@@ -113,7 +113,7 @@ module Ace
                   • Valid template variables
                   • Consistent settings
 
-              For configuration examples, see .ace.example/git/worktree.yml
+              For configuration examples, see .ace-defaults/git/worktree.yml
             HELP
             0
           end
@@ -262,7 +262,7 @@ module Ace
               puts "  • Ensure all required fields are present"
               puts "  • Verify template variables are correct"
               puts "  • Check that worktree root directory is accessible"
-              puts "  • See .ace.example/git/worktree.yml for examples"
+              puts "  • See .ace-defaults/git/worktree.yml for examples"
               puts
 
               return 1
@@ -302,7 +302,7 @@ module Ace
                   # Check if it's the active config
                   if file.include?(".ace/git/worktree.yml")
                     puts "   📍 Active project configuration"
-                  elsif file.include?(".ace.example/")
+                  elsif file.include?(".ace-defaults/")
                     puts "   📋 Example template"
                   elsif file.include?("~/.ace/")
                     puts "   👤 User configuration"
@@ -320,7 +320,7 @@ module Ace
             puts "Configuration Priority (highest to lowest):"
             puts "  1. .ace/git/worktree.yml (project-specific)"
             puts "  2. ~/.ace/git/worktree.yml (user-specific)"
-            puts "  3. .ace.example/git/worktree.yml (defaults)"
+            puts "  3. .ace-defaults/git/worktree.yml (defaults)"
             puts
             puts "Note: Later configurations override earlier ones."
             puts

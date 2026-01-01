@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "test_helper"
+require_relative "test_helper"
 
 class Ace::CoreTest < Minitest::Test
   def test_that_it_has_a_version_number
@@ -21,5 +21,10 @@ class Ace::CoreTest < Minitest::Test
 
   def test_environment_method_exists
     assert_respond_to Ace::Core, :environment
+  end
+
+  def test_resolve_defaults_dir_returns_ace_defaults
+    result = Ace::Core.send(:resolve_defaults_dir)
+    assert_equal ".ace-defaults", result
   end
 end

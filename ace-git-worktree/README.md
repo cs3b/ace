@@ -173,7 +173,7 @@ The primary workflow creates isolated development environments for tasks with in
 
 ## Configuration
 
-Configuration is loaded from `.ace/git/worktree.yml`. See `.ace.example/git/worktree.yml` for a complete template:
+Configuration is loaded from `.ace/git/worktree.yml`. See `.ace-defaults/git/worktree.yml` for a complete template:
 
 ```yaml
 git:
@@ -545,7 +545,7 @@ ace-git-worktree config files
 
 # 4. Create example configuration
 mkdir -p .ace/git
-cp ace-git-worktree/.ace.example/git/worktree.yml .ace/git/worktree.yml
+cp ace-git-worktree/.ace-defaults/git/worktree.yml .ace/git/worktree.yml
 ```
 
 ### Debug Mode

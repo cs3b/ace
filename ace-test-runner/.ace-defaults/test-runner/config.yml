@@ -2,7 +2,7 @@
 # ADR-022: This file is the single source of truth for defaults
 #
 # Configuration cascade:
-#   1. .ace.example/test-runner/config.yml (gem defaults - this file)
+#   1. .ace-defaults/test-runner/config.yml (gem defaults - this file)
 #   2. ~/.ace/test/runner.yml (user defaults)
 #   3. .ace/test/runner.yml (project overrides)
 #   4. CLI options (highest priority)

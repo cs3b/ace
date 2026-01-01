@@ -9,7 +9,7 @@ module Ace
       # Provides visibility into what's recently done, in progress, and coming next
       #
       # Configuration (ADR-022):
-      # Primary source of defaults is .ace.example/taskflow/config.yml via Configuration class.
+      # Primary source of defaults is .ace-defaults/taskflow/config.yml via Configuration class.
       # This molecule receives settings from the caller (typically TaskflowContextLoader).
       # Fallback defaults exist for backward compatibility but callers should provide explicit values.
       class TaskActivityAnalyzer

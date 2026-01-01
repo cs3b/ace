@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2025-12-30
+
+### Changed
+
+- Replace ace-support-core dependency with ace-config for configuration cascade
+- Migrate from Ace::Core to Ace::Config.create() API
+- Migrate from `resolve_for` to `resolve_namespace` for cleaner config loading
+
+## [0.15.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+
 ## [0.14.0] - 2025-12-29
 
 ### Changed
@@ -177,16 +192,5 @@ From dev-tools/exe/search (0.8.0):
 - ripgrep (external) for content search
 - fd (external) for file search
 - fzf (external, optional) for interactive selection
-
----
-
-## [Unreleased]
-
-### Planned
-
-- Additional presets for common search patterns
-- Performance optimizations for large codebases
-- Enhanced result aggregation strategies
-- Plugin system for custom formatters
 
 [0.9.0]: https://github.com/your-org/ace-meta/releases/tag/ace-search-v0.9.0
