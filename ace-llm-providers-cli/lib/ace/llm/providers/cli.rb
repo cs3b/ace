@@ -9,7 +9,7 @@ module Ace
       module CLI
         # Main entry point for CLI providers
         # Simply requires the provider client classes
-        # Configuration comes from YAML files in .ace.example/llm/providers/
+        # Configuration comes from YAML files in .ace-defaults/llm/providers/
         class << self
           def setup
             # Require all CLI provider client classes

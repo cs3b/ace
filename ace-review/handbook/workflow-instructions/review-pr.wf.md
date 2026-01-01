@@ -96,41 +96,59 @@ grep -rn "class TaskPatternExtractor" ace-git/lib/
 - Style/formatting recommendations
 - Developer Feedback items (these are human-verified)
 
-### Step 5: Create Feedback Plan
+### Step 5: Categorize Results
 
-Based on the synthesis report's **Prioritized Action Items** and **verification results**, create a plan:
+Based on verification results, categorize each item:
 
-1. List only VALID, SUGGESTION, and Developer Feedback items by priority (Critical → High → Medium → Low)
-2. Note any INVALID items that were filtered out
-3. For each item, note:
-   - Location (file:line)
-   - Description of the issue
-   - Recommended fix
-   - Verification evidence (for LLM items)
-   - **Source**: LLM review or Developer Feedback (PR comment)
-4. Identify which items to implement now vs capture as ideas for later
+**Goes to "No Action Needed" (no numbering):**
+- INVALID - False positives, LLM hallucinations, code is correct
+- VERIFIED CORRECT - LLM suggested to verify, but verification confirmed code is correct
 
-### Step 6: Present Plan and Wait for Confirmation
+**Goes to "Action Items" (numbered with priority):**
+- VALID - Issue confirmed, needs fixing
+- SUGGESTION - Optional improvement
+- Developer Feedback - From PR comments (always valid, needs resolution)
 
-Present the plan to the user with a summary:
-- Number of items per priority level
-- Number of items from PR comments (require resolution)
-- Estimated scope of changes
-- Any items recommended to defer
+### Step 6: Present Results
 
-Use AskUserQuestion to confirm:
-- "Which items should I implement?"
-- Options: All items, High priority only, Custom selection
+Present results in two separate sections:
+
+#### No Action Needed
+
+List items that don't require changes (no numbering):
+- Description + why it's invalid/correct
+- Verification evidence
+
+#### Action Items
+
+Numbered table of items that need fixing:
+
+| # | Priority | Issue | File | Source | Fix |
+|---|----------|-------|------|--------|-----|
+| 1 | Critical | ... | `file:line` | LLM/Dev | ... |
+| 2 | High | ... | `file:line` | LLM/Dev | ... |
+
+Note: Items from **Developer Feedback** require PR comment resolution after implementation.
+
+### Step 7: Ask for Priority Threshold
+
+Use AskUserQuestion:
+- "Which priority level should I implement?"
+- Options:
+  - All items
+  - Medium and higher (skip Low)
+  - High and higher (skip Low, Medium)
+  - Critical only
 
 Only proceed with implementation after user confirmation.
 
-### Step 7: Implement Fixes
+### Step 8: Implement Fixes
 
 Implement the confirmed fixes. After each fix:
 - Commit with a clear message referencing the issue
 - Note the commit SHA for PR comment resolution
 
-### Step 8: Resolve PR Comments (for Developer Feedback items)
+### Step 9: Resolve PR Comments (for Developer Feedback items)
 
 After implementing fixes for items sourced from **Developer Feedback**:
 

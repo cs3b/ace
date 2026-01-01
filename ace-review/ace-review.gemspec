@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
-  spec.files = Dir.glob('{lib,exe}/**/*') + %w[
+  spec.files = Dir.glob('{lib,exe,.ace-defaults}/**/*') + %w[
     ace-review.gemspec
     README.md
     CHANGELOG.md
@@ -33,7 +33,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-core', '~> 0.9'
+  spec.add_dependency 'ace-config', '~> 0.4'
+  spec.add_dependency 'ace-support-core', '~> 0.9' # For ProcessTerminator
   spec.add_dependency 'ace-context', '~> 0.9'
   spec.add_dependency 'ace-git', '~> 0.3'
   # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git
