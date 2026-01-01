@@ -379,6 +379,177 @@ module Ace
           end
         end
       end
+
+      # === Edge Cases: Filesystem Failures ===
+
+      def test_invalid_yaml_in_cascade_raises_error
+        # Test that invalid YAML in any cascade level raises a clear error
+        with_temp_config(
+          ".git" => "",
+          ".ace" => {
+            "settings.yml" => "valid: true"
+          },
+          "subdir" => {
+            ".ace" => {
+              "settings.yml" => "invalid:\n  - list\n  bad: indent"
+            }
+          }
+        ) do |tmpdir|
+          Dir.chdir(File.join(tmpdir, "subdir")) do
+            resolver = Ace::Config.create
+
+            error = assert_raises(YamlParseError) do
+              resolver.resolve
+            end
+
+            assert_match(/Failed to parse YAML/, error.message)
+          end
+        end
+      end
+
+      def test_invalid_yaml_in_specific_file_raises_error
+        # Test resolve_file with invalid YAML
+        with_temp_config(
+          ".git" => "",
+          ".ace" => {
+            "broken.yml" => "key: [\nunfinished array"
+          }
+        ) do |_tmpdir|
+          resolver = Ace::Config.create
+
+          error = assert_raises(YamlParseError) do
+            resolver.resolve_file(["broken.yml"])
+          end
+
+          assert_match(/Failed to parse YAML/, error.message)
+        end
+      end
+
+      def test_permission_denied_on_config_file
+        skip "Cannot test permission denial on Windows" if Gem.win_platform?
+
+        with_temp_config(
+          ".git" => "",
+          ".ace" => {
+            "settings.yml" => "key: value"
+          }
+        ) do |tmpdir|
+          config_path = File.join(tmpdir, ".ace", "settings.yml")
+
+          # Remove read permission
+          File.chmod(0o000, config_path)
+
+          begin
+            resolver = Ace::Config.create
+
+            error = assert_raises(ConfigNotFoundError) do
+              resolver.resolve
+            end
+
+            assert_match(/Failed to read file/, error.message)
+          ensure
+            # Restore permission for cleanup
+            File.chmod(0o644, config_path)
+          end
+        end
+      end
+
+      def test_permission_denied_on_config_directory
+        skip "Cannot test permission denial on Windows" if Gem.win_platform?
+
+        with_temp_config(
+          ".git" => "",
+          ".ace" => {
+            "settings.yml" => "key: value"
+          }
+        ) do |tmpdir|
+          config_dir = File.join(tmpdir, ".ace")
+
+          # Remove read and execute permission from directory
+          File.chmod(0o000, config_dir)
+
+          begin
+            resolver = Ace::Config.create
+
+            # Should gracefully handle inaccessible directory
+            # (finder won't find files, cascade returns empty)
+            config = resolver.resolve
+            assert_kind_of Models::Config, config
+          ensure
+            # Restore permission for cleanup
+            File.chmod(0o755, config_dir)
+          end
+        end
+      end
+
+      def test_symlink_loop_in_config_path
+        skip "Cannot test symlinks on Windows" if Gem.win_platform?
+
+        with_temp_config(
+          ".git" => "",
+          ".ace" => {
+            "settings.yml" => "key: value"
+          }
+        ) do |tmpdir|
+          # Create a symlink loop
+          loop_dir = File.join(tmpdir, "loop")
+          FileUtils.mkdir_p(loop_dir)
+          File.symlink(loop_dir, File.join(loop_dir, "self"))
+
+          Dir.chdir(loop_dir) do
+            resolver = Ace::Config.create
+
+            # Should not hang or crash on symlink loop
+            # The finder should skip or limit traversal
+            config = resolver.resolve
+            assert_kind_of Models::Config, config
+          end
+        end
+      end
+
+      def test_config_file_is_directory
+        # Edge case: config file path is actually a directory
+        with_temp_config(
+          ".git" => "",
+          ".ace" => {
+            "settings.yml" => {} # Create as directory instead of file
+          }
+        ) do |_tmpdir|
+          resolver = Ace::Config.create
+
+          # Should gracefully skip directories named like config files
+          config = resolver.resolve
+          assert_kind_of Models::Config, config
+          assert_equal({}, config.data)
+        end
+      end
+
+      def test_binary_content_in_yaml_file
+        # Edge case: YAML file contains binary/non-UTF8 content
+        with_temp_config(
+          ".git" => "",
+          ".ace" => {
+            "settings.yml" => "key: valid\n"
+          }
+        ) do |tmpdir|
+          # Append binary content to the YAML file
+          config_path = File.join(tmpdir, ".ace", "settings.yml")
+          File.open(config_path, "ab") do |f|
+            f.write("\xFF\xFE\x00\x00".b) # BOM-like binary
+          end
+
+          resolver = Ace::Config.create
+
+          # Should handle gracefully - either parse what's valid or raise clear error
+          begin
+            config = resolver.resolve
+            # If it parsed, check the valid part was captured
+            assert_equal "valid", config.get("key") if config.data.any?
+          rescue YamlParseError => e
+            assert_match(/Failed to parse/, e.message)
+          end
+        end
+      end
     end
   end
 end

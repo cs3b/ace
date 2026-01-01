@@ -20,6 +20,8 @@ module Ace
           YAML.safe_load(yaml_string, permitted_classes: [Symbol, Date], aliases: true)
         rescue Psych::SyntaxError => e
           raise YamlParseError, "Failed to parse YAML: #{e.message}"
+        rescue Encoding::CompatibilityError, Encoding::InvalidByteSequenceError => e
+          raise YamlParseError, "Failed to parse YAML (encoding error): #{e.message}"
         end
 
         # Convert Ruby hash to YAML string
