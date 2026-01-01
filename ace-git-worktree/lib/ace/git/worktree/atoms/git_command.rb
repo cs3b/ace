@@ -20,20 +20,30 @@ module Ace
         #     puts "Error: #{result[:error]}"
         #   end
         class GitCommand
-          # Default timeout for git commands (30 seconds)
-          DEFAULT_TIMEOUT = 30
+          # Fallback timeout for git commands (30 seconds)
+          # Used only when config is unavailable
+          FALLBACK_TIMEOUT = 30
 
           class << self
+            # Get default timeout from config or fallback
+            # @return [Integer] Timeout in seconds
+            def default_timeout
+              Ace::Git::Worktree.default_timeout
+            rescue StandardError
+              FALLBACK_TIMEOUT
+            end
+
             # Execute a git command safely using ace-git's CommandExecutor
             #
             # @param args [Array<String>] Command arguments (command and its arguments)
-            # @param timeout [Integer] Timeout in seconds (default: 30)
+            # @param timeout [Integer, nil] Timeout in seconds (uses config default if nil)
             # @return [Hash] Result hash with :success, :output, :error, :exit_code keys
             #
             # @example
             #   result = GitCommand.execute("worktree", "list")
             #   # => { success: true, output: "/path/to/worktree abc123 [branch-name]\n", error: "", exit_code: 0 }
-            def execute(*args, timeout: DEFAULT_TIMEOUT)
+            def execute(*args, timeout: nil)
+              timeout ||= default_timeout
               # Ensure all arguments are strings
               string_args = args.map(&:to_s)
 
@@ -61,13 +71,13 @@ module Ace
             # Execute a git worktree command
             #
             # @param args [Array<String>] Worktree subcommand arguments
-            # @param timeout [Integer] Timeout in seconds
+            # @param timeout [Integer, nil] Timeout in seconds (uses config default if nil)
             # @return [Hash] Result hash with command execution details
             #
             # @example
             #   result = GitCommand.worktree("add", "/path/to/worktree", "-b", "feature-branch")
-            def worktree(*args, timeout: DEFAULT_TIMEOUT)
-              execute("worktree", *args, timeout:)
+            def worktree(*args, timeout: nil)
+              execute("worktree", *args, timeout: timeout)
             end
 
             # Check if git repository exists
