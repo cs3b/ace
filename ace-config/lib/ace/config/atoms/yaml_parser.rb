@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
+require "date"
 
 module Ace
   module Config
@@ -16,7 +17,7 @@ module Ace
         def parse(yaml_string)
           return {} if yaml_string.nil? || yaml_string.strip.empty?
 
-          YAML.safe_load(yaml_string, permitted_classes: [Symbol], aliases: true)
+          YAML.safe_load(yaml_string, permitted_classes: [Symbol, Date], aliases: true)
         rescue Psych::SyntaxError => e
           raise YamlParseError, "Failed to parse YAML: #{e.message}"
         end
