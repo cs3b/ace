@@ -7,7 +7,7 @@ PATH
 PATH
   remote: ace-context
   specs:
-    ace-context (0.22.1)
+    ace-context (0.22.2)
       ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-support-core (~> 0.10)
@@ -15,7 +15,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.13.1)
+    ace-docs (0.13.2)
       ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -47,7 +47,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.8.1)
+    ace-git-worktree (0.8.2)
       ace-config (~> 0.4)
       ace-git (~> 0.4)
       ace-taskflow (>= 0.10.0)
@@ -107,14 +107,14 @@ PATH
 PATH
   remote: ace-nav
   specs:
-    ace-nav (0.13.1)
+    ace-nav (0.13.2)
       ace-config (~> 0.4)
       ace-support-fs (~> 0.1)
 
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.9.1)
+    ace-prompt (0.9.2)
       ace-config (~> 0.4)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
@@ -126,7 +126,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.29.2)
+    ace-review (0.29.3)
       ace-config (~> 0.4)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
@@ -138,14 +138,14 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.15.1)
+    ace-search (0.15.2)
       ace-config (~> 0.4)
       ace-git (~> 0.3)
 
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.14.1)
+    ace-support-core (0.14.2)
       ace-config (~> 0.4)
       ace-support-fs (~> 0.1)
 
