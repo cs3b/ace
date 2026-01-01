@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2025-12-30
+
+### Changed
+
+* Replace ace-support-core dependency with ace-config for configuration cascade
+* Migrate from Ace::Core to Ace::Config.create() API
+
+## [0.6.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+
+## [0.5.0] - 2025-12-29
+
+### Changed
+- Migrate ProjectRootFinder dependency from `Ace::Core::Molecules` to `Ace::Support::Fs::Molecules` for direct ace-support-fs usage
+
 ## [0.4.0] - 2025-12-27
 
 ### Added

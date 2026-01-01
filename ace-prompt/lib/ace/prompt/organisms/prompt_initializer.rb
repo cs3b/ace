@@ -2,7 +2,7 @@
 
 require_relative "../molecules/template_resolver"
 require_relative "../molecules/template_manager"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 
 module Ace
   module Prompt
@@ -15,7 +15,7 @@ module Ace
         class << self
           # Get default prompt directory (project-local)
           def default_prompt_dir
-            project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+            project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
             File.join(project_root, ".cache", "ace-prompt", "prompts")
           end
         end

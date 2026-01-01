@@ -7,6 +7,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.3] - 2026-01-01
+
+### Fixed
+
+- **Configurable timeout for gh CLI operations**: `execute_simple` and `execute` methods now use configurable timeout from config instead of hardcoded values
+  - Added `gh_simple_timeout` config option (default: 10s) for simple commands like `--version`, `auth status`
+  - `execute` now reads `gh_timeout` from config (default: 30s) instead of hardcoded fallback
+  - Follows ADR-022 pattern with `Ace::Review.get("defaults", "key")` for config access
+
+## [0.29.2] - 2025-12-30
+
+### Changed
+
+- Add ace-config dependency for configuration cascade management
+- Migrate from Ace::Core to Ace::Config.create() API (keep ace-support-core for ProcessTerminator)
+- Migrate from `resolve_for` to `resolve_namespace` for cleaner config loading
+
+## [0.29.1] - 2025-12-30
+
+### Changed
+
+- **Workflow presentation format**: Improved review results presentation in `review.wf.md` and `review-pr.wf.md`
+  - Separate "No Action Needed" section (no numbering) for INVALID and VERIFIED CORRECT items
+  - Numbered "Action Items" table with priority column
+  - New priority threshold selection: All, Medium+, High+, Critical only
+  - Clearer categorization step (Step 5) before presentation
+
+## [0.29.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+
+## [0.28.0] - 2025-12-29
+
+### Changed
+- Migrate file system operations from `Ace::Core::Molecules` to `Ace::Support::Fs::Molecules` for direct ace-support-fs usage
+
+## [0.27.2] - 2025-12-28
+
+### Added
+- **Prioritize developer feedback in synthesis**: Human reviewer comments now receive special handling
+  - New "Developer Action Required" section appears before Consensus Findings
+  - Each unresolved comment gets its own subsection with exact text preserved
+  - Priority boosting ensures developer feedback is never ranked lower than Medium
+  - Added completeness requirements to prevent summarization of dev comments
+  - Added anti-patterns and verification checklist for developer feedback
+
+## [0.27.1] - 2025-12-28
+
+### Fixed
+- **Auto-discover repo for inline PR comments**: When running `ace-review --pr <number>` (local PR number), inline code comments were silently not fetched because GraphQL requires owner/repo format. Now automatically discovers repository via `gh repo view --json owner,name`
+- **Improved warning messages**: Upgraded warning messages from Debug to Warning level for better visibility when inline comments cannot be fetched
+
 ## [0.27.0] - 2025-12-28
 
 ### Added

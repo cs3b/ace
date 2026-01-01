@@ -1,0 +1,16 @@
+# Multi-model PR review - extends code-pr with concurrent model execution
+# Uses multiple models to get diverse perspectives on code changes
+
+presets:
+  - code
+
+description: "Multi-model PR review - concurrent execution across claude:opus, codex, and gpro"
+
+models:
+  - claude:opus              # Deep reasoning, architecture analysis
+  - codex:max  # Code-focused, implementation details
+  - google:pro-preview
+  - xai:grok-4-latest
+  - openrouter:minimax
+  - togetherai:qwen-coder
+  - togetherai:deepseek

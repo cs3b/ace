@@ -59,7 +59,7 @@ module Ace
       option :no_enhance, type: :boolean,
                           desc: "Explicitly disable LLM enhancement (override config)"
       option :model, type: :string,
-                     desc: "LLM model (default: #{Ace::Prompt::DEFAULT_MODEL})"
+                     desc: "LLM model (default from config: defaults.model)"
       option :system_prompt, type: :string,
                              desc: "Custom system prompt path"
       option :task, type: :string,

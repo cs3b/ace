@@ -4,15 +4,32 @@ module Ace
   module Core
     module Molecules
       # ContextChunker splits large content into manageable chunks
+      # Configuration is loaded from .ace-defaults/core/settings.yml
+      # and can be overridden at .ace/core/settings.yml (ADR-022)
       class ContextChunker
+        # Fallback value if config is not available
         DEFAULT_CHUNK_LIMIT = 150_000
         DEFAULT_CHUNK_SUFFIX = '_chunk'
 
         attr_reader :chunk_limit
 
-        def initialize(chunk_limit = DEFAULT_CHUNK_LIMIT)
-          @chunk_limit = chunk_limit
+        # @param chunk_limit [Integer, nil] Override chunk limit (nil uses config)
+        def initialize(chunk_limit = nil)
+          @chunk_limit = chunk_limit || config_chunk_limit
         end
+
+        private
+
+        # Load chunk_limit from configuration cascade
+        # Falls back to DEFAULT_CHUNK_LIMIT if config is unavailable
+        # @return [Integer] Configured chunk limit
+        def config_chunk_limit
+          Ace::Core.get("core", "context_chunker", "chunk_limit") || DEFAULT_CHUNK_LIMIT
+        rescue StandardError
+          DEFAULT_CHUNK_LIMIT
+        end
+
+        public
 
         # Check if content needs chunking
         def needs_chunking?(content)

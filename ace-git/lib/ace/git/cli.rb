@@ -80,7 +80,7 @@ module Ace
 
           Global config:  ~/.ace/git/config.yml
           Project config: .ace/git/config.yml
-          Example:        ace-git/.ace.example/git/config.yml
+          Example:        ace-git/.ace-defaults/git/config.yml
 
         OUTPUT:
 

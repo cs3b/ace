@@ -24,10 +24,10 @@ $ gem install ace-llm-providers-cli
 
 ### Configuration
 
-Provider configurations are in `.ace.example/llm/providers/`. Copy these to your project's `.ace/llm/providers/` directory:
+Provider configurations are in `.ace-defaults/llm/providers/`. Copy these to your project's `.ace/llm/providers/` directory:
 
 ```bash
-cp -r gems/ace-llm-providers-cli/.ace.example/llm/providers/*.yml .ace/llm/providers/
+cp -r gems/ace-llm-providers-cli/.ace-defaults/llm/providers/*.yml .ace/llm/providers/
 ```
 
 ## Prerequisites

@@ -2,6 +2,6 @@
 
 module Ace
   module Nav
-    VERSION = "0.11.0"
+    VERSION = "0.13.2"
   end
 end

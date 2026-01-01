@@ -111,7 +111,7 @@ if options[:list]
   if presets.empty?
     puts "No presets found in .ace/context/presets/"
     puts "Create markdown files with YAML frontmatter in .ace/context/presets/ to define presets."
-    puts "Example presets are available in the ace-context gem at .ace.example/context/"
+    puts "Example presets are available in the ace-context gem at .ace-defaults/context/"
   else
     puts "Available presets:"
     presets.each do |preset|
@@ -176,8 +176,8 @@ when 'stdio'
 when 'cache'
   # Save to cache directory
   require 'fileutils'
-  require 'ace/core/molecules/project_root_finder'
-  project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+  require 'ace/support/fs'
+  project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
   cache_dir = File.join(project_root, '.cache/ace-context')
   FileUtils.mkdir_p(cache_dir)
 

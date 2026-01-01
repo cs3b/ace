@@ -31,15 +31,33 @@ module Ace
         #         env:
         #           CUSTOM_VAR: "value"
         class HookExecutor
-          # Default timeout for hook execution (seconds)
-          DEFAULT_TIMEOUT = 30
+          # Fallback timeout for hook execution (seconds)
+          # Used only when config is unavailable
+          FALLBACK_DEFAULT_TIMEOUT = 30
 
-          # Maximum timeout allowed (seconds)
-          MAX_TIMEOUT = 300
+          # Fallback maximum timeout allowed (seconds)
+          # Used only when config is unavailable
+          FALLBACK_MAX_TIMEOUT = 300
 
           # Initialize a new HookExecutor
           def initialize
             @results = []
+          end
+
+          # Get default timeout from config or fallback
+          # @return [Integer] Default timeout in seconds
+          def default_timeout
+            Ace::Git::Worktree.hook_timeout
+          rescue StandardError
+            FALLBACK_DEFAULT_TIMEOUT
+          end
+
+          # Get maximum timeout from config or fallback
+          # @return [Integer] Maximum timeout in seconds
+          def max_timeout
+            Ace::Git::Worktree.max_timeout
+          rescue StandardError
+            FALLBACK_MAX_TIMEOUT
           end
 
           # Execute a list of hooks
@@ -238,12 +256,12 @@ module Ace
           # @param timeout [Integer, nil] Configured timeout
           # @return [Integer] Validated timeout in seconds
           def get_timeout(timeout)
-            return DEFAULT_TIMEOUT if timeout.nil?
+            return default_timeout if timeout.nil?
 
             timeout_int = timeout.to_i
-            return DEFAULT_TIMEOUT if timeout_int <= 0
+            return default_timeout if timeout_int <= 0
 
-            [timeout_int, MAX_TIMEOUT].min
+            [timeout_int, max_timeout].min
           end
 
           # Prepare environment variables

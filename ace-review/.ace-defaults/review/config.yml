@@ -1,0 +1,54 @@
+# ace-review configuration file
+# This file defines default settings and presets for code reviews
+#
+# Configuration Options:
+# ---------------------
+# preset          - Default preset when --preset not specified (default: "code")
+# model           - Default LLM model for reviews (default: "google:gemini-2.5-flash")
+# output_format   - Output format for reviews (default: "markdown")
+# context         - Default context preset (default: "project")
+# max_concurrent_models - Max parallel LLM queries for multi-model execution (default: 3)
+# auto_execute    - Auto-execute LLM query without confirmation (default: false)
+# gh_timeout      - Timeout for GitHub CLI operations in seconds (default: 30)
+# gh_simple_timeout - Timeout for simple gh commands like --version, auth status (default: 10)
+# llm_timeout     - Timeout for LLM queries in seconds (default: 300)
+#
+# Environment Variables:
+# ---------------------
+# ACE_DEBUG / DEBUG       - Enable debug output (set to "1")
+# ACE_REVIEW_DEBUG        - Enable detailed composition debugging (set to "1")
+
+# Default settings applied to all reviews unless overridden
+defaults:
+  preset: "code"  # Default preset when --preset not specified
+  model: "google:gemini-2.5-flash"
+  output_format: "markdown"
+  context: "project"
+  max_concurrent_models: 3  # Max parallel LLM queries for multi-model execution
+  auto_execute: false  # Set to true to auto-execute LLM query without confirmation
+  auto_save: false  # Set to true to enable auto-save to task/release directories (opt-in)
+  auto_save_branch_patterns:
+    - '^(\d+(?:\.\d+)?)-'  # Standard: 121-feature, 121.01-subtask
+    - '^feature/(\d+)-'     # Feature branches: feature/123-name
+  auto_save_release_fallback: true  # Save to release dir when no task detected
+  gh_timeout: 30  # Timeout for GitHub CLI operations in seconds
+  gh_simple_timeout: 10  # Timeout for simple gh commands (--version, auth status)
+  llm_timeout: 300  # Timeout for LLM queries in seconds (5 minutes)
+
+# Storage configuration
+# storage:
+#   # Where to store review outputs
+#   # Detection order (if not specified):
+#   #   1. Try: $(ace-taskflow release --path reviews)
+#   #   2. Fallback: .cache/ace-review/sessions/
+#   # You can override with custom path (supports %{release} placeholder):
+#   base_path: ".ace-taskflow/%{release}/reviews"
+#   auto_organize: true
+
+# Synthesis configuration for multi-model review reports
+synthesis:
+  enabled: true  # Set to false to disable automatic synthesis
+  model: "claude:sonnet"  # Model to use for synthesis (best format compliance)
+
+# Review presets - load from .ace/review/presets/*.yml
+# Individual preset files provide better organization and shareability

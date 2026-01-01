@@ -19,15 +19,28 @@ module Ace
         # @example List with task associations
         #   worktrees = lister.list_with_tasks
         class WorktreeLister
-          # Default timeout for git commands
-          DEFAULT_TIMEOUT = 30
+          # Fallback timeout for git commands
+          # Used only when config is unavailable
+          FALLBACK_TIMEOUT = 30
 
           # Initialize a new WorktreeLister
           #
-          # @param timeout [Integer] Command timeout in seconds
-          def initialize(timeout: DEFAULT_TIMEOUT)
-            @timeout = timeout
+          # @param timeout [Integer, nil] Command timeout in seconds (uses config default if nil)
+          def initialize(timeout: nil)
+            @timeout = timeout || config_timeout
           end
+
+          private
+
+          # Get timeout from config or fallback
+          # @return [Integer] Timeout in seconds
+          def config_timeout
+            Ace::Git::Worktree.list_timeout
+          rescue StandardError
+            FALLBACK_TIMEOUT
+          end
+
+          public
 
           # List all worktrees in the repository
           #

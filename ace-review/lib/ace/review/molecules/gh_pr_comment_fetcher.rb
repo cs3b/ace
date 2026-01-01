@@ -224,16 +224,22 @@ module Ace
           repo_full = parsed[:repo]
           number = parsed[:number]
 
-          # Skip if we don't have repo info (local PR number only)
+          # Try to discover repo from git remote if not provided in identifier
+          if repo_full.nil? && number
+            repo_full = discover_repo_from_remote(options)
+          end
+
+          # Skip if we still don't have repo info
           unless repo_full && number
-            warn "Debug: Skipping review threads fetch - missing owner/repo (PR identifier may be local number only)"
+            warn "Warning: Cannot fetch inline code comments - repository info not available. " \
+                 "Use full PR format (owner/repo#number) or run from within a git repository."
             return []
           end
 
           # Parse owner/repo from combined format (e.g., "owner/repo")
           parts = repo_full.split("/", 2)
           unless parts.length == 2
-            warn "Debug: Skipping review threads fetch - invalid repo format: #{repo_full}"
+            warn "Warning: Cannot fetch inline code comments - invalid repo format: #{repo_full}"
             return []
           end
           owner = parts[0]
@@ -369,9 +375,33 @@ module Ace
           }
         end
 
+        # Discover repository owner/name from git remote via gh CLI
+        #
+        # @param options [Hash] Fetch options
+        # @option options [Integer] :timeout Timeout in seconds (default: 10)
+        # @return [String, nil] "owner/name" format or nil if not a GitHub repo
+        def self.discover_repo_from_remote(options = {})
+          timeout = options[:timeout] || 10
+          result = Ace::Review::Molecules::GhCliExecutor.execute(
+            "repo",
+            ["view", "--json", "owner,name"],
+            timeout: timeout
+          )
+          return nil unless result[:success]
+
+          data = JSON.parse(result[:stdout])
+          owner = data.dig("owner", "login")
+          name = data["name"]
+          return nil unless owner && name
+
+          "#{owner}/#{name}"
+        rescue JSON::ParserError, StandardError
+          nil
+        end
+
         private_class_method :extract_comments, :extract_reviews, :fetch_review_threads,
                              :extract_review_threads, :check_pagination_limits,
-                             :bot_author?, :handle_fetch_error
+                             :bot_author?, :handle_fetch_error, :discover_repo_from_remote
       end
     end
   end

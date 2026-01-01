@@ -4,6 +4,225 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.215] - 2025-12-31
+
+### Added
+
+**ace-config Documentation**: Complete documentation suite for ace-config gem (Task 157.11)
+
+- Migration guide at `docs/migrations/ace-config-migration.md` (263 lines)
+  - Before/after migration examples for ace-* gems and external projects
+  - API migration reference (resolve_for → resolve_file/resolve_namespace)
+  - Directory naming changes (.ace.example/ → .ace-defaults/)
+  - Error class namespace changes
+
+### Changed
+
+- ADR-022 updated with ace-config extraction rationale and recommended patterns
+- docs/ace-gems.g.md updated to use ace-config patterns for configuration
+
+## [0.9.214] - 2025-12-31
+
+### Technical
+
+**ace-config 0.4.1**: Add comprehensive tests (Task 157.10)
+
+- Add edge case tests: deep nesting, unicode, nil values, special YAML types, large values
+- Add custom path tests: custom config_dir, defaults_dir, cascade priority
+- Total: 173 tests, 326 assertions
+
+## [0.9.213] - 2025-12-30
+
+### Added
+
+**ace-config 0.4.0**: Add `merge()` method to Config model
+
+- `merge()` method on Config model as the primary API for merging configuration data
+- `with()` remains as an alias for backward compatibility
+- Provides more intuitive API for gems merging CLI options or runtime overrides
+
+## [0.9.212] - 2025-12-30
+
+### Changed
+
+**ace-config Migration**: Update 16 packages with ace-config dependency and API migration
+
+All packages now use `Ace::Config.create()` API instead of `Ace::Core` for configuration cascade management.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-context | 0.22.1 | +ace-config, API migration |
+| ace-docs | 0.13.1 | +ace-config, API migration |
+| ace-git | 0.5.1 | Replace ace-support-core with ace-config |
+| ace-git-commit | 0.14.1 | Replace ace-support-core with ace-config |
+| ace-git-secrets | 0.3.1 | Replace ace-support-core with ace-config |
+| ace-git-worktree | 0.8.1 | Replace ace-support-core with ace-config |
+| ace-lint | 0.5.1 | Replace ace-support-core with ace-config |
+| ace-llm | 0.16.1 | +ace-config, ClientRegistry refactor |
+| ace-llm-providers-cli | 0.11.1 | Replace ace-support-core with ace-config |
+| ace-nav | 0.13.1 | Replace ace-support-core with ace-config + ace-support-fs |
+| ace-prompt | 0.9.1 | Replace ace-support-core with ace-config |
+| ace-review | 0.29.2 | +ace-config (keep ace-support-core for ProcessTerminator) |
+| ace-search | 0.15.1 | Replace ace-support-core with ace-config |
+| ace-support-core | 0.14.1 | +ace-config dependency |
+| ace-taskflow | 0.26.1 | Replace ace-support-core with ace-config |
+| ace-test-runner | 0.6.1 | Replace ace-support-core with ace-config |
+
+## [0.9.211] - 2025-12-30
+
+### Changed
+
+**ace-llm-models-dev 0.3.3**: Update provider config paths for .ace-defaults rename
+
+- Update provider config path references from `.ace.example` to `.ace-defaults`
+
+**Migrate 9 packages from `resolve_for` to `resolve_namespace`**
+
+Use the new `resolve_namespace` API for cleaner config loading. This eliminates manual pattern construction and removes deprecation warnings.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-docs | 0.13.0 → 0.13.1 | Use `resolve_namespace("docs")` |
+| ace-git | 0.5.0 → 0.5.1 | Use `resolve_namespace("git")` |
+| ace-git-commit | 0.14.0 → 0.14.1 | Use `resolve_namespace("git", filename: "commit")` |
+| ace-git-secrets | 0.3.0 → 0.3.1 | Use `resolve_namespace("git-secrets")` |
+| ace-git-worktree | 0.8.0 → 0.8.1 | Use `resolve_namespace("git", filename: "worktree")` |
+| ace-lint | 0.5.0 → 0.5.1 | Use `resolve_namespace("lint")` and `resolve_namespace("lint", filename: "kramdown")` |
+| ace-prompt | 0.9.0 → 0.9.1 | Use `resolve_namespace("prompt")` |
+| ace-review | 0.29.0 → 0.29.2 | Use `resolve_namespace("review")` |
+| ace-search | 0.15.0 → 0.15.1 | Use `resolve_namespace("search")` |
+
+## [0.9.210] - 2025-12-30
+
+### Changed
+
+**ace-config 0.2.1**: Add Date class support and release accumulated improvements
+
+- Add `Date` class to permitted YAML classes for parsing date values in config files
+- Add runtime dependency on `ace-support-fs` for filesystem utilities
+- Add `class_get_env` class method on PathExpander for consistent ENV access pattern
+- Reorganize ConfigResolver methods: all public methods grouped together before private section
+
+### Added
+
+**ace-config v0.2.0 → v0.3.0 (Task 157.14)**
+
+- `resolve_namespace(*segments, filename: "config")` method to ConfigResolver for simplified namespace-based config resolution
+- Automatically builds `.yml/.yaml` file patterns from path segments
+- Reduces boilerplate across ace-* gems for config loading
+
+## [0.9.209] - 2025-12-30
+
+### Changed
+
+**Task 157.08: Rename `.ace.example/` to `.ace-defaults/`**
+
+Standardize gem defaults directory naming from `.ace.example` to `.ace-defaults` for clarity. The new naming makes it clearer these are bundled defaults shipped with gems, not user-provided examples.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-context | 0.21.0 → 0.22.0 | Rename defaults directory |
+| ace-docs | 0.12.0 → 0.13.0 | Rename defaults directory |
+| ace-git | 0.4.0 → 0.5.0 | Rename defaults directory |
+| ace-git-commit | 0.13.0 → 0.14.0 | Rename defaults directory |
+| ace-git-secrets | 0.2.0 → 0.3.0 | Rename defaults directory |
+| ace-git-worktree | 0.7.0 → 0.8.0 | Rename defaults directory |
+| ace-handbook | 0.1.0 → 0.2.0 | Rename defaults directory |
+| ace-integration-claude | 0.1.0 → 0.2.0 | Rename defaults directory |
+| ace-lint | 0.4.0 → 0.5.0 | Rename defaults directory |
+| ace-llm | 0.15.1 → 0.16.0 | Rename defaults directory |
+| ace-llm-providers-cli | 0.10.2 → 0.11.0 | Rename defaults directory, update ace-llm dep |
+| ace-nav | 0.12.0 → 0.13.0 | Rename defaults directory |
+| ace-prompt | 0.8.0 → 0.9.0 | Rename defaults directory |
+| ace-review | 0.28.0 → 0.29.0 | Rename defaults directory |
+| ace-search | 0.14.0 → 0.15.0 | Rename defaults directory |
+| ace-support-core | 0.13.0 → 0.14.0 | Rename defaults directory |
+| ace-taskflow | 0.25.0 → 0.26.0 | Rename defaults directory |
+| ace-test-runner | 0.5.0 → 0.6.0 | Rename defaults directory |
+
+## [0.9.208] - 2025-12-30
+
+### Changed
+
+**ace-support-core v0.12.0 → v0.13.0**
+- Configuration cascade now powered by ace-config gem
+- Configuration resolution delegated to ace-config with `.ace` and `.ace-defaults` directories
+- Added resolver caching for improved performance (avoids repeated FS traversal)
+- Added `Ace::Core.reset_config!` to clear cached resolver for test isolation
+
+### Deprecated
+
+**ace-support-core v0.13.0**
+- `Ace::Core.config(search_paths:, file_patterns:)` parameters are deprecated - use `Ace::Config.create(config_dir:, defaults_dir:)` for custom paths
+- `Ace::Core::Organisms::ConfigResolver.new(search_paths:)` is deprecated - use new API with `config_dir:` and `defaults_dir:` parameters
+- Both will be removed in a future minor version
+
+### Added
+
+**ace-support-core v0.13.0**
+- Runtime dependencies: ace-config (~> 0.2), ace-support-fs (~> 0.1)
+- Migration fallback: `.ace.example` fallback for gem defaults during migration period
+- Test coverage: 10 new tests for deprecation warnings and caching
+
+## [0.9.207] - 2025-12-29
+
+### Changed
+
+**Task 161: Migrate dependent gems to ace-support-fs**
+
+Complete migration from `Ace::Core::Molecules::ProjectRootFinder` and `Ace::Core::Molecules::DirectoryTraverser` to use `Ace::Support::Fs::*` directly across all dependent gems.
+
+| Package | Version | Change |
+|---------|---------|--------|
+| ace-test-runner | 0.4.0 → 0.5.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-search | 0.13.0 → 0.14.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-docs | 0.11.0 → 0.12.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-nav | 0.11.0 → 0.12.0 | Migrate DirectoryTraverser and ProjectRootFinder to ace-support-fs |
+| ace-context | 0.20.0 → 0.21.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-review | 0.27.2 → 0.28.0 | Migrate file system operations to ace-support-fs |
+| ace-prompt | 0.7.0 → 0.8.0 | Migrate ProjectRootFinder to ace-support-fs |
+| ace-support-core | 0.11.1 → 0.12.0 | Remove backward compat aliases, update internal deps |
+
+### Removed
+
+**ace-support-core v0.12.0** (BREAKING)
+- Removed `Ace::Core::Atoms::PathExpander` alias
+- Removed `Ace::Core::Molecules::ProjectRootFinder` alias
+- Removed `Ace::Core::Molecules::DirectoryTraverser` alias
+- Use `Ace::Support::Fs::*` directly instead
+
+## [0.9.206] - 2025-12-28
+
+### Added
+
+**ace-review v0.27.1 → v0.27.2**
+- Prioritize developer feedback in synthesis: Human reviewer comments now receive special handling
+- New "Developer Action Required" section appears before Consensus Findings
+- Each unresolved comment gets its own subsection with exact text preserved
+- Priority boosting ensures developer feedback is never ranked lower than Medium
+
+## [0.9.205] - 2025-12-28
+
+### Added
+
+**ace-config v0.2.0** (new gem)
+- Initial release of ace-config gem extracted from ace-support-core
+- Generic configuration cascade with customizable folder names
+- `Ace::Config.create` and `Ace::Config.virtual_resolver` factory methods
+- Deep merging with configurable array strategies (:replace, :concat, :union)
+- Project root detection, path expansion, YAML parsing
+- Memoization for `resolve()` and `get()` methods
+- Windows compatibility via `File::ALT_SEPARATOR` support
+- Zero runtime dependencies (stdlib only)
+
+## [0.9.204] - 2025-12-28
+
+### Fixed
+
+**ace-review v0.27.0 → v0.27.1**
+- Fixed: Auto-discover repo for inline PR comments - when running `ace-review --pr <number>` (local PR number), inline code comments were silently not fetched because GraphQL requires owner/repo format. Now automatically discovers repository via `gh repo view`
+- Fixed: Upgraded warning messages from Debug to Warning level for better visibility
+
 ## [0.9.203] - 2025-12-28
 
 ### Package Version Bumps (ADR-022 Configuration Pattern)

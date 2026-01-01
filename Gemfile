@@ -1,6 +1,7 @@
 source 'https://rubygems.org'
 
 # Local workspace gems - flat in root (ace-* prefix)
+gem 'ace-config', path: 'ace-config'
 gem 'ace-context', path: 'ace-context'
 gem 'ace-docs', path: 'ace-docs'
 gem 'ace-git', path: 'ace-git'
@@ -16,6 +17,7 @@ gem 'ace-prompt', path: 'ace-prompt'
 gem 'ace-review', path: 'ace-review'
 gem 'ace-search', path: 'ace-search'
 gem 'ace-support-core', path: 'ace-support-core'
+gem 'ace-support-fs', path: 'ace-support-fs'
 gem 'ace-support-mac-clipboard', path: 'ace-support-mac-clipboard'
 gem 'ace-support-markdown', path: 'ace-support-markdown'
 gem 'ace-taskflow', path: 'ace-taskflow'

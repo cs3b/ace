@@ -6,11 +6,18 @@ Part of the ace-support-* pattern for library-only infrastructure gems (no CLI t
 
 ## Features
 
-- **Configuration Cascade**: Search and merge configs from `./.ace` → `~/.ace` → gem defaults
-- **Deep Merging**: Intelligent merging of nested configuration with configurable array strategies
+- **Configuration Cascade**: Powered by ace-config gem with `./.ace` → `~/.ace` → gem defaults resolution
+- **Deep Merging**: Intelligent merging of nested configuration with configurable merge strategies
 - **Environment Variables**: Load and manage .env files with proper precedence
+- **Filesystem Utilities**: Path resolution and project root finding via ace-support-fs
 - **ATOM Architecture**: Clean separation of concerns using Atoms, Molecules, Organisms pattern
-- **Zero Dependencies**: Uses only Ruby standard library for maximum compatibility
+
+**Note**: During migration, gem defaults are loaded from `.ace.example/` (legacy) or `.ace-defaults/` (new standard). The fallback to `.ace.example` will be removed after all gems complete migration.
+
+## Dependencies
+
+- **ace-config** (~> 0.2): Generic configuration cascade management
+- **ace-support-fs** (~> 0.1): Filesystem utilities (PathExpander, ProjectRootFinder, DirectoryTraverser)
 
 ## Installation
 
@@ -58,17 +65,22 @@ env.set('MY_VAR', 'value')
 env.get('MY_VAR', 'default')
 ```
 
-### Custom Configuration Paths
+### Custom Configuration
 
 ```ruby
-# Use custom search paths
-config = Ace::Core.config(search_paths: ['./.custom', '~/.myapp'])
+# Create a resolver with custom directories
+resolver = Ace::Config.create(
+  config_dir: ".myapp",           # Custom config directory (default: .ace)
+  defaults_dir: ".myapp-defaults", # Custom defaults directory
+  gem_path: __dir__               # Gem root for bundled defaults (optional)
+)
+config = resolver.resolve
 
-# Or create a resolver with custom settings
+# Or use the ConfigResolver directly for more control
 resolver = Ace::Core::Organisms::ConfigResolver.new(
-  search_paths: ['./.ace', '~/.ace', '/etc/ace'],
-  file_patterns: ['config.yml', '*/config.yml'],
-  merge_strategy: :deep
+  config_dir: ".ace",
+  defaults_dir: ".ace-defaults",  # Or ".ace.example" for legacy gems
+  gem_path: __dir__
 )
 config = resolver.resolve
 ```
@@ -80,56 +92,28 @@ config = resolver.resolve
 Ace::Core.create_default_config('./.ace/core/config.yml')
 ```
 
-### Path Resolution with PathExpander
+### Path Resolution
 
-PathExpander provides unified path resolution across ACE tools with automatic context inference:
-
-```ruby
-require 'ace/core/atoms/path_expander'
-
-# For config files, workflows, templates, prompts
-config_file = ".ace/nav/config.yml"
-expander = Ace::Core::Atoms::PathExpander.for_file(config_file)
-
-# Resolve multiple paths - context inferred once!
-expander.resolve("./local/file.md")        # Source-relative (from config dir)
-expander.resolve("docs/architecture.md")   # Project-relative (from project root)
-expander.resolve("$HOME/.ace/custom.yml")  # Environment variable expansion
-expander.resolve("/absolute/path.md")      # Absolute paths
-
-# For CLI arguments
-expander = Ace::Core::Atoms::PathExpander.for_cli
-resolved = expander.resolve(ARGV[0])  # Uses current directory as context
-```
-
-**Protocol URI Support** (with ace-nav integration):
+Path expansion and project root finding are provided by the **ace-support-fs** gem:
 
 ```ruby
-# Register protocol resolver (e.g., ace-nav)
-Ace::Core::Atoms::PathExpander.register_protocol_resolver(resolver)
+require 'ace/support/fs'
 
-# Now protocol URIs work automatically
-expander.resolve("wfi://workflow-name")    # Resolves via ace-nav
-expander.resolve("guide://testing")        # Workflow instructions
-expander.resolve("tmpl://task-draft")      # Templates
+# PathExpander: unified path resolution with context inference
+expander = Ace::Support::Fs::Atoms::PathExpander.for_file(".ace/nav/config.yml")
+expander.resolve("./local/file.md")        # Source-relative
+expander.resolve("docs/architecture.md")   # Project-relative
+
+# ProjectRootFinder: locate project root by markers (.git, .ace, etc.)
+root = Ace::Support::Fs::Molecules::ProjectRootFinder.find
+root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+
+# DirectoryTraverser: traverse config directories
+traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new
+config_dirs = traverser.find_config_directories
 ```
 
-**Path Resolution Rules**:
-- Paths starting with `./` or `../`: Resolved relative to source document directory
-- Paths without prefix: Resolved relative to project root
-- Paths with `$VAR` or `${VAR}`: Environment variables expanded
-- Protocol URIs (`protocol://`): Delegated to registered resolver
-- Absolute paths: Used as-is
-
-**Backward Compatible Class Methods**:
-
-```ruby
-# Legacy stateless methods still work
-Ace::Core::Atoms::PathExpander.expand("~/docs")     # Expand tilde and env vars
-Ace::Core::Atoms::PathExpander.join("a", "b", "c")  # Join path components
-Ace::Core::Atoms::PathExpander.absolute?("/path")   # Check if absolute
-Ace::Core::Atoms::PathExpander.protocol?("wfi://")  # Check if protocol URI
-```
+See **ace-support-fs** gem for complete documentation on path resolution, protocol URIs, and directory traversal.
 
 ## Configuration Structure
 
@@ -165,8 +149,8 @@ ace:
 
 This gem follows the ATOM (Atoms, Molecules, Organisms, Models) architecture:
 
-- **Atoms**: Pure functions with no side effects (`yaml_parser`, `env_parser`, `deep_merger`, `path_expander`)
-- **Molecules**: Composed operations using Atoms (`yaml_loader`, `env_loader`, `config_finder`, `project_root_finder`)
+- **Atoms**: Pure functions with no side effects (`yaml_parser`, `env_parser`, `deep_merger`)
+- **Molecules**: Composed operations using Atoms (`yaml_loader`, `env_loader`, `config_finder`)
 - **Organisms**: Business logic orchestration (`config_resolver`, `environment_manager`)
 - **Models**: Data structures with no behavior (`config`, `cascade_path`)
 

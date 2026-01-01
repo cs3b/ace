@@ -1,3 +1,9 @@
+---
+name: vue-firebase
+description: Vue 3 + Firebase platform review focus
+last-updated: '2026-01-01'
+---
+
 # Vue.js with Firebase Focus
 
 ## Vue 3 & Firebase Platform Review

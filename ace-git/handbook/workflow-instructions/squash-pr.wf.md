@@ -49,6 +49,24 @@ Squash multiple commits into cohesive, logical commits for clean, maintainable g
 > ⚠️ **CRITICAL**: Before squashing ANY PR, you MUST determine the correct base commit.
 > Do NOT assume `origin/main` is the correct base - PRs can be based on feature branches!
 
+### Step 0: Run ace-git status (REQUIRED FIRST STEP)
+
+```bash
+ace-git status
+```
+
+This shows the PR's target branch clearly:
+```
+## Current PR
+
+#102 [OPEN] 159: Extract ace-support-fs gem...
+  Target: 157-extract-ace-config-gem-from-ace-support-core | Author: @cs3b
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         THIS is your base branch, NOT origin/main!
+```
+
+**If Target is NOT `main`**: Your PR depends on another PR. Use `origin/<target-branch>` as your squash base.
+
 ### Step 1: Get PR's Base Branch
 
 ```bash

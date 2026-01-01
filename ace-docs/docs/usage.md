@@ -424,7 +424,7 @@ ace-docs:
 
 This generates a single `repo-diff.diff` file with all changes.
 
-See `.ace.example/docs/config.yml` in the ace-docs gem for the complete configuration reference.
+See `.ace-defaults/docs/config.yml` in the ace-docs gem for the complete configuration reference.
 
 ## Frontmatter Schema
 

@@ -19,7 +19,7 @@ class PromptProcessorTest < Minitest::Test
   def test_processes_prompt_successfully
     File.write(@prompt_file, "Test prompt")
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call
 
       assert result[:success]
@@ -32,7 +32,7 @@ class PromptProcessorTest < Minitest::Test
   end
 
   def test_handles_missing_prompt_file
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call
 
       refute result[:success]
@@ -45,7 +45,7 @@ class PromptProcessorTest < Minitest::Test
     content = "Important prompt content"
     File.write(@prompt_file, content)
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call
 
       assert result[:success]
@@ -60,7 +60,7 @@ class PromptProcessorTest < Minitest::Test
   def test_updates_symlink_to_archive
     File.write(@prompt_file, "Test")
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call
 
       assert result[:success]
@@ -77,7 +77,7 @@ class PromptProcessorTest < Minitest::Test
     custom_file = File.join(@tmpdir, "custom-prompt.md")
     File.write(custom_file, "Custom content")
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call(input_path: custom_file)
 
       assert result[:success]
@@ -89,7 +89,7 @@ class PromptProcessorTest < Minitest::Test
   def test_handles_empty_prompt
     File.write(@prompt_file, "")
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call
 
       # Empty content should still succeed
@@ -102,7 +102,7 @@ class PromptProcessorTest < Minitest::Test
     content = "日本語 Привет café 🎉"
     File.write(@prompt_file, content, encoding: "utf-8")
 
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Organisms::PromptProcessor.call
 
       assert result[:success]

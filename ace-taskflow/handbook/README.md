@@ -84,7 +84,7 @@ The ace-taskflow workflows integrate seamlessly with dev-tools:
 ## Protocol Configuration
 
 The workflows are discoverable via the wfi-sources protocol:
-- Configuration: `.ace.example/protocols/wfi-sources/ace-taskflow.yml`
+- Configuration: `.ace-defaults/protocols/wfi-sources/ace-taskflow.yml`
 - Type: `gem` (for gem-based discovery)
 - Path: `handbook/workflow-instructions/`
 

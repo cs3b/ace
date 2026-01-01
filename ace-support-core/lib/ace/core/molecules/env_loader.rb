@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/env_parser"
-require_relative "../atoms/path_expander"
+require "ace/support/fs"
 require_relative "../errors"
 
 module Ace
@@ -14,7 +14,7 @@ module Ace
         # @return [Hash] Parsed environment variables
         # @raise [EnvParseError] if parsing fails
         def self.load_file(filepath)
-          filepath = Atoms::PathExpander.expand(filepath)
+          filepath = Ace::Support::Fs::Atoms::PathExpander.expand(filepath)
 
           unless File.exist?(filepath)
             return {}
@@ -87,7 +87,7 @@ module Ace
         # @param root [String] Project root directory
         # @return [Hash] Variables that were loaded
         def self.auto_load(root = Dir.pwd)
-          root = Atoms::PathExpander.expand(root)
+          root = Ace::Support::Fs::Atoms::PathExpander.expand(root)
 
           # Standard .env file locations in priority order
           env_files = [

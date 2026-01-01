@@ -2,7 +2,7 @@
 
 require "yaml"
 require "pathname"
-require "ace/core/molecules/directory_traverser"
+require "ace/support/fs"
 require_relative "../models/protocol_source"
 
 module Ace
@@ -58,7 +58,7 @@ module Ace
           sources = []
 
           # Use directory traverser to find all .ace directories up to project root
-          traverser = Ace::Core::Molecules::DirectoryTraverser.new(start_path: Dir.pwd)
+          traverser = Ace::Support::Fs::Molecules::DirectoryTraverser.new(start_path: Dir.pwd)
           config_dirs = traverser.find_config_directories
 
           # Check each .ace directory for protocol sources

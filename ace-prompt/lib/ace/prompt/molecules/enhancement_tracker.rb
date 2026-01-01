@@ -2,16 +2,35 @@
 
 require "fileutils"
 require "digest"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 
 module Ace
   module Prompt
     module Molecules
       # Tracks enhancement iterations and manages enhancement cache
       class EnhancementTracker
-        # Cache directory for enhanced prompts
-        CACHE_DIR = ".cache/ace-prompt/enhance-cache"
-        ARCHIVE_DIR = ".cache/ace-prompt/prompts/archive"
+        # Default directories (fallback if config unavailable)
+        DEFAULT_CACHE_DIR = ".cache/ace-prompt"
+        DEFAULT_ENHANCE_CACHE = "enhance-cache"
+        DEFAULT_ARCHIVE_DIR = "prompts/archive"
+
+        # Get enhance cache directory from config
+        # @return [String] Enhance cache directory relative to project root
+        def self.enhance_cache_dir
+          config = Ace::Prompt.config
+          cache_dir = config.dig("paths", "cache_dir") || DEFAULT_CACHE_DIR
+          enhance_cache = config.dig("paths", "enhance_cache") || DEFAULT_ENHANCE_CACHE
+          File.join(cache_dir, enhance_cache)
+        end
+
+        # Get archive directory from config
+        # @return [String] Archive directory relative to project root
+        def self.archive_dir
+          config = Ace::Prompt.config
+          cache_dir = config.dig("paths", "cache_dir") || DEFAULT_CACHE_DIR
+          archive = config.dig("paths", "archive_dir") || DEFAULT_ARCHIVE_DIR
+          File.join(cache_dir, archive)
+        end
 
         # Calculate cache key including all parameters that affect output
         #
@@ -42,8 +61,8 @@ module Ace
         # @param hash [String] Content hash
         # @return [Boolean] True if cached
         def self.cached?(hash)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-          cache_path = File.join(project_root, CACHE_DIR, "#{hash}.md")
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          cache_path = File.join(project_root, enhance_cache_dir, "#{hash}.md")
           File.exist?(cache_path)
         end
 
@@ -52,8 +71,8 @@ module Ace
         # @param hash [String] Content hash
         # @return [String, nil] Cached content or nil if not found
         def self.get_cached(hash)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-          cache_path = File.join(project_root, CACHE_DIR, "#{hash}.md")
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          cache_path = File.join(project_root, enhance_cache_dir, "#{hash}.md")
           return nil unless File.exist?(cache_path)
 
           File.read(cache_path, encoding: "utf-8")
@@ -68,11 +87,11 @@ module Ace
         # @param content [String] Content to cache
         # @return [Boolean] True if successful
         def self.store_cache(hash, content)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-          cache_dir = File.join(project_root, CACHE_DIR)
-          FileUtils.mkdir_p(cache_dir)
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          cache_dir_path = File.join(project_root, enhance_cache_dir)
+          FileUtils.mkdir_p(cache_dir_path)
 
-          cache_path = File.join(cache_dir, "#{hash}.md")
+          cache_path = File.join(cache_dir_path, "#{hash}.md")
           File.write(cache_path, content, encoding: "utf-8")
           true
         rescue StandardError => e
@@ -85,13 +104,13 @@ module Ace
         # @param timestamp [String] Timestamp (e.g., "20251129-143000")
         # @return [Integer] Next iteration number (1, 2, 3, etc.)
         def self.next_iteration(timestamp)
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-          archive_dir = File.join(project_root, ARCHIVE_DIR)
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          archive_dir_path = File.join(project_root, archive_dir)
 
-          return 1 unless Dir.exist?(archive_dir)
+          return 1 unless Dir.exist?(archive_dir_path)
 
           # Find all enhancement files for this timestamp
-          pattern = File.join(archive_dir, "#{timestamp}_e*.md")
+          pattern = File.join(archive_dir_path, "#{timestamp}_e*.md")
           existing_files = Dir.glob(pattern)
 
           return 1 if existing_files.empty?

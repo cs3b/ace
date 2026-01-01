@@ -227,21 +227,25 @@ module Ace
           assert_kind_of Array, sources
         end
 
-        def test_raises_error_when_example_config_missing
+        def test_handles_missing_gem_defaults_gracefully
           config_loader = ConfigLoader.new
 
-          # Stub load_example_config to simulate missing file
-          def config_loader.load_example_config
-            raise ConfigLoader::Error, "Default config not found: /fake/path. " \
-                                        "This is a gem packaging error - .ace.example/ must be included in the gem."
-          end
+          # Stub the gem defaults loading to simulate missing defaults
+          # This tests graceful degradation when defaults file doesn't exist
+          config_loader.stub :load_gem_defaults_only, {} do
+            # Mock Ace::Config.create to raise an error, triggering fallback
+            mock_resolver = Minitest::Mock.new
+            mock_config = Minitest::Mock.new
+            mock_config.expect :data, {}
 
-          error = assert_raises(ConfigLoader::Error) do
-            config_loader.load_settings
-          end
+            Ace::Config.stub :create, mock_resolver do
+              mock_resolver.expect :resolve_namespace, mock_config, ["nav"]
+              settings = config_loader.load_settings
 
-          assert_match(/gem packaging error/, error.message)
-          assert_match(/ace\.example/, error.message)
+              # Should return valid config (empty or from user config cascade)
+              assert_kind_of Hash, settings
+            end
+          end
         end
 
         def test_loads_legacy_settings_yml_with_deprecation_warning

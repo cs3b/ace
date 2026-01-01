@@ -36,7 +36,7 @@ module Ace
           @models = hash[:models]
           @dry_run = hash[:dry_run] || false
           @verbose = hash[:verbose] || false
-          @auto_execute = hash[:auto_execute] || Ace::Review.get("defaults", "auto_execute") || false
+          @auto_execute = hash.key?(:auto_execute) ? hash[:auto_execute] : (Ace::Review.get("defaults", "auto_execute") || false)
 
           # Session options
           @save_session = hash.fetch(:save_session, true)

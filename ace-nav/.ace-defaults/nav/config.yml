@@ -1,0 +1,24 @@
+# ace-nav configuration
+# Place in .ace/nav/config.yml to customize
+# ADR-022: This file is the single source of truth for defaults
+#
+# Configuration cascade:
+#   1. .ace-defaults/nav/config.yml (gem defaults - this file)
+#   2. ~/.ace/nav/config.yml (user defaults)
+#   3. .ace/nav/config.yml (project overrides)
+
+# Cache settings for protocol resolution
+cache:
+  enabled: false  # Enable caching of protocol lookups
+  directory: ".cache/ace-nav"  # Cache directory path
+  ttl: 3600  # Cache TTL in seconds (1 hour)
+
+# Fuzzy matching settings for resource names
+fuzzy:
+  enabled: true  # Enable fuzzy matching for resource names
+  threshold: 0.6  # Minimum similarity score (0.0 - 1.0)
+
+# Output settings
+output:
+  color: true  # Enable colored output
+  verbose: false  # Enable verbose output

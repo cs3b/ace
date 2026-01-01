@@ -5,22 +5,17 @@ module Ace
     # Base error class for all ace-core errors
     class Error < StandardError; end
 
-    # Raised when configuration file is not found
-    class ConfigNotFoundError < Error; end
-
-    # Raised when configuration file is invalid
+    # Raised when configuration file is invalid (ace-specific)
     class ConfigInvalidError < Error; end
 
-    # Raised when YAML parsing fails
-    class YamlParseError < Error; end
-
-    # Raised when environment file parsing fails
+    # Raised when environment file parsing fails (ace-specific)
     class EnvParseError < Error; end
 
-    # Raised when a path cannot be resolved
-    class PathError < Error; end
-
-    # Raised when merge strategy is invalid
-    class MergeStrategyError < Error; end
+    # Note: The following errors are now aliases to ace-config errors,
+    # defined in lib/ace/core.rb for backward compatibility:
+    # - ConfigNotFoundError -> Ace::Config::ConfigNotFoundError
+    # - YamlParseError -> Ace::Config::YamlParseError
+    # - PathError -> Ace::Config::PathError
+    # - MergeStrategyError -> Ace::Config::MergeStrategyError
   end
 end
