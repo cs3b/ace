@@ -8,7 +8,7 @@ Copy any of these example preset files to your project's `.ace/taskflow/presets/
 
 ```bash
 # Copy a preset example
-cp ace-taskflow/.ace.example/taskflow/presets/urgent.yml .ace/taskflow/presets/
+cp ace-taskflow/.ace-defaults/taskflow/presets/urgent.yml .ace/taskflow/presets/
 
 # Use the preset
 ace-taskflow tasks urgent

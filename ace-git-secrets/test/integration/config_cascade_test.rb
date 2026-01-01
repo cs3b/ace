@@ -5,16 +5,16 @@ require "yaml"
 require "fileutils"
 
 # Integration tests for config cascade (ADR-022 compliance)
-# Verifies that .ace/git-secrets/config.yml overrides .ace.example/git-secrets/config.yml
+# Verifies that .ace/git-secrets/config.yml overrides .ace-defaults/git-secrets/config.yml
 class ConfigCascadeTest < GitSecretsTestCase
   def setup
     @temp_repo = create_temp_repo
     @original_dir = Dir.pwd
     Dir.chdir(@temp_repo)
 
-    # Create .ace.example defaults
-    FileUtils.mkdir_p(".ace.example/git-secrets")
-    File.write(".ace.example/git-secrets/config.yml", YAML.dump({
+    # Create .ace-defaults defaults
+    FileUtils.mkdir_p(".ace-defaults/git-secrets")
+    File.write(".ace-defaults/git-secrets/config.yml", YAML.dump({
       "output" => { "format" => "table", "mask_tokens" => true },
       "whitelist" => [],
       "exclusions" => []
@@ -31,7 +31,7 @@ class ConfigCascadeTest < GitSecretsTestCase
   end
 
   def test_loads_defaults_from_ace_example
-    # When no .ace/ user config exists, should use .ace.example defaults
+    # When no .ace/ user config exists, should use .ace-defaults defaults
     # Note: This test verifies the fallback behavior
     config = Ace::Git::Secrets.config
 
@@ -59,7 +59,7 @@ class ConfigCascadeTest < GitSecretsTestCase
   end
 
   def test_deep_merge_preserves_nested_defaults
-    # Test deep merge via ace-support-core's DeepMerger
+    # Test deep merge via ace-config's DeepMerger
     base = {
       "output" => { "format" => "table", "mask_tokens" => true },
       "whitelist" => []
@@ -68,7 +68,7 @@ class ConfigCascadeTest < GitSecretsTestCase
       "output" => { "format" => "json" }
     }
 
-    result = Ace::Core::Atoms::DeepMerger.merge(base, override)
+    result = Ace::Config::Atoms::DeepMerger.merge(base, override)
 
     assert_equal "json", result["output"]["format"], "Override should take precedence"
     assert_equal true, result["output"]["mask_tokens"], "Non-overridden nested values should be preserved"

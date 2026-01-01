@@ -134,7 +134,15 @@ ace-test [package] [target] [options] [file-paths]
 
 ### Configuration
 
-Ace-test looks for configuration in `.ace/test.yml` in your project root. Example:
+Ace-test uses the ace-config cascade to find configuration files. The following paths are supported (in priority order):
+
+1. **Project config**: `.ace/test-runner/config.yml` or `.ace/test/runner.yml`
+2. **User config**: `~/.ace/test-runner/config.yml` or `~/.ace/test/runner.yml`
+3. **Gem defaults**: Built-in defaults from ace-test-runner
+
+> **Breaking Change (v0.9.x)**: Previous config paths (`.ace/test.yml`, `.ace/test-runner.yml`, root-level `test-runner.yml`) are no longer supported. Migrate your configuration to `.ace/test-runner/config.yml`.
+
+Example configuration:
 
 ```yaml
 version: 1

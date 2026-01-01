@@ -235,18 +235,26 @@ module Ace
 
         # If first arg looks like a namespace, resolve it
         if namespace_or_keys.is_a?(String) && namespace_or_keys.match?(/^[a-z]+$/)
-          # Use resolve_for instead of deprecated resolve_namespace
-          patterns = if file
-            ["#{namespace_or_keys}/#{file}.yml", "#{namespace_or_keys}/#{file}.yaml"]
+          config = if file
+            # Use resolve_namespace for single-file case (cleaner API)
+            resolver.resolve_namespace(namespace_or_keys, filename: file)
           else
-            ["#{namespace_or_keys}/*.yml", "#{namespace_or_keys}/*.yaml"]
+            # Use resolve_file for glob pattern case (resolve_namespace doesn't support globs)
+            resolver.resolve_file(namespace_glob_patterns(namespace_or_keys))
           end
-          config = resolver.resolve_for(patterns)
           keys.empty? ? config.data : config.get(*keys)
         else
           # Traditional key path lookup
           resolver.get(namespace_or_keys, *keys)
         end
+      end
+
+      # Build glob patterns for all YAML files in a namespace directory
+      # @param namespace [String] Namespace name
+      # @return [Array<String>] Glob patterns for .yml and .yaml files
+      # @api private
+      def namespace_glob_patterns(namespace)
+        ["#{namespace}/*.yml", "#{namespace}/*.yaml"]
       end
 
       # Load environment variables
@@ -309,19 +317,9 @@ module Ace
         )
       end
 
-      # Resolve defaults directory with fallback for migration period
-      # Prefers .ace-defaults (new standard) but falls back to .ace.example
+      # Defaults directory for gem configuration
       def resolve_defaults_dir
-        gem_path = gem_root_path
-        return ".ace-defaults" unless gem_path
-
-        if Dir.exist?(File.join(gem_path, ".ace-defaults"))
-          ".ace-defaults"
-        elsif Dir.exist?(File.join(gem_path, ".ace.example"))
-          ".ace.example" # Migration fallback - remove after task 157.08
-        else
-          ".ace-defaults"
-        end
+        ".ace-defaults"
       end
 
       # Get gem root path for loading bundled defaults

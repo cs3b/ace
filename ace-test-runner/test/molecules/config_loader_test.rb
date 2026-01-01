@@ -28,14 +28,13 @@ class ConfigLoaderTest < Minitest::Test
   end
 
   def test_load_default_config_when_no_file_exists
-    # Stub cascade_configs to prevent loading actual user/project config files
-    @loader.stub :cascade_configs, [] do
-      config = @loader.load
-      assert_equal 1, config[:version]
-      assert config[:patterns].is_a?(Hash)
-      assert config[:groups].is_a?(Hash)
-      assert config[:defaults].is_a?(Hash)
-    end
+    # With Ace::Config.create() API, cascade is handled internally
+    # This test verifies that load() returns valid config from gem defaults
+    config = @loader.load
+    assert_equal 1, config[:version]
+    assert config[:patterns].is_a?(Hash)
+    assert config[:groups].is_a?(Hash)
+    assert config[:defaults].is_a?(Hash)
   end
 
   def test_load_from_specific_file

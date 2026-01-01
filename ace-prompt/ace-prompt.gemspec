@@ -26,6 +26,7 @@ Gem::Specification.new do |spec|
                           lib/**/*
                           config/**/*
                           exe/*
+                          .ace-defaults/**/*
                           *.md
                           LICENSE.txt
                           Rakefile
@@ -36,7 +37,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-core', '~> 0.10'
+  spec.add_dependency 'ace-config', '~> 0.4'
   spec.add_dependency 'ace-nav', '~> 0.8'
   spec.add_dependency 'ace-context', '~> 0.8'
   spec.add_dependency 'ace-git', '~> 0.3' # Unified git operations (task 140.04)

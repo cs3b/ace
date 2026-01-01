@@ -6,7 +6,7 @@
 # Configuration is loaded in this priority (highest to lowest):
 # 1. .ace/git/worktree.yml (project-specific)
 # 2. ~/.ace/git/worktree.yml (user-specific)
-# 3. .ace.example/git/worktree.yml (these defaults)
+# 3. .ace-defaults/git/worktree.yml (these defaults)
 
 git:
   worktree:

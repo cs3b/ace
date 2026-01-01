@@ -2,8 +2,8 @@
 
 require_relative 'lint/version'
 
-# Load ace-core for config management
-require 'ace/core'
+# Load ace-config for configuration cascade management
+require 'ace/config'
 
 # Models
 require_relative 'lint/models/validation_error'
@@ -41,93 +41,79 @@ module Ace
       ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
     end
 
-    # Load general ace-lint configuration using ace-core config cascade
+    # Load general ace-lint configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Priority: gem defaults < user config
-    # @return [Hash] Configuration hash
+    # Uses Ace::Config.create() for configuration cascade resolution
+    # @return [Hash] Configuration hash with defaults merged
     def self.config
       @config ||= begin
-        require 'yaml'
-        require 'ace/core/atoms/deep_merger'
+        gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
+                   File.expand_path("../..", __dir__)
 
-        # Load gem defaults from .ace.example/lint/config.yml
-        gem_defaults = load_gem_defaults
+        resolver = Ace::Config.create(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          gem_path: gem_root
+        )
 
-        # Load user config via ace-core cascade
-        user_config = Ace::Core.config.get('ace', 'lint') || {}
-
-        # Merge gem defaults with user config
-        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+        # Resolve config for lint namespace
+        config = resolver.resolve_namespace("lint")
+        config.data
       rescue StandardError => e
         warn "Warning: Could not load ace-lint config: #{e.message}" if debug?
-        load_gem_defaults || {}
+        # Fall back to gem defaults instead of empty hash to prevent silent config erasure
+        load_gem_defaults_fallback("lint", "config.yml")
       end
     end
 
-    # Load gem defaults from .ace.example/lint/config.yml
-    # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
-    # @return [Hash] Default configuration from gem
-    # @raise [Error] If default config file is missing (gem packaging error)
-    def self.load_gem_defaults
-      gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
-      defaults_path = File.join(gem_root, ".ace.example", "lint", "config.yml")
-
-      unless File.exist?(defaults_path)
-        raise Error, "Default config not found: #{defaults_path}. " \
-              "This is a gem packaging error - .ace.example/ must be included in the gem."
-      end
-
-      YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
-    end
-    private_class_method :load_gem_defaults
-
-    # Load kramdown-specific configuration
+    # Load kramdown-specific configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
     # Config location: .ace/lint/kramdown.yml
-    # @return [Hash] Kramdown configuration
+    # @return [Hash] Kramdown configuration hash with defaults merged
     def self.kramdown_config
       @kramdown_config ||= begin
-        require 'yaml'
-        require 'ace/core/atoms/deep_merger'
+        gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
+                   File.expand_path("../..", __dir__)
 
-        # Load gem defaults from .ace.example/lint/kramdown.yml
-        gem_defaults = load_kramdown_gem_defaults
+        resolver = Ace::Config.create(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          gem_path: gem_root
+        )
 
-        # Load user config via ace-core cascade
-        base_config = Ace::Core.config
-        user_config = base_config.get('ace', 'lint', 'kramdown') || {}
-
-        # Merge gem defaults with user config
-        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+        # Resolve kramdown-specific config
+        config = resolver.resolve_namespace("lint", filename: "kramdown")
+        config.data
       rescue StandardError => e
-        warn "Warning: Could not load kramdown config: #{e.message}"
-        load_kramdown_gem_defaults || {}
+        warn "Warning: Could not load kramdown config: #{e.message}" if debug?
+        # Fall back to gem defaults instead of empty hash to prevent silent config erasure
+        load_gem_defaults_fallback("lint", "kramdown.yml")
       end
     end
-
-    # Load gem defaults from .ace.example/lint/kramdown.yml
-    # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
-    # @return [Hash] Default kramdown configuration from gem
-    # @raise [Error] If default config file is missing (gem packaging error)
-    def self.load_kramdown_gem_defaults
-      gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
-      defaults_path = File.join(gem_root, ".ace.example", "lint", "kramdown.yml")
-
-      unless File.exist?(defaults_path)
-        raise Error, "Default config not found: #{defaults_path}. " \
-              "This is a gem packaging error - .ace.example/ must be included in the gem."
-      end
-
-      YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
-    end
-    private_class_method :load_kramdown_gem_defaults
 
     # Reset config cache (useful for testing)
     def self.reset_config!
       @config = nil
       @kramdown_config = nil
     end
+
+    # Load gem defaults directly as fallback when cascade resolution fails
+    # This ensures configuration is never silently erased due to YAML errors
+    # or user config issues
+    # @param namespace [String] Config namespace (e.g., "lint")
+    # @param filename [String] Config filename (e.g., "config.yml", "kramdown.yml")
+    # @return [Hash] Defaults hash or empty hash if defaults also fail
+    def self.load_gem_defaults_fallback(namespace, filename)
+      gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace-defaults", namespace, filename)
+
+      return {} unless File.exist?(defaults_path)
+
+      YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
+    rescue StandardError
+      {} # Only return empty hash if even defaults fail to load
+    end
+    private_class_method :load_gem_defaults_fallback
   end
 end
