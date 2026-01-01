@@ -1,3 +1,9 @@
+---
+name: spec
+description: Specification and proposal review scope focus
+last-updated: '2026-01-01'
+---
+
 # Specification Review Focus
 
 ## FOCUS COMBINATION: Specification

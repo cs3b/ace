@@ -1,3 +1,9 @@
+---
+name: performance
+description: Performance optimization review focus
+last-updated: '2026-01-01'
+---
+
 # Performance Focus
 
 ## Performance Optimization Review
