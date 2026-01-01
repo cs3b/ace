@@ -1,5 +1,5 @@
 # Gitleaks configuration for ace-task project
-# ADR-022: User overrides in .ace/git-secrets/ (defaults in .ace.example/)
+# ADR-022: User overrides in .ace/git-secrets/ (defaults in .ace-defaults/)
 # Extends default gitleaks rules with custom patterns
 
 [extend]

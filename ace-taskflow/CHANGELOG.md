@@ -5,6 +5,21 @@ All notable changes to ace-taskflow will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.26.1] - 2025-12-30
+
+### Changed
+
+* Replace ace-support-core dependency with ace-config for configuration cascade
+* Migrate from Ace::Core to Ace::Config.create() API
+
+## [0.26.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
 ## [0.25.0] - 2025-12-27
 
 ### Added

@@ -7,8 +7,10 @@ module Ace
   module Core
     module Atoms
       # Pure command execution functions with safety features
+      # Configuration is loaded from .ace-defaults/core/settings.yml
+      # and can be overridden at .ace/core/settings.yml (ADR-022)
       module CommandExecutor
-        # Default timeout for commands (30 seconds)
+        # Fallback timeout value if config is not available
         DEFAULT_TIMEOUT = 30
 
         # Maximum output size (1MB)
@@ -16,13 +18,23 @@ module Ace
 
         module_function
 
+        # Get configured timeout from config cascade
+        # Falls back to DEFAULT_TIMEOUT if config is unavailable
+        # @return [Integer] Configured timeout in seconds
+        def configured_timeout
+          Ace::Core.get("core", "command_executor", "timeout") || DEFAULT_TIMEOUT
+        rescue StandardError
+          DEFAULT_TIMEOUT
+        end
+
         # Execute a command with timeout and output capture
         # @param command [String] Command to execute
-        # @param timeout [Integer] Timeout in seconds
+        # @param timeout [Integer] Timeout in seconds (defaults to config value)
         # @param max_output [Integer] Maximum output size in bytes
         # @param cwd [String] Working directory for command
         # @return [Hash] {success: Boolean, stdout: String, stderr: String, exit_code: Integer, error: String}
-        def execute(command, timeout: DEFAULT_TIMEOUT, max_output: MAX_OUTPUT_SIZE, cwd: nil)
+        def execute(command, timeout: nil, max_output: MAX_OUTPUT_SIZE, cwd: nil)
+          timeout ||= configured_timeout
           return { success: false, error: "Command cannot be nil" } if command.nil?
           return { success: false, error: "Command cannot be empty" } if command.strip.empty?
 
@@ -141,10 +153,11 @@ module Ace
         # Execute command with real-time output streaming
         # @param command [String] Command to execute
         # @param output_callback [Proc] Callback for output lines
-        # @param timeout [Integer] Timeout in seconds
+        # @param timeout [Integer] Timeout in seconds (defaults to config value)
         # @param cwd [String] Working directory
         # @return [Hash] {success: Boolean, exit_code: Integer, error: String}
-        def stream(command, output_callback: nil, timeout: DEFAULT_TIMEOUT, cwd: nil)
+        def stream(command, output_callback: nil, timeout: nil, cwd: nil)
+          timeout ||= configured_timeout
           return { success: false, error: "Command cannot be nil" } if command.nil?
 
           options = {}

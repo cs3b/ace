@@ -4,7 +4,7 @@ class: Ace::LLM::Organisms::TogetherAIClient
 gem: ace-llm
 models:
   - Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8
-  - deepseek-ai/DeepSeek-V3
+  - deepseek-ai/DeepSeek-V3.1
   - essentialai/Rnj-1-Instruct
   - moonshotai/Kimi-K2-Instruct
   - moonshotai/Kimi-K2-Thinking
@@ -12,7 +12,7 @@ models:
 aliases:
   model:
     qwen-coder: Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8
-    deepseek: deepseek-ai/DeepSeek-V3
+    deepseek: deepseek-ai/DeepSeek-V3.1
     kimi: moonshotai/Kimi-K2-Instruct
     kimi-T: moonshotai/Kimi-K2-Thinking
     oss: openai/gpt-oss-120b

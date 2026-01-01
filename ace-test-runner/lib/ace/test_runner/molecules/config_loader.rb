@@ -2,12 +2,12 @@
 
 require "yaml"
 require "ostruct"
-require "ace/core/atoms/deep_merger"
+require "ace/config"
 
 module Ace
   module TestRunner
     module Molecules
-      # Load configuration using ace-core patterns
+      # Load configuration using Ace::Config.create() API
       # Follows ADR-022: Configuration Default and Override Pattern
       #
       # Configuration priority (highest to lowest):
@@ -15,65 +15,57 @@ module Ace
       # 2. Explicit config_path if provided
       # 3. Project config: .ace/test/runner.yml (nearest wins via cascade)
       # 4. User config: ~/.ace/test/runner.yml
-      # 5. Gem defaults: ace-test-runner/.ace.example/test-runner/config.yml
+      # 5. Gem defaults: ace-test-runner/.ace-defaults/test-runner/config.yml
       class ConfigLoader
-        DEFAULT_CONFIG_PATHS = [
-          ".ace/test/runner.yml",
-          ".ace/test/runner.yaml",
-          ".ace/test.yml",
-          ".ace/test.yaml",
-          ".ace/test-runner.yml",
-          ".ace/test-runner.yaml",
-          "test-runner.yml",
-          "test-runner.yaml"
-        ].freeze
-
-        # Load gem defaults from .ace.example/test-runner/config.yml
-        # This file is shipped with the gem and is the single source of truth
-        # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
-        # @return [Hash] Default configuration from gem
-        # @raise [RuntimeError] If default config file is missing (gem packaging error)
+        # Load gem defaults for direct access (used by tests)
+        # @return [Hash] Default configuration with symbol keys
         def self.load_gem_defaults
-          @gem_defaults ||= begin
-            gem_root = File.expand_path("../../../..", __dir__)
-            default_file = File.join(gem_root, ".ace.example", "test-runner", "config.yml")
+          gem_root = Gem.loaded_specs["ace-test-runner"]&.gem_dir ||
+                     File.expand_path("../../../..", __dir__)
 
-            unless File.exist?(default_file)
-              raise "Default config not found: #{default_file}. " \
-                    "This is a gem packaging error - .ace.example/ must be included in the gem."
-            end
+          resolver = Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root
+          )
 
-            content = YAML.safe_load_file(default_file, permitted_classes: [], symbolize_names: true, aliases: true)
-            content || {}
-          end
+          config = resolver.resolve_namespace("test-runner").data
+          deep_symbolize_keys(config)
         end
 
-        # Reset cached gem defaults (for testing)
+        # Reset method for test isolation (no-op since we don't cache at class level)
         def self.reset_gem_defaults!
-          @gem_defaults = nil
+          # No-op: Ace::Config.create() is called fresh each time
         end
 
         def load(config_path = nil)
-          # Start with gem defaults
-          config = deep_copy(self.class.load_gem_defaults)
+          gem_root = Gem.loaded_specs["ace-test-runner"]&.gem_dir ||
+                     File.expand_path("../../../..", __dir__)
 
+          resolver = Ace::Config.create(
+            config_dir: ".ace",
+            defaults_dir: ".ace-defaults",
+            gem_path: gem_root
+          )
+
+          # Get merged config from cascade
+          config = resolver.resolve_file(["test-runner/config.yml", "test/runner.yml"]).data
+
+          # If explicit config_path provided, merge it on top
           if config_path && File.exist?(config_path)
-            # Explicit config path provided - merge over defaults
             user_config = load_from_file(config_path)
-            config = Ace::Core::Atoms::DeepMerger.merge(config, user_config)
-          else
-            # Apply cascade: home config, then walk up from current directory
-            cascade_configs.each do |path|
-              if File.exist?(path)
-                puts "Loading configuration from: #{path}" if ENV["DEBUG"]
-                user_config = load_from_file(path)
-                config = Ace::Core::Atoms::DeepMerger.merge(config, user_config)
-              end
-            end
+            config = Ace::Config::Atoms::DeepMerger.merge(config, user_config)
           end
+
+          # Convert to symbol keys for backward compatibility
+          config = deep_symbolize_keys(config)
 
           validate_config(config)
           normalize_config(config)
+        rescue StandardError => e
+          warn "Warning: Could not load ace-test-runner config: #{e.message}" if ENV["DEBUG"]
+          # Return minimal valid config on error
+          normalize_config({ version: 1 })
         end
 
         def merge_with_options(config, options)
@@ -111,37 +103,30 @@ module Ace
 
         private
 
-        # Build cascade paths from home directory up through current directory hierarchy
-        # Returns paths in order from lowest to highest priority
-        def cascade_configs
-          paths = []
-
-          # User-level config (lowest priority in cascade)
-          home_config = File.join(Dir.home, ".ace", "test", "runner.yml")
-          paths << home_config
-
-          # Walk from current directory up, collecting project configs
-          project_paths = []
-          current = Dir.pwd
-          while current != "/" && current != File.dirname(current)
-            DEFAULT_CONFIG_PATHS.each do |rel_path|
-              full_path = File.join(current, rel_path)
-              project_paths << full_path if File.exist?(full_path)
-            end
-            current = File.dirname(current)
-          end
-
-          # Add project paths in reverse order (furthest ancestor first, current last)
-          paths.concat(project_paths.reverse)
-
-          paths.uniq
-        end
-
         def load_from_file(path)
-          YAML.safe_load_file(path, permitted_classes: [], symbolize_names: true, aliases: true) || {}
+          YAML.safe_load_file(path, permitted_classes: [], aliases: true) || {}
         rescue StandardError => e
           warn "Warning: Failed to load config from #{path}: #{e.message}"
           {}
+        end
+
+        # Recursively convert string keys to symbols
+        def deep_symbolize_keys(obj)
+          self.class.deep_symbolize_keys(obj)
+        end
+
+        # Class method version for use in self.load_gem_defaults
+        def self.deep_symbolize_keys(obj)
+          case obj
+          when Hash
+            obj.each_with_object({}) do |(key, value), result|
+              result[key.to_sym] = deep_symbolize_keys(value)
+            end
+          when Array
+            obj.map { |item| deep_symbolize_keys(item) }
+          else
+            obj
+          end
         end
 
         def validate_config(config)

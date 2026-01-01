@@ -54,14 +54,14 @@ This document provides actionable decisions from Architecture Decision Records (
 **Details**: [ADR-015](decisions/ADR-015-mono-repo-ace-gems-migration.md)
 
 ### ACE Gem Configuration Default and Override Pattern
-**Decision**: All ace-* gems load defaults from `.ace.example/` files and merge with user overrides from `.ace/` cascade using `Ace::Core::Atoms::DeepMerger`.
+**Decision**: All ace-* gems load defaults from `.ace-defaults/` files and merge with user overrides from `.ace/` cascade using `ace-config` gem.
 **Impact**: When creating or modifying gems:
-- Put complete defaults in `.ace.example/gem-name/config.yml` (single source of truth)
-- Implement `load_gem_defaults` method to load from `.ace.example/` at runtime
-- Use `Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)` for consistent merging
+- Put complete defaults in `.ace-defaults/gem-name/config.yml` (single source of truth)
+- Use `Ace::Config.create(gem_path: gem_root).resolve_namespace("gem-name")` for configuration cascade
+- Use `Ace::Config::Models::Config.wrap(defaults, user_config)` for merging defaults with overrides
 - Provide `reset_config!` method for test isolation
 - Support backward compatibility for renamed keys with deprecation path
-**Status**: Task 143 completed December 2025 - all applicable packages now compliant (ace-taskflow, ace-nav, ace-test-runner, ace-git-commit, ace-docs, ace-lint, ace-prompt, ace-review, ace-search). ace-git and ace-git-secrets were already compliant. ace-llm packages deferred (ENV-based).
+**Status**: Task 143 completed December 2025 - all applicable packages now compliant (ace-taskflow, ace-nav, ace-test-runner, ace-git-commit, ace-docs, ace-lint, ace-prompt, ace-review, ace-search). ace-git and ace-git-secrets were already compliant. ace-llm packages deferred (ENV-based). Task 157 extracted ace-config gem from ace-support-core.
 **Details**: [ADR-022](decisions/ADR-022-configuration-default-and-override-pattern.md) (supersedes ADR-019)
 
 ## Gem Architecture Patterns

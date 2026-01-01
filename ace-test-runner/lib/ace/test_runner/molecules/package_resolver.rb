@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "pathname"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 
 module Ace
   module TestRunner
@@ -9,13 +9,12 @@ module Ace
       # Resolves package names or paths to absolute package directories
       # Supports: package name (ace-context), relative path (./ace-context), absolute path
       #
-      # Note: This class depends on ace-support-core which is a hard dependency.
-      # The ProjectRootFinder from ace-support-core handles project root detection.
+      # Note: This class depends on ace-support-fs which provides ProjectRootFinder.
       class PackageResolver
         # Initialize resolver
         # @param project_root [String, nil] Override project root (for testing)
         def initialize(project_root: nil)
-          @project_root = project_root || Ace::Core::Molecules::ProjectRootFinder.find
+          @project_root = project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find
         end
 
         # Resolve a package name or path to an absolute directory path

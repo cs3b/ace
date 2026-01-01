@@ -5,6 +5,93 @@ All notable changes to ace-core will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.14.2] - 2026-01-01
+
+### Changed
+
+* Add configurable timeouts and limits in `.ace-defaults/core/config.yml`
+* Add `configured_timeout` to CommandExecutor for timeout configuration
+
+## [0.14.1] - 2025-12-30
+
+### Changed
+
+* Add ace-config dependency for configuration cascade delegation
+
+## [0.14.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+
+## [0.13.0] - 2025-12-30
+
+### Changed
+- **Configuration Cascade Migration**: Now powered by ace-config gem
+  - Configuration resolution delegated to ace-config with `.ace` and `.ace-defaults` directories
+  - Added resolver caching for improved performance (avoids repeated FS traversal)
+  - Added `Ace::Core.reset_config!` to clear cached resolver for test isolation
+
+### Deprecated
+- `Ace::Core.config(search_paths:, file_patterns:)` parameters are deprecated
+  - Use `Ace::Config.create(config_dir:, defaults_dir:)` for custom paths
+  - Deprecated parameters emit warning and are ignored
+  - **Will be removed in a future minor version**
+- `Ace::Core::Organisms::ConfigResolver.new(search_paths:)` is deprecated
+  - Backward-compatible wrapper maintains old behavior with deprecation warning
+  - Use new API with `config_dir:` and `defaults_dir:` parameters
+  - **Will be removed in a future minor version**
+
+### Added
+- **Runtime Dependencies**: ace-config (~> 0.2), ace-support-fs (~> 0.1)
+  - ace-config provides generic configuration cascade management
+  - ace-support-fs provides filesystem utilities (added in v0.12.0)
+- **Migration Fallback**: `.ace.example` fallback for gem defaults during migration period
+- **Test Coverage**: Added deprecation warning and caching tests (10 new tests)
+
+### Migration Guide
+
+**Old API (deprecated, will be removed soon):**
+```ruby
+# Custom search paths (deprecated)
+config = Ace::Core.config(search_paths: ['./.custom', '~/.myapp'])
+
+# ConfigResolver with search_paths (deprecated)
+resolver = Ace::Core::Organisms::ConfigResolver.new(
+  search_paths: ['./.ace', '~/.ace', '/defaults'],
+  file_patterns: ['*.yml']
+)
+```
+
+**New API (recommended):**
+```ruby
+# Use Ace::Config directly for custom paths
+resolver = Ace::Config.create(
+  config_dir: ".custom",
+  defaults_dir: ".custom-defaults"
+)
+config = resolver.resolve
+
+# Standard ace configuration (no changes needed)
+config = Ace::Core.config  # Uses .ace and .ace-defaults
+```
+
+## [0.12.0] - 2025-12-29
+
+### Changed
+- Migrate internal components to use `Ace::Support::Fs` directly instead of local aliases
+- Update ConfigFinder, EnvLoader, EnvironmentManager, FileAggregator, PromptCacheManager, and VirtualConfigResolver to import from ace-support-fs
+
+### Removed
+- **BREAKING**: Remove backward compatibility aliases for filesystem utilities
+  - Removed `Ace::Core::Atoms::PathExpander` (use `Ace::Support::Fs::Atoms::PathExpander`)
+  - Removed `Ace::Core::Molecules::ProjectRootFinder` (use `Ace::Support::Fs::Molecules::ProjectRootFinder`)
+  - Removed `Ace::Core::Molecules::DirectoryTraverser` (use `Ace::Support::Fs::Molecules::DirectoryTraverser`)
+  - Removed related test files for backward compatibility wrappers
+
 ## [0.11.1] - 2025-11-17
 
 ### Added
@@ -18,8 +105,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Optional validation support with `validate: false` parameter for flexibility
   - Field type validation ensuring data integrity
   - Enhanced test coverage: 17 tests, 55 assertions covering all new functionality
-
-## [Unreleased]
 
 ### Changed
 

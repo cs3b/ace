@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
+require "yaml"
 require_relative "docs/version"
-require "ace/core" # For config cascade
+require "ace/config" # For config cascade
 
 module Ace
   module Docs
@@ -14,48 +15,52 @@ module Ace
       File.expand_path("../..", __dir__)
     end
 
-    # Get configuration using ace-core config cascade
+    # Get configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Priority: gem defaults < user config
+    # Uses Ace::Config.create() for configuration cascade resolution
     # @return [Hash] Configuration hash with defaults merged
     def self.config
       @config ||= begin
-        require 'yaml'
-        require 'ace/core/atoms/deep_merger'
+        gem_root = Gem.loaded_specs["ace-docs"]&.gem_dir ||
+                   File.expand_path("../..", __dir__)
 
-        # Load gem defaults from .ace.example/docs/config.yml
-        gem_defaults = load_gem_defaults
+        resolver = Ace::Config.create(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          gem_path: gem_root
+        )
 
-        # Load user config via ace-core cascade
-        user_config = Ace::Core.config.get("ace", "docs") || {}
-
-        # Merge gem defaults with user config
-        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
+        # Resolve config for docs namespace
+        config = resolver.resolve_namespace("docs")
+        config.data
+      rescue StandardError => e
+        warn "ace-docs: Could not load config: #{e.class} - #{e.message}" if debug?
+        # Fall back to gem defaults instead of empty hash to prevent silent config erasure
+        load_gem_defaults_fallback
       end
     end
-
-    # Load gem defaults from .ace.example/docs/config.yml
-    # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
-    # @return [Hash] Default configuration from gem
-    # @raise [Error] If default config file is missing (gem packaging error)
-    def self.load_gem_defaults
-      gem_root = Gem.loaded_specs["ace-docs"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
-      defaults_path = File.join(gem_root, ".ace.example", "docs", "config.yml")
-
-      unless File.exist?(defaults_path)
-        raise Error, "Default config not found: #{defaults_path}. " \
-              "This is a gem packaging error - .ace.example/ must be included in the gem."
-      end
-
-      YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
-    end
-    private_class_method :load_gem_defaults
 
     # Reset configuration (primarily for testing)
     def self.reset_config!
       @config = nil
     end
+
+    # Load gem defaults directly as fallback when cascade resolution fails
+    # This ensures configuration is never silently erased due to YAML errors
+    # or user config issues
+    # @return [Hash] Defaults hash or empty hash if defaults also fail
+    def self.load_gem_defaults_fallback
+      gem_root = Gem.loaded_specs["ace-docs"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace-defaults", "docs", "config.yml")
+
+      return {} unless File.exist?(defaults_path)
+
+      YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
+    rescue StandardError
+      {} # Only return empty hash if even defaults fail to load
+    end
+    private_class_method :load_gem_defaults_fallback
 
     # Check if debug mode is enabled
     # @return [Boolean] True if debug mode is enabled

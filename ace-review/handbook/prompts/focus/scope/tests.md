@@ -1,3 +1,9 @@
+---
+name: tests
+description: Test quality and coverage review scope focus
+last-updated: '2026-01-01'
+---
+
 # Test Scope Focus
 
 ## FOCUS COMBINATION: Tests

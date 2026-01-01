@@ -40,7 +40,7 @@ end
 ```ruby
 # Resolve symlinks and validate project boundaries
 real_path = File.realpath(prompt_path) rescue prompt_path
-project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
+project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
 
 unless real_path.start_with?(project_root)
   warn "Error: File path resolves outside project: #{real_path}"

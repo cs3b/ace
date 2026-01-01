@@ -1,0 +1,47 @@
+# ace-test-runner default configuration
+# ADR-022: This file is the single source of truth for defaults
+#
+# Configuration cascade:
+#   1. .ace-defaults/test-runner/config.yml (gem defaults - this file)
+#   2. ~/.ace/test/runner.yml (user defaults)
+#   3. .ace/test/runner.yml (project overrides)
+#   4. CLI options (highest priority)
+
+version: 1
+
+# Test file patterns for each category
+# Supports both test/unit/atoms and test/atoms directory structures
+patterns:
+  atoms: "test/{unit/,}atoms/**/*_test.rb"
+  molecules: "test/{unit/,}molecules/**/*_test.rb"
+  organisms: "test/{unit/,}organisms/**/*_test.rb"
+  models: "test/{unit/,}models/**/*_test.rb"
+  integration: "test/integration/**/*_test.rb"
+  system: "test/system/**/*_test.rb"
+
+# Test groups that combine multiple patterns
+groups:
+  unit:
+    - atoms
+    - molecules
+    - organisms
+    - models
+  all:
+    - unit
+    - integration
+    - system
+  quick:
+    - atoms
+    - molecules
+
+# Default execution options
+defaults:
+  reporter: progress
+  color: auto
+  fail_fast: false
+  save_reports: true
+  report_dir: test-reports
+
+# Failure display limits
+failure_limits:
+  max_display: 7

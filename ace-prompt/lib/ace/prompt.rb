@@ -1,20 +1,42 @@
 # frozen_string_literal: true
 
+require "yaml"
 require_relative "prompt/version"
 
-# Load ace-core for config management
-require "ace/core"
+# Load ace-config for configuration cascade management
+require "ace/config"
 
 module Ace
   module Prompt
     class Error < StandardError; end
 
-    # Default LLM model for enhancement
+    # Mutex for thread-safe config initialization
+    @config_mutex = Mutex.new
+
+    # Default LLM model for enhancement (fallback if config unavailable)
     DEFAULT_MODEL = "glite"
 
-    # Valid temperature range for LLM generation
+    # Valid temperature range for LLM generation (fallback if config unavailable)
     TEMPERATURE_MIN = 0.0
     TEMPERATURE_MAX = 2.0
+
+    # Get default model from config or use fallback
+    # @return [String] Default model
+    def self.default_model
+      config.dig("defaults", "model") || DEFAULT_MODEL
+    end
+
+    # Get temperature min from config or use fallback
+    # @return [Float] Temperature min
+    def self.temperature_min
+      config.dig("defaults", "temperature", "min") || TEMPERATURE_MIN
+    end
+
+    # Get temperature max from config or use fallback
+    # @return [Float] Temperature max
+    def self.temperature_max
+      config.dig("defaults", "temperature", "max") || TEMPERATURE_MAX
+    end
   end
 end
 
@@ -44,51 +66,72 @@ require_relative "prompt/cli"
 # Reopen module for additional methods
 module Ace
   module Prompt
+    # Check if debug mode is enabled
+    # @return [Boolean] True if debug mode is enabled
+    def self.debug?
+      ENV["ACE_DEBUG"] == "1" || ENV["DEBUG"] == "1"
+    end
 
-    # Load ace-prompt configuration using ace-core config cascade
+    # Load ace-prompt configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Priority: gem defaults < user config
+    # Uses Ace::Config.create() for configuration cascade resolution
+    # Thread-safe: uses mutex for initialization
     # @return [Hash] Configuration hash with defaults merged
     def self.config
-      @config ||= begin
-        require 'yaml'
-        require 'ace/core/atoms/deep_merger'
+      # Fast path: return cached config if already initialized
+      return @config if defined?(@config) && @config
 
-        # Load gem defaults from .ace.example/prompt/config.yml
-        gem_defaults = load_gem_defaults
-
-        # Load user config via ace-core cascade
-        user_config = Ace::Core.get("prompt", file: "config") || {}
-
-        # Merge gem defaults with user config
-        Ace::Core::Atoms::DeepMerger.merge(gem_defaults, user_config)
-      rescue StandardError => e
-        warn "Warning: Could not load ace-prompt config: #{e.message}"
-        load_gem_defaults || {}
+      # Thread-safe initialization
+      @config_mutex.synchronize do
+        @config ||= load_config
       end
     end
-
-    # Load gem defaults from .ace.example/prompt/config.yml
-    # Per ADR-022: gem MUST include .ace.example/ - missing file is a packaging error
-    # @return [Hash] Default configuration from gem
-    # @raise [Error] If default config file is missing (gem packaging error)
-    def self.load_gem_defaults
-      gem_root = Gem.loaded_specs["ace-prompt"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
-      defaults_path = File.join(gem_root, ".ace.example", "prompt", "config.yml")
-
-      unless File.exist?(defaults_path)
-        raise Error, "Default config not found: #{defaults_path}. " \
-              "This is a gem packaging error - .ace.example/ must be included in the gem."
-      end
-
-      YAML.safe_load_file(defaults_path, permitted_classes: [], aliases: true) || {}
-    end
-    private_class_method :load_gem_defaults
 
     # Reset config cache (useful for testing)
+    # Thread-safe: uses mutex to prevent race conditions
     def self.reset_config!
-      @config = nil
+      @config_mutex.synchronize do
+        @config = nil
+      end
     end
+
+    # Load configuration using Ace::Config cascade
+    # @return [Hash] Merged configuration
+    def self.load_config
+      gem_root = Gem.loaded_specs["ace-prompt"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+
+      resolver = Ace::Config.create(
+        config_dir: ".ace",
+        defaults_dir: ".ace-defaults",
+        gem_path: gem_root
+      )
+
+      # Resolve config for prompt namespace
+      config = resolver.resolve_namespace("prompt")
+      config.data
+    rescue StandardError => e
+      warn "ace-prompt: Could not load config: #{e.class} - #{e.message}" if debug?
+      # Fall back to gem defaults instead of empty hash to prevent silent config erasure
+      load_gem_defaults_fallback
+    end
+    private_class_method :load_config
+
+    # Load gem defaults directly as fallback when cascade resolution fails
+    # This ensures configuration is never silently erased due to YAML errors
+    # or user config issues
+    # @return [Hash] Defaults hash or empty hash if defaults also fail
+    def self.load_gem_defaults_fallback
+      gem_root = Gem.loaded_specs["ace-prompt"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace-defaults", "prompt", "config.yml")
+
+      return {} unless File.exist?(defaults_path)
+
+      YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
+    rescue StandardError
+      {} # Only return empty hash if even defaults fail to load
+    end
+    private_class_method :load_gem_defaults_fallback
   end
 end

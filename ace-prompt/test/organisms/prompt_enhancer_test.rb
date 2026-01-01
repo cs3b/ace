@@ -16,7 +16,7 @@ class PromptEnhancerTest < Minitest::Test
   end
 
   def test_returns_cached_content_when_available
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Original prompt"
       model = "glite" # Default model
       system_prompt_uri = @system_prompt_path
@@ -50,7 +50,7 @@ class PromptEnhancerTest < Minitest::Test
   end
 
   def test_returns_original_when_system_prompt_fails_to_load
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Test prompt"
 
       result = Ace::Prompt::Organisms::PromptEnhancer.call(
@@ -66,7 +66,7 @@ class PromptEnhancerTest < Minitest::Test
   end
 
   def test_returns_original_when_ace_llm_not_available
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Test prompt"
 
       # Mock LoadError when trying to require ace/llm
@@ -102,7 +102,7 @@ class PromptEnhancerTest < Minitest::Test
     }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
         result = Ace::Prompt::Organisms::PromptEnhancer.call(
           content: content,
           model: "glite",
@@ -131,7 +131,7 @@ class PromptEnhancerTest < Minitest::Test
     }
 
     Ace::LLM::QueryInterface.stub :query, mock_query do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
         Ace::Prompt::Organisms::PromptEnhancer.call(
           content: content,
           model: nil,
@@ -142,7 +142,7 @@ class PromptEnhancerTest < Minitest::Test
   end
 
   def test_handles_empty_llm_response
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Test prompt"
 
       begin
@@ -168,7 +168,7 @@ class PromptEnhancerTest < Minitest::Test
   end
 
   def test_handles_llm_error
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Test prompt"
 
       begin
@@ -194,7 +194,7 @@ class PromptEnhancerTest < Minitest::Test
   end
 
   def test_successful_enhancement_stores_in_cache
-    Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       content = "Test prompt"
       model = "glite" # Default model
       system_prompt_uri = @system_prompt_path

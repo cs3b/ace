@@ -103,7 +103,7 @@ parse_block_html: true
 parse_span_html: true
 ```
 
-See `.ace.example/lint/kramdown.yml` for the full example configuration.
+See `.ace-defaults/lint/kramdown.yml` for the full example configuration.
 
 ### Configuration Options
 

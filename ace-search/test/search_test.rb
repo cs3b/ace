@@ -26,4 +26,17 @@ class Ace::TestSearch < AceSearchTestCase
     assert config.key?("max_results")
     assert config.key?("exclude")
   end
+
+  def test_reset_config_clears_cached_config
+    # Load config to cache it
+    original_config = Ace::Search.config
+    assert_same original_config, Ace::Search.config, "Config should be cached"
+
+    # Reset the config
+    Ace::Search.reset_config!
+
+    # Next call should return a new instance (even if equal)
+    new_config = Ace::Search.config
+    refute_same original_config, new_config, "Config should be a new instance after reset"
+  end
 end

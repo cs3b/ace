@@ -1,3 +1,9 @@
+---
+name: atom
+description: ATOM architecture compliance review focus
+last-updated: '2026-01-01'
+---
+
 # ATOM Architecture Focus
 
 ## Architectural Compliance (ATOM)

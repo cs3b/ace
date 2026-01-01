@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-01-01
+
+### Fixed
+
+- Restore historical freshness thresholds for monthly documents (30/45 days instead of 14/30)
+- Add frequency-specific threshold configuration in `.ace-defaults/docs/config.yml`
+- Migrate DocumentRegistry to use ace-config cascade for configuration loading
+
+## [0.13.1] - 2025-12-30
+
+### Changed
+
+- Add ace-config dependency for configuration cascade management
+- Migrate from Ace::Core to Ace::Config.create() API
+- Migrate from `resolve_for` to `resolve_namespace` for cleaner config loading
+
+## [0.13.0] - 2025-12-30
+
+### Changed
+
+* Rename `.ace.example/` to `.ace-defaults/` for gem defaults directory
+
+## [0.12.0] - 2025-12-29
+
+### Changed
+- Migrate ProjectRootFinder dependency from `Ace::Core::Molecules` to `Ace::Support::Fs::Molecules` for direct ace-support-fs usage
+
 ## [0.11.0] - 2025-12-28
 
 ### Added

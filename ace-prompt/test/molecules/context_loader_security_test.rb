@@ -31,7 +31,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     project_root = @project_root
 
     Ace::Prompt.stub :config, test_config do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, project_root do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, project_root do
         yield
       end
     end
@@ -275,7 +275,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     debug_messages = []
 
     Ace::Prompt.stub :config, mock_config do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
           assert_equal "", result, "Should process with debug logging enabled"
@@ -300,7 +300,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     debug_messages = []
 
     Ace::Prompt.stub :config, mock_config do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
           assert_equal "", result, "Should process with debug enabled but category filtered"
@@ -325,7 +325,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     debug_messages = []
 
     Ace::Prompt.stub :config, mock_config do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
           assert_equal "", result, "Should process without debug logging"
@@ -386,7 +386,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     }
 
     Ace::Prompt.stub :config, mock_config do
-      Ace::Core::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(msg) { error_message = msg }) do
           result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
         end

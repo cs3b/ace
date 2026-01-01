@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require "ace/core/molecules/project_root_finder"
+require "ace/support/fs"
 require_relative "../atoms/timestamp_generator"
 
 module Ace
@@ -9,9 +9,28 @@ module Ace
     module Molecules
       # Archives prompt file with timestamp and updates symlink
       class PromptArchiver
-        # Default archive directory relative to project root
-        DEFAULT_ARCHIVE_DIR = ".cache/ace-prompt/prompts/archive"
-        PREVIOUS_SYMLINK = ".cache/ace-prompt/prompts/_previous.md"
+        # Default directories (fallback if config unavailable)
+        DEFAULT_CACHE_DIR = ".cache/ace-prompt"
+        DEFAULT_ARCHIVE_DIR = "prompts/archive"
+        DEFAULT_PREVIOUS_SYMLINK = "prompts/_previous.md"
+
+        # Get archive directory from config
+        # @return [String] Archive directory relative to project root
+        def self.archive_dir_from_config
+          config = Ace::Prompt.config
+          cache_dir = config.dig("paths", "cache_dir") || DEFAULT_CACHE_DIR
+          archive_dir = config.dig("paths", "archive_dir") || DEFAULT_ARCHIVE_DIR
+          File.join(cache_dir, archive_dir)
+        end
+
+        # Get previous symlink path from config
+        # @return [String] Previous symlink path relative to project root
+        def self.previous_symlink_from_config
+          config = Ace::Prompt.config
+          cache_dir = config.dig("paths", "cache_dir") || DEFAULT_CACHE_DIR
+          previous_symlink = config.dig("paths", "previous_symlink") || DEFAULT_PREVIOUS_SYMLINK
+          File.join(cache_dir, previous_symlink)
+        end
 
         # Archive prompt content
         #
@@ -23,8 +42,8 @@ module Ace
         def self.call(content:, timestamp: nil, archive_dir: nil, symlink_path: nil)
           return { success: false, error: "Error: Content to archive cannot be nil" } if content.nil?
 
-          project_root = Ace::Core::Molecules::ProjectRootFinder.find_or_current
-          archive_dir ||= File.join(project_root, DEFAULT_ARCHIVE_DIR)
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          archive_dir ||= File.join(project_root, archive_dir_from_config)
           FileUtils.mkdir_p(archive_dir)
 
           # Generate or use provided timestamp
@@ -44,7 +63,7 @@ module Ace
           File.write(archive_path, content, encoding: "utf-8")
 
           # Update symlink
-          symlink_path ||= File.join(project_root, PREVIOUS_SYMLINK)
+          symlink_path ||= File.join(project_root, previous_symlink_from_config)
           update_symlink_result = update_symlink(symlink_path, archive_path)
 
           {

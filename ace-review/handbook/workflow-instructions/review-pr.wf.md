@@ -1,11 +1,11 @@
 ---
 name: review-pr
 description: Review PR and plan feedback application with comment resolution
-argument-hint: "[pr-number]"
+argument-hint: "[pr-number] [--preset <name>] [flags]"
 allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
 update:
   frequency: on-change
-  last-updated: '2025-12-27'
+  last-updated: '2025-12-30'
 ---
 
 # Review PR and Plan Feedback Workflow
@@ -16,15 +16,34 @@ Review a GitHub Pull Request using ace-review, read the synthesis report, and cr
 
 ## Arguments
 
-- `$ARGUMENTS`: PR number (e.g., `64`, `123`)
+- `$ARGUMENTS`: Optional PR number and/or additional flags (e.g., `123`, `--preset code-deep`, `123 --preset security`)
 
 ## Instructions
 
-### Step 1: Run PR Review
+### Step 1: Determine PR Number
+
+If `$ARGUMENTS` contains a PR number, use it. Otherwise, detect the current PR:
 
 ```bash
-ace-review --pr $ARGUMENTS
+gh pr view --json number -q '.number'
 ```
+
+### Step 2: Run PR Review
+
+**Always use `--pr` flag.** Append any additional parameters from `$ARGUMENTS`:
+
+```bash
+# If PR number provided in arguments:
+ace-review --pr <pr-number> [additional-flags]
+
+# If no PR number, use detected PR:
+ace-review --pr $(gh pr view --json number -q '.number') [additional-flags]
+```
+
+**Examples:**
+- `/ace:review-pr 123` → `ace-review --pr 123`
+- `/ace:review-pr --preset code-deep` → `ace-review --pr <current-pr> --preset code-deep`
+- `/ace:review-pr 123 --preset security` → `ace-review --pr 123 --preset security`
 
 **Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
@@ -35,13 +54,13 @@ The review includes:
 - Developer feedback from PR comments (`review-dev-feedback.md`) - if the PR has comments
 - Synthesis combining all sources (`synthesis-report.md`)
 
-### Step 2: Read Synthesis Report
+### Step 3: Read Synthesis Report
 
 Read the synthesis report path shown in the command output.
 
 Note which feedback items come from **Developer Feedback** - these are from PR comments and should be resolved after implementation.
 
-### Step 3: Verify Action Items
+### Step 4: Verify Action Items
 
 Before presenting action items to the user, verify each Critical and High priority item.
 
@@ -77,41 +96,59 @@ grep -rn "class TaskPatternExtractor" ace-git/lib/
 - Style/formatting recommendations
 - Developer Feedback items (these are human-verified)
 
-### Step 4: Create Feedback Plan
+### Step 5: Categorize Results
 
-Based on the synthesis report's **Prioritized Action Items** and **verification results**, create a plan:
+Based on verification results, categorize each item:
 
-1. List only VALID, SUGGESTION, and Developer Feedback items by priority (Critical → High → Medium → Low)
-2. Note any INVALID items that were filtered out
-3. For each item, note:
-   - Location (file:line)
-   - Description of the issue
-   - Recommended fix
-   - Verification evidence (for LLM items)
-   - **Source**: LLM review or Developer Feedback (PR comment)
-4. Identify which items to implement now vs capture as ideas for later
+**Goes to "No Action Needed" (no numbering):**
+- INVALID - False positives, LLM hallucinations, code is correct
+- VERIFIED CORRECT - LLM suggested to verify, but verification confirmed code is correct
 
-### Step 5: Present Plan and Wait for Confirmation
+**Goes to "Action Items" (numbered with priority):**
+- VALID - Issue confirmed, needs fixing
+- SUGGESTION - Optional improvement
+- Developer Feedback - From PR comments (always valid, needs resolution)
 
-Present the plan to the user with a summary:
-- Number of items per priority level
-- Number of items from PR comments (require resolution)
-- Estimated scope of changes
-- Any items recommended to defer
+### Step 6: Present Results
 
-Use AskUserQuestion to confirm:
-- "Which items should I implement?"
-- Options: All items, High priority only, Custom selection
+Present results in two separate sections:
+
+#### No Action Needed
+
+List items that don't require changes (no numbering):
+- Description + why it's invalid/correct
+- Verification evidence
+
+#### Action Items
+
+Numbered table of items that need fixing:
+
+| # | Priority | Issue | File | Source | Fix |
+|---|----------|-------|------|--------|-----|
+| 1 | Critical | ... | `file:line` | LLM/Dev | ... |
+| 2 | High | ... | `file:line` | LLM/Dev | ... |
+
+Note: Items from **Developer Feedback** require PR comment resolution after implementation.
+
+### Step 7: Ask for Priority Threshold
+
+Use AskUserQuestion:
+- "Which priority level should I implement?"
+- Options:
+  - All items
+  - Medium and higher (skip Low)
+  - High and higher (skip Low, Medium)
+  - Critical only
 
 Only proceed with implementation after user confirmation.
 
-### Step 6: Implement Fixes
+### Step 8: Implement Fixes
 
 Implement the confirmed fixes. After each fix:
 - Commit with a clear message referencing the issue
 - Note the commit SHA for PR comment resolution
 
-### Step 7: Resolve PR Comments (for Developer Feedback items)
+### Step 9: Resolve PR Comments (for Developer Feedback items)
 
 After implementing fixes for items sourced from **Developer Feedback**:
 

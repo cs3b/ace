@@ -591,7 +591,7 @@ defaults:
   auto_save_release_fallback: true         # Save to release dir when no task detected
 ```
 
-See `.ace.example/review/config.yml` for the full example configuration.
+See `.ace-defaults/review/config.yml` for the full example configuration.
 
 ### How It Works
 
@@ -872,7 +872,7 @@ While YAML anchors (`&ref`, `*ref`) provide similar functionality, preset compos
 ace-review resolves presets in this order (first match wins):
 
 1. **Project presets**: `.ace/review/presets/*.yml` (your customizations)
-2. **Gem presets**: `ace-review/.ace.example/review/presets/*.yml` (built-in defaults)
+2. **Gem presets**: `ace-review/.ace-defaults/review/presets/*.yml` (built-in defaults)
 
 This allows you to:
 - Override built-in presets by creating a file with the same name
@@ -882,7 +882,7 @@ This allows you to:
 **Example**: To customize the `code-pr` preset:
 ```bash
 # Copy and modify the default
-cp ace-review/.ace.example/review/presets/code-pr.yml .ace/review/presets/code-pr.yml
+cp ace-review/.ace-defaults/review/presets/code-pr.yml .ace/review/presets/code-pr.yml
 # Edit .ace/review/presets/code-pr.yml with your changes
 ```
 

@@ -40,14 +40,14 @@ module Ace
         target_dir = target_directory
 
         unless File.exist?(source_dir)
-          puts "Warning: No ace.example directory found for #{gem_name}"
+          puts "Warning: No .ace-defaults directory found for #{gem_name}"
           return
         end
 
         # Show config docs on first run if config is missing
         show_config_docs_if_needed(gem_name, target_dir)
 
-        # Copy files from ace.example to .ace
+        # Copy files from .ace-defaults to .ace
         copy_config_files(source_dir, target_dir, gem_name)
       end
 

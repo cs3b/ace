@@ -9,6 +9,16 @@ test_suite:
       group: foundation
       priority: 1
 
+    - name: ace-config
+      path: ace-config
+      group: foundation
+      priority: 1
+
+    - name: ace-support-fs
+      path: ace-support-fs
+      group: foundation
+      priority: 2
+
     - name: ace-test-runner
       path: ace-test-runner
       group: foundation
