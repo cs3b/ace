@@ -9,7 +9,7 @@
 # ace-git-secrets uses gitleaks for all token detection.
 # The config is resolved via cascade:
 #   1. .ace/git-secrets/gitleaks.toml (user override)
-#   2. .ace.example/git-secrets/gitleaks.toml (gem default)
+#   2. .ace-defaults/git-secrets/gitleaks.toml (gem default)
 # To customize gitleaks rules, copy the gem default to .ace/git-secrets/gitleaks.toml
 # and modify as needed. The file path is resolved automatically.
 # Note: This is NOT a config option - gitleaks.toml must be a separate file.

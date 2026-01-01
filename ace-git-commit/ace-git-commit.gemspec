@@ -29,9 +29,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-core', '~> 0.10'
+  spec.add_dependency 'ace-config', '~> 0.4'
   spec.add_dependency 'ace-git', '~> 0.3'
-  spec.add_dependency 'ace-llm', '~> 0.15.0'
+  spec.add_dependency 'ace-llm', '~> 0.16'
 
   # Development dependencies managed in root Gemfile
 end

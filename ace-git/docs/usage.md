@@ -150,7 +150,7 @@ ace-git uses the ACE configuration cascade:
 
 - **Global config:** `~/.ace/git/config.yml`
 - **Project config:** `.ace/git/config.yml`
-- **Example config:** `ace-git/.ace.example/git/config.yml`
+- **Example config:** `ace-git/.ace-defaults/git/config.yml`
 
 ### Example Configuration
 
@@ -177,7 +177,7 @@ diff:
 | `max_lines` | Integer | `10000` | Maximum lines in diff output |
 | `timeout` | Integer | `30` | Command timeout in seconds |
 
-**Default exclude_patterns** (from `.ace.example/git/config.yml`):
+**Default exclude_patterns** (from `.ace-defaults/git/config.yml`):
 - Lock files: `**/*.lock`, `package-lock.json`, `yarn.lock`, `Gemfile.lock`
 - Vendored deps: `vendor/**/*`, `node_modules/**/*`
 - Build artifacts: `coverage/**/*`, `dist/**/*`, `build/**/*`, `.cache/**/*`

@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
-require "ace/core"
+require "ace/config"
 
 module Ace
   module Search
     module Molecules
       # Manages search presets from .ace/search/presets/*.yml files
-      # This is a molecule - composed operation using ace-core for config loading
+      # This is a molecule - composed operation using ace-config for config loading
       class PresetManager
         def initialize
-          @discovery = Ace::Core::ConfigDiscovery.new
+          @project_root = Ace::Config.find_project_root || Dir.pwd
           @presets = {}
           load_presets
         end
@@ -30,12 +30,16 @@ module Ace
         end
 
         # Merge preset with options
+        # Uses Config.merge() for consistent merge strategy support
         def merge_with_options(preset_name, options = {})
           preset = get(preset_name)
           return options unless preset
 
-          # Deep merge preset with options, with options taking precedence
-          Ace::Core::Atoms::DeepMerger.merge(preset, options)
+          # Wrap preset in Config object to use Config.merge() consistently
+          # This enables future per-key merge strategies via _merge directive
+          Ace::Config::Models::Config.new(preset, source: "preset:#{preset_name}")
+            .merge(options)
+            .to_h
         end
 
         private
@@ -54,7 +58,7 @@ module Ace
           dirs = []
 
           # Check project .ace/search/presets/
-          project_preset_dir = File.join(@discovery.project_root, ".ace/search/presets")
+          project_preset_dir = File.join(@project_root, ".ace/search/presets")
           dirs << project_preset_dir if Dir.exist?(project_preset_dir)
 
           # Check home ~/.ace/search/presets/
@@ -63,7 +67,7 @@ module Ace
 
           # Check gem example presets
           gem_root = File.expand_path("../../../../..", __FILE__)
-          gem_preset_dir = File.join(gem_root, ".ace.example/search/presets")
+          gem_preset_dir = File.join(gem_root, ".ace-defaults/search/presets")
           dirs << gem_preset_dir if Dir.exist?(gem_preset_dir)
 
           dirs
@@ -78,7 +82,7 @@ module Ace
 
         # Load a single preset file
         def load_preset_file(file)
-          data = Ace::Core::Atoms::YamlParser.parse(File.read(file))
+          data = Ace::Config::Atoms::YamlParser.parse(File.read(file))
           preset_name = data["name"] || data[:name] || File.basename(file, ".*")
 
           # Remove metadata keys, rest are options
