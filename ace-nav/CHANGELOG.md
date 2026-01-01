@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-01-01
+
+### Changed
+
+* Add thread-safe configuration initialization with Mutex pattern
+* Improve error logging with gem prefix and exception class
+
 ## [0.13.1] - 2025-12-30
 
 ### Changed
