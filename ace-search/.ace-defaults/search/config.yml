@@ -5,6 +5,9 @@
 
 ace:
   search:
+    # Execution defaults
+    timeout: 120                # seconds - timeout for ripgrep/fd commands
+
     # Pattern matching defaults
     case_insensitive: false     # -i, --case-insensitive
     whole_word: false           # -w, --whole-word
