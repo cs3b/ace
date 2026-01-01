@@ -77,6 +77,14 @@ Ace::Config.path_expander(source_dir: dir, project_root: root)
 
 # Find project root
 Ace::Config.find_project_root(start_path: nil, markers: [...])
+
+# Quick merge helper - merge defaults with overrides, return hash
+Ace::Config::Models::Config.wrap(
+  defaults,             # Base configuration (Hash or nil)
+  overrides,            # Override values (Hash)
+  source: "wrap",       # Source label for debugging
+  merge_strategy: :replace  # Array merge strategy
+)
 ```
 
 ### Resolver Methods
@@ -84,10 +92,35 @@ Ace::Config.find_project_root(start_path: nil, markers: [...])
 ```ruby
 resolver = Ace::Config.create
 
-resolver.resolve                     # Full cascade resolution
-resolver.resolve_for(["file.yml"])   # Specific file patterns
+resolver.resolve                     # Full cascade resolution (memoized)
+resolver.resolve_file(["file.yml"])  # Specific file patterns (not memoized)
+resolver.resolve_namespace("docs")   # Namespace resolution: docs/config.yml (not memoized)
 resolver.get("key", "nested")        # Direct value access
 ```
+
+### Namespace Resolution
+
+`resolve_namespace` provides a convenience API for resolving configuration by namespace path:
+
+```ruby
+resolver = Ace::Config.create
+
+# Single namespace - resolves docs/config.yml and docs/config.yaml
+config = resolver.resolve_namespace("docs")
+
+# Nested namespaces - resolves git/worktree/config.yml
+config = resolver.resolve_namespace("git", "worktree")
+
+# Custom filename - resolves lint/kramdown.yml
+config = resolver.resolve_namespace("lint", filename: "kramdown")
+
+# Root config with custom filename - resolves settings.yml
+config = resolver.resolve_namespace(filename: "settings")
+```
+
+This is equivalent to calling `resolve_file` with the appropriate patterns, but reduces boilerplate when working with namespace-based configurations.
+
+**Note**: `resolve_namespace` does not support glob patterns. Use `resolve_file` for pattern matching (e.g., `presets/*.yml`). See [docs/usage.md](docs/usage.md) for security considerations.
 
 ## Architecture
 

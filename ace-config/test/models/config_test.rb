@@ -71,7 +71,16 @@ module Ace
           assert_equal [["a", 1], ["b", 2]], collected
         end
 
-        def test_with_merges_data
+        def test_merge_merges_data
+          config = Config.new({ "a" => 1, "b" => 2 })
+
+          result = config.merge({ "b" => 3, "c" => 4 })
+
+          assert_equal({ "a" => 1, "b" => 3, "c" => 4 }, result.data)
+          assert_includes result.source, "+merged"
+        end
+
+        def test_with_is_alias_for_merge
           config = Config.new({ "a" => 1, "b" => 2 })
 
           result = config.with({ "b" => 3, "c" => 4 })
@@ -93,6 +102,53 @@ module Ace
           config = Config.new({ "a" => 1 })
 
           assert config.frozen?
+        end
+
+        # Config.wrap factory method tests
+        def test_wrap_returns_hash
+          result = Config.wrap({ "a" => 1 })
+
+          assert_instance_of Hash, result
+          assert_equal({ "a" => 1 }, result)
+        end
+
+        def test_wrap_merges_overrides
+          base = { "a" => 1, "b" => 2 }
+          overrides = { "b" => 3, "c" => 4 }
+
+          result = Config.wrap(base, overrides)
+
+          assert_equal({ "a" => 1, "b" => 3, "c" => 4 }, result)
+        end
+
+        def test_wrap_with_empty_overrides
+          base = { "a" => 1 }
+
+          result = Config.wrap(base)
+
+          assert_equal({ "a" => 1 }, result)
+        end
+
+        def test_wrap_deep_merges_nested_hashes
+          base = { "nested" => { "a" => 1, "b" => 2 } }
+          overrides = { "nested" => { "b" => 3 } }
+
+          result = Config.wrap(base, overrides)
+
+          assert_equal({ "nested" => { "a" => 1, "b" => 3 } }, result)
+        end
+
+        def test_wrap_respects_merge_strategy
+          base = { "items" => [1, 2] }
+          overrides = { "items" => [3, 4] }
+
+          # :replace (default) - override replaces base
+          replace_result = Config.wrap(base, overrides)
+          assert_equal({ "items" => [3, 4] }, replace_result)
+
+          # :union - combine unique items
+          union_result = Config.wrap(base, overrides, merge_strategy: :union)
+          assert_equal({ "items" => [1, 2, 3, 4] }, union_result)
         end
       end
     end
