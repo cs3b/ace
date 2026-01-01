@@ -18,11 +18,11 @@ module Ace
         # @param temperature [Float] Temperature for LLM generation (0.0-2.0)
         # @return [Hash] Result with :content, :enhanced, :cached, :error keys
         def self.call(content:, model: nil, system_prompt_uri: nil, temperature: 0.3)
-          # Use default model if not specified
-          resolved_model = model || Ace::Prompt::DEFAULT_MODEL
+          # Use default model from config if not specified
+          resolved_model = model || Ace::Prompt.default_model
 
           # Validate and clamp temperature to valid range
-          validated_temperature = [[temperature.to_f, Ace::Prompt::TEMPERATURE_MIN].max, Ace::Prompt::TEMPERATURE_MAX].min
+          validated_temperature = [[temperature.to_f, Ace::Prompt.temperature_min].max, Ace::Prompt.temperature_max].min
 
           # Resolve system prompt path
           system_prompt_path = system_prompt_uri || DEFAULT_SYSTEM_PROMPT_URI
