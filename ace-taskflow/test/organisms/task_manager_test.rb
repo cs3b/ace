@@ -24,10 +24,10 @@ class TaskManagerTest < AceTaskflowTestCase
   def test_find_next_task_skips_blocked
     with_test_project do |dir|
       # Mark task 002 (in-progress) and 003 (pending) as blocked
-      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "002", "task.002.s.md")
+      task_002 = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "002", "task.002.s.md")
       File.write(task_002, File.read(task_002).gsub(/status: in-progress/, "status: blocked"))
 
-      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.s.md")
+      task_003 = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "003", "task.003.s.md")
       File.write(task_003, File.read(task_003).gsub(/status: pending/, "status: blocked"))
 
       Dir.chdir(dir) do
@@ -71,7 +71,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert result[:success]
 
         # Verify file was updated
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "003", "task.003.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "003", "task.003.s.md")
         content = File.read(task_file)
         assert_match(/status: in-progress/, content)
       end
@@ -437,7 +437,7 @@ class TaskManagerTest < AceTaskflowTestCase
         taskflow_root = File.join(dir, ".ace-taskflow")
         config_dir = File.join(dir, ".ace", "taskflow")
         FileUtils.mkdir_p(config_dir)
-        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n  directories:\n    tasks: t\n")
+        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n")
 
         # Create release with .active marker
         release_dir = File.join(taskflow_root, "v.0.9.0")
@@ -510,7 +510,7 @@ parent: v.0.9.0+task.121
         taskflow_root = File.join(dir, ".ace-taskflow")
         config_dir = File.join(dir, ".ace", "taskflow")
         FileUtils.mkdir_p(config_dir)
-        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n  directories:\n    tasks: t\n")
+        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n")
 
         # Create release with .active marker
         release_dir = File.join(taskflow_root, "v.0.9.0")
@@ -582,7 +582,7 @@ parent: v.0.9.0+task.121
         taskflow_root = File.join(dir, ".ace-taskflow")
         config_dir = File.join(dir, ".ace", "taskflow")
         FileUtils.mkdir_p(config_dir)
-        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n  directories:\n    tasks: t\n")
+        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n")
 
         # Create release with .active marker
         release_dir = File.join(taskflow_root, "v.0.9.0")
@@ -619,7 +619,7 @@ dependencies: []
         taskflow_root = File.join(dir, ".ace-taskflow")
         config_dir = File.join(dir, ".ace", "taskflow")
         FileUtils.mkdir_p(config_dir)
-        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n  directories:\n    tasks: t\n")
+        File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n")
 
         # Create release with .active marker
         release_dir = File.join(taskflow_root, "v.0.9.0")
@@ -752,6 +752,51 @@ This is a regular task, not an orchestrator.
         result = manager.reopen_task("999")
         refute result[:success]
         assert_match(/not found/, result[:message])
+      end
+    end
+  end
+
+  # Tests for resolve_release_path (Task 158 - backlog fix regression test)
+
+  def test_resolve_release_path_backlog
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.send(:resolve_release_path, "backlog")
+
+        # Should return path to backlog directory using configuration
+        expected_backlog_dir = Ace::Taskflow.configuration.backlog_dir
+        assert_equal File.join(dir, ".ace-taskflow", expected_backlog_dir), result
+      end
+    end
+  end
+
+  def test_resolve_release_path_current
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.send(:resolve_release_path, "current")
+
+        # Should return path to active release (v.0.9.0 in fixture)
+        assert_match(/v\.0\.9\.0/, result)
+      end
+    end
+  end
+
+  def test_resolve_release_path_all
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.send(:resolve_release_path, "all")
+
+        # Should return root path
+        assert_equal File.join(dir, ".ace-taskflow"), result
       end
     end
   end

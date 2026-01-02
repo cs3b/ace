@@ -11,7 +11,7 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_task_from_file
     with_test_project do |dir|
       Dir.chdir(dir) do
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "001", "task.001.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "001", "task.001.s.md")
         task = @loader.load_task(task_file)
 
         assert task
@@ -25,8 +25,10 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_all_tasks_from_release
     with_test_project do |dir|
       Dir.chdir(dir) do
+        # Create loader inside test block to use correct root path
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
         release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
-        tasks = @loader.load_tasks_from_release(release_path)
+        tasks = loader.load_tasks_from_release(release_path)
 
         assert_equal 5, tasks.length
         assert tasks.all? { |t| t[:id].start_with?("v.0.9.0+task") }
@@ -37,8 +39,10 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_tasks_with_filter
     with_test_project do |dir|
       Dir.chdir(dir) do
+        # Create loader inside test block to use correct root path
+        loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
         release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
-        all_tasks = @loader.load_tasks_from_release(release_path)
+        all_tasks = loader.load_tasks_from_release(release_path)
         pending_tasks = all_tasks.select { |task| task[:status] == "pending" }
 
         assert_equal 3, pending_tasks.length
@@ -115,7 +119,7 @@ class TaskLoaderTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         # Create a task file with comprehensive frontmatter
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "099", "task.099.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "099", "task.099.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
         File.write(task_file, <<~CONTENT)
           ---
@@ -169,7 +173,7 @@ class TaskLoaderTest < AceTaskflowTestCase
     with_test_project do |dir|
       Dir.chdir(dir) do
         # Create a task file
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "098", "task.098.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "098", "task.098.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
         File.write(task_file, <<~CONTENT)
           ---
@@ -213,7 +217,7 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_update_task_status_creates_backup
     with_test_project do |dir|
       Dir.chdir(dir) do
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "097", "task.097.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "097", "task.097.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
         original_content = TestFactory.sample_task_content(id: "v.0.9.0+task.097", status: "pending")
         File.write(task_file, original_content)
@@ -278,7 +282,7 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_load_task_includes_hierarchical_fields
     with_test_project do |dir|
       Dir.chdir(dir) do
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "001", "task.001.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "001", "task.001.s.md")
         task = @loader.load_task(task_file)
 
         assert task

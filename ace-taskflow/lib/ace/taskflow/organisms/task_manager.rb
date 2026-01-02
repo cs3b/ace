@@ -22,10 +22,11 @@ module Ace
     module Organisms
       # Task business logic orchestration
       class TaskManager
-        attr_reader :root_path, :config
+        attr_reader :root_path
 
-        def initialize(config = nil)
-          @config = config || Molecules::ConfigLoader.load
+        def initialize(_config = nil)
+          # Note: _config parameter retained for backward compatibility but unused
+          # All configuration is accessed via Ace::Taskflow.configuration (ADR-022)
           @root_path = Molecules::ConfigLoader.find_root
           @task_loader = Molecules::TaskLoader.new(@root_path)
           @release_resolver = Molecules::ReleaseResolver.new(@root_path)
@@ -599,8 +600,7 @@ module Ace
           end
 
           # Get flexible/strict mode from config (default: flexible)
-          strict_transitions = @config.dig("taskflow", "strict_transitions") == true
-          flexible_mode = !strict_transitions
+          flexible_mode = !Ace::Taskflow.configuration.strict_transitions?
 
           # Validate status transition using pure logic molecule
           unless Molecules::StatusValidator.valid_transition?(task[:status], new_status, flexible: flexible_mode)
@@ -1165,7 +1165,7 @@ module Ace
             primary = @release_resolver.find_primary_active
             primary ? primary[:path] : nil
           when "backlog"
-            File.join(@root_path, @config.backlog_dir)
+            File.join(@root_path, Ace::Taskflow.configuration.backlog_dir)
           when "all"
             @root_path
           else
