@@ -4,6 +4,22 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/molecules/config_loader"
 
 class ConfigLoaderTest < AceTaskflowTestCase
+  # Include ConfigHelpers for with_real_config
+  include Ace::TestSupport::ConfigHelpers
+
+  # All tests in this file need real config access since they test config loading
+  def setup
+    super
+    # Disable test_mode for config loading tests
+    Ace::Config.test_mode = false
+  end
+
+  def teardown
+    # Re-enable test_mode after each test
+    Ace::Config.test_mode = true
+    super
+  end
+
   def test_load_default_config
     with_test_project do |dir|
       Dir.chdir(dir) do

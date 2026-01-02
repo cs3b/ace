@@ -16,9 +16,6 @@ $LOAD_PATH.unshift(ace_git_path) if Dir.exist?(ace_git_path)
 
 require "ace/prompt"
 
-# Note: ace-prompt cannot use Ace::Config.test_mode = true
-# because it has tests that verify config values and defaults
-
 require "minitest/autorun"
 require "fileutils"
 require "tmpdir"

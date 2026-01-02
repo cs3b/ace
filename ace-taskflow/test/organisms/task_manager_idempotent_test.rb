@@ -4,6 +4,17 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/organisms/task_manager"
 
 class TaskManagerIdempotentTest < AceTaskflowTestCase
+  # These tests need real config access since they test config-based behavior
+  def setup
+    super
+    Ace::Config.test_mode = false
+  end
+
+  def teardown
+    Ace::Config.test_mode = true
+    super
+  end
+
   # Test idempotent status updates
   def test_update_status_to_same_status_succeeds
     with_test_project do |dir|
