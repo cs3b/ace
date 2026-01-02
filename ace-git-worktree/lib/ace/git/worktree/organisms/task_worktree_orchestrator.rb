@@ -81,10 +81,13 @@ module Ace
               # Step 3: Update task status if configured (and not overridden)
               should_update_status = options[:no_status_update] ? false : @config.auto_mark_in_progress?
               if should_update_status && task_data[:status] != "in-progress"
-                if update_task_status(task_id, "in-progress")
+                status_result = update_task_status(task_id, "in-progress")
+                if status_result[:success]
                   workflow_result[:steps_completed] << "status_updated"
                 else
-                  return error_workflow_result("Failed to update task status", workflow_result)
+                  error_message = status_result[:message] || "Failed to update task status"
+                  hint = "\n\nHint: Use --no-status-update to create worktree without changing task status"
+                  return error_workflow_result(error_message + hint, workflow_result)
                 end
               end
 
@@ -524,7 +527,7 @@ module Ace
           #
           # @param task_id [String] Task ID
           # @param status [String] New status
-          # @return [Boolean] true if successful
+          # @return [Hash] Result with :success and :message keys
           def update_task_status(task_id, status)
             @task_status_updater.update_status(task_id, status)
           end
