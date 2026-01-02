@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.164
-status: pending
+status: in-progress
 priority: medium
 estimate: 1h
 dependencies: []
+worktree:
+  branch: 164-improve-ace-git-worktree-error-message-for-dependency-blocked-tasks
+  path: "../ace-task.164"
+  created_at: '2026-01-02 00:41:08'
+  updated_at: '2026-01-02 00:41:08'
 ---
 
 # Improve ace-git-worktree error message for dependency-blocked tasks
