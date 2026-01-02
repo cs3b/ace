@@ -184,6 +184,10 @@ module Ace
           config["status"] = taskflow_section["status"] if taskflow_section["status"]
           config["terminal_statuses"] = taskflow_section["terminal_statuses"] if taskflow_section["terminal_statuses"]
 
+          # Preserve taskflow nested section for Configuration access patterns
+          # This allows config.dig("taskflow", "key") to work
+          config["taskflow"] = taskflow_section
+
           config
         end
       end

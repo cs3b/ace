@@ -215,6 +215,11 @@ class ReleaseManagerTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         create_test_release(dir, "v.1.0.0", "active", with_tasks: true, all_done: false)
 
+        # Reset caches to pick up the new release structure
+        Ace::Taskflow::Molecules::TaskLoader.clear_cache!
+        Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
+        Ace::Taskflow.reset_configuration!
+
         manager = Ace::Taskflow::Organisms::ReleaseManager.new
         result = manager.validate_release("v.1.0.0")
 
@@ -265,7 +270,7 @@ class ReleaseManagerTest < AceTaskflowTestCase
     end
 
     FileUtils.mkdir_p(release_dir)
-    FileUtils.mkdir_p(File.join(release_dir, "tasks"))
+    FileUtils.mkdir_p(File.join(release_dir, "t"))
     FileUtils.mkdir_p(File.join(release_dir, "ideas"))
     FileUtils.mkdir_p(File.join(release_dir, "docs"))
 
@@ -285,7 +290,7 @@ class ReleaseManagerTest < AceTaskflowTestCase
       # Create sample tasks
       2.times do |i|
         task_num = sprintf("%03d", i + 1)
-        task_dir = File.join(release_dir, "tasks", "#{task_num}-test-task")
+        task_dir = File.join(release_dir, "t", "#{task_num}-test-task")
         FileUtils.mkdir_p(task_dir)
 
         task_status = all_done ? "done" : (i == 0 ? "done" : "pending")

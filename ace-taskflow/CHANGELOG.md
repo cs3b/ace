@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.2] - 2026-01-01
+
+### Fixed
+
+- Fix `ace-taskflow task move <TASK_REF> --backlog` command failing with "undefined method 'backlog_dir' for an instance of Hash"
+
+### Changed
+
+- Use Ace::Taskflow.configuration for accessing Configuration object methods in TaskManager#resolve_release_path
+
 ## [0.26.1] - 2025-12-30
 
 ### Changed

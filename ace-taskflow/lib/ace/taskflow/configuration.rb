@@ -87,6 +87,13 @@ module Ace
         config.dig("references", "allow_cross_release") != false
       end
 
+      # Check if strict status transitions are enabled
+      # When true, only predefined status transitions are allowed
+      # When false (default), flexible transitions are permitted
+      def strict_transitions?
+        config.dig("taskflow", "strict_transitions") == true
+      end
+
       # Get default idea location
       def default_idea_location
         config.dig("defaults", "idea_location") || "active"

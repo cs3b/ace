@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.216] - 2026-01-01
+
+### Fixed
+
+**ace-taskflow 0.26.2**: Fix task move --backlog command (Task 158)
+
+- Fix `ace-taskflow task move <TASK_REF> --backlog` failing with "undefined method 'backlog_dir' for an instance of Hash"
+- Use `Ace::Taskflow.configuration` for accessing Configuration object methods in TaskManager#resolve_release_path
+
 ## [0.9.215] - 2025-12-31
 
 ### Added
