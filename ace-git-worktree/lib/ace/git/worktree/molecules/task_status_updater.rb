@@ -17,13 +17,16 @@ module Ace
         #
         # Updates task status using ace-taskflow Ruby API or CLI commands.
         # Provides methods for marking tasks as in-progress, done, etc.
+        # All methods return a result hash with :success and :message keys.
         #
         # @example Mark task as in-progress
         #   updater = TaskStatusUpdater.new
-        #   success = updater.mark_in_progress("081")
+        #   result = updater.mark_in_progress("081")
+        #   # => { success: true, message: "Task status updated to in-progress" }
+        #   # => { success: false, message: "Cannot start task: blocked by dependencies 157" }
         #
         # @example Update with custom status
-        #   success = updater.update_status("081", "done")
+        #   result = updater.update_status("081", "done")
         class TaskStatusUpdater
           # Default timeout for ace-taskflow commands
           DEFAULT_TIMEOUT = 10
@@ -39,11 +42,11 @@ module Ace
           # Mark task as in-progress
           #
           # @param task_ref [String] Task reference (081, task.081, v.0.9.0+081)
-          # @return [Boolean] true if status was updated successfully
+          # @return [Hash] Result with :success and :message keys
           #
           # @example
           #   updater = TaskStatusUpdater.new
-          #   success = updater.mark_in_progress("081")
+          #   result = updater.mark_in_progress("081")
           def mark_in_progress(task_ref)
             update_status(task_ref, "in-progress")
           end
@@ -51,10 +54,10 @@ module Ace
           # Mark task as done
           #
           # @param task_ref [String] Task reference
-          # @return [Boolean] true if status was updated successfully
+          # @return [Hash] Result with :success and :message keys
           #
           # @example
-          #   success = updater.mark_done("081")
+          #   result = updater.mark_done("081")
           def mark_done(task_ref)
             update_status(task_ref, "done")
           end
@@ -62,10 +65,10 @@ module Ace
           # Mark task as blocked
           #
           # @param task_ref [String] Task reference
-          # @return [Boolean] true if status was updated successfully
+          # @return [Hash] Result with :success and :message keys
           #
           # @example
-          #   success = updater.mark_blocked("081")
+          #   result = updater.mark_blocked("081")
           def mark_blocked(task_ref)
             update_status(task_ref, "blocked")
           end
@@ -74,13 +77,15 @@ module Ace
           #
           # @param task_ref [String] Task reference
           # @param status [String] New status value
-          # @return [Boolean] true if status was updated successfully
+          # @return [Hash] Result with :success and :message keys
           #
           # @example
-          #   success = updater.update_status("081", "in-progress")
+          #   result = updater.update_status("081", "in-progress")
+          #   # => { success: true, message: "Task status updated to in-progress" }
+          #   # => { success: false, message: "Cannot start task: blocked by dependencies 157" }
           def update_status(task_ref, status)
-            return false if task_ref.nil? || task_ref.empty?
-            return false if status.nil? || status.empty?
+            return { success: false, message: "Task reference is required" } if task_ref.nil? || task_ref.empty?
+            return { success: false, message: "Status is required" } if status.nil? || status.empty?
 
             puts "DEBUG: TaskStatusUpdater.update_status called with task_ref=#{task_ref}, status=#{status}" if ENV["DEBUG"]
             puts "DEBUG: use_ruby_api? = #{use_ruby_api?}" if ENV["DEBUG"]
@@ -260,7 +265,7 @@ module Ace
           #
           # @param task_ref [String] Task reference
           # @param status [String] New status
-          # @return [Boolean] true if successful
+          # @return [Hash] Result with :success and :message keys
           def update_status_via_api(task_ref, status)
             begin
               # Use TaskManager for status updates
@@ -270,11 +275,11 @@ module Ace
               puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
 
               if result[:success]
-                true
+                { success: true, message: "Task status updated to #{status}" }
               else
                 puts "DEBUG: TaskManager failed: #{result[:message]}" if ENV["DEBUG"]
-                # Fall back to CLI on API failure
-                update_status_via_cli(task_ref, status)
+                # Return API failure result with message (don't fallback to CLI)
+                { success: false, message: result[:message] || "Failed to update task status" }
               end
             rescue StandardError => e
               puts "DEBUG: TaskManager exception: #{e.message}" if ENV["DEBUG"]
@@ -287,13 +292,17 @@ module Ace
           #
           # @param task_ref [String] Task reference
           # @param status [String] New status
-          # @return [Boolean] true if successful
+          # @return [Hash] Result with :success and :message keys
           def update_status_via_cli(task_ref, status)
             normalized_ref = normalize_task_reference(task_ref)
-            return false unless normalized_ref
+            return { success: false, message: "Invalid task reference" } unless normalized_ref
 
             result = execute_ace_taskflow_command("task", "update", normalized_ref, "--field", "status=#{status}")
-            result[:success]
+            if result[:success]
+              { success: true, message: "Task status updated to #{status}" }
+            else
+              { success: false, message: result[:error] || "Failed to update task status" }
+            end
           end
 
           # Add worktree metadata using Ruby API

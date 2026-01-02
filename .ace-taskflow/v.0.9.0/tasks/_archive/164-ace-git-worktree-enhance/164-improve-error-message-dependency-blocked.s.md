@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.164
-status: in-progress
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -61,11 +61,11 @@ Hint: Use --no-status-update to create worktree without changing task status
 
 ### Success Criteria
 
-- [ ] Error message shows actual blocker reason from TaskManager
-- [ ] Blocking dependency task IDs are listed
-- [ ] Blocking dependency statuses are shown (pending, draft, etc.)
-- [ ] Hint suggests `--no-status-update` workaround
-- [ ] User can understand exactly why task creation failed
+- [x] Error message shows actual blocker reason from TaskManager
+- [x] Blocking dependency task IDs are listed
+- [x] Blocking dependency statuses are shown (pending, draft, etc.)
+- [x] Hint suggests `--no-status-update` workaround
+- [x] User can understand exactly why task creation failed
 
 ### Validation Questions
 
@@ -100,13 +100,13 @@ Hint: Use --no-status-update to create worktree without changing task status
 
 ### Execution Steps
 
-- [ ] Modify `TaskStatusUpdater#update_status` to return result hash
-- [ ] Modify `TaskStatusUpdater#update_status_via_api` to preserve message
-- [ ] Modify `TaskStatusUpdater#update_status_via_cli` to return result hash
-- [ ] Update `TaskWorktreeOrchestrator#create_for_task` to use new return format
-- [ ] Add hint message for workaround
-- [ ] Update tests to expect new return format
-- [ ] Run test suite: `cd ace-git-worktree && ace-test`
+- [x] Modify `TaskStatusUpdater#update_status` to return result hash
+- [x] Modify `TaskStatusUpdater#update_status_via_api` to preserve message
+- [x] Modify `TaskStatusUpdater#update_status_via_cli` to return result hash
+- [x] Update `TaskWorktreeOrchestrator#create_for_task` to use new return format
+- [x] Add hint message for workaround
+- [x] Update tests to expect new return format
+- [x] Run test suite: `cd ace-git-worktree && ace-test`
 
 ### Test Cases
 
