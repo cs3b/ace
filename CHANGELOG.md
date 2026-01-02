@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.218] - 2026-01-02
+
+### Added
+
+**ace-config 0.4.2**: Add test mode for faster test execution (Task 157.12)
+
+- Thread-safe test mode using `Thread.current` for parallel test environments
+- `ACE_CONFIG_TEST_MODE` environment variable for CI/test runner integration
+- `test_mode` and `mock_config` parameters to `Ace::Config.create`
+- Test mode short-circuit in `resolve_type` and `find_configs` methods
+
 ## [0.9.217] - 2026-01-02
 
 ### Changed
