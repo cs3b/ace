@@ -1,11 +1,10 @@
 ---
-id: v.0.9.0+task.157.13
+id: v.0.9.0+task.165
 status: pending
 priority: medium
 estimate: 4h
 dependencies:
-  - v.0.9.0+task.157.12
-parent: v.0.9.0+task.157
+- v.0.9.0+task.157.12
 ---
 
 # Implement per-key merge strategies (_merge directive)
