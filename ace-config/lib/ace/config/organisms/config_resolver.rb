@@ -8,7 +8,7 @@ module Ace
       # Complete configuration cascade resolution
       class ConfigResolver
         attr_reader :config_dir, :defaults_dir, :gem_path
-        attr_reader :file_patterns, :merge_strategy
+        attr_reader :file_patterns, :merge_strategy, :test_mode
 
         # Initialize config resolver with configurable options
         # @param config_dir [String] User config folder name (default: ".ace")
@@ -17,13 +17,17 @@ module Ace
         # @param file_patterns [Array<String>, nil] Patterns for config files
         # @param merge_strategy [Symbol] How to merge arrays (:replace, :concat, :union)
         # @param cache_namespaces [Boolean] Whether to cache resolve_namespace results (default: false)
+        # @param test_mode [Boolean] Skip filesystem searches and return empty/mock config (default: false)
+        # @param mock_config [Hash, nil] Mock config data to return in test mode
         def initialize(
           config_dir: ".ace",
           defaults_dir: ".ace-defaults",
           gem_path: nil,
           file_patterns: nil,
           merge_strategy: :replace,
-          cache_namespaces: false
+          cache_namespaces: false,
+          test_mode: false,
+          mock_config: nil
         )
           @config_dir = config_dir
           @defaults_dir = defaults_dir
@@ -32,12 +36,22 @@ module Ace
           @merge_strategy = merge_strategy
           @cache_namespaces = cache_namespaces
           @namespace_cache = {} if cache_namespaces
+          @test_mode = test_mode
+          @mock_config = mock_config || {}
+        end
+
+        # Check if test mode is active
+        # @return [Boolean] True if test mode is active
+        def test_mode?
+          @test_mode == true
         end
 
         # Resolve configuration cascade (memoized)
+        #
+        # In test mode, returns mock config immediately without filesystem access.
         # @return [Models::Config] Merged configuration
         def resolve
-          @resolved_config ||= resolve_without_cache
+          @resolved_config ||= test_mode? ? resolve_test_mode : resolve_without_cache
         end
 
         # Reset memoized configuration (useful for tests or dynamic reloading)
@@ -142,9 +156,14 @@ module Ace
         # different pattern sets. Use `resolve` for repeated access to
         # the same configuration.
         #
+        # In test mode, returns mock config immediately without filesystem access.
+        #
         # @param patterns [Array<String>, String] File patterns to search for
         # @return [Models::Config] Resolved configuration
         def resolve_file(patterns)
+          # Short-circuit in test mode
+          return resolve_test_mode if test_mode?
+
           # Create finder with specified patterns
           finder = Molecules::ConfigFinder.new(
             config_dir: config_dir,
@@ -189,9 +208,15 @@ module Ace
         end
 
         # Get config from specific type
+        #
+        # In test mode, returns mock config immediately without filesystem access.
+        #
         # @param type [Symbol] Config type (:local, :home, :gem)
         # @return [Models::Config, nil] Config from that type
         def resolve_type(type)
+          # Short-circuit in test mode
+          return resolve_test_mode if test_mode?
+
           finder = build_finder
 
           paths = finder.find_by_type(type).select(&:exists)
@@ -218,12 +243,28 @@ module Ace
         end
 
         # Find config files
+        #
+        # In test mode, returns an empty array without filesystem access.
+        #
         # @return [Array<Models::CascadePath>] All potential config paths
         def find_configs
+          # Short-circuit in test mode
+          return [] if test_mode?
+
           build_finder.find_all
         end
 
         private
+
+        # Internal: resolve in test mode (no filesystem access)
+        # @return [Models::Config] Mock configuration
+        def resolve_test_mode
+          Models::Config.new(
+            @mock_config,
+            source: "test_mode",
+            merge_strategy: merge_strategy
+          )
+        end
 
         # Internal: resolve configuration cascade without caching
         # @return [Models::Config] Merged configuration

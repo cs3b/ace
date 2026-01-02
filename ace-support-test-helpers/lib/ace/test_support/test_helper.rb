@@ -8,9 +8,22 @@ module Ace
         Dir.mktmpdir do |dir|
           original_pwd = Dir.pwd
           Dir.chdir(dir)
+
+          # Clear ProjectRootFinder cache when changing directories
+          # This ensures consistent behavior in tests
+          clear_project_root_cache
+
           yield dir
         ensure
           Dir.chdir(original_pwd)
+          clear_project_root_cache
+        end
+      end
+
+      # Clear ProjectRootFinder cache (safe to call even if ace-support-fs not loaded)
+      def clear_project_root_cache
+        if defined?(Ace::Support::Fs::Molecules::ProjectRootFinder)
+          Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
         end
       end
 

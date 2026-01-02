@@ -81,6 +81,70 @@ module Ace
                "Average merge time #{avg_time}s exceeded threshold 0.1s"
       end
 
+      # Test mode performance tests
+
+      def test_test_mode_resolution_is_fast
+        # Test mode should be extremely fast since it skips filesystem
+        elapsed = Benchmark.realtime do
+          1000.times do
+            resolver = Organisms::ConfigResolver.new(test_mode: true)
+            resolver.resolve
+            resolver.resolve_namespace("git")
+            resolver.resolve_file("some/path.yml")
+          end
+        end
+
+        avg_time = elapsed / 1000
+        # Should be < 5ms per iteration - relaxed threshold for CI stability
+        assert avg_time < 0.005,
+               "Test mode average time #{avg_time}s too slow (should be <5ms)"
+      end
+
+      def test_test_mode_with_mock_config_performance
+        mock_config = build_nested_hash(depth: 3, breadth: 5)
+
+        elapsed = Benchmark.realtime do
+          1000.times do
+            resolver = Organisms::ConfigResolver.new(
+              test_mode: true,
+              mock_config: mock_config
+            )
+            resolver.resolve
+            resolver.get("key0", "key0", "key0")
+          end
+        end
+
+        avg_time = elapsed / 1000
+        # Relaxed threshold for CI stability
+        assert avg_time < 0.005,
+               "Test mode with mock config too slow: #{avg_time}s (should be <5ms)"
+      end
+
+      def test_class_level_test_mode_performance
+        original_test_mode = Ace::Config.test_mode
+        original_mock = Ace::Config.default_mock
+
+        begin
+          Ace::Config.test_mode = true
+          Ace::Config.default_mock = { "key" => "value" }
+
+          elapsed = Benchmark.realtime do
+            1000.times do
+              resolver = Ace::Config.create
+              resolver.resolve
+            end
+          end
+
+          avg_time = elapsed / 1000
+          # Relaxed threshold for CI stability
+          assert avg_time < 0.005,
+                 "Class-level test mode too slow: #{avg_time}s (should be <5ms)"
+        ensure
+          Ace::Config.test_mode = original_test_mode
+          Ace::Config.default_mock = original_mock
+        end
+      end
+
       private
 
       def with_deep_cascade(depth:)

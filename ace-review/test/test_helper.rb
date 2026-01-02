@@ -15,6 +15,9 @@ require "minitest/pride"
 # Load shared test support for mocking fixtures
 require "ace/test_support"
 
+# Note: ace-review cannot use Ace::Config.test_mode = true
+# because it has tests that verify config behavior (synthesis_test)
+
 # Base test class
 class AceReviewTest < Minitest::Test
   def setup

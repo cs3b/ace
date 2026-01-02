@@ -345,6 +345,131 @@ end
 
 This clears cached project root detection, ensuring tests don't affect each other.
 
+## Test Mode for Performance
+
+When running tests, filesystem-based configuration resolution can become a bottleneck. ace-config provides a **test mode** that skips all filesystem operations, providing approximately 30x faster configuration resolution.
+
+### Enabling Test Mode
+
+**Option 1: In test_helper.rb (recommended)**
+
+```ruby
+# test/test_helper.rb
+require "ace/config"
+
+# Enable test mode to skip filesystem searches
+# This significantly speeds up tests that don't need real config files
+Ace::Config.test_mode = true
+```
+
+**Option 2: Environment variable**
+
+```bash
+export ACE_CONFIG_TEST_MODE=true
+```
+
+**Option 3: Per-resolver override**
+
+```ruby
+config = Ace::Config.create(test_mode: true)
+```
+
+### Mock Configuration Data
+
+Provide mock data instead of reading from disk:
+
+```ruby
+# Global mock for all resolvers
+Ace::Config.default_mock = { "key" => "value", "nested" => { "setting" => true } }
+Ace::Config.test_mode = true
+
+config = Ace::Config.create
+config.resolve.get("key")         # => "value"
+config.resolve.get("nested", "setting")  # => true
+
+# Per-resolver mock
+config = Ace::Config.create(
+  test_mode: true,
+  mock_config: { "specific" => "data" }
+)
+```
+
+### Testing Real Filesystem Access
+
+Some tests need to verify real config file behavior. Use `with_real_config`:
+
+```ruby
+def test_config_cascade_ordering
+  Ace::Config.with_real_config do
+    # This block uses real filesystem resolution
+    config = Ace::Config.create
+    result = config.resolve
+    assert_equal expected_merged_config, result.data
+  end
+  # Outside the block, test_mode is restored
+end
+```
+
+### Thread Safety
+
+Test mode state is thread-local, ensuring parallel test runners (e.g., minitest-parallel) don't interfere with each other:
+
+```ruby
+# Thread 1: test mode enabled
+Ace::Config.test_mode = true
+
+# Thread 2: test mode disabled (doesn't affect Thread 1)
+Ace::Config.test_mode = false
+```
+
+### Migration Guide for Gem Maintainers
+
+If your gem uses ace-config, enable test mode in your test helper to speed up your test suite:
+
+**Step 1**: Add to your test helper
+
+```ruby
+# my-gem/test/test_helper.rb
+require "ace/config"
+Ace::Config.test_mode = true
+```
+
+**Step 2**: Provide mock config if your tests check config values
+
+```ruby
+Ace::Config.default_mock = { "my_gem" => { "setting" => "test_value" } }
+```
+
+**Step 3**: Reset config in setup (already recommended practice)
+
+```ruby
+class MyGemTestCase < Minitest::Test
+  def setup
+    MyGem.reset_config!  # Your gem's reset method
+    Ace::Config.reset_config!  # Clear ace-config caches
+  end
+end
+```
+
+**Step 4**: Test real config access where needed
+
+```ruby
+def test_real_config_integration
+  Ace::Config.with_real_config do
+    # Tests that verify actual file reading
+  end
+end
+```
+
+### Performance Comparison
+
+| Mode | Resolution Time | Use Case |
+|------|-----------------|----------|
+| Normal | ~0.3ms | Production, real config needed |
+| Test Mode | ~0.01ms | Unit tests, mock data sufficient |
+
+Test mode is **30x faster** because it bypasses all filesystem operations (directory traversal, file existence checks, YAML parsing).
+
 ## Integration with Other ACE Gems
 
 ace-config is designed to be the foundation for other ACE gems:

@@ -7,6 +7,70 @@ module Ace
   module TestSupport
     # Helpers for config testing across all ace-* gems
     module ConfigHelpers
+      # Execute block with test mode enabled
+      #
+      # This helper enables Ace::Config test mode for the duration of the block,
+      # skipping filesystem searches and returning mock config instead.
+      #
+      # @param mock_config [Hash] Mock configuration data to return (default: {})
+      # @yield Block to execute with test mode enabled
+      # @return [Object] Result of the block
+      #
+      # @example Skip config filesystem access
+      #   with_test_config do
+      #     config = Ace::Config.create.resolve
+      #     assert_equal({}, config.data)
+      #   end
+      #
+      # @example Provide mock config
+      #   with_test_config({ "key" => "value" }) do
+      #     config = Ace::Config.create.resolve
+      #     assert_equal "value", config.get("key")
+      #   end
+      #
+      def with_test_config(mock_config = {})
+        require "ace/config"
+
+        original_test_mode = Ace::Config.test_mode
+        original_mock = Ace::Config.default_mock
+
+        Ace::Config.test_mode = true
+        Ace::Config.default_mock = mock_config
+
+        yield
+      ensure
+        Ace::Config.test_mode = original_test_mode
+        Ace::Config.default_mock = original_mock
+      end
+
+      # Execute block with real config (test mode disabled)
+      #
+      # This helper temporarily disables test mode for integration tests
+      # that need to test actual filesystem-based config loading.
+      #
+      # @yield Block to execute with real config
+      # @return [Object] Result of the block
+      #
+      # @example Run integration test with real config
+      #   with_real_config do
+      #     with_temp_config(".git" => "", ".ace" => { "config.yml" => "key: value" }) do
+      #       config = Ace::Config.create.resolve
+      #       assert_equal "value", config.get("key")
+      #     end
+      #   end
+      #
+      def with_real_config
+        require "ace/config"
+
+        original_test_mode = Ace::Config.test_mode
+
+        Ace::Config.test_mode = false
+
+        yield
+      ensure
+        Ace::Config.test_mode = original_test_mode
+      end
+
       # Execute block with temporary config file
       def with_config(path, content)
         FileUtils.mkdir_p(File.dirname(path))
