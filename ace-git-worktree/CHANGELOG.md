@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-01-02
+
+### Changed
+
+* **BREAKING**: `TaskStatusUpdater#update_status`, `#mark_in_progress`, `#mark_done`, `#mark_blocked` now return `{success: Boolean, message: String}` instead of Boolean
+  - Enables rich error propagation for dependency-blocked tasks
+  - Orchestrator now displays actionable error messages with hints
+* Improved error message for dependency-blocked tasks with `--no-status-update` hint
+
 ## [0.8.2] - 2026-01-01
 
 ### Changed
