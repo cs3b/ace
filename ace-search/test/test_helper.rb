@@ -28,9 +28,6 @@ require "ace/search/models/search_preset"
 require "minitest/autorun"
 require "ace/test_support"
 
-# Note: ace-search cannot use Ace::Config.test_mode = true
-# because it has tests that verify config-based presets
-
 class AceSearchTestCase < AceTestCase
   # Helper to check if external tools are available
   def skip_unless_rg_available

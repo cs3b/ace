@@ -3,6 +3,17 @@
 require "test_helper"
 
 class Ace::TestSearch < AceSearchTestCase
+  # Config tests need real config access
+  def setup
+    super
+    Ace::Config.test_mode = false
+  end
+
+  def teardown
+    Ace::Config.test_mode = true
+    super
+  end
+
   def test_that_it_has_a_version_number
     refute_nil ::Ace::Search::VERSION
     assert_match(/\d+\.\d+\.\d+/, ::Ace::Search::VERSION)
