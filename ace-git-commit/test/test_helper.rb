@@ -21,6 +21,9 @@ rescue LoadError
   # Test support not available, use basic Minitest::Test
 end
 
+# Enable test mode for ace-config to skip filesystem config searches
+Ace::Config.test_mode = true
+
 # Base test class
 class TestCase < (defined?(Ace::TestSupport::BaseTestCase) ? Ace::TestSupport::BaseTestCase : Minitest::Test)
   # Add any common test setup here

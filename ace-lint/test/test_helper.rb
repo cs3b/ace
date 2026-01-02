@@ -8,4 +8,7 @@ $LOAD_PATH.unshift(ace_support_core_path) if Dir.exist?(ace_support_core_path)
 
 require "ace/lint"
 
+# Note: ace-lint cannot use Ace::Config.test_mode = true
+# because it has tests that verify config values (kramdown_config)
+
 require "minitest/autorun"

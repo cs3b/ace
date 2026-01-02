@@ -46,6 +46,14 @@ module Ace
   #     defaults_dir: ".ace-defaults"
   #   )
   #
+  # @example Test mode (skip filesystem searches)
+  #   Ace::Config.test_mode = true
+  #   config = Ace::Config.create  # Returns empty config immediately
+  #
+  #   # Or with mock data
+  #   Ace::Config.default_mock = { "key" => "value" }
+  #   config = Ace::Config.create  # Returns mock config
+  #
   module Config
     # Default folder name for user configuration
     DEFAULT_CONFIG_DIR = ".ace"
@@ -68,6 +76,58 @@ module Ace
     ].freeze
 
     class << self
+      # Thread-local test mode state
+      # Uses Thread.current for true thread isolation in parallel test environments
+      # @return [Boolean, nil] Whether test mode is enabled
+      def test_mode
+        Thread.current[:ace_config_test_mode]
+      end
+
+      # Set thread-local test mode state
+      # @param value [Boolean, nil] Whether test mode is enabled
+      def test_mode=(value)
+        Thread.current[:ace_config_test_mode] = value
+      end
+
+      # Thread-local mock configuration data to return in test mode
+      # @return [Hash, nil] Mock configuration data
+      def default_mock
+        Thread.current[:ace_config_default_mock]
+      end
+
+      # Set thread-local mock configuration data
+      # @param value [Hash, nil] Mock configuration data
+      def default_mock=(value)
+        Thread.current[:ace_config_default_mock] = value
+      end
+
+      # Check if test mode is active
+      #
+      # Test mode is active when:
+      # 1. Ace::Config.test_mode is explicitly set to true
+      # 2. ACE_CONFIG_TEST_MODE environment variable is set to "1" or "true" (case-insensitive)
+      #
+      # Note: We intentionally do NOT auto-detect based on Minitest being loaded,
+      # as that would break tests that need to test real filesystem access
+      # (like ace-config's own tests). Use explicit opt-in instead.
+      #
+      # Note: ENV lookup is intentionally NOT memoized to allow dynamic control
+      # of test_mode via environment variable changes at runtime.
+      #
+      # @return [Boolean] True if test mode is active
+      def test_mode?
+        # Note: test_mode (without ?) is the thread-local getter defined above,
+        # not a recursive call - it reads from Thread.current[:ace_config_test_mode]
+        return true if test_mode == true
+
+        env_value = ENV["ACE_CONFIG_TEST_MODE"]
+        return false if env_value.nil?
+        return true if env_value == "1"
+        return true if env_value.casecmp("true").zero?
+
+        false
+      end
+
       # Create a new configuration resolver with customizable options
       #
       # @param config_dir [String] User config folder name (default: ".ace")
@@ -75,6 +135,8 @@ module Ace
       # @param gem_path [String, nil] Optional gem root for defaults
       # @param merge_strategy [Symbol] Array merge strategy (:replace, :concat, :union)
       # @param cache_namespaces [Boolean] Whether to cache resolve_namespace results (default: false)
+      # @param test_mode [Boolean, nil] Force test mode on/off (default: nil = auto-detect)
+      # @param mock_config [Hash, nil] Mock config data for test mode (default: nil = use default_mock)
       # @return [Organisms::ConfigResolver] Configuration resolver instance
       #
       # @example Create with defaults
@@ -93,19 +155,30 @@ module Ace
       #   config.resolve_namespace("my_gem")  # reads from disk
       #   config.resolve_namespace("my_gem")  # returns cached result
       #
+      # @example Test mode with mock config
+      #   config = Ace::Config.create(test_mode: true, mock_config: { "key" => "value" })
+      #   config.resolve.get("key")  # => "value"
+      #
       def create(
         config_dir: DEFAULT_CONFIG_DIR,
         defaults_dir: DEFAULT_DEFAULTS_DIR,
         gem_path: nil,
         merge_strategy: :replace,
-        cache_namespaces: false
+        cache_namespaces: false,
+        test_mode: nil,
+        mock_config: nil
       )
+        # Determine effective test mode
+        effective_test_mode = test_mode.nil? ? test_mode? : test_mode
+
         Organisms::ConfigResolver.new(
           config_dir: config_dir,
           defaults_dir: defaults_dir,
           gem_path: gem_path,
           merge_strategy: merge_strategy,
-          cache_namespaces: cache_namespaces
+          cache_namespaces: cache_namespaces,
+          test_mode: effective_test_mode,
+          mock_config: mock_config || default_mock
         )
       end
 
@@ -190,6 +263,8 @@ module Ace
       # @return [void]
       def reset_config!
         Ace::Support::Fs::Molecules::ProjectRootFinder.clear_cache!
+        Thread.current[:ace_config_test_mode] = nil
+        Thread.current[:ace_config_default_mock] = nil
       end
     end
   end

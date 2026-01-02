@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-01-02
+
+### Added
+- Test mode for faster test execution (`Ace::Config.test_mode = true`)
+- `ACE_CONFIG_TEST_MODE` environment variable for CI/test runner integration (case-insensitive)
+- `mock_config` parameter to `Ace::Config.create` for providing mock data in tests
+- `test_mode` parameter to `Ace::Config.create` for explicit test mode control
+- Thread-safe test mode state using `Thread.current` for parallel test environments
+- Test mode short-circuit in `resolve_type` and `find_configs` methods
+
 ## [0.4.1] - 2025-12-31
 
 ### Technical

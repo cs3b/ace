@@ -9,6 +9,9 @@ require_relative "support/shell_mock_helper"
 require_relative "support/tree_assertions_helper"
 require_relative "support/mock_repo_context"
 
+# Note: ace-taskflow cannot use Ace::Config.test_mode = true
+# because it has tests that verify config loading behavior (ConfigLoaderTest)
+
 # Base test case for ace-taskflow tests
 class AceTaskflowTestCase < Ace::TestSupport::BaseTestCase
   include LlmMockHelper
