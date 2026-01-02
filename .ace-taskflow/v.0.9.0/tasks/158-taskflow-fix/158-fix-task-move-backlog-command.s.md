@@ -64,16 +64,19 @@ New path: .ace-taskflow/_backlog/tasks/141-ci-mq-ace/
 
 ### Success Criteria
 
-- [ ] `ace-taskflow task move <TASK_REF> --backlog` works without error
-- [ ] Task directory is moved to correct backlog location
-- [ ] Success message shows new path
-- [ ] No regression in other move operations (--child-of, --release)
+- [x] `ace-taskflow task move <TASK_REF> --backlog` works without error
+- [x] Task directory is moved to correct backlog location
+- [x] Success message shows new path
+- [x] No regression in other move operations (--child-of, --release)
 
 ### Validation Questions
 
-- [ ] Should `TaskManager` use `Configuration` object instead of raw Hash?
-- [ ] Are there other places in TaskManager calling config methods on a Hash?
-- [ ] Is this related to Task 143 (unified configuration)?
+- [x] Should `TaskManager` use `Configuration` object instead of raw Hash?
+  - Answer: Use `Ace::Taskflow.configuration` at the call site to access the Configuration object, keeping @config as Hash for other uses that don't need method access
+- [x] Are there other places in TaskManager calling config methods on a Hash?
+  - Answer: No, the only instance was in `resolve_release_path` for the `"backlog"` case
+- [x] Is this related to Task 143 (unified configuration)?
+  - Answer: No, Task 143 was about configuration defaults and overrides. This was a simple bug where the wrong config accessor was used.
 
 ## Objective
 
@@ -111,4 +114,5 @@ Fix the broken `--backlog` option so tasks can be moved to backlog via CLI.
 ## References
 
 - Task 143: Unified configuration loading and merging defaults across ace-* packages
+- [ADR-022](docs/decisions/ADR-022-configuration-default-and-override-pattern.md): Configuration default and override pattern - explains why `Ace::Taskflow.configuration` object should be used instead of raw Hash for accessing config methods like `backlog_dir`
 - Related: ace-taskflow configuration architecture in `docs/ace-gems.g.md`

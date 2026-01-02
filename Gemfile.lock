@@ -177,7 +177,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.26.1)
+    ace-taskflow (0.26.2)
       ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
