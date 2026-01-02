@@ -430,7 +430,7 @@ dependencies: []
     taskflow_root = File.join(dir, ".ace-taskflow")
     config_dir = File.join(dir, ".ace", "taskflow")
     FileUtils.mkdir_p(config_dir)
-    File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n  directories:\n    tasks: t\n")
+    File.write(File.join(config_dir, "config.yml"), "taskflow:\n  root: .ace-taskflow\n")
 
     release_dir = File.join(taskflow_root, "v.0.9.0")
     FileUtils.mkdir_p(release_dir)

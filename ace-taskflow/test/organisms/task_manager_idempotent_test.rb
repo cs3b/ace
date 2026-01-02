@@ -56,7 +56,7 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
         # Create a task in draft status
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "050", "task.050.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "050", "task.050.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
         File.write(task_file, TestFactory.sample_task_content(
           id: "v.0.9.0+task.050",
@@ -75,7 +75,7 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
       Dir.chdir(dir) do
         manager = Ace::Taskflow::Organisms::TaskManager.new
         # Create a task with custom status
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "051", "task.051.s.md")
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "051", "task.051.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
         File.write(task_file, TestFactory.sample_task_content(
           id: "v.0.9.0+task.051",
@@ -127,9 +127,23 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_strict_mode_enforces_rigid_validation
     with_test_project do |dir|
       Dir.chdir(dir) do
-        # Create manager with strict transitions enabled
-        strict_config = { "taskflow" => { "strict_transitions" => true } }
-        strict_manager = Ace::Taskflow::Organisms::TaskManager.new(strict_config)
+        # Enable strict transitions via configuration file (ADR-022 pattern)
+        # Only override what we need - other settings come from gem defaults via ace-config
+        config_file = File.join(dir, ".ace", "taskflow", "config.yml")
+        FileUtils.mkdir_p(File.dirname(config_file))
+        File.write(config_file, <<~YAML)
+          taskflow:
+            strict_transitions: true
+            root: .ace-taskflow
+        YAML
+
+        # Reset all caches to pick up the new configuration
+        Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+        Ace::Taskflow.reset_configuration!
+        Ace::Taskflow::Molecules::TaskLoader.clear_cache!
+        Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
+
+        strict_manager = Ace::Taskflow::Organisms::TaskManager.new
 
         # In strict mode, cannot go directly from pending to done
         result = strict_manager.update_task_status("003", "done")
@@ -142,17 +156,31 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
   def test_strict_mode_rejects_custom_statuses
     with_test_project do |dir|
       Dir.chdir(dir) do
-        # Create a task with custom status
-        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "tasks", "052", "task.052.s.md")
+        # Create a task with custom status (using t/ directory matching gem defaults)
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "052", "task.052.s.md")
         FileUtils.mkdir_p(File.dirname(task_file))
         File.write(task_file, TestFactory.sample_task_content(
           id: "v.0.9.0+task.052",
           status: "ready-for-review"
         ))
 
-        # Create manager with strict transitions
-        strict_config = { "taskflow" => { "strict_transitions" => true } }
-        strict_manager = Ace::Taskflow::Organisms::TaskManager.new(strict_config)
+        # Enable strict transitions via configuration file (ADR-022 pattern)
+        # Only override what we need - other settings come from gem defaults via ace-config
+        config_file = File.join(dir, ".ace", "taskflow", "config.yml")
+        FileUtils.mkdir_p(File.dirname(config_file))
+        File.write(config_file, <<~YAML)
+          taskflow:
+            strict_transitions: true
+            root: .ace-taskflow
+        YAML
+
+        # Reset all caches to pick up the new configuration
+        Ace::Taskflow::Molecules::ConfigLoader.reset_gem_defaults!
+        Ace::Taskflow.reset_configuration!
+        Ace::Taskflow::Molecules::TaskLoader.clear_cache!
+        Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
+
+        strict_manager = Ace::Taskflow::Organisms::TaskManager.new
 
         # In strict mode, custom status transitions should fail
         result = strict_manager.update_task_status("052", "done")
