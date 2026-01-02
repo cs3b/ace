@@ -5,9 +5,6 @@ require "ace/test_support"
 require_relative "support/command_mock_helper"
 require_relative "support/pr_mock_fixtures"
 
-# Enable test mode for ace-config to skip filesystem config searches
-Ace::Config.test_mode = true
-
 # AceTestCase is provided by ace-support-test-helpers with all helpers
 
 # Enable command mocking for all tests to ensure deterministic, fast execution
