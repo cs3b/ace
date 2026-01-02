@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.217] - 2026-01-02
+
+### Changed
+
+**ace-git-worktree 0.8.3**: Improve error message for dependency-blocked tasks (Task 164)
+
+- `TaskStatusUpdater#update_status` and related methods now return `{success:, message:}` hash instead of Boolean
+- Enables rich error propagation for dependency-blocked tasks
+- Displays actionable error messages with `--no-status-update` hint when task status update fails
+
 ## [0.9.216] - 2026-01-01
 
 ### Fixed
