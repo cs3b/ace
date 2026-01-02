@@ -11,6 +11,9 @@ require "minitest/reporters"
 # Load shared test support for mocking fixtures
 require "ace/test_support"
 
+# Enable test mode for ace-config to skip filesystem config searches
+Ace::Config.test_mode = true
+
 Minitest::Reporters.use! Minitest::Reporters::SpecReporter.new
 
 # Standardized coverage configuration
