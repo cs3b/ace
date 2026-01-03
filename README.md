@@ -90,7 +90,7 @@ ace-taskflow tasks --current
 ace-git-commit -i "fixing authentication bug"
 
 # Navigate to workflow
-ace-nav wfi://work-on-task
+ace-context wfi://work-on-task
 
 # Run tests
 ace-test test/specific_test.rb
@@ -209,8 +209,8 @@ See [docs/tools.md](docs/tools.md) for complete CLI reference.
 Navigate workflows directly from terminal:
 
 ```bash
-ace-nav wfi://work-on-task
-ace-nav wfi://load-context
+ace-context wfi://work-on-task
+ace-context wfi://load-context
 ```
 
 Workflows are self-contained with embedded templates following ADR-001.

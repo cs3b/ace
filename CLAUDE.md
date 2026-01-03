@@ -46,6 +46,19 @@ Agents should recognize these command patterns:
 - `@.claude/commands/ace/load-context.md` → Use ace-context
 - `@.claude/commands/*` → Follow specific command instructions
 
+## Workflow Context Embedding
+
+**Best practice**: When agents invoke workflows via `/ace:command`, the workflow may include embedded context (via `embed_document_source: true`).
+
+Agents should:
+1. Check for embedded XML sections like `<current_repository_status>` or `<available_presets>`
+2. Use this context instead of running redundant commands
+3. Reference embedded sections explicitly in responses
+
+**Example**: When `/ace:commit` is invoked, the workflow includes `<current_repository_status>` with git state. No need to run `git status` separately.
+
+For full patterns and guidance, run `ace-context guide://workflow-context-embedding`.
+
 ## CLI Tool Usage
 
 The following are CLI tools that run in your terminal (bash/fish). See also: [docs/tools.md](docs/tools.md) for complete reference.
@@ -66,7 +79,7 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Protocols**: wfi://, guide://, prompt://, tmpl://
 **Examples**:
 
-- `ace-nav wfi://load-context` → Read output file path, then read that file
+- `ace-context wfi://load-context` → Read output file path, then read that file
 - `ace-nav --sources` → List available resource sources
 
 ### ace-* CLI Tools: Output Handling (Terminal)
@@ -86,7 +99,7 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Correct patterns**:
 ✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
 ✅ `ace-context project` → output is already concise; read referenced files as needed
-✅ `ace-nav wfi://workflow` → returns file path, then `Read` that file
+✅ `ace-context wfi://workflow` → returns workflow content (may include embedded context)
 
 ## Testing Constraints
 
