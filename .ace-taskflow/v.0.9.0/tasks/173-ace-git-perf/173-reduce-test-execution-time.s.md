@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.173
-status: draft
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 173-optimize-ace-git-test-performance-11s-to-under-5s
+  path: "../ace-task.173"
+  created_at: '2026-01-03 13:07:48'
+  updated_at: '2026-01-03 13:07:48'
 ---
 
 # Optimize ace-git test performance (11s to under 5s)
