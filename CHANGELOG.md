@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.226] - 2026-01-03
+
+### Added
+
+- **docs/testing-patterns.md**: 6 new sections documenting test performance optimization patterns from tasks 167-175
+  - Test Performance Targets: Thresholds by test layer (atoms <10ms, molecules <50ms, organisms <100ms, integration <500ms, E2E <2s)
+  - E2E Test Strategy: "Keep ONE E2E per file" rule with migration examples
+  - Composite Test Helpers: Pattern to reduce 6-7 level nesting to single helper calls
+  - Subprocess Stubbing with Open3: Patterns for mocking subprocess calls
+  - DiffOrchestrator Stubbing Pattern: Cross-package git stubbing for ace-git dependency
+  - Sleep Stubbing for Retry Tests: Kernel.sleep stubbing pattern
+
+### Changed
+
+- **dev-handbook/workflow-instructions/fix-tests.wf.md**: Enhanced test performance troubleshooting section with diagnostics and performance targets
+- **dev-handbook/guides/testing.g.md**: Added section 8 "Test Performance Optimization" with cross-references
+- **dev-handbook/guides/testing/test-maintenance.md**: Added 5 optimization strategies (items 4-8) referencing new patterns
+
+### Technical
+
+- Documented learnings from 9-package test optimization achieving 60% average performance improvement
+- Added Performance Cost Reference table (git init ~150-200ms, subprocess spawn ~150ms, etc.)
+- Summary section reorganized into Core Principles, Performance Patterns, Mock & Stub Patterns, Testability Patterns
+
 ## [0.9.225] - 2026-01-03
 
 ### Changed
