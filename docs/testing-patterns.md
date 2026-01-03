@@ -499,6 +499,44 @@ end
 3. **Determinism**: Predictable results without filesystem race conditions
 4. **Portability**: Works in CI environments without git configuration
 
+## Zombie Mocks Pattern
+
+"Zombie Mocks" occur when mocks stub methods that are no longer called by the implementation, but tests continue to pass because the real code path happens to work (slowly or otherwise).
+
+### Symptoms
+
+- Tests pass but are unexpectedly slow
+- Mock setup doesn't match actual code implementation
+- Refactored code still uses old mock patterns
+
+### Case Study: ace-docs ChangeDetector
+
+**Problem**: Tests stubbed `ChangeDetector.stub :execute_git_command` but the implementation had evolved to use `Ace::Git::Organisms::DiffOrchestrator.generate`. Tests passed but each ran real git operations (~1 second each).
+
+```ruby
+# ❌ ZOMBIE MOCK - stubs method no longer in code path
+ChangeDetector.stub :execute_git_command, "" do
+  result = ChangeDetector.get_diff_for_documents(docs, since: "HEAD~1")
+end
+
+# ✅ CORRECT - stubs actual method being called
+mock_result = Ace::Git::Models::DiffResult.empty
+Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
+  result = ChangeDetector.get_diff_for_documents(docs, since: "HEAD~1")
+end
+```
+
+**Detection**: Run `ace-test --profile 10` to find slow unit tests. Tests taking >100ms often indicate zombie mocks.
+
+**Result**: Fixing zombie mocks reduced test time from 14s to 1.5s (89% improvement).
+
+### Prevention
+
+1. **Profile regularly**: Add `ace-test --profile 10` to development workflow
+2. **Review mock targets**: When refactoring, update test mocks to match new code paths
+3. **Extract helpers**: Create reusable mock helpers (like `with_empty_git_diff`) that are easy to maintain
+4. **Test the mocks**: Verify mocks are being hit by temporarily breaking them
+
 ## Summary
 
 - Extract external dependencies to protected methods
@@ -510,3 +548,4 @@ end
 - **Use thread-safe stub pattern instead of define_method**
 - **Never call exit in commands or organisms - return status codes and raise exceptions**
 - **Handle exit only at the CLI entry point (exe/ace-\*)**
+- **Watch for zombie mocks - stubs that don't match actual code paths**
