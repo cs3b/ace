@@ -6,6 +6,14 @@ description: Create well-structured Git commits using ace-git-commit's LLM-power
 argument-hint: "[intention]"
 doc-type: workflow
 purpose: commit workflow instruction
+context:
+  embed_document_source: true
+  sections:
+    current_repository_status:
+      commands:
+        - git status -sb 
+        - git diff --stat
+
 update:
   frequency: on-change
   last-updated: '2025-09-26'
@@ -30,11 +38,15 @@ ace-git-commit automatically:
 
 ## Instructions
 
-1. **Review changes** to understand what will be committed:
-   ```bash
-   git status
-   git diff --stat
-   ```
+1. **Repository status is embedded above** in `<current_repository_status>`.
+
+   The current git state (status + diff summary) is already loaded in this workflow.
+   Review it to understand what will be committed:
+   - Which files are modified? (from status output)
+   - How significant are the changes? (from diff --stat)
+   - Is this the right scope for a single commit?
+
+   No need to run git commands - the context is already provided.
 
 2. **Execute commit** based on scope:
    - All changes: `ace-git-commit`
@@ -45,8 +57,7 @@ ace-git-commit automatically:
 
 3. **Verify result**:
    ```bash
-   git log -1 --oneline
-   git status
+   ace-git status
    ```
 
 ## Options Reference
