@@ -25,7 +25,7 @@ Developers experience faster test execution. Backtick git commands replaced with
 
 ### Success Criteria
 
-- [x] Test suite runs in <5 seconds (currently ~6.7s, originally 13.01s)
+- [x] Test suite runs in <5 seconds (achieved 4.6-4.9s, down from 6.7s, originally 13.01s)
 - [x] All 380 tests pass
 - [x] No real git init via backticks (use stubs)
 - [x] Stub chains simplified
