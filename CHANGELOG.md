@@ -4,6 +4,68 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.233] - 2026-01-03
+
+### Added
+
+- **ace-handbook 0.4.0**: Guides support with handbook/guides/ directory
+  - `workflow-context-embedding.g.md` guide for `embed_document_source` pattern
+  - Guide discovery protocol (.ace-defaults/nav/protocols/guide-sources/ace-handbook.yml)
+  - Establishes pattern for gem-based guides in ace-handbook
+  - Guide migrated from dev-handbook/guides/ to ace-handbook/handbook/guides/
+
+## [0.9.232] - 2026-01-03
+
+### Changed
+
+- **ace-integration-claude 0.3.1**: Updated CLAUDE.md template to use ace-context
+  - Template now uses `ace-context wfi://` instead of `ace-nav wfi://` for workflow discovery
+  - Aligns with new best practice for Claude Code integration
+
+## [0.9.231] - 2026-01-03
+
+### Changed
+
+- **ace-taskflow 0.27.1**: Migrated workflow instructions from ace-nav to ace-context
+  - 19 workflows updated to use `ace-context wfi://` protocol
+  - Standardizes on ace-context for all workflow discovery
+
+## [0.9.230] - 2026-01-03
+
+### Changed
+
+- **ace-docs 0.14.1**: Migrated workflow instructions from ace-nav to ace-context
+  - 7 workflows updated to use `ace-context wfi://` protocol
+  - Standardizes on ace-context for all workflow discovery
+
+## [0.9.229] - 2026-01-03
+
+### Changed
+
+- **ace-git-commit 0.15.1**: Enhanced commit workflow with embedded repository status
+  - `embed_document_source: true` frontmatter with `<current_repository_status>` section
+  - Pre-loaded git status and diff summary eliminates redundant commands
+  - Reduced tool calls from 5 to 2-3 (40-60% improvement) when agents invoke `/ace:commit`
+
+## [0.9.228] - 2026-01-03
+
+### Added
+
+- **ace-context 0.24.0**: Support for loading plain markdown files with frontmatter and embedded context in workflows
+  - Returns raw content with metadata for non-template markdown files
+  - `embed_document_source: true` frontmatter support for embedding dynamic context
+  - Integration tests for plain markdown file loading
+  - Enhanced `load-context` workflow to use embedded `<available_presets>` section
+  - Reduced tool calls by 40-60% for workflows using embedded context
+
+### Technical
+
+- **ace-handbook/handbook/guides/workflow-context-embedding.g.md**: Pattern guide for workflow context embedding (accessed via `ace-context guide://workflow-context-embedding`)
+  - Three core patterns: "Context Already Available", "Interactive Selection", "Validation"
+  - Section naming conventions for embedded context
+  - When to use `embed_document_source: true` vs manual context gathering
+- **CLAUDE.md**: Added "Workflow Context Embedding" section explaining embedded context usage
+
 ## [0.9.227] - 2026-01-03
 
 ### Changed
