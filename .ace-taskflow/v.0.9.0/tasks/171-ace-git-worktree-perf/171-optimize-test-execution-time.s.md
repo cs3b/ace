@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.171
-status: draft
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 171-optimize-ace-git-worktree-test-performance-13s-to-under-5s
+  path: "../ace-task.171"
+  created_at: '2026-01-03 13:06:41'
+  updated_at: '2026-01-03 13:06:41'
 ---
 
 # Optimize ace-git-worktree test performance (13s to under 5s)
