@@ -16,6 +16,7 @@ require_relative '../molecules/section_formatter'
 require_relative 'pr_context_loader'
 require_relative '../models/context_data'
 require_relative '../atoms/content_checker'
+require_relative '../atoms/typo_detector'
 
 module Ace
   module Context
@@ -1333,66 +1334,18 @@ module Ace
           context
         end
 
-        # Check for frontmatter keys that might be typos of known template keys
-        # Only runs when ACE_CONTEXT_STRICT env var is set
-        # @param frontmatter [Hash] Parsed frontmatter YAML
-        # @param path [String] File path for warning message
-        # @return [Array<String>] List of warning messages
+        # Delegate to Atoms::TypoDetector for architectural consistency
+        # @deprecated Use Atoms::TypoDetector.detect_suspicious_keys directly
         def detect_suspicious_keys(frontmatter, path)
           return [] unless ENV['ACE_CONTEXT_STRICT']
 
-          # Known keys for templates and workflows
-          known_keys = %w[
-            context files commands include exclude diffs
-            name description allowed-tools params
-            update frequency sections last-updated
-            auto_generate template-refs
-          ]
-
-          warnings = []
-          frontmatter.keys.each do |key|
-            next if known_keys.include?(key)
-
-            # Check for common typos using Levenshtein-like distance
-            known_keys.each do |known|
-              if typo_distance(key, known) <= 2
-                warnings << "Possible typo in #{path}: frontmatter key '#{key}' looks similar to known key '#{known}'"
-                break
-              end
-            end
-          end
-
-          warnings
+          Atoms::TypoDetector.detect_suspicious_keys(frontmatter, path)
         end
 
-        # Calculate simple edit distance between two strings
-        # @param str1 [String] First string
-        # @param str2 [String] Second string
-        # @return [Integer] Edit distance (number of single-character edits)
+        # Delegate to Atoms::TypoDetector for architectural consistency
+        # @deprecated Use Atoms::TypoDetector.typo_distance directly
         def typo_distance(str1, str2)
-          return str2.length if str1.empty?
-          return str1.length if str2.empty?
-
-          # Simple distance: check if one can become the other with <=2 edits
-          # (insertion, deletion, or substitution)
-          matrix = Array.new(str1.length + 1) { |i| [i] }
-
-          (0..str2.length).each do |j|
-            matrix[0][j] = j
-          end
-
-          (1..str1.length).each do |i|
-            (1..str2.length).each do |j|
-              cost = str1[i - 1] == str2[j - 1] ? 0 : 1
-              matrix[i][j] = [
-                matrix[i - 1][j] + 1,       # deletion
-                matrix[i][j - 1] + 1,       # insertion
-                matrix[i - 1][j - 1] + cost # substitution
-              ].min
-            end
-          end
-
-          matrix[str1.length][str2.length]
+          Atoms::TypoDetector.typo_distance(str1, str2)
         end
       end
     end
