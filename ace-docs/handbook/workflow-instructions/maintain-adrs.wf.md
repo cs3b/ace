@@ -29,7 +29,7 @@ obsolete patterns, and maintaining the decisions.md summary.
 
 ## Project Context Loading
 
-* Read and follow: `ace-nav wfi://load-context`
+* Read and follow: `ace-context wfi://load-context`
 
 ## Maintenance Actions
 
