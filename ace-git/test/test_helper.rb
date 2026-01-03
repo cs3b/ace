@@ -17,4 +17,14 @@ class AceGitTestCase < AceTestCase
     Ace::Git.reset_config!
     super
   end
+
+  # Helper to build mock PR data for PrMetadataFetcher stubs
+  # Used across multiple organism tests to avoid duplication
+  def build_mock_prs(current_pr: nil, merged_prs: [], open_prs: [])
+    prs = []
+    prs << current_pr.merge("state" => "OPEN") if current_pr
+    merged_prs.each { |pr| prs << pr.merge("state" => "MERGED") }
+    open_prs.each { |pr| prs << pr.merge("state" => "OPEN") }
+    { success: true, prs: prs }
+  end
 end
