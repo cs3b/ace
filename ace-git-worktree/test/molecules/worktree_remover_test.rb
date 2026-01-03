@@ -6,7 +6,6 @@ require "stringio"
 class WorktreeRemoverTest < Minitest::Test
   def setup
     setup_temp_dir
-    setup_git_repo
     @remover = Ace::Git::Worktree::Molecules::WorktreeRemover.new
   end
 
@@ -256,15 +255,6 @@ class WorktreeRemoverTest < Minitest::Test
   end
 
   private
-
-  def setup_git_repo
-    # Initialize a git repo in temp dir if needed for tests
-    Dir.chdir(@temp_dir) do
-      system("git init --quiet") unless File.exist?(".git")
-      system("git config user.email 'test@example.com'")
-      system("git config user.name 'Test User'")
-    end
-  end
 
   def mock_worktree_info(path, branch)
     worktree_info = Object.new
