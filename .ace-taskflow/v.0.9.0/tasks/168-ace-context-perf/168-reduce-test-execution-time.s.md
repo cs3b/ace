@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.168
-status: draft
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 168-optimize-ace-context-test-performance-15s-to-under-5s
+  path: "../ace-task.168"
+  created_at: '2026-01-03 13:04:37'
+  updated_at: '2026-01-03 13:04:37'
 ---
 
 # Optimize ace-context test performance (15s to under 5s)
