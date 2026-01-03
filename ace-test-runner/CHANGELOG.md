@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-01-03
+
+### Changed
+
+* **Test Performance Optimization**: Reduce test suite execution time by 46% (3.3s → 1.78s)
+  * Convert 2 E2E integration tests to use mocked subprocess execution
+  * Retain 1 representative E2E test for genuine CLI validation
+  * Improve assertions per second from 105 to 194 (85% improvement)
+  * Add E2E Coverage Analysis documenting risk mitigation
+
+### Technical
+
+* Enhanced code comments explaining E2E test rationale
+* Added performance measurement commands to documentation
+* Documented CI benchmark/regression guard (5s threshold)
+
 ## [0.6.1] - 2025-12-30
 
 ### Changed
