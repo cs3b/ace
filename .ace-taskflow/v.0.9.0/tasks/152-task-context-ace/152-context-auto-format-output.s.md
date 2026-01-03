@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.152
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 152-ace-context-auto-format-output-based-on-line-count-threshold
+  path: "../ace-task.152"
+  created_at: '2026-01-03 22:42:01'
+  updated_at: '2026-01-03 22:42:01'
 ---
 
 # ace-context: Auto-format output based on line count threshold
