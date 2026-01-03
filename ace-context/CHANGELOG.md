@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-01-03
+
+### Added
+- Support for loading plain markdown files with frontmatter (preserves both content and metadata)
+- `embed_document_source: true` frontmatter support for embedding dynamic context in workflows
+- Integration tests for plain markdown file loading
+
+### Changed
+- Enhanced `load-context` workflow to use embedded `<available_presets>` section
+- Improved context_loader.rb to return raw content with metadata for non-template markdown files
+
 ## [0.23.0] - 2026-01-03
 
 ### Changed
