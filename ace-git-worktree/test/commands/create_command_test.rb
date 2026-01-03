@@ -36,10 +36,10 @@ class CreateCommandTest < Minitest::Test
     }
     mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-      result = @command.run(["--task", "081"])
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      result = command.run(["--task", "081"])
       assert_equal 0, result
       mock_worktree_manager.verify
     end
@@ -60,10 +60,10 @@ class CreateCommandTest < Minitest::Test
     }
     mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-      result = @command.run(["--task", "081", "--dry-run"])
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      result = command.run(["--task", "081", "--dry-run"])
       assert_equal 0, result
       mock_worktree_manager.verify
     end
@@ -74,9 +74,9 @@ class CreateCommandTest < Minitest::Test
     mock_worktree_manager = Minitest::Mock.new
     mock_worktree_manager.expect(:create, { success: true }, [String, Hash])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["feature-branch"])
+    result = command.run(["feature-branch"])
     assert_equal 0, result
     mock_worktree_manager.verify
   end
@@ -86,9 +86,9 @@ class CreateCommandTest < Minitest::Test
     mock_worktree_manager = Minitest::Mock.new
     mock_worktree_manager.expect(:create, { success: true }, [String, Hash])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["feature-branch", "--path", "/custom/path"])
+    result = command.run(["feature-branch", "--path", "/custom/path"])
     assert_equal 0, result
     mock_worktree_manager.verify
   end
@@ -101,10 +101,10 @@ class CreateCommandTest < Minitest::Test
       error: "Task not found: invalid"
     }, [String, Hash])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-      result = @command.run(["--task", "invalid"])
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      result = command.run(["--task", "invalid"])
       # Should handle invalid task gracefully
       assert_equal 1, result
       mock_worktree_manager.verify
@@ -112,6 +112,9 @@ class CreateCommandTest < Minitest::Test
   end
 
   def test_run_with_dangerous_task_id
+    # Security test: Verify dangerous inputs are rejected BEFORE manager is called.
+    # No manager mock needed - if validation fails and manager is called,
+    # the test would error (manager would try real operations).
     dangerous_ids = [
       "081; rm -rf /",
       "081`whoami`",
@@ -152,10 +155,10 @@ class CreateCommandTest < Minitest::Test
       mock_result
     end
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-      result = @command.run(["--task", "081", "--dry-run", "--path", "/custom/path"])
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      result = command.run(["--task", "081", "--dry-run", "--path", "/custom/path"])
       assert_equal 0, result
       mock_worktree_manager.verify
     end
@@ -168,9 +171,9 @@ class CreateCommandTest < Minitest::Test
       raise Ace::Git::GitError, "Git command failed"
     end
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["--task", "081"])
+    result = command.run(["--task", "081"])
     assert_equal 1, result
     mock_worktree_manager.verify
   end
@@ -204,10 +207,10 @@ class CreateCommandTest < Minitest::Test
       }
       mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
 
-      @command.instance_variable_set(:@manager, mock_worktree_manager)
+      command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-      @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-        result = @command.run(["--task", task_format, "--dry-run"])
+      command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+        result = command.run(["--task", task_format, "--dry-run"])
         assert_equal 0, result, "Should accept task format: #{task_format}"
         mock_worktree_manager.verify
       end
@@ -255,10 +258,10 @@ class CreateCommandTest < Minitest::Test
       mock_result
     end
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-      result = @command.run([
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      result = command.run([
         "--task", "081",
         "--no-mise-trust",
         "--no-status-update",
@@ -284,9 +287,9 @@ class CreateCommandTest < Minitest::Test
       { success: true }
     end
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run([
+    result = command.run([
       "feature-branch",
       "--path", "/custom/path",
       "--no-mise-trust",
@@ -322,10 +325,10 @@ class CreateCommandTest < Minitest::Test
         mock_result
       end
 
-      @command.instance_variable_set(:@manager, mock_worktree_manager)
+      command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-      @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-        result = @command.run(["--task", "081", flag, "--dry-run"])
+      command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+        result = command.run(["--task", "081", flag, "--dry-run"])
         assert_equal 0, result, "Should handle #{flag} flag correctly"
         mock_worktree_manager.verify
       end
@@ -358,10 +361,10 @@ class CreateCommandTest < Minitest::Test
         mock_result
       end
 
-      @command.instance_variable_set(:@manager, mock_worktree_manager)
+      command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
-      @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
-        result = @command.run([
+      command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+        result = command.run([
           "--task", "081",
           "--commit-message", commit_message,
           "--dry-run"
@@ -403,8 +406,8 @@ class CreateCommandTest < Minitest::Test
             directory_name: "ace-pr-26"
           }, [Integer, Hash, Hash])
 
-          @command.instance_variable_set(:@manager, mock_worktree_manager)
-          result = @command.run(["--pr", "26"])
+          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+          result = command.run(["--pr", "26"])
 
           assert_equal 0, result
           mock_worktree_manager.verify
@@ -441,10 +444,10 @@ class CreateCommandTest < Minitest::Test
             directory_name: "ace-pr-42"
           }, [Integer, Hash, Hash])
 
-          @command.instance_variable_set(:@manager, mock_worktree_manager)
+          command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
           # Capture output to verify fork warning
           output = capture_io do
-            result = @command.run(["--pr", "42"])
+            result = command.run(["--pr", "42"])
             assert_equal 0, result
           end.first
 
@@ -561,10 +564,10 @@ class CreateCommandTest < Minitest::Test
       raise Ace::Git::GitError, "Unexpected git operation failed"
     end
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
 
     output = capture_io do
-      result = @command.run(["--task", "081"])
+      result = command.run(["--task", "081"])
       assert_equal 1, result
     end.first
 

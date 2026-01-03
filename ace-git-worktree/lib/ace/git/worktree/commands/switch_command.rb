@@ -19,8 +19,10 @@ module Ace
         #   cd $(ace-git-worktree switch 081)
         class SwitchCommand
           # Initialize a new SwitchCommand
-          def initialize
-            @manager = Organisms::WorktreeManager.new
+          #
+          # @param manager [Object] Optional manager dependency for testing
+          def initialize(manager: nil)
+            @manager = manager || Organisms::WorktreeManager.new
           end
 
           # Run the switch command
@@ -176,6 +178,33 @@ module Ace
             if options[:list] && options[:identifier]
               raise ArgumentError, "Cannot specify both identifier and --list option"
             end
+
+            # Security validation for identifiers (can be task ID, branch, or path)
+            if options[:identifier] && contains_dangerous_patterns?(options[:identifier])
+              raise ArgumentError, "Identifier contains potentially dangerous characters"
+            end
+          end
+
+          # Check if a string contains dangerous patterns
+          #
+          # Matches TaskFetcher's validation to ensure consistent security boundaries.
+          # Rejects shell metacharacters, null bytes, newlines, redirects, and path traversal.
+          #
+          # @param value [String] Value to check
+          # @return [Boolean] true if dangerous patterns found
+          def contains_dangerous_patterns?(value)
+            return false if value.nil?
+
+            # Patterns from TaskFetcher.valid_task_reference? for consistency
+            dangerous_patterns = [
+              /[;&|`$(){}\[\]]/,  # Shell metacharacters
+              /\x00/,           # Null bytes
+              /[\r\n]/,         # Newlines
+              /[<>]/,           # Redirects
+              /\.\./,           # Path traversal
+            ]
+
+            dangerous_patterns.any? { |pattern| value.match?(pattern) }
           end
 
           # Display switch result
