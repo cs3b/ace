@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
                      "with deep merging and priority-based resolution."
   spec.homepage = "https://github.com/cs3b/ace-meta/tree/main/ace-config"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   # Runtime dependencies
   spec.add_dependency "ace-support-fs", "~> 0.1"
@@ -22,8 +22,14 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
 
-  spec.files = Dir.glob("{lib,.ace-defaults}/**/*") +
-               %w[README.md CHANGELOG.md LICENSE.txt ace-config.gemspec Rakefile]
+  spec.files = Dir.glob(%w[
+    lib/**/*
+    handbook/**/*
+    .ace-defaults/**/*
+    *.md
+    LICENSE
+    Rakefile
+  ]).select { |f| File.file?(f) }
   spec.require_paths = ["lib"]
 
   spec.metadata["homepage_uri"] = spec.homepage
