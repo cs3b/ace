@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-01-03
+
+### Fixed
+
+- Mock correct git operations in ChangeDetector tests - stub `DiffOrchestrator.generate` instead of `execute_git_command` to avoid real git I/O (89% test performance improvement: 14s → 1.5s)
+
+### Technical
+
+- Extract `with_empty_git_diff` test helper to reduce duplication (6 instances)
+- Add benchmark command and Lessons Learned section to task documentation
+
 ## [0.13.2] - 2026-01-01
 
 ### Fixed

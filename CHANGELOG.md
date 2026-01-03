@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.221] - 2026-01-03
+
+### Fixed
+
+**ace-docs 0.13.3**: Optimize test performance from 14s to 1.5s (89% reduction) (Task 169)
+
+- Mock correct git operations in ChangeDetector tests - stub `DiffOrchestrator.generate` instead of `execute_git_command`
+- Extract `with_empty_git_diff` test helper to reduce duplication
+
 ## [0.9.220] - 2026-01-03
 
 ### Changed
