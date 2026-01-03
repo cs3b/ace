@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-01-03
+
+### Changed
+
+- Optimize test execution time from 6.54s to 4.37s (33% reduction)
+  - Created `with_mock_repo_load` helper to replace 6-7 levels of nested stubs
+  - Created `with_mock_diff_orchestrator` helper for consolidated stub management
+  - Extracted `build_mock_prs` to test_helper.rb for reuse
+  - Reused single temp directory instead of per-test Dir.mktmpdir calls
+  - Organisms layer: 4.82s → 2.72s (44% faster)
+
+### Technical
+
+- Add `setup_repo_status_loader_defaults` helper for cleaner test setup
+- Add comprehensive YARD documentation for test helpers
+- Improve test hermeticity with proper stub defaults for `find_pr_for_branch` and `fetch_metadata`
+
 ## [0.5.1] - 2025-12-30
 
 ### Changed
