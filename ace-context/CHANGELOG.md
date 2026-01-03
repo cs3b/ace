@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-01-03
+
+### Added
+- Auto-format output based on line count threshold (default: 500 lines)
+  - Content below threshold displays inline to stdout
+  - Content at or above threshold saves to cache file
+  - Configurable via `auto_format_threshold` in `.ace/context/config.yml`
+- `LineCounter` atom for counting content lines
+- Integration tests for CLI auto-format behavior
+
+### Changed
+- Presets no longer default to `output: stdio`; allows auto-format to determine output mode
+- Config bounds validation for `auto_format_threshold` (10-10000 lines)
+
+### Fixed
+- Moved `line_counter` require to top of CLI for consistency
+
 ## [0.24.0] - 2026-01-03
 
 ### Added
