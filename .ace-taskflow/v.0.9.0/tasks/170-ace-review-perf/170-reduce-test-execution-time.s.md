@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.170
-status: draft
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 170-optimize-ace-review-test-performance-14s-to-under-5s
+  path: "../ace-task.170"
+  created_at: '2026-01-03 13:06:17'
+  updated_at: '2026-01-03 13:06:17'
 ---
 
 # Optimize ace-review test performance (14s to under 5s)
