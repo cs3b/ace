@@ -23,7 +23,7 @@ Create a detailed implementation plan for a task that already has a validated be
 
 ## Project Context Loading
 
-- Read and follow: `ace-nav wfi://load-project-context`
+- Read and follow: `ace-context wfi://load-project-context`
 
 ## Task Type Considerations
 

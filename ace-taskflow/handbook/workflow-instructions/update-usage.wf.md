@@ -593,7 +593,7 @@ Friday: [Review]
 which ace-taskflow
 
 # Check workflow exists
-ace-nav wfi://[workflow] --verify
+ace-context wfi://[workflow] --verify
 ```
 
 ### Permission Errors
