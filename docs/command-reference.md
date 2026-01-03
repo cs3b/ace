@@ -127,7 +127,7 @@ ace-context --list               # List available presets
 ace-context wfi://load-context   # Load via protocol
 
 # Navigation
-ace-context wfi://work-on-task       # Navigate to workflow
+ace-context wfi://work-on-task       # Load workflow content
 ace-nav --sources                # List available sources
 ```
 
