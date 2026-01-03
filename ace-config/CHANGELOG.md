@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-01-03
+
+### Changed
+- Optimized performance test execution time from 11.77s to 1.64s (85% improvement)
+- Reduced loop iterations in performance tests (100-1000 → 10-50)
+- Reduced cascade depth from 5 to 2 levels for faster tests
+- Reduced file count from 50 to 10 in file-based tests
+- Extracted iteration count constants (CASCADE_ITERATIONS, GLOB_ITERATIONS, FINDER_ITERATIONS, TEST_MODE_ITERATIONS)
+- Implemented median-based timing metrics instead of average for robustness with small sample sizes
+- Added deep cascade correctness test to maintain coverage at depth 5
+
+### Technical
+- Added performance measurement helpers (`measure_iterations`, `median_time`, `format_time`)
+- Separated constants for I/O-bound vs CPU-bound operations tuning
+
 ## [0.4.2] - 2026-01-02
 
 ### Added
