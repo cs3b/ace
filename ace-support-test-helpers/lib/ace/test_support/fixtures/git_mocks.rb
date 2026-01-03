@@ -1,11 +1,98 @@
 # frozen_string_literal: true
 
+require "fileutils"
+require "tmpdir"
+
 module Ace
   module TestSupport
     module Fixtures
       # Shared mock fixtures for Git command testing
       # Extracted from ace-git-worktree/test/test_helper.rb to promote reusability
       module GitMocks
+        # Mock git repository for fast unit tests without subprocess calls
+        # Provides a temp directory with files but no actual git init
+        # Use this for testing code that reads files but doesn't need real git commands
+        #
+        # @example
+        #   repo = MockGitRepo.new
+        #   repo.add_file("secret.txt", "TOKEN=ghp_abc123")
+        #   repo.add_commit("abc1234", message: "Add secret")
+        #   # Test code that examines repo structure
+        #   repo.cleanup
+        class MockGitRepo
+          attr_reader :path, :commits, :files
+
+          # Create a mock git repository
+          # @yield [self] Optionally yields self for one-line setup patterns
+          # @example Block initializer for concise setup
+          #   repo = MockGitRepo.new do |r|
+          #     r.add_file("secret.txt", "TOKEN=abc123")
+          #     r.add_commit("abc1234", message: "Add secret")
+          #   end
+          def initialize
+            @path = Dir.mktmpdir("ace-mock-git-repo")
+            @commits = []
+            @files = {}
+            # Create a fake .git directory to pass validation checks
+            # This is much faster than running `git init` (~150ms savings)
+            FileUtils.mkdir_p(File.join(@path, ".git"))
+
+            yield self if block_given?
+          end
+
+          # Add a file to the mock repo (instant, no git add)
+          # @param filename [String] Relative path within repo
+          # @param content [String] File content
+          def add_file(filename, content)
+            full_path = File.join(@path, filename)
+            FileUtils.mkdir_p(File.dirname(full_path))
+            File.write(full_path, content)
+            @files[filename] = content
+          end
+
+          # Record a mock commit (no subprocess)
+          # @param hash [String] Commit hash
+          # @param message [String] Commit message
+          # @param files [Array<String>] Files in this commit
+          def add_commit(hash, message: "Test commit", files: nil)
+            @commits << {
+              hash: hash,
+              message: message,
+              files: files || @files.keys.dup
+            }
+          end
+
+          # Simulate git status output (mock repos are always "clean")
+          # @return [Boolean] Always true for mock repos
+          def status_clean?
+            true
+          end
+
+          # Get the latest commit hash (or nil if no commits)
+          # @return [String, nil] Last commit hash
+          def head
+            @commits.last&.dig(:hash)
+          end
+
+          # Clean up the temp directory
+          def cleanup
+            FileUtils.rm_rf(@path) if @path && Dir.exist?(@path)
+          end
+
+          # Reset the mock repo state without destroying the temp directory
+          # Useful for reusing the same mock repo across multiple test assertions
+          def reset!
+            @commits = []
+            @files = {}
+            # Clear files but keep .git directory
+            Dir.glob(File.join(@path, "*")).each do |f|
+              next if File.basename(f) == ".git"
+
+              FileUtils.rm_rf(f)
+            end
+          end
+        end
+
         # Creates a mock git command result
         # @param output [String] The command output
         # @param error [String] The error output
