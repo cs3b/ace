@@ -1,12 +1,16 @@
 ---
 id: v.0.9.0+task.152
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 2h
 dependencies: []
 ---
 
 # ace-context: Auto-format output based on line count threshold
+
+## Objective
+
+Improve ace-context UX by providing intelligent output formatting that balances immediate usability (showing short content inline) with performance and readability (providing file paths for long content). Users shouldn't need to manually specify format for common use cases.
 
 ## Behavioral Specification
 
@@ -22,8 +26,6 @@ When users run `ace-context` without specifying an explicit output format:
 - For content at or above 500 lines: Display file path to stdout
 - When explicit output format is defined: Honor the specified format regardless of line count
 
-This provides intelligent defaults that balance immediate usability (short content shown inline) with performance (long content via file path).
-
 ### Interface Contract
 
 ```bash
@@ -32,73 +34,147 @@ ace-context project
 # If result < 500 lines: prints content directly
 # If result >= 500 lines: prints file path
 
-# Explicit format overrides auto-formatting
-ace-context project --format content
+# Explicit output modes override auto-formatting
+ace-context project --output stdio
 # Always prints content regardless of size
 
-ace-context project --format path
+ace-context project --output cache
 # Always prints file path regardless of size
 
-# Protocol-based invocation
+# Protocol-based invocation follows same logic
 ace-context wfi://load-context
-# Follows same auto-format logic
 ```
-
-**Error Handling:**
-- Invalid preset/file: Display clear error message
-- File not found: Report missing resource
-- Format parsing errors: Fall back to file path output
-
-**Edge Cases:**
-- Exactly 500 lines: Treat as >= 500 (return file path)
-- Empty content: Return content directly (0 lines < 500)
-- Multiple formats specified: Last format takes precedence
 
 ### Success Criteria
 
-- [ ] **Auto-format behavior**: Content < 500 lines returns inline, >= 500 lines returns path (when no format specified)
-- [ ] **Explicit format override**: --format flag overrides automatic behavior
-- [ ] **Backward compatibility**: Existing explicit format specifications continue to work
-- [ ] **User feedback**: Clear indication when file path is returned (e.g., "Context saved to: <path>")
-
-### Validation Questions
-
-- [ ] **Threshold value**: Is 500 lines the right threshold, or should it be configurable?
-- [ ] **Format detection**: Should we consider terminal size/capabilities when auto-formatting?
-- [ ] **Default behavior**: Should default favor content or path for edge cases?
-- [ ] **Transition experience**: How do we communicate this change to existing users?
-
-## Objective
-
-Improve ace-context UX by providing intelligent output formatting that balances immediate usability (showing short content inline) with performance and readability (providing file paths for long content). Users shouldn't need to manually specify format for common use cases.
+- [ ] **Auto-format behavior**: Content < 500 lines returns inline, >= 500 lines returns path (when no output mode specified)
+- [ ] **Explicit output override**: --output flag overrides automatic behavior
+- [ ] **Backward compatibility**: Existing explicit output specifications continue to work
+- [ ] **User feedback**: Clear indication when file path is returned
+- [ ] **Configurable threshold**: auto_format_threshold in config.yml
 
 ## Scope of Work
 
-- **User Experience Scope**: ace-context command behavior when output format is not explicitly specified
-- **System Behavior Scope**: Automatic output format selection based on content line count
-- **Interface Scope**: ace-context CLI command and its --format flag behavior
-
 ### Deliverables
 
-#### Behavioral Specifications
-- Auto-format logic specification (line count threshold)
-- Format override behavior specification
-- User feedback for path-based output
+#### Create
+- `ace-context/.ace-defaults/context/config.yml` - Add `auto_format_threshold: 500` setting
+- `ace-context/test/atoms/line_counter_test.rb` - Unit tests for line counting atom
+- `ace-context/lib/ace/context/atoms/line_counter.rb` - Pure function to count lines in content
 
-#### Validation Artifacts
-- Test scenarios for < 500 lines (expect content)
-- Test scenarios for >= 500 lines (expect path)
-- Test scenarios for explicit format flags
-- Backward compatibility validation
+#### Modify
+- `ace-context/exe/ace-context` - Implement auto-format logic in CLI
+- `ace-context/lib/ace/context.rb` - Add `auto_format_threshold` config helper method
+
+## Technical Approach
+
+### Architecture Pattern
+- **CLI-level implementation**: Auto-format is an output presentation concern, implemented in CLI entry point
+- **Config-driven threshold**: Threshold is configurable via ADR-022 pattern
+- **Pure atom for line counting**: Simple testable function in atoms layer
+
+### Implementation Strategy
+
+1. **Configuration**: Add `auto_format_threshold` to config defaults (500 lines)
+2. **Line Counter Atom**: Create simple `LineCounter.count(content)` pure function
+3. **CLI Logic**: After loading context, check if output mode is auto, then decide based on line count
+
+### Output Mode Priority (highest to lowest)
+1. CLI `--output` flag (explicit user request)
+2. Preset's `metadata[:output]` (preset configuration)
+3. Auto-format based on line count (new default behavior)
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Analyze current ace-context CLI output handling
+* [x] Review ADR-022 configuration pattern for adding new config values
+* [x] Design line counting atom interface
+
+### Execution Steps
+
+- [ ] Add `auto_format_threshold` to `.ace-defaults/context/config.yml`
+  > TEST: Config Loading
+  > Type: Unit Test
+  > Assert: `Ace::Context.auto_format_threshold` returns 500 by default
+  > Command: ace-test ace-context test/context_test.rb
+
+- [ ] Create `LineCounter` atom in `lib/ace/context/atoms/line_counter.rb`
+  > TEST: Line Counting
+  > Type: Unit Test
+  > Assert: Correctly counts lines in content strings
+  > Command: ace-test ace-context test/atoms/line_counter_test.rb
+
+- [ ] Add `auto_format_threshold` helper method to `lib/ace/context.rb`
+  > TEST: Config Access
+  > Type: Unit Test
+  > Assert: Method reads from config correctly
+  > Command: ace-test ace-context test/context_test.rb
+
+- [ ] Update CLI (`exe/ace-context`) to implement auto-format logic
+  > TEST: CLI Auto-Format
+  > Type: Integration Test
+  > Assert: Small content outputs directly, large content outputs path
+  > Command: ace-test ace-context test/integration/
+
+- [ ] Run full test suite
+  > TEST: All Tests Pass
+  > Type: Full Suite
+  > Assert: No regressions
+  > Command: ace-test ace-context
+
+- [ ] Manual validation with real presets
+  > TEST: Manual Validation
+  > Type: Manual
+  > Assert: `ace-context minimal` shows content, `ace-context project` shows path
+
+## Test Cases
+
+### Unit Tests (atoms)
+
+| Test | Input | Expected |
+|------|-------|----------|
+| Empty content | `""` | 0 lines |
+| Single line | `"hello"` | 1 line |
+| Multiple lines | `"a\nb\nc"` | 3 lines |
+| Trailing newline | `"a\nb\n"` | 2 lines |
+| Exactly threshold | 500 lines | 500 |
+
+### Integration Tests
+
+| Test | Scenario | Expected Behavior |
+|------|----------|-------------------|
+| Small context | Content < 500 lines, no --output | Content displayed |
+| Large context | Content >= 500 lines, no --output | File path displayed |
+| Explicit stdio | Any size, --output stdio | Content displayed |
+| Explicit cache | Any size, --output cache | File path displayed |
+| Preset default | Preset has `output: cache` | File path displayed |
+| Threshold edge | Exactly 500 lines | File path displayed |
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Breaking existing scripts that rely on current behavior
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Only affects cases where no explicit output mode was set
+  - **Rollback:** Remove auto-format logic, revert to implicit stdio
+
+### Integration Risks
+- **Risk:** Configuration not loading correctly
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Default to 500 if config loading fails
 
 ## Out of Scope
 
-- ❌ **Implementation Details**: How line counting is performed, file storage mechanisms
-- ❌ **Performance Optimization**: Caching strategies, content processing optimizations
-- ❌ **Configuration System**: User-configurable thresholds (future enhancement)
-- ❌ **Alternative Formats**: JSON, YAML, or other structured output formats
+- ❌ Terminal size detection
+- ❌ JSON/YAML alternative output formats (separate feature)
+- ❌ Dynamic threshold based on content type
 
 ## References
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251102-104953-context-enhance/auto-format-based-on-line-count.s.md`
-- Related to: ace-context tool enhancement for better UX
+- UX documentation: `ux/usage.md` in task directory
+- Related: ace-context tool enhancement for better UX
