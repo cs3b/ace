@@ -16,12 +16,7 @@ class WorktreeManagerContractTest < Minitest::Test
 
   def setup
     setup_temp_dir
-
-    # Initialize a git repository for testing
-    `git init`
-    `git config user.email "test@example.com"`
-    `git config user.name "Test User"`
-    `git commit --allow-empty -m "Initial commit"`
+    # Tests use mocks from GitMocks, no real git repo needed
   end
 
   def teardown

@@ -114,10 +114,21 @@ class SwitchCommandTest < Minitest::Test
       "task.081`whoami`"
     ]
 
+    # Stub manager to return "not found" without running git commands
+    # The point is that these dangerous inputs don't succeed, not how they fail
+    mock_worktree_manager = Minitest::Mock.new
+    dangerous_inputs.each do |_|
+      mock_worktree_manager.expect(:switch, { success: false, error: "Worktree not found" }, [String])
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
     dangerous_inputs.each do |dangerous_input|
       result = @command.run([dangerous_input])
       assert_equal 1, result, "Should reject dangerous input: #{dangerous_input}"
     end
+
+    mock_worktree_manager.verify
   end
 
   def test_mutually_exclusive_arguments

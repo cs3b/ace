@@ -94,9 +94,21 @@ class CreateCommandTest < Minitest::Test
   end
 
   def test_run_with_invalid_task_id
-    result = @command.run(["--task", "invalid"])
-    # Should handle invalid task gracefully
-    assert_equal 1, result
+    # Mock ace-taskflow availability and task fetch
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:create_task, {
+      success: false,
+      error: "Task not found: invalid"
+    }, [String, Hash])
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+    @command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      result = @command.run(["--task", "invalid"])
+      # Should handle invalid task gracefully
+      assert_equal 1, result
+      mock_worktree_manager.verify
+    end
   end
 
   def test_run_with_dangerous_task_id

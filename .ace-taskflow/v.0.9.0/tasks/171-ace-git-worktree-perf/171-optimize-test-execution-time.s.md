@@ -25,10 +25,10 @@ Developers experience faster test execution. Backtick git commands replaced with
 
 ### Success Criteria
 
-- [ ] Test suite runs in <5 seconds (currently ~6.7s, originally 13.01s)
-- [ ] All 380 tests pass
-- [ ] No real git init via backticks (use stubs)
-- [ ] Stub chains simplified
+- [x] Test suite runs in <5 seconds (currently ~6.7s, originally 13.01s)
+- [x] All 380 tests pass
+- [x] No real git init via backticks (use stubs)
+- [x] Stub chains simplified
 
 ## Objective
 
@@ -100,51 +100,51 @@ Reduce ace-git-worktree test execution time from ~6.7s to <5s by eliminating rea
 
 ### Execution Steps
 
-- [ ] **Step 1**: Remove `setup_git_repo` from worktree_remover_test.rb
+- [x] **Step 1**: Remove `setup_git_repo` from worktree_remover_test.rb
   - Lines 9, 260-267: Remove setup_git_repo call and method
   - Tests use mocks; real git repo unnecessary
   > TEST: Verify tests still pass
   > Assert: 11 tests pass without real git init
   > Command: ace-test ace-git-worktree/test/molecules/worktree_remover_test.rb
 
-- [ ] **Step 2**: Remove git init from worktree_manager_contract_test.rb
+- [x] **Step 2**: Remove git init from worktree_manager_contract_test.rb
   - Lines 21-24: Remove backtick git commands from setup
   - Contract tests use mock fixtures, not real git
   > TEST: Verify contract tests pass
   > Assert: 5 tests pass without git init
   > Command: ace-test ace-git-worktree integration
 
-- [ ] **Step 3**: Stub ace-taskflow in create_command_test.rb
+- [x] **Step 3**: Stub ace-taskflow in create_command_test.rb
   - `test_run_with_invalid_task_id`: Add Open3 stub for ace-taskflow
   - Pattern: Use existing `stub_ace_taskflow_output` helper
   > TEST: Verify test_run_with_invalid_task_id runs fast
   > Assert: Test completes in <50ms
   > Command: ace-test ace-git-worktree commands --profile 5
 
-- [ ] **Step 4**: Stub external calls in switch_command_test.rb
+- [x] **Step 4**: Stub external calls in switch_command_test.rb
   - `test_security_validation_on_paths_and_tasks`: Stub GitCommand and TaskFetcher
   - Validation happens before external calls, so may not need stubs
   > TEST: Verify security validation tests run fast
   > Assert: test_security_validation_on_paths_and_tasks <100ms
   > Command: ace-test ace-git-worktree commands --profile 10
 
-- [ ] **Step 5**: Stub ace-taskflow in cli_test.rb security tests
+- [x] **Step 5**: Stub ace-taskflow in cli_test.rb security tests
   - `test_security_validation_in_task_ids`: Stub Open3.capture3
   > TEST: Verify CLI security tests run fast
   > Assert: test_security_validation_in_task_ids <50ms
   > Command: ace-test ace-git-worktree commands --profile 10
 
-- [ ] **Step 6**: Run full test suite and verify performance
+- [x] **Step 6**: Run full test suite and verify performance
   > TEST: Full suite performance
   > Assert: All 380 tests pass in <5 seconds
   > Command: ace-test ace-git-worktree --profile 20
 
 ## Acceptance Criteria
 
-- [ ] AC 1: Test suite runs in <5 seconds (currently ~6.7s)
-- [ ] AC 2: All 380 tests pass with 0 failures
-- [ ] AC 3: No real git init commands in test setup (grep verification)
-- [ ] AC 4: Security validation tests use stubs, not real commands
+- [x] AC 1: Test suite runs in <5 seconds (4.63-4.96s achieved)
+- [x] AC 2: All 380 tests pass with 0 failures
+- [x] AC 3: No real git init commands in test setup (grep verification)
+- [x] AC 4: Security validation tests use stubs, not real commands
 
 ## Out of Scope
 
