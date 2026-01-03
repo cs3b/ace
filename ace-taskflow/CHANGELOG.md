@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.26.3] - 2026-01-03
+
+### Added
+
+- `with_real_test_project` composite helper in test_helper.rb to reduce test nesting from 3 levels to 1
+
+### Changed
+
+- Refactor test helpers to use `with_real_config` pattern for better test isolation and performance
+
+### Technical
+
+- Test performance optimization: reduce test execution time from 10s to under 5s through proper test_mode usage
+
 ## [0.26.2] - 2026-01-01
 
 ### Fixed
