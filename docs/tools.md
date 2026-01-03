@@ -18,14 +18,14 @@ All tools below are run from your terminal using the `ace-` prefix.
 
 | Tool | Purpose | Key Commands |
 |------|---------|--------------|
-| **ace-context** | Load project context | `ace-context project`, `ace-context --list`, `ace-context --embed-source` |
+| **ace-context** | Load project context with wfi:// protocol support | `ace-context project`, `ace-context wfi://workflow`, `ace-context --list` |
 | **ace-docs** | Documentation management | `ace-docs status`, `ace-docs update file.md` |
 | **ace-git** | Repository context, PR activity, diff | `ace-git status`, `ace-git status --no-pr`, `ace-git diff` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
 | **ace-git-secrets** | Detect and remove tokens | `ace-git-secrets scan`, `ace-git-secrets revoke`, `ace-git-secrets rewrite-history` |
 | **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
 | **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
-| **ace-nav** | Resource navigation | `ace-nav wfi://workflow-name`, `ace-nav --sources` |
+| **ace-nav** | Resource navigation with wfi:// protocol resolution | `ace-nav wfi://workflow`, `ace-nav --sources` |
 | **ace-review** | Code review | `ace-review --preset pr`, `ace-review --task 121`, `ace-review --auto-execute` |
 | **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
 | **ace-taskflow** | Task management | `ace-taskflow task 018`, `ace-taskflow tasks all` |
@@ -99,6 +99,7 @@ ace-review --subject 'diff: {ranges: ["origin/main...HEAD"]}'  # Review vs main 
 # Navigation and context
 ace-context project --output stdio      # Load context to stdout
 ace-context project --embed-source      # Include source document inline
+ace-context wfi://work-on-task         # Load workflow via protocol
 ace-nav 'wfi://*task*' --list          # Find workflow patterns
 
 # Test execution
