@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../atoms/boundary_finder'
+
 module Ace
   module Core
     module Molecules
@@ -129,8 +131,51 @@ module Ace
           }
         end
 
-        # Split lines into chunks
+        # Split lines into chunks using semantic boundaries when possible
+        # Semantic boundaries ensure XML elements like <file> and <output> are never split
         def split_into_chunks(lines)
+          content = lines.join
+
+          # Check if content has semantic elements (XML tags we shouldn't split)
+          if Atoms::BoundaryFinder.has_semantic_elements?(content)
+            split_by_semantic_boundaries(content)
+          else
+            split_by_line_count(lines)
+          end
+        end
+
+        # Split content using semantic boundaries (never splits <file> or <output> elements)
+        # Falls back to keeping large single elements whole rather than splitting them
+        def split_by_semantic_boundaries(content)
+          blocks = Atoms::BoundaryFinder.parse_blocks(content)
+
+          chunks = []
+          current_chunk_blocks = []
+          current_line_count = 0
+
+          blocks.each do |block|
+            block_lines = block[:lines]
+
+            # If adding this block would exceed limit and we have content, flush current chunk
+            if current_line_count + block_lines > @chunk_limit && current_chunk_blocks.any?
+              chunks << current_chunk_blocks.map { |b| b[:content] }.join
+              current_chunk_blocks = []
+              current_line_count = 0
+            end
+
+            # Add block to current chunk (even if it exceeds limit - we don't split elements)
+            current_chunk_blocks << block
+            current_line_count += block_lines
+          end
+
+          # Add remaining blocks
+          chunks << current_chunk_blocks.map { |b| b[:content] }.join if current_chunk_blocks.any?
+
+          chunks
+        end
+
+        # Original line-based splitting for content without semantic elements
+        def split_by_line_count(lines)
           chunks = []
           current_chunk = []
 

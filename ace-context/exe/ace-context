@@ -166,7 +166,20 @@ if context.metadata[:error]
 end
 
 # Determine output mode
-output_mode = options[:output] || context.metadata[:output] || 'stdio'
+# Priority: CLI flag > preset metadata > auto-format based on line count
+explicit_output = options[:output] || context.metadata[:output]
+
+if explicit_output
+  # Explicit output mode specified - honor it
+  output_mode = explicit_output
+else
+  # Auto-format: decide based on line count vs threshold
+  require 'ace/context/atoms/line_counter'
+  line_count = Ace::Context::Atoms::LineCounter.count(context.content)
+  threshold = Ace::Context.auto_format_threshold
+
+  output_mode = line_count >= threshold ? 'cache' : 'stdio'
+end
 
 # Handle output based on mode
 case output_mode
