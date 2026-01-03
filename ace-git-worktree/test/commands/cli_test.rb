@@ -190,12 +190,12 @@ class CliTest < Minitest::Test
       "081\tinjection"
     ]
 
-    dangerous_ids.each do |dangerous_id|
-      cli = Ace::Git::Worktree::CLI.new(["create", dangerous_id, "--dry-run"])
+    # Stub git commands to return failure without running real git
+    # The point is that dangerous inputs cause failure, not how they fail
+    Open3.stub(:capture3, ["", "fatal: invalid branch name", 1]) do
+      dangerous_ids.each do |dangerous_id|
+        cli = Ace::Git::Worktree::CLI.new(["create", dangerous_id, "--dry-run"])
 
-      # Stub git commands to return failure without running real git
-      # The point is that dangerous inputs cause failure, not how they fail
-      Open3.stub(:capture3, ["", "fatal: invalid branch name", 1]) do
         # Should not crash or execute malicious commands
         result = cli.run
         # Should fail gracefully
