@@ -718,16 +718,38 @@ class ContextLoaderTest < AceTestCase
 
   # Tests for load_inline_yaml with nested context key
   # This ensures ace-review typed subjects (diff:, files:, pr:) work correctly
+  # Optimized to use DiffOrchestrator stubbing instead of real git repos (~10ms vs ~600ms)
+  # See PR #114 for performance optimization details
+
+  # Helper: Creates a mock DiffResult for testing diff-related functionality
+  # Simulates what DiffOrchestrator.generate would return for a simple file change
+  # @param filename [String] The filename to include in the mock diff (default: "test.rb")
+  # @param range [String] The git range for metadata (default: "HEAD~1..HEAD")
+  # @return [Ace::Git::Models::DiffResult] A mock diff result
+  def build_mock_diff_result(filename: "test.rb", range: "HEAD~1..HEAD")
+    mock_diff_content = <<~DIFF
+      diff --git a/#{filename} b/#{filename}
+      index abc1234..def5678 100644
+      --- a/#{filename}
+      +++ b/#{filename}
+      @@ -1 +1,2 @@
+      -# Initial content
+      +# Updated content
+      +# Line 2
+    DIFF
+
+    Ace::Git::Models::DiffResult.new(
+      content: mock_diff_content,
+      stats: { additions: 2, deletions: 1, files: 1, total_changes: 3 },
+      files: [filename],
+      metadata: { range: range }
+    )
+  end
 
   def test_load_inline_yaml_with_flat_diffs_config
     with_temp_dir do
-      # Create a git repo with commits
-      system("git init --initial-branch=main > /dev/null 2>&1")
-      system("git config user.email 'test@test.com' && git config user.name 'Test'")
-      File.write("test.rb", "# Initial content")
-      system("git add . && git commit -m 'Initial' > /dev/null 2>&1")
+      # Create test file for diff output reference
       File.write("test.rb", "# Updated content\n# Line 2")
-      system("git add . && git commit -m 'Update' > /dev/null 2>&1")
 
       # Flat config (traditional usage)
       yaml_string = <<~YAML
@@ -736,24 +758,22 @@ class ContextLoaderTest < AceTestCase
         ---
       YAML
 
-      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
-      context = loader.send(:load_inline_yaml, yaml_string)
+      # Stub DiffOrchestrator to return mock diff
+      Ace::Git::Organisms::DiffOrchestrator.stub :generate, build_mock_diff_result do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        context = loader.send(:load_inline_yaml, yaml_string)
 
-      # Should contain diff output
-      assert context.content.length > 50, "Expected substantial content from diff"
-      assert context.content.include?("test.rb"), "Should include filename in diff"
+        # Should contain diff output
+        assert context.content.length > 50, "Expected substantial content from diff"
+        assert context.content.include?("test.rb"), "Should include filename in diff"
+      end
     end
   end
 
   def test_load_inline_yaml_with_nested_context_diffs_config
     with_temp_dir do
-      # Create a git repo with commits
-      system("git init --initial-branch=main > /dev/null 2>&1")
-      system("git config user.email 'test@test.com' && git config user.name 'Test'")
-      File.write("test.rb", "# Initial content")
-      system("git add . && git commit -m 'Initial' > /dev/null 2>&1")
+      # Create test file for diff output reference
       File.write("test.rb", "# Updated content\n# Line 2")
-      system("git add . && git commit -m 'Update' > /dev/null 2>&1")
 
       # Nested config (ace-review typed subject format)
       yaml_string = <<~YAML
@@ -763,22 +783,22 @@ class ContextLoaderTest < AceTestCase
         ---
       YAML
 
-      loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
-      context = loader.send(:load_inline_yaml, yaml_string)
+      # Stub DiffOrchestrator to return mock diff
+      Ace::Git::Organisms::DiffOrchestrator.stub :generate, build_mock_diff_result do
+        loader = Ace::Context::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        context = loader.send(:load_inline_yaml, yaml_string)
 
-      # Should contain diff output (same as flat config)
-      assert context.content.length > 50, "Expected substantial content from nested diff config"
-      assert context.content.include?("test.rb"), "Should include filename in diff from nested config"
+        # Should contain diff output (same as flat config)
+        assert context.content.length > 50, "Expected substantial content from nested diff config"
+        assert context.content.include?("test.rb"), "Should include filename in diff from nested config"
+      end
     end
   end
 
   def test_load_inline_yaml_flat_and_nested_produce_same_output
     with_temp_dir do
-      # Create a git repo with commits
-      system("git init --initial-branch=main > /dev/null 2>&1")
-      system("git config user.email 'test@test.com' && git config user.name 'Test'")
+      # Just create the test file - no git repo needed for files: config
       File.write("test.rb", "# Test content")
-      system("git add . && git commit -m 'Initial' > /dev/null 2>&1")
 
       flat_yaml = <<~YAML
         files:
