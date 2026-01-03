@@ -106,7 +106,7 @@ bin/test-reliability slow --threshold 0.5
    it 'times out long-running commands' do
      result = execute('sleep 2', timeout: 1)
    end
-   
+
    # After: Takes ~1 second
    it 'times out long-running commands' do
      result = execute('sleep 1.1', timeout: 1)
@@ -117,12 +117,27 @@ bin/test-reliability slow --threshold 0.5
    ```ruby
    # Before: Real HTTP request
    response = client.get('https://api.example.com/data')
-   
+
    # After: Stubbed response
    allow(client).to receive(:get).and_return(mock_response)
    ```
 
 3. **Batch Similar Tests**: Group related assertions to reduce setup overhead
+
+4. **Use Composite Helpers**: Reduce 6-7 level nesting to single helper calls
+   (See [Testing Patterns - Composite Test Helpers](../../../docs/testing-patterns.md#composite-test-helpers))
+
+5. **Apply E2E Rule**: Keep ONE E2E test per file, convert rest to mocked versions
+   (See [Testing Patterns - E2E Test Strategy](../../../docs/testing-patterns.md#e2e-test-strategy-keep-one-per-integration-file))
+
+6. **Stub at Correct Layer**: Use `with_empty_git_diff` for DiffOrchestrator stubbing
+   (See [Testing Patterns - DiffOrchestrator Stubbing](../../../docs/testing-patterns.md#difforchestrator-stubbing-pattern))
+
+7. **Stub Sleep in Retry Tests**: Avoid 1-2s delays per sleep call
+   (See [Testing Patterns - Sleep Stubbing](../../../docs/testing-patterns.md#sleep-stubbing-for-retry-tests))
+
+8. **Watch for Zombie Mocks**: Stubs that don't match actual code paths run real operations
+   (See [Testing Patterns - Zombie Mocks](../../../docs/testing-patterns.md#zombie-mocks-pattern))
 
 ## Ruby 3.4.2 Compatibility
 

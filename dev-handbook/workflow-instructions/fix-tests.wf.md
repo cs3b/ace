@@ -175,12 +175,26 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 ### 5. Test Performance
 
 **Symptoms**: Tests timeout or run very slowly
+**Diagnostic**:
+1. Run `ace-test --profile 10` to identify slowest tests
+2. Check for zombie mocks (stubs not matching actual code paths)
+3. Verify stubbing at correct layer
+
 **Solutions**:
 
-- Profile slow tests
+- Profile slow tests with `ace-test --profile 10`
+- Use composite test helpers (reduce 6-7 level nesting)
+- Apply E2E rule: Keep ONE E2E test per file, convert rest to mocked
+- Stub DiffOrchestrator for git operations
+- Stub Kernel.sleep in retry tests
 - Use test data builders efficiently
 - Minimize database operations
 - Parallelize test execution
+
+**Performance Targets** (see `docs/testing-patterns.md`):
+- Unit tests: <10-50ms (atoms <10ms, molecules <50ms)
+- Integration tests: <500ms
+- E2E tests: <2s (keep to minimum - ONE per file)
 
 ## Time Management and Efficiency
 

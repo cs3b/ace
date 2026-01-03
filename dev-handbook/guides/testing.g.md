@@ -133,6 +133,18 @@ to an AI agent when generating or modifying code.
 * **Concurrency:** Write specific tests to verify thread safety if components are expected to be used
   concurrently (e.g., test shared resources under concurrent access using multiple threads).
 
+## 8. Test Performance Optimization
+
+For detailed patterns on test performance optimization including:
+- Performance targets by test layer (Unit <10ms, Integration <500ms, E2E <2s)
+- Composite test helpers (reduce deep nesting)
+- E2E to integration migration ("ONE E2E per file" rule)
+- Subprocess stubbing patterns (Open3, DiffOrchestrator)
+- Sleep stubbing for retry tests
+- Zombie mocks detection and prevention
+
+See: [Testing Patterns](../../docs/testing-patterns.md#test-performance-targets)
+
 ## Related Documentation
 
 * Technology-Specific Guides:
