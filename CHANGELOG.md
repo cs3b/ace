@@ -38,20 +38,17 @@ All notable changes to this project will be documented in this file.
 - Reduce loop iterations in performance tests (100-1000 → 10-50)
 - Reduce cascade depth from 5 to 2 levels for faster tests
 - Reduce file count from 50 to 10 in file-based tests
-- Extract iteration count constants for independent tuning
-- Implement median-based timing metrics for robustness with small sample sizes
-- Add performance measurement helpers (`measure_iterations`, `median_time`, `format_time`)
 
 ## [0.9.219] - 2026-01-03
 
 ### Changed
 
-**ace-context 0.22.3**: Optimize test suite performance (Task 168)
+**ace-review 0.29.4**: Optimize test performance (Task 170)
 
-- Reduce test execution time from 8.63s to 3.62s (58% improvement)
-- Replace Open3.capture3 subprocess calls with direct API calls in CLI integration tests
-- Replace git init with DiffOrchestrator stubbing in context_loader tests
-- Extract `build_mock_diff_result` helper for reusable test mocking
+- Reduced test suite execution time from 7.15s to 1.77s (75% reduction)
+- Removed unnecessary git init from MultiModelCliTest
+- Added shared `stub_synthesizer_prompt_path` helper to avoid ace-nav subprocess calls
+- Optimized `mock_llm_synthesis` to use block-based stubbing pattern
 
 ## [0.9.218] - 2026-01-02
 
