@@ -13,7 +13,8 @@ Gem::Specification.new do |spec|
                      "cost tracking, and change monitoring for 40+ LLM providers. " \
                      "Validate model names, calculate query costs, and track pricing changes."
   spec.homepage = "https://github.com/cs3b/ace-meta"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.license = "MIT"
+  spec.required_ruby_version = ">= 3.3.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
@@ -21,12 +22,14 @@ Gem::Specification.new do |spec|
   spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/ace-llm-models-dev/CHANGELOG.md"
 
   spec.files = Dir.glob(%w[
-                          lib/**/*
-                          exe/*
-                          *.md
-                          LICENSE.txt
-                          Rakefile
-                        ]).select { |f| File.file?(f) }
+    lib/**/*
+    handbook/**/*
+    exe/*
+    .ace-defaults/**/*
+    *.md
+    LICENSE
+    Rakefile
+  ]).select { |f| File.file?(f) }
 
   spec.bindir = "exe"
   spec.executables = ["ace-llm-models"]
