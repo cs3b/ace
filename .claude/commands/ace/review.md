@@ -6,7 +6,7 @@ last_modified: '2025-10-05'
 source: ace-review
 ---
 
-read and run `ace-nav wfi://review`
+read and run `ace-context wfi://review`
 
-read and run `ace-nav wfi://commit`
+read and run `ace-context wfi://commit`
 

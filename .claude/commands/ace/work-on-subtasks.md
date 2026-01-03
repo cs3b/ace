@@ -5,6 +5,6 @@ argument-hint: "[orchestrator-task-id]"
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://work-on-subtasks`
+read and run `ace-context wfi://work-on-subtasks`
 
 ARGUMENTS: $ARGUMENTS

@@ -6,4 +6,4 @@ last_modified: '2025-10-03'
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://update-usage`
+read and run `ace-context wfi://update-usage`
