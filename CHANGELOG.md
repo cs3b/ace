@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.220] - 2026-01-03
+
+### Changed
+
+**ace-config 0.4.3**: Optimize test performance (Task 172)
+
+- Reduce test execution time from 11.77s to 1.64s (85% improvement)
+- Reduce loop iterations in performance tests (100-1000 → 10-50)
+- Reduce cascade depth from 5 to 2 levels for faster tests
+- Reduce file count from 50 to 10 in file-based tests
+- Extract iteration count constants for independent tuning
+- Implement median-based timing metrics for robustness with small sample sizes
+- Add performance measurement helpers (`measure_iterations`, `median_time`, `format_time`)
+
 ## [0.9.219] - 2026-01-03
 
 ### Changed
