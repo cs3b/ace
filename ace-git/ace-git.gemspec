@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
                      'Requires Git >= 2.23.0.'
   spec.homepage = 'https://github.com/cs3b/ace-meta/tree/main/ace-git'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.2.0'
+  spec.required_ruby_version = '>= 3.3.0'
 
   spec.metadata['allowed_push_host'] = 'https://rubygems.org'
 
