@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'ace/context'
+require 'ace/context/atoms/line_counter'
 require 'optparse'
 
 options = {
@@ -174,7 +175,6 @@ if explicit_output
   output_mode = explicit_output
 else
   # Auto-format: decide based on line count vs threshold
-  require 'ace/context/atoms/line_counter'
   line_count = Ace::Context::Atoms::LineCounter.count(context.content)
   threshold = Ace::Context.auto_format_threshold
 
