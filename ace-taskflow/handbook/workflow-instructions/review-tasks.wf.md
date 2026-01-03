@@ -19,7 +19,7 @@ Process multiple tasks through review workflow and aggregate findings, questions
 ## Prerequisites
 
 - Tasks exist for review (discoverable via `ace-taskflow tasks` with various filters)
-- Access to `review-task` singular workflow via `ace-nav wfi://review-task`
+- Access to `review-task` singular workflow via `ace-context wfi://review-task`
 - Understanding of ace-taskflow commands
 
 ## Variables
@@ -65,7 +65,7 @@ Execute review-task workflow for task: [task-id]
 ARGUMENTS: [task-id]
 
 Follow the complete review-task workflow:
-1. Read and execute: ace-nav wfi://review-task
+1. Read and execute: ace-context wfi://review-task
 2. Generate questions by priority (HIGH/MEDIUM/LOW)
 3. Conduct research and update content
 4. Set needs_review flag appropriately

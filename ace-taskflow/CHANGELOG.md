@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-01-03
+
+### Changed
+
+- Migrated 19 workflow instructions from `ace-nav wfi://` to `ace-context wfi://` for consistency
+- Standardizes on ace-context for all workflow discovery across the package
+
 ## [0.27.0] - 2026-01-03
 
 ### Changed

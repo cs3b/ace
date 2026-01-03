@@ -26,7 +26,7 @@ Systematically analyze bug reports to identify root cause, verify reproduction, 
 
 ## Project Context Loading
 
-- Read and follow: `ace-nav wfi://load-project-context`
+- Read and follow: `ace-context wfi://load-project-context`
 
 **Before starting bug analysis:**
 

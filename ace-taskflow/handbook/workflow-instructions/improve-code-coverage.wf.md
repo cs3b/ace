@@ -26,7 +26,7 @@ Systematically analyze code coverage reports and create targeted test tasks to i
 
 ## Project Context Loading
 
-- Read and follow: `ace-nav wfi://load-project-context`
+- Read and follow: `ace-context wfi://load-project-context`
 
 ## Framework Detection
 

@@ -19,7 +19,7 @@ update:
 
 ## Project Context Loading
 
-- Read and follow: `ace-nav wfi://load-project-context`
+- Read and follow: `ace-context wfi://load-project-context`
 
 ## Quick Start
 
@@ -103,7 +103,7 @@ For experienced users, here's the condensed workflow:
 
       **→ Redirect to work-on-subtasks workflow:**
       ```
-      Read and execute: ace-nav wfi://work-on-subtasks
+      Read and execute: ace-context wfi://work-on-subtasks
       Pass context: orchestrator task path and pending subtasks
       ```
 
