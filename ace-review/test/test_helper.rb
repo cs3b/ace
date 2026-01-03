@@ -17,6 +17,9 @@ require "ace/test_support"
 
 # Base test class
 class AceReviewTest < Minitest::Test
+  # Include shared prompt stubbing helpers from ace-support-test-helpers
+  include Ace::TestSupport::Fixtures::PromptHelpers
+
   def setup
     @original_pwd = Dir.pwd
     @test_dir = Dir.mktmpdir("ace-review-test")
