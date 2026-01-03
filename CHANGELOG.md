@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.225] - 2026-01-03
+
+### Changed
+
+**ace-test-runner 0.6.2**: Optimize test performance from 3.3s to 1.78s (46% reduction)
+
+- Reduce test suite execution time by 46% (3.3s → 1.78s)
+- Convert 2 E2E integration tests to use mocked subprocess execution
+- Retain 1 representative E2E test for genuine CLI validation
+- Improve assertions per second from 105 to 194 (85% improvement)
+- Add E2E Coverage Analysis documenting risk mitigation
+
+### Technical
+
+- Enhanced code comments explaining E2E test rationale
+- Added performance measurement commands to documentation
+- Documented CI benchmark/regression guard (5s threshold)
+
 ## [0.9.224] - 2026-01-03
 
 ### Changed
