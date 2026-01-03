@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-01-03
+
+### Changed
+
+- Enhanced `commit` workflow with `embed_document_source: true` to embed `<current_repository_status>`
+- Workflow now includes pre-loaded git status and diff summary, eliminating redundant commands
+- Reduced tool calls from 5 to 2-3 (40-60% improvement) when agents invoke `/ace:commit`
+
 ## [0.15.0] - 2026-01-03
 
 ### Changed
