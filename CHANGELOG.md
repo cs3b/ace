@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.219] - 2026-01-03
+
+### Changed
+
+**ace-context 0.22.3**: Optimize test suite performance (Task 168)
+
+- Reduce test execution time from 8.63s to 3.62s (58% improvement)
+- Replace Open3.capture3 subprocess calls with direct API calls in CLI integration tests
+- Replace git init with DiffOrchestrator stubbing in context_loader tests
+- Extract `build_mock_diff_result` helper for reusable test mocking
+
 ## [0.9.218] - 2026-01-02
 
 ### Added

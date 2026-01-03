@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.22.3] - 2026-01-03
+
+### Changed
+
+* Optimize test suite performance from 8.63s to 3.62s (58% reduction)
+  * Replace Open3.capture3 subprocess calls with direct API calls in CLI integration tests
+  * Replace git init with DiffOrchestrator stubbing in context_loader tests
+  * Extract `build_mock_diff_result` helper for reusable test mocking
+  * Add docstrings to test helpers explaining CLI equivalence
+
 ## [0.22.2] - 2026-01-01
 
 ### Changed
