@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-01-03
+
+### Changed
+
+* Optimize test execution time from 6.6s to under 5s (28% improvement)
+* Strengthen security assertions and add dependency injection to commands
+* Remove unnecessary git init calls from test setup
+
+### Technical
+
+* Add detailed implementation plan for test performance optimization
+
 ## [0.8.3] - 2026-01-02
 
 ### Changed
