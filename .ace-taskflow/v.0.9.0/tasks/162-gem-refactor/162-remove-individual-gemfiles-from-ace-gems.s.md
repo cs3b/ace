@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.162
-status: pending
+status: in-progress
 priority: medium
 estimate: 15m
 dependencies: []
+worktree:
+  branch: 162-remove-individual-gemfiles-from-ace-gems
+  path: "../ace-task.162"
+  created_at: '2026-01-03 17:30:59'
+  updated_at: '2026-01-03 17:30:59'
 ---
 
 # Remove individual Gemfiles from ace-* gems
