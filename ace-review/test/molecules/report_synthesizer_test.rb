@@ -8,6 +8,15 @@ class ReportSynthesizerTest < AceReviewTest
     @synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
     @session_dir = File.join(@test_dir, "session")
     FileUtils.mkdir_p(@session_dir)
+
+    # Stub resolve_prompt_path to avoid ace-nav subprocess call
+    # Override in tests that need actual prompt resolution (like test_resolve_prompt_path_finds_synthesis_prompt)
+    setup_prompt_path_stub
+  end
+
+  # Override in tests that need actual prompt resolution
+  def setup_prompt_path_stub
+    stub_synthesizer_prompt_path(@synthesizer)
   end
 
   def test_initialization
@@ -194,7 +203,9 @@ class ReportSynthesizerTest < AceReviewTest
   end
 
   def test_resolve_prompt_path_finds_synthesis_prompt
-    path = @synthesizer.send(:resolve_prompt_path, "synthesis-review-reports.system.md")
+    # Create a fresh synthesizer without stub for actual resolution test
+    fresh_synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
+    path = fresh_synthesizer.send(:resolve_prompt_path, "synthesis-review-reports.system.md")
 
     # Path should be non-empty and end with the expected filename
     refute_empty path, "Should resolve to a path"

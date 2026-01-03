@@ -17,6 +17,7 @@ require_relative "test_support/performance_helpers"  # Performance testing utili
 require_relative "test_support/fixtures/context_mocks"  # Shared context mocks
 require_relative "test_support/fixtures/git_mocks"  # Shared git mocks
 require_relative "test_support/fixtures/http_mocks"  # Shared HTTP mocks for LLM testing
+require_relative "test_support/fixtures/prompt_helpers"  # Shared prompt stubbing helpers
 require_relative "test_support/fixtures/test_runner_mocks"  # Shared test runner mocks
 
 # Configure Minitest reporters by default
