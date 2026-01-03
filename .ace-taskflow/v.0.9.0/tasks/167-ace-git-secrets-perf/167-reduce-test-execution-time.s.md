@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.167
-status: draft
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 167-optimize-ace-git-secrets-test-performance-21s-to-under-5s
+  path: "../ace-task.167"
+  created_at: '2026-01-03 00:02:10'
+  updated_at: '2026-01-03 00:02:10'
 ---
 
 # Optimize ace-git-secrets test performance (21s to under 5s)
