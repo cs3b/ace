@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.222] - 2026-01-03
+
+### Changed
+
+**ace-git-worktree 0.8.4**: Optimize test performance from 6.6s to under 5s (Task 171)
+
+- Optimize test execution time from 6.6s to 4.3-4.9s (28% improvement)
+- Remove unnecessary git init calls from test setup (worktree_remover_test.rb, worktree_manager_contract_test.rb)
+- Strengthen security assertions and add dependency injection to commands
+- Add constructor-based dependency injection for CreateCommand, SwitchCommand, PruneCommand, RemoveCommand, ListCommand
+
+### Technical
+
+- Add detailed implementation plan for test performance optimization
+
 ## [0.9.221] - 2026-01-03
 
 ### Fixed
