@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.172
-status: draft
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 172-optimize-ace-config-test-performance-12s-to-under-5s
+  path: "../ace-task.172"
+  created_at: '2026-01-03 13:07:09'
+  updated_at: '2026-01-03 13:07:09'
 ---
 
 # Optimize ace-config test performance (12s to under 5s)
