@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog][1], and this project adheres to [Semantic Versioning][2].
 
+## [Unreleased]
+
+## [0.2.0] - 2026-01-03
+
+### Changed
+- **BREAKING**: Minimum Ruby version raised to 3.3.0 (was 3.1.0)
+- Standardized gemspec file patterns with deterministic Dir.glob
+- Added MIT LICENSE file
+
 ## [0.1.1] - 2025-11-11
 
 ### Added
