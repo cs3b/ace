@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
                      "Library-only gem following ace-support-* pattern for shared filesystem operations."
   spec.homepage = "https://github.com/cs3b/ace-meta"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
@@ -25,6 +25,7 @@ Gem::Specification.new do |spec|
   # Specify which files should be added to the gem when it is released.
   spec.files = Dir.glob(%w[
                           lib/**/*
+                          handbook/**/*
                           *.md
                           LICENSE
                           Rakefile
