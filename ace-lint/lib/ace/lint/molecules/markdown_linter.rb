@@ -116,6 +116,14 @@ module Ace
             end
           end
 
+          # Check: file should end with newline
+          unless content.end_with?("\n")
+            warnings << Models::ValidationError.new(
+              message: 'Missing trailing newline at end of file',
+              severity: :warning
+            )
+          end
+
           warnings
         end
       end
