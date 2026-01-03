@@ -13,7 +13,7 @@ tools and following consistent documentation patterns.
 
 ## Project Context Loading
 
-* Read and follow: `ace-nav wfi://load-context`
+* Read and follow: `ace-context wfi://load-context`
 
 ## High-Level Execution Plan
 

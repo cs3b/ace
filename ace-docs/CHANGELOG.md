@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-01-03
+
+### Changed
+
+- Migrated 7 workflow instructions from `ace-nav wfi://` to `ace-context wfi://` for consistency
+- Updated workflows: create-adr, create-api-docs, create-cookbook, create-user-docs, maintain-adrs, update-blueprint, update-context-docs
+
 ## [0.14.0] - 2026-01-03
 
 ### Changed
