@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-01-03
+
+### Added
+- `BoundaryFinder` atom for semantic boundary detection in XML-structured content
+  - Parses content into semantic blocks (`<file>`, `<output>` elements)
+  - Ensures XML elements are never split mid-element during chunking
+  - Documents whitespace handling behavior
+- `ContextChunker` integration tests for semantic boundary splitting
+
+### Changed
+- `ContextChunker.split_into_chunks` now uses semantic boundaries when content contains XML elements
+  - Falls back to line-based splitting for plain text content
+  - Single large elements kept whole even if exceeding chunk limit
+
 ## [0.15.0] - 2026-01-03
 
 ### Changed
