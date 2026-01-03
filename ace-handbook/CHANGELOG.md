@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-01-03
+
+### Added
+- Guides support with handbook/guides/ directory
+- workflow-context-embedding.g.md guide for embed_document_source pattern
+- Guide discovery protocol (.ace-defaults/nav/protocols/guide-sources/ace-handbook.yml)
+
 ## [0.3.0] - 2026-01-03
 
 ### Changed
