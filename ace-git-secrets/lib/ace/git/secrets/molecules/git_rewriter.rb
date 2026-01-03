@@ -35,7 +35,8 @@ module Ace
           # @return [Boolean]
           def clean_working_directory?
             output, status = Open3.capture2(
-              "git", "-C", repository_path, "status", "--porcelain"
+              "git", "-C", repository_path, "status", "--porcelain",
+              err: File::NULL
             )
             status.success? && output.strip.empty?
           end
@@ -89,7 +90,8 @@ module Ace
           # @return [Boolean] Success status
           def create_backup(backup_path)
             output, status = Open3.capture2(
-              "git", "clone", "--mirror", repository_path, backup_path
+              "git", "clone", "--mirror", repository_path, backup_path,
+              err: File::NULL
             )
             status.success?
           rescue StandardError

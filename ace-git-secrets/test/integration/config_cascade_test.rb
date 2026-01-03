@@ -8,9 +8,10 @@ require "fileutils"
 # Verifies that .ace/git-secrets/config.yml overrides .ace-defaults/git-secrets/config.yml
 class ConfigCascadeTest < GitSecretsTestCase
   def setup
-    @temp_repo = create_temp_repo
+    # Use mock repo for fast tests - config cascade only needs file system
+    @mock_repo = MockGitRepo.new
     @original_dir = Dir.pwd
-    Dir.chdir(@temp_repo)
+    Dir.chdir(@mock_repo.path)
 
     # Create .ace-defaults defaults
     FileUtils.mkdir_p(".ace-defaults/git-secrets")
@@ -26,7 +27,7 @@ class ConfigCascadeTest < GitSecretsTestCase
 
   def teardown
     Dir.chdir(@original_dir)
-    cleanup_temp_repo(@temp_repo)
+    @mock_repo&.cleanup
     Ace::Git::Secrets.reset_config!
   end
 

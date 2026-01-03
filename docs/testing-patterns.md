@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-01'
+  last-updated: '2026-01-03'
 ---
 
 # Testing Patterns for ACE
@@ -398,6 +398,107 @@ When refactoring commands with exit calls:
 3. **Composability**: Commands can be called from other commands
 4. **Isolation**: Test failures don't affect other tests
 
+## Mock Git Repository Pattern
+
+When testing code that interacts with git repositories, use `MockGitRepo` for fast unit tests instead of real git operations.
+
+### When to Use MockGitRepo
+
+- **Unit tests**: Testing file reading, validation, pattern matching
+- **Tests that don't need git history**: Testing code that reads repo structure
+- **Performance-critical tests**: Avoid ~150ms subprocess overhead per git command
+
+### When to Use Real Repositories
+
+- **Integration tests**: Testing actual git operations (commit, push, rebase)
+- **E2E tests**: Verifying real tool execution (gitleaks, git-filter-repo)
+- **Git history tests**: Testing log parsing, diff generation, branch operations
+
+### Usage
+
+```ruby
+# From ace-support-test-helpers
+require 'ace/test_support'
+
+class MyTest < Minitest::Test
+  def setup
+    @mock_repo = Ace::TestSupport::Fixtures::GitMocks::MockGitRepo.new
+  end
+
+  def teardown
+    @mock_repo&.cleanup
+  end
+
+  def test_file_processing
+    @mock_repo.add_file("config.yml", "key: value")
+    @mock_repo.add_commit("abc1234", message: "Add config")
+
+    result = MyProcessor.new(@mock_repo.path).process
+    assert result.success?
+  end
+
+  def test_multiple_scenarios
+    # Test first scenario
+    @mock_repo.add_file("valid.txt", "content")
+    assert valid_result
+
+    # Reset and test second scenario
+    @mock_repo.reset!
+    @mock_repo.add_file("invalid.txt", "bad content")
+    refute valid_result
+  end
+end
+```
+
+### Helper Pattern for Gem-Specific Tests
+
+For gem-specific mocking (like gitleaks), create helpers that wrap the shared MockGitRepo:
+
+```ruby
+# In test_helper.rb
+def with_mocked_git_repo
+  repo = Ace::TestSupport::Fixtures::GitMocks::MockGitRepo.new
+  begin
+    yield repo
+  ensure
+    repo.cleanup
+  end
+end
+```
+
+### Thread-Safe Mocking
+
+Use Minitest's `stub` method instead of `define_method` for thread-safe test mocking:
+
+```ruby
+# ❌ BAD - Not thread-safe, can cause race conditions
+def with_mocked_scanner(result)
+  original = ScannerClass.instance_method(:scan)
+  ScannerClass.define_method(:scan) { result }
+  yield
+ensure
+  ScannerClass.define_method(:scan, original)
+end
+
+# ✅ GOOD - Thread-safe stub pattern
+def with_mocked_scanner(result)
+  ScannerClass.stub :new, ->(**_opts) {
+    mock = Object.new
+    mock.define_singleton_method(:scan) { result }
+    mock
+  } do
+    yield
+  end
+end
+```
+
+### Benefits
+
+1. **Speed**: MockGitRepo is ~150x faster than real git init
+2. **Isolation**: No global state pollution between tests
+3. **Determinism**: Predictable results without filesystem race conditions
+4. **Portability**: Works in CI environments without git configuration
+
 ## Summary
 
 - Extract external dependencies to protected methods
@@ -405,5 +506,7 @@ When refactoring commands with exit calls:
 - Profile tests regularly to catch performance regressions
 - Document patterns for team consistency
 - Only use subprocesses when true process isolation is required
+- **Use MockGitRepo for unit tests, real repos for integration tests**
+- **Use thread-safe stub pattern instead of define_method**
 - **Never call exit in commands or organisms - return status codes and raise exceptions**
 - **Handle exit only at the CLI entry point (exe/ace-\*)**

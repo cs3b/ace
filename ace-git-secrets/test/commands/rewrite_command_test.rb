@@ -4,38 +4,52 @@ require_relative "../test_helper"
 
 class RewriteCommandTest < GitSecretsTestCase
   def setup
-    skip "gitleaks not installed" unless gitleaks_available?
-    @temp_repo = create_temp_repo
+    # Use mock repo for fast tests - no real git subprocess calls
+    @mock_repo = MockGitRepo.new
     @original_dir = Dir.pwd
-    Dir.chdir(@temp_repo)
+    Dir.chdir(@mock_repo.path)
   end
 
   def teardown
     Dir.chdir(@original_dir) if @original_dir
-    cleanup_temp_repo(@temp_repo) if @temp_repo
+    @mock_repo&.cleanup
   end
 
   def test_dry_run_returns_success_with_no_changes
-    # Use high-entropy token that gitleaks will detect
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    @mock_repo.add_file("secret.txt", "TOKEN=ghp_TestTokenForDryRun1234567890ABCDEF")
 
-    with_test_gitleaks_config do
-      with_rewriter_availability(true) do
-        output, = capture_io do
-          exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
-            dry_run: true
-          )
-          assert_equal 0, exit_code
-        end
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "ghp_TestTokenForDryRun1234567890ABCDEF",
+        file_path: "secret.txt",
+        commit_hash: "abc1234"
+      }
+    ]
 
-        assert_match(/DRY RUN/i, output)
+    with_rewrite_test_mocks(findings: mock_findings) do
+      output, = capture_io do
+        exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+          dry_run: true
+        )
+        assert_equal 0, exit_code
       end
+
+      assert_match(/DRY RUN/i, output)
     end
   end
 
   def test_requires_confirmation_without_force
-    # Use high-entropy token that gitleaks will detect
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    @mock_repo.add_file("secret.txt", "TOKEN=ghp_TestTokenForConfirm1234567890ABCDEF")
+
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "ghp_TestTokenForConfirm1234567890ABCDEF",
+        file_path: "secret.txt",
+        commit_hash: "abc1234"
+      }
+    ]
 
     # Simulate user not providing confirmation (empty stdin)
     mock_stdin = StringIO.new("\n")
@@ -47,14 +61,12 @@ class RewriteCommandTest < GitSecretsTestCase
     begin
       $stdin = mock_stdin
 
-      with_test_gitleaks_config do
-        with_rewriter_availability(true) do
-          output, = capture_io do
-            exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
-              force: false,
-              backup: false
-            )
-          end
+      with_rewrite_test_mocks(findings: mock_findings) do
+        output, = capture_io do
+          exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+            force: false,
+            backup: false
+          )
         end
       end
     ensure
@@ -67,27 +79,33 @@ class RewriteCommandTest < GitSecretsTestCase
   end
 
   def test_returns_error_when_git_filter_repo_unavailable
-    # Use high-entropy token that gitleaks will detect
-    create_commit(@temp_repo, "secret.txt", "TOKEN=literal:[REDACTED:github-pat]", "Add secret")
+    @mock_repo.add_file("secret.txt", "TOKEN=literal:[REDACTED:github-pat]")
 
-    with_test_gitleaks_config do
-      with_rewriter_availability(false) do
-        output, = capture_io do
-          exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
-            force: true
-          )
-          assert_equal 1, exit_code
-        end
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "literal:[REDACTED:github-pat]",
+        file_path: "secret.txt",
+        commit_hash: "abc1234"
+      }
+    ]
 
-        assert_match(/git-filter-repo is required/i, output)
+    with_rewrite_test_mocks(findings: mock_findings, rewriter_available: false) do
+      output, = capture_io do
+        exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+          force: true
+        )
+        assert_equal 1, exit_code
       end
+
+      assert_match(/git-filter-repo is required/i, output)
     end
   end
 
   def test_returns_success_when_no_tokens_found
-    create_commit(@temp_repo, "clean.txt", "no secrets here", "Clean commit")
+    @mock_repo.add_file("clean.txt", "no secrets here")
 
-    with_rewriter_availability(true) do
+    with_rewrite_test_mocks do
       output, = capture_io do
         exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
           force: true
@@ -99,9 +117,4 @@ class RewriteCommandTest < GitSecretsTestCase
     end
   end
 
-  private
-
-  def gitleaks_available?
-    Ace::Git::Secrets::Atoms::GitleaksRunner.available?
-  end
 end
