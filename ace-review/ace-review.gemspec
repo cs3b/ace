@@ -11,23 +11,25 @@ Gem::Specification.new do |spec|
   spec.summary = 'Automated code review tool for the ACE framework'
   spec.description = 'ace-review enables automated code review and quality analysis using LLM-powered ' \
                      'insights, supporting preset-based workflows and release integration with ace-taskflow'
-  spec.homepage = 'https://github.com/ace-meta/ace-review'
+  spec.homepage = 'https://github.com/cs3b/ace-meta'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.0.0'
+  spec.required_ruby_version = '>= 3.3.0'
 
-  spec.metadata['allowed_push_host'] = "TODO: Set to your gem server 'https://example.com'"
+  spec.metadata['allowed_push_host'] = 'https://rubygems.org'
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = spec.homepage
-  spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/CHANGELOG.md"
+  spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/ace-review/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
-  spec.files = Dir.glob('{lib,exe,.ace-defaults}/**/*') + %w[
-    ace-review.gemspec
-    README.md
-    CHANGELOG.md
-    LICENSE.txt
+  spec.files = Dir.glob(%w[
+    lib/**/*
+    handbook/**/*
+    exe/*
+    .ace-defaults/**/*
+    *.md
+    LICENSE
     Rakefile
-  ]
+  ]).select { |f| File.file?(f) }
   spec.bindir = 'exe'
   spec.executables = ['ace-review']
   spec.require_paths = ['lib']
