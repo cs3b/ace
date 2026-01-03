@@ -282,7 +282,7 @@ module Ace
             context: context_config,
             body: body.strip,
             format: params['format'], # Don't set default here - let ContextLoader handle defaults
-            output: params['output'] || 'stdio',
+            output: params['output'],  # nil allows auto-format to determine output mode
             cache: params['output'] == 'cache',
             metadata: frontmatter['metadata'] || {}
           }

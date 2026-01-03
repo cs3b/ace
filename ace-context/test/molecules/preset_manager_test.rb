@@ -180,7 +180,7 @@ class PresetManagerTest < AceTestCase
       preset = manager.get_preset("minimal")
 
       assert preset
-      assert_equal "stdio", preset[:output]  # Default output
+      assert_nil preset[:output]  # nil allows auto-format to determine output mode
       assert_equal({}, preset[:params])  # Empty params hash
     end
   end

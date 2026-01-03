@@ -145,11 +145,13 @@ module Ace
       # When no explicit --output mode is specified:
       #   - Content below this threshold: displayed inline (stdout)
       #   - Content at or above this threshold: saved to cache file
-      # @return [Integer] Auto-format threshold in lines (default: 500)
+      # @return [Integer] Auto-format threshold in lines (default: 500, range: 10-10000)
       def auto_format_threshold
         threshold = config["auto_format_threshold"]
-        # Ensure valid positive integer, default to 500
-        return 500 unless threshold.is_a?(Integer) && threshold.positive?
+        # Ensure valid integer within reasonable bounds (10-10000 lines)
+        # - Below 10: too aggressive, would cache almost everything
+        # - Above 10000: defeats the purpose of auto-format
+        return 500 unless threshold.is_a?(Integer) && threshold.between?(10, 10_000)
 
         threshold
       end
