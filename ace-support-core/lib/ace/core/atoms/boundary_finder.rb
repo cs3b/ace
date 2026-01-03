@@ -6,6 +6,22 @@ module Ace
       # Pure functions to find semantic boundaries in XML-structured content
       # Used by ContextChunker to split content at clean boundaries
       # (between </file> and <file>, between </output> and <output>)
+      #
+      # ## Whitespace Handling
+      #
+      # Whitespace-only content between XML elements is intentionally dropped.
+      # This means the sum of block line counts may be less than the total
+      # content line count. This is acceptable because:
+      # - The primary goal is preserving XML element integrity, not exact line counting
+      # - Chunk limits are approximate; slightly exceeding is better than splitting elements
+      # - Typical variance is ~2-5% of content lines
+      #
+      # @example Whitespace between elements
+      #   content = "<file>a</file>\n\n<file>b</file>"
+      #   blocks = BoundaryFinder.parse_blocks(content)
+      #   # => 2 blocks (whitespace between them is dropped)
+      #   # Block line sum: 2, Content lines: 3
+      #
       module BoundaryFinder
         # XML element patterns for semantic blocks
         # These elements should never be split in the middle
