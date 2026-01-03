@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.4] - 2026-01-03
+
+### Changed
+
+- **Test performance optimization**: Reduced test suite execution time from 7.15s to 1.77s (75% reduction)
+  - Removed unnecessary git init from MultiModelCliTest (tests only parse CLI options)
+  - Added shared `stub_synthesizer_prompt_path` helper to avoid ace-nav subprocess calls (~150-400ms per call)
+  - Optimized `mock_llm_synthesis` to use block-based stubbing pattern for better isolation
+
+### Technical
+
+- Extract shared prompt path stubbing to `AceReviewTest#stub_synthesizer_prompt_path`
+- Include `Ace::TestSupport::Fixtures::PromptHelpers` mixin in test helper
+- Remove unused `require "tmpdir"` from multi_model_cli_test.rb
+
 ## [0.29.3] - 2026-01-01
 
 ### Fixed
