@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.227] - 2026-01-03
+
+### Changed
+
+**All ACE Gems (BREAKING)**: Standardize Ruby requirement and gemspec patterns
+
+- **Ruby 3.3.0 minimum**: All 24 gems now require Ruby >= 3.3.0 (previously varied 3.0.0-3.2.0)
+- Standardized gemspec `spec.files` to deterministic `Dir.glob` pattern
+- Added MIT LICENSE to all packages
+- MINOR version bump on all gems reflecting breaking Ruby change
+- Fixed LICENSE file trailing newlines (4 files)
+
+New versions:
+- ace-config 0.5.0, ace-context 0.23.0, ace-docs 0.14.0, ace-git 0.6.0
+- ace-git-commit 0.15.0, ace-git-secrets 0.4.0, ace-git-worktree 0.9.0
+- ace-handbook 0.3.0, ace-integration-claude 0.3.0, ace-lint 0.6.0
+- ace-llm 0.17.0, ace-llm-models-dev 0.4.0, ace-llm-providers-cli 0.12.0
+- ace-nav 0.14.0, ace-prompt 0.10.0, ace-review 0.30.0, ace-search 0.16.0
+- ace-support-core 0.15.0, ace-support-fs 0.2.0, ace-support-mac-clipboard 0.2.0
+- ace-support-markdown 0.2.0, ace-support-test-helpers 0.10.0
+- ace-taskflow 0.27.0, ace-test-runner 0.7.0
+
 ## [0.9.226] - 2026-01-03
 
 ### Added

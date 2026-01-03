@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.163
-status: pending
+status: done
 priority: low
 estimate: 30m
 dependencies: []
@@ -124,7 +124,7 @@ ls ace-*/LICENSE.txt 2>/dev/null | wc -l  # → 0
 
 ## Acceptance Criteria
 
-- [ ] Root LICENSE exists
-- [ ] All 24 ace-* packages have LICENSE
-- [ ] No LICENSE.txt files remain
-- [ ] Gemspecs include LICENSE
+- [x] Root LICENSE exists
+- [x] All 24 ace-* packages have LICENSE
+- [x] No LICENSE.txt files remain
+- [x] Gemspecs include LICENSE

@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-31'
+  last-updated: '2026-01-03'
 ---
 
 # ACE Gem Development Guide
@@ -410,6 +410,30 @@ end
 
 ## Gemspec
 
+### Standard spec.files Pattern
+
+All gemspecs must use this standardized pattern for file inclusion:
+
+```ruby
+spec.files = Dir.glob(%w[
+  lib/**/*
+  handbook/**/*
+  exe/*
+  .ace-defaults/**/*
+  *.md
+  LICENSE
+  Rakefile
+]).select { |f| File.file?(f) }
+```
+
+**Key requirements:**
+- `handbook/**/*` must be included in ALL gems (even if empty today - for future AI integration)
+- `lib/**/*` instead of `lib/**/*.rb` to include non-Ruby files
+- `.select { |f| File.file?(f) }` to filter out directories
+- `LICENSE` (not `LICENSE.txt`) for MIT license file
+
+### Dependencies
+
 ```ruby
 spec.add_dependency "ace-config", "~> 0.4"  # Configuration cascade
 spec.add_dependency "ace-support-core", "~> 0.10"  # Core utilities (if needed)
@@ -421,7 +445,8 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 ✅ **DO**:
 - Use `Ace::Config.create.resolve_namespace('gem')` for config cascade
 - Use `Ace::Config::Models::Config.wrap()` for merging defaults + overrides
-- Include handbook/ with agents and workflows
+- Include `handbook/**/*` in spec.files for ALL gems (required for AI-native architecture)
+- Use standardized `Dir.glob(%w[...]).select { |f| File.file?(f) }` pattern for spec.files
 - Flat test structure: `test/atoms/` not `test/ace/gem/atoms/`
 - Provide .ace-defaults/ configs
 - Maintain CHANGELOG.md in Keep a Changelog format
@@ -436,6 +461,8 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - Hardcode config paths or create custom ConfigLoader
 - Use nested test structure
 - Skip example configs or CHANGELOG updates
+- Use old-style `Dir[...]` or `Dir.glob("{lib,exe}/**/*") + %w[...]` patterns for spec.files
+- Omit `handbook/**/*` from spec.files (violates AI-native architecture principle)
 
 ## Examples
 
