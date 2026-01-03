@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.175
-status: draft
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 175-optimize-ace-test-runner-test-performance-8s-to-under-5s
+  path: "../ace-task.175"
+  created_at: '2026-01-03 13:08:45'
+  updated_at: '2026-01-03 13:08:45'
 ---
 
 # Optimize ace-test-runner test performance (8s to under 5s)
