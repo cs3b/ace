@@ -404,8 +404,9 @@ module Ace
         end
 
         def load_template(path)
-          # Read template file
-          template_content = File.read(path)
+          # Read template file (preserve original for workflow fallback)
+          original_content = File.read(path)
+          template_content = original_content
 
           # Extract and strip frontmatter if present
           frontmatter = {}
@@ -474,7 +475,8 @@ module Ace
             # If embed_document_source is true, store original document and keep embedded files separate
             if config['embed_document_source']
               # Store original document (with frontmatter) as source content
-              context.content = File.read(path)
+              # Use original_content instead of File.read to avoid redundant I/O
+              context.content = original_content
 
               # context.files already has embedded files from process_template_config
               # Don't add source to files array - it will be output as raw content
@@ -489,6 +491,12 @@ module Ace
             format_context(context, format)
 
             return context
+          end
+
+          # Check if this is plain markdown with metadata-only frontmatter
+          # (e.g., workflow files with description/allowed-tools but no context config)
+          if frontmatter.any?
+            return load_plain_markdown(original_content, frontmatter, path)
           end
 
           # Otherwise, parse template configuration from body
@@ -1295,6 +1303,96 @@ module Ace
             error: e.message,
             error_type: :invalid_range
           }
+        end
+
+        # Load plain markdown file with metadata-only frontmatter
+        # Used as fallback for workflow files with description/allowed-tools but no context config
+        # @param original_content [String] The full file content with frontmatter
+        # @param frontmatter [Hash] Parsed frontmatter YAML
+        # @param path [String] File path for source metadata
+        # @return [Models::ContextData] Context with original content and metadata
+        def load_plain_markdown(original_content, frontmatter, path)
+          context = Models::ContextData.new
+          # Use original_content (preserved before frontmatter stripping)
+          context.content = original_content
+          # Store metadata from frontmatter using merge to preserve any existing metadata
+          # Include frontmatter and frontmatter_yaml for parity with template path
+          context.metadata = (context.metadata || {}).merge(
+            frontmatter.transform_keys(&:to_sym)
+          ).merge(
+            source: path,
+            frontmatter: frontmatter
+          )
+          # Store frontmatter_yaml if frontmatter was present
+          context.metadata[:frontmatter_yaml] = frontmatter.to_yaml if frontmatter.any?
+
+          # Check for frontmatter typos and store warnings in metadata
+          warnings = detect_suspicious_keys(frontmatter, path)
+          context.metadata[:warnings] = warnings if warnings.any?
+
+          context
+        end
+
+        # Check for frontmatter keys that might be typos of known template keys
+        # Only runs when ACE_CONTEXT_STRICT env var is set
+        # @param frontmatter [Hash] Parsed frontmatter YAML
+        # @param path [String] File path for warning message
+        # @return [Array<String>] List of warning messages
+        def detect_suspicious_keys(frontmatter, path)
+          return [] unless ENV['ACE_CONTEXT_STRICT']
+
+          # Known keys for templates and workflows
+          known_keys = %w[
+            context files commands include exclude diffs
+            name description allowed-tools params
+            update frequency sections last-updated
+            auto_generate template-refs
+          ]
+
+          warnings = []
+          frontmatter.keys.each do |key|
+            next if known_keys.include?(key)
+
+            # Check for common typos using Levenshtein-like distance
+            known_keys.each do |known|
+              if typo_distance(key, known) <= 2
+                warnings << "Possible typo in #{path}: frontmatter key '#{key}' looks similar to known key '#{known}'"
+                break
+              end
+            end
+          end
+
+          warnings
+        end
+
+        # Calculate simple edit distance between two strings
+        # @param str1 [String] First string
+        # @param str2 [String] Second string
+        # @return [Integer] Edit distance (number of single-character edits)
+        def typo_distance(str1, str2)
+          return str2.length if str1.empty?
+          return str1.length if str2.empty?
+
+          # Simple distance: check if one can become the other with <=2 edits
+          # (insertion, deletion, or substitution)
+          matrix = Array.new(str1.length + 1) { |i| [i] }
+
+          (0..str2.length).each do |j|
+            matrix[0][j] = j
+          end
+
+          (1..str1.length).each do |i|
+            (1..str2.length).each do |j|
+              cost = str1[i - 1] == str2[j - 1] ? 0 : 1
+              matrix[i][j] = [
+                matrix[i - 1][j] + 1,       # deletion
+                matrix[i][j - 1] + 1,       # insertion
+                matrix[i - 1][j - 1] + cost # substitution
+              ].min
+            end
+          end
+
+          matrix[str1.length][str2.length]
         end
       end
     end

@@ -2,6 +2,12 @@
 update:
   update_frequency: on-change
   last-updated: '2025-10-24'
+context:
+  embed_document_source: true
+  sections:
+    available_presets:
+      commands:
+        - ace-context --list 
 ---
 
 # Load Context Workflow Instruction
@@ -34,16 +40,24 @@ ace-context $input
 - **Files**: Paths with `/`, `./`, `../`, or file extensions (e.g., `./context.md`, `/absolute/path.yml`)
 - **Protocols**: URLs with `://` pattern (e.g., `wfi://workflow-name`, `guide://testing`)
 
-### 2. Read the Generated Context
+### 2. Select and Load Context
 
-Read the complete cached context file returned by ace-context:
+**Available presets are listed above** in `<available_presets>`.
 
-```bash
-# The ace-context tool outputs the cache file path like:
-# Context saved (N lines, X KB), output file: /path/to/cache/file.md
-```
+Based on the user's `$input` variable:
 
-Read the ENTIRE file to understand the full project context.
+1. **Preset names** (simple names like "project", "base"):
+   - Verify preset exists in `<available_presets>` embedded above
+   - Run: `ace-context $input`
+
+2. **File paths** (contains `/`, `./`, extensions):
+   - Run directly: `ace-context $input`
+
+3. **Protocols** (contains `://`):
+   - Run directly: `ace-context $input`
+   - Note: Workflows with `embed_document_source: true` include their context
+
+**After loading**, read the complete cached context file.
 
 ### 3. Prepare Summary
 
