@@ -13,6 +13,7 @@ require_relative "support/mock_repo_context"
 class AceTaskflowTestCase < Ace::TestSupport::BaseTestCase
   include LlmMockHelper
   include TreeAssertionsHelper
+  include Ace::TestSupport::ConfigHelpers
 
   # Reset cached configuration and data before each test to ensure test isolation
   # This is important since ADR-022 caches gem defaults and configuration for performance
@@ -37,5 +38,30 @@ class AceTaskflowTestCase < Ace::TestSupport::BaseTestCase
 
   def with_clean_project(&block)
     TestFactory.with_clean_project(&block)
+  end
+
+  # Composite helper: Combines with_real_config + with_test_project
+  # Reduces nesting from 3 levels to 1 for tests that need real filesystem config
+  #
+  # @yield [dir] Yields the test project directory path
+  #
+  # @example Usage (reduces nesting)
+  #   # Before: 3 levels of nesting
+  #   with_real_config do
+  #     with_test_project do |dir|
+  #       Dir.chdir(dir) { }
+  #     end
+  #   end
+  #
+  #   # After: 1 level of nesting
+  #   with_real_test_project do |dir|
+  #     Dir.chdir(dir) { }
+  #   end
+  def with_real_test_project(&block)
+    with_real_config do
+      with_test_project do |dir|
+        yield dir
+      end
+    end
   end
 end
