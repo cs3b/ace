@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.174
-status: draft
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 174-optimize-ace-taskflow-test-performance-10s-to-under-5s
+  path: "../ace-task.174"
+  created_at: '2026-01-03 13:08:17'
+  updated_at: '2026-01-03 13:08:17'
 ---
 
 # Optimize ace-taskflow test performance (10s to under 5s)
