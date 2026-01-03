@@ -6,4 +6,4 @@ last_modified: '2025-09-26'
 source: ace-git-commit
 ---
 
-read and run `ace-nav wfi://commit`
+read and run `ace-context wfi://commit`

@@ -6,7 +6,7 @@ last_modified: '2025-10-02'
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://capture-application-features`
+read and run `ace-context wfi://capture-application-features`
 
-read and run `ace-nav wfi://commit`
+read and run `ace-context wfi://commit`
 

@@ -6,4 +6,4 @@ last_modified: '2025-11-13'
 source: ace-git
 ---
 
-read and run `ace-nav wfi://rebase`
+read and run `ace-context wfi://rebase`

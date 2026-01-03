@@ -6,4 +6,4 @@ last_modified: '2025-10-13'
 source: ace-docs
 ---
 
-read and run `ace-nav wfi://update-docs`
+read and run `ace-context wfi://update-docs`

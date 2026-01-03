@@ -6,4 +6,4 @@ last_modified: '2025-12-03'
 source: ace-review
 ---
 
-read and run `ace-nav wfi://review-pr`
+read and run `ace-context wfi://review-pr`
