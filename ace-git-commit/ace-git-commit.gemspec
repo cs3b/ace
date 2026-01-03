@@ -10,20 +10,24 @@ Gem::Specification.new do |spec|
 
   spec.summary = 'LLM-powered git commit tool for ACE'
   spec.description = 'Streamlined git commit tool that leverages LLM technology to generate meaningful commit messages'
-  spec.homepage = 'https://github.com/ace-meta/ace-git-commit'
+  spec.homepage = 'https://github.com/cs3b/ace-meta'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.0.0'
+  spec.required_ruby_version = '>= 3.3.0'
 
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = spec.homepage
-  spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/CHANGELOG.md"
+  spec.metadata['changelog_uri'] = "#{spec.homepage}/blob/main/ace-git-commit/CHANGELOG.md"
 
   # Specify which files should be added to the gem
-  spec.files = Dir.chdir(__dir__) do
-    `git ls-files -z`.split("\x0").reject do |f|
-      (f == __FILE__) || f.match(%r{\A(?:(?:test|spec|features)/|\.(?:git))})
-    end
-  end
+  spec.files = Dir.glob(%w[
+    lib/**/*
+    handbook/**/*
+    exe/*
+    .ace-defaults/**/*
+    *.md
+    LICENSE
+    Rakefile
+  ]).select { |f| File.file?(f) }
   spec.bindir = 'exe'
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
