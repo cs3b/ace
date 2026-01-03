@@ -141,6 +141,19 @@ module Ace
         config["chunk_limit"] || 150_000
       end
 
+      # Line count threshold for auto-format output mode
+      # When no explicit --output mode is specified:
+      #   - Content below this threshold: displayed inline (stdout)
+      #   - Content at or above this threshold: saved to cache file
+      # @return [Integer] Auto-format threshold in lines (default: 500)
+      def auto_format_threshold
+        threshold = config["auto_format_threshold"]
+        # Ensure valid positive integer, default to 500
+        return 500 unless threshold.is_a?(Integer) && threshold.positive?
+
+        threshold
+      end
+
       private
 
       # Load configuration using Ace::Config cascade
