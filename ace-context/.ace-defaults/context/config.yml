@@ -12,3 +12,10 @@ context:
   # Maximum characters before chunking output into multiple files
   # Default: 150000 characters (~150KB of text)
   chunk_limit: 150000
+
+  # Auto-format threshold: line count at which output switches from inline to file
+  # When no explicit --output mode is specified:
+  #   - Content below this threshold: displayed inline (stdout)
+  #   - Content at or above this threshold: saved to cache file (path printed)
+  # Default: 500 lines
+  auto_format_threshold: 500
