@@ -23,7 +23,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 ## Project Context Loading
 
-- Read and follow: `ace-nav wfi://load-project-context`
+- Read and follow: `ace-context wfi://load-project-context`
 
 ## Process Steps
 
