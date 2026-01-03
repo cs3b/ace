@@ -13,6 +13,12 @@ module Ace
       class ChangeDetectorTest < AceTestCase
         # No setup/teardown needed - we mock git operations
 
+        # Helper to mock DiffOrchestrator with empty result (avoids real git operations)
+        def with_empty_git_diff(&block)
+          empty_result = Ace::Git::Models::DiffResult.empty
+          Ace::Git::Organisms::DiffOrchestrator.stub(:generate, empty_result, &block)
+        end
+
         def test_get_diff_for_document_with_no_changes
           document = Models::Document.new(
             path: "test.md",
@@ -23,8 +29,7 @@ module Ace
           )
 
           # Mock ace-git to return empty diff (no changes)
-          empty_result = Ace::Git::Models::DiffResult.empty
-          Ace::Git::Organisms::DiffOrchestrator.stub :generate, empty_result do
+          with_empty_git_diff do
             result = ChangeDetector.get_diff_for_document(document)
 
             assert_equal "test.md", result[:document_path]
@@ -74,9 +79,14 @@ module Ace
             frontmatter: { "doc-type" => "api", "purpose" => "Second doc" }
           )
 
-          # Mock git to return diffs for both documents
-          mock_diff = "diff --git a/doc1.md b/doc1.md\n+Updated content"
-          ChangeDetector.stub :execute_git_command, mock_diff do
+          # Mock DiffOrchestrator to return diff content (avoids real git operations)
+          mock_result = Ace::Git::Models::DiffResult.new(
+            content: "diff --git a/doc1.md b/doc1.md\n+Updated content",
+            stats: { additions: 1, deletions: 0, files: 1, total_changes: 1 },
+            files: ["doc1.md"],
+            metadata: { since: "HEAD~1" }
+          )
+          Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
             result = ChangeDetector.get_diff_for_documents([doc1, doc2], since: "HEAD~1")
 
             assert_equal 2, result[:total_documents]
@@ -125,8 +135,8 @@ module Ace
             frontmatter: { "doc-type" => "guide", "purpose" => "Test" }
           )
 
-          # Mock git to return empty diff
-          ChangeDetector.stub :execute_git_command, "" do
+          # Mock ace-git DiffOrchestrator to avoid real git operations
+          with_empty_git_diff do
             # Test with renames excluded (using new exclude_* key pattern)
             result = ChangeDetector.get_diff_for_document(
               document,
@@ -150,8 +160,8 @@ module Ace
             }
           )
 
-          # Mock git to avoid real git operations
-          ChangeDetector.stub :execute_git_command, "" do
+          # Mock ace-git DiffOrchestrator to avoid real git operations
+          with_empty_git_diff do
             result = ChangeDetector.get_diff_for_document(document)
 
             assert_equal "2024-09-15", result[:since]
@@ -167,8 +177,8 @@ module Ace
             }
           )
 
-          # Mock git to avoid real git operations
-          ChangeDetector.stub :execute_git_command, "" do
+          # Mock ace-git DiffOrchestrator to avoid real git operations
+          with_empty_git_diff do
             result = ChangeDetector.get_diff_for_document(document, since: Date.new(2024, 10, 1))
 
             assert_equal "2024-10-01", result[:since]
@@ -184,8 +194,8 @@ module Ace
             }
           )
 
-          # Mock git to avoid real git operations
-          ChangeDetector.stub :execute_git_command, "" do
+          # Mock ace-git DiffOrchestrator to avoid real git operations
+          with_empty_git_diff do
             result = ChangeDetector.get_diff_for_document(document, since: "HEAD~5")
 
             assert_equal "HEAD~5", result[:since]
@@ -287,8 +297,8 @@ module Ace
             }
           )
 
-          # Mock git to return empty diffs for both subjects
-          ChangeDetector.stub :execute_git_command, "" do
+          # Mock ace-git DiffOrchestrator to return empty diffs for both subjects
+          with_empty_git_diff do
             result = ChangeDetector.get_diff_for_document(document)
 
             assert_equal "test.md", result[:document_path]
