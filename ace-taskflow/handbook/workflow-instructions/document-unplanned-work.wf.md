@@ -22,7 +22,7 @@ Document significant work completed during a session that wasn't part of any pla
 
 ## Project Context Loading
 
-- Read and follow: `ace-nav wfi://load-project-context`
+- Read and follow: `ace-context wfi://load-project-context`
 
 ## High-Level Execution Plan
 

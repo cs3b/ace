@@ -23,7 +23,7 @@ Execute the final deployment and archival phase of project releases, transitioni
 
 ## Project Context Loading
 
-- Read and follow: `ace-nav wfi://load-project-context`
+- Read and follow: `ace-context wfi://load-project-context`
 
 ## High-Level Execution Plan
 
@@ -73,7 +73,7 @@ Execute the final deployment and archival phase of project releases, transitioni
    - For strict mode (fail on medium confidence too): `ace-git-secrets check-release --strict`
    - If tokens are detected:
      - **STOP**: Do not proceed with release
-     - Follow `ace-nav wfi://token-remediation` workflow to remediate
+     - Follow `ace-context wfi://token-remediation` workflow to remediate
      - Re-run security check after remediation
    - Verify scan passes before continuing
 
