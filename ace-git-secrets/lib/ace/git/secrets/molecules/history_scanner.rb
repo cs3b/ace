@@ -123,7 +123,7 @@ module Ace
             cmd = ["git", "-C", repository_path, "rev-list", "--count", "HEAD"]
             cmd.insert(-2, "--since=#{since}") if since
 
-            output, status = Open3.capture2(*cmd)
+            output, status = Open3.capture2(*cmd, err: File::NULL)
             status.success? ? output.strip.to_i : 0
           rescue StandardError
             0

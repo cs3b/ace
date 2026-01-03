@@ -4,145 +4,173 @@ require_relative "../test_helper"
 
 class SecurityAuditorTest < GitSecretsTestCase
   def setup
-    skip "gitleaks not installed" unless gitleaks_available?
-    @temp_repo = create_temp_repo
-    @original_dir = Dir.pwd
-    Dir.chdir(@temp_repo)
-    @gitleaks_config = test_gitleaks_config
+    # Use mock repo for fast tests - no real git subprocess calls
+    @mock_repo = MockGitRepo.new
   end
 
   def teardown
-    Dir.chdir(@original_dir) if @original_dir
-    cleanup_temp_repo(@temp_repo) if @temp_repo
+    @mock_repo&.cleanup
   end
 
   def test_whitelist_filters_by_file_pattern
-    # Create test directory and file with token
-    FileUtils.mkdir_p("test")
-    File.write("test/mock_tokens.json", '{"token": "ghp_1234567890abcdefghijklmnopqrstuvwxyzAB"}')
-    system("git add test/mock_tokens.json")
-    system("git commit -q -m 'Test fixture'")
+    # Create test directory and file with token (no git subprocess)
+    @mock_repo.add_file("test/mock_tokens.json", '{"token": "ghp_1234567890abcdefghijklmnopqrstuvwxyzAB"}')
 
     whitelist = [
       { "file" => "test/*", "reason" => "Test fixtures" }
     ]
 
-    auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-      repository_path: @temp_repo,
-      gitleaks_config: @gitleaks_config,
-      whitelist: whitelist
-    )
-    report = auditor.audit
+    # Mock gitleaks to return a finding for this file
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "ghp_1234567890abcdefghijklmnopqrstuvwxyzAB",
+        file_path: "test/mock_tokens.json",
+        commit_hash: "abc1234"
+      }
+    ]
 
-    assert report.clean?, "Whitelisted file pattern should filter out token"
+    with_mocked_gitleaks(findings: mock_findings) do
+      auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
+        repository_path: @mock_repo.path,
+        whitelist: whitelist
+      )
+      report = auditor.audit
+
+      assert report.clean?, "Whitelisted file pattern should filter out token"
+    end
   end
 
   def test_whitelist_filters_by_exact_token
-    # Create file with known test token
-    File.write("config.txt", "API_KEY=ghp_test_example_for_documentation_only")
-    system("git add config.txt")
-    system("git commit -q -m 'Add config'")
+    @mock_repo.add_file("config.txt", "API_KEY=ghp_test_example_for_documentation_only")
 
     whitelist = [
       { "pattern" => "ghp_test_example_for_documentation_only", "reason" => "Example token for docs" }
     ]
 
-    auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-      repository_path: @temp_repo,
-      gitleaks_config: @gitleaks_config,
-      whitelist: whitelist
-    )
-    report = auditor.audit
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "ghp_test_example_for_documentation_only",
+        file_path: "config.txt",
+        commit_hash: "abc1234"
+      }
+    ]
 
-    assert report.clean?, "Whitelisted exact token should be filtered"
+    with_mocked_gitleaks(findings: mock_findings) do
+      auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
+        repository_path: @mock_repo.path,
+        whitelist: whitelist
+      )
+      report = auditor.audit
+
+      assert report.clean?, "Whitelisted exact token should be filtered"
+    end
   end
 
   def test_whitelist_does_not_filter_non_matching_tokens
-    # Create file with token not in whitelist
-    # Use a high-entropy token that gitleaks will detect
-    File.write("secret.txt", "TOKEN=literal:[REDACTED:github-pat]")
-    system("git add secret.txt")
-    system("git commit -q -m 'Add secret'")
+    @mock_repo.add_file("secret.txt", "TOKEN=ghp_RealSecretToken1234567890ABCDEFGH")
 
     whitelist = [
       { "file" => "test/*", "reason" => "Test fixtures" }
     ]
 
-    auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-      repository_path: @temp_repo,
-      gitleaks_config: @gitleaks_config,
-      whitelist: whitelist
-    )
-    report = auditor.audit
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "ghp_RealSecretToken1234567890ABCDEFGH",
+        file_path: "secret.txt",
+        commit_hash: "abc1234"
+      }
+    ]
 
-    refute report.clean?, "Non-whitelisted token should still be detected"
-    assert report.tokens.size >= 1, "Should detect at least one token"
+    with_mocked_gitleaks(findings: mock_findings) do
+      auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
+        repository_path: @mock_repo.path,
+        whitelist: whitelist
+      )
+      report = auditor.audit
+
+      refute report.clean?, "Non-whitelisted token should still be detected"
+      assert report.tokens.size >= 1, "Should detect at least one token"
+    end
   end
 
   def test_audit_without_whitelist
-    # Use a high-entropy token that gitleaks will detect
-    File.write("secret.txt", "TOKEN=literal:[REDACTED:github-pat]")
-    system("git add secret.txt")
-    system("git commit -q -m 'Add secret'")
+    @mock_repo.add_file("secret.txt", "TOKEN=ghp_SecretToken1234567890ABCDEFGHIJKL")
 
-    auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-      repository_path: @temp_repo,
-      gitleaks_config: @gitleaks_config
-    )
-    report = auditor.audit
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "ghp_SecretToken1234567890ABCDEFGHIJKL",
+        file_path: "secret.txt",
+        commit_hash: "abc1234"
+      }
+    ]
 
-    refute report.clean?
-    assert report.tokens.size >= 1
+    with_mocked_gitleaks(findings: mock_findings) do
+      auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
+        repository_path: @mock_repo.path
+      )
+      report = auditor.audit
+
+      refute report.clean?
+      assert report.tokens.size >= 1
+    end
   end
 
   def test_audit_with_empty_whitelist
-    # Use a high-entropy token that gitleaks will detect
-    File.write("secret.txt", "TOKEN=literal:[REDACTED:github-pat]")
-    system("git add secret.txt")
-    system("git commit -q -m 'Add secret'")
+    @mock_repo.add_file("secret.txt", "TOKEN=ghp_SecretToken1234567890ABCDEFGHIJKL")
 
-    auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-      repository_path: @temp_repo,
-      gitleaks_config: @gitleaks_config,
-      whitelist: []
-    )
-    report = auditor.audit
+    mock_findings = [
+      {
+        pattern_name: "github-pat",
+        matched_value: "ghp_SecretToken1234567890ABCDEFGHIJKL",
+        file_path: "secret.txt",
+        commit_hash: "abc1234"
+      }
+    ]
 
-    refute report.clean?, "Empty whitelist should not filter anything"
+    with_mocked_gitleaks(findings: mock_findings) do
+      auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
+        repository_path: @mock_repo.path,
+        whitelist: []
+      )
+      report = auditor.audit
+
+      refute report.clean?, "Empty whitelist should not filter anything"
+    end
   end
 
   def test_multiple_whitelist_rules
-    # Create files in different locations (ghp_ + 36+ alphanumeric chars)
-    FileUtils.mkdir_p("test")
-    FileUtils.mkdir_p("docs")
-    FileUtils.mkdir_p("src")
-    File.write("test/fixture.json", "ghp_TestFixtureTokenABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    File.write("docs/example.md", "ghp_DocumentationExampleTokenABCDEFGHIJKLMNOPQ")
-    File.write("src/real.rb", "ghp_RealSecretTokenABCDEFGHIJKLMNOPQRSTUVWXYZ12")
-    system("git add .")
-    system("git commit -q -m 'Add files'")
+    # Create files in different locations
+    @mock_repo.add_file("test/fixture.json", "ghp_TestFixtureTokenABCDEFGHIJKLMNOPQRSTUVWXYZ")
+    @mock_repo.add_file("docs/example.md", "ghp_DocumentationExampleTokenABCDEFGHIJKLMNOPQ")
+    @mock_repo.add_file("src/real.rb", "ghp_RealSecretTokenABCDEFGHIJKLMNOPQRSTUVWXYZ12")
 
     whitelist = [
       { "file" => "test/*", "reason" => "Test fixtures" },
       { "file" => "docs/*", "reason" => "Documentation examples" }
     ]
 
-    auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
-      repository_path: @temp_repo,
-      gitleaks_config: @gitleaks_config,
-      whitelist: whitelist
-    )
-    report = auditor.audit
+    # Mock gitleaks to return findings for all three files
+    mock_findings = [
+      { pattern_name: "github-pat", matched_value: "ghp_TestFixtureTokenABCDEFGHIJKLMNOPQRSTUVWXYZ", file_path: "test/fixture.json", commit_hash: "abc1234" },
+      { pattern_name: "github-pat", matched_value: "ghp_DocumentationExampleTokenABCDEFGHIJKLMNOPQ", file_path: "docs/example.md", commit_hash: "abc1234" },
+      { pattern_name: "github-pat", matched_value: "ghp_RealSecretTokenABCDEFGHIJKLMNOPQRSTUVWXYZ12", file_path: "src/real.rb", commit_hash: "abc1234" }
+    ]
 
-    # Only src/real.rb token should be detected
-    refute report.clean?
-    assert report.tokens.size >= 1, "Should detect at least one token"
-    assert report.tokens.any? { |t| t.file_path.include?("src/real.rb") }, "Should detect token in src/real.rb"
-  end
+    with_mocked_gitleaks(findings: mock_findings) do
+      auditor = Ace::Git::Secrets::Organisms::SecurityAuditor.new(
+        repository_path: @mock_repo.path,
+        whitelist: whitelist
+      )
+      report = auditor.audit
 
-  private
-
-  def gitleaks_available?
-    Ace::Git::Secrets::Atoms::GitleaksRunner.available?
+      # Only src/real.rb token should be detected (others whitelisted)
+      refute report.clean?
+      assert_equal 1, report.tokens.size, "Should detect exactly one token (the non-whitelisted one)"
+      assert report.tokens.any? { |t| t.file_path.include?("src/real.rb") }, "Should detect token in src/real.rb"
+    end
   end
 end
