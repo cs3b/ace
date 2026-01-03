@@ -12,14 +12,21 @@ Gem::Specification.new do |spec|
   spec.description = "Provides safe, atomic markdown file operations with frontmatter extraction, section editing, and validation. Prevents file corruption through backup/rollback mechanisms."
   spec.homepage = "https://github.com/cs3b/ace-meta"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/CHANGELOG.md"
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/blob/main/ace-support-markdown/CHANGELOG.md"
 
   # Specify which files should be added to the gem when it is released.
-  spec.files = Dir.glob("{lib,exe}/**/*") + %w[README.md LICENSE.txt CHANGELOG.md]
+  spec.files = Dir.glob(%w[
+    lib/**/*
+    handbook/**/*
+    exe/*
+    *.md
+    LICENSE
+    Rakefile
+  ]).select { |f| File.file?(f) }
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
