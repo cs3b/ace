@@ -47,7 +47,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.8.3)
+    ace-git-worktree (0.8.4)
       ace-config (~> 0.4)
       ace-git (~> 0.4)
       ace-taskflow (>= 0.10.0)
