@@ -6,7 +6,7 @@ last_modified: '2025-11-27'
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://work-on-task`
+read and run `ace-context wfi://work-on-task`
 
-read and run `ace-nav wfi://commit`
+read and run `ace-context wfi://commit`
 

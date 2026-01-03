@@ -6,4 +6,4 @@ last_modified: '2025-12-09'
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://fix-bug`
+read and run `ace-context wfi://fix-bug`

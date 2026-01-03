@@ -5,5 +5,5 @@ argument-hint: "[idea-pattern]"
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://draft-tasks`
+read and run `ace-context wfi://draft-tasks`
 
