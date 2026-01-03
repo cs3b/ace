@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.224] - 2026-01-03
+
+### Changed
+
+**ace-taskflow 0.26.3**: Optimize test performance from 10s to under 5s (Task 174)
+
+- Reduced test suite execution time from 9.77s to 4.72s (51.7% reduction)
+- Added `with_real_test_project` composite helper to reduce test nesting from 3 levels to 1
+- Refactored test helpers to use `with_real_config` pattern for better test isolation
+
+### Technical
+
+- Test performance optimization through proper test_mode usage
+- Include Ace::TestSupport::ConfigHelpers in AceTaskflowTestCase base class
+
 ## [0.9.223] - 2026-01-03
 
 ### Changed
