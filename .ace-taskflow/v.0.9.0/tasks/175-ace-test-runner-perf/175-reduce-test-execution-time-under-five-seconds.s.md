@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.175
-status: in-progress
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -8,7 +8,7 @@ worktree:
   branch: 175-optimize-ace-test-runner-test-performance-8s-to-under-5s
   path: "../ace-task.175"
   created_at: '2026-01-03 13:08:45'
-  updated_at: '2026-01-03 13:08:45'
+  updated_at: '2026-01-03 13:36:00'
 ---
 
 # Optimize ace-test-runner test performance (8s to under 5s)
@@ -29,14 +29,53 @@ worktree:
 
 ### Performance Breakdown (as of 2026-01-03)
 
+**Initial state (commit d7938194):**
 ```
 Test Suite Time: 3.3s total
-├── Atoms:      20ms   (5 tests)
-├── Molecules:  52ms   (83 tests)
-├── Models:      5ms   (11 tests)
-└── Integration: 3.2s  (30 tests)
+├── Atoms:      20ms   (5 tests, 20 assertions)
+├── Molecules:  52ms   (83 tests, 218 assertions)
+├── Models:      5ms   (11 tests, 22 assertions)
+└── Integration: 3.2s  (30 tests, 85 assertions)
     ├── E2E tests (3):   2.6s  (0.83-0.91s each)
     └── Mocked tests (27): 0.6s  (22ms each)
+
+Total: 129 tests, 345 assertions
+Performance: ~105 assertions/second
+```
+
+**After Option A implementation:**
+```
+Test Suite Time: 1.78s total (46% faster, 78% faster than original 8.25s)
+├── Atoms:      24ms   (5 tests, 20 assertions)
+├── Molecules:  65ms   (83 tests, 218 assertions)
+├── Models:      6ms   (11 tests, 22 assertions)
+└── Integration: 1.69s (30 tests, 85 assertions)
+    ├── E2E tests (1):   0.88s  (sole remaining E2E test)
+    └── Mocked tests (29): 0.81s  (28ms each)
+
+Total: 129 tests, 345 assertions
+Performance: ~194 assertions/second (85% improvement)
+```
+
+**To verify performance:**
+```bash
+# Run full test suite
+ace-test ace-test-runner
+# Expected: ~1.8s total (varies by system)
+
+# Profile slowest tests
+ace-test ace-test-runner --profile 20
+# Expected: 1 E2E test dominates (~0.9s), all others <30ms
+
+# Reference commits:
+# - d7938194 (2025-12-26): Initial optimization (3.3s)
+# - 9b799a66 (2026-01-03): Option A implementation (1.78s)
+```
+
+**Task closure:**
+```bash
+# Mark task as complete with performance note
+ace-taskflow task done 175 --note "Perf: 8.25s → 1.78s (78% reduction, 194 assertions/sec)"
 ```
 
 ### Root Cause Analysis
@@ -49,6 +88,38 @@ Test Suite Time: 3.3s total
 **Remaining bottlenecks:**
 - 3 E2E validation tests (2.6s total, 79% of suite time)
 - These use real subprocess execution for genuine end-to-end CLI validation
+
+### E2E Coverage Analysis
+
+**Current E2E Tests:**
+1. `test_run_tests_for_package_by_name` - Tests "ace-test ace-context atoms"
+2. `test_package_with_target` - Tests "ace-test ace-nav atoms"
+3. `test_package_prefixed_file_path` - Tests "ace-context/test/atoms/..."
+
+**Coverage Overlap:**
+All 3 tests validate the same core CLI functionality:
+- Subprocess spawning and execution
+- Package discovery and resolution
+- Test runner invocation
+- Output parsing and return codes
+
+**Mock Infrastructure Validation:**
+The mock infrastructure (`run_ace_test_with_mock`) has been verified to handle all scenarios tested by E2E tests:
+- ✅ Package by name: `run_ace_test_with_mock("ace-context", "atoms")` (line 44)
+- ✅ Package with target: `run_ace_test_with_mock("ace-context", "atoms", "--verbose")` (line 82)
+- ✅ Package-prefixed file paths: `run_ace_test_with_mock("ace-context/test/atoms/...")` (line 123)
+
+**Risk Mitigation:**
+- Keep 1 representative E2E test (`test_run_tests_for_package_by_name`) for genuine CLI validation
+- Convert other 2 to mocks (same coverage, faster execution)
+- Mock infrastructure proven to handle all tested scenarios
+- No loss of functional coverage - all scenarios tested by mocks
+
+**Performance Regression Guard:**
+```bash
+# CI should fail if suite exceeds 5s (original target)
+# Current: 3.3s, Threshold: 5s, Buffer: 1.7s
+```
 
 ## Behavioral Specification
 
