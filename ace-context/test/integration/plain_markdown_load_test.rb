@@ -15,7 +15,9 @@ class PlainMarkdownLoadTest < AceTestCase
   def test_loads_workflow_file_via_wfi_protocol
     # Resolve wfi:// protocol to file path using ace-nav
     # This is an E2E test that requires ace-nav to be installed
-    file_path = `ace-nav wfi://commit 2>/dev/null`.strip
+    # Use local bin/ace-nav from mono-repo to avoid global CLI dependency
+    ace_nav_bin = File.expand_path("../../../../bin/ace-nav", __dir__)
+    file_path = `#{ace_nav_bin} wfi://commit 2>/dev/null`.strip
 
     # Skip if ace-nav not available or workflow doesn't exist
     # Note: This is a genuine E2E test validating ace-nav protocol resolution.
