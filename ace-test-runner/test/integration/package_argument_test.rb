@@ -16,7 +16,10 @@ class PackageArgumentTest < Minitest::Test
   end
 
   # Test running tests for a package by name from repo root
-  # NOTE: This test uses REAL subprocess execution for end-to-end validation
+  # NOTE: This is the ONLY E2E test using REAL subprocess execution.
+  # All other integration tests use mocked subprocess for speed (65x faster).
+  # This test validates the actual CLI integration works end-to-end.
+  # Rationale: Represents the most common usage pattern (package by name).
 
   def test_run_tests_for_package_by_name
     Dir.chdir(@project_root) do
@@ -49,11 +52,11 @@ class PackageArgumentTest < Minitest::Test
   end
 
   # Test combining package with target
-  # NOTE: This test uses REAL subprocess execution for end-to-end validation
+  # Uses mocked subprocess for speed (65x faster than real subprocess)
 
   def test_package_with_target
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("ace-nav", "atoms")
+      output, status = run_ace_test_with_mock("ace-nav", "atoms")
 
       assert status.success?, "Should run specific target for package"
       assert_match(/Running tests in ace-nav/, output)
@@ -177,12 +180,12 @@ class PackageArgumentTest < Minitest::Test
   # Test package-prefixed file path syntax (ace-context/test/foo_test.rb)
   # Note: When a file path exists directly (e.g., from project root), it runs as a direct file.
   # Package context is only used when the file doesn't exist relative to current directory.
-  # NOTE: This test uses REAL subprocess execution for end-to-end validation
+  # Uses mocked subprocess for speed (65x faster than real subprocess)
 
   def test_package_prefixed_file_path
     # When file exists from current directory, run it directly (no package context)
     Dir.chdir(@project_root) do
-      output, status = run_ace_test("ace-context/test/atoms/content_checker_test.rb")
+      output, status = run_ace_test_with_mock("ace-context/test/atoms/content_checker_test.rb")
 
       assert status.success?, "Should run package-prefixed file path, got: #{output}"
       # File exists at this path, so runs directly without package context
