@@ -22,8 +22,10 @@ module Ace
           PR_NUMBER_PATTERN = /^\d+$/.freeze
 
           # Initialize a new CreateCommand
-          def initialize
-            @manager = Ace::Git::Worktree::Organisms::WorktreeManager.new
+          #
+          # @param manager [Object] Optional manager dependency for testing
+          def initialize(manager: nil)
+            @manager = manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           end
 
           # Run the create command
@@ -278,6 +280,11 @@ module Ace
               raise ArgumentError, "Task ID cannot be empty"
             end
 
+            # Security validation for task IDs
+            if options[:task] && contains_dangerous_patterns?(options[:task])
+              raise ArgumentError, "Task ID contains potentially dangerous characters"
+            end
+
             if options[:pr] && options[:pr].empty?
               raise ArgumentError, "PR number cannot be empty"
             end
@@ -307,19 +314,21 @@ module Ace
 
           # Check if a string contains dangerous patterns
           #
+          # Matches TaskFetcher's validation to ensure consistent security boundaries.
+          # Rejects shell metacharacters, null bytes, newlines, redirects, and path traversal.
+          #
           # @param value [String] Value to check
           # @return [Boolean] true if dangerous patterns found
           def contains_dangerous_patterns?(value)
             return false if value.nil?
 
+            # Patterns from TaskFetcher.valid_task_reference? for consistency
             dangerous_patterns = [
-              /;/,           # Command separator
-              /\|/,          # Pipe
-              /`/,           # Backtick command substitution
-              /\$\(/,        # Command substitution
-              /\.\.\//,      # Path traversal
-              /&&/,          # AND operator
-              /\|\|/         # OR operator
+              /[;&|`$(){}\[\]]/,  # Shell metacharacters
+              /\x00/,           # Null bytes
+              /[\r\n]/,         # Newlines
+              /[<>]/,           # Redirects
+              /\.\./,           # Path traversal
             ]
 
             dangerous_patterns.any? { |pattern| value.match?(pattern) }

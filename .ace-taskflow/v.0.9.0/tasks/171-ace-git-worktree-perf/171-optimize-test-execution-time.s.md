@@ -114,22 +114,23 @@ Reduce ace-git-worktree test execution time from ~6.7s to <5s by eliminating rea
   > Assert: 5 tests pass without git init
   > Command: ace-test ace-git-worktree integration
 
-- [x] **Step 3**: Stub ace-taskflow in create_command_test.rb
-  - `test_run_with_invalid_task_id`: Add Open3 stub for ace-taskflow
-  - Pattern: Use existing `stub_ace_taskflow_output` helper
+- [x] **Step 3**: Stub ace-taskflow and external calls in create_command_test.rb
+  - `test_run_with_invalid_task_id`: Use `WorktreeManager` mock via constructor DI
+  - `test_run_with_dangerous_task_id`: No stubs needed (command-level validation)
+  - Pattern: CreateCommand.new(manager: mock_worktree_manager)
   > TEST: Verify test_run_with_invalid_task_id runs fast
   > Assert: Test completes in <50ms
   > Command: ace-test ace-git-worktree commands --profile 5
 
 - [x] **Step 4**: Stub external calls in switch_command_test.rb
-  - `test_security_validation_on_paths_and_tasks`: Stub GitCommand and TaskFetcher
-  - Validation happens before external calls, so may not need stubs
+  - `test_security_validation_on_paths_and_tasks`: No stubs needed (command-level validation)
+  - Pattern: SwitchCommand.new(manager: mock_worktree_manager)
   > TEST: Verify security validation tests run fast
   > Assert: test_security_validation_on_paths_and_tasks <100ms
   > Command: ace-test ace-git-worktree commands --profile 10
 
 - [x] **Step 5**: Stub ace-taskflow in cli_test.rb security tests
-  - `test_security_validation_in_task_ids`: Stub Open3.capture3
+  - `test_security_validation_in_task_ids`: No Open3 stubs needed (command-level validation)
   > TEST: Verify CLI security tests run fast
   > Assert: test_security_validation_in_task_ids <50ms
   > Command: ace-test ace-git-worktree commands --profile 10

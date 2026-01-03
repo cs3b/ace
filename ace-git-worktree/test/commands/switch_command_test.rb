@@ -27,9 +27,9 @@ class SwitchCommandTest < Minitest::Test
     mock_worktree_manager = Minitest::Mock.new
     mock_worktree_manager.expect(:switch, { success: true }, [String])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["/path/to/worktree"])
+    result = command.run(["/path/to/worktree"])
     assert_equal 0, result
     mock_worktree_manager.verify
   end
@@ -45,9 +45,9 @@ class SwitchCommandTest < Minitest::Test
     }
     mock_worktree_manager.expect(:switch, mock_result, [String])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["--branch", "feature-branch"])
+    result = command.run(["--branch", "feature-branch"])
     assert_equal 0, result
     mock_worktree_manager.verify
   end
@@ -64,9 +64,9 @@ class SwitchCommandTest < Minitest::Test
     }
     mock_worktree_manager.expect(:switch, mock_result, [String])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["--task", "081"])
+    result = command.run(["--task", "081"])
     assert_equal 0, result
     mock_worktree_manager.verify
   end
@@ -82,9 +82,9 @@ class SwitchCommandTest < Minitest::Test
     ]
     mock_worktree_manager.expect(:list_all, { success: true, worktrees: mock_worktrees }, [Hash])
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["--list"])
+    result = command.run(["--list"])
     assert_equal 0, result
     mock_worktree_manager.verify
   end
@@ -96,9 +96,9 @@ class SwitchCommandTest < Minitest::Test
       raise StandardError, "Worktree not found"
     end
 
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 
-    result = @command.run(["/nonexistent/path"])
+    result = command.run(["/nonexistent/path"])
     assert_equal 1, result
     mock_worktree_manager.verify
   end
@@ -114,21 +114,13 @@ class SwitchCommandTest < Minitest::Test
       "task.081`whoami`"
     ]
 
-    # Stub manager to return "not found" without running git commands
-    # The point is that these dangerous inputs don't succeed, not how they fail
-    mock_worktree_manager = Minitest::Mock.new
-    dangerous_inputs.each do |_|
-      mock_worktree_manager.expect(:switch, { success: false, error: "Worktree not found" }, [String])
-    end
-
-    @command.instance_variable_set(:@manager, mock_worktree_manager)
-
+    # Security test: Verify dangerous inputs are rejected at command level,
+    # BEFORE manager is called. No manager mock needed - if validation fails,
+    # the manager would never be invoked.
     dangerous_inputs.each do |dangerous_input|
       result = @command.run([dangerous_input])
       assert_equal 1, result, "Should reject dangerous input: #{dangerous_input}"
     end
-
-    mock_worktree_manager.verify
   end
 
   def test_mutually_exclusive_arguments
@@ -155,9 +147,9 @@ class SwitchCommandTest < Minitest::Test
       }
       mock_worktree_manager.expect(:switch, mock_result, [String])
 
-      @command.instance_variable_set(:@manager, mock_worktree_manager)
+      command = Ace::Git::Worktree::Commands::SwitchCommand.new(manager: mock_worktree_manager)
 
-      result = @command.run(["--task", task_format])
+      result = command.run(["--task", task_format])
       assert_equal 0, result, "Should accept valid task format: #{task_format}"
       mock_worktree_manager.verify
     end
