@@ -1,54 +1,151 @@
 ---
 id: v.0.9.0+task.162
-status: draft
+status: pending
 priority: medium
-estimate: 30m
+estimate: 15m
 dependencies: []
 ---
 
 # Remove individual Gemfiles from ace-* gems
 
-## Description
+## Objective
 
-Remove individual `Gemfile` files from ace-* gems. The mono-repo pattern uses a single root `Gemfile` for all development - individual gems should only have `*.gemspec` files for runtime dependencies.
+Enforce the mono-repo pattern by removing redundant individual Gemfiles from ace-* gems. The root Gemfile serves as the single source for all development dependencies, while gemspecs define runtime dependencies for gem distribution.
 
-Per ADR and updated `docs/ace-gems.g.md`:
+Per ADR and `docs/ace-gems.g.md`:
 - Root `Gemfile`: Development dependencies for entire mono-repo
 - `*.gemspec`: Runtime dependencies for gem distribution
 - Individual gem `Gemfile`: NOT needed (anti-pattern)
 
-## Gems with Gemfiles to Remove
+## Scope of Work
 
-1. ace-config/Gemfile
-2. ace-docs/Gemfile
-3. ace-git-worktree/Gemfile
-4. ace-handbook/Gemfile
-5. ace-integration-claude/Gemfile
-6. ace-lint/Gemfile
-7. ace-llm-providers-cli/Gemfile
-8. ace-nav/Gemfile
-9. ace-review/Gemfile
-10. ace-search/Gemfile
-11. ace-support-mac-clipboard/Gemfile
-12. ace-support-markdown/Gemfile
+### Current State (Verified)
+
+**11 Gemfiles to remove** (not 12 - ace-config already clean):
+- ace-docs/Gemfile
+- ace-git-worktree/Gemfile
+- ace-handbook/Gemfile
+- ace-integration-claude/Gemfile
+- ace-lint/Gemfile
+- ace-llm-providers-cli/Gemfile
+- ace-nav/Gemfile
+- ace-review/Gemfile
+- ace-search/Gemfile
+- ace-support-mac-clipboard/Gemfile
+- ace-support-markdown/Gemfile
+
+**6 Gemfile.lock files to remove** (orphaned):
+- ace-handbook/Gemfile.lock
+- ace-integration-claude/Gemfile.lock
+- ace-lint/Gemfile.lock
+- ace-llm-providers-cli/Gemfile.lock
+- ace-support-mac-clipboard/Gemfile.lock
+- ace-test-runner/Gemfile.lock (orphan - no matching Gemfile)
+
+### Deliverables
+
+#### Delete
+
+- `ace-docs/Gemfile`
+- `ace-git-worktree/Gemfile`
+- `ace-handbook/Gemfile`
+- `ace-integration-claude/Gemfile`
+- `ace-lint/Gemfile`
+- `ace-llm-providers-cli/Gemfile`
+- `ace-nav/Gemfile`
+- `ace-review/Gemfile`
+- `ace-search/Gemfile`
+- `ace-support-mac-clipboard/Gemfile`
+- `ace-support-markdown/Gemfile`
+- `ace-handbook/Gemfile.lock`
+- `ace-integration-claude/Gemfile.lock`
+- `ace-lint/Gemfile.lock`
+- `ace-llm-providers-cli/Gemfile.lock`
+- `ace-support-mac-clipboard/Gemfile.lock`
+- `ace-test-runner/Gemfile.lock`
+
+## Technical Approach
+
+### Why This is Safe
+
+1. **All individual Gemfiles are boilerplate** - they only contain:
+   - `gemspec` (loads from .gemspec)
+   - `irb`, `rake`, `minitest` (already in root Gemfile)
+
+2. **Root Gemfile already includes all gems** via `path:` references
+
+3. **Gemspecs declare all runtime dependencies** properly
+
+4. **Development dependencies are centralized** in root Gemfile
+
+### Risk Assessment
+
+- **Risk**: Breaking `bundle install` or tests
+  - **Probability**: Low
+  - **Impact**: Medium
+  - **Mitigation**: Run `bundle install` and `ace-test-suite` before committing
+  - **Rollback**: `git checkout ace-*/Gemfile*`
+
+## Implementation Plan
+
+### Execution Steps
+
+- [ ] Remove all individual Gemfiles
+  ```bash
+  rm ace-docs/Gemfile ace-git-worktree/Gemfile ace-handbook/Gemfile \
+     ace-integration-claude/Gemfile ace-lint/Gemfile ace-llm-providers-cli/Gemfile \
+     ace-nav/Gemfile ace-review/Gemfile ace-search/Gemfile \
+     ace-support-mac-clipboard/Gemfile ace-support-markdown/Gemfile
+  ```
+  > TEST: Verify removal
+  > Type: Action Validation
+  > Assert: No Gemfiles remain in ace-* directories
+  > Command: ls ace-*/Gemfile 2>/dev/null || echo "All Gemfiles removed"
+
+- [ ] Remove all orphaned Gemfile.lock files
+  ```bash
+  rm ace-handbook/Gemfile.lock ace-integration-claude/Gemfile.lock \
+     ace-lint/Gemfile.lock ace-llm-providers-cli/Gemfile.lock \
+     ace-support-mac-clipboard/Gemfile.lock ace-test-runner/Gemfile.lock
+  ```
+  > TEST: Verify removal
+  > Type: Action Validation
+  > Assert: No Gemfile.lock files remain in ace-* directories
+  > Command: ls ace-*/Gemfile.lock 2>/dev/null || echo "All Gemfile.lock removed"
+
+- [ ] Verify root bundle still works
+  ```bash
+  bundle install
+  ```
+  > TEST: Bundle verification
+  > Type: Integration Validation
+  > Assert: bundle install succeeds
+  > Command: bundle check
+
+- [ ] Run test suite to verify no regressions
+  ```bash
+  ace-test-suite
+  ```
+  > TEST: Full test suite
+  > Type: Integration Validation
+  > Assert: All tests pass
+  > Command: ace-test-suite
 
 ## Acceptance Criteria
 
-- [ ] All 12 Gemfiles removed from individual gems
+- [ ] All 11 Gemfiles removed from individual gems
+- [ ] All 6 orphaned Gemfile.lock files removed
 - [ ] Root Gemfile still works (`bundle install` succeeds)
 - [ ] All tests pass via `ace-test-suite`
-- [ ] No orphaned Gemfile.lock files remain
+- [ ] No Gemfile or Gemfile.lock files exist in ace-* directories
 
-## Implementation Notes
+## Out of Scope
 
-Simple cleanup task:
-```bash
-rm ace-*/Gemfile
-rm ace-*/Gemfile.lock  # if any exist
-```
+- ❌ Modifying gemspecs
+- ❌ Changing root Gemfile
+- ❌ Updating .gitignore patterns
 
-Verify with:
-```bash
-bundle install
-ace-test-suite
-```
+## References
+
+- `docs/ace-gems.g.md` - Mono-Repo Dependency Management section
+- ADR-015: Mono-Repo Migration
