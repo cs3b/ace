@@ -94,7 +94,7 @@ Self-contained instruction documents for complete processes:
 * **Location**: `gem/handbook/workflow-instructions/*.wf.md`
 * **Structure**: Frontmatter (purpose, params, tools) + complete instructions + embedded templates
 * **Principle**: ADR-001 self-containment - include all context inline
-* **Discovery**: `ace-nav wfi://workflow-name`
+* **Discovery**: `ace-context wfi://workflow-name`
 * **Use when**: Multi-step process, decision points, context management
 
 ### Agents (.ag.md)
