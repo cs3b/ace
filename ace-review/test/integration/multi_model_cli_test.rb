@@ -2,29 +2,10 @@
 
 require "test_helper"
 require "ace/review/cli"
-require "tmpdir"
 
 class MultiModelCliTest < Minitest::Test
-  def setup
-    @original_dir = Dir.pwd
-    @tmpdir = Dir.mktmpdir
-    Dir.chdir(@tmpdir)
-
-    # Create minimal git repo
-    system("git init -q")
-    system("git config user.email 'test@example.com'")
-    system("git config user.name 'Test User'")
-
-    # Create a test file and commit
-    File.write("test.rb", "# test file")
-    system("git add test.rb")
-    system("git commit -q -m 'initial'")
-  end
-
-  def teardown
-    Dir.chdir(@original_dir)
-    FileUtils.rm_rf(@tmpdir)
-  end
+  # No setup/teardown needed - these tests only parse CLI options
+  # and test ReviewOptions model, they don't need a git repository
 
   def test_cli_parses_comma_separated_models
     cli = Ace::Review::CLI.new

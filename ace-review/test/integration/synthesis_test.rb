@@ -42,28 +42,27 @@ class SynthesisIntegrationTest < AceReviewTest
     File.write(report1, sample_review_content("Gemini 2.5 Flash"))
     File.write(report2, sample_review_content("GPT-4"))
 
-    # Mock LLM executor
-    mock_llm_synthesis
+    # Mock LLM executor and execute synthesis
+    mock_llm_synthesis do
+      synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
+      result = synthesizer.synthesize(
+        report_paths: [report1, report2],
+        session_dir: @session_dir
+      )
 
-    # Execute synthesis
-    synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
-    result = synthesizer.synthesize(
-      report_paths: [report1, report2],
-      session_dir: @session_dir
-    )
+      # Verify result
+      assert result[:success], "Synthesis should succeed"
+      assert result[:output_file], "Should have output file"
+      assert_equal File.join(@session_dir, "synthesis-report.md"), result[:output_file]
 
-    # Verify result
-    assert result[:success], "Synthesis should succeed"
-    assert result[:output_file], "Should have output file"
-    assert_equal File.join(@session_dir, "synthesis-report.md"), result[:output_file]
+      # Verify file exists
+      assert File.exist?(result[:output_file]), "Synthesis file should exist"
 
-    # Verify file exists
-    assert File.exist?(result[:output_file]), "Synthesis file should exist"
-
-    # Verify content
-    content = File.read(result[:output_file])
-    assert_includes content, "Multi-Model Review Synthesis"
-    assert_includes content, "gemini-2-5-flash, gpt-4"
+      # Verify content
+      content = File.read(result[:output_file])
+      assert_includes content, "Multi-Model Review Synthesis"
+      assert_includes content, "gemini-2-5-flash, gpt-4"
+    end
   end
 
   def test_auto_synthesis_after_multi_model_execution
@@ -278,8 +277,10 @@ class SynthesisIntegrationTest < AceReviewTest
     # Track which model was used for synthesis
     synthesis_model_used = nil
 
-    # Create synthesizer with stubbed executor
+    # Create synthesizer with stubbed executor and resolve_prompt_path
     synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
+    stub_synthesizer_prompt_path(synthesizer)
+
     synthesizer.llm_executor.define_singleton_method(:execute) do |**args|
       synthesis_model_used = args[:model]
       {
@@ -358,32 +359,55 @@ class SynthesisIntegrationTest < AceReviewTest
   end
 
   def mock_llm_synthesis
-    # Stub LLM executor globally for all ReportSynthesizer instances
-    Ace::Review::Molecules::LlmExecutor.class_eval do
-      alias_method :original_execute, :execute
+    # Capture response and test instance for closure context
+    response_content = mock_llm_synthesis_response
+    test_instance = self
 
-      def execute(**_args)
-        {
-          success: true,
-          response: mock_synthesis_response_global,
-          metadata: { tokens: 1000 }
-        }
+    # Create mock executor that returns canned response
+    mock_executor = Object.new
+    mock_executor.define_singleton_method(:execute) do |**_args|
+      {
+        success: true,
+        response: response_content,
+        metadata: { tokens: 1000 }
+      }
+    end
+
+    # Store original new method before stubbing
+    original_new = Ace::Review::Molecules::ReportSynthesizer.method(:new)
+
+    # Use Minitest stub for automatic cleanup of LlmExecutor
+    Ace::Review::Molecules::LlmExecutor.stub :new, mock_executor do
+      # For ReportSynthesizer, use manual stub with ensure cleanup
+      # (needed to call original new inside the stub)
+      Ace::Review::Molecules::ReportSynthesizer.define_singleton_method(:new) do |*args, **kwargs|
+        instance = original_new.call(*args, **kwargs)
+        test_instance.stub_synthesizer_prompt_path(instance)
+        instance
       end
 
-      def mock_synthesis_response_global
-        <<~MARKDOWN
-          # Multi-Model Review Synthesis
-
-          ## Overview
-          - Models: gemini-2-5-flash, gpt-4
-
-          ## Consensus Findings (All Models Agree)
-          1. Missing error handling
-
-          ## Prioritized Action Items
-          1. Fix error handling
-        MARKDOWN
+      begin
+        yield if block_given?
+      ensure
+        # Restore original new method
+        Ace::Review::Molecules::ReportSynthesizer.define_singleton_method(:new, original_new)
       end
     end
+  end
+
+  # Mock response for LLM synthesis tests
+  def mock_llm_synthesis_response
+    <<~MARKDOWN
+      # Multi-Model Review Synthesis
+
+      ## Overview
+      - Models: gemini-2-5-flash, gpt-4
+
+      ## Consensus Findings (All Models Agree)
+      1. Missing error handling
+
+      ## Prioritized Action Items
+      1. Fix error handling
+    MARKDOWN
   end
 end
