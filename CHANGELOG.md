@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.234] - 2026-01-03
+
+### Added
+
+- **ace-context 0.25.0**: Auto-format output based on line count threshold
+  - Content below 500 lines displays inline to stdout
+  - Content at/above 500 lines saves to cache file (path printed)
+  - Configurable via `auto_format_threshold` in `.ace/context/config.yml`
+  - `LineCounter` atom for counting content lines
+  - Integration tests for CLI auto-format behavior
+
+- **ace-support-core**: Semantic boundary-aware chunking (unreleased)
+  - `BoundaryFinder` atom parses content into semantic blocks
+  - `<file>` and `<output>` XML elements never split mid-element
+  - Chunking respects element boundaries for LLM processing integrity
+
 ## [0.9.233] - 2026-01-03
 
 ### Added
