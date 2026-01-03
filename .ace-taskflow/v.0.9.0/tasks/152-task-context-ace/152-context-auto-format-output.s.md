@@ -16,15 +16,15 @@ Improve ace-context UX by providing intelligent output formatting that balances 
 
 ### User Experience
 - **Input**: Users invoke `ace-context` with a preset, file path, or protocol (e.g., `ace-context project`)
-- **Process**: System retrieves context and evaluates output format - if content is below 500 lines and no explicit output format is specified, content is returned directly; otherwise, file path is returned
-- **Output**: Either context content displayed inline (< 500 lines) or file path provided for reading (>= 500 lines or explicit format specified)
+- **Process**: System retrieves context and evaluates output mode - if content is below 500 lines and no explicit output mode is specified, content is returned directly; otherwise (>= 500 lines or explicit output mode specified), file path is returned
+- **Output**: Either context content displayed inline (< 500 lines) or file path provided for reading (>= 500 lines or explicit output mode specified)
 
 ### Expected Behavior
 
-When users run `ace-context` without specifying an explicit output format:
+When users run `ace-context` without specifying an explicit output mode:
 - For content below 500 lines: Display content directly to stdout
-- For content at or above 500 lines: Display file path to stdout
-- When explicit output format is defined: Honor the specified format regardless of line count
+- For content at or above 500 lines (>= 500): Display file path to stdout
+- When explicit output mode is defined: Honor the specified mode regardless of line count
 
 ### Interface Contract
 
@@ -50,8 +50,9 @@ ace-context wfi://load-context
 - [ ] **Auto-format behavior**: Content < 500 lines returns inline, >= 500 lines returns path (when no output mode specified)
 - [ ] **Explicit output override**: --output flag overrides automatic behavior
 - [ ] **Backward compatibility**: Existing explicit output specifications continue to work
-- [ ] **User feedback**: Clear indication when file path is returned
+- [ ] **User feedback**: Clear indication when file path is returned (format: `Context saved (N lines, X.XX KB), output file:\n<path>`)
 - [ ] **Configurable threshold**: auto_format_threshold in config.yml
+- [ ] **Fallback behavior**: Default to 500 lines if config is missing or invalid
 
 ## Scope of Work
 
@@ -61,6 +62,12 @@ ace-context wfi://load-context
 - `ace-context/.ace-defaults/context/config.yml` - Add `auto_format_threshold: 500` setting
 - `ace-context/test/atoms/line_counter_test.rb` - Unit tests for line counting atom
 - `ace-context/lib/ace/context/atoms/line_counter.rb` - Pure function to count lines in content
+
+#### Output File Naming Convention
+When auto-format saves to cache, use the existing cache naming pattern:
+- **Location**: `.cache/ace-context/`
+- **Filename**: `{input-name}.md` where input-name is sanitized (non-alphanumeric chars → underscore)
+- **Examples**: `project.md`, `wfi___load_context.md`, `base-custom.md`
 
 #### Modify
 - `ace-context/exe/ace-context` - Implement auto-format logic in CLI
@@ -80,9 +87,12 @@ ace-context wfi://load-context
 3. **CLI Logic**: After loading context, check if output mode is auto, then decide based on line count
 
 ### Output Mode Priority (highest to lowest)
-1. CLI `--output` flag (explicit user request)
-2. Preset's `metadata[:output]` (preset configuration)
-3. Auto-format based on line count (new default behavior)
+
+**Explicit rule**: CLI flags override preset metadata, which overrides auto-format logic.
+
+1. CLI `--output` flag (explicit user request) - always honored
+2. Preset's `metadata[:output]` (preset configuration) - treated as explicit
+3. Auto-format based on line count (new default behavior) - only when no explicit mode
 
 ## Implementation Plan
 
@@ -150,7 +160,9 @@ ace-context wfi://load-context
 | Explicit stdio | Any size, --output stdio | Content displayed |
 | Explicit cache | Any size, --output cache | File path displayed |
 | Preset default | Preset has `output: cache` | File path displayed |
-| Threshold edge | Exactly 500 lines | File path displayed |
+| Threshold edge | Exactly 500 lines, no --output | File path displayed (>= 500 boundary) |
+| Custom threshold | 499 lines, threshold set to 400 | File path displayed |
+| Config fallback | Invalid/missing config | Uses default 500 lines |
 
 ## Risk Assessment
 
