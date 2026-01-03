@@ -10,9 +10,9 @@ Gem::Specification.new do |spec|
 
   spec.summary = "LLM provider integration for AI-assisted development"
   spec.description = "Query any LLM provider through a unified CLI interface with cost tracking and output formatting"
-  spec.homepage = "https://github.com/massiveconflict/ace-meta"
+  spec.homepage = "https://github.com/cs3b/ace-meta"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.1.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
@@ -20,19 +20,20 @@ Gem::Specification.new do |spec|
 
   # Specify which files should be added to the gem when it is released.
   spec.files = Dir.glob(%w[
-    lib/**/*.rb
+    lib/**/*
+    handbook/**/*
     exe/*
     .ace-defaults/**/*
-    README.md
-    CHANGELOG.md
-    LICENSE.txt
-  ])
+    *.md
+    LICENSE
+    Rakefile
+  ]).select { |f| File.file?(f) }
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "ace-config", "~> 0.4"
+  spec.add_dependency "ace-config", "~> 0.5"
   spec.add_dependency "ace-support-core", "~> 0.10"
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "addressable", "~> 2.8"
