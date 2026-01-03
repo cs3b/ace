@@ -6,7 +6,7 @@ last_modified: '2025-10-02'
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://prioritize-align-ideas`
+read and run `ace-context wfi://prioritize-align-ideas`
 
-read and run `ace-nav wfi://commit`
+read and run `ace-context wfi://commit`
 

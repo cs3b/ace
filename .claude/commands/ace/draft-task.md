@@ -6,5 +6,5 @@ last_modified: '2025-09-24'
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://draft-task`
+read and run `ace-context wfi://draft-task`
 

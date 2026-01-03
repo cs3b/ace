@@ -6,4 +6,4 @@ last_modified: '2025-11-15'
 source: ace-git
 ---
 
-read and run `ace-nav wfi://update-pr-description`
+read and run `ace-context wfi://update-pr-description`

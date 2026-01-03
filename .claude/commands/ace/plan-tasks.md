@@ -5,6 +5,6 @@ argument-hint: "[task-id-pattern]"
 source: ace-taskflow
 ---
 
-read and run `ace-nav wfi://plan-tasks`
+read and run `ace-context wfi://plan-tasks`
 
 ARGUMENTS: $ARGUMENTS
