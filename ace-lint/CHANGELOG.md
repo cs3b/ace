@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-01-03
+
+### Changed
+- **BREAKING**: Minimum Ruby version raised to 3.3.0 (was 3.1.0)
+- Standardized gemspec file patterns with deterministic Dir.glob
+- Added MIT LICENSE file
+
 ## [0.5.1] - 2025-12-30
 
 ### Changed
