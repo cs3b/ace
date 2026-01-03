@@ -1,10 +1,19 @@
 ---
 id: v.0.9.0+task.153
-status: pending
+status: done
 priority: medium
-estimate: 3h
+estimate: 3.5h
+type: orchestrator
+subtasks:
+- v.0.9.0+task.153.1
+- v.0.9.0+task.153.2
 dependencies:
-  - v.0.9.0+task.152
+- v.0.9.0+task.152
+worktree:
+  branch: 153-replace-ace-nav-wfi-with-ace-context-wfi-in-claude-code-commands-and-workflows
+  path: "../ace-task.153"
+  created_at: '2026-01-03 19:54:59'
+  updated_at: '2026-01-03 19:54:59'
 ---
 
 # Replace ace-nav wfi:// with ace-context wfi:// in Claude Code commands and workflows
@@ -35,6 +44,19 @@ When agents and workflows need to load context:
 - [ ] **Templates updated**: ace-integration-claude templates
 - [ ] **ace-context enhanced**: Supports loading plain markdown files with frontmatter
 - [ ] **Backwards compatibility**: ace-nav wfi:// continues to work
+
+## Subtasks
+
+This orchestrator task is split into two subtasks:
+
+| Subtask | Description | Estimate | Status |
+|---------|-------------|----------|--------|
+| [153.1](153.1-ace-context-plain-markdown.s.md) | Enhance ace-context to load plain markdown files | 1.5h | done |
+| [153.2](153.2-migrate-ace-nav-to-context.s.md) | Migrate ace-nav wfi:// to ace-context wfi:// | 2h | done |
+
+Execute subtasks sequentially: 153.1 must complete before 153.2 can begin.
+
+---
 
 ## Scope of Work
 
