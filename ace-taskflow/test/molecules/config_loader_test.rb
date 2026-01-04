@@ -234,7 +234,8 @@ class ConfigLoaderTest < AceTaskflowTestCase
     with_real_tmpdir do |_dir|
       config = Ace::Taskflow::Molecules::ConfigLoader.load
 
-      assert_equal %w[done cancelled suspended superseded], config["terminal_statuses"]
+      # Includes 'skipped' for tasks intentionally not needed
+      assert_equal %w[done cancelled suspended superseded skipped], config["terminal_statuses"]
     end
   end
 

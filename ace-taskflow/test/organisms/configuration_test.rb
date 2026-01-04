@@ -81,4 +81,75 @@ class ConfigurationTest < AceTaskflowTestCase
     end
   end
 
+  def test_path_in_done_dir_matches_exact_directory
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+        config = Ace::Taskflow.configuration
+
+        # Path with done directory as a complete path component should match
+        assert config.path_in_done_dir?("/project/.ace-taskflow/_archive/v.0.8.0/t/001/task.md"),
+               "Should match when _archive is a complete path component"
+        assert config.path_in_done_dir?("_archive/v.0.8.0/t/001/task.md"),
+               "Should match at beginning of path"
+        assert config.path_in_done_dir?("/project/_archive/task.md"),
+               "Should match in middle of path"
+      end
+    end
+  end
+
+  def test_path_in_done_dir_avoids_substring_false_positives
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+        config = Ace::Taskflow.configuration
+
+        # Paths with archive directory name as a substring should NOT match
+        refute config.path_in_done_dir?("/project/.ace-taskflow/v.0.9.0/my_archive_tasks/t/099/task.md"),
+               "Should NOT match when _archive is a substring of directory name"
+        refute config.path_in_done_dir?("/project/_archive_backup/task.md"),
+               "Should NOT match _archive_backup (prefix match)"
+        refute config.path_in_done_dir?("/project/old_archive/task.md"),
+               "Should NOT match old_archive (suffix match)"
+        refute config.path_in_done_dir?("/project/not_archived_yet/task.md"),
+               "Should NOT match not_archived_yet (contains archive as substring)"
+      end
+    end
+  end
+
+  def test_done_dir_pattern_is_memoized
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+        config = Ace::Taskflow.configuration
+
+        # Call twice and verify we get the same object (memoized)
+        pattern1 = config.done_dir_pattern
+        pattern2 = config.done_dir_pattern
+
+        assert_same pattern1, pattern2, "Pattern should be memoized"
+      end
+    end
+  end
+
+  def test_done_dir_pattern_resets_on_reload
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+        config = Ace::Taskflow.configuration
+
+        # Get initial pattern
+        pattern1 = config.done_dir_pattern
+
+        # Reload config
+        config.reload!
+
+        # Get pattern again - should be a new object
+        pattern2 = config.done_dir_pattern
+
+        refute_same pattern1, pattern2, "Pattern should be reset after reload"
+      end
+    end
+  end
+
 end
