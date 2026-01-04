@@ -36,6 +36,7 @@ taskflow:
     - cancelled   # Task cancelled/abandoned intentionally
     - suspended   # Task suspended indefinitely (may resume later)
     - superseded  # Task replaced by another task
+    - skipped     # Task intentionally skipped (not needed)
 
   # Reference resolution settings
   references:
