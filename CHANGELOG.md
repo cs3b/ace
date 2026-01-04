@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.235] - 2026-01-04
+
+### Fixed
+
+- **ace-taskflow 0.27.2**: Doctor command respects configured archive directory
+  - Task location validation now uses `directories.completed` config instead of hardcoded `/done/` pattern
+  - Improved path matching regex prevents substring false positives in directory detection
+  - Added regression tests for custom `done_dir` configuration
+  - Test factory now uses configured directory names for proper fixture generation
+  - README updated to reference configurable archive directory
+
 ## [0.9.234] - 2026-01-03
 
 ### Added

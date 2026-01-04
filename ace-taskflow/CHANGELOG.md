@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.2] - 2026-01-04
+
+### Fixed
+
+- Doctor command now respects configured archive directory (`directories.completed`) instead of hardcoded `/done/` pattern in task location validation
+- Improved path matching regex to avoid substring false positives when validating task locations against archive directory
+
+### Technical
+
+- Added regression tests for custom `done_dir` configuration
+- Updated README to reference configurable archive directory instead of hardcoded "done/" folder
+- Test factory now uses configured directory names for proper test fixture generation
+
 ## [0.27.1] - 2026-01-03
 
 ### Changed
