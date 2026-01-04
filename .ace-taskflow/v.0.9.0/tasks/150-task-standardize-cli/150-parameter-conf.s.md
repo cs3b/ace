@@ -1,12 +1,16 @@
 ---
 id: v.0.9.0+task.150
-status: planned
+status: pending
 priority: medium
 estimate: M
 dependencies: []
 ---
 
 # Standardize CLI Parameter Configuration and Output Summary
+
+## Objective
+
+Improve transparency, predictability, and debuggability of ace-* CLI tools by standardizing parameter configuration patterns and providing immediate feedback on effective configuration. This benefits both human developers (clearer understanding of active settings) and AI agents (deterministic context for autonomous operations).
 
 ## Behavioral Specification
 
@@ -23,15 +27,13 @@ When any `ace-*` CLI command is executed, the system should:
 3. Proceed with command execution using the resolved configuration
 4. Allow users to suppress the summary with a `--no-summary` or `--quiet` flag
 
-This provides transparency for both human developers and AI agents, showing exactly what parameters are active without requiring inspection of multiple configuration files.
-
 ### Interface Contract
 
 ```bash
 # CLI Interface - Configuration Summary Output
 ace-review --pr 123
 # Output to stderr (before main command execution):
-# Config: provider=openrouter model=claude-sonnet-4.5 pr=123 format=markdown summary=enabled
+# Config: preset=pr model=claude-sonnet-4.5 pr=123 format=markdown
 
 ace-test test/file_test.rb --quiet
 # No config summary (suppressed by --quiet flag)
@@ -63,73 +65,125 @@ ace-taskflow idea enhance 20251202-115955-cli-enhance
 - Very large config: Summarize only CLI-relevant parameters (truncate if needed)
 - Nested config keys: Flatten to dot-notation (e.g., `llm.provider=openrouter`)
 
-### Success Criteria
-
-- [ ] **Configuration Transparency**: Every ace-* command displays a 1-3 line config summary at start
-- [ ] **Standardized Defaults**: Each ace-* gem defines CLI defaults in `.ace-defaults/gem/config.yml` under `cli_defaults` key
-- [ ] **Cascade Integration**: Configuration resolution uses ace-config cascade correctly (CLI > project > gem defaults per ADR-022)
-- [ ] **Summary Suppression**: `--no-summary` or `--quiet` flag successfully suppresses config output
-- [ ] **Machine Readability**: Summary format is parseable by agents (key=value format)
-- [ ] **Security**: No sensitive data (tokens, credentials) exposed in summary output
-- [ ] **Backward Compatibility**: Existing ace-* command usage remains unaffected (summary is additive)
-
-### Validation Questions (Resolved)
-
-- [x] **Summary Format**: Key=value format (most concise, machine-readable)
-- [x] **Summary Content**: CLI-relevant only, configurable via `summary_keys` in config
-- [x] **Output Stream**: stderr (doesn't interfere with stdout pipelines)
-- [x] **Verbosity Levels**: Support brief/normal/detailed via config
-- [x] **Global Flag**: Yes, via `.ace/gem/config.yml` cli_defaults.quiet
-- [x] **Config Resolution Logging**: Defer to verbose mode (--verbose shows sources)
-
-## Objective
-
-Improve transparency, predictability, and debuggability of ace-* CLI tools by standardizing parameter configuration patterns and providing immediate feedback on effective configuration. This benefits both human developers (clearer understanding of active settings) and AI agents (deterministic context for autonomous operations).
-
 ## Scope of Work
-
-- **User Experience Scope**:
-  - All ace-* CLI command executions
-  - Configuration summary display at command start
-  - Summary suppression via flags
-  - Clear feedback on effective configuration
-
-- **System Behavior Scope**:
-  - Unified configuration resolution across all ace-* gems
-  - Standardized default parameter loading
-  - Concise configuration summary generation
-  - Security filtering of sensitive data
-
-- **Interface Scope**:
-  - All ace-* CLI commands receive summary capability
-  - New `--no-summary`/`--quiet` flag support
-  - `.ace-defaults/gem/config.yml` structure for CLI defaults
-  - Configuration summary output format
 
 ### Deliverables
 
-#### Behavioral Specifications
-- Configuration summary output format specification
-- CLI parameter precedence rules documentation
-- Configuration file structure for gem defaults
-- Summary suppression behavior specification
+#### Create
 
-#### Validation Artifacts
-- Test scenarios for configuration cascade
-- Examples of summary output for different commands
-- Edge case handling specifications
-- Security filtering requirements
+- `ace-support-core/lib/ace/core/atoms/config_summary.rb`
+  - Purpose: Core ConfigSummary module using ace-config for defaults comparison
+  - Key components: `initialize`, `to_s`, `display`, sensitive key filtering
+  - Dependencies: ace-config gem
+
+- `ace-support-core/test/atoms/config_summary_test.rb`
+  - Purpose: Test coverage for ConfigSummary
+
+#### Modify
+
+- `.ace-defaults/*/config.yml` files
+  - Changes: Add `cli_defaults` section with `summary_keys`, `quiet`, `verbosity`
+
+- `ace-review/lib/ace/review/cli.rb` (pilot)
+  - Changes: Integrate ConfigSummary display before command execution
+
+- All ace-* CLI entry points (rollout)
+  - Changes: Add `--quiet`/`--no-summary` flags, integrate ConfigSummary
+
+## Technical Approach
+
+### Design Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Summary Format | Key=value | Most concise, machine-parseable, docker/kubectl pattern |
+| Output Stream | stderr | Doesn't interfere with stdout pipelines |
+| Summary Content | CLI-relevant only | Via configurable `summary_keys` |
+| Adoption | Opt-in per gem | Backward compatible, incremental rollout |
+
+### Implementation Strategy
+
+ConfigSummary uses ace-config (per ADR-022):
+- `Ace::Config.create.resolve_namespace()` for user config
+- Loads gem defaults from `.ace-defaults/gem/config.yml`
+- Only surfaces values that differ from defaults (diff mode)
+- Filters sensitive keys, sorts output for determinism
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Research existing CLI summary patterns (docker, kubectl)
+* [x] Design key=value format specification
+* [x] Define cli_defaults schema for .ace-defaults/
+* [x] Resolve validation questions (format, stream, content)
+
+### Execution Steps
+
+- [ ] Create `ace-support-core/lib/ace/core/atoms/config_summary.rb`
+  > TEST: Module Creation
+  > Type: Unit Test
+  > Assert: ConfigSummary.new returns valid instance, to_s produces key=value format
+  > Command: ace-test ace-support-core atoms
+
+- [ ] Create `ace-support-core/test/atoms/config_summary_test.rb`
+  > TEST: Test Coverage
+  > Type: Unit Test
+  > Assert: Covers initialize, to_s, display, sensitive filtering, defaults comparison
+  > Command: ace-test ace-support-core atoms
+
+- [ ] Add `cli_defaults` to `.ace-defaults/review/config.yml`
+
+- [ ] Integrate ConfigSummary with ace-review CLI (pilot)
+  > TEST: Pilot Integration
+  > Type: Integration Test
+  > Assert: ace-review displays config summary on stderr before execution
+  > Command: ace-review --preset pr --dry-run 2>&1 | grep "Config:"
+
+- [ ] Add `--quiet`/`--no-summary` flags to ace-review
+
+- [ ] Rollout to remaining OptionParser CLIs (ace-test, ace-nav, ace-docs)
+
+- [ ] Rollout to Thor CLIs (ace-git, ace-prompt, ace-git-commit)
+
+- [ ] Integrate with ace-taskflow (custom dispatcher)
+
+- [ ] Update ADR-022 with `cli_defaults` pattern documentation
+
+- [ ] Run full test suite
+  > TEST: Regression
+  > Type: Full Suite
+  > Assert: All existing tests pass
+  > Command: ace-test-suite
+
+## Risk Assessment
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Breaking existing scripts | Low | Medium | Summary to stderr; opt-in adoption |
+| Performance overhead | Low | Low | Minimal (single hash iteration) |
+| Inconsistent adoption | Medium | Low | Clear pattern + documentation |
+| Summary clutter | Low | Low | Default to brief; --quiet available |
+
+## Acceptance Criteria
+
+- [ ] ConfigSummary module passes unit tests
+- [ ] ace-review displays summary on command start (pilot)
+- [ ] `--quiet` flag suppresses summary output
+- [ ] Sensitive keys (tokens, passwords) are filtered
+- [ ] Key=value format is parseable by agents
+- [ ] No regression in existing CLI behavior
+- [ ] Documentation updated (ADR-022)
 
 ## Out of Scope
 
-- ❌ **Implementation Details**: Specific module/class organization in ace-support-core
-- ❌ **Technology Decisions**: Whether to use Thor hooks, mixins, or base classes
-- ❌ **Performance Optimization**: Caching strategies for configuration resolution
-- ❌ **Future Enhancements**: Interactive configuration editing, config validation tools
-- ❌ **Migration Scripts**: Automated migration of existing config to new format
+- ❌ Interactive configuration editing
+- ❌ Config validation tools
+- ❌ Performance optimization/caching
+- ❌ Migration scripts for existing configs
 
 ## References
 
-- Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251202-115955-cli-enhance/standardize-parameter-configuration-and-output-summary.s.md`
+- Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251202-115955-cli-enhance/`
 - ADR-022: Configuration Default and Override Pattern (ace-config)
 - Related: Existing `.ace-defaults/` configuration patterns
