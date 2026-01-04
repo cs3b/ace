@@ -1,131 +1,215 @@
 ---
 id: v.0.9.0+task.149
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 8h
 dependencies: []
 ---
 
 # Compact Sortable ID Format with ASCII Encoding (6 chars vs 14)
 
-## Behavioral Specification
-
-### User Experience
-- **Input**: Users create timestamped resources (ideas, sessions, tasks) that need unique identifiers
-- **Process**: System automatically generates compact, sortable IDs that maintain chronological ordering while reducing path length
-- **Output**: 6-character IDs (vs current 14-character timestamps) that are URL-friendly, human-readable, and chronologically sortable
-
-### Expected Behavior
-
-Users should be able to work with compact identifiers that:
-- Replace 14-character timestamps (YYYYMMDD-HHMMSS) with 6-character encoded IDs
-- Maintain exact chronological sort order (year/month/day/hour/minute/second precision)
-- Use ASCII encoding for each time component to maximize compression
-- Remain unique within the system (collision-free for practical use cases)
-- Are reversible (decode back to original timestamp for debugging/display)
-- Work seamlessly in file paths, URLs, and directory names
-
-The system should generate these IDs automatically when creating timestamped resources, with the compact format reducing path lengths significantly while maintaining all chronological benefits.
-
-### Interface Contract
-
-```bash
-# Research and Design Phase
-# 1. Research existing compact sortable ID formats
-#    - Lexicographically sortable identifiers
-#    - Base-N encoding schemes for timestamps
-#    - URL-safe character sets
-#    - Collision resistance approaches
-
-# 2. Design format specification
-#    - Define ASCII character mapping for each component
-#    - Document encoding/decoding algorithm
-#    - Specify sort order guarantees
-#    - Define valid character ranges
-
-# 3. Validation interface (proposed utility)
-ace-id-encode "2025-11-17 23:10:38"
-# Output: "X5KN2E" (example - actual encoding TBD)
-
-ace-id-decode "X5KN2E"
-# Output: "2025-11-17 23:10:38"
-
-ace-id-validate "X5KN2E"
-# Output: "Valid: sortable, unique, timestamp: 2025-11-17 23:10:38"
-
-# Usage in taskflow
-ace-taskflow idea create "My new idea"
-# Creates: .ace-taskflow/v.0.9.0/ideas/X5KN2E-my-new/X5KN2E-my-new-idea.s.md
-# Instead of: .ace-taskflow/v.0.9.0/ideas/20251117-231038-my-new/...
-```
-
-**Error Handling:**
-- Invalid timestamp input: Clear error message with format requirements
-- Decode of invalid ID: Report which character/position is invalid
-- Collision detection: Report if ID already exists (unlikely but possible)
-
-**Edge Cases:**
-- Year 2100+: Consider encoding scheme limits
-- Timezone handling: All IDs should be UTC-based
-- Microsecond precision: Not needed (second precision sufficient)
-- Legacy timestamp conversion: Support migrating existing 14-char IDs
-
-### Success Criteria
-
-- [ ] **Research Complete**: Documented analysis of existing sortable ID formats, base-N encoding schemes, and best practices for compact timestamps
-- [ ] **Format Specification**: Complete specification document defining the encoding algorithm, character mapping, and sort guarantees
-- [ ] **Validation**: Proof that 6-character IDs maintain chronological sort order across year/month/day/hour/minute/second boundaries
-- [ ] **Uniqueness Guarantee**: Mathematical proof or testing showing collision resistance for practical timeframes (100+ years at 1 ID/second)
-- [ ] **Reversibility**: Ability to decode any valid compact ID back to original timestamp
-- [ ] **Path Length Reduction**: Measured reduction from 14 chars to 6 chars (57% compression) in actual file paths
-
-### Validation Questions
-
-- [ ] **Encoding Scheme**: Which base-N encoding provides optimal balance of compactness, readability, and URL-safety? (Base62, Base64, custom mapping?)
-- [ ] **Character Set**: Should we use alphanumeric only, or include URL-safe symbols? Case-sensitive or case-insensitive?
-- [ ] **Sort Order**: How do we guarantee lexicographic sort matches chronological sort across all component boundaries?
-- [ ] **Year Encoding**: Can we encode years 2000-2099 in a single character? What about beyond 2099?
-- [ ] **Collision Handling**: What happens if two IDs are generated in the same second? Increment counter, microsecond precision, or accept rare collision?
-- [ ] **Migration Strategy**: How do we handle existing 14-character timestamp IDs? Convert in-place, support both formats, or grandfather old format?
-- [ ] **Human Readability**: Should IDs be somewhat readable (recognize year/month patterns) or purely compact?
-
 ## Objective
 
-Reduce file path lengths and improve system ergonomics by replacing 14-character timestamps with 6-character compact sortable IDs, while maintaining all chronological ordering benefits and ensuring uniqueness. This research task will evaluate existing approaches and design a specification for implementation.
+Reduce file path lengths and improve system ergonomics by replacing 14-character timestamps (YYYYMMDD-HHMMSS) with 6-character compact sortable IDs, while maintaining all chronological ordering benefits and ensuring uniqueness.
+
+## Research Summary
+
+### Existing Approaches Analyzed
+
+| Format | Length | Sortable | Structure |
+|--------|--------|----------|-----------|
+| ULID | 26 | Yes | 48-bit timestamp + 80-bit random, Crockford Base32 |
+| KSUID | 27 | Yes | 32-bit timestamp + 128-bit random, Base62 |
+| Snowflake | 19 | Yes | 41-bit timestamp + 10-bit machine + 12-bit sequence |
+| UUID v7 | 36 | Yes | 48-bit timestamp + 74-bit random |
+
+**Key Insight**: All existing formats prioritize distributed uniqueness over compactness. For single-system use with second precision, a custom packed encoding achieves 6 characters.
+
+### Selected Approach: Packed Binary Base62
+
+**Algorithm**:
+1. Pack timestamp components into 33-bit integer
+2. Encode as 6-character Base62 string (35.7 bits capacity)
+
+**Bit Layout**:
+```
+Year (7)   Month (4)  Day (5)  Hour (5)  Min (6)  Sec (6)  = 33 bits
+[2000-2099] [0-11]    [0-30]   [0-23]    [0-59]   [0-59]
+```
+
+**Base62 Alphabet** (ASCII-sorted for lexicographic ordering):
+```
+0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+```
+
+### Validation Results
+
+- **Encoding/Decoding**: Verified round-trip for 2000-2099 range
+- **Sortability**: Lexicographic order matches chronological order across all boundaries
+- **Compression**: 14 chars → 6 chars (57% reduction)
+
+**Example Encodings**:
+| Timestamp | Compact ID |
+|-----------|------------|
+| 2000-01-01 00:00:00 | `000000` |
+| 2025-11-17 23:10:38 | `1sWjZu` |
+| 2025-12-31 23:59:59 | `1sw2tn` |
+| 2026-01-01 00:00:00 | `1u586q` |
+| 2099-12-31 23:59:59 | `7J16uB` |
 
 ## Scope of Work
 
-- **Research Scope**: Analysis of existing compact sortable ID formats, base-N encoding schemes, and timestamp compression techniques
-- **Design Scope**: Complete format specification with encoding/decoding algorithms, sort order guarantees, and collision resistance
-- **Validation Scope**: Testing methodology to prove sort order preservation and uniqueness guarantees
-- **Documentation Scope**: Format specification, usage examples, and migration considerations
-
 ### Deliverables
 
-#### Behavioral Specifications
-- Format specification document defining the 6-character encoding scheme
-- Character mapping table (e.g., 0-9, A-Z, a-z to values 0-61)
-- Encoding/decoding algorithm pseudocode
-- Sort order proof or demonstration
+#### Create
 
-#### Validation Artifacts
-- Test cases showing chronological sort preservation
-- Uniqueness analysis (collision probability calculations)
-- Comparison with existing approaches (Snowflake, ULID, KSUID, etc.)
-- Migration strategy for existing timestamp-based IDs
+- `ace-support-core/lib/ace/core/atoms/compact_id_encoder.rb`
+  - Purpose: Core encoding/decoding logic
+  - Key components: `encode(time)`, `decode(id)`, `valid?(id)`, `detect_format(str)`
+
+- `ace-support-core/test/atoms/compact_id_encoder_test.rb`
+  - Purpose: Comprehensive test coverage
+  - Coverage: Encoding, decoding, sortability, edge cases, error handling
+
+#### Modify
+
+- `ace-taskflow/lib/ace/taskflow/molecules/file_namer.rb`
+  - Changes: Add compact ID support via config option
+  - Integration: Use CompactIdEncoder when `id_format: compact`
+
+- `ace-taskflow/.ace-defaults/taskflow/config.yml`
+  - Changes: Add `file_naming.id_format` option (default: `timestamp`)
+
+- `ace-prompt/lib/ace/prompt/atoms/timestamp_generator.rb`
+  - Changes: Add compact ID generation method
+  - Integration: Support both formats based on config
+
+- `ace-test-runner/lib/ace/test_runner/atoms/timestamp_generator.rb`
+  - Changes: Add compact ID support for test report naming
+
+## Technical Approach
+
+### Architecture Pattern
+
+- **Location**: ace-support-core (shared utility)
+- **Layer**: Atom (pure function, no side effects)
+- **Pattern**: Static module methods for encode/decode
+
+### Implementation Strategy
+
+1. Create core encoder in ace-support-core
+2. Add integration to ace-taskflow (primary user)
+3. Extend to ace-prompt and ace-test-runner
+4. All changes backward-compatible (opt-in via config)
+
+### Error Handling
+
+- `InvalidIdError`: Non-Base62 characters or wrong length
+- `RangeError`: Year outside 2000-2099 range
+- Graceful fallback to timestamp format on decode failure
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Research existing sortable ID formats (ULID, KSUID, Snowflake)
+* [x] Design encoding algorithm with 6-character target
+* [x] Validate sortability across time boundaries
+* [x] Document file modification plan
+* [x] Create UX/usage documentation
+
+### Execution Steps
+
+- [ ] Create `ace-support-core/lib/ace/core/atoms/compact_id_encoder.rb`
+  > TEST: Encoding Verification
+  > Type: Unit Test
+  > Assert: encode(decode(id)) == id for all valid IDs
+  > Command: ace-test ace-support-core atoms
+
+- [ ] Create `ace-support-core/test/atoms/compact_id_encoder_test.rb`
+  > TEST: Test Coverage
+  > Type: Unit Test
+  > Assert: All encode/decode/validate methods covered
+  > Command: ace-test ace-support-core atoms
+
+- [ ] Add sortability verification tests
+  > TEST: Sortability
+  > Type: Unit Test
+  > Assert: Lexicographic sort == chronological sort
+  > Command: ace-test ace-support-core atoms
+
+- [ ] Update ace-taskflow FileNamer to support compact IDs
+  > TEST: Integration
+  > Type: Integration Test
+  > Assert: Ideas created with compact IDs when configured
+  > Command: ace-test ace-taskflow molecules
+
+- [ ] Update ace-taskflow config defaults with id_format option
+
+- [ ] Update ace-prompt TimestampGenerator
+  > TEST: Prompt Sessions
+  > Type: Unit Test
+  > Assert: Session directories use compact IDs when configured
+  > Command: ace-test ace-prompt atoms
+
+- [ ] Update ace-test-runner TimestampGenerator
+  > TEST: Test Reports
+  > Type: Unit Test
+  > Assert: Report filenames use compact IDs when configured
+  > Command: ace-test ace-test-runner atoms
+
+- [ ] Run full test suite
+  > TEST: Regression
+  > Type: Full Suite
+  > Assert: All existing tests pass
+  > Command: ace-test-suite
+
+## Risk Assessment
+
+### Technical Risks
+
+- **Risk**: Year 2100+ timestamps fail
+  - **Probability**: Low (74 years away)
+  - **Impact**: Medium
+  - **Mitigation**: Clear error message, documented limitation
+  - **Rollback**: Fallback to timestamp format
+
+- **Risk**: Case-sensitive filesystem issues
+  - **Probability**: Low (modern systems case-sensitive)
+  - **Impact**: Low
+  - **Mitigation**: Base62 uses distinct case characters
+  - **Rollback**: N/A (format designed for case-sensitive sorting)
+
+### Integration Risks
+
+- **Risk**: Breaking existing timestamp-based lookups
+  - **Probability**: Low (opt-in via config)
+  - **Impact**: Medium
+  - **Mitigation**: Dual-format detection in loaders
+  - **Monitoring**: Test with existing idea/task directories
+
+## Acceptance Criteria
+
+- [ ] CompactIdEncoder.encode() produces 6-character IDs
+- [ ] CompactIdEncoder.decode() recovers original timestamp
+- [ ] Lexicographic sort matches chronological sort for all generated IDs
+- [ ] ace-taskflow creates ideas with compact IDs when configured
+- [ ] ace-prompt creates sessions with compact IDs when configured
+- [ ] All existing tests pass (no regressions)
+- [ ] Documentation updated with format specification
 
 ## Out of Scope
 
-- ❌ **Implementation Details**: Specific Ruby/Python/shell script implementation
-- ❌ **Integration Work**: Updating ace-taskflow or other tools to use new format
-- ❌ **Migration Execution**: Actually converting existing timestamp IDs
-- ❌ **Performance Optimization**: Encoding/decoding performance tuning
-- ❌ **UI/Display Changes**: How compact IDs are displayed to users
-- ❌ **Related Features**: Other ID format improvements not related to timestamp compression
+- ❌ Migrating existing timestamps to compact format
+- ❌ Sub-second precision (millisecond/microsecond)
+- ❌ Distributed uniqueness (machine ID component)
+- ❌ Year 2100+ support
+- ❌ UI/display changes for compact IDs
 
 ## References
 
-- Original idea: `.ace-taskflow/v.0.9.0/ideas/done/20251117-231038-search-add/convert-timestamp-to-id-2025-10-12-use.s.md`
-- Related work: Lexicographically sortable identifiers (ULID, KSUID, Snowflake)
-- Current timestamp format: `YYYYMMDD-HHMMSS` (14 characters)
-- Target format: 6 ASCII characters with chronological sort preservation
+- Original idea: `.ace-taskflow/v.0.9.0/ideas/_archive/20251117-231038-search-add/convert-timestamp-to-id-2025-10-12-use.s.md`
+- [ULID Spec](https://github.com/ulid/spec) - Lexicographically sortable identifiers
+- [KSUID](https://github.com/segmentio/ksuid) - K-Sortable Unique Identifiers
+- [Brandur: K-sorted IDs](https://brandur.org/fragments/k-sorted-ids) - Comparison of approaches
+- UX Documentation: `./ux/usage.md`
