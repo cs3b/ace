@@ -46,6 +46,22 @@ module Ace
           "_archive"
       end
 
+      # Get regex pattern to match done directory as a complete path component
+      # Memoized to avoid rebuilding on every validation loop
+      # This prevents false positives like "my_done_tasks" matching "done"
+      # @return [Regexp] Pattern that matches /done_dir/ as discrete path component
+      def done_dir_pattern
+        @done_dir_pattern ||= Regexp.new("(^|/)#{Regexp.escape(done_dir)}/")
+      end
+
+      # Check if a path is in the done directory
+      # Uses anchored regex pattern to avoid substring false positives
+      # @param path [String] File path to check
+      # @return [Boolean] True if path is in the done directory
+      def path_in_done_dir?(path)
+        path.match?(done_dir_pattern)
+      end
+
       # Get backlog directory name
       def backlog_dir
         config.dig("directories", "backlog") || "_backlog"
@@ -164,6 +180,7 @@ module Ace
       def reload!
         @config = Molecules::ConfigLoader.load
         @root_directory = nil
+        @done_dir_pattern = nil
         self
       end
 

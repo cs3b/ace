@@ -213,22 +213,26 @@ module Ace
         end
 
         def validate_status_location_consistency(tasks, ideas, issues)
+          # Get configured done directory name and pattern from shared helper
+          config = Ace::Taskflow.configuration
+          done_dir = config.done_dir
+
           # Check tasks
           tasks.each do |task|
             next unless task[:path] && task[:status]
 
-            is_in_done_dir = task[:path].include?("/done/")
+            is_in_done_dir = config.path_in_done_dir?(task[:path])
 
             if task[:status] == "done" && !is_in_done_dir
               issues << {
                 type: :warning,
-                message: "Task #{task[:id]} has status 'done' but is not in done/ directory",
+                message: "Task #{task[:id]} has status 'done' but is not in #{done_dir}/ directory",
                 location: task[:path]
               }
             elsif task[:status] != "done" && is_in_done_dir
               issues << {
                 type: :error,
-                message: "Task #{task[:id]} is in done/ directory but status is '#{task[:status]}'",
+                message: "Task #{task[:id]} is in #{done_dir}/ directory but status is '#{task[:status]}'",
                 location: task[:path]
               }
             end
@@ -238,13 +242,13 @@ module Ace
           ideas.each do |idea|
             next unless idea[:path]
 
-            is_in_done_dir = idea[:path].include?("/done/")
+            is_in_done_dir = config.path_in_done_dir?(idea[:path])
             status = idea[:status] || (is_in_done_dir ? "done" : "pending")
 
             if status == "done" && !is_in_done_dir
               issues << {
                 type: :info,
-                message: "Idea #{idea[:filename]} marked as done but not in done/ directory",
+                message: "Idea #{idea[:filename]} marked as done but not in #{done_dir}/ directory",
                 location: idea[:path]
               }
             end

@@ -41,12 +41,15 @@ module Ace
         # @param issue [Hash] Issue to fix
         # @return [Boolean] Whether fix was successful
         def fix_issue(issue)
+          # Get configured done directory name for dynamic patterns
+          done_dir = Regexp.escape(Ace::Taskflow.configuration.done_dir)
+
           case issue[:message]
           when /Missing closing '---' delimiter/
             fix_missing_delimiter(issue[:location])
-          when /marked as done but not in done\/ directory/
+          when /marked as done but not in #{done_dir}\/ directory/
             fix_task_location(issue[:location], :move_to_done)
-          when /in done\/ directory but status is/
+          when /in #{done_dir}\/ directory but status is/
             fix_task_status(issue[:location], "done")
           when /Missing recommended field: (\w+)/
             fix_missing_field(issue[:location], $1)
@@ -63,11 +66,14 @@ module Ace
         def can_fix?(issue)
           return false unless issue[:location]
 
+          # Get configured done directory name for dynamic patterns
+          done_dir = Regexp.escape(Ace::Taskflow.configuration.done_dir)
+
           # List of auto-fixable patterns
           fixable_patterns = [
             /Missing closing '---' delimiter/,
-            /marked as done but not in done\/ directory/,
-            /in done\/ directory but status is/,
+            /marked as done but not in #{done_dir}\/ directory/,
+            /in #{done_dir}\/ directory but status is/,
             /Missing recommended field:/,
             /Missing default/
           ]

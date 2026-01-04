@@ -242,8 +242,8 @@ module Ace
 
             AUTO-FIXABLE ISSUES:
               - Missing closing '---' delimiter in frontmatter
-              - Done tasks not in done/ directory
-              - Tasks in done/ directory with wrong status
+              - Done tasks not in configured archive directory
+              - Tasks in archive directory with wrong status
               - Missing recommended fields with defaults
               - Simple formatting issues
 
