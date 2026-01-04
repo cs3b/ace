@@ -84,56 +84,103 @@ Config: preset=pr model=claude-sonnet-4.5 pr=123 format=markdown
 
 **Subtask 150.01: Create ConfigSummary Module**
 
-Create `Ace::Core::Atoms::ConfigSummary` in ace-support-core:
+Create `Ace::Core::Atoms::ConfigSummary` in ace-support-core, leveraging ace-config for defaults comparison:
 
 ```ruby
 # ace-support-core/lib/ace/core/atoms/config_summary.rb
+require "ace/config"
+
 module Ace
   module Core
     module Atoms
       class ConfigSummary
         SENSITIVE_KEYS = %w[token key secret password credential api_key].freeze
 
-        def initialize(gem_name:, config:, cli_args: {})
+        def initialize(gem_name:, cli_args: {}, summary_keys: [])
           @gem_name = gem_name
-          @config = config
           @cli_args = cli_args
+          @summary_keys = summary_keys
+
+          # Use ace-config to load defaults and user overrides separately
+          @defaults = load_gem_defaults
+          @user_config = Ace::Config.create
+                           .resolve_namespace(gem_name)
+                           .to_h
         end
 
         def to_s
           params = build_summary_params
-          "Config: #{params.map { |k, v| "#{k}=#{v}" }.join(' ')}"
+          return "" if params.empty?
+          "Config: #{params.map { |k, v| "#{k}=#{format_value(v)}" }.join(' ')}"
         end
 
         def display(io: $stderr, quiet: false)
           return if quiet
-          io.puts to_s
+          summary = to_s
+          io.puts summary unless summary.empty?
         end
 
         private
 
+        def load_gem_defaults
+          gem_spec = Gem.loaded_specs["ace-#{@gem_name}"]
+          return {} unless gem_spec
+
+          defaults_path = File.join(gem_spec.gem_dir, ".ace-defaults", @gem_name, "config.yml")
+          return {} unless File.exist?(defaults_path)
+
+          YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
+        end
+
         def build_summary_params
-          merged = {}
-          # Add CLI args first (highest priority, always shown)
-          @cli_args.each { |k, v| merged[k] = v unless sensitive?(k) }
-          # Add key config values that differ from defaults
-          add_config_highlights(merged)
-          merged
+          params = {}
+          # CLI args always shown (highest priority)
+          @cli_args.each { |k, v| params[k] = v unless sensitive?(k) }
+          # Show config values that differ from defaults (for summary_keys only)
+          add_overrides_from_defaults(params)
+          # Sort keys for deterministic output
+          params.sort.to_h
+        end
+
+        def add_overrides_from_defaults(params)
+          @summary_keys.each do |key|
+            user_val = dig_key(@user_config, key)
+            default_val = dig_key(@defaults, key)
+            # Only show if user has overridden the default
+            if user_val && user_val != default_val && !sensitive?(key)
+              params[key] = user_val
+            end
+          end
+        end
+
+        def dig_key(hash, key)
+          keys = key.to_s.split(".")
+          keys.reduce(hash) { |h, k| h.is_a?(Hash) ? h[k] : nil }
         end
 
         def sensitive?(key)
           SENSITIVE_KEYS.any? { |s| key.to_s.downcase.include?(s) }
         end
 
-        def add_config_highlights(merged)
-          # Each gem defines which config keys to surface
-          # Default: surface nothing from deep config
+        def format_value(val)
+          case val
+          when Array then val.join(",")
+          when Hash then "{...}"
+          else val.to_s
+          end
         end
       end
     end
   end
 end
 ```
+
+**Key Design Points (per ADR-022)**:
+- Uses `ace-config` gem's `Ace::Config.create.resolve_namespace()` for user config
+- Loads gem defaults from `.ace-defaults/gem/config.yml`
+- Only surfaces values that differ from defaults (diff mode)
+- Filters sensitive keys (tokens, passwords, etc.)
+- Sorts output keys for deterministic, testable output
 
 **Files to create/modify**:
 - `ace-support-core/lib/ace/core/atoms/config_summary.rb` (new)
