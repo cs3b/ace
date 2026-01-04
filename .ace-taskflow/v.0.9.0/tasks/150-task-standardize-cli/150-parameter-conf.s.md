@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.150
-status: pending
+status: in-progress
 priority: medium
 estimate: M
 dependencies: []
+worktree:
+  branch: 150-standardize-cli-parameter-configuration-and-output-summary
+  path: "../ace-task.150"
+  created_at: '2026-01-04 10:46:16'
+  updated_at: '2026-01-04 10:46:16'
 ---
 
 # Standardize CLI Parameter Configuration and Output Summary
