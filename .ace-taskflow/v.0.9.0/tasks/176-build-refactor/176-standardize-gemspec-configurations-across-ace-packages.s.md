@@ -3,9 +3,7 @@ id: v.0.9.0+task.176
 status: done
 priority: medium
 estimate: 30m
-dependencies:
-  - 162
-  - 163
+dependencies: []
 ---
 
 # Standardize gemspec configurations across all ace-* packages
