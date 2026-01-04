@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.177
-status: pending
+status: in-progress
 priority: medium
 estimate: 1h
 dependencies: []
+worktree:
+  branch: 177-fix-ace-taskflow-doctor-to-respect-configured-archive-folder
+  path: "../ace-task.177"
+  created_at: '2026-01-04 01:24:33'
+  updated_at: '2026-01-04 01:24:33'
 ---
 
 # Fix ace-taskflow doctor to respect configured archive folder
