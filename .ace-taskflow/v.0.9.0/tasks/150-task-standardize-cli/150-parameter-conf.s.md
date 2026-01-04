@@ -18,7 +18,7 @@ dependencies: []
 ### Expected Behavior
 
 When any `ace-*` CLI command is executed, the system should:
-1. Resolve configuration using the existing ace-support-core cascade (CLI args > .ace/ config > gem defaults)
+1. Resolve configuration using ace-config cascade (CLI args > .ace/ config > gem defaults via ADR-022)
 2. Display a concise, parseable summary of the effective configuration to stderr
 3. Proceed with command execution using the resolved configuration
 4. Allow users to suppress the summary with a `--no-summary` or `--quiet` flag
@@ -67,20 +67,20 @@ ace-taskflow idea enhance 20251202-115955-cli-enhance
 
 - [ ] **Configuration Transparency**: Every ace-* command displays a 1-3 line config summary at start
 - [ ] **Standardized Defaults**: Each ace-* gem defines CLI defaults in `.ace-defaults/gem/config.yml` under `cli_defaults` key
-- [ ] **Cascade Integration**: Configuration resolution uses ace-support-core cascade correctly (CLI > project > gem defaults)
+- [ ] **Cascade Integration**: Configuration resolution uses ace-config cascade correctly (CLI > project > gem defaults per ADR-022)
 - [ ] **Summary Suppression**: `--no-summary` or `--quiet` flag successfully suppresses config output
 - [ ] **Machine Readability**: Summary format is parseable by agents (key=value format)
 - [ ] **Security**: No sensitive data (tokens, credentials) exposed in summary output
 - [ ] **Backward Compatibility**: Existing ace-* command usage remains unaffected (summary is additive)
 
-### Validation Questions
+### Validation Questions (Resolved)
 
-- [ ] **Summary Format**: Should we use JSON, YAML, or key=value format for the config summary? Key=value seems most concise.
-- [ ] **Summary Content**: Which configuration keys should be included in the summary? All? Only CLI-relevant? Configurable?
-- [ ] **Output Stream**: Is stderr the right choice for summary output to avoid interfering with stdout pipelines?
-- [ ] **Verbosity Levels**: Should there be different verbosity levels for the summary (brief, detailed)?
-- [ ] **Global Flag**: Should there be a global .ace/ config option to disable summaries permanently?
-- [ ] **Config Resolution Logging**: Should there be a verbose mode that shows WHERE each config value came from (CLI, project, default)?
+- [x] **Summary Format**: Key=value format (most concise, machine-readable)
+- [x] **Summary Content**: CLI-relevant only, configurable via `summary_keys` in config
+- [x] **Output Stream**: stderr (doesn't interfere with stdout pipelines)
+- [x] **Verbosity Levels**: Support brief/normal/detailed via config
+- [x] **Global Flag**: Yes, via `.ace/gem/config.yml` cli_defaults.quiet
+- [x] **Config Resolution Logging**: Defer to verbose mode (--verbose shows sources)
 
 ## Objective
 
@@ -131,5 +131,5 @@ Improve transparency, predictability, and debuggability of ace-* CLI tools by st
 ## References
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/done/20251202-115955-cli-enhance/standardize-parameter-configuration-and-output-summary.s.md`
-- Related: ace-support-core configuration cascade documentation
+- ADR-022: Configuration Default and Override Pattern (ace-config)
 - Related: Existing `.ace-defaults/` configuration patterns
