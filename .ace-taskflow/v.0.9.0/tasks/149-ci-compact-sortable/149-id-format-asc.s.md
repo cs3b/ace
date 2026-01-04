@@ -34,8 +34,10 @@ Reduce file path lengths and improve system ergonomics by replacing 14-character
 **Bit Layout**:
 ```
 Year (7)   Month (4)  Day (5)  Hour (5)  Min (6)  Sec (6)  = 33 bits
-[2000-2099] [0-11]    [0-30]   [0-23]    [0-59]   [0-59]
+[2000-2099] [1-12]    [1-31]   [0-23]    [0-59]   [0-59]
 ```
+
+**Note**: Month and day use 1-indexed values (1-12, 1-31) matching standard date conventions. This loses one value from the theoretical range but simplifies encoding/decoding and matches Time API expectations.
 
 **Base62 Alphabet** (ASCII-sorted for lexicographic ordering):
 ```
@@ -101,6 +103,29 @@ Year (7)   Month (4)  Day (5)  Hour (5)  Min (6)  Sec (6)  = 33 bits
 2. Add integration to ace-taskflow (primary user)
 3. Extend to ace-prompt and ace-test-runner
 4. All changes backward-compatible (opt-in via config)
+
+### Timezone Handling
+
+All timestamps **must** be normalized to UTC before encoding:
+- `encode(time)` converts input to UTC internally
+- `decode(id)` returns Time in UTC
+- This ensures consistent IDs across hosts regardless of local timezone
+
+### Collision Handling
+
+When multiple IDs are generated within the same second:
+- Bump timestamp by +2 seconds to ensure uniqueness
+- Base62 encoding means +1 second may produce visually similar IDs
+- +2 seconds guarantees distinct character change in encoded output
+
+```ruby
+# Collision avoidance example
+last_id_time = @last_generated_at
+if Time.now.utc.to_i <= last_id_time.to_i
+  current_time = last_id_time + 2  # Bump by 2 seconds
+end
+@last_generated_at = current_time
+```
 
 ### Error Handling
 

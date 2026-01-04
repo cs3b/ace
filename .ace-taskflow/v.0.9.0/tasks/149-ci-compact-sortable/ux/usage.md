@@ -10,10 +10,10 @@ Compact Sortable IDs replace 14-character timestamps (YYYYMMDD-HHMMSS) with 6-ch
 
 The format uses packed binary encoding with Base62 representation:
 
-1. **Pack timestamp into 33-bit integer**:
+1. **Pack timestamp into 33-bit integer** (all times normalized to UTC):
    - Year (2000-2099): 7 bits (offset from 2000)
-   - Month (1-12): 4 bits (0-indexed)
-   - Day (1-31): 5 bits (0-indexed)
+   - Month (1-12): 4 bits (1-indexed, matching Time API)
+   - Day (1-31): 5 bits (1-indexed, matching Time API)
    - Hour (0-23): 5 bits
    - Minute (0-59): 6 bits
    - Second (0-59): 6 bits
@@ -36,13 +36,13 @@ The format uses packed binary encoding with Base62 representation:
 ### Encoding
 
 ```ruby
-require 'ace/support/core/atoms/compact_id_encoder'
+require 'ace/core/atoms/compact_id_encoder'
 
-# Encode current time
+# Encode current time (always uses UTC internally)
 id = Ace::Core::Atoms::CompactIdEncoder.encode(Time.now)
 # => "1sWjZu"
 
-# Encode specific time
+# Encode specific time (converted to UTC)
 id = Ace::Core::Atoms::CompactIdEncoder.encode(Time.new(2025, 11, 17, 23, 10, 38))
 # => "1sWjZu"
 ```
@@ -50,9 +50,9 @@ id = Ace::Core::Atoms::CompactIdEncoder.encode(Time.new(2025, 11, 17, 23, 10, 38
 ### Decoding
 
 ```ruby
-# Decode back to Time
+# Decode back to Time (always returns UTC)
 time = Ace::Core::Atoms::CompactIdEncoder.decode("1sWjZu")
-# => 2025-11-17 23:10:38 +0000
+# => 2025-11-17 23:10:38 UTC
 
 # Validate format
 Ace::Core::Atoms::CompactIdEncoder.valid?("1sWjZu")
@@ -144,10 +144,17 @@ new_id = Ace::Core::Atoms::CompactIdEncoder.encode(time)
 - Maximum: 2099-12-31 23:59:59 → `7J16uB`
 - Year 2100+ requires format extension
 
-### Collision Resistance
+### Collision Handling
 
 - Unique to the second (same as current format)
-- For sub-second precision, append random suffix: `1sWjZu-a3`
+- Multiple IDs in same second: bump by +2 seconds for uniqueness
+- +2 seconds ensures distinct character change in Base62 output
+
+```ruby
+# Generator tracks last ID time and bumps if collision detected
+id1 = generator.generate  # => "1sWjZu" (at 23:10:38)
+id2 = generator.generate  # => "1sWjZw" (bumped to 23:10:40)
+```
 
 ### URL Safety
 
