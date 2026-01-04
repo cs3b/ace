@@ -336,15 +336,19 @@ module Ace
         def check_task_location_consistency(file, frontmatter)
           return unless frontmatter["status"]
 
-          is_in_done = file.include?("/done/")
+          config = Ace::Taskflow.configuration
+          done_dir = config.done_dir
+          # Use anchored regex pattern to avoid substring false positives
+          # (e.g., "my_done_tasks" should not match "done")
+          is_in_done = config.path_in_done_dir?(file)
           status = frontmatter["status"]
-          # Terminal states that are valid in done/ directory
-          terminal_states = %w[done superseded cancelled skipped]
+          # Terminal states that are valid in done/ directory (from configuration)
+          terminal_states = config.terminal_statuses
 
           if terminal_states.include?(status) && !is_in_done
-            add_issue(:warning, "Task with terminal status '#{status}' not in done/ directory", file)
+            add_issue(:warning, "Task with terminal status '#{status}' not in #{done_dir}/ directory", file)
           elsif !terminal_states.include?(status) && is_in_done
-            add_issue(:error, "Task in done/ directory but status is '#{status}'", file)
+            add_issue(:error, "Task in #{done_dir}/ directory but status is '#{status}'", file)
           end
         end
 
@@ -446,11 +450,15 @@ module Ace
           # Define which issues can be auto-fixed
           return false unless issue[:type] == :error || issue[:type] == :warning
 
+          # Get configured done directory name for dynamic patterns
+          config = Ace::Taskflow.configuration
+          done_dir = Regexp.escape(config.done_dir)
+
           # Check for specific fixable patterns
           fixable_patterns = [
             /Missing closing '---' delimiter/,
-            /marked as done but not in done\/ directory/,
-            /in done\/ directory but status is/,
+            /not in #{done_dir}\/ directory/,
+            /in #{done_dir}\/ directory but status is/,
             /Missing recommended field:/,
             /Missing default/
           ]

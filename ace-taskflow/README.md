@@ -216,7 +216,7 @@ ace-taskflow retros
 # View specific retro
 ace-taskflow retro show sprint-23-learnings
 
-# Mark retro as done (moves to done/ folder)
+# Mark retro as done (moves to configured archive directory)
 ace-taskflow retro done sprint-23-learnings
 
 # List all retros including done
@@ -226,9 +226,9 @@ ace-taskflow retros --all
 ace-taskflow retros --done
 ```
 
-Retrospective notes follow the done pattern similar to ideas:
+Retrospective notes follow the archive pattern similar to ideas:
 - **Active retros**: Stored in `.ace-taskflow/<release>/retros/` (configurable)
-- **Done retros**: Moved to `.ace-taskflow/<release>/retros/done/`
+- **Done retros**: Moved to configured archive directory (default: `done/` subdirectory within retros/)
 - **Default listing**: Excludes done retros for cleaner view
 - **Show all**: Use `--all` or `--done` flags to include completed retros
 

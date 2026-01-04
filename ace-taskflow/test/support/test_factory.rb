@@ -152,10 +152,34 @@ module TestFactory
       task_dir = File.join(base_dir, release, "t", task_num)
       FileUtils.mkdir_p(task_dir)
 
-      status = case i
-               when 0 then "done"
-               when 1 then "in-progress"
-               else "pending"
+      # Check if this is in the archive directory using configuration helper
+      # Uses anchored regex pattern to avoid substring false positives
+      # (e.g., "my_archive_tasks" should NOT match "_archive")
+      config = begin
+        Ace::Taskflow.configuration
+      rescue => _e
+        nil
+      end
+
+      # Use config helper if available, otherwise fallback to basic pattern matching
+      is_in_archive = if config
+                        config.path_in_done_dir?(base_dir) || base_dir.end_with?("/#{config.done_dir}")
+                      else
+                        # Fallback for when config is not yet loaded
+                        base_dir.include?("/_archive/") || base_dir.end_with?("/_archive")
+                      end
+
+      # Use terminal statuses for tasks in archive directory
+      # Note: Use 'done' status which is recognized by both frontmatter validator and configured terminal_statuses
+      status = if is_in_archive
+                 "done"
+               else
+                 # Active tasks can have any status
+                 case i
+                 when 0 then "done"
+                 when 1 then "in-progress"
+                 else "pending"
+                 end
                end
 
       File.write(
