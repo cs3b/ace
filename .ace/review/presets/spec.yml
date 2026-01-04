@@ -1,4 +1,9 @@
 # Specification review - clarity, completeness, and feasibility
+#
+# Requires --subject parameter to specify files to review:
+#   ace-review --preset spec --subject '.ace-taskflow/v.0.9.0/tasks/150-*/**/*'
+#
+# For auto-detecting all changed .s.md files on branch, use 'spec-branch' preset.
 
 description: "Specification review - goal clarity, usage expectations, tests, completeness"
 
@@ -7,7 +12,7 @@ instructions:
   context:
     sections:
       project_context:
-        presets: 
+        presets:
           - project
       format:
         title: "Format Guidelines"
@@ -31,12 +36,4 @@ models:
   - google:pro-preview
   - xai:grok-code-fast
 
-
-subject:
-  context:
-    sections:
-      spec_changes:
-        title: "Specification Changes"
-        description: "Specification files to review"
-        commands:
-          - "git diff origin/main...HEAD -- '**/*.s.md'"
+# No subject section - uses CLI --subject parameter directly
