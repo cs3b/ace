@@ -8,16 +8,18 @@ Compact Sortable IDs replace 14-character timestamps (YYYYMMDD-HHMMSS) with 6-ch
 
 ### Encoding Algorithm
 
-The format uses packed binary encoding with Base36 representation (lowercase, case-insensitive):
+The format uses hierarchical field encoding with Base36 representation (lowercase, case-insensitive):
 
-1. **Pack timestamp into integer** (all times normalized to UTC):
-   - **Year offset** (0-107): 2 digits in Base36 (108-year coverage from year_zero)
-   - **Elapsed time** (seconds in year, ~1.85s precision): 4 digits in Base36
+**6 Base36 digits encode hierarchical time components** (all times normalized to UTC):
+1. **Positions 1-2**: Year offset (0-1295) divided by 12 = 108-year coverage from year_zero
+2. **Position 3**: Day of month (0-35, mapped to calendar days 1-31)
+3. **Position 4**: 40-minute hour block (24×60÷40 = exactly 36 values)
+4. **Positions 5-6**: Precision within 40-min window (2400s ÷ 1296 = ~1.85s precision)
 
-2. **Encode as Base36** (6 characters):
-   - Alphabet: `0123456789abcdefghijklmnopqrstuvwxyz` (36 characters, lowercase only)
-   - ASCII-sorted for lexicographic ordering
-   - Case-insensitive for filesystem safety
+**Encoding properties**:
+- Alphabet: `0123456789abcdefghijklmnopqrstuvwxyz` (36 characters, lowercase only)
+- ASCII-sorted for lexicographic ordering
+- Case-insensitive for filesystem safety
 
 ### Character Mapping
 
@@ -32,7 +34,9 @@ The format uses packed binary encoding with Base36 representation (lowercase, ca
 | Component | Base36 Digits | Decimal Range | Coverage |
 |-----------|---------------|---------------|----------|
 | Year offset | 2 | 0-1295 | 108 years (from year_zero) |
-| Elapsed time | 4 | 0-1,679,615 | ~1.85s precision (~17M seconds/year) |
+| Day of month | 1 | 0-35 | Calendar days (1-31) |
+| 40-min hour block | 1 | 0-35 | 36 blocks/day (24×60÷40) |
+| Second precision | 2 | 0-1295 | ~1.85s within 40-min window |
 | **Total** | **6** | **36^6 ≈ 2.17B** | **108 years at ~1.85s granularity** |
 
 **Example**: With `year_zero: 2000`
@@ -56,7 +60,7 @@ id = Ace::Timestamp::Atoms::CompactIdEncoder.encode(Time.new(2025, 11, 17, 23, 1
 
 # With custom year_zero
 id = Ace::Timestamp::Atoms::CompactIdEncoder.encode(Time.new(2025, 1, 1), year_zero: 2020)
-# => "5xyzabc"
+# => "5xyzab"
 ```
 
 ### Decoding
@@ -160,15 +164,16 @@ new_id = Ace::Timestamp::Atoms::CompactIdEncoder.encode(time)
 ### Bit Layout
 
 ```
-  Year Offset (2×Base36)    Elapsed Time (4×Base36)
-  [YY]                      [TTTT]
-  0-1295 (108 years)        0-1,679,615 (~1.85s precision)
+  Year Offset (2×Base36)    Day (1×Base36)    Hour Block (1×Base36)    Seconds (2×Base36)
+  [YY]                      [D]               [H]                      [SS]
+  0-1295 (108 years)        0-35 (days 1-31)  0-35 (40-min blocks)     0-1295 (~1.85s precision)
 ```
 
-**Calculation**:
-- Year offset = `(current_year - year_zero)` encoded in 2 Base36 digits
-- Elapsed time = seconds_since_year_epoch encoded in 4 Base36 digits
-- Year epoch = `Time.utc(year_zero, 1, 1, 0, 0, 0)`
+**Hierarchical Calculation**:
+1. Year offset = `(current_year - year_zero)` encoded in 2 Base36 digits (÷12 for month capacity)
+2. Day of month = `day_of_month` encoded in 1 Base36 digit
+3. Hour block = `(hour × 60 + minute) ÷ 40` encoded in 1 Base36 digit (36 values = 24 hours)
+4. Seconds = `seconds within 40-min window` encoded in 2 Base36 digits (~1.85s precision)
 
 ### Year Range
 
@@ -182,9 +187,10 @@ new_id = Ace::Timestamp::Atoms::CompactIdEncoder.encode(time)
 
 ### Collision Handling
 
-- Unique to ~1.85 seconds (precision limit)
+- Unique to ~1.85 seconds within each 40-minute window
 - Multiple IDs in same precision window: bump to next slot
 - Ensures distinct character change in Base36 output
+- Generator tracks last ID and increments if collision detected
 
 ```ruby
 # Generator tracks last ID and bumps if collision detected
