@@ -10,6 +10,9 @@ require_relative 'context/organisms/context_loader'
 require_relative 'context/molecules/preset_manager'
 require_relative 'context/molecules/context_file_writer'
 
+# CLI and commands
+require_relative 'context/cli'
+
 module Ace
   module Context
     # Mutex for thread-safe config initialization
