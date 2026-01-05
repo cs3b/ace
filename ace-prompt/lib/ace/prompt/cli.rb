@@ -1,19 +1,33 @@
 # frozen_string_literal: true
 
 require "fileutils"
-require "thor"
+require "ace/core/cli/base"
 require_relative "organisms/prompt_processor"
 require_relative "organisms/prompt_initializer"
 
 module Ace
   module Prompt
     # Thor CLI for ace-prompt
-    class CLI < Thor
-      def self.exit_on_failure?
-        false
+    class CLI < Ace::Core::CLI::Base
+      # class_options :quiet, :verbose, :debug inherited from Base
+
+      default_task :process
+
+      # Override help to add default command routing section
+      def self.help(shell, subcommand = false)
+        super
+        shell.say ""
+        shell.say "Default Command Routing:"
+        shell.say "  Unknown commands are auto-routed to 'process' - the default command:"
+        shell.say "    ace-prompt file.md                  → ace-prompt process file.md"
+        shell.say "  No need to type 'process' explicitly"
+        shell.say ""
+        shell.say "Examples:"
+        shell.say "  ace-prompt                          # Process prompt from default location"
+        shell.say "  ace-prompt --setup                  # Initialize workspace"
       end
 
-      desc "process", "Read prompt, archive it, and output to stdout or file (default command)"
+      desc "process", "Process prompt file and output"
       long_desc <<~DESC
         Read prompt file, archive it with timestamp, update symlink, and output content.
 
@@ -43,10 +57,26 @@ module Ace
           # Explicitly disable context
           $ ace-prompt --no-context
 
+          # Enhance via LLM
+          $ ace-prompt --enhance --model gpt-4
+
+          # Use task-specific prompts
+          $ ace-prompt --task 121
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/prompt/config.yml
+          Project config: .ace/prompt/config.yml
+          Example:        ace-prompt/.ace-defaults/prompt/config.yml
+
+          Context loading: Configure context.enabled in config
+          LLM enhancement: Configure enhance.enabled and defaults.model
+
         OUTPUT:
 
           By default, content is printed to stdout.
           Use --output to save to a file instead.
+          Exit codes: 0 (success), 1 (error)
       DESC
       option :output, type: :string, aliases: "-o",
                       desc: "Write content to file instead of stdout (use '-' for explicit stdout)"
@@ -64,7 +94,14 @@ module Ace
                              desc: "Custom system prompt path"
       option :task, type: :string,
                     desc: "Use task's prompts directory (e.g., '117' or '121.01')"
+      option :help, type: :boolean, aliases: "-h", desc: "Show this help message"
       def process
+        # Handle --help/-h option
+        if options[:help]
+          invoke :help, ["process"]
+          return 0
+        end
+
         # Determine context flag
         context_enabled = determine_context_enabled(options)
 
@@ -117,8 +154,6 @@ module Ace
         return 1
       end
 
-      default_task :process
-
       desc "setup", "Initialize prompt workspace with template"
       long_desc <<~DESC
         Create prompt workspace and initialize with template.
@@ -145,6 +180,22 @@ module Ace
 
           # Force overwrite (alias for --no-archive)
           $ ace-prompt setup --force
+
+          # Setup for specific task
+          $ ace-prompt setup --task 121
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/prompt/config.yml
+          Project config: .ace/prompt/config.yml
+          Example:        ace-prompt/.ace-defaults/prompt/config.yml
+
+          Task detection: Configure task.detection for auto-detection
+
+        OUTPUT:
+
+          Creates prompt file at specified path
+          Exit codes: 0 (success), 1 (error)
 
         BEHAVIOR:
 
@@ -192,12 +243,15 @@ module Ace
         1
       end
 
-      desc "version", "Show version"
-      def version
-        puts Ace::Prompt::VERSION
-      end
+      version_command "ace-prompt", Ace::Prompt::VERSION
 
-      map %w[-v --version] => :version
+      # Handle unknown commands as arguments to the default 'process' command
+      def method_missing(command, *args)
+        # Don't route flags to default command (let Thor handle them)
+        return super if command.to_s.start_with?("-")
+        invoke :process, [command.to_s] + args
+      end
+      # respond_to_missing? inherited from Ace::Core::CLI::Base
 
       private
 
