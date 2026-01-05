@@ -30,7 +30,7 @@ module Ace
           # Use passed args or instance args
           args ||= @args
 
-          display_config_summary
+          display_config_summary(args)
 
           # Parse display mode options first
           display_mode = parse_display_mode(args)
@@ -69,8 +69,6 @@ module Ace
             add_dependency(args)
           when "remove-dependency"
             remove_dependency(args)
-          when "--help", "-h"
-            show_help
           else
             # Try to show specific task
             show_task(subaction, display_mode: display_mode)
@@ -793,16 +791,17 @@ module Ace
           puts "  ace-taskflow task move backlog+025 v.0.10.0"
         end
 
-        def display_config_summary
+        def display_config_summary(args)
           return if @options[:quiet]
 
           require "ace/core"
-          Ace::Core::Atoms::ConfigSummary.display(
+          Ace::Core::Atoms::ConfigSummary.display_if_needed(
             command: "taskflow",
             config: Ace::Taskflow.config,
             defaults: load_defaults,
             options: @options,
-            quiet: false
+            quiet: false,
+            args: args
           )
         end
 
