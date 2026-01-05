@@ -183,7 +183,10 @@ module Ace
           cmd_parts << "--fail-fast" if options["fail_fast"]
           cmd_parts << "--no-color" unless options.fetch("color", true)
 
-          cmd_parts.join(" ")
+          # Build command string
+          # Note: Do NOT set CI=true here - respect the existing environment
+          # Tests that need CI-aware behavior should check ENV['CI'] directly
+          cmd = cmd_parts.join(" ")
         end
 
         def parse_progress(process_info, chunk)
