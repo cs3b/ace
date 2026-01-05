@@ -7,9 +7,8 @@ module Ace
     class CLI < Ace::Core::CLI::Base
       # class_options :quiet, :verbose, :debug inherited from Base
 
-      # Additional class options for command-level OptionParser flags
-      # These allow Thor to accept flags that are re-parsed by command classes
-      # TODO: Full migration to Thor options (refactor command classes)
+      # Additional class options for command-level CommandOptionParser
+      # These allow Thor to accept flags that are merged with command-level options
       class_option :json, type: :boolean, desc: "Output as JSON"
       class_option :markdown, type: :boolean, desc: "Output as Markdown (default)"
       class_option :status, type: :string, desc: "Filter by status"
