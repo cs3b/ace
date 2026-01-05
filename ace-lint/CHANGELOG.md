@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-01-05
+
+### Added
+- Thor CLI migration with ConfigSummary display
+
+### Changed
+- Adopted Ace::Core::CLI::Base for standardized options
+
+
 ## [0.6.0] - 2026-01-03
 
 ### Changed
