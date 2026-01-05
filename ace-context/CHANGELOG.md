@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-01-05
+
+### Added
+- Thor CLI migration with standardized command structure
+- ConfigSummary display for effective configuration with sensitive key filtering
+- Comprehensive CLI help documentation across all commands
+
+### Changed
+- Adopted Ace::Core::CLI::Base for standardized options (--quiet, --verbose, --debug)
+- Migrated from OptionParser to Thor framework
+- Added method_missing for default subcommand support
+
+### Fixed
+- CLI routing and dependency management for feature parity
+- --help dispatch for all ACE commands
+- ConfigSummary display with proper config passing
+
 ## [0.25.0] - 2026-01-03
 
 ### Added
