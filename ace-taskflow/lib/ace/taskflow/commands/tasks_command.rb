@@ -56,6 +56,14 @@ module Ace
 
         private
 
+        # Build the option parser for tasks command
+        def build_option_parser
+          Molecules::CommandOptionParser.new(
+            option_sets: [:display, :release, :filter, :limits, :subtasks, :sort, :help],
+            banner: "Usage: ace-taskflow tasks [preset] [options]"
+          )
+        end
+
         def detect_preset_name(args)
           return nil if args.empty? || args.first.start_with?('-')
 
@@ -68,122 +76,14 @@ module Ace
           end
         end
 
-        def parse_additional_filters(args)
-          filters = {}
-          filter_strings = []
-
-          i = 0
-          while i < args.length
-            arg = args[i]
-            case arg
-            # NEW: Unified filter syntax
-            when "--filter"
-              if i + 1 < args.length
-                filter_strings << args[i + 1]
-                i += 2
-              else
-                raise ArgumentError, "Missing value for --filter flag. Use: --filter key:value"
-              end
-            when "--filter-clear"
-              filters[:filter_clear] = true
-              i += 1
-            # REMOVED: Legacy filter flags with helpful error messages
-            when "--status"
-              suggested_value = args[i + 1] if i + 1 < args.length
-              suggested_filter = if suggested_value
-                # Convert comma-separated to pipe-separated
-                converted = suggested_value.gsub(/,\s*/, '|')
-                "--filter status:#{converted}"
-              else
-                "--filter status:value"
-              end
-              raise ArgumentError, "Error: --status flag is no longer supported. Use: #{suggested_filter}"
-            when "--priority"
-              suggested_value = args[i + 1] if i + 1 < args.length
-              suggested_filter = if suggested_value
-                converted = suggested_value.gsub(/,\s*/, '|')
-                "--filter priority:#{converted}"
-              else
-                "--filter priority:value"
-              end
-              raise ArgumentError, "Error: --priority flag is no longer supported. Use: #{suggested_filter}"
-            # KEPT: Convenience and formatting flags
-            when "--days"
-              filters[:days] = args[i + 1].to_i if i + 1 < args.length
-              i += 2
-            when "--limit"
-              filters[:limit] = args[i + 1].to_i if i + 1 < args.length
-              i += 2
-            when "--stats"
-              filters[:stats] = true
-              i += 1
-            when "--tree"
-              filters[:tree] = true
-              i += 1
-            when "--path"
-              filters[:path] = true
-              i += 1
-            when "--list"
-              filters[:list] = true
-              i += 1
-            # Hierarchical display flags
-            when "--subtasks"
-              filters[:subtasks_display] = :show
-              i += 1
-            when "--no-subtasks"
-              filters[:subtasks_display] = :hide
-              i += 1
-            when "--flat"
-              filters[:flat] = true
-              i += 1
-            # KEPT: Release selection flags (not filters)
-            when "--backlog"
-              filters[:release] = "backlog"
-              i += 1
-            when "--release"
-              filters[:release] = args[i + 1] if i + 1 < args.length
-              i += 2
-            when "--sort"
-              sort_spec = args[i + 1]
-              if sort_spec && sort_spec.include?(':')
-                field, direction = sort_spec.split(':')
-                filters[:sort] = { by: field.to_sym, ascending: direction == 'asc' }
-              elsif sort_spec
-                filters[:sort] = { by: sort_spec.to_sym, ascending: true }
-              end
-              i += 2
-            when "--help", "-h"
-              show_help
-              exit 0
-            else
-              i += 1
-            end
-          end
-
-          # Parse filter strings into filter specifications
-          if filter_strings.any?
-            filters[:filter_specs] = Atoms::FilterParser.parse(filter_strings)
-          end
-
-          filters
-        end
-
-        def execute_with_preset(preset_name, remaining_args)
-          # Parse additional filters from remaining args
-          additional_filters = parse_additional_filters(remaining_args)
-
-          # Handle preset override from legacy flags
-          if additional_filters[:_preset_override]
-            preset_name = additional_filters.delete(:_preset_override)
-          end
-
+        def execute_with_preset(preset_name, options)
           # Check for stats only (other formatters handled after filtering)
-          if additional_filters[:stats]
-            return show_statistics_for_preset(preset_name, additional_filters)
+          if options[:stats]
+            return show_statistics_for_preset(preset_name, options)
           end
 
           # Handle filter-clear: if set, don't pass old-style filters to preset
-          if additional_filters[:filter_clear]
+          if options[:filter_clear]
             # Apply preset but ignore its filters
             preset_config = @preset_manager.apply_preset(preset_name, {})
             return 1 unless preset_config
@@ -191,23 +91,28 @@ module Ace
             preset_config[:filters] = {}
           else
             # Apply preset with additional filters (normal flow)
-            preset_config = @preset_manager.apply_preset(preset_name, additional_filters)
+            preset_config = @preset_manager.apply_preset(preset_name, options)
             return 1 unless preset_config
           end
 
           # Store filter_specs in preset_config so TaskFilter can access them
-          if additional_filters[:filter_specs]
-            preset_config[:filter_specs] = additional_filters[:filter_specs]
+          if options[:filter_specs]
+            preset_config[:filter_specs] = options[:filter_specs]
           end
 
           # Override release if provided via flags
-          if additional_filters[:release]
-            preset_config[:release] = additional_filters[:release]
+          if options[:release]
+            preset_config[:release] = options[:release]
+          end
+
+          # Handle --all flag for release selection
+          if options[:all]
+            preset_config[:release] = "all"
           end
 
           # Override sort if provided
-          if additional_filters[:sort]
-            preset_config[:sort] = additional_filters[:sort]
+          if options[:sort]
+            preset_config[:sort] = options[:sort]
           end
 
           # Get tasks based on preset configuration
@@ -218,30 +123,30 @@ module Ace
 
           # Apply limit if specified
           original_count = tasks.size
-          if additional_filters[:limit] && additional_filters[:limit] > 0
-            tasks = tasks.take(additional_filters[:limit])
+          if options[:limit] && options[:limit] > 0
+            tasks = tasks.take(options[:limit])
           end
 
           # Display tasks with appropriate formatter
-          if additional_filters[:tree]
-            display_tree_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          elsif additional_filters[:path]
-            display_paths_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          elsif additional_filters[:list]
-            display_list_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          elsif additional_filters[:flat]
-            display_flat_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          elsif additional_filters[:subtasks_display] == :show
-            display_hierarchical_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
-          elsif additional_filters[:subtasks_display] == :hide
-            display_no_subtasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+          if options[:tree]
+            display_tree_with_preset(tasks, preset_config, original_count, options[:limit])
+          elsif options[:path]
+            display_paths_with_preset(tasks, preset_config, original_count, options[:limit])
+          elsif options[:list]
+            display_list_with_preset(tasks, preset_config, original_count, options[:limit])
+          elsif options[:flat]
+            display_flat_with_preset(tasks, preset_config, original_count, options[:limit])
+          elsif options[:subtasks_display] == :show
+            display_hierarchical_with_preset(tasks, preset_config, original_count, options[:limit])
+          elsif options[:subtasks_display] == :hide
+            display_no_subtasks_with_preset(tasks, preset_config, original_count, options[:limit])
           else
             # Default: use config to determine subtask display mode
             subtasks_mode = Taskflow.configuration.subtasks_display_mode
             if subtasks_mode == "enabled"
-              display_hierarchical_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+              display_hierarchical_with_preset(tasks, preset_config, original_count, options[:limit])
             else
-              display_tasks_with_preset(tasks, preset_config, original_count, additional_filters[:limit])
+              display_tasks_with_preset(tasks, preset_config, original_count, options[:limit])
             end
           end
         end

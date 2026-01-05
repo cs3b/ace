@@ -2,6 +2,7 @@
 
 require_relative "../organisms/retro_manager"
 require_relative "../atoms/path_formatter"
+require_relative "../molecules/command_option_parser"
 
 module Ace
   module Taskflow
@@ -10,6 +11,7 @@ module Ace
       class RetroCommand
         def initialize
           @manager = Organisms::RetroManager.new
+          @create_parser = build_create_parser
         end
 
         def execute(args)
@@ -39,52 +41,38 @@ module Ace
 
         private
 
+        def build_create_parser
+          Molecules::CommandOptionParser.new(
+            option_sets: [:release, :help],
+            banner: "Usage: ace-taskflow retro create <title> [options]"
+          )
+        end
+
         def create_retro(args)
-          # Parse options
-          title_parts = []
-          release = "current"
+          # Parse options using CommandOptionParser
+          result = @create_parser.parse(args)
+          return 0 if result[:help_requested]
 
-          i = 0
-          while i < args.length
-            arg = args[i]
-            case arg
-            when "--release"
-              release = args[i + 1]
-              i += 2
-            when "--current"
-              release = "current"
-              i += 1
-            when "--backlog"
-              release = "backlog"
-              i += 1
-            else
-              title_parts << arg
-              i += 1
-            end
-          end
-
-          title = title_parts.join(" ")
+          options = result[:parsed]
+          title = result[:remaining].join(" ")
 
           if title.empty?
-            puts "Usage: ace-taskflow retro create <title> [options]"
-            puts "Options:"
-            puts "  --release <version>   Create in specific release"
-            puts "  --current             Create in current/active release (default)"
-            puts "  --backlog             Create in backlog"
+            puts @create_parser.help_text
             return 1
           end
 
-          result = @manager.create_retro(title, release: release)
+          release = options[:release] || "current"
+          create_result = @manager.create_retro(title, release: release)
 
-          if result[:success]
-            puts result[:message]
+          if create_result[:success]
+            puts create_result[:message]
             # Use project root for relative path
             root_path = Dir.pwd
-            relative_path = Atoms::PathFormatter.format_relative_path(result[:path], root_path)
+            relative_path = Atoms::PathFormatter.format_relative_path(create_result[:path], root_path)
             puts "Path: #{relative_path}"
             0
           else
-            puts "Error: #{result[:message]}"
+            puts "Error: #{create_result[:message]}"
             1
           end
         end
