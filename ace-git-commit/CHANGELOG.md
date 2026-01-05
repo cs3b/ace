@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-01-04
+
+### Fixed
+
+- ace-git-commit now respects `.gitignore` when staging directory paths
+- Directories are passed directly to `git add` without file expansion
+- Fixed issue where `ace-git-commit .ace-taskflow/` would try to stage files in gitignored subdirectories like `reviews/`
+- Only glob patterns are expanded to file lists through PathResolver
+
 ## [0.15.1] - 2026-01-03
 
 ### Changed
