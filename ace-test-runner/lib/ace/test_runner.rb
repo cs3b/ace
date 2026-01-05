@@ -15,6 +15,9 @@ require "time"
 
 require_relative "test_runner/version"
 
+# CLI and commands
+require_relative "test_runner/cli"
+
 # Models - Pure data structures
 require_relative "test_runner/models/test_result"
 require_relative "test_runner/models/test_failure"
@@ -34,6 +37,7 @@ require_relative "test_runner/molecules/failure_analyzer"
 require_relative "test_runner/molecules/report_storage"
 require_relative "test_runner/molecules/config_loader"
 require_relative "test_runner/molecules/pattern_resolver"
+require_relative "test_runner/molecules/cli_argument_parser"
 # Other molecules loaded lazily (deprecation_fixer, rake_integration)
 
 # Formatters - Load only base formatter, others loaded on demand
@@ -48,6 +52,9 @@ require_relative "test_runner/organisms/report_generator"
 module Ace
   module TestRunner
     class Error < StandardError; end
+
+    # Define module namespaces
+    module Commands; end
 
     class << self
       def run(options = {})
