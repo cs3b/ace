@@ -37,6 +37,9 @@ require_relative "llm/organisms/lmstudio_client"
 require_relative "llm/organisms/xai_client"
 require_relative "llm/organisms/openrouter_client"
 
+# CLI and commands
+require_relative "llm/cli"
+
 module Ace
   module LLM
     class Error < StandardError; end
@@ -49,5 +52,6 @@ module Ace
     module Molecules; end
     module Organisms; end
     module Models; end
+    module Commands; end
   end
 end

@@ -1,11 +1,6 @@
 # frozen_string_literal: true
 
-# Try to load ace-core if available
-begin
-  require "ace/core"
-rescue LoadError
-  # ace-core is optional for basic functionality
-end
+require "ace/core"
 
 require_relative "models_dev/version"
 require_relative "models_dev/errors"
