@@ -5,7 +5,7 @@ argument-hint: "[preset] [subjects...]"
 allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
 update:
   frequency: on-change
-  last-updated: '2025-12-30'
+  last-updated: '2026-01-05'
 ---
 
 # Code Review Workflow
@@ -18,11 +18,14 @@ Review code using ace-review, read the synthesis report, and create a plan for a
 
 - `$1`: Preset name (optional). Run `ace-review --list-presets` to see options.
 - `$2+`: Subject(s) using `type:value` syntax (optional, additive to preset):
-  - `staged`, `working` - keywords
-  - `diff:origin/main..HEAD` - git range
-  - `pr:123` - PR diff
-  - `files:lib/**/*.rb` - file pattern
-  - `task:145` - task context
+
+  **IMPORTANT: The type prefix is REQUIRED for all subjects except keywords**
+
+  - `staged`, `working` - keywords (no prefix needed)
+  - `diff:origin/main..HEAD` - git range (prefix required)
+  - `pr:123` - PR diff (prefix required)
+  - `files:lib/**/*.rb` - file pattern (prefix required)
+  - `task:145` - task context (prefix required)
 
 ## Instructions
 
@@ -37,6 +40,9 @@ ace-review --preset $1 --auto-execute
 
 # With subject(s) - additive to preset
 ace-review --subject "$2" --auto-execute
+
+# File pattern review (NOTE: files: prefix is REQUIRED)
+ace-review --preset spec --subject "files:.ace-taskflow/**/*.md" --auto-execute
 
 # Multiple subjects merge automatically
 ace-review --subject pr:76 --subject files:CHANGELOG.md --auto-execute
@@ -167,6 +173,19 @@ ace-review --subject pr:76 --subject files:README.md --auto-execute  # Combined
 # Debug
 ace-review --dry-run   # See what would run
 ```
+
+## Common Mistakes
+
+❌ **Wrong**: `ace-review --subject path/to/file`
+✅ **Correct**: `ace-review --subject files:path/to/file`
+
+❌ **Wrong**: `ace-review --subject 123`
+✅ **Correct**: `ace-review --subject pr:123`
+
+❌ **Wrong**: `ace-review --subject origin/main..HEAD`
+✅ **Correct**: `ace-review --subject diff:origin/main..HEAD`
+
+The type prefix (`files:`, `pr:`, `diff:`, `task:`) is **required** for all subjects except the keywords `staged` and `working`.
 
 ## Success Criteria
 
