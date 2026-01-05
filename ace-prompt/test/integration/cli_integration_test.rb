@@ -364,8 +364,8 @@ class CLIIntegrationTest < Minitest::Test
     # Test version command
     output, _error = run_cli_isolated(["version"])
 
-    # Should output version
-    assert_match(/^\d+\.\d+\.\d+/, output.strip)
+    # Should output version with package name
+    assert_match(/^ace-prompt \d+\.\d+\.\d+/, output.strip)
   end
 
   def test_process_with_enhance_flag_integration
