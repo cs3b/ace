@@ -8,5 +8,4 @@ source: ace-review
 
 read and run `ace-context wfi://review`
 
-read and run `ace-context wfi://commit`
 
