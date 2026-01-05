@@ -35,6 +35,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
+  spec.add_dependency 'thor', '~> 1.3' # Required for repeatable: true option support
   spec.add_dependency 'ace-config', '~> 0.4'
   spec.add_dependency 'ace-support-core', '~> 0.9' # For ProcessTerminator
   spec.add_dependency 'ace-context', '~> 0.9'
