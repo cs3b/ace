@@ -76,12 +76,13 @@ class CommitOrchestratorTest < TestCase
     mock_path_resolver = Minitest::Mock.new
     @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
 
-    # Single file validation path
+    # Single file validation and path separation
     mock_path_resolver.expect :glob_pattern?, false, ["file1.txt"]  # In non_glob_paths check
     mock_path_resolver.expect :validate_paths, { valid: ["file1.txt"], invalid: [] }, [["file1.txt"]]
-    mock_path_resolver.expect :glob_pattern?, false, ["file1.txt"]  # In has_glob_patterns check
+    mock_path_resolver.expect :glob_pattern?, false, ["file1.txt"]  # In glob_patterns check
 
-    @mock_file_stager.expect :stage_files, true, [["file1.txt"]]  # Now returns boolean
+    # Single files now use stage_paths (same path as directories)
+    @mock_file_stager.expect :stage_paths, true, [["file1.txt"]]
     @mock_file_stager.expect :staged_files, ["file1.txt"]
     @mock_git.expect :has_staged_changes?, true
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add file1"]
@@ -262,16 +263,16 @@ class CommitOrchestratorTest < TestCase
     mock_path_resolver = Minitest::Mock.new
     @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
 
-    # Mock glob_pattern? - called multiple times (validation + has_directories/has_glob_patterns checks)
-    mock_path_resolver.expect :glob_pattern?, true, ["**/*.rb"]  # In validation
-    mock_path_resolver.expect :glob_pattern?, true, ["**/*.rb"]  # In has_glob_patterns check
+    # Mock glob_pattern? - called for validation, then for separating paths
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.rb"]  # In validation (reject from non_glob_paths)
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.rb"]  # In glob pattern check
 
     # Mock resolve_paths to return file list
     mock_path_resolver.expect :resolve_paths,
       ["lib/file1.rb", "lib/file2.rb"],
       [["**/*.rb"]]
 
-    # Mock stage_paths
+    # Mock stage_paths with resolved files
     @mock_file_stager.expect :stage_paths, true, [["lib/file1.rb", "lib/file2.rb"]]
     @mock_file_stager.expect :staged_files, ["lib/file1.rb", "lib/file2.rb"]
 
@@ -303,24 +304,19 @@ class CommitOrchestratorTest < TestCase
     mock_path_resolver = Minitest::Mock.new
     @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
 
-    # Mock validation for non-glob paths (each path checked twice: validation + has_glob_patterns)
+    # Mock validation for non-glob paths (each path checked in validation)
     mock_path_resolver.expect :glob_pattern?, false, ["lib/"]   # In validation
     mock_path_resolver.expect :glob_pattern?, false, ["test/"]  # In validation
     mock_path_resolver.expect :validate_paths,
       { valid: ["lib/", "test/"], invalid: [] },
       [["lib/", "test/"]]
 
-    # Mock has_directories and has_glob_patterns checks
-    mock_path_resolver.expect :glob_pattern?, false, ["lib/"]   # In has_glob_patterns
-    mock_path_resolver.expect :glob_pattern?, false, ["test/"]  # In has_glob_patterns
+    # Mock glob_pattern? for separating paths (directories, globs, single files)
+    mock_path_resolver.expect :glob_pattern?, false, ["lib/"]   # Directory check
+    mock_path_resolver.expect :glob_pattern?, false, ["test/"]  # Directory check
 
-    # Mock resolve_paths
-    mock_path_resolver.expect :resolve_paths,
-      ["lib/file1.rb", "test/file1_test.rb"],
-      [["lib/", "test/"]]
-
-    # Mock stage_paths (multiple paths trigger this)
-    @mock_file_stager.expect :stage_paths, true, [["lib/file1.rb", "test/file1_test.rb"]]
+    # Directories are passed directly to stage_paths (no expansion)
+    @mock_file_stager.expect :stage_paths, true, [["lib/", "test/"]]
     @mock_file_stager.expect :staged_files, ["lib/file1.rb", "test/file1_test.rb"]
 
     @mock_git.expect :has_staged_changes?, true
@@ -351,9 +347,9 @@ class CommitOrchestratorTest < TestCase
     mock_path_resolver = Minitest::Mock.new
     @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
 
-    # Mock glob_pattern? - called multiple times (validation + has_glob_patterns check)
-    mock_path_resolver.expect :glob_pattern?, true, ["**/*.xyz"]  # In validation
-    mock_path_resolver.expect :glob_pattern?, true, ["**/*.xyz"]  # In has_glob_patterns check
+    # Mock glob_pattern? - called for validation, then for separating paths
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.xyz"]  # In validation (reject from non_glob_paths)
+    mock_path_resolver.expect :glob_pattern?, true, ["**/*.xyz"]  # In glob pattern check
 
     # Mock resolve_paths to return empty (no matching files)
     mock_path_resolver.expect :resolve_paths, [], [["**/*.xyz"]]
