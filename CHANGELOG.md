@@ -4,6 +4,225 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.246] - 2026-01-05
+
+### Added
+
+- **ace-lint 0.7.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration
+
+- **ace-prompt 0.11.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration
+
+- **ace-review 0.31.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration
+
+- **ace-taskflow 0.28.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration
+
+### Changed
+
+- **ace-lint 0.7.0**: Adopted Ace::Core::CLI::Base for standardized options
+- **ace-prompt 0.11.0**: Adopted Ace::Core::CLI::Base for standardized options
+- **ace-review 0.31.0**: Adopted Ace::Core::CLI::Base for standardized options
+- **ace-taskflow 0.28.0**: Adopted Ace::Core::CLI::Base for standardized options
+- **ace-test-runner 0.8.0**: Adopted Ace::Core::CLI::Base for standardized options
+- **ace-llm-models-dev 0.4.1**: Adopted Ace::Core::CLI::Base for standardized options
+
+### Fixed
+
+- **ace-test-runner 0.8.0**: CLI routing and dependency management fixes
+- **ace-llm-models-dev 0.4.1**: CLI routing fixes
+
+
+## [0.9.245] - 2026-01-05
+
+### Added
+
+- **ace-docs 0.15.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration with sensitive key filtering
+  - Comprehensive CLI help documentation across all commands
+
+### Changed
+
+- **ace-docs 0.15.0**: Adopted Ace::Core::CLI::Base for standardized options
+  - Migrated from OptionParser to Thor framework
+  - Added method_missing for default subcommand support
+
+
+## [0.9.244] - 2026-01-05
+
+### Added
+
+- **ace-search 0.17.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration with sensitive key filtering
+  - Comprehensive CLI help documentation across all commands
+  - self.help overrides for custom command descriptions
+
+### Changed
+
+- **ace-search 0.17.0**: Adopted Ace::Core::CLI::Base for standardized options
+  - Migrated from OptionParser to Thor framework
+  - Added method_missing for default subcommand support
+
+### Fixed
+
+- **ace-search 0.17.0**: CLI routing and configuration fixes
+  - CLI routing and dependency management for feature parity
+  - --help dispatch for all ACE commands
+  - Resolved -v flag conflict and search interactive mode bug
+  - Add handle_no_command_error for command name patterns
+  - Addressed PR #123 review findings for Medium and higher priority issues
+
+## [0.9.243] - 2026-01-05
+
+### Added
+
+- **ace-git-worktree 0.10.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration with sensitive key filtering
+  - Comprehensive CLI help documentation across all commands
+  - self.help overrides for custom command descriptions
+
+### Changed
+
+- **ace-git-worktree 0.10.0**: Adopted Ace::Core::CLI::Base for standardized options
+  - Migrated from OptionParser to Thor framework
+  - Added method_missing for default subcommand support
+
+### Fixed
+
+- **ace-git-worktree 0.10.0**: CLI routing and configuration fixes
+  - CLI routing and dependency management for feature parity
+  - --help dispatch for all ACE commands
+
+### Technical
+
+- **ace-git-worktree 0.10.0**: Refactored tests to use capture_io and assert exceptions
+
+## [0.9.242] - 2026-01-05
+
+### Added
+
+- **ace-git-secrets 0.5.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration with sensitive key filtering
+  - Comprehensive CLI help documentation across all commands
+  - --help support for all subcommands
+  - exit_on_failure and version mapping standardization
+
+### Changed
+
+- **ace-git-secrets 0.5.0**: Adopted Ace::Core::CLI::Base for standardized options
+  - Migrated from OptionParser to Thor framework
+  - Added method_missing for default subcommand support
+
+## [0.9.241] - 2026-01-05
+
+### Added
+
+- **ace-llm 0.18.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration with sensitive key filtering
+  - Comprehensive CLI help documentation across all commands
+  - Routing for list-providers command
+
+### Changed
+
+- **ace-llm 0.18.0**: Adopted Ace::Core::CLI::Base for standardized options
+  - Migrated from OptionParser to Thor framework
+  - Added method_missing for default subcommand support
+
+### Fixed
+
+- **ace-llm 0.18.0**: CLI routing and configuration fixes
+  - CLI routing and dependency management for feature parity
+  - --help dispatch for all ACE commands
+  - Addressed PR #123 review findings for Medium and higher priority issues
+
+## [0.9.240] - 2026-01-05
+
+### Changed
+
+- **ace-git 0.6.1**: Adopted Ace::Core::CLI::Base for standardized options
+  - Added method_missing for default subcommand support
+
+### Fixed
+
+- **ace-git 0.6.1**: CLI flag conflict and review findings
+  - Resolved -v flag conflict between --verbose and --version
+  - Addressed PR #123 review findings for Medium and higher priority issues
+
+## [0.9.239] - 2026-01-05
+
+### Added
+
+- **ace-nav 0.15.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration with sensitive key filtering
+  - Comprehensive CLI help documentation across all commands
+
+### Changed
+
+- **ace-nav 0.15.0**: Adopted Ace::Core::CLI::Base for standardized options
+  - Migrated from OptionParser to Thor framework
+  - Added method_missing for default subcommand support
+  - Improved config loading and thread safety
+
+### Fixed
+
+- **ace-nav 0.15.0**: CLI routing and configuration fixes
+  - CLI routing and dependency management for feature parity
+  - --help dispatch for all ACE commands
+  - Restored default subcommand behavior
+  - Addressed PR #123 review findings for Medium and higher priority issues
+
+## [0.9.238] - 2026-01-05
+
+### Added
+
+- **ace-context 0.26.0**: Thor CLI migration with ConfigSummary display
+  - Thor CLI migration with standardized command structure
+  - ConfigSummary display for effective configuration with sensitive key filtering
+  - Comprehensive CLI help documentation across all commands
+
+### Changed
+
+- **ace-context 0.26.0**: Adopted Ace::Core::CLI::Base for standardized options
+  - Migrated from OptionParser to Thor framework
+  - Added method_missing for default subcommand support
+
+### Fixed
+
+- **ace-context 0.26.0**: CLI routing and configuration fixes
+  - CLI routing and dependency management for feature parity
+  - --help dispatch for all ACE commands
+  - ConfigSummary display with proper config passing
+
+## [0.9.237] - 2026-01-05
+
+### Fixed
+
+- **ace-config 0.5.1**: Performance test stabilization and CLI improvements
+  - Stabilize performance tests with adjusted thresholds for CI consistency
+  - Improve command default behavior and fix flaky test
+
+## [0.9.236] - 2026-01-04
+
+### Fixed
+
+- **ace-git-commit 0.15.2**: Respect .gitignore when staging directory paths
+  - Directories now pass directly to `git add` without file expansion
+  - Fixed issue where `ace-git-commit .ace-taskflow/` would try to stage files in gitignored subdirectories like `reviews/`
+  - Only glob patterns are expanded to file lists through PathResolver
+  - Updated tests to reflect new directory handling behavior
+
 ## [0.9.235] - 2026-01-04
 
 ### Fixed
