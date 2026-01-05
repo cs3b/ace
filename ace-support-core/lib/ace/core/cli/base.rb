@@ -28,6 +28,37 @@ module Ace
       #     version_command "my-gem", Ace::MyGem::VERSION
       #   end
       #
+      # @example ConfigSummary usage in command classes
+      #   # ConfigSummary only displays when --verbose is used.
+      #   # This keeps normal command output clean and readable.
+      #   #
+      #   # Normal command (no config shown):
+      #   #   $ ace-gem command
+      #   #   (output only, no config summary)
+      #   #
+      #   # With --verbose flag (config shown):
+      #   #   $ ace-gem --verbose command
+      #   #   Config: key=value key2=value2
+      #   #   (output...)
+      #   #
+      #   def execute(args = [])
+      #     # Check for --help flag BEFORE displaying config
+      #     return show_help if args.include?("--help") || args.include?("-h")
+      #
+      #     # Config is NOT shown by default (only when --verbose is used)
+      #     Ace::Core::Atoms::ConfigSummary.display_if_needed(
+      #       command: "mycommand",
+      #       config: MyGem.config,
+      #       defaults: MyGem.default_config,
+      #       options: @options,
+      #       args: args
+      #     )
+      #     # ... rest of implementation
+      #   end
+      #   #
+      #   # Note: display_if_needed automatically checks both --help and --verbose,
+      #   # so config is only shown when verbose is true AND help was not requested.
+      #
       class Base < Thor
         def self.exit_on_failure?
           true

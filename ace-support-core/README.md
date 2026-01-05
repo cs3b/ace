@@ -115,6 +115,56 @@ config_dirs = traverser.find_config_directories
 
 See **ace-support-fs** gem for complete documentation on path resolution, protocol URIs, and directory traversal.
 
+## ConfigSummary
+
+`ConfigSummary` provides configuration summary display for CLI commands. It shows effective configuration state to stderr, displaying only values that differ from defaults and filtering sensitive keys.
+
+### Verbose-Only Behavior
+
+**Important**: `ConfigSummary.display()` and `ConfigSummary.display_if_needed()` only show output when `--verbose` is passed. This keeps normal command output clean and readable.
+
+```ruby
+# Normal command execution (no config shown)
+ace-gem command
+# (output only)
+
+# With --verbose flag (config shown)
+ace-gem --verbose command
+# Config: key=value key2=value2
+# (output...)
+```
+
+### Usage in Commands
+
+```ruby
+require "ace/core"
+
+# In your command execute method
+def execute
+  # Check for --help BEFORE displaying config
+  return show_help if args.include?("--help") || args.include?("-h")
+
+  # Config only shown when --verbose is used
+  Ace::Core::Atoms::ConfigSummary.display_if_needed(
+    command: "mycommand",
+    config: MyGem.config,
+    defaults: MyGem.default_config,
+    options: @options,
+    args: args
+  )
+
+  # ... rest of implementation
+end
+```
+
+### Features
+
+- **Verbose-only**: Output only shown when `options[:verbose]` is true
+- **Help detection**: `display_if_needed` automatically skips output when help is requested
+- **Sensitive key filtering**: Keys ending with `token`, `password`, `secret`, `credential`, `key`, `api_key` are filtered
+- **Default diffing**: Only shows values that differ from defaults
+- **Nested config**: Flattens nested hashes with dot notation (e.g., `llm.provider=google`)
+
 ## Configuration Structure
 
 Configuration files are YAML with the following structure:
