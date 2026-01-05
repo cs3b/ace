@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-01-05
+
+### Fixed
+- Stabilize performance tests and adjust thresholds for CI consistency
+- Improve command default behavior and fix flaky test
+
 ## [0.5.0] - 2026-01-03
 
 ### Changed
