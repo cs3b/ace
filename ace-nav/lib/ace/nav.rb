@@ -3,18 +3,29 @@
 require_relative "nav/version"
 require "ace/config"
 
+# Load all ace-nav components
+require_relative "nav/cli"
+require_relative "nav/atoms/gem_resolver"
+require_relative "nav/atoms/path_normalizer"
+require_relative "nav/atoms/uri_parser"
+require_relative "nav/molecules/config_loader"
+require_relative "nav/molecules/handbook_scanner"
+require_relative "nav/molecules/protocol_scanner"
+require_relative "nav/molecules/resource_resolver"
+require_relative "nav/molecules/source_registry"
+require_relative "nav/organisms/navigation_engine"
+require_relative "nav/organisms/command_delegator"
+require_relative "nav/models/handbook_source"
+require_relative "nav/models/protocol_source"
+require_relative "nav/models/resource"
+require_relative "nav/models/resource_uri"
+
 module Ace
   module Nav
     class Error < StandardError; end
 
-    # Mutex for thread-safe config initialization
+    # Initialize mutex for thread-safe config access
     @config_mutex = Mutex.new
-
-    # Define module namespaces
-    module Atoms; end
-    module Molecules; end
-    module Organisms; end
-    module Models; end
 
     # Check if debug mode is enabled
     # @return [Boolean] True if debug mode is enabled
