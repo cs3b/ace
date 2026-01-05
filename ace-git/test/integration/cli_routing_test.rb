@@ -80,12 +80,8 @@ class CliRoutingTest < AceGitTestCase
     assert_match(/\d+\.\d+\.\d+/, output.first)
   end
 
-  def test_cli_routes_version_with_short_flag
-    output = capture_io do
-      Ace::Git::CLI.start(["-v"])
-    end
-    assert_match(/\d+\.\d+\.\d+/, output.first)
-  end
+  # Note: -v is reserved for --verbose (not version). Use --version only.
+  # See subtask 150.13 for rationale.
 
   def test_cli_routes_version_with_long_flag
     output = capture_io do
