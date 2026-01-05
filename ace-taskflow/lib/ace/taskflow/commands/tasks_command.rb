@@ -5,9 +5,9 @@ require_relative "../molecules/task_filter"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/dependency_tree_visualizer"
 require_relative "../molecules/stats_formatter"
+require_relative "../molecules/command_option_parser"
 require_relative "../models/task"
 require_relative "../atoms/path_formatter"
-require_relative "../atoms/filter_parser"
 require_relative "helpers"
 
 module Ace
@@ -22,6 +22,7 @@ module Ace
           @config = Taskflow.configuration
           @preset_manager = Molecules::ListPresetManager.new
           @stats_formatter = Molecules::StatsFormatter.new(@root_path)
+          @option_parser = build_option_parser
         end
 
         def execute(args, thor_options = {})
@@ -31,37 +32,23 @@ module Ace
             return execute_reschedule(args)
           end
 
-          # Merge Thor options for --status, --stats, --tree, --all, --limit, --format
-          # These Thor class options are passed from CLI routing
-          if thor_options[:status]
-            args.unshift("--status", thor_options[:status])
-          end
-          if thor_options[:stats]
-            args.unshift("--stats")
-          end
-          if thor_options[:tree]
-            args.unshift("--tree")
-          end
-          if thor_options[:all]
-            args.unshift("--all")
-          end
-          if thor_options[:limit]
-            args.unshift("--limit", thor_options[:limit].to_s)
-          end
-          if thor_options[:format]
-            args.unshift("--format", thor_options[:format])
-          end
+          # Parse options using CommandOptionParser (merges Thor options automatically)
+          result = @option_parser.parse(args, thor_options: thor_options)
+          return 0 if result[:help_requested]
 
-          # Check if first argument is a preset name
-          preset_name = detect_preset_name(args)
+          options = result[:parsed]
+          remaining = result[:remaining]
+
+          # Check if first remaining argument is a preset name
+          preset_name = detect_preset_name(remaining)
           if preset_name
-            args.shift # Remove preset name from args
+            remaining.shift # Remove preset name from args
           else
             # Default to 'next' preset for tasks
             preset_name = 'next'
           end
 
-          execute_with_preset(preset_name, args)
+          execute_with_preset(preset_name, options)
         rescue StandardError => e
           puts "Error: #{e.message}"
           exit 1
