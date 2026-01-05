@@ -25,7 +25,7 @@ class CLITest < Minitest::Test
       Ace::Prompt::CLI.start(["version"])
     end.first
 
-    assert_match(/^\d+\.\d+\.\d+/, output.strip)
+    assert_match(/^ace-prompt \d+\.\d+\.\d+/, output.strip)
   end
 
   def test_process_is_default_command
@@ -36,8 +36,8 @@ class CLITest < Minitest::Test
     assert cli.respond_to?(:process)
   end
 
-  def test_exit_on_failure_is_false
-    assert_equal false, Ace::Prompt::CLI.exit_on_failure?
+  def test_exit_on_failure_is_true
+    assert_equal true, Ace::Prompt::CLI.exit_on_failure?
   end
 
   def test_has_output_option
