@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-01-05
+
+### Changed
+- Adopted Ace::Core::CLI::Base for standardized options (--quiet, --verbose, --debug)
+- Added method_missing for default subcommand support
+
+### Fixed
+- Resolved -v flag conflict between --verbose and --version
+- Addressed PR #123 review findings for Medium and higher priority issues
+
 ## [0.6.0] - 2026-01-03
 
 ### Changed
