@@ -25,10 +25,9 @@ module Ace
           when "--help", "-h"
             show_help
             0
-          when nil
-            puts "Usage: ace-taskflow retro <subcommand> [options]"
-            puts "Run 'ace-taskflow retro --help' for more information"
-            1
+          when nil, "list"
+            # Show active retros by default (delegates to retros command behavior)
+            show_active_retros
           else
             # Try to show specific retro by reference
             show_retro([subaction] + args)
@@ -196,17 +195,47 @@ module Ace
           puts ""
           puts "  done <reference>    Mark retro as done (move to _archive/)"
           puts ""
+          puts "  list                List active retros (default when no subcommand)"
+          puts ""
           puts "Options:"
           puts "  --release <version> Work with specific release"
           puts "  --current           Work with current/active release (default)"
           puts "  --backlog           Work with backlog"
           puts ""
           puts "Examples:"
+          puts "  ace-taskflow retro                  # List active retros (default)"
           puts "  ace-taskflow retro create 'ace-test-runner fixes'"
           puts "  ace-taskflow retro show ace-test-runner"
           puts "  ace-taskflow retro ace-test-runner"
           puts "  ace-taskflow retro done ace-test-runner"
           puts "  ace-taskflow retro create 'API refactor' --release v.0.8.0"
+        end
+
+        def show_active_retros
+          # Reuse retros command behavior for listing active retros
+          retros = @manager.list_retros(release: "current", filters: { scope: :active })
+
+          if retros.empty?
+            puts "No active retrospective notes found in current release."
+            puts ""
+            puts "Use 'ace-taskflow retro create <title>' to create your first reflection note."
+            return 0
+          end
+
+          puts "Active Retrospective Notes (current release):"
+          puts ""
+          retros.each { |retro| display_retro_line(retro) }
+          puts ""
+          puts "Total: #{retros.count} retro#{retros.count == 1 ? '' : 's'}"
+          0
+        end
+
+        def display_retro_line(retro)
+          date = retro[:date] || "unknown"
+          title = retro[:title] || File.basename(retro[:filename], ".md")
+          status_icon = retro[:is_done] ? "✓" : " "
+
+          puts "  #{status_icon} #{date}  #{title}"
         end
       end
     end
