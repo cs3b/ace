@@ -126,6 +126,8 @@ module Ace
             run_integrity_check
           when :dependencies
             check_dependencies
+          when :subtasks
+            check_subtasks
           else
             add_issue(:error, "Unknown check type: #{check_type}")
           end
@@ -307,6 +309,56 @@ module Ace
             location = issue[:location] || issue[:locations]&.join(", ")
             add_issue(issue[:type], issue[:message], location)
           end
+        end
+
+        def check_subtasks
+          require_relative "../organisms/task_manager"
+          require_relative "../molecules/release_resolver"
+
+          release_resolver = Molecules::ReleaseResolver.new(@root_path)
+          active_release = release_resolver.find_primary_active
+          return add_issue(:warning, "No active release found") unless active_release
+
+          task_manager = Organisms::TaskManager.new(@root_path)
+          all_tasks = task_manager.load_all(release: active_release[:name], include_content: false)
+
+          subtask_issues = 0
+          orphan_issues = 0
+
+          all_tasks.each do |task|
+            @stats[:files_scanned] += 1
+            parent_id = task[:parent_id] || task.dig(:frontmatter, "parent_id")
+            subtask_ids = task[:subtask_ids] || task.dig(:frontmatter, "subtask_ids") || []
+
+            # Check parent reference exists
+            if parent_id
+              parent_task = all_tasks.find { |t| t[:id] == parent_id }
+              unless parent_task
+                add_issue(:error, "Subtask references non-existent parent_id: #{parent_id}", task[:path])
+                orphan_issues += 1
+              end
+            end
+
+            # Check subtask references exist
+            subtask_ids.each do |subtask_id|
+              subtask = all_tasks.find { |t| t[:id] == subtask_id }
+              unless subtask
+                add_issue(:error, "Parent task references non-existent subtask_id: #{subtask_id}", task[:path])
+                subtask_issues += 1
+              else
+                # Check bidirectional consistency
+                child_parent_id = subtask[:parent_id] || subtask.dig(:frontmatter, "parent_id")
+                unless child_parent_id == task[:id]
+                  add_issue(:warning, "Subtask #{subtask_id} does not reference parent #{task[:id]}", task[:path])
+                end
+              end
+            end
+          end
+
+          @stats[:components][:subtasks] = {
+            orphan_issues: orphan_issues,
+            subtask_issues: subtask_issues
+          }
         end
 
         def check_task_file(file)

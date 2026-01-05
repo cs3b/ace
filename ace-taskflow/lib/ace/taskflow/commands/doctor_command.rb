@@ -89,6 +89,8 @@ module Ace
             when "--check"
               i += 1
               options[:check] = args[i]
+            when "--subtasks"
+              options[:check] = "subtasks"
             when "--fix", "-f"
               options[:fix] = true
             when "--dry-run"
@@ -197,7 +199,8 @@ module Ace
               -h, --help                Show this help message
               -c, --component TYPE      Check specific component (tasks, ideas, releases, retros)
               -r, --release VERSION     Check specific release (e.g., v.0.9.0)
-              --check TYPE              Run specific check (frontmatter, structure, integrity, dependencies)
+              --check TYPE              Run specific check (frontmatter, structure, integrity, dependencies, subtasks)
+              --subtasks                Shorthand for --check subtasks
               -f, --fix                 Auto-fix safe issues
               --dry-run                 Preview fixes without applying them
               --format FORMAT           Output format (terminal, json, summary)
