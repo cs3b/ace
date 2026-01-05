@@ -153,7 +153,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.17.0)
+    ace-support-core (0.18.0)
       ace-config (~> 0.4)
       ace-support-fs (~> 0.1)
 
@@ -185,7 +185,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.28.1)
+    ace-taskflow (0.29.0)
       ace-config (~> 0.5)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)
