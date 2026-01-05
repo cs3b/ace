@@ -40,16 +40,26 @@ lib/ace/gem/
 
 ### CLI Entry Point (`cli.rb`)
 
+All CLIs extend `Ace::Core::CLI::Base` which provides:
+- `exit_on_failure?` returning `true` for proper error handling
+- Standard class options: `--quiet/-q`, `--verbose/-v`, `--debug/-d`
+- `version_command` helper for consistent version reporting
+- `respond_to_missing?` for default task delegation
+
+**Important**: `-v` is reserved for `--verbose` across all CLIs. Version is accessed via `--version` only.
+
 ```ruby
 # lib/ace/gem/cli.rb
-require 'thor'
+require "ace/core/cli/base"
 
 module Ace
   module Gem
-    class CLI < Thor
+    class CLI < Ace::Core::CLI::Base
+      # class_options :quiet, :verbose, :debug inherited from Base
+
+      default_task :process
+
       desc "process FILE", "Process a file"
-      option :verbose, type: :boolean, aliases: '-v'
-      option :debug, type: :boolean, aliases: '-d'
       def process(file)
         require_relative 'commands/process_command'
         Commands::ProcessCommand.new(file, options).execute
@@ -61,9 +71,15 @@ module Ace
         Commands::StatusCommand.new(options).execute
       end
 
-      desc "version", "Show version"
-      def version
-        puts Ace::Gem::VERSION
+      # Use version_command helper instead of manual definition
+      version_command "ace-gem", Ace::Gem::VERSION
+
+      # Override help to add custom sections (optional)
+      def self.help(shell, subcommand = false)
+        super
+        shell.say ""
+        shell.say "Examples:"
+        shell.say "  ace-gem file.txt           # Process file"
       end
     end
   end
@@ -117,19 +133,21 @@ end
 ### Requirements
 
 **DO:**
-- ✅ Use Thor for CLI framework
+- ✅ Extend `Ace::Core::CLI::Base` (not raw Thor)
 - ✅ Create commands/ directory for command classes
 - ✅ Each command in separate file
 - ✅ cli.rb as single entry point
 - ✅ Commands return exit codes (0/1)
 - ✅ Use gem config cascade in commands
-- ✅ Provide --help for all commands
+- ✅ Use `version_command` helper for version
+- ✅ Reserve `-v` for `--verbose`
 - ✅ Handle errors gracefully
 
 **DON'T:**
 - ❌ Use OptionParser directly
 - ❌ Put command logic in cli.rb
 - ❌ Use `exit()` in command classes
+- ❌ Use `-v` for version (use `--version`)
 - ❌ Hardcode configuration values
 - ❌ Mix command logic with business logic
 
