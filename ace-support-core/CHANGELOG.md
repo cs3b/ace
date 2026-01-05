@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-01-04
+
+### Added
+- `ConfigSummary` atom for standardized CLI configuration output to stderr
+  - Displays effective configuration state with config-diffing (only non-default values)
+  - Sensitive key filtering (keys ending with: token, password, secret, credential, key, api_key)
+  - Nested key flattening with dot notation (e.g., `llm.provider=google`)
+  - Allowlist support via `summary_keys` parameter
+  - Quiet mode support (suppress output with `--quiet`)
+  - Deterministic sorted key output
+  - 18 comprehensive tests covering all functionality
+
 ## [0.16.0] - 2026-01-03
 
 ### Added

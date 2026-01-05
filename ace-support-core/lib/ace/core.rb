@@ -10,8 +10,12 @@ require "ace/config"
 require "ace/support/fs"
 
 # Ace-specific components
+require_relative "core/atoms/config_summary"
 require_relative "core/organisms/environment_manager"
 require_relative "core/config_discovery"
+
+# CLI base class for Thor-based commands
+require_relative "core/cli/base"
 
 module Ace
   module Core
