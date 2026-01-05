@@ -4,8 +4,9 @@ filename_suggestion: fix-taskflow-status-recent
 enhanced_at: 2025-12-29 23:19:00
 location: active
 llm_model: gflash
+status: done
+completed_at: 2026-01-05T23:24:24+00:00
 ---
-
 # Fix ace-taskflow status to accurately report recently completed tasks
 
 ## Problem
