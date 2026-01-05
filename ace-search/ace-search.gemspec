@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Dependencies
+  spec.add_dependency "thor", "~> 1.3"
   spec.add_dependency "ace-config", "~> 0.5"
   spec.add_dependency "ace-git", "~> 0.3"
 

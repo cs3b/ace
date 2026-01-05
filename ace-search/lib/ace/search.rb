@@ -3,9 +3,15 @@
 require_relative "search/version"
 require "ace/config"
 
+# CLI and commands
+require_relative "search/cli"
+
 module Ace
   module Search
     class Error < StandardError; end
+
+    # Define module namespaces
+    module Commands; end
 
     # Check if debug mode is enabled
     # @return [Boolean] True if debug mode is enabled
@@ -42,6 +48,21 @@ module Ace
     # Reset config cache (useful for testing)
     def self.reset_config!
       @config = nil
+    end
+
+    # Load gem defaults from .ace-defaults/search/config.yml
+    # Used by ConfigSummary to display effective configuration diffs
+    # @return [Hash] Gem defaults hash
+    def self.load_gem_defaults
+      gem_root = Gem.loaded_specs["ace-search"]&.gem_dir ||
+                 File.expand_path("../..", __dir__)
+      defaults_path = File.join(gem_root, ".ace-defaults", "search", "config.yml")
+
+      return {} unless File.exist?(defaults_path)
+
+      data = YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
+      # Extract the ace.search section for backward compatibility
+      data.dig("ace", "search") || data
     end
 
     # Load gem defaults directly as fallback when cascade resolution fails
