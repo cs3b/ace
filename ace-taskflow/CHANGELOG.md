@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-01-05
+
+### Changed
+- Adopted `ConfigSummary.display_if_needed` pattern in TaskCommand
+  - Configuration summary now only displays with `--verbose` flag
+  - Help text remains clean and uncluttered
+  - Aligned with ace-support-core 0.18.0 conditional config display behavior
+
+### Fixed
+- Config summary output appearing with `--help` commands in task commands
+  - Applied conditional display logic to TaskCommand
+  - Tests added for help detection behavior
+
 ## [0.28.1] - 2026-01-05
 
 ### Added
