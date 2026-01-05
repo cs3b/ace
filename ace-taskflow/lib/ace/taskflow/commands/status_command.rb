@@ -14,9 +14,18 @@ module Ace
       # Shows current task, activity, and operational state
       # Git state is available via ace-git context command
       class StatusCommand
-        def execute(args)
-          # Parse options
+        def execute(args, thor_options = {})
+          # Parse options with OptionParser (command-level flags)
           options = parse_options(args)
+
+          # Merge Thor class options (from CLI routing)
+          # Thor boolean flags are passed through as-is; format needs special handling
+          options[:format] = "json" if thor_options[:json]
+          options[:format] = "markdown" if thor_options[:markdown]
+          options[:recently_done_limit] = thor_options[:recently_done_limit] if thor_options[:recently_done_limit]
+          options[:up_next_limit] = thor_options[:up_next_limit] if thor_options[:up_next_limit]
+          options[:include_drafts] = thor_options[:include_drafts] if !thor_options[:include_drafts].nil?
+          options[:include_activity] = thor_options[:include_activity] if !thor_options[:include_activity].nil?
 
           # If help was shown, return early with success
           # If invalid option was encountered, return early with failure
