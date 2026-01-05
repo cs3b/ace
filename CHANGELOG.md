@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.249] - 2026-01-05
+
+### Added
+
+- **ace-support-core 0.18.0**: `ConfigSummary.display_if_needed` method for conditional configuration display
+  - Checks for help flags (`--help`, `-h`) before displaying config
+  - Added `ConfigSummary.help_requested?` helper to detect help flag presence
+  - Prevents config summary from polluting help text output
+
+### Changed
+
+- **ace-support-core 0.18.0**: ConfigSummary now requires `--verbose` flag to display configuration details
+  - Standard command output remains clean and uncluttered
+  - Debug configuration available when explicitly requested
+  - Improved help text clarity by separating concerns
+
+- **ace-taskflow 0.29.0**: Adopted `ConfigSummary.display_if_needed` pattern in TaskCommand
+  - Configuration summary now only displays with `--verbose` flag
+  - Help text remains clean and uncluttered
+  - Aligned with ace-support-core 0.18.0 conditional config display behavior
+
+### Fixed
+
+- **ace-support-core 0.18.0**: Config summary output appearing with `--help` commands
+  - Configuration now only shows when both not in help mode AND verbose is enabled
+  - Added tests for `help_requested?` detection logic
+
+- **ace-taskflow 0.29.0**: Config summary output appearing with `--help` commands in task commands
+  - Applied conditional display logic to TaskCommand
+  - Tests added for help detection behavior
+
 ## [0.9.248] - 2026-01-05
 
 ### Technical

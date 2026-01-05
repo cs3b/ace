@@ -82,8 +82,61 @@ module Ace
         def self.display(command:, config: {}, defaults: {}, options: {}, quiet: false, summary_keys: nil)
           return if quiet
 
+          # Only display config when verbose mode is explicitly enabled
+          return unless options[:verbose]
+
           summary = new(command, config, defaults, options, summary_keys).build
           $stderr.puts "Config: #{summary}" unless summary.empty?
+        end
+
+        # Display configuration summary only if help was NOT requested.
+        #
+        # This is the recommended method for commands that need to show config
+        # but want to avoid polluting --help output with configuration details.
+        #
+        # @param command [String] Command name for context
+        # @param config [Hash] Effective configuration (merged result)
+        # @param defaults [Hash] Default configuration to diff against
+        # @param options [Hash] CLI options (Thor options hash)
+        # @param quiet [Boolean] Suppress output if true
+        # @param summary_keys [Array<String>, nil] Allowlist of keys to include (nil = all non-sensitive)
+        # @return [nil]
+        #
+        # @example Usage in command
+        #   def execute
+        #     # Check for help BEFORE displaying config
+        #     return show_help if help_requested?(options, args)
+        #
+        #     # Now safe to display config
+        #     ConfigSummary.display_if_needed(
+        #       command: "review",
+        #       config: Gem.config,
+        #       defaults: Gem.default_config,
+        #       options: options
+        #     )
+        #   end
+        #
+        def self.display_if_needed(command:, config: {}, defaults: {}, options: {}, quiet: false, summary_keys: nil, args: ARGV)
+          return if quiet
+          return if help_requested?(options, args)
+
+          display(command: command, config: config, defaults: defaults, options: options, summary_keys: summary_keys)
+        end
+
+        # Check if help was requested via options or arguments.
+        #
+        # @param options [Hash] CLI options hash (from Thor)
+        # @param args [Array<String>] Command arguments (defaults to ARGV for CLI context)
+        # @return [Boolean] true if help was requested
+        #
+        # @note The `args` parameter defaults to ARGV for CLI usage convenience.
+        #       In test or non-CLI contexts, pass an explicit array to avoid global state.
+        #
+        def self.help_requested?(options = {}, args = ARGV)
+          options[:help] ||
+            options[:h] ||
+            args.include?("--help") ||
+            args.include?("-h")
         end
 
         def initialize(command, config, defaults, options, summary_keys)
