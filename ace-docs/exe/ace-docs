@@ -1,13 +1,61 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "thor"
+require "ace/core/cli/base"
 require_relative "../lib/ace/docs"
 
 module Ace
   module Docs
-    class CLI < Thor
+    class CLI < Ace::Core::CLI::Base
+      # class_options :quiet, :verbose, :debug inherited from Base
+
+      # Override help to add document management section
+      def self.help(shell, subcommand = false)
+        super
+        shell.say ""
+        shell.say "Document Management:"
+        shell.say "  Track document freshness via frontmatter conventions:"
+        shell.say "    status     -> Show document freshness and update needs"
+        shell.say "    validate   -> Check documents against rules"
+        shell.say "    update     -> Update frontmatter fields"
+        shell.say ""
+        shell.say "Examples:"
+        shell.say "  ace-docs status                      # All tracked documents"
+        shell.say "  ace-docs validate docs/**/*.md       # Validate pattern"
+        shell.say "  ace-docs update README.md --set last-updated=today"
+      end
+
       desc "status", "Show status of all managed documents"
+      long_desc <<~DESC
+        Display status information for all documents tracked by ace-docs,
+        including freshness, update status, and document metadata.
+
+        EXAMPLES:
+
+          # Show status of all documents
+          $ ace-docs status
+
+          # Filter by document type
+          $ ace-docs status --type handbook
+
+          # Show only documents needing update
+          $ ace-docs status --needs-update
+
+          # Filter by freshness status
+          $ ace-docs status --freshness stale
+          $ ace-docs status --freshness current
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/docs/config.yml
+          Project config: .ace/docs/config.yml
+          Example:        ace-docs/.ace-defaults/docs/config.yml
+
+        OUTPUT:
+
+          Table format with columns: path, type, status, last-updated
+          Exit codes: 0 (success), 1 (error)
+      DESC
       option :type, desc: "Filter by document type"
       option :needs_update, type: :boolean, desc: "Show only documents needing update"
       option :freshness, desc: "Filter by freshness status (current/stale/outdated)"
@@ -19,6 +67,20 @@ module Ace
       end
 
       desc "discover", "Find and list all managed documents"
+      long_desc <<~DESC
+        Scan the project for all documents managed by ace-docs and display them.
+        Useful for verifying which files are being tracked.
+
+        EXAMPLES:
+
+          # List all managed documents
+          $ ace-docs discover
+
+          # Output shows count and file paths with types
+          # Found 15 managed documents:
+          #   docs/architecture.md (architecture)
+          #   dev-handbook/guides/testing.md (guide)
+      DESC
       def discover
         require_relative "../lib/ace/docs/organisms/document_registry"
         registry = Organisms::DocumentRegistry.new
@@ -26,47 +88,203 @@ module Ace
 
         if documents.empty?
           puts "No managed documents found."
-          return
+          return 0
         end
 
         puts "Found #{documents.size} managed documents:"
         documents.each do |doc|
           puts "  #{doc.relative_path || doc.path} (#{doc.doc_type})"
         end
+        0
       rescue StandardError => e
         error_exit("Error discovering documents", e)
       end
 
       desc "update FILE", "Update document frontmatter"
+      long_desc <<~DESC
+        Update frontmatter fields in a single document or all documents matching a preset.
+        Common updates include last-updated timestamps and status changes.
+
+        SYNTAX:
+          ace-docs update FILE [OPTIONS]
+          ace-docs update --preset PRESET [OPTIONS]
+
+        EXAMPLES:
+
+          # Update last-updated to today
+          $ ace-docs update README.md --set last-updated=today
+
+          # Update multiple fields
+          $ ace-docs update docs/guide.md --set status=complete --set last-reviewed=2025-01-04
+
+          # Update all documents matching a preset
+          $ ace-docs update --set last-updated=today --preset handbook
+
+          # Update with explicit date
+          $ ace-docs update file.md --set last-updated=2025-01-04
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/docs/config.yml
+          Project config: .ace/docs/config.yml
+
+        OUTPUT:
+
+          Updated fields written to file frontmatter
+          Exit codes: 0 (success), 1 (error)
+      DESC
       option :set, type: :hash, desc: "Fields to update (e.g., --set last-updated=today)"
       option :preset, desc: "Update all documents matching preset"
       def update(file = nil)
+        # Handle --help/-h passed as file argument
+        if file == "--help" || file == "-h"
+          invoke :help, ["update"]
+          return 0
+        end
         require_relative "../lib/ace/docs/commands/update_command"
         exit_code = Commands::UpdateCommand.new(options).execute(file)
-        exit(exit_code) if exit_code != 0
+        return exit_code if exit_code != 0
+        0
       end
 
       desc "analyze FILE", "Analyze changes for a document with LLM"
+      long_desc <<~DESC
+        Analyze git changes for a document using an LLM to understand what content
+        has changed and whether documentation updates are needed.
+
+        SYNTAX:
+          ace-docs analyze FILE [OPTIONS]
+
+        EXAMPLES:
+
+          # Analyze changes since last commit
+          $ ace-docs analyze README.md
+
+          # Analyze changes since specific date
+          $ ace-docs analyze docs/architecture.md --since "2025-01-01"
+
+          # Exclude renamed/moved files from diff
+          $ ace-docs analyze file.md --exclude-renames --exclude-moves
+
+        CONFIGURATION:
+
+          LLM model configured via ace-llm
+          Global config:  ~/.ace/docs/config.yml
+          Project config: .ace/docs/config.yml
+
+        OUTPUT:
+
+          Analysis results printed to stdout
+          Exit codes: 0 (success), 1 (error)
+      DESC
       option :since, desc: "Date or commit to analyze from"
       option :exclude_renames, type: :boolean, desc: "Exclude renamed files from diff"
       option :exclude_moves, type: :boolean, desc: "Exclude moved files from diff"
       def analyze(file)
+        # Handle --help/-h passed as file argument
+        if file == "--help" || file == "-h"
+          invoke :help, ["analyze"]
+          return 0
+        end
         require_relative "../lib/ace/docs/commands/analyze_command"
         exit_code = Commands::AnalyzeCommand.new(options).execute(file)
-        exit(exit_code) if exit_code != 0
+        return exit_code if exit_code != 0
+        0
       end
 
       desc "validate [FILE|PATTERN]", "Validate documents against rules"
+      long_desc <<~DESC
+        Validate documents against configured rules. Syntax validation uses linters,
+        semantic validation uses LLM analysis.
+
+        SYNTAX:
+          ace-docs validate [FILE|PATTERN] [OPTIONS]
+
+        EXAMPLES:
+
+          # Validate all documents
+          $ ace-docs validate
+
+          # Validate specific file
+          $ ace-docs validate README.md
+
+          # Validate by pattern
+          $ ace-docs validate docs/**/*.md
+
+          # Run syntax validation only
+          $ ace-docs validate --syntax
+
+          # Run semantic validation only
+          $ ace-docs validate --semantic
+
+          # Run all validation types
+          $ ace-docs validate --all
+
+        CONFIGURATION:
+
+          Validation rules configured via ace-lint
+          Global config:  ~/.ace/docs/config.yml
+          Project config: .ace/docs/config.yml
+
+        OUTPUT:
+
+          Validation report printed to stdout
+          Exit codes: 0 (pass), 1 (fail), 2 (error)
+      DESC
       option :syntax, type: :boolean, desc: "Run syntax validation using linters"
       option :semantic, type: :boolean, desc: "Run semantic validation using LLM"
       option :all, type: :boolean, desc: "Run all validation types"
       def validate(pattern = nil)
+        # Handle --help/-h passed as pattern argument
+        if pattern == "--help" || pattern == "-h"
+          invoke :help, ["validate"]
+          return 0
+        end
         require_relative "../lib/ace/docs/commands/validate_command"
         exit_code = Commands::ValidateCommand.new(options).execute(pattern)
-        exit(exit_code) if exit_code != 0
+        return exit_code if exit_code != 0
+        0
       end
 
       desc "analyze-consistency [PATTERN]", "Analyze cross-document consistency"
+      long_desc <<~DESC
+        Analyze multiple documents for consistency issues including terminology
+        conflicts, duplicate content, and version inconsistencies.
+
+        SYNTAX:
+          ace-docs analyze-consistency [PATTERN] [OPTIONS]
+
+        EXAMPLES:
+
+          # Analyze all documents
+          $ ace-docs analyze-consistency
+
+          # Analyze specific directory
+          $ ace-docs analyze-consistency docs/handbook/
+
+          # Check for terminology conflicts only
+          $ ace-docs analyze-consistency --terminology
+
+          # Find duplicate content only
+          $ ace-docs analyze-consistency --duplicates --threshold 80
+
+          # Save report to cache
+          $ ace-docs analyze-consistency --save
+
+          # Use specific LLM model
+          $ ace-docs analyze-consistency --model gpt-4
+
+        CONFIGURATION:
+
+          LLM model configured via ace-llm
+          Global config:  ~/.ace/docs/config.yml
+          Project config: .ace/docs/config.yml
+
+        OUTPUT:
+
+          Consistency report in markdown format (default)
+          Exit codes: 0 (success), 1 (issues found with --strict), 2 (error)
+      DESC
       option :terminology, type: :boolean, desc: "Check terminology conflicts only"
       option :duplicates, type: :boolean, desc: "Find duplicate content only"
       option :versions, type: :boolean, desc: "Check version consistency only"
@@ -77,18 +295,34 @@ module Ace
       option :model, desc: "LLM model to use (default: gflash)"
       option :timeout, type: :numeric, desc: "LLM timeout in seconds"
       option :strict, type: :boolean, desc: "Exit with code 1 if issues found"
-      option :verbose, type: :boolean, desc: "Show verbose output"
-      option :debug, type: :boolean, desc: "Show debug output"
+      # Note: verbose and debug options inherited from Ace::Core::CLI::Base
       def analyze_consistency(pattern = nil)
+        # Handle --help/-h passed as pattern argument
+        if pattern == "--help" || pattern == "-h"
+          invoke :help, ["analyze_consistency"]
+          return 0
+        end
         require_relative "../lib/ace/docs/commands/analyze_consistency_command"
         exit_code = Commands::AnalyzeConsistencyCommand.new(options).execute(pattern)
-        exit(exit_code) if exit_code != 0
+        return exit_code if exit_code != 0
+        0
       end
 
       desc "version", "Show ace-docs version"
+      long_desc <<~DESC
+        Display the current version of ace-docs.
+
+        EXAMPLES:
+
+          $ ace-docs version
+          $ ace-docs --version
+      DESC
       def version
         puts "ace-docs version #{Ace::Docs::VERSION}"
+        0
       end
+      map "--version" => :version
+      # Note: -v reserved for --verbose, version only via --version
 
       private
 
