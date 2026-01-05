@@ -116,28 +116,37 @@ module Ace
             end
           end
 
-          # Check if any paths are directories, glob patterns, or multiple files
-          has_directories = options.files.any? { |f| File.directory?(f) }
-          has_glob_patterns = options.files.any? { |f| @path_resolver.glob_pattern?(f) }
+          # Separate paths by type for different handling
+          glob_patterns = options.files.select { |f| @path_resolver.glob_pattern?(f) }
+          non_patterns = options.files - glob_patterns
+          directories = non_patterns.select { |f| File.directory?(f) }
+          single_files = non_patterns - directories
 
-          if has_directories || has_glob_patterns || options.files.length > 1
-            # Use path-restricted staging (reset + selective add)
-            # Resolve paths/patterns to actual file lists first
-            resolved_files = @path_resolver.resolve_paths(options.files)
+          # Build list of paths to stage
+          # - Directories: pass through directly (git add handles gitignore)
+          # - Globs: expand to tracked files (requires filesystem traversal)
+          # - Single files: pass through
+          paths_to_stage = directories + single_files
 
-            if resolved_files.empty?
-              puts "\n✗ No files found matching the specified path(s) or pattern(s)"
+          # Expand glob patterns to tracked files
+          unless glob_patterns.empty?
+            resolved_globs = @path_resolver.resolve_paths(glob_patterns)
+            if resolved_globs.empty?
+              puts "\n✗ No files found matching the specified pattern(s)"
               puts "Glob patterns expand only to git-tracked files."
               return false
             end
-
-            puts "Staging files from specified path(s)..." unless options.quiet
-            result = @file_stager.stage_paths(resolved_files)
-          else
-            # Single file - use simple staging
-            puts "Staging specific files..." unless options.quiet
-            result = @file_stager.stage_files(options.files)
+            paths_to_stage.concat(resolved_globs)
           end
+
+          if paths_to_stage.empty?
+            puts "\n✗ No files found matching the specified path(s)"
+            return false
+          end
+
+          # Stage using path-restricted approach (reset + selective add)
+          puts "Staging files from specified path(s)..." unless options.quiet
+          result = @file_stager.stage_paths(paths_to_stage)
 
           if result
             staged_count = @file_stager.staged_files.length
