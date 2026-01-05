@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-01-05
+
+### Technical
+- Clarified subject type prefix requirement in workflow documentation with explicit warnings and common mistakes examples
+
 ## [0.31.0] - 2026-01-05
 
 ### Added
