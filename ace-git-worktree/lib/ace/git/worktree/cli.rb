@@ -1,194 +1,303 @@
 # frozen_string_literal: true
 
+require "ace/core/cli/base"
+
 module Ace
   module Git
     module Worktree
-      # CLI class for ace-git-worktree
-      #
-      # Provides the main command-line interface with routing to specific
-      # command classes. Follows the ace-taskflow pattern with case/when routing.
-      #
-      # @example Usage from executable
-      #   CLI.new(ARGV).run
-      class CLI
-        # Initialize a new CLI
-        #
-        # @param args [Array<String>] Command line arguments
-        def initialize(args = ARGV)
-          @args = args
-          @commands = {}
-          @commands_registered = false
+      class CLI < Ace::Core::CLI::Base
+        # class_options :quiet, :verbose, :debug inherited from Base
+
+        # Override help to add task-aware worktrees section
+        def self.help(shell, subcommand = false)
+          super
+          shell.say ""
+          shell.say "Task-Aware Worktrees:"
+          shell.say "  Create worktrees linked to tasks or PRs:"
+          shell.say "    ace-git-worktree create --task 081"
+          shell.say "    ace-git-worktree create --pr 123"
+          shell.say ""
+          shell.say "Examples:"
+          shell.say "  ace-git-worktree create --task 081   # Worktree for task"
+          shell.say "  ace-git-worktree list                # List worktrees"
+          shell.say "  ace-git-worktree switch 081          # Switch by task"
         end
 
-        # Run the CLI
-        #
-        # @return [Integer] Exit code (0 for success, 1 for error)
-        def run
-          # Handle no arguments
-          if @args.empty?
-            show_help
+        desc "create [BRANCH] [OPTIONS]", "Create a new worktree"
+        long_desc <<~DESC
+          Create a new git worktree. Supports task-aware, PR, and traditional worktree creation.
+
+          SYNTAX:
+            ace-git-worktree create [BRANCH] [OPTIONS]
+
+          TASK-AWARE:
+            ace-git-worktree create --task <task-id>
+            ace-git-worktree create --task 081 --dry-run
+
+          PR-AWARE:
+            ace-git-worktree create --pr <pr-number>
+            ace-git-worktree create --pr 123
+
+          TRADITIONAL:
+            ace-git-worktree create <branch-name>
+            ace-git-worktree create feature/new-auth --checkout
+
+          EXAMPLES:
+
+            # Create worktree for task
+            $ ace-git-worktree create --task 081
+
+            # Create worktree for PR
+            $ ace-git-worktree create --pr 123
+
+            # Create with branch name
+            $ ace-git-worktree create feature/new-auth
+
+            # Dry run to preview
+            $ ace-git-worktree create --task 081 --dry-run
+
+          CONFIGURATION:
+
+            Global config:  ~/.ace/git-worktree/config.yml
+            Project config: .ace/git-worktree/config.yml
+            Example:        ace-git-worktree/.ace-defaults/git-worktree/config.yml
+
+          OUTPUT:
+
+            Created worktree path printed to stdout
+            Exit codes: 0 (success), 1 (error)
+        DESC
+        option :task, type: :string, desc: "Create worktree for task (task ID)"
+        option :pr, type: :string, desc: "Create worktree for PR"
+        option :branch, type: :string, desc: "Create worktree from branch"
+        option :force, type: :boolean, aliases: "-f", desc: "Force creation even if worktree exists"
+        option :dry_run, type: :boolean, aliases: "-n", desc: "Show what would be created without doing it"
+        option :no_fetch, type: :boolean, desc: "Skip fetching remote branches"
+        option :checkout, type: :boolean, desc: "Checkout the worktree after creation"
+        def create(*args)
+          # Handle --help/-h passed as first argument
+          if args.first == "--help" || args.first == "-h"
+            invoke :help, ["create"]
             return 0
           end
-
-          # Handle help/version first
-          case @args.first
-          when "--help", "-h", "help"
-            show_help
-            return 0
-          when "--version", "-v", "version"
-            show_version
-            return 0
-          end
-
-          # Route to command
-          command_name = @args.first
-          command_args = @args[1..-1]
-
-          # Register commands only when we need them
-          ensure_commands_registered
-          command = @commands[command_name]
-          if command
-            command.run(command_args)
-          else
-            puts "Error: Unknown command '#{command_name}'"
-            puts
-            show_help
-            1
-          end
-        rescue StandardError => e
-          puts "Unexpected error: #{e.message}"
-          puts
-
-          # Provide specific guidance for common errors
-          case e.message
-          when /ace-taskflow/
-            puts "ace-taskflow dependency issue detected:"
-            puts "  1. Install ace-taskflow: gem install ace-taskflow"
-            puts "  2. Check PATH: which ace-taskflow"
-            puts "  3. For task operations, ensure ace-taskflow is available"
-          when /git.*not found|git.*command/
-            puts "Git dependency issue detected:"
-            puts "  1. Install git: https://git-scm.com/downloads"
-            puts "  2. Check git is in PATH: which git"
-            puts "  3. Ensure you're in a git repository"
-          when /permission.*denied|access.*denied/
-            puts "Permission issue detected:"
-            puts "  1. Check directory permissions"
-            puts "  2. Ensure git repository is accessible"
-            puts "  3. Try running with appropriate permissions"
-          end
-
-          puts
-          show_help
-          1
+          display_config_summary("create")
+          Commands::CreateCommand.new.run(args)
         end
+
+        desc "list [OPTIONS]", "List all worktrees"
+        long_desc <<~DESC
+          List all git worktrees with optional filtering.
+
+          SYNTAX:
+            ace-git-worktree list [OPTIONS]
+
+          EXAMPLES:
+
+            # List all worktrees
+            $ ace-git-worktree list
+
+            # Show task information
+            $ ace-git-worktree list --show-tasks
+
+            # Verbose output
+            $ ace-git-worktree list --verbose
+
+          CONFIGURATION:
+
+            Global config:  ~/.ace/git-worktree/config.yml
+            Project config: .ace/git-worktree/config.yml
+            Example:        ace-git-worktree/.ace-defaults/git-worktree/config.yml
+
+          OUTPUT:
+
+            Table format with worktree details
+            Exit codes: 0 (success), 1 (error)
+        DESC
+        option :show_tasks, type: :boolean, desc: "Show task information for each worktree"
+        def list(*args)
+          display_config_summary("list")
+          Commands::ListCommand.new.run(args)
+        end
+
+        desc "switch <IDENTIFIER>", "Switch to a worktree"
+        long_desc <<~DESC
+          Switch to a worktree by returning its path.
+
+          SYNTAX:
+            ace-git-worktree switch <IDENTIFIER>
+
+          EXAMPLES:
+
+            # Switch by task number
+            $ ace-git-worktree switch 081
+
+            # Switch by branch name
+            $ ace-git-worktree switch feature-branch
+
+          CONFIGURATION:
+
+            Global config:  ~/.ace/git-worktree/config.yml
+            Project config: .ace/git-worktree/config.yml
+            Example:        ace-git-worktree/.ace-defaults/git-worktree/config.yml
+
+          OUTPUT:
+
+            Worktree path printed to stdout (for cd with backticks)
+            Exit codes: 0 (success), 1 (error)
+        DESC
+        def switch(*args)
+          # Handle --help/-h passed as first argument
+          if args.first == "--help" || args.first == "-h"
+            invoke :help, ["switch"]
+            return 0
+          end
+          display_config_summary("switch")
+          Commands::SwitchCommand.new.run(args)
+        end
+
+        desc "remove <IDENTIFIER> [OPTIONS]", "Remove a worktree"
+        long_desc <<~DESC
+          Remove a git worktree.
+
+          SYNTAX:
+            ace-git-worktree remove <IDENTIFIER> [OPTIONS]
+
+          EXAMPLES:
+
+            # Remove by task ID
+            $ ace-git-worktree remove --task 081
+
+            # Remove by branch name
+            $ ace-git-worktree remove feature-branch
+
+            # Force removal
+            $ ace-git-worktree remove --force 123
+
+          CONFIGURATION:
+
+            Global config:  ~/.ace/git-worktree/config.yml
+            Project config: .ace/git-worktree/config.yml
+            Example:        ace-git-worktree/.ace-defaults/git-worktree/config.yml
+
+          OUTPUT:
+
+            Removal confirmation printed to stdout
+            Exit codes: 0 (success), 1 (error)
+        DESC
+        option :force, type: :boolean, aliases: "-f", desc: "Force removal without confirmation"
+        option :task, type: :string, desc: "Specify worktree by task ID"
+        def remove(*args)
+          # Handle --help/-h passed as first argument
+          if args.first == "--help" || args.first == "-h"
+            invoke :help, ["remove"]
+            return 0
+          end
+          display_config_summary("remove")
+          Commands::RemoveCommand.new.run(args)
+        end
+
+        desc "prune [OPTIONS]", "Clean up deleted worktrees"
+        long_desc <<~DESC
+          Prune worktrees that have been deleted from the filesystem.
+
+          SYNTAX:
+            ace-git-worktree prune [OPTIONS]
+
+          EXAMPLES:
+
+            # Prune deleted worktrees
+            $ ace-git-worktree prune
+
+            # Dry run to preview
+            $ ace-git-worktree prune --dry-run
+
+          CONFIGURATION:
+
+            Global config:  ~/.ace/git-worktree/config.yml
+            Project config: .ace/git-worktree/config.yml
+            Example:        ace-git-worktree/.ace-defaults/git-worktree/config.yml
+
+          OUTPUT:
+
+            Pruned worktrees listed
+            Exit codes: 0 (success), 1 (error)
+        DESC
+        option :dry_run, type: :boolean, aliases: "-n", desc: "Show what would be pruned without doing it"
+        def prune(*args)
+          # Handle --help/-h passed as first argument
+          if args.first == "--help" || args.first == "-h"
+            invoke :help, ["prune"]
+            return 0
+          end
+          display_config_summary("prune")
+          Commands::PruneCommand.new.run(args)
+        end
+
+        desc "config [OPTIONS]", "Show/manage configuration"
+        long_desc <<~DESC
+          Show configuration and file locations.
+
+          SYNTAX:
+            ace-git-worktree config [OPTIONS]
+
+          EXAMPLES:
+
+            # Show configuration
+            $ ace-git-worktree config
+
+            # Show config file locations
+            $ ace-git-worktree config --files
+
+          CONFIGURATION:
+
+            Global config:  ~/.ace/git-worktree/config.yml
+            Project config: .ace/git-worktree/config.yml
+            Example:        ace-git-worktree/.ace-defaults/git-worktree/config.yml
+
+          OUTPUT:
+
+            Configuration details printed to stdout
+            Exit codes: 0 (success), 1 (error)
+        DESC
+        option :files, type: :boolean, desc: "Show configuration file locations"
+        def config(*args)
+          display_config_summary("config")
+          Commands::ConfigCommand.new.run(args)
+        end
+
+        # Aliases
+        map %w[ls] => :list
+        map %w[rm] => :remove
+        map %w[cd] => :switch
+
+        desc "version", "Show version"
+        long_desc <<~DESC
+          Display the current version of ace-git-worktree.
+
+          EXAMPLES:
+
+            $ ace-git-worktree version
+            $ ace-git-worktree --version
+        DESC
+        def version
+          puts "ace-git-worktree version #{Ace::Git::Worktree::VERSION}"
+          0
+        end
+        map "--version" => :version
 
         private
 
-        # Ensure commands are registered (lazy loading)
-        def ensure_commands_registered
-          return if @commands_registered
-          register_commands
-          @commands_registered = true
-        end
+        def display_config_summary(command)
+          return if options[:quiet]
 
-        # Register all available commands
-        def register_commands
-          @commands["create"] = Commands::CreateCommand.new
-          @commands["list"] = Commands::ListCommand.new
-          @commands["switch"] = Commands::SwitchCommand.new
-          @commands["remove"] = Commands::RemoveCommand.new
-          @commands["prune"] = Commands::PruneCommand.new
-          @commands["config"] = Commands::ConfigCommand.new
-
-          # Add aliases
-          @commands["ls"] = @commands["list"]
-          @commands["rm"] = @commands["remove"]
-          @commands["cd"] = @commands["switch"]
-        end
-
-        # Show help information
-        def show_help
-          puts <<~HELP
-            ace-git-worktree - Task-aware git worktree management
-
-            USAGE:
-                ace-git-worktree <command> [OPTIONS]
-
-            COMMANDS:
-                create      Create a new worktree
-                list        List all worktrees
-                switch      Switch to a worktree
-                remove      Remove a worktree
-                prune       Clean up deleted worktrees
-                config      Show/manage configuration
-
-            TASK-AWARE WORKFLOW:
-                ace-git-worktree create --task <task-id>     Create worktree for task
-                ace-git-worktree switch <task-id>            Switch to task worktree
-                ace-git-worktree remove --task <task-id>     Remove task worktree
-
-            TRADITIONAL WORKFLOW:
-                ace-git-worktree create <branch-name>        Create traditional worktree
-                ace-git-worktree switch <branch-name>       Switch to worktree
-                ace-git-worktree remove <identifier>        Remove worktree
-
-            EXAMPLES:
-                # Create task-aware worktree
-                ace-git-worktree create --task 081
-
-                # List all worktrees
-                ace-git-worktree list --show-tasks
-
-                # Switch to task worktree
-                cd $(ace-git-worktree switch 081)
-
-                # Remove task worktree
-                ace-git-worktree remove --task 081
-
-                # Clean up deleted worktrees
-                ace-git-worktree prune
-
-                # Show configuration
-                ace-git-worktree config
-
-            HELP:
-                Use 'ace-git-worktree <command> --help' for command-specific help
-
-            CONFIGURATION:
-                Configuration is loaded from .ace/git/worktree.yml
-                See 'ace-git-worktree config --files' for file locations
-
-            VERSION:
-                #{VERSION}
-
-            For more information, see the project documentation.
-          HELP
-        end
-
-        # Show version information
-        def show_version
-          puts "ace-git-worktree version #{VERSION}"
-          puts "Part of the ACE ecosystem"
-        end
-
-        # Get version from version module
-        #
-        # @return [String] Version string
-        def VERSION
-          # Load version module only once
-          unless defined?(Ace::Git::Worktree::VERSION)
-            version_file = File.expand_path("../version.rb", __dir__)
-            require version_file if File.exist?(version_file)
-          end
-
-          if defined?(Ace::Git::Worktree::VERSION)
-            Ace::Git::Worktree::VERSION
-          else
-            "0.1.0"
-          end
-        rescue StandardError
-          "0.1.0"
+          require "ace/core"
+          Ace::Core::Atoms::ConfigSummary.display(
+            command: command,
+            config: Ace::Git::Worktree.config,
+            defaults: {},
+            options: options,
+            quiet: false
+          )
         end
       end
     end
