@@ -1,221 +1,248 @@
 # frozen_string_literal: true
 
-require "optparse"
+require "ace/core/cli/base"
 require "fileutils"
 require_relative "organisms/navigation_engine"
 require_relative "organisms/command_delegator"
 
 module Ace
   module Nav
-    # CLI interface for ace-nav
-    class Cli
-      def initialize
-        @engine = Organisms::NavigationEngine.new
-        @options = {}
+    class CLI < Ace::Core::CLI::Base
+      default_task :resolve
+
+      # Override help to add wildcard routing section
+      def self.help(shell, subcommand = false)
+        super
+        shell.say ""
+        shell.say "Magic Wildcard Routing:"
+        shell.say "  Wildcard patterns are auto-routed to 'list' command - no need to type 'list':"
+        shell.say "    ace-nav wfi://*              → ace-nav list wfi://*"
+        shell.say "    ace-nav tmpl://@ace-*/*     → ace-nav list tmpl://@ace-*/*"
+        shell.say "    ace-nav wfi://              → ace-nav list wfi:// (protocol-only)"
+        shell.say "  Recognized patterns: *, ?, trailing /, protocol-only"
+        shell.say ""
+        shell.say "Examples:"
+        shell.say "  ace-nav wfi://setup                # Resolve workflow"
+        shell.say "  ace-nav wfi://*                    # List workflows (auto-routing)"
+        shell.say "  ace-nav tmpl://custom ./output.md  # Create from template"
       end
 
-      def run(argv)
-        parse_options(argv)
+      desc "resolve URI", "Resolve resource path or content"
+      long_desc <<~DESC
+        Resolve a resource URI to its path or content.
 
-        # Check for standalone options that don't require a path/URI
-        if @options[:help]
-          show_help
-          return 0
-        elsif @options[:sources]
-          show_sources
-          return 0
-        end
+        SYNTAX:
+          ace-nav [URI] [OPTIONS]
+          ace-nav resolve [URI] [OPTIONS]
 
-        # Get the path/URI argument
-        path_or_uri = argv.first
+        Automatically detects list mode for wildcards, patterns ending with /,
+        and protocol-only URIs (e.g., wfi://, tmpl://).
 
-        unless path_or_uri
-          show_help
-          return 0
-        end
+        EXAMPLES:
 
-        # Execute based on options
-        execute(path_or_uri)
-      rescue StandardError => e
-        puts "Error: #{e.message}"
-        puts e.backtrace if @options[:verbose]
-        1
-      end
+          # Resolve URI to path
+          $ ace-nav wfi://setup
 
-      private
+          # Display content
+          $ ace-nav wfi://setup --content
 
-      def parse_options(argv)
-        @parser = OptionParser.new do |opts|
-          opts.banner = "Usage: ace-nav <path-or-uri> [options]"
-          opts.separator ""
-          opts.separator "Options:"
+          # Wildcard patterns auto-route to list
+          $ ace-nav wfi://*
 
-          opts.on("--path", "Display resource path") do
-            @options[:path] = true
-          end
+          # Protocol-only URIs auto-route to list
+          $ ace-nav tmpl:///
 
-          opts.on("--content", "Display resource content") do
-            @options[:content] = true
-          end
+        CONFIGURATION:
 
-          opts.on("--create [PATH]", "Create resource from template") do |path|
-            @options[:create] = path || true
-          end
+          Global config:  ~/.ace/nav/config.yml
+          Project config: .ace/nav/config.yml
+          Example:        ace-nav/.ace-defaults/nav/config.yml
 
-          opts.on("--list", "List matching resources") do
-            @options[:list] = true
-          end
+          Sources configured via nav.sources in config
 
-          opts.on("--tree", "Display resources in tree format") do
-            @options[:tree] = true
-            @options[:list] = true
-          end
+        OUTPUT:
 
-          opts.on("--verbose", "Show detailed information") do
-            @options[:verbose] = true
-          end
-
-          opts.on("--sources", "Show available sources") do
-            @options[:sources] = true
-          end
-
-          opts.on("-h", "--help", "Show this help message") do
-            @options[:help] = true
-          end
-
-          opts.on("-v", "--version", "Show version") do
-            puts "ace-nav #{VERSION}"
-            exit
-          end
-        end
-
-        @parser.parse!(argv)
-      end
-
-      def execute(path_or_uri)
-        # Check if this is a cmd-type protocol (command delegation)
-        if path_or_uri.include?("://")
-          protocol = path_or_uri.split("://").first
-          if @engine.cmd_protocol?(protocol)
-            # Delegate to external command and return exit code
-            delegator = Organisms::CommandDelegator.new
-            return delegator.delegate(path_or_uri, @options)
-          end
-        end
-
-        # Check if it's a protocol-only URI (e.g., "tmpl://")
-        # and automatically treat it as a list operation with wildcard
-        if path_or_uri.match?(/^\w+:\/\/$/)
-          # Protocol-only URI, add wildcard and force list mode
-          path_or_uri = "#{path_or_uri}*"
-          @options[:list] = true
-        elsif path_or_uri.include?("*") || path_or_uri.include?("?")
-          # Pattern contains wildcards, force list mode
-          @options[:list] = true
-        elsif path_or_uri.match?(/\/$/)
-          # Pattern ends with /, force list mode (subdirectory/prefix pattern)
-          @options[:list] = true
-        end
-
-        if @options[:create]
-          return create_resource(path_or_uri)
-        elsif @options[:list]
-          list_resources(path_or_uri)
-          return 0  # List operations always succeed
-        else
-          return resolve_resource(path_or_uri)
-        end
-      end
-
-      def show_help
-        puts @parser
-        puts
-        puts "Examples:"
-        puts "  ace-nav wfi://setup                         # Find first matching workflow"
-        puts "  ace-nav wfi://@ace-git/setup               # From specific source"
-        puts "  ace-nav wfi://setup --content              # Show content"
-        puts "  ace-nav 'wfi://*' --list                   # List all workflows"
-        puts "  ace-nav wfi://setup --create               # Create from template"
-        puts "  ace-nav --sources                          # Show available sources"
-        puts
-        puts "Available Protocols:"
-
-        protocols = @engine.discovered_protocols
-        if protocols.empty?
-          puts "  No protocols discovered. Check your configuration."
-        else
-          protocols.sort.each do |key, protocol|
-            name = protocol["name"] || key.capitalize
-            desc = protocol["description"] || ""
-            if desc.empty?
-              puts "  #{key}://   - #{name}"
-            else
-              puts "  #{key}://   - #{name}"
-              puts "           #{desc}"
-            end
-          end
-        end
-        puts
-        puts "Sources (use @ prefix):"
-        puts "  @project - Project overrides (./.ace/handbook)"
-        puts "  @user    - User overrides (~/.ace/handbook)"
-        puts "  @ace-*   - Specific ace gem"
-      end
-
-      def show_sources
-        sources = @engine.sources(verbose: @options[:verbose])
-
-        if @options[:verbose]
-          require "json"
-          puts JSON.pretty_generate(sources)
-        else
-          puts "Available sources:"
-          sources.each { |source| puts "  #{source}" }
-        end
-      end
-
-      def create_resource(uri)
-        target = @options[:create] == true ? nil : @options[:create]
-        result = @engine.create(uri, target)
-
-        if result[:error]
-          puts "Error: #{result[:error]}"
-          return 1
-        else
-          puts "Created: #{result[:created]}"
-          puts "From: #{result[:from]}" if @options[:verbose]
+          By default, displays resolved path
+          Use --content to display resource content
+          Exit codes: 0 (success), 1 (error)
+      DESC
+      option :path, type: :boolean, desc: "Display resource path"
+      option :content, type: :boolean, desc: "Display resource content"
+      option :verbose, type: :boolean, aliases: "-v", desc: "Show detailed information"
+      option :quiet, type: :boolean, aliases: "-q", desc: "Suppress config summary"
+      def resolve(uri)
+        # Handle --help/-h passed as URI argument
+        if uri == "--help" || uri == "-h"
+          invoke :help, ["resolve"]
           return 0
         end
-      end
 
-      def list_resources(pattern)
-        resources = @engine.list(pattern, tree: @options[:tree], verbose: @options[:verbose])
-
-        if resources.empty?
-          puts "No resources found matching: #{pattern}"
-        elsif @options[:verbose]
-          require "json"
-          puts JSON.pretty_generate(resources)
-        else
-          resources.each { |resource| puts resource }
-        end
-      end
-
-      def resolve_resource(uri)
-        result = @engine.resolve(uri, content: @options[:content], verbose: @options[:verbose])
-
-        if result.nil?
-          puts "Resource not found: #{uri}"
-          return 1
-        elsif @options[:verbose] && result.is_a?(Hash)
-          require "json"
-          puts JSON.pretty_generate(result)
-        else
-          puts result
+        # Handle magic patterns (wildcards → list)
+        if magic_wildcard_pattern?(uri)
+          invoke :list, [uri]
+          return
         end
 
+        require_relative "commands/resolve_command"
+        Commands::ResolveCommand.new(uri, options).execute
+      end
+
+      desc "list PATTERN", "List matching resources"
+      long_desc <<~DESC
+        List all resources matching the given pattern.
+
+        SYNTAX:
+          ace-nav list [PATTERN] [OPTIONS]
+
+        EXAMPLES:
+
+          # List all workflows
+          $ ace-nav list 'wfi://*'
+
+          # List templates with pattern
+          $ ace-nav list 'tmpl://@ace-*/*'
+
+          # Tree format
+          $ ace-nav list wfi:// --tree
+
+          # Can also use wildcard directly (auto-routed)
+          $ ace-nav wfi://*
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/nav/config.yml
+          Project config: .ace/nav/config.yml
+          Example:        ace-nav/.ace-defaults/nav/config.yml
+
+        OUTPUT:
+
+          Table format with columns: URI, path, type
+          Use --tree for hierarchical format
+          Exit codes: 0 (success), 1 (error)
+      DESC
+      option :tree, type: :boolean, desc: "Display resources in tree format"
+      option :verbose, type: :boolean, aliases: "-v", desc: "Show detailed information"
+      option :quiet, type: :boolean, aliases: "-q", desc: "Suppress config summary"
+      def list(pattern)
+        require_relative "commands/list_command"
+        Commands::ListCommand.new(pattern, options).execute
+      end
+
+      desc "create URI [TARGET]", "Create resource from template"
+      long_desc <<~DESC
+        Create a new resource from a template.
+
+        SYNTAX:
+          ace-nav create [URI] [TARGET] [OPTIONS]
+
+        EXAMPLES:
+
+          # Create from workflow template
+          $ ace-nav create wfi://my-workflow
+
+          # Create from template to specific file
+          $ ace-nav create tmpl://custom ./output.md
+
+          # Backward compat: using --create flag
+          $ ace-nav --create wfi://my-workflow
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/nav/config.yml
+          Project config: .ace/nav/config.yml
+          Example:        ace-nav/.ace-defaults/nav/config.yml
+
+        OUTPUT:
+
+          Creates resource at specified path or default location
+          Exit codes: 0 (success), 1 (error)
+      DESC
+      option :verbose, type: :boolean, aliases: "-v", desc: "Show detailed information"
+      option :quiet, type: :boolean, aliases: "-q", desc: "Suppress config summary"
+      def create(uri, target = nil)
+        require_relative "commands/create_command"
+        Commands::CreateCommand.new(uri, target, options).execute
+      end
+
+      desc "sources", "Show available sources"
+      long_desc <<~DESC
+        Show all available sources for resources.
+
+        EXAMPLES:
+
+          # Show all sources
+          $ ace-nav sources
+
+          # Verbose JSON output
+          $ ace-nav sources --verbose
+
+          # Backward compat: using --sources flag
+          $ ace-nav --sources
+
+        CONFIGURATION:
+
+          Sources configured in: .ace/nav/config.yml
+          Global config:  ~/.ace/nav/config.yml
+          Project config: .ace/nav/config.yml
+
+        OUTPUT:
+
+          Table format with source details
+          Use --verbose for JSON output
+          Exit codes: 0 (success), 1 (error)
+      DESC
+      option :verbose, type: :boolean, aliases: "-v", desc: "Show detailed information (JSON)"
+      def sources
+        require_relative "commands/sources_command"
+        Commands::SourcesCommand.new(options).execute
+      end
+
+      # Backward compatibility: --sources flag still works
+      map "--sources" => :sources
+
+      # Backward compatibility for --create URI flag
+      desc "create_from_flag URI", "Create resource (backward compat)", hide: true
+      def create_from_flag(uri = nil)
+        if uri && uri != "" && uri != "--sources"
+          invoke :create, [uri]
+        else
+          puts "Usage: ace-nav create URI [TARGET]"
+          puts "       ace-nav --create URI"
+        end
+      end
+      map "--create" => :create_from_flag
+
+      desc "version", "Show version"
+      long_desc <<~DESC
+        Display the current version of ace-nav.
+
+        EXAMPLES:
+
+          $ ace-nav version
+          $ ace-nav --version
+      DESC
+      def version
+        puts "ace-nav #{VERSION}"
         0
       end
+      map "--version" => :version
+
+      no_commands do
+        # Check if URI pattern should trigger list mode
+        def magic_wildcard_pattern?(uri)
+          return true if uri.include?("*") || uri.include?("?")
+          return true if uri.match?(/\/$/)
+          return true if uri.match?(/^\w+:\/\/$/)
+          false
+        end
+      end
+
+      # Handle unknown commands as arguments to the default 'resolve' command
+      # This allows: ace-nav wfi://update-pr-description without requiring 'resolve'
+      def method_missing(command, *args)
+        invoke :resolve, [command.to_s] + args
+      end
+      # respond_to_missing? inherited from Ace::Core::CLI::Base
     end
   end
 end

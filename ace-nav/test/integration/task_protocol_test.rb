@@ -47,79 +47,65 @@ class TaskProtocolIntegrationTest < Minitest::Test
   end
 
   def test_task_protocol_delegation_with_simple_reference
-    cli = Ace::Nav::Cli.new
-
     # Test that delegation succeeds (exit code 0)
     # Note: system() outputs directly to stdout, suppress with capture_io
     exit_code = nil
     capture_io do
-      exit_code = cli.run(["task://083"])
+      exit_code = Ace::Nav::CLI.start(["task://083"])
     end
 
     assert_equal 0, exit_code
   end
 
   def test_task_protocol_delegation_with_full_reference
-    cli = Ace::Nav::Cli.new
-
     exit_code = nil
     capture_io do
-      exit_code = cli.run(["task://v.0.9.0+task.083"])
+      exit_code = Ace::Nav::CLI.start(["task://v.0.9.0+task.083"])
     end
 
     assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_path_option
-    cli = Ace::Nav::Cli.new
-
     exit_code = nil
     capture_io do
-      exit_code = cli.run(["task://083", "--path"])
+      exit_code = Ace::Nav::CLI.start(["task://083", "--path"])
     end
 
     assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_content_option
-    cli = Ace::Nav::Cli.new
-
     exit_code = nil
     capture_io do
-      exit_code = cli.run(["task://083", "--content"])
+      exit_code = Ace::Nav::CLI.start(["task://083", "--content"])
     end
 
     assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_tree_option
-    cli = Ace::Nav::Cli.new
-
     exit_code = nil
     capture_io do
-      exit_code = cli.run(["task://083", "--tree"])
+      exit_code = Ace::Nav::CLI.start(["task://083", "--tree"])
     end
 
     assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_backlog_reference
-    cli = Ace::Nav::Cli.new
-
     exit_code = nil
     capture_io do
-      exit_code = cli.run(["task://backlog+025"])
+      exit_code = Ace::Nav::CLI.start(["task://backlog+025"])
     end
 
     assert_equal 0, exit_code
   end
 
   def test_task_protocol_with_prefixed_reference
-    cli = Ace::Nav::Cli.new
-
     exit_code = nil
     capture_io do
-      exit_code = cli.run(["task://task.083"])
+      exit_code = Ace::Nav::CLI.start(["task://task.083"])
     end
 
     assert_equal 0, exit_code
@@ -135,14 +121,12 @@ class TaskProtocolIntegrationTest < Minitest::Test
     end
   end
 
-  def test_cli_help_shows_task_protocol
-    cli = Ace::Nav::Cli.new
-
+  def test_cli_help_displays_successfully
     stdout_output = capture_io do
-      cli.run(["--help"])
+      Ace::Nav::CLI.start(["--help"])
     end
 
-    # Help should list task:// protocol
-    assert_match(/task:\/\//, stdout_output[0])
+    # Help should display Thor-standard format (task:// protocol is user-configured, not in static help)
+    assert_match(/Commands:/, stdout_output[0])
   end
 end

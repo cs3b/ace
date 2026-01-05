@@ -3,8 +3,7 @@
 
 require "bundler/setup"
 require "ace/nav"
-require "ace/nav/cli"
 
-# Run the CLI and exit with returned code
-exit_code = Ace::Nav::Cli.new.run(ARGV)
-exit(exit_code || 0)
+# Start Thor CLI and exit with the returned status code
+result = Ace::Nav::CLI.start(ARGV)
+exit(result.is_a?(Integer) ? result : 0)
