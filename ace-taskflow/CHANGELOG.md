@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.28.1] - 2026-01-05
+
+### Added
+- Unified `CommandOptionParser` molecule with composable option sets (display, release, filter, limits, subtasks, sort, actions, help)
+- Custom options support via block syntax for command-specific flags
+
+### Changed
+- Migrated all command classes to use CommandOptionParser, removing manual `while` loops
+- Removed ARGV reconstruction patterns from TasksCommand, ReleasesCommand
+- Commands now receive options hash directly instead of parsing raw args
+- Net reduction of 357 lines of parsing code
+
 ## [0.28.0] - 2026-01-05
 
 ### Added
