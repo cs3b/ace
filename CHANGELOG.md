@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.248] - 2026-01-05
+
+### Technical
+
+- **ace-review 0.31.1**: Clarified subject type prefix requirement in workflow documentation
+  - Added explicit warnings that type prefixes (files:, pr:, diff:, task:) are required
+  - Added Common Mistakes section with wrong/correct examples
+  - Improved Step 1 examples with file pattern usage
+
 ## [0.9.247] - 2026-01-05
 
 ### Added
