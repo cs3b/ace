@@ -1,526 +1,225 @@
 # frozen_string_literal: true
 
-require "optparse"
+require "ace/core/cli/base"
 
 module Ace
   module Review
-    # CLI interface for ace-review
-    class CLI
-      def initialize
-        @options = {
-          save_session: true
-        }
+    class CLI < Ace::Core::CLI::Base
+      # class_options :quiet, :verbose, :debug inherited from Base
+
+      default_task :review
+
+      # Override help to add preset system section
+      def self.help(shell, subcommand = false)
+        super
+        shell.say ""
+        shell.say "Preset System:"
+        shell.say "  Presets provide pre-configured review types with focused prompts:"
+        shell.say "    code         → General code review"
+        shell.say "    code-pr      → PR-focused code review"
+        shell.say "    security     → Security-focused review"
+        shell.say "    performance  → Performance-focused review"
+        shell.say "    docs         → Documentation review"
+        shell.say "  Use --list-presets to see all available presets"
+        shell.say ""
+        shell.say "Examples:"
+        shell.say "  ace-review --preset code-pr             # PR code review"
+        shell.say "  ace-review --preset security --auto-execute"
+        shell.say "  ace-review --pr 123                      # Review by PR number"
       end
 
-      def run(argv)
-        # Check for subcommand
-        if argv.first && !argv.first.start_with?("-")
-          subcommand = argv.shift
-          case subcommand
-          when "synthesize"
-            run_synthesize(argv)
-            return
-          else
-            # Not a recognized subcommand, put it back
-            argv.unshift(subcommand)
-          end
+      desc "review [OPTIONS]", "Execute code review using presets or custom configuration"
+      long_desc <<~DESC
+        Execute code review using presets or custom configuration.
+
+        SYNTAX:
+          ace-review [OPTIONS]
+
+        EXAMPLES:
+
+          # Use preset for code review
+          $ ace-review --preset code-pr
+
+          # Security review with auto-execute
+          $ ace-review --preset security --auto-execute
+
+          # Save review to task directory
+          $ ace-review --preset code-pr --task 114
+
+          # Review GitHub PR
+          $ ace-review --pr 123 --auto-execute
+
+          # Multi-subject review
+          $ ace-review --preset code --subject diff:HEAD~3 --subject files:docs/**/*.md
+
+          # Multi-model review with synthesis
+          $ ace-review --preset code-pr --model gemini --model gpt-4 --auto-execute
+
+          # Dry run to preview
+          $ ace-review --preset security --dry-run
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/review/config.yml
+          Project config: .ace/review/config.yml
+          Example:        ace-review/.ace-defaults/review/config.yml
+
+          Presets configured via review.presets
+
+        OUTPUT:
+
+          Review report saved to file or task directory
+          Exit codes: 0 (success), 1 (error)
+
+        PRESET SYSTEM:
+
+          code         → General code review
+          code-pr      → PR-focused code review
+          security     → Security-focused review
+          performance  → Performance-focused review
+          docs         → Documentation review
+
+          Use --list-presets to see all available presets
+      DESC
+      option :preset, type: :string, desc: "Review preset from configuration"
+      option :output_dir, type: :string, desc: "Custom output directory for review"
+      option :output, type: :string, desc: "Specific output file path"
+      option :context, type: :string, desc: "Context configuration (preset name or YAML)"
+      option :subject, type: :string, repeatable: true, desc: "Subject configuration (can be specified multiple times)"
+      option :prompt_base, type: :string, desc: "Base prompt module"
+      option :prompt_format, type: :string, desc: "Format module"
+      option :prompt_focus, type: :string, desc: "Focus modules (comma-separated)"
+      option :add_focus, type: :string, desc: "Add focus modules to preset"
+      option :prompt_guidelines, type: :string, desc: "Guideline modules (comma-separated)"
+      option :model, type: :string, repeatable: true, desc: "LLM model(s) to use (can be specified multiple times)"
+      option :no_synthesize, type: :boolean, desc: "Skip synthesis for multi-model reviews"
+      option :synthesis_model, type: :string, desc: "Model to use for synthesis (default: gemini-2.5-flash)"
+      option :dry_run, type: :boolean, desc: "Prepare review without executing"
+      option :auto_execute, type: :boolean, desc: "Execute LLM query automatically"
+      option :save_session, type: :boolean, desc: "Save session files (default: true)"
+      option :session_dir, type: :string, desc: "Custom session directory"
+      option :task, type: :string, desc: "Save review report to task directory (task number, task.NNN, or v.X.Y.Z+NNN)"
+      option :no_auto_save, type: :boolean, desc: "Disable auto-save even if enabled in config"
+      option :pr, type: :string, desc: "Review GitHub PR (number, URL, or owner/repo#number)"
+      option :pr_comments, type: :boolean, desc: "Include PR comments as feedback source (default: true for --pr)"
+      option :post_comment, type: :boolean, desc: "Post review as PR comment (requires --pr)"
+      option :gh_timeout, type: :numeric, desc: "Timeout for gh CLI operations in seconds (default: 30)"
+      def review(*args)
+        # Handle --help/-h passed as first argument
+        if args.first == "--help" || args.first == "-h"
+          invoke :help, ["review"]
+          return 0
         end
-
-        parse_options(argv)
-
-        # Handle list commands
-        if @options[:list_presets]
-          list_presets
-          return
-        elsif @options[:list_prompts]
-          list_prompts
-          return
-        elsif @options[:help]
-          show_help
-          return
-        end
-
-        # Execute review
-        execute_review
-      rescue StandardError => e
-        puts "✗ Error: #{e.message}"
-        puts e.backtrace if @options[:verbose]
-        exit 1
+        require_relative "commands/review_command"
+        Commands::ReviewCommand.new(args, options).execute
       end
 
-      private
+      desc "synthesize [OPTIONS]", "Synthesize multiple review reports into a consolidated report"
+      long_desc <<~DESC
+        Synthesize multiple review reports into a consolidated report.
 
-      def parse_options(argv)
-        @parser = OptionParser.new do |opts|
-          opts.banner = "Usage: ace-review [options]"
-          opts.separator ""
-          opts.separator "Execute review using presets or custom configuration"
-          opts.separator ""
-          opts.separator "Options:"
+        SYNTAX:
+          ace-review synthesize [OPTIONS]
 
-          opts.on("--preset NAME", "Review preset from configuration (or set defaults.preset in config)") do |v|
-            @options[:preset] = v
-          end
+        EXAMPLES:
 
-          opts.on("--output-dir DIR", "Custom output directory for review") do |v|
-            @options[:output_dir] = v
-          end
+          # Synthesize from session directory
+          $ ace-review synthesize --session .cache/ace-review/sessions/review-20251201-143022/
 
-          opts.on("--output FILE", "Specific output file path") do |v|
-            @options[:output] = v
-          end
+          # Synthesize specific reports
+          $ ace-review synthesize --reports report1.md,report2.md --output synthesis.md
 
-          opts.on("--context CONFIG", "Context configuration (preset name or YAML)") do |v|
-            @options[:context] = v
-          end
+        CONFIGURATION:
 
-          opts.on("--subject CONFIG", "Subject configuration (can be specified multiple times, merged together)") do |v|
-            # Skip empty or whitespace-only values
-            next if v.nil? || v.strip.empty?
-            # Initialize subjects array if not present
-            @options[:subjects] ||= []
-            # Accumulate subject values into array (stripped)
-            @options[:subjects] << v.strip
-          end
+          Global config:  ~/.ace/review/config.yml
+          Project config: .ace/review/config.yml
+          Example:        ace-review/.ace-defaults/review/config.yml
 
-          opts.on("--prompt-base MODULE", "Base prompt module") do |v|
-            @options[:prompt_base] = v
-          end
+        OUTPUT:
 
-          opts.on("--prompt-format MODULE", "Format module") do |v|
-            @options[:prompt_format] = v
-          end
-
-          opts.on("--prompt-focus MODULES", "Focus modules (comma-separated)") do |v|
-            @options[:prompt_focus] = v
-          end
-
-          opts.on("--add-focus MODULES", "Add focus modules to preset") do |v|
-            @options[:add_focus] = v
-          end
-
-          opts.on("--prompt-guidelines MODULES", "Guideline modules (comma-separated)") do |v|
-            @options[:prompt_guidelines] = v
-          end
-
-          opts.on("--model MODELS", "LLM model(s) to use (comma-separated or multiple flags)") do |v|
-            # Initialize models array if not present
-            @options[:models] ||= []
-            # Split comma-separated values, strip whitespace, and filter blanks
-            @options[:models].concat(v.split(",").map(&:strip).reject(&:empty?))
-          end
-
-          opts.on("--no-synthesize", "Skip synthesis for multi-model reviews") do
-            @options[:no_synthesize] = true
-          end
-
-          opts.on("--synthesis-model MODEL", "Model to use for synthesis (default: gemini-2.5-flash)") do |v|
-            @options[:synthesis_model] = v
-          end
-
-          opts.on("--list-presets", "List available presets") do
-            @options[:list_presets] = true
-          end
-
-          opts.on("--list-prompts", "List available prompt modules") do
-            @options[:list_prompts] = true
-          end
-
-          opts.on("--dry-run", "Prepare review without executing") do
-            @options[:dry_run] = true
-          end
-
-          opts.on("-v", "--verbose", "Verbose output") do
-            @options[:verbose] = true
-          end
-
-          opts.on("--auto-execute", "Execute LLM query automatically") do
-            @options[:auto_execute] = true
-          end
-
-          opts.on("--[no-]save-session", "Save session files (default: true)") do |v|
-            @options[:save_session] = v
-          end
-
-          opts.on("--session-dir DIR", "Custom session directory") do |v|
-            @options[:session_dir] = v
-          end
-
-          opts.on("--task TASKREF", "Save review report to task directory (task number, task.NNN, or v.X.Y.Z+NNN)") do |v|
-            @options[:task] = v
-          end
-
-          opts.on("--no-auto-save", "Disable auto-save even if enabled in config") do
-            @options[:no_auto_save] = true
-          end
-
-          opts.on("--pr IDENTIFIER", "Review GitHub PR (number, URL, or owner/repo#number)") do |v|
-            @options[:pr] = v
-          end
-
-          opts.on("--[no-]pr-comments", "Include PR comments as feedback source (default: true for --pr)") do |v|
-            @options[:pr_comments] = v
-          end
-
-          opts.on("--post-comment", "Post review as PR comment (requires --pr)") do
-            @options[:post_comment] = true
-          end
-
-          opts.on("--gh-timeout SECONDS", Integer, "Timeout for gh CLI operations in seconds (default: 30)") do |v|
-            @options[:gh_timeout] = v
-          end
-
-          opts.on("-h", "--help", "Show this help") do
-            @options[:help] = true
-          end
-        end
-
-        @parser.parse!(argv)
-
-        # Normalize subjects to single :subject key for ReviewOptions
-        # Single value: pass as-is (backward compatible)
-        # Multiple values: pass as array (deduplicated)
-        if @options[:subjects]&.any?
-          # Deduplicate subjects (order preserved)
-          @options[:subjects].uniq!
-          @options[:subject] = @options[:subjects].size == 1 ? @options[:subjects].first : @options[:subjects]
-          @options.delete(:subjects)  # Clean up intermediate key
-        end
-
-        # Deduplicate and validate models if present
-        if @options[:models]
-          @options[:models].uniq!
-          validate_model_names(@options[:models])
-        end
+          Consolidated synthesis report saved to file
+          Exit codes: 0 (success), 1 (error)
+      DESC
+      option :session, type: :string, desc: "Session directory containing review reports"
+      option :reports, type: :string, desc: "Explicit report files to synthesize (comma-separated)"
+      option :synthesis_model, type: :string, desc: "Model to use for synthesis"
+      option :output, type: :string, desc: "Output file path (default: synthesis-report.md)"
+      option :verbose, type: :boolean, aliases: "-v", desc: "Verbose output"
+      def synthesize(*args)
+        require_relative "commands/synthesize_command"
+        Commands::SynthesizeCommand.new(args, options).execute
       end
 
-      # Validate model names contain only expected characters
-      # @param models [Array<String>] model names to validate
-      # @raise [ArgumentError] if model name contains invalid characters
-      def validate_model_names(models)
-        models.each do |model|
-          unless model.match?(/\A[a-zA-Z0-9\-_:.]+\z/)
-            raise ArgumentError, "Invalid model name '#{model}'. Model names can only contain alphanumeric characters, hyphens, underscores, colons, and dots."
-          end
-        end
-      end
+      desc "list-presets", "List available review presets"
+      long_desc <<~DESC
+        List all available review presets with descriptions and sources.
 
-      def show_help
-        puts @parser
-        puts
-        puts "Examples:"
-        puts "  ace-review --preset code-pr"
-        puts "  ace-review --preset security --auto-execute"
-        puts "  ace-review --preset docs --output-dir ./reviews"
-        puts "  ace-review --preset code-pr --task 114"
-        puts "  ace-review --preset security --task 114 --auto-execute"
-        puts "  ace-review --pr 123 --auto-execute"
-        puts "  ace-review --pr https://github.com/owner/repo/pull/456 --preset security"
-        puts "  ace-review --pr owner/repo#789 --post-comment --auto-execute"
-        puts
-        puts "Multi-subject examples (subjects are merged - same types concatenate):"
-        puts "  ace-review --preset code --subject diff:HEAD~3 --subject files:docs/**/*.md"
-        puts "  ace-review --preset security --subject files:lib/**/*.rb --subject files:test/**/*_test.rb"
-        puts "  ace-review --preset code-pr --subject pr:123 --subject files:CHANGELOG.md"
-        puts "  ace-review --preset docs --subject staged --subject files:README.md"
-        puts "  # Note: Multiple diffs/files/prs merge into arrays; duplicates are removed"
-        puts
-        puts "Multi-model examples:"
-        puts "  ace-review --preset code-pr --model \"gemini,gpt-4,claude\" --auto-execute"
-        puts "  ace-review --preset code-pr --model gemini --model gpt-4 --auto-execute"
-        puts "  ace-review --preset security --model \"google:gemini-2.5-flash,openai:gpt-4\" --auto-execute"
-        puts "  ace-review --preset code-pr --model \"gemini,gpt-4\" --no-synthesize --auto-execute"
-        puts
-        puts "Synthesis examples:"
-        puts "  ace-review synthesize --session .cache/ace-review/sessions/review-20251201-143022/"
-        puts "  ace-review synthesize --session ./session --synthesis-model gpt-4"
-        puts "  ace-review synthesize --reports report1.md report2.md --output synthesis.md"
-        puts
-        puts "List commands:"
-        puts "  ace-review --list-presets"
-        puts "  ace-review --list-prompts"
-      end
+        EXAMPLES:
 
+          # List all presets
+          $ ace-review list-presets
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/review/config.yml
+          Project config: .ace/review/config.yml
+          Example:        ace-review/.ace-defaults/review/config.yml
+
+        OUTPUT:
+
+          Table format with columns: name, description, source
+          Exit codes: 0 (success), 1 (error)
+      DESC
       def list_presets
-        manager = Ace::Review::Organisms::ReviewManager.new
-
-        presets = manager.list_presets
-        if presets.empty?
-          puts "No presets found"
-          puts "Create presets in .ace/review/config.yml or .ace/review/presets/"
-          return
-        end
-
-        puts "Available Review Presets:"
-        puts
-
-        # Header
-        puts format("%-20s %-50s %-10s", "Preset", "Description", "Source")
-        puts "-" * 80
-
-        # Load preset manager to get descriptions
-        preset_manager = Ace::Review::Molecules::PresetManager.new
-
-        presets.each do |name|
-          preset = preset_manager.load_preset(name)
-          description = preset&.dig("description") || "-"
-
-          # Determine source
-          source = if preset_manager.send(:load_preset_from_file, name)
-                     "file"
-                   elsif preset_manager.send(:load_preset_from_config, name)
-                     "config"
-                   else
-                     "default"
-                   end
-
-          puts format("%-20s %-50s %-10s", name, description, source)
-        end
+        require_relative "commands/list_presets_command"
+        Commands::ListPresetsCommand.new.execute
       end
 
+      desc "list-prompts", "List available prompt modules"
+      long_desc <<~DESC
+        List all available prompt modules by category.
+
+        EXAMPLES:
+
+          # List all prompt modules
+          $ ace-review list-prompts
+
+        CONFIGURATION:
+
+          Global config:  ~/.ace/review/config.yml
+          Project config: .ace/review/config.yml
+          Example:        ace-review/.ace-defaults/review/config.yml
+
+        OUTPUT:
+
+          Grouped by category: base, format, focus, guidelines
+          Exit codes: 0 (success), 1 (error)
+      DESC
       def list_prompts
-        manager = Ace::Review::Organisms::ReviewManager.new
-
-        prompts = manager.list_prompts
-        if prompts.empty?
-          puts "No prompt modules found"
-          return
-        end
-
-        puts "Available Prompt Modules:"
-        puts
-
-        prompts.each do |category, items|
-          puts "  #{category}/"
-          format_prompt_items(items, "    ")
-        end
+        require_relative "commands/list_prompts_command"
+        Commands::ListPromptsCommand.new.execute
       end
 
-      def format_prompt_items(items, indent)
-        case items
-        when Hash
-          items.each do |name, value|
-            if value.is_a?(Array)
-              puts "#{indent}#{name}/"
-              value.each do |item|
-                source = item.is_a?(Hash) ? " (#{item[:source]})" : ""
-                item_name = item.is_a?(Hash) ? item[:name] : item
-                puts "#{indent}  #{item_name}#{source}"
-              end
-            else
-              source = value.is_a?(String) ? " (#{value})" : ""
-              puts "#{indent}#{name}#{source}"
-            end
-          end
-        when Array
-          items.each { |item| puts "#{indent}#{item}" }
-        when String
-          puts "#{indent}#{items}"
-        end
+      desc "version", "Show version"
+      long_desc <<~DESC
+        Display the current version of ace-review.
+
+        EXAMPLES:
+
+          $ ace-review version
+          $ ace-review --version
+      DESC
+      def version
+        puts "ace-review #{Ace::Review::VERSION}"
+        0
       end
+      map "--version" => :version
 
-      def execute_review
-        # Convert hash to ReviewOptions object
-        options = Ace::Review::Models::ReviewOptions.new(@options)
-
-        puts "Analyzing code with preset '#{options.preset}'..." if options.verbose
-
-        manager = Ace::Review::Organisms::ReviewManager.new
-        result = manager.execute_review(options)
-
-        if result[:success]
-          handle_success(result)
-        else
-          handle_error(result)
-        end
+      # Handle unknown commands as arguments to the default 'review' command
+      def method_missing(command, *args)
+        invoke :review, [command.to_s] + args
       end
-
-      def handle_success(result)
-        # Handle multi-model results
-        if result[:summary]
-          handle_multi_model_success(result)
-          return
-        end
-
-        # Display review saved/prepared message
-        if result[:output_file]
-          puts "✓ Review saved: #{result[:output_file]}"
-        elsif result[:session_dir]
-          puts "✓ Review session prepared: #{result[:session_dir]}"
-
-          # Display prompt files for ace-context workflow
-          if result[:system_prompt_file] && result[:user_prompt_file]
-            puts "  System prompt: #{result[:system_prompt_file]}"
-            puts "  User prompt: #{result[:user_prompt_file]}"
-
-            unless @options[:dry_run]
-              puts
-              puts "To execute with LLM:"
-              puts "  ace-llm query --file #{result[:user_prompt_file]} --context #{result[:system_prompt_file]}"
-            end
-          elsif result[:prompt_file]
-            # Legacy format for backward compatibility
-            puts "  Prompt: #{result[:prompt_file]}"
-            unless @options[:dry_run]
-              puts
-              puts "To execute with LLM:"
-              puts "  ace-llm query --file #{result[:prompt_file]}"
-            end
-          end
-        end
-
-        # Display comment posting results
-        if result[:comment_url]
-          puts "✓ Review posted to PR: #{result[:comment_url]}"
-        elsif result[:comment_error]
-          puts "✗ Failed to post comment: #{result[:comment_error]}"
-          puts "  (Review saved locally - you can post manually)"
-        end
-
-        # Display dry-run preview
-        if result[:dry_run_preview]
-          puts
-          puts "=== Comment Preview (Dry Run) ==="
-          puts result[:dry_run_preview]
-          puts "=== End Preview ==="
-        end
-      end
-
-      def handle_multi_model_success(result)
-        puts
-        puts "Reviews saved (#{result[:summary][:success_count]} of #{result[:summary][:total_models]} succeeded):"
-        puts "  Session directory: #{result[:session_dir]}"
-        puts
-
-        if result[:output_files]&.any?
-          result[:output_files].each do |file|
-            puts "  ✓ #{File.basename(file)}"
-          end
-        end
-
-        if result[:failed_models]&.any?
-          puts
-          puts "Failed models:"
-          result[:failed_models].each do |model|
-            puts "  ✗ #{model}"
-          end
-        end
-
-        if result[:task_paths]&.any?
-          puts
-          puts "Saved to task directory:"
-          # Extract common directory from first path and make it relative
-          first_path = result[:task_paths].first
-          task_dir = File.dirname(first_path)
-          relative_dir = task_dir.sub("#{Dir.pwd}/", "")
-          puts "  #{relative_dir}/"
-          result[:task_paths].each do |path|
-            puts "  ✓ #{File.basename(path)}"
-          end
-        end
-
-        puts
-        puts "Total duration: #{result[:summary][:total_duration]}s"
-      end
-
-      def handle_error(result)
-        puts "✗ Error: #{result[:error]}"
-        exit 1
-      end
-
-      # Run synthesis subcommand
-      def run_synthesize(argv)
-        options = {}
-
-        parser = OptionParser.new do |opts|
-          opts.banner = "Usage: ace-review synthesize [options]"
-          opts.separator ""
-          opts.separator "Synthesize multiple review reports into a consolidated report"
-          opts.separator ""
-          opts.separator "Options:"
-
-          opts.on("--session DIR", "Session directory containing review reports") do |v|
-            options[:session_dir] = v
-          end
-
-          opts.on("--reports FILES", Array, "Explicit report files to synthesize (comma-separated)") do |v|
-            options[:report_files] = v
-          end
-
-          opts.on("--synthesis-model MODEL", "Model to use for synthesis") do |v|
-            options[:synthesis_model] = v
-          end
-
-          opts.on("--output FILE", "Output file path (default: synthesis-report.md)") do |v|
-            options[:output] = v
-          end
-
-          opts.on("-v", "--verbose", "Verbose output") do
-            options[:verbose] = true
-          end
-
-          opts.on("-h", "--help", "Show this help") do
-            puts opts
-            exit
-          end
-        end
-
-        parser.parse!(argv)
-
-        # Validate inputs
-        if options[:session_dir].nil? && options[:report_files].nil?
-          puts "✗ Error: Either --session or --reports is required"
-          puts
-          puts parser
-          exit 1
-        end
-
-        # Determine report paths
-        report_paths = if options[:report_files]
-                        options[:report_files]
-                      else
-                        # Find all review-*.md files in session directory
-                        session_dir = options[:session_dir]
-                        unless Dir.exist?(session_dir)
-                          puts "✗ Error: Session directory not found: #{session_dir}"
-                          exit 1
-                        end
-                        Dir.glob(File.join(session_dir, "review-*.md"))
-                      end
-
-        # Determine session directory for output
-        session_dir = if options[:session_dir]
-                       options[:session_dir]
-                     elsif options[:report_files] && options[:report_files].any?
-                       File.dirname(options[:report_files].first)
-                     else
-                       Dir.pwd
-                     end
-
-        # Execute synthesis
-        require_relative "molecules/report_synthesizer"
-        synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
-
-        result = synthesizer.synthesize(
-          report_paths: report_paths,
-          model: options[:synthesis_model],
-          session_dir: session_dir,
-          output_file: options[:output]
-        )
-
-        if result[:success]
-          # Success message already displayed by synthesizer
-          exit 0
-        else
-          puts "✗ Synthesis failed: #{result[:error]}"
-          puts result[:backtrace].join("\n") if options[:verbose] && result[:backtrace]
-          exit 1
-        end
-      rescue StandardError => e
-        puts "✗ Error: #{e.message}"
-        puts e.backtrace if options[:verbose]
-        exit 1
-      end
+      # respond_to_missing? inherited from Ace::Core::CLI::Base
     end
   end
 end
