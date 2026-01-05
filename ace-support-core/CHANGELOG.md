@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-01-05
+
+### Added
+- `ConfigSummary.display_if_needed` method to conditionally display configuration
+  - Checks for help flags (`--help`, `-h`) before displaying config
+  - Added `ConfigSummary.help_requested?` helper to detect help flag presence
+  - Prevents config summary from polluting help text output
+
+### Changed
+- ConfigSummary now requires `--verbose` flag to display configuration details
+  - Standard command output remains clean and uncluttered
+  - Debug configuration available when explicitly requested
+  - Improved help text clarity by separating concerns
+
+### Fixed
+- Config summary output appearing with `--help` commands
+  - Configuration now only shows when both not in help mode AND verbose is enabled
+  - Added tests for `help_requested?` detection logic
+
 ## [0.17.0] - 2026-01-04
 
 ### Added
