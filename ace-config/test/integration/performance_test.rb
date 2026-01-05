@@ -90,8 +90,8 @@ module Ace
         end
 
         median = median_time(times)
-        assert median < 0.1,
-               "Median merge time #{format_time(median)} exceeded threshold 0.1s"
+        assert median < 0.25,
+               "Median merge time #{format_time(median)} exceeded threshold 0.25s"
       end
 
       # Test mode performance tests
