@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.247] - 2026-01-05
+
+### Added
+
+- **ace-taskflow 0.28.1**: Unified CommandOptionParser for all commands
+  - New `CommandOptionParser` molecule with composable option sets (display, release, filter, limits, subtasks, sort, actions, help)
+  - Custom options support via block syntax for command-specific flags
+
+### Changed
+
+- **ace-taskflow 0.28.1**: Migrated all commands from manual parsing to CommandOptionParser
+  - Removed ARGV reconstruction patterns from TasksCommand, ReleasesCommand
+  - Commands now receive options hash directly instead of parsing raw args
+  - Net reduction of 357 lines of parsing code
+
 ## [0.9.246] - 2026-01-05
 
 ### Added
