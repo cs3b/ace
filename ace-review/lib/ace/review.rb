@@ -53,6 +53,7 @@ module Ace
     module Molecules; end
     module Organisms; end
     module Models; end
+    module Commands; end
 
     class << self
       # Configuration accessor

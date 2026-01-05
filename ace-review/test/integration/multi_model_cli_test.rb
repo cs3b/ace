@@ -2,57 +2,182 @@
 
 require "test_helper"
 require "ace/review/cli"
+require "ace/review/commands/review_command"
 
-class MultiModelCliTest < Minitest::Test
-  # No setup/teardown needed - these tests only parse CLI options
-  # and test ReviewOptions model, they don't need a git repository
+# Tests for ReviewCommand option processing (migrated from OptionParser to Thor)
+# These tests verify that Thor CLI options are processed correctly by ReviewCommand
+class ReviewCommandOptionsTest < Minitest::Test
+  # Test model parsing - comma-separated models in single flag
+  def test_command_parses_comma_separated_models
+    # Thor's repeatable option would give us an array with one element
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      model: ["gemini,gpt-4,claude"],
+      preset: "pr"
+    })
 
-  def test_cli_parses_comma_separated_models
-    cli = Ace::Review::CLI.new
+    options = command.instance_variable_get(:@options)
 
-    # Simulate parsing --model "gemini,gpt-4,claude"
-    argv = ["--preset", "pr", "--model", "gemini,gpt-4,claude", "--dry-run"]
-
-    # Parse options (private method, but we can test indirectly via run)
-    cli.instance_variable_set(:@options, { preset: "pr", save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # Verify models were parsed correctly
-    assert_equal ["gemini", "gpt-4", "claude"], options[:models]
+    # Verify models were parsed and split correctly
+    assert_equal ["gemini", "gpt-4", "claude"], options[:model]
   end
 
-  def test_cli_parses_repeated_model_flags
-    cli = Ace::Review::CLI.new
+  # Test model parsing - multiple --model flags
+  def test_command_parses_repeated_model_flags
+    # Thor's repeatable option gives us array of values
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      model: ["gemini", "gpt-4"],
+      preset: "pr"
+    })
 
-    # Simulate parsing multiple --model flags
-    argv = ["--preset", "pr", "--model", "gemini", "--model", "gpt-4", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { preset: "pr", save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
+    options = command.instance_variable_get(:@options)
 
     # Verify models were collected
-    assert_equal ["gemini", "gpt-4"], options[:models]
+    assert_equal ["gemini", "gpt-4"], options[:model]
   end
 
-  def test_cli_deduplicates_models
-    cli = Ace::Review::CLI.new
+  # Test model deduplication
+  def test_command_deduplicates_models
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      model: ["gemini,gemini,gpt-4"],
+      preset: "pr"
+    })
 
-    # Simulate parsing duplicate models
-    argv = ["--preset", "pr", "--model", "gemini,gemini,gpt-4", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { preset: "pr", save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
+    options = command.instance_variable_get(:@options)
 
     # Verify duplicates were removed
-    assert_equal ["gemini", "gpt-4"], options[:models]
+    assert_equal ["gemini", "gpt-4"], options[:model]
   end
 
+  # Test single subject parsing
+  def test_command_parses_single_subject_flag
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      subject: ["diff:HEAD~3"],
+      preset: "pr"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # Single subject should be passed as string (backward compatible)
+    assert_equal "diff:HEAD~3", options[:subject]
+  end
+
+  # Test multiple subjects parsing
+  def test_command_parses_multiple_subject_flags_as_array
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      subject: ["diff:HEAD~3", "files:*.md"],
+      preset: "pr"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # Multiple subjects should be passed as array
+    assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
+  end
+
+  # Test three or more subjects
+  def test_command_normalizes_three_or_more_subjects
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      subject: ["pr:77", "files:README.md", "diff:HEAD~1"],
+      preset: "pr"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # Three or more subjects should all be in the array
+    assert_equal ["pr:77", "files:README.md", "diff:HEAD~1"], options[:subject]
+  end
+
+  # Test subject deduplication
+  def test_command_deduplicates_subjects
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      subject: ["diff:HEAD~3", "diff:HEAD~3", "files:*.md"],
+      preset: "pr"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # Duplicate subjects should be removed
+    assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
+  end
+
+  # Test empty subject filtering
+  def test_command_rejects_empty_subject_strings
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      subject: ["", "diff:HEAD~3"],
+      preset: "pr"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # Empty subjects should be filtered out, single remaining subject as string
+    assert_equal "diff:HEAD~3", options[:subject]
+  end
+
+  # Test whitespace-only subject filtering
+  def test_command_rejects_whitespace_only_subjects
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      subject: ["   ", "diff:HEAD~3"],
+      preset: "pr"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # Whitespace-only subjects should be filtered out
+    assert_equal "diff:HEAD~3", options[:subject]
+  end
+
+  # Test all empty subjects results in nil
+  def test_command_no_subject_when_all_empty
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      subject: ["", "   "],
+      preset: "pr"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # When all subjects are empty, subject should be nil
+    assert_nil options[:subject]
+  end
+
+  # Test PR comments flag enabled
+  def test_command_preserves_pr_comments_flag_enabled
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      pr: "123",
+      pr_comments: true
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    assert_equal true, options[:pr_comments]
+  end
+
+  # Test PR comments flag disabled (--no-pr-comments)
+  def test_command_preserves_no_pr_comments_flag
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      pr: "123",
+      pr_comments: false
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    assert_equal false, options[:pr_comments]
+  end
+
+  # Test PR comments default (not specified)
+  def test_command_pr_comments_default_when_not_specified
+    command = Ace::Review::Commands::ReviewCommand.new([], {
+      pr: "123"
+    })
+
+    options = command.instance_variable_get(:@options)
+
+    # When not specified, pr_comments should be nil (defaults handled by ReviewOptions)
+    assert_nil options[:pr_comments]
+  end
+end
+
+# Tests for ReviewOptions model (unchanged from original)
+class ReviewOptionsModelTest < Minitest::Test
   def test_review_options_effective_models_with_array
     options = Ace::Review::Models::ReviewOptions.new(
       models: ["gemini", "gpt-4", "claude"]
@@ -125,150 +250,9 @@ class MultiModelCliTest < Minitest::Test
     # should use default when nothing is set
     assert_equal "google:gemini-2.5-flash", options.effective_model
   end
-
-  def test_cli_parses_pr_comments_flag_enabled
-    cli = Ace::Review::CLI.new
-
-    argv = ["--pr", "123", "--pr-comments", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    assert_equal true, options[:pr_comments]
-  end
-
-  def test_cli_parses_no_pr_comments_flag
-    cli = Ace::Review::CLI.new
-
-    argv = ["--pr", "123", "--no-pr-comments", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    assert_equal false, options[:pr_comments]
-  end
-
-  def test_cli_pr_comments_default_when_not_specified
-    cli = Ace::Review::CLI.new
-
-    argv = ["--pr", "123", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # When not specified, pr_comments should be nil (defaults handled by ReviewOptions)
-    assert_nil options[:pr_comments]
-  end
-
-  # Multi-subject CLI parsing tests (PR #79 feedback)
-  def test_cli_parses_single_subject_flag
-    cli = Ace::Review::CLI.new
-
-    argv = ["--preset", "pr", "--subject", "diff:HEAD~3", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # Single subject should be passed as string (backward compatible)
-    assert_equal "diff:HEAD~3", options[:subject]
-    assert_nil options[:subjects]  # Intermediate key should be cleaned up
-  end
-
-  def test_cli_parses_multiple_subject_flags_as_array
-    cli = Ace::Review::CLI.new
-
-    argv = ["--preset", "pr", "--subject", "diff:HEAD~3", "--subject", "files:*.md", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # Multiple subjects should be passed as array
-    assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
-    assert_nil options[:subjects]  # Intermediate key should be cleaned up
-  end
-
-  def test_cli_normalizes_three_or_more_subjects
-    cli = Ace::Review::CLI.new
-
-    argv = ["--preset", "pr", "--subject", "pr:77", "--subject", "files:README.md", "--subject", "diff:HEAD~1", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # Three or more subjects should all be in the array
-    assert_equal ["pr:77", "files:README.md", "diff:HEAD~1"], options[:subject]
-    assert_nil options[:subjects]
-  end
-
-  def test_cli_deduplicates_subjects
-    cli = Ace::Review::CLI.new
-
-    argv = ["--preset", "pr", "--subject", "diff:HEAD~3", "--subject", "diff:HEAD~3", "--subject", "files:*.md", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # Duplicate subjects should be removed
-    assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
-  end
-
-  def test_cli_rejects_empty_subject_strings
-    cli = Ace::Review::CLI.new
-
-    argv = ["--preset", "pr", "--subject", "", "--subject", "diff:HEAD~3", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # Empty subjects should be filtered out
-    assert_equal "diff:HEAD~3", options[:subject]
-  end
-
-  def test_cli_rejects_whitespace_only_subjects
-    cli = Ace::Review::CLI.new
-
-    argv = ["--preset", "pr", "--subject", "   ", "--subject", "diff:HEAD~3", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # Whitespace-only subjects should be filtered out
-    assert_equal "diff:HEAD~3", options[:subject]
-  end
-
-  def test_cli_no_subject_when_all_empty
-    cli = Ace::Review::CLI.new
-
-    argv = ["--preset", "pr", "--subject", "", "--subject", "   ", "--dry-run"]
-
-    cli.instance_variable_set(:@options, { save_session: true })
-    cli.send(:parse_options, argv)
-
-    options = cli.instance_variable_get(:@options)
-
-    # When all subjects are empty, subject should be nil
-    assert_nil options[:subject]
-  end
 end
 
+# Tests for MultiModelExecutor (unchanged from original)
 class MultiModelExecutorTest < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir
