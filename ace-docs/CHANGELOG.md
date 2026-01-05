@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-01-05
+
+### Added
+- Thor CLI migration with standardized command structure
+- ConfigSummary display for effective configuration with sensitive key filtering
+- Comprehensive CLI help documentation across all commands
+
+### Changed
+- Adopted Ace::Core::CLI::Base for standardized options (--quiet, --verbose, --debug)
+- Migrated from OptionParser to Thor framework
+- Added method_missing for default subcommand support
+
 ## [0.14.1] - 2026-01-03
 
 ### Changed
