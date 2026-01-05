@@ -24,11 +24,32 @@ module Ace
           @stats_formatter = Molecules::StatsFormatter.new(@root_path)
         end
 
-        def execute(args)
+        def execute(args, thor_options = {})
           # Check for reschedule subcommand
           if args.first == "reschedule"
             args.shift # Remove "reschedule"
             return execute_reschedule(args)
+          end
+
+          # Merge Thor options for --status, --stats, --tree, --all, --limit, --format
+          # These Thor class options are passed from CLI routing
+          if thor_options[:status]
+            args.unshift("--status", thor_options[:status])
+          end
+          if thor_options[:stats]
+            args.unshift("--stats")
+          end
+          if thor_options[:tree]
+            args.unshift("--tree")
+          end
+          if thor_options[:all]
+            args.unshift("--all")
+          end
+          if thor_options[:limit]
+            args.unshift("--limit", thor_options[:limit].to_s)
+          end
+          if thor_options[:format]
+            args.unshift("--format", thor_options[:format])
           end
 
           # Check if first argument is a preset name

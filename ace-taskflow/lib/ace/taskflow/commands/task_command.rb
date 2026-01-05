@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "yaml"
 require_relative "../organisms/task_manager"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/task_filter"
@@ -18,12 +19,19 @@ module Ace
       class TaskCommand
         include Helpers
 
-        def initialize
+        def initialize(args = [], options = {})
+          @args = args
+          @options = options
           @manager = Organisms::TaskManager.new
           @preset_manager = Molecules::ListPresetManager.new
         end
 
-        def execute(args)
+        def execute(args = nil)
+          # Use passed args or instance args
+          args ||= @args
+
+          display_config_summary
+
           # Parse display mode options first
           display_mode = parse_display_mode(args)
 
@@ -783,6 +791,31 @@ module Ace
           puts "  ace-taskflow task start 019"
           puts "  ace-taskflow task done 019"
           puts "  ace-taskflow task move backlog+025 v.0.10.0"
+        end
+
+        def display_config_summary
+          return if @options[:quiet]
+
+          require "ace/core"
+          Ace::Core::Atoms::ConfigSummary.display(
+            command: "taskflow",
+            config: Ace::Taskflow.config,
+            defaults: load_defaults,
+            options: @options,
+            quiet: false
+          )
+        end
+
+        def load_defaults
+          gem_root = Gem.loaded_specs["ace-taskflow"]&.gem_dir ||
+                     File.expand_path("../../../../../..", __dir__)
+          defaults_path = File.join(gem_root, ".ace-defaults", "taskflow", "config.yml")
+
+          unless File.exist?(defaults_path)
+            return {}
+          end
+
+          YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
         end
       end
     end

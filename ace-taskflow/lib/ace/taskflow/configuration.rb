@@ -245,5 +245,11 @@ module Ace
     def self.reset_configuration!
       @configuration = Configuration.new
     end
+
+    # Get raw configuration hash for ConfigSummary
+    # Returns the effective config hash (merged defaults + user overrides)
+    def self.config
+      configuration.config
+    end
   end
 end
