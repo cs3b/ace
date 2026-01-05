@@ -1,17 +1,28 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 200
+  max_lines: 250
   required_sections:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-03'
+  last-updated: '2026-01-05'
 ---
 
 # ACE Gem Development Guide
 
 Quick reference based on production patterns from ace-lint, ace-docs, ace-taskflow, ace-search.
+
+## Task 150 CLI Standardization (2026-01)
+
+All CLI gems were standardized to use Thor with consistent patterns:
+- **CLI Base Class**: `Ace::Core::CLI::Base` provides standard options (--quiet, --verbose, --debug)
+- **ConfigSummary**: Displays effective configuration, filtered for sensitive keys
+- **Exit Codes**: Commands return status codes, exe/ handles exit (never call exit in commands)
+- **Reserved Flags**: `-v` = verbose, `-q` = quiet, `-d` = debug, `-h` = help, `-o` = output
+- **Version Command**: Use `--version` (not `-v`), via `version_command` helper
+
+See `.ace-taskflow/v.0.9.0/tasks/150-task-standardize-cli/usage/ux.md` for full UX analysis.
 
 ## Gem Naming Conventions
 
@@ -253,16 +264,44 @@ Symlink to `.claude/agents/` for Claude Code.
 
 ## CLI
 
+**ADR-018 Pattern**: All ACE gems use Thor for CLI commands with standardized options and exit code handling.
+
+### CLI Base Class (ace-support-core)
+
+All CLI gems should inherit from `Ace::Core::CLI::Base` for standardized behavior:
+
 ```ruby
 # lib/ace/gem/cli.rb
-require 'thor'
+require "ace/core/cli/base"
+
 module Ace::Gem
-  class CLI < Thor
-    desc "process FILE", "Process"
-    option :verbose, type: :boolean
-    def process(file)
-      # Use config cascade
+  class CLI < Ace::Core::CLI::Base
+    default_task :process  # For single-purpose tools
+
+    desc "process FILE", "Process file with auto-detection"
+    long_desc <<~DESC
+      Detailed description of what the command does.
+
+      Examples:
+        $ ace-gem process input.txt
+        $ ace-gem process input.txt --verbose
+    DESC
+    def process(file = nil)
+      # Display config summary (unless --quiet)
+      Ace::Core::Atoms::ConfigSummary.display(
+        command: "process",
+        config: Gem.config,
+        defaults: Gem.load_gem_defaults,
+        options: options,
+        quiet: options[:quiet]
+      )
+
+      require_relative "commands/process_command"
+      Commands::ProcessCommand.new(file, options).execute
     end
+
+    # Define version command with gem's VERSION constant
+    version_command "ace-gem", Gem::VERSION
   end
 end
 
@@ -270,6 +309,122 @@ end
 #!/usr/bin/env ruby
 require 'ace/gem'
 Ace::Gem::CLI.start(ARGV)
+```
+
+### Standard Options
+
+The CLI base class provides these options automatically:
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--quiet` | `-q` | Suppress config summary output |
+| `--verbose` | `-v` | Enable verbose output |
+| `--debug` | `-d` | Enable debug output |
+| `--version` | | Show version (via `version_command`) |
+| `--help` | `-h` | Show help (Thor default) |
+
+**Important**: `-v` is reserved for `--verbose`. Use `--version` for version output.
+
+### ConfigSummary Output
+
+Commands display effective configuration to stderr:
+
+```ruby
+Ace::Core::Atoms::ConfigSummary.display(
+  command: "my_command",
+  config: Gem.config,           # Effective config
+  defaults: Gem.default_config, # Defaults for diffing
+  options: options,             # Thor options hash
+  quiet: options[:quiet],       # Suppress if --quiet
+  summary_keys: %w[model preset] # Optional allowlist
+)
+# Output: "Config: model=gflash preset=pr"
+```
+
+Features:
+- Only shows values that differ from defaults
+- Filters sensitive keys (token, password, secret, key, api_key)
+- Flattens nested config with dot notation
+- Outputs to stderr (won't interfere with piping)
+
+### Exit Code Handling
+
+**CRITICAL**: Commands must return status codes, never call `exit`:
+
+```ruby
+# ❌ BAD - Terminates test process
+def execute
+  if invalid?
+    puts "Error"
+    exit 1  # Kills tests!
+  end
+end
+
+# ✅ GOOD - Returns status code
+def execute
+  return 1 if invalid?
+  0  # Success
+end
+```
+
+The CLI entry point (exe/) handles exit:
+
+```ruby
+# exe/ace-gem
+require 'ace/gem'
+exit_code = Ace::Gem::CLI.start(ARGV)
+exit(exit_code || 0)
+```
+
+### Reserved Short Flags
+
+| Flag | Meaning | Notes |
+|------|---------|-------|
+| `-h` | help | Thor default |
+| `-v` | verbose | NOT version |
+| `-q` | quiet | Suppress config summary |
+| `-d` | debug | Debug output |
+| `-o` | output | Output destination |
+| `-f` | Available | Package-specific |
+
+### Default Task Pattern
+
+For single-purpose tools, use `default_task` to allow implicit command invocation:
+
+```ruby
+class CLI < Ace::Core::CLI::Base
+  default_task :process
+
+  desc "process [FILE]", "Process with auto-detection"
+  def process(file = nil)
+    # File argument is optional for default task
+  end
+
+  def respond_to_missing?(method, *_args)
+    # Delegate unknown commands to default task
+    true
+  end
+end
+```
+
+This allows: `ace-gem file.txt` instead of `ace-gem process file.txt`
+
+### Multi-Command CLIs
+
+For tools with multiple subcommands (like ace-taskflow):
+
+```ruby
+class CLI < Ace::Core::CLI::Base
+  desc "task REF", "Show task details"
+  def task(ref)
+    # ...
+  end
+
+  desc "tasks LIST", "List tasks"
+  def tasks(list)
+    # ...
+  end
+end
 ```
 
 ## Mono-Repo Dependency Management
@@ -435,8 +590,16 @@ spec.files = Dir.glob(%w[
 ### Dependencies
 
 ```ruby
-spec.add_dependency "ace-config", "~> 0.4"  # Configuration cascade
-spec.add_dependency "ace-support-core", "~> 0.10"  # Core utilities (if needed)
+# For CLI gems with executables
+spec.add_dependency "ace-support-core", "~> 0.10"  # CLI::Base, ConfigSummary
+spec.add_dependency "ace-config", "~> 0.4"         # Configuration cascade
+spec.add_dependency "thor", "~> 1.0"               # CLI framework
+
+# For library gems (no CLI)
+spec.add_dependency "ace-support-core", "~> 0.10"  # Only if needed
+spec.add_dependency "ace-config", "~> 0.4"         # Only if needed
+
+# Development
 spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 ```
 
@@ -452,6 +615,10 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - Maintain CHANGELOG.md in Keep a Changelog format
 - Add ace-config dependency for configuration support
 - Follow naming conventions: ace-* for CLI tools, ace-support-* for libraries
+- **CLI gems**: Inherit from `Ace::Core::CLI::Base` for standard options
+- **CLI gems**: Return status codes from commands, never call `exit`
+- **CLI gems**: Use ConfigSummary.display() to show effective config
+- **CLI gems**: Reserve `-v` for verbose, `--version` for version
 - **Integration packages**: Use `integrations/` directory for integration assets (official pattern)
 - **Integration packages**: Include ace-nav protocol registration for workflow discovery
 - **Integration packages**: Bundle templates, documentation, and custom commands with workflows
@@ -463,6 +630,9 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - Skip example configs or CHANGELOG updates
 - Use old-style `Dir[...]` or `Dir.glob("{lib,exe}/**/*") + %w[...]` patterns for spec.files
 - Omit `handbook/**/*` from spec.files (violates AI-native architecture principle)
+- **CLI gems**: Call `exit` in command methods (kills test processes)
+- **CLI gems**: Use `-v` for version flag (reserved for verbose)
+- **CLI gems**: Skip ConfigSummary display (users need to see effective config)
 
 ## Examples
 
