@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../organisms/folder_migrator"
+require_relative "../molecules/command_option_parser"
 
 module Ace
   module Taskflow
@@ -9,16 +10,15 @@ module Ace
       class MigrateCommand
         def initialize
           @root_path = find_taskflow_root
+          @option_parser = build_option_parser
         end
 
         def execute(args)
-          options = parse_options(args)
+          # Parse options using CommandOptionParser
+          result = @option_parser.parse(args)
+          return 0 if result[:help_requested]
 
-          # Handle help
-          if options[:help]
-            show_help
-            return 0
-          end
+          options = result[:parsed]
 
           # Check for taskflow directory
           unless @root_path
@@ -62,35 +62,13 @@ module Ace
 
         private
 
-        def parse_options(args)
-          options = {
-            dry_run: false,
-            verbose: false,
-            no_git: false,
-            help: false
-          }
-
-          i = 0
-          while i < args.length
-            arg = args[i]
-
-            case arg
-            when "--help", "-h"
-              options[:help] = true
-            when "--dry-run", "-n"
-              options[:dry_run] = true
-            when "--verbose", "-v"
-              options[:verbose] = true
-            when "--no-git"
-              options[:no_git] = true
-            else
-              puts "Unknown option: #{arg}"
-            end
-
-            i += 1
+        def build_option_parser
+          Molecules::CommandOptionParser.new(
+            option_sets: [:display, :actions, :help],
+            banner: "Usage: ace-taskflow migrate [options]"
+          ) do |opts, parsed|
+            opts.on("--no-git", "Don't use git mv (copy/delete instead)") { parsed[:no_git] = true }
           end
-
-          options
         end
 
         def display_results(results, options)

@@ -2,6 +2,7 @@
 
 require_relative "../organisms/retro_manager"
 require_relative "../atoms/path_formatter"
+require_relative "../molecules/command_option_parser"
 
 module Ace
   module Taskflow
@@ -10,16 +11,15 @@ module Ace
       class RetrosCommand
         def initialize
           @manager = Organisms::RetroManager.new
+          @option_parser = build_option_parser
         end
 
         def execute(args)
-          # Parse options
-          options = parse_options(args)
+          # Parse options using CommandOptionParser
+          result = @option_parser.parse(args)
+          return 0 if result[:help_requested]
 
-          if options[:help]
-            show_help
-            return 0
-          end
+          options = result[:parsed]
 
           # Determine scope from flags
           scope = if options[:all]
@@ -31,7 +31,7 @@ module Ace
                   end
 
           # List retros
-          release = options[:release]
+          release = options[:release] || "current"
           retros = @manager.list_retros(release: release, filters: { scope: scope })
 
           # Apply limit if specified
@@ -54,46 +54,13 @@ module Ace
 
         private
 
-        def parse_options(args)
-          options = {
-            release: "current",
-            limit: nil,
-            all: false,
-            done: false,
-            help: false
-          }
-
-          i = 0
-          while i < args.length
-            arg = args[i]
-            case arg
-            when "--release"
-              options[:release] = args[i + 1]
-              i += 2
-            when "--current"
-              options[:release] = "current"
-              i += 1
-            when "--backlog"
-              options[:release] = "backlog"
-              i += 1
-            when "--limit"
-              options[:limit] = args[i + 1].to_i
-              i += 2
-            when "--all"
-              options[:all] = true
-              i += 1
-            when "--done"
-              options[:done] = true
-              i += 1
-            when "--help", "-h"
-              options[:help] = true
-              i += 1
-            else
-              i += 1
-            end
+        def build_option_parser
+          Molecules::CommandOptionParser.new(
+            option_sets: [:release, :limits, :help],
+            banner: "Usage: ace-taskflow retros [options]"
+          ) do |opts, parsed|
+            opts.on("--done", "Show only done retros") { parsed[:done] = true }
           end
-
-          options
         end
 
         def display_retros(retros, release, scope, options)

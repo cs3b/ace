@@ -3,9 +3,9 @@
 require_relative "../molecules/idea_loader"
 require_relative "../molecules/list_preset_manager"
 require_relative "../molecules/stats_formatter"
+require_relative "../molecules/command_option_parser"
 require_relative "../models/idea"
 require_relative "../atoms/path_formatter"
-require_relative "../atoms/filter_parser"
 require_relative "../molecules/task_filter"
 require_relative "helpers"
 
@@ -20,30 +20,46 @@ module Ace
           @idea_loader = Molecules::IdeaLoader.new(@root_path)
           @preset_manager = Molecules::ListPresetManager.new
           @stats_formatter = Molecules::StatsFormatter.new(@root_path)
+          @option_parser = build_option_parser
         end
 
         def execute(args)
-          if args.include?("--help") || args.include?("-h")
-            show_help
-            exit 0
-          end
+          # Parse options using CommandOptionParser
+          result = @option_parser.parse(args)
+          return 0 if result[:help_requested]
 
-          # Check if first argument is a preset name
-          preset_name = detect_preset_name(args)
+          options = result[:parsed]
+          remaining = result[:remaining]
+
+          # Check if first remaining argument is a preset name
+          preset_name = detect_preset_name(remaining)
           if preset_name
-            args.shift # Remove preset name from args
+            remaining.shift # Remove preset name from args
           else
             # Default to 'next' preset (shows pending + in-progress items, excluding maybe/anyday)
             preset_name = 'next'
           end
 
-          execute_with_preset(preset_name, args)
+          # Handle --all flag as preset override
+          if options[:all]
+            preset_name = 'all'
+          end
+
+          execute_with_preset(preset_name, options)
         rescue StandardError => e
           puts "Error: #{e.message}"
           exit 1
         end
 
         private
+
+        # Build the option parser for ideas command
+        def build_option_parser
+          Molecules::CommandOptionParser.new(
+            option_sets: [:display, :release, :filter, :limits, :help],
+            banner: "Usage: ace-taskflow ideas [preset] [options]"
+          )
+        end
 
         def detect_preset_name(args)
           return nil if args.empty? || args.first.start_with?('-')
@@ -57,22 +73,14 @@ module Ace
           end
         end
 
-        def execute_with_preset(preset_name, remaining_args)
-          # Parse additional filters from remaining args
-          additional_filters = parse_additional_filters(remaining_args)
-
-          # Handle preset override from legacy --all flag
-          if additional_filters[:_preset_override]
-            preset_name = additional_filters.delete(:_preset_override)
-          end
-
+        def execute_with_preset(preset_name, options)
           # Check for special flags
-          if additional_filters[:stats]
-            return show_statistics_for_preset(preset_name, additional_filters)
+          if options[:stats]
+            return show_statistics_for_preset(preset_name, options)
           end
 
           # Handle filter-clear: if set, don't pass old-style filters to preset
-          if additional_filters[:filter_clear]
+          if options[:filter_clear]
             # Apply preset but ignore its filters
             preset_config = @preset_manager.apply_preset(preset_name, {}, :ideas)
             return 1 unless preset_config
@@ -80,7 +88,7 @@ module Ace
             preset_config[:filters] = {}
           else
             # Apply preset with additional filters (normal flow)
-            preset_config = @preset_manager.apply_preset(preset_name, additional_filters, :ideas)
+            preset_config = @preset_manager.apply_preset(preset_name, options, :ideas)
             return 1 unless preset_config
           end
 
@@ -88,13 +96,13 @@ module Ace
           preset_config[:name] = preset_name
 
           # Store filter_specs in preset_config so filtering can access them
-          if additional_filters[:filter_specs]
-            preset_config[:filter_specs] = additional_filters[:filter_specs]
+          if options[:filter_specs]
+            preset_config[:filter_specs] = options[:filter_specs]
           end
 
           # Override release if provided via flags
-          if additional_filters[:release]
-            preset_config[:release] = additional_filters[:release]
+          if options[:release]
+            preset_config[:release] = options[:release]
           end
 
           # Get ideas based on preset configuration
@@ -102,8 +110,8 @@ module Ace
 
           # Apply limit if specified
           original_count = ideas.size
-          if additional_filters[:limit] && additional_filters[:limit] > 0
-            ideas = ideas.take(additional_filters[:limit])
+          if options[:limit] && options[:limit] > 0
+            ideas = ideas.take(options[:limit])
           end
 
           # Display ideas
@@ -112,100 +120,12 @@ module Ace
             return 0
           else
             # Check format option
-            if additional_filters[:format] == "json"
+            if options[:format] == "json"
               display_ideas_as_json(ideas, preset_config)
             else
-              display_ideas_with_preset(ideas, preset_config, original_count, additional_filters[:limit], additional_filters[:short])
+              display_ideas_with_preset(ideas, preset_config, original_count, options[:limit], options[:short])
             end
           end
-        end
-
-
-        def parse_additional_filters(args)
-          filters = {}
-          filter_strings = []
-
-          i = 0
-          while i < args.length
-            arg = args[i]
-            case arg
-            # NEW: Unified filter syntax
-            when "--filter"
-              if i + 1 < args.length
-                filter_strings << args[i + 1]
-                i += 2
-              else
-                raise ArgumentError, "Missing value for --filter flag. Use: --filter key:value"
-              end
-            when "--filter-clear"
-              filters[:filter_clear] = true
-              i += 1
-            # REMOVED: Legacy filter flags with helpful error messages
-            when "--status"
-              suggested_value = args[i + 1] if i + 1 < args.length
-              suggested_filter = if suggested_value
-                converted = suggested_value.gsub(/,\s*/, '|')
-                "--filter status:#{converted}"
-              else
-                "--filter status:value"
-              end
-              raise ArgumentError, "Error: --status flag is no longer supported. Use: #{suggested_filter}"
-            when "--priority"
-              suggested_value = args[i + 1] if i + 1 < args.length
-              suggested_filter = if suggested_value
-                converted = suggested_value.gsub(/,\s*/, '|')
-                "--filter priority:#{converted}"
-              else
-                "--filter priority:value"
-              end
-              raise ArgumentError, "Error: --priority flag is no longer supported. Use: #{suggested_filter}"
-            # KEPT: Display and formatting flags
-            when "--days"
-              filters[:days] = args[i + 1].to_i if i + 1 < args.length
-              i += 2
-            when "--limit"
-              filters[:limit] = args[i + 1].to_i if i + 1 < args.length
-              i += 2
-            when "--stats"
-              filters[:stats] = true
-              i += 1
-            when "--verbose", "-v"
-              filters[:verbose] = true
-              i += 1
-            when "--short"
-              filters[:short] = true
-              i += 1
-            when "--format"
-              filters[:format] = args[i + 1] if i + 1 < args.length
-              i += 2
-            # KEPT: Release selection flags (not filters)
-            when "--backlog"
-              filters[:release] = "backlog"
-              i += 1
-            when "--release", "-r"
-              filters[:release] = args[i + 1] if i + 1 < args.length
-              i += 2
-            when "--current"
-              filters[:release] = "current"
-              i += 1
-            when "--all"
-              # Map to 'all' preset
-              filters[:_preset_override] = "all"
-              i += 1
-            when "--help", "-h"
-              show_help
-              exit 0
-            else
-              i += 1
-            end
-          end
-
-          # Parse filter strings into filter specifications
-          if filter_strings.any?
-            filters[:filter_specs] = Atoms::FilterParser.parse(filter_strings)
-          end
-
-          filters
         end
 
         def get_ideas_for_preset(preset_config)

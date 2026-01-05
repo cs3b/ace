@@ -3,6 +3,7 @@
 require_relative "../organisms/taskflow_doctor"
 require_relative "../molecules/doctor_fixer"
 require_relative "../molecules/doctor_reporter"
+require_relative "../molecules/command_option_parser"
 
 module Ace
   module Taskflow
@@ -11,16 +12,17 @@ module Ace
       class DoctorCommand
         def initialize
           @root_path = find_taskflow_root
+          @option_parser = build_option_parser
         end
 
         def execute(args)
-          options = parse_options(args)
+          # Parse options using CommandOptionParser
+          result = @option_parser.parse(args)
+          return 0 if result[:help_requested]
 
-          # Handle help
-          if options[:help]
-            show_help
-            return 0
-          end
+          options = result[:parsed]
+          # Set default format
+          options[:format] ||= :terminal
 
           # Check for taskflow directory
           unless @root_path
@@ -62,64 +64,24 @@ module Ace
 
         private
 
-        def parse_options(args)
-          options = {
-            format: :terminal,
-            verbose: false,
-            fix: false,
-            dry_run: false,
-            quiet: false,
-            no_color: false,
-            errors_only: false
-          }
-
-          i = 0
-          while i < args.length
-            arg = args[i]
-
-            case arg
-            when "--help", "-h"
-              options[:help] = true
-            when "--component", "-c"
-              i += 1
-              options[:component] = args[i]
-            when "--release", "-r"
-              i += 1
-              options[:release] = args[i]
-            when "--check"
-              i += 1
-              options[:check] = args[i]
-            when "--subtasks"
-              options[:check] = "subtasks"
-            when "--fix", "-f"
-              options[:fix] = true
-            when "--dry-run"
-              options[:dry_run] = true
-              options[:fix] = true
-            when "--format"
-              i += 1
-              options[:format] = args[i].to_sym if args[i]
-            when "--verbose", "-v"
-              options[:verbose] = true
-            when "--quiet", "-q"
-              options[:quiet] = true
-            when "--errors-only"
-              options[:errors_only] = true
-            when "--no-color"
-              options[:no_color] = true
-            when "--json"
-              options[:format] = :json
-              options[:no_color] = true
-            when "--summary"
-              options[:format] = :summary
-            else
-              puts "Unknown option: #{arg}"
+        def build_option_parser
+          Molecules::CommandOptionParser.new(
+            option_sets: [:display, :release, :actions, :help],
+            banner: "Usage: ace-taskflow doctor [options]"
+          ) do |opts, parsed|
+            opts.on("--component TYPE", "-c TYPE", "Check specific component") { |v| parsed[:component] = v }
+            opts.on("--check TYPE", "Run specific check") { |v| parsed[:check] = v }
+            opts.on("--subtasks", "Shorthand for --check subtasks") { parsed[:check] = "subtasks" }
+            opts.on("--fix", "-f", "Attempt to auto-fix issues") { parsed[:fix] = true }
+            opts.on("--quiet", "-q", "Quiet mode - just exit code") { parsed[:quiet] = true }
+            opts.on("--errors-only", "Show only errors, not warnings") { parsed[:errors_only] = true }
+            opts.on("--no-color", "Disable colored output") { parsed[:no_color] = true }
+            opts.on("--json", "Output in JSON format") do
+              parsed[:format] = :json
+              parsed[:no_color] = true
             end
-
-            i += 1
+            opts.on("--summary", "Show summary format") { parsed[:format] = :summary }
           end
-
-          options
         end
 
         def run_diagnosis(options)
