@@ -1,16 +1,13 @@
 # frozen_string_literal: true
 
-require "thor"
+require "ace/core/cli/base"
 require "json"
 
 module Ace
   module LLM
     module ModelsDev
       # CLI for ace-llm-models
-      class CLI < Thor
-        def self.exit_on_failure?
-          false
-        end
+      class CLI < Ace::Core::CLI::Base
 
         # Register subcommands
         desc "cache SUBCOMMAND", "Manage local cache"
@@ -46,10 +43,7 @@ module Ace
           Commands::CacheCLI.new([], options).sync
         end
 
-        desc "version", "Show version"
-        def version
-          puts "ace-llm-models-dev #{VERSION}"
-        end
+        version_command "ace-llm-models", VERSION
 
         desc "help [COMMAND]", "Describe available commands"
         def help(command = nil)

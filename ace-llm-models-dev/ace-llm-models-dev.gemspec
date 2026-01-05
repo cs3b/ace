@@ -36,13 +36,10 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
+  spec.add_dependency "ace-support-core", "~> 0.10"
   spec.add_dependency "thor", "~> 1.3"
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "faraday-retry", "~> 2.0"
-
-  # Optional runtime dependencies:
-  # - ace-support-core (~> 0.10): Enhanced project root detection (auto-discovered)
-  #   Without it, falls back to relative path detection from gem location
 
   # Development dependencies managed in root Gemfile
 end
