@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "thor"
+require "ace/core/cli/base"
 require_relative "commands/scan_command"
 require_relative "commands/rewrite_command"
 require_relative "commands/revoke_command"
@@ -11,21 +11,11 @@ module Ace
   module Git
     module Secrets
       # CLI interface using Thor
-      # Note: Commands return exit codes; exe/ace-git-secrets handles exit()
+      # Commands return exit codes; exe/ace-git-secrets handles exit()
       #
       # Requires gitleaks to be installed: brew install gitleaks
-      class CLI < Thor
-        # Track last exit code for exe wrapper
-        class << self
-          attr_accessor :last_exit_code
-        end
-
-        # Return false to prevent Thor from calling exit() on errors
-        # Commands set last_exit_code instead; exe/ace-git-secrets handles exit
-        # This aligns with docs/testing-patterns.md return-code contract
-        def self.exit_on_failure?
-          false
-        end
+      class CLI < Ace::Core::CLI::Base
+        # class_options :quiet, :verbose, :debug inherited from Base
 
         # Load config early before any command runs to ensure thread safety.
         # This preloading is CRITICAL for thread safety. The config method uses
@@ -47,12 +37,17 @@ module Ace
                       desc: "Format for saved report file (json, markdown)"
         method_option :confidence, type: :string, aliases: "-c", default: "low",
                       desc: "Minimum confidence (high, medium, low)"
-        method_option :verbose, type: :boolean, aliases: "-v",
+        method_option :verbose, type: :boolean,
                       desc: "Enable verbose output with full report to stdout"
         method_option :quiet, type: :boolean, aliases: "-q",
                       desc: "Suppress non-essential output (for CI)"
-        def scan
-          self.class.last_exit_code = Commands::ScanCommand.execute(options)
+        def scan(first_arg = nil)
+          # Handle --help/-h for subcommand
+          if first_arg == "--help" || first_arg == "-h"
+            invoke :help, ["scan"]
+            return 0
+          end
+          Commands::ScanCommand.execute(options)
         end
 
         desc "rewrite-history", "Remove detected tokens from Git history"
@@ -64,8 +59,13 @@ module Ace
                       desc: "Skip confirmation prompt"
         method_option :scan_file, type: :string,
                       desc: "Use previous scan results file"
-        def rewrite_history
-          self.class.last_exit_code = Commands::RewriteCommand.execute(options)
+        def rewrite_history(first_arg = nil)
+          # Handle --help/-h for subcommand
+          if first_arg == "--help" || first_arg == "-h"
+            invoke :help, ["rewrite-history"]
+            return 0
+          end
+          Commands::RewriteCommand.execute(options)
         end
 
         desc "revoke", "Revoke detected tokens via provider APIs"
@@ -75,8 +75,13 @@ module Ace
                       desc: "Revoke specific token"
         method_option :scan_file, type: :string,
                       desc: "Use previous scan results file"
-        def revoke
-          self.class.last_exit_code = Commands::RevokeCommand.execute(options)
+        def revoke(first_arg = nil)
+          # Handle --help/-h for subcommand
+          if first_arg == "--help" || first_arg == "-h"
+            invoke :help, ["revoke"]
+            return 0
+          end
+          Commands::RevokeCommand.execute(options)
         end
 
         desc "check-release", "Pre-release security validation check"
@@ -84,15 +89,21 @@ module Ace
                       desc: "Fail on medium confidence matches"
         method_option :format, type: :string, aliases: "-f", default: "table",
                       desc: "Output format (table, json)"
-        def check_release
-          self.class.last_exit_code = Commands::CheckReleaseCommand.execute(options)
+        def check_release(first_arg = nil)
+          # Handle --help/-h for subcommand
+          if first_arg == "--help" || first_arg == "-h"
+            invoke :help, ["check-release"]
+            return 0
+          end
+          Commands::CheckReleaseCommand.execute(options)
         end
 
         desc "version", "Show version"
         def version
           puts "ace-git-secrets version #{Ace::Git::Secrets::VERSION}"
-          self.class.last_exit_code = 0
+          0
         end
+        map "--version" => :version
       end
     end
   end

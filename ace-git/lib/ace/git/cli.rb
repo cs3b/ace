@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 
-require "thor"
+require "ace/core/cli/base"
 
 module Ace
   module Git
     # Thor CLI for ace-git
-    class CLI < Thor
-      def self.exit_on_failure?
-        true
-      end
+    class CLI < Ace::Core::CLI::Base
+      # Note: exit_on_failure? and class_options inherited from Base
+      # Custom respond_to_missing? kept for conditional git range detection
 
       # Override banner for better formatting
       def self.banner(command, _namespace = nil, _subcommand = false)
@@ -105,6 +104,17 @@ module Ace
         # Handle --help/-h passed as range argument
         if range == "--help" || range == "-h"
           invoke :help, ["diff"]
+          return 0
+        end
+
+        # Check if known Thor flags were passed as range argument
+        # This happens when using -v, --verbose, etc. without a command
+        # Thor's default_task routes them to the default command as arguments
+        known_thor_flags = %w[-v --verbose -q --quiet -d --debug --version -h --help]
+        if known_thor_flags.include?(range.to_s)
+          # Known flag was passed as an argument
+          # Show usage since flags should come before the command
+          invoke :help, []
           return 0
         end
 
@@ -229,12 +239,7 @@ module Ace
       end
 
       desc "version", "Show version"
-      def version
-        puts Ace::Git::VERSION
-        0
-      end
-
-      map %w[-v --version] => :version
+      version_command "ace-git", Ace::Git::VERSION
 
       default_task :diff
 
@@ -245,6 +250,16 @@ module Ace
       # The pattern is restrictive to avoid false positives.
       def method_missing(method_name, *args, &block)
         method_str = method_name.to_s
+
+        # Check if the "command" is a known Thor option flag
+        # These should not be routed to diff as a range argument
+        known_thor_flags = %w[-v --verbose -q --quiet -d --debug --version -h --help]
+        if known_thor_flags.include?(method_str)
+          # Known flag was passed as a standalone argument
+          # Show usage since no valid command/range was specified
+          invoke :help, []
+          return 0
+        end
 
         # Only treat as git range if it matches specific git range patterns:
         # - Contains range operators: .. or ...

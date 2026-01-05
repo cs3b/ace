@@ -8,8 +8,6 @@ class CLITest < GitSecretsTestCase
     @mock_repo = MockGitRepo.new
     @original_dir = Dir.pwd
     Dir.chdir(@mock_repo.path)
-    # Reset exit code before each test
-    Ace::Git::Secrets::CLI.last_exit_code = nil
   end
 
   def teardown
@@ -17,18 +15,18 @@ class CLITest < GitSecretsTestCase
     @mock_repo&.cleanup
   end
 
-  def test_cli_does_not_call_exit
-    # Verify that CLI methods set last_exit_code instead of calling exit
-    # This is critical for testability (per docs/testing-patterns.md)
+  def test_cli_returns_exit_code
+    # Verify that CLI.start returns exit codes for testability
+    # (per docs/testing-patterns.md return-code contract)
     @mock_repo.add_file("clean.txt", "no secrets here")
 
     with_mocked_gitleaks(clean: true) do
-      # If CLI called exit(), this would terminate the test process
+      result = nil
       capture_io do
-        Ace::Git::Secrets::CLI.start(["scan"])
+        result = Ace::Git::Secrets::CLI.start(["scan"])
       end
 
-      assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 0, result
     end
   end
 
@@ -36,11 +34,12 @@ class CLITest < GitSecretsTestCase
     @mock_repo.add_file("clean.txt", "no secrets here")
 
     with_mocked_gitleaks(clean: true) do
+      result = nil
       capture_io do
-        Ace::Git::Secrets::CLI.start(["scan"])
+        result = Ace::Git::Secrets::CLI.start(["scan"])
       end
 
-      assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 0, result
     end
   end
 
@@ -57,35 +56,38 @@ class CLITest < GitSecretsTestCase
     ]
 
     with_mocked_gitleaks(findings: mock_findings) do
+      result = nil
       capture_io do
-        Ace::Git::Secrets::CLI.start(["scan"])
+        result = Ace::Git::Secrets::CLI.start(["scan"])
       end
 
-      assert_equal 1, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 1, result
     end
   end
 
   def test_version_command
+    result = nil
     output, = capture_io do
-      Ace::Git::Secrets::CLI.start(["version"])
+      result = Ace::Git::Secrets::CLI.start(["version"])
     end
 
     assert_match(/ace-git-secrets version/, output)
-    assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+    assert_equal 0, result
   end
 
   def test_scan_with_format_json
     @mock_repo.add_file("clean.txt", "no secrets")
 
     with_mocked_gitleaks(clean: true) do
+      result = nil
       output, = capture_io do
-        Ace::Git::Secrets::CLI.start(["scan", "--report-format", "json"])
+        result = Ace::Git::Secrets::CLI.start(["scan", "--report-format", "json"])
       end
 
       # New behavior: summary to stdout, full JSON report saved to file
       # Verify output mentions report saved and find the file
       assert_match(/Report saved:.*\.json/, output, "Should mention JSON report file")
-      assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 0, result
 
       # Verify the JSON file was created
       cache_dir = File.join(@mock_repo.path, ".cache", "ace-git-secrets")
@@ -103,13 +105,14 @@ class CLITest < GitSecretsTestCase
     @mock_repo.add_file("clean.txt", "no secrets")
 
     with_mocked_gitleaks(clean: true) do
+      result = nil
       output, = capture_io do
-        Ace::Git::Secrets::CLI.start(["scan", "--verbose"])
+        result = Ace::Git::Secrets::CLI.start(["scan", "--verbose"])
       end
 
       # Verbose mode should show full report
       assert_match(/No tokens detected/, output, "Verbose output should show full message")
-      assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 0, result
     end
   end
 
@@ -117,12 +120,13 @@ class CLITest < GitSecretsTestCase
     @mock_repo.add_file("clean.yml", "nothing=here")
 
     with_mocked_gitleaks(clean: true) do
+      result = nil
       # High confidence should pass for clean repo
       capture_io do
-        Ace::Git::Secrets::CLI.start(["scan", "--confidence", "high"])
+        result = Ace::Git::Secrets::CLI.start(["scan", "--confidence", "high"])
       end
 
-      assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 0, result
     end
   end
 
@@ -130,11 +134,12 @@ class CLITest < GitSecretsTestCase
     @mock_repo.add_file("clean.txt", "no secrets")
 
     with_mocked_gitleaks(clean: true) do
+      result = nil
       capture_io do
-        Ace::Git::Secrets::CLI.start(["check-release"])
+        result = Ace::Git::Secrets::CLI.start(["check-release"])
       end
 
-      assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 0, result
     end
   end
 
@@ -151,11 +156,12 @@ class CLITest < GitSecretsTestCase
     ]
 
     with_mocked_gitleaks(findings: mock_findings) do
+      result = nil
       capture_io do
-        Ace::Git::Secrets::CLI.start(["check-release"])
+        result = Ace::Git::Secrets::CLI.start(["check-release"])
       end
 
-      assert_equal 1, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 1, result
     end
   end
 
@@ -164,12 +170,13 @@ class CLITest < GitSecretsTestCase
     @mock_repo.add_file("clean.txt", "no secrets")
 
     with_mocked_gitleaks(clean: true) do
+      result = nil
       # Should not raise an error
       capture_io do
-        Ace::Git::Secrets::CLI.start(["scan", "--verbose"])
+        result = Ace::Git::Secrets::CLI.start(["scan", "--verbose"])
       end
 
-      assert_equal 0, Ace::Git::Secrets::CLI.last_exit_code
+      assert_equal 0, result
     end
   end
 end
