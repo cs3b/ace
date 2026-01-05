@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.178
-status: draft
+status: pending
 priority: high
-estimate: TBD
+estimate: 2h
 dependencies: []
 ---
 
@@ -175,3 +175,139 @@ ace-taskflow status
 - 177: Fix ace-taskflow doctor (done 1d ago)
 ```
 Most recent tasks appear first with accurate timestamps.
+
+## Root Cause Analysis
+
+### Investigation Results
+
+**File Mtime Verification:**
+- Task 150 orchestrator mtime: `2026-01-05 21:04:17` (TODAY)
+- Task 177 mtime: `2026-01-04 10:45:15` (YESTERDAY)
+- Task 150 IS newer than Task 177, but appears at position 37 instead of position 1
+
+**Root Cause Identified:**
+
+The bug is in `DependencyResolver.apply_standard_sort()` method in `ace-taskflow/lib/ace/taskflow/molecules/dependency_resolver.rb`:
+
+1. When sorting done tasks by `:modified`, `TaskFilter.sort_tasks()` checks if any task has dependencies
+2. If ANY task has dependencies (even unrelated ones), it delegates to `DependencyResolver.dependency_aware_sort()`
+3. `dependency_aware_sort()` calls `apply_standard_sort()` for sorting within each dependency level
+4. **BUG:** `apply_standard_sort()` does NOT handle `:modified` as a sort criterion - it falls through to the `else` case which returns tasks unsorted
+
+**Code Path:**
+```ruby
+# task_filter.rb line 196
+if consider_dependencies && has_dependencies
+  DependencyResolver.dependency_aware_sort(tasks, sort_by, ascending)  # Called
+else
+  # Standard sort - NOT called because some done task has dependencies
+end
+
+# dependency_resolver.rb apply_standard_sort()
+case sort_by
+when :sort then ...
+when :priority then ...
+when :status then ...
+when :id then ...
+else
+  tasks  # <-- BUG: :modified falls here, returns unsorted!
+end
+```
+
+## Technical Approach
+
+### Architecture Pattern
+- Single bug fix in existing ATOM molecule (`DependencyResolver`)
+- No architectural changes required
+- Pattern: Add missing case handler for `:modified` sort criterion
+
+### Implementation Strategy
+
+**Option A (Recommended): Add :modified to DependencyResolver.apply_standard_sort()**
+- Pros: Minimal change, fixes the exact issue
+- Cons: None - this is the correct fix
+
+**Option B (Alternative): Skip dependency sorting for done tasks**
+- Rationale: Done tasks don't need dependency ordering
+- Implementation: Modify `TaskFilter.sort_tasks()` to skip dependency check when sorting by `:modified`
+- Pros: Conceptually cleaner (dependencies irrelevant for completed work)
+- Cons: More invasive change, could affect other code paths
+
+**Selected: Option A** - Add the missing `:modified` case to `apply_standard_sort()`
+
+### Technology Stack
+- No new dependencies required
+- Ruby standard library `File.mtime` (already used)
+
+## File Modifications
+
+### Modify
+- `ace-taskflow/lib/ace/taskflow/molecules/dependency_resolver.rb`
+  - Changes: Add `:modified` case to `apply_standard_sort()` method (~10 lines)
+  - Impact: Fixes sorting for "Recently Done" section
+  - Integration points: Called by `dependency_aware_sort()` which is called by `TaskFilter.sort_tasks()`
+
+### Create
+- `ace-taskflow/test/molecules/dependency_resolver_modified_sort_test.rb`
+  - Purpose: Test the `:modified` sort criterion in `apply_standard_sort()`
+  - Key components: Test cases for ascending/descending mtime sorting
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Analyze TaskActivityAnalyzer to understand how "Recently Done" is populated
+* [x] Trace code path from status command to find_recently_done()
+* [x] Verify file mtimes are correct (they are - task 150 is newer than 177)
+* [x] Identify where the sorting goes wrong
+* [x] Document root cause in task specification
+
+### Execution Steps
+
+- [ ] Add `:modified` case to `DependencyResolver.apply_standard_sort()`
+  > TEST: Modified Sort Handling
+  > Type: Unit Test
+  > Assert: Tasks sorted by file mtime in correct order
+  > Command: ace-test ace-taskflow test/molecules/dependency_resolver_test.rb
+
+- [ ] Create test case for `:modified` sorting in DependencyResolver
+  > TEST: Test Coverage
+  > Type: Unit Test
+  > Assert: New test passes with correct ordering
+  > Command: ace-test ace-taskflow test/molecules/dependency_resolver_test.rb
+
+- [ ] Run full ace-taskflow test suite
+  > TEST: Regression Check
+  > Type: Full Test Suite
+  > Assert: All existing tests pass
+  > Command: ace-test ace-taskflow
+
+- [ ] Manual verification with ace-taskflow status
+  > TEST: Integration Validation
+  > Type: Manual
+  > Assert: Task 150 appears first in "Recently Done"
+  > Command: ace-taskflow status
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Change affects other sorting behavior
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Run full test suite, verify existing tests pass
+  - **Rollback:** Single line change, easy to revert
+
+### Integration Risks
+- **Risk:** Performance degradation from file I/O
+  - **Probability:** Very Low (already doing File.mtime in TaskFilter)
+  - **Impact:** Low
+  - **Mitigation:** Same pattern already used in TaskFilter
+  - **Monitoring:** Verify status command completes in <1s
+
+## Acceptance Criteria
+
+- [x] **Root cause documented**: Investigation complete with clear explanation
+- [ ] **Fix implemented**: `:modified` case added to `apply_standard_sort()`
+- [ ] **Tests added**: Unit test for modified sorting
+- [ ] **Regression verified**: All existing tests pass
+- [ ] **Manual verification**: Task 150 appears first in "Recently Done"
