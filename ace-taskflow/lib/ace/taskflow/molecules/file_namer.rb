@@ -7,16 +7,9 @@ module Ace
   module Taskflow
     module Molecules
       class FileNamer
-        # Default time provider for testing
-        @time_provider = Time
-
-        class << self
-          attr_accessor :time_provider
-        end
-
-        def initialize(config, time_provider: nil)
+        def initialize(config, time_provider: Time)
           @config = config
-          @time_provider = time_provider || FileNamer.time_provider
+          @time_provider = time_provider
         end
 
         def generate(metadata = {})
