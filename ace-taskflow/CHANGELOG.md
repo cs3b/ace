@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.29.1] - 2026-01-06
+
+### Fixed
+- Recently completed tasks not appearing in "Recently Done" section of `ace-taskflow status`
+  - Added missing `:modified` sort case to `DependencyResolver.apply_standard_sort()`
+  - Tasks are now correctly sorted by file modification time
+  - Subtasks completed recently now appear alongside parent tasks
+
 ## [0.29.0] - 2026-01-05
 
 ### Changed

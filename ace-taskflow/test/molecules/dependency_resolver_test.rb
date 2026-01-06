@@ -145,4 +145,68 @@ class DependencyResolverTest < AceTaskflowTestCase
     # Should not include missing dependency, only existing pending ones
     assert blocking.none? { |t| t[:id] == "task.888" }
   end
+
+  def test_apply_standard_sort_by_modified_ascending
+    tasks = [
+      { id: "task.003", modified: Time.now - 3600 },  # 1 hour ago
+      { id: "task.001", modified: Time.now - 7200 },  # 2 hours ago
+      { id: "task.002", modified: Time.now }           # Now (newest)
+    ]
+
+    result = @resolver.send(:apply_standard_sort, tasks, :modified, true)
+
+    # Ascending order: oldest to newest
+    assert_equal "task.001", result[0][:id]
+    assert_equal "task.003", result[1][:id]
+    assert_equal "task.002", result[2][:id]
+  end
+
+  def test_apply_standard_sort_by_modified_descending
+    tasks = [
+      { id: "task.003", modified: Time.now - 3600 },  # 1 hour ago
+      { id: "task.001", modified: Time.now - 7200 },  # 2 hours ago
+      { id: "task.002", modified: Time.now }           # Now (newest)
+    ]
+
+    result = @resolver.send(:apply_standard_sort, tasks, :modified, false)
+
+    # Descending order: newest to oldest
+    assert_equal "task.002", result[0][:id]
+    assert_equal "task.003", result[1][:id]
+    assert_equal "task.001", result[2][:id]
+  end
+
+  def test_apply_standard_sort_by_modified_with_nil_modified
+    tasks = [
+      { id: "task.003", modified: Time.now - 3600 },
+      { id: "task.001", modified: nil },              # No modified time
+      { id: "task.002", modified: Time.now }
+    ]
+
+    result = @resolver.send(:apply_standard_sort, tasks, :modified, false)
+
+    # Tasks with nil modified should come last (treated as Time.at(0))
+    assert_equal "task.002", result[0][:id]
+    assert_equal "task.003", result[1][:id]
+    assert_equal "task.001", result[2][:id]
+  end
+
+  def test_dependency_aware_sort_by_modified_within_levels
+    tasks_with_dependencies = [
+      { id: "task.001", status: "done", dependencies: [], modified: Time.now - 7200 },
+      { id: "task.002", status: "done", dependencies: ["task.001"], modified: Time.now - 3600 },
+      { id: "task.003", status: "done", dependencies: ["task.001"], modified: Time.now }
+    ]
+
+    result = @resolver.dependency_aware_sort(tasks_with_dependencies, :modified, false)
+
+    # task.001 should be first (no dependencies)
+    assert_equal "task.001", result[0][:id]
+
+    # task.002 and task.003 are at same dependency level, sorted by modified (newest first)
+    task_002_index = result.index { |t| t[:id] == "task.002" }
+    task_003_index = result.index { |t| t[:id] == "task.003" }
+
+    assert task_003_index < task_002_index, "task.003 (newer) should come before task.002"
+  end
 end
