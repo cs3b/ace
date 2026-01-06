@@ -3,5 +3,10 @@
 
 require_relative "../lib/ace/timestamp"
 
-result = Ace::Timestamp::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)
+begin
+  result = Ace::Timestamp::CLI.start(ARGV)
+  exit(result.is_a?(Integer) ? result : 0)
+rescue StandardError => e
+  warn "Error: #{e.message}" if ENV["DEBUG"]
+  exit 1
+end
