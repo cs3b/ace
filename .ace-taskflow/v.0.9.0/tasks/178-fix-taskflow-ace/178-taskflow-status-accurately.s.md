@@ -312,7 +312,7 @@ end
 ## Acceptance Criteria
 
 - [x] **Root cause documented**: Investigation complete with clear explanation
-- [ ] **Fix implemented**: `:modified` case added to `apply_standard_sort()`
-- [ ] **Tests added**: Unit test for modified sorting
-- [ ] **Regression verified**: All existing tests pass
-- [ ] **Manual verification**: Task 150 appears first in "Recently Done"
+- [x] **Fix implemented**: `:modified` case added to `apply_standard_sort()`
+- [x] **Tests added**: Unit test for modified sorting
+- [x] **Regression verified**: All existing tests pass (1250 tests, 0 failures)
+- [x] **Manual verification**: Recently completed tasks now appear correctly in "Recently Done"
