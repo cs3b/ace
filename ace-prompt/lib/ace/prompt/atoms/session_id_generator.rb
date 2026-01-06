@@ -8,11 +8,8 @@ module Ace
       # Generates Base36 compact IDs for prompt archiving
       #
       # Uses ace-timestamp to generate 6-character compact IDs (e.g., "i50jj3")
-      #
-      # TODO: Consider renaming to SessionIdGenerator in a future PR to better
-      # reflect its purpose (generates session IDs, not timestamps)
-      #
-      module TimestampGenerator
+      # These IDs serve as session identifiers for archived prompts
+      module SessionIdGenerator
         # Generate Base36 ID for current time
         #
         # @param time [Time] Optional time in UTC (default: current UTC time)
