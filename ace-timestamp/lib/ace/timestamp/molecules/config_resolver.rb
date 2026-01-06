@@ -92,6 +92,11 @@ module Ace
               raise ArgumentError, "alphabet must be exactly 36 characters, got #{alphabet&.length || 'nil'}"
             end
 
+            # Verify all characters in the alphabet are unique
+            unless alphabet.chars.uniq.length == 36
+              raise ArgumentError, "alphabet must contain 36 unique characters (duplicates found)"
+            end
+
             unless year_zero.is_a?(Integer) && year_zero.between?(1900, 2100)
               raise ArgumentError, "year_zero must be between 1900-2100, got #{year_zero.inspect}"
             end

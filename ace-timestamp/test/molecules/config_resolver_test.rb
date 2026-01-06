@@ -143,6 +143,14 @@ module Ace
           assert_match(/alphabet must be exactly 36 characters/, error.message)
         end
 
+        def test_resolve_raises_on_duplicate_alphabet_characters
+          error = assert_raises(ArgumentError) do
+            ConfigResolver.resolve(alphabet: "0123456789abcdefghijklmnopqrstuvwxyy")
+          end
+
+          assert_match(/alphabet must contain 36 unique characters/, error.message)
+        end
+
         def test_resolve_raises_on_year_zero_too_low
           error = assert_raises(ArgumentError) do
             ConfigResolver.resolve(year_zero: 1899)
