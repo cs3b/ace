@@ -8,9 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **BREAKING**: Archive filenames changed from 14-character timestamps to 6-character Base36 compact IDs
+  - Example: `20251129-143000.md` → `i50jj3.md`
+  - Existing timestamp-formatted archives remain readable (dual-format support)
+  - Archives are git-ignored, so no migration needed for existing files
+  - `_previous.md` symlink now points to Base36-formatted archives
 - Migrate to Base36 compact IDs for session archiving (via ace-timestamp)
-- Archive filenames now use 6-character Base36 IDs (e.g., `i50jj3`) instead of 15-character timestamps
 - Simplified TimestampGenerator atom (removed legacy timestamp format support since archives are gitignored)
+
+### Added
+- Base36 compact ID format documentation in README with precision notes (~1.85s)
 
 ## [0.11.0] - 2026-01-05
 
