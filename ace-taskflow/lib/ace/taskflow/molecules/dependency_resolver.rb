@@ -5,6 +5,9 @@ module Ace
     module Molecules
       # Resolves task dependencies and performs topological sorting
       class DependencyResolver
+        # Default timestamp for tasks without modification time (epoch start)
+        DEFAULT_MODIFIED_TIME = Time.at(0).freeze
+
         # Check if all dependencies for a task are met
         # @param task [Hash] Task to check
         # @param all_tasks [Array<Hash>] All tasks in the system
@@ -291,7 +294,17 @@ module Ace
           when :id
             tasks.sort_by { |t| t[:id] || "" }
           when :modified
-            tasks.sort_by { |t| t[:modified] || Time.at(0) }
+            # Sort by modification time, using file mtime as fallback when :modified key is nil
+            # This aligns with TaskFilter.sort_tasks behavior for consistent sorting
+            tasks.sort_by do |t|
+              if t[:modified]
+                t[:modified]
+              elsif t[:path] && File.exist?(t[:path])
+                File.mtime(t[:path])
+              else
+                DEFAULT_MODIFIED_TIME
+              end
+            end
           else
             tasks
           end

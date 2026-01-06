@@ -2,6 +2,7 @@
 
 require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/molecules/dependency_resolver"
+require "tmpdir"
 
 class DependencyResolverTest < AceTaskflowTestCase
   def setup
@@ -147,10 +148,12 @@ class DependencyResolverTest < AceTaskflowTestCase
   end
 
   def test_apply_standard_sort_by_modified_ascending
+    # Use fixed times to prevent test flakiness from timing variations
+    base_time = Time.new(2026, 1, 6, 12, 0, 0)
     tasks = [
-      { id: "task.003", modified: Time.now - 3600 },  # 1 hour ago
-      { id: "task.001", modified: Time.now - 7200 },  # 2 hours ago
-      { id: "task.002", modified: Time.now }           # Now (newest)
+      { id: "task.003", modified: base_time - 3600 },  # 1 hour ago
+      { id: "task.001", modified: base_time - 7200 },  # 2 hours ago
+      { id: "task.002", modified: base_time }           # Base time (newest)
     ]
 
     result = @resolver.send(:apply_standard_sort, tasks, :modified, true)
@@ -162,10 +165,12 @@ class DependencyResolverTest < AceTaskflowTestCase
   end
 
   def test_apply_standard_sort_by_modified_descending
+    # Use fixed times to prevent test flakiness from timing variations
+    base_time = Time.new(2026, 1, 6, 12, 0, 0)
     tasks = [
-      { id: "task.003", modified: Time.now - 3600 },  # 1 hour ago
-      { id: "task.001", modified: Time.now - 7200 },  # 2 hours ago
-      { id: "task.002", modified: Time.now }           # Now (newest)
+      { id: "task.003", modified: base_time - 3600 },  # 1 hour ago
+      { id: "task.001", modified: base_time - 7200 },  # 2 hours ago
+      { id: "task.002", modified: base_time }           # Base time (newest)
     ]
 
     result = @resolver.send(:apply_standard_sort, tasks, :modified, false)
@@ -177,25 +182,79 @@ class DependencyResolverTest < AceTaskflowTestCase
   end
 
   def test_apply_standard_sort_by_modified_with_nil_modified
+    # Use fixed times to prevent test flakiness from timing variations
+    base_time = Time.new(2026, 1, 6, 12, 0, 0)
     tasks = [
-      { id: "task.003", modified: Time.now - 3600 },
+      { id: "task.003", modified: base_time - 3600 },
       { id: "task.001", modified: nil },              # No modified time
-      { id: "task.002", modified: Time.now }
+      { id: "task.002", modified: base_time }
     ]
 
     result = @resolver.send(:apply_standard_sort, tasks, :modified, false)
 
-    # Tasks with nil modified should come last (treated as Time.at(0))
+    # Tasks with nil modified should come last (treated as DEFAULT_MODIFIED_TIME)
+    assert_equal "task.002", result[0][:id]
+    assert_equal "task.003", result[1][:id]
+    assert_equal "task.001", result[2][:id]
+  end
+
+  def test_apply_standard_sort_by_modified_with_path_fallback
+    # Test that tasks with :path but no :modified key use File.mtime as fallback
+    Dir.mktmpdir do |tmpdir|
+      # Create test files with different modification times
+      file1 = File.join(tmpdir, "task.001.md")
+      file2 = File.join(tmpdir, "task.002.md")
+      file3 = File.join(tmpdir, "task.003.md")
+
+      File.write(file1, "task 1")
+      File.write(file2, "task 2")
+      File.write(file3, "task 3")
+
+      # Set specific mtimes (file1 oldest, file3 newest)
+      base_time = Time.new(2026, 1, 6, 12, 0, 0)
+      File.utime(base_time - 7200, base_time - 7200, file1)  # 2 hours ago
+      File.utime(base_time - 3600, base_time - 3600, file2)  # 1 hour ago
+      File.utime(base_time, base_time, file3)                 # Base time
+
+      tasks = [
+        { id: "task.002", path: file2 },  # No :modified key, has :path
+        { id: "task.001", path: file1 },  # No :modified key, has :path
+        { id: "task.003", path: file3 }   # No :modified key, has :path
+      ]
+
+      result = @resolver.send(:apply_standard_sort, tasks, :modified, false)
+
+      # Descending order: newest to oldest (based on file mtime)
+      assert_equal "task.003", result[0][:id]
+      assert_equal "task.002", result[1][:id]
+      assert_equal "task.001", result[2][:id]
+    end
+  end
+
+  def test_apply_standard_sort_by_modified_with_missing_path
+    # Tasks with :path pointing to non-existent files should use DEFAULT_MODIFIED_TIME
+    base_time = Time.new(2026, 1, 6, 12, 0, 0)
+    tasks = [
+      { id: "task.002", modified: base_time },
+      { id: "task.001", path: "/nonexistent/path/task.001.md" },  # Missing file
+      { id: "task.003", modified: base_time - 3600 }
+    ]
+
+    result = @resolver.send(:apply_standard_sort, tasks, :modified, false)
+
+    # task.001 with missing file should come last (DEFAULT_MODIFIED_TIME = Time.at(0))
     assert_equal "task.002", result[0][:id]
     assert_equal "task.003", result[1][:id]
     assert_equal "task.001", result[2][:id]
   end
 
   def test_dependency_aware_sort_by_modified_within_levels
+    # Use fixed times to prevent test flakiness from timing variations
+    base_time = Time.new(2026, 1, 6, 12, 0, 0)
     tasks_with_dependencies = [
-      { id: "task.001", status: "done", dependencies: [], modified: Time.now - 7200 },
-      { id: "task.002", status: "done", dependencies: ["task.001"], modified: Time.now - 3600 },
-      { id: "task.003", status: "done", dependencies: ["task.001"], modified: Time.now }
+      { id: "task.001", status: "done", dependencies: [], modified: base_time - 7200 },
+      { id: "task.002", status: "done", dependencies: ["task.001"], modified: base_time - 3600 },
+      { id: "task.003", status: "done", dependencies: ["task.001"], modified: base_time }
     ]
 
     result = @resolver.dependency_aware_sort(tasks_with_dependencies, :modified, false)
