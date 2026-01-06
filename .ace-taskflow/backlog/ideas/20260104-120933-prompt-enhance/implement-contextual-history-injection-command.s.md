@@ -2,7 +2,7 @@
 title: Implement ace-prompt push for Contextual History Injection
 filename_suggestion: feat-prompt-context-push
 enhanced_at: 2026-01-04 12:09:32
-location: active
+location: backlog
 llm_model: gflash
 ---
 
