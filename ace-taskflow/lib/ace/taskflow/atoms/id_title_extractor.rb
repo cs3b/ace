@@ -14,29 +14,28 @@ module Ace
         # @param warn_deprecated [Proc] Optional callback for deprecation warnings
         # @return [Array<String, String>] [id, title] pair
         def self.extract_from_dirname(name, warn_deprecated: nil)
-          # Try timestamp format first: "20250924-165837-my-idea"
-          if name =~ /^(\d{8}-\d{6})-(.*)$/
-            id = ::Regexp.last_match(1)
-            title = ::Regexp.last_match(2).tr("-", " ").strip
-            # Issue deprecation warning for old timestamp format
+          case name
+          in /^(\d{8}-\d{6})-(.*)$/
+            # Timestamp format: "20250924-165837-my-idea"
+            id = $1
+            title = $2.tr("-", " ").strip
             warn_deprecated&.call(name)
-            return [id, title]
-          end
-
-          # Try compact Base36 format: "abc123-my-idea"
-          # Compact IDs are exactly 6 alphanumeric characters
-          if name =~ /^([0-9a-z]{6})-(.*)$/i
-            potential_id = ::Regexp.last_match(1)
+            [id, title]
+          in /^([0-9a-z]{6})-(.*)$/i
+            # Compact Base36 format: "abc123-my-idea"
+            # Validate it's actually a Base36 compact ID
+            potential_id = $1
             if Ace::Timestamp.detect_format(potential_id) == :compact
-              id = potential_id
-              title = ::Regexp.last_match(2).tr("-", " ").strip
-              return [id, title]
+              title = $2.tr("-", " ").strip
+              [potential_id, title]
+            else
+              # Not a valid Base36 ID, treat as no ID
+              [nil, name.tr("-", " ").strip]
             end
+          else
+            # No recognized ID format
+            [nil, name.tr("-", " ").strip]
           end
-
-          # Fallback: no recognized ID format
-          # Return nil for ID and the whole name as title
-          [nil, name.tr("-", " ").strip]
         end
 
         # Extract title from a directory/file name (ID removal only)
@@ -44,21 +43,22 @@ module Ace
         # @param name [String] Directory or filename (without extension)
         # @return [String] Extracted title with ID prefix removed
         def self.extract_title_from_dirname(name)
-          # Remove timestamp prefix: YYYYMMDD-HHMMSS-
-          if name =~ /^(\d{8}-\d{6})-(.*)$/
-            return $2
-          end
-
-          # Remove Base36 ID prefix with validation
-          if name =~ /^([0-9a-z]{6})-(.*)$/i
+          case name
+          in /^(\d{8}-\d{6})-(.*)$/
+            # Remove timestamp prefix: YYYYMMDD-HHMMSS-
+            $2
+          in /^([0-9a-z]{6})-(.*)$/i
+            # Remove Base36 ID prefix with validation
             potential_id = $1
             if Ace::Timestamp.detect_format(potential_id) == :compact
-              return $2
+              $2
+            else
+              name
             end
+          else
+            # No recognized ID prefix, return name as-is
+            name
           end
-
-          # No recognized ID prefix, return name as-is
-          name
         end
       end
     end
