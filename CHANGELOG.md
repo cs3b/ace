@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.252] - 2026-01-06
+
+### Fixed
+
+- **ace-taskflow 0.29.1**: Recently completed tasks not appearing in "Recently Done" section
+  - Added missing `:modified` sort case to `DependencyResolver.apply_standard_sort()`
+  - Tasks now correctly sorted by file modification time (newest first)
+  - Subtasks completed recently now appear alongside parent tasks
+
 ## [0.9.251] - 2026-01-06
 
 ### Fixed
