@@ -5,7 +5,7 @@ require_relative "lib/ace/docs/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-docs"
   spec.version = Ace::Docs::VERSION
-  spec.authors = ["ACE Team"]
+  spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Documentation management with frontmatter, change analysis, and intelligent updates"

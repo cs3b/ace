@@ -7,8 +7,8 @@ require "ace/taskflow/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-taskflow"
   spec.version = Ace::Taskflow::VERSION
-  spec.authors = ["Monkey Codes"]
-  spec.email = ["mc@monkey.codes"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Task and idea management for ACE"
   spec.description = "Unified task management including idea capture, task tracking, and release management"
