@@ -38,6 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-config", "~> 0.5"
   spec.add_dependency "ace-support-core", "~> 0.11" # Requires PromptCacheManager
   spec.add_dependency "ace-git", "~> 0.3"
+  spec.add_dependency "ace-timestamp", "~> 0.1"
   spec.add_dependency "ace-llm", "~> 0.1"
   spec.add_dependency "ace-support-markdown", "~> 0.1"
   spec.add_dependency "thor", "~> 1.3"
