@@ -3,6 +3,9 @@
 require "test_helper"
 
 class EnhancementTrackerTest < Minitest::Test
+  # Test fixture for Base36 session ID format
+  BASE36_SESSION_ID = "i50jj3"
+
   def setup
     @test_dir = Dir.mktmpdir
   end
@@ -113,68 +116,65 @@ class EnhancementTrackerTest < Minitest::Test
 
   def test_next_iteration_returns_1_when_no_archive_dir
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration("20251129-143000")
+      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration(BASE36_SESSION_ID)
       assert_equal 1, iteration
     end
   end
 
   def test_next_iteration_returns_1_when_no_enhancement_files
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      # Create archive directory but no enhancement files
       archive_dir = File.join(@test_dir, ".cache/ace-prompt/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
 
       # Create a regular archive file (not enhanced)
-      File.write(File.join(archive_dir, "20251129-143000.md"), "original")
+      File.write(File.join(archive_dir, "#{BASE36_SESSION_ID}.md"), "original")
 
-      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration("20251129-143000")
+      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration(BASE36_SESSION_ID)
       assert_equal 1, iteration
     end
   end
 
   def test_next_iteration_increments_from_existing
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      timestamp = "20251129-143000"
       archive_dir = File.join(@test_dir, ".cache/ace-prompt/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
 
       # Create some enhancement files
-      File.write(File.join(archive_dir, "#{timestamp}_e001.md"), "enhanced 1")
-      File.write(File.join(archive_dir, "#{timestamp}_e002.md"), "enhanced 2")
+      File.write(File.join(archive_dir, "#{BASE36_SESSION_ID}_e001.md"), "enhanced 1")
+      File.write(File.join(archive_dir, "#{BASE36_SESSION_ID}_e002.md"), "enhanced 2")
 
-      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration(timestamp)
+      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration(BASE36_SESSION_ID)
       assert_equal 3, iteration
     end
   end
 
   def test_next_iteration_handles_gaps_in_numbering
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      timestamp = "20251129-143000"
       archive_dir = File.join(@test_dir, ".cache/ace-prompt/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
 
       # Create files with gaps
-      File.write(File.join(archive_dir, "#{timestamp}_e001.md"), "enhanced 1")
-      File.write(File.join(archive_dir, "#{timestamp}_e005.md"), "enhanced 5")
+      File.write(File.join(archive_dir, "#{BASE36_SESSION_ID}_e001.md"), "enhanced 1")
+      File.write(File.join(archive_dir, "#{BASE36_SESSION_ID}_e005.md"), "enhanced 5")
 
-      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration(timestamp)
+      iteration = Ace::Prompt::Molecules::EnhancementTracker.next_iteration(BASE36_SESSION_ID)
       assert_equal 6, iteration # Should be max + 1
     end
   end
 
   def test_enhancement_filename_formats_correctly
-    filename = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename("20251129-143000", 1)
-    assert_equal "20251129-143000_e001.md", filename
+    filename = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename(BASE36_SESSION_ID, 1)
+    assert_equal "#{BASE36_SESSION_ID}_e001.md", filename
   end
 
   def test_enhancement_filename_pads_iteration_number
-    filename1 = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename("20251129-143000", 1)
-    filename10 = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename("20251129-143000", 10)
-    filename100 = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename("20251129-143000", 100)
+    filename1 = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename(BASE36_SESSION_ID, 1)
+    filename10 = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename(BASE36_SESSION_ID, 10)
+    filename100 = Ace::Prompt::Molecules::EnhancementTracker.enhancement_filename(BASE36_SESSION_ID, 100)
 
-    assert_equal "20251129-143000_e001.md", filename1
-    assert_equal "20251129-143000_e010.md", filename10
-    assert_equal "20251129-143000_e100.md", filename100
+    assert_equal "#{BASE36_SESSION_ID}_e001.md", filename1
+    assert_equal "#{BASE36_SESSION_ID}_e010.md", filename10
+    assert_equal "#{BASE36_SESSION_ID}_e100.md", filename100
   end
 
   def test_cache_directory_created_automatically

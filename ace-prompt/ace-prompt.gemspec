@@ -40,11 +40,12 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'ace-config', '~> 0.4'
-  spec.add_dependency 'ace-nav', '~> 0.8'
   spec.add_dependency 'ace-context', '~> 0.8'
   spec.add_dependency 'ace-git', '~> 0.3' # Unified git operations (task 140.04)
   spec.add_dependency 'ace-llm', '~> 0.8'
+  spec.add_dependency 'ace-nav', '~> 0.8'
   spec.add_dependency 'ace-taskflow', '~> 0.9'
+  spec.add_dependency 'ace-timestamp', '~> 0.1' # Base36 compact IDs (task 149)
   spec.add_dependency 'thor', '~> 1.3'
 
   # Development dependencies managed in root Gemfile

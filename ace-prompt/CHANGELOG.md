@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Migrate to Base36 compact IDs for session archiving (via ace-timestamp)
+- Archive filenames now use 6-character Base36 IDs (e.g., `i50jj3`) instead of 15-character timestamps
+- Simplified TimestampGenerator atom (removed legacy timestamp format support since archives are gitignored)
+
 ## [0.11.0] - 2026-01-05
 
 ### Added
