@@ -5,7 +5,7 @@ require_relative "lib/ace/timestamp/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-timestamp"
   spec.version = Ace::Timestamp::VERSION
-  spec.authors = ["ace-meta"]
+  spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Base36 compact ID generation for timestamps"
