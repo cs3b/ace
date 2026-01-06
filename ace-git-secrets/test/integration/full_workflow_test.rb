@@ -79,9 +79,9 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
       assert_match(/Tokens found:/i, cli_output)
       assert_match(/SECURITY ALERT/i, cli_output)
 
-      # Verify the saved report file contains the details
-      cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
-      json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
+      # Verify the saved report file contains the details in sessions/ subdirectory
+      sessions_dir = File.join(@temp_repo, ".cache", "ace-git-secrets", "sessions")
+      json_files = Dir.glob(File.join(sessions_dir, "*-report.json"))
       assert json_files.any?, "Report file should be saved"
     end
   end
@@ -99,9 +99,9 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
       # New behavior: JSON saved to file, summary to stdout
       assert_match(/Report saved:.*\.json/, output)
 
-      # Parse JSON from saved file
-      cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
-      json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
+      # Parse JSON from saved file in sessions/ subdirectory
+      sessions_dir = File.join(@temp_repo, ".cache", "ace-git-secrets", "sessions")
+      json_files = Dir.glob(File.join(sessions_dir, "*-report.json"))
       assert json_files.any?, "JSON report file should exist"
 
       json_content = File.read(json_files.first)
@@ -321,9 +321,9 @@ class FullWorkflowIntegrationTest < GitSecretsTestCase
         )
       end
 
-      # Find the saved report file
-      cache_dir = File.join(@temp_repo, ".cache", "ace-git-secrets")
-      json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
+      # Find the saved report file in sessions/ subdirectory
+      sessions_dir = File.join(@temp_repo, ".cache", "ace-git-secrets", "sessions")
+      json_files = Dir.glob(File.join(sessions_dir, "*-report.json"))
       assert json_files.any?, "Scan should save a JSON report file"
 
       scan_file = json_files.first
