@@ -1,63 +1,62 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Migration script to convert timestamp-format directories to Base36 format
+# CORRECTED Migration script to convert WRONG Base36 directories to CORRECT Base36 format
+# The previous migration used a reimplemented Base36Encoder with wrong algorithm.
+# This script uses Ace::Timestamp.encode DIRECTLY from the gem.
+#
 # Usage:
 #   ruby migrate-ideas-to-base36.rb --dry-run  # Preview changes
 #   ruby migrate-ideas-to-base36.rb            # Execute migration
 
+require "bundler/setup"
+require "ace/timestamp"
 require "time"
 require "fileutils"
 
-# Simple Base36 encoder for timestamps (same logic as Ace::Timestamp)
-module Base36Encoder
+# Decoder for the WRONG algorithm that was used previously
+# This is needed to reverse the incorrect encoding back to a timestamp
+module WrongBase36Decoder
   ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
-  YEAR_ZERO = 2020 # Default year_zero
+  YEAR_ZERO = 2020
 
-  def self.encode(time, year_zero: YEAR_ZERO)
-    total_minutes = minutes_since_epoch(time, year_zero)
-    encode_minutes(total_minutes)
-  end
-
-  def self.minutes_since_epoch(time, year_zero)
-    epoch = Time.utc(year_zero, 1, 1, 0, 0, 0)
-    ((time.to_i - epoch.to_i) / 60).to_i
-  end
-
-  def self.encode_minutes(total_minutes)
-    result = ""
-    value = total_minutes
-
-    6.times do
-      result = ALPHABET[value % 36] + result
-      value /= 36
+  def self.decode(base36_str)
+    value = 0
+    base36_str.each_char do |c|
+      idx = ALPHABET.index(c)
+      return nil if idx.nil?
+      value = value * 36 + idx
     end
-
-    result
+    # value is minutes since epoch
+    epoch = Time.utc(YEAR_ZERO, 1, 1, 0, 0, 0)
+    epoch + (value * 60)
   end
 end
 
-class Base36Migrator
-  TIMESTAMP_PATTERN = /^(\d{8})-(\d{6})-(.*)$/
+class Base36Corrector
+  # Pattern for incorrectly encoded directories (6 lowercase alphanumeric chars followed by dash)
+  WRONG_BASE36_PATTERN = /^([0-9a-z]{6})-(.*)$/
 
   def initialize(root_path, dry_run: false)
     @root_path = root_path
     @dry_run = dry_run
     @renamed = []
+    @skipped = []
     @errors = []
   end
 
   def migrate!
-    puts "Scanning for timestamp directories in #{@root_path}..."
+    puts "Scanning for incorrectly-encoded Base36 directories in #{@root_path}..."
     puts "Mode: #{@dry_run ? 'DRY RUN' : 'EXECUTE'}"
+    puts "Using: Ace::Timestamp.encode (gem version)"
     puts
 
-    timestamp_dirs = find_timestamp_directories
-    puts "Found #{timestamp_dirs.length} directories to migrate"
+    wrong_dirs = find_wrong_directories
+    puts "Found #{wrong_dirs.length} directories to correct"
     puts
 
-    timestamp_dirs.each do |dir_path|
-      migrate_directory(dir_path)
+    wrong_dirs.each do |dir_path|
+      correct_directory(dir_path)
     end
 
     print_summary
@@ -65,34 +64,60 @@ class Base36Migrator
 
   private
 
-  def find_timestamp_directories
+  def find_wrong_directories
     pattern = File.join(@root_path, "**", "*")
     Dir.glob(pattern)
        .select { |path| Dir.exist?(path) }
-       .select { |path| File.basename(path).match?(TIMESTAMP_PATTERN) }
+       .select { |path| needs_correction?(File.basename(path)) }
        .sort
   end
 
-  def migrate_directory(dir_path)
+  def needs_correction?(dirname)
+    match = dirname.match(WRONG_BASE36_PATTERN)
+    return false unless match
+
+    wrong_id = match[1]
+    # Check if this looks like an incorrectly encoded ID (starts with 01 or 00)
+    # Correct IDs for 2025-2026 dates start with 8 or 9
+    return false if wrong_id.start_with?("8", "9")
+
+    # Try to decode and verify it's a reasonable date
+    time = WrongBase36Decoder.decode(wrong_id)
+    return false unless time
+
+    # Sanity check: should be between 2020 and 2030
+    time.year >= 2020 && time.year <= 2030
+  end
+
+  def correct_directory(dir_path)
     dirname = File.basename(dir_path)
     parent_dir = File.dirname(dir_path)
 
-    match = dirname.match(TIMESTAMP_PATTERN)
+    match = dirname.match(WRONG_BASE36_PATTERN)
     return unless match
 
-    date_part = match[1]  # YYYYMMDD
-    time_part = match[2]  # HHMMSS
-    title = match[3]
+    wrong_id = match[1]
+    title = match[2]
 
-    # Parse timestamp
-    timestamp_str = "#{date_part}-#{time_part}"
-    time = Time.strptime(timestamp_str, "%Y%m%d-%H%M%S")
+    # Decode the wrong ID back to timestamp
+    time = WrongBase36Decoder.decode(wrong_id)
+    unless time
+      @errors << { old: dir_path, error: "Could not decode wrong ID: #{wrong_id}" }
+      puts "  ERROR: Could not decode #{wrong_id}"
+      return
+    end
 
-    # Encode to Base36
-    base36_id = Base36Encoder.encode(time)
+    # Re-encode using the CORRECT algorithm from the gem
+    correct_id = Ace::Timestamp.encode(time)
+
+    # If they're the same (shouldn't happen but check), skip
+    if wrong_id == correct_id
+      @skipped << { path: dir_path, reason: "Already correct" }
+      return
+    end
 
     # Construct new dirname
-    new_dirname = "#{base36_id}-#{title}"
+    new_dirname = "#{correct_id}-#{title}"
     new_path = File.join(parent_dir, new_dirname)
 
     # Check for conflicts
@@ -106,7 +131,8 @@ class Base36Migrator
     if @dry_run
       puts "  WOULD RENAME: #{dirname}"
       puts "            TO: #{new_dirname}"
-      @renamed << { old: dir_path, new: new_path, dirname: dirname, new_dirname: new_dirname }
+      puts "       (time: #{time.strftime('%Y-%m-%d %H:%M')})"
+      @renamed << { old: dir_path, new: new_path, time: time }
     else
       begin
         # Use git mv to preserve history
@@ -114,13 +140,13 @@ class Base36Migrator
         if result
           puts "  RENAMED: #{dirname}"
           puts "       TO: #{new_dirname}"
-          @renamed << { old: dir_path, new: new_path, dirname: dirname, new_dirname: new_dirname }
+          @renamed << { old: dir_path, new: new_path, time: time }
         else
           # Fallback to regular mv if not in git
           FileUtils.mv(dir_path, new_path)
           puts "  RENAMED (non-git): #{dirname}"
           puts "                 TO: #{new_dirname}"
-          @renamed << { old: dir_path, new: new_path, dirname: dirname, new_dirname: new_dirname }
+          @renamed << { old: dir_path, new: new_path, time: time }
         end
       rescue StandardError => e
         @errors << { old: dir_path, new: new_path, error: e.message }
@@ -135,6 +161,7 @@ class Base36Migrator
     puts "MIGRATION SUMMARY"
     puts "=" * 60
     puts "Directories renamed: #{@renamed.length}"
+    puts "Skipped: #{@skipped.length}"
     puts "Errors: #{@errors.length}"
 
     if @errors.any?
@@ -149,11 +176,22 @@ class Base36Migrator
       puts
       puts "Run without --dry-run to execute these changes."
     end
+
+    # Show a few examples of the mappings
+    if @renamed.any?
+      puts
+      puts "SAMPLE MAPPINGS:"
+      @renamed.first(5).each do |r|
+        old_name = File.basename(r[:old])
+        new_name = File.basename(r[:new])
+        puts "  #{old_name[0..20]}... -> #{new_name[0..20]}..."
+      end
+    end
   end
 end
 
 # Main execution
-if __FILE__ == $0
+if __FILE__ == $PROGRAM_NAME
   dry_run = ARGV.include?("--dry-run")
   root_path = ARGV.find { |arg| !arg.start_with?("--") } || ".ace-taskflow"
 
@@ -162,6 +200,6 @@ if __FILE__ == $0
     exit 1
   end
 
-  migrator = Base36Migrator.new(root_path, dry_run: dry_run)
-  migrator.migrate!
+  corrector = Base36Corrector.new(root_path, dry_run: dry_run)
+  corrector.migrate!
 end
