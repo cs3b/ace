@@ -202,6 +202,7 @@ PATH
     ace-test-runner (0.8.0)
       ace-config (~> 0.5)
       ace-support-test-helpers (~> 0.1)
+      ace-timestamp (~> 0.1)
       minitest (~> 5.0)
       minitest-reporters (~> 1.6)
       ostruct
