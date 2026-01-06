@@ -105,6 +105,16 @@ Configuration cascade (in order of precedence):
 3. User config (`~/.ace/timestamp/config.yml`)
 4. Gem defaults (`.ace-defaults/timestamp/config.yml`)
 
+## Precision Limitations
+
+The 6-character compact ID format has approximately **1.85 seconds** of precision (2400 seconds / 1296 combinations). This means:
+
+- Multiple rapid operations within ~1.85 seconds may produce identical IDs
+- For microsecond-precision requirements, use full timestamp formats instead
+- For collision avoidance in high-frequency scenarios, consider using session IDs or appending additional entropy
+
+The precision is intentionally designed for task management, file naming, and other use cases where exact microsecond timing is not critical.
+
 ## License
 
 MIT
