@@ -3,4 +3,5 @@
 
 require_relative "../lib/ace/timestamp"
 
-exit(Ace::Timestamp::CLI.start(ARGV) || 0)
+result = Ace::Timestamp::CLI.start(ARGV)
+exit(result.is_a?(Integer) ? result : 0)
