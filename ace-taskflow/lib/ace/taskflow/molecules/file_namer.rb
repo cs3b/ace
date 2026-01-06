@@ -34,22 +34,10 @@ module Ace
           File.join(directory, dirname)
         end
 
-        # Generate an ID based on configured format
-        # @return [String] Either 6-char Base36 compact ID or 14-char timestamp
+        # Generate a Base36 compact ID (6 characters)
+        # @return [String] 6-char Base36 compact ID
         def generate_id
-          current_time = @time_provider.now
-          if id_format == "base36"
-            Ace::Timestamp.encode(current_time)
-          else
-            timestamp_format = @config.dig("file_naming", "timestamp_format") || "%Y%m%d-%H%M%S"
-            current_time.strftime(timestamp_format)
-          end
-        end
-
-        # Get the configured ID format
-        # @return [String] "base36" or "timestamp"
-        def id_format
-          @config.dig("file_naming", "id_format") || "base36"
+          Ace::Timestamp.encode(@time_provider.now)
         end
 
         # Detect the format of an ID string

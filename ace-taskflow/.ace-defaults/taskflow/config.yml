@@ -81,12 +81,8 @@ taskflow:
       - **Author**: %{author}
       - **Status**: unprocessed
     file_naming:
-      pattern: "%{timestamp}-%{title}"
-      timestamp_format: "%Y%m%d-%H%M%S"
-      # ID format for directory naming
-      # "base36" - 6-character compact IDs (e.g., "abc123-my-idea")
-      # "timestamp" - 14-character timestamps (e.g., "20250106-120000-my-idea")
-      id_format: "base36"
+      pattern: "%{id}-%{title}"
+      # IDs are always 6-character Base36 compact format (e.g., "abc123-my-idea")
 
   # Task configuration
   task:

@@ -11,6 +11,8 @@ class RetroLoaderTest < AceTaskflowTestCase
   end
 
   # Test the private extract_title_from_filename method directly
+  # All tests use Base36 compact ID format (6 alphanumeric characters)
+
   def test_extract_title_from_base36_filename
     path = "/some/path/abc123-retro.md"
     title = @loader.send(:extract_title_from_filename, path)
@@ -18,10 +20,10 @@ class RetroLoaderTest < AceTaskflowTestCase
     assert_equal "Retro", title
   end
 
-  def test_extract_title_from_timestamp_filename
-    path = "/some/path/20250115-103045-old-retro.md"
+  def test_extract_title_from_base36_multi_word
+    path = "/some/path/xyz789-sprint-review.md"
     title = @loader.send(:extract_title_from_filename, path)
-    assert_equal "Old retro", title
+    assert_equal "Sprint review", title
   end
 
   def test_extract_title_with_date_prefix_and_base36_id
@@ -47,10 +49,10 @@ class RetroLoaderTest < AceTaskflowTestCase
     assert_equal "Dated retro", title
   end
 
-  def test_extract_title_with_timestamp_only
-    path = "/some/path/20250115-103045-timestamp-retro.md"
+  def test_extract_title_with_complex_name
+    path = "/some/path/def456-q4-2025-planning-review.md"
     title = @loader.send(:extract_title_from_filename, path)
-    # Should strip timestamp only
-    assert_equal "Timestamp retro", title
+    # Should strip Base36 ID and format title
+    assert_equal "Q4 2025 planning review", title
   end
 end
