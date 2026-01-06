@@ -111,8 +111,11 @@ module Ace
                 gem_path: gem_root
               )
 
-              config = resolver.resolve_namespace("timestamp")
-              symbolize_keys(config.data.fetch("timestamp", {}))
+              loaded_config = resolver.resolve_namespace("timestamp")
+              user_config = symbolize_keys(loaded_config.data.fetch("timestamp", {}))
+
+              # Merge user config with fallback defaults (user values take precedence)
+              FALLBACK_DEFAULTS.merge(user_config)
             rescue Psych::SyntaxError => e
               config_path = File.join(Dir.pwd, ".ace", "timestamp", "config.yml")
               warn "Error: Failed to parse #{config_path}: #{e.message}" if Ace::Timestamp.debug?

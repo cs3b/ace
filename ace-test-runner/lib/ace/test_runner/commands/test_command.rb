@@ -83,13 +83,7 @@ module Ace
           require "ace/test_runner/atoms/timestamp_generator"
           require "ace/test_runner/molecules/config_loader"
 
-          # Load config to get id_format for proper directory detection
-          config_loader = Molecules::ConfigLoader.new
-          config_data = config_loader.load(@options[:config_path])
-          report_config = config_data[:report] || {}
-          id_format = (report_config[:id_format] || :base36).to_sym
-
-          timestamp_generator = Atoms::TimestampGenerator.new(id_format: id_format)
+          timestamp_generator = Atoms::TimestampGenerator.new
           storage = Molecules::ReportStorage.new(
             base_dir: @options[:report_dir] || "test-reports",
             timestamp_generator: timestamp_generator
