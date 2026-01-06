@@ -22,6 +22,7 @@ PATH
       ace-llm (~> 0.1)
       ace-support-core (~> 0.11)
       ace-support-markdown (~> 0.1)
+      ace-timestamp (~> 0.1)
       colorize (~> 1.1)
       fileutils (~> 1.7)
       terminal-table (~> 3.0)
