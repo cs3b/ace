@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.251] - 2026-01-06
+
+### Fixed
+
+- **ace-git-worktree 0.10.2**: Thor CLI consuming `--files` option in `config` command
+  - `ace-git-worktree config --files` was showing default config instead of file locations
+  - Added `:config` to `stop_on_unknown_option!` to complete Thor workaround coverage
+
 ## [0.9.250] - 2026-01-06
 
 ### Fixed
