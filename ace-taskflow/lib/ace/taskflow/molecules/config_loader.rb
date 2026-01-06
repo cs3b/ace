@@ -184,12 +184,29 @@ module Ace
           config["status"] = taskflow_section["status"] if taskflow_section["status"]
           config["terminal_statuses"] = taskflow_section["terminal_statuses"] if taskflow_section["terminal_statuses"]
 
+          # Validate id_format configuration
+          validate_id_format!(taskflow_section)
+
           # Preserve taskflow nested section for Configuration access patterns
           # This allows config.dig("taskflow", "key") to work
           config["taskflow"] = taskflow_section
 
           config
         end
+
+        # Validate id_format configuration value
+        # @param taskflow_section [Hash] Taskflow configuration section
+        # @raise [ArgumentError] If id_format has invalid value
+        def self.validate_id_format!(taskflow_section)
+          id_format = taskflow_section.dig("file_naming", "id_format")
+          return unless id_format # Skip validation if not set
+
+          valid_formats = ["base36", "timestamp"]
+          unless valid_formats.include?(id_format)
+            raise ArgumentError, "Invalid id_format '#{id_format}'. Must be one of: #{valid_formats.join(', ')}"
+          end
+        end
+        private_class_method :validate_id_format!
       end
     end
   end

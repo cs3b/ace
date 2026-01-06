@@ -11,6 +11,9 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
       "template" => "# %{title}\n\n%{content}\n\n---\nCaptured: %{timestamp}",
       "formatting" => {
         "timestamp_format" => "%Y-%m-%d %H:%M:%S"
+      },
+      "file_naming" => {
+        "id_format" => "timestamp"
       }
     }
     @writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)

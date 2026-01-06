@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.254] - 2026-01-06
+
+### Added
+
+- **ace-taskflow 0.30.0**: Base36 compact ID support for idea directories
+  - Add Base36 compact ID support for idea directories
+  - Add Base36 compact ID extraction from idea titles
+  - Integrate with ace-timestamp for compact timestamp generation
+
 ## [0.9.253] - 2026-01-06
 
 ### Fixed
