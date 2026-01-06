@@ -116,8 +116,8 @@ module Ace
       # Define version command
       version_command "ace-timestamp", Ace::Timestamp::VERSION
 
-      # Default command is help
-      default_task :help
+      # Default command is encode (encodes current time when no args)
+      default_task :encode
     end
   end
 end

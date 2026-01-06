@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.253] - 2026-01-06
+
+### Fixed
+
+- **ace-timestamp 0.1.1**: CLI exit code handling and default command
+  - Fix exit code handling using standard ACE pattern (`result.is_a?(Integer) ? result : 0`)
+  - Change default CLI command from `help` to `encode` (encodes current time when no args)
+  - Fix timestamp parsing to check legacy format (YYYYMMDD-HHMMSS) before Time.parse
+  - Add configuration validation for alphabet (36 chars) and year_zero (1900-2100)
+  - Add ace-support-test-helpers to development dependencies
+  - Correct day range documentation from "0-35" to "0-30"
+
 ## [0.9.252] - 2026-01-06
 
 ### Fixed

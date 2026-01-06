@@ -208,7 +208,7 @@ PATH
 PATH
   remote: ace-timestamp
   specs:
-    ace-timestamp (0.1.0)
+    ace-timestamp (0.1.1)
       ace-config (~> 0.4)
       ace-support-core (~> 0.1)
       thor (~> 1.3)
