@@ -102,8 +102,8 @@ class TimestampGeneratorTest < Minitest::Test
     compact_id = generator.generate(@test_time)
     parsed = generator.parse(compact_id)
 
-    # Allow ~2s tolerance due to Base36 encoding precision
-    assert_in_delta @test_time.to_i, parsed.to_i, 2
+    # Allow 1s tolerance (Base36 encoding has 1-second precision)
+    assert_in_delta @test_time.to_i, parsed.to_i, 1
   end
 
   def test_parse_timestamp_format
@@ -121,6 +121,20 @@ class TimestampGeneratorTest < Minitest::Test
   def test_parse_invalid_returns_nil
     generator = Ace::TestRunner::Atoms::TimestampGenerator.new
     result = generator.parse("not-a-valid-id")
+
+    assert_nil result
+  end
+
+  def test_parse_nil_returns_nil
+    generator = Ace::TestRunner::Atoms::TimestampGenerator.new
+    result = generator.parse(nil)
+
+    assert_nil result
+  end
+
+  def test_parse_empty_string_returns_nil
+    generator = Ace::TestRunner::Atoms::TimestampGenerator.new
+    result = generator.parse("")
 
     assert_nil result
   end
