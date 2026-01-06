@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.250] - 2026-01-06
+
+### Fixed
+
+- **ace-git-worktree 0.10.1**: Thor CLI consuming command-specific options (`--task`, `--pr`, `--branch`) instead of passing them to command handlers
+  - `ace-git-worktree create --task 178` was showing help instead of executing
+  - Added `stop_on_unknown_option!` to let command handlers parse their own options
+
 ## [0.9.249] - 2026-01-05
 
 ### Added
