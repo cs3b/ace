@@ -39,6 +39,11 @@ test_suite:
       group: tools
       priority: 3
 
+    - name: ace-timestamp
+      path: ace-timestamp
+      group: tools
+      priority: 3
+
     - name: ace-git-commit
       path: ace-git-commit
       group: tools
