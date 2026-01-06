@@ -5,55 +5,32 @@ require "ace/timestamp"
 module Ace
   module TestRunner
     module Atoms
-      # Generates consistent timestamps for reports
+      # Generates Base36 compact IDs for test reports
       #
-      # Supports two ID formats:
-      # - :base36 - 6-character compact IDs (e.g., "i50jj3") - NEW DEFAULT
-      # - :timestamp - 14-character timestamps (e.g., "20250106-123000") - LEGACY
+      # Uses ace-timestamp to generate 6-character compact IDs (e.g., "i50jj3")
+      # for test report directories and files. Reports are temporary, so no
+      # backward compatibility with legacy timestamp format is needed.
       #
-      # @example Using Base36 format (default)
-      #   generator = TimestampGenerator.new(id_format: :base36)
+      # @example Generate a compact ID
+      #   generator = TimestampGenerator.new
       #   generator.generate  # => "i50jj3"
       #
-      # @example Using legacy timestamp format
-      #   generator = TimestampGenerator.new(id_format: :timestamp)
-      #   generator.generate  # => "20250106-123000"
-      #
-      # @example Detect format of existing ID
-      #   # Note: detect_format returns :compact (detection result from ace-timestamp)
-      #   # while id_format config uses :base36 (configuration option). Both refer to
-      #   # the same 6-character Base36 encoded format.
-      #   TimestampGenerator.detect_format("i50jj3")        # => :compact
-      #   TimestampGenerator.detect_format("20250106-123000") # => :timestamp
+      # @example Generate ISO timestamp for human-readable output
+      #   generator = TimestampGenerator.new
+      #   generator.iso_timestamp  # => "2025-01-06T12:30:00"
       #
       class TimestampGenerator
-        TIMESTAMP_FORMAT = "%Y%m%d-%H%M%S"
         ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
-        # Valid ID format options
-        VALID_ID_FORMATS = %i[base36 timestamp].freeze
-
-        # @param id_format [Symbol] ID format (:base36 or :timestamp)
-        # @param format [String] strftime format for timestamp mode (legacy param)
-        def initialize(id_format: :base36, format: TIMESTAMP_FORMAT)
-          @id_format = validate_id_format(id_format)
-          @timestamp_format = format
-        end
-
-        # Generate an ID for the given time
+        # Generate a Base36 compact ID for the given time
         #
         # @param time [Time] The time to encode (default: Time.now)
-        # @return [String] Generated ID in configured format
+        # @return [String] 6-character Base36 compact ID
         def generate(time = Time.now)
-          case @id_format
-          when :base36
-            Ace::Timestamp.encode(time)
-          when :timestamp
-            time.strftime(@timestamp_format)
-          end
+          Ace::Timestamp.encode(time)
         end
 
-        # Generate an ISO timestamp
+        # Generate an ISO timestamp for human-readable output
         #
         # @param time [Time] The time to format (default: Time.now)
         # @return [String] ISO formatted timestamp
@@ -64,7 +41,7 @@ module Ace
         # Generate a directory name (alias for generate)
         #
         # @param time [Time] The time to encode (default: Time.now)
-        # @return [String] Directory name in configured format
+        # @return [String] 6-character Base36 compact ID
         def directory_name(time = Time.now)
           generate(time)
         end
@@ -79,20 +56,12 @@ module Ace
           extension ? "#{base}#{extension}" : base
         end
 
-        # Parse a timestamp or compact ID string to Time
+        # Parse a Base36 compact ID string to Time
         #
-        # @param id_str [String] The ID string to parse
-        # @param format [String] strftime format (for timestamp format)
+        # @param id_str [String] The Base36 ID string to parse
         # @return [Time, nil] Parsed time or nil if invalid
-        def parse(id_str, format = @timestamp_format)
-          detected = self.class.detect_format(id_str)
-
-          case detected
-          when :compact
-            Ace::Timestamp.decode(id_str)
-          when :timestamp
-            Time.strptime(id_str, format)
-          end
+        def parse(id_str)
+          Ace::Timestamp.decode(id_str)
         rescue ArgumentError
           nil
         end
@@ -110,25 +79,12 @@ module Ace
         # Detect the format of an ID string
         #
         # @param value [String] The ID string to analyze
-        # @return [Symbol, nil] :compact, :timestamp, or nil
+        # @return [Symbol, nil] :compact for valid Base36 IDs, :timestamp for legacy format, or nil
         def self.detect_format(value)
           Ace::Timestamp.detect_format(value)
         end
 
-        # Get current ID format setting
-        #
-        # @return [Symbol] Current ID format (:base36 or :timestamp)
-        attr_reader :id_format
-
         private
-
-        def validate_id_format(format)
-          unless VALID_ID_FORMATS.include?(format)
-            raise ArgumentError,
-              "Invalid id_format: #{format.inspect}. Valid options: #{VALID_ID_FORMATS.join(', ')}"
-          end
-          format
-        end
 
         def format_duration(seconds)
           if seconds < 1

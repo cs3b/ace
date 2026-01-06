@@ -42,12 +42,6 @@ defaults:
   save_reports: true
   report_dir: test-reports
 
-# Report ID format configuration
-# - base36: 6-character compact IDs (e.g., "i50jj3") - NEW DEFAULT
-# - timestamp: 14-character timestamps (e.g., "20250106-123000") - LEGACY
-report:
-  id_format: base36
-
 # Failure display limits
 failure_limits:
   max_display: 7
