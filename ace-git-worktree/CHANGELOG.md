@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-01-06
+
 ### Fixed
 - Thor CLI consuming command-specific options (`--task`, `--pr`, `--branch`, etc.) instead of passing them to command handlers, causing `ace-git-worktree create --task 178` to show help instead of executing
 
