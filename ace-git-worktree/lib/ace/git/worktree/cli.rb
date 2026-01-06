@@ -8,6 +8,10 @@ module Ace
       class CLI < Ace::Core::CLI::Base
         # class_options :quiet, :verbose, :debug inherited from Base
 
+        # Prevent Thor from consuming command-specific options
+        # Let CreateCommand, SwitchCommand, etc. handle their own options
+        stop_on_unknown_option! :create, :switch, :remove, :prune, :list
+
         # Override help to add task-aware worktrees section
         def self.help(shell, subcommand = false)
           super
@@ -67,13 +71,6 @@ module Ace
             Created worktree path printed to stdout
             Exit codes: 0 (success), 1 (error)
         DESC
-        option :task, type: :string, desc: "Create worktree for task (task ID)"
-        option :pr, type: :string, desc: "Create worktree for PR"
-        option :branch, type: :string, desc: "Create worktree from branch"
-        option :force, type: :boolean, aliases: "-f", desc: "Force creation even if worktree exists"
-        option :dry_run, type: :boolean, aliases: "-n", desc: "Show what would be created without doing it"
-        option :no_fetch, type: :boolean, desc: "Skip fetching remote branches"
-        option :checkout, type: :boolean, desc: "Checkout the worktree after creation"
         def create(*args)
           # Handle --help/-h passed as first argument
           if args.first == "--help" || args.first == "-h"
@@ -113,7 +110,6 @@ module Ace
             Table format with worktree details
             Exit codes: 0 (success), 1 (error)
         DESC
-        option :show_tasks, type: :boolean, desc: "Show task information for each worktree"
         def list(*args)
           display_config_summary("list")
           Commands::ListCommand.new.run(args)
@@ -184,8 +180,6 @@ module Ace
             Removal confirmation printed to stdout
             Exit codes: 0 (success), 1 (error)
         DESC
-        option :force, type: :boolean, aliases: "-f", desc: "Force removal without confirmation"
-        option :task, type: :string, desc: "Specify worktree by task ID"
         def remove(*args)
           # Handle --help/-h passed as first argument
           if args.first == "--help" || args.first == "-h"
@@ -222,7 +216,6 @@ module Ace
             Pruned worktrees listed
             Exit codes: 0 (success), 1 (error)
         DESC
-        option :dry_run, type: :boolean, aliases: "-n", desc: "Show what would be pruned without doing it"
         def prune(*args)
           # Handle --help/-h passed as first argument
           if args.first == "--help" || args.first == "-h"
