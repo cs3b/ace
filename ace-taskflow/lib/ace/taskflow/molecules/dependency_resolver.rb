@@ -290,6 +290,8 @@ module Ace
             tasks.sort_by { |t| status_value(t[:status]) }
           when :id
             tasks.sort_by { |t| t[:id] || "" }
+          when :modified
+            tasks.sort_by { |t| t[:modified] || Time.at(0) }
           else
             tasks
           end
