@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/timestamp"
+
 module Ace
   module Git
     module Secrets
@@ -164,9 +166,9 @@ module Ace
 
           # Generate default backup path
           def generate_backup_path
-            timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+            session_id = Ace::Timestamp.encode(Time.now)
             repo_name = File.basename(repository_path)
-            File.join(File.dirname(repository_path), "#{repo_name}-backup-#{timestamp}.git")
+            File.join(File.dirname(repository_path), "#{repo_name}-backup-#{session_id}.git")
           end
 
           # Instructions after successful rewrite

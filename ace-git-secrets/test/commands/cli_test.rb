@@ -89,9 +89,9 @@ class CLITest < GitSecretsTestCase
       assert_match(/Report saved:.*\.json/, output, "Should mention JSON report file")
       assert_equal 0, result
 
-      # Verify the JSON file was created
-      cache_dir = File.join(@mock_repo.path, ".cache", "ace-git-secrets")
-      json_files = Dir.glob(File.join(cache_dir, "*-report.json"))
+      # Verify the JSON file was created in sessions/ subdirectory
+      sessions_dir = File.join(@mock_repo.path, ".cache", "ace-git-secrets", "sessions")
+      json_files = Dir.glob(File.join(sessions_dir, "*-report.json"))
       assert json_files.any?, "JSON report file should exist"
 
       # Verify the JSON content

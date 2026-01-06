@@ -153,8 +153,9 @@ class ScanReportTest < GitSecretsTestCase
     Dir.mktmpdir do |dir|
       report.save_to_file(directory: dir)
 
-      # Check that both files were created
-      files = Dir.glob(File.join(dir, "*"))
+      # Check that both files were created in sessions/ subdirectory
+      sessions_dir = File.join(dir, "sessions")
+      files = Dir.glob(File.join(sessions_dir, "*"))
       assert_equal 2, files.size
 
       report_file = files.find { |f| f.end_with?("-report.json") }
@@ -176,7 +177,9 @@ class ScanReportTest < GitSecretsTestCase
     Dir.mktmpdir do |dir|
       report.save_to_file(directory: dir)
 
-      files = Dir.glob(File.join(dir, "*"))
+      # Files are saved in sessions/ subdirectory
+      sessions_dir = File.join(dir, "sessions")
+      files = Dir.glob(File.join(sessions_dir, "*"))
       assert_equal 1, files.size
       assert files[0].end_with?("-report.json")
     end
