@@ -10,7 +10,7 @@ module Ace
 
         # Prevent Thor from consuming command-specific options
         # Let CreateCommand, SwitchCommand, etc. handle their own options
-        stop_on_unknown_option! :create, :switch, :remove, :prune, :list
+        stop_on_unknown_option! :create, :switch, :remove, :prune, :list, :config
 
         # Override help to add task-aware worktrees section
         def self.help(shell, subcommand = false)
@@ -252,7 +252,6 @@ module Ace
             Configuration details printed to stdout
             Exit codes: 0 (success), 1 (error)
         DESC
-        option :files, type: :boolean, desc: "Show configuration file locations"
         def config(*args)
           display_config_summary("config")
           Commands::ConfigCommand.new.run(args)

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-01-06
+
+### Fixed
+- Thor CLI consuming `--files` option in `config` command instead of passing to ConfigCommand
+
+### Changed
+- Add `:config` to `stop_on_unknown_option!` to fix `ace-git-worktree config --files`
+
 ## [0.10.1] - 2026-01-06
 
 ### Fixed
