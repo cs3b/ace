@@ -71,13 +71,13 @@ module Ace
             # - Rounding errors in floating point time operations
             # By clamping, we ensure the encoder never crashes and produces
             # a valid compact ID even for edge-case inputs.
-            clamped_seconds = [[time.sec, 0].max, 59].min
+            clamped_seconds = time.sec.clamp(0, 59)
             seconds_into_block = ((minutes_of_day % BLOCK_MINUTES) * 60) + clamped_seconds
             precision = (seconds_into_block * PRECISION_DIVISOR) / BLOCK_SECONDS
             # Clamp precision to valid 2-digit base36 range (0-1295)
             # This defensive clamping handles any arithmetic edge cases
             # that could produce values outside the valid range.
-            precision = [[precision, 0].max, PRECISION_DIVISOR - 1].min
+            precision = precision.clamp(0, PRECISION_DIVISOR - 1)
 
             # Encode each component and freeze to prevent mutation
             (encode_value(months_offset, 2, alphabet) +
