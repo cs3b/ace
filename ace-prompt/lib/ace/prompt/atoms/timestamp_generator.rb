@@ -1,18 +1,37 @@
 # frozen_string_literal: true
 
+require "ace/timestamp"
+
 module Ace
   module Prompt
     module Atoms
-      # Generates timestamps in YYYYMMDD-HHMMSS format
+      # Generates Base36 compact IDs for prompt archiving
+      #
+      # Uses ace-timestamp to generate 6-character compact IDs (e.g., "i50jj3")
+      #
+      # TODO: Consider renaming to SessionIdGenerator in a future PR to better
+      # reflect its purpose (generates session IDs, not timestamps)
+      #
       module TimestampGenerator
-        # Generate timestamp for current time
+        # Generate Base36 ID for current time
         #
-        # @param time [Time] Optional time to format (default: Time.now)
-        # @return [Hash] Hash with :timestamp key
-        def self.call(time: Time.now)
+        # @param time [Time] Optional time in UTC (default: Time.now.utc)
+        # @return [Hash] Hash with :timestamp key containing 6-char Base36 ID
+        # @note Time is expected to be in UTC for consistent ID generation
+        def self.call(time: Time.now.utc)
           {
-            timestamp: time.strftime("%Y%m%d-%H%M%S")
+            timestamp: Ace::Timestamp.encode(time)
           }
+        end
+
+        # Check if a string is a valid Base36 ID
+        #
+        # @param value [String] ID string to validate
+        # @return [Boolean] true if valid Base36 ID
+        def self.valid?(value)
+          return false unless value.is_a?(String)
+
+          Ace::Timestamp.valid?(value)
         end
       end
     end
