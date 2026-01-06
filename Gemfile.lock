@@ -205,6 +205,14 @@ PATH
       ostruct
       thor (~> 1.3)
 
+PATH
+  remote: ace-timestamp
+  specs:
+    ace-timestamp (0.1.0)
+      ace-config (~> 0.4)
+      ace-support-core (~> 0.1)
+      thor (~> 1.3)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -331,6 +339,7 @@ DEPENDENCIES
   ace-support-test-helpers!
   ace-taskflow!
   ace-test-runner!
+  ace-timestamp!
   addressable (~> 2.8)
   bigdecimal (~> 3.1)
   bundler (~> 2.4)
