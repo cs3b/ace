@@ -129,4 +129,37 @@ class IdeaModelTest < AceTaskflowTestCase
 
     assert_nil idea.created_at
   end
+
+  # Tests for Base36 compact ID format support in title extraction
+  def test_extract_title_from_base36_filename
+    idea = Ace::Taskflow::Models::Idea.new(
+      filename: "abc123-my-great-idea.s.md"
+    )
+    assert_equal "my great idea", idea.title
+  end
+
+  def test_extract_title_from_timestamp_filename
+    idea = Ace::Taskflow::Models::Idea.new(
+      filename: "20250115-103045-my-great-idea.s.md"
+    )
+    assert_equal "my great idea", idea.title
+  end
+
+  def test_extract_title_from_base36_directory_idea
+    idea = Ace::Taskflow::Models::Idea.new(
+      filename: "xyz789-directory-idea/idea.s.md"
+    )
+    # Directory-style ideas: basename is "idea.s.md", after processing: "idea"
+    # The filename is stored as-is, and extract_title_from_filename gets the basename
+    assert_equal "idea", idea.title
+  end
+
+  def test_extract_title_with_no_id_prefix
+    idea = Ace::Taskflow::Models::Idea.new(
+      filename: "my-great-idea.md"
+    )
+    # Files without ID prefix should still work
+    # "my" is 2 chars, not 6, so it won't be treated as Base36 ID
+    assert_equal "my great idea", idea.title
+  end
 end

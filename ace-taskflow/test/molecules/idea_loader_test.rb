@@ -192,4 +192,96 @@ class IdeaLoaderTest < AceTaskflowTestCase
       end
     end
   end
+
+  # Tests for Base36 compact ID format support
+  def test_load_idea_with_compact_id_format
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
+        FileUtils.mkdir_p(idea_dir)
+        # Use a valid-looking 6-char Base36 ID
+        File.write(File.join(idea_dir, "abc123-compact-idea.s.md"), "# Compact Idea\n\nContent here")
+
+        @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
+        ideas = @loader.load_all(release: "backlog")
+
+        assert_equal 1, ideas.length
+        assert_equal "abc123", ideas.first[:id]
+        assert_match(/compact idea/i, ideas.first[:title])
+      end
+    end
+  end
+
+  def test_load_idea_directory_with_compact_id
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas", "xyz789-directory-idea")
+        FileUtils.mkdir_p(idea_dir)
+        File.write(File.join(idea_dir, "idea.s.md"), "# Directory Idea\n\nContent")
+
+        @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
+        ideas = @loader.load_all(release: "backlog")
+
+        assert_equal 1, ideas.length
+        assert_equal "xyz789", ideas.first[:id]
+        assert ideas.first[:is_directory]
+      end
+    end
+  end
+
+  def test_mixed_timestamp_and_compact_ids
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
+        FileUtils.mkdir_p(idea_dir)
+        # Create both timestamp and compact ID ideas
+        File.write(File.join(idea_dir, "20250101-100000-timestamp-idea.s.md"), "# Timestamp Idea")
+        File.write(File.join(idea_dir, "abc123-compact-idea.s.md"), "# Compact Idea")
+
+        @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
+        ideas = @loader.load_all(release: "backlog")
+
+        assert_equal 2, ideas.length
+
+        timestamp_idea = ideas.find { |i| i[:id] == "20250101-100000" }
+        compact_idea = ideas.find { |i| i[:id] == "abc123" }
+
+        assert timestamp_idea, "Should load timestamp format idea"
+        assert compact_idea, "Should load compact format idea"
+      end
+    end
+  end
+
+  def test_find_by_reference_with_compact_id
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        # Create v.0.9.0 as active release and add idea there
+        release_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        FileUtils.mkdir_p(release_dir)
+        File.write(File.join(release_dir, "abc123-test-idea.s.md"), "# Test Idea\n\nContent")
+
+        @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
+        idea = @loader.find_by_reference("abc123")
+
+        assert idea
+        assert_equal "abc123", idea[:id]
+      end
+    end
+  end
+
+  def test_extract_timestamp_from_compact_id
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        idea_dir = File.join(dir, ".ace-taskflow", "_backlog", "ideas")
+        FileUtils.mkdir_p(idea_dir)
+        File.write(File.join(idea_dir, "abc123-idea.s.md"), "# Test")
+
+        @loader = Ace::Taskflow::Molecules::IdeaLoader.new(File.join(dir, ".ace-taskflow"))
+        ideas = @loader.load_all(release: "backlog")
+
+        # Should have a created_at time (decoded from compact ID or fallback)
+        assert ideas.first[:created_at].is_a?(Time)
+      end
+    end
+  end
 end
