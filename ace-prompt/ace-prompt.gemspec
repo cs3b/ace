@@ -5,8 +5,8 @@ require_relative 'lib/ace/prompt/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-prompt'
   spec.version = Ace::Prompt::VERSION
-  spec.authors = ['Michal Czyz']
-  spec.email = ['mc@cs3b.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Prompt workspace with automatic archiving'
   spec.description = 'Provides a single active prompt file with automatic history archiving. ' \

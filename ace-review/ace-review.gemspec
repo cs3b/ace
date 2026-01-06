@@ -5,8 +5,8 @@ require_relative 'lib/ace/review/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-review'
   spec.version = Ace::Review::VERSION
-  spec.authors = ['ACE Meta']
-  spec.email = ['ace-meta@example.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Automated code review tool for the ACE framework'
   spec.description = 'ace-review enables automated code review and quality analysis using LLM-powered ' \

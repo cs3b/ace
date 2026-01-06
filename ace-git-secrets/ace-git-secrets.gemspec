@@ -5,7 +5,7 @@ require_relative "lib/ace/git/secrets/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-git-secrets"
   spec.version = Ace::Git::Secrets::VERSION
-  spec.authors = ["ace-meta"]
+  spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Detect, remove, and revoke authentication tokens from Git history"

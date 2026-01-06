@@ -7,8 +7,8 @@ require "ace/llm/providers/cli/version"
 Gem::Specification.new do |spec|
   spec.name          = "ace-llm-providers-cli"
   spec.version       = Ace::LLM::Providers::CLI::VERSION
-  spec.authors       = ["AI Development Team"]
-  spec.email         = ["ai-dev@example.com"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary       = "CLI-based LLM providers for ace-llm"
   spec.description   = "Extends ace-llm with CLI-based LLM providers like Claude Code, Codex, and OpenCode"

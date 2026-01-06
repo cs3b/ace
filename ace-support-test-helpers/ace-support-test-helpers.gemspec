@@ -5,8 +5,8 @@ require_relative 'lib/ace/test_support/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-support-test-helpers'
   spec.version = Ace::TestSupport::VERSION
-  spec.authors = ['Michal Czyz']
-  spec.email = ['mc@cs3b.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Shared test utilities for ace-* gems'
   spec.description = 'Development-only infrastructure gem providing shared test utilities, base test cases, ' \

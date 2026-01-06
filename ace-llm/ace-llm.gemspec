@@ -5,8 +5,8 @@ require_relative "lib/ace/llm/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-llm"
   spec.version = Ace::LLM::VERSION
-  spec.authors = ["Assistant Coding Enabler"]
-  spec.email = ["mc+git@massiveconflict.com"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "LLM provider integration for AI-assisted development"
   spec.description = "Query any LLM provider through a unified CLI interface with cost tracking and output formatting"
