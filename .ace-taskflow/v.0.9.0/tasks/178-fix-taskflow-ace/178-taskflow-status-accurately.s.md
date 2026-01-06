@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.178
-status: pending
+status: in-progress
 priority: high
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 178-fix-ace-taskflow-status-to-accurately-report-recently-completed-tasks
+  path: "../ace-task.178"
+  created_at: '2026-01-06 01:00:09'
+  updated_at: '2026-01-06 01:00:09'
 ---
 
 # Fix ace-taskflow status to accurately report recently completed tasks
