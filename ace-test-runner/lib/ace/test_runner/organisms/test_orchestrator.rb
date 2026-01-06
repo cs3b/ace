@@ -361,7 +361,8 @@ module Ace
             failure_limits: config_with_options.failure_limits,
             profile: options[:profile],
             execution: config_with_options.execution || {},
-            files: options[:files]
+            files: options[:files],
+            report_id_format: extract_report_id_format(config_with_options)
           )
         end
 
@@ -543,8 +544,19 @@ module Ace
           end
         end
 
+        def extract_report_id_format(config)
+          # Extract report.id_format from config, default to :base36
+          report_config = config.report || config[:report] || {}
+          format = report_config[:id_format] || report_config["id_format"] || :base36
+          format.to_sym
+        end
+
         def save_reports(report)
-          storage = Molecules::ReportStorage.new(base_dir: @configuration.report_dir)
+          timestamp_generator = Atoms::TimestampGenerator.new(id_format: @configuration.report_id_format)
+          storage = Molecules::ReportStorage.new(
+            base_dir: @configuration.report_dir,
+            timestamp_generator: timestamp_generator
+          )
 
           # Save in appropriate format
           report_path = case @configuration.format

@@ -20,6 +20,9 @@ module Ace
       #   generator.generate  # => "20250106-123000"
       #
       # @example Detect format of existing ID
+      #   # Note: detect_format returns :compact (detection result from ace-timestamp)
+      #   # while id_format config uses :base36 (configuration option). Both refer to
+      #   # the same 6-character Base36 encoded format.
       #   TimestampGenerator.detect_format("i50jj3")        # => :compact
       #   TimestampGenerator.detect_format("20250106-123000") # => :timestamp
       #
