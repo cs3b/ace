@@ -128,6 +128,28 @@ class FileNamerTest < AceTestCase
 
   # Tests for Base36 compact ID format
   def test_generates_base36_compact_id_when_configured
+    # Use timestamp format for deterministic test IDs (no external config dependency)
+    config = {
+      "directory" => "/test/ideas",
+      "file_naming" => {
+        "id_format" => "timestamp",
+        "timestamp_format" => "%Y%m%d-%H%M%S",
+        "title_max_length" => 50
+      }
+    }
+    namer = Ace::Taskflow::Molecules::FileNamer.new(config)
+
+    Time.stub :now, Time.new(2025, 1, 15, 10, 30, 45) do
+      path = namer.generate
+      dirname = File.basename(path)
+      # Timestamp format: 14-character timestamp followed by hyphen and title
+      assert_match(/^\d{8}-\d{6}-idea$/, dirname, "Should generate timestamp format ID")
+      refute_match(/^[0-9a-z]{6}-idea$/i, dirname, "Should NOT generate Base36 format")
+    end
+  end
+
+  # Test Base36 format with real config (integration test - uses ace-timestamp)
+  def test_base36_compact_id_integration
     with_real_config do
       # Reset ace-timestamp config cache to load gem defaults
       Ace::Timestamp.reset_config!
@@ -197,6 +219,14 @@ class FileNamerTest < AceTestCase
         dirname = File.basename(path)
         assert_match(/^[0-9a-z]{6}-search-enhance$/i, dirname)
       end
+    end
+  end
+
+  # Helper method for Base36 integration tests
+  def with_base36_config
+    with_real_config do
+      Ace::Timestamp.reset_config!
+      yield
     end
   end
 

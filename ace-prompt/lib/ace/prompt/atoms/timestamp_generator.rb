@@ -15,10 +15,11 @@ module Ace
       module TimestampGenerator
         # Generate Base36 ID for current time
         #
-        # @param time [Time] Optional time in UTC (default: Time.now.utc)
+        # @param time [Time] Optional time in UTC (default: current UTC time)
         # @return [Hash] Hash with :timestamp key containing 6-char Base36 ID
         # @note Time is expected to be in UTC for consistent ID generation
-        def self.call(time: Time.now.utc)
+        def self.call(time: nil)
+          time ||= Time.now.utc
           {
             timestamp: Ace::Timestamp.encode(time)
           }
