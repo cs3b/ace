@@ -179,7 +179,8 @@ class ReviewManagerTest < AceReviewTest
 
     refute_nil release_path
     assert File.exist?(release_path)
-    assert_match(/review-report-gpt-4-\d{8}-\d{6}\.md/, File.basename(release_path))
+    # Compact ID is 6 chars Base36 (0-9, a-z)
+    assert_match(/review-report-gpt-4-[0-9a-z]{6}\.md/, File.basename(release_path))
 
     release_content = File.read(release_path)
     assert_match(/# Review Report/, release_content)
