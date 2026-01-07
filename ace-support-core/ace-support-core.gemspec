@@ -5,8 +5,8 @@ require_relative 'lib/ace/core/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-support-core'
   spec.version = Ace::Core::VERSION
-  spec.authors = ['Michal Czyz']
-  spec.email = ['mc@cs3b.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Core configuration cascade and shared functionality for ace-* gems'
   spec.description = 'Foundational infrastructure gem providing configuration cascade resolution, ' \

@@ -4,6 +4,62 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.255] - 2026-01-07
+
+### Added
+
+- **ace-timestamp 0.1.1**: New package for Base36 compact ID generation
+  - Encode/decode between timestamps and 6-character Base36 compact IDs
+  - Configurable year_zero (default 2020) and precision (second/minute/hour)
+  - CLI interface: `ace-timestamp encode/decode/config`
+  - Thread-safe implementation with Ruby 3 pattern matching
+
+### Changed
+
+- **ace-taskflow 0.30.0**: Base36 compact ID support for idea directories
+  - Default idea directory naming changed from YYYYMMDD-HHMMSS to 6-char Base36 IDs
+  - Backward compatible: existing timestamp directories remain readable
+
+- **ace-prompt 0.12.0**: Migrate to Base36 compact IDs for session archiving
+  - Archive filenames changed from timestamps to 6-char Base36 compact IDs
+  - Renamed TimestampGenerator to SessionIdGenerator
+
+- **ace-review 0.32.0**: Migrate to Base36 compact IDs for review reports
+  - Review report filenames changed from timestamps to 6-char Base36 compact IDs
+  - Session directories now use compact ID format
+
+- **ace-docs 0.16.0**: Migrate to Base36 compact IDs for session and file naming
+  - Session directories and analysis reports use 6-char Base36 compact IDs
+
+- **ace-test-runner 0.9.0**: Migrate to Base36 compact IDs for test reports
+  - Test report directories changed from timestamps to 6-char Base36 compact IDs
+  - Simplified configuration loading using ADR-022 pattern
+
+- **ace-git-secrets 0.6.0**: Migrate to Base36 compact IDs and sessions subdirectory
+  - Scan report filenames changed from timestamps to 6-char Base36 compact IDs
+  - Reports now stored in `sessions/` subdirectory
+
+## [0.9.254] - 2026-01-06
+
+### Added
+
+- **ace-taskflow 0.30.0**: Base36 compact ID support for idea directories
+  - Add Base36 compact ID support for idea directories
+  - Add Base36 compact ID extraction from idea titles
+  - Integrate with ace-timestamp for compact timestamp generation
+
+## [0.9.253] - 2026-01-06
+
+### Fixed
+
+- **ace-timestamp 0.1.1**: CLI exit code handling and default command
+  - Fix exit code handling using standard ACE pattern (`result.is_a?(Integer) ? result : 0`)
+  - Change default CLI command from `help` to `encode` (encodes current time when no args)
+  - Fix timestamp parsing to check legacy format (YYYYMMDD-HHMMSS) before Time.parse
+  - Add configuration validation for alphabet (36 chars) and year_zero (1900-2100)
+  - Add ace-support-test-helpers to development dependencies
+  - Correct day range documentation from "0-35" to "0-30"
+
 ## [0.9.252] - 2026-01-06
 
 ### Fixed

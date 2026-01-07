@@ -5,8 +5,8 @@ require_relative "lib/ace/handbook/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-handbook"
   spec.version = Ace::Handbook::VERSION
-  spec.authors = ["ACE Team"]
-  spec.email = ["team@ace.dev"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Handbook management workflows for ACE"
   spec.description = "Pure workflow package containing handbook management workflows, templates, guides, and agents accessible via wfi:// protocol"
