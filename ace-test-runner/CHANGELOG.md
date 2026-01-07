@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Test report directories changed from 14-character timestamps to 6-character Base36 compact IDs
+  - Example: `20251129-143000/` → `i50jj3/`
+  - Reports are temporary, so no backward compatibility needed
+- Migrate TimestampGenerator to use ace-timestamp for Base36 compact IDs
+- Simplified configuration loading using ADR-022 config cascade pattern
+
+### Added
+- Dependency on ace-timestamp for compact ID generation
+
 ## [0.8.0] - 2026-01-05
 
 ### Added
