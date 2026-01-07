@@ -79,10 +79,10 @@ This document provides actionable decisions from Architecture Decision Records (
 **Impact**: Use `test/atoms/` NOT `test/ace/gem/atoms/` - flat structure only. Simplifies navigation and maintains consistency.
 **Details**: [ADR-017](decisions/ADR-017-flat-test-structure.md)
 
-### Thor CLI Commands Pattern
-**Decision**: All CLI gems use Thor with `lib/ace/gem/commands/` directory for command classes.
-**Impact**: Create command classes in `commands/`, use `cli.rb` as Thor entry point, test in `test/commands/`. Commands return exit codes (0/1).
-**Details**: [ADR-018](decisions/ADR-018-thor-cli-commands-pattern.md)
+### dry-cli CLI Framework
+**Decision**: All CLI gems use dry-cli with `lib/ace/gem/cli/` directory for command classes.
+**Impact**: Create command classes in `cli/`, use Registry pattern in `cli.rb`, test in `test/commands/`. Commands use SharedHelpers module for common patterns. `-v` reserved for `--verbose`.
+**Details**: [ADR-023](decisions/ADR-023-dry-cli-framework.md) (supersedes ADR-018)
 
 ### Semantic Versioning and CHANGELOG
 **Decision**: All gems must follow semantic versioning and maintain CHANGELOG.md in Keep a Changelog format.
@@ -127,11 +127,13 @@ This document provides actionable decisions from Architecture Decision Records (
 
 ## Archived Decisions
 
-The following decisions are **archived** as they apply only to legacy `_legacy/dev-tools`:
+The following decisions are **archived** as they apply only to legacy code or have been superseded:
 - **ADR-006**: CI-Aware VCR Configuration (VCR not used in current gems)
 - **ADR-007**: Zeitwerk Autoloading (current gems use explicit requires)
 - **ADR-008**: Observability with dry-monitor (not used in current gems)
-- **ADR-009**: Centralized CLI Error Reporting (superseded by ADR-018 Thor patterns)
+- **ADR-009**: Centralized CLI Error Reporting (superseded by ADR-018 Thor, then ADR-023 dry-cli)
+- **ADR-018**: Thor CLI Commands Pattern (superseded by ADR-023 dry-cli due to option consumption bugs)
+- **ADR-019**: Configuration Architecture (superseded by ADR-022)
 
 See `docs/decisions/archive/README.md` for details on archived decisions.
 

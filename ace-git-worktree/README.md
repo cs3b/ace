@@ -41,10 +41,11 @@ ace-git-worktree create --task 081
 ace-git-worktree create --pr 26
 
 # Create a worktree from a remote branch
-ace-git-worktree create -b origin/feature/auth
+ace-git-worktree create --from origin/feature/auth
+ace-git-worktree create -b origin/feature/auth  # Short form
 
 # Create a worktree from a local branch
-ace-git-worktree create -b my-feature
+ace-git-worktree create --from my-feature
 
 # List all worktrees with task associations
 ace-git-worktree list --show-tasks
@@ -105,14 +106,14 @@ Create worktrees from existing branches (local or remote):
 
 ```bash
 # Remote branch (auto-fetches and sets up tracking)
-ace-git-worktree create -b origin/feature/authentication
-ace-git-worktree create --branch upstream/release/v2.0
+ace-git-worktree create --from origin/feature/authentication
+ace-git-worktree create -b upstream/release/v2.0  # Short form
 
 # Local branch (no tracking)
-ace-git-worktree create -b my-local-feature
+ace-git-worktree create --from my-local-feature
 
 # Complex branch names (handles slashes)
-ace-git-worktree create -b origin/feature/auth/oauth2
+ace-git-worktree create --from origin/feature/auth/oauth2
 ```
 
 **Features:**
