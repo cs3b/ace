@@ -99,18 +99,18 @@ module Ace
           false
         end
 
-        # Calculate next iteration number for a timestamp
+        # Calculate next iteration number for a session ID
         #
-        # @param timestamp [String] Timestamp (e.g., "20251129-143000")
+        # @param session_id [String] Base36 session ID (e.g., "i50jj3")
         # @return [Integer] Next iteration number (1, 2, 3, etc.)
-        def self.next_iteration(timestamp)
+        def self.next_iteration(session_id)
           project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
           archive_dir_path = File.join(project_root, archive_dir)
 
           return 1 unless Dir.exist?(archive_dir_path)
 
-          # Find all enhancement files for this timestamp
-          pattern = File.join(archive_dir_path, "#{timestamp}_e*.md")
+          # Find all enhancement files for this session ID
+          pattern = File.join(archive_dir_path, "#{session_id}_e*.md")
           existing_files = Dir.glob(pattern)
 
           return 1 if existing_files.empty?
@@ -127,11 +127,11 @@ module Ace
 
         # Generate enhancement archive filename
         #
-        # @param timestamp [String] Timestamp (e.g., "20251129-143000")
+        # @param session_id [String] Base36 session ID (e.g., "i50jj3")
         # @param iteration [Integer] Iteration number
-        # @return [String] Filename (e.g., "20251129-143000_e001.md")
-        def self.enhancement_filename(timestamp, iteration)
-          "#{timestamp}_e#{iteration.to_s.rjust(3, '0')}.md"
+        # @return [String] Filename (e.g., "i50jj3_e001.md")
+        def self.enhancement_filename(session_id, iteration)
+          "#{session_id}_e#{iteration.to_s.rjust(3, '0')}.md"
         end
       end
     end

@@ -5,8 +5,8 @@ require_relative 'lib/ace/prompt/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-prompt'
   spec.version = Ace::Prompt::VERSION
-  spec.authors = ['Michal Czyz']
-  spec.email = ['mc@cs3b.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Prompt workspace with automatic archiving'
   spec.description = 'Provides a single active prompt file with automatic history archiving. ' \
@@ -40,11 +40,12 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'ace-config', '~> 0.4'
-  spec.add_dependency 'ace-nav', '~> 0.8'
   spec.add_dependency 'ace-context', '~> 0.8'
   spec.add_dependency 'ace-git', '~> 0.3' # Unified git operations (task 140.04)
   spec.add_dependency 'ace-llm', '~> 0.8'
+  spec.add_dependency 'ace-nav', '~> 0.8'
   spec.add_dependency 'ace-taskflow', '~> 0.9'
+  spec.add_dependency 'ace-timestamp', '~> 0.1' # Base36 compact IDs (task 149)
   spec.add_dependency 'thor', '~> 1.3'
 
   # Development dependencies managed in root Gemfile

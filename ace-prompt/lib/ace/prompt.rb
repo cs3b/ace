@@ -41,7 +41,7 @@ module Ace
 end
 
 # Atoms
-require_relative "prompt/atoms/timestamp_generator"
+require_relative "prompt/atoms/session_id_generator"
 require_relative "prompt/atoms/content_hasher"
 require_relative "prompt/atoms/frontmatter_extractor"
 require_relative "prompt/atoms/task_path_resolver"
