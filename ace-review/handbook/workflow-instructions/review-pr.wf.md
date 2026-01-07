@@ -121,12 +121,31 @@ List items that don't require changes (no numbering):
 
 #### Action Items
 
-Numbered table of items that need fixing:
+List items that need fixing with priority indicators:
 
-| # | Priority | Issue | File | Source | Fix |
-|---|----------|-------|------|--------|-----|
-| 1 | Critical | ... | `file:line` | LLM/Dev | ... |
-| 2 | High | ... | `file:line` | LLM/Dev | ... |
+```
+🔴 #1 [Critical] Issue description
+   File: path/to/file.rb:123
+   Source: LLM (gemini-2.5-flash)
+   Fix: What needs to be done
+
+🟡 #2 [High] Developer feedback item
+   File: another/file.rb:45
+   Source: Developer Feedback
+   Fix: Address reviewer comment
+
+🟢 #3 [Medium] Improvement suggestion
+   File: path/to/file.rb:89
+   Source: LLM (gpt-4)
+   Fix: Optional enhancement
+
+🔵 #4 [Low] Nice-to-have
+   File: path/to/file.rb:12
+   Source: LLM
+   Fix: Minor improvement
+```
+
+Priority indicators: 🔴 Critical/Blocking, 🟡 High, 🟢 Medium, 🔵 Low
 
 Note: Items from **Developer Feedback** require PR comment resolution after implementation.
 
