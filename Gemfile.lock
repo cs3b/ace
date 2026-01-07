@@ -152,7 +152,8 @@ PATH
     ace-search (0.17.0)
       ace-config (~> 0.5)
       ace-git (~> 0.3)
-      thor (~> 1.3)
+      ace-support-core (~> 0.18)
+      dry-cli (~> 1.1)
 
 PATH
   remote: ace-support-core
@@ -160,6 +161,7 @@ PATH
     ace-support-core (0.18.0)
       ace-config (~> 0.4)
       ace-support-fs (~> 0.1)
+      dry-cli (~> 1.1)
 
 PATH
   remote: ace-support-fs
