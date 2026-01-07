@@ -13,16 +13,18 @@ update:
 
 Quick reference based on production patterns from ace-lint, ace-docs, ace-taskflow, ace-search.
 
-## Task 150 CLI Standardization (2026-01)
+## Task 179 CLI Migration (2026-01)
 
-All CLI gems were standardized to use Thor with consistent patterns:
-- **CLI Base Class**: `Ace::Core::CLI::Base` provides standard options (--quiet, --verbose, --debug)
-- **ConfigSummary**: Displays effective configuration, filtered for sensitive keys
+All CLI gems are migrating from Thor to dry-cli with consistent patterns:
+- **CLI Base Module**: `Ace::Core::CLI::DryCli::Base` provides helper methods (quiet?, verbose?, debug?)
+- **Registry Pattern**: Use `extend Dry::CLI::Registry` and register commands
+- **CLI.start Method**: Implement testable `CLI.start(args)` with default command routing
 - **Exit Codes**: Commands return status codes, exe/ handles exit (never call exit in commands)
 - **Reserved Flags**: `-v` = verbose, `-q` = quiet, `-d` = debug, `-h` = help, `-o` = output
-- **Version Command**: Use `--version` (not `-v`), via `version_command` helper
+- **Version Command**: Use `Ace::Core::CLI::DryCli::VersionCommand.build()`
+- **Type Conversion**: dry-cli returns strings; convert numeric options with `.to_i`
 
-See `.ace-taskflow/v.0.9.0/tasks/150-task-standardize-cli/usage/ux.md` for full UX analysis.
+See `.ace-taskflow/v.0.9.0/tasks/179-task-migrate-cli/` for migration details.
 
 ## Gem Naming Conventions
 
@@ -66,7 +68,7 @@ ace-gem/
 ├── .ace-defaults/gem/config.yml    # REQUIRED
 ├── lib/ace/gem/
 │   ├── atoms/, molecules/, organisms/, models/  # ATOM architecture
-│   ├── commands/                  # Thor CLI commands
+│   ├── commands/                  # dry-cli command classes
 │   ├── cli.rb, version.rb
 ├── test/                          # FLAT: atoms/, molecules/, organisms/, models/
 │   ├── commands/, integration/, fixtures/
@@ -264,11 +266,102 @@ Symlink to `.claude/agents/` for Claude Code.
 
 ## CLI
 
-**ADR-018 Pattern**: All ACE gems use Thor for CLI commands with standardized options and exit code handling.
+**Task 179 Migration (2026-01)**: All ACE CLI gems are migrating from Thor to dry-cli.
 
-### CLI Base Class (ace-support-core)
+### dry-cli Pattern (New Standard)
 
-All CLI gems should inherit from `Ace::Core::CLI::Base` for standardized behavior:
+New and migrated gems use `dry-cli` with the `Ace::Core::CLI::DryCli::Base` module:
+
+```ruby
+# lib/ace/gem/cli.rb
+require "dry/cli"
+require "ace/core"
+require_relative "commands/process"
+
+module Ace::Gem
+  module CLI
+    extend Dry::CLI::Registry
+
+    # Commands that should NOT be treated as search patterns
+    KNOWN_COMMANDS = %w[process version help --help -h --version].freeze
+    DEFAULT_COMMAND = "process"
+
+    # Testable start method with default command routing
+    def self.start(args)
+      if args.any? && !KNOWN_COMMANDS.include?(args.first)
+        args = [DEFAULT_COMMAND] + args
+      end
+      Dry::CLI.new(self).call(arguments: args)
+    end
+
+    register "process", Commands::Process
+
+    # Version command
+    version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      gem_name: "ace-gem",
+      version: Ace::Gem::VERSION
+    )
+    register "version", version_cmd
+    register "--version", version_cmd
+  end
+end
+
+# lib/ace/gem/commands/process.rb
+module Ace::Gem::Commands
+  class Process < Dry::CLI::Command
+    include Ace::Core::CLI::DryCli::Base
+
+    desc "Process file with auto-detection"
+
+    argument :file, required: false, desc: "File to process"
+    option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
+    option :verbose, type: :boolean, aliases: %w[-v], desc: "Verbose output"
+    option :debug, type: :boolean, aliases: %w[-d], desc: "Debug output"
+
+    def call(file: nil, **options)
+      # Type conversion: dry-cli returns strings for numeric options
+      # options[:limit] = options[:limit].to_i if options[:limit]
+
+      ProcessCommand.new(file, options).execute
+    end
+  end
+end
+
+# exe/ace-gem
+#!/usr/bin/env ruby
+require_relative "../lib/ace/gem"
+result = Ace::Gem::CLI.start(ARGV)
+exit(result.is_a?(Integer) ? result : 0)
+```
+
+### dry-cli Migration Gotchas
+
+1. **Type Conversion**: dry-cli returns strings for all options. Manually convert numerics:
+   ```ruby
+   numeric_options = %i[limit count max_results]
+   numeric_options.each { |k| options[k] = options[k].to_i if options[k] }
+   ```
+
+2. **Default Task Routing**: Implement in `CLI.start` method, not as framework feature.
+
+3. **Help Documentation**: Use `desc` with heredoc and `example` array:
+   ```ruby
+   desc <<~DESC.strip
+     Main description here.
+
+     Additional context:
+       - Point one
+       - Point two
+   DESC
+
+   example ['pattern --flag', '"*.rb" -f']
+   ```
+
+4. **Boolean Options**: dry-cli generates `--[no-]flag` automatically.
+
+### Thor Pattern (Legacy)
+
+Existing gems using Thor inherit from `Ace::Core::CLI::Base`:
 
 ```ruby
 # lib/ace/gem/cli.rb
@@ -276,39 +369,17 @@ require "ace/core/cli/base"
 
 module Ace::Gem
   class CLI < Ace::Core::CLI::Base
-    default_task :process  # For single-purpose tools
+    default_task :process
 
     desc "process FILE", "Process file with auto-detection"
-    long_desc <<~DESC
-      Detailed description of what the command does.
-
-      Examples:
-        $ ace-gem process input.txt
-        $ ace-gem process input.txt --verbose
-    DESC
     def process(file = nil)
-      # Display config summary (unless --quiet)
-      Ace::Core::Atoms::ConfigSummary.display(
-        command: "process",
-        config: Gem.config,
-        defaults: Gem.load_gem_defaults,
-        options: options,
-        quiet: options[:quiet]
-      )
-
       require_relative "commands/process_command"
       Commands::ProcessCommand.new(file, options).execute
     end
 
-    # Define version command with gem's VERSION constant
     version_command "ace-gem", Gem::VERSION
   end
 end
-
-# exe/ace-gem
-#!/usr/bin/env ruby
-require 'ace/gem'
-Ace::Gem::CLI.start(ARGV)
 ```
 
 ### Standard Options
