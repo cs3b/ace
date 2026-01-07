@@ -4,37 +4,37 @@ require_relative "../test_helper"
 require "ace/search/cli"
 
 class CliRoutingTest < AceSearchTestCase
+  include Ace::TestSupport::CliHelpers
+
+  # Helper method to invoke CLI with routing logic
+  # Uses CLI.start to ensure default task routing is tested
+  def invoke_search_cli(args)
+    invoke_cli_stdout(Ace::Search::CLI, args)
+  end
+
   # --- Version Command Tests ---
 
   def test_cli_routes_version_command
-    output = capture_io do
-      Ace::Search::CLI.start(["version"])
-    end
-    assert_match(/\d+\.\d+\.\d+/, output.first)
+    output = invoke_search_cli(["version"])
+    assert_match(/\d+\.\d+\.\d+/, output)
   end
 
   def test_cli_routes_version_with_long_flag
-    output = capture_io do
-      Ace::Search::CLI.start(["--version"])
-    end
-    assert_match(/\d+\.\d+\.\d+/, output.first)
+    output = invoke_search_cli(["--version"])
+    assert_match(/\d+\.\d+\.\d+/, output)
   end
 
   # --- Help Command Tests ---
 
   def test_cli_routes_help_command
-    output = capture_io do
-      Ace::Search::CLI.start(["help"])
-    end
+    output = invoke_search_cli(["help"])
     # Help should mention available commands
-    assert_match(/search|Commands/i, output.first)
+    assert_match(/search|Commands/i, output)
   end
 
   def test_cli_routes_help_with_long_flag
-    output = capture_io do
-      Ace::Search::CLI.start(["--help"])
-    end
-    assert_match(/Commands:/i, output.first)
+    output = invoke_search_cli(["--help"])
+    assert_match(/Commands:/i, output)
   end
 
   # --- Search Command Tests ---
@@ -42,9 +42,7 @@ class CliRoutingTest < AceSearchTestCase
   def test_cli_routes_search_command_with_explicit_command
     skip_unless_rg_available
 
-    output, err = capture_io do
-      Ace::Search::CLI.start(["search", "test", "--max-results", "1"])
-    end
+    output = invoke_search_cli(["search", "test", "--max-results", "1"])
     # Should attempt a search
     assert_match(/Found \d+ results?|mode:/i, output)
   end
@@ -54,19 +52,16 @@ class CliRoutingTest < AceSearchTestCase
   def test_cli_uses_search_as_default_task
     skip_unless_rg_available
 
-    output, err = capture_io do
-      # Unknown commands should be treated as patterns and invoke search
-      Ace::Search::CLI.start(["TODO", "--max-results", "1"])
-    end
+    # Unknown commands should be treated as patterns and invoke search
+    output = invoke_search_cli(["TODO", "--max-results", "1"])
     # Should attempt a search (the pattern "TODO" should be treated as search pattern)
     assert_match(/Found \d+ results?|mode:/i, output)
   end
 
-  def test_cli_error_when_no_pattern
-    output, err = capture_io do
-      Ace::Search::CLI.start([])
-    end
-    # Should show error about missing pattern
-    assert_match(/No search pattern provided/i, output + err)
+  def test_cli_shows_help_when_no_args
+    result = invoke_cli(Ace::Search::CLI, [])
+    # dry-cli shows help when no arguments provided
+    # This is a UX improvement over showing an error
+    assert_match(/Commands:/i, result[:stdout] + result[:stderr])
   end
 end
