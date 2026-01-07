@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
 require "pathname"
+require "ace/timestamp"
 require_relative "release_resolver"
 require_relative "config_loader"
 require_relative "../configuration"
+require_relative "../atoms/id_title_extractor"
 
 module Ace
   module Taskflow
@@ -163,8 +165,8 @@ module Ace
           # Remove date prefix (YYYY-MM-DD-)
           title = filename.sub(/^\d{4}-\d{2}-\d{2}-/, "")
 
-          # Remove timestamp prefix if present (YYYYMMDD-HHMMSS-)
-          title = title.sub(/^\d{8}-\d{6}-/, "")
+          # Extract title by removing ID prefix (timestamp or Base36)
+          title = Ace::Taskflow::Atoms::IdTitleExtractor.extract_title_from_dirname(title)
 
           # Convert slug to readable title
           title.gsub("-", " ").capitalize
