@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.06)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command wrappers for all commands (diff, status, branch, pr)
+  - Maintained magic git range routing (HEAD~5..HEAD -> diff)
+  - All 423 tests pass with complete feature parity
+
 ## [0.6.1] - 2026-01-05
 
 ### Changed
