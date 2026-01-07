@@ -20,32 +20,32 @@ class PromptArchiverTest < Minitest::Test
     FileUtils.rm_rf(@tmpdir)
   end
 
-  def test_archives_content_with_timestamp
+  def test_archives_content_with_session_id
     content = "Test prompt content"
-    timestamp = "20251127-143000"
+    session_id = "i50jj3"
 
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content,
-        timestamp: timestamp
+        timestamp: session_id
       )
 
       assert result[:success]
       assert result[:archive_path]
       assert File.exist?(result[:archive_path])
       assert_equal content, File.read(result[:archive_path])
-      assert result[:archive_path].end_with?("20251127-143000.md")
+      assert result[:archive_path].end_with?("i50jj3.md")
     end
   end
 
   def test_updates_symlink
     content = "Test content"
-    timestamp = "20251127-143000"
+    session_id = "i50jj3"
 
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content,
-        timestamp: timestamp
+        timestamp: session_id
       )
 
       assert result[:success]
@@ -54,7 +54,7 @@ class PromptArchiverTest < Minitest::Test
 
       # Check symlink points to archive file
       target = File.readlink(result[:symlink_path])
-      assert_match(/archive\/20251127-143000\.md$/, target)
+      assert_match(/archive\/i50jj3\.md$/, target)
     end
   end
 
@@ -77,19 +77,19 @@ class PromptArchiverTest < Minitest::Test
     end
   end
 
-  def test_handles_timestamp_collision
+  def test_handles_session_id_collision
     content1 = "First content"
     content2 = "Second content"
-    timestamp = "20251127-143000"
+    session_id = "i50jj3"
 
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result1 = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content1,
-        timestamp: timestamp
+        timestamp: session_id
       )
       result2 = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content2,
-        timestamp: timestamp
+        timestamp: session_id
       )
 
       assert result1[:success]
@@ -97,8 +97,8 @@ class PromptArchiverTest < Minitest::Test
       refute_equal result1[:archive_path], result2[:archive_path]
 
       # Second file should have -1 suffix
-      assert result1[:archive_path].end_with?("20251127-143000.md")
-      assert result2[:archive_path].end_with?("20251127-143000-1.md")
+      assert result1[:archive_path].end_with?("i50jj3.md")
+      assert result2[:archive_path].end_with?("i50jj3-1.md")
 
       # Both files should exist with correct content
       assert_equal content1, File.read(result1[:archive_path])
@@ -131,17 +131,17 @@ class PromptArchiverTest < Minitest::Test
   def test_overwrites_existing_symlink
     content1 = "First"
     content2 = "Second"
-    timestamp1 = "20251127-140000"
-    timestamp2 = "20251127-150000"
+    session_id1 = "i40aaa"
+    session_id2 = "i60bbb"
 
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       result1 = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content1,
-        timestamp: timestamp1
+        timestamp: session_id1
       )
       result2 = Ace::Prompt::Molecules::PromptArchiver.call(
         content: content2,
-        timestamp: timestamp2
+        timestamp: session_id2
       )
 
       assert result1[:success]
@@ -149,7 +149,7 @@ class PromptArchiverTest < Minitest::Test
 
       # Symlink should point to second archive
       target = File.readlink(result2[:symlink_path])
-      assert_match(/20251127-150000\.md$/, target)
+      assert_match(/i60bbb\.md$/, target)
     end
   end
 

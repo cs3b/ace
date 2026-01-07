@@ -2,6 +2,33 @@
 
 Prompt workspace with automatic archiving and history management.
 
+## Base36 Compact ID Format
+
+**New in v0.9.0**: ace-prompt now uses 6-character Base36 compact IDs for archived prompts (e.g., `i50jj3.md`) instead of 14-character timestamps (e.g., `20251129-143000.md`).
+
+### Key Features
+
+- **Compact**: 6 characters vs 14 characters (57% shorter)
+- **Sortable**: String sorting equals chronological sorting
+- **Precision**: ~1.85 seconds per increment (sufficient for prompt archiving)
+- **Coverage**: 108 years from configured year_zero (default: 2000)
+
+### What Changed
+
+- Archive filenames changed from `YYYYMMDD-HHMMSS.md` to `BASE36ID.md`
+- Example: `20251129-143000.md` → `i50jj3.md`
+- Existing archives with timestamp format remain accessible as regular files (no migration needed)
+- `_previous.md` symlink now points to Base36-formatted archives
+
+### Precision Notes
+
+The Base36 format has approximately **1.85 seconds of precision**:
+- Two prompts archived within ~1.85 seconds may share the same ID
+- The system appends a counter (e.g., `i50jj3-1.md`, `i50jj3-2.md`) to handle collisions
+- This precision is intentional for compactness
+
+For more details on the encoding scheme, see the [ace-timestamp README](https://github.com/cs3b/ace-meta/tree/main/ace-timestamp).
+
 ## Quick Start
 
 ```bash
@@ -54,9 +81,9 @@ enhance:
 ### How It Works
 
 1. Reads your prompt from `the-prompt.md`
-2. Archives the original prompt with timestamp
+2. Archives the original prompt with Base36 compact ID
 3. Sends to LLM with enhancement system prompt
-4. Archives enhanced version with `_eNNN` suffix (e.g., `20251129-143000_e001.md`)
+4. Archives enhanced version with `_eNNN` suffix (e.g., `i50jj3_e001.md`)
 5. Updates `_previous.md` symlink to point to enhanced version
 6. Outputs enhanced content
 
@@ -249,7 +276,7 @@ Task IDs are resolved using ace-taskflow's API, which means:
 ## What It Does
 
 1. Reads `.cache/ace-prompt/prompts/the-prompt.md` (or task-specific directory)
-2. Archives it to `archive/YYYYMMDD-HHMMSS.md`
+2. Archives it to `archive/BASE36ID.md` (e.g., `i50jj3.md`)
 3. Updates `_previous.md` symlink
 4. Outputs content to stdout (or file with `--output`)
 
