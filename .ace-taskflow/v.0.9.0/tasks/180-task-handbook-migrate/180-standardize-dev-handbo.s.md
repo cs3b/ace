@@ -56,120 +56,166 @@ Finalize the ace-handbook gem by migrating all remaining content from dev-handbo
 
 ## Scope of Work
 
-### Phase 1: Workflow-Instructions Migration (17 files)
+### Phase 1: Workflow-Instructions Migration
 
-**Already in ace-handbook** (6 files - no action needed):
-- [x] manage-agents.wf.md
-- [x] manage-guides.wf.md
-- [x] manage-workflow-instructions.wf.md
-- [x] review-guides.wf.md
-- [x] review-workflows.wf.md
-- [x] update-handbook-docs.wf.md
+**Already migrated to ace-handbook** (6 files):
+- [x] manage-agents.wf.md → ace-handbook
+- [x] manage-guides.wf.md → ace-handbook
+- [x] manage-workflow-instructions.wf.md → ace-handbook
+- [x] review-guides.wf.md → ace-handbook
+- [x] review-workflows.wf.md → ace-handbook
+- [x] update-handbook-docs.wf.md → ace-handbook
 
-**To migrate from dev-handbook** (17 files):
-| File | Decision | Notes |
-|------|----------|-------|
-| capture-application-features.wf.md | [ ] migrate / skip / move-to: | Feature discovery |
-| create-adr.wf.md | [ ] migrate / skip / move-to: | ADR creation |
-| create-api-docs.wf.md | [ ] migrate / skip / move-to: | API documentation |
-| create-cookbook.wf.md | [ ] migrate / skip / move-to: | Cookbook creation |
-| create-test-cases.wf.md | [ ] migrate / skip / move-to: | Test case generation |
-| create-user-docs.wf.md | [ ] migrate / skip / move-to: | User documentation |
-| document-unplanned-work.wf.md | [ ] migrate / skip / move-to: | Unplanned work tracking |
-| fix-linting-issue-from.wf.md | [ ] migrate / skip / move-to: | Lint fix workflow |
-| fix-tests.wf.md | [ ] migrate / skip / move-to: | Test fix workflow |
-| improve-code-coverage.wf.md | [ ] migrate / skip / move-to: | Coverage improvement |
-| load-project-context.wf.md | [ ] migrate / skip / move-to: | Context loading |
-| prioritize-align-ideas.wf.md | [ ] migrate / skip / move-to: | Idea prioritization |
-| rebase-against.wf.md | [ ] migrate / skip / move-to: | Git rebase workflow |
-| save-session-context.wf.md | [ ] migrate / skip / move-to: | Session management |
-| synthesize-reviews.wf.md | [ ] migrate / skip / move-to: | Review synthesis |
-| update-blueprint.wf.md | [ ] migrate / skip / move-to: | Blueprint updates |
-| update-context-docs.wf.md | [ ] migrate / skip / move-to: | Context doc updates |
+**Already migrated to other packages** (10 files):
+- [x] update-integration-claude.wf.md → ace-integration-claude
+- [x] update-tools-docs.wf.md → ace-docs
 
-### Phase 2: Guides Migration (26 files)
+**From dev-handbook/workflow-instructions/** (17 files - 14 MIGRATED, 3 remaining):
+| File | Status | Location |
+|------|--------|----------|
+| capture-application-features.wf.md | [x] migrated | ace-taskflow |
+| create-adr.wf.md | [x] migrated | ace-docs |
+| create-api-docs.wf.md | [x] migrated | ace-docs |
+| create-cookbook.wf.md | [x] migrated | ace-docs |
+| create-test-cases.wf.md | [x] migrated | ace-taskflow |
+| create-user-docs.wf.md | [x] migrated | ace-docs |
+| document-unplanned-work.wf.md | [x] migrated | ace-taskflow |
+| fix-linting-issue-from.wf.md | [ ] NOT MIGRATED | suggest: ace-lint |
+| fix-tests.wf.md | [x] migrated | ace-taskflow |
+| improve-code-coverage.wf.md | [x] migrated | ace-taskflow |
+| load-project-context.wf.md | [x] migrated | ace-context (as load-context.wf.md) |
+| prioritize-align-ideas.wf.md | [x] migrated | ace-taskflow |
+| rebase-against.wf.md | [x] migrated | ace-git (as rebase.wf.md) |
+| save-session-context.wf.md | [ ] NOT MIGRATED | suggest: skip (obsolete?) |
+| synthesize-reviews.wf.md | [ ] NOT MIGRATED | suggest: ace-review |
+| update-blueprint.wf.md | [x] migrated | ace-docs |
+| update-context-docs.wf.md | [x] migrated | ace-docs |
 
-**Already in ace-handbook** (1 file - no action needed):
-- [x] workflow-context-embedding.g.md
+**From dev-handbook/.integrations/wfi/** (1 file - NOT MIGRATED):
+| File | Status | Location |
+|------|--------|----------|
+| initialize-project-structure.wf.md | [ ] NOT MIGRATED | suggest: ace-handbook |
 
-**To migrate from dev-handbook** (26 files):
-| File | Decision | Notes |
-|------|----------|-------|
-| ai-agent-integration.g.md | [ ] migrate / skip / move-to: | AI integration patterns |
-| atom-pattern.g.md | [ ] migrate / skip / move-to: | ATOM architecture |
-| changelog.g.md | [ ] migrate / skip / move-to: | Changelog format |
-| code-review-process.g.md | [ ] migrate / skip / move-to: | Code review |
-| coding-standards.g.md | [ ] migrate / skip / move-to: | Coding standards |
-| debug-troubleshooting.g.md | [ ] migrate / skip / move-to: | Debugging |
-| documentation.g.md | [ ] migrate / skip / move-to: | Documentation standards |
-| documents-embedded-sync.g.md | [ ] migrate / skip / move-to: | Doc sync |
-| documents-embedding.g.md | [ ] migrate / skip / move-to: | Doc embedding |
-| embedded-testing-guide.g.md | [ ] migrate / skip / move-to: | Testing embedded docs |
-| error-handling.g.md | [ ] migrate / skip / move-to: | Error handling |
-| llm-query-tool-reference.g.md | [ ] migrate / skip / move-to: | LLM tool reference |
-| performance.g.md | [ ] migrate / skip / move-to: | Performance |
-| project-management.g.md | [ ] migrate / skip / move-to: | Project mgmt |
-| quality-assurance.g.md | [ ] migrate / skip / move-to: | QA |
-| release-codenames.g.md | [ ] migrate / skip / move-to: | Release codenames |
-| release-publish.g.md | [ ] migrate / skip / move-to: | Release publishing |
-| roadmap-definition.g.md | [ ] migrate / skip / move-to: | Roadmap |
-| security.g.md | [ ] migrate / skip / move-to: | Security |
-| strategic-planning.g.md | [ ] migrate / skip / move-to: | Strategic planning |
-| task-definition.g.md | [ ] migrate / skip / move-to: | Task definition |
-| temporary-file-management.g.md | [ ] migrate / skip / move-to: | Temp files |
-| testing-tdd-cycle.g.md | [ ] migrate / skip / move-to: | TDD cycle |
-| testing.g.md | [ ] migrate / skip / move-to: | Testing |
-| version-control-system-git.g.md | [ ] migrate / skip / move-to: | Git VCS |
-| version-control-system-message.g.md | [ ] migrate / skip / move-to: | Commit messages |
+**Summary**: 22/26 workflows migrated (85%), 4 remaining
 
-### Phase 3: Agents Migration (12 files)
+### Phase 2: Guides Migration
 
-**To migrate from dev-handbook/.integrations/claude/agents/**:
-| File | Decision | Notes |
-|------|----------|-------|
-| cms-componentizer.ag.md | [ ] migrate / skip / move-to: | CMS component |
-| cms-field-verifier.ag.md | [ ] migrate / skip / move-to: | CMS fields |
-| cms-page-designer.ag.md | [ ] migrate / skip / move-to: | CMS pages |
-| cms-page-populator.ag.md | [ ] migrate / skip / move-to: | CMS population |
-| create-path.ag.md | [ ] migrate / skip / move-to: | Path creation |
-| feature-research.ag.md | [ ] migrate / skip / move-to: | Feature research |
-| git-commit.ag.md | [ ] migrate / skip / move-to: | Git commits |
-| lint-files.ag.md | [ ] migrate / skip / move-to: | Linting |
-| release-navigator.ag.md | [ ] migrate / skip / move-to: | Release navigation |
-| search.ag.md | [ ] migrate / skip / move-to: | Search |
-| task-creator.ag.md | [ ] migrate / skip / move-to: | Task creation |
-| task-finder.ag.md | [ ] migrate / skip / move-to: | Task finding |
+**Already migrated to ace-handbook** (1 file):
+- [x] workflow-context-embedding.g.md → ace-handbook
 
-### Phase 4: Templates Migration (25 directories)
+**From dev-handbook/guides/** (26 files - 0 MIGRATED, all remaining):
+| File | Status | Suggested Target |
+|------|--------|------------------|
+| ai-agent-integration.g.md | [ ] NOT MIGRATED | ace-handbook |
+| atom-pattern.g.md | [ ] NOT MIGRATED | ace-handbook |
+| changelog.g.md | [ ] NOT MIGRATED | ace-handbook |
+| code-review-process.g.md | [ ] NOT MIGRATED | ace-review |
+| coding-standards.g.md | [ ] NOT MIGRATED | ace-handbook |
+| debug-troubleshooting.g.md | [ ] NOT MIGRATED | ace-handbook |
+| documentation.g.md | [ ] NOT MIGRATED | ace-docs |
+| documents-embedded-sync.g.md | [ ] NOT MIGRATED | ace-docs |
+| documents-embedding.g.md | [ ] NOT MIGRATED | ace-docs |
+| embedded-testing-guide.g.md | [ ] NOT MIGRATED | ace-docs |
+| error-handling.g.md | [ ] NOT MIGRATED | ace-handbook |
+| llm-query-tool-reference.g.md | [ ] NOT MIGRATED | ace-llm |
+| performance.g.md | [ ] NOT MIGRATED | ace-handbook |
+| project-management.g.md | [ ] NOT MIGRATED | ace-taskflow |
+| quality-assurance.g.md | [ ] NOT MIGRATED | ace-handbook |
+| release-codenames.g.md | [ ] NOT MIGRATED | ace-taskflow |
+| release-publish.g.md | [ ] NOT MIGRATED | ace-taskflow |
+| roadmap-definition.g.md | [ ] NOT MIGRATED | ace-taskflow |
+| security.g.md | [ ] NOT MIGRATED | ace-git-secrets |
+| strategic-planning.g.md | [ ] NOT MIGRATED | ace-handbook |
+| task-definition.g.md | [ ] NOT MIGRATED | ace-taskflow |
+| temporary-file-management.g.md | [ ] NOT MIGRATED | skip (obsolete?) |
+| testing-tdd-cycle.g.md | [ ] NOT MIGRATED | ace-test-runner |
+| testing.g.md | [ ] NOT MIGRATED | ace-test-runner |
+| version-control-system-git.g.md | [ ] NOT MIGRATED | ace-git |
+| version-control-system-message.g.md | [ ] NOT MIGRATED | ace-git-commit |
 
-**To migrate from dev-handbook/templates/**:
-| Directory | Decision | Notes |
-|-----------|----------|-------|
-| binstubs/ | [ ] migrate / skip / move-to: | Binstub templates |
-| code-docs/ | [ ] migrate / skip / move-to: | Code documentation |
-| commit/ | [ ] migrate / skip / move-to: | Commit templates |
-| completed-work-documentation.md | [ ] migrate / skip / move-to: | Completion docs |
-| context/ | [ ] migrate / skip / move-to: | Context templates |
-| cookbooks/ | [ ] migrate / skip / move-to: | Cookbook templates |
-| idea-manager/ | [ ] migrate / skip / move-to: | Idea management |
-| project-docs/ | [ ] migrate / skip / move-to: | Project docs |
-| prompts/ | [ ] migrate / skip / move-to: | Prompt templates |
-| release-codemods/ | [ ] migrate / skip / move-to: | Release codemods |
-| release-docs/ | [ ] migrate / skip / move-to: | Release docs |
-| release-management/ | [ ] migrate / skip / move-to: | Release mgmt |
-| release-planning/ | [ ] migrate / skip / move-to: | Release planning |
-| release-reflections/ | [ ] migrate / skip / move-to: | Retrospectives |
-| release-research/ | [ ] migrate / skip / move-to: | Release research |
-| release-tasks/ | [ ] migrate / skip / move-to: | Release tasks |
-| release-testing/ | [ ] migrate / skip / move-to: | Release testing |
-| release-ux/ | [ ] migrate / skip / move-to: | Release UX |
-| review-agents/ | [ ] migrate / skip / move-to: | Review agents |
-| review-modules/ | [ ] migrate / skip / move-to: | Review modules |
-| review-tasks/ | [ ] migrate / skip / move-to: | Review tasks |
-| session-management/ | [ ] migrate / skip / move-to: | Session mgmt |
-| task-management/ | [ ] migrate / skip / move-to: | Task mgmt |
-| tasks/ | [ ] migrate / skip / move-to: | Task templates |
-| user-docs/ | [ ] migrate / skip / move-to: | User docs |
+**From dev-handbook/.meta/gds/** (5 meta-guides - definition files):
+| File | Status | Notes |
+|------|--------|-------|
+| agents-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
+| guides-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
+| markdown-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
+| tools-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
+| workflow-instructions-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
+
+**Summary**: 1/32 guides migrated (3%), 31 remaining
+
+### Phase 3: Agents Migration
+
+**Already migrated to ace-* packages** (5 agents across packages):
+- [x] search.ag.md → ace-search
+- [x] research.ag.md → ace-search
+- [x] security-audit.ag.md → ace-git-secrets
+- [x] worktree.ag.md → ace-git-worktree
+- [x] timestamp.ag.md → ace-timestamp
+
+**From dev-handbook/.integrations/claude/agents/** (12 files - 1 migrated, 5 skip, 6 remaining):
+| File | Status | Suggested Target |
+|------|--------|------------------|
+| cms-componentizer.ag.md | [x] skip | project-specific (CMS) |
+| cms-field-verifier.ag.md | [x] skip | project-specific (CMS) |
+| cms-page-designer.ag.md | [x] skip | project-specific (CMS) |
+| cms-page-populator.ag.md | [x] skip | project-specific (CMS) |
+| create-path.ag.md | [x] skip | legacy/obsolete |
+| feature-research.ag.md | [ ] NOT MIGRATED | ace-search (merge with research.ag.md?) |
+| git-commit.ag.md | [ ] NOT MIGRATED | ace-git-commit |
+| lint-files.ag.md | [ ] NOT MIGRATED | ace-lint |
+| release-navigator.ag.md | [ ] NOT MIGRATED | ace-taskflow |
+| search.ag.md | [x] migrated | ace-search (already done) |
+| task-creator.ag.md | [ ] NOT MIGRATED | ace-taskflow |
+| task-finder.ag.md | [ ] NOT MIGRATED | ace-taskflow |
+
+**.claude/agents/ symlinks** (integration layer):
+- [x] search.ag.md → ace-search/handbook/agents/search.ag.md
+- [x] research.ag.md → ace-search/handbook/agents/research.ag.md
+
+**Summary**: 6/12 dev-handbook agents handled (1 migrated, 5 skip), 6 remaining for migration
+
+### Phase 4: Templates Migration
+
+**Already migrated to ace-* packages** (partial):
+- [x] ace-git/handbook/templates/commit/squash.template.md
+- [x] ace-git/handbook/templates/pr/default.template.md
+- [x] ace-git/handbook/templates/pr/bugfix.template.md
+- [x] ace-git/handbook/templates/pr/feature.template.md
+- [x] ace-prompt/handbook/templates/the-prompt-base.template.md
+- [x] ace-prompt/handbook/templates/the-prompt-bug.template.md
+- [x] ace-taskflow/templates/idea_enhancement.system.md
+
+**From dev-handbook/templates/** (25 directories - mostly NOT MIGRATED):
+| Directory | Status | Suggested Target |
+|-----------|--------|------------------|
+| binstubs/ | [ ] NOT MIGRATED | skip (mono-repo specific) |
+| code-docs/ | [ ] NOT MIGRATED | ace-docs |
+| commit/ | [x] partial | ace-git (squash done) |
+| completed-work-documentation.md | [ ] NOT MIGRATED | ace-taskflow |
+| context/ | [ ] NOT MIGRATED | ace-context |
+| cookbooks/ | [ ] NOT MIGRATED | ace-docs |
+| idea-manager/ | [ ] NOT MIGRATED | ace-taskflow |
+| project-docs/ | [ ] NOT MIGRATED | ace-docs |
+| prompts/ | [x] partial | ace-prompt (base, bug done) |
+| release-codemods/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-docs/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-management/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-planning/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-reflections/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-research/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-tasks/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-testing/ | [ ] NOT MIGRATED | ace-taskflow |
+| release-ux/ | [ ] NOT MIGRATED | ace-taskflow |
+| review-agents/ | [ ] NOT MIGRATED | ace-review |
+| review-modules/ | [ ] NOT MIGRATED | ace-review |
+| review-tasks/ | [ ] NOT MIGRATED | ace-review |
+| session-management/ | [ ] NOT MIGRATED | skip (obsolete?) |
+| task-management/ | [ ] NOT MIGRATED | ace-taskflow |
+| tasks/ | [ ] NOT MIGRATED | ace-taskflow |
+| user-docs/ | [ ] NOT MIGRATED | ace-docs |
+
+**Summary**: 2/25 template dirs partially migrated, 23 remaining
 
 ### Phase 5: Integration Updates
 
