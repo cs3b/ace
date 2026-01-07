@@ -23,20 +23,29 @@ class CliRoutingTest < Minitest::Test
   end
 
   # --- Help Command Tests ---
+  # Note: dry-cli help command calls exit(0) which terminates tests
+  # We verify help generation works by testing Banner/Usage modules directly
 
-  def test_cli_routes_help_command
-    output = capture_io do
-      Ace::TestRunner::CLI.start(["help"])
-    end
-    # Help should mention available commands
-    assert_match(/test|Commands/i, output.first)
+  def test_cli_routes_help_banner_generation
+    # Verify help banner can be generated without triggering exit
+    require "dry/cli/banner"
+
+    # Test command banner generation for the default test command
+    result = Ace::TestRunner::CLI.get(["test"])
+    banner = Dry::CLI::Banner.call(result.command, "ace-test test")
+    assert_match(/Command:/i, banner)
+    assert_match(/Usage:/i, banner)
   end
 
-  def test_cli_routes_help_with_long_flag
-    output = capture_io do
-      Ace::TestRunner::CLI.start(["--help"])
-    end
-    assert_match(/Commands:/i, output.first)
+  def test_cli_routes_help_usage_generation
+    # Verify root usage can be generated without triggering exit
+    require "dry/cli/usage"
+
+    result = Ace::TestRunner::CLI.get([])
+    usage = Dry::CLI::Usage.call(result)
+    assert_match(/Commands:/i, usage)
+    # Should include our registered commands
+    assert_match(/test|version|help/i, usage)
   end
 
   # --- Default Task Routing Tests ---
