@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-01-07
+
 ### Added
 - **dry-cli Infrastructure**: Foundation for dry-cli based CLIs (task 179.01)
   - `Ace::Core::CLI::DryCli::Base` module with common CLI patterns
@@ -26,9 +28,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Supports both class-level and proc-based version strings
   - Comprehensive test coverage: 3 test files with 26+ tests
   - dry-cli ~> 1.1 dependency added to gemspec
+- **convert_types helper**: Type conversion utility for dry-cli options
+  - Converts string options to specified types (integer, float, boolean)
+  - Handles dry-cli's string-only option return values
+  - Supports batch type conversion with keyword arguments
 
 ### Changed
 - Updated `lib/ace/core.rb` to require dry-cli infrastructure modules
+- Standardized dry-cli dependency to ~> 1.0 across all gems
 
 ## [0.18.0] - 2026-01-05
 

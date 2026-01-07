@@ -4,6 +4,142 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.270] - 2026-01-07
+
+### Changed
+
+- **ace-review 0.33.0**: Migrate CLI from Thor to dry-cli (task 179.14)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Converted CLI to dry-cli Registry pattern
+  - Created dry-cli command classes (list_presets, list_prompts, review, synthesize)
+
+## [0.9.269] - 2026-01-07
+
+### Changed
+
+- **ace-docs 0.17.0**: Migrate CLI from Thor to dry-cli (task 179.10)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command classes (analyze, analyze_consistency, discover, status, update, validate)
+
+## [0.9.268] - 2026-01-07
+
+### Changed
+
+- **ace-git-secrets 0.7.0**: Migrate CLI from Thor to dry-cli (task 179.09)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command wrappers (Scan, Rewrite, Revoke, CheckRelease)
+
+## [0.9.267] - 2026-01-07
+
+### Changed
+
+- **ace-test-runner 0.10.0**: Migrate CLI from Thor to dry-cli (task 179.12)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command class (test)
+
+## [0.9.266] - 2026-01-07
+
+### Changed
+
+- **ace-git-commit 0.16.0**: Migrate CLI from Thor to dry-cli (task 179.07)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command class (commit)
+
+## [0.9.265] - 2026-01-07
+
+### Changed
+
+- **ace-llm 0.19.0**: Migrate CLI from Thor to dry-cli (task 179.13)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command classes (query, list_providers)
+
+## [0.9.264] - 2026-01-07
+
+### Changed
+
+- **ace-prompt 0.13.0**: Migrate CLI from Thor to dry-cli (task 179.11)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command classes (Process, Setup)
+
+## [0.9.263] - 2026-01-07
+
+### Changed
+
+- **ace-git 0.7.0**: Migrate CLI from Thor to dry-cli (task 179.06)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command wrappers for all commands
+  - Maintained magic git range routing
+
+## [0.9.262] - 2026-01-07
+
+### Changed
+
+- **ace-nav 0.16.0**: Migrate CLI from Thor to dry-cli (task 179.05)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Converted to Registry pattern with explicit command classes
+  - Maintained backward compatibility for flags
+
+## [0.9.261] - 2026-01-07
+
+### Changed
+
+- **ace-context 0.27.0**: Migrate CLI from Thor to dry-cli (task 179.04)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Converted to `Dry::CLI::Registry` pattern with explicit command registration
+  - Maintained backward compatibility for `--list` flag
+
+## [0.9.260] - 2026-01-07
+
+### Changed
+
+- **ace-lint 0.8.0**: Migrate CLI from Thor to dry-cli (task 179.03)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - User-facing command interface remains identical
+
+## [0.9.259] - 2026-01-07
+
+### Changed
+
+- **ace-search 0.18.0**: Migrate CLI from Thor to dry-cli (task 179.02)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - All user-facing commands, options, and behavior remain identical
+  - Default command routing preserved
+  - Standardized `KNOWN_COMMANDS` pattern
+
+## [0.9.258] - 2026-01-07
+
+### Added
+
+- **ace-support-test-helpers 0.11.0**: CLI test helpers for dry-cli framework (task 179)
+  - `CliHelpers` module for testing dry-cli based CLIs
+  - `invoke_cli` for capturing stdout/stderr/result from CLI execution
+  - `assert_cli_success` and `assert_cli_output_matches` assertion helpers
+
+## [0.9.257] - 2026-01-07
+
+### Added
+
+- **ace-support-core 0.19.0**: dry-cli infrastructure for CLI framework migration (task 179.01)
+  - `Ace::Core::CLI::DryCli::Base` module with common CLI patterns (verbose?, quiet?, debug?, exit codes, debug logging)
+  - `Ace::Core::CLI::DryCli::ConfigSummaryMixin` for config display integration
+  - `Ace::Core::CLI::DryCli::VersionCommand` helper for version commands
+  - `convert_types` helper for dry-cli option type conversion (integer, float, boolean)
+
+### Changed
+
+- Standardized dry-cli dependency to ~> 1.0 across all gems
+
+## [0.9.256] - 2026-01-07
+
+### Added
+
+- **ace-review 0.32.1**: Support `commit:HASH` subject type for reviewing individual commits
+  - Accepts commit hashes with 6-40 hexadecimal characters
+  - Validates hash format before git operations
+  - Generates diff using `COMMIT~1..COMMIT` syntax to show commit's changes
+  - Provides clear error messages for invalid formats
+  - Updated documentation with usage examples
+
 ## [0.9.255] - 2026-01-07
 
 ### Added

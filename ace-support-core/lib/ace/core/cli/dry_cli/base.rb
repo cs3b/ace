@@ -195,6 +195,40 @@ module Ace
           def format_pairs(hash)
             hash.map { |k, v| "#{k}=#{v}" }.join(" ")
           end
+
+          # Convert type-castable options from strings to their target types
+          #
+          # dry-cli returns all option values as strings. This helper converts
+          # specified options to integers or floats for consistent behavior
+          # with the previous Thor-based CLI.
+          #
+          # @param options [Hash] Command options hash
+          # @param conversions [Hash] Map of option keys to conversion types (:integer, :float)
+          # @return [Hash] Options with converted values
+          #
+          # @example Convert single option
+          #   def call(**options)
+          #     opts = convert_types(options, timeout: :integer)
+          #     opts[:timeout] # => 30 (Integer)
+          #   end
+          #
+          # @example Convert multiple options
+          #   def call(**options)
+          #     opts = convert_types(options, limit: :integer, ratio: :float)
+          #   end
+          def convert_types(options, conversions)
+            conversions.each do |key, type|
+              next if options[key].nil?
+
+              case type
+              when :integer
+                options[key] = options[key].to_i
+              when :float
+                options[key] = options[key].to_f
+              end
+            end
+            options
+          end
         end
       end
     end

@@ -275,6 +275,7 @@ New and migrated gems use `dry-cli` with the `Ace::Core::CLI::DryCli::Base` modu
 ```ruby
 # lib/ace/gem/cli.rb
 require "dry/cli"
+require "set"  # REQUIRED for KNOWN_COMMANDS pattern (Set.new)
 require "ace/core"
 require_relative "commands/process"
 
@@ -282,13 +283,21 @@ module Ace::Gem
   module CLI
     extend Dry::CLI::Registry
 
-    # Commands that should NOT be treated as search patterns
-    KNOWN_COMMANDS = %w[process version help --help -h --version].freeze
+    # Application commands registered in this CLI (single source of truth)
+    REGISTERED_COMMANDS = %w[process].freeze
+
+    # dry-cli built-in commands (standard across all CLI gems)
+    BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+    # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
+    # Using Set for O(1) lookup performance
+    KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+
     DEFAULT_COMMAND = "process"
 
     # Testable start method with default command routing
     def self.start(args)
-      if args.any? && !KNOWN_COMMANDS.include?(args.first)
+      if args.empty? || !KNOWN_COMMANDS.include?(args.first)
         args = [DEFAULT_COMMAND] + args
       end
       Dry::CLI.new(self).call(arguments: args)
@@ -336,15 +345,43 @@ exit(result.is_a?(Integer) ? result : 0)
 
 ### dry-cli Migration Gotchas
 
-1. **Type Conversion**: dry-cli returns strings for all options. Manually convert numerics:
+1. **Type Conversion**: dry-cli returns strings for all options. Use the `convert_types` helper:
    ```ruby
-   numeric_options = %i[limit count max_results]
-   numeric_options.each { |k| options[k] = options[k].to_i if options[k] }
+   # Single option
+   opts = convert_types(options, timeout: :integer)
+
+   # Multiple options
+   opts = convert_types(options, limit: :integer, ratio: :float)
    ```
 
 2. **Default Task Routing**: Implement in `CLI.start` method, not as framework feature.
 
-3. **Help Documentation**: Use `desc` with heredoc and `example` array:
+3. **KNOWN_COMMANDS Pattern**: Use the standardized three-constant pattern:
+   ```ruby
+   # Single source of truth for application commands
+   REGISTERED_COMMANDS = %w[process].freeze
+
+   # dry-cli built-ins (standard across all CLI gems)
+   BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+   # Auto-derived - no manual maintenance needed
+   KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+   ```
+   This ensures adding a new command only requires updating `REGISTERED_COMMANDS`.
+
+   **Multi-command example** (e.g., ace-review):
+   ```ruby
+   # Single source of truth for application commands
+   REGISTERED_COMMANDS = %w[review synthesize list-presets list-prompts].freeze
+
+   # dry-cli built-ins (standard across all CLI gems)
+   BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+   # Auto-derived - no manual maintenance needed
+   KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+   ```
+
+4. **Help Documentation**: Use `desc` with heredoc and `example` array:
    ```ruby
    desc <<~DESC.strip
      Main description here.
@@ -357,7 +394,7 @@ exit(result.is_a?(Integer) ? result : 0)
    example ['pattern --flag', '"*.rb" -f']
    ```
 
-4. **Boolean Options**: dry-cli generates `--[no-]flag` automatically.
+5. **Boolean Options**: dry-cli generates `--[no-]flag` automatically.
 
 ### Thor Pattern (Legacy)
 
