@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Scan report filenames changed from 14-character timestamps to 6-character Base36 compact IDs
+  - Example: `20251129-143000-report.json` → `i50jj3-report.json`
+  - Reports now stored in `sessions/` subdirectory: `.cache/ace-git-secrets/sessions/`
+- Migrate to Base36 compact IDs for session and file naming (via ace-timestamp)
+
+### Added
+- Dependency on ace-timestamp for compact ID generation
+- Organized report storage with `sessions/` subdirectory
+
 ## [0.5.0] - 2026-01-05
 
 ### Added
