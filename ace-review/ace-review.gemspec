@@ -5,8 +5,8 @@ require_relative 'lib/ace/review/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-review'
   spec.version = Ace::Review::VERSION
-  spec.authors = ['ACE Meta']
-  spec.email = ['ace-meta@example.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Automated code review tool for the ACE framework'
   spec.description = 'ace-review enables automated code review and quality analysis using LLM-powered ' \
@@ -37,6 +37,7 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency 'thor', '~> 1.3' # Required for repeatable: true option support
   spec.add_dependency 'ace-config', '~> 0.4'
+  spec.add_dependency 'ace-timestamp', '~> 0.1'
   spec.add_dependency 'ace-support-core', '~> 0.9' # For ProcessTerminator
   spec.add_dependency 'ace-context', '~> 0.9'
   spec.add_dependency 'ace-git', '~> 0.3'
