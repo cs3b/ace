@@ -98,7 +98,8 @@ For experienced users, here's the condensed workflow:
    - Run review cycle (x2 max)
    - User validates manually
    - Run tests
-   - Mark subtask done
+   - Merge PR with rebase: `gh pr merge <number> --rebase`
+   - Pull changes and mark subtask done
 3. **Summarize progress** after each subtask
 4. **Wait for user feedback** between subtasks
 
@@ -349,9 +350,31 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 - If later subtasks fail, earlier work is preserved
 - Makes PR reviews more manageable
 
-#### 3.8 Mark Subtask Complete
+#### 3.8 Merge PR (Rebase)
 
-After all validations pass:
+After user validation passes, merge the PR using **rebase merge** to preserve commit history:
+
+```bash
+# Merge PR with rebase (preserves individual commits)
+gh pr merge <pr-number> --rebase
+
+# Pull merged changes to orchestrator branch
+git pull --rebase origin {orchestrator-branch}
+```
+
+**Why rebase merge:**
+- Preserves granular commit history from subtask branch
+- Each logical change remains a separate commit
+- Easier to review, bisect, and revert individual changes
+- Maintains clean linear history on orchestrator branch
+
+**Avoid:**
+- `--squash` - Loses commit granularity (subagent prepared commits well)
+- `--merge` - Creates merge commits that clutter history
+
+#### 3.9 Mark Subtask Complete
+
+After PR is merged:
 
 ```bash
 # Mark subtask as done
@@ -380,7 +403,7 @@ Continue to next subtask?
 
 Continue with next pending subtask:
 - Check dependencies are satisfied
-- Follow steps 3.1-3.7
+- Follow steps 3.1-3.9
 - Summarize progress
 
 ### Step 6: Final Orchestrator Summary

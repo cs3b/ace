@@ -2,11 +2,13 @@
 
 require "pathname"
 require "set"
+require "ace/timestamp"
 require_relative "../models/idea"
 require_relative "release_resolver"
 require_relative "config_loader"
 require_relative "../configuration"
 require_relative "../atoms/yaml_parser"
+require_relative "../atoms/id_title_extractor"
 require_relative "idea_structure_validator"
 
 module Ace
@@ -72,9 +74,13 @@ module Ace
         end
 
         def find_by_reference(reference)
-          # Parse reference format (e.g., "20250924-165837" or just partial name)
-          if reference =~ /^\d{8}-\d{6}/
-            # Full timestamp reference
+          # Parse reference format - supports:
+          # - Compact Base36 format: "abc123"
+          # - Partial name search for anything else
+          format = Ace::Timestamp.detect_format(reference)
+
+          if format == :compact
+            # Full ID reference (compact Base36)
             ideas = load_all(release: "current", include_content: true)
             ideas.find { |idea| idea[:id] == reference }
           else
@@ -218,12 +224,8 @@ module Ace
 
           return nil unless idea_file && File.exist?(idea_file)
 
-          # Extract ID from dirname (timestamp part)
-          id = dirname[/^(\d{8}-\d{6})/, 1]
-
-          # Extract title from dirname (after timestamp)
-          title = dirname.sub(/^\d{8}-\d{6}-/, "")
-          title = title.tr("-", " ").strip
+          # Extract ID from dirname (Base36 format: "abc123-my-idea" -> "abc123")
+          id, title = Ace::Taskflow::Atoms::IdTitleExtractor.extract_from_dirname(dirname)
 
           # Find attachment files (exclude all .s.md files)
           attachments = Dir.glob(File.join(dir_path, "*"))
@@ -306,12 +308,9 @@ module Ace
 
           filename = File.basename(path)
 
-          # Extract ID from filename (timestamp part)
-          id = filename[/^(\d{8}-\d{6})/, 1]
-
-          # Extract title from filename (after timestamp and before .md)
-          title = filename.sub(/^\d{8}-\d{6}-/, "").sub(/\.md$/, "")
-          title = title.tr("-", " ").strip
+          # Extract ID and title from filename (Base36 format: "abc123-my-idea.s.md")
+          basename = filename.sub(/\.s\.md$/, "").sub(/\.md$/, "")
+          id, title = Ace::Taskflow::Atoms::IdTitleExtractor.extract_from_dirname(basename)
 
           # Read content to parse frontmatter
           content = File.read(path)
@@ -345,14 +344,22 @@ module Ace
         end
 
         def extract_timestamp_from_filename(filename)
-          # Extract timestamp from filename format: YYYYMMDD-HHMMSS
-          if filename =~ /^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})/
-            year, month, day, hour, min, sec = ::Regexp.last_match.captures
-            Time.new(year.to_i, month.to_i, day.to_i, hour.to_i, min.to_i, sec.to_i)
+          # Extract the ID using Base36 format detection
+          id, _title = Ace::Taskflow::Atoms::IdTitleExtractor.extract_from_dirname(filename)
+
+          return Time.now unless id
+
+          format = Ace::Timestamp.detect_format(id)
+          if format == :compact
+            # Compact Base36 format - decode to Time
+            Ace::Timestamp.decode(id)
           else
-            # Return current time as fallback
+            # Fallback for unrecognized format
             Time.now
           end
+        rescue StandardError
+          # Fallback if decoding fails
+          Time.now
         end
 
         def extract_release_from_path(path)

@@ -16,6 +16,36 @@ Or install it directly:
 gem install ace-taskflow
 ```
 
+## Base36 Compact ID Format
+
+**New in v0.9.0**: ace-taskflow now uses 6-character Base36 compact IDs by default (e.g., `i50jj3`) instead of 14-character timestamps (e.g., `20250106-123000`).
+
+### Key Features
+
+- **Compact**: 6 characters vs 14 characters (57% shorter)
+- **Sortable**: String sorting equals chronological sorting
+- **Precision**: ~1.85 seconds per increment (sufficient for task/idea management)
+- **Coverage**: 108 years from configured year_zero (default: 2000)
+
+### Configuration
+
+All ideas use 6-character Base36 compact IDs by default. The file naming pattern can be customized in `.ace/taskflow/config.yml`:
+
+```yaml
+taskflow:
+  file_naming:
+    title_max_length: 50   # Max length of title in filename (default: 50)
+```
+
+### Precision Notes
+
+The Base36 format has approximately **1.85 seconds of precision**:
+- Two ideas created within ~1.85 seconds may share the same ID
+- The system appends a counter (e.g., `i50jj3-1`, `i50jj3-2`) to handle collisions
+- This precision is intentional for compactness and is sufficient for task/idea use cases
+
+For more details on the encoding scheme, see the [ace-timestamp README](https://github.com/cs3b/ace-meta/tree/main/ace-timestamp).
+
 ## Usage
 
 ### Capture Ideas
