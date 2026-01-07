@@ -3,6 +3,7 @@
 require "json"
 require "yaml"
 require "fileutils"
+require "ace/timestamp"
 
 module Ace
   module Git
@@ -194,11 +195,12 @@ module Ace
           # @return [String] Path to saved report file
           def save_to_file(format: :json, directory: nil, include_raw: true, quiet: false)
             cache_dir = directory || File.join(repository_path || ".", ".cache", "ace-git-secrets")
-            FileUtils.mkdir_p(cache_dir)
+            sessions_dir = File.join(cache_dir, "sessions")
+            FileUtils.mkdir_p(sessions_dir)
 
-            timestamp = scanned_at.strftime("%Y%m%d-%H%M%S")
+            session_id = Ace::Timestamp.encode(scanned_at)
             ext = format == :markdown ? "md" : "json"
-            path = File.join(cache_dir, "#{timestamp}-report.#{ext}")
+            path = File.join(sessions_dir, "#{session_id}-report.#{ext}")
 
             # JSON format includes raw values by default for revoke/rewrite-history workflows
             # Markdown format never includes raw values (human-readable)
@@ -211,20 +213,20 @@ module Ace
             end
 
             # Generate providers report for revocation workflow (only when tokens found)
-            save_providers_report(cache_dir, timestamp) if tokens_found?
+            save_providers_report(sessions_dir, session_id) if tokens_found?
 
             path
           end
 
           # Save providers-grouped markdown report for revocation workflow
-          # @param cache_dir [String] Directory to save report
-          # @param timestamp [String] Timestamp prefix for filename
+          # @param sessions_dir [String] Sessions directory to save report
+          # @param session_id [String] Session ID prefix for filename
           # @return [String, nil] Path to saved report, or nil if no tokens
-          def save_providers_report(cache_dir, timestamp)
+          def save_providers_report(sessions_dir, session_id)
             providers_content = to_providers_markdown
             return nil unless providers_content
 
-            providers_path = File.join(cache_dir, "#{timestamp}-providers.md")
+            providers_path = File.join(sessions_dir, "#{session_id}-providers.md")
             File.write(providers_path, providers_content)
             providers_path
           rescue StandardError => e
