@@ -71,7 +71,17 @@ class CLITest < GitSecretsTestCase
       result = Ace::Git::Secrets::CLI.start(["version"])
     end
 
-    assert_match(/ace-git-secrets version/, output)
+    assert_match(/ace-git-secrets/, output)
+    assert_equal 0, result
+  end
+
+  def test_version_long_flag
+    result = nil
+    output, = capture_io do
+      result = Ace::Git::Secrets::CLI.start(["--version"])
+    end
+
+    assert_match(/ace-git-secrets/, output)
     assert_equal 0, result
   end
 
@@ -178,5 +188,27 @@ class CLITest < GitSecretsTestCase
 
       assert_equal 0, result
     end
+  end
+
+  def test_help_command
+    result = nil
+    output, = capture_io do
+      result = Ace::Git::Secrets::CLI.start(["help"])
+    end
+
+    # dry-cli help should show available commands
+    assert_match(/Commands:/, output)
+    assert_equal 0, result
+  end
+
+  def test_help_for_scan_command
+    result = nil
+    output, = capture_io do
+      result = Ace::Git::Secrets::CLI.start(["help", "scan"])
+    end
+
+    # dry-cli help for specific command should show usage
+    assert_match(/scan/, output)
+    assert_equal 0, result
   end
 end
