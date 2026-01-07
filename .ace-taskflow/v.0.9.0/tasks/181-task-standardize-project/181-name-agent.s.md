@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.181
-status: draft
+status: pending
 priority: medium
-estimate: 2h
+estimate: 1h
 dependencies: []
 ---
 
@@ -65,30 +65,36 @@ Standardize the project's full name to "ACE (Agentic Coding Environment)" to:
 
 ### Deliverables
 
-#### Files to Update (~85 files across categories)
+#### Files to Update (19 files, 27 occurrences)
 
-**Critical Documentation (8 files)**
-- `/Users/mc/Ps/ace-meta/README.md`
-- `/Users/mc/Ps/ace-meta/docs/what-do-we-build.md`
-- `/Users/mc/Ps/ace-meta/docs/architecture.md`
-- `/Users/mc/Ps/ace-meta/docs/blueprint.md`
+**Critical Documentation (4 files, 4 occurrences)**
+- `README.md` (1)
+- `docs/what-do-we-build.md` (1)
+- `docs/architecture.md` (1)
+- `docs/blueprint.md` (1)
 
-**Package READMEs**
-- `ace-context/README.md`
-- `ace-integration-claude/README.md`
-- `ace-handbook/README.md`
-- `ace-search/README.md`
-- `ace-support-mac-clipboard/README.md`
-- Other ace-*/README.md files
+**Package READMEs (5 files, 7 occurrences)**
+- `ace-context/README.md` (1)
+- `ace-handbook/README.md` (2)
+- `ace-integration-claude/README.md` (2)
+- `ace-search/README.md` (1)
+- `ace-support-mac-clipboard/README.md` (1)
 
-**Configuration & Templates**
-- `.ace/README.md`
-- `ace-taskflow/templates/idea_enhancement.system.md`
+**Configuration & Templates (2 files, 2 occurrences)**
+- `.ace/README.md` (1)
+- `ace-taskflow/templates/idea_enhancement.system.md` (1)
 
-**Historical/Archive Documents**
-- v.0.7.0 migration docs
-- Completed task files
-- Idea files in backlog
+**Historical/Archive Documents (6 files, 12 occurrences)**
+- `.ace-taskflow/_backlog/ideas/ACE-FILES/ace-banner.s.md` (3)
+- `.ace-taskflow/_backlog/ideas/ACE-FILES/ace-branding.s.md` (2)
+- `.ace-taskflow/_backlog/ideas/ace-project-renaming/20250824-2323-ace-project-renaming.s.md` (3)
+- `.ace-taskflow/v.0.9.0/ideas/_archive/8mqz5e-git-fix/remove-and-revoke-authentication-tokens-from-history.s.md` (1)
+- `.ace-taskflow/v.0.9.0/ideas/_archive/8n1yss-ace-context-enhance/add-dynamic-git-branch-and-pr-info.s.md` (1)
+- `.ace-taskflow/_archive/v.0.7.0/retros/2025-09-16-migration-guide-creation.md` (1)
+
+**Files to Skip (already correct or self-referential)**
+- `.ace-taskflow/v.0.9.0/ideas/_archive/8o6iro-ace-rename/idea.s.md` - source idea, references both forms
+- `.ace-taskflow/v.0.9.0/tasks/181-task-standardize-project/181-name-agent.s.md` - this task file
 
 **Cache Files**
 - Clear `.cache/` directory (files regenerate automatically)
@@ -100,7 +106,96 @@ Standardize the project's full name to "ACE (Agentic Coding Environment)" to:
 - Manual cache file updates (auto-regenerated)
 - Any functional/behavioral changes
 
+## Implementation Plan
+
+### Execution Steps
+
+- [ ] **Step 1**: Update Critical Documentation (4 files)
+  - Replace "Agent Coding Environment" with "Agentic Coding Environment" in:
+    - `README.md`
+    - `docs/what-do-we-build.md`
+    - `docs/architecture.md`
+    - `docs/blueprint.md`
+  > TEST: Critical Docs Updated
+  > Type: Content Validation
+  > Assert: All 4 files contain "Agentic Coding Environment", none contain "Agent Coding Environment"
+  > Command: grep -l "Agent Coding Environment" README.md docs/*.md | wc -l # Should be 0
+
+- [ ] **Step 2**: Update Package READMEs (5 files)
+  - Replace in:
+    - `ace-context/README.md`
+    - `ace-handbook/README.md`
+    - `ace-integration-claude/README.md`
+    - `ace-search/README.md`
+    - `ace-support-mac-clipboard/README.md`
+  > TEST: Package READMEs Updated
+  > Type: Content Validation
+  > Assert: All package READMEs updated
+  > Command: grep -rl "Agent Coding Environment" ace-*/README.md | wc -l # Should be 0
+
+- [ ] **Step 3**: Update Configuration & Templates (2 files)
+  - Replace in:
+    - `.ace/README.md`
+    - `ace-taskflow/templates/idea_enhancement.system.md`
+  > TEST: Config/Templates Updated
+  > Type: Content Validation
+  > Assert: Config and template files updated
+  > Command: grep -l "Agent Coding Environment" .ace/README.md ace-taskflow/templates/*.md | wc -l # Should be 0
+
+- [ ] **Step 4**: Update Historical/Archive Documents (6 files)
+  - Replace in:
+    - `.ace-taskflow/_backlog/ideas/ACE-FILES/ace-banner.s.md`
+    - `.ace-taskflow/_backlog/ideas/ACE-FILES/ace-branding.s.md`
+    - `.ace-taskflow/_backlog/ideas/ace-project-renaming/20250824-2323-ace-project-renaming.s.md`
+    - `.ace-taskflow/v.0.9.0/ideas/_archive/8mqz5e-git-fix/remove-and-revoke-authentication-tokens-from-history.s.md`
+    - `.ace-taskflow/v.0.9.0/ideas/_archive/8n1yss-ace-context-enhance/add-dynamic-git-branch-and-pr-info.s.md`
+    - `.ace-taskflow/_archive/v.0.7.0/retros/2025-09-16-migration-guide-creation.md`
+  > TEST: Historical Docs Updated
+  > Type: Content Validation
+  > Assert: All historical documents updated
+  > Command: grep -rl "Agent Coding Environment" .ace-taskflow/ | grep -v "181-name-agent.s.md\|8o6iro-ace-rename" | wc -l # Should be 0
+
+- [ ] **Step 5**: Clear Cache Directory
+  ```bash
+  rm -rf .cache/ace-context/
+  ```
+  > TEST: Cache Cleared
+  > Type: File System Validation
+  > Assert: Cache directory cleared
+  > Command: ls .cache/ace-context/ 2>/dev/null | wc -l # Should be 0
+
+- [ ] **Step 6**: Final Validation
+  ```bash
+  grep -r "Agent Coding Environment" --include="*.md" . | grep -v ".ace-taskflow/v.0.9.0/tasks/181" | grep -v "8o6iro-ace-rename"
+  ```
+  > TEST: Complete Replacement
+  > Type: Final Validation
+  > Assert: No remaining occurrences except in task file and source idea
+  > Command: Should return empty (0 lines)
+
+## Acceptance Criteria
+
+- [ ] AC 1: All 17 files updated (excluding task file and source idea)
+- [ ] AC 2: "ACE" acronym preserved in all locations
+- [ ] AC 3: No CLI tools affected (verify with `ace-search --version`)
+- [ ] AC 4: Cache regenerates correctly after clearing
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Partial replacement leaves inconsistent naming
+  - **Probability:** Low
+  - **Impact:** Low
+  - **Mitigation:** Use exact string match replacement, verify with grep
+  - **Rollback:** Git revert single commit
+
+- **Risk:** Accidentally modify source code
+  - **Probability:** Very Low
+  - **Impact:** Medium
+  - **Mitigation:** Explicit file list, no lib/ or test/ files in scope
+  - **Rollback:** Git revert
+
 ## References
 
-- Source idea: `.ace-taskflow/v.0.9.0/ideas/8o6iro-ace-rename/idea.s.md`
+- Source idea: `.ace-taskflow/v.0.9.0/ideas/_archive/8o6iro-ace-rename/idea.s.md`
 - Related backlog idea: `.ace-taskflow/_backlog/ideas/ace-project-renaming/`
