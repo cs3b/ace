@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **dry-cli Infrastructure**: Foundation for dry-cli based CLIs (task 179.01)
+  - `Ace::Core::CLI::DryCli::Base` module with common CLI patterns
+    - Standard option checks (`verbose?`, `quiet?`, `debug?`)
+    - Exit code helpers (`exit_success`, `exit_failure`)
+    - Debug logging (`debug_log`)
+    - Option validation (`validate_required!`)
+    - Hash formatting (`format_pairs`)
+    - Reserved flags constant (`RESERVED_FLAGS`)
+  - `Ace::Core::CLI::DryCli::ConfigSummaryMixin` for config display integration
+    - `display_config_summary` method with quiet/verbose mode support
+    - `GemClassMixin` variant with gem class configuration support
+    - Integration with existing `Ace::Core::Atoms::ConfigSummary`
+  - `Ace::Core::CLI::DryCli::VersionCommand` helper for version commands
+    - `VersionCommand.build` factory for creating command classes
+    - `VersionCommand.module` for creating version mixins
+    - Supports both class-level and proc-based version strings
+  - Comprehensive test coverage: 3 test files with 26+ tests
+  - dry-cli ~> 1.1 dependency added to gemspec
+
+### Changed
+- Updated `lib/ace/core.rb` to require dry-cli infrastructure modules
+
 ## [0.18.0] - 2026-01-05
 
 ### Added
