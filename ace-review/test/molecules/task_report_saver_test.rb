@@ -53,8 +53,9 @@ class TaskReportSaverTest < Minitest::Test
 
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
-    # Should match pattern: YYYYMMDD-HHMMSS-google-gemini-2-5-flash-pr-review.md
-    assert_match(/^\d{8}-\d{6}-google-gemini-2-5-flash-pr-review\.md$/, filename)
+    # Should match pattern: {compact_id}-google-gemini-2-5-flash-pr-review.md
+    # Compact ID is 6 chars Base36 (0-9, a-z)
+    assert_match(/^[0-9a-z]{6}-google-gemini-2-5-flash-pr-review\.md$/, filename)
   end
 
   def test_generate_filename_with_model_name
@@ -62,8 +63,9 @@ class TaskReportSaverTest < Minitest::Test
 
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
-    # Should match pattern: YYYYMMDD-HHMMSS-gpt-4-security-review.md
-    assert_match(/^\d{8}-\d{6}-gpt-4-security-review\.md$/, filename)
+    # Should match pattern: {compact_id}-gpt-4-security-review.md
+    # Compact ID is 6 chars Base36 (0-9, a-z)
+    assert_match(/^[0-9a-z]{6}-gpt-4-security-review\.md$/, filename)
   end
 
   def test_generate_filename_unique_for_same_provider_models
@@ -74,9 +76,10 @@ class TaskReportSaverTest < Minitest::Test
     filename_flash = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data_flash)
     filename_pro = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data_pro)
 
-    # Remove timestamp prefix to compare model portions
-    flash_suffix = filename_flash.sub(/^\d{8}-\d{6}-/, '')
-    pro_suffix = filename_pro.sub(/^\d{8}-\d{6}-/, '')
+    # Remove compact ID prefix to compare model portions
+    # Compact ID is 6 chars Base36 (0-9, a-z)
+    flash_suffix = filename_flash.sub(/^[0-9a-z]{6}-/, '')
+    pro_suffix = filename_pro.sub(/^[0-9a-z]{6}-/, '')
 
     # Filenames should be different (different model slugs)
     refute_equal flash_suffix, pro_suffix, "Same-provider models should produce different filenames"
@@ -98,8 +101,9 @@ class TaskReportSaverTest < Minitest::Test
 
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
-    # Should match pattern: YYYYMMDD-HHMMSS-synthesis.md
-    assert_match(/^\d{8}-\d{6}-synthesis\.md$/, filename)
+    # Should match pattern: {compact_id}-synthesis.md
+    # Compact ID is 6 chars Base36 (0-9, a-z)
+    assert_match(/^[0-9a-z]{6}-synthesis\.md$/, filename)
   end
 
   def test_extract_provider_from_prefixed_model

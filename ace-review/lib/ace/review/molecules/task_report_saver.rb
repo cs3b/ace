@@ -2,11 +2,12 @@
 
 require "fileutils"
 require "time"
+require "ace/timestamp"
 
 module Ace
   module Review
     module Molecules
-      # Save review reports to task directories with timestamped filenames
+      # Save review reports to task directories with compact ID filenames
       class TaskReportSaver
         # Save a review report to a task's reviews/ directory
         # @param task_dir [String] Path to the task directory
@@ -78,17 +79,17 @@ module Ace
           end
         end
 
-        # Generate timestamped filename for review report
+        # Generate filename with compact ID for review report
         # @param review_data [Hash] Review metadata (preset, model, report_type, etc.)
         # @return [String] Filename with format depending on report_type:
-        #   - synthesis: YYYYMMDD-HHMMSS-synthesis.md
-        #   - regular:   YYYYMMDD-HHMMSS-model-preset-review.md
+        #   - synthesis: {compact_id}-synthesis.md
+        #   - regular:   {compact_id}-model-preset-review.md
         def self.generate_filename(review_data)
-          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
+          compact_id = Ace::Timestamp.encode(Time.now)
 
           # Handle synthesis reports with special filename format
           if review_data[:report_type] == 'synthesis'
-            return "#{timestamp}-synthesis.md"
+            return "#{compact_id}-synthesis.md"
           end
 
           # Use full model slug for uniqueness (e.g., "google:gemini-2.5-flash" -> "google-gemini-2-5-flash")
@@ -100,7 +101,7 @@ module Ace
           # Sanitize preset name for filename
           preset_slug = Ace::Review::Atoms::SlugGenerator.generate(preset)
 
-          "#{timestamp}-#{model_slug}-#{preset_slug}-review.md"
+          "#{compact_id}-#{model_slug}-#{preset_slug}-review.md"
         end
 
         # Extract provider name from model string
