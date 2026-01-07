@@ -27,7 +27,7 @@ ace-prompt setup --force            # Alias for --no-archive
 
 **Behavior:**
 - Creates `{project_root}/.cache/ace-prompt/prompts/the-prompt.md`
-- Archives existing prompt by default (to `archive/the-prompt-YYYYMMDD-HHMMSS.md`)
+- Archives existing prompt by default (to `archive/{base36_id}.md`)
 - Resolves templates via ace-nav `tmpl://` protocol
 
 ### process (v0.1.0)
@@ -42,7 +42,7 @@ ace-prompt -o /tmp/prompt.md        # Output to file
 
 **Behavior:**
 - Reads `the-prompt.md` from prompt directory
-- Archives with timestamp
+- Archives with Base36 session ID (6-character compact ID)
 - Updates `_previous.md` symlink
 - Outputs content to stdout or file
 
@@ -87,7 +87,7 @@ All files relative to project root:
 ├── the-prompt.md           # Active prompt
 ├── _previous.md            # Symlink to latest archive
 └── archive/
-    └── the-prompt-YYYYMMDD-HHMMSS.md
+    └── {base36_id}.md      # e.g., i50jj3.md (6-char compact ID)
 ```
 
 ## Templates
