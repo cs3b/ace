@@ -5,7 +5,7 @@ require_relative "lib/ace/git/secrets/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-git-secrets"
   spec.version = Ace::Git::Secrets::VERSION
-  spec.authors = ["ace-meta"]
+  spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Detect, remove, and revoke authentication tokens from Git history"
@@ -39,6 +39,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "ace-config", "~> 0.5"
+  spec.add_dependency "ace-timestamp", "~> 0.1"
   spec.add_dependency "faraday", "~> 2.7", ">= 2.7.4"
   spec.add_dependency "faraday-retry", "~> 2.2"
   spec.add_dependency "thor", "~> 1.3"
