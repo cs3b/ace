@@ -17,6 +17,11 @@ require_relative "core/config_discovery"
 # CLI base class for Thor-based commands
 require_relative "core/cli/base"
 
+# CLI infrastructure for dry-cli based commands
+require_relative "core/cli/dry_cli/base"
+require_relative "core/cli/dry_cli/config_summary_mixin"
+require_relative "core/cli/dry_cli/version_command"
+
 module Ace
   module Core
     # Re-export ace-config and ace-support-fs classes for backward compatibility
