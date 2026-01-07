@@ -5,12 +5,17 @@ require "ace/taskflow/organisms/idea_writer"
 
 # Pure unit tests for IdeaWriter - no filesystem operations
 class IdeaWriterUnitTest < AceTaskflowTestCase
+  include Ace::TestSupport::ConfigHelpers
+
   def setup
     @config = {
       "directory" => "/test/ideas",
       "template" => "# %{title}\n\n%{content}\n\n---\nCaptured: %{timestamp}",
       "formatting" => {
         "timestamp_format" => "%Y-%m-%d %H:%M:%S"
+      },
+      "file_naming" => {
+        "title_max_length" => 50
       }
     }
     @writer = Ace::Taskflow::Organisms::IdeaWriter.new(@config)
@@ -20,39 +25,47 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
     @write_calls = []
   end
 
-  def test_generates_correct_path_with_timestamp_and_slug
-    mock_slug_resp = mock_slug_response(folder_slug: "test-idea", file_slug: "test-content")
+  def test_generates_correct_path_with_base36_id_and_slug
+    with_real_config do
+      Ace::Timestamp.reset_config!
 
-    mock_filesystem do
-      mock_llm_query(response_text: mock_slug_resp) do
-        content = "This is a test idea"
-        path = @writer.write(content)
+      mock_slug_resp = mock_slug_response(folder_slug: "test-idea", file_slug: "test-content")
 
-        # Verify path format: /test/ideas/YYYYMMDD-HHMMSS-test-idea/test-content.s.md
-        assert_match(%r{^/test/ideas/\d{8}-\d{6}-test-idea/test-content\.s\.md$}, path)
+      mock_filesystem do
+        mock_llm_query(response_text: mock_slug_resp) do
+          content = "This is a test idea"
+          path = @writer.write(content)
 
-        # Verify directory was created (extract folder from file path)
-        folder_path = File.dirname(path)
-        assert @mkdir_calls.include?(folder_path), "Should create idea directory"
+          # Verify path format: /test/ideas/{6-char-base36}-test-idea/test-content.s.md
+          assert_match(%r{^/test/ideas/[0-9a-z]{6}-test-idea/test-content\.s\.md$}i, path)
 
-        # Verify file was written
-        assert @write_calls.any? { |call| call[:path].include?("test-content.s.md") }
+          # Verify directory was created (extract folder from file path)
+          folder_path = File.dirname(path)
+          assert @mkdir_calls.include?(folder_path), "Should create idea directory"
+
+          # Verify file was written
+          assert @write_calls.any? { |call| call[:path].include?("test-content.s.md") }
+        end
       end
     end
   end
 
   def test_uses_configured_directory
-    custom_config = @config.merge("directory" => "/custom/ideas")
-    writer = Ace::Taskflow::Organisms::IdeaWriter.new(custom_config)
+    with_real_config do
+      Ace::Timestamp.reset_config!
 
-    mock_slug_resp = mock_slug_response(folder_slug: "custom-dir", file_slug: "test-idea")
+      custom_config = @config.merge("directory" => "/custom/ideas")
+      writer = Ace::Taskflow::Organisms::IdeaWriter.new(custom_config)
 
-    mock_filesystem do
-      mock_llm_query(response_text: mock_slug_resp) do
-        path = writer.write("Test content")
+      mock_slug_resp = mock_slug_response(folder_slug: "custom-dir", file_slug: "test-idea")
 
-        # Verify path uses custom directory and includes file
-        assert_match(%r{^/custom/ideas/\d{8}-\d{6}-custom-dir/test-idea\.s\.md$}, path)
+      mock_filesystem do
+        mock_llm_query(response_text: mock_slug_resp) do
+          path = writer.write("Test content")
+
+          # Verify path uses custom directory with Base36 ID
+          assert_match(%r{^/custom/ideas/[0-9a-z]{6}-custom-dir/test-idea\.s\.md$}i, path)
+        end
       end
     end
   end
