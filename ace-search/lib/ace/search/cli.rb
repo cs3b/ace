@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
+require "set"
 require "ace/core"
 require_relative "../search"
 # Commands
@@ -31,9 +32,15 @@ module Ace
     module CLI
       extend Dry::CLI::Registry
 
-      # Commands that should NOT be treated as search patterns
-      # These are dry-cli built-ins or explicitly registered commands
-      KNOWN_COMMANDS = %w[search version help list --help -h --version].freeze
+      # Application commands registered in this CLI (single source of truth)
+      REGISTERED_COMMANDS = %w[search].freeze
+
+      # dry-cli built-in commands (standard across all CLI gems)
+      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+      # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
+      # Using Set for O(1) lookup performance
+      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
 
       # Default command to use when first argument is not a known command
       DEFAULT_COMMAND = "search"
