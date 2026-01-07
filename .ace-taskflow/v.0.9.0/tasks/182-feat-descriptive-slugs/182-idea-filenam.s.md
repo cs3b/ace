@@ -1,8 +1,8 @@
 ---
 id: v.0.9.0+task.182
-status: draft
+status: pending
 priority: medium
-estimate: TBD
+estimate: 4h
 dependencies: []
 ---
 
@@ -72,14 +72,17 @@ Improve idea path readability and discoverability by including descriptive slugs
 
 #### Behavioral Specifications
 - Idea filename pattern: `{slug}.idea.s.md`
-- File discovery priority: `.idea.s.md` > `.s.md` > `idea.s.md`
+- File discovery priority: `{slug}.idea.s.md` > `*.s.md` (non idea.s.md) > `idea.s.md`
 - Backward compatibility with existing ideas
 
-#### Implementation Files
-- `idea_writer.rb:113` - Change extension to `.idea.s.md`
-- `idea_loader.rb:211-223` - Add `.idea.s.md` priority in discovery
-- `ideas_command.rb` - Update display path resolution
-- Test files - Update assertions for new pattern
+#### Create
+- `ace-taskflow/test/molecules/idea_loader_slug_test.rb` - New tests for `.idea.s.md` pattern
+
+#### Modify
+- `ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb:112-116` - Change `.s.md` to `.idea.s.md`
+- `ace-taskflow/lib/ace/taskflow/molecules/idea_loader.rb:211-223` - Add `.idea.s.md` priority
+- `ace-taskflow/lib/ace/taskflow/commands/ideas_command.rb:327-332` - Update display path resolution
+- `ace-taskflow/test/molecules/idea_loader_test.rb` - Update test assertions for new pattern
 
 ## Out of Scope
 
@@ -87,7 +90,118 @@ Improve idea path readability and discoverability by including descriptive slugs
 - Changing task filename patterns
 - Modifying the compact ID generation
 
+## Technical Approach
+
+### Architecture Pattern
+- Extension of existing ATOM pattern: Atoms (unchanged) → Molecules (IdeaLoader) → Organisms (IdeaWriter)
+- No new dependencies required
+- Changes are localized to file naming/discovery logic
+
+### Implementation Strategy
+The changes are minimal and well-isolated:
+
+1. **IdeaWriter (Organism)**: Change the file extension from `.s.md` to `.idea.s.md`
+2. **IdeaLoader (Molecule)**: Update discovery priority to prefer `.idea.s.md` files
+3. **IdeasCommand**: Update display path to show `.idea.s.md` files correctly
+
+### File Discovery Priority (Updated)
+```
+1. {slug}.idea.s.md  (new format - highest priority)
+2. {slug}.s.md       (current format - exclude "idea.s.md")
+3. idea.s.md         (legacy fallback)
+```
+
+### Backward Compatibility
+- Existing `idea.s.md` files remain fully supported
+- No migration required
+- Mixed formats work seamlessly
+
+## Implementation Plan
+
+### Planning Steps
+
+* [x] Analyze current idea_writer.rb implementation (lines 109-131)
+* [x] Analyze current idea_loader.rb implementation (lines 208-266)
+* [x] Analyze ideas_command.rb display logic (lines 326-337)
+* [x] Review existing test coverage
+
+### Execution Steps
+
+- [ ] **Step 1**: Update IdeaWriter to use `.idea.s.md` extension
+  - Location: `ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb:112-116`
+  - Change: Replace `.s.md` with `.idea.s.md` in filename generation
+  > TEST: Verify IdeaWriter creates files with .idea.s.md extension
+  > Type: Unit Test
+  > Assert: New ideas create `{slug}.idea.s.md` files
+  > Command: ace-test ace-taskflow/test/organisms/idea_writer_test.rb
+
+- [ ] **Step 2**: Update IdeaLoader discovery priority
+  - Location: `ace-taskflow/lib/ace/taskflow/molecules/idea_loader.rb:211-223`
+  - Change: Modify `load_idea_from_directory` to prefer `.idea.s.md` files
+  - Priority: `.idea.s.md` > other `.s.md` > `idea.s.md`
+  > TEST: Verify IdeaLoader finds .idea.s.md files first
+  > Type: Unit Test
+  > Assert: Loader prefers slug.idea.s.md over idea.s.md
+  > Command: ace-test ace-taskflow/test/molecules/idea_loader_test.rb
+
+- [ ] **Step 3**: Update IdeasCommand display path resolution
+  - Location: `ace-taskflow/lib/ace/taskflow/commands/ideas_command.rb:327-332`
+  - Change: Update `display_idea_line` to resolve actual file path, not hardcoded `idea.s.md`
+  > TEST: Verify list command displays correct file paths
+  > Type: Integration Test
+  > Assert: `ace-taskflow ideas` shows `.idea.s.md` paths
+  > Command: ace-test ace-taskflow/test/commands/ideas_command_test.rb
+
+- [ ] **Step 4**: Update existing tests with new patterns
+  - Files: `ace-taskflow/test/molecules/idea_loader_test.rb`, `ace-taskflow/test/organisms/idea_writer_test.rb`
+  - Changes: Update test fixtures and assertions to use `.idea.s.md`
+  > TEST: All tests pass with new pattern
+  > Type: Full Test Suite
+  > Assert: All ace-taskflow tests pass
+  > Command: ace-test ace-taskflow
+
+- [ ] **Step 5**: Add new tests for backward compatibility
+  - Create tests that verify:
+    - Legacy `idea.s.md` files are still found
+    - Mixed formats in same release work correctly
+    - Priority ordering is correct
+  > TEST: Backward compatibility verified
+  > Type: Unit Test
+  > Assert: Legacy ideas still load correctly
+  > Command: ace-test ace-taskflow/test/molecules/idea_loader_test.rb
+
+- [ ] **Step 6**: Manual verification
+  - Create new idea: `ace-taskflow idea create "Test slug naming"`
+  - Verify file created with `.idea.s.md` extension
+  - Verify `ace-taskflow ideas` lists it correctly
+  - Verify existing ideas still appear in list
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk:** Tests might hardcode `idea.s.md` pattern
+  - **Probability:** Medium
+  - **Impact:** Low (easy to fix)
+  - **Mitigation:** Search for all `idea.s.md` references in tests
+  - **Rollback:** Revert file extension change
+
+### Integration Risks
+- **Risk:** Other code might rely on `idea.s.md` filename
+  - **Probability:** Low
+  - **Impact:** Medium
+  - **Mitigation:** Search codebase for `idea.s.md` references
+  - **Monitoring:** Run full test suite
+
+## Acceptance Criteria
+
+- [ ] AC 1: New ideas created with `{slug}.idea.s.md` filename pattern
+- [ ] AC 2: Existing `idea.s.md` files remain loadable
+- [ ] AC 3: `ace-taskflow ideas` displays correct file paths
+- [ ] AC 4: All ace-taskflow tests pass
+- [ ] AC 5: Mixed old/new format ideas work in same directory
+
 ## References
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/done/8o6jap-taskflow-add/`
 - Related: Task 149 (Base36 Compact ID implementation)
+- Current implementation: `ace-taskflow/lib/ace/taskflow/organisms/idea_writer.rb:112-116`
