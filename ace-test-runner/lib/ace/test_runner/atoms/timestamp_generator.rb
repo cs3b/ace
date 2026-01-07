@@ -1,43 +1,87 @@
 # frozen_string_literal: true
 
+require "ace/timestamp"
+
 module Ace
   module TestRunner
     module Atoms
-      # Generates consistent timestamps for reports
+      # Generates Base36 compact IDs for test reports
+      #
+      # Uses ace-timestamp to generate 6-character compact IDs (e.g., "i50jj3")
+      # for test report directories and files. Reports are temporary, so no
+      # backward compatibility with legacy timestamp format is needed.
+      #
+      # @example Generate a compact ID
+      #   generator = TimestampGenerator.new
+      #   generator.generate  # => "i50jj3"
+      #
+      # @example Generate ISO timestamp for human-readable output
+      #   generator = TimestampGenerator.new
+      #   generator.iso_timestamp  # => "2025-01-06T12:30:00"
+      #
       class TimestampGenerator
-        DEFAULT_FORMAT = "%Y%m%d-%H%M%S"
         ISO_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
-        def initialize(format: DEFAULT_FORMAT)
-          @format = format
-        end
-
+        # Generate a Base36 compact ID for the given time
+        #
+        # @param time [Time] The time to encode (default: Time.now)
+        # @return [String] 6-character Base36 compact ID
         def generate(time = Time.now)
-          time.strftime(@format)
+          Ace::Timestamp.encode(time)
         end
 
+        # Generate an ISO timestamp for human-readable output
+        #
+        # @param time [Time] The time to format (default: Time.now)
+        # @return [String] ISO formatted timestamp
         def iso_timestamp(time = Time.now)
           time.strftime(ISO_FORMAT)
         end
 
+        # Generate a directory name (alias for generate)
+        #
+        # @param time [Time] The time to encode (default: Time.now)
+        # @return [String] 6-character Base36 compact ID
         def directory_name(time = Time.now)
           generate(time)
         end
 
+        # Generate a filename timestamp with optional extension
+        #
+        # @param time [Time] The time to encode (default: Time.now)
+        # @param extension [String, nil] Optional file extension
+        # @return [String] Filename with optional extension
         def filename_timestamp(time = Time.now, extension = nil)
           base = generate(time)
           extension ? "#{base}#{extension}" : base
         end
 
-        def parse(timestamp_str, format = @format)
-          Time.strptime(timestamp_str, format)
+        # Parse a Base36 compact ID string to Time
+        #
+        # @param id_str [String] The Base36 ID string to parse
+        # @return [Time, nil] Parsed time or nil if invalid
+        def parse(id_str)
+          Ace::Timestamp.decode(id_str)
         rescue ArgumentError
           nil
         end
 
+        # Calculate elapsed time between two times
+        #
+        # @param start_time [Time] Start time
+        # @param end_time [Time] End time (default: Time.now)
+        # @return [String] Human-readable duration
         def elapsed_time(start_time, end_time = Time.now)
           duration = end_time - start_time
           format_duration(duration)
+        end
+
+        # Detect the format of an ID string
+        #
+        # @param value [String] The ID string to analyze
+        # @return [Symbol, nil] :compact for valid Base36 IDs, :timestamp for legacy format, or nil
+        def self.detect_format(value)
+          Ace::Timestamp.detect_format(value)
         end
 
         private

@@ -5,8 +5,8 @@ require_relative "lib/ace/test_runner/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-test-runner"
   spec.version = Ace::TestRunner::VERSION
-  spec.authors = ["Ace Meta Team"]
-  spec.email = ["ace@example.com"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Test execution and reporting tool for ace-* gems"
   spec.description = "Provides comprehensive test execution with AI-friendly output formats and detailed reporting"
@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "thor", "~> 1.3"
   spec.add_dependency "ace-config", "~> 0.5"
   spec.add_dependency "ace-support-test-helpers", "~> 0.1"
+  spec.add_dependency "ace-timestamp", "~> 0.1"
   spec.add_dependency "minitest", "~> 5.0"
   spec.add_dependency "minitest-reporters", "~> 1.6"
   spec.add_dependency "ostruct"
