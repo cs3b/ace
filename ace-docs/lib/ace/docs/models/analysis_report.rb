@@ -2,6 +2,7 @@
 
 require "yaml"
 require "fileutils"
+require "ace/timestamp"
 
 module Ace
   module Docs
@@ -40,8 +41,8 @@ module Ace
           cache_dir ||= Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
           FileUtils.mkdir_p(cache_dir)
 
-          timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-          filename = "analysis-#{timestamp}.md"
+          compact_id = Ace::Timestamp.encode(Time.now)
+          filename = "analysis-#{compact_id}.md"
           filepath = File.join(cache_dir, filename)
 
           File.write(filepath, to_markdown)
