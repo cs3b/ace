@@ -7,13 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-01-07
+
 ### Changed
 - **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.02)
-  - Replaced `thor` dependency with `dry-cli ~> 1.1`
-  - Added `ace-support-core ~> 0.18` dependency for dry-cli infrastructure
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Added `ace-support-core ~> 0.19` dependency for dry-cli infrastructure
   - All user-facing commands, options, and behavior remain identical
   - Default command routing (`ace-search pattern` → `ace-search search pattern`) preserved
   - Numeric option type-conversion handled for parity with Thor implementation
+  - Standardized `KNOWN_COMMANDS` pattern across dry-cli gems
 
 ## [0.17.0] - 2026-01-05
 
