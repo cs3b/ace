@@ -5,8 +5,8 @@ require_relative "lib/ace/config/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-config"
   spec.version = Ace::Config::VERSION
-  spec.authors = ["ACE Team"]
-  spec.email = ["ace@example.com"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Generic configuration cascade management"
   spec.description = "Reusable configuration cascade with customizable folder names. " \

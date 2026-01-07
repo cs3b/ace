@@ -5,8 +5,8 @@ require_relative "lib/ace/nav/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-nav"
   spec.version = Ace::Nav::VERSION
-  spec.authors = ["ACE Development Team"]
-  spec.email = ["ace-dev@example.com"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Unified navigation and resource discovery for ACE ecosystem"
   spec.description = "ace-nav provides unified navigation and path resolution across the ACE ecosystem. " \
