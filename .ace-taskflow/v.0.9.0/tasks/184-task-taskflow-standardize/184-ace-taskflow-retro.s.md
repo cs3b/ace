@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.184
-status: draft
+status: pending
 priority: medium
 estimate: 2h
 dependencies: []
@@ -84,16 +84,86 @@ Achieve consistency with Task 149's Base36 Compact ID standard across all ace-ta
 - Modifying RetroLoader parsing (already supports multiple formats)
 - Any other ace-taskflow file naming changes (audit confirmed only retros need this)
 
+## Technical Approach
+
+### Architecture Pattern
+- **Pattern**: Follow established FileNamer pattern from idea creation
+- **Integration**: RetroManager uses `Ace::Timestamp.encode()` directly, matching FileNamer's `generate_id` method
+- **Impact**: Minimal - single file change, backward compatibility preserved
+
+### Implementation Strategy
+The change is localized to `RetroManager#create_retro` method (lines 139-142):
+- Replace `Time.now.strftime("%Y-%m-%d")` with `Ace::Timestamp.encode(Time.now)`
+- Template date field remains unchanged (human-readable date for content)
+- RetroLoader already handles Base36 IDs via IdTitleExtractor (confirmed in code review)
+
+## File Modifications
+
+### Modify
+- `ace-taskflow/lib/ace/taskflow/organisms/retro_manager.rb`
+  - **Line 4**: Add `require "ace/timestamp"`
+  - **Line 140**: Replace `date_str = Time.now.strftime("%Y-%m-%d")` with `id = Ace::Timestamp.encode(Time.now)`
+  - **Line 142**: Change `filename = "#{date_str}-#{slug}.md"` to `filename = "#{id}-#{slug}.md"`
+  - **Line 155**: Keep `date_str` for template content (separate variable: `date_str = Time.now.strftime("%Y-%m-%d")`)
+
+- `ace-taskflow/test/commands/retro_command_test.rb`
+  - **Line 53**: Update assertion from date pattern to Base36 ID pattern
+  - Add new test for Base36 ID format validation
+
+### No Changes Needed
+- `ace-taskflow/lib/ace/taskflow/molecules/retro_loader.rb` - Already uses IdTitleExtractor for Base36 parsing
+- `ace-taskflow/test/molecules/retro_loader_test.rb` - Already tests Base36 extraction
+
+## Implementation Plan
+
+### Execution Steps
+
+- [ ] Step 1: Update RetroManager to use ace-timestamp for ID generation
+  - Add `require "ace/timestamp"` at top of file
+  - Replace date-based ID with `Ace::Timestamp.encode(Time.now)`
+  - Keep separate date variable for template content
+  > TEST: Verify RetroManager generates Base36 IDs
+  > Type: Unit Test
+  > Assert: Created filename matches pattern `/^[0-9a-z]{6}-/i`
+  > Command: ace-test ace-taskflow/test/organisms/retro_manager_test.rb
+
+- [ ] Step 2: Update retro_command_test.rb assertions for new pattern
+  - Change assertion from `/\d{4}-\d{2}-\d{2}-test-retro/` to `/^[0-9a-z]{6}-test-retro/i`
+  > TEST: CLI creates retro with Base36 ID
+  > Type: Integration Test
+  > Assert: Created file uses Base36 prefix
+  > Command: ace-test ace-taskflow/test/commands/retro_command_test.rb
+
+- [ ] Step 3: Run full test suite to verify backward compatibility
+  > TEST: All existing tests pass
+  > Type: Regression Test
+  > Assert: No test failures
+  > Command: ace-test ace-taskflow
+
+## Acceptance Criteria
+
+- [x] AC 0: Implementation plan reviewed and approved
+- [ ] AC 1: New retros created with 6-char Base36 ID prefix (e.g., `i50jj3-topic.md`)
+- [ ] AC 2: Template content still displays human-readable date (not Base36 ID)
+- [ ] AC 3: Old date-prefixed retros remain navigable (backward compatibility)
+- [ ] AC 4: All ace-taskflow tests pass
+
+## Risk Assessment
+
+### Technical Risks
+- **Risk**: Duplicate ID collision (two retros created in same second)
+  - **Probability**: Low (retros created manually, rarely in rapid succession)
+  - **Impact**: Low (error message already handles duplicate filenames)
+  - **Mitigation**: Existing duplicate detection in RetroManager handles this
+
+### Integration Risks
+- **Risk**: RetroLoader fails to parse Base36 IDs
+  - **Probability**: Very Low (code review confirms IdTitleExtractor already supports Base36)
+  - **Impact**: Medium (retro listing would break)
+  - **Mitigation**: Existing test suite covers this; verified in retro_loader_test.rb
+
 ## References
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/8o6lu6-taskflow-add/idea.s.md`
 - Task 149: Base36 Compact ID Format Implementation
 - Pattern reference: `ace-taskflow/lib/ace/taskflow/molecules/file_namer.rb` (lines 37-41)
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `ace-taskflow/lib/ace/taskflow/organisms/retro_manager.rb` | Replace date-based naming with ace-timestamp (lines 140-142) |
-| `ace-taskflow/test/commands/retro_command_test.rb` | Update test assertions for new naming pattern |
-| `ace-taskflow/test/organisms/retro_manager_test.rb` | Add Base36 ID generation tests (if exists) |
