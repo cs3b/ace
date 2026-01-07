@@ -2,7 +2,7 @@
 id: v.0.9.0+task.180
 status: draft
 priority: medium
-estimate: 8-16h
+estimate: 4-8h
 dependencies: []
 ---
 
@@ -40,15 +40,19 @@ gem install ace-handbook
 
 ### Success Criteria
 
-- [ ] All approved workflows migrated to ace-handbook
-- [ ] All approved guides migrated to ace-handbook
-- [ ] All approved agents migrated to ace-handbook
-- [ ] All approved templates migrated to ace-handbook
+- [ ] 1 remaining workflow migrated (initialize-project-structure.wf.md → ace-handbook)
+- [ ] 31 guides migrated to appropriate ace-* packages
+- [ ] ~12 template directories migrated to appropriate ace-* packages
 - [ ] ace-nav discovery works for all migrated content
-- [ ] .claude/ symlinks updated to point to ace-handbook
+- [ ] .claude/ symlinks updated for new locations
 - [ ] docs/blueprint.md and architecture.md updated
-- [ ] ace-handbook version bumped to 0.5.0
+- [ ] Affected ace-* gems version bumped
 - [ ] dev-handbook archived to _legacy/
+
+**Deferred to Subtasks**:
+- Agents → subtask 180.2 (convert to skills)
+- Lint workflow → subtask 180.1 (new design)
+- idea-manager investigation → subtask 180.3
 
 ## Objective
 
@@ -80,27 +84,23 @@ Migrate remaining dev-handbook content to appropriate ace-* package handbooks. E
 | create-test-cases.wf.md | [x] migrated | ace-taskflow |
 | create-user-docs.wf.md | [x] migrated | ace-docs |
 | document-unplanned-work.wf.md | [x] migrated | ace-taskflow |
-| fix-linting-issue-from.wf.md | [ ] NOT MIGRATED | suggest: ace-lint |
-@# approved -> we should have run-lint (with option to autofix) -> that should create report; and we should have a workflow that will process and report and create task for all the things that needs to be done, with optional proposal how to do it (if its not autofix we should discuss it in the task form)
+| fix-linting-issue-from.wf.md | [x] skip | → subtask 180.1 (new lint workflow design) |
 | fix-tests.wf.md | [x] migrated | ace-taskflow |
 | improve-code-coverage.wf.md | [x] migrated | ace-taskflow |
 | load-project-context.wf.md | [x] migrated | ace-context (as load-context.wf.md) |
 | prioritize-align-ideas.wf.md | [x] migrated | ace-taskflow |
 | rebase-against.wf.md | [x] migrated | ace-git (as rebase.wf.md) |
-| save-session-context.wf.md | [ ] NOT MIGRATED | suggest: skip (obsolete?) |
-@# skip
-| synthesize-reviews.wf.md | [ ] NOT MIGRATED | suggest: ace-review |
-@# we already have synthezie in the ace-review -> each review do it automaticaly if there is more then one report -> skip
+| save-session-context.wf.md | [x] skip | obsolete |
+| synthesize-reviews.wf.md | [x] skip | already in ace-review (auto-synthesizes) |
 | update-blueprint.wf.md | [x] migrated | ace-docs |
 | update-context-docs.wf.md | [x] migrated | ace-docs |
 
 **From dev-handbook/.integrations/wfi/** (1 file - NOT MIGRATED):
 | File | Status | Location |
 |------|--------|----------|
-| initialize-project-structure.wf.md | [ ] NOT MIGRATED | suggest: ace-handbook |
-@# agree
+| initialize-project-structure.wf.md | [ ] NOT MIGRATED | ace-handbook |
 
-**Summary**: 22/26 workflows migrated (85%), 4 remaining
+**Summary**: 23/26 workflows migrated or skipped (88%), 1 remaining to migrate
 
 ### Phase 2: Guides Migration
 
@@ -144,9 +144,9 @@ Migrate remaining dev-handbook content to appropriate ace-* package handbooks. E
 | guides-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
 | markdown-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
 | tools-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
-| workflow-instructions-definition.g.md | [ ] NOT MIGRATED | meta: ace-handbook |
+| workflow-instructions-definition.g.md | [ ] NOT MIGRATED | ace-handbook/guides/meta/ |
 
-@# they should stil be in own meta namespace wihtout breaking how the whole hanbook owrks guides/meta/... 
+**Note**: Meta-guides should maintain their own namespace: `ace-handbook/handbook/guides/meta/`
 
 **Summary**: 1/32 guides migrated (3%), 31 remaining
 
@@ -167,23 +167,23 @@ Migrate remaining dev-handbook content to appropriate ace-* package handbooks. E
 | cms-page-designer.ag.md | [x] skip | project-specific (CMS) |
 | cms-page-populator.ag.md | [x] skip | project-specific (CMS) |
 | create-path.ag.md | [x] skip | legacy/obsolete |
-| feature-research.ag.md | [ ] NOT MIGRATED | ace-search (merge with research.ag.md?) |
-| git-commit.ag.md | [ ] NOT MIGRATED | ace-git-commit |
-| lint-files.ag.md | [ ] NOT MIGRATED | ace-lint |
-| release-navigator.ag.md | [ ] NOT MIGRATED | ace-taskflow |
-| search.ag.md | [x] migrated | ace-search (already done) |
-| task-creator.ag.md | [ ] NOT MIGRATED | ace-taskflow |
-| task-finder.ag.md | [ ] NOT MIGRATED | ace-taskflow |
+| feature-research.ag.md | [x] skip | → subtask 180.2 (convert to skill) |
+| git-commit.ag.md | [x] skip | → subtask 180.2 (convert to skill) |
+| lint-files.ag.md | [x] skip | → subtask 180.2 (convert to skill) |
+| release-navigator.ag.md | [x] skip | → subtask 180.2 (convert to skill) |
+| search.ag.md | [x] migrated | ace-search (→ skill in 180.2) |
+| task-creator.ag.md | [x] skip | → subtask 180.2 (convert to skill) |
+| task-finder.ag.md | [x] skip | → subtask 180.2 (convert to skill) |
 
-@# skipp all agents -> create new task with content of this agents and plan to migrate this agents to skills in future -> put in backlog 
+**Decision**: All agents should be converted to skills (subtask 180.2). This includes:
+- 6 remaining dev-handbook agents (feature-research, git-commit, lint-files, release-navigator, task-creator, task-finder)
+- 5 already migrated agents (search, research, security-audit, worktree, timestamp)
 
 **.claude/agents/ symlinks** (integration layer):
-- [x] search.ag.md → ace-search/handbook/agents/search.ag.md
-- [x] research.ag.md → ace-search/handbook/agents/research.ag.md
+- [x] search.ag.md → ace-search/handbook/agents/search.ag.md (→ skill in 180.2)
+- [x] research.ag.md → ace-search/handbook/agents/research.ag.md (→ skill in 180.2)
 
-@# also agents we have migrated dshould follow the same process -> convert to skill add them to the same task 
-
-**Summary**: 6/12 dev-handbook agents handled (1 migrated, 5 skip), 6 remaining for migration
+**Summary**: All agents deferred to subtask 180.2 for skill conversion
 
 ### Phase 4: Templates Migration
 
@@ -199,23 +199,15 @@ Migrate remaining dev-handbook content to appropriate ace-* package handbooks. E
 **From dev-handbook/templates/** (25 directories - mostly NOT MIGRATED):
 | Directory | Status | Suggested Target |
 |-----------|--------|------------------|
-| binstubs/ | [ ] NOT MIGRATED | skip (mono-repo specific) |
+| binstubs/ | [x] skip | mono-repo specific |
 | code-docs/ | [ ] NOT MIGRATED | ace-docs |
-| commit/ | [x] partial | ace-git (squash done) |
-@# skip 
-| completed-work-documentation.md | [ ] NOT MIGRATED | ace-taskflow |
-@# this need more work -> move now to ace-handbook
-| context/ | [ ] NOT MIGRATED | ace-context |
-@# skip
-| cookbooks/ | [ ] NOT MIGRATED | ace-docs |
-@# this is more to ace-handbook (cookbooks should be parto of handbook/ )
-| idea-manager/ | [ ] NOT MIGRATED | ace-taskflow |
-@# we should not migrate as it is just improve the /Users/mc/Ps/ace-meta/ace-taskflow/handbook/workflow-instructions/capture-idea.wf.md if anything valueable  
-@# it would be good to trace how ace-taskflow idea create works with -llm works and do we still need it - maybe yes 
+| commit/ | [x] skip | already migrated to ace-git |
+| completed-work-documentation.md | [ ] NOT MIGRATED | ace-handbook (needs more work) |
+| context/ | [x] skip | |
+| cookbooks/ | [ ] NOT MIGRATED | ace-handbook (cookbooks are part of handbook) |
+| idea-manager/ | [x] skip | → subtask 180.3 (investigate) |
 | project-docs/ | [ ] NOT MIGRATED | ace-docs |
-@# verify with what we have in ace-docs 
-| prompts/ | [x] partial | ace-prompt (base, bug done) |
-@# prompts are empty ? 
+| prompts/ | [x] skip | empty directory |
 | release-codemods/ | [ ] NOT MIGRATED | ace-taskflow |
 | release-docs/ | [ ] NOT MIGRATED | ace-taskflow |
 | release-management/ | [ ] NOT MIGRATED | ace-taskflow |
@@ -225,16 +217,15 @@ Migrate remaining dev-handbook content to appropriate ace-* package handbooks. E
 | release-tasks/ | [ ] NOT MIGRATED | ace-taskflow |
 | release-testing/ | [ ] NOT MIGRATED | ace-taskflow |
 | release-ux/ | [ ] NOT MIGRATED | ace-taskflow |
-| review-agents/ | [ ] NOT MIGRATED | ace-review |
-@# we should get rid of agents and migrate to skills instead so this need to be reframed as skills -> ace-handbook
+| review-agents/ | [x] skip | → subtask 180.2 (convert to skills) |
 | review-modules/ | [ ] NOT MIGRATED | ace-review |
 | review-tasks/ | [ ] NOT MIGRATED | ace-review |
-| session-management/ | [ ] NOT MIGRATED | skip (obsolete?) |
+| session-management/ | [x] skip | obsolete |
 | task-management/ | [ ] NOT MIGRATED | ace-taskflow |
 | tasks/ | [ ] NOT MIGRATED | ace-taskflow |
 | user-docs/ | [ ] NOT MIGRATED | ace-docs |
 
-**Summary**: 2/25 template dirs partially migrated, 23 remaining
+**Summary**: 7/25 template dirs skipped, ~12 remaining to migrate
 
 ### Phase 5: Integration Updates
 
