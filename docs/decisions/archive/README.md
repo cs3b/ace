@@ -26,7 +26,16 @@ Archived ADRs preserve historical context and help understand the evolution of t
 ### ADR-009: Centralized CLI Error Reporting
 - **Archived**: October 14, 2025
 - **Reason**: ErrorReporter module only used in legacy dev-tools. Current gems use standard error handling.
-- **Current State**: Thor CLI commands handle errors with standard Ruby exception patterns (see ADR-018)
+- **Current State**: dry-cli commands handle errors with standard Ruby exception patterns (see ADR-023)
+
+### ADR-018: Thor CLI Commands Pattern
+- **Archived**: January 7, 2026
+- **Reason**: Thor replaced by dry-cli due to fundamental design limitations:
+  1. Option consumption conflicts (Thor consumes declared options before calling method)
+  2. Nested subcommand limitations (Thor issue #489 open since 2014)
+  3. Default command workarounds required
+  4. Help flag boilerplate everywhere
+- **Current State**: See ADR-023 for dry-cli patterns
 
 ### ADR-019: Configuration Architecture
 - **Archived**: December 13, 2025
@@ -37,7 +46,7 @@ Archived ADRs preserve historical context and help understand the evolution of t
 
 These ADRs were created during the **legacy dev-tools phase** (pre-v0.9.0) before the mono-repo migration (ADR-015). The migration to ace-* gems (v0.9.0+, October 2025) introduced new patterns:
 
-- **ADR-018**: Thor CLI Commands Pattern (replaces ADR-009)
+- **ADR-023**: dry-cli CLI Framework (supersedes ADR-018 Thor, which replaced ADR-009)
 - **ADR-010**: HTTP Client Strategy with Faraday (current approach, no VCR)
 - **Explicit Requires**: No autoloading framework needed for smaller, focused gems
 
@@ -46,7 +55,7 @@ These ADRs were created during the **legacy dev-tools phase** (pre-v0.9.0) befor
 For current architecture decisions, see:
 - **ADR-015**: Mono-Repo Migration to ace-* Gems
 - **ADR-016**: Handbook Directory Architecture
-- **ADR-018**: Thor CLI Commands Pattern
+- **ADR-023**: dry-cli CLI Framework
 - **docs/decisions.md**: Summary of all active decisions
 
 ---
