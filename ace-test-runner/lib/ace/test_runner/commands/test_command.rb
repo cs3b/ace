@@ -80,9 +80,18 @@ module Ace
 
         def handle_cleanup_reports
           require "ace/test_runner/molecules/report_storage"
+          require "ace/test_runner/atoms/timestamp_generator"
+          require "ace/test_runner/molecules/config_loader"
 
+          # Load config from cascade (ADR-022 pattern)
+          config_loader = Molecules::ConfigLoader.new
+          config_data = config_loader.load(@options[:config_path])
+          config = config_loader.merge_with_options(config_data, @options)
+
+          timestamp_generator = Atoms::TimestampGenerator.new
           storage = Molecules::ReportStorage.new(
-            base_dir: @options[:report_dir] || "test-reports"
+            base_dir: config[:defaults][:report_dir] || "test-reports",
+            timestamp_generator: timestamp_generator
           )
 
           keep = @options[:cleanup_keep] || 10
