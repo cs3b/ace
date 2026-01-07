@@ -147,6 +147,19 @@ module CommandMockHelper
       }
     end
 
+    # ace-nav command (for protocol resolution)
+    mock_command(/^ace-nav/) do |command, options|
+      # Extract protocol ref from command
+      protocol_ref = command.match(/^ace-nav\s+"?([^"\s]+)"?/)[1] rescue "wfi://workflow"
+      {
+        success: true,
+        stdout: "/test/path/to/#{protocol_ref.gsub(/[^a-zA-Z0-9]/, '_')}.md\n",
+        stderr: "",
+        exitstatus: 0,
+        signal: nil
+      }
+    end
+
     # pwd command
     mock_command(/^pwd$/) do |command, options|
       {
