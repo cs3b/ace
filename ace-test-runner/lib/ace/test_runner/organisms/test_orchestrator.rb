@@ -544,7 +544,11 @@ module Ace
         end
 
         def save_reports(report)
-          storage = Molecules::ReportStorage.new(base_dir: @configuration.report_dir)
+          timestamp_generator = Atoms::TimestampGenerator.new
+          storage = Molecules::ReportStorage.new(
+            base_dir: @configuration.report_dir,
+            timestamp_generator: timestamp_generator
+          )
 
           # Save in appropriate format
           report_path = case @configuration.format
