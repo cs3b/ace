@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.03)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - User-facing command interface remains identical
+  - All options and behavior preserved
+  - Improved internal command structure and testability
+
 ## [0.7.0] - 2026-01-05
 
 ### Added

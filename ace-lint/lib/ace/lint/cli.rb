@@ -1,105 +1,86 @@
 # frozen_string_literal: true
 
-require 'ace/core/cli/base'
-require_relative 'commands/lint_command'
-require_relative 'version'
+require "dry/cli"
+require "set"
+require "ace/core"
+require_relative "../lint"
+# Commands
+require_relative "commands/lint_command"
 
 module Ace
   module Lint
-    # CLI interface using Thor
-    class CLI < Ace::Core::CLI::Base
-      # class_options :quiet, :verbose, :debug inherited from Base
+    # dry-cli based CLI registry for ace-lint
+    #
+    # This replaces the Thor-based CLI with dry-cli while maintaining
+    # complete command parity and user-facing behavior.
+    module CLI
+      extend Dry::CLI::Registry
 
-      # Override to allow `ace-lint file.md` without explicit `lint` command
-      def self.start(given_args = ARGV, config = {})
-        # If first arg looks like a file/path (not a known command), prepend 'lint'
-        if given_args.any? && !%w[lint version help].include?(given_args.first) && !given_args.first.start_with?('-')
-          given_args.unshift('lint')
+      # Application commands registered in this CLI (single source of truth)
+      REGISTERED_COMMANDS = %w[lint].freeze
+
+      # dry-cli built-in commands (standard across all CLI gems)
+      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+      # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
+      # Using Set for O(1) lookup performance
+      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+
+      # Default command to use when first argument is not a known command
+      DEFAULT_COMMAND = "lint"
+
+      # Start the CLI with default command routing
+      #
+      # This method handles the default task routing that was previously
+      # in the Thor CLI.start override. Moving it here makes the routing
+      # logic testable and ensures consistent behavior for all consumers
+      # (shell, tests, internal Ruby calls).
+      #
+      # @param args [Array<String>] Command-line arguments
+      # @return [Integer] Exit code (0 for success, non-zero for failure)
+      #
+      # @example From shell
+      #   Ace::Lint::CLI.start(ARGV)
+      #
+      # @example From tests
+      #   result = Ace::Lint::CLI.start(["README.md", "--fix"])
+      def self.start(args)
+        # If first argument isn't a known command and args aren't empty,
+        # prepend the default command. This maintains Thor's default_task parity.
+        #
+        # Edge case: If first arg looks like a file path (contains . or /),
+        # treat it as a file path even if it happens to match a command name.
+        # Example: ace-lint ./version should lint ./version, not show version
+        if args.any? && !known_command?(args.first)
+          args = [DEFAULT_COMMAND] + args
         end
-        super(given_args, config)
+
+        Dry::CLI.new(self).call(arguments: args)
       end
 
-      # Override help to add examples section
-      def self.help(shell, subcommand = false)
-        super
-        shell.say ""
-        shell.say "File Type Auto-Detection:"
-        shell.say "  File types are detected from extensions by default:"
-        shell.say "    .md  → markdown (frontmatter validation)"
-        shell.say "    .yml, .yaml → yaml (syntax checking)"
-        shell.say "    *.*  → frontmatter (YAML frontmatter in any file)"
-        shell.say ""
-        shell.say "Examples:"
-        shell.say "  ace-lint README.md                    # Auto-detect type from extension"
-        shell.say "  ace-lint --fix README.md              # Auto-fix and format"
-        shell.say "  ace-lint --type yaml config.yml       # Explicit type specification"
-        shell.say "  ace-lint docs/**/*.md --format        # Format with kramdown"
+      # Check if argument is a known command, considering path edge cases
+      #
+      # @param arg [String] First argument to check
+      # @return [Boolean] true if it's a command, false if it's likely a file path
+      def self.known_command?(arg)
+        return false if arg.nil?
+
+        # If it looks like a path (contains / or starts with .), treat as file path not command
+        return false if arg.include?("/") || arg.start_with?(".")
+
+        KNOWN_COMMANDS.include?(arg)
       end
 
-      desc 'lint [FILES...]', 'Lint markdown, YAML, and frontmatter files'
-      long_desc <<~DESC
-        Lint markdown, YAML, and frontmatter files for common issues.
-        Auto-detects file type from extension by default.
+      # Register the lint command
+      register "lint", Commands::Lint.new
 
-        SYNTAX:
-          ace-lint [FILES...] [OPTIONS]
-          ace-lint lint [FILES...] [OPTIONS]
-
-        EXAMPLES:
-
-          # Basic linting (auto-detect file type)
-          $ ace-lint README.md
-          $ ace-lint docs/**/*.md
-
-          # Auto-fix and format
-          $ ace-lint --fix README.md
-          $ ace-lint --format --line-width 80 docs/*.md
-
-          # Specific file type (override auto-detection)
-          $ ace-lint --type yaml config.yml
-          $ ace-lint --type frontmatter _posts/*.md
-
-          # Multiple files with options
-          $ ace-lint file1.md file2.yml --fix
-          $ ace-lint **/*.md --quiet --format
-
-        SUPPORTED FILE TYPES:
-
-          markdown     .md files with frontmatter validation
-          yaml         .yml, .yaml files with syntax checking
-          frontmatter  Files with YAML frontmatter (any extension)
-
-        CONFIGURATION:
-
-          Global config:  ~/.ace/lint/config.yml
-          Project config: .ace/lint/config.yml
-          Example:        ace-lint/.ace-defaults/lint/config.yml
-
-        OUTPUT:
-
-          Exit codes: 0 (success), 1 (errors found), 2 (fatal error)
-          Errors printed to stderr in format: "file:line: message"
-          Use --quiet to suppress detailed output
-      DESC
-      method_option :fix, type: :boolean, aliases: '-f', desc: 'Auto-fix/format files'
-      method_option :format, type: :boolean, desc: 'Format files with kramdown'
-      method_option :type, type: :string, aliases: '-t', desc: 'File type (markdown, yaml, frontmatter)'
-      # :quiet option inherited from Base class (-q alias)
-      method_option :line_width, type: :numeric, desc: 'Line width for formatting (default: 120)'
-      def lint(*files)
-        # Handle --help/-h passed as first argument
-        if files.first == "--help" || files.first == "-h"
-          invoke :help, ["lint"]
-          return 0
-        end
-        Commands::LintCommand.execute(files, options)
-      end
-
-      # Define version command using Base class helper (maps --version, not -v)
-      version_command 'ace-lint', Ace::Lint::VERSION
-
-      # Default command is lint
-      default_task :lint
+      # Register version command
+      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+        gem_name: "ace-lint",
+        version: Ace::Lint::VERSION
+      )
+      register "version", version_cmd
+      register "--version", version_cmd
     end
   end
 end

@@ -27,6 +27,7 @@ require_relative 'lint/organisms/result_reporter'
 
 # Commands
 require_relative 'lint/commands/lint_command'
+require_relative 'lint/commands/lint'
 
 # CLI
 require_relative 'lint/cli'
