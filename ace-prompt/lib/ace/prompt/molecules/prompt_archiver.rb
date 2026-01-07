@@ -2,7 +2,7 @@
 
 require "fileutils"
 require "ace/support/fs"
-require_relative "../atoms/timestamp_generator"
+require_relative "../atoms/session_id_generator"
 
 module Ace
   module Prompt
@@ -47,7 +47,7 @@ module Ace
           FileUtils.mkdir_p(archive_dir)
 
           # Generate or use provided timestamp
-          ts = timestamp || Atoms::TimestampGenerator.call[:timestamp]
+          ts = timestamp || Atoms::SessionIdGenerator.call[:timestamp]
 
           # Handle timestamp collision by appending suffix
           archive_filename = "#{ts}.md"
