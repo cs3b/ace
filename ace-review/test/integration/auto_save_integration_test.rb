@@ -144,14 +144,16 @@ class AutoSaveIntegrationTest < Minitest::Test
     review_data = { report_type: 'synthesis' }
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
-    assert_match(/\d{8}-\d{6}-synthesis\.md$/, filename)
+    # Compact ID is 6 chars Base36 (0-9, a-z)
+    assert_match(/[0-9a-z]{6}-synthesis\.md$/, filename)
   end
 
   def test_generates_model_review_filename
     review_data = { model: "claude:opus", preset: "code-pr" }
     filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
 
-    assert_match(/\d{8}-\d{6}-claude-opus-code-pr-review\.md$/, filename)
+    # Compact ID is 6 chars Base36 (0-9, a-z)
+    assert_match(/[0-9a-z]{6}-claude-opus-code-pr-review\.md$/, filename)
   end
 
   # Test end-to-end flow (mocked)
