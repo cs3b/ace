@@ -5,8 +5,8 @@ require_relative 'lib/ace/git/worktree/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-git-worktree'
   spec.version = Ace::Git::Worktree::VERSION
-  spec.authors = ['Miguel Czyz']
-  spec.email = ['mc@cs3b.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Task-aware git worktree management for ACE ecosystem'
   spec.description = <<~DESC

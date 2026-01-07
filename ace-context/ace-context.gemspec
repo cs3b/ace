@@ -5,8 +5,8 @@ require_relative 'lib/ace/context/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-context'
   spec.version = Ace::Context::VERSION
-  spec.authors = ['Michal Czyz']
-  spec.email = ['mc@cs3b.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Context loading for ACE projects'
   spec.description = 'Context loading gem for ACE projects. Provides preset-based context ' \

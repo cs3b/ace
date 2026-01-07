@@ -5,8 +5,8 @@ require_relative "lib/ace/integration/claude/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-integration-claude"
   spec.version = Ace::Integration::Claude::VERSION
-  spec.authors = ["ACE Team"]
-  spec.email = ["team@ace.dev"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Claude Code integration workflows for ACE"
   spec.description = "Integration package containing Claude Code command templates, workflows, and tools for maintaining AI-assisted development integration"
