@@ -124,12 +124,27 @@ List items that don't require changes (no numbering):
 
 #### Action Items
 
-Numbered table of items that need fixing:
+List items that need fixing with priority indicators:
 
-| # | Priority | Issue | File | Fix |
-|---|----------|-------|------|-----|
-| 1 | Critical | ... | `file:line` | ... |
-| 2 | High | ... | `file:line` | ... |
+```
+🔴 #1 [Critical] Issue description
+   File: path/to/file.rb:123
+   Fix: What needs to be done
+
+🟡 #2 [High] Another issue
+   File: another/file.rb:45
+   Fix: Suggested fix
+
+🟢 #3 [Medium] Improvement suggestion
+   File: path/to/file.rb:89
+   Fix: Optional enhancement
+
+🔵 #4 [Low] Nice-to-have
+   File: path/to/file.rb:12
+   Fix: Minor improvement
+```
+
+Priority indicators: 🔴 Critical/Blocking, 🟡 High, 🟢 Medium, 🔵 Low
 
 ### Step 6: Ask for Priority Threshold
 
