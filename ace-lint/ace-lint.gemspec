@@ -5,7 +5,7 @@ require_relative "lib/ace/lint/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-lint"
   spec.version = Ace::Lint::VERSION
-  spec.authors = ["ace-meta"]
+  spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Ruby-only linting gem for markdown, YAML, and frontmatter validation"

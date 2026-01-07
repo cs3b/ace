@@ -5,8 +5,8 @@ require_relative "lib/ace/support/mac_clipboard/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-support-mac-clipboard"
   spec.version = Ace::Support::MacClipboard::VERSION
-  spec.authors = ["ACE Team"]
-  spec.email = ["ace@example.com"]
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = "macOS NSPasteboard integration for ACE"
   spec.description = "Provides FFI-based access to macOS NSPasteboard for reading rich clipboard content (images, files, RTF, HTML)"

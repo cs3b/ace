@@ -5,7 +5,7 @@ require_relative "lib/ace/search/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-search"
   spec.version = Ace::Search::VERSION
-  spec.authors = ["ACE Team"]
+  spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Unified search tool for codebases with ripgrep/fd backends"

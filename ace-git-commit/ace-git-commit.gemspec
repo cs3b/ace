@@ -5,8 +5,8 @@ require_relative 'lib/ace/git_commit/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-git-commit'
   spec.version = Ace::GitCommit::VERSION
-  spec.authors = ['ACE Team']
-  spec.email = ['ace@example.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'LLM-powered git commit tool for ACE'
   spec.description = 'Streamlined git commit tool that leverages LLM technology to generate meaningful commit messages'

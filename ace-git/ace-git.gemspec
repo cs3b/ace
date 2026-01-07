@@ -5,8 +5,8 @@ require_relative 'lib/ace/git/version'
 Gem::Specification.new do |spec|
   spec.name = 'ace-git'
   spec.version = Ace::Git::VERSION
-  spec.authors = ['Michal Czyz']
-  spec.email = ['mc@cs3b.com']
+  spec.authors = ["Michal Czyz"]
+  spec.email = ["mc@cs3b.com"]
 
   spec.summary = 'Unified git operations for ACE projects'
   spec.description = 'Comprehensive git integration for ACE ecosystem: unified diff generation, ' \
