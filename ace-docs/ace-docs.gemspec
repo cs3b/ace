@@ -5,7 +5,7 @@ require_relative "lib/ace/docs/version"
 Gem::Specification.new do |spec|
   spec.name = "ace-docs"
   spec.version = Ace::Docs::VERSION
-  spec.authors = ["ACE Team"]
+  spec.authors = ["Michal Czyz"]
   spec.email = ["mc@cs3b.com"]
 
   spec.summary = "Documentation management with frontmatter, change analysis, and intelligent updates"
@@ -38,6 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-config", "~> 0.5"
   spec.add_dependency "ace-support-core", "~> 0.11" # Requires PromptCacheManager
   spec.add_dependency "ace-git", "~> 0.3"
+  spec.add_dependency "ace-timestamp", "~> 0.1"
   spec.add_dependency "ace-llm", "~> 0.1"
   spec.add_dependency "ace-support-markdown", "~> 0.1"
   spec.add_dependency "thor", "~> 1.3"
