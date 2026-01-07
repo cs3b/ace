@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.13)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command classes (query, list_providers)
+  - Standardized option type handling (temperature as float)
+
+### Fixed
+- CLI test compatibility with dry-cli capture patterns
+- Default command routing for query command
+
 ## [0.18.0] - 2026-01-05
 
 ### Added
