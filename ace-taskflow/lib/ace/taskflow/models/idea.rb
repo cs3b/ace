@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "ace/timestamp"
+
 module Ace
   module Taskflow
     module Models
@@ -40,9 +42,30 @@ module Ace
         def extract_title_from_filename(filename)
           return nil unless filename
 
-          # Remove timestamp prefix and .md extension
-          title = filename.sub(/^\d{8}-\d{6}-/, "").sub(/\.md$/, "")
-          # Convert dashes to spaces
+          # Get basename (handle directory-style ideas like "xyz789-directory-idea/idea.s.md")
+          basename = File.basename(filename)
+
+          # Remove .s.md or .md extension first
+          basename = basename.sub(/\.s\.md$/, "").sub(/\.md$/, "")
+
+          # Try timestamp prefix first: "20250115-103045-my-idea"
+          if basename =~ /^(\d{8}-\d{6})-(.*)$/
+            title = $2
+          # Try Base36 ID prefix with validation: "abc123-my-idea"
+          elsif basename =~ /^([0-9a-z]{6})-(.*)$/i
+            potential_id = $1
+            if Ace::Timestamp.detect_format(potential_id) == :compact
+              title = $2
+            else
+              # Not a valid Base36 ID, treat entire basename as title
+              title = basename
+            end
+          else
+            # No recognized ID prefix, use entire basename as title
+            title = basename
+          end
+
+          # Convert dashes to spaces and strip
           title.tr("-", " ").strip
         end
       end

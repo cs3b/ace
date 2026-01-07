@@ -99,6 +99,7 @@ module TestFactory
 
     # Create .ace/taskflow/config.yml for config discovery
     # Only set root - other settings come from gem defaults via ace-config cascade
+    # IDs use Base36 compact format from ace-timestamp gem
     config_dir = File.join(base_dir, ".ace", "taskflow")
     FileUtils.mkdir_p(config_dir)
     File.write(File.join(config_dir, "config.yml"), <<~CONFIG)

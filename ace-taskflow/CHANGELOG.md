@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-01-06
+
+### Added
+- Base36 compact ID support for idea directories (default format)
+- Base36 compact ID extraction from idea titles
+- Configurable `id_format` option in `.ace/taskflow/config.yml` (base36 or timestamp)
+
+### Changed
+- **BREAKING**: Default idea directory naming changed from 14-character timestamps (YYYYMMDD-HHMMSS) to 6-character Base36 compact IDs
+  - Example: `20250106-123000-dark-mode` → `i50jj3-dark-mode`
+  - Existing timestamp-formatted directories remain readable (dual-format detection)
+  - To restore legacy format, set `id_format: "timestamp"` in config
+  - See README for migration notes and precision details (~1.85s precision)
+
 ## [0.29.1] - 2026-01-06
 
 ### Fixed

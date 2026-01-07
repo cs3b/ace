@@ -1,36 +1,50 @@
 # frozen_string_literal: true
 
 require "time"
+require "ace/timestamp"
 
 module Ace
   module Taskflow
     module Molecules
       class FileNamer
-        def initialize(config)
+        def initialize(config, time_provider: Time)
           @config = config
+          @time_provider = time_provider
         end
 
         def generate(metadata = {})
-          timestamp_format = @config.dig("file_naming", "timestamp_format") || "%Y%m%d-%H%M%S"
-          timestamp = Time.now.strftime(timestamp_format)
+          id = generate_id
           directory = idea_directory
 
           # BUG FIX: ALWAYS generate directory paths (never flat files)
           # This fixes the bug where ideas were sometimes created as flat files
-          # Generate folder name with timestamp + theme
+          # Generate folder name with id + theme
           if metadata[:folder_slug]
             # Use LLM-generated hierarchical slugs
-            dirname = "#{timestamp}-#{metadata[:folder_slug]}"
+            dirname = "#{id}-#{metadata[:folder_slug]}"
           else
             # Fallback: use title for folder slug
             title = sanitize_title(metadata[:title])
             dirname = if title && !title.empty?
-                        "#{timestamp}-#{title}"
+                        "#{id}-#{title}"
                       else
-                        "#{timestamp}-idea"
+                        "#{id}-idea"
                       end
           end
           File.join(directory, dirname)
+        end
+
+        # Generate a Base36 compact ID (6 characters)
+        # @return [String] 6-char Base36 compact ID
+        def generate_id
+          Ace::Timestamp.encode(@time_provider.now)
+        end
+
+        # Detect the format of an ID string
+        # @param id_string [String] The ID to analyze
+        # @return [Symbol, nil] :compact, :timestamp, or nil
+        def self.detect_id_format(id_string)
+          Ace::Timestamp.detect_format(id_string)
         end
 
         private
