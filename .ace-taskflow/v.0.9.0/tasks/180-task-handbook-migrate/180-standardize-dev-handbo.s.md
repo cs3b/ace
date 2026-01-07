@@ -6,7 +6,7 @@ estimate: 8-16h
 dependencies: []
 ---
 
-# Migrate and Standardize dev-handbook Content to ace-handbook Gem
+# Migrate dev-handbook Content to Appropriate ace-* Package Handbooks
 
 ## Behavioral Specification
 
@@ -52,7 +52,7 @@ gem install ace-handbook
 
 ## Objective
 
-Finalize the ace-handbook gem by migrating all remaining content from dev-handbook, enabling `gem install ace-handbook` to provide complete AI-assisted development capabilities. This eliminates the legacy dev-handbook directory and centralizes all workflows, guides, agents, and templates in a distributable gem.
+Migrate remaining dev-handbook content to appropriate ace-* package handbooks. Each workflow, guide, agent, and template goes to the most thematically relevant package (e.g., git workflows → ace-git, review guides → ace-review, task agents → ace-taskflow). Generic/cross-cutting content goes to ace-handbook. This eliminates the legacy dev-handbook directory and distributes content across focused gems.
 
 ## Scope of Work
 
