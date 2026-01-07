@@ -40,9 +40,10 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency "ace-config", "~> 0.5"
   spec.add_dependency "ace-timestamp", "~> 0.1"
+  spec.add_dependency "ace-support-core", "~> 0.9"
+  spec.add_dependency "dry-cli", "~> 1.0"
   spec.add_dependency "faraday", "~> 2.7", ">= 2.7.4"
   spec.add_dependency "faraday-retry", "~> 2.2"
-  spec.add_dependency "thor", "~> 1.3"
 
   # Development dependencies
   spec.add_development_dependency "minitest", "~> 5.19"
