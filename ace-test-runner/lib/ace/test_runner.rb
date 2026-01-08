@@ -30,6 +30,7 @@ require_relative "test_runner/atoms/command_builder"
 require_relative "test_runner/atoms/result_parser"
 require_relative "test_runner/atoms/timestamp_generator"
 require_relative "test_runner/atoms/lazy_loader"
+require_relative "test_runner/atoms/report_path_resolver"
 
 # Molecules - Core operations (always needed for basic test running)
 require_relative "test_runner/molecules/test_executor"
@@ -38,6 +39,7 @@ require_relative "test_runner/molecules/report_storage"
 require_relative "test_runner/molecules/config_loader"
 require_relative "test_runner/molecules/pattern_resolver"
 require_relative "test_runner/molecules/cli_argument_parser"
+require_relative "test_runner/molecules/failed_package_reporter"
 # Other molecules loaded lazily (deprecation_fixer, rake_integration)
 
 # Formatters - Load only base formatter, others loaded on demand
