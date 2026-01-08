@@ -1,5 +1,0 @@
-# frozen_string_literal: true
-
-module CodingAgentTools
-  VERSION = "0.6.0"
-end
