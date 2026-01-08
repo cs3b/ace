@@ -1,7 +1,7 @@
 ---
 name: spec
 description: Specification and proposal review scope focus
-last-updated: '2026-01-01'
+last-updated: '2026-01-08'
 ---
 
 # Specification Review Focus

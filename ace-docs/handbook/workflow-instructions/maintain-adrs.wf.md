@@ -102,7 +102,7 @@ Identify gaps between files and summary
 
 **Examples from Production:**
 
-* **ADR-003**: Template Directory Separation (evolved from `dev-handbook/templates/` to `gem/handbook/`)
+* **ADR-003**: Template Directory Separation (evolved from the legacy dev-handbook structure to `gem/handbook/`)
 * **ADR-004**: Consistent Path Standards (evolved to distributed gem/handbook/ pattern)
 
 ### When to Update Scope
@@ -409,7 +409,7 @@ Ensure proper sectioning:
 4.  Consider creating new ADR if fundamentally different
 5.  Update decisions.md with evolution note
 
-**Example**: Template patterns evolved from `dev-handbook/templates/` to `gem/handbook/`
+**Example**: Template patterns evolved from the legacy dev-handbook structure to `gem/handbook/`
 
 ### Scenario 3: Quarterly ADR Review
 

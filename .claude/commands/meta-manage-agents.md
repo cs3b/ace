@@ -50,4 +50,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: @dev-handbook/.meta/wfi/manage-agents.wf.md
+For detailed instructions, see: ace-context wfi://manage-agents

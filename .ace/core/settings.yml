@@ -28,9 +28,4 @@ ace:
   # Custom paths or patterns can be added here
   paths:
     gems:
-      - "ace-support-core"
-      - "ace-*"  # Future gems
-    submodules:
-      - "dev-tools"
-      - "dev-handbook"
-      - "dev-taskflow"
+      - "ace-*"  # All ace-* gems in mono-repo

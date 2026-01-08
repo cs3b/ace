@@ -51,4 +51,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: @dev-handbook/.meta/wfi/update-integration-claude.wf.md
+For detailed instructions, see: ace-context wfi://update-integration-claude

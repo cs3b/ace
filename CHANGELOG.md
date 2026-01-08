@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.272] - 2026-01-08
+
+### Changed
+
+- **ace-handbook 0.5.0**: dev-handbook content migration (task 180)
+  - Migrated 31 guides to appropriate ace-* packages
+  - Migrated 12 template directories to ace-docs, ace-taskflow, ace-review
+  - Migrated initialize-project-structure.wf.md workflow
+  - Added guide:// and tmpl:// protocol sources to 8 packages
+  - Updated docs/blueprint.md and docs/architecture.md
+
+### Removed
+
+- **dev-handbook**: Content archived to _legacy/dev-handbook/
+  - Workflows moved to ace-* package handbook/ directories
+  - Guides distributed to thematically appropriate packages
+  - Templates moved to ace-docs, ace-taskflow, ace-review
+
 ## [0.9.271] - 2026-01-08
 
 ### Added

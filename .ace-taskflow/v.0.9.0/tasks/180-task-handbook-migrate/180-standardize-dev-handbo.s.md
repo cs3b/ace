@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.180
-status: in-progress
+status: done
 priority: medium
 estimate: 4-8h
 dependencies: []
@@ -49,14 +49,14 @@ gem install ace-handbook
 
 ### Success Criteria
 
-- [ ] 1 remaining workflow migrated (initialize-project-structure.wf.md → ace-handbook)
-- [ ] 31 guides migrated to appropriate ace-* packages
-- [ ] ~12 template directories migrated to appropriate ace-* packages
-- [ ] ace-nav discovery works for all migrated content
-- [ ] .claude/ symlinks updated for new locations
-- [ ] docs/blueprint.md and architecture.md updated
-- [ ] Affected ace-* gems version bumped
-- [ ] dev-handbook archived to _legacy/
+- [x] 1 remaining workflow migrated (initialize-project-structure.wf.md → ace-handbook)
+- [x] 31 guides migrated to appropriate ace-* packages
+- [x] ~12 template directories migrated to appropriate ace-* packages
+- [x] ace-nav discovery sources registered for all packages
+- [x] .ace/ config files updated for new locations
+- [x] docs/blueprint.md and architecture.md updated
+- [x] ace-handbook version bumped to 0.5.0
+- [x] dev-handbook archived to _legacy/
 
 **Deferred to Subtasks**:
 - Agents → subtask 180.2 (convert to skills)

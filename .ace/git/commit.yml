@@ -14,26 +14,30 @@ git:
 
       # Custom scopes for ace-meta components
       custom:
-        # Gem components
+        # Gem components (auto-detected from ace-* pattern)
         - ace-support-core
         - ace-llm
+        - ace-git
         - ace-git-commit
+        - ace-git-secrets
+        - ace-git-worktree
         - ace-context
         - ace-nav
         - ace-taskflow
         - ace-test-runner
         - ace-support-test-helpers
+        - ace-handbook
+        - ace-review
+        - ace-docs
+        - ace-lint
+        - ace-search
+        - ace-prompt
+        - ace-integration-claude
 
         # Project areas
-        - dev-handbook
-        - dev-tools
         - taskflow
-        - templates
         - docs
         - config
-        - workflow
-        - agents
-        - prompts
 
   # LLM settings for this project
   generation:

@@ -1,0 +1,10 @@
+---
+# Guide Sources Protocol Configuration for ace-git-commit gem
+name: ace-git-commit
+type: gem
+description: Guides from ace-git-commit gem
+priority: 10
+config:
+  relative_path: handbook/guides
+  pattern: "*.g.md"
+  enabled: true

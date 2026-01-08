@@ -86,7 +86,6 @@ document_types:
   # Development guides
   guide:
     paths:
-      - "dev-handbook/guides/**/*.md"
       - "**/*.g.md"              # Extension-based pattern
     defaults:
       update_frequency: monthly
@@ -96,7 +95,6 @@ document_types:
   workflow:
     paths:
       - "**/*.wf.md"             # Extension pattern
-      - "dev-handbook/workflow-instructions/**/*.md"
     defaults:
       update_frequency: on-change
       auto_generate:
@@ -105,7 +103,6 @@ document_types:
   # Templates
   template:
     paths:
-      - "dev-handbook/templates/**/*.md"
       - "**/*.template.md"
     defaults:
       update_frequency: on-change

@@ -21,7 +21,7 @@ contexts:
       - "dev-taskflow/backlog"
       - "dev-taskflow/done"
       - "dev-taskflow/sessions"
-      - "dev-handbook/templates"
+      - "ace-handbook/handbook/templates"
       - "dev-tools/sig"
       - "dev-tools/coverage"
     includes: []
@@ -32,7 +32,7 @@ contexts:
     excludes:
       - "dev-taskflow/backlog"
       - "dev-taskflow/done"
-      - "dev-handbook/templates"
+      - "ace-handbook/handbook/templates"
     includes:
       - "dev-tools/lib"
       - "dev-tools/spec"
@@ -42,7 +42,7 @@ contexts:
   # Task context - focus on current tasks and workflow
   tasks:
     excludes:
-      - "dev-handbook"
+      - "ace-handbook/handbook"
       - "dev-tools/coverage"
       - "dev-tools/sig"
     includes:
@@ -73,7 +73,7 @@ repositories:
     - "."              # tools-meta (root)
     - "dev-tools"      # Primary development focus
     - "dev-taskflow"   # Task management
-    - "dev-handbook"   # Documentation and guides
+    - "ace-handbook/handbook"   # Documentation and guides
   
   # Repository-specific exclusions
   specific_excludes:
@@ -86,5 +86,5 @@ repositories:
     "dev-taskflow":
       - "backlog"
       - "done"
-    "dev-handbook":
+    "ace-handbook/handbook":
       - "templates"

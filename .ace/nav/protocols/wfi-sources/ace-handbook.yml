@@ -1,0 +1,11 @@
+---
+# WFI Sources Protocol Configuration for ace-handbook gem
+name: ace-handbook
+type: gem
+description: Handbook management workflow instructions
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true

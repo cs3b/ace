@@ -1,7 +1,7 @@
 ---
 title: 'Meta: Update Tools Documentation'
 command: meta-update-tools-docs
-description: Update dev-tools documentation from implementation and tests
+description: Update ace-* package documentation from implementation and tests
 author: handbook
 tools_restricted: true
 tools_allowed: Read, Write, Edit, MultiEdit, Glob, Grep, LS, Bash, TodoWrite
@@ -13,7 +13,7 @@ source: custom
 
 # Meta: Update Tools Documentation
 
-Update dev-tools documentation to reflect current implementation.
+Update ace-* package documentation to reflect current implementation.
 
 ## Usage
 
@@ -32,7 +32,7 @@ This meta workflow helps you:
 ## Process
 
 The workflow will:
-1. Analyze dev-tools Ruby implementation
+1. Analyze ace-* Ruby implementation
 2. Extract command signatures and options
 3. Update documentation files
 4. Generate usage examples from tests
@@ -48,4 +48,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: @dev-handbook/.meta/wfi/update-tools-docs.wf.md
+For detailed instructions, see: ace-context wfi://update-tools-docs
