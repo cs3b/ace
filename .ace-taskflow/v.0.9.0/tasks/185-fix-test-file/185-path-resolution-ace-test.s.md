@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.185
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 185-fix-test-file-path-resolution-in-ace-test-suite
+  path: "../ace-task.185"
+  created_at: '2026-01-08 21:53:39'
+  updated_at: '2026-01-08 21:53:39'
 ---
 
 # Fix Test File Path Resolution in ace-test-suite
