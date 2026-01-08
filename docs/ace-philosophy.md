@@ -487,35 +487,15 @@ ace-context project --embed-source
 stateDiagram-v2
     [*] --> idea: Capture idea
 
-    idea --> draft: /ace:draft-task
-    note right of draft
-        Task specification
-        Initial scope defined
-    end note
-
-    draft --> pending: /ace:plan-task
-    note right of pending
-        Implementation plan
-        Subtasks identified
-    end note
-
-    pending --> in_progress: /ace:work-on-task
-    note right of in_progress
-        Active development
-        Code changes made
-    end note
-
+    idea --> draft: draft-task
+    draft --> pending: plan-task
+    pending --> in_progress: work-on-task
     in_progress --> review: Submit for review
 
     review --> in_progress: Revisions needed
     review --> done: Approved
 
-    done --> [*]: Archived to _archive/
-
-    note right of done
-        Moved to _archive/
-        Ready for release notes
-    end note
+    done --> [*]: Archived
 ```
 
 **Directory structure:**
