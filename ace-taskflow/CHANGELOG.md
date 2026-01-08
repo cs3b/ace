@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-01-08
+
+### Added
+- SharedOptions module for DRY option definitions across CLI commands
+- CLI routing tests for KNOWN_COMMANDS and command aliases
+- `migrate-paths` alias for backward compatibility with Thor CLI naming
+
+### Changed
+- Migrated CLI framework from Thor to dry-cli
+  - All commands now use dry-cli with consistent Registry pattern
+  - Default command routing (`ace-taskflow 150` → `ace-taskflow task 150`) handled in `CLI.start`
+  - Cache clearing integrated into CLI lifecycle
+  - Type conversion for numeric options (limit, recently_done_limit, up_next_limit)
+  - KNOWN_COMMANDS pattern with COMMAND_ALIASES for auto-derived command validation
+  - Command aliases supported (e.g., `context` → `status`, `migrate-paths` → `migrate`)
+- CLI wrapper commands now properly pass options to underlying command classes
+  - `ideas`, `retros`, `doctor`, `migrate` commands accept all expected flags
+  - Options merged via CommandOptionParser's `thor_options:` parameter
+
+### Removed
+- `thor` dependency (replaced with `dry-cli`)
+
 ## [0.30.0] - 2026-01-06
 
 ### Added

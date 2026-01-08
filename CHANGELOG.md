@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.271] - 2026-01-08
+
+### Added
+
+- **ace-taskflow 0.31.0**: SharedOptions module for DRY option definitions
+  - CLI routing tests for KNOWN_COMMANDS and command aliases
+  - `migrate-paths` alias for backward compatibility with Thor CLI naming
+
+### Changed
+
+- **ace-taskflow 0.31.0**: Migrate CLI from Thor to dry-cli (task 179.15)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Converted CLI to dry-cli Registry pattern
+  - Created 12 dry-cli command wrapper classes
+  - Default command routing (`ace-taskflow 150` → `ace-taskflow task 150`)
+  - Command aliases: `context` → `status`, `migrate-paths` → `migrate`
+  - Type conversion for numeric options
+  - Cache clearing integrated into CLI lifecycle
+
+### Fixed
+
+- **ace-taskflow 0.31.0**: CLI routing and option handling
+  - Fixed default command routing for empty args
+  - Improved numeric option conversion across commands
+  - Fixed option passing to underlying command classes
+
 ## [0.9.270] - 2026-01-07
 
 ### Changed
