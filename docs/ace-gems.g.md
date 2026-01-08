@@ -13,16 +13,18 @@ update:
 
 Quick reference based on production patterns from ace-lint, ace-docs, ace-taskflow, ace-search.
 
-## Task 150 CLI Standardization (2026-01)
+## CLI Framework
 
-All CLI gems were standardized to use Thor with consistent patterns:
-- **CLI Base Class**: `Ace::Core::CLI::Base` provides standard options (--quiet, --verbose, --debug)
-- **ConfigSummary**: Displays effective configuration, filtered for sensitive keys
+All CLI gems use dry-cli (migration from Thor completed in Task 179, 2026-01):
+- **CLI Base Module**: `Ace::Core::CLI::DryCli::Base` provides helper methods (quiet?, verbose?, debug?)
+- **Registry Pattern**: Use `extend Dry::CLI::Registry` and register commands
+- **CLI.start Method**: Implement testable `CLI.start(args)` with default command routing
 - **Exit Codes**: Commands return status codes, exe/ handles exit (never call exit in commands)
 - **Reserved Flags**: `-v` = verbose, `-q` = quiet, `-d` = debug, `-h` = help, `-o` = output
-- **Version Command**: Use `--version` (not `-v`), via `version_command` helper
+- **Version Command**: Use `Ace::Core::CLI::DryCli::VersionCommand.build()`
+- **Type Conversion**: dry-cli returns strings; convert numeric options with `.to_i`
 
-See `.ace-taskflow/v.0.9.0/tasks/150-task-standardize-cli/usage/ux.md` for full UX analysis.
+See `.ace-taskflow/v.0.9.0/tasks/179-task-migrate-cli/` for migration details.
 
 ## Gem Naming Conventions
 
@@ -66,7 +68,7 @@ ace-gem/
 ├── .ace-defaults/gem/config.yml    # REQUIRED
 ├── lib/ace/gem/
 │   ├── atoms/, molecules/, organisms/, models/  # ATOM architecture
-│   ├── commands/                  # Thor CLI commands
+│   ├── commands/                  # dry-cli command classes
 │   ├── cli.rb, version.rb
 ├── test/                          # FLAT: atoms/, molecules/, organisms/, models/
 │   ├── commands/, integration/, fixtures/
@@ -264,64 +266,145 @@ Symlink to `.claude/agents/` for Claude Code.
 
 ## CLI
 
-**ADR-018 Pattern**: All ACE gems use Thor for CLI commands with standardized options and exit code handling.
+### dry-cli Pattern (Standard)
 
-### CLI Base Class (ace-support-core)
-
-All CLI gems should inherit from `Ace::Core::CLI::Base` for standardized behavior:
+New and migrated gems use `dry-cli` with the `Ace::Core::CLI::DryCli::Base` module:
 
 ```ruby
 # lib/ace/gem/cli.rb
-require "ace/core/cli/base"
+require "dry/cli"
+require "set"  # REQUIRED for KNOWN_COMMANDS pattern (Set.new)
+require "ace/core"
+require_relative "commands/process"
 
 module Ace::Gem
-  class CLI < Ace::Core::CLI::Base
-    default_task :process  # For single-purpose tools
+  module CLI
+    extend Dry::CLI::Registry
 
-    desc "process FILE", "Process file with auto-detection"
-    long_desc <<~DESC
-      Detailed description of what the command does.
+    # Application commands registered in this CLI (single source of truth)
+    REGISTERED_COMMANDS = %w[process].freeze
 
-      Examples:
-        $ ace-gem process input.txt
-        $ ace-gem process input.txt --verbose
-    DESC
-    def process(file = nil)
-      # Display config summary (unless --quiet)
-      Ace::Core::Atoms::ConfigSummary.display(
-        command: "process",
-        config: Gem.config,
-        defaults: Gem.load_gem_defaults,
-        options: options,
-        quiet: options[:quiet]
-      )
+    # dry-cli built-in commands (standard across all CLI gems)
+    BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
 
-      require_relative "commands/process_command"
-      Commands::ProcessCommand.new(file, options).execute
+    # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
+    # Using Set for O(1) lookup performance
+    KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+
+    DEFAULT_COMMAND = "process"
+
+    # Testable start method with default command routing
+    def self.start(args)
+      if args.empty? || !KNOWN_COMMANDS.include?(args.first)
+        args = [DEFAULT_COMMAND] + args
+      end
+      Dry::CLI.new(self).call(arguments: args)
     end
 
-    # Define version command with gem's VERSION constant
-    version_command "ace-gem", Gem::VERSION
+    register "process", Commands::Process
+
+    # Version command
+    version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+      gem_name: "ace-gem",
+      version: Ace::Gem::VERSION
+    )
+    register "version", version_cmd
+    register "--version", version_cmd
+  end
+end
+
+# lib/ace/gem/commands/process.rb
+module Ace::Gem::Commands
+  class Process < Dry::CLI::Command
+    include Ace::Core::CLI::DryCli::Base
+
+    desc "Process file with auto-detection"
+
+    argument :file, required: false, desc: "File to process"
+    option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
+    option :verbose, type: :boolean, aliases: %w[-v], desc: "Verbose output"
+    option :debug, type: :boolean, aliases: %w[-d], desc: "Debug output"
+
+    def call(file: nil, **options)
+      # Type conversion: dry-cli returns strings for numeric options
+      # options[:limit] = options[:limit].to_i if options[:limit]
+
+      ProcessCommand.new(file, options).execute
+    end
   end
 end
 
 # exe/ace-gem
 #!/usr/bin/env ruby
-require 'ace/gem'
-Ace::Gem::CLI.start(ARGV)
+require_relative "../lib/ace/gem"
+result = Ace::Gem::CLI.start(ARGV)
+exit(result.is_a?(Integer) ? result : 0)
 ```
+
+### dry-cli Migration Gotchas
+
+1. **Type Conversion**: dry-cli returns strings for all options. Use the `convert_types` helper:
+   ```ruby
+   # Single option
+   opts = convert_types(options, timeout: :integer)
+
+   # Multiple options
+   opts = convert_types(options, limit: :integer, ratio: :float)
+   ```
+
+2. **Default Task Routing**: Implement in `CLI.start` method, not as framework feature.
+
+3. **KNOWN_COMMANDS Pattern**: Use the standardized three-constant pattern:
+   ```ruby
+   # Single source of truth for application commands
+   REGISTERED_COMMANDS = %w[process].freeze
+
+   # dry-cli built-ins (standard across all CLI gems)
+   BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+   # Auto-derived - no manual maintenance needed
+   KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+   ```
+   This ensures adding a new command only requires updating `REGISTERED_COMMANDS`.
+
+   **Multi-command example** (e.g., ace-review):
+   ```ruby
+   # Single source of truth for application commands
+   REGISTERED_COMMANDS = %w[review synthesize list-presets list-prompts].freeze
+
+   # dry-cli built-ins (standard across all CLI gems)
+   BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+   # Auto-derived - no manual maintenance needed
+   KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+   ```
+
+4. **Help Documentation**: Use `desc` with heredoc and `example` array:
+   ```ruby
+   desc <<~DESC.strip
+     Main description here.
+
+     Additional context:
+       - Point one
+       - Point two
+   DESC
+
+   example ['pattern --flag', '"*.rb" -f']
+   ```
+
+5. **Boolean Options**: dry-cli generates `--[no-]flag` automatically.
 
 ### Standard Options
 
-The CLI base class provides these options automatically:
+CLI commands include these standard options via `Ace::Core::CLI::DryCli::Base`:
 
 | Option | Short | Description |
 |--------|-------|-------------|
 | `--quiet` | `-q` | Suppress config summary output |
 | `--verbose` | `-v` | Enable verbose output |
 | `--debug` | `-d` | Enable debug output |
-| `--version` | | Show version (via `version_command`) |
-| `--help` | `-h` | Show help (Thor default) |
+| `--version` | | Show version (via `VersionCommand`) |
+| `--help` | `-h` | Show help |
 
 **Important**: `-v` is reserved for `--verbose`. Use `--version` for version output.
 
@@ -334,7 +417,7 @@ Ace::Core::Atoms::ConfigSummary.display(
   command: "my_command",
   config: Gem.config,           # Effective config
   defaults: Gem.default_config, # Defaults for diffing
-  options: options,             # Thor options hash
+  options: options,             # dry-cli options hash
   quiet: options[:quiet],       # Suppress if --quiet
   summary_keys: %w[model preset] # Optional allowlist
 )
@@ -380,30 +463,34 @@ exit(exit_code || 0)
 
 | Flag | Meaning | Notes |
 |------|---------|-------|
-| `-h` | help | Thor default |
+| `-h` | help | dry-cli default |
 | `-v` | verbose | NOT version |
 | `-q` | quiet | Suppress config summary |
 | `-d` | debug | Debug output |
 | `-o` | output | Output destination |
 | `-f` | Available | Package-specific |
 
-### Default Task Pattern
+### Default Command Routing
 
-For single-purpose tools, use `default_task` to allow implicit command invocation:
+For single-purpose tools, implement default command routing via `CLI.start`:
 
 ```ruby
-class CLI < Ace::Core::CLI::Base
-  default_task :process
+module CLI
+  extend Dry::CLI::Registry
 
-  desc "process [FILE]", "Process with auto-detection"
-  def process(file = nil)
-    # File argument is optional for default task
+  REGISTERED_COMMANDS = %w[process].freeze
+  BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+  KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+  DEFAULT_COMMAND = "process"
+
+  def self.start(args)
+    if args.empty? || !KNOWN_COMMANDS.include?(args.first)
+      args = [DEFAULT_COMMAND] + args
+    end
+    Dry::CLI.new(self).call(arguments: args)
   end
 
-  def respond_to_missing?(method, *_args)
-    # Delegate unknown commands to default task
-    true
-  end
+  register "process", Commands::Process
 end
 ```
 
@@ -414,16 +501,17 @@ This allows: `ace-gem file.txt` instead of `ace-gem process file.txt`
 For tools with multiple subcommands (like ace-taskflow):
 
 ```ruby
-class CLI < Ace::Core::CLI::Base
-  desc "task REF", "Show task details"
-  def task(ref)
-    # ...
-  end
+module CLI
+  extend Dry::CLI::Registry
 
-  desc "tasks LIST", "List tasks"
-  def tasks(list)
-    # ...
-  end
+  # Commands are registered hierarchically
+  register "task show", Commands::TaskShow
+  register "task list", Commands::TaskList
+  register "tasks", Commands::Tasks  # Alias for task list
+
+  # Use nested registration for subcommand groups
+  register "worktree create", Commands::WorktreeCreate
+  register "worktree delete", Commands::WorktreeDelete
 end
 ```
 

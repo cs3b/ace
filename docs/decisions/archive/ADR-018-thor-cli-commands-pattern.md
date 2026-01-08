@@ -1,8 +1,28 @@
 # ADR-018: Thor CLI Commands Pattern
 
 ## Status
-Accepted
+
+**Deprecated - Archived (January 2026)**
+
+Original Status: Accepted
 Date: October 14, 2025
+
+## Deprecation Notice
+
+**This ADR is archived and no longer applicable to the current codebase.**
+
+- **Archived**: January 7, 2026
+- **Reason**: Thor replaced by dry-cli due to option consumption conflicts and nested subcommand limitations
+- **Current Practice**: See ADR-023: dry-cli CLI Framework
+- **Context**: Applied to ace-* gems from October 2025 until January 2026 migration
+
+For current patterns, see:
+- **ADR-023**: dry-cli CLI Framework
+- **Task 179**: Migration orchestrator with rationale
+
+---
+
+**Original ADR (for historical reference):**
 
 ## Context
 
