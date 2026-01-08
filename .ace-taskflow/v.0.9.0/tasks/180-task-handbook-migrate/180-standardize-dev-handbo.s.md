@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.180
-status: pending
+status: in-progress
 priority: medium
 estimate: 4-8h
 dependencies: []
@@ -8,6 +8,11 @@ subtasks:
 - v.0.9.0+task.180.01
 - v.0.9.0+task.180.02
 - v.0.9.0+task.180.03
+worktree:
+  branch: 180-migrate-dev-handbook-content-to-appropriate-ace-package-handbooks
+  path: "../ace-task.180"
+  created_at: '2026-01-08 15:57:12'
+  updated_at: '2026-01-08 15:57:12'
 ---
 
 # Migrate dev-handbook Content to Appropriate ace-* Package Handbooks
