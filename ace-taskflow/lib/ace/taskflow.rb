@@ -3,6 +3,11 @@
 require "ace/core"
 require_relative "taskflow/version"
 require_relative "taskflow/configuration"
+
+# Molecules that need to be available for cache clearing
+require_relative "taskflow/molecules/task_loader"
+require_relative "taskflow/molecules/release_resolver"
+
 require_relative "taskflow/cli"
 
 module Ace
