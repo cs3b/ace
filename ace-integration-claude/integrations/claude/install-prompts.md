@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide shows how to install Claude Code commands using the unified handbook CLI. Each workflow file in `dev-handbook/workflow-instructions/*.wf.md` gets a corresponding command in the Claude Code interface.
+This guide shows how to install Claude Code commands using the unified handbook CLI. Each workflow file in `ace-handbook/handbook/workflow-instructions/*.wf.md` gets a corresponding command in the Claude Code interface.
 
 ## CLAUDE.md Template
 
@@ -50,16 +50,16 @@ The handbook CLI will:
 
 For each workflow instruction file, create a corresponding command file:
 
-- `dev-handbook/workflow-instructions/draft-task.wf.md` → `.claude/commands/draft-task.md`
-- `dev-handbook/workflow-instructions/work-on-task.wf.md` → `.claude/commands/work-on-task.md`
-- `dev-handbook/workflow-instructions/plan-task.wf.md` → `.claude/commands/plan-task.md`
+- `ace-handbook/handbook/workflow-instructions/draft-task.wf.md` → `.claude/commands/draft-task.md`
+- `ace-handbook/handbook/workflow-instructions/work-on-task.wf.md` → `.claude/commands/work-on-task.md`
+- `ace-handbook/handbook/workflow-instructions/plan-task.wf.md` → `.claude/commands/plan-task.md`
 
 ### 2. Command Template
 
 Use below template, if custom template is missing (at the end of the file) for each command file:
 
 ```md
-read whole file and follow @dev-handbook/workflow-instructions/workflow-name.wf.md
+read whole file and follow @ace-handbook/handbook/workflow-instructions/workflow-name.wf.md
 
 read and run @.claude/commands/commit.md
 ```
@@ -68,14 +68,14 @@ read and run @.claude/commands/commit.md
 
 #### draft-task.md
 ```md
-read whole file and follow @dev-handbook/workflow-instructions/draft-task.wf.md
+read whole file and follow @ace-handbook/handbook/workflow-instructions/draft-task.wf.md
 
 read and run @.claude/commands/commit.md
 ```
 
 #### work-on-task.md
 ```md
-read whole file and follow @dev-handbook/workflow-instructions/work-on-task.wf.md
+read whole file and follow @ace-handbook/handbook/workflow-instructions/work-on-task.wf.md
 
 /commit
 read and run @.claude/commands/commit.md

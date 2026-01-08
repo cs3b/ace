@@ -110,16 +110,19 @@ Single-purpose, composable agents for focused actions:
 
 Development patterns and best practices:
 
-* Located in `dev-handbook/guides/`
+* Located in each gem's `handbook/guides/` directory
+* Generic guides in `ace-handbook/handbook/guides/`
+* Package-specific guides in respective gems (e.g., `ace-review/handbook/guides/`)
 * Reference documentation for humans and agents
-* Standards and conventions
 
 ### Handbook Organization
 
 Each gem includes `handbook/` for AI integration:
 
     gem/handbook/
-    ├── agents/*.ag.md              # Single-purpose, composable
+    ├── agents/*.ag.md               # Single-purpose, composable
+    ├── guides/*.g.md                # Development guides
+    ├── templates/**/*.template.md   # Document templates
     └── workflow-instructions/*.wf.md  # Complete, self-contained
 
 **Agent vs Workflow**: Agents for single actions, workflows for multi-step processes. Both use frontmatter and

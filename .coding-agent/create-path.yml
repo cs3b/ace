@@ -4,7 +4,7 @@
 templates:
   # Documentation creation templates
   docs-new:
-    template: dev-handbook/templates/project-docs/README.template.md
+    template: ace-handbook/handbook/templates/project-docs/README.template.md
     variables:
       title: user_input
       slug: '{metadata.slug}'
@@ -12,7 +12,7 @@ templates:
       
   # Reflection creation templates  
   reflection-new:
-    template: dev-handbook/templates/release-reflections/retrospective.template.md
+    template: ace-handbook/handbook/templates/release-reflections/retrospective.template.md
     variables:
       title: user_input
       session: '{metadata.session}'
@@ -20,7 +20,7 @@ templates:
       
   # Code review templates
   code-review-new:
-    template: dev-handbook/templates/review-tasks/task-review-summary.template.md
+    template: ace-handbook/handbook/templates/review-tasks/task-review-summary.template.md
     variables:
       title: user_input
       reviewer: '{metadata.reviewer}'

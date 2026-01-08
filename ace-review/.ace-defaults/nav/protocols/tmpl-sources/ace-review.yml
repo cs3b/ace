@@ -1,0 +1,10 @@
+---
+# Template Sources Protocol Configuration for ace-review gem
+name: ace-review
+type: gem
+description: Templates from ace-review gem
+priority: 10
+config:
+  relative_path: handbook/templates
+  pattern: "**/*.template.md"
+  enabled: true

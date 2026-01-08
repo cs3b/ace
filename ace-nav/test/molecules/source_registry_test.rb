@@ -108,7 +108,7 @@ module Ace
           })
 
           create_test_source(@test_dir, "test", "project_source", {
-            "path" => "$PROJECT_ROOT_PATH/dev-handbook"
+            "path" => "$PROJECT_ROOT_PATH/ace-handbook/handbook"
           })
 
           Dir.chdir(@test_dir) do
@@ -118,7 +118,7 @@ module Ace
             assert_equal "/test/value/resources", env_source.path
 
             project_source = sources.find { |s| s.name == "project_source" }
-            assert_equal "#{@test_dir}/dev-handbook", project_source.path
+            assert_equal "#{@test_dir}/ace-handbook/handbook", project_source.path
           end
         ensure
           ENV.delete("TEST_VAR")

@@ -29,7 +29,7 @@ module Ace
           "# Output shows count and file paths with types",
           "# Found 15 managed documents:",
           "#   docs/architecture.md (architecture)",
-          "#   dev-handbook/guides/testing.md (guide)"
+          "#   ace-handbook/handbook/guides/testing.g.md (guide)"
         ]
 
         # Standard options

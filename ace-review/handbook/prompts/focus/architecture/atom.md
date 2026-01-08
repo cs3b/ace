@@ -1,7 +1,7 @@
 ---
 name: atom
 description: ATOM architecture compliance review focus
-last-updated: '2026-01-01'
+last-updated: '2026-01-08'
 ---
 
 # ATOM Architecture Focus

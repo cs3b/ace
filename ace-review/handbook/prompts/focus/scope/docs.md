@@ -1,7 +1,7 @@
 ---
 name: docs
 description: Documentation review scope focus
-last-updated: '2026-01-01'
+last-updated: '2026-01-08'
 ---
 
 # Documentation Scope Focus

@@ -1,7 +1,7 @@
 ---
 name: ruby
 description: Ruby language review focus with idioms and best practices
-last-updated: '2026-01-01'
+last-updated: '2026-01-08'
 ---
 
 # Ruby Language Focus

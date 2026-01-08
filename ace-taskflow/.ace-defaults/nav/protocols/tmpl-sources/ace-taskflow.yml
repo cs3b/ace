@@ -1,19 +1,10 @@
 ---
-# WFI Sources Protocol Configuration for ace-taskflow gem
-# This enables workflow discovery from the installed ace-taskflow gem
-
+# Template Sources Protocol Configuration for ace-taskflow gem
 name: ace-taskflow
 type: gem
-description: Taskflow templates from ace-taskflow gem
+description: Templates from ace-taskflow gem
 priority: 10
-
-# Configuration for workflow discovery within the gem
 config:
-  # Relative path within the gem (default: handbook/workflow-instructions)
   relative_path: handbook/templates
-
-  # Pattern for finding workflow files (default: *.wf.md)
-  pattern: "*.template.md"
-
-  # Enable discovery
+  pattern: "**/*.template.md"
   enabled: true

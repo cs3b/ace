@@ -2,21 +2,21 @@
 
 ## Goal
 
-Maintain accurate, comprehensive, and well-structured README documentation across the dev-handbook directory hierarchy
+Maintain accurate, comprehensive, and well-structured README documentation across ace-* packages
 to ensure all components are properly documented and discoverable.
 
 ## Prerequisites
 
 * Understanding of handbook structure and component relationships
-* Access to dev-handbook directory and all subdirectories
+* Access to ace-* package directories
 * Familiarity with handbook conventions and patterns
 * Knowledge of agents, commands, guides, and workflow systems
 
 ## Project Context Loading
 
-### Load dev-handbook context preset
+### Load project context preset
 
-    context --preset project
+    ace-context project
 {: .language-bash}
 
 ### Review target documentation files
@@ -64,7 +64,7 @@ to ensure all components are properly documented and discoverable.
 
 **Structure to maintain:**
 
-    # Development Handbook (`dev-handbook`)
+    # ACE Handbooks (ace-* packages)
     
     [Brief description and purpose]
     

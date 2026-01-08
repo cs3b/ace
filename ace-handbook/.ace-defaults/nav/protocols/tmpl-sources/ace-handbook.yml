@@ -1,0 +1,10 @@
+---
+# Template Sources Protocol Configuration for ace-handbook gem
+name: ace-handbook
+type: gem
+description: Templates from ace-handbook gem
+priority: 10
+config:
+  relative_path: handbook/templates
+  pattern: "**/*.template.md"
+  enabled: true

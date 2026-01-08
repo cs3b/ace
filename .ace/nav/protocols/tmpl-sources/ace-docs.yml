@@ -1,0 +1,19 @@
+---
+# Template Sources Protocol Configuration for ace-docs gem
+# This enables template discovery from the installed ace-docs gem
+
+name: ace-docs
+type: gem
+description: Documentation templates from ace-docs gem
+priority: 10
+
+# Configuration for template discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/templates
+
+  # Pattern for finding template files
+  pattern: "**/*.template.md"
+
+  # Enable discovery
+  enabled: true

@@ -1,7 +1,7 @@
 ---
 name: security
 description: Security vulnerability review focus
-last-updated: '2026-01-01'
+last-updated: '2026-01-08'
 ---
 
 # Security Focus

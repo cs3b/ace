@@ -1,0 +1,10 @@
+---
+# Guide Sources Protocol Configuration for ace-test-runner gem
+name: ace-test-runner
+type: gem
+description: Guides from ace-test-runner gem
+priority: 10
+config:
+  relative_path: handbook/guides
+  pattern: "*.g.md"
+  enabled: true
