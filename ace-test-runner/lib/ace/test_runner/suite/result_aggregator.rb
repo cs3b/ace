@@ -138,7 +138,7 @@ module Ace
               report << "- Failures: #{pkg[:failures]}"
               report << "- Errors: #{pkg[:errors]}"
               report << "- Error: #{pkg[:error_message]}" if pkg[:error_message]
-              report << "- Report: `#{pkg[:path]}/test-reports/latest/failures.json`"
+              report << Ace::TestRunner::Molecules::FailedPackageReporter.format_for_markdown(pkg)
               report << ""
             end
           end
