@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-01-08
+
+### Fixed
+- Fixed `guide://` protocol links in ace-test-runner guides (added `.g` suffix for `.g.md` files)
+- Cross-gem guide:// links now properly resolve to resources with `.g` extension
+
+## [0.5.0] - 2026-01-08
+
+### Added
+- Migrated 10 generic guides from dev-handbook to handbook/guides/
+  - ai-agent-integration.g.md, atom-pattern.g.md, changelog.g.md
+  - coding-standards.g.md, debug-troubleshooting.g.md, error-handling.g.md
+  - performance.g.md, quality-assurance.g.md, strategic-planning.g.md
+- Migrated 5 meta-guides to handbook/guides/meta/
+  - agents-definition.g.md, guides-definition.g.md, markdown-definition.g.md
+  - tools-definition.g.md, workflow-instructions-definition.g.md
+- Guide subdirectories with language-specific content (ruby, rust, typescript)
+- initialize-project-structure.wf.md workflow for project setup
+- Templates: cookbooks/cookbook.template.md, completed-work-documentation.md
+- Template discovery protocol (.ace-defaults/nav/protocols/tmpl-sources/)
+
+### Changed
+- Consolidates dev-handbook content into ace-handbook gem
+- All development guides now distributed with gem installation
+
 ## [0.4.0] - 2026-01-03
 
 ### Added

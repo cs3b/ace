@@ -265,7 +265,7 @@ See `wfi://maintain-adrs` for complete lifecycle management.
 * If yes to any, create the ADR
 
 <documents>
-    <template path="dev-handbook/templates/project-docs/decisions/adr.template.md"># ADR-XXX: Title of the Decision
+    <template path="tmpl://project-docs/decisions/adr"># ADR-XXX: Title of the Decision
 
 ## Status
 

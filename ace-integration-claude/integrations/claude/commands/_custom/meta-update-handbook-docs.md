@@ -46,4 +46,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: @dev-handbook/.meta/wfi/update-handbook-docs.wf.md
+For detailed instructions, see: @ace-handbook/handbook/workflow-instructions/update-handbook-docs.wf.md

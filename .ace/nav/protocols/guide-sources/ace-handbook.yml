@@ -1,0 +1,19 @@
+---
+# Guide Sources Protocol Configuration for ace-handbook gem
+# This enables guide discovery from the installed ace-handbook gem
+
+name: ace-handbook
+type: gem
+description: Development guides from ace-handbook gem
+priority: 10
+
+# Configuration for guide discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/workflow-instructions)
+  relative_path: handbook/guides
+
+  # Pattern for finding guide files (default: *.wf.md)
+  pattern: "*.g.md"
+
+  # Enable discovery
+  enabled: true

@@ -18,18 +18,17 @@ This document provides navigation guidance for the ACE codebase, highlighting wh
 ## Repository Structure
 
 ```
-ace-*/          # Ruby gems following ATOM architecture (20+ production gems)
-                # ace-support-core, ace-context, ace-taskflow, ace-nav, ace-llm,
-                # ace-git-commit, ace-git-worktree, ace-prompt, ace-search,
-                # ace-review, ace-docs, ace-lint, ace-test, ace-test-support,
-                # ace-llm-providers-cli, ace-support-mac-clipboard
-dev-handbook/   # Workflows, agents, guides (migrating to ace-handbook gem)
+ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
+                # Each gem includes handbook/ for workflows, guides, templates
+                # Key gems: ace-handbook, ace-taskflow, ace-context, ace-nav,
+                # ace-git, ace-git-commit, ace-review, ace-docs, ace-lint,
+                # ace-search, ace-llm, ace-test-runner
 .ace-taskflow/  # Task and release management
-dev-tools/      # Legacy CLI tools (mostly migrated to ace-* gems)
 .claude/        # Claude Code integration (commands and agent symlinks)
 .ace/           # Configuration cascade root
 docs/           # System documentation and ADRs
 .github/        # CI/CD workflows
+_legacy/        # Archived content (dev-handbook, dev-tools)
 ```
 
 For detailed architecture and ATOM pattern, see [architecture.md](architecture.md).
@@ -42,9 +41,8 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 - `docs/migrations/**/*` # Documentation migration records
 - `ace-*/lib/**/*` # Gem source code (modify only for bug fixes)
 - `ace-*/test/**/*` # Gem test files (modify only for test updates)
+- `ace-*/handbook/**/*` # Gem workflows, guides, templates
 - `.github/workflows/**/*` # CI/CD configuration
-- `dev-handbook/guides/**/*` # Development guides
-- `dev-handbook/workflow-instructions/**/*` # AI workflow instructions
 - `.ace-taskflow/done/**/*` # Completed tasks
 - `.ace-taskflow/v.*/retro/**/*` # Development retrospectives
 - `Gemfile.lock` # Root workspace lock file
@@ -62,4 +60,4 @@ AI agents should ignore these during normal operations:
 - `.bundle/**/*` # Bundle cache
 - `node_modules/**/*` # Node.js dependencies
 - `*.bak` # Backup files
-- `docs/context/cached/**/*` # Legacy cached context files
+- `_legacy/**/*` # Archived content (dev-handbook, dev-tools)

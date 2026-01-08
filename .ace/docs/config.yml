@@ -74,7 +74,7 @@ global_rules:
     markdown: markdownlint
     yaml: yamllint
   semantic_validation:
-    guide_reference: "dev-handbook/guides/documentation-standards.md"
+    guide_reference: "ace-docs/handbook/guides/documentation.g.md"
 
 # Cache configuration
 cache:
@@ -98,4 +98,3 @@ ignore:
   - "**/coverage/**"
   - "**/_legacy/**"
   - "**/.ace-taskflow/done/**"
-  - "dev-handbook/**"

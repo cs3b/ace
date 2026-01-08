@@ -24,8 +24,8 @@ repositories:
       path: "dev-taskflow"
       priority: 3
       description: "Task management and project planning"
-    - name: "dev-handbook"
-      path: "dev-handbook"
+    - name: "ace-handbook/handbook"
+      path: "ace-handbook/handbook"
       priority: 4
       description: "Development resources and guides"
 
@@ -85,7 +85,7 @@ resolution:
       - "dev-tools/lib"
       - "dev-tools/exe"
       - "dev-taskflow/current"
-      - "dev-handbook/workflow-instructions"
+      - "ace-handbook/handbook/workflow-instructions"
 
 # Security and sandboxing
 security:
@@ -115,7 +115,7 @@ autocorrect_mappings:
   # Common project structure typos
   "dev-tool": "dev-tools"
   "dev-taks": "dev-taskflow"
-  "dev-hanbook": "dev-handbook"
+  "dev-hanbook": "ace-handbook/handbook"
 
 # Scoped autocorrect configuration for scope:pattern syntax
 scoped_autocorrect:
@@ -150,7 +150,7 @@ scoped_autocorrect:
     # Repository scopes
     "tools": ["dev-tools"]
     "taskflow": ["dev-taskflow"]
-    "handbook": ["dev-handbook"]
+    "handbook": ["ace-handbook/handbook"]
     "meta": ["."]
     
     # File type scopes
@@ -176,10 +176,10 @@ scoped_autocorrect:
     "docs":
       - "dev-taskflow/current/*/docs"
       - "dev-taskflow/*/docs"
-      - "dev-handbook"
+      - "ace-handbook/handbook"
     "workflow":
-      - "dev-handbook/workflow-instructions"
-      - "dev-handbook/guides"
+      - "ace-handbook/handbook/workflow-instructions"
+      - "ace-handbook/handbook/guides"
 
   # Scope autocorrection mappings
   scope_autocorrect:
@@ -210,7 +210,7 @@ scoped_autocorrect:
     "task-flow": "taskflow"
     "hanbook": "handbook"
     "hand-book": "handbook"
-    "dev-handbook": "handbook"
+    "ace-handbook/handbook": "handbook"
     
     # File type typos
     "ruby": "rb"

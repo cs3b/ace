@@ -45,7 +45,7 @@ ace-meta/
 ├── ace-test-support/      # Testing infrastructure
 ├── .ace/                  # Configuration root (cascade system)
 ├── docs/                  # System documentation and ADRs
-├── dev-handbook/          # Legacy (being migrated to ace-handbook)
+├── ace-handbook/          # Handbook gem (workflows, guides, templates)
 └── Gemfile                # Shared workspace dependencies
 ```
 
@@ -226,13 +226,13 @@ Workflows are self-contained with embedded templates following ADR-001.
 
 ## 🔄 Legacy Components
 
-The following directories are legacy and being migrated:
+The following directories have been archived to `_legacy/`:
 
-- **dev-handbook/**: Migrating to `ace-handbook` gem
-- **dev-tools/**: Functionality migrated to various ace-* gems
-- **.ace-taskflow/**: Now managed by `ace-taskflow` gem
+- **dev-handbook/**: Migrated to `ace-handbook` gem ✅
+- **dev-tools/**: Functionality migrated to various ace-* gems ✅
+- **.ace-taskflow/**: Now managed by `ace-taskflow` gem ✅
 
-These remain during the transition period and will be removed in future releases.
+The `_legacy/` directory contains archived content from the previous multi-repo structure and can be safely removed.
 
 ## 🛠️ Development Workflow
 

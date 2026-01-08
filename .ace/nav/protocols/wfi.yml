@@ -8,7 +8,7 @@ enabled: true
 extensions:
   - .wfi.md
   - .workflow.md
-  - .wf.md  # Legacy dev-handbook format
+  - .wf.md  # Standard workflow format
 
 # Template for creating new workflows
 create_template: |

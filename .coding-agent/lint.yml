@@ -28,7 +28,7 @@ markdown:
     template_embedding:
       enabled: true
       template_dirs:
-        - dev-handbook/.meta/tpl
+        - ace-handbook/handbook/.meta/tpl
         - templates
         - _includes
     task_metadata:
