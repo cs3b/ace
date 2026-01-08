@@ -12,6 +12,6 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "ace/review"
 
-# Start Thor CLI and exit with the returned status code
+# Start dry-cli and exit with the returned status code
 result = Ace::Review::CLI.start(ARGV)
 exit(result.is_a?(Integer) ? result : 0)

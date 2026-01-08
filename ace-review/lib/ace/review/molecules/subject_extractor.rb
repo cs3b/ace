@@ -218,6 +218,20 @@ module Ace
             { "context" => { "files" => file_patterns } }
           when /^files:$/
             raise ArgumentError, "Empty value for files: subject. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
+          when /^commit:(.+)$/
+            commit_hash = ::Regexp.last_match(1).strip
+            if commit_hash.empty?
+              raise ArgumentError, "Empty value for commit: subject. Usage: commit:HASH"
+            end
+            # Normalize to lowercase for validation (git hashes are lowercase)
+            commit_hash = commit_hash.downcase
+            # Validate hash format: 6-40 hexadecimal characters
+            unless commit_hash.match?(/\A[a-f0-9]{6,40}\z/)
+              raise ArgumentError, "Invalid commit hash format: '#{commit_hash}'. Must be 6-40 hexadecimal characters."
+            end
+            { "context" => { "diffs" => ["#{commit_hash}~1..#{commit_hash}"] } }
+          when /^commit:$/
+            raise ArgumentError, "Empty value for commit: subject. Usage: commit:HASH"
           when /^task:(.+)$/
             resolve_task_subject(::Regexp.last_match(1), timeout: @taskflow_timeout)
           when /^task:$/

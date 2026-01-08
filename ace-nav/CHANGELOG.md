@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.05)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Converted CLI to Registry pattern with `Ace::Nav::CLI.start(args)` entry point
+  - Added dry-cli command classes for resolve, list, create, and sources
+  - Maintained backward compatibility for `--sources` and `--create` flags
+
+### Fixed
+- Updated test expectations for dry-cli module-based CLI (no longer instantiable)
+
 ## [0.15.0] - 2026-01-05
 
 ### Added

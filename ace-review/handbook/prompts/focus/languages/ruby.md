@@ -45,6 +45,6 @@ Review for appropriate use of modern Ruby features:
 - **Numbered Block Parameters** (`_1`, `_2`): Use only for simple, short blocks
 - **Hash Shorthand** (`{x:, y:}`): Use when variable name matches key name
 - **Rightward Assignment** (`expr => var`): Use sparingly for destructuring results
-- **Data Classes** (`Data.define`): Prefer over Struct for immutable value objects
+- **Data Classes** (`Data.define`): Prefer over Struct for immutable value objects (requires Ruby 3.2+; project uses 3.4+)
 - **Keyword Argument Forwarding** (`def foo(**) = bar(**)`)
 - **Ractor**: Review thread-safety implications when used

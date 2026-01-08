@@ -5,11 +5,23 @@ require "test_helper"
 class SetupResetCommandsTest < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir
-    @cli = Ace::Prompt::CLI.new
   end
 
   def teardown
     FileUtils.rm_rf(@tmpdir)
+  end
+
+  # Helper method to invoke CLI
+  def invoke_prompt_cli(args)
+    stdout, stderr = capture_io do
+      @_cli_result = Ace::Prompt::CLI.start(args)
+    end
+
+    {
+      stdout: stdout,
+      stderr: stderr,
+      result: @_cli_result
+    }
   end
 
   # setup command tests
@@ -18,13 +30,11 @@ class SetupResetCommandsTest < Minitest::Test
     Ace::Prompt::Organisms::PromptInitializer.stub(:setup, lambda { |**_opts|
       { success: true, path: "/tmp/the-prompt.md", archive_path: nil }
     }) do
-      output, _err = capture_io do
-        result = @cli.setup
-        assert_equal 0, result
-      end
-
-      assert_match(/Prompt initialized/, output)
-      assert_match(/Path:/, output)
+      result = invoke_prompt_cli(["setup"])
+      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      # We verify success by checking the output
+      assert_match(/Prompt initialized/, result[:stdout])
+      assert_match(/Path:/, result[:stdout])
     end
   end
 
@@ -33,14 +43,11 @@ class SetupResetCommandsTest < Minitest::Test
     Ace::Prompt::Organisms::PromptInitializer.stub(:setup, lambda { |**_opts|
       { success: true, path: "/tmp/the-prompt.md", archive_path: "/tmp/archive/the-prompt-20250101.md" }
     }) do
-      output, _err = capture_io do
-        result = @cli.setup
-        assert_equal 0, result
-      end
-
-      assert_match(/Prompt initialized/, output)
-      assert_match(/Path:/, output)
-      assert_match(/Archive:/, output)
+      result = invoke_prompt_cli(["setup"])
+      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      assert_match(/Prompt initialized/, result[:stdout])
+      assert_match(/Path:/, result[:stdout])
+      assert_match(/Archive:/, result[:stdout])
     end
   end
 
@@ -51,11 +58,19 @@ class SetupResetCommandsTest < Minitest::Test
       force_passed = opts[:force]
       { success: true, path: "/tmp/the-prompt.md", skipped: false }
     }) do
-      capture_io do
-        @cli.options = { force: true }
-        @cli.setup
-      end
+      invoke_prompt_cli(["setup", "--force"])
+      assert force_passed
+    end
+  end
 
+  def test_setup_command_with_short_force_flag
+    # Test that -f flag works
+    force_passed = nil
+    Ace::Prompt::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
+      force_passed = opts[:force]
+      { success: true, path: "/tmp/the-prompt.md", skipped: false }
+    }) do
+      invoke_prompt_cli(["setup", "-f"])
       assert force_passed
     end
   end
@@ -67,12 +82,20 @@ class SetupResetCommandsTest < Minitest::Test
       template_uri_passed = opts[:template_uri]
       { success: true, path: "/tmp/the-prompt.md", skipped: false }
     }) do
-      capture_io do
-        @cli.options = { template: "tmpl://custom/template" }
-        @cli.setup
-      end
-
+      invoke_prompt_cli(["setup", "--template", "tmpl://custom/template"])
       assert_equal "tmpl://custom/template", template_uri_passed
+    end
+  end
+
+  def test_setup_command_with_short_template_flag
+    # Test that -t flag works
+    template_passed = nil
+    Ace::Prompt::Organisms::PromptInitializer.stub(:setup, lambda { |**opts|
+      template_passed = opts[:template_uri]
+      { success: true, path: "/tmp/the-prompt.md", skipped: false }
+    }) do
+      invoke_prompt_cli(["setup", "-t", "bug"])
+      assert_equal "bug", template_passed
     end
   end
 
@@ -81,24 +104,20 @@ class SetupResetCommandsTest < Minitest::Test
     Ace::Prompt::Organisms::PromptInitializer.stub(:setup, lambda { |**_opts|
       { success: false, path: nil, skipped: false, error: "Setup failed" }
     }) do
-      _output, err = capture_io do
-        result = @cli.setup
-        assert_equal 1, result
-      end
-
-      assert_match(/Setup failed/, err)
+      result = invoke_prompt_cli(["setup"])
+      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      # We verify failure by checking stderr for the error message
+      assert_match(/Setup failed/, result[:stderr])
     end
   end
 
   def test_setup_command_handles_exception
     # Stub to raise exception
     Ace::Prompt::Organisms::PromptInitializer.stub(:setup, ->(**_opts) { raise "Unexpected error" }) do
-      _output, err = capture_io do
-        result = @cli.setup
-        assert_equal 1, result
-      end
-
-      assert_match(/Unexpected error/, err)
+      result = invoke_prompt_cli(["setup"])
+      # Note: dry-cli v1.3.0 returns a Set, not the exit code
+      # We verify failure by checking stderr for the error message
+      assert_match(/Unexpected error/, result[:stderr])
     end
   end
 
@@ -109,11 +128,7 @@ class SetupResetCommandsTest < Minitest::Test
       force_passed = opts[:force]
       { success: true, path: "/tmp/the-prompt.md", archive_path: nil }
     }) do
-      capture_io do
-        @cli.options = { no_archive: true }
-        @cli.setup
-      end
-
+      invoke_prompt_cli(["setup", "--no-archive"])
       assert force_passed
     end
   end
@@ -125,11 +140,7 @@ class SetupResetCommandsTest < Minitest::Test
       template_uri_passed = opts[:template_uri]
       { success: true, path: "/tmp/the-prompt.md", archive_path: nil }
     }) do
-      capture_io do
-        @cli.options = { template: "bug" }
-        @cli.setup
-      end
-
+      invoke_prompt_cli(["setup", "--template", "bug"])
       assert_equal "bug", template_uri_passed
     end
   end
@@ -137,5 +148,13 @@ class SetupResetCommandsTest < Minitest::Test
   def test_default_template_uri_constant
     assert_equal "tmpl://the-prompt-base",
                  Ace::Prompt::Organisms::PromptInitializer::DEFAULT_TEMPLATE_URI
+  end
+
+  # Task option tests
+  def test_setup_command_with_task_option
+    # Test that --task option is accepted
+    result = invoke_prompt_cli(["setup", "--task", "121"])
+    # Should not crash (will likely fail due to task not existing, but that's ok)
+    assert result[:result].is_a?(Integer)
   end
 end

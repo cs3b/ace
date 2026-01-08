@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.14)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Converted CLI to dry-cli Registry pattern
+  - Created dry-cli command classes (list_presets, list_prompts, review, synthesize)
+
+## [0.32.1] - 2026-01-07
+
+### Added
+- Support `commit:HASH` subject type for reviewing individual commits
+  - Accepts commit hashes with 6-40 hexadecimal characters
+  - Validates hash format before git operations
+  - Generates diff using `COMMIT~1..COMMIT` syntax to show commit's changes
+  - Provides clear error messages for invalid formats
+  - Updated documentation with usage examples
+
 ## [0.32.0] - 2026-01-07
 
 ### Changed
