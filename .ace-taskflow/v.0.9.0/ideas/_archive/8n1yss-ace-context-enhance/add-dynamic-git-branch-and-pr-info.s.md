@@ -10,7 +10,7 @@ completed_at: 2025-12-09T00:49:46+00:00
 # Enhance ace-context with Dynamic Git Branch and PR Information
 
 ## Problem
-LLM agents operating within the ACE (Agent Coding Environment) often lack crucial, real-time Git context when performing development tasks. While `ace-context` excels at loading static project context, it currently does not dynamically gather information about the active Git branch, associated Pull Request (PR) details, or the target branch for that PR. This deficiency leads to less accurate code reviews, suboptimal commit message suggestions, and contextually irrelevant documentation updates from agents, as they operate without a complete understanding of the current development state.
+LLM agents operating within the ACE (Agentic Coding Environment) often lack crucial, real-time Git context when performing development tasks. While `ace-context` excels at loading static project context, it currently does not dynamically gather information about the active Git branch, associated Pull Request (PR) details, or the target branch for that PR. This deficiency leads to less accurate code reviews, suboptimal commit message suggestions, and contextually irrelevant documentation updates from agents, as they operate without a complete understanding of the current development state.
 
 ## Solution
 Enhance the `ace-context` gem to automatically gather and expose dynamic Git information. This includes:

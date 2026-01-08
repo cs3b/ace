@@ -1,6 +1,6 @@
 # ace-context
 
-Context loading and caching for the ACE (Agent Coding Environment) ecosystem. Provides smart project context extraction for AI agents and developers.
+Context loading and caching for the ACE (Agentic Coding Environment) ecosystem. Provides smart project context extraction for AI agents and developers.
 
 ## Installation
 

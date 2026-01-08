@@ -1,4 +1,4 @@
-# ACE (Agent Coding Environment) - Monorepo
+# ACE (Agentic Coding Environment) - Monorepo
 
 **Version:** 0.9.0+ | **Architecture:** Modular Ruby Gems | **Status:** Active Development
 

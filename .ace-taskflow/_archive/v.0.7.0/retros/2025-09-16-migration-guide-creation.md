@@ -110,7 +110,7 @@
 
 ## Additional Context
 
-This task was part of the v0.6.0 ACE migration release, representing a major rebranding effort from "Coding Agent Tools" to "ACE Tools" (Agent Coding Environment). The migration affects:
+This task was part of the v0.6.0 ACE migration release, representing a major rebranding effort from "Coding Agent Tools" to "ACE Tools" (Agentic Coding Environment). The migration affects:
 
 - All three core repositories (handbook, taskflow, tools)
 - Ruby gem distribution and API

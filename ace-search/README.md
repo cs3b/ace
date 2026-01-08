@@ -268,4 +268,4 @@ Both agents are available at:
 
 ## License
 
-Part of the ACE (Agent Coding Environment) toolkit.
+Part of the ACE (Agentic Coding Environment) toolkit.
