@@ -23,9 +23,9 @@ module Ace
           @option_parser = build_option_parser
         end
 
-        def execute(args)
-          # Parse options using CommandOptionParser
-          result = @option_parser.parse(args)
+        def execute(args, thor_options = {})
+          # Parse options using CommandOptionParser, merging any pre-parsed options
+          result = @option_parser.parse(args, thor_options: thor_options)
           return 0 if result[:help_requested]
 
           options = result[:parsed]
@@ -48,7 +48,7 @@ module Ace
           execute_with_preset(preset_name, options)
         rescue StandardError => e
           puts "Error: #{e.message}"
-          exit 1
+          1
         end
 
         private
