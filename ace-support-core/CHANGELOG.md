@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **Thor base class deleted**: `Ace::Core::CLI::Base` removed as all gems now use dry-cli (task 179.16)
+  - Thor dependency removed from gemspec
+  - `lib/ace/core/cli/base.rb` deleted
+  - All CLI gems now use `Ace::Core::CLI::DryCli::Base` module instead
+
+## [0.19.0] - 2026-01-07
+
+### Added
+- **dry-cli Infrastructure**: Foundation for dry-cli based CLIs (task 179.01)
+  - `Ace::Core::CLI::DryCli::Base` module with common CLI patterns
+    - Standard option checks (`verbose?`, `quiet?`, `debug?`)
+    - Exit code helpers (`exit_success`, `exit_failure`)
+    - Debug logging (`debug_log`)
+    - Option validation (`validate_required!`)
+    - Hash formatting (`format_pairs`)
+    - Reserved flags constant (`RESERVED_FLAGS`)
+  - `Ace::Core::CLI::DryCli::ConfigSummaryMixin` for config display integration
+    - `display_config_summary` method with quiet/verbose mode support
+    - `GemClassMixin` variant with gem class configuration support
+    - Integration with existing `Ace::Core::Atoms::ConfigSummary`
+  - `Ace::Core::CLI::DryCli::VersionCommand` helper for version commands
+    - `VersionCommand.build` factory for creating command classes
+    - `VersionCommand.module` for creating version mixins
+    - Supports both class-level and proc-based version strings
+  - Comprehensive test coverage: 3 test files with 26+ tests
+  - dry-cli ~> 1.1 dependency added to gemspec
+- **convert_types helper**: Type conversion utility for dry-cli options
+  - Converts string options to specified types (integer, float, boolean)
+  - Handles dry-cli's string-only option return values
+  - Supports batch type conversion with keyword arguments
+
+### Changed
+- Updated `lib/ace/core.rb` to require dry-cli infrastructure modules
+- Standardized dry-cli dependency to ~> 1.0 across all gems
+
 ## [0.18.0] - 2026-01-05
 
 ### Added
