@@ -1,6 +1,6 @@
 # ACE Handbook Gem
 
-Handbook management workflows for ACE (Agent Coding Environment). This pure workflow package contains standardized workflows for creating, managing, and maintaining development guides, workflow instructions, and agent definitions.
+Handbook management workflows for ACE (Agentic Coding Environment). This pure workflow package contains standardized workflows for creating, managing, and maintaining development guides, workflow instructions, and agent definitions.
 
 ## Installation
 
@@ -112,7 +112,7 @@ The gem is available as open source under the terms of the MIT License.
 
 ## ACE Integration
 
-This gem is part of the ACE (Agent Coding Environment) ecosystem. For more information:
+This gem is part of the ACE (Agentic Coding Environment) ecosystem. For more information:
 
 - [ACE Documentation](https://github.com/cs3b/ace-meta)
 - [ace-nav Protocol](https://github.com/cs3b/ace-meta)

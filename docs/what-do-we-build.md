@@ -9,7 +9,7 @@ update:
   last-updated: '2025-12-27'
 ---
 
-# ACE (Agent Coding Environment)
+# ACE (Agentic Coding Environment)
 
 ## What We Build
 

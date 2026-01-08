@@ -20,11 +20,11 @@
   :currency: USD
 ---
 
-# Rename Project to ACE (Agent Coding Environment)
+# Rename Project to ACE (Agentic Coding Environment)
 
 ## Intention
 
-To rename the project from "Coding Agent Workflow Toolkit" to "Agent Coding Environment" (ACE) and update all related artifacts, including repository names, gem names, folder structures, and configuration directories, to reflect this new branding.
+To rename the project from "Coding Agent Workflow Toolkit" to "Agentic Coding Environment" (ACE) and update all related artifacts, including repository names, gem names, folder structures, and configuration directories, to reflect this new branding.
 
 ## Some more Context
 
@@ -85,7 +85,7 @@ To rename the project from "Coding Agent Workflow Toolkit" to "Agent Coding Envi
 
 **We assume that:**
 - All project components (gem, CLI tools, workflows, documentation) consistently use the "coding agent" or "coding-agent-tools" terminology that needs to be replaced. - *Needs validation*
-- The new name "ACE" (Agent Coding Environment) will be adopted universally across the project. - *Needs validation*
+- The new name "ACE" (Agentic Coding Environment) will be adopted universally across the project. - *Needs validation*
 - Git submodules can be cleanly updated to point to new repository names without significant issues. - *Needs validation*
 - Renaming configuration directories to `.ace` will not conflict with existing user configurations or system settings. - *Needs validation*
 - The renaming process can be automated to a significant degree to minimize manual effort and errors. - *Needs validation*

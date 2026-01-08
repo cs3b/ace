@@ -13,7 +13,7 @@ update:
 
 ## Overview
 
-ACE (Agent Coding Environment) is a mono-repo ecosystem of modular Ruby gems that provide a deterministic CLI surface
+ACE (Agentic Coding Environment) is a mono-repo ecosystem of modular Ruby gems that provide a deterministic CLI surface
 for AI-assisted software development. Both human developers and AI agents use the same tools through consistent
 interfaces.
 

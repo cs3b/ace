@@ -22,11 +22,11 @@ If you’re using tools like ReadmeAI, you can apply emoji theme packs that alig
 2. Taglines & Descriptions for Each Module (in README)
 
 ace-handbook
-	•	Tagline: “Your Agent Coding Environment Playbook”
+	•	Tagline: “Your Agentic Coding Environment Playbook”
 	•	Brief Description:
 
 # ace-handbook
-The comprehensive playbook for the Agent Coding Environment.
+The comprehensive playbook for the Agentic Coding Environment.
 It includes:
 - Architectural guidance and modular design patterns
 - Example workflows and onboarding strategies
