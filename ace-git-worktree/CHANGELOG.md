@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrate CLI framework from Thor to dry-cli (per ADR-018)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Added `ace-support-core ~> 0.10` dependency for CLI base classes
+  - New CLI structure: `lib/ace/git/worktree/cli/` contains dry-cli command classes
+  - Existing `commands/` directory preserved (contains command implementations)
+  - Command aliases: `list` → `ls`, `switch` → `cd`, `remove` → `rm`
+  - Version command now uses standardized `Ace::Core::CLI::DryCli::VersionCommand`
+  - `--verbose` (`-v`) is now verbose output, `--version` is for version (ADR-018)
+  - Tests updated to check output instead of return values (dry-cli limitation)
+- **BREAKING**: Renamed `--branch`/`-b` option to `--from`/`-b` in create command
+  - Clarifies that this specifies the source branch, not the target branch name
+  - The `-b` short alias still works for backward compatibility
+
+### Fixed
+- **Critical**: Command aliases (`ls`, `cd`, `rm`) now work correctly
+  - Previously, aliases were misrouted to the default `create` command
+  - Added `COMMAND_ALIASES` constant to `KNOWN_COMMANDS` for proper routing
+- Fixed `ConfigSummary.display` to pass actual CLI options instead of empty hash
+- Fixed security validation test to use `capture_io` for proper output capture
+
+### Technical
+- CLI module now extends `Dry::CLI::Registry` with command registration
+- Command classes in `cli/` directory wrap existing `commands/` implementations
+- Config command accepts subcommand as positional argument (backward compatibility)
+- All commands support `--quiet`, `--verbose`, `--debug` flags from base module
+- Default command routing preserved (empty args → `create`)
+- Extracted shared helpers into `cli/shared_helpers.rb` module (DRY)
+- Standardized verbose option aliases to just `["-v"]` across all commands
+
 ## [0.10.2] - 2026-01-06
 
 ### Fixed

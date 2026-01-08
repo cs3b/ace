@@ -44,9 +44,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-git', '~> 0.3' # Unified git operations (task 140.04)
   spec.add_dependency 'ace-llm', '~> 0.8'
   spec.add_dependency 'ace-nav', '~> 0.8'
+  spec.add_dependency 'ace-support-core', '~> 0.9' # dry-cli infrastructure (task 179.01)
   spec.add_dependency 'ace-taskflow', '~> 0.9'
   spec.add_dependency 'ace-timestamp', '~> 0.1' # Base36 compact IDs (task 149)
-  spec.add_dependency 'thor', '~> 1.3'
+  spec.add_dependency 'dry-cli', '~> 1.0'
 
   # Development dependencies managed in root Gemfile
 end
