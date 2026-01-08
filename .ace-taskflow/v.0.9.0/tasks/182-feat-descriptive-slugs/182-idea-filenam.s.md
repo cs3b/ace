@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.182
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 182-implement-descriptive-slugs-for-idea-filenames
+  path: "../ace-task.182"
+  created_at: '2026-01-08 22:02:19'
+  updated_at: '2026-01-08 22:02:19'
 ---
 
 # Implement Descriptive Slugs for Idea Filenames
