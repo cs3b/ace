@@ -9,7 +9,7 @@ description: "Multi-model PR review - concurrent execution across claude:opus, c
 models:
   - claude:opus              # Deep reasoning, architecture analysis
   - codex:max  # Code-focused, implementation details
-  # - google:pro-preview
+  - google:pro-preview
   - xai:grok-4-latest
   - openrouter:minimax
   - togetherai:qwen-coder
