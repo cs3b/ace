@@ -4,7 +4,7 @@
 templates:
   task:
     # Path to the task template file (relative to project root)
-    path: dev-handbook/templates/task-management/task.pending.template.md
+    path: ace-handbook/handbook/templates/task-management/task.pending.template.md
     
     # Template variables and their sources
     variables:

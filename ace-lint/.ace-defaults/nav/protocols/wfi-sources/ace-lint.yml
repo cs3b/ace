@@ -1,0 +1,11 @@
+---
+# WFI Sources Protocol Configuration for ace-lint gem
+name: ace-lint
+type: gem
+description: Lint workflow instructions from ace-lint gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true

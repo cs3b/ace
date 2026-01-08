@@ -1,7 +1,7 @@
 ---
 name: rails
 description: Ruby on Rails framework review focus
-last-updated: '2026-01-01'
+last-updated: '2026-01-08'
 ---
 
 # Ruby on Rails Focus

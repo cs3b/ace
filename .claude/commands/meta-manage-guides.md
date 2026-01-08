@@ -49,4 +49,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: @dev-handbook/.meta/wfi/manage-guides.wf.md
+read and run ace-context wfi://manage-guides

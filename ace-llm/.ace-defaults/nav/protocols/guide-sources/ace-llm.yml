@@ -1,0 +1,10 @@
+---
+# Guide Sources Protocol Configuration for ace-llm gem
+name: ace-llm
+type: gem
+description: Guides from ace-llm gem
+priority: 10
+config:
+  relative_path: handbook/guides
+  pattern: "*.g.md"
+  enabled: true

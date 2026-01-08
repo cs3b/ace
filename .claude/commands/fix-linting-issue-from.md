@@ -7,6 +7,6 @@ last_modified: '2025-08-25 00:47:54'
 source: generated
 ---
 
-read whole file and follow @dev-handbook/workflow-instructions/fix-linting-issue-from.wf.md
+read whole file and follow ace-context wfi://run-lint
 
 read and run @.claude/commands/commit.md

@@ -8,7 +8,7 @@ module Ace
       # MessageGenerator generates commit messages using LLM
       class MessageGenerator
         DEFAULT_MODEL = "glite"
-        SYSTEM_PROMPT_PATH = "dev-handbook/templates/prompts/git-commit.system.md"
+        SYSTEM_PROMPT_PATH = "ace-git-commit/handbook/prompts/git-commit.system.md"
 
         def initialize(config = nil)
           @config = config || {}
@@ -57,7 +57,7 @@ module Ace
         # Find the system prompt file path
         # @return [String, nil] Path to system prompt or nil
         def find_system_prompt_path
-          # Look for dev-handbook in current directory or parent directories
+          # Look for ace-git-commit/handbook in current directory or parent directories
           current = Pathname.pwd
 
           while current.parent != current

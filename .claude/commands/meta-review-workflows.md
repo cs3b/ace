@@ -48,4 +48,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: @dev-handbook/.meta/wfi/review-workflows.wf.md
+For detailed instructions, see: ace-context wfi://review-workflows

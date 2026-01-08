@@ -58,11 +58,11 @@ presets:
         - "icons"
     context:            # Background: agent standards
       files:
-        - dev-handbook/.meta/gds/agents-definition.g.md
+        - ace-handbook/handbook/.meta/gds/agents-definition.g.md
         - docs/architecture.md
     subject:            # What to review: agent files
       files:
-        - "dev-handbook/.integrations/claude/agents/*.ag.md"
+        - "ace-handbook/handbook/.integrations/claude/agents/*.ag.md"
 
   security:
     description: "Security and vulnerability review"

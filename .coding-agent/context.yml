@@ -17,10 +17,10 @@ presets:
         chunk_limit: 60000
 
     # Handbook specific context
-    dev-handbook:
+    ace-handbook/handbook:
         description: "Context focused on development guides and workflows"
-        template: "docs/context/dev-handbook.md"
-        output: "docs/context/cached/dev-handbook.md"
+        template: "docs/context/ace-handbook/handbook.md"
+        output: "docs/context/cached/ace-handbook/handbook.md"
         chunk_limit: 60000
 
     # Handbook specific context
@@ -46,7 +46,7 @@ settings:
 security:
     allowed_template_paths:
         - "docs/**"
-        - "dev-handbook/**"
+        - "ace-handbook/handbook/**"
         - "dev-taskflow/**"
         - ".coding-agent/**"
         - "templates/**"
