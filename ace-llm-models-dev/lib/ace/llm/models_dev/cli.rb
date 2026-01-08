@@ -1,67 +1,79 @@
 # frozen_string_literal: true
 
-require "ace/core/cli/base"
+require "dry/cli"
+require "set"
 require "json"
+require "ace/core"
+
+# Load CLI command classes
+require_relative "cli/cache/sync"
+require_relative "cli/cache/status"
+require_relative "cli/cache/diff"
+require_relative "cli/cache/clear"
+require_relative "cli/providers/list"
+require_relative "cli/providers/show"
+require_relative "cli/providers/sync"
+require_relative "cli/models/search"
+require_relative "cli/models/info"
+require_relative "cli/models/cost"
+require_relative "cli/search"
+require_relative "cli/info"
+require_relative "cli/sync_shortcut"
 
 module Ace
   module LLM
     module ModelsDev
-      # CLI for ace-llm-models
-      class CLI < Ace::Core::CLI::Base
+      # CLI for ace-llm-models using dry-cli
+      module CLI
+        extend Dry::CLI::Registry
 
-        # Register subcommands
-        desc "cache SUBCOMMAND", "Manage local cache"
-        subcommand "cache", Commands::CacheCLI
+        # Application commands registered in this CLI (single source of truth)
+        REGISTERED_COMMANDS = %w[cache providers models search info sync].freeze
 
-        desc "providers SUBCOMMAND", "Manage providers"
-        subcommand "providers", Commands::ProvidersCLI
+        # dry-cli built-in commands (standard across all CLI gems)
+        BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
 
-        desc "models SUBCOMMAND", "Work with models"
-        subcommand "models", Commands::ModelsCLI
+        # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
+        KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
 
-        # Top-level shortcuts for common operations
-        desc "search [QUERY]", "Search models (shortcut for: models search)"
-        option :provider, type: :string, aliases: "-p", desc: "Limit to provider"
-        option :limit, type: :numeric, aliases: "-l", default: 20, desc: "Max results"
-        option :filter, type: :array, aliases: "-f", desc: "Filter by key:value (repeatable)"
-        option :json, type: :boolean, desc: "Output as JSON"
-        def search(query = nil)
-          Commands::ModelsCLI.new([], options).search(query)
-        end
+        DEFAULT_COMMAND = "help"
 
-        desc "info MODEL_ID", "Show model info (shortcut for: models info)"
-        option :full, type: :boolean, desc: "Show complete details"
-        option :json, type: :boolean, desc: "Output as JSON"
-        def info(model_id)
-          Commands::ModelsCLI.new([], options).info(model_id)
-        end
-
-        desc "sync", "Sync from models.dev (shortcut for: cache sync)"
-        option :force, type: :boolean, aliases: "-f", desc: "Force sync even if cache is fresh"
-        option :json, type: :boolean, desc: "Output as JSON"
-        def sync
-          Commands::CacheCLI.new([], options).sync
-        end
-
-        version_command "ace-llm-models", VERSION
-
-        desc "help [COMMAND]", "Describe available commands"
-        def help(command = nil)
-          if command.nil?
-            puts "ace-llm-models - Query models.dev data"
-            puts
-            puts "Quick Start:"
-            puts "  ace-llm-models sync                              # Download model data"
-            puts "  ace-llm-models search gpt-4                      # Search for models"
-            puts "  ace-llm-models info openai:gpt-4o                # Get model details"
-            puts "  ace-llm-models providers sync -p openai --apply  # Sync provider config"
-            puts
+        # Testable start method with default command routing
+        def self.start(args)
+          if args.empty? || !KNOWN_COMMANDS.include?(args.first)
+            args = [DEFAULT_COMMAND] + args
           end
-          super
+          Dry::CLI.new(self).call(arguments: args)
         end
 
-        # Default to help
-        default_task :help
+        # Cache subcommands
+        register "cache sync", Commands::Cache::Sync
+        register "cache status", Commands::Cache::Status
+        register "cache diff", Commands::Cache::Diff
+        register "cache clear", Commands::Cache::Clear
+
+        # Providers subcommands
+        register "providers list", Commands::Providers::List
+        register "providers show", Commands::Providers::Show
+        register "providers sync", Commands::Providers::Sync
+
+        # Models subcommands
+        register "models search", Commands::Models::Search
+        register "models info", Commands::Models::Info
+        register "models cost", Commands::Models::Cost
+
+        # Top-level shortcuts
+        register "search", Commands::SearchShortcut
+        register "info", Commands::InfoShortcut
+        register "sync", Commands::SyncShortcut
+
+        # Version command
+        version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+          gem_name: "ace-llm-models",
+          version: VERSION
+        )
+        register "version", version_cmd
+        register "--version", version_cmd
       end
     end
   end

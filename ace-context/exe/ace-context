@@ -3,6 +3,13 @@
 
 require "ace/context"
 
-# Start Thor CLI and exit with the returned status code
+# Handle --list flag (legacy Thor mapping)
+if ARGV.include?("--list") || ARGV.include?("--list-presets")
+  ARGV.delete("--list")
+  ARGV.delete("--list-presets")
+  ARGV.unshift("list")
+end
+
+# Start dry-cli and exit with the returned status code
 result = Ace::Context::CLI.start(ARGV)
 exit(result.is_a?(Integer) ? result : 0)

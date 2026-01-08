@@ -309,7 +309,7 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_unknown_typed_subject_falls_through
     # Unknown type prefix should fall through to auto-detect
-    result = @extractor.extract("commit:abc123")
+    result = @extractor.extract("unknown:abc123")
     assert_kind_of String, result
   end
 
@@ -389,6 +389,92 @@ class SubjectExtractorTest < AceReviewTest
     assert_includes error.message, "Empty value for task: subject"
     assert_includes error.message, "task:REF"
   end
+
+  # commit: subject type tests
+  def test_commit_typed_subject_short_hash
+    result = @extractor.extract("commit:abc123")
+    assert_kind_of String, result
+  end
+
+  def test_commit_typed_subject_short_hash_config
+    config = @extractor.parse_typed_subject_config("commit:abc123")
+    assert_equal({ "context" => { "diffs" => ["abc123~1..abc123"] } }, config)
+  end
+
+  def test_commit_typed_subject_full_hash
+    result = @extractor.extract("commit:3cd9afbf1234567890abcd1234567890abcd1234")
+    assert_kind_of String, result
+  end
+
+  def test_commit_typed_subject_full_hash_config
+    config = @extractor.parse_typed_subject_config("commit:3cd9afbf1234567890abcd1234567890abcd1234")
+    assert_equal({ "context" => { "diffs" => ["3cd9afbf1234567890abcd1234567890abcd1234~1..3cd9afbf1234567890abcd1234567890abcd1234"] } }, config)
+  end
+
+  def test_commit_typed_subject_with_whitespace
+    # Whitespace should be trimmed
+    config = @extractor.parse_typed_subject_config("commit:  abc123  ")
+    assert_equal({ "context" => { "diffs" => ["abc123~1..abc123"] } }, config)
+  end
+
+  def test_commit_typed_subject_invalid_format_non_hex
+    error = assert_raises ArgumentError do
+      @extractor.extract("commit:xyz")
+    end
+    assert_includes error.message, "Invalid commit hash format"
+    assert_includes error.message, "xyz"
+    assert_includes error.message, "6-40 hexadecimal characters"
+  end
+
+  def test_commit_typed_subject_invalid_format_too_short
+    error = assert_raises ArgumentError do
+      @extractor.extract("commit:abc12")
+    end
+    assert_includes error.message, "Invalid commit hash format"
+    assert_includes error.message, "abc12"
+    assert_includes error.message, "6-40 hexadecimal characters"
+  end
+
+  def test_commit_typed_subject_invalid_format_too_long
+    error = assert_raises ArgumentError do
+      @extractor.extract("commit:abc123abc123abc123abc123abc123abc123abc123abc123")
+    end
+    assert_includes error.message, "Invalid commit hash format"
+    assert_includes error.message, "6-40 hexadecimal characters"
+  end
+
+  def test_commit_typed_subject_uppercase_normalized
+    # Uppercase should be normalized to lowercase (improves UX)
+    config = @extractor.parse_typed_subject_config("commit:ABC123")
+    assert_equal({ "context" => { "diffs" => ["abc123~1..abc123"] } }, config)
+  end
+
+  def test_commit_typed_subject_invalid_format_special_chars
+    error = assert_raises ArgumentError do
+      @extractor.extract("commit:abc-123")
+    end
+    assert_includes error.message, "Invalid commit hash format"
+  end
+
+  def test_empty_commit_value_raises_helpful_error
+    error = assert_raises ArgumentError do
+      @extractor.extract("commit:")
+    end
+    assert_includes error.message, "Empty value for commit: subject"
+    assert_includes error.message, "commit:HASH"
+  end
+
+  def test_commit_typed_subject_exact_boundaries
+    # Test exactly 6 characters (lower boundary)
+    config = @extractor.parse_typed_subject_config("commit:abcdef")
+    assert_equal({ "context" => { "diffs" => ["abcdef~1..abcdef"] } }, config)
+
+    # Test exactly 40 characters (upper boundary)
+    full_hash = "a" * 40
+    config = @extractor.parse_typed_subject_config("commit:#{full_hash}")
+    assert_equal({ "context" => { "diffs" => ["#{full_hash}~1..#{full_hash}"] } }, config)
+  end
+
 
   def test_typed_subject_parsing_precedence
     # Typed subjects take precedence over auto-detect

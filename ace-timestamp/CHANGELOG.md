@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **CLI migrated to dry-cli** (task 179.16)
+  - Replaced Thor-based CLI with dry-cli registry pattern
+  - Thor dependency replaced with dry-cli ~> 1.1 in gemspec
+  - Command classes moved to `cli/` directory as separate files
+  - Commands now use keyword arguments for options
+
 ## [0.1.1] - 2026-01-06
 
 ### Fixed

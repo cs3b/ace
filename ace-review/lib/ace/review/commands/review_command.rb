@@ -52,8 +52,11 @@ module Ace
         def process_subjects(options)
           return unless options[:subject]
 
-          # Thor's repeatable option gives us an array
-          subjects = Array(options[:subject]).compact.map(&:strip).reject(&:empty?)
+          # Handle both array input (from tests/API) and string input (from CLI)
+          # CLI uses ARRAY_SEPARATOR (\x1F) to preserve internal commas in subjects
+          subjects = Array(options[:subject]).flat_map do |s|
+            s.to_s.split(CLI::ARRAY_SEPARATOR)
+          end.compact.map(&:strip).reject(&:empty?)
 
           if subjects.any?
             # Deduplicate subjects (order preserved)

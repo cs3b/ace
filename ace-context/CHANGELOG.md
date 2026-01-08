@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.04)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Converted CLI class to `Dry::CLI::Registry` pattern with explicit command registration
+  - Moved default command routing logic from method_missing to `CLI.start` method
+  - Added type conversion for numeric options (max_size, timeout)
+  - Maintained backward compatibility for `--list` flag via exe/ace-context wrapper
+
+### Fixed
+- Added ace-nav command mocking in test helper to prevent subprocess hangs
+- Stubbed LoadCommand and ListCommand in CLI routing tests for faster test execution
+
 ## [0.26.0] - 2026-01-05
 
 ### Added

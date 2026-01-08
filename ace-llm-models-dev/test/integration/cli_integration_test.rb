@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "ace/llm/models_dev/cli"
 require "tmpdir"
 require "fileutils"
 require "json"
@@ -233,30 +234,16 @@ class CLIIntegrationTest < ModelsDevTestCase
     # Create minimal cache so search can proceed
     create_cache_with_models("anthropic", ["claude-3-sonnet"])
 
-    # Execute search with invalid filter format
-    cli = Ace::LLM::ModelsDev::Commands::ModelsCLI.new
-
-    stderr_output = nil
-    exit_code = nil
-
-    # Capture stderr and run
-    old_stderr = $stderr
-    $stderr = StringIO.new
-
-    begin
-      Ace::LLM::ModelsDev::Molecules::CacheManager.stub :new, create_cache_manager do
-        cli.stub :options, { filter: ["badfilter"], json: false, limit: 20 } do
-          exit_code = cli.search(nil)
-        end
+    Ace::LLM::ModelsDev::Molecules::CacheManager.stub :new, create_cache_manager do
+      cmd = Ace::LLM::ModelsDev::Commands::Models::Search.new
+      _, stderr_output = capture_io do
+        @exit_code = cmd.call(query: nil, filter: ["badfilter"], json: false, limit: 20)
       end
-      stderr_output = $stderr.string
-    ensure
-      $stderr = old_stderr
-    end
 
-    # Verify: error returned
-    assert_equal 1, exit_code, "Invalid filter should return error exit code"
-    assert_match(/Invalid filter format 'badfilter'/, stderr_output)
+      # Verify: error returned
+      assert_equal 1, @exit_code, "Invalid filter should return error exit code"
+      assert_match(/Invalid filter format 'badfilter'/, stderr_output)
+    end
   end
 
   def test_search_with_valid_filter_succeeds
@@ -275,54 +262,30 @@ class CLIIntegrationTest < ModelsDevTestCase
     }
     write_cache(cache_data)
 
-    cli = Ace::LLM::ModelsDev::Commands::ModelsCLI.new
+    Ace::LLM::ModelsDev::Molecules::CacheManager.stub :new, create_cache_manager do
+      cmd = Ace::LLM::ModelsDev::Commands::Models::Search.new
+      stdout_output = capture_io do
+        @exit_code = cmd.call(query: nil, filter: ["provider:anthropic"], json: false, limit: 20)
+      end.first
 
-    stdout_output = nil
-    exit_code = nil
-
-    old_stdout = $stdout
-    $stdout = StringIO.new
-
-    begin
-      Ace::LLM::ModelsDev::Molecules::CacheManager.stub :new, create_cache_manager do
-        cli.stub :options, { filter: ["provider:anthropic"], json: false, limit: 20 } do
-          exit_code = cli.search(nil)
-        end
-      end
-      stdout_output = $stdout.string
-    ensure
-      $stdout = old_stdout
+      assert_equal 0, @exit_code, "Valid filter should succeed"
+      assert_match(/claude-3-sonnet/, stdout_output)
     end
-
-    assert_equal 0, exit_code, "Valid filter should succeed"
-    assert_match(/claude-3-sonnet/, stdout_output)
   end
 
   def test_search_with_multiple_invalid_filters_shows_all_errors
     create_cache_with_models("anthropic", ["claude-3-sonnet"])
 
-    cli = Ace::LLM::ModelsDev::Commands::ModelsCLI.new
-
-    stderr_output = nil
-    exit_code = nil
-
-    old_stderr = $stderr
-    $stderr = StringIO.new
-
-    begin
-      Ace::LLM::ModelsDev::Molecules::CacheManager.stub :new, create_cache_manager do
-        cli.stub :options, { filter: ["bad1", "provider:ok", "bad2"], json: false, limit: 20 } do
-          exit_code = cli.search(nil)
-        end
+    Ace::LLM::ModelsDev::Molecules::CacheManager.stub :new, create_cache_manager do
+      cmd = Ace::LLM::ModelsDev::Commands::Models::Search.new
+      _, stderr_output = capture_io do
+        @exit_code = cmd.call(query: nil, filter: ["bad1", "provider:ok", "bad2"], json: false, limit: 20)
       end
-      stderr_output = $stderr.string
-    ensure
-      $stderr = old_stderr
-    end
 
-    assert_equal 1, exit_code
-    assert_match(/Invalid filter format 'bad1'/, stderr_output)
-    assert_match(/Invalid filter format 'bad2'/, stderr_output)
+      assert_equal 1, @exit_code
+      assert_match(/Invalid filter format 'bad1'/, stderr_output)
+      assert_match(/Invalid filter format 'bad2'/, stderr_output)
+    end
   end
 
   private
