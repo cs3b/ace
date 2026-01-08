@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-01-07
+
+### Added
+- **CLI test helpers** for dry-cli based CLIs (task 179)
+  - `CliHelpers` module with reusable patterns for testing CLI commands
+  - `invoke_cli` - Invoke CLI and capture stdout/stderr/result
+  - `invoke_cli_stdout` - Convenience method for stdout only
+  - `assert_cli_success` - Assert CLI returns exit code 0
+  - `assert_cli_output_matches` - Assert CLI output matches pattern
+
 ## [0.10.0] - 2026-01-03
 
 ### Changed
