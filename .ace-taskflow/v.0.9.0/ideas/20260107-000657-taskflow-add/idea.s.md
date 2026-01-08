@@ -1,5 +1,5 @@
 ---
-title: Standardize Project Naming: ACE (Agentic Coding Environment) Consistency
+title: "Standardize Project Naming: ACE (Agentic Coding Environment) Consistency"
 filename_suggestion: chore-core-naming-consistency
 enhanced_at: 2026-01-07 00:06:56
 location: active
