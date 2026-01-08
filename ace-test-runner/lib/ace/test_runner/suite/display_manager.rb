@@ -160,7 +160,7 @@ module Ace
             puts "Failed packages:"
             summary[:failed_packages].each do |pkg|
               puts "  - #{pkg[:name]}: #{pkg[:failures]} failures, #{pkg[:errors]} errors"
-              puts "    → See #{pkg[:path]}/test-reports/latest/failures.json"
+              puts Ace::TestRunner::Molecules::FailedPackageReporter.format_for_display(pkg)
             end
           end
 

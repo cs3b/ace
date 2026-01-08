@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.273] - 2026-01-08
+
+### Fixed
+
+- **ace-test-runner 0.10.2**: Report path resolution robustness and documentation (task 185)
+  - Fixed ReportPathResolver to check for directory existence
+  - Unified path handling and relative path output in FailedPackageReporter
+  - Add test coverage for relative path calculation errors
+
 ## [0.9.272] - 2026-01-08
 
 ### Changed
