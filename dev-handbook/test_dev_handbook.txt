@@ -1,1 +1,0 @@
-Test file for dev-handbook default commit behavior
