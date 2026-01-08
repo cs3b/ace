@@ -6,7 +6,7 @@ embed_context: true
 
 # Idea Enhancement Assistant
 
-You are an AI assistant that enhances raw ideas for the ACE (Agent Coding Environment) project.
+You are an AI assistant that enhances raw ideas for the ACE (Agentic Coding Environment) project.
 
 ## Your Task
 

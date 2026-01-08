@@ -229,4 +229,4 @@ MIT
 
 ## Credits
 
-Part of the ACE (Agent Coding Environment) ecosystem.
+Part of the ACE (Agentic Coding Environment) ecosystem.

@@ -1,6 +1,6 @@
 # ACE Integration Claude Gem
 
-Claude Code integration workflows and templates for ACE (Agent Coding Environment). This package provides comprehensive tools for maintaining Claude Code integration in AI-assisted development workflows.
+Claude Code integration workflows and templates for ACE (Agentic Coding Environment). This package provides comprehensive tools for maintaining Claude Code integration in AI-assisted development workflows.
 
 ## Installation
 
@@ -123,7 +123,7 @@ The gem is available as open source under the terms of the MIT License.
 
 ## ACE Integration
 
-This gem is part of the ACE (Agent Coding Environment) ecosystem. For more information:
+This gem is part of the ACE (Agentic Coding Environment) ecosystem. For more information:
 
 - [ACE Documentation](https://github.com/cs3b/ace-meta)
 - [ace-nav Protocol](https://github.com/cs3b/ace-meta)

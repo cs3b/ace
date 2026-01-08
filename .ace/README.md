@@ -1,6 +1,6 @@
 # ACE Configuration Directory
 
-This directory contains all configuration for the ACE (Agent Coding Environment) development system.
+This directory contains all configuration for the ACE (Agentic Coding Environment) development system.
 
 **Important**: All configurations are explicit - there are no hidden defaults in the gems. Each gem provides example configurations in their `ace.example/` directories that should be copied here and customized for your project.
 

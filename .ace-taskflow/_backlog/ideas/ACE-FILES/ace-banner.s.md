@@ -48,7 +48,7 @@ Module Showcase with Emojis & Taglines
 
 ## Project Modules
 
--  **ace-handbook** – *Your Agent Coding Environment Playbook*
+-  **ace-handbook** – *Your Agentic Coding Environment Playbook*
    Guidelines, architectural patterns, and onboarding workflows.
 -  **ace-tools** – *Forge the Code: Your Agent Toolkit*
    CLI scripts, templates, and utilities for developer productivity.
@@ -62,7 +62,7 @@ Module Showcase with Emojis & Taglines
 
 <!-- [OPTIONAL] Top-of-file ASCII or SVG banner -->
 
-# Ace Project: Agent Coding Environment
+# Ace Project: Agentic Coding Environment
 
 A modular framework for building intelligent agents structured around:
 - **ace-handbook**
@@ -75,7 +75,7 @@ A modular framework for building intelligent agents structured around:
 
 | Module          | Tagline                                | Purpose                                                         |
 |------------------|----------------------------------------|-----------------------------------------------------------------|
-| ace-handbook     | Your Agent Coding Environment Playbook | Architecture, patterns, best practices, onboarding guide        |
+| ace-handbook     | Your Agentic Coding Environment Playbook | Architecture, patterns, best practices, onboarding guide        |
 | ace-tools        | Forge the Code: Your Agent Toolkit     | CLI, templates, utilities to accelerate development             |
 | ace-taskflow     | Orchestrate Tasks with Precision       | Workflow orchestration, execution engine, retry strategies      |
 

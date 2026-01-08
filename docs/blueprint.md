@@ -9,7 +9,7 @@ update:
   last-updated: '2025-12-01'
 ---
 
-# Project Blueprint: ACE (Agent Coding Environment)
+# Project Blueprint: ACE (Agentic Coding Environment)
 
 ## What is a Blueprint?
 
