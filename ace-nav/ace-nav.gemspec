@@ -36,7 +36,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Runtime dependencies
-  spec.add_dependency "thor", "~> 1.3"
+  spec.add_dependency "dry-cli", "~> 1.0"
+  spec.add_dependency "ace-support-core", "~> 0.10"
   spec.add_dependency "ace-config", "~> 0.5"
   spec.add_dependency "ace-support-fs", "~> 0.1"
 

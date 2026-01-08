@@ -34,9 +34,10 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies - Ruby-only stack
   spec.add_dependency "ace-config", "~> 0.5"
+  spec.add_dependency "ace-support-core", "~> 0.11"
+  spec.add_dependency "dry-cli", "~> 1.0"
   spec.add_dependency "kramdown", "~> 2.4"
   spec.add_dependency "kramdown-parser-gfm", "~> 1.1"
-  spec.add_dependency "thor", "~> 1.3"
   spec.add_dependency "colorize", "~> 1.1"
 
   # Development dependencies

@@ -458,6 +458,10 @@ Clean, type-safe subject specification using `type:value` syntax:
 # Git diff ranges
 ace-review --subject diff:origin/main..HEAD --preset code
 
+# Commit hashes (review single commit)
+ace-review --subject commit:3cd9afbf --preset code
+ace-review --subject commit:abc123 --preset code  # short hash (6+ chars)
+
 # GitHub pull requests (subject-only mode)
 ace-review --subject pr:123 --preset code
 
@@ -507,6 +511,7 @@ ace-review --preset docs --subject staged --subject files:README.md
 
 | Input | Resolves To (ace-context config) |
 |-------|----------------------------------|
+| `commit:hash` | `{ "context" => { "diffs" => ["hash~1..hash"] } }` |
 | `diff:range` | `{ "context" => { "diffs" => ["range"] } }` |
 | `pr:123` | `{ "context" => { "pr" => ["123"] } }` |
 | `pr:123,456` | `{ "context" => { "pr" => ["123", "456"] } }` (comma splits into array) |
@@ -515,6 +520,8 @@ ace-review --preset docs --subject staged --subject files:README.md
 | `task:ref` | Task lookup → `{ "context" => { "files" => ["task-dir/**/*.s.md"] } }` |
 | `staged` | Auto-detect (legacy path) |
 | `working` | Auto-detect (legacy path) |
+
+**Note:** `commit:` subject format requires hexadecimal hashes (6-40 characters). Short hashes (6+ chars) and full hashes (40 chars) are both supported. The commit's changes are extracted by comparing the commit to its parent (`COMMIT~1..COMMIT`).
 
 **Note:** Comma-separated values within a typed subject (e.g., `pr:1,2,3` or `files:a.rb,b.rb`) are split into arrays. Empty entries are automatically filtered out.
 

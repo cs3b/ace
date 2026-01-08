@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **CLI migrated to dry-cli** (task 179.16)
+  - Replaced Thor-based CLI with dry-cli registry pattern
+  - Thor dependency replaced with dry-cli ~> 1.1 in gemspec
+  - Removed old Thor subcommand files (cache_cli.rb, providers_cli.rb, models_cli.rb)
+  - New command classes in `cli/{cache,providers,models}/` directories
+  - Commands now use keyword arguments for options
+  - Subcommands registered hierarchically: `cache sync`, `providers list`, etc.
+
 ## [0.4.1] - 2026-01-05
 
 ### Added

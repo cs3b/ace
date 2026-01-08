@@ -34,11 +34,6 @@ require_relative "models_dev/molecules/provider_sync_diff"
 require_relative "models_dev/organisms/sync_orchestrator"
 require_relative "models_dev/organisms/provider_sync_orchestrator"
 
-# CLI subcommands (must be after molecules/organisms are loaded)
-require_relative "models_dev/cli/cache_cli"
-require_relative "models_dev/cli/providers_cli"
-require_relative "models_dev/cli/models_cli"
-
 module Ace
   module LLM
     module ModelsDev

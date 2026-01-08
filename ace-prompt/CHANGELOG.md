@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-01-07
+
+### Changed
+- **BREAKING**: Migrated CLI framework from Thor to dry-cli (task 179.11)
+  - Replaced `thor` dependency with `dry-cli ~> 1.0`
+  - Created dry-cli command classes in `lib/ace/prompt/commands/`
+  - All commands and options maintain parity with Thor implementation
+
+### Added
+- `Process` command for prompt processing (default command)
+- `Setup` command for workspace initialization
+
 ## [0.12.0] - 2026-01-07
 
 ### Changed

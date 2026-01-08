@@ -41,7 +41,8 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'ace-config', '~> 0.4'
-  spec.add_dependency 'thor', '~> 1.3'
+  spec.add_dependency 'ace-support-core', '~> 0.9'
+  spec.add_dependency 'dry-cli', '~> 1.0'
 
   # Development dependencies
   spec.add_development_dependency 'ace-support-test-helpers', '~> 0.9'
