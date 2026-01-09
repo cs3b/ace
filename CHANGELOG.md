@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.284] - 2026-01-09
+
+### Added
+
+- **ace-taskflow 0.33.1**: Migrate task subcommands to nested dry-cli commands
+  - Created 11 new nested subcommand classes: `Create`, `Show`, `Start`, `Done`, `Move`, `Update`, `Defer`, `Undefer`, `Undone`, `AddDependency`, `RemoveDependency`
+  - Implemented `CommandRouter` molecule to disambiguate between `task <ref>` and `task <subcommand>`
+  - Added comprehensive tests for create command
+  - Updated `CLI` and `CLI::Task` registration to use nested subcommands
+
+### Fixed
+
+- **ace-taskflow 0.33.1**: Correct require_relative path for molecules in show command
+
+### Changed
+
+- **ace-taskflow 0.33.1**: Refactored create command to use TaskManager directly
+
 ## [0.9.283] - 2026-01-09
 
 ### Changed
