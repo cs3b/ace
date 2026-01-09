@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.190
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
@@ -50,10 +50,10 @@ ace-nav sources [options]           # List resource sources
 
 ### Success Criteria
 
-- [ ] **4 commands refactored**: resolve, list, create, sources merged with their *Command classes
-- [ ] **Help text works**: Each command shows proper documentation
-- [ ] **Tests pass**: All tests updated
-- [ ] **No functional changes**: Commands work exactly as before
+- [x] **4 commands refactored**: resolve, list, create, sources merged with their *Command classes
+- [x] **Help text works**: Each command shows proper documentation
+- [x] **Tests pass**: All tests updated
+- [x] **No functional changes**: Commands work exactly as before
 
 ## Objective
 
@@ -151,7 +151,7 @@ After refactoring, each file will:
 
 ### Planning Steps
 
-* [ ] Verify cli_test.rb tests can still access private methods after merge
+* [x] Verify cli_test.rb tests can still access private methods after merge
   > TEST: Test compatibility check
   > Type: Pre-condition Check
   > Assert: Test uses send(:magic_wildcard_pattern?) which works on instances
@@ -159,7 +159,7 @@ After refactoring, each file will:
 
 ### Execution Steps
 
-- [ ] Merge ResolveCommand into Resolve class
+- [x] Merge ResolveCommand into Resolve class
   - Copy execute logic to call() method
   - Move private methods
   - Update requires
@@ -169,7 +169,7 @@ After refactoring, each file will:
   > Assert: ace-nav wfi://load-context resolves correctly
   > Command: ace-nav wfi://load-context --quiet | head -5
 
-- [ ] Merge ListCommand into List class
+- [x] Merge ListCommand into List class
   - Copy execute logic to call() method
   - Move private methods
   - Update requires
@@ -178,7 +178,7 @@ After refactoring, each file will:
   > Assert: ace-nav list 'wfi://*' shows resources
   > Command: ace-nav list 'wfi://*' --quiet | head -5
 
-- [ ] Merge CreateCommand into Create class
+- [x] Merge CreateCommand into Create class
   - Copy execute logic to call() method
   - Move private methods
   - Update requires
@@ -187,7 +187,7 @@ After refactoring, each file will:
   > Assert: ace-nav create --help shows usage
   > Command: ace-nav create --help 2>&1 | head -5
 
-- [ ] Merge SourcesCommand into Sources class
+- [x] Merge SourcesCommand into Sources class
   - Copy execute logic to call() method
   - Move private methods
   - Update requires
@@ -196,7 +196,7 @@ After refactoring, each file will:
   > Assert: ace-nav sources shows available sources
   > Command: ace-nav sources --quiet | head -5
 
-- [ ] Delete obsolete *Command files
+- [x] Delete obsolete *Command files
   - Remove resolve_command.rb
   - Remove list_command.rb
   - Remove create_command.rb
@@ -206,7 +206,7 @@ After refactoring, each file will:
   > Assert: No broken requires in remaining files
   > Command: cd ace-nav && ruby -Ilib -e "require 'ace/nav/cli'"
 
-- [ ] Run full test suite
+- [x] Run full test suite
   > TEST: All tests pass
   > Type: Final Validation
   > Assert: 78+ tests pass (same as baseline)
@@ -236,13 +236,13 @@ After refactoring, each file will:
 
 ## Acceptance Criteria
 
-- [ ] AC 1: All 4 wrapper files contain merged logic (no delegation to *Command)
-- [ ] AC 2: All 4 *_command.rb files deleted
-- [ ] AC 3: `ace-nav --help` works correctly
-- [ ] AC 4: `ace-nav wfi://load-context` resolves correctly
-- [ ] AC 5: `ace-nav sources` lists sources correctly
-- [ ] AC 6: 78+ tests pass (baseline maintained)
-- [ ] AC 7: cli_test.rb magic_wildcard_pattern? tests pass
+- [x] AC 1: All 4 wrapper files contain merged logic (no delegation to *Command)
+- [x] AC 2: All 4 *_command.rb files deleted
+- [x] AC 3: `ace-nav --help` works correctly
+- [x] AC 4: `ace-nav wfi://load-context` resolves correctly
+- [x] AC 5: `ace-nav sources` lists sources correctly
+- [x] AC 6: 78+ tests pass (baseline maintained)
+- [x] AC 7: cli_test.rb magic_wildcard_pattern? tests pass
 
 ## Out of Scope
 
