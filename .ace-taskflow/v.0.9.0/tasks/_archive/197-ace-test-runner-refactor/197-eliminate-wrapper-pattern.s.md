@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.197
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -41,10 +41,10 @@ ace-test [pattern] [options]    # Run tests
 
 ### Success Criteria
 
-- [ ] **Test command refactored**: Wrapper merged with TestCommand
-- [ ] **Help text works**: `ace-test --help` shows proper documentation
-- [ ] **Tests pass**: All tests updated
-- [ ] **No functional changes**: Command works exactly as before
+- [x] **Test command refactored**: Wrapper merged with TestCommand
+- [x] **Help text works**: `ace-test --help` shows proper documentation
+- [x] **Tests pass**: All tests updated
+- [x] **No functional changes**: Command works exactly as before
 
 ## Objective
 
@@ -139,7 +139,7 @@ commands/
 
 ### Execution Steps
 
-- [ ] Step 1: Merge test_command.rb methods into test.rb
+- [x] Step 1: Merge test_command.rb methods into test.rb
   - Move all private methods from TestCommand into Test class
   - Convert instance variables (@args, @options) to method parameters
   - Keep method signatures compatible
@@ -148,7 +148,7 @@ commands/
   > Assert: All methods from TestCommand exist in Test class
   > Command: grep -c "def " ace-test-runner/lib/ace/test_runner/commands/test.rb
 
-- [ ] Step 2: Update call() method to inline execute() logic
+- [x] Step 2: Update call() method to inline execute() logic
   - Move execute() logic directly into call()
   - Maintain error handling and special mode checks
   > TEST: Call Method Updated
@@ -156,7 +156,7 @@ commands/
   > Assert: call() contains execute logic
   > Command: ace-test ace-test-runner
 
-- [ ] Step 3: Update test file (cleanup_config_test.rb)
+- [x] Step 3: Update test file (cleanup_config_test.rb)
   - Replace TestCommand.new with CLI-compatible approach
   - Option A: Call via CLI.start
   - Option B: Create test helper method
@@ -165,7 +165,7 @@ commands/
   > Assert: Tests use new pattern
   > Command: grep -c "TestCommand" ace-test-runner/test/
 
-- [ ] Step 4: Delete test_command.rb
+- [x] Step 4: Delete test_command.rb
   - Remove file after all logic migrated
   - Remove require statement from test.rb
   > TEST: File Removed
@@ -173,13 +173,13 @@ commands/
   > Assert: test_command.rb no longer exists
   > Command: test ! -f ace-test-runner/lib/ace/test_runner/commands/test_command.rb
 
-- [ ] Step 5: Run full test suite
+- [x] Step 5: Run full test suite
   > TEST: All Tests Pass
   > Type: Action Validation
   > Assert: All tests pass
   > Command: cd ace-test-runner && ace-test
 
-- [ ] Step 6: Verify CLI functionality
+- [x] Step 6: Verify CLI functionality
   > TEST: CLI Works
   > Type: Action Validation
   > Assert: ace-test --help shows documentation
@@ -203,11 +203,11 @@ commands/
 
 ## Acceptance Criteria
 
-- [ ] AC 1: test_command.rb deleted
-- [ ] AC 2: test.rb contains all business logic (>200 lines)
-- [ ] AC 3: All tests in ace-test-runner pass
-- [ ] AC 4: `ace-test --help` shows proper documentation
-- [ ] AC 5: `ace-test atoms` runs successfully (in a valid package)
+- [x] AC 1: test_command.rb deleted
+- [x] AC 2: test.rb contains all business logic (>200 lines)
+- [x] AC 3: All tests in ace-test-runner pass
+- [x] AC 4: `ace-test --help` shows proper documentation
+- [x] AC 5: `ace-test atoms` runs successfully (in a valid package)
 
 ## Out of Scope
 
