@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-01-09
+
+### Changed
+- **BREAKING**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `Load` and `List` dry-cli command classes
+  - Deleted `load_command.rb` and `list_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+- Added `PresetListFormatter` atom for reusable list formatting logic
+
 ## [0.27.0] - 2026-01-07
 
 ### Changed

@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.189
-status: pending
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -136,13 +136,13 @@ end
 
 ### Execution Steps
 
-- [ ] Create backup branch before refactoring
+- [x] Create backup branch before refactoring
   > TEST: Branch exists
   > Type: Pre-condition Check
   > Assert: Branch created successfully
   > Command: `git branch -a | grep backup-189`
 
-- [ ] Merge `list_command.rb` into `list.rb` (simpler command first)
+- [x] Merge `list_command.rb` into `list.rb` (simpler command first)
   - Remove `require_relative "list_command"`
   - Inline the execute method logic directly in `call`
   > TEST: List command works
@@ -150,9 +150,9 @@ end
   > Assert: `ace-context list` shows presets without errors
   > Command: `ace-context list`
 
-- [ ] Delete `list_command.rb`
+- [x] Delete `list_command.rb`
 
-- [ ] Merge `load_command.rb` into `load.rb`
+- [x] Merge `load_command.rb` into `load.rb`
   - Remove `require_relative "load_command"`
   - Copy private methods: `process_options`, `inspect_config_mode`, `load_multiple_inputs`, `load_auto`, `handle_output`, `write_to_cache`, `write_to_file`, `display_config_summary`, `load_gem_defaults`
   - Replace `LoadCommand.new(input, options).execute` with inline method calls
@@ -162,9 +162,9 @@ end
   > Assert: `ace-context project` loads context successfully
   > Command: `ace-context project -q`
 
-- [ ] Delete `load_command.rb`
+- [x] Delete `load_command.rb`
 
-- [ ] Update `cli_routing_test.rb` test mocks
+- [x] Update `cli_routing_test.rb` test mocks
   - Lines 46-48: Change stub from `ListCommand` to list output
   - Lines 62-65: Change stub from `LoadCommand` to load output
   > TEST: Test file passes
@@ -172,13 +172,13 @@ end
   > Assert: CLI routing tests pass
   > Command: `ace-test test/commands/cli_routing_test.rb`
 
-- [ ] Run full test suite
+- [x] Run full test suite
   > TEST: All tests pass
   > Type: Final Validation
   > Assert: All ace-context tests pass
   > Command: `cd ace-context && ace-test`
 
-- [ ] Manual validation of key commands
+- [x] Manual validation of key commands
   > TEST: CLI functionality verified
   > Type: Integration Validation
   > Assert: Commands work as expected
@@ -186,14 +186,14 @@ end
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `load_command.rb` and `list_command.rb` files deleted
-- [ ] AC 2: `load.rb` contains all business logic (single file per command)
-- [ ] AC 3: `list.rb` contains all business logic
-- [ ] AC 4: `ace-context load --help` displays proper help text
-- [ ] AC 5: `ace-context list` outputs available presets
-- [ ] AC 6: `ace-context project` loads project context correctly
-- [ ] AC 7: All tests in `ace-context/test/` pass
-- [ ] AC 8: No functional changes to CLI behavior (pure refactoring)
+- [x] AC 1: `load_command.rb` and `list_command.rb` files deleted
+- [x] AC 2: `load.rb` contains all business logic (single file per command)
+- [x] AC 3: `list.rb` contains all business logic
+- [x] AC 4: `ace-context load --help` displays proper help text
+- [x] AC 5: `ace-context list` outputs available presets
+- [x] AC 6: `ace-context project` loads project context correctly
+- [x] AC 7: All tests in `ace-context/test/` pass
+- [x] AC 8: No functional changes to CLI behavior (pure refactoring)
 
 ## Out of Scope
 
