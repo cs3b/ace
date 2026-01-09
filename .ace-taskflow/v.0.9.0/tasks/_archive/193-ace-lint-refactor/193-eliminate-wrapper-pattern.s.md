@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.193
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -26,10 +26,10 @@ ace-lint <pattern> [options]    # Lint files
 
 ### Success Criteria
 
-- [ ] **Lint command refactored**: Wrapper merged with LintCommand
-- [ ] **Help text works**: `ace-lint --help` shows proper documentation
-- [ ] **Tests pass**: All tests updated
-- [ ] **No functional changes**: Command works exactly as before
+- [x] **Lint command refactored**: Wrapper merged with LintCommand
+- [x] **Help text works**: `ace-lint --help` shows proper documentation
+- [x] **Tests pass**: All tests updated
+- [x] **No functional changes**: Command works exactly as before
 
 ## Objective
 
@@ -129,7 +129,7 @@ Key code migrations:
 
 ### Execution Steps
 
-- [ ] Step 1: Merge LintCommand methods into Lint class
+- [x] Step 1: Merge LintCommand methods into Lint class
   - Move `execute` logic into `call` method
   - Move `expand_file_paths` as private method
   - Move `prepare_options` as private method
@@ -138,53 +138,53 @@ Key code migrations:
   > Assert: lint.rb contains all business logic
   > Command: # Verify with: grep -c "def " ace-lint/lib/ace/lint/commands/lint.rb
 
-- [ ] Step 2: Update require statements in lint.rb
+- [x] Step 2: Update require statements in lint.rb
   - Remove `require_relative "lint_command"`
   > TEST: Require Statement Validation
   > Type: Action Validation
   > Assert: No reference to lint_command in lint.rb
   > Command: # grep "lint_command" ace-lint/lib/ace/lint/commands/lint.rb
 
-- [ ] Step 3: Update cli.rb to remove lint_command require
+- [x] Step 3: Update cli.rb to remove lint_command require
   - Remove line: `require_relative "commands/lint_command"`
   > TEST: CLI Load Verification
   > Type: Action Validation
   > Assert: cli.rb loads without lint_command
   > Command: # ruby -r ace-lint -e "puts 'OK'"
 
-- [ ] Step 4: Update ace/lint.rb to remove lint_command require
+- [x] Step 4: Update ace/lint.rb to remove lint_command require
   - Remove line: `require_relative 'lint/commands/lint_command'`
   > TEST: Module Load Verification
   > Type: Action Validation
   > Assert: lint.rb loads without lint_command
   > Command: # ruby -r ace-lint -e "puts 'OK'"
 
-- [ ] Step 5: Run tests to verify functionality preserved
+- [x] Step 5: Run tests to verify functionality preserved
   > TEST: Test Suite Validation
   > Type: Regression Test
   > Assert: All existing tests pass
   > Command: # cd ace-lint && ace-test
 
-- [ ] Step 6: Delete lint_command.rb
+- [x] Step 6: Delete lint_command.rb
   - Only after tests pass in Step 5
   > TEST: File Deletion Verification
   > Type: Action Validation
   > Assert: File removed from filesystem
   > Command: # test ! -f ace-lint/lib/ace/lint/commands/lint_command.rb
 
-- [ ] Step 7: Final test run to confirm deletion doesn't break anything
+- [x] Step 7: Final test run to confirm deletion doesn't break anything
   > TEST: Final Regression Test
   > Type: Regression Test
   > Assert: All tests still pass after file deletion
   > Command: # cd ace-lint && ace-test
 
-- [ ] Step 8: Verify help text works
+- [x] Step 8: Verify help text works
   > TEST: CLI Help Validation
   > Type: Smoke Test
   > Assert: Help displays without errors
   > Command: # ace-lint --help
 
-- [ ] Step 9: Verify basic lint functionality works
+- [x] Step 9: Verify basic lint functionality works
   > TEST: Functional Smoke Test
   > Type: Smoke Test
   > Assert: Lint command works on a sample file
@@ -192,11 +192,11 @@ Key code migrations:
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `ace-lint/lib/ace/lint/commands/lint_command.rb` deleted
-- [ ] AC 2: `ace-lint/lib/ace/lint/commands/lint.rb` contains all business logic
-- [ ] AC 3: All ace-lint tests pass
-- [ ] AC 4: `ace-lint --help` displays correct documentation
-- [ ] AC 5: `ace-lint README.md` executes without errors (functional parity)
+- [x] AC 1: `ace-lint/lib/ace/lint/commands/lint_command.rb` deleted
+- [x] AC 2: `ace-lint/lib/ace/lint/commands/lint.rb` contains all business logic
+- [x] AC 3: All ace-lint tests pass
+- [x] AC 4: `ace-lint --help` displays correct documentation
+- [x] AC 5: `ace-lint README.md` executes without errors (functional parity)
 
 ## Out of Scope
 

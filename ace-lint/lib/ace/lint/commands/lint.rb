@@ -2,15 +2,16 @@
 
 require "dry/cli"
 require "ace/core/cli/dry_cli/base"
-require_relative "lint_command"
+require_relative '../organisms/lint_orchestrator'
+require_relative '../organisms/result_reporter'
 
 module Ace
   module Lint
     module Commands
       # dry-cli Command class for the lint command
       #
-      # This wraps the existing LintCommand logic in a dry-cli compatible
-      # interface, maintaining complete parity with the Thor implementation.
+      # This command provides linting functionality for markdown, YAML, and
+      # frontmatter files, maintaining complete parity with the Thor implementation.
       class Lint < Dry::CLI::Command
         include Ace::Core::CLI::DryCli::Base
 
@@ -71,8 +72,80 @@ module Ace
           # This maintains parity with the Thor implementation
           clean_options[:line_width] = clean_options[:line_width].to_i if clean_options[:line_width]
 
-          # Use the existing LintCommand logic
-          LintCommand.execute(files, clean_options)
+          # Validate inputs
+          if files.empty?
+            puts 'Error: No files specified'
+            puts 'Usage: ace-lint [FILES...] [OPTIONS]'
+            return 1
+          end
+
+          # Expand globs
+          expanded_paths = expand_file_paths(files)
+
+          if expanded_paths.empty?
+            puts 'Error: No files found matching the given patterns'
+            return 1
+          end
+
+          # Create orchestrator
+          orchestrator = Organisms::LintOrchestrator.new
+
+          # Prepare options
+          lint_options = prepare_options(clean_options)
+
+          # Lint files
+          results = orchestrator.lint_files(expanded_paths, options: lint_options)
+
+          # Report results
+          verbose = !clean_options[:quiet]
+          Organisms::ResultReporter.report(results, verbose: verbose)
+
+          # Return exit code
+          Organisms::ResultReporter.exit_code(results)
+        end
+
+        private
+
+        # Expand file paths, handling glob patterns
+        # @param paths [Array<String>] File paths or glob patterns
+        # @return [Array<String>] Expanded file paths
+        def expand_file_paths(paths)
+          expanded = []
+
+          paths.each do |path|
+            # Check if it's a glob pattern
+            if path.include?('*')
+              matched_files = Dir.glob(path)
+              expanded.concat(matched_files)
+            elsif File.exist?(path)
+              expanded << path
+            else
+              puts "Warning: File not found: #{path}"
+            end
+          end
+
+          expanded.uniq.sort
+        end
+
+        # Prepare options for the linter
+        # @param options [Hash] Raw command options
+        # @return [Hash] Prepared options for lint orchestrator
+        def prepare_options(options)
+          prepared = {}
+
+          # Type option
+          prepared[:type] = options[:type].to_sym if options[:type]
+
+          # Fix/format options
+          prepared[:fix] = options[:fix] if options[:fix]
+          prepared[:format] = options[:format] if options[:format]
+
+          # Kramdown options
+          kramdown_opts = {}
+          kramdown_opts[:line_width] = options[:line_width] if options[:line_width]
+          prepared[:kramdown_options] = kramdown_opts unless kramdown_opts.empty?
+
+          prepared
         end
       end
     end
