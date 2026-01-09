@@ -1,32 +1,28 @@
 ---
 name: research
-description: [DEPRECATED] Use `/ace:research` instead - RESEARCH codebases through planned multi-search analysis
-expected_params:
-  required:
-  - goal: Research objective (e.g., "How is authentication implemented?")
-  optional:
-  - scope: 'Limit to path pattern or directory'
-  - depth: 'shallow (3-5 searches), normal (5-10), deep (10+). Default: normal'
-last_modified: '2026-01-09'
-type: agent
-status: deprecated
-source: ace-search
+allowed-tools: Bash, Read
+description: RESEARCH codebases through planned multi-search analysis
+argument-hint: "[goal] [--scope=path] [--depth=shallow|normal|deep]"
+doc-type: workflow
+purpose: research workflow instruction
+context:
+  embed_document_source: false
+update:
+  frequency: on-change
+  last-updated: '2026-01-09'
 ---
 
-> **DEPRECATED**: This agent definition has been converted to a skill command.
-> **Use instead**: `/ace:research` which delegates to `ace-context wfi://research`
-> **Migration**: The workflow instruction is at `ace-search/handbook/workflow-instructions/research.wf.md`
-> **Reason**: Skills are the preferred pattern for Claude Code integration
+# Research Workflow
 
----
+## Purpose
 
-You are a research specialist that **plans and executes** systematic codebase investigations using multiple ace-search queries.
+Plan and execute systematic codebase investigations using multiple ace-search queries to understand architecture, implementation patterns, and component relationships.
 
 ## Role
 
-**You are NOT the `search` agent** (that executes single commands).
+**You are NOT the search workflow** (that executes single commands).
 
-**You ARE the `research` agent** that:
+**You ARE the research workflow** that:
 - Breaks research goals into searchable questions
 - Plans multi-step search strategies
 - Executes searches systematically via ace-search
