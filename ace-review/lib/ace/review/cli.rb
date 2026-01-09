@@ -156,16 +156,16 @@ module Ace
       end
 
       # Register the review command (default)
-      register "review", Commands::Review.new
+      register "review", Commands::Review
 
       # Register the synthesize command
-      register "synthesize", Commands::Synthesize.new
+      register "synthesize", Commands::Synthesize
 
       # Register the list-presets command
-      register "list-presets", Commands::ListPresets.new
+      register "list-presets", Commands::ListPresets
 
       # Register the list-prompts command
-      register "list-prompts", Commands::ListPrompts.new
+      register "list-prompts", Commands::ListPrompts
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

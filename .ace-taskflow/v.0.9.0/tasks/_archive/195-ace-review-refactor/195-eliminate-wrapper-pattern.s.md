@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.195
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
@@ -29,10 +29,10 @@ ace-review list-prompts [options]     # List available prompts
 
 ### Success Criteria
 
-- [ ] **4 commands refactored**: review, synthesize, list-presets, list-prompts merged with their *Command classes
-- [ ] **Help text works**: Each command shows proper documentation
-- [ ] **Tests pass**: All tests updated
-- [ ] **No functional changes**: Commands work exactly as before
+- [x] **4 commands refactored**: review, synthesize, list-presets, list-prompts merged with their *Command classes
+- [x] **Help text works**: Each command shows proper documentation
+- [x] **Tests pass**: All tests updated
+- [x] **No functional changes**: Commands work exactly as before
 
 ## Objective
 
@@ -170,7 +170,7 @@ end
 
 #### Phase 1: Simple Commands (list-presets, list-prompts)
 
-- [ ] Merge ListPresetsCommand logic into ListPresets class
+- [x] Merge ListPresetsCommand logic into ListPresets class
   - Remove `require_relative "list_presets_command"`
   - Move `execute` method logic into `call` method
   - Move private helper methods
@@ -179,9 +179,9 @@ end
   > Assert: `ace-review list-presets` displays presets correctly
   > Command: cd ace-review && ace-test
 
-- [ ] Delete `list_presets_command.rb`
+- [x] Delete `list_presets_command.rb`
 
-- [ ] Merge ListPromptsCommand logic into ListPrompts class
+- [x] Merge ListPromptsCommand logic into ListPrompts class
   - Remove `require_relative "list_prompts_command"`
   - Move `execute` method logic into `call` method
   - Move `format_prompt_items` private method
@@ -190,11 +190,11 @@ end
   > Assert: `ace-review list-prompts` displays prompts correctly
   > Command: cd ace-review && ace-test
 
-- [ ] Delete `list_prompts_command.rb`
+- [x] Delete `list_prompts_command.rb`
 
 #### Phase 2: Medium Command (synthesize)
 
-- [ ] Merge SynthesizeCommand logic into Synthesize class
+- [x] Merge SynthesizeCommand logic into Synthesize class
   - Remove `require_relative "synthesize_command"`
   - Move `execute` method logic into `call` method
   - Move private methods: `parse_report_files`, `find_review_reports`, `determine_session_dir`
@@ -204,11 +204,11 @@ end
   > Assert: `ace-review synthesize --help` shows options correctly
   > Command: cd ace-review && ace-test
 
-- [ ] Delete `synthesize_command.rb`
+- [x] Delete `synthesize_command.rb`
 
 #### Phase 3: Complex Command (review)
 
-- [ ] Merge ReviewCommand logic into Review class
+- [x] Merge ReviewCommand logic into Review class
   - Remove `require_relative "review_command"`
   - Convert instance-based methods to work with call parameters
   - Move all private methods:
@@ -227,11 +227,11 @@ end
   > Assert: `ace-review --help` shows all options
   > Command: cd ace-review && ace-test
 
-- [ ] Delete `review_command.rb`
+- [x] Delete `review_command.rb`
 
 #### Phase 4: Test Updates
 
-- [ ] Update multi_model_cli_test.rb
+- [x] Update multi_model_cli_test.rb
   - Change `require "ace/review/commands/review_command"` to `require "ace/review/commands/review"`
   - Update test instantiation from `ReviewCommand.new([], options)` to `Review.new` with appropriate test approach
   - Consider testing via private method calls or refactoring to test through public CLI interface
@@ -242,13 +242,13 @@ end
 
 #### Phase 5: Final Verification
 
-- [ ] Run full test suite
+- [x] Run full test suite
   > TEST: Full Test Suite
   > Type: Action Validation
   > Assert: All tests pass with no regressions
   > Command: cd ace-review && ace-test
 
-- [ ] Verify CLI help text for all commands
+- [x] Verify CLI help text for all commands
   > TEST: Help Text Verification
   > Type: Manual Verification
   > Assert: All commands show correct help
@@ -285,11 +285,11 @@ end
 
 ## Acceptance Criteria
 
-- [ ] AC 1: All 4 wrapper commands merged with their *Command classes
-- [ ] AC 2: All 4 *Command files deleted
-- [ ] AC 3: All existing tests pass (with necessary updates)
-- [ ] AC 4: CLI help text displays correctly for all commands
-- [ ] AC 5: No functional changes to command behavior
+- [x] AC 1: All 4 wrapper commands merged with their *Command classes
+- [x] AC 2: All 4 *Command files deleted
+- [x] AC 3: All existing tests pass (with necessary updates)
+- [x] AC 4: CLI help text displays correctly for all commands
+- [x] AC 5: No functional changes to command behavior
 
 ## References
 

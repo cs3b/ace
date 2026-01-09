@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.282] - 2026-01-09
+
+### Changed
+
+- **ace-review 0.33.1**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `ListPresets`, `ListPrompts`, `Review`, and `Synthesize` dry-cli command classes
+  - Deleted `list_presets_command.rb`, `list_prompts_command.rb`, `review_command.rb`, and `synthesize_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.9.281] - 2026-01-09
 
 ### Changed
