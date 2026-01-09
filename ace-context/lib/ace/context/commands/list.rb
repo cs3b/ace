@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/preset_list_formatter"
+
 module Ace
   module Context
     module Commands
@@ -18,22 +20,8 @@ module Ace
 
         def call(**options)
           presets = Ace::Context.list_presets
-
-          if presets.empty?
-            puts "No presets found in .ace/context/presets/"
-            puts "Create markdown files with YAML frontmatter in .ace/context/presets/ to define presets."
-            puts "Example presets are available in the ace-context gem at .ace-defaults/context/"
-          else
-            puts "Available presets:"
-            presets.each do |preset|
-              puts "  #{preset[:name]}"
-              puts "    Description: #{preset[:description]}" if preset[:description]
-              puts "    Default output: #{preset[:output] || 'stdio'}"
-              puts "    Source: #{preset[:source_file]}" if preset[:source_file]
-              puts ""
-            end
-          end
-
+          lines = Atoms::PresetListFormatter.format(presets)
+          lines.each { |line| puts line }
           0
         end
       end
