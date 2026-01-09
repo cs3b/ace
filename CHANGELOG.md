@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.277] - 2026-01-09
+
+### Changed
+
+- **ace-nav 0.16.1**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `Create`, `List`, `Resolve`, and `Sources` dry-cli command classes
+  - Deleted `create_command.rb`, `list_command.rb`, `resolve_command.rb`, and `sources_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.9.276] - 2026-01-09
 
 ### Changed

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-01-09
+
+### Changed
+- **BREAKING**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `Create`, `List`, `Resolve`, and `Sources` dry-cli command classes
+  - Deleted `create_command.rb`, `list_command.rb`, `resolve_command.rb`, and `sources_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.16.0] - 2026-01-07
 
 ### Changed
