@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.188
-status: pending
+status: in-progress
 priority: high
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 188-fix-task-file-extensions-from-ideasmd-to-smd
+  path: "../ace-task.188"
+  created_at: '2026-01-09 16:00:16'
+  updated_at: '2026-01-09 16:00:16'
 ---
 
 # Fix task file extensions from .idea.s.md to .s.md
