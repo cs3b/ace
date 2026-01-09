@@ -37,7 +37,7 @@ class IdeaWriterIntegrationTest < AceTaskflowTestCase
 
         # Verify it returns the file path
         assert File.exist?(path), "Idea file should exist"
-        assert_match(/integration-test\/complete-workflow\.s\.md$/, path, "Should return full file path")
+        assert_match(/integration-test\/complete-workflow\.idea\.s\.md$/, path, "Should return full file path")
 
         # Verify directory was created
         folder_path = File.dirname(path)
@@ -89,7 +89,7 @@ class IdeaWriterIntegrationTest < AceTaskflowTestCase
 
         # Verify file path is returned
         assert File.exist?(path), "Idea file should exist"
-        assert_match(/llm-enhanced\/test-idea\.s\.md$/, path, "Should return full file path")
+        assert_match(/llm-enhanced\/test-idea\.idea\.s\.md$/, path, "Should return full file path")
 
         # Verify directory structure
         folder_path = File.dirname(path)
