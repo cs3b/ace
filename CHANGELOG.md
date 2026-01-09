@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.275] - 2026-01-08
+
+### Removed
+
+- **ace-taskflow 0.33.0**: Backward compatibility for legacy idea and retro file formats
+  - Removed support for `idea.s.md` files (only `.idea.s.md` supported)
+  - Removed support for `.s.md` flat files in ideas root
+  - Removed support for `YYYY-MM-DD-{slug}.md` retro format
+  - Removed support for `YYYYMMDD-{slug}.md` retro format
+  - All existing files already use new formats (no migration needed)
+
+### Changed
+
+- **ace-taskflow 0.33.0**: Simplified file discovery logic
+  - Removed 3-priority fallback system from IdeaLoader
+  - Removed legacy date parsing from RetroLoader
+  - Reduced codebase by ~150 lines of backward compatibility code
+  - Updated tests to use only `.idea.s.md` and Base36 retro formats
+
+## [0.9.274] - 2026-01-08
+
+### Added
+
+- **ace-taskflow 0.32.0**: Descriptive slugs for idea filenames and retrospectives (tasks 182, 184)
+  - Idea filenames now use `{slug}.idea.s.md` pattern (e.g., `taskflow-add.idea.s.md`)
+  - Retrospective filenames now use `{base36-id}-{slug}.md` pattern (e.g., `i50jj3-performance-analysis.md`)
+  - File discovery priority: `.idea.s.md` > `.s.md` > `idea.s.md`
+  - Directory deduplication prevents duplicate loading
+  - Full backward compatibility with existing `idea.s.md` files
+  - Added 4 new backward compatibility tests
+
+### Changed
+
+- **ace-taskflow 0.32.0**: Idea file creation and discovery improvements
+  - IdeaWriter creates files with `.idea.s.md` extension
+  - RetroManager generates Base36 compact ID filenames
+  - IdeaLoader prioritizes new format while supporting legacy formats
+  - IdeasCommand displays actual file paths instead of hardcoded `idea.s.md`
+
 ## [0.9.273] - 2026-01-08
 
 ### Fixed
