@@ -36,15 +36,15 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
           content = "This is a test idea"
           path = @writer.write(content)
 
-          # Verify path format: /test/ideas/{6-char-base36}-test-idea/test-content.s.md
-          assert_match(%r{^/test/ideas/[0-9a-z]{6}-test-idea/test-content\.s\.md$}i, path)
+          # Verify path format: /test/ideas/{6-char-base36}-test-idea/test-content.idea.s.md
+          assert_match(%r{^/test/ideas/[0-9a-z]{6}-test-idea/test-content\.idea\.s\.md$}i, path)
 
           # Verify directory was created (extract folder from file path)
           folder_path = File.dirname(path)
           assert @mkdir_calls.include?(folder_path), "Should create idea directory"
 
           # Verify file was written
-          assert @write_calls.any? { |call| call[:path].include?("test-content.s.md") }
+          assert @write_calls.any? { |call| call[:path].include?("test-content.idea.s.md") }
         end
       end
     end
@@ -64,7 +64,7 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
           path = writer.write("Test content")
 
           # Verify path uses custom directory with Base36 ID
-          assert_match(%r{^/custom/ideas/[0-9a-z]{6}-custom-dir/test-idea\.s\.md$}i, path)
+          assert_match(%r{^/custom/ideas/[0-9a-z]{6}-custom-dir/test-idea\.idea\.s\.md$}i, path)
         end
       end
     end
@@ -80,7 +80,7 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
         # Verify mkdir_p was called (creates parent directories)
         assert @mkdir_calls.any?, "Should call mkdir_p"
         # Path should be a file, folder name should contain nested-idea
-        assert_match(/nested-idea\/test-content\.s\.md$/, path)
+        assert_match(/nested-idea\/test-content\.idea\.s\.md$/, path)
       end
     end
   end
@@ -119,11 +119,11 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
         path = @writer.write(content)
 
         # Verify path contains folder slug and file
-        assert_match(/long-idea\/truncated-title\.s\.md$/, path)
+        assert_match(/long-idea\/truncated-title\.idea\.s\.md$/, path)
 
         # Verify file slug is used in filename
         write_call = @write_calls.first
-        assert_match(/truncated-title\.s\.md$/, write_call[:path])
+        assert_match(/truncated-title\.idea\.s\.md$/, write_call[:path])
       end
     end
   end

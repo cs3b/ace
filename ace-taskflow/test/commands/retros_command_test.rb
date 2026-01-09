@@ -18,17 +18,27 @@ module Ace
           FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros")
           FileUtils.mkdir_p(".ace-taskflow/v.0.9.0/retros/_archive")
 
-          # Create test retros
+          # Create test retros using Base36 ID format (new standard)
+          # Generate Base36 IDs for test dates
+          require "ace/timestamp"
+          time1 = Time.utc(2025, 10, 2, 0, 0, 0)
+          time2 = Time.utc(2025, 10, 1, 0, 0, 0)
+          time3 = Time.utc(2025, 9, 30, 0, 0, 0)
+
+          id1 = Ace::Timestamp.encode(time1)
+          id2 = Ace::Timestamp.encode(time2)
+          id3 = Ace::Timestamp.encode(time3)
+
           File.write(
-            ".ace-taskflow/v.0.9.0/retros/2025-10-02-test-retro-1.md",
+            ".ace-taskflow/v.0.9.0/retros/#{id1}-test-retro-1.md",
             "# Reflection: Test 1\n\nContent"
           )
           File.write(
-            ".ace-taskflow/v.0.9.0/retros/2025-10-01-test-retro-2.md",
+            ".ace-taskflow/v.0.9.0/retros/#{id2}-test-retro-2.md",
             "# Reflection: Test 2\n\nContent"
           )
           File.write(
-            ".ace-taskflow/v.0.9.0/retros/_archive/2025-09-30-done-retro.md",
+            ".ace-taskflow/v.0.9.0/retros/_archive/#{id3}-done-retro.md",
             "# Reflection: Done\n\nContent"
           )
 
