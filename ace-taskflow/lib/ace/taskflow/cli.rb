@@ -4,6 +4,8 @@ require "dry/cli"
 require "set"
 require "ace/core"
 require_relative "../taskflow"
+# Molecules
+require_relative "molecules/command_router"
 # Command wrapper classes
 require_relative "cli/task"
 require_relative "cli/tasks"
@@ -17,6 +19,18 @@ require_relative "cli/status"
 require_relative "cli/doctor"
 require_relative "cli/migrate"
 require_relative "cli/config"
+# Nested task subcommands
+require_relative "commands/task/create"
+require_relative "commands/task/show"
+require_relative "commands/task/start"
+require_relative "commands/task/done"
+require_relative "commands/task/undone"
+require_relative "commands/task/defer"
+require_relative "commands/task/undefer"
+require_relative "commands/task/move"
+require_relative "commands/task/update"
+require_relative "commands/task/add_dependency"
+require_relative "commands/task/remove_dependency"
 
 module Ace
   module Taskflow
@@ -32,6 +46,13 @@ module Ace
         task tasks idea ideas
         release releases retro retros
         status doctor migrate config
+      ].freeze
+
+      # Task subcommands (for routing disambiguation)
+      # These are the known subcommands under "task" namespace
+      TASK_SUBCOMMANDS = %w[
+        create show start done undone defer undefer move update
+        add-dependency remove-dependency
       ].freeze
 
       # dry-cli built-in commands (standard across all CLI gems)
@@ -54,24 +75,33 @@ module Ace
       # This method handles:
       # 1. Cache clearing at start of each CLI invocation (from Thor version)
       # 2. Default command routing for unknown commands (e.g., "150" -> "task 150")
-      # 3. Testable entry point for consistent behavior
+      # 3. Task subcommand routing disambiguation (e.g., "task create" vs "task 114")
+      # 4. Testable entry point for consistent behavior
       #
       # @param args [Array<String>] Command-line arguments
       # @return [Integer] Exit code (0 for success, non-zero for failure)
       def self.start(args)
         # Clear per-command caches at the start of each CLI invocation
-        # This ensures fresh data for each command execution
         clear_caches!
 
-        # Prepend default command when:
-        # - args is empty (user ran `ace-taskflow` with no arguments)
-        # - first argument isn't a known command (user ran `ace-taskflow 150`)
-        # This maintains Thor's default_task parity.
-        if args.empty? || !known_command?(args.first)
-          args = [DEFAULT_COMMAND] + args
-        end
+        # Apply routing rules via CommandRouter molecule
+        args = Molecules::CommandRouter.route(
+          args,
+          default: DEFAULT_COMMAND,
+          known_commands: KNOWN_COMMANDS,
+          task_subcommands: TASK_SUBCOMMANDS
+        )
 
         Dry::CLI.new(self).call(arguments: args)
+      end
+
+      # @deprecated Use Molecules::CommandRouter.route_task_subcommand instead
+      # Retained for backward compatibility with existing tests
+      def self.route_task_subcommand(args)
+        Molecules::CommandRouter.route_task_subcommand(
+          args,
+          task_subcommands: TASK_SUBCOMMANDS
+        )
       end
 
       # Check if argument is a known command
@@ -92,6 +122,17 @@ module Ace
 
       # Register task commands
       register "task", CLI::Task.new
+      register "task create", Commands::Task::Create
+      register "task show", Commands::Task::Show
+      register "task start", Commands::Task::Start
+      register "task done", Commands::Task::Done
+      register "task undone", Commands::Task::Undone
+      register "task defer", Commands::Task::Defer
+      register "task undefer", Commands::Task::Undefer
+      register "task move", Commands::Task::Move
+      register "task update", Commands::Task::Update
+      register "task add-dependency", Commands::Task::AddDependency
+      register "task remove-dependency", Commands::Task::RemoveDependency
       register "tasks", CLI::Tasks.new
 
       # Register idea commands
