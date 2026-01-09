@@ -46,6 +46,41 @@ The Base36 format has approximately **1.85 seconds of precision**:
 
 For more details on the encoding scheme, see the [ace-timestamp README](https://github.com/cs3b/ace-meta/tree/main/ace-timestamp).
 
+## Filename Formats
+
+### Idea Files
+
+All ideas use the `{slug}.idea.s.md` format within their ID directory:
+
+```
+ideas/
+  └── abc123-dark-mode/
+      └── dark-mode.idea.s.md
+```
+
+**Structure**:
+- `{base36-id}-{slug}/` - Directory with Base36 ID and descriptive slug
+- `{slug}.idea.s.md` - Idea file with descriptive slug
+
+**Example**: `abc123-add-dark-mode/add-dark-mode.idea.s.md`
+
+### Retrospective Files
+
+All retrospectives use the `{base36-id}-{slug}.md` format:
+
+```
+retros/
+  └── i50jj3-sprint-review.md
+```
+
+**Structure**:
+- `{base36-id}-{slug}.md` - Base36 timestamp ID with descriptive slug
+
+**Benefits**:
+- Sortable by creation time (string sort = chronological sort)
+- Compact filenames (6-char ID)
+- Consistent with idea directory naming
+
 ## Usage
 
 ### Capture Ideas

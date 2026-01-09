@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-01-09
+
+### Removed
+- **BREAKING**: Backward compatibility for legacy idea file formats
+  - Removed support for `idea.s.md` files (only `.idea.s.md` supported)
+  - Removed support for `.s.md` flat files in ideas root
+  - Migration completed: All 1,142 legacy idea files migrated to new format
+- **BREAKING**: Backward compatibility for legacy retrospective date formats
+  - Removed support for `YYYY-MM-DD-{slug}.md` format
+  - Removed support for `YYYYMMDD-{slug}.md` format
+  - Only Base36 ID format `{base36-id}-{slug}.md` supported
+  - Migration completed: All 1,071 legacy retro files migrated to new format
+
+### Changed
+- Simplified idea file discovery logic (removed 3-priority fallback system)
+- Simplified retro date extraction (Base36-only parsing, removed legacy formats)
+- Removed 3 constants from IdeaLoader (PREFERRED_IDEA_EXT, ALTERNATIVE_IDEA_EXT, LEGACY_IDEA_FILE)
+- Reduced codebase by ~150 lines of backward compatibility logic
+- Removed 7 backward compatibility tests, added 2 new validation tests
+- Updated README to remove migration sections and document current format
+
+### Technical
+- Simplified `load_all_with_glob` to only match `.idea.s.md` files
+- Simplified `load_idea_from_directory` to single glob operation
+- Simplified `extract_date_from_filename` to Base36-only parsing
+- Removed `is_directory_based` detection logic
+- Removed priority-based file selection system
+
+## [0.32.0] - 2026-01-08
+
+### Added
+- Descriptive slug support for idea filenames using `{slug}.idea.s.md` pattern
+- Base36 compact ID format for retrospective filenames
+- File discovery priority for `.idea.s.md` format (preferred > alternative > legacy)
+- Directory deduplication in IdeaLoader to prevent duplicate loading
+- Title extraction from content header for all ideas (not just when include_content is true)
+- `file_path` attribute to idea data for resolved file path (eliminates redundant I/O)
+- `resolve_idea_file_path` helper in IdeasCommand for correct file path resolution
+- Backward compatibility tests for mixed idea format support
+- 5 new tests for `file_path` resolution across all idea formats
+
+### Changed
+- IdeaWriter creates files with `.idea.s.md` extension instead of `.s.md`
+- **BREAKING**: RetroManager generates `{base36-id}-{slug}.md` filenames instead of `{date}-{slug}.md`
+  - RetroLoader now decodes Base36 timestamps for date extraction
+  - Legacy date-prefixed retros remain readable (dual-format detection)
+- IdeaLoader file discovery prioritizes `.idea.s.md` over other formats
+- IdeaLoader returns `file_path` in data hash (removes need for Command-layer resolution)
+- IdeasCommand displays actual file paths using `idea[:file_path]` instead of calling `resolve_idea_file_path`
+- IdeaLoader optimized to use single glob operation for all `.s.md` files
+
+### Fixed
+- Retro date parsing regression for Base36 filenames (now decodes via `Ace::Timestamp.decode`)
+- Redundant file I/O in ideas display loops (file_path now resolved once in IdeaLoader)
+- Removed duplicate `resolve_idea_file_path` method from IdeasCommand (now handled by IdeaLoader)
+
+### Technical
+- Added `ace/timestamp` require to RetroManager for Base36 ID generation
+- Updated test assertions for new `.idea.s.md` pattern in idea_writer and integration tests
+- Added 4 new backward compatibility tests to idea_loader_test.rb
+- Added 5 new `file_path` resolution tests to idea_loader_test.rb
+- Removed unused `::Regexp` prefix (redundant within class scope)
+
 ## [0.31.0] - 2026-01-08
 
 ### Added
