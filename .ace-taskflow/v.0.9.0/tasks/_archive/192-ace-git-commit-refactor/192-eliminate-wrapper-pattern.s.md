@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.192
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -122,7 +122,7 @@ Key code migrations:
 
 ### Execution Steps
 
-- [ ] Step 1: Merge CommitCommand methods into Commit class
+- [x] Step 1: Merge CommitCommand methods into Commit class
   - Move `execute` logic into `call` method
   - Move `display_config_summary` as private method
   - Move `commit_options` as private method
@@ -133,40 +133,40 @@ Key code migrations:
   > Assert: commit.rb contains all business logic
   > Command: # Verify with: grep -c "def " ace-git-commit/lib/ace/git_commit/commands/commit.rb
 
-- [ ] Step 2: Update require statements in commit.rb
+- [x] Step 2: Update require statements in commit.rb
   - Remove `require_relative "commit_command"`
   > TEST: Require Statement Validation
   > Type: Action Validation
   > Assert: No reference to commit_command in commit.rb
   > Command: # grep "commit_command" ace-git-commit/lib/ace/git_commit/commands/commit.rb
 
-- [ ] Step 3: Update git_commit.rb to remove commit_command require
+- [x] Step 3: Update git_commit.rb to remove commit_command require
   - Remove line 19: `require_relative "git_commit/commands/commit_command"`
   > TEST: Module Load Verification
   > Type: Action Validation
   > Assert: git_commit.rb loads without commit_command
   > Command: # ruby -r ace-git-commit -e "puts 'OK'"
 
-- [ ] Step 4: Run tests to verify functionality preserved
+- [x] Step 4: Run tests to verify functionality preserved
   > TEST: Test Suite Validation
   > Type: Regression Test
   > Assert: All existing tests pass
   > Command: # cd ace-git-commit && ace-test
 
-- [ ] Step 5: Delete commit_command.rb
+- [x] Step 5: Delete commit_command.rb
   - Only after tests pass in Step 4
   > TEST: File Deletion Verification
   > Type: Action Validation
   > Assert: File removed from filesystem
   > Command: # test ! -f ace-git-commit/lib/ace/git_commit/commands/commit_command.rb
 
-- [ ] Step 6: Final test run to confirm deletion doesn't break anything
+- [x] Step 6: Final test run to confirm deletion doesn't break anything
   > TEST: Final Regression Test
   > Type: Regression Test
   > Assert: All tests still pass after file deletion
   > Command: # cd ace-git-commit && ace-test
 
-- [ ] Step 7: Verify help text works
+- [x] Step 7: Verify help text works
   > TEST: CLI Help Validation
   > Type: Smoke Test
   > Assert: Help displays without errors
@@ -174,11 +174,11 @@ Key code migrations:
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `ace-git-commit/lib/ace/git_commit/commands/commit_command.rb` deleted
-- [ ] AC 2: `ace-git-commit/lib/ace/git_commit/commands/commit.rb` contains all business logic
-- [ ] AC 3: All ace-git-commit tests pass
-- [ ] AC 4: `ace-git-commit --help` displays correct documentation
-- [ ] AC 5: `ace-git-commit --dry-run` executes without errors (functional parity)
+- [x] AC 1: `ace-git-commit/lib/ace/git_commit/commands/commit_command.rb` deleted
+- [x] AC 2: `ace-git-commit/lib/ace/git_commit/commands/commit.rb` contains all business logic
+- [x] AC 3: All ace-git-commit tests pass
+- [x] AC 4: `ace-git-commit --help` displays correct documentation
+- [x] AC 5: `ace-git-commit --dry-run` executes without errors (functional parity)
 
 ## Out of Scope
 
