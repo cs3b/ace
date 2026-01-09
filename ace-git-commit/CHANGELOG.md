@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-01-09
+
+### Changed
+- **BREAKING**: Eliminate wrapper pattern in dry-cli command
+  - Merged business logic directly into `Commit` dry-cli command class
+  - Deleted `commit_command.rb` wrapper file
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.16.0] - 2026-01-07
 
 ### Changed
