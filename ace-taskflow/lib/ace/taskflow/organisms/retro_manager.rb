@@ -2,9 +2,11 @@
 
 require "fileutils"
 require "time"
+require "ace/timestamp"
 require_relative "../molecules/retro_loader"
 require_relative "../molecules/release_resolver"
 require_relative "../molecules/config_loader"
+require_relative "../atoms/slug_sanitizer"
 
 module Ace
   module Taskflow
@@ -136,10 +138,10 @@ module Ace
           # Ensure retro directory exists
           FileUtils.mkdir_p(retro_dir)
 
-          # Generate filename with date and slug
-          date_str = Time.now.strftime("%Y-%m-%d")
+          # Generate filename with Base36 ID and slug
+          id = Ace::Timestamp.encode(Time.now)
           slug = generate_slug(title)
-          filename = "#{date_str}-#{slug}.md"
+          filename = "#{id}-#{slug}.md"
           file_path = File.join(retro_dir, filename)
 
           # Check if file already exists
@@ -151,7 +153,8 @@ module Ace
           end
 
           begin
-            # Generate content from template
+            # Generate content from template with human-readable date
+            date_str = Time.now.strftime("%Y-%m-%d")
             content = RETRO_TEMPLATE % { date: date_str }
 
             # Write file
@@ -239,12 +242,8 @@ module Ace
         private
 
         def generate_slug(title)
-          title
-            .downcase
-            .gsub(/[^a-z0-9\s-]/, "")  # Remove special chars
-            .gsub(/\s+/, "-")          # Replace spaces with hyphens
-            .gsub(/-+/, "-")           # Collapse multiple hyphens
-            .gsub(/^-|-$/, "")         # Remove leading/trailing hyphens
+          # Use SlugSanitizer for consistent, secure slug generation with path traversal protection
+          Ace::Taskflow::Atoms::SlugSanitizer.sanitize(title)
         end
       end
     end

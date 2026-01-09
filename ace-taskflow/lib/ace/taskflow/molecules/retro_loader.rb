@@ -109,6 +109,7 @@ module Ace
 
           {
             path: file_path,
+            file_path: file_path,
             filename: File.basename(file_path),
             title: title || extract_title_from_filename(file_path),
             date: extract_date_from_filename(file_path),
@@ -151,6 +152,7 @@ module Ace
             # Lightweight load without full content parsing
             {
               path: path,
+              file_path: path,
               filename: File.basename(path),
               title: extract_title_from_filename(path),
               date: extract_date_from_filename(path),
@@ -162,11 +164,8 @@ module Ace
         def extract_title_from_filename(path)
           filename = File.basename(path, ".md")
 
-          # Remove date prefix (YYYY-MM-DD-)
-          title = filename.sub(/^\d{4}-\d{2}-\d{2}-/, "")
-
-          # Extract title by removing ID prefix (timestamp or Base36)
-          title = Ace::Taskflow::Atoms::IdTitleExtractor.extract_title_from_dirname(title)
+          # Extract title by removing Base36 ID prefix
+          title = Ace::Taskflow::Atoms::IdTitleExtractor.extract_title_from_dirname(filename)
 
           # Convert slug to readable title
           title.gsub("-", " ").capitalize
@@ -175,15 +174,15 @@ module Ace
         def extract_date_from_filename(path)
           filename = File.basename(path, ".md")
 
-          # Try YYYY-MM-DD format first
-          if filename =~ /^(\d{4}-\d{2}-\d{2})/
-            return $1
-          end
-
-          # Try YYYYMMDD format
-          if filename =~ /^(\d{8})/
-            date_str = $1
-            return "#{date_str[0..3]}-#{date_str[4..5]}-#{date_str[6..7]}"
+          # Only support Base36 timestamp format
+          if filename =~ /^([a-z0-9]+)-/
+            timestamp_id = $1
+            begin
+              decoded_time = Ace::Timestamp.decode(timestamp_id)
+              return decoded_time.strftime("%Y-%m-%d")
+            rescue ArgumentError, Ace::Timestamp::Error
+              return nil
+            end
           end
 
           nil

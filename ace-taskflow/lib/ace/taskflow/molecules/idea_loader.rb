@@ -15,6 +15,9 @@ module Ace
   module Taskflow
     module Molecules
       class IdeaLoader
+        # Filename extension for idea files (only .idea.s.md format supported)
+        IDEA_EXT = ".idea.s.md".freeze
+
         # Scope-specific subdirectories for organizing ideas (GTD-inspired)
         # Scopes organize ideas by priority/certainty (folder location):
         #   - next (top-level): Immediately actionable ideas
@@ -24,7 +27,21 @@ module Ace
         #   - _maybe/: Good idea but not now (configurable via parked_dir)
         # Note: Scope is independent from status (draft/pending/in-progress/done/obsolete)
         # These values are used as fallback; configuration takes precedence
+        # Case-insensitive comparison for robustness against filesystem naming variations
         SCOPE_SUBDIRECTORIES = %w[_archive _maybe maybe anyday].freeze
+
+        def self.excluded_directory?(dir_name)
+          SCOPE_SUBDIRECTORIES.any? { |excluded| excludedcasecmp?(dir_name, excluded) }
+        end
+
+        def excluded_directory?(dir_name)
+          self.class.excluded_directory?(dir_name)
+        end
+
+        # Helper for case-insensitive comparison (handles filesystem naming variations)
+        def self.excludedcasecmp?(a, b)
+          a.downcase == b.downcase
+        end
 
         def initialize(root_path = nil)
           @root_path = root_path || ConfigLoader.find_root
@@ -38,18 +55,18 @@ module Ace
         #   - "backlog": Load from backlog directory
         #   - "v.X.Y.Z": Load from specific release
         # @param include_content [Boolean] Whether to include file content (default: false)
-        # @param glob [Array<String>, nil] Glob patterns to match (default: ["ideas/**/*.s.md"])
-        #   - Default `["ideas/**/*.s.md"]` matches ALL ideas including subdirectories (maybe/, anyday/, done/)
-        #   - Use `["ideas/*.s.md"]` for top-level ideas only (excludes subdirectories)
-        #   - Use `["ideas/maybe/**/*.s.md"]` for ideas in maybe/ subdirectory only
+        # @param glob [Array<String>, nil] Glob patterns to match (default: ["ideas/**/*.idea.s.md"])
+        #   - Default `["ideas/**/*.idea.s.md"]` matches ALL ideas including subdirectories (maybe/, anyday/, done/)
+        #   - Use `["ideas/*.idea.s.md"]` for top-level ideas only (excludes subdirectories)
+        #   - Use `["ideas/maybe/**/*.idea.s.md"]` for ideas in maybe/ subdirectory only
         #   - Patterns are relative to the release root (release/backlog path)
         # @return [Array<Hash>] Array of idea hashes with keys: :id, :filename, :title, :path, :created_at, :release
         # @example Load all ideas from current release
         #   loader.load_all(release: "current")
         # @example Load top-level ideas only (no subdirectories)
-        #   loader.load_all(release: "current", glob: ["ideas/*.s.md"])
+        #   loader.load_all(release: "current", glob: ["ideas/*#{IDEA_EXT}"])
         # @example Load maybe ideas only
-        #   loader.load_all(release: "current", glob: ["ideas/maybe/**/*.s.md"])
+        #   loader.load_all(release: "current", glob: ["ideas/maybe/**/*#{IDEA_EXT}"])
         def load_all(release: "current", include_content: false, glob: nil)
           # Use glob-based loading (glob defaults to all ideas if not provided)
           # Use the default pattern from configuration if no glob provided
@@ -59,7 +76,8 @@ module Ace
 
         def find_next(release: "current")
           # Top-level ideas only (excludes subdirectories like maybe/, anyday/, done/)
-          ideas = load_all(release: release, include_content: false, glob: ["*.s.md"])
+          # Use IDEA_EXT constant for consistency (DRY principle)
+          ideas = load_all(release: release, include_content: false, glob: ["*/*#{IDEA_EXT}"])
           ideas.first
         end
 
@@ -135,6 +153,7 @@ module Ace
 
           ideas = []
           matched_paths = Set.new
+          loaded_directories = Set.new  # Track directories we've already loaded
 
           # Apply each glob pattern - prepend ideas directory
           ideas_dir = Taskflow.configuration.ideas_dir
@@ -151,23 +170,30 @@ module Ace
               matched_paths.add(path)
 
               # Load idea from file or directory
-              if File.file?(path) && path.end_with?('.s.md')
-                # Check if this is a directory-based idea (idea.s.md inside a directory)
-                if File.basename(path) == "idea.s.md"
-                  parent_dir = File.dirname(path)
-                  # All idea.s.md files are part of directory-based ideas (standardized format)
+              if File.file?(path) && path.end_with?(IDEA_EXT)
+                # Directory-based idea: {slug}.idea.s.md file inside a directory
+                parent_dir = File.dirname(path)
+                ideas_dirname = Taskflow.configuration.ideas_dir
+
+                # Check if it's in a subdirectory (not directly in ideas root)
+                # Explicit equality check handles edge case where parent_dir is exactly ideas_dirname
+                if parent_dir != ideas_dirname && !parent_dir.end_with?("/#{ideas_dirname}")
+                  # Skip if we've already loaded from this directory
+                  next if loaded_directories.include?(parent_dir)
+                  loaded_directories.add(parent_dir)
+
+                  # Load from directory
                   idea = load_idea_from_directory(parent_dir, include_content)
                   ideas << idea if idea
-                  next
                 end
-
-                # Otherwise load as flat file (legacy format)
-                idea = load_idea_file(path, include_content)
-                ideas << idea if idea
               elsif Dir.exist?(path)
-                # Check if it's a directory-based idea (contains idea.s.md)
-                idea_file = File.join(path, "idea.s.md")
-                if File.exist?(idea_file)
+                # Skip if we've already loaded from this directory
+                next if loaded_directories.include?(path)
+                loaded_directories.add(path)
+
+                # Check if it's a directory-based idea (contains .idea.s.md)
+                idea_files = Dir.glob(File.join(path, "*#{IDEA_EXT}"))
+                if idea_files.any?
                   idea = load_idea_from_directory(path, include_content)
                   ideas << idea if idea
                 end
@@ -181,23 +207,17 @@ module Ace
         def load_ideas_from_directory(dir, include_content)
           ideas = []
 
-          # Load flat file ideas (*.s.md)
-          flat_files = Dir.glob(File.join(dir, "*.s.md")).sort
-          flat_files.each do |path|
-            idea = load_idea_file(path, include_content)
-            ideas << idea if idea
-          end
-
-          # Load directory-based ideas (directories containing idea.s.md)
+          # Load directory-based ideas (directories containing .idea.s.md)
           Dir.glob(File.join(dir, "*")).sort.each do |path|
             next unless Dir.exist?(path)
             # Skip scope subdirectories
             basename = File.basename(path)
-            next if SCOPE_SUBDIRECTORIES.include?(basename)
+            next if excluded_directory?(basename)
 
-            idea_file = File.join(path, "idea.s.md")
-            if File.exist?(idea_file)
-              idea = load_idea_from_directory(path, include_content)
+            idea_files = Dir.glob(File.join(path, "*#{IDEA_EXT}"))
+            idea_files.each do |idea_file|
+              parent_dir = File.dirname(idea_file)
+              idea = load_idea_from_directory(parent_dir, include_content)
               ideas << idea if idea
             end
           end
@@ -208,21 +228,9 @@ module Ace
         def load_idea_from_directory(dir_path, include_content)
           dirname = File.basename(dir_path)
 
-          # Try new format first: {description}.s.md (without timestamp)
-          # Find any .s.md file that's not 'idea.s.md'
-          md_files = Dir.glob(File.join(dir_path, "*.s.md"))
-                        .reject { |f| File.basename(f) == "idea.s.md" }
-
-          idea_file = if md_files.any?
-                        # New format: use the slug-based filename
-                        md_files.first
-                      else
-                        # Old format: idea.s.md
-                        idea_s = File.join(dir_path, "idea.s.md")
-                        File.exist?(idea_s) ? idea_s : nil
-                      end
-
-          return nil unless idea_file && File.exist?(idea_file)
+          # Load the .idea.s.md file from the directory (only supported format)
+          idea_file = Dir.glob(File.join(dir_path, "*#{IDEA_EXT}")).first
+          return nil unless idea_file
 
           # Extract ID from dirname (Base36 format: "abc123-my-idea" -> "abc123")
           id, title = Ace::Taskflow::Atoms::IdTitleExtractor.extract_from_dirname(dirname)
@@ -240,11 +248,15 @@ module Ace
           frontmatter = parsed[:frontmatter] || {}
           body_content = parsed[:content]
 
+          # Try to extract title from content header (always do this, not just when include_content is true)
+          title = extract_title_from_content(body_content) || title
+
           idea_data = {
             id: id,
             filename: dirname,
             title: title,
             path: dir_path,
+            file_path: idea_file,
             created_at: extract_timestamp_from_filename(dirname),
             release: extract_release_from_path(dir_path),
             attachments: attachments,
@@ -255,11 +267,6 @@ module Ace
 
           if include_content
             idea_data[:content] = body_content
-
-            # Try to extract title from content header
-            if body_content =~ /^#\s+(.+)$/
-              idea_data[:title] = ::Regexp.last_match(1).strip
-            end
           end
 
           idea_data
@@ -323,6 +330,7 @@ module Ace
             filename: filename,
             title: title,
             path: path,
+            file_path: path,
             created_at: extract_timestamp_from_filename(filename),
             release: extract_release_from_path(path),
             attachments: [],
@@ -335,12 +343,20 @@ module Ace
             idea_data[:content] = body_content
 
             # Try to extract title from content header
-            if body_content =~ /^#\s+(.+)$/
-              idea_data[:title] = ::Regexp.last_match(1).strip
-            end
+            content_title = extract_title_from_content(body_content)
+            idea_data[:title] = content_title if content_title
           end
 
           idea_data
+        end
+
+        # Extract title from content header (# Title)
+        # @param content [String] The content to search for title
+        # @return [String, nil] The extracted title or nil if not found
+        def extract_title_from_content(content)
+          return nil unless content
+          return nil unless content =~ /^#\s+(.+)$/
+          Regexp.last_match(1).strip
         end
 
         def extract_timestamp_from_filename(filename)
@@ -378,15 +394,12 @@ module Ace
         def count_ideas_in_directory(dir)
           return 0 unless Dir.exist?(dir)
 
-          # Count flat file ideas (*.s.md)
-          flat_count = Dir.glob(File.join(dir, "*.s.md")).count
-
-          # Count directory-based ideas (directories with idea.s.md)
+          # Count directory-based ideas (directories containing .idea.s.md)
           dir_count = Dir.glob(File.join(dir, "*"))
-            .select { |path| Dir.exist?(path) && !SCOPE_SUBDIRECTORIES.include?(File.basename(path)) }
-            .count { |path| File.exist?(File.join(path, "idea.s.md")) }
+            .select { |path| Dir.exist?(path) && !excluded_directory?(File.basename(path)) }
+            .count { |path| Dir.glob(File.join(path, "*#{IDEA_EXT}")).any? }
 
-          main_count = flat_count + dir_count
+          main_count = dir_count
 
           # Count ideas in scope subdirectories
           subdirs_count = 0
@@ -394,11 +407,10 @@ module Ace
             subdir = File.join(dir, subdir_name)
             next unless Dir.exist?(subdir)
 
-            subdir_flat = Dir.glob(File.join(subdir, "*.s.md")).count
             subdir_dirs = Dir.glob(File.join(subdir, "*"))
               .select { |path| Dir.exist?(path) }
-              .count { |path| File.exist?(File.join(path, "idea.s.md")) }
-            subdirs_count += subdir_flat + subdir_dirs
+              .count { |path| Dir.glob(File.join(path, "*#{IDEA_EXT}")).any? }
+            subdirs_count += subdir_dirs
           end
 
           main_count + subdirs_count
