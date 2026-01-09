@@ -1,10 +1,15 @@
 ---
 id: v.0.9.0+task.180.02
-status: pending
+status: in-progress
 priority: medium
 estimate: 12-16h
 dependencies: []
 parent: v.0.9.0+task.180
+worktree:
+  branch: 180.02-convert-agents-to-skills
+  path: "../ace-task.180.02"
+  created_at: '2026-01-09 01:00:16'
+  updated_at: '2026-01-09 01:00:16'
 ---
 
 # Convert Agents to Skills
