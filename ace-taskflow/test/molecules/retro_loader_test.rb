@@ -27,11 +27,12 @@ class RetroLoaderTest < AceTaskflowTestCase
   end
 
   def test_extract_title_with_date_prefix_and_base36_id
-    # Date prefix + Base36 ID: 2025-01-15-abc123-retro.md
-    path = "/some/path/2025-01-15-abc123-dated-retro.md"
+    # Date prefix + Base36 ID: 2025-01-15-abc123-dated-retro.md
+    # With backward compatibility removed, "2025" is treated as part of the slug
+    path = "/some/path/2025-01-15-dated-retro.md"
     title = @loader.send(:extract_title_from_filename, path)
-    # Should strip both date prefix and Base36 ID
-    assert_equal "Dated retro", title
+    # Should return full filename converted to title (date prefixes no longer supported)
+    assert_equal "2025 01 15 dated retro", title
   end
 
   def test_extract_title_with_no_id_prefix
@@ -45,8 +46,9 @@ class RetroLoaderTest < AceTaskflowTestCase
   def test_extract_title_with_date_prefix_only
     path = "/some/path/2025-01-15-dated-retro.md"
     title = @loader.send(:extract_title_from_filename, path)
-    # Should strip date prefix only
-    assert_equal "Dated retro", title
+    # With backward compatibility removed, date prefix is no longer stripped
+    # The entire filename is converted to title
+    assert_equal "2025 01 15 dated retro", title
   end
 
   def test_extract_title_with_complex_name
@@ -54,5 +56,50 @@ class RetroLoaderTest < AceTaskflowTestCase
     title = @loader.send(:extract_title_from_filename, path)
     # Should strip Base36 ID and format title
     assert_equal "Q4 2025 planning review", title
+  end
+
+  # Test the private extract_date_from_filename method
+  # Tests Base36 timestamp decoding
+
+  def test_extract_date_from_base36_filename
+    # Create a valid Base36 timestamp using ace-timestamp
+    time = Time.utc(2025, 1, 15, 12, 0, 0)
+    timestamp_id = Ace::Timestamp.encode(time)
+    path = "/some/path/#{timestamp_id}-retro.md"
+    date = @loader.send(:extract_date_from_filename, path)
+    assert_equal "2025-01-15", date
+  end
+
+  def test_extract_date_from_base36_with_slug
+    time = Time.utc(2024, 12, 31, 23, 59, 59)
+    timestamp_id = Ace::Timestamp.encode(time)
+    path = "/some/path/#{timestamp_id}-sprint-review.md"
+    date = @loader.send(:extract_date_from_filename, path)
+    assert_equal "2024-12-31", date
+  end
+
+  def test_extract_date_returns_nil_for_invalid_base36
+    # Invalid Base36 string that doesn't decode to a timestamp
+    path = "/some/path/invalid123-retro.md"
+    date = @loader.send(:extract_date_from_filename, path)
+    assert_nil date
+  end
+
+  def test_extract_date_returns_nil_for_no_date_prefix
+    path = "/some/path/my-retro.md"
+    date = @loader.send(:extract_date_from_filename, path)
+    assert_nil date
+  end
+
+  def test_legacy_date_formats_not_supported
+    # Legacy YYYY-MM-DD format should return nil
+    path = "/some/path/2025-01-15-retro.md"
+    date = @loader.send(:extract_date_from_filename, path)
+    assert_nil date
+
+    # Legacy YYYYMMDD format should return nil
+    path = "/some/path/20250115-retro.md"
+    date = @loader.send(:extract_date_from_filename, path)
+    assert_nil date
   end
 end
