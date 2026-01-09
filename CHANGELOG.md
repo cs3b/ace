@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.278] - 2026-01-09
+
+### Changed
+
+- **ace-git 0.7.1**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `Branch`, `Diff`, `PR`, and `Status` dry-cli command classes
+  - Deleted `branch_command.rb`, `diff_command.rb`, `pr_command.rb`, and `status_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.9.277] - 2026-01-09
 
 ### Changed
