@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/test_runner/commands/test_command"
+require "ace/test_runner/commands/test"
 require "json"
 
 class CleanupConfigTest < Minitest::Test
@@ -41,12 +41,16 @@ class CleanupConfigTest < Minitest::Test
 
       # Run cleanup WITHOUT --report-dir CLI option
       # It should read from config cascade
-      command = Ace::TestRunner::Commands::TestCommand.new(
-        [],
-        { cleanup_reports: true, cleanup_keep: 0, cleanup_age: 30 }
-      )
+      command = Ace::TestRunner::Commands::Test.new
 
-      output = capture_io { command.execute }
+      output = capture_io do
+        command.call(
+          args: [],
+          cleanup_reports: true,
+          cleanup_keep: 0,
+          cleanup_age: 30
+        )
+      end
 
       # Verify cleanup happened in the config-specified directory
       assert_match(/Cleaning up test reports/, output.first)
@@ -89,12 +93,17 @@ class CleanupConfigTest < Minitest::Test
       File.write(File.join(cli_report_dir, "old_report", "summary.json"), summary_content)
 
       # Run cleanup WITH --report-dir CLI option
-      command = Ace::TestRunner::Commands::TestCommand.new(
-        [],
-        { cleanup_reports: true, cleanup_keep: 0, cleanup_age: 30, report_dir: cli_report_dir }
-      )
+      command = Ace::TestRunner::Commands::Test.new
 
-      capture_io { command.execute }
+      capture_io do
+        command.call(
+          args: [],
+          cleanup_reports: true,
+          cleanup_keep: 0,
+          cleanup_age: 30,
+          report_dir: cli_report_dir
+        )
+      end
 
       # CLI dir should be cleaned
       assert_equal 0, Dir.glob("#{cli_report_dir}/*").size
