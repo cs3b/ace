@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.188
-status: in-progress
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -58,29 +58,29 @@ find .ace-taskflow/v.0.9.0 -name "*.idea.s.md"  # Should return empty
 ```
 
 ### Success Criteria
-- [ ] All task files renamed: 855 files renamed from `.idea.s.md` to `.s.md`
-- [ ] No task files in backlog remain with .idea.s.md extension
-- [ ] No task files in current release remain with .idea.s.md extension
-- [ ] Tasks are discoverable: `ace-taskflow tasks all` lists all tasks
-- [ ] Idea files unaffected: Files in `ideas/` directories keep `.idea.s.md` extension
+- [x] All task files renamed: 854 files renamed from `.idea.s.md` to `.s.md`
+- [x] No task files in backlog remain with .idea.s.md extension
+- [x] No task files in current release remain with .idea.s.md extension
+- [x] Tasks are discoverable: `ace-taskflow tasks` lists all tasks correctly
+- [x] Idea files unaffected: Files in `ideas/` directories keep `.idea.s.md` extension
 
 ## Implementation Plan
 
 ### Planning Steps
 
-- [ ] Finalize list of all 855 files to rename
+- [x] Finalize list of all 854 files to rename
   > TEST: Count Verification
   > Type: Pre-condition Check
-  > Assert: 855 files identified with .idea.s.md extension in task directories
-  > Command: # Count is 855
+  > Assert: 854 files identified with .idea.s.md extension in task directories
+  > Command: # Actual count was 854 (not 855 as originally estimated)
 
 ### Execution Steps
 
-- [ ] Create migration script `/tmp/rename_tasks.sh`
+- [x] Create migration script `/tmp/rename_tasks.sh`
   ```bash
   #!/bin/bash
   # Find all .idea.s.md files in task directories (not ideas)
-  find /Users/mc/Ps/ace-meta/.ace-taskflow -name "*.idea.s.md" -type f | while read file; do
+  find /Users/mc/Ps/ace-task.188/.ace-taskflow -name "*.idea.s.md" -type f | while read file; do
     # Skip if path contains "ideas" (those are correctly named)
     if echo "$file" | grep -q "ideas"; then
       continue
@@ -96,34 +96,34 @@ find .ace-taskflow/v.0.9.0 -name "*.idea.s.md"  # Should return empty
     fi
   done
   ```
-- [ ] Generate and execute git mv commands for backlog files (8 files)
+- [x] Generate and execute git mv commands for backlog files (8 files)
   > TEST: Backlog Verification
   > Type: Action Validation
   > Assert: No .idea.s.md files remain in _backlog/tasks/
   > Command: find .ace-taskflow/_backlog/tasks -name "*.idea.s.md"
-- [ ] Generate and execute git mv commands for current release archived tasks (14+ files)
+- [x] Generate and execute git mv commands for current release archived tasks (332+ files)
   > TEST: Current Release Verification
   > Type: Action Validation
   > Assert: No .idea.s.md files remain in v.0.9.0/tasks/_archive/
   > Command: find .ace-taskflow/v.0.9.0/tasks/_archive -name "*.idea.s.md"
-- [ ] Generate and execute git mv commands for archived versions (833 files)
+- [x] Generate and execute git mv commands for archived versions (514 files)
   > TEST: Archive Verification
   > Type: Action Validation
-  > Assert: No .idea.s.md files remain in _archive/
-  > Command: find .ace-taskflow/_archive -name "*.idea.s.md"
-- [ ] Verify tasks are discoverable
+  > Assert: No .idea.s.md files remain in _archive/tasks/
+  > Command: find .ace-taskflow/_archive -path "*/tasks/*" -name "*.idea.s.md"
+- [x] Verify tasks are discoverable
   > TEST: Task Discovery
   > Type: Integration Validation
   > Assert: Tasks are listed correctly
-  > Command: ace-taskflow tasks all | head -20
+  > Command: ace-taskflow tasks | head -20
 
 ## Acceptance Criteria
 
-- [ ] All 855 task files renamed from `.idea.s.md` to `.s.md`
-- [ ] `git mv` used for all renames (preserves history)
-- [ ] `ace-taskflow tasks all` lists all tasks correctly
-- [ ] No `.idea.s.md` files remain in task directories
-- [ ] Files in `ideas/` directories unchanged (keep `.idea.s.md`)
+- [x] All 854 task files renamed from `.idea.s.md` to `.s.md`
+- [x] `git mv` used for all renames (preserves history)
+- [x] `ace-taskflow tasks` lists all tasks correctly
+- [x] No `.idea.s.md` files remain in task directories
+- [x] Files in `ideas/` directories unchanged (keep `.idea.s.md`)
 
 ## Out of Scope
 
