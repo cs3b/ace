@@ -1180,10 +1180,10 @@ module Ace
           # This ensures task IDs are never reused across the entire project
           all_tasks = @task_loader.load_all_tasks
 
-          # Extract task numbers from all tasks
+          # Extract task numbers from task IDs (not file paths)
+          # File paths can be unreliable for subtasks (e.g., "17910-*.s.md" for "task.179.10")
           existing_numbers = all_tasks.map do |task|
-            # Task number can be in task[:task_number] or extracted from task[:id]
-            task[:task_number]&.to_i || extract_number_from_id(task[:id])
+            extract_number_from_id(task[:id])
           end.compact
 
           return "001" if existing_numbers.empty?
@@ -1193,12 +1193,15 @@ module Ace
         end
 
         # Extract numeric part from task ID (e.g., "v.0.9.0+task.058" → 58)
+        # For subtasks, extracts only parent number (e.g., "task.179.10" → 179)
         # @param id [String] Task ID
         # @return [Integer, nil] Extracted number or nil
         def extract_number_from_id(id)
           return nil unless id
 
-          match = id.match(/task\.(\d+)/)
+          # Match only the main task number, stopping at subtask delimiter
+          # "task.179" → 179, "task.179.10" → 179 (not 17910)
+          match = id.match(/task\.(\d+)(?:\.|$)/)
           match ? match[1].to_i : nil
         end
 

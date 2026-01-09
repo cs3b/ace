@@ -9,8 +9,12 @@ module Ace
     module CLI
       # dry-cli Command class for the task command
       #
-      # This wraps the existing TaskCommand logic in a dry-cli compatible
-      # interface, maintaining complete parity with the Thor implementation.
+      # This handles the base "task" command cases:
+      # - No arguments: Show next task
+      # - Task reference: Show specific task
+      #
+      # All subcommands (create, show, start, done, etc.) are now handled
+      # by nested dry-cli commands in Commands::Task::* namespace.
       class Task < Dry::CLI::Command
         include Ace::Core::CLI::DryCli::Base
 
@@ -18,7 +22,7 @@ module Ace
           Operations on single tasks
 
           SYNTAX:
-            ace-taskflow task [REF] [ACTION] [ARGS]
+            ace-taskflow task [REF]
 
           EXAMPLES:
 
@@ -30,11 +34,20 @@ module Ace
             $ ace-taskflow task task.114          # Task ID format
             $ ace-taskflow task v.0.9.0+114      # Full reference
 
-            # Mark task as done
-            $ ace-taskflow task done 114
+          SUBCOMMANDS:
 
-            # Show task status
-            $ ace-taskflow task status 114
+            Use 'ace-taskflow task <subcommand> --help' for details:
+            - create: Create new task
+            - show: Show task details
+            - start: Mark task as in-progress
+            - done: Mark task as complete
+            - undone: Reopen completed task
+            - defer: Defer task to future
+            - undefer: Restore deferred task
+            - move: Move or reorganize task
+            - update: Update task metadata
+            - add-dependency: Add task dependency
+            - remove-dependency: Remove task dependency
 
           CONFIGURATION:
 
@@ -62,10 +75,9 @@ module Ace
           '114                      # Show task by number',
           'task.114                 # Show task by ID format',
           'v.0.9.0+114              # Show task by full reference',
-          'done 114                 # Mark task as complete',
-          'start 114                # Mark task as in-progress',
-          'create "Add caching"     # Create new task',
-          'move 114 --child-of 112  # Move task as subtask'
+          'create "Add caching"     # Create new task (nested command)',
+          'done 114                 # Mark task as complete (nested command)',
+          'start 114                # Mark task as in-progress (nested command)'
         ]
 
         # Standard options (inherited from Base but need explicit definition for dry-cli)
@@ -73,20 +85,10 @@ module Ace
         option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
         option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
-        # Class options that are passed through to TaskCommand
-        option :json, type: :boolean, desc: "Output as JSON"
-        option :markdown, type: :boolean, desc: "Output as Markdown (default)"
-        option :status, type: :string, desc: "Filter by status"
-        option :stats, type: :boolean, desc: "Show statistics"
-        option :tree, type: :boolean, desc: "Show tree structure"
-        option :format, type: :string, desc: "Output format"
-        option :limit, type: :integer, desc: "Limit results"
-        option :all, type: :boolean, desc: "Show all items"
-        option :recently_done_limit, type: :integer, desc: "Max recently done tasks to show"
-        option :up_next_limit, type: :integer, desc: "Max up next tasks to show"
-        option :include_drafts, type: :boolean, desc: "Include draft tasks in Up Next"
-        option :include_activity, type: :boolean, desc: "Include task activity section"
-        option :output, type: :string, aliases: %w[-o], desc: "Output file path"
+        # Display mode options
+        option :path, type: :boolean, desc: "Show only task file path"
+        option :content, type: :boolean, desc: "Show full task content"
+        option :tree, type: :boolean, desc: "Show dependency tree"
 
         def call(**options)
           # Remaining arguments are in options[:args]
