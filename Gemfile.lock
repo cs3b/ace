@@ -32,7 +32,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.16.0)
+    ace-git-commit (0.16.1)
       ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-llm (~> 0.16)
