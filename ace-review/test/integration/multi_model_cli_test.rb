@@ -2,20 +2,25 @@
 
 require "test_helper"
 require "ace/review/cli"
-require "ace/review/commands/review_command"
+require "ace/review/commands/review"
 
-# Tests for ReviewCommand option processing (migrated from OptionParser to Thor)
-# These tests verify that Thor CLI options are processed correctly by ReviewCommand
+# Tests for Review command option processing (migrated from OptionParser to Thor to dry-cli)
+# These tests verify that dry-cli options are processed correctly by Review command
 class ReviewCommandOptionsTest < Minitest::Test
   # Test model parsing - comma-separated models in single flag
   def test_command_parses_comma_separated_models
-    # Thor's repeatable option would give us an array with one element
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      model: ["gemini,gpt-4,claude"],
-      preset: "pr"
-    })
+    # dry-cli's repeatable option gives us an array with one element
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    # Stub execute_review to prevent actual execution
+    command.stub :execute_review, 0 do
+      command.call(
+        model: ["gemini,gpt-4,claude"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Verify models were parsed and split correctly
     assert_equal ["gemini", "gpt-4", "claude"], options[:model]
@@ -23,13 +28,17 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test model parsing - multiple --model flags
   def test_command_parses_repeated_model_flags
-    # Thor's repeatable option gives us array of values
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      model: ["gemini", "gpt-4"],
-      preset: "pr"
-    })
+    # dry-cli's repeatable option gives us array of values
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        model: ["gemini", "gpt-4"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Verify models were collected
     assert_equal ["gemini", "gpt-4"], options[:model]
@@ -37,12 +46,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test model deduplication
   def test_command_deduplicates_models
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      model: ["gemini,gemini,gpt-4"],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        model: ["gemini,gemini,gpt-4"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Verify duplicates were removed
     assert_equal ["gemini", "gpt-4"], options[:model]
@@ -50,12 +63,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test single subject parsing
   def test_command_parses_single_subject_flag
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      subject: ["diff:HEAD~3"],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        subject: ["diff:HEAD~3"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Single subject should be passed as string (backward compatible)
     assert_equal "diff:HEAD~3", options[:subject]
@@ -63,12 +80,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test multiple subjects parsing
   def test_command_parses_multiple_subject_flags_as_array
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      subject: ["diff:HEAD~3", "files:*.md"],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        subject: ["diff:HEAD~3", "files:*.md"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Multiple subjects should be passed as array
     assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
@@ -76,12 +97,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test three or more subjects
   def test_command_normalizes_three_or_more_subjects
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      subject: ["pr:77", "files:README.md", "diff:HEAD~1"],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        subject: ["pr:77", "files:README.md", "diff:HEAD~1"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Three or more subjects should all be in the array
     assert_equal ["pr:77", "files:README.md", "diff:HEAD~1"], options[:subject]
@@ -89,12 +114,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test subject deduplication
   def test_command_deduplicates_subjects
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      subject: ["diff:HEAD~3", "diff:HEAD~3", "files:*.md"],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        subject: ["diff:HEAD~3", "diff:HEAD~3", "files:*.md"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Duplicate subjects should be removed
     assert_equal ["diff:HEAD~3", "files:*.md"], options[:subject]
@@ -102,12 +131,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test empty subject filtering
   def test_command_rejects_empty_subject_strings
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      subject: ["", "diff:HEAD~3"],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        subject: ["", "diff:HEAD~3"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Empty subjects should be filtered out, single remaining subject as string
     assert_equal "diff:HEAD~3", options[:subject]
@@ -115,12 +148,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test whitespace-only subject filtering
   def test_command_rejects_whitespace_only_subjects
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      subject: ["   ", "diff:HEAD~3"],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        subject: ["   ", "diff:HEAD~3"],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # Whitespace-only subjects should be filtered out
     assert_equal "diff:HEAD~3", options[:subject]
@@ -128,12 +165,16 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test all empty subjects results in nil
   def test_command_no_subject_when_all_empty
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      subject: ["", "   "],
-      preset: "pr"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        subject: ["", "   "],
+        preset: "pr"
+      )
+    end
+
+    options = command.options
 
     # When all subjects are empty, subject should be nil
     assert_nil options[:subject]
@@ -141,35 +182,47 @@ class ReviewCommandOptionsTest < Minitest::Test
 
   # Test PR comments flag enabled
   def test_command_preserves_pr_comments_flag_enabled
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      pr: "123",
-      pr_comments: true
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        pr: "123",
+        pr_comments: true
+      )
+    end
+
+    options = command.options
 
     assert_equal true, options[:pr_comments]
   end
 
   # Test PR comments flag disabled (--no-pr-comments)
   def test_command_preserves_no_pr_comments_flag
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      pr: "123",
-      pr_comments: false
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        pr: "123",
+        pr_comments: false
+      )
+    end
+
+    options = command.options
 
     assert_equal false, options[:pr_comments]
   end
 
   # Test PR comments default (not specified)
   def test_command_pr_comments_default_when_not_specified
-    command = Ace::Review::Commands::ReviewCommand.new([], {
-      pr: "123"
-    })
+    command = Ace::Review::Commands::Review.new
 
-    options = command.instance_variable_get(:@options)
+    command.stub :execute_review, 0 do
+      command.call(
+        pr: "123"
+      )
+    end
+
+    options = command.options
 
     # When not specified, pr_comments should be nil (defaults handled by ReviewOptions)
     assert_nil options[:pr_comments]
