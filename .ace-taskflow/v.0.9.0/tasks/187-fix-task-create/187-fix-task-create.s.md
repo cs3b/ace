@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.187
-status: pending
+status: in-progress
 priority: high
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 187-fix-task-create-command-with-nested-dry-cli-subcommands
+  path: "../ace-task.187"
+  created_at: '2026-01-09 17:00:41'
+  updated_at: '2026-01-09 17:00:41'
 ---
 
 # Fix task create command with nested dry-cli subcommands
