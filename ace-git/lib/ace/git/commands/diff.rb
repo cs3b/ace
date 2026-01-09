@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
+require "fileutils"
+require "tmpdir"
+require "yaml"
 require "ace/core/cli/dry_cli/base"
-require_relative "diff_command"
 
 module Ace
   module Git
     module Commands
-      # dry-cli command wrapper for diff
-      # Bridges dry-cli interface to existing DiffCommand class
+      # dry-cli command for generating diffs
+      # Migrated from ace-git-diff
       class Diff < Dry::CLI::Command
         include Ace::Core::CLI::DryCli::Base
 
@@ -34,7 +36,195 @@ module Ace
         option :debug, type: :boolean, aliases: %w[-d], desc: "Debug output"
 
         def call(range: nil, **options)
-          DiffCommand.new.execute(range, options)
+          # Verify we're in a git repository
+          unless Atoms::CommandExecutor.in_git_repo?
+            raise Ace::Git::GitError, "Not a git repository (or any of the parent directories)"
+          end
+
+          # Build options hash, including any custom config file
+          diff_options = build_options(range, options)
+
+          # Generate diff
+          result = if options[:raw]
+                     Organisms::DiffOrchestrator.raw(diff_options)
+                   else
+                     Organisms::DiffOrchestrator.generate(diff_options)
+                   end
+
+          # Output result
+          output_result(result, options)
+
+          # Return success
+          0
+        rescue Ace::Git::Error => e
+          warn "Error generating diff: #{e.message}"
+          1
+        end
+
+        private
+
+        def build_options(range, cli_options)
+          options = {}
+
+          # Load custom config file if specified
+          if cli_options[:config]
+            custom_config = load_config_file(cli_options[:config])
+            options.merge!(custom_config)
+          end
+
+          # Add range if specified
+          options[:ranges] = [range] if range
+
+          # Add since if specified
+          options[:since] = cli_options[:since] if cli_options[:since]
+
+          # Add path filters
+          options[:paths] = cli_options[:paths] if cli_options[:paths]
+
+          # Add exclude patterns (overrides config if specified)
+          options[:exclude_patterns] = cli_options[:exclude] if cli_options[:exclude]
+
+          # Add format
+          options[:format] = cli_options[:format]&.to_sym || :diff
+
+          options
+        end
+
+        # Load configuration from a YAML file
+        # Handles both flat config and git:-rooted config (per .ace/git/config.yml format)
+        # @param config_path [String] Path to config file
+        # @return [Hash] Configuration hash
+        def load_config_file(config_path)
+          unless file_exist?(config_path)
+            raise Ace::Git::ConfigError, "Config file not found: #{config_path}"
+          end
+
+          config = yaml_safe_load(file_read(config_path))
+          config ||= {}
+
+          # Handle git:-rooted config files (standard .ace/git/config.yml format)
+          # Extract git section first, then extract diff config from it
+          git_config = config["git"] || config[:git] || config
+          Molecules::ConfigLoader.extract_diff_config(git_config)
+        rescue Psych::SyntaxError => e
+          raise Ace::Git::ConfigError, "Invalid YAML in config file: #{e.message}"
+        end
+
+        def output_result(result, options)
+          content = format_content(result, options)
+
+          # Write to file or stdout
+          if options[:output]
+            write_to_file(content, options[:output])
+          else
+            puts content
+          end
+        end
+
+        def format_content(result, options)
+          if result.empty?
+            return "(no changes)"
+          end
+
+          case options[:format]&.to_sym
+          when :summary
+            format_summary(result)
+          else
+            result.content
+          end
+        end
+
+        def write_to_file(content, output_path)
+          # Validate path to prevent directory traversal attacks
+          validate_output_path(output_path)
+
+          # Create parent directories if needed
+          FileUtils.mkdir_p(File.dirname(output_path)) unless File.dirname(output_path) == "."
+
+          # Write content to file
+          File.write(output_path, content)
+
+          # Output confirmation to stderr so it doesn't interfere with piping
+          warn "Diff written to: #{output_path}"
+        end
+
+        # Validate output path to prevent directory traversal attacks
+        # Strictly restricts output paths to current working directory or temp directory
+        # Uses File.realpath (when available) to resolve symlinks and normalize paths
+        # @param path [String] Path to validate
+        # @raise [Ace::Git::ConfigError] If path contains traversal sequences or escapes allowed directories
+        def validate_output_path(path)
+          # Check for null bytes (security)
+          if path.include?("\0")
+            raise Ace::Git::ConfigError, "Invalid output path: null bytes not allowed"
+          end
+
+          # Explicitly reject path traversal sequences
+          if path.include?("..")
+            raise Ace::Git::ConfigError, "Invalid output path: path traversal not allowed"
+          end
+
+          # Resolve the actual path - use realpath for existing paths to resolve symlinks,
+          # otherwise use expand_path for new paths (file doesn't exist yet)
+          expanded = File.expand_path(path)
+
+          # Get allowed directories, resolving symlinks where possible
+          cwd = resolve_real_path(Dir.pwd)
+          tmpdir = resolve_real_path(Dir.tmpdir)
+
+          # Strictly enforce that path is within cwd or tmpdir (no exceptions)
+          unless expanded.start_with?("#{cwd}/") || expanded == cwd ||
+                 expanded.start_with?("#{tmpdir}/") || expanded == tmpdir
+            raise Ace::Git::ConfigError,
+                  "Invalid output path: must be within working directory or temp directory"
+          end
+        end
+
+        # Resolve path to real path (resolving symlinks), falling back to expand_path
+        # @param path [String] Path to resolve
+        # @return [String] Resolved path
+        def resolve_real_path(path)
+          File.realpath(path)
+        rescue Errno::ENOENT
+          File.expand_path(path)
+        end
+
+        def format_summary(result)
+          summary = []
+          summary << "# Diff Summary"
+          summary << ""
+          summary << result.summary
+          summary << ""
+
+          if result.files.any?
+            summary << "## Files Changed"
+            result.files.each do |file|
+              summary << "- #{file}"
+            end
+            summary << ""
+          end
+
+          summary.join("\n")
+        end
+
+        protected
+
+        # Protected methods for external dependency access (testability pattern)
+        # See docs/testing-patterns.md for rationale
+
+        # Check if file exists (protected for test stubbing)
+        def file_exist?(path)
+          File.exist?(path)
+        end
+
+        # Read file content (protected for test stubbing)
+        def file_read(path)
+          File.read(path)
+        end
+
+        # Parse YAML safely (protected for test stubbing)
+        def yaml_safe_load(content)
+          YAML.safe_load(content, permitted_classes: [Symbol])
         end
       end
     end

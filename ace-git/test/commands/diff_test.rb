@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/diff_command"
+require "ace/git/commands/diff"
 
-class DiffCommandTest < AceGitTestCase
+class DiffTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::DiffCommand.new
+    @command = Ace::Git::Commands::Diff.new
   end
 
   def test_execute_returns_success_with_valid_range
@@ -21,7 +21,7 @@ class DiffCommandTest < AceGitTestCase
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
         output = capture_io do
-          result = @command.execute("HEAD~1..HEAD", { format: "diff" })
+          result = @command.call(range: "HEAD~1..HEAD", format: "diff")
           assert_equal 0, result
         end
         assert_match(/diff content/, output.first)
@@ -32,7 +32,7 @@ class DiffCommandTest < AceGitTestCase
   def test_execute_returns_error_when_not_in_git_repo
     Ace::Git::Atoms::CommandExecutor.stub :in_git_repo?, false do
       output = capture_io do
-        result = @command.execute(nil, {})
+        result = @command.call
         assert_equal 1, result
       end
       assert_match(/Not a git repository/, output.last)
@@ -49,7 +49,7 @@ class DiffCommandTest < AceGitTestCase
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
         output = capture_io do
-          result = @command.execute(nil, { format: "diff" })
+          result = @command.call(format: "diff")
           assert_equal 0, result
         end
         assert_match(/\(no changes\)/, output.first)
@@ -67,7 +67,7 @@ class DiffCommandTest < AceGitTestCase
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
         output = capture_io do
-          result = @command.execute(nil, { output: "../../etc/passwd", format: "diff" })
+          result = @command.call(output: "../../etc/passwd", format: "diff")
           assert_equal 1, result
         end
         assert_match(/path traversal not allowed/, output.last)
@@ -102,7 +102,7 @@ class DiffCommandTest < AceGitTestCase
           mock_result
         } do
           capture_io do
-            @command.execute(nil, { config: config_path, format: "diff" })
+            @command.call(config: config_path, format: "diff")
           end
         end
 
@@ -116,7 +116,7 @@ class DiffCommandTest < AceGitTestCase
   def test_config_file_option_raises_on_missing_file
     Ace::Git::Atoms::CommandExecutor.stub :in_git_repo?, true do
       output = capture_io do
-        result = @command.execute(nil, { config: "/nonexistent/config.yml", format: "diff" })
+        result = @command.call(config: "/nonexistent/config.yml", format: "diff")
         assert_equal 1, result
       end
       assert_match(/Config file not found/, output.last)
@@ -152,7 +152,7 @@ class DiffCommandTest < AceGitTestCase
           mock_result
         } do
           capture_io do
-            @command.execute(nil, { config: config_path, format: "diff" })
+            @command.call(config: config_path, format: "diff")
           end
         end
 
@@ -171,7 +171,7 @@ class DiffCommandTest < AceGitTestCase
 
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(_opts) { raise error } do
         output = capture_io do
-          result = @command.execute("invalid..range", { format: "diff" })
+          result = @command.call(range: "invalid..range", format: "diff")
           assert_equal 1, result
         end
         assert_match(/Error generating diff/, output.last)
@@ -194,7 +194,7 @@ class DiffCommandTest < AceGitTestCase
       error_scenarios.each do |scenario|
         Ace::Git::Organisms::DiffOrchestrator.stub :generate, ->(_opts) { raise scenario[:error] } do
           output = capture_io do
-            result = @command.execute("some-range", { format: "diff" })
+            result = @command.call(range: "some-range", format: "diff")
             assert_equal 1, result, "Command should return error status for: #{scenario[:error].message}"
           end
           # Error should be in stderr, not masked as "(no changes)" in stdout
@@ -218,7 +218,7 @@ class DiffCommandTest < AceGitTestCase
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
         output = capture_io do
           # This absolute path is outside cwd and tmpdir
-          result = @command.execute(nil, { output: "/etc/passwd", format: "diff" })
+          result = @command.call(output: "/etc/passwd", format: "diff")
           assert_equal 1, result
         end
         assert_match(/must be within working directory or temp directory/, output.last)

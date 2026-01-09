@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-01-09
+
+### Changed
+- **BREAKING**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `Branch`, `Diff`, `PR`, and `Status` dry-cli command classes
+  - Deleted `branch_command.rb`, `diff_command.rb`, `pr_command.rb`, and `status_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.7.0] - 2026-01-07
 
 ### Changed
