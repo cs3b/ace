@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/pr_command"
+require "ace/git/commands/pr"
 
-class PrCommandTest < AceGitTestCase
+class PrTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::PrCommand.new
+    @command = Ace::Git::Commands::Pr.new
   end
 
   def test_execute_returns_error_when_gh_not_installed
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, false do
       output = capture_io do
-        result = @command.execute(nil, format: nil)
+        result = @command.call( format: nil)
         assert_equal 1, result
       end
       assert_match(/GitHub CLI.*not installed/, output.last)
@@ -23,7 +23,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, nil do
         output = capture_io do
-          result = @command.execute(nil, format: nil)
+          result = @command.call( format: nil)
           assert_equal 1, result
         end
         assert_match(/No PR found for current branch/, output.last)
@@ -45,7 +45,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, mock_result do
         output = capture_io do
-          result = @command.execute(42, format: nil, with_diff: false)
+          result = @command.call(number: 42, format: nil, with_diff: false)
           assert_equal 0, result
         end
         # Compact format: # PR #42: Test PR [OPEN]
@@ -69,7 +69,7 @@ class PrCommandTest < AceGitTestCase
       Ace::Git::Molecules::PrMetadataFetcher.stub :find_pr_for_branch, "99" do
         Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, mock_result do
           output = capture_io do
-            result = @command.execute(nil, format: nil, with_diff: false)
+            result = @command.call( format: nil, with_diff: false)
             assert_equal 0, result
           end
           # Compact format: # PR #99: Auto-found PR [OPEN]
@@ -94,7 +94,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, mock_result do
         output = capture_io do
-          result = @command.execute(42, format: "json", with_diff: false)
+          result = @command.call(number: 42, format: "json", with_diff: false)
           assert_equal 0, result
         end
         json = JSON.parse(output.first)
@@ -118,7 +118,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_pr, mock_result do
         output = capture_io do
-          result = @command.execute(42, format: nil, with_diff: true)
+          result = @command.call(number: 42, format: nil, with_diff: true)
           assert_equal 0, result
         end
         assert_match(/## Diff/, output.first)
@@ -133,7 +133,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, mock_result do
         output = capture_io do
-          result = @command.execute(999, format: nil, with_diff: false)
+          result = @command.call(number: 999, format: nil, with_diff: false)
           assert_equal 1, result
         end
         assert_match(/PR not found/, output.last)
@@ -145,7 +145,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::GhNotInstalledError, "gh not found" } do
         output = capture_io do
-          result = @command.execute(42, format: nil, with_diff: false)
+          result = @command.call(number: 42, format: nil, with_diff: false)
           assert_equal 1, result
         end
         assert_match(/gh not found/, output.last)
@@ -157,7 +157,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::GhAuthenticationError, "Not authenticated" } do
         output = capture_io do
-          result = @command.execute(42, format: nil, with_diff: false)
+          result = @command.call(number: 42, format: nil, with_diff: false)
           assert_equal 1, result
         end
         assert_match(/Not authenticated/, output.last)
@@ -169,7 +169,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::PrNotFoundError, "PR #999 not found" } do
         output = capture_io do
-          result = @command.execute(999, format: nil, with_diff: false)
+          result = @command.call(number: 999, format: nil, with_diff: false)
           assert_equal 1, result
         end
         assert_match(/PR #999 not found/, output.last)
@@ -181,7 +181,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise Ace::Git::TimeoutError, "Request timed out" } do
         output = capture_io do
-          result = @command.execute(42, format: nil, with_diff: false)
+          result = @command.call(number: 42, format: nil, with_diff: false)
           assert_equal 1, result
         end
         assert_match(/Request timed out/, output.last)
@@ -193,7 +193,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, ->(_){ raise ArgumentError, "Invalid PR identifier" } do
         output = capture_io do
-          result = @command.execute("invalid", format: nil, with_diff: false)
+          result = @command.call(number: "invalid", format: nil, with_diff: false)
           assert_equal 1, result
         end
         assert_match(/Invalid PR identifier/, output.last)
@@ -215,7 +215,7 @@ class PrCommandTest < AceGitTestCase
     Ace::Git::Molecules::PrMetadataFetcher.stub :gh_installed?, true do
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, mock_result do
         output = capture_io do
-          result = @command.execute(42, format: nil, with_diff: false)
+          result = @command.call(number: 42, format: nil, with_diff: false)
           assert_equal 0, result
         end
         assert_match(/testuser/, output.first)

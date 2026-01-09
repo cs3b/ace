@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/branch_command"
+require "ace/git/commands/branch"
 
-class BranchCommandTest < AceGitTestCase
+class BranchTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::BranchCommand.new
+    @command = Ace::Git::Commands::Branch.new
   end
 
   def test_execute_returns_success_with_branch_info
@@ -20,7 +20,7 @@ class BranchCommandTest < AceGitTestCase
 
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
-        result = @command.execute(format: nil)
+        result = @command.call
         assert_equal 0, result
       end
       assert_match(/main/, output.first)
@@ -38,7 +38,7 @@ class BranchCommandTest < AceGitTestCase
 
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
-        result = @command.execute(format: nil)
+        result = @command.call
         assert_equal 0, result
       end
       assert_match(/abc1234/, output.first)
@@ -51,7 +51,7 @@ class BranchCommandTest < AceGitTestCase
 
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
-        result = @command.execute(format: nil)
+        result = @command.call
         assert_equal 1, result
       end
       assert_match(/not a git repository/, output.last)
@@ -71,7 +71,7 @@ class BranchCommandTest < AceGitTestCase
 
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
-        result = @command.execute(format: "json")
+        result = @command.call(format: "json")
         assert_equal 0, result
       end
       json = JSON.parse(output.first)
@@ -92,7 +92,7 @@ class BranchCommandTest < AceGitTestCase
 
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
-        result = @command.execute(format: nil)
+        result = @command.call
         assert_equal 0, result
       end
       assert_match(/ahead 3/, output.first)
@@ -102,7 +102,7 @@ class BranchCommandTest < AceGitTestCase
   def test_execute_handles_ace_git_error
     Ace::Git::Molecules::BranchReader.stub :full_info, ->{ raise Ace::Git::Error, "Something went wrong" } do
       output = capture_io do
-        result = @command.execute(format: nil)
+        result = @command.call
         assert_equal 1, result
       end
       assert_match(/Something went wrong/, output.last)
