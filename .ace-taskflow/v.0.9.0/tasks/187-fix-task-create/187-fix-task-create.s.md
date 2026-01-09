@@ -1,5 +1,5 @@
 ---
-id: v.0.9.0+task.182
+id: v.0.9.0+task.187
 status: pending
 priority: high
 estimate: 3h
@@ -66,6 +66,7 @@ ace-taskflow task create "Archive output" --child-of 121
 
 **Edge Cases:**
 - Title with spaces: Handle quoted strings properly
+- **Title precedence**: When both positional title AND `--title` flag provided, `--title` wins (more explicit)
 - Multiple dependencies: Parse comma-separated list
 - Subtask creation: Validate parent exists and supports subtasks
 - Dry-run mode: Show preview without creating files
@@ -78,6 +79,14 @@ ace-taskflow task create "Archive output" --child-of 121
 - [ ] **Backward Compatibility**: `ace-taskflow task create "Title"` positional argument still works
 - [ ] **No Unknown Option Errors**: No "was called with arguments" errors for valid options
 - [ ] **Exit Codes**: Returns 0 on success, non-zero on failure
+
+### Error Handling Acceptance Criteria
+
+- [ ] **Missing title**: Error message with usage hint, exit code 1
+- [ ] **Invalid status**: Error message listing valid statuses (pending, draft, in-progress, done, blocked), exit code 1
+- [ ] **Invalid parent reference** (`--child-of`): Error message that parent task not found, exit code 1
+- [ ] **Dry-run mode**: Shows preview of what would be created, exit code 0, no files created
+- [ ] **Invalid dependencies** (`--dependencies`): Error for non-existent task references, exit code 1
 
 ### Validation Questions
 
@@ -103,8 +112,17 @@ Fix the broken `ace-taskflow task create` command by refactoring from wrapper pa
 - Help text for create command
 
 #### Validation Artifacts
-- Test scenarios for option parsing
-- Command execution verification
+- **Automated Unit Tests**: `test/commands/task/create_test.rb` with scenarios:
+  - Option parsing: `--title`, `--status`, `--estimate`, `--dependencies`, `--child-of`, `--dry-run`
+  - Dependencies parsing: `--dependencies 041,042` correctly splits into array
+  - Subtask creation: `--child-of 121` validates parent exists
+  - Title precedence: `--title` wins over positional when both provided
+  - Dry-run output: Shows preview without creating files
+  - Error handling: Missing title, invalid status, invalid parent reference
+- **Manual Verification**: Command execution transcripts saved to task directory:
+  - `manual-test-success.log`: Successful task creation with all options
+  - `manual-test-help.log`: Output of `--help` showing create-specific usage
+  - `manual-test-errors.log`: Error messages for invalid inputs
 - Help display validation
 
 ## Out of Scope
@@ -131,8 +149,14 @@ Fix the broken `ace-taskflow task create` command by refactoring from wrapper pa
 1. Create new command class for `task create` with proper option definitions
 2. Register as nested subcommand `"task create"`
 3. Keep existing `TaskCommand#create_task` method for business logic
-4. Update CLI registration to use new pattern
-5. Leave existing wrapper in place for backward compatibility during transition
+4. **CLI Routing Resolution**: Implement custom routing in `CLI.start` to handle the collision between:
+   - Legacy: `ace-taskflow task 114` (direct lookup by number/ID)
+   - New: `ace-taskflow task create --title "X"` (nested subcommand)
+5. **Coexistence Strategy**: Use action-based routing:
+   - If second arg is known subcommand (create, show, list, move, etc.) → route to subcommand
+   - If second arg looks like task reference (number, task.N, v.X+Y) → route to legacy lookup
+   - Otherwise → route to legacy lookup with all args
+6. Remove the conflicting `register "task", CLI::Task.new` wrapper after nested subcommands are registered
 
 ### File Modifications
 
@@ -144,13 +168,17 @@ Fix the broken `ace-taskflow task create` command by refactoring from wrapper pa
 
 #### Modify
 - `lib/ace/taskflow/cli.rb`
-  - Changes: Add `register "task create", Commands::Task::Create`
-  - Impact: Routes `ace-taskflow task create` to new command class
-  - Integration points: Keep existing `register "task", CLI::Task.new` for direct task reference (e.g., `ace-taskflow task 114`)
+  - Changes:
+    - Add `register "task create", Commands::Task::Create`
+    - Implement custom routing in `CLI.start` to disambiguate `task <ref>` vs `task <subcommand>`
+    - Remove `register "task", CLI::Task.new` (conflicts with nested registration)
+  - Impact: Routes both `ace-taskflow task create` and `ace-taskflow task 114` correctly
+  - Integration points: Delegate to existing TaskCommand organism for business logic
 
 #### Keep (No changes)
 - `lib/ace/taskflow/commands/task_command.rb` - Business logic organism
 - `lib/ace/taskflow/molecules/task_arg_parser.rb` - Argument parsing (optional, can use dry-cli options directly)
+  - **Note**: Verify `OptionParser` doesn't call `exit` for `--help` (violates ADR-021 testability). If it does, return status code instead.
 
 ### Planning Steps
 
@@ -163,17 +191,29 @@ Fix the broken `ace-taskflow task create` command by refactoring from wrapper pa
 ### Execution Steps
 
 - [ ] Create `lib/ace/taskflow/commands/task/` directory
+- [ ] Create `test/commands/task/` directory
 - [ ] Create `lib/ace/taskflow/commands/task/create.rb` with:
   - Class definition extending `Dry::CLI::Command`
   - Include `Ace::Core::CLI::DryCli::Base`
   - Option definitions for all create flags
+  - **Type conversion**: Use `convert_types` helper for numeric options (dry-cli returns strings)
   - `call` method that converts options to args and delegates to TaskCommand
 - [ ] Update `lib/ace/taskflow/cli.rb` to require and register the new command
+- [ ] Create `test/commands/task/create_test.rb` with automated test scenarios
+  - Mock TaskCommand organism for unit testing option parsing
+  - Test: Dependencies parsing (`--dependencies 041,042`)
+  - Test: Subtask creation with `--child-of`
+  - Test: Title precedence (`--title` vs positional)
+  - Test: Dry-run mode output
+  - Test: Error cases (missing title, invalid status)
 - [ ] Test manually: `ace-taskflow task create --title "Test" --status draft`
 - [ ] Test help: `ace-taskflow task create --help`
 - [ ] Test backward compatibility: `ace-taskflow task create "Title"`
 - [ ] Verify existing functionality: `ace-taskflow task 114` (should still work)
 - [ ] Run existing test suite to ensure no regressions
+- [ ] **Documentation Audit**: Check `ace-taskflow/handbook/` and `.claude/agents/` for hardcoded legacy command examples
+  - Update any references to old task create syntax
+  - Update workflow instructions if they reference the old pattern
 
 ### Risk Assessment
 
