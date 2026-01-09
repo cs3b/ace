@@ -63,7 +63,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.7.0)
+    ace-git (0.7.1)
       ace-config (~> 0.4)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)

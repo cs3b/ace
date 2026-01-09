@@ -5,11 +5,6 @@ require "set"
 require "ace/core"
 require_relative "../git"
 # Commands
-require_relative "commands/diff_command"
-require_relative "commands/status_command"
-require_relative "commands/branch_command"
-require_relative "commands/pr_command"
-# dry-cli command wrappers
 require_relative "commands/diff"
 require_relative "commands/status"
 require_relative "commands/branch"

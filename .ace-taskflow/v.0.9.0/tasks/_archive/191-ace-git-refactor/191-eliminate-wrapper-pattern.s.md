@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.191
-status: pending
+status: done
 priority: medium
 estimate: 3h
 dependencies: []
@@ -134,7 +134,7 @@ end
 
 ### Execution Steps
 
-- [ ] **Step 1: Consolidate Diff command**
+- [x] **Step 1: Consolidate Diff command**
   - Merge `diff_command.rb` logic into `diff.rb`
   - Update `call` method with full business logic
   - Move private methods (`build_options`, `load_config_file`, `output_result`, etc.)
@@ -145,7 +145,7 @@ end
   > Assert: All diff_command_test.rb tests pass with updated class reference
   > Command: cd ace-git && ace-test test/commands/diff_command_test.rb
 
-- [ ] **Step 2: Consolidate Status command**
+- [x] **Step 2: Consolidate Status command**
   - Merge `status_command.rb` logic into `status.rb`
   - Update `call` method with `execute` logic
   - Remove `require_relative "status_command"` line
@@ -154,7 +154,7 @@ end
   > Assert: All status_command_test.rb tests pass with updated class reference
   > Command: cd ace-git && ace-test test/commands/status_command_test.rb
 
-- [ ] **Step 3: Consolidate Branch command**
+- [x] **Step 3: Consolidate Branch command**
   - Merge `branch_command.rb` logic into `branch.rb`
   - Update `call` method with `execute` logic
   - Move `output_text` private method
@@ -164,7 +164,7 @@ end
   > Assert: All branch_command_test.rb tests pass with updated class reference
   > Command: cd ace-git && ace-test test/commands/branch_command_test.rb
 
-- [ ] **Step 4: Consolidate Pr command**
+- [x] **Step 4: Consolidate Pr command**
   - Merge `pr_command.rb` logic into `pr.rb`
   - Update `call` method with `execute` logic
   - Move `output_markdown` private method
@@ -174,7 +174,7 @@ end
   > Assert: All pr_command_test.rb tests pass with updated class reference
   > Command: cd ace-git && ace-test test/commands/pr_command_test.rb
 
-- [ ] **Step 5: Update cli.rb requires**
+- [x] **Step 5: Update cli.rb requires**
   - Remove requires for deleted `*_command.rb` files
   - Verify CLI registration still works
   > TEST: CLI registration
@@ -182,7 +182,7 @@ end
   > Assert: ace-git --help shows all commands
   > Command: cd ace-git && ./exe/ace-git --help
 
-- [ ] **Step 6: Update test files**
+- [x] **Step 6: Update test files**
   - Update `test/commands/diff_command_test.rb`:
     - Change require to `ace/git/commands/diff`
     - Update class reference from `DiffCommand` to `Diff`
@@ -195,7 +195,7 @@ end
   > Assert: All tests in test/commands/ pass
   > Command: cd ace-git && ace-test test/commands/
 
-- [ ] **Step 7: Delete obsolete files**
+- [x] **Step 7: Delete obsolete files**
   - Delete `lib/ace/git/commands/diff_command.rb`
   - Delete `lib/ace/git/commands/status_command.rb`
   - Delete `lib/ace/git/commands/branch_command.rb`
@@ -205,13 +205,13 @@ end
   > Assert: require "ace/git" works without errors
   > Command: ruby -e "require 'ace/git'"
 
-- [ ] **Step 8: Run full test suite**
+- [x] **Step 8: Run full test suite**
   > TEST: Full ace-git test suite
   > Type: Regression Test
   > Assert: All tests pass
   > Command: cd ace-git && ace-test
 
-- [ ] **Step 9: CLI integration verification**
+- [x] **Step 9: CLI integration verification**
   - Test each command manually
   > TEST: Manual CLI verification
   > Type: Manual Integration Test
@@ -244,12 +244,12 @@ end
 
 ## Acceptance Criteria
 
-- [ ] **4 commands refactored**: diff, status, branch, pr merged with their *Command classes
-- [ ] **Help text works**: Each command shows proper documentation via `--help`
-- [ ] **Tests pass**: All existing tests pass with updated class references
-- [ ] **No functional changes**: Commands work exactly as before
-- [ ] **4 files deleted**: All `*_command.rb` wrapper files removed
-- [ ] **Require statements updated**: cli.rb only requires consolidated files
+- [x] **4 commands refactored**: diff, status, branch, pr merged with their *Command classes
+- [x] **Help text works**: Each command shows proper documentation via `--help`
+- [x] **Tests pass**: All existing tests pass with updated class references
+- [x] **No functional changes**: Commands work exactly as before
+- [x] **4 files deleted**: All `*_command.rb` wrapper files removed
+- [x] **Require statements updated**: cli.rb only requires consolidated files
 
 ## Out of Scope
 
