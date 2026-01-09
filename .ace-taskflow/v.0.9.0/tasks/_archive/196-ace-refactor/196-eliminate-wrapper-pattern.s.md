@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.196
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -43,10 +43,10 @@ ace-search <pattern> [options]    # Search code/files
 
 ### Success Criteria
 
-- [ ] **Search command refactored**: Wrapper merged with SearchCommand
-- [ ] **Help text works**: `ace-search --help` shows proper documentation
-- [ ] **Tests pass**: All tests updated
-- [ ] **No functional changes**: Command works exactly as before
+- [x] **Search command refactored**: Wrapper merged with SearchCommand
+- [x] **Help text works**: `ace-search --help` shows proper documentation
+- [x] **Tests pass**: All tests updated
+- [x] **No functional changes**: Command works exactly as before
 
 ## Objective
 
@@ -134,13 +134,13 @@ The refactoring moves all business logic from `SearchCommand` into the dry-cli `
 
 ### Planning Steps
 
-* [ ] Analyze SearchCommand interface to identify all public/private methods
+* [x] Analyze SearchCommand interface to identify all public/private methods
   > TEST: Understanding Check
   > Type: Pre-condition Check
   > Assert: All methods and their dependencies identified
   > Command: # grep -n "def " ace-search/lib/ace/search/commands/search_command.rb
 
-* [ ] Verify test coverage for current implementation
+* [x] Verify test coverage for current implementation
   > TEST: Coverage Check
   > Type: Pre-condition Check
   > Assert: All existing tests documented
@@ -148,33 +148,33 @@ The refactoring moves all business logic from `SearchCommand` into the dry-cli `
 
 ### Execution Steps
 
-- [ ] Step 1: Add all private methods from SearchCommand to Search class
+- [x] Step 1: Add all private methods from SearchCommand to Search class
   - Copy `build_search_options`, `determine_scope`, `parse_include_option`, `parse_exclude_option`
   - Copy `resolve_search_path`, `apply_preset`, `execute_search`
   - Copy `apply_interactive_selection`, `output_results`, `display_config_summary`
 
-- [ ] Step 2: Update `call` method to inline SearchCommand.execute logic
+- [x] Step 2: Update `call` method to inline SearchCommand.execute logic
   - Replace `command = SearchCommand.new(pattern, search_path, clean_options)` / `command.execute`
   - With direct implementation from SearchCommand#execute
   - Add instance variables: `@pattern`, `@search_path`, `@options`, `@result`
 
-- [ ] Step 3: Update require statements
+- [x] Step 3: Update require statements
   - Remove `require_relative "search_command"` from search.rb
   - Add any missing requires (json, set already in search_command.rb)
 
-- [ ] Step 4: Delete search_command.rb
+- [x] Step 4: Delete search_command.rb
   > TEST: File Deletion
   > Type: Action Validation
   > Assert: File deleted and not referenced
   > Command: # rm ace-search/lib/ace/search/commands/search_command.rb && grep -r "search_command" ace-search/lib/
 
-- [ ] Step 5: Run existing tests to verify parity
+- [x] Step 5: Run existing tests to verify parity
   > TEST: Functional Parity
   > Type: Integration Test
   > Assert: All tests pass
   > Command: # ace-test ace-search
 
-- [ ] Step 6: Run CLI integration test
+- [x] Step 6: Run CLI integration test
   > TEST: CLI Integration
   > Type: End-to-End Test
   > Assert: CLI commands work as before
@@ -198,13 +198,13 @@ The refactoring moves all business logic from `SearchCommand` into the dry-cli `
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `ace-search --help` displays correct usage information
-- [ ] AC 2: `ace-search "pattern"` executes search and returns results
-- [ ] AC 3: `ace-search "*.rb" --files` executes file search correctly
-- [ ] AC 4: All options (--json, --yaml, --max-results, etc.) work as before
-- [ ] AC 5: All existing tests pass without modification
-- [ ] AC 6: `search_command.rb` file is deleted
-- [ ] AC 7: No functional changes to user-facing behavior
+- [x] AC 1: `ace-search --help` displays correct usage information
+- [x] AC 2: `ace-search "pattern"` executes search and returns results
+- [x] AC 3: `ace-search "*.rb" --files` executes file search correctly
+- [x] AC 4: All options (--json, --yaml, --max-results, etc.) work as before
+- [x] AC 5: All existing tests pass without modification
+- [x] AC 6: `search_command.rb` file is deleted
+- [x] AC 7: No functional changes to user-facing behavior
 
 ## Out of Scope
 

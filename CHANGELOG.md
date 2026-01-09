@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.283] - 2026-01-09
+
+### Changed
+
+- **ace-search 0.18.1**: Eliminate wrapper pattern in dry-cli command
+  - Merged business logic directly into `Search` dry-cli command class
+  - Deleted `search_command.rb` wrapper file
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.9.282] - 2026-01-09
 
 ### Changed
