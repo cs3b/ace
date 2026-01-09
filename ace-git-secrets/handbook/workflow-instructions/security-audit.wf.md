@@ -1,6 +1,6 @@
 ---
 name: security-audit
-allowed-tools: Bash, Read
+allowed-tools: Bash, Read, Write
 description: Perform security audits to detect leaked authentication tokens in Git repositories
 argument-hint: "[scan|check-release] [--since=SINCE] [--confidence=LEVEL] [options]"
 doc-type: workflow
