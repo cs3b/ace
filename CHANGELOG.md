@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.276] - 2026-01-09
+
+### Changed
+
+- **ace-context 0.27.1**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `Load` and `List` dry-cli command classes
+  - Deleted `load_command.rb` and `list_command.rb` wrapper files
+  - Added `PresetListFormatter` atom for reusable list formatting logic
+
 ## [0.9.275] - 2026-01-08
 
 ### Removed
