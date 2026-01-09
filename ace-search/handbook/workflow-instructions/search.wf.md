@@ -1,36 +1,22 @@
 ---
 name: search
-description: [DEPRECATED] Use `/ace:search` instead - SEARCH code patterns and files
-expected_params:
-  required:
-  - pattern: Search pattern (text, regex, file glob, or auto-detected)
-  optional:
-  - search_type: 'Search mode: file, content, hybrid, auto (default: auto)'
-  - search_root: 'Root directory for search (default: project root)'
-  - glob: 'Filter by file pattern (e.g., "**/*.rb", "**/*.md")'
-  - scope: 'Git scope: staged, tracked, changed, all (default: all)'
-last_modified: '2026-01-09'
-type: agent
-status: deprecated
-source: ace-search
+allowed-tools: Bash, Read
+description: SEARCH code patterns and files - intelligent discovery across codebases
+argument-hint: "[pattern] [--file|--content] [options]"
+doc-type: workflow
+purpose: search workflow instruction
+context:
+  embed_document_source: false
+update:
+  frequency: on-change
+  last-updated: '2026-01-09'
 ---
 
-> **DEPRECATED**: This agent definition has been converted to a skill command.
-> **Use instead**: `/ace:search` which delegates to `ace-context wfi://search`
-> **Migration**: The workflow instruction is at `ace-search/handbook/workflow-instructions/search.wf.md`
-> **Reason**: Skills are the preferred pattern for Claude Code integration
+# Search Workflow
 
----
+## Purpose
 
-You are a search specialist focused on intelligent code and file discovery using the **ace-search** gem.
-
-## Core Responsibilities
-
-Your primary role is to **SEARCH** and **DISCOVER** information, not modify it:
-- Find files by name, pattern, or extension
-- Search for code patterns, functions, classes, or text
-- Explore project structure and organization
-- Provide intelligent filtering to focus on relevant results
+Intelligent code and file discovery using the **ace-search** gem - finding files by name, searching for code patterns, and exploring project structure.
 
 ## Primary Tool: ace-search
 
@@ -300,40 +286,9 @@ To narrow results, try:
 
 ## Important Notes
 
-- **Discovery Only**: This agent searches but does not modify files
+- **Discovery Only**: This workflow searches but does not modify files
 - **DWIM Mode**: Auto mode intelligently detects file vs content searches
 - **Git Integration**: Supports scoping to staged/tracked/changed files
 - **Preset Support**: Can use predefined search configurations
 - **Performance**: Use specific modes and filters for faster searches
 - **Results Limit**: Default max-results prevents overwhelming output
-
-## Example Multi-Step Search
-
-When asked to "find how agents are implemented":
-
-```bash
-# Step 1: Find agent files
-ace-search "*.ag.md" --file
-
-# Step 2: Search for agent definitions
-ace-search "name: " --content --glob "**/*.ag.md"
-
-# Step 3: Look in likely directories
-ace-search "agent" --file --include "dev-handbook/.integrations/**/*"
-
-# Step 4: Find agent usage
-ace-search "expected_params" --content --glob "**/*.ag.md" --max-results 10
-
-# Step 5: Check for agent documentation
-ace-search "agent" --content --glob "**/README.md"
-```
-
-## Integration with ACE Ecosystem
-
-ace-search integrates with the ACE framework:
-- Configuration via ace-core (.ace/search/config.yml)
-- Preset support (.ace/search/presets/)
-- Git-aware scoping
-- Consistent ATOM architecture
-
-Remember: Your role is to help users **discover and understand** code structure, not to modify it. Focus on providing clear, actionable search results that guide exploration and comprehension.
