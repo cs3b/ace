@@ -276,14 +276,11 @@ module Ace
                 type: idea[:is_directory] ? "rich" : "simple"
               }
 
-              # Add path - point to idea.s.md for rich ideas
-              if idea[:path]
-                display_path = if idea[:is_directory]
-                  File.join(idea[:path], "idea.s.md")
-                else
-                  idea[:path]
-                end
-                idea_json[:path] = format_relative_path(display_path)
+              # Add path - point to actual idea file for rich ideas
+              if idea[:file_path]
+                idea_json[:path] = format_relative_path(idea[:file_path])
+              elsif idea[:path]
+                idea_json[:path] = format_relative_path(idea[:path])
               end
 
               # Add attachment info for rich ideas
@@ -323,15 +320,12 @@ module Ace
 
           # Show path unless --short flag is used
           unless short
-            if idea[:path]
-              # For rich ideas (directories), point to idea.s.md file
-              display_path = if idea[:is_directory]
-                File.join(idea[:path], "idea.s.md")
-              else
-                idea[:path]
-              end
-
-              relative_path = format_relative_path(display_path)
+            if idea[:file_path]
+              # Use file_path resolved by IdeaLoader (preferred: .idea.s.md, alternative: .s.md, legacy: idea.s.md)
+              relative_path = format_relative_path(idea[:file_path])
+              puts "  #{relative_path}"
+            elsif idea[:path]
+              relative_path = format_relative_path(idea[:path])
               puts "  #{relative_path}"
             end
           end

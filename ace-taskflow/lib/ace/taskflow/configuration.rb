@@ -79,8 +79,9 @@ module Ace
 
       # Get default glob pattern for all spec files
       # This is the single source of truth for spec file matching
+      # Updated: Only .idea.s.md format is supported (legacy formats removed)
       def default_glob_pattern
-        ['**/*.s.md']
+        ['**/*.idea.s.md']
       end
 
       # Get active release selection strategy
