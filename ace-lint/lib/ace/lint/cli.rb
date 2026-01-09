@@ -4,8 +4,6 @@ require "dry/cli"
 require "set"
 require "ace/core"
 require_relative "../lint"
-# Commands
-require_relative "commands/lint_command"
 
 module Ace
   module Lint
