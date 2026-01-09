@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-01-09
+
+### Added
+- **BREAKING**: Migrate task subcommands to nested dry-cli commands
+  - Created 11 new nested subcommand classes: `Create`, `Show`, `Start`, `Done`, `Move`, `Update`, `Defer`, `Undefer`, `Undone`, `AddDependency`, `RemoveDependency`
+  - Implemented `CommandRouter` molecule to disambiguate between `task <ref>` and `task <subcommand>`
+  - Added comprehensive tests for create command
+  - Updated `CLI` and `CLI::Task` registration to use nested subcommands
+
+### Fixed
+- Correct require_relative path for molecules in show command
+
+### Changed
+- Refactored create command to use TaskManager directly
+
 ## [0.33.0] - 2026-01-09
 
 ### Removed
