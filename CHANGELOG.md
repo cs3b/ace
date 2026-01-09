@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.279] - 2026-01-09
+
+### Changed
+
+- **ace-git-commit 0.16.1**: Eliminate wrapper pattern in dry-cli command
+  - Merged business logic directly into `Commit` dry-cli command class
+  - Deleted `commit_command.rb` wrapper file
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.9.278] - 2026-01-09
 
 ### Changed
