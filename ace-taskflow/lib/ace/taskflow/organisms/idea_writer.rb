@@ -7,6 +7,7 @@ require_relative "../configuration"
 require_relative "../molecules/git_committer"
 require_relative "../molecules/idea_enhancer"
 require_relative "../atoms/clipboard_reader"
+require_relative "../atoms/slug_sanitizer"
 require_relative "../molecules/attachment_manager"
 
 module Ace
@@ -107,12 +108,18 @@ module Ace
           end
 
           # Write idea file in directory with hierarchical naming convention
-          # Use {file-slug}.s.md format if available (NO timestamp in filename)
+          # Use {file-slug}.idea.s.md format if available (NO timestamp in filename)
           # Otherwise use generic "idea.s.md" for fallback compatibility
-          filename = if metadata[:file_slug] && !metadata[:file_slug].to_s.strip.empty?
-                       "#{metadata[:file_slug]}.s.md"
+          # Use strict slug sanitization (kebab-case) via SlugSanitizer atom
+          safe_file_slug = if metadata[:file_slug] && !metadata[:file_slug].to_s.strip.empty?
+                             Ace::Taskflow::Atoms::SlugSanitizer.sanitize(metadata[:file_slug])
+                           else
+                             nil
+                           end
+          filename = if safe_file_slug && !safe_file_slug.empty?
+                       "#{safe_file_slug}.idea.s.md"
                      else
-                       "idea.s.md"
+                       "idea.idea.s.md"  # Default slug + new format (loader only finds .idea.s.md)
                      end
           idea_file = File.join(path, filename)
           formatted_content = format_idea(enhanced_content, metadata)

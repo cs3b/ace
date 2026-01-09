@@ -277,6 +277,9 @@ module Ace
           idea_files.each do |file|
             check_idea_file(file)
           end
+
+          # Check for legacy format files (migration validation)
+          check_legacy_idea_formats(idea_files)
         end
 
         def check_retros
@@ -288,12 +291,18 @@ module Ace
 
           retro_files.each do |file|
             @stats[:files_scanned] += 1
-            # Retros typically don't have strict requirements
-            # Just check if file is readable
+            # Check if file is readable
             unless File.readable?(file)
               add_issue(:warning, "Cannot read retro file", file)
+              next
             end
+
+            # Check retro naming format
+            check_retro_naming(file)
           end
+
+          # Check for legacy format files (migration validation)
+          check_legacy_retro_formats(retro_files)
         end
 
         def check_dependencies
@@ -406,8 +415,40 @@ module Ace
 
         def check_idea_naming(file)
           filename = File.basename(file)
-          unless filename.match?(/^\d{8}(-\d{6})?-[\w-]+\.md$/)
-            add_issue(:warning, "Non-standard idea filename format", file)
+          # Check for new .idea.s.md format in directory-based ideas
+          unless filename.end_with?(".idea.s.md")
+            add_issue(:warning, "Non-standard idea filename format (expected .idea.s.md)", file)
+          end
+        end
+
+        def check_retro_naming(file)
+          filename = File.basename(file, ".md")
+          # Check for Base36 ID prefix format (e.g., i50jj3-performance-analysis.md)
+          unless filename.match?(/^[a-z0-9]+-/)
+            add_issue(:warning, "Non-standard retro filename format (expected Base36 ID prefix)", file)
+          end
+        end
+
+        def check_legacy_idea_formats(idea_files)
+          # Check for legacy flat file .s.md format
+          flat_files = idea_files.select { |f| f.end_with?(".s.md") && !f.end_with?(".idea.s.md") }
+          flat_files.each do |file|
+            add_issue(:warning, "Legacy flat file idea format (.s.md) found - run migration", file)
+          end
+
+          # Check for old idea.s.md format (without slug)
+          old_idea_files = idea_files.select { |f| File.basename(f) == "idea.s.md" }
+          old_idea_files.each do |file|
+            add_issue(:warning, "Legacy idea.s.md format found (should use slug.idea.s.md)", file)
+          end
+        end
+
+        def check_legacy_retro_formats(retro_files)
+          # Check for legacy date-prefixed formats
+          date_prefix_pattern = /^\d{4}-\d{2}-\d{2}-/
+          legacy_files = retro_files.select { |f| File.basename(f).match?(date_prefix_pattern) }
+          legacy_files.each do |file|
+            add_issue(:warning, "Legacy date-prefixed retro format found (YYYY-MM-DD-) - run migration", file)
           end
         end
 
