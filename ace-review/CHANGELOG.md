@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.1] - 2026-01-09
+
+### Changed
+- **BREAKING**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `ListPresets`, `ListPrompts`, `Review`, and `Synthesize` dry-cli command classes
+  - Deleted `list_presets_command.rb`, `list_prompts_command.rb`, `review_command.rb`, and `synthesize_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.33.0] - 2026-01-07
 
 ### Changed
