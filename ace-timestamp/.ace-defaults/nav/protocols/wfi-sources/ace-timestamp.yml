@@ -1,0 +1,19 @@
+---
+# WFI Sources Protocol Configuration for ace-timestamp gem
+# This enables workflow discovery from the installed ace-timestamp gem
+
+name: ace-timestamp
+type: gem
+description: Timestamp workflow instructions from ace-timestamp gem
+priority: 10
+
+# Configuration for workflow discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/workflow-instructions)
+  relative_path: handbook/workflow-instructions
+
+  # Pattern for finding workflow files (default: *.wf.md)
+  pattern: "*.wf.md"
+
+  # Enable discovery
+  enabled: true

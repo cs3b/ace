@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.180.02
-status: in-progress
+status: done
 priority: medium
 estimate: 12-16h
 dependencies: []
@@ -170,83 +170,83 @@ After conversion validation:
 * [x] Analyze current skill command patterns
 * [x] Identify agents with existing workflow instructions
 * [x] Determine conversion complexity for each agent
-* [ ] Review workflow instruction template format
+* [x] Review workflow instruction template format
 
 ### Execution Steps
 
 #### Phase 1: Type A Conversions (Existing Workflows)
 
-- [ ] Create `.claude/commands/ace/task-creator.md` delegating to `wfi://create-task`
+- [x] Create `.claude/commands/ace/task-creator.md` delegating to `wfi://create-task`
   > TEST: Skill Registration
   > Type: Action Validation
   > Assert: `/ace:task-creator` appears in Claude Code skills
   > Command: grep -l "task-creator" .claude/commands/ace/
 
-- [ ] Verify git-commit skill exists (commit.md delegates to wfi://commit)
+- [x] Verify git-commit skill exists (commit.md delegates to wfi://commit)
 
 #### Phase 2: Type B Conversions (Extract Workflows)
 
-- [ ] Extract search.ag.md to `ace-search/handbook/workflow-instructions/search.wf.md`
+- [x] Extract search.ag.md to `ace-search/handbook/workflow-instructions/search.wf.md`
   > TEST: Workflow Created
   > Type: File Validation
   > Assert: Workflow instruction file exists and has valid structure
   > Command: head -20 ace-search/handbook/workflow-instructions/search.wf.md
 
-- [ ] Create `.claude/commands/ace/search.md` delegating to `wfi://search`
+- [x] Create `.claude/commands/ace/search.md` delegating to `wfi://search`
 
-- [ ] Extract research.ag.md to `ace-search/handbook/workflow-instructions/research.wf.md`
+- [x] Extract research.ag.md to `ace-search/handbook/workflow-instructions/research.wf.md`
 
-- [ ] Create `.claude/commands/ace/research.md` delegating to `wfi://research`
+- [x] Create `.claude/commands/ace/research.md` delegating to `wfi://research`
 
-- [ ] Extract feature-research.ag.md to `ace-search/handbook/workflow-instructions/feature-research.wf.md`
+- [x] Extract feature-research.ag.md to `ace-search/handbook/workflow-instructions/feature-research.wf.md`
 
-- [ ] Create `.claude/commands/ace/feature-research.md` delegating to `wfi://feature-research`
+- [x] Create `.claude/commands/ace/feature-research.md` delegating to `wfi://feature-research`
 
-- [ ] Extract worktree.ag.md to `ace-git-worktree/handbook/workflow-instructions/worktree.wf.md`
+- [x] Extract worktree.ag.md to `ace-git-worktree/handbook/workflow-instructions/worktree.wf.md`
 
-- [ ] Create `.claude/commands/ace/worktree.md` delegating to `wfi://worktree`
+- [x] Create `.claude/commands/ace/worktree.md` delegating to `wfi://worktree`
 
-- [ ] Extract security-audit.ag.md to `ace-git-secrets/handbook/workflow-instructions/security-audit.wf.md`
+- [x] Extract security-audit.ag.md to `ace-git-secrets/handbook/workflow-instructions/security-audit.wf.md`
 
-- [ ] Create `.claude/commands/ace/security-audit.md` delegating to `wfi://security-audit`
+- [x] Create `.claude/commands/ace/security-audit.md` delegating to `wfi://security-audit`
 
-- [ ] Extract timestamp.ag.md to `ace-timestamp/handbook/workflow-instructions/timestamp.wf.md`
+- [x] Extract timestamp.ag.md to `ace-timestamp/handbook/workflow-instructions/timestamp.wf.md`
 
-- [ ] Create `.claude/commands/ace/timestamp.md` delegating to `wfi://timestamp`
+- [x] Create `.claude/commands/ace/timestamp.md` delegating to `wfi://timestamp`
 
-- [ ] Extract lint-files.ag.md to workflow or enhance fix-linting-issue-from.wf.md
+- [x] Extract lint-files.ag.md to workflow or enhance fix-linting-issue-from.wf.md
 
-- [ ] Create `.claude/commands/ace/lint.md` delegating to lint workflow
+- [x] Create `.claude/commands/ace/lint.md` delegating to lint workflow
 
 #### Phase 3: Type C Conversions (CLI Delegation)
 
-- [ ] Create `.claude/commands/ace/release-navigator.md` delegating to `ace-taskflow release` CLI
+- [x] Create `.claude/commands/ace/release-navigator.md` delegating to `ace-taskflow release` CLI
 
-- [ ] Create `.claude/commands/ace/task-finder.md` delegating to `ace-taskflow tasks` CLI
+- [x] Create `.claude/commands/ace/task-finder.md` delegating to `ace-taskflow tasks` CLI
 
 #### Phase 4: Cleanup
 
-- [ ] Convert review-agents template to guide format
+- [x] Convert review-agents template to guide format
 
-- [ ] Remove `.claude/agents/search.ag.md` symlink
+- [x] Remove `.claude/agents/search.ag.md` symlink
 
-- [ ] Remove `.claude/agents/research.ag.md` symlink
+- [x] Remove `.claude/agents/research.ag.md` symlink
 
-- [ ] Add deprecation notice to original agent files
+- [x] Add deprecation notice to original agent files
 
-- [ ] Update CLAUDE.md Available Agents section
+- [x] Update CLAUDE.md Available Agents section
 
 #### Phase 5: Validation
 
-- [ ] Test each skill command invocation
+- [x] Test each skill command invocation
   > TEST: Skills Work
   > Type: Integration Test
   > Assert: All 11 skills can be invoked and produce expected output
   > Command: claude --skill ace:search --help 2>/dev/null || echo "Manual test required"
 
-- [ ] Verify workflow instructions load correctly via ace-context
+- [x] Verify workflow instructions load correctly via ace-context
 
-- [ ] Update project documentation
+- [x] Update project documentation
 
 ## Risk Assessment
 
@@ -274,12 +274,12 @@ After conversion validation:
 
 ## Acceptance Criteria
 
-- [ ] All 11 agents have corresponding skill commands in `.claude/commands/ace/`
-- [ ] Skills invoke correctly via `/ace:command` pattern
-- [ ] Workflow instructions exist for complex agent behaviors
-- [ ] Agent symlinks removed from `.claude/agents/`
-- [ ] CLAUDE.md updated to reference skills instead of agents
-- [ ] Original agent files marked deprecated (not deleted for backward compat)
+- [x] All 11 agents have corresponding skill commands in `.claude/commands/ace/`
+- [x] Skills invoke correctly via `/ace:command` pattern
+- [x] Workflow instructions exist for complex agent behaviors
+- [x] Agent symlinks removed from `.claude/agents/`
+- [x] CLAUDE.md updated to reference skills instead of agents
+- [x] Original agent files marked deprecated (not deleted for backward compat)
 
 ## Out of Scope
 
