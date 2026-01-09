@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.281] - 2026-01-09
+
+### Changed
+
+- **ace-llm 0.19.1**: Eliminate wrapper pattern in dry-cli commands
+  - Merged business logic directly into `ListProviders` and `Query` dry-cli command classes
+  - Deleted `list_providers_command.rb` and `query_command.rb` wrapper files
+  - Simplified architecture by removing unnecessary delegation layer
+
 ## [0.9.280] - 2026-01-09
 
 ### Changed

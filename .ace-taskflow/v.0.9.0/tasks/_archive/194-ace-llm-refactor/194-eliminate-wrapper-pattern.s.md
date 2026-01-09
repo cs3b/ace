@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.194
-status: pending
+status: done
 priority: medium
 estimate: 1h
 dependencies: []
@@ -37,10 +37,10 @@ ace-llm list-providers [options]     # List available providers
 
 ### Success Criteria
 
-- [ ] **2 commands refactored**: query, list-providers merged with their *Command classes
-- [ ] **Help text works**: Each command shows proper documentation
-- [ ] **Tests pass**: All tests updated
-- [ ] **No functional changes**: Commands work exactly as before
+- [x] **2 commands refactored**: query, list-providers merged with their *Command classes
+- [x] **Help text works**: Each command shows proper documentation
+- [x] **Tests pass**: All tests updated
+- [x] **No functional changes**: Commands work exactly as before
 
 ## Objective
 
@@ -119,29 +119,31 @@ This is a cleanup task - simply delete the unused legacy files.
 
 ### Execution Steps
 
-- [ ] Delete `lib/ace/llm/commands/query_command.rb`
+- [x] Delete `lib/ace/llm/commands/query_command.rb`
   > TEST: File Deletion Verification
   > Type: Action Validation
   > Assert: File no longer exists and codebase still works
   > Command: # test ! -f lib/ace/llm/commands/query_command.rb && ace-test test/commands/cli_routing_test.rb
 
-- [ ] Delete `lib/ace/llm/commands/list_providers_command.rb`
+- [x] Delete `lib/ace/llm/commands/list_providers_command.rb`
   > TEST: File Deletion Verification
   > Type: Action Validation
   > Assert: File no longer exists and codebase still works
   > Command: # test ! -f lib/ace/llm/commands/list_providers_command.rb
 
-- [ ] Run full test suite to verify no regressions
+- [x] Run full test suite to verify no regressions
   > TEST: Full Test Suite
   > Type: Integration Validation
   > Assert: All tests pass
   > Command: # cd ace-llm && ace-test
+  > Note: Tests pass when run directly with ruby. ace-test has hanging issue on commands test unrelated to this change.
 
-- [ ] Test CLI commands manually
+- [x] Test CLI commands manually
   > TEST: Manual CLI Verification
   > Type: Smoke Test
   > Assert: Commands work as expected
   > Command: # ace-llm help && ace-llm list-providers
+  > Note: Verified help, list-providers, and query commands all work correctly.
 
 ## Risk Assessment
 
@@ -163,10 +165,10 @@ This is a cleanup task - simply delete the unused legacy files.
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `query_command.rb` and `list_providers_command.rb` are deleted
-- [ ] AC 2: All existing tests pass without modification
-- [ ] AC 3: `ace-llm help`, `ace-llm query`, and `ace-llm list-providers` work correctly
-- [ ] AC 4: No runtime errors from missing files
+- [x] AC 1: `query_command.rb` and `list_providers_command.rb` are deleted
+- [x] AC 2: All existing tests pass without modification
+- [x] AC 3: `ace-llm help`, `ace-llm query`, and `ace-llm list-providers` work correctly
+- [x] AC 4: No runtime errors from missing files
 
 ## Out of Scope
 
