@@ -129,14 +129,13 @@ Validate entire monorepo (final check before commits).
 
 - `ace-test-suite` - Run all tests across all packages
 
-## Available Agents
+## Search & Research Commands
 
-**Location**: `.claude/agents/` (symlinks to ace-search/handbook/agents/)
+- `/ace:search` - Code/file search and discovery
+- `/ace:research` - Multi-search analysis and synthesis
+- `/ace:feature-research` - Feature gap analysis and implementation patterns
 
-- **@search**: Code/file search and discovery
-- **@research**: Multi-search analysis and synthesis
-
-**Usage**: Direct invocation (`@agent`) or Task tool (`subagent_type: agent-name`)
+**Usage**: Invoke via `/ace:command` in Claude Code
 
 ## Project Context
 
