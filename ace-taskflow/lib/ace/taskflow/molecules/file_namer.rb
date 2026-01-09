@@ -2,6 +2,7 @@
 
 require "time"
 require "ace/timestamp"
+require_relative "../atoms/slug_sanitizer"
 
 module Ace
   module Taskflow
@@ -20,13 +21,27 @@ module Ace
           # This fixes the bug where ideas were sometimes created as flat files
           # Generate folder name with id + theme
           if metadata[:folder_slug]
-            # Use LLM-generated hierarchical slugs
-            dirname = "#{id}-#{metadata[:folder_slug]}"
+            # Use LLM-generated hierarchical slugs (defensively sanitized)
+            safe_slug = sanitize_slug(metadata[:folder_slug])
+            # Fallback to title-based naming if sanitization results in empty string
+            if safe_slug.empty?
+              title = sanitize_title(metadata[:title])
+              # Also apply SlugSanitizer to title for path traversal protection
+              safe_title = title ? sanitize_slug(title) : nil
+              dirname = if safe_title && !safe_title.empty?
+                          "#{id}-#{safe_title}"
+                        else
+                          "#{id}-idea"
+                        end
+            else
+              dirname = "#{id}-#{safe_slug}"
+            end
           else
-            # Fallback: use title for folder slug
+            # Fallback: use title for folder slug (also sanitize for path traversal protection)
             title = sanitize_title(metadata[:title])
-            dirname = if title && !title.empty?
-                        "#{id}-#{title}"
+            safe_title = title ? sanitize_slug(title) : nil
+            dirname = if safe_title && !safe_title.empty?
+                        "#{id}-#{safe_title}"
                       else
                         "#{id}-idea"
                       end
@@ -48,6 +63,14 @@ module Ace
         end
 
         private
+
+        # Defensive sanitization for slugs to prevent path traversal
+        # Delegates to SlugSanitizer atom for consistency across codebase
+        # @param slug [String] The slug to sanitize
+        # @return [String] Sanitized slug safe for filesystem operations
+        def sanitize_slug(slug)
+          Ace::Taskflow::Atoms::SlugSanitizer.sanitize(slug)
+        end
 
         def sanitize_title(title)
           return nil if title.nil? || title.empty?
