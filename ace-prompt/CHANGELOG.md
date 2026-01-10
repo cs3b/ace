@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-01-10
+
+### Changed
+- Use shared `Ace::Core::CLI::DryCli::DefaultRouting` module for CLI routing
+  - Removed duplicate routing code in favor of shared implementation
+  - Maintains same behavior with less code duplication
+
+## [0.13.1] - 2026-01-10
+
+### Fixed
+- Fix CLI default command routing to properly handle flags
+  - Removed flawed `!args.first.start_with?("-")` check from routing condition
+  - Flags like `--enhance`, `-t` now correctly route to default `process` command
+  - Built-in flags (`--help`, `--version`) continue working via KNOWN_COMMANDS
+
 ## [0.13.0] - 2026-01-07
 
 ### Changed
