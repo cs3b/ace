@@ -14,7 +14,7 @@ context:
       title: Project Vision
       description: What do we Build
       files:
-        - docs/what-do-we-build.md
+        - docs/vision.md
 
     architecture:
       title: Architecture

@@ -113,7 +113,7 @@ Configuration follows the ace-* gem pattern using ace-core config cascade.
 context:
   enabled: false  # Enable context loading via ace-context
   sources:
-    - file: "docs/what-do-we-build.md"  # Default sources when enabled
+    - file: "docs/vision.md"  # Default sources when enabled
     - preset: "project-overview"
 
 enhance:
@@ -196,7 +196,7 @@ Your prompt content here...
 context:
   enabled: true
   sources:
-    - file: "docs/what-do-we-build.md"
+    - file: "docs/vision.md"
     - preset: "project-context"
 ```
 ```bash

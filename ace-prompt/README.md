@@ -139,7 +139,7 @@ Configure default context behavior in `.ace/prompt/config.yml`:
 context:
   enabled: true  # Default: false
   sources:
-    - file: "docs/what-do-we-build.md"
+    - file: "docs/vision.md"
     - preset: "project-context"
 ```
 
