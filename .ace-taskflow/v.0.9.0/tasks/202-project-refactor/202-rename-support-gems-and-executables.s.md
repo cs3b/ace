@@ -79,6 +79,17 @@ Establish consistent naming conventions across the ACE gem ecosystem. Support/in
   202.03     202.04  (can run parallel)
 ```
 
+## Commit Strategy
+
+Each subtask uses **commit per phase** (not single atomic commit):
+- Commit after directory structure changes
+- Commit after gemspec and Gemfile updates
+- Commit after source file updates (requires, namespaces)
+- Commit after test updates
+- Commit after documentation updates
+
+This improves reviewability while maintaining a clean git history.
+
 ## Out of Scope
 
 - Renaming functional gems (ace-context, ace-docs, ace-review, etc.)

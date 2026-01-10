@@ -28,23 +28,25 @@ See `.ace-taskflow/v.0.9.0/tasks/179-task-migrate-cli/` for migration details.
 
 ## Gem Naming Conventions
 
-ACE gems follow a strict naming pattern to clarify their purpose:
+ACE gems follow a naming pattern that clarifies their purpose:
 
-### ace-* Pattern (Functional Gems with CLI Tools)
-- **Purpose**: Provide direct functionality to users through CLI commands
-- **Examples**: ace-search, ace-lint, ace-docs, ace-taskflow, ace-review, ace-prompt
+### ace-* Pattern (Agentic Coding Tools)
+- **Purpose**: Ready-to-use tools for AI-assisted development workflows
+- **Examples**: ace-search, ace-lint, ace-docs, ace-taskflow, ace-review, ace-prompt, ace-llm
 - **Characteristics**:
+  - Complete, user-facing functionality
   - Have executables in `exe/` directory
-  - Registered in gemspec: `spec.executables = ['ace-tool']`
-  - User-facing functionality
+  - Designed for direct use by developers and AI agents
+  - Self-contained capabilities (may depend on ace-support-* gems)
 
-### ace-support-* Pattern (Infrastructure Library Gems)
-- **Purpose**: Provide shared infrastructure and utilities for other gems
-- **Examples**: ace-support-core, ace-support-test-helpers, ace-support-markdown
+### ace-support-* Pattern (Infrastructure Gems)
+- **Purpose**: Shared infrastructure and utilities that support other gems
+- **Examples**: ace-support-core, ace-support-config, ace-support-nav, ace-support-timestamp
 - **Characteristics**:
-  - No CLI executables (`spec.executables = []`)
-  - Library-only functionality
-  - Shared by multiple ace-* gems
+  - Primarily used as dependencies by other ace-* gems
+  - MAY have CLI executables if they provide user-facing tools (e.g., ace-nav, ace-timestamp)
+  - Focus on reusable infrastructure, configuration, or utilities
+  - Namespace: `Ace::Support::*` (e.g., `Ace::Support::Config`)
 
 ### ace-llm-providers-* Pattern (Provider Extensions)
 - **Purpose**: Extend ace-llm with specific provider implementations
