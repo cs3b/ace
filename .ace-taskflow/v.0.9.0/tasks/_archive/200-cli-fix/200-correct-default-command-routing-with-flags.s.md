@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.200
-status: in-progress
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -187,3 +187,33 @@ end
 - Task 144: dry-cli migration (introduced the bug)
 - Working pattern: `ace-taskflow/lib/ace/taskflow/molecules/command_router.rb:42-46`
 - Plan file: `/Users/mc/.claude/plans/shiny-conjuring-wolf.md`
+
+## Post-Review Notes (PR #145)
+
+### Implemented Improvements
+
+1. **Regression Tests**: Added CLI routing tests for ace-docs, ace-git-commit, and ace-prompt
+   - Tests verify that flags route to default command correctly
+   - Tests verify built-in flags (--help, --version) are not routed to default
+
+2. **Ruby 3.4+ Syntax**: Updated `known_command?` to use endless method syntax
+   - Cleaner, more concise implementation
+   - Applied to ace-docs, ace-git-commit, ace-prompt
+
+### Future Refactor (Medium Priority)
+
+Extract routing logic to shared module for DRY compliance:
+
+```ruby
+# Proposed: ace-support-core/lib/ace/core/cli/dry_cli/default_routing.rb
+module Ace::Core::CLI::DryCli::DefaultRouting
+  def self.route(args, default:, known_commands:)
+    return [default] + args if args.empty? || !known_commands.include?(args.first)
+    args
+  end
+end
+```
+
+This would consolidate the identical routing pattern currently duplicated in:
+- ace-docs, ace-git-commit, ace-prompt, ace-search, ace-taskflow
+- ace-git, ace-git-secrets, ace-lint, ace-llm, ace-nav, ace-review, ace-test-runner, ace-timestamp

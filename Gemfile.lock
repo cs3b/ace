@@ -16,7 +16,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.17.0)
+    ace-docs (0.17.2)
       ace-config (~> 0.5)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -32,7 +32,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.16.1)
+    ace-git-commit (0.16.3)
       ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-llm (~> 0.16)
@@ -128,7 +128,7 @@ PATH
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.13.0)
+    ace-prompt (0.13.2)
       ace-config (~> 0.4)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
@@ -165,7 +165,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.19.0)
+    ace-support-core (0.19.1)
       ace-config (~> 0.4)
       ace-support-fs (~> 0.1)
       dry-cli (~> 1.0)
@@ -198,7 +198,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.33.1)
+    ace-taskflow (0.33.3)
       ace-config (~> 0.5)
       ace-git (~> 0.3)
       ace-support-core (~> 0.11)

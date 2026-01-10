@@ -4,6 +4,55 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.286] - 2026-01-10
+
+### Added
+
+- **ace-support-core 0.19.1**: Shared CLI routing logic module
+  - `Ace::Core::CLI::DryCli::DefaultRouting` module with `start` and `known_command?` methods
+  - Eliminates duplicate routing code across CLI gems
+  - Provides consistent default command routing behavior
+
+- **ace-taskflow 0.33.3**: CLI routing tests for nested idea subcommands
+  - 15 new tests covering create, done, park, unpark, reschedule
+  - Tests verify proper routing with flags and arguments
+
+### Fixed
+
+- **ace-taskflow 0.33.3**: Double content push in idea create command
+  - Fixed content duplication when using `--note` flag
+  - Changed flag order to add flags before positional content
+  - Skip positional content when `--note` is provided
+
+### Changed
+
+- **ace-docs 0.17.2**: Use shared DefaultRouting module
+  - Removed duplicate routing code in favor of shared implementation
+
+- **ace-git-commit 0.16.3**: Use shared DefaultRouting module
+  - Removed duplicate routing code in favor of shared implementation
+
+- **ace-prompt 0.13.2**: Use shared DefaultRouting module
+  - Removed duplicate routing code in favor of shared implementation
+
+- **ace-taskflow 0.33.3**: Use shared DefaultRouting module
+  - Removed duplicate routing code in favor of shared implementation
+
+## [0.9.285] - 2026-01-10
+
+### Fixed
+
+- **ace-taskflow 0.33.2**: Migrate idea subcommands to nested dry-cli commands
+  - Created 5 new nested subcommand classes: `Create`, `Done`, `Park`, `Unpark`, `Reschedule`
+  - Updated `CommandRouter` molecule to support idea subcommand routing
+  - Added `IDEA_SUBCOMMANDS` constant for routing disambiguation
+  - Changed `CLI::Idea` to use `options[:args]` pattern (no argument declarations)
+  - Fixes `idea create -gc` and other subcommand+flag combinations
+
+### Technical
+
+- **ace-taskflow 0.33.2**: Added regression tests for CLI routing with flags
+
 ## [0.9.284] - 2026-01-09
 
 ### Added
