@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.199
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies: []
@@ -55,13 +55,13 @@ ls .claude/skills/ace/         # Nested structure preserved
 
 ### Success Criteria
 
-- [ ] **Directory renamed**: `.claude/commands/` → `.claude/skills/`
-- [ ] **Internal references updated**: All `@.claude/commands/` → `@.claude/skills/`
-- [ ] **Frontmatter modernized**: `allowed-tools` converted to YAML list format
-- [ ] **Documentation updated**: CLAUDE.md, docs/architecture.md updated
-- [ ] **ace-integration-claude updated**: Templates and workflows use new paths
-- [ ] **Hot-reload works**: Edit a skill file, immediately available in Claude Code
-- [ ] **Slash commands work**: `/ace:commit`, `/ace:work-on-task` execute correctly
+- [x] **Directory renamed**: `.claude/commands/` → `.claude/skills/`
+- [x] **Internal references updated**: All `@.claude/commands/` → `@.claude/skills/`
+- [x] **Frontmatter modernized**: `allowed-tools` converted to YAML list format
+- [x] **Documentation updated**: CLAUDE.md, docs/architecture.md updated
+- [x] **ace-integration-claude updated**: Templates and workflows use new paths
+- [x] **Hot-reload works**: Edit a skill file, immediately available in Claude Code
+- [x] **Slash commands work**: `/ace:commit`, `/ace:work-on-task` execute correctly
 
 ### Validation Questions
 
@@ -104,12 +104,12 @@ Align with Claude Code v2.1.0+ unified skills model for:
 
 ### Execution Steps
 
-- [ ] **Step 1**: Rename directory
+- [x] **Step 1**: Rename directory
   ```bash
   mv .claude/commands .claude/skills
   ```
 
-- [ ] **Step 2**: Modernize frontmatter in all skill files
+- [x] **Step 2**: Modernize frontmatter in all skill files
   Convert `allowed-tools` from comma-separated to YAML list:
   ```yaml
   # Before
@@ -123,27 +123,27 @@ Align with Claude Code v2.1.0+ unified skills model for:
     - Bash
   ```
 
-- [ ] **Step 3**: Update internal skill references
+- [x] **Step 3**: Update internal skill references
   Find and replace in all `.claude/skills/**/*.md`:
   ```
   @.claude/commands/ → @.claude/skills/
   ```
 
-- [ ] **Step 4**: Update root CLAUDE.md
+- [x] **Step 4**: Update root CLAUDE.md
   - Line 46: `@.claude/commands/ace/load-context.md` → `@.claude/skills/ace/load-context.md`
   - Line 47: `@.claude/commands/*` → `@.claude/skills/*`
 
-- [ ] **Step 5**: Update docs/architecture.md
+- [x] **Step 5**: Update docs/architecture.md
   - Line 133: `.claude/commands/` → `.claude/skills/`
 
-- [ ] **Step 6**: Update ace-integration-claude package
+- [x] **Step 6**: Update ace-integration-claude package
   - `integrations/claude/install-prompts.md`: Update all path examples
   - `integrations/claude/metadata-field-reference.md`: Update reference
   - `handbook/workflow-instructions/update-integration-claude.wf.md`: Update directory paths
   - `integrations/claude/templates/command.md.tmpl`: Update commit reference
   - `integrations/claude/commands/_custom/commit.md`: Update example paths
 
-- [ ] **Step 7**: Enhance skill descriptions for autodiscoverability
+- [x] **Step 7**: Enhance skill descriptions for autodiscoverability
   Improve `description` field to help Claude Code suggest relevant skills:
   ```yaml
   # Before (minimal)
@@ -159,7 +159,7 @@ Align with Claude Code v2.1.0+ unified skills model for:
   - Keep under ~80 chars for readability
   - Use keywords that match user intent
 
-- [ ] **Step 8**: Verify migration
+- [x] **Step 8**: Verify migration
   ```bash
   # Check directory exists
   ls .claude/skills/
@@ -172,19 +172,19 @@ Align with Claude Code v2.1.0+ unified skills model for:
   head -10 .claude/skills/ace/commit.md
   ```
 
-- [ ] **Step 9**: Test slash commands
+- [x] **Step 9**: Test slash commands
   - `/ace:commit` - verify execution
   - `/ace:work-on-task` - verify execution
 
 ## Acceptance Criteria
 
-- [ ] `.claude/skills/` directory exists with all 67 skill files
-- [ ] All skill files use YAML list format for `allowed-tools`
-- [ ] All skill descriptions are meaningful for autodiscoverability
-- [ ] No references to `.claude/commands/` remain in skill files
-- [ ] Documentation updated (CLAUDE.md, docs/architecture.md)
-- [ ] ace-integration-claude templates generate to new location
-- [ ] Slash commands work correctly after migration
+- [x] `.claude/skills/` directory exists with all 67 skill files
+- [x] All skill files use YAML list format for `allowed-tools`
+- [x] All skill descriptions are meaningful for autodiscoverability
+- [x] No references to `.claude/commands/` remain in skill files
+- [x] Documentation updated (CLAUDE.md, docs/architecture.md)
+- [x] ace-integration-claude templates generate to new location
+- [x] Slash commands work correctly after migration
 
 ## References
 
