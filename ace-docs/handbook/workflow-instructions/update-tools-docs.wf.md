@@ -31,7 +31,7 @@ Maintain an ultra-compact tools reference focused on essential information only.
 
 ### Understand project purpose and architecture
 
-* docs/what-do-we-build.md
+* docs/vision.md
 * docs/architecture.md
 * docs/blueprint.md
 * docs/tools.md

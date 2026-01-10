@@ -85,7 +85,7 @@ Clearly state the primary objective of this workflow. What problem does it solve
 
 ## Project Context Loading
 
-* Load project objectives: `docs/what-do-we-build.md`
+* Load project objectives: `docs/vision.md`
 * Load architecture: `docs/architecture.md`  
 * Load current release: `dev-taskflow/current/*/`
 * [Other specific files relevant to this workflow]

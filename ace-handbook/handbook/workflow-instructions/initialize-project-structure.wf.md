@@ -30,7 +30,7 @@ Complete the project initialization started by `coding-agent-tools integrate cla
 
 2. **Update Generated Documentation**:
     - Review the auto-generated files created by `integrate --init-project`:
-        - `docs/what-do-we-build.md`
+        - `docs/vision.md`
         - `docs/architecture.md`
         - `docs/blueprint.md`
     - Update these files with information gathered from PRD.md/README.md and interactive prompts

@@ -6,7 +6,7 @@ This document provides a concise overview of the project's structure and organiz
 
 ## Core Project Documents
 
-- [What We Build](docs/what-do-we-build.md) - Project vision and goals
+- [What We Build](docs/vision.md) - Project vision and goals
 - [Architecture](docs/architecture.md) - System design and implementation principles
 - [Blueprint](docs/blueprint.md) - Project structure and organization
 
