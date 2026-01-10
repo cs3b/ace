@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2026-01-10T16:46:50+00:00
+---
+
 # Idea
 
 lets rename some gems to be consistent ace-config -> ace-support-config, ace-timestamp -> ace-support-timestamp (allow support gems to have executables), and maybe ace-nav -> ace-support-nav and rename ace-llm-query executalbe to ace-llm
