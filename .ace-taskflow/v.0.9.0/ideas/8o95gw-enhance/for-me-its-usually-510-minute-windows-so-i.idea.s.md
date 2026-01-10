@@ -1,0 +1,13 @@
+# Idea
+
+For me it’s usually 5–10 minute windows, so I do one of two things 😄
+– work on the spec for the next task
+– micro-learning
+
+## Attached Files
+
+- [clipboard-content.rtf](./clipboard-content.rtf)
+- [clipboard-content.html](./clipboard-content.html)
+
+---
+Captured: 2026-01-10 03:38:46
