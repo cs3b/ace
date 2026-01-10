@@ -36,9 +36,15 @@ module Ace
       # @example Testing with options
       #   result = invoke_cli(Ace::Search::CLI, ["search", "TODO", "--max-results", "10"])
       #   assert_equal 0, result[:result]
+      #
+      # @note dry-cli calls exit(0) for --help, so we catch SystemExit
       def invoke_cli(cli_class, args)
         stdout, stderr = capture_io do
-          @_cli_result = cli_class.start(args)
+          begin
+            @_cli_result = cli_class.start(args)
+          rescue SystemExit => e
+            @_cli_result = e.status
+          end
         end
 
         {
