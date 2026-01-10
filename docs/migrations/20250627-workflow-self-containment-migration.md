@@ -30,7 +30,7 @@ The workflow instruction system has been completely refactored to eliminate exte
 ```markdown
 # New Workflow Pattern
 ## Project Context Loading
-* Load project objectives: `docs/what-do-we-build.md`
+* Load project objectives: `docs/vision.md`
 * Load architecture: `docs/architecture.md`
 * Load project structure: `docs/blueprint.md`
 
@@ -141,7 +141,7 @@ All remaining workflow files now follow the new self-contained structure.
 
    ```markdown
    ## Project Context Loading
-   * Load project objectives: `docs/what-do-we-build.md`
+   * Load project objectives: `docs/vision.md`
    * Load architecture: `docs/architecture.md`  
    * Load project structure: `docs/blueprint.md`
    * [Other relevant files for your workflow]
@@ -267,7 +267,7 @@ dependencies: []
 
 ```markdown
 ## Project Context Loading
-* Load project objectives: `docs/what-do-we-build.md`
+* Load project objectives: `docs/vision.md`
 * Load architecture: `docs/architecture.md`
 * Load project structure: `docs/blueprint.md`
 ```

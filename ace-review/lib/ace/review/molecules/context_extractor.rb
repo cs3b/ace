@@ -8,15 +8,6 @@ module Ace
       # Extracts context (background information) for reviews
       # Delegates to ContextComposer for context.md pattern and ace-context integration
       class ContextExtractor
-        DEFAULT_PROJECT_DOCS = [
-          "README.md",
-          "docs/architecture.md",
-          "docs/what-do-we-build.md",
-          "docs/blueprint.md",
-          ".github/CONTRIBUTING.md",
-          "ARCHITECTURE.md"
-        ].freeze
-
         def initialize
           @preset_manager = nil # Lazy load to avoid circular dependency
         end
@@ -78,8 +69,9 @@ module Ace
         end
 
         def extract_project_context(cache_dir = nil)
-          # Build list of existing project docs
-          existing_docs = DEFAULT_PROJECT_DOCS.select { |path| File.exist?(path) }
+          # Build list of existing project docs from config (ADR-022 pattern)
+          project_docs = Ace::Review.get("project_docs") || default_project_docs
+          existing_docs = project_docs.select { |path| File.exist?(path) }
 
           if existing_docs.empty?
             # If no standard docs found, try to find any markdown files
@@ -90,6 +82,19 @@ module Ace
 
           # Use ContextComposer to load all docs
           use_context_composer({ "files" => existing_docs }, cache_dir)
+        end
+
+        # Fallback defaults when config loading fails
+        # These should match .ace-defaults/review/config.yml project_docs
+        def default_project_docs
+          %w[
+            README.md
+            docs/architecture.md
+            docs/vision.md
+            docs/blueprint.md
+            .github/CONTRIBUTING.md
+            ARCHITECTURE.md
+          ]
         end
 
         def load_preset_context(preset_name)
