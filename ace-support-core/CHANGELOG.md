@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-01-10
+
+### Added
+- **DefaultRouting Module**: Shared CLI routing logic for dry-cli based gems
+  - `Ace::Core::CLI::DryCli::DefaultRouting` module with `start` and `known_command?` methods
+  - Eliminates duplicate routing code across CLI gems
+  - Provides consistent default command routing behavior
+  - Used by ace-docs, ace-git-commit, ace-prompt, and others
+
 ### Removed
 - **Thor base class deleted**: `Ace::Core::CLI::Base` removed as all gems now use dry-cli (task 179.16)
   - Thor dependency removed from gemspec
