@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.204
-status: pending
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 204-update-all-ace-skills-with-contextagentallowed-tools-pattern
+  path: "../ace-task.204"
+  created_at: '2026-01-10 21:03:04'
+  updated_at: '2026-01-10 21:03:04'
 ---
 
 # Update all ACE skills with context/agent/allowed-tools pattern
