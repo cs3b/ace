@@ -27,13 +27,16 @@ class CliRoutingTest < AceSearchTestCase
   # --- Help Command Tests ---
 
   def test_cli_routes_help_command
-    output = invoke_search_cli(["help"])
-    # Help should mention available commands
+    result = invoke_cli(Ace::Search::CLI, ["help"])
+    # Help goes to stderr in dry-cli
+    output = result[:stdout] + result[:stderr]
     assert_match(/search|Commands/i, output)
   end
 
   def test_cli_routes_help_with_long_flag
-    output = invoke_search_cli(["--help"])
+    result = invoke_cli(Ace::Search::CLI, ["--help"])
+    # Help goes to stderr in dry-cli
+    output = result[:stdout] + result[:stderr]
     assert_match(/Commands:/i, output)
   end
 
