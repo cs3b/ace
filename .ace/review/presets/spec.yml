@@ -8,8 +8,8 @@
 description: "Specification review - goal clarity, usage expectations, tests, completeness"
 
 instructions:
-  base: "prompt://base/system"
   context:
+    base: "prompt://base/system"
     sections:
       project_context:
         presets:
