@@ -155,6 +155,7 @@ class SetupResetCommandsTest < Minitest::Test
     # Test that --task option is accepted
     result = invoke_prompt_cli(["setup", "--task", "121"])
     # Should not crash (will likely fail due to task not existing, but that's ok)
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 end
