@@ -18,7 +18,7 @@ module Ace
       extend Dry::CLI::Registry
 
       # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[query list-providers].freeze
+      REGISTERED_COMMANDS = %w[query list-providers --list-providers].freeze
 
       # dry-cli built-in commands (standard across all CLI gems)
       BUILTIN_COMMANDS = %w[version help --help -h --version].freeze

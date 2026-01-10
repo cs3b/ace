@@ -30,13 +30,16 @@ class CliRoutingTest < AceLlmTestCase
   # --- Help Command Tests ---
 
   def test_cli_routes_help_command
-    output = invoke_llm_cli(["help"])
-    # Help should mention available commands
+    result = invoke_cli(Ace::LLM::CLI, ["help"])
+    # Help goes to stderr in dry-cli
+    output = result[:stdout] + result[:stderr]
     assert_match(/query|list-providers/i, output)
   end
 
   def test_cli_routes_help_with_long_flag
-    output = invoke_llm_cli(["--help"])
+    result = invoke_cli(Ace::LLM::CLI, ["--help"])
+    # Help goes to stderr in dry-cli
+    output = result[:stdout] + result[:stderr]
     assert_match(/Commands:/i, output)
   end
 
