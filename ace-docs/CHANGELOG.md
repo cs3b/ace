@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-01-10
+
+### Changed
+- Use shared `Ace::Core::CLI::DryCli::DefaultRouting` module for CLI routing
+  - Removed duplicate routing code in favor of shared implementation
+  - Maintains same behavior with less code duplication
+
+## [0.17.1] - 2026-01-10
+
+### Fixed
+- Fix CLI default command routing to properly handle flags
+  - Added complete default routing infrastructure with REGISTERED_COMMANDS, BUILTIN_COMMANDS, KNOWN_COMMANDS, DEFAULT_COMMAND constants
+  - Added `known_command?` helper method for routing logic
+  - Flags now correctly route to default `status` command
+  - Built-in flags (`--help`, `--version`) continue working via KNOWN_COMMANDS
+
 ## [0.17.0] - 2026-01-07
 
 ### Changed

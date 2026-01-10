@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
+require "set"
 require "ace/core"
 require_relative "../docs"
 # CLI Commands
@@ -19,14 +20,20 @@ module Ace
     # complete command parity and user-facing behavior.
     module CLI
       extend Dry::CLI::Registry
+      extend Ace::Core::CLI::DryCli::DefaultRouting
 
-      # Start the CLI
-      #
-      # @param args [Array<String>] Command-line arguments
-      # @return [Integer] Exit code (0 for success, non-zero for failure)
-      def self.start(args)
-        Dry::CLI.new(self).call(arguments: args)
-      end
+      # Application commands registered in this CLI (single source of truth)
+      REGISTERED_COMMANDS = %w[status discover update analyze validate analyze-consistency].freeze
+
+      # dry-cli built-in commands (standard across all CLI gems)
+      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+
+      # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
+      # Using Set for O(1) lookup performance
+      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+
+      # Default command to use when first argument is not a known command
+      DEFAULT_COMMAND = "status"
 
       # Register all commands
       register "status", StatusCommand.new
