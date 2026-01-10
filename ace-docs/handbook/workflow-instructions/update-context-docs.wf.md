@@ -23,19 +23,16 @@ This workflow maintains five essential project documents, each with a distinct p
 
 **IMPORTANT: Update documents in this exact order to prevent duplication:**
 
-1.  **`docs/vision.md`** - Vision & Goals (UPDATE FIRST)
-    * Brief project overview (1 paragraph)
-    * Current capabilities (one line each)
-    * Coming soon features (one line each)
-    * Vision statement **Target**: ~30 lines maximum
+1.  **`docs/vision.md`** - Vision, Philosophy & Goals (UPDATE FIRST)
+    * Project vision and philosophy
+    * Core principles (Same Environment, DX/AX, Config Without Lock-In, Distribution Without Friction)
+    * Current capabilities with workflow examples
+    * Architecture patterns overview **Target**: ~600 lines (comprehensive after consolidation)
     **MUST NOT CONTAIN:**
-    
-    * Technical implementation details
-    * Architecture or design principles
-    * Directory structures or file paths
-    * Tool usage instructions
-    * User personas or use cases
-    * Verbose descriptions
+
+    * Detailed directory structures (in blueprint.md)
+    * Full ADR content (in decisions/)
+    * Step-by-step setup instructions
 2.  **`docs/blueprint.md`** - Navigation Guide (UPDATE SECOND)
     * Simple top-level directory list
     * Read-only paths for AI agents
@@ -140,19 +137,19 @@ Based on repository analysis, determine updates needed for each document:
 
 ### 4. Update vision.md (FIRST)
 
-Keep ultra-compact:
+This is the comprehensive vision document (after consolidation of philosophy + what-do-we-build):
 
-* One paragraph overview
-* Current capabilities (one line each)
-* Coming soon features (one line each)
-* Vision statement
+* Project vision and philosophy
+* Core principles with explanations
+* Current capabilities with workflow examples
+* Architecture patterns overview
 
-**Remove if present:**
+**Ensure:**
 
-* User personas and use cases
-* Verbose descriptions
-* Any content that will appear in subsequent documents
-* Keep under 30 lines total
+* Principles are clearly articulated
+* Workflow examples demonstrate real usage
+* Cross-references to other docs where appropriate
+* Target: ~600 lines (comprehensive document)
 
 ### 5. Update blueprint.md (SECOND)
 
@@ -231,19 +228,13 @@ Format each decision as:
 
 Verify each document:
 
-* vision.md is ultra-compact (~30
-  lines)
-* blueprint.md has navigation guidance only
-  (~50 lines)
-* architecture.md focuses on
-  patterns/decisions (~150 lines)
-* tools.md has current tools only (~30
-  lines)
-* decisions.md contains actionable ADR
-  summaries
+* vision.md is comprehensive with philosophy, principles, and workflow examples (~600 lines)
+* blueprint.md has navigation guidance only (~50 lines)
+* architecture.md focuses on patterns/decisions (~150 lines)
+* tools.md has current tools only (~30 lines)
+* decisions.md contains actionable ADR summaries
 * NO content is duplicated across documents
-* Update order was followed: vision →
-  blueprint → architecture → tools → decisions
+* Update order was followed: vision → blueprint → architecture → tools → decisions
 
 
 ### 11. Run Ownership Validation
