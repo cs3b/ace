@@ -114,7 +114,7 @@ This section clarifies the purpose and scope of each major documentation file. F
 
 Refer to the README.md template in the project initialization templates
 
-##### docs/what-do-we-build.md
+##### docs/vision.md
 
 **Purpose**: Product vision and business context
 
@@ -275,8 +275,8 @@ Refer to the README.md template in the project initialization templates
 
 | Content Type | Primary Location | Secondary References OK |
 |-------------|------------------|------------------------|
-| Product vision | what-do-we-build.md | README (brief), roadmap |
-| User personas | what-do-we-build.md | - |
+| Product vision | vision.md | README (brief), roadmap |
+| User personas | vision.md | - |
 | Installation | README, SETUP.md | - |
 | Usage examples | README (basic), docs/examples/ | - |
 | Directory structure | blueprint.md | architecture.md (technical) |

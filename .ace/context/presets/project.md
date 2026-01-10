@@ -7,7 +7,7 @@ context:
     timeout: 30
   embed_document_source: true
   files:
-    - docs/what-do-we-build.md
+    - docs/vision.md
     - docs/blueprint.md
     - docs/architecture.md
     - docs/ace-gems.g.md

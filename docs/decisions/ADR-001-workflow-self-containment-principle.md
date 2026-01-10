@@ -42,7 +42,7 @@ All workflow instruction files must be completely self-contained and independent
 
 2. **Embedded Essential Content**: All necessary templates, examples, formats, and guidelines must be embedded directly within the workflow file rather than referenced externally.
 
-3. **Explicit Project Context Loading**: Workflows may reference three standardized project context files (`docs/what-do-we-build.md`, `docs/architecture.md`, `docs/blueprint.md`) but must explicitly specify what information to load and why.
+3. **Explicit Project Context Loading**: Workflows may reference three standardized project context files (`docs/vision.md`, `docs/architecture.md`, `docs/blueprint.md`) but must explicitly specify what information to load and why.
 
 4. **Self-Contained Templates**: All required templates and examples must be embedded inline rather than stored in separate template files.
 
@@ -127,7 +127,7 @@ This decision establishes the foundational principle for all future workflow dev
 
 ```markdown
 ## Prerequisites
-- Load project context: `docs/what-do-we-build.md`
+- Load project context: `docs/vision.md`
 - Review commit format: `dev-handbook/guides/version-control-system.g.md`
 - Use task template: `dev-handbook/guides/draft-release/v.x.x.x/tasks/_template.md`
 ```
@@ -137,7 +137,7 @@ This decision establishes the foundational principle for all future workflow dev
 ```markdown
 ## Project Context Loading
 Load these project files to understand context:
-- `docs/what-do-we-build.md` - Project objectives and scope
+- `docs/vision.md` - Project objectives and scope
 - `docs/architecture.md` - System design principles
 - `docs/blueprint.md` - Project structure overview
 

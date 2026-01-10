@@ -15,7 +15,7 @@ how to navigate the codebase.
 ## Prerequisites
 
 * Project structure should be relatively stable
-* Core documents (`what-do-we-build.md`, `architecture.md`) should exist and be reasonably up-to-date
+* Core documents (`vision.md`, `architecture.md`) should exist and be reasonably up-to-date
 * Write access to `dev-taskflow/` directory
 
 ## Project Context Loading
@@ -47,7 +47,7 @@ how to navigate the codebase.
 ## Process Steps
 
 1.  **Identify Core Project Documents:**
-    * Verify `docs/what-do-we-build.md` and `docs/architecture.md` are present
+    * Verify `docs/vision.md` and `docs/architecture.md` are present
     * Check for any additional core documentation files
 2.  **Generate Blueprint Structure:**
     
@@ -183,7 +183,7 @@ This document provides a concise overview of the project's structure and organiz
 
 ## Core Project Documents
 
-- [What We Build](docs/what-do-we-build.md) - Project vision and goals
+- [What We Build](docs/vision.md) - Project vision and goals
 - [Architecture](docs/architecture.md) - System design and implementation principles
 - [Blueprint](docs/blueprint.md) - Project structure and organization
 

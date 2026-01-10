@@ -17,7 +17,7 @@ This document provides actionable decisions from Architecture Decision Records (
 
 ### Workflow Self-Containment
 **Decision**: All AI workflows must be completely self-contained with embedded templates and context. Workflows cannot depend on other workflows or external files except the three standard context documents.
-**Impact**: When executing workflows, never load external guides or templates. All necessary information must be within the .wf.md file itself. Only load `docs/what-do-we-build.md`, `docs/architecture.md`, and `docs/blueprint.md` for project context.
+**Impact**: When executing workflows, never load external guides or templates. All necessary information must be within the .wf.md file itself. Only load `docs/vision.md`, `docs/architecture.md`, and `docs/blueprint.md` for project context.
 **Details**: [ADR-001](decisions/ADR-001-workflow-self-containment-principle.md)
 
 ### XML Template Embedding
