@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.200
-status: pending
+status: in-progress
 priority: high
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 200-fix-cli-default-command-routing-with-flags
+  path: "../ace-task.200"
+  created_at: '2026-01-10 01:31:37'
+  updated_at: '2026-01-10 01:31:37'
 ---
 
 # Fix CLI default command routing with flags
