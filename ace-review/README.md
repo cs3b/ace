@@ -648,6 +648,17 @@ defaults:
   output_format: "markdown"
   context: "project"
 
+# Project documentation files for auto-context extraction
+# Used when context: "project" or context: "auto"
+# Order matters: first found files are used first
+project_docs:
+  - "README.md"
+  - "docs/architecture.md"
+  - "docs/vision.md"
+  - "docs/blueprint.md"
+  - ".github/CONTRIBUTING.md"
+  - "ARCHITECTURE.md"
+
 storage:
   base_path: ".ace-taskflow/%{release}/reviews"
   auto_organize: true
