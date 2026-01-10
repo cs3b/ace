@@ -50,9 +50,9 @@ The handbook CLI will:
 
 For each workflow instruction file, create a corresponding command file:
 
-- `ace-handbook/handbook/workflow-instructions/draft-task.wf.md` → `.claude/commands/draft-task.md`
-- `ace-handbook/handbook/workflow-instructions/work-on-task.wf.md` → `.claude/commands/work-on-task.md`
-- `ace-handbook/handbook/workflow-instructions/plan-task.wf.md` → `.claude/commands/plan-task.md`
+- `ace-handbook/handbook/workflow-instructions/draft-task.wf.md` → `.claude/skills/draft-task.md`
+- `ace-handbook/handbook/workflow-instructions/work-on-task.wf.md` → `.claude/skills/work-on-task.md`
+- `ace-handbook/handbook/workflow-instructions/plan-task.wf.md` → `.claude/skills/plan-task.md`
 
 ### 2. Command Template
 
@@ -61,7 +61,7 @@ Use below template, if custom template is missing (at the end of the file) for e
 ```md
 read whole file and follow @ace-handbook/handbook/workflow-instructions/workflow-name.wf.md
 
-read and run @.claude/commands/commit.md
+read and run @.claude/skills/commit.md
 ```
 
 ### 3. Example Commands
@@ -70,7 +70,7 @@ read and run @.claude/commands/commit.md
 ```md
 read whole file and follow @ace-handbook/handbook/workflow-instructions/draft-task.wf.md
 
-read and run @.claude/commands/commit.md
+read and run @.claude/skills/commit.md
 ```
 
 #### work-on-task.md
@@ -78,7 +78,7 @@ read and run @.claude/commands/commit.md
 read whole file and follow @ace-handbook/handbook/workflow-instructions/work-on-task.wf.md
 
 /commit
-read and run @.claude/commands/commit.md
+read and run @.claude/skills/commit.md
 ```
 
 ## Command Output Example

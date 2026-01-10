@@ -631,7 +631,7 @@ llm-query anthropic:claude-3-opus-20240229 \
 
 ### Handbook Review Command
 
-**File:** `.claude/commands/handbook-review.md`
+**File:** `.claude/skills/handbook-review.md`
 
 **Usage Pattern:**
 

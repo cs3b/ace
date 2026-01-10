@@ -43,8 +43,8 @@ ace-test atoms              # Run atom tests
 
 Agents should recognize these command patterns:
 
-- `@.claude/commands/ace/load-context.md` → Use ace-context
-- `@.claude/commands/*` → Follow specific command instructions
+- `@.claude/skills/ace/load-context.md` → Use ace-context
+- `@.claude/skills/*` → Follow specific skill instructions
 
 ## Workflow Context Embedding
 

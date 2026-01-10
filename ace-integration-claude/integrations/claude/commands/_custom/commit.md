@@ -26,7 +26,7 @@ When called directly, use the session context:
 ```
 Use the git-commit-manager agent to commit changes.
 Context: [Brief description of what was done]
-Files modified: [File paths or globs like ".claude/commands/*.md" OR "Check git-status" if unknown]
+Files modified: [File paths or globs like ".claude/skills/*.md" OR "Check git-status" if unknown]
 Intention: [Purpose and goal of these changes]
 ```
 
@@ -34,7 +34,7 @@ Example with specific files:
 ```
 Use the git-commit-manager agent to commit changes.
 Context: Created git-commit-manager agent and updated command files
-Files modified: .claude/agents/git-commit-manager.md, .claude/commands/*.md, dev-handbook/.integrations/claude/install-prompts.md
+Files modified: .claude/agents/git-commit-manager.md, .claude/skills/*.md, dev-handbook/.integrations/claude/install-prompts.md
 Intention: Centralize git commit management through specialized agent and update all commands to reference /commit instead of duplicating logic
 ```
 
