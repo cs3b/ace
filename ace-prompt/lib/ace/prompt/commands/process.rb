@@ -48,7 +48,7 @@ module Ace
                                desc: "Custom system prompt path"
         option :task, type: :string,
                       desc: "Use task's prompts directory (e.g., '117' or '121.01')"
-        option :help, type: :boolean, aliases: %w[-h], desc: "Show this help message"
+        # Note: dry-cli handles --help/-h automatically, no need to define it
 
         # Standard options (inherited from Base but need explicit definition for dry-cli)
         option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
@@ -56,13 +56,6 @@ module Ace
         option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
         def call(**options)
-          # Handle --help/-h option
-          if help?(options)
-            # dry-cli will handle help automatically via the desc and example attributes
-            # We just need to return success
-            return exit_success
-          end
-
           # Determine context flag
           context_enabled = determine_context_enabled(options)
 

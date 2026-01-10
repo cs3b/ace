@@ -15,9 +15,14 @@ class CLITest < Minitest::Test
   end
 
   # Helper method to invoke CLI with routing logic
+  # Note: dry-cli calls exit(0) for --help, so we catch SystemExit
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
-      @_cli_result = Ace::Prompt::CLI.start(args)
+      begin
+        @_cli_result = Ace::Prompt::CLI.start(args)
+      rescue SystemExit => e
+        @_cli_result = e.status
+      end
     end
 
     {
@@ -80,9 +85,9 @@ class CLITest < Minitest::Test
     # Should route to process command (default)
     result = invoke_prompt_cli([])
 
-    # When no args, dry-cli shows help, but when we provide a file-like argument
-    # it should route to process. For now, just verify the CLI doesn't crash
-    assert result[:result].is_a?(Integer)
+    # When no args, dry-cli shows help. Verify CLI didn't crash
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   # Context flag integration tests
@@ -91,21 +96,24 @@ class CLITest < Minitest::Test
     result = invoke_prompt_cli(["process", "--context"])
 
     # Should not crash (will fail due to no actual prompt file, but that's ok)
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   def test_no_context_option_accepted
     # Test that --no-context flag is accepted
     result = invoke_prompt_cli(["process", "--no-context"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   def test_short_context_flag_accepted
     # Test that -c flag is accepted
     result = invoke_prompt_cli(["process", "-c"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   # Enhance flag integration tests
@@ -113,21 +121,24 @@ class CLITest < Minitest::Test
     # Test that --enhance flag is accepted
     result = invoke_prompt_cli(["process", "--enhance"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   def test_no_enhance_option_accepted
     # Test that --no-enhance flag is accepted
     result = invoke_prompt_cli(["process", "--no-enhance"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   def test_model_option_accepted
     # Test that --model flag is accepted
     result = invoke_prompt_cli(["process", "--model", "gpt-4"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   # Setup command tests
@@ -142,21 +153,24 @@ class CLITest < Minitest::Test
     # Test that --force flag is accepted
     result = invoke_prompt_cli(["setup", "--force"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   def test_setup_with_no_archive_option_accepted
     # Test that --no-archive flag is accepted
     result = invoke_prompt_cli(["setup", "--no-archive"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   def test_setup_with_template_option_accepted
     # Test that --template flag is accepted
     result = invoke_prompt_cli(["setup", "--template", "bug"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   # Output option tests
@@ -164,13 +178,15 @@ class CLITest < Minitest::Test
     # Test that --output flag is accepted
     result = invoke_prompt_cli(["process", "--output", "/tmp/test.md"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 
   def test_short_output_flag_accepted
     # Test that -o flag is accepted
     result = invoke_prompt_cli(["process", "-o", "/tmp/test.md"])
 
-    assert result[:result].is_a?(Integer)
+    # Note: dry-cli returns a Set, not the command's exit code
+    refute_nil result[:result]
   end
 end
