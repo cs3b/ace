@@ -12,6 +12,8 @@ update:
 
 > **ACE (Agentic Coding Environment)** is built on a simple belief: AI coding assistants should work in the same environment as developers, using the same tools. Not tools designed only for agents, or tools retrofitted to sort-of work with agents, but tools that are excellent for both.
 
+*This document consolidates the former `docs/ace-philosophy.md` and `docs/what-do-we-build.md` into a single comprehensive vision reference.*
+
 ## Table of Contents
 
 - [Why ACE Exists](#why-ace-exists)

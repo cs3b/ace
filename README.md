@@ -28,6 +28,8 @@ ACE packages development capabilities as installable Ruby gems. Each gem include
 
 Each gem is independently installable: `gem install ace-context ace-taskflow`
 
+> **Note:** This table shows core CLI gems. See [docs/vision.md](docs/vision.md#current-capabilities) for additional gems including ace-docs, ace-git-secrets, ace-git-worktree, ace-prompt, and ace-llm-providers-cli.
+
 ## Quick Start
 
 ### Installation
