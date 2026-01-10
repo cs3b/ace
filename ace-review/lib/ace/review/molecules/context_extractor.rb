@@ -84,8 +84,9 @@ module Ace
           use_context_composer({ "files" => existing_docs }, cache_dir)
         end
 
-        # Fallback defaults when config loading fails
-        # These should match .ace-defaults/review/config.yml project_docs
+        # Fallback defaults used only when Ace::Review.get("project_docs") returns nil
+        # (e.g., config cascade initialization fails). Primary source is
+        # .ace-defaults/review/config.yml project_docs - keep these in sync.
         def default_project_docs
           %w[
             README.md
