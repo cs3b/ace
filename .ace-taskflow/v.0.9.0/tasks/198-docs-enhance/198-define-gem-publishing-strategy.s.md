@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.198
-status: pending
+status: in-progress
 priority: high
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 198-documentation-strategy-for-gem-publishing
+  path: "../ace-task.198"
+  created_at: '2026-01-10 15:00:25'
+  updated_at: '2026-01-10 15:00:25'
 ---
 
 # Documentation strategy for gem publishing
