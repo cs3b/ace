@@ -246,7 +246,7 @@ ADR maintenance includes:
 - Scope updates for partially outdated decisions
 - Synchronization with `docs/decisions.md` summary
 
-### Context Documents (what-do-we-build.md, architecture.md, etc.)
+### Context Documents (vision.md, architecture.md, etc.)
 
 For core context documents with specific requirements (line limits, update order, duplication prevention), see the specialized workflow:
 

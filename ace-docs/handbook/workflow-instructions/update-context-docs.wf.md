@@ -23,7 +23,7 @@ This workflow maintains five essential project documents, each with a distinct p
 
 **IMPORTANT: Update documents in this exact order to prevent duplication:**
 
-1.  **`docs/what-do-we-build.md`** - Vision & Goals (UPDATE FIRST)
+1.  **`docs/vision.md`** - Vision & Goals (UPDATE FIRST)
     * Brief project overview (1 paragraph)
     * Current capabilities (one line each)
     * Coming soon features (one line each)
@@ -42,7 +42,7 @@ This workflow maintains five essential project documents, each with a distinct p
     * Ignored paths for normal operations **Target**: ~50 lines
     **MUST NOT CONTAIN:**
     
-    * Project vision or goals (in what-do-we-build.md)
+    * Project vision or goals (in vision.md)
     * Architecture patterns or decisions
     * Tool usage instructions
     * References to `git ls-files` or `eza`
@@ -55,7 +55,7 @@ This workflow maintains five essential project documents, each with a distinct p
     * Reference to blueprint.md for file structure **Target**: ~150 lines
     **MUST NOT CONTAIN:**
     
-    * Project vision (in what-do-we-build.md)
+    * Project vision (in vision.md)
     * Directory trees (in blueprint.md)
     * Setup instructions (move to mise tasks)
     * Tool usage examples
@@ -66,7 +66,7 @@ This workflow maintains five essential project documents, each with a distinct p
     * Table of available commands **Target**: ~30 lines
     **MUST NOT CONTAIN:**
     
-    * Future/planned tools (in what-do-we-build.md)
+    * Future/planned tools (in vision.md)
     * Architecture explanations (in architecture.md)
     * Setup instructions
     * Configuration details
@@ -118,7 +118,7 @@ Check if ownership model exists and load it for validation:
 
 Read each document to understand current state:
 
-* `docs/what-do-we-build.md`
+* `docs/vision.md`
 * `docs/blueprint.md`
 * `docs/architecture.md`
 * `docs/tools.md`
@@ -130,7 +130,7 @@ Based on repository analysis, determine updates needed for each document:
 
 | Change Type | Affected Documents |
 |----------
-| New features/capabilities | what-do-we-build.md |
+| New features/capabilities | vision.md |
 | Directory/file reorganization | blueprint.md |
 | Architecture/design changes | architecture.md |
 | New tools or commands | tools.md |
@@ -138,7 +138,7 @@ Based on repository analysis, determine updates needed for each document:
 | Technology stack updates | architecture.md |
 | Build/setup changes | Remove from docs, create mise task |
 
-### 4. Update what-do-we-build.md (FIRST)
+### 4. Update vision.md (FIRST)
 
 Keep ultra-compact:
 
@@ -162,7 +162,7 @@ Navigation guidance only:
 * Read-only paths
 * Ignored paths
 
-**Check against what-do-we-build.md:**
+**Check against vision.md:**
 
 * Remove any duplicated content
 * Keep under 50 lines total
@@ -178,7 +178,7 @@ Focus on patterns and decisions:
 
 **Check against previous documents:**
 
-* Remove any content from what-do-we-build.md
+* Remove any content from vision.md
 * Remove any content from blueprint.md
 * Reference blueprint.md for structure
 * Keep under 150 lines total
@@ -231,7 +231,7 @@ Format each decision as:
 
 Verify each document:
 
-* what-do-we-build.md is ultra-compact (~30
+* vision.md is ultra-compact (~30
   lines)
 * blueprint.md has navigation guidance only
   (~50 lines)
@@ -265,7 +265,7 @@ If ownership model exists, validate all documents:
 
 Create atomic commits for each document (in update order):
 
-    git add docs/what-do-we-build.md
+    git add docs/vision.md
     git commit -m "docs: update project vision and features"
     
     git add docs/blueprint.md
@@ -284,7 +284,7 @@ Create atomic commits for each document (in update order):
 ## Success Criteria
 
 * All five context documents are current and accurate
-* Documents are compact: what-do-we-build (~30), blueprint (~50), architecture (~150), tools (~30)
+* Documents are compact: vision (~600), blueprint (~50), architecture (~150), tools (~30)
 * Update order was followed: vision → blueprint → architecture → tools → decisions
 * NO duplication exists between documents
 * Each document maintains its specific focus
@@ -294,7 +294,7 @@ Create atomic commits for each document (in update order):
 
 ### Adding a New Feature
 
-1.  Update what-do-we-build.md with high-level feature description
+1.  Update vision.md with high-level feature description
 2.  Update architecture.md if it introduces new technical patterns
 3.  Update blueprint.md if new directories/files were added
 

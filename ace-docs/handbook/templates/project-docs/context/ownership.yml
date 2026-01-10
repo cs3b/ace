@@ -85,7 +85,7 @@ topics:
 
 # Document ownership - what each file owns and must not contain
 documents:
-  docs/what-do-we-build.md:
+  docs/vision.md:
     owns:
       - project_vision
       - user_personas
@@ -114,7 +114,7 @@ documents:
       - command_reference
       - brand_guidelines
     cross_references:
-      - "For project goals → what-do-we-build.md"
+      - "For project goals → vision.md"
       - "For file structure → blueprint.md"
       - "For commands → tools.md"
 
@@ -144,7 +144,7 @@ documents:
       - visual_design
     cross_references:
       - "For architecture → architecture.md"
-      - "For project info → what-do-we-build.md"
+      - "For project info → vision.md"
 
   docs/styles.md:
     owns:

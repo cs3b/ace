@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.198
-status: in-progress
+status: done
 priority: high
 estimate: 4h
 dependencies: []
@@ -59,12 +59,12 @@ ace-*/
 
 ### Success Criteria
 
-- [ ] **Vision clarity**: New user understands what ACE is and why in 2 minutes
-- [ ] **Quick start works**: User can install and use a gem in 5 minutes
-- [ ] **No duplication**: Content exists in exactly one place
-- [ ] **Gem docs consistent**: All CLI gems follow README + usage.md pattern
-- [ ] **Cross-references work**: All internal links resolve correctly
-- [ ] **Templates exist**: gem-readme.template.md and gem-usage.template.md created
+- [x] **Vision clarity**: New user understands what ACE is and why in 2 minutes
+- [x] **Quick start works**: User can install and use a gem in 5 minutes
+- [x] **No duplication**: Content exists in exactly one place
+- [ ] **Gem docs consistent**: All CLI gems follow README + usage.md pattern (Phase 3)
+- [x] **Cross-references work**: All internal links resolve correctly
+- [ ] **Templates exist**: gem-readme.template.md and gem-usage.template.md created (Phase 2)
 
 ### Validation Questions
 
@@ -128,7 +128,7 @@ Files to update after rename:
 
 ### Execution Steps
 
-- [ ] **Step 1: Create vision.md**
+- [x] **Step 1: Create vision.md**
   - Read `docs/ace-philosophy.md` (base document)
   - Read `docs/what-do-we-build.md` (supplementary content)
   - Create `docs/vision.md` with merged content
@@ -139,7 +139,7 @@ Files to update after rename:
   > Assert: docs/vision.md exists with all sections from both source docs
   > Command: head -50 docs/vision.md && grep -c "## " docs/vision.md
 
-- [ ] **Step 2: Streamline README.md**
+- [x] **Step 2: Streamline README.md**
   - Create new concise README structure (~150 lines)
   - Keep: What is ACE, gem table, quick start (3-5 commands)
   - Add: Documentation section with links to vision.md, architecture.md, etc.
@@ -148,14 +148,14 @@ Files to update after rename:
   > Assert: README.md is ≤150 lines and contains essential sections
   > Command: wc -l README.md && grep "## " README.md
 
-- [ ] **Step 3: Delete source files**
+- [x] **Step 3: Delete source files**
   - Delete `docs/what-do-we-build.md`
   - Delete `docs/ace-philosophy.md`
   > TEST: Source files removed
   > Assert: Old files no longer exist
   > Command: ls docs/what-do-we-build.md docs/ace-philosophy.md 2>&1 | grep "No such file"
 
-- [ ] **Step 4: Update cross-references**
+- [x] **Step 4: Update cross-references**
   - Search for references to deleted files
   - Update `docs/architecture.md` references
   - Update `docs/blueprint.md` references
@@ -164,7 +164,7 @@ Files to update after rename:
   > Assert: No files reference deleted documents
   > Command: grep -r "what-do-we-build\|ace-philosophy" docs/ README.md || echo "No broken refs"
 
-- [ ] **Step 5: Verify all links work**
+- [x] **Step 5: Verify all links work**
   - Check all internal markdown links
   - Verify cross-references are correct
   > TEST: Links valid
@@ -187,11 +187,11 @@ Files to update after rename:
 
 ## Acceptance Criteria
 
-- [ ] `docs/vision.md` exists with complete merged content
-- [ ] `README.md` is ≤150 lines with clear structure
-- [ ] No references to deleted files remain
-- [ ] All internal links work
-- [ ] Documentation hierarchy is clear: README → vision → architecture → gems
+- [x] `docs/vision.md` exists with complete merged content
+- [x] `README.md` is ≤150 lines with clear structure
+- [x] No references to deleted files remain
+- [x] All internal links work
+- [x] Documentation hierarchy is clear: README → vision → architecture → gems
 
 ## Out of Scope
 

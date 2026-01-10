@@ -35,7 +35,7 @@ dev-taskflow
 │   ├── v.0.2.0-dev-docs-review
 │   ├── v.0.2.1-spec-form-diff
 │   ├── v.0.2.2-feedback-to-process
-└── what-do-we-build.md
+└── vision.md
 ```
 
 (Use `tree dev-taskflow -L 2` from the project root to view the current structure)

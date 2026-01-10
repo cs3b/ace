@@ -385,7 +385,7 @@ When working with temporary files:
 2. Check project context document availability:
 
    ```bash
-   ls -la docs/what-do-we-build.md docs/architecture.md docs/blueprint.md
+   ls -la docs/vision.md docs/architecture.md docs/blueprint.md
    ```
 
 3. For missing templates, check submodule status:
