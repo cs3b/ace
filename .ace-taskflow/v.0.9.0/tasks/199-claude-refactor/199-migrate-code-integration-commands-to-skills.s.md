@@ -2,7 +2,7 @@
 id: v.0.9.0+task.199
 status: pending
 priority: medium
-estimate: 3h
+estimate: 4h
 dependencies: []
 ---
 
@@ -84,6 +84,7 @@ Align with Claude Code v2.1.0+ unified skills model for:
 
 #### Modify
 - All 67 skill files: modernize frontmatter (`allowed-tools` → YAML list)
+- All 67 skill files: enhance `description` for autodiscoverability
 - All skill files with `@.claude/commands/` references (~20 files)
 - `CLAUDE.md` (lines 46-47)
 - `docs/architecture.md` (line 133)
@@ -142,7 +143,23 @@ Align with Claude Code v2.1.0+ unified skills model for:
   - `integrations/claude/templates/command.md.tmpl`: Update commit reference
   - `integrations/claude/commands/_custom/commit.md`: Update example paths
 
-- [ ] **Step 7**: Verify migration
+- [ ] **Step 7**: Enhance skill descriptions for autodiscoverability
+  Improve `description` field to help Claude Code suggest relevant skills:
+  ```yaml
+  # Before (minimal)
+  description: Work On Task
+
+  # After (descriptive for autodiscovery)
+  description: Execute task implementation - loads context, follows plan, commits changes
+  ```
+
+  Guidelines:
+  - Start with action verb (Execute, Create, Search, Review, etc.)
+  - Include key capabilities/use cases
+  - Keep under ~80 chars for readability
+  - Use keywords that match user intent
+
+- [ ] **Step 8**: Verify migration
   ```bash
   # Check directory exists
   ls .claude/skills/
@@ -155,7 +172,7 @@ Align with Claude Code v2.1.0+ unified skills model for:
   head -10 .claude/skills/ace/commit.md
   ```
 
-- [ ] **Step 8**: Test slash commands
+- [ ] **Step 9**: Test slash commands
   - `/ace:commit` - verify execution
   - `/ace:work-on-task` - verify execution
 
@@ -163,6 +180,7 @@ Align with Claude Code v2.1.0+ unified skills model for:
 
 - [ ] `.claude/skills/` directory exists with all 67 skill files
 - [ ] All skill files use YAML list format for `allowed-tools`
+- [ ] All skill descriptions are meaningful for autodiscoverability
 - [ ] No references to `.claude/commands/` remain in skill files
 - [ ] Documentation updated (CLAUDE.md, docs/architecture.md)
 - [ ] ace-integration-claude templates generate to new location
