@@ -31,6 +31,12 @@ require_relative "commands/task/move"
 require_relative "commands/task/update"
 require_relative "commands/task/add_dependency"
 require_relative "commands/task/remove_dependency"
+# Nested idea subcommands
+require_relative "commands/idea/create"
+require_relative "commands/idea/done"
+require_relative "commands/idea/park"
+require_relative "commands/idea/unpark"
+require_relative "commands/idea/reschedule"
 
 module Ace
   module Taskflow
@@ -53,6 +59,12 @@ module Ace
       TASK_SUBCOMMANDS = %w[
         create show start done undone defer undefer move update
         add-dependency remove-dependency
+      ].freeze
+
+      # Idea subcommands (for routing disambiguation)
+      # These are the known subcommands under "idea" namespace
+      IDEA_SUBCOMMANDS = %w[
+        create done park unpark reschedule
       ].freeze
 
       # dry-cli built-in commands (standard across all CLI gems)
@@ -89,7 +101,8 @@ module Ace
           args,
           default: DEFAULT_COMMAND,
           known_commands: KNOWN_COMMANDS,
-          task_subcommands: TASK_SUBCOMMANDS
+          task_subcommands: TASK_SUBCOMMANDS,
+          idea_subcommands: IDEA_SUBCOMMANDS
         )
 
         Dry::CLI.new(self).call(arguments: args)
@@ -105,7 +118,6 @@ module Ace
       end
 
       # Check if argument is a known command
-      #
       # @param arg [String] First argument to check
       # @return [Boolean] true if it's a known command
       def self.known_command?(arg)
@@ -137,6 +149,11 @@ module Ace
 
       # Register idea commands
       register "idea", CLI::Idea.new
+      register "idea create", Commands::Idea::Create
+      register "idea done", Commands::Idea::Done
+      register "idea park", Commands::Idea::Park
+      register "idea unpark", Commands::Idea::Unpark
+      register "idea reschedule", Commands::Idea::Reschedule
       register "ideas", CLI::Ideas.new
 
       # Register release commands

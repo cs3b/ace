@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.3] - 2026-01-10
+
+### Fixed
+- Fixed double content push in `idea create` when using `--note` flag
+  - Changed flag order to add flags before positional content
+  - Skip positional content when `--note` is provided to avoid duplication
+
+### Added
+- Added CLI routing tests for nested idea subcommands
+  - 15 new tests covering create, done, park, unpark, reschedule
+  - Tests verify proper routing with flags and arguments
+
+### Changed
+- Extracted CLI routing logic to use shared `Ace::Core::CLI::DryCli::DefaultRouting` module
+  - Removed duplicate routing code in favor of shared implementation
+  - Maintains same behavior with less code duplication
+
+## [0.33.2] - 2026-01-10
+
+### Fixed
+- Migrate idea subcommands to nested dry-cli commands
+  - Created 5 new nested subcommand classes: `Create`, `Done`, `Park`, `Unpark`, `Reschedule`
+  - Updated `CommandRouter` molecule to support idea subcommand routing
+  - Added `IDEA_SUBCOMMANDS` constant for routing disambiguation
+  - Changed `CLI::Idea` to use `options[:args]` pattern (no argument declarations)
+  - Fixes `idea create -gc` and other subcommand+flag combinations
+
+### Technical
+- Added regression tests for CLI routing with flags
+
 ## [0.33.1] - 2026-01-09
 
 ### Added
