@@ -164,7 +164,7 @@ dev-handbook/guides/
 └── initialize-project-templates/
     ├── PRD.md                          # Template file
     ├── architecture.md                 # Template file
-    └── what-do-we-build.md             # Template file
+    └── vision.md                       # Template file (was what-do-we-build.md)
 ```
 
 ### After: Separated Template Directory
