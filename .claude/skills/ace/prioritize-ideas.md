@@ -1,0 +1,17 @@
+---
+description: Prioritize and align development ideas with project goals and roadmap
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - TodoWrite
+  - Bash
+argument-hint: 
+last_modified: 2025-10-02
+source: ace-taskflow
+---
+
+read and run `ace-context wfi://prioritize-align-ideas`
+
+read and run `ace-context wfi://commit`
+

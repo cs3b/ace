@@ -130,7 +130,7 @@ standardized formats.
 
 ## AI Integration
 
-* **Commands**: `.claude/commands/` maps workflows to slash commands
+* **Skills**: `.claude/skills/` maps workflows to slash commands
 * **Agents**: `.claude/agents/` provides agent access; frontmatter defines capabilities
 * **Deterministic CLI**: Predictable, parseable output for autonomous execution
 * **wfi:// Protocol**: Direct workflow access via ace-nav

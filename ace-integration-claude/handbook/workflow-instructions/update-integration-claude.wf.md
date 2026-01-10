@@ -108,7 +108,7 @@ Install Claude commands to your project's .claude/ directory:
 
 The integration process:
 
-* Creates .claude/commands/ and .claude/agents/ directories if missing
+* Creates .claude/skills/ and .claude/agents/ directories if missing
 * Copies command files from dev-handbook to project
 * Flattens directory structure for Claude Code compatibility
 * Preserves custom commands while updating generated ones
@@ -167,7 +167,7 @@ Review the summary to ensure:
 
 * Verify YAML front-matter syntax is correct
 * Check that workflow path references are absolute
-* Ensure @.claude/commands/commit.md reference exists
+* Ensure @.claude/skills/commit.md reference exists
 * Test with simpler command first
 
 ### Tool Specification Validation
@@ -221,7 +221,7 @@ Common corrections:
 
 ### Post-Integration Verification
 
-* Commands appear in .claude/commands/
+* Commands appear in .claude/skills/
 * Agents appear in .claude/agents/ (if
   applicable)
 * Review installation summary for
