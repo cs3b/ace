@@ -228,4 +228,55 @@ class ContextExtractorTest < AceReviewTest
     result = @extractor.extract(config)
     refute_empty result
   end
+
+  # Tests for default_project_docs and config loading (ADR-022 compliance)
+  def test_default_project_docs_matches_config_file
+    # Load the actual config file to verify fallback matches
+    # __dir__ is test/molecules, so ../.. gets to ace-review gem root
+    gem_root = File.expand_path("../..", __dir__)
+    config_path = File.join(gem_root, ".ace-defaults/review/config.yml")
+    config = YAML.safe_load_file(config_path)
+    config_docs = config["project_docs"]
+
+    # Get the fallback defaults via the private method
+    fallback_docs = @extractor.send(:default_project_docs)
+
+    assert_equal config_docs, fallback_docs,
+      "Fallback default_project_docs should match .ace-defaults/review/config.yml project_docs"
+  end
+
+  def test_extract_project_context_uses_config_when_available
+    # Verify the config-based loading path (success path)
+    Ace::Review.stub(:get, ->(key) { %w[README.md docs/vision.md] if key == "project_docs" }) do
+      Dir.chdir(@temp_dir) do
+        # Create files that match config
+        File.write(File.join(@temp_dir, "README.md"), "# Test")
+        FileUtils.mkdir_p(File.join(@temp_dir, "docs"))
+        File.write(File.join(@temp_dir, "docs/vision.md"), "# Vision")
+
+        result = @extractor.extract("project")
+        refute_empty result
+      end
+    end
+  end
+
+  def test_extract_project_context_uses_fallback_when_config_unavailable
+    # Verify the fallback path (failure path)
+    Ace::Review.stub(:get, ->(_key) { nil }) do
+      Dir.chdir(@temp_dir) do
+        # Create README.md which is in fallback defaults
+        File.write(File.join(@temp_dir, "README.md"), "# Test Project")
+
+        result = @extractor.extract("project")
+        refute_empty result
+      end
+    end
+  end
+
+  def test_default_project_docs_includes_vision_md
+    # Specific check that vision.md is included (after consolidation)
+    fallback_docs = @extractor.send(:default_project_docs)
+    assert_includes fallback_docs, "docs/vision.md",
+      "Fallback should include docs/vision.md (consolidated from philosophy + what-do-we-build)"
+  end
 end

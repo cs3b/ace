@@ -23,7 +23,7 @@ ACE packages development capabilities as installable Ruby gems. Each gem include
 | **ace-review** | `ace-review` | Preset-based code review with LLM analysis |
 | **ace-search** | `ace-search` | Unified file and content search |
 | **ace-taskflow** | `ace-taskflow` | Task, release, and idea management |
-| **ace-test** | `ace-test` | Test execution with parallel processing |
+| **ace-test-runner** | `ace-test` | Test execution with parallel processing |
 | **ace-support-core** | _(library)_ | Configuration cascade and shared utilities |
 
 Each gem is independently installable: `gem install ace-context ace-taskflow`
@@ -86,6 +86,8 @@ Each gem has its own README in its directory.
 
 ## Project Structure
 
+ACE is organized as a mono-repo where each gem is developed and versioned together, enabling seamless cross-gem integration and consistent tooling.
+
 ```
 ace-meta/
 ├── ace-context/           # Context loading
@@ -97,7 +99,7 @@ ace-meta/
 ├── ace-review/            # Code review
 ├── ace-search/            # File search
 ├── ace-taskflow/          # Task management
-├── ace-test/              # Test execution
+├── ace-test-runner/       # Test execution
 ├── ace-support-core/      # Foundation (zero dependencies)
 ├── .ace/                  # Configuration cascade root
 ├── docs/                  # System documentation
