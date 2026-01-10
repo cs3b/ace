@@ -62,16 +62,16 @@ ace-*/
 - [x] **Vision clarity**: New user understands what ACE is and why in 2 minutes
 - [x] **Quick start works**: User can install and use a gem in 5 minutes
 - [x] **No duplication**: Content exists in exactly one place
-- [ ] **Gem docs consistent**: All CLI gems follow README + usage.md pattern (Phase 3)
+- [~] **Gem docs consistent**: All CLI gems follow README + usage.md pattern (deferred: Phase 3)
 - [x] **Cross-references work**: All internal links resolve correctly
-- [ ] **Templates exist**: gem-readme.template.md and gem-usage.template.md created (Phase 2)
+- [~] **Templates exist**: gem-readme.template.md and gem-usage.template.md (deferred: Phase 2)
 
 ### Validation Questions
 
 - [x] **Philosophy disposition**: Merge into vision.md (confirmed)
 - [x] **Gem doc pattern**: README + docs/usage.md (confirmed)
 - [x] **Doc generation**: Build ace-docs-gen using dry-cli-completion patterns (confirmed)
-- [ ] **Starlight setup**: Separate repo or subdirectory?
+- [~] **Starlight setup**: Separate repo or subdirectory? (deferred: future project)
 
 ## Objective
 
