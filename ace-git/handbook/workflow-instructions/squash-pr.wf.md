@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: version-based commit squashing workflow
 update:
   frequency: on-change
-  last-updated: '2025-12-13'
+  last-updated: '2026-01-11'
 ---
 
 # Version-Based Commit Squashing Workflow
@@ -185,9 +185,79 @@ git log $base_commit..HEAD --format="%s" | \
 git log $base_commit..HEAD --format="%B" | grep -i "BREAKING"
 ```
 
-### 4. Perform Interactive Squash
+### 4. Perform Squash
 
-#### Method A: Interactive Rebase (Full Control)
+> **RECOMMENDED**: Use **Method A (Soft Reset + Path-Based Staging)** for most PRs.
+> This method gives you full control over commit organization and generates messages automatically with `ace-git-commit`.
+
+#### Method A: Soft Reset + Path-Based Staging (Recommended)
+
+**Best for**: Most PRs, multi-package changes, when you want logical commit organization
+
+```bash
+# Step 1: Soft reset to base (keeps all changes staged)
+git reset --soft $base_commit
+
+# Step 2: Reset all staging - we'll stage manually by path
+git reset HEAD
+
+# Step 3: Stage and commit by logical path groups
+
+# Generic pattern:
+# git add <new-files-or-dirs>/ <deleted-files-or-dirs>/
+# ace-git-commit paths --intention "describe the logical change"
+
+# Example: ace-config rename organized by package
+
+# Commit 1: The renamed gem itself (new dir + deleted dir)
+# NOTE: Adding the OLD directory (ace-config/) stages the DELETIONS
+git add ace-support-config/ ace-config/
+ace-git-commit paths --intention "rename ace-config to ace-support-config gem for naming consistency"
+# CRITICAL: Verify after each commit!
+git status  # Should show only unstaged files for next commit(s)
+
+# Commit 2: Core dependency (delegation)
+git add ace-support-core/lib/ ace-support-core/test/
+ace-git-commit paths --intention "delegate config to Ace::Support::Config namespace"
+git status
+
+# Commit 3: Dependent gem - ace-context
+git add ace-context/lib/ ace-context/test/ ace-context/ace-context.gemspec
+ace-git-commit paths --intention "update for ace-config rename"
+git status
+
+# Continue for each package...
+# Commit N: Monorepo files
+git add Gemfile Gemfile.lock .ace/test/suite.yml
+ace-git-commit paths --intention "update dependencies for renamed gem"
+git status  # Should be clean (only untracked files)
+```
+
+**Why this is better:**
+- Full control over commit organization by package/path
+- `ace-git-commit` generates appropriate messages based on actual changes
+- `--intention` provides context for the change
+- Verification after each commit catches issues immediately
+- No complex rebase conflicts
+
+> ⚠️ **WARNING: Glob Patterns in Fish/Zsh**
+>
+> Shell globs may not expand as expected in fish/zsh:
+>
+> ```bash
+> # BAD - May fail silently or expand incorrectly:
+> git add */gemspec
+> git add ace-*/lib/
+>
+> # GOOD - Use explicit paths or find:
+> find . -maxdepth 2 -name "*.gemspec" -exec git add {} +
+> # OR list packages explicitly:
+> git add ace-context/ace-context.gemspec ace-docs/ace-docs.gemspec ...
+> ```
+
+#### Method B: Interactive Rebase (Advanced)
+
+**Best for**: Complex rebase operations, preserving specific commits, advanced users
 
 ```bash
 # Start interactive rebase from base commit
@@ -201,54 +271,38 @@ git rebase -i $base_commit
 # pick mno7890 docs: update README
 # pick pqr1234 fix: typo in feature A
 
-# Change to squash strategy:
+# Change to squash/fixup strategy:
 # pick abc1234 chore: bump version to v0.9.0
 # squash def5678 feat: add feature A
 # squash ghi9012 feat: add feature B
-# squash jkl3456 fix: resolve bug X
-# squash mno7890 docs: update README
-# squash pqr1234 fix: typo in feature A
+# fixup jkl3456 fix: resolve bug X
+# fixup mno7890 docs: update README
+# fixup pqr1234 fix: typo in feature A
 
-# Save and close editor
+# Save and close editor - will prompt for commit message
 ```
 
-#### Method B: Soft Reset (Simple)
+**squash vs fixup:**
+- `squash` - combines commit into previous, prompts to edit combined message (use for meaningful commits)
+- `fixup` - combines commit into previous, discards the message (use for typo fixes, WIP commits)
+
+**Note**: Method B is more complex and can lead to conflicts. Use Method A for most cases.
+
+### 4.1. Verification Checklist (CRITICAL)
+
+> ⚠️ **After EACH commit, you MUST verify:**
 
 ```bash
-# Reset to base while keeping changes
-git reset --soft $base_commit
-
-# All changes now staged
+# 1. Check git status - should show clean or only next package's files
 git status
 
-# Create single commit
-git commit -m "$(cat <<'EOF'
-v0.9.0: Authentication and Performance Improvements
+# 2. Verify commit contains expected files
+git show --stat HEAD
 
-## Features
-- OAuth2 authentication system
-- Session management with Redis
-- User profile endpoints
-
-## Fixes
-- Memory leak in session store
-- Race condition in authentication
-- Performance regression in queries
-
-## Documentation
-- Updated API documentation
-- Added authentication guide
-- Improved README
-
-## Breaking Changes
-None
-
-## Migration Notes
-- Add REDIS_URL to environment
-- Run: rake db:migrate
-EOF
-)"
+# 3. Repeat for EACH commit!
 ```
+
+**Why this matters**: If you skip verification, you might miss files (like the ace-config deletions that weren't staged in our incident).
 
 ### 5. Craft Consolidated Commit Message
 
@@ -323,7 +377,33 @@ cat CHANGELOG.md | head -50
 bundle exec rake test
 ```
 
-### 8. Force Push (If Needed)
+### 8. Pre-Push Verification (CRITICAL)
+
+> ⚠️ **Before force pushing, verify everything is correct:**
+
+```bash
+# 1. Check git status - should be clean (only untracked files)
+git status
+# Expected: "nothing to commit, working tree clean" (except untracked files)
+
+# 2. Verify all squashed commits
+git log $base_commit..HEAD --oneline
+# Count should match your intended number of commits
+
+# 3. Verify file count matches expectations
+git diff --stat $base_commit..HEAD
+# Compare with original: git diff --stat $base_commit@{1} HEAD@{1}
+
+# 4. Run tests for affected packages
+ace-test  # or bundle exec rake test
+```
+
+**If any verification fails:**
+- Use `git reflog` to find the pre-squash state
+- `git reset --hard HEAD@{n}` to go back
+- Fix issues and retry
+
+### 9. Force Push (If Needed)
 
 ```bash
 # If squashing published commits (use with caution!)
@@ -593,6 +673,22 @@ git commit --amend --no-edit
 git push --force-with-lease origin branch-name
 # This fails if remote changed, protecting against overwrites
 ```
+
+**Problem**: "index.lock" or "Unable to create index" errors
+
+**Solution**: Git operation was interrupted, leaving a lock file:
+```bash
+# Remove lock files from main git dir
+rm -f .git/index.lock
+
+# For worktrees, also remove worktree lock
+rm -f /path/to/worktree/.git/index.lock
+rm -f /path/to/main/repo/.git/worktrees/worktree-name/index.lock
+
+# Then retry your command
+```
+
+**Root cause**: This happens when a git command is interrupted (Ctrl+C, error, crash). The lock file prevents concurrent git operations from corrupting the index.
 
 ## Best Practices
 
