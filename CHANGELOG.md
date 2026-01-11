@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.289] - 2026-01-11
+
+### Fixed
+
+- **ace-context 0.28.2**: Added stats header for chunked output
+  - Shows total lines, size, and chunk count before listing paths
+
+## [0.9.288] - 2026-01-11
+
+### Changed
+
+- **ace-context 0.28.1**: Chunked output now shows chunk paths directly
+  - CLI outputs chunk file paths (one per line) instead of index file
+  - Agents read chunks directly without discovering via index first
+
+## [0.9.287] - 2026-01-11
+
+### Changed
+
+- **ace-context 0.28.0**: ContextChunker moved from ace-support-core
+  - `Ace::Context::Molecules::ContextChunker` for splitting large outputs
+  - `Ace::Context::Atoms::BoundaryFinder` for semantic XML boundary detection
+  - Config key `chunk_limit` renamed to `max_lines` for clarity
+  - Default changed from 150000 to 2000 lines
+
+- **ace-support-core 0.20.0**: ContextChunker removed (moved to ace-context)
+  - Removed orphaned `context_chunker` config section
+  - Config key `chunk_limit` renamed to `max_lines`
+
 ## [0.9.286] - 2026-01-10
 
 ### Added

@@ -7,7 +7,7 @@ PATH
 PATH
   remote: ace-context
   specs:
-    ace-context (0.27.1)
+    ace-context (0.28.2)
       ace-config (~> 0.4)
       ace-git (~> 0.3)
       ace-support-core (~> 0.10)
@@ -165,7 +165,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.19.1)
+    ace-support-core (0.20.0)
       ace-config (~> 0.4)
       ace-support-fs (~> 0.1)
       dry-cli (~> 1.0)
