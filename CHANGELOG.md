@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.291] - 2026-01-11
+
+### Added
+
+- **ace-taskflow 0.33.5**: Show parent task context for orphan subtasks in filtered results
+  - Parent tasks display with `[context]` indicator when their subtasks match filter criteria
+  - Subtasks displayed under parent with tree connectors (├─ and └─)
+  - Parent does not count toward result count (it's context, not a match)
+
+### Fixed
+
+- **ace-taskflow 0.33.5**: Wrap CLI-invoking tests with `with_real_test_project`
+  - Prevents creating test artifacts in actual project directory
+
 ## [0.9.290] - 2026-01-11
 
 ### Fixed
