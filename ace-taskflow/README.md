@@ -267,6 +267,47 @@ Benefits:
 - Improved searchability
 - AI-friendly structure
 
+#### Orphan Subtasks Display
+
+When filtering tasks with presets (e.g., `ace-taskflow tasks next`), subtasks whose parent tasks are not in the filtered results are displayed with their parent context shown above them. These are called "orphan subtasks."
+
+The parent task is marked with a `[context]` indicator to show it's being displayed for context only (it's not part of the filtered results):
+
+```
+  v.0.9.0+task.202 🟢 Parent Orchestrator (Orchestrator) [context]
+    .ace-taskflow/v.0.9.0/tasks/202-task-refactor/202-rename-support-gems.s.md
+    └─ v.0.9.0+task.203 🟡 Show parent task context for orphan subtasks
+```
+
+**When orphan display occurs:**
+
+1. **Filtered results don't include the parent**: When you use a preset that filters tasks (e.g., `next` shows only pending tasks), and a subtask matches the filter but its parent doesn't
+2. **Parent lookup succeeds**: The command finds the parent task via `show_task` and displays it for context
+3. **Parent is marked with `[context]`**: The parent line includes a `[context]` indicator to distinguish it from actual filtered results
+
+**Example scenario:**
+
+```
+# Parent task 202 is "done", subtask 203 is "pending"
+ace-taskflow tasks next   # Shows only pending tasks
+
+# Output:
+  v.0.9.0+task.202 🟢 Rename Support Gems (Orchestrator) [context]
+    .ace-taskflow/v.0.9.0/tasks/202-task-refactor/202-rename-support-gems.s.md
+    └─ v.0.9.0+task.203 🟡 Show parent context for orphan subtasks
+```
+
+The parent (202) is shown because it provides context for subtask 203, even though task 202 itself doesn't match the "pending" filter. The `[context]` marker makes it clear that task 202 is not part of the filtered results.
+
+**Debug mode:**
+
+If a parent task cannot be found (e.g., it was deleted), use `--verbose` or `--debug` to see which subtasks were skipped:
+
+```bash
+ace-taskflow tasks next --verbose
+# Output: [DEBUG] Parent task 202 not found for orphan subtask group (1 subtask(s) skipped)
+```
+
 ### Retrospective Management
 
 Capture and manage reflection notes for development sessions:
