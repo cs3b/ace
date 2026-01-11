@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.203
-status: in-progress
+status: done
 priority: medium
 estimate: 30m
 dependencies: []
@@ -44,10 +44,10 @@ v.0.9.0+task.202 ⚫ Rename Support Gems (Orchestrator) [context]
 
 ### Success Criteria
 
-- [ ] Parent task shown with `[context]` indicator when subtasks are orphaned
-- [ ] Subtasks displayed under parent with tree connectors
-- [ ] Parent does not count toward result count (it's context, not a match)
-- [ ] Works with `--subtasks` display mode
+- [x] Parent task shown with `[context]` indicator when subtasks are orphaned
+- [x] Subtasks displayed under parent with tree connectors
+- [x] Parent does not count toward result count (it's context, not a match)
+- [x] Works with `--subtasks` display mode
 
 ## Objective
 
@@ -110,26 +110,26 @@ end
 
 ### Execution Steps
 
-- [ ] **Step 1: Add display_parent_context_line method**
+- [x] **Step 1: Add display_parent_context_line method**
   - Add new method to display parent task with `[context]` indicator
   - Location: `ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb`
   > TEST: Method exists
   > Command: grep -n "display_parent_context_line" ace-taskflow/lib/ace/taskflow/commands/tasks_command.rb
 
-- [ ] **Step 2: Update orphan subtasks handling**
+- [x] **Step 2: Update orphan subtasks handling**
   - Modify `display_hierarchical_with_preset` method
   - Group orphan subtasks by parent_id
   - Load parent task and display with context indicator
   > TEST: Orphan subtasks grouped
   > Command: ace-taskflow tasks --filter status:pending --subtasks
 
-- [ ] **Step 3: Verify find_task exists in manager**
+- [x] **Step 3: Verify find_task exists in manager**
   - Ensure `@manager.find_task(parent_id)` works
   - May need to use existing method or add one
   > TEST: find_task works
   > Command: grep -n "def find_task\|def get_task" ace-taskflow/lib/ace/taskflow/organisms/task_manager.rb
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
   > TEST: All tests pass
   > Command: ace-test ace-taskflow
 
@@ -142,10 +142,10 @@ end
 
 ## Acceptance Criteria
 
-- [ ] `ace-taskflow tasks --filter status:pending --subtasks` shows parent 202 with `[context]`
-- [ ] Subtasks 202.01-04 display under parent with tree connectors
-- [ ] All ace-taskflow tests pass
-- [ ] No regression in other display modes
+- [x] `ace-taskflow tasks --filter status:pending --subtasks` shows parent 202 with `[context]`
+- [x] Subtasks 202.01-04 display under parent with tree connectors
+- [x] All ace-taskflow tests pass
+- [x] No regression in other display modes
 
 ## References
 

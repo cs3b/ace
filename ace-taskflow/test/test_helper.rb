@@ -8,11 +8,13 @@ require_relative "support/llm_mock_helper"
 require_relative "support/shell_mock_helper"
 require_relative "support/tree_assertions_helper"
 require_relative "support/mock_repo_context"
+require_relative "support/task_test_helpers"
 
 # Base test case for ace-taskflow tests
 class AceTaskflowTestCase < Ace::TestSupport::BaseTestCase
   include LlmMockHelper
   include TreeAssertionsHelper
+  include TaskTestHelpers
   # ConfigHelpers provides with_real_config and related config testing utilities
   # Loads real gem defaults from .ace-defaults/ and merges with test configuration
   include Ace::TestSupport::ConfigHelpers

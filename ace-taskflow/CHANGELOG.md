@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.5] - 2026-01-11
+
+### Added
+- Show parent task context for orphan subtasks in filtered results
+  - Parent tasks display with `[context]` indicator when their subtasks match filter criteria
+  - Subtasks displayed under parent with tree connectors (├─ and └─)
+  - Parent does not count toward result count (it's context, not a match)
+
+### Fixed
+- Wrap CLI-invoking tests with `with_real_test_project` to prevent creating test artifacts in actual project directory
+
 ## [0.33.4] - 2026-01-11
 
 ### Fixed
