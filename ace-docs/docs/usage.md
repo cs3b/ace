@@ -318,7 +318,7 @@ cache_dir: .cache/ace-docs
 
 # LLM integration settings for analyze command
 llm_temperature: 0.3        # Lower for deterministic analysis (default: 0.3)
-# llm_model: gflash         # Override default (uses ace-llm-query defaults)
+# llm_model: gflash         # Override default (uses ace-llm defaults)
 
 # Warning threshold for large diffs
 max_diff_lines_warning: 100000  # Warn when diff exceeds this size
@@ -694,7 +694,7 @@ ace-docs status | ace-context add --tag doc-status
 
 # Analyze changes with context
 ace-docs diff --all
-ace-llm-query --prompt "Summarize documentation changes" < .cache/ace-docs/diff-*.md
+ace-llm --prompt "Summarize documentation changes" < .cache/ace-docs/diff-*.md
 ```
 
 ## Troubleshooting
@@ -713,7 +713,7 @@ ace-llm-query --prompt "Summarize documentation changes" < .cache/ace-docs/diff-
 - Check if the specific documents have changes in that time range
 
 **LLM errors during analyze:**
-- Verify ace-llm-query is installed and accessible
+- Verify ace-llm is installed and accessible
 - Check LLM API credentials are configured
 - Try again if rate limited (error message will indicate this)
 - For very large diffs (>100K lines), use `--exclude-renames` or `--exclude-moves`
