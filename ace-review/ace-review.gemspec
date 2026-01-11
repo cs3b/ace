@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'dry-cli', '~> 1.0'
-  spec.add_dependency 'ace-config', '~> 0.4'
+  spec.add_dependency 'ace-support-config', '~> 0.6'
   spec.add_dependency 'ace-timestamp', '~> 0.1'
   spec.add_dependency 'ace-support-core', '~> 0.9' # For ProcessTerminator
   spec.add_dependency 'ace-context', '~> 0.9'

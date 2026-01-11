@@ -3,7 +3,7 @@
 require "yaml"
 require "date"
 require "pathname"
-require "ace/config"
+require 'ace/support/config'
 require_relative "../atoms/env_reader"
 
 module Ace
@@ -193,12 +193,12 @@ module Ace
         # Get default configuration paths (legacy support for custom paths)
         # @return [Array<String>] Default paths to search
         def default_config_paths
-          # When using Ace::Config, paths are handled by the resolver
+          # When using Ace::Support::Config, paths are handled by the resolver
           # This method kept for backward compatibility with custom config_paths
           [File.join(gem_root, ".ace-defaults", "llm", "providers")]
         end
 
-        # Load all provider configurations using Ace::Config cascade
+        # Load all provider configurations using Ace::Support::Config cascade
         # ADR-022: Uses deep merge - project configs extend gem defaults
         def load_all_configurations
           # If custom config_paths were provided, use legacy loading
@@ -207,8 +207,8 @@ module Ace
             return
           end
 
-          # Use Ace::Config for standard cascade (deep merge)
-          resolver = Ace::Config.create(
+          # Use Ace::Support::Config for standard cascade (deep merge)
+          resolver = Ace::Support::Config.create(
             config_dir: ".ace",
             defaults_dir: ".ace-defaults",
             gem_path: gem_root
@@ -228,7 +228,7 @@ module Ace
         end
 
         # Load a single provider with cascade (deep merge)
-        # @param resolver [Ace::Config::Organisms::ConfigResolver] Config resolver
+        # @param resolver [Ace::Support::Config::Organisms::ConfigResolver] Config resolver
         # @param filename [String] Provider config filename (e.g., "anthropic.yml")
         def load_provider_with_cascade(resolver, filename)
           config = resolver.resolve_file(["llm/providers/#{filename}"]).data
@@ -241,7 +241,7 @@ module Ace
 
           provider_name = normalize_provider_name(config["name"])
           @providers[provider_name] = config
-        rescue Ace::Config::YamlParseError => e
+        rescue Ace::Support::Config::YamlParseError => e
           warn "Error parsing provider config #{filename}: #{e.message}"
         rescue StandardError => e
           warn "Error loading provider #{filename}: #{e.message}"

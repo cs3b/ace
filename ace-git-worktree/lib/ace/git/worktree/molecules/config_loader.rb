@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "yaml"
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module Git
@@ -92,7 +92,7 @@ module Ace
             gem_root = Gem.loaded_specs["ace-git-worktree"]&.gem_dir ||
                        File.expand_path("../../../../..", __dir__)
 
-            resolver = Ace::Config.create(
+            resolver = Ace::Support::Config.create(
               config_dir: ".ace",
               defaults_dir: ".ace-defaults",
               gem_path: gem_root

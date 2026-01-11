@@ -233,12 +233,12 @@ module Ace
           # Stub the gem defaults loading to simulate missing defaults
           # This tests graceful degradation when defaults file doesn't exist
           config_loader.stub :load_gem_defaults_only, {} do
-            # Mock Ace::Config.create to raise an error, triggering fallback
+            # Mock Ace::Support::Config.create to raise an error, triggering fallback
             mock_resolver = Minitest::Mock.new
             mock_config = Minitest::Mock.new
             mock_config.expect :data, {}
 
-            Ace::Config.stub :create, mock_resolver do
+            Ace::Support::Config.stub :create, mock_resolver do
               mock_resolver.expect :resolve_namespace, mock_config, ["nav"]
               settings = config_loader.load_settings
 

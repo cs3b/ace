@@ -3,7 +3,7 @@
 require_relative "secrets/version"
 
 # Load ace-config for configuration cascade management
-require "ace/config"
+require 'ace/support/config'
 
 # Models
 require_relative "secrets/models/detected_token"
@@ -45,7 +45,7 @@ module Ace
 
       # Load ace-git-secrets configuration using ace-config cascade
       # Follows ADR-022: Load defaults from .ace-defaults/, merge user overrides from .ace/
-      # Uses Ace::Config.create() for configuration cascade resolution
+      # Uses Ace::Support::Config.create() for configuration cascade resolution
       #
       # @note Thread Safety: This method is thread-safe via Mutex synchronization.
       #   The config is loaded once and cached for subsequent calls.
@@ -62,7 +62,7 @@ module Ace
             gem_root = Gem.loaded_specs["ace-git-secrets"]&.gem_dir ||
                        File.expand_path("../../..", __dir__)
 
-            resolver = Ace::Config.create(
+            resolver = Ace::Support::Config.create(
               config_dir: ".ace",
               defaults_dir: ".ace-defaults",
               gem_path: gem_root
