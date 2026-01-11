@@ -98,7 +98,7 @@ module Ace
       def write_output(context, output_path, options = {})
         writer = Molecules::ContextFileWriter.new(
           cache_dir: cache_dir,
-          chunk_limit: chunk_limit
+          max_lines: max_lines
         )
         writer.write_with_chunking(context, output_path, options)
       end
@@ -138,10 +138,10 @@ module Ace
         config["cache_dir"] || ".cache/ace-context"
       end
 
-      # Maximum characters before chunking output into multiple files
-      # @return [Integer] Chunk limit in characters (default: 150000)
-      def chunk_limit
-        config["chunk_limit"] || 150_000
+      # Maximum lines per chunk before splitting output into multiple files
+      # @return [Integer] Max lines per chunk (default: 2000)
+      def max_lines
+        config["max_lines"] || 2_000
       end
 
       # Line count threshold for auto-format output mode

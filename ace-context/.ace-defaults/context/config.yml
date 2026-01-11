@@ -9,9 +9,9 @@ context:
   # Default: .cache/ace-context (relative to project root)
   cache_dir: ".cache/ace-context"
 
-  # Maximum characters before chunking output into multiple files
-  # Default: 150000 characters (~150KB of text)
-  chunk_limit: 150000
+  # Maximum lines per chunk before splitting output into multiple files
+  # Default: 2000 lines
+  max_lines: 2000
 
   # Auto-format threshold: line count at which output switches from inline to file
   # When no explicit --output mode is specified:
