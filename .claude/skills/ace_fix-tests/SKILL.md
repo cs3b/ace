@@ -1,15 +1,20 @@
 ---
 name: ace:fix-tests
 description: Fix failing automated tests systematically
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
+  - Bash(ace-test:*)
   - Read
   - Write
   - Edit
-  - Bash
   - Grep
   - Glob
-argument-hint: 
-last_modified: 2025-10-02
+argument-hint: [test-file-pattern]
+last_modified: 2026-01-10
 source: ace-taskflow
 ---
 

@@ -1,15 +1,22 @@
 ---
 name: ace-review-package
 description: Review Package - Comprehensive code, docs, UX/DX review with recommendations
+# context: no-fork
+# agent: Explore
+user-invocable: true
 allowed-tools:
+  - Bash(ace-context:*)
+  - Bash(ace-git:*)
+  - Bash(gh:*)
   - Read
-  - Bash
   - Glob
   - Grep
   - Write
+  - Edit
   - TodoWrite
+  - Skill
 argument-hint: [package-name]
-last_modified: 2025-11-11
+last_modified: 2026-01-10
 source: custom
 ---
 

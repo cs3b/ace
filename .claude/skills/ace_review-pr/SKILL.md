@@ -1,13 +1,17 @@
 ---
 name: ace:review-pr
 description: Review PR and Plan Feedback
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-review:*)
+  - Bash(ace-context:*)
   - Read
-  - Bash
   - TodoWrite
   - AskUserQuestion
-argument-hint: [pr-number]
-last_modified: 2025-12-03
+argument-hint: [#]
+last_modified: 2026-01-10
 source: ace-review
 ---
 

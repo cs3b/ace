@@ -1,8 +1,12 @@
 ---
 name: ace:security-audit
 description: Perform security audits to detect leaked authentication tokens
+# context: no-fork
+# agent: Bash
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-git-secrets:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [scan|check-release] [--since=SINCE] [--confidence=LEVEL] [options]
 last_modified: 2026-01-09

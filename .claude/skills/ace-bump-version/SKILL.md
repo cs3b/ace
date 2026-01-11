@@ -1,12 +1,16 @@
 ---
 name: ace-bump-version
 description: Increment gem version following semver with CHANGELOG updates
+# context: no-fork
+# agent: Bash
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-git:*)
+  - Bash(ace-context:*)
   - Read
   - Edit
 argument-hint: [package-name] [patch|minor|major]
-last_modified: 2025-10-14
+last_modified: 2026-01-10
 source: ace-handbook
 ---
 

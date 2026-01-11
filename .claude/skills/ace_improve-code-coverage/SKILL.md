@@ -1,15 +1,20 @@
 ---
 name: ace:improve-code-coverage
 description: Analyze coverage and create targeted test tasks to improve coverage
+# context: no-fork
+# agent: Plan
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
+  - Bash(ace-test:*)
   - Read
   - Write
   - Edit
-  - Bash
   - Grep
   - Glob
-argument-hint: 
-last_modified: 2025-10-02
+argument-hint: [package-path] [target-percent]
+last_modified: 2026-01-10
 source: ace-taskflow
 ---
 

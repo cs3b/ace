@@ -1,15 +1,18 @@
 ---
 name: ace:draft-task
 description: Draft Task with Idea File Movement
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - TodoWrite
-  - Bash
 argument-hint: [task-description or idea-file-path]
-last_modified: 2025-09-24
+last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
 read and run `ace-context wfi://draft-task`
-

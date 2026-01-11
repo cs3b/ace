@@ -1,13 +1,18 @@
 ---
 name: ace:synthesize-retros
 description: Synthesize retrospectives into patterns and improvement recommendations
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
+  - Bash(ace-git-commit:*)
   - Read
   - Write
   - Grep
   - TodoWrite
-  - Bash
-last_modified: 2025-10-02
+last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
