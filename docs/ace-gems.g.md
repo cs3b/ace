@@ -116,17 +116,17 @@ All ACE gems must follow the unified configuration pattern established in ADR-02
 
 ```ruby
 # lib/ace/gem.rb
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module Gem
     def self.config
       @config ||= begin
         defaults = load_gem_defaults
-        user_config = Ace::Config.create
+        user_config = Ace::Support::Config.create
                         .resolve_namespace("gem")
                         .to_h
-        Ace::Config::Models::Config.wrap(defaults, user_config, source: "gem")
+        Ace::Support::Config::Models::Config.wrap(defaults, user_config, source: "gem")
       end
     end
 
@@ -157,7 +157,7 @@ For gems with multiple tools (like ace-lint):
 
 ```ruby
 # .ace/lint/config.yml (nested) + .ace/lint/kramdown.yml (flat)
-resolver = Ace::Config.create
+resolver = Ace::Support::Config.create
 resolver.resolve_namespace("lint")                     # General settings
 resolver.resolve_namespace("lint", filename: "kramdown")  # Tool-specific
 ```
@@ -183,7 +183,7 @@ end
 ```ruby
 # Load from .ace-defaults/ + use ace-config (GOOD)
 def self.config
-  @config ||= Ace::Config::Models::Config.wrap(
+  @config ||= Ace::Support::Config::Models::Config.wrap(
     load_gem_defaults,  # From .ace-defaults/gem/config.yml
     user_config         # From .ace/gem/config.yml cascade via ace-config
   )
@@ -696,8 +696,8 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 ## Essential Patterns
 
 ✅ **DO**:
-- Use `Ace::Config.create.resolve_namespace('gem')` for config cascade
-- Use `Ace::Config::Models::Config.wrap()` for merging defaults + overrides
+- Use `Ace::Support::Config.create.resolve_namespace('gem')` for config cascade
+- Use `Ace::Support::Config::Models::Config.wrap()` for merging defaults + overrides
 - Include `handbook/**/*` in spec.files for ALL gems (required for AI-native architecture)
 - Use standardized `Dir.glob(%w[...]).select { |f| File.file?(f) }` pattern for spec.files
 - Flat test structure: `test/atoms/` not `test/ace/gem/atoms/`

@@ -24,13 +24,13 @@ ADR-022 originally proposed renaming `.ace.example/` to `.ace-defaults/`. This r
 
 **ace-config Gem Extraction (Task 157)**
 
-The configuration cascade functionality has been extracted into a standalone `ace-config` gem as part of Task 157. This provides:
+The configuration cascade functionality has been extracted into a standalone `ace-support-config` gem as part of Task 157. This provides:
 
-- **Generic API**: `Ace::Config.create()` with customizable folder names (`config_dir`, `defaults_dir`)
+- **Generic API**: `Ace::Support::Config.create()` with customizable folder names (`config_dir`, `defaults_dir`)
 - **External Compatibility**: Projects outside the ACE ecosystem can use ace-config independently
 - **Namespace Resolution**: New `resolve_namespace()` method for simplified config access
 - **Config.wrap()**: Quick merge helper for common defaults + overrides pattern
-- **Simplified Integration**: Gems use `Ace::Config.create(gem_path: __dir__)` instead of manual loading
+- **Simplified Integration**: Gems use `Ace::Support::Config.create(gem_path: __dir__)` instead of manual loading
 
 All ace-* gems now use ace-config for configuration cascade. See [docs/migrations/ace-config-migration.md](../migrations/ace-config-migration.md) for migration details.
 
@@ -297,21 +297,21 @@ The following packages have been migrated to the ADR-022 pattern:
 
 **Recommended Pattern (using ace-config)**
 
-With ace-config gem, the configuration pattern simplifies to:
+With ace-support-config gem, the configuration pattern simplifies to:
 
 ```ruby
 # lib/ace/gem.rb
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module Gem
     def self.config
       @config ||= begin
         defaults = load_gem_defaults
-        user_config = Ace::Config.create
+        user_config = Ace::Support::Config.create
                         .resolve_namespace("gem")
                         .to_h
-        Ace::Config::Models::Config.wrap(defaults, user_config, source: "gem")
+        Ace::Support::Config::Models::Config.wrap(defaults, user_config, source: "gem")
       end
     end
 
@@ -337,9 +337,9 @@ end
 ```
 
 Key implementation details:
-- Uses `Ace::Config.create` for configuration cascade
+- Uses `Ace::Support::Config.create` for configuration cascade
 - Uses `resolve_namespace("gem")` to load user config from `.ace/gem/config.yml`
-- Uses `Ace::Config::Models::Config.wrap()` for clean defaults + overrides merging
+- Uses `Ace::Support::Config::Models::Config.wrap()` for clean defaults + overrides merging
 - Loads defaults from `.ace-defaults/gem/config.yml`
 - Provides `reset_config!` for test isolation
 
