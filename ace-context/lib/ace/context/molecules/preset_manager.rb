@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/config'
+require 'ace/support/config'
 require 'yaml'
 require 'set'
 require_relative '../atoms/preset_validator'
@@ -240,7 +240,7 @@ module Ace
           presets = {}
 
           # Use ace-config VirtualConfigResolver to find all context/*.md files
-          resolver = Ace::Config.virtual_resolver
+          resolver = Ace::Support::Config.virtual_resolver
 
           # Get all context/presets/*.md files from virtual map
           resolver.glob("context/presets/*.md").each do |relative_path, absolute_path|

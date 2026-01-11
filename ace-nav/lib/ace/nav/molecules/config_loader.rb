@@ -4,13 +4,13 @@ require "yaml"
 require "pathname"
 require_relative "source_registry"
 require "ace/support/fs"
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module Nav
     module Molecules
       # Loads configuration from .ace/nav/*.yml files and protocols
-      # ADR-022: Uses Ace::Config.create() for gem defaults + user cascade
+      # ADR-022: Uses Ace::Support::Config.create() for gem defaults + user cascade
       class ConfigLoader
         class Error < StandardError; end
 
@@ -22,17 +22,17 @@ module Ace
         end
 
         # Load main settings configuration
-        # ADR-022: Uses Ace::Config.create() for gem defaults + user cascade
+        # ADR-022: Uses Ace::Support::Config.create() for gem defaults + user cascade
         # @return [Hash] Configuration with defaults and user overrides
         def load_settings
           # Return cached if already loaded
           return @configs["settings"] if @configs.key?("settings")
 
-          # Load gem defaults via Ace::Config
+          # Load gem defaults via Ace::Support::Config
           gem_root = Gem.loaded_specs["ace-nav"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
 
-          resolver = Ace::Config.create(
+          resolver = Ace::Support::Config.create(
             config_dir: ".ace",
             defaults_dir: ".ace-defaults",
             gem_path: gem_root
@@ -41,7 +41,7 @@ module Ace
           # Get gem defaults first
           gem_defaults = begin
             resolver.resolve_namespace("nav").data
-          rescue Ace::Config::YamlParseError => e
+          rescue Ace::Support::Config::YamlParseError => e
             warn "Warning: Failed to parse nav config: #{e.message}" if debug?
             load_gem_defaults_only(gem_root)
           rescue StandardError => e
@@ -59,7 +59,7 @@ module Ace
                         end
 
           # Deep merge: user config over gem defaults
-          @configs["settings"] = Ace::Config::Atoms::DeepMerger.merge(gem_defaults, user_config)
+          @configs["settings"] = Ace::Support::Config::Atoms::DeepMerger.merge(gem_defaults, user_config)
         end
 
         # Load protocol-specific configuration

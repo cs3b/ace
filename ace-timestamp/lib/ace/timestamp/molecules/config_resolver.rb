@@ -30,7 +30,7 @@ module Ace
         class << self
           # Resolve configuration with optional overrides
           #
-          # Uses Ace::Config::Models::Config.wrap for proper merging per ADR-022.
+          # Uses Ace::Support::Config::Models::Config.wrap for proper merging per ADR-022.
           #
           # @param overrides [Hash] Runtime configuration overrides
           # @return [Hash] Merged configuration
@@ -45,7 +45,7 @@ module Ace
             end
 
             # Merge base config with runtime overrides
-            config = Ace::Config::Models::Config.wrap(
+            config = Ace::Support::Config::Models::Config.wrap(
               base_config,
               symbolized_overrides,
               source: "ace-timestamp"
@@ -110,7 +110,7 @@ module Ace
               gem_root = Gem.loaded_specs["ace-timestamp"]&.gem_dir ||
                          File.expand_path("../../..", __dir__)
 
-              resolver = Ace::Config.create(
+              resolver = Ace::Support::Config.create(
                 config_dir: ".ace",
                 defaults_dir: ".ace-defaults",
                 gem_path: gem_root

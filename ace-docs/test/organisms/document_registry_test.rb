@@ -17,7 +17,7 @@ module Ace
 
           # Reset config cache so each test gets fresh config resolution
           Ace::Docs.reset_config!
-          Ace::Config.reset_config!
+          Ace::Support::Config.reset_config!
         end
 
         def teardown
@@ -26,7 +26,7 @@ module Ace
 
           # Clean up config cache after each test
           Ace::Docs.reset_config!
-          Ace::Config.reset_config!
+          Ace::Support::Config.reset_config!
         end
 
         def test_initialize_with_no_config

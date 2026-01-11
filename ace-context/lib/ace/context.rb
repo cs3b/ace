@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/config'
+require 'ace/support/config'
 require 'ace/core'
 require 'ace/git'
 require_relative 'context/version'
@@ -105,7 +105,7 @@ module Ace
 
       # Get configuration for ace-context
       # Follows ADR-022: Configuration Default and Override Pattern
-      # Uses Ace::Config.create() for configuration cascade resolution
+      # Uses Ace::Support::Config.create() for configuration cascade resolution
       # Thread-safe: uses mutex for initialization
       # @return [Hash] merged configuration hash
       # @example Get current configuration
@@ -161,14 +161,14 @@ module Ace
 
       private
 
-      # Load configuration using Ace::Config cascade
+      # Load configuration using Ace::Support::Config cascade
       # Resolves gem defaults from .ace-defaults/ and user overrides from .ace/
       # @return [Hash] Merged and transformed configuration
       def load_config
         gem_root = Gem.loaded_specs["ace-context"]&.gem_dir ||
                    File.expand_path("../..", __dir__)
 
-        resolver = Ace::Config.create(
+        resolver = Ace::Support::Config.create(
           config_dir: ".ace",
           defaults_dir: ".ace-defaults",
           gem_path: gem_root
@@ -180,7 +180,7 @@ module Ace
         # Extract the context section for direct access
         raw_config = config.data["context"] || config.data
         normalize_keys(raw_config)
-      rescue Ace::Config::YamlParseError => e
+      rescue Ace::Support::Config::YamlParseError => e
         warn "ace-context: YAML syntax error in configuration"
         warn "  #{e.message}"
         # Fall back to gem defaults

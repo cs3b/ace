@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "nav/version"
-require "ace/config"
+require 'ace/support/config'
 
 # Load all ace-nav components
 require_relative "nav/cli"
@@ -35,7 +35,7 @@ module Ace
 
     # Load ace-nav configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Uses Ace::Config.create() for configuration cascade resolution
+    # Uses Ace::Support::Config.create() for configuration cascade resolution
     # Thread-safe: uses mutex for initialization
     # @return [Hash] Configuration hash with defaults merged
     def self.config
@@ -56,13 +56,13 @@ module Ace
       end
     end
 
-    # Load configuration using Ace::Config cascade
+    # Load configuration using Ace::Support::Config cascade
     # @return [Hash] Merged configuration
     def self.load_config
       gem_root = Gem.loaded_specs["ace-nav"]&.gem_dir ||
                  File.expand_path("../..", __dir__)
 
-      resolver = Ace::Config.create(
+      resolver = Ace::Support::Config.create(
         config_dir: ".ace",
         defaults_dir: ".ace-defaults",
         gem_path: gem_root
