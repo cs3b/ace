@@ -319,7 +319,7 @@ flowchart TD
 **Implementation:**
 ```ruby
 # How ACE tools load configuration
-resolver = Ace::Config.create
+resolver = Ace::Support::Config.create
 config = resolver.resolve_namespace("git", filename: "commit")
 
 # Gem defaults + user overrides + project overrides = final config
