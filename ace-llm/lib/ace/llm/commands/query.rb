@@ -84,9 +84,10 @@ module Ace
         #
         # @return [Integer] Exit code (0 for success)
         def show_help
-          puts "Usage: ace-llm-query PROVIDER[:MODEL] [PROMPT] [options]"
-          puts "       ace-llm-query PROVIDER --prompt PROMPT [options]"
-          puts "       ace-llm-query PROVIDER PROMPT --model MODEL [options]"
+          cmd = Ace::LLM::CLI::COMMAND_NAME
+          puts "Usage: #{cmd} PROVIDER[:MODEL] [PROMPT] [options]"
+          puts "       #{cmd} PROVIDER --prompt PROMPT [options]"
+          puts "       #{cmd} PROVIDER PROMPT --model MODEL [options]"
           puts ""
           puts "Query any LLM provider through a unified interface"
           puts ""
@@ -106,10 +107,10 @@ module Ace
           puts "  -h, --help                     Show this help message"
           puts ""
           puts "Examples:"
-          puts '  ace-llm-query google:gemini-2.5-flash "What is Ruby?"'
-          puts '  ace-llm-query gflash "Quick question" # using alias'
-          puts '  ace-llm-query google --prompt "What is Ruby?" # using --prompt flag'
-          puts '  ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite'
+          puts "  #{cmd} google:gemini-2.5-flash \"What is Ruby?\""
+          puts "  #{cmd} gflash \"Quick question\" # using alias"
+          puts "  #{cmd} google --prompt \"What is Ruby?\" # using --prompt flag"
+          puts "  #{cmd} google \"What is Ruby?\" --model gemini-2.0-flash-lite"
           puts ""
           puts "Provider Aliases:"
           puts "  Short aliases for common provider:MODEL combinations:"
@@ -139,7 +140,7 @@ module Ace
           end
 
           puts ""
-          puts "Use: ace-llm-query #{@provider_model} \"your prompt here\""
+          puts "Use: #{Ace::LLM::CLI::COMMAND_NAME} #{@provider_model} \"your prompt here\""
           0
         end
 
