@@ -3,7 +3,7 @@
 require_relative "timestamp/version"
 
 # Load ace-config for configuration cascade management
-require "ace/config"
+require 'ace/support/config'
 
 # Atoms
 require_relative "timestamp/atoms/compact_id_encoder"

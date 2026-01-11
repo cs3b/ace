@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module Search
@@ -9,7 +9,7 @@ module Ace
       # This is a molecule - composed operation using ace-config for config loading
       class PresetManager
         def initialize
-          @project_root = Ace::Config.find_project_root || Dir.pwd
+          @project_root = Ace::Support::Config.find_project_root || Dir.pwd
           @presets = {}
           load_presets
         end
@@ -37,7 +37,7 @@ module Ace
 
           # Wrap preset in Config object to use Config.merge() consistently
           # This enables future per-key merge strategies via _merge directive
-          Ace::Config::Models::Config.new(preset, source: "preset:#{preset_name}")
+          Ace::Support::Config::Models::Config.new(preset, source: "preset:#{preset_name}")
             .merge(options)
             .to_h
         end
@@ -82,7 +82,7 @@ module Ace
 
         # Load a single preset file
         def load_preset_file(file)
-          data = Ace::Config::Atoms::YamlParser.parse(File.read(file))
+          data = Ace::Support::Config::Atoms::YamlParser.parse(File.read(file))
           preset_name = data["name"] || data[:name] || File.basename(file, ".*")
 
           # Remove metadata keys, rest are options

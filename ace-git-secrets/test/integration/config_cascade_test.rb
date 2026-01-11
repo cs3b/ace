@@ -69,7 +69,7 @@ class ConfigCascadeTest < GitSecretsTestCase
       "output" => { "format" => "json" }
     }
 
-    result = Ace::Config::Atoms::DeepMerger.merge(base, override)
+    result = Ace::Support::Config::Atoms::DeepMerger.merge(base, override)
 
     assert_equal "json", result["output"]["format"], "Override should take precedence"
     assert_equal true, result["output"]["mask_tokens"], "Non-overridden nested values should be preserved"

@@ -6,11 +6,11 @@ class Ace::TestSearch < AceSearchTestCase
   # Config tests need real config access
   def setup
     super
-    Ace::Config.test_mode = false
+    Ace::Support::Config.test_mode = false
   end
 
   def teardown
-    Ace::Config.test_mode = true
+    Ace::Support::Config.test_mode = true
     super
   end
 
