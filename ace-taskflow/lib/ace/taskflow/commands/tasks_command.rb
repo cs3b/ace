@@ -14,15 +14,31 @@ module Ace
   module Taskflow
     module Commands
       # Handle tasks (plural) subcommand for browsing/listing
+      #
+      # NOTE: This command class has accumulated significant presentation logic
+      # (display_* and format_* methods). Consider extracting a TaskFormatter
+      # molecule in a future PR to keep the Command class thin and focused on
+      # orchestration, per ATOM architecture principles.
       class TasksCommand
         include Helpers
+
+        # Column width constants for consistent display alignment
+        # Values chosen based on typical reference format lengths (e.g., "v.0.9.0+task.203" = 16 chars)
+        TASK_REF_WIDTH = 18
+        SUBTASK_REF_WIDTH = 12
+        private_constant :TASK_REF_WIDTH, :SUBTASK_REF_WIDTH
+
+        # Public accessor for test stubbing (documented as test-specific API)
+        attr_reader :task_manager
+
         def initialize
           @root_path = Molecules::ConfigLoader.find_root
-          @manager = Organisms::TaskManager.new
+          @task_manager = Organisms::TaskManager.new
           @config = Taskflow.configuration
           @preset_manager = Molecules::ListPresetManager.new
           @stats_formatter = Molecules::StatsFormatter.new(@root_path)
           @option_parser = build_option_parser
+          @options = {}  # Store options for access in display methods
         end
 
         def execute(args, thor_options = {})
@@ -48,13 +64,25 @@ module Ace
             preset_name = 'next'
           end
 
+          # Store options for access in display methods
+          @options = options
           execute_with_preset(preset_name, options)
         rescue StandardError => e
           puts "Error: #{e.message}"
-          exit 1
+          1
         end
 
         private
+
+        # Check if debug/verbose logging is enabled
+        def verbose?
+          @options[:verbose] || @options[:debug]
+        end
+
+        # Output debug message when verbose mode is enabled
+        def debug_log(message)
+          $stderr.puts "[DEBUG] #{message}" if verbose?
+        end
 
         # Build the option parser for tasks command
         def build_option_parser
@@ -179,14 +207,14 @@ module Ace
 
           case release
           when 'all'
-            @manager.list_tasks(release: "all", filters: filters, glob: glob)
+            @task_manager.list_tasks(release: "all", filters: filters, glob: glob)
           when 'backlog'
-            @manager.list_tasks(release: "backlog", filters: filters, glob: glob)
+            @task_manager.list_tasks(release: "backlog", filters: filters, glob: glob)
           when 'current'
-            @manager.list_tasks(release: "current", filters: filters, glob: glob)
+            @task_manager.list_tasks(release: "current", filters: filters, glob: glob)
           else
             # Assume it's a specific release
-            @manager.list_tasks(release: release, filters: filters, glob: glob)
+            @task_manager.list_tasks(release: release, filters: filters, glob: glob)
           end
         end
 
@@ -300,7 +328,7 @@ module Ace
 
         def execute_reschedule(args)
           require_relative "../organisms/task_scheduler"
-          scheduler = Organisms::TaskScheduler.new(@manager)
+          scheduler = Organisms::TaskScheduler.new(@task_manager)
 
           # Parse reschedule options
           tasks_to_reschedule = []
@@ -481,7 +509,7 @@ module Ace
           puts header
 
           # Get ALL tasks for complete dependency visualization
-          all_tasks = @manager.list_tasks(release: "all")
+          all_tasks = @task_manager.list_tasks(release: "all")
           puts ""
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
         end
@@ -505,7 +533,7 @@ module Ace
           end
 
           # Get ALL tasks for complete dependency visualization
-          all_tasks = @manager.list_tasks(release: "all")
+          all_tasks = @task_manager.list_tasks(release: "all")
           puts ""
           puts Molecules::DependencyTreeVisualizer.generate_forest(tasks, all_tasks)
           0
@@ -597,15 +625,45 @@ module Ace
           end
 
           # Display subtasks whose parents are not in the result set (orphan subtasks)
-          orphan_subtasks = tasks.select do |t|
-            t[:parent_id] && !orchestrators.any? { |o| o[:id] == t[:parent_id] }
-          end
-          orphan_subtasks.each { |task| display_task_line(task) }
+          # Use cache to avoid redundant parent lookups
+          display_orphan_subtasks_with_context(tasks, orchestrators)
 
           # Display single tasks
           singles.each { |task| display_task_line(task) }
 
           0
+        end
+
+        # Display orphan subtasks grouped by parent, showing parent context for each group
+        # Batch loads all parent tasks at once to avoid N+1 query pattern
+        def display_orphan_subtasks_with_context(tasks, orchestrators)
+          orphan_subtasks = select_orphan_subtasks(tasks, orchestrators)
+
+          # Batch load all unique parent IDs at once (N queries -> 1 query)
+          parent_ids = orphan_subtasks.map { |t| t[:parent_id] }.uniq
+          parent_cache = parent_ids.to_h { |id| [id, @task_manager.show_task(id)] }
+
+          orphan_subtasks.group_by { |t| t[:parent_id] }.each do |parent_id, children|
+            parent_task = parent_cache[parent_id]
+            if parent_task
+              display_parent_context_line(parent_task)
+              children.sort_by { |s| s[:id] || "" }.each_with_index do |subtask, idx|
+                connector = idx == children.length - 1 ? "└─" : "├─"
+                display_subtask_line(subtask, connector)
+              end
+            else
+              # Parent task missing - log warning in debug mode
+              debug_log "Parent task #{parent_id} not found for orphan subtask group (#{children.size} subtask(s) skipped)"
+              next
+            end
+          end
+        end
+
+        # Select orphan subtasks (subtasks whose parents are not in the given orchestrators list)
+        def select_orphan_subtasks(tasks, orchestrators)
+          tasks.select do |t|
+            t[:parent_id] && !orchestrators.any? { |o| o[:id] == t[:parent_id] }
+          end
         end
 
         # Display without subtasks, showing count instead
@@ -661,33 +719,56 @@ module Ace
           0
         end
 
-        # Display a subtask with tree connector
-        def display_subtask_line(task_data, connector)
+        # Format task display components (status, reference, title) for reuse across display methods
+        # Returns hash with: status_str, ref, display_title, orchestrator_marker, task
+        def format_task_display_data(task_data)
+          return nil if task_data.nil? || task_data.empty?
+
           task = Models::Task.new(task_data)
 
-          status_str = status_icon(task.status)
-          ref = task.qualified_reference || task.task_number || task.id || "unknown"
-          display_title = strip_task_id_from_title(task.title)
+          {
+            status_str: status_icon(task.status),
+            ref: task.qualified_reference || task.task_number || task.id || "unknown",
+            display_title: strip_task_id_from_title(task.title),
+            orchestrator_marker: task_data[:is_orchestrator] ? " (Orchestrator)" : "",
+            task: task  # Include task object for path access
+          }
+        end
 
-          puts "    #{connector} #{ref.ljust(12)} #{status_str} #{display_title}"
+        # Display a subtask with tree connector
+        def display_subtask_line(task_data, connector)
+          data = format_task_display_data(task_data)
+          return if data.nil?
+
+          puts "    #{connector} #{data[:ref].ljust(SUBTASK_REF_WIDTH)} #{data[:status_str]} #{data[:display_title]}"
+        end
+
+        # Display parent task as context (not a match) with [context] indicator
+        def display_parent_context_line(task_data)
+          data = format_task_display_data(task_data)
+          return if data.nil?
+
+          puts "  #{data[:ref].ljust(TASK_REF_WIDTH)} #{data[:status_str]} #{data[:display_title]}#{data[:orchestrator_marker]} [context]"
+
+          # Show path on second line if available
+          if data[:task].path
+            relative_path = format_relative_path(data[:task].path)
+            puts "    #{relative_path}"
+          end
         end
 
         # Display task with subtask count indicator
         def display_task_line_with_subtask_count(task_data, subtask_count)
-          task = Models::Task.new(task_data)
-
-          status_str = status_icon(task.status)
-          ref = task.qualified_reference || task.task_number || task.id || "unknown"
-          display_title = strip_task_id_from_title(task.title)
+          data = format_task_display_data(task_data)
+          return if data.nil?
 
           count_str = subtask_count > 0 ? " (#{subtask_count} subtasks)" : ""
-          orchestrator_marker = task_data[:is_orchestrator] ? " (Orchestrator)" : ""
 
-          puts "  #{ref.ljust(15)} #{status_str} #{display_title}#{orchestrator_marker}#{count_str}"
+          puts "  #{data[:ref].ljust(TASK_REF_WIDTH)} #{data[:status_str]} #{data[:display_title]}#{data[:orchestrator_marker]}#{count_str}"
 
-          # Show path on second line
-          if task.path
-            relative_path = format_relative_path(task.path)
+          # Show path on second line if available
+          if data[:task].path
+            relative_path = format_relative_path(data[:task].path)
             puts "    #{relative_path}"
           end
         end
