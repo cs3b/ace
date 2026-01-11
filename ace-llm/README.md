@@ -24,16 +24,16 @@ bundle exec rake install
 
 ```bash
 # Query with explicit provider and model
-ace-llm-query google:gemini-2.5-flash "What is Ruby programming?"
+ace-llm google:gemini-2.5-flash "What is Ruby programming?"
 
 # Use default model for provider
-ace-llm-query google "Explain closures"
+ace-llm google "Explain closures"
 
 # Use aliases for quick access
-ace-llm-query gflash "Write a haiku about coding"
+ace-llm gflash "Write a haiku about coding"
 
 # List available providers and their status
-ace-llm-query --list-providers
+ace-llm --list-providers
 ```
 
 ### Common Aliases
@@ -52,34 +52,34 @@ ace-llm-query --list-providers
 
 ```bash
 # Save output to file
-ace-llm-query gflash "Explain Docker" --output docker.md
+ace-llm gflash "Explain Docker" --output docker.md
 
 # Control temperature
-ace-llm-query gflash "Creative story" --temperature 1.5
+ace-llm gflash "Creative story" --temperature 1.5
 
 # Limit output length
-ace-llm-query gflash "Summary" --max-tokens 200
+ace-llm gflash "Summary" --max-tokens 200
 
 # Add system prompt (replaces defaults)
-ace-llm-query gflash code.rb --system "You are a Ruby expert"
+ace-llm gflash code.rb --system "You are a Ruby expert"
 
 # Append to system prompt (keeps defaults, adds context)
-ace-llm-query gflash code.rb --system-append "Focus on performance"
+ace-llm gflash code.rb --system-append "Focus on performance"
 
 # Combine both for layered control
-ace-llm-query gflash code.rb --system base-prompt.md --system-append context.md
+ace-llm gflash code.rb --system base-prompt.md --system-append context.md
 
 # Output as JSON
-ace-llm-query gflash "List 5 tips" --format json --output tips.json
+ace-llm gflash "List 5 tips" --format json --output tips.json
 
 # Override model with --model flag
-ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite
-ace-llm-query gflash "Quick test" --model gemini-pro  # Override alias model
+ace-llm google "What is Ruby?" --model gemini-2.0-flash-lite
+ace-llm gflash "Quick test" --model gemini-pro  # Override alias model
 
 # Use --prompt flag for explicit prompt specification
-ace-llm-query google --prompt "What is Ruby?"
-ace-llm-query gflash --prompt prompt.txt --output response.md
-ace-llm-query google --prompt 'Query with "quotes" and $vars'  # Avoid escaping issues
+ace-llm google --prompt "What is Ruby?"
+ace-llm gflash --prompt prompt.txt --output response.md
+ace-llm google --prompt 'Query with "quotes" and $vars'  # Avoid escaping issues
 ```
 
 ### System Prompt Control
@@ -89,19 +89,19 @@ Control how system prompts are handled by different providers:
 **Replace defaults entirely** (`--system`):
 ```bash
 # Full control over system prompt - replaces provider defaults
-ace-llm-query claude:haiku --system "Generate only the commit message" --prompt "$(git diff --staged)"
+ace-llm claude:haiku --system "Generate only the commit message" --prompt "$(git diff --staged)"
 ```
 
 **Append to defaults** (`--system-append`):
 ```bash
 # Keeps provider defaults and adds your context
-ace-llm-query claude:sonnet --system-append "This project uses ATOM architecture" --prompt "Review this code"
+ace-llm claude:sonnet --system-append "This project uses ATOM architecture" --prompt "Review this code"
 ```
 
 **Layered prompts** (both flags):
 ```bash
 # Base instructions + task-specific context
-ace-llm-query claude:haiku --system standards.md --system-append task-context.md --prompt "Generate code"
+ace-llm claude:haiku --system standards.md --system-append task-context.md --prompt "Generate code"
 ```
 
 **Provider behavior**:
@@ -263,7 +263,7 @@ providers:
 
 **User Feedback**:
 ```bash
-$ ace-llm-query google "Generate commit message"
+$ ace-llm google "Generate commit message"
 ⚠ google unavailable (503), retrying... (attempt 2/3)
 ⚠ google unavailable after 3 retries
 ℹ Trying fallback provider anthropic:claude-3-5-sonnet...
@@ -320,7 +320,7 @@ All providers are now configuration-based and support dynamic loading:
 - **Together AI** - Various open-source models
 - **LM Studio** (local models) - Custom local models
 
-Use `ace-llm-query --list-providers` to see available providers and their configuration status.
+Use `ace-llm --list-providers` to see available providers and their configuration status.
 
 ## Development
 

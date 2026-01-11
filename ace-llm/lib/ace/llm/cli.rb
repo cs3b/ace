@@ -20,6 +20,9 @@ module Ace
       # Application commands registered in this CLI (single source of truth)
       REGISTERED_COMMANDS = %w[query list-providers --list-providers].freeze
 
+      # Executable command name (single source of truth for CLI references)
+      COMMAND_NAME = "ace-llm".freeze
+
       # dry-cli built-in commands (standard across all CLI gems)
       BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
 
@@ -33,7 +36,7 @@ module Ace
       # Start the CLI with default command routing
       #
       # This method handles the default task routing that was previously
-      # in the exe/ace-llm-query wrapper. Moving it here makes the routing
+      # in the exe/ace-llm wrapper. Moving it here makes the routing
       # logic testable and ensures consistent behavior for all consumers
       # (shell, tests, internal Ruby calls).
       #
@@ -74,7 +77,7 @@ module Ace
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
-        gem_name: "ace-llm-query",
+        gem_name: COMMAND_NAME,
         version: Ace::LLM::VERSION
       )
       register "version", version_cmd
