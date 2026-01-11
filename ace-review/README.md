@@ -53,7 +53,7 @@ Automated review tool for the ACE framework. Provides preset-based analysis usin
 
 ## Changes in 0.9.7
 
-- **ace-llm-query Integration Fixed**: Updated to work with ace-llm-query v0.9.1+ API
+- **ace-llm Integration Fixed**: Updated to work with ace-llm v0.9.1+ API (formerly ace-llm-query)
   - Fixed command construction with proper `--prompt` flag (replaces non-existent `--file`)
   - Added PROVIDER:MODEL positional argument as first parameter
   - Review reports now saved directly to session directory via `--output` flag

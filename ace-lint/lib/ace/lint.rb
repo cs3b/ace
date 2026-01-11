@@ -3,7 +3,7 @@
 require_relative 'lint/version'
 
 # Load ace-config for configuration cascade management
-require 'ace/config'
+require 'ace/support/config'
 
 # Models
 require_relative 'lint/models/validation_error'
@@ -43,14 +43,14 @@ module Ace
 
     # Load general ace-lint configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Uses Ace::Config.create() for configuration cascade resolution
+    # Uses Ace::Support::Config.create() for configuration cascade resolution
     # @return [Hash] Configuration hash with defaults merged
     def self.config
       @config ||= begin
         gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
                    File.expand_path("../..", __dir__)
 
-        resolver = Ace::Config.create(
+        resolver = Ace::Support::Config.create(
           config_dir: ".ace",
           defaults_dir: ".ace-defaults",
           gem_path: gem_root
@@ -75,7 +75,7 @@ module Ace
         gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
                    File.expand_path("../..", __dir__)
 
-        resolver = Ace::Config.create(
+        resolver = Ace::Support::Config.create(
           config_dir: ".ace",
           defaults_dir: ".ace-defaults",
           gem_path: gem_root

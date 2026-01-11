@@ -56,13 +56,13 @@ module Ace
 
         # Load configuration with gem defaults and user overrides
         # Follows ADR-022: Configuration Default and Override Pattern
-        # Uses Ace::Config.create() for configuration cascade resolution
+        # Uses Ace::Support::Config.create() for configuration cascade resolution
         # @return [Hash] Configuration
         def load_config
           gem_root = Gem.loaded_specs["ace-git-commit"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
 
-          resolver = Ace::Config.create(
+          resolver = Ace::Support::Config.create(
             config_dir: ".ace",
             defaults_dir: ".ace-defaults",
             gem_path: gem_root
