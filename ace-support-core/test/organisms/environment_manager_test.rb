@@ -4,15 +4,15 @@ require_relative "../test_helper"
 require "ace/core/organisms/environment_manager"
 
 class EnvironmentManagerTest < AceTestCase
-  # Tests need real config access since EnvironmentManager uses Ace::Config
+  # Tests need real config access since EnvironmentManager uses Ace::Support::Config
   def setup
     super
     @original_env = ENV.to_h.dup
-    Ace::Config.test_mode = false
+    Ace::Support::Config.test_mode = false
   end
 
   def teardown
-    Ace::Config.test_mode = true
+    Ace::Support::Config.test_mode = true
     # Restore original environment
     ENV.clear
     @original_env.each { |k, v| ENV[k] = v }
