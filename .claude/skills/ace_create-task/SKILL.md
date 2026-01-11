@@ -1,14 +1,18 @@
 ---
 name: ace:create-task
 description: Create complete task from plan (draft + plan + commit)
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - Edit
-  - Bash
   - TodoWrite
 argument-hint: [plan-description]
-last_modified: 2025-10-06
+last_modified: 2026-01-10
 source: ace-taskflow
 ---
 

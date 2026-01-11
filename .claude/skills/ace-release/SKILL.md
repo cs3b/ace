@@ -1,8 +1,12 @@
 ---
 name: ace-release
 description: Bump Version and Update Both CHANGELOGs
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-git:*)
+  - Bash(ace-context:*)
   - Read
   - Edit
 argument-hint: [package-name] [patch|minor|major]

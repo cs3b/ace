@@ -3,12 +3,17 @@ name: meta-update-tools-docs
 title: Meta: Update Tools Documentation
 command: meta-update-tools-docs
 description: Update ace-* package documentation from implementation and tests
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 author: handbook
 model_preference: claude-3-5-sonnet-latest
 version: 1.0.0
-last_modified: 2025-08-25 00:47:54
+last_modified: 2026-01-10
 source: custom
 allowed-tools:
+  - Bash(ace-handbook:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - Edit
@@ -16,8 +21,8 @@ allowed-tools:
   - Glob
   - Grep
   - LS
-  - Bash
   - TodoWrite
+argument-hint: [component]
 ---
 
 # Meta: Update Tools Documentation

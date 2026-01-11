@@ -1,16 +1,18 @@
 ---
 name: ace:review
 description: Review code changes with preset-based analysis and LLM feedback
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-review:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - TodoWrite
-  - Bash
 argument-hint: [file-path or commit-ref]
-last_modified: 2025-10-05
+last_modified: 2026-01-10
 source: ace-review
 ---
 
 read and run `ace-context wfi://review`
-
-

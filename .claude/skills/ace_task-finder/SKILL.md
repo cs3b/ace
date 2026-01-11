@@ -1,8 +1,12 @@
 ---
 name: ace:task-finder
 description: FIND tasks - list, filter, and discover tasks
+# context: no-fork
+# agent: Explore
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [list|show] [options]
 last_modified: 2026-01-09

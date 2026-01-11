@@ -1,11 +1,16 @@
 ---
 name: ace:create-pr
 description: Create GitHub pull request with generated description and summary
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-git:*)
+  - Bash(ace-context:*)
+  - Bash(gh:*)
   - Read
 argument-hint: [pr-type]
-last_modified: 2025-11-13
+last_modified: 2026-01-10
 source: ace-git
 ---
 
