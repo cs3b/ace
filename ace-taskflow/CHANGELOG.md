@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.6] - 2026-01-11
+
+### Fixed
+- Handle Float subtask references from YAML parsing in TaskReferenceParser
+  - YAML parses unquoted `202.01` as Float, not String
+  - Now converts to string before checking `.empty?` to prevent NoMethodError
+
 ## [0.33.5] - 2026-01-11
 
 ### Added
