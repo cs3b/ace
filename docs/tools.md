@@ -24,7 +24,7 @@ All tools below are run from your terminal using the `ace-` prefix.
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
 | **ace-git-secrets** | Detect and remove tokens | `ace-git-secrets scan`, `ace-git-secrets revoke`, `ace-git-secrets rewrite-history` |
 | **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
-| **ace-llm-query** | Query LLM providers | `ace-llm-query "prompt" -m gpt-4` |
+| **ace-llm** | Query LLM providers | `ace-llm "prompt" -m gpt-4` |
 | **ace-nav** | Resource navigation with wfi:// protocol resolution | `ace-nav wfi://workflow`, `ace-nav --sources` |
 | **ace-review** | Code review | `ace-review --preset pr`, `ace-review --task 121`, `ace-review --auto-execute` |
 | **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
