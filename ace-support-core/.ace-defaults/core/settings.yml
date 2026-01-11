@@ -12,10 +12,6 @@ core:
   command_executor:
     timeout: 30  # Default timeout in seconds for command execution
 
-  # ContextChunker settings
-  context_chunker:
-    chunk_limit: 150000  # Maximum lines before chunking content
-
 ace:
   # Project identification
   project:

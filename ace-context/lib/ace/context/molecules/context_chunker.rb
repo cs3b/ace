@@ -3,32 +3,31 @@
 require_relative '../atoms/boundary_finder'
 
 module Ace
-  module Core
+  module Context
     module Molecules
       # ContextChunker splits large content into manageable chunks
-      # Configuration is loaded from .ace-defaults/core/settings.yml
-      # and can be overridden at .ace/core/settings.yml (ADR-022)
+      # Configuration is loaded from Ace::Context.max_lines (ADR-022)
       class ContextChunker
         # Fallback value if config is not available
-        DEFAULT_CHUNK_LIMIT = 150_000
+        DEFAULT_MAX_LINES = 2_000
         DEFAULT_CHUNK_SUFFIX = '_chunk'
 
-        attr_reader :chunk_limit
+        attr_reader :max_lines
 
-        # @param chunk_limit [Integer, nil] Override chunk limit (nil uses config)
-        def initialize(chunk_limit = nil)
-          @chunk_limit = chunk_limit || config_chunk_limit
+        # @param max_lines [Integer, nil] Override max lines per chunk (nil uses config)
+        def initialize(max_lines = nil)
+          @max_lines = max_lines || config_max_lines
         end
 
         private
 
-        # Load chunk_limit from configuration cascade
-        # Falls back to DEFAULT_CHUNK_LIMIT if config is unavailable
-        # @return [Integer] Configured chunk limit
-        def config_chunk_limit
-          Ace::Core.get("core", "context_chunker", "chunk_limit") || DEFAULT_CHUNK_LIMIT
+        # Load max_lines from configuration
+        # Falls back to DEFAULT_MAX_LINES if config is unavailable
+        # @return [Integer] Configured max lines per chunk
+        def config_max_lines
+          Ace::Context.max_lines
         rescue StandardError
-          DEFAULT_CHUNK_LIMIT
+          DEFAULT_MAX_LINES
         end
 
         public
@@ -38,7 +37,7 @@ module Ace
           return false if content.nil? || content.empty?
 
           line_count = content.lines.size
-          line_count > @chunk_limit
+          line_count > @max_lines
         end
 
         # Split content into chunks
@@ -59,7 +58,7 @@ module Ace
           {
             chunked: true,
             total_chunks: chunks.size,
-            chunk_limit: @chunk_limit,
+            max_lines: @max_lines,
             total_lines: lines.size,
             index_file: "#{base_path}.md",
             index_content: index_content,
@@ -157,7 +156,7 @@ module Ace
             block_lines = block[:lines]
 
             # If adding this block would exceed limit and we have content, flush current chunk
-            if current_line_count + block_lines > @chunk_limit && current_chunk_blocks.any?
+            if current_line_count + block_lines > @max_lines && current_chunk_blocks.any?
               chunks << current_chunk_blocks.map { |b| b[:content] }.join
               current_chunk_blocks = []
               current_line_count = 0
@@ -182,7 +181,7 @@ module Ace
           lines.each do |line|
             current_chunk << line
 
-            if current_chunk.size >= @chunk_limit
+            if current_chunk.size >= @max_lines
               chunks << current_chunk.join
               current_chunk = []
             end
@@ -225,7 +224,7 @@ module Ace
           index_lines << "## Summary"
           index_lines << ""
           index_lines << "- Total chunks: #{chunk_files.size}"
-          index_lines << "- Chunk limit: #{@chunk_limit} lines"
+          index_lines << "- Max lines per chunk: #{@max_lines}"
           index_lines << "- Total size: #{format_bytes(calculate_total_size(chunk_files))}"
           index_lines << ""
           index_lines << "## Chunks"

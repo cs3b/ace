@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.28.2] - 2026-01-11
+
+### Fixed
+- **Chunked output header**: Added stats header (lines, size, chunk count) before listing chunk paths
+  - Previously showed bare paths with no context
+
+## [0.28.1] - 2026-01-11
+
+### Changed
+- **Chunked output**: CLI now outputs chunk file paths directly (one per line) instead of index file path
+  - Agents can read chunks directly without first reading the index
+  - Non-chunked output still shows single file path
+
+## [0.28.0] - 2026-01-11
+
+### Added
+- **ContextChunker**: Moved from ace-support-core (this package is the only consumer)
+  - `Ace::Context::Molecules::ContextChunker` for splitting large outputs
+  - `Ace::Context::Atoms::BoundaryFinder` for semantic XML boundary detection
+  - Preserves `<file>` and `<output>` element integrity when chunking
+
+### Changed
+- **BREAKING**: Config key `chunk_limit` renamed to `max_lines` for clarity
+- Default max_lines changed from 150000 to 2000 (more practical default)
+- Configuration now loaded via `Ace::Context.max_lines` instead of `Ace::Core.get(...)`
+
 ## [0.27.1] - 2026-01-09
 
 ### Changed

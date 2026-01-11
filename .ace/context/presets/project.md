@@ -3,7 +3,7 @@ description: Project-wide context
 context:
   params:
     output: cache
-    max_size: 10485760
+    max_size: 81920
     timeout: 30
   embed_document_source: true
   files:

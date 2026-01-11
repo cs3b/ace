@@ -2,20 +2,20 @@
 
 require 'pathname'
 require 'fileutils'
-require 'ace/core/molecules/context_chunker'
+require_relative 'context_chunker'
 require_relative 'section_formatter'
 
 module Ace
   module Context
     module Molecules
       # ContextFileWriter handles writing context to files with caching and chunking
-      # Configuration values (cache_dir, chunk_limit) are loaded from Ace::Context.config
+      # Configuration values (cache_dir, max_lines) are loaded from Ace::Context.config
       # following ADR-022 pattern.
       class ContextFileWriter
-        def initialize(cache_dir: nil, chunk_limit: nil)
+        def initialize(cache_dir: nil, max_lines: nil)
           @cache_dir = cache_dir || Ace::Context.cache_dir
-          @chunk_limit = chunk_limit || Ace::Context.chunk_limit
-          @chunker = Ace::Core::Molecules::ContextChunker.new(@chunk_limit)
+          @max_lines = max_lines || Ace::Context.max_lines
+          @chunker = ContextChunker.new(@max_lines)
         end
 
         # Write context with optional chunking
