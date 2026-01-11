@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'ace/config'
+require 'ace/support/config'
 require 'yaml'
 require_relative '../configuration'
 
@@ -127,7 +127,7 @@ module Ace
           presets = default_presets
 
           # Use VirtualConfigResolver to find all taskflow/presets/*.yml files
-          resolver = Ace::Config.virtual_resolver
+          resolver = Ace::Support::Config.virtual_resolver
 
           # Get all taskflow/presets/*.yml files from virtual map
           resolver.glob("taskflow/presets/*.yml").each do |relative_path, absolute_path|

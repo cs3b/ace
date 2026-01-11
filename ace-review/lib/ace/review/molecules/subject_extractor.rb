@@ -3,7 +3,7 @@
 require "yaml"
 require "open3"
 require "timeout"
-require "ace/config"
+require 'ace/support/config'
 require "ace/core/atoms/process_terminator" # Keep from ace-support-core for process cleanup
 require "ace/git"
 require_relative "../errors"
@@ -68,7 +68,7 @@ module Ace
 
           # Use Config objects with :coerce_union strategy to progressively merge subjects
           # This enables future per-key merge strategies via _merge directive
-          initial_config = Ace::Config::Models::Config.new({}, merge_strategy: :coerce_union)
+          initial_config = Ace::Support::Config::Models::Config.new({}, merge_strategy: :coerce_union)
 
           merged_config = subjects.reduce(initial_config) do |acc, subject|
             config_hash = resolve_single_subject(subject)
@@ -87,7 +87,7 @@ module Ace
         # @param overlay [Hash] overlay configuration hash
         # @return [Hash] merged configuration (new hash, does not mutate inputs)
         def deep_merge_arrays(base, overlay)
-          Ace::Config::Models::Config.new(base, merge_strategy: :coerce_union)
+          Ace::Support::Config::Models::Config.new(base, merge_strategy: :coerce_union)
             .merge(overlay)
             .to_h
         end

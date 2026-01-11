@@ -1,14 +1,14 @@
 # Migration Guide: llm-query to ace-llm
 
-> **Note**: This guide was originally written for the `ace-llm` executable,
-> which was renamed to `ace-llm` in v0.10.0 (task 202.01). All references below
+> **Note**: This guide was originally written for the `ace-llm-query` executable,
+> which was renamed to `ace-llm` in v0.20.0 (task 202.01). All references below
 > have been updated to reflect the current `ace-llm` name.
 
 ## Command API Comparison
 
 ### Command Name
 - **Original**: `llm-query` (via dev-tools)
-- **Current**: `ace-llm` (via ace-llm gem, renamed from `ace-llm` in v0.10.0)
+- **Current**: `ace-llm` (via ace-llm gem, renamed from `ace-llm-query` in v0.20.0)
 
 ### Basic Syntax (Identical)
 Both commands use the same basic syntax:

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module Git
@@ -24,7 +24,7 @@ module Ace
 
             # Use Config.merge() for consistent merge strategy support
             # This enables future per-key merge strategies via _merge directive
-            config_hash = Ace::Config::Models::Config.new(global_diff_config, source: "git_global")
+            config_hash = Ace::Support::Config::Models::Config.new(global_diff_config, source: "git_global")
               .merge(instance_config)
               .to_h
 
@@ -46,7 +46,7 @@ module Ace
 
             # Use Config.merge() cascade: global -> gem -> instance
             # This enables future per-key merge strategies via _merge directive
-            config_hash = Ace::Config::Models::Config.new(global_diff_config, source: "git_global")
+            config_hash = Ace::Support::Config::Models::Config.new(global_diff_config, source: "git_global")
               .merge(gem_diff_config)
               .merge(instance_config)
               .to_h
@@ -77,7 +77,7 @@ module Ace
               diff_config = config["diff"] || config[:diff]
               if diff_config.is_a?(Hash)
                 # Merge nested diff over top-level using Config.merge()
-                return Ace::Config::Models::Config.new(top_level_diff, source: "git_diff_extract")
+                return Ace::Support::Config::Models::Config.new(top_level_diff, source: "git_diff_extract")
                   .merge(diff_config)
                   .to_h
               end

@@ -296,7 +296,7 @@ module Ace
 
         def find_project_root
           # Use ace-config for project root discovery
-          Ace::Config.find_project_root || Dir.pwd
+          Ace::Support::Config.find_project_root || Dir.pwd
         end
 
         def resolve_config_path(custom_path)
@@ -306,7 +306,7 @@ module Ace
           end
 
           # Use ace-config ConfigFinder to locate config in cascade
-          finder = Ace::Config.finder
+          finder = Ace::Support::Config.finder
 
           # Try review/config.yml first, then fallbacks
           config_patterns = [
@@ -349,7 +349,7 @@ module Ace
           end
 
           # Use ace-config ConfigFinder to find preset in cascade
-          finder = Ace::Config.finder
+          finder = Ace::Support::Config.finder
           preset_file = finder.find_file("review/presets/#{preset_name}.yml")
 
           if preset_file && File.exist?(preset_file)

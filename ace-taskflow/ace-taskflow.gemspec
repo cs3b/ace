@@ -36,7 +36,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "dry-cli", "~> 1.0"
-  spec.add_dependency "ace-config", "~> 0.5"
+  spec.add_dependency "ace-support-config", "~> 0.6"
   spec.add_dependency "ace-support-core", "~> 0.11"
   spec.add_dependency "ace-git", "~> 0.3"
   spec.add_dependency "clipboard", "~> 1.3"
