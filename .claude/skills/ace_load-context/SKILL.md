@@ -12,4 +12,6 @@ last_modified: 2026-01-10
 source: ace-context
 ---
 
-Run `ace-context project`, read the output (stdo or file path). And Wait for user further instructions.
+Run `ace-context project`, read the whole output (sdio or files)
+
+After reading the whole context, wait for user further instructions.

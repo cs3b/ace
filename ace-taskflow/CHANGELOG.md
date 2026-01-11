@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.4] - 2026-01-11
+
+### Fixed
+- Wrap CLI-invoking tests with `with_real_test_project` to prevent creating test artifacts in actual project directory
+
+### Added
+- Improve idea subcommand handling with nested commands
+
+### Technical
+- Merge philosophy and what-do-we-build into vision.md, streamline README
+
 ## [0.33.3] - 2026-01-10
 
 ### Fixed

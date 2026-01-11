@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.290] - 2026-01-11
+
+### Fixed
+
+- **ace-taskflow 0.33.4**: Wrap CLI-invoking tests with `with_real_test_project`
+  - Prevents creating test artifacts in actual project directory
+  - Fixes issue where tests created `8oa1vl-test-default` directories
+
+### Added
+
+- **ace-taskflow 0.33.4**: Improve idea subcommand handling with nested commands
+
+### Technical
+
+- **ace-taskflow 0.33.4**: Merge philosophy and what-do-we-build into vision.md
+
 ## [0.9.289] - 2026-01-11
 
 ### Fixed
