@@ -25,12 +25,13 @@ module Ace
         RELEASE_VERSION_PATTERN = /^v\.\d+\.\d+\.\d+([-\w]+)?$/
 
         # Parse a task reference into its components
-        # @param reference [String] The task reference to parse
+        # @param reference [String, Numeric] The task reference to parse (supports numeric for YAML-parsed subtask IDs)
         # @return [Hash, nil] Hash with :release, :number, :subtask, or nil if invalid
         def self.parse(reference)
-          return nil if reference.nil? || reference.empty?
+          return nil if reference.nil?
 
           reference = reference.to_s.strip
+          return nil if reference.empty?
 
           # Check for hierarchical qualified reference (e.g., v.0.9.0+task.121.01)
           # Must be checked before non-hierarchical patterns (more specific)
