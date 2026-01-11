@@ -12,6 +12,5 @@ last_modified: 2026-01-10
 source: ace-context
 ---
 
-Run `ace-context project`, read the whole output (sdio or files)
+Run `ace-context project`, And read the whole output (sdio and files content)
 
-After reading the whole context, wait for user further instructions.
