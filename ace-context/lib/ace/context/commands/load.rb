@@ -226,8 +226,16 @@ module Ace
           result = Ace::Context.write_output(context, cache_file, options)
 
           if result[:success]
-            puts "Context saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
-            puts cache_file
+            if result[:chunked]
+              chunks = result[:results].select { |r| r[:file_type] == 'chunk' }
+              total_lines = chunks.sum { |r| r[:lines] || 0 }
+              total_size = chunks.sum { |r| r[:size] || 0 }
+              puts "Context saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
+              chunks.each { |r| puts r[:path] }
+            else
+              puts "Context saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
+              puts cache_file
+            end
             0
           else
             $stderr.puts "Error writing cache: #{result[:error]}"
@@ -242,13 +250,32 @@ module Ace
           result = Ace::Context.write_output(context, file_path, options)
 
           if result[:success]
-            puts "Context saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
-            puts file_path
+            if result[:chunked]
+              chunks = result[:results].select { |r| r[:file_type] == 'chunk' }
+              total_lines = chunks.sum { |r| r[:lines] || 0 }
+              total_size = chunks.sum { |r| r[:size] || 0 }
+              puts "Context saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
+              chunks.each { |r| puts r[:path] }
+            else
+              puts "Context saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
+              puts file_path
+            end
             0
           else
             $stderr.puts "Error writing file: #{result[:error]}"
             1
           end
+        end
+
+        def format_size(bytes)
+          units = ['B', 'KB', 'MB', 'GB']
+          size = bytes.to_f
+          unit_index = 0
+          while size >= 1024 && unit_index < units.size - 1
+            size /= 1024
+            unit_index += 1
+          end
+          "#{size.round(2)} #{units[unit_index]}"
         end
 
         def display_config_summary(options)

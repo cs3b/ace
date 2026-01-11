@@ -10,7 +10,7 @@ module Ace
         # Valid template configuration keys
         VALID_KEYS = %w[
           files commands format embed_document_source
-          include exclude output chunk_limit max_size timeout
+          include exclude output max_lines max_size timeout
         ].freeze
 
         module_function
@@ -129,7 +129,7 @@ module Ace
             'format' => config['format'],
             'embed_document_source' => config['embed_document_source'],
             'output' => config['output'],
-            'chunk_limit' => config['chunk_limit'],
+            'max_lines' => config['max_lines'],
             'max_size' => config['max_size'],
             'timeout' => config['timeout']
           }.compact
@@ -175,7 +175,7 @@ module Ace
             end
 
             # Take last non-nil value for other keys
-            %w[format embed_document_source output chunk_limit max_size timeout].each do |key|
+            %w[format embed_document_source output max_lines max_size timeout].each do |key|
               result[key] = config[key] if config.key?(key)
             end
           end

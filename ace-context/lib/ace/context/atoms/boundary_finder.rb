@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module Ace
-  module Core
+  module Context
     module Atoms
       # Pure functions to find semantic boundaries in XML-structured content
       # Used by ContextChunker to split content at clean boundaries

@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require 'ace/core/atoms/boundary_finder'
+require 'ace/context/atoms/boundary_finder'
 
 class BoundaryFinderTest < AceTestCase
   # parse_blocks tests
 
   def test_parse_blocks_empty_content
-    assert_equal [], Ace::Core::Atoms::BoundaryFinder.parse_blocks("")
-    assert_equal [], Ace::Core::Atoms::BoundaryFinder.parse_blocks(nil)
+    assert_equal [], Ace::Context::Atoms::BoundaryFinder.parse_blocks("")
+    assert_equal [], Ace::Context::Atoms::BoundaryFinder.parse_blocks(nil)
   end
 
   def test_parse_blocks_plain_text_only
     content = "# Header\n\nSome plain text content."
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 1, blocks.size
     assert_equal :text, blocks[0][:type]
@@ -22,7 +22,7 @@ class BoundaryFinderTest < AceTestCase
 
   def test_parse_blocks_single_file_element
     content = '<file path="test.rb" language="ruby">puts "hello"</file>'
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 1, blocks.size
     assert_equal :file, blocks[0][:type]
@@ -31,7 +31,7 @@ class BoundaryFinderTest < AceTestCase
 
   def test_parse_blocks_single_output_element
     content = '<output command="git status">On branch main</output>'
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 1, blocks.size
     assert_equal :output, blocks[0][:type]
@@ -44,7 +44,7 @@ class BoundaryFinderTest < AceTestCase
       <file path="b.rb" language="ruby">code b</file>
     XML
 
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 2, blocks.size
     assert_equal :file, blocks[0][:type]
@@ -59,7 +59,7 @@ class BoundaryFinderTest < AceTestCase
       <output command="ruby test.rb">output</output>
     XML
 
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 2, blocks.size
     assert_equal :file, blocks[0][:type]
@@ -73,7 +73,7 @@ class BoundaryFinderTest < AceTestCase
       # Commands
     XML
 
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 3, blocks.size
     assert_equal :text, blocks[0][:type]
@@ -92,7 +92,7 @@ class BoundaryFinderTest < AceTestCase
       </file>
     XML
 
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 1, blocks.size
     assert_equal :file, blocks[0][:type]
@@ -111,7 +111,7 @@ class BoundaryFinderTest < AceTestCase
       </output>
     XML
 
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 1, blocks.size
     assert_equal :output, blocks[0][:type]
@@ -120,7 +120,7 @@ class BoundaryFinderTest < AceTestCase
 
   def test_parse_blocks_counts_lines_correctly
     content = "line1\nline2\nline3"
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     assert_equal 3, blocks[0][:lines]
   end
@@ -160,7 +160,7 @@ class BoundaryFinderTest < AceTestCase
       </commands>
     XML
 
-    blocks = Ace::Core::Atoms::BoundaryFinder.parse_blocks(content)
+    blocks = Ace::Context::Atoms::BoundaryFinder.parse_blocks(content)
 
     # Should have: header text, file 1, file 2, middle text with </files> and <commands>, output, trailing text
     file_blocks = blocks.select { |b| b[:type] == :file }
@@ -174,28 +174,28 @@ class BoundaryFinderTest < AceTestCase
 
   def test_has_semantic_elements_with_file
     content = '<file path="test.rb" language="ruby">code</file>'
-    assert Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?(content)
+    assert Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?(content)
   end
 
   def test_has_semantic_elements_with_output
     content = '<output command="ls">files</output>'
-    assert Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?(content)
+    assert Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?(content)
   end
 
   def test_has_semantic_elements_plain_text
     content = "# Header\n\nJust plain markdown text."
-    refute Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?(content)
+    refute Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?(content)
   end
 
   def test_has_semantic_elements_empty
-    refute Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?("")
-    refute Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?(nil)
+    refute Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?("")
+    refute Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?(nil)
   end
 
   def test_has_semantic_elements_partial_tags
     # Incomplete tags should not match
-    refute Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?("<file>no closing")
-    refute Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?("<file incomplete")
-    refute Ace::Core::Atoms::BoundaryFinder.has_semantic_elements?("</file> orphan closing")
+    refute Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?("<file>no closing")
+    refute Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?("<file incomplete")
+    refute Ace::Context::Atoms::BoundaryFinder.has_semantic_elements?("</file> orphan closing")
   end
 end

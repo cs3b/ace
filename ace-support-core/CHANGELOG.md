@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-01-11
+
+### Changed
+- **ContextChunker moved to ace-context**: ContextChunker and BoundaryFinder relocated to ace-context package (only consumer)
+- **Config key renamed**: `chunk_limit` renamed to `max_lines` for clarity
+- Removed orphaned `context_chunker` section from settings.yml
+
 ## [0.19.1] - 2026-01-10
 
 ### Added
