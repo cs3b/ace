@@ -1,17 +1,20 @@
 ---
 name: ace:review-questions
 description: Review and answer clarifying questions about task or implementation
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - TodoWrite
-  - Bash
 argument-hint: [question-context]
-last_modified: 2025-09-24
+last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
 read and run `ace-context wfi://review-questions`
 
 read and run `ace-context wfi://commit`
-

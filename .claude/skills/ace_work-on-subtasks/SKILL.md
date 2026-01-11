@@ -1,8 +1,12 @@
 ---
 name: ace:work-on-subtasks
 description: Work On Subtasks (orchestrator task delegation)
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
   - Read
   - Task
   - AskUserQuestion

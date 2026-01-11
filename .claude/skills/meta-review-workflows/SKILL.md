@@ -3,17 +3,22 @@ name: meta-review-workflows
 title: Meta: Review Workflows
 command: meta-review-workflows
 description: Review and validate workflow instructions for quality and consistency
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 author: handbook
 model_preference: claude-3-5-sonnet-latest
 version: 1.0.0
-last_modified: 2025-08-25 00:47:54
+last_modified: 2026-01-10
 source: custom
 allowed-tools:
+  - Bash(ace-handbook:*)
+  - Bash(ace-context:*)
   - Read
   - Glob
   - LS
-  - Bash
   - TodoWrite
+argument-hint: [workflow-name]
 ---
 
 # Meta: Review Workflows

@@ -1,8 +1,12 @@
 ---
 name: ace:release-navigator
 description: Navigate and display release information
+# context: no-fork
+# agent: Explore
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [list|show] [options]
 last_modified: 2026-01-09

@@ -1,15 +1,22 @@
 ---
 name: create-test-cases
 description: Create Test Cases
+# context: no-fork
+# agent: Plan
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
+  - Bash(ace-git-commit:*)
   - Read
   - Write
-  - Bash
+  - Edit
   - Grep
-last_modified: 2025-08-25 00:47:54
+argument-hint: [feature-description]
+last_modified: 2026-01-10
 source: generated
 ---
 
-read whole file and follow ace-context wfi://create-test-cases
+read and run `ace-context wfi://create-test-cases`
 
-read and run @.claude/skills/commit.md
+read and run `ace-context wfi://commit`

@@ -1,8 +1,8 @@
 ---
 name: ace:commit
 description: Generate intelligent git commit message from staged or all changes
-context: fork
-agent: general-purpose
+# context: no-fork
+# agent: Bash
 user-invocable: true
 allowed-tools:
   - Bash(ace-git-commit:*) 
@@ -10,7 +10,7 @@ allowed-tools:
   - Bash(ace-context:*) 
   - Read
 argument-hint: [intention]
-last_modified: 2025-09-26
+last_modified: 2026-01-10
 source: ace-git-commit
 ---
 

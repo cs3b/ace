@@ -1,17 +1,23 @@
 ---
 name: ace:maintain-adrs
 description: Maintain ADR lifecycle (evolve, archive, sync)
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-docs:*)
+  - Bash(ace-context:*)
+  - Bash(ace-git-commit:*)
   - Read
   - Write
   - Edit
   - Grep
   - Glob
-  - Bash
 argument-hint: [action: review|archive|evolve|sync]
+last_modified: 2026-01-10
 source: generated
 ---
 
-read and follow @ace-docs/handbook/workflow-instructions/maintain-adrs.wf.md
+read and run `ace-context wfi://maintain-adrs`
 
-read and run @.claude/skills/commit.md
+read and run `ace-context wfi://commit`

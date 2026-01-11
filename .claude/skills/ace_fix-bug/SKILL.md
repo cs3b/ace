@@ -1,15 +1,20 @@
 ---
 name: ace:fix-bug
 description: Execute bug fix plan, apply changes, create tests, and verify resolution
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-context:*)
+  - Bash(ace-test:*)
   - Read
   - Write
   - Edit
-  - Bash
   - Grep
   - Glob
-argument-hint: 
-last_modified: 2025-12-09
+argument-hint: [bug-description-or-analysis-file]
+last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
