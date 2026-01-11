@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.292] - 2026-01-11
+
+### Fixed
+
+- **ace-taskflow 0.33.6**: Handle Float subtask references from YAML parsing in TaskReferenceParser
+  - YAML parses unquoted `202.01` as Float, not String
+  - Now converts to string before checking `.empty?` to prevent NoMethodError
+
 ## [0.9.291] - 2026-01-11
 
 ### Added
