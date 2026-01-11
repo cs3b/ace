@@ -1,10 +1,14 @@
-# Migrating to ace-config
+# Migrating to ace-support-config
 
-This guide covers migration to ace-config from previous configuration patterns.
+> **NOTE**: `ace-config` has been renamed to `ace-support-config` (v0.6.0+). See the [ace-support-config README](../../ace-support-config/README.md) for the current API.
+>
+> This guide is preserved as historical documentation for the original extraction. For new projects, use `ace-support-config` with namespace `Ace::Support::Config`.
+
+This guide covers migration to ace-support-config from previous configuration patterns.
 
 ## Overview
 
-ace-config provides a generic configuration cascade system extracted from ace-support-core. It offers:
+ace-support-config provides a generic configuration cascade system extracted from ace-support-core. It offers:
 
 - **Customizable folder names**: Use `.my-app/` instead of `.ace/`
 - **Generic API**: No ACE-specific conventions required
@@ -44,18 +48,20 @@ end
 
 ### After (ace-config pattern)
 
+> **Updated**: This pattern now uses `ace-support-config` with namespace `Ace::Support::Config`.
+
 ```ruby
-require "ace/config"
+require "ace/support/config"
 
 module Ace
   module MyGem
     def self.config
       @config ||= begin
         defaults = load_gem_defaults
-        user_config = Ace::Config.create
+        user_config = Ace::Support::Config.create
                         .resolve_namespace("my_gem")
                         .to_h
-        Ace::Config::Models::Config.wrap(defaults, user_config, source: "my-gem")
+        Ace::Support::Config::Models::Config.wrap(defaults, user_config, source: "my-gem")
       end
     end
 
@@ -83,9 +89,9 @@ end
 ### Key Changes
 
 1. **Import change**: `require "ace/config"` instead of `require "ace/core/atoms/deep_merger"`
-2. **User config**: Use `Ace::Config.create.resolve_namespace("my_gem")` instead of `Ace::Core.config.get()`
-3. **Merging**: Use `Ace::Config::Models::Config.wrap()` instead of `DeepMerger.merge()`
-4. **Gem dependency**: Add `ace-config` to gemspec instead of `ace-support-core` (for config only)
+2. **User config**: Use `Ace::Support::Config.create.resolve_namespace("my_gem")` instead of `Ace::Core.config.get()`
+3. **Merging**: Use `Ace::Support::Config::Models::Config.wrap()` instead of `DeepMerger.merge()`
+4. **Gem dependency**: Add `ace-support-config` to gemspec instead of `ace-support-core` (for config only)
 
 ### Gemspec Change
 
@@ -94,20 +100,20 @@ end
 spec.add_dependency "ace-support-core", "~> 0.10"
 
 # After
-spec.add_dependency "ace-config", "~> 0.4"
+spec.add_dependency "ace-support-config", "~> 0.6"
 ```
 
 Note: If you still need other ace-support-core functionality, keep both dependencies.
 
 ## For External Projects
 
-Projects outside the ACE ecosystem can use ace-config independently:
+Projects outside the ACE ecosystem can use ace-support-config independently:
 
 ### Installation
 
 ```ruby
 # Gemfile
-gem "ace-config"
+gem "ace-support-config"
 ```
 
 ### Basic Usage
@@ -116,11 +122,11 @@ gem "ace-config"
 require "ace/config"
 
 # Create resolver with default folder names (.ace/)
-config = Ace::Config.create
+config = Ace::Support::Config.create
 value = config.get("database", "host")
 
 # Or with custom folder names
-config = Ace::Config.create(
+config = Ace::Support::Config.create(
   config_dir: ".my-app",
   defaults_dir: ".my-app-defaults"
 )
@@ -132,7 +138,7 @@ config = Ace::Config.create(
 module MyApp
   def self.config
     @config ||= begin
-      resolver = Ace::Config.create(
+      resolver = Ace::Support::Config.create(
         config_dir: ".my-app",
         defaults_dir: ".my-app-defaults",
         gem_path: File.expand_path("..", __dir__)
@@ -179,14 +185,14 @@ The `resolve_for` method is deprecated. Use the appropriate replacement:
 
 ### DeepMerger
 
-DeepMerger is available in ace-config:
+DeepMerger is available in ace-support-config:
 
 ```ruby
 # Before
 Ace::Core::Atoms::DeepMerger.merge(base, overlay)
 
 # After
-Ace::Config::Atoms::DeepMerger.merge(base, overlay)
+Ace::Support::Config::Atoms::DeepMerger.merge(base, overlay)
 ```
 
 ### Config.wrap() - New Helper
@@ -198,7 +204,7 @@ For the common pattern of merging defaults with overrides:
 config = Ace::Core::Atoms::DeepMerger.merge(defaults, user_config)
 
 # After (equivalent, more concise)
-config = Ace::Config::Models::Config.wrap(defaults, user_config)
+config = Ace::Support::Config::Models::Config.wrap(defaults, user_config)
 ```
 
 ## Directory Naming
@@ -228,15 +234,15 @@ Error classes are now in the `Ace::Config` namespace:
 rescue Ace::Core::ConfigNotFoundError
 
 # After
-rescue Ace::Config::ConfigNotFoundError
+rescue Ace::Support::Config::ConfigNotFoundError
 ```
 
 Available errors:
-- `Ace::Config::Error` - Base class
-- `Ace::Config::ConfigNotFoundError` - Config file not found
-- `Ace::Config::YamlParseError` - Invalid YAML
-- `Ace::Config::PathError` - Path resolution failed
-- `Ace::Config::MergeStrategyError` - Invalid merge strategy
+- `Ace::Support::Config::Error` - Base class
+- `Ace::Support::Config::ConfigNotFoundError` - Config file not found
+- `Ace::Support::Config::YamlParseError` - Invalid YAML
+- `Ace::Support::Config::PathError` - Path resolution failed
+- `Ace::Support::Config::MergeStrategyError` - Invalid merge strategy
 
 ## Test Isolation
 
@@ -251,13 +257,13 @@ end
 
 ## Compatibility Notes
 
-- ace-config requires Ruby 3.0+
-- ace-config depends on ace-support-fs for path utilities
+- ace-support-config requires Ruby 3.0+
+- ace-support-config depends on ace-support-fs for path utilities
 - YAML files support both `.yml` and `.yaml` extensions
 - Array merge strategies: `:replace` (default), `:concat`, `:union`
 
 ## Further Reading
 
-- [ace-config README](../../ace-config/README.md)
-- [ace-config Usage Guide](../../ace-config/docs/usage.md)
+- [ace-support-config README](../../ace-support-config/README.md)
+- [ace-support-config Usage Guide](../../ace-support-config/docs/usage.md)
 - [ADR-022: Configuration Default and Override Pattern](../decisions/ADR-022-configuration-default-and-override-pattern.md)
