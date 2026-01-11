@@ -28,7 +28,7 @@ class ConfigLoaderTest < Minitest::Test
   end
 
   def test_load_default_config_when_no_file_exists
-    # With Ace::Config.create() API, cascade is handled internally
+    # With Ace::Support::Config.create() API, cascade is handled internally
     # This test verifies that load() returns valid config from gem defaults
     config = @loader.load
     assert_equal 1, config[:version]

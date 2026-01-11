@@ -18,8 +18,8 @@ module Ace
           @failed_packages = []
 
           # Use ace-config's project root detection
-          require "ace/config"
-          @project_root = Ace::Config.find_project_root
+          require 'ace/support/config'
+          @project_root = Ace::Support::Config.find_project_root
 
           # Resolve package paths relative to project root
           resolve_package_paths! if @project_root

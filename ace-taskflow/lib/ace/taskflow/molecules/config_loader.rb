@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require "yaml"
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module Taskflow
     module Molecules
-      # Load configuration using Ace::Config.create() API
+      # Load configuration using Ace::Support::Config.create() API
       # Follows ADR-022: Configuration Default and Override Pattern
       #
       # Configuration priority (highest to lowest):
@@ -27,7 +27,7 @@ module Ace
         end
 
         # Load configuration from cascade
-        # Uses Ace::Config.create() for consistent cascade handling
+        # Uses Ace::Support::Config.create() for consistent cascade handling
         # @return [Hash] Merged configuration
         def self.load
           # Always reload to pick up user overrides (don't use cached defaults)
@@ -40,7 +40,7 @@ module Ace
           gem_root = Gem.loaded_specs["ace-taskflow"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
 
-          resolver = Ace::Config.create(
+          resolver = Ace::Support::Config.create(
             config_dir: ".ace",
             defaults_dir: ".ace-defaults",
             gem_path: gem_root
@@ -49,7 +49,7 @@ module Ace
           config = resolver.resolve_namespace("taskflow").data
           taskflow_section = config["taskflow"] || config
           extract_taskflow_config(taskflow_section)
-        rescue Ace::Config::YamlParseError => e
+        rescue Ace::Support::Config::YamlParseError => e
           warn "Warning: Failed to parse taskflow config: #{e.message}"
           # Fall back to gem defaults only
           load_gem_defaults_only

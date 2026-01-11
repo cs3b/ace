@@ -2,12 +2,12 @@
 
 require "yaml"
 require "ostruct"
-require "ace/config"
+require 'ace/support/config'
 
 module Ace
   module TestRunner
     module Molecules
-      # Load configuration using Ace::Config.create() API
+      # Load configuration using Ace::Support::Config.create() API
       # Follows ADR-022: Configuration Default and Override Pattern
       #
       # Configuration priority (highest to lowest):
@@ -23,7 +23,7 @@ module Ace
           gem_root = Gem.loaded_specs["ace-test-runner"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
 
-          resolver = Ace::Config.create(
+          resolver = Ace::Support::Config.create(
             config_dir: ".ace",
             defaults_dir: ".ace-defaults",
             gem_path: gem_root
@@ -35,14 +35,14 @@ module Ace
 
         # Reset method for test isolation (no-op since we don't cache at class level)
         def self.reset_gem_defaults!
-          # No-op: Ace::Config.create() is called fresh each time
+          # No-op: Ace::Support::Config.create() is called fresh each time
         end
 
         def load(config_path = nil)
           gem_root = Gem.loaded_specs["ace-test-runner"]&.gem_dir ||
                      File.expand_path("../../../..", __dir__)
 
-          resolver = Ace::Config.create(
+          resolver = Ace::Support::Config.create(
             config_dir: ".ace",
             defaults_dir: ".ace-defaults",
             gem_path: gem_root
@@ -54,7 +54,7 @@ module Ace
           # If explicit config_path provided, merge it on top
           if config_path && File.exist?(config_path)
             user_config = load_from_file(config_path)
-            config = Ace::Config::Atoms::DeepMerger.merge(config, user_config)
+            config = Ace::Support::Config::Atoms::DeepMerger.merge(config, user_config)
           end
 
           # Convert to symbol keys for backward compatibility

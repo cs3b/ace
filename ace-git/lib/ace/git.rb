@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/config"
+require 'ace/support/config'
 require_relative "git/version"
 
 module Ace
@@ -26,7 +26,7 @@ module Ace
 
     # Get configuration for ace-git
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Uses Ace::Config.create() for configuration cascade resolution
+    # Uses Ace::Support::Config.create() for configuration cascade resolution
     # Thread-safe: uses mutex for initialization
     # @return [Hash] merged configuration hash
     # @example Get current configuration
@@ -44,14 +44,14 @@ module Ace
       end
     end
 
-    # Load configuration using Ace::Config cascade
+    # Load configuration using Ace::Support::Config cascade
     # Resolves gem defaults from .ace-defaults/ and user overrides from .ace/
     # @return [Hash] Merged and transformed configuration
     def self.load_config
       gem_root = Gem.loaded_specs["ace-git"]&.gem_dir ||
                  File.expand_path("../..", __dir__)
 
-      resolver = Ace::Config.create(
+      resolver = Ace::Support::Config.create(
         config_dir: ".ace",
         defaults_dir: ".ace-defaults",
         gem_path: gem_root
@@ -63,7 +63,7 @@ module Ace
       # Extract and flatten the git section for backward compatibility
       raw_config = config.data["git"] || config.data
       extract_git_config(raw_config)
-    rescue Ace::Config::YamlParseError => e
+    rescue Ace::Support::Config::YamlParseError => e
       warn "ace-git: YAML syntax error in configuration"
       warn "  #{e.message}"
       # Fall back to gem defaults instead of empty hash to prevent silent config erasure

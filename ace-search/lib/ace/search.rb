@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "search/version"
-require "ace/config"
+require 'ace/support/config'
 
 # CLI and commands
 require_relative "search/cli"
@@ -21,13 +21,13 @@ module Ace
 
     # Configuration
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Uses Ace::Config.create() for configuration cascade resolution
+    # Uses Ace::Support::Config.create() for configuration cascade resolution
     def self.config
       @config ||= begin
         gem_root = Gem.loaded_specs["ace-search"]&.gem_dir ||
                    File.expand_path("../..", __dir__)
 
-        resolver = Ace::Config.create(
+        resolver = Ace::Support::Config.create(
           config_dir: ".ace",
           defaults_dir: ".ace-defaults",
           gem_path: gem_root
