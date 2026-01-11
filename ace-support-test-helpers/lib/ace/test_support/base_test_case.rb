@@ -17,8 +17,8 @@ module Ace
         @original_pwd = Dir.pwd
         super
         # Enable test mode by default - tests needing real config use with_real_config
-        if defined?(Ace::Config) && Ace::Config.respond_to?(:test_mode=)
-          Ace::Config.test_mode = true
+        if defined?(Ace::Support::Config) && Ace::Support::Config.respond_to?(:test_mode=)
+          Ace::Support::Config.test_mode = true
         end
       end
 
