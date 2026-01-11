@@ -75,48 +75,48 @@ codex-oss init
 
 ## Usage
 
-Once installed, the CLI providers automatically register with ace-llm and can be used through the standard `ace-llm-query` interface:
+Once installed, the CLI providers automatically register with ace-llm and can be used through the standard `ace-llm` interface:
 
 ```bash
 # Claude Code examples (using cc alias or claude directly)
-ace-llm-query cc "Explain this Ruby pattern"  # Uses cc alias -> claude:sonnet
-ace-llm-query claude:opus "Explain this Ruby pattern"
-ace-llm-query claude:sonnet "Generate a test for this code" --output test.rb
-ace-llm-query claude:haiku "Quick refactor suggestion"
+ace-llm cc "Explain this Ruby pattern"  # Uses cc alias -> claude:sonnet
+ace-llm claude:opus "Explain this Ruby pattern"
+ace-llm claude:sonnet "Generate a test for this code" --output test.rb
+ace-llm claude:haiku "Quick refactor suggestion"
 
 # Codex examples
-ace-llm-query codex:gpt-5 "Review this code for best practices"
-ace-llm-query codex:mini "Generate documentation"
+ace-llm codex:gpt-5 "Review this code for best practices"
+ace-llm codex:mini "Generate documentation"
 
 # OpenCode examples
-ace-llm-query opencode "Generate unit tests" --output tests.rb
-ace-llm-query opencode:google/gemini-2.5-flash "Analyze this architecture"
+ace-llm opencode "Generate unit tests" --output tests.rb
+ace-llm opencode:google/gemini-2.5-flash "Analyze this architecture"
 
 # Codex OSS examples
-ace-llm-query codexoss "Suggest improvements"
+ace-llm codexoss "Suggest improvements"
 ```
 
 ### All Standard Options Work
 
 ```bash
 # Output to file
-ace-llm-query claude:opus "Generate README" --output README.md
+ace-llm claude:opus "Generate README" --output README.md
 
 # Different formats
-ace-llm-query claude:sonnet "Explain" --format json
-ace-llm-query claude:sonnet "Explain" --format markdown
+ace-llm claude:sonnet "Explain" --format json
+ace-llm claude:sonnet "Explain" --format markdown
 
 # Temperature control
-ace-llm-query codex:gpt-5 "Creative writing" --temperature 0.9
+ace-llm codex:gpt-5 "Creative writing" --temperature 0.9
 
 # Token limits
-ace-llm-query opencode "Summary" --max-tokens 500
+ace-llm opencode "Summary" --max-tokens 500
 
 # System prompts
-ace-llm-query claude:opus "Review" --system "You are a code reviewer"
+ace-llm claude:opus "Review" --system "You are a code reviewer"
 
 # Timeout control
-ace-llm-query codexoss "Complex analysis" --timeout 180
+ace-llm codexoss "Complex analysis" --timeout 180
 ```
 
 ## Check CLI Tool Status
@@ -275,7 +275,7 @@ Some CLI tools cache authentication. Try:
 
 Increase the timeout:
 ```bash
-ace-llm-query cc:opus "large prompt" --timeout 300
+ace-llm cc:opus "large prompt" --timeout 300
 ```
 
 Or set it in code:

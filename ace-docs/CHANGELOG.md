@@ -646,7 +646,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Semantic Validation**: LLM-powered documentation accuracy validation
   - New `validate --semantic` flag for content validation
   - Checks if content matches stated purpose, identifies contradictions
-  - Uses ace-llm-query subprocess with gflash model (temperature 0.3)
+  - Uses ace-llm subprocess with gflash model (temperature 0.3)
   - Returns specific issues and inconsistencies found
   - Example: `ace-docs validate docs/architecture.md --semantic`
 
@@ -669,10 +669,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed obsolete `filter_relevant_changes()` method
 
 - **Validator**: Implemented semantic validation
-  - `validate_semantic()` now calls ace-llm-query subprocess
+  - `validate_semantic()` now calls ace-llm subprocess
   - Builds semantic validation prompt from document metadata
   - Parses LLM response for validation status and issues
-  - Graceful error handling for missing ace-llm-query
+  - Graceful error handling for missing ace-llm
 
 ### Fixed
 
@@ -734,7 +734,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Batch Analysis Command**: New `ace-docs analyze` command for LLM-powered documentation analysis
   - Accepts file lists and filter options (--needs-update, --type, --freshness)
   - Automatic time range detection from document staleness
-  - LLM compaction via ace-llm-query subprocess integration
+  - LLM compaction via ace-llm subprocess integration
   - Markdown reports organized by impact level (HIGH/MEDIUM/LOW)
   - Cache management with timestamped analysis reports
   - Support for exclude-renames and exclude-moves options
