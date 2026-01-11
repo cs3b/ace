@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.203
-status: pending
+status: in-progress
 priority: medium
 estimate: 30m
 dependencies: []
+worktree:
+  branch: 203-show-parent-task-context-for-orphan-subtasks-in-filtered-results
+  path: "../ace-task.203"
+  created_at: '2026-01-11 01:26:43'
+  updated_at: '2026-01-11 01:26:43'
 ---
 
 # Show parent task context for orphan subtasks in filtered results
