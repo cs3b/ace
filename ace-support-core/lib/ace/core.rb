@@ -4,7 +4,7 @@ require_relative "core/version"
 require_relative "core/errors"
 
 # Import ace-config for generic configuration cascade
-require "ace/config"
+require 'ace/support/config'
 
 # Import ace-support-fs for filesystem utilities (also re-exported by ace-config)
 require "ace/support/fs"
@@ -35,8 +35,8 @@ module Ace
 
     module Atoms
       # From ace-config: configuration parsing and merging
-      DeepMerger = ::Ace::Config::Atoms::DeepMerger
-      YamlParser = ::Ace::Config::Atoms::YamlParser
+      DeepMerger = ::Ace::Support::Config::Atoms::DeepMerger
+      YamlParser = ::Ace::Support::Config::Atoms::YamlParser
 
       # From ace-support-fs: path resolution utilities
       PathExpander = ::Ace::Support::Fs::Atoms::PathExpander
@@ -44,8 +44,8 @@ module Ace
 
     module Molecules
       # From ace-config: configuration discovery and loading
-      ConfigFinder = ::Ace::Config::Molecules::ConfigFinder
-      YamlLoader = ::Ace::Config::Molecules::YamlLoader
+      ConfigFinder = ::Ace::Support::Config::Molecules::ConfigFinder
+      YamlLoader = ::Ace::Support::Config::Molecules::YamlLoader
 
       # From ace-support-fs: filesystem traversal and project detection
       DirectoryTraverser = ::Ace::Support::Fs::Molecules::DirectoryTraverser
@@ -55,7 +55,7 @@ module Ace
     module Organisms
       # Backward-compatible wrapper for ConfigResolver
       # Accepts old API (search_paths, file_patterns) and translates to new API
-      class ConfigResolver < ::Ace::Config::Organisms::ConfigResolver
+      class ConfigResolver < ::Ace::Support::Config::Organisms::ConfigResolver
         # @param search_paths [Array<String>] DEPRECATED - use config_dir/defaults_dir instead
         # @param file_patterns [Array<String>] Optional file patterns
         # @param merge_strategy [Symbol] How to merge arrays (:replace, :concat, :union)
@@ -119,7 +119,7 @@ module Ace
               end
 
               potential_files.each do |file|
-                result << ::Ace::Config::Models::CascadePath.new(
+                result << ::Ace::Support::Config::Models::CascadePath.new(
                   path: file,
                   type: type,
                   exists: File.exist?(file)
@@ -150,9 +150,9 @@ module Ace
           all_configs = []
           @legacy_file_patterns.each do |pattern|
             Dir.glob(File.join(expanded_path, pattern)).sort.each do |file|
-              config = ::Ace::Config::Molecules::YamlLoader.load_file(file)
+              config = ::Ace::Support::Config::Molecules::YamlLoader.load_file(file)
               all_configs << config if config
-            rescue ::Ace::Config::YamlParseError
+            rescue ::Ace::Support::Config::YamlParseError
               # Skip malformed
             end
           end
@@ -160,9 +160,9 @@ module Ace
           return nil if all_configs.empty?
 
           merged = all_configs.reduce({}) do |acc, config|
-            ::Ace::Config::Atoms::DeepMerger.merge(acc, config.data, array_strategy: @legacy_merge_strategy)
+            ::Ace::Support::Config::Atoms::DeepMerger.merge(acc, config.data, array_strategy: @legacy_merge_strategy)
           end
-          ::Ace::Config::Models::Config.new(merged, source: all_configs.first.source)
+          ::Ace::Support::Config::Models::Config.new(merged, source: all_configs.first.source)
         end
 
         private
@@ -177,9 +177,9 @@ module Ace
             @legacy_file_patterns.each do |pattern|
               Dir.glob(File.join(expanded_path, pattern)).sort.each do |file|
                 begin
-                  config = ::Ace::Config::Molecules::YamlLoader.load_file(file)
+                  config = ::Ace::Support::Config::Molecules::YamlLoader.load_file(file)
                   all_configs << config if config
-                rescue ::Ace::Config::YamlParseError
+                rescue ::Ace::Support::Config::YamlParseError
                   raise # Re-raise for test compatibility
                 end
               end
@@ -188,34 +188,34 @@ module Ace
 
           # Merge all configs (first has highest priority)
           if all_configs.empty?
-            ::Ace::Config::Models::Config.new({}, source: "defaults")
+            ::Ace::Support::Config::Models::Config.new({}, source: "defaults")
           else
             merged = all_configs.reverse.reduce({}) do |acc, config|
-              ::Ace::Config::Atoms::DeepMerger.merge(acc, config.data, array_strategy: @legacy_merge_strategy)
+              ::Ace::Support::Config::Atoms::DeepMerger.merge(acc, config.data, array_strategy: @legacy_merge_strategy)
             end
             # Build cascade source showing all config paths
             cascade_source = all_configs.map(&:source).join(" -> ")
-            ::Ace::Config::Models::Config.new(merged, source: cascade_source)
+            ::Ace::Support::Config::Models::Config.new(merged, source: cascade_source)
           end
         end
       end
 
-      VirtualConfigResolver = ::Ace::Config::Organisms::VirtualConfigResolver
+      VirtualConfigResolver = ::Ace::Support::Config::Organisms::VirtualConfigResolver
     end
 
     module Models
       # Re-export from ace-config
-      CascadePath = ::Ace::Config::Models::CascadePath
-      Config = ::Ace::Config::Models::Config
+      CascadePath = ::Ace::Support::Config::Models::CascadePath
+      Config = ::Ace::Support::Config::Models::Config
     end
 
     # Re-export errors for backward compatibility
     # Note: Ace::Core::Error and ace-specific errors remain in core/errors.rb
     # These are aliases for ace-config errors
-    ConfigNotFoundError = ::Ace::Config::ConfigNotFoundError
-    YamlParseError = ::Ace::Config::YamlParseError
-    PathError = ::Ace::Config::PathError
-    MergeStrategyError = ::Ace::Config::MergeStrategyError
+    ConfigNotFoundError = ::Ace::Support::Config::ConfigNotFoundError
+    YamlParseError = ::Ace::Support::Config::YamlParseError
+    PathError = ::Ace::Support::Config::PathError
+    MergeStrategyError = ::Ace::Support::Config::MergeStrategyError
 
     # Main module providing config cascade and environment management
     class << self
@@ -226,7 +226,7 @@ module Ace
       def config(search_paths: nil, file_patterns: nil)
         if search_paths || file_patterns
           warn "[DEPRECATION] Ace::Core.config search_paths and file_patterns parameters are deprecated " \
-               "and ignored. Use Ace::Config.create(config_dir:, defaults_dir:) for custom paths."
+               "and ignored. Use Ace::Support::Config.create(config_dir:, defaults_dir:) for custom paths."
         end
 
         cached_resolver.resolve
@@ -276,7 +276,7 @@ module Ace
       # @param path [String] Where to create config
       # @return [Models::Config] Created config
       def create_default_config(path = "./.ace/core/config.yml")
-        ::Ace::Config::Organisms::ConfigResolver.create_default(path)
+        ::Ace::Support::Config::Organisms::ConfigResolver.create_default(path)
       end
 
       # Get environment manager
@@ -308,7 +308,7 @@ module Ace
       # Per ADR-022, this method allows test isolation
       def reset_config!
         @cached_resolver = nil
-        ::Ace::Config.reset_config!
+        ::Ace::Support::Config.reset_config!
         clear_env_cache
       end
 
@@ -317,7 +317,7 @@ module Ace
       # Cached resolver instance for performance
       # Avoids repeated filesystem traversal on every config/get call
       def cached_resolver
-        @cached_resolver ||= ::Ace::Config.create(
+        @cached_resolver ||= ::Ace::Support::Config.create(
           config_dir: ".ace",
           defaults_dir: resolve_defaults_dir,
           gem_path: gem_root_path
