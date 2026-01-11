@@ -22,21 +22,25 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
   end
 
   def test_cli_routes_idea_create_with_note_flag
-    # Verify --note flag routes correctly to create subcommand
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "--note", "test content"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify --note flag routes correctly to create subcommand
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "--note", "test content"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should not reject the command or flag
-    refute_match(/unknown command/i, output)
+      # Should not reject the command or flag
+      refute_match(/unknown command/i, output)
+    end
   end
 
   def test_cli_routes_idea_create_with_positional_content
-    # Verify positional content routes to create subcommand
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "my idea content"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify positional content routes to create subcommand
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "my idea content"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should accept positional content
-    refute_match(/unknown command/i, output)
+      # Should accept positional content
+      refute_match(/unknown command/i, output)
+    end
   end
 
   # --- Idea Done Subcommand Tests ---
@@ -51,12 +55,14 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
   end
 
   def test_cli_routes_idea_done_with_reference
-    # Verify done subcommand accepts idea reference
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "done", "some-idea"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify done subcommand accepts idea reference
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "done", "some-idea"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should not reject the reference
-    refute_match(/unknown command/i, output)
+      # Should not reject the reference
+      refute_match(/unknown command/i, output)
+    end
   end
 
   # --- Idea Park Subcommand Tests ---
@@ -71,12 +77,14 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
   end
 
   def test_cli_routes_idea_park_with_reference
-    # Verify park subcommand accepts idea reference
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "park", "some-idea"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify park subcommand accepts idea reference
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "park", "some-idea"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should not reject the reference
-    refute_match(/unknown command/i, output)
+      # Should not reject the reference
+      refute_match(/unknown command/i, output)
+    end
   end
 
   # --- Idea Unpark Subcommand Tests ---
@@ -91,12 +99,14 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
   end
 
   def test_cli_routes_idea_unpark_with_reference
-    # Verify unpark subcommand accepts idea reference
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "unpark", "some-idea"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify unpark subcommand accepts idea reference
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "unpark", "some-idea"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should not reject the reference
-    refute_match(/unknown command/i, output)
+      # Should not reject the reference
+      refute_match(/unknown command/i, output)
+    end
   end
 
   # --- Idea Reschedule Subcommand Tests ---
@@ -111,31 +121,37 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
   end
 
   def test_cli_routes_idea_reschedule_with_reference_and_date
-    # Verify reschedule subcommand accepts reference and date
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "reschedule", "some-idea", "tomorrow"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify reschedule subcommand accepts reference and date
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "reschedule", "some-idea", "tomorrow"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should not reject the arguments
-    refute_match(/unknown command/i, output)
+      # Should not reject the arguments
+      refute_match(/unknown command/i, output)
+    end
   end
 
   # --- Idea Subcommand Flag Handling Tests ---
 
   def test_idea_create_with_clipboard_flag
-    # Verify --clipboard flag is handled correctly by create subcommand
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "--clipboard"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify --clipboard flag is handled correctly by create subcommand
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "--clipboard"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should not reject as unknown command
-    refute_match(/unknown command/i, output)
+      # Should not reject as unknown command
+      refute_match(/unknown command/i, output)
+    end
   end
 
   def test_idea_create_with_location_flags
-    # Verify location flags (--backlog, --current, --release) work with create
-    %w[--backlog --current].each do |flag|
-      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", flag])
-      output = result[:stdout] + result[:stderr]
-      refute_match(/unknown command/i, output, "Flag #{flag} should not cause unknown command error")
+    with_real_test_project do |_dir|
+      # Verify location flags (--backlog, --current, --release) work with create
+      %w[--backlog --current].each do |flag|
+        result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", flag])
+        output = result[:stdout] + result[:stderr]
+        refute_match(/unknown command/i, output, "Flag #{flag} should not cause unknown command error")
+      end
     end
   end
 
@@ -151,11 +167,13 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
   end
 
   def test_idea_command_with_reference
-    # Verify 'idea <reference>' works (not routed to subcommands)
-    result = invoke_cli(Ace::Taskflow::CLI, ["idea", "some-idea-ref"])
-    output = result[:stdout] + result[:stderr]
+    with_real_test_project do |_dir|
+      # Verify 'idea <reference>' works (not routed to subcommands)
+      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "some-idea-ref"])
+      output = result[:stdout] + result[:stderr]
 
-    # Should show idea or appropriate error, not "unknown command"
-    refute_match(/unknown command/i, output)
+      # Should show idea or appropriate error, not "unknown command"
+      refute_match(/unknown command/i, output)
+    end
   end
 end
