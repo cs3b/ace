@@ -1,15 +1,20 @@
 ---
 id: v.0.9.0+task.202
-status: pending
+status: in-progress
 priority: high
 estimate: 11h
 dependencies: []
 type: orchestrator
 subtasks:
-  - 202.01
-  - 202.02
-  - 202.03
-  - 202.04
+- 202.01
+- 202.02
+- 202.03
+- 202.04
+worktree:
+  branch: 202-rename-support-gems-and-executables-for-naming-consistency
+  path: "../ace-task.202"
+  created_at: '2026-01-11 12:04:58'
+  updated_at: '2026-01-11 12:04:58'
 ---
 
 # Rename Support Gems and Executables for Naming Consistency
