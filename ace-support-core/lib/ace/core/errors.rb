@@ -13,9 +13,9 @@ module Ace
 
     # Note: The following errors are now aliases to ace-config errors,
     # defined in lib/ace/core.rb for backward compatibility:
-    # - ConfigNotFoundError -> Ace::Config::ConfigNotFoundError
-    # - YamlParseError -> Ace::Config::YamlParseError
-    # - PathError -> Ace::Config::PathError
-    # - MergeStrategyError -> Ace::Config::MergeStrategyError
+    # - ConfigNotFoundError -> Ace::Support::Config::ConfigNotFoundError
+    # - YamlParseError -> Ace::Support::Config::YamlParseError
+    # - PathError -> Ace::Support::Config::PathError
+    # - MergeStrategyError -> Ace::Support::Config::MergeStrategyError
   end
 end

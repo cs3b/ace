@@ -26,7 +26,7 @@ class DeprecationAndCachingTest < AceTestCase
 
     assert_match(/DEPRECATION/, err)
     assert_match(/search_paths/, err)
-    assert_match(/Ace::Config\.create/, err)
+    assert_match(/Ace::Support::Config\.create/, err)
   end
 
   def test_config_with_file_patterns_emits_deprecation_warning
