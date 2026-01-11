@@ -1,12 +1,17 @@
 ---
 name: ace-update-pr-desc
 description: Update PR description based on current work
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-git:*)
+  - Bash(ace-context:*)
+  - Bash(gh:*)
   - Read
   - Grep
-argument-hint: [pr-number]
-last_modified: 2025-11-15
+argument-hint: [#]
+last_modified: 2026-01-10
 source: ace-git
 ---
 

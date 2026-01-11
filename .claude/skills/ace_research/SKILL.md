@@ -1,8 +1,12 @@
 ---
 name: ace:research
 description: RESEARCH codebases through planned multi-search analysis
+# context: no-fork
+# agent: Explore
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-search:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [goal] [--scope=path] [--depth=shallow|normal|deep]
 last_modified: 2026-01-09

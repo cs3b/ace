@@ -1,11 +1,17 @@
 ---
 name: ace:rebase
 description: Rebase with CHANGELOG preservation
+# context: no-fork
+# agent: Bash
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-git:*)
+  - Bash(ace-context:*)
   - Read
+  - Edit
+  - Write
 argument-hint: [target-branch]
-last_modified: 2025-11-13
+last_modified: 2026-01-10
 source: ace-git
 ---
 

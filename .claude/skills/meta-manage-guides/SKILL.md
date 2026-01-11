@@ -3,20 +3,25 @@ name: meta-manage-guides
 title: Meta: Manage Guides
 command: meta-manage-guides
 description: Create, update, and maintain development guides
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 author: handbook
 model_preference: claude-3-5-sonnet-latest
 version: 1.0.0
-last_modified: 2025-08-25 00:47:54
+last_modified: 2026-01-10
 source: custom
 allowed-tools:
+  - Bash(ace-handbook:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - Edit
   - MultiEdit
   - Glob
   - LS
-  - Bash
   - TodoWrite
+argument-hint: [guide-name] [action: create|update|review]
 ---
 
 # Meta: Manage Guides

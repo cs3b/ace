@@ -1,8 +1,12 @@
 ---
 name: ace:lint-process
 description: Process lint report and create tasks for manual fixes
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-lint:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [report-path]
 source: ace-lint

@@ -1,11 +1,15 @@
 ---
 name: ace:squash-pr
 description: Squash commits by version
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-git:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [version]
-last_modified: 2025-11-13
+last_modified: 2026-01-10
 source: ace-git
 ---
 

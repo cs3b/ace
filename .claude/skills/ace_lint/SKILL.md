@@ -1,8 +1,12 @@
 ---
 name: ace:lint
 description: Run ace-lint on project files with optional autofix and report
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
 allowed-tools:
-  - Bash
+  - Bash(ace-lint:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [file-pattern] [--fix] [--report]
 source: ace-lint
