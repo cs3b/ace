@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/config"
+require 'ace/support/config'
 require "ace/support/fs"
 
 module Ace
@@ -14,7 +14,7 @@ module Ace
       # @param start_path [String] Starting path for discovery (default: current directory)
       def initialize(start_path: nil)
         @start_path = start_path || Dir.pwd
-        @finder = ::Ace::Config::Molecules::ConfigFinder.new(
+        @finder = ::Ace::Support::Config::Molecules::ConfigFinder.new(
           config_dir: ".ace",
           defaults_dir: ".ace-defaults",
           use_traversal: true,
@@ -91,7 +91,7 @@ module Ace
                 proj_root = project_root
                 file_config = resolve_relative_paths(file_config, base_dir, proj_root)
               end
-              config = ::Ace::Config::Atoms::DeepMerger.merge(config, file_config)
+              config = ::Ace::Support::Config::Atoms::DeepMerger.merge(config, file_config)
             end
           rescue => e
             warn "Error loading config from #{file}: #{e.message}"
