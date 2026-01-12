@@ -3,18 +3,7 @@ id: v.0.9.0+task.150.11
 status: done
 priority: medium
 estimate: 2h
-dependencies:
-- 150.0
-- 150.01
-- 150.02
-- 150.03
-- 150.04
-- 150.05
-- 150.06
-- 150.07
-- 150.08
-- 150.09
-- 150.1
+dependencies: []
 parent: v.0.9.0+task.150
 ---
 
