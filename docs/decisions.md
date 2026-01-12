@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-28'
+  last-updated: '2026-01-12'
 ---
 
 # Project Decisions
@@ -88,6 +88,16 @@ This document provides actionable decisions from Architecture Decision Records (
 **Decision**: All gems must follow semantic versioning and maintain CHANGELOG.md in Keep a Changelog format.
 **Impact**: Update CHANGELOG.md with every change, bump versions according to semver (MAJOR for breaking, MINOR for features, PATCH for fixes).
 **Details**: [ADR-020](decisions/ADR-020-semantic-versioning-changelog.md)
+
+### No Backward Compatibility Until 1.0.0
+**Decision**: No backward compatibility mechanisms will be provided for pre-1.0.0 gems.
+**Impact**: When working with gems during pre-1.0 development:
+- No require path shims for renamed gems
+- No namespace aliases for refactored modules
+- No deprecation warnings for breaking changes
+- All consumers in mono-repo are updated together
+**Status**: Accepted January 2026 - applies until 1.0.0 release
+**Details**: [ADR-024](decisions/ADR-024-no-backward-compatibility-pre-1.0.md)
 
 ### Standardized Rakefile
 **Decision**: All gems use standardized Rakefile with Rake::TestTask and CI compatibility.
