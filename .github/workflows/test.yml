@@ -27,7 +27,7 @@ jobs:
           - ace-support-test-helpers
           - ace-test-runner
           - ace-context
-          - ace-nav
+          - ace-support-nav
           - ace-taskflow
           - ace-git-commit
           - ace-llm
