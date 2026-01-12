@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/timestamp"
+require "ace/support/timestamp"
 
 module Ace
   module Prompt
@@ -18,7 +18,7 @@ module Ace
         def self.call(time: nil)
           time ||= Time.now.utc
           {
-            timestamp: Ace::Timestamp.encode(time)
+            timestamp: Ace::Support::Timestamp.encode(time)
           }
         end
 
@@ -29,7 +29,7 @@ module Ace
         def self.valid?(value)
           return false unless value.is_a?(String)
 
-          Ace::Timestamp.valid?(value)
+          Ace::Support::Timestamp.valid?(value)
         end
       end
     end

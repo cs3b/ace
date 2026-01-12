@@ -64,7 +64,7 @@ class RetroLoaderTest < AceTaskflowTestCase
   def test_extract_date_from_base36_filename
     # Create a valid Base36 timestamp using ace-timestamp
     time = Time.utc(2025, 1, 15, 12, 0, 0)
-    timestamp_id = Ace::Timestamp.encode(time)
+    timestamp_id = Ace::Support::Timestamp.encode(time)
     path = "/some/path/#{timestamp_id}-retro.md"
     date = @loader.send(:extract_date_from_filename, path)
     assert_equal "2025-01-15", date
@@ -72,7 +72,7 @@ class RetroLoaderTest < AceTaskflowTestCase
 
   def test_extract_date_from_base36_with_slug
     time = Time.utc(2024, 12, 31, 23, 59, 59)
-    timestamp_id = Ace::Timestamp.encode(time)
+    timestamp_id = Ace::Support::Timestamp.encode(time)
     path = "/some/path/#{timestamp_id}-sprint-review.md"
     date = @loader.send(:extract_date_from_filename, path)
     assert_equal "2024-12-31", date

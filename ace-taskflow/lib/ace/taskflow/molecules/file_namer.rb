@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "time"
-require "ace/timestamp"
+require "ace/support/timestamp"
 require_relative "../atoms/slug_sanitizer"
 
 module Ace
@@ -52,14 +52,14 @@ module Ace
         # Generate a Base36 compact ID (6 characters)
         # @return [String] 6-char Base36 compact ID
         def generate_id
-          Ace::Timestamp.encode(@time_provider.now)
+          Ace::Support::Timestamp.encode(@time_provider.now)
         end
 
         # Detect the format of an ID string
         # @param id_string [String] The ID to analyze
         # @return [Symbol, nil] :compact, :timestamp, or nil
         def self.detect_id_format(id_string)
-          Ace::Timestamp.detect_format(id_string)
+          Ace::Support::Timestamp.detect_format(id_string)
         end
 
         private
