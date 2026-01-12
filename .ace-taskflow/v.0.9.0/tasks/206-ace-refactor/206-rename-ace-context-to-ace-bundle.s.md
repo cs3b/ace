@@ -108,7 +108,7 @@ Rename `ace-context` to `ace-bundle` to better reflect its purpose: bundling mul
 - Archived content in `.ace-taskflow/_archive/`
 - Backward compatibility aliases
 - Migration tooling for external users
-- CHANGELOG entries for old ace-context versions
+- Rewriting historical CHANGELOG entries (keep ace-context history as-is)
 
 ## Research Findings
 
@@ -131,7 +131,7 @@ ace-bundle (was ace-context)
 | Gemspecs | 3 files | ace-prompt, ace-review, root Gemfile |
 | Config files | 4 files | .ace-defaults/, .ace/ |
 | Documentation | 8+ primary | README, CLAUDE.md, docs/*.md |
-| Skills | 9 files | .claude/skills/ references |
+| Skills | 66 files | .claude/skills/ references |
 | Executables | 2 files | bin/, exe/ |
 
 ### Pattern Replacements Required
@@ -143,6 +143,17 @@ ace-bundle (was ace-context)
 | `require 'ace/context'` | `require 'ace/bundle'` | All requires |
 | `.cache/ace-context` | `.cache/ace-bundle` | Config defaults |
 | `.ace/context` | `.ace/bundle` | Config directories |
+
+## Versioning Strategy
+
+Bump **minor version** for ace-bundle and all dependent gems (no 1.0.0 release yet):
+
+| Gem | Current Version | New Version | Reason |
+|-----|-----------------|-------------|--------|
+| ace-bundle (was ace-context) | 0.28.2 | 0.29.0 | Rename + minor bump |
+| ace-prompt | 0.13.2 | 0.14.0 | Dependency change |
+| ace-review | 0.33.1 | 0.34.0 | Dependency change |
+| ace-docs | 0.17.2 | 0.18.0 | Dependency change |
 
 ## Implementation Plan
 
@@ -174,7 +185,8 @@ ace-bundle (was ace-context)
   - `module Ace::Context` → `module Ace::Bundle`
   - Update all internal requires
 - [ ] **2.4** Update version file: `lib/ace/bundle/version.rb`
-  - `module Ace::Bundle::VERSION`
+  - Update module namespace: `Ace::Context` → `Ace::Bundle`
+  - Bump to minor version: `VERSION = "0.29.0"`
 
 #### Phase 3: Configuration Files
 
@@ -182,6 +194,9 @@ ace-bundle (was ace-context)
 - [ ] **3.2** Update nav source file: `.ace-defaults/nav/protocols/wfi-sources/ace-context.yml` → `ace-bundle.yml`
 - [ ] **3.3** Rename project config: `.ace/context/` → `.ace/bundle/`
 - [ ] **3.4** Update config.yml cache path references: `ace-context` → `ace-bundle`
+- [ ] **3.5** Update YAML root keys in config files:
+  - Replace `context:` with `bundle:` in `.ace-defaults/bundle/config.yml`
+  - Replace `context:` with `bundle:` in any project/user overrides (`.ace/bundle/config.yml`)
 
 #### Phase 4: Test Files
 
@@ -209,7 +224,11 @@ ace-bundle (was ace-context)
 - [ ] **5.6** Update ace-docs requires (2 files):
   - `lib/ace/docs/prompts/consistency_prompt.rb`
   - `lib/ace/docs/prompts/document_analysis_prompt.rb`
-- [ ] **5.7** Run tests for dependent gems:
+- [ ] **5.7** Bump dependent gem versions:
+  - `ace-prompt/lib/ace/prompt/version.rb`: `VERSION = "0.14.0"`
+  - `ace-review/lib/ace/review/version.rb`: `VERSION = "0.34.0"`
+  - `ace-docs/lib/ace/docs/version.rb`: `VERSION = "0.18.0"`
+- [ ] **5.8** Run tests for dependent gems:
   ```bash
   ace-test ace-prompt && ace-test ace-review && ace-test ace-docs
   ```
@@ -246,7 +265,9 @@ ace-bundle (was ace-context)
 - [ ] **8.6** Update `docs/ace-gems.g.md`
 - [ ] **8.7** Update `docs/command-reference.md`
 - [ ] **8.8** Update `ace-bundle/README.md` (package readme)
-- [ ] **8.9** Update `ace-bundle/CHANGELOG.md` with rename note
+- [ ] **8.9** Update `ace-bundle/CHANGELOG.md`:
+  - Add entry for 0.29.0 documenting the rename from ace-context
+  - Note: Historical ace-context entries remain unchanged (continuity)
 
 #### Phase 9: CI/CD
 
@@ -296,6 +317,8 @@ ace-bundle (was ace-context)
 - [ ] All dependent gems (ace-prompt, ace-review, ace-docs) work correctly
 - [ ] All 66 skill files updated
 - [ ] Full test suite passes (`ace-test-suite`)
+- [ ] CI workflow (`.github/workflows/test.yml`) updated
+- [ ] Test suite config (`.ace/test/suite.yml`) updated
 - [ ] No references to old name remain in active codebase
 
 ## Out of Scope

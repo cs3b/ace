@@ -32,7 +32,7 @@ instructions:
 
 models:
   - claude:opus              # Deep reasoning, architecture analysis
-  - codex:gpt-5.1-codex-max  # Code-focused, implementation details
+  - codex:max  # Code-focused, implementation details
   - google:pro-preview
   - xai:grok-code-fast
 
