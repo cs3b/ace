@@ -4,8 +4,7 @@ status: done
 priority: medium
 estimate: S
 parent: v.0.9.0+task.150
-dependencies:
-- v.0.9.0+task.150.0
+dependencies: []
 ---
 
 # 150.03: Migrate ace-nav to Thor
