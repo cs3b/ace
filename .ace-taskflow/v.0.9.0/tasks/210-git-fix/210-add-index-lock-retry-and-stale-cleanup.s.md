@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.210
-status: pending
+status: in-progress
 priority: high
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 210-add-git-index-lock-retry-with-stale-lock-cleanup
+  path: "../ace-task.210"
+  created_at: '2026-01-12 15:03:41'
+  updated_at: '2026-01-12 15:03:41'
 ---
 
 # Add Git Index Lock Retry with Stale Lock Cleanup
