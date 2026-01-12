@@ -14,4 +14,4 @@ ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
 require "bundler/setup"
 
 # Now require and run the actual ace-timestamp executable
-load ace_meta_root.join("ace-timestamp/exe/ace-timestamp").to_s
+load ace_meta_root.join("ace-support-timestamp/exe/ace-timestamp").to_s
