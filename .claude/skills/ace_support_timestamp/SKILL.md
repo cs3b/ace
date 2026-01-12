@@ -10,7 +10,7 @@ allowed-tools:
   - Read
 argument-hint: [encode|decode|config] [value] [options]
 last_modified: 2026-01-09
-source: ace-timestamp
+source: ace-support-timestamp
 ---
 
 read and run `ace-context wfi://timestamp`
