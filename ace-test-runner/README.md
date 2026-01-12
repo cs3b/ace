@@ -71,11 +71,11 @@ ace-test ace-context atoms  # Run ace-context atom tests from within ace-search
 |---------|--------------|
 | `ace-test` | All tests in current package |
 | `ace-test atoms` | Only atom tests in current package |
-| `ace-test ace-nav` | All tests in ace-nav package |
-| `ace-test ace-nav atoms` | Only atom tests in ace-nav |
-| `ace-test ace-nav/test/file.rb` | Specific file in ace-nav (from project root) |
-| `ace-test ace-nav/test/file.rb:42` | Specific line in ace-nav (from project root) |
-| `ace-test ./ace-nav` | All tests using relative path |
+| `ace-test ace-support-nav` | All tests in ace-support-nav package |
+| `ace-test ace-support-nav atoms` | Only atom tests in ace-support-nav |
+| `ace-test ace-support-nav/test/file.rb` | Specific file in ace-support-nav (from project root) |
+| `ace-test ace-support-nav/test/file.rb:42` | Specific line in ace-support-nav (from project root) |
+| `ace-test ./ace-support-nav` | All tests using relative path |
 | `ace-test test/atoms/file.rb` | Specific file in current package |
 
 **Note:** Package names match `ace-*` directories in the mono-repo root, enabling shell tab completion.

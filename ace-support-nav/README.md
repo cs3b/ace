@@ -6,8 +6,6 @@ Unified navigation and resource discovery for the ACE ecosystem.
 
 ace-support-nav provides unified navigation and path resolution across the ACE ecosystem. It automatically discovers handbooks bundled within ace-* gems, resolves resource URIs to actual file paths, and supports a multi-level override cascade (project > user > gem).
 
-> **Note**: This gem was renamed from `ace-nav` to `ace-support-nav` in version 0.17.0. The namespace changed from `Ace::Nav` to `Ace::Support::Nav`. The executable remains `ace-nav` for backwards compatibility.
-
 ## Features
 
 - **Automatic Discovery**: Discovers handbooks bundled in ace-* gems without configuration
@@ -153,31 +151,6 @@ Ace::Support::Nav::CLI.start(["wfi://setup"])
 # Use navigation engine directly
 engine = Ace::Support::Nav::Organisms::NavigationEngine.new
 result = engine.resolve("wfi://setup")
-```
-
-## Migration from ace-nav
-
-If upgrading from `ace-nav` to `ace-support-nav`, update your code:
-
-```ruby
-# Before
-require "ace/nav"
-Ace::Nav.config
-Ace::Nav::CLI.start(ARGV)
-
-# After
-require "ace/support/nav"
-Ace::Support::Nav.config
-Ace::Support::Nav::CLI.start(ARGV)
-```
-
-Update your Gemfile:
-```ruby
-# Before
-gem 'ace-nav', '~> 0.16'
-
-# After
-gem 'ace-support-nav', '~> 0.17'
 ```
 
 ## Development
