@@ -16,7 +16,7 @@ PATH
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
       ace-support-markdown (~> 0.1)
-      ace-timestamp (~> 0.1)
+      ace-support-timestamp (~> 0.2)
       colorize (~> 1.1)
       dry-cli (~> 1.0)
       fileutils (~> 1.7)
@@ -39,7 +39,7 @@ PATH
     ace-git-secrets (0.7.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
-      ace-timestamp (~> 0.1)
+      ace-support-timestamp (~> 0.2)
       dry-cli (~> 1.0)
       faraday (~> 2.7, >= 2.7.4)
       faraday-retry (~> 2.2)
@@ -129,8 +129,8 @@ PATH
       ace-nav (~> 0.8)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
+      ace-support-timestamp (~> 0.2)
       ace-taskflow (~> 0.9)
-      ace-timestamp (~> 0.1)
       dry-cli (~> 1.0)
 
 PATH
@@ -143,8 +143,8 @@ PATH
       ace-nav (~> 0.9)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
+      ace-support-timestamp (~> 0.2)
       ace-taskflow (~> 0.19)
-      ace-timestamp (~> 0.1)
       dry-cli (~> 1.0)
 
 PATH
@@ -196,6 +196,14 @@ PATH
       minitest-reporters (~> 1.6)
 
 PATH
+  remote: ace-support-timestamp
+  specs:
+    ace-support-timestamp (0.2.0)
+      ace-support-config (~> 0.6)
+      ace-support-core (~> 0.1)
+      dry-cli (~> 1.1)
+
+PATH
   remote: ace-taskflow
   specs:
     ace-taskflow (0.33.6)
@@ -204,7 +212,7 @@ PATH
       ace-support-core (~> 0.11)
       ace-support-mac-clipboard (~> 0.2.0)
       ace-support-markdown (~> 0.1)
-      ace-timestamp (~> 0.1)
+      ace-support-timestamp (~> 0.2)
       clipboard (~> 1.3)
       dry-cli (~> 1.0)
 
@@ -215,19 +223,11 @@ PATH
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.1)
       ace-support-test-helpers (~> 0.1)
-      ace-timestamp (~> 0.1)
+      ace-support-timestamp (~> 0.2)
       dry-cli (~> 1.0)
       minitest (~> 5.0)
       minitest-reporters (~> 1.6)
       ostruct
-
-PATH
-  remote: ace-timestamp
-  specs:
-    ace-timestamp (0.1.1)
-      ace-support-config (~> 0.6)
-      ace-support-core (~> 0.1)
-      dry-cli (~> 1.1)
 
 GEM
   remote: https://rubygems.org/
@@ -334,9 +334,9 @@ DEPENDENCIES
   ace-support-mac-clipboard!
   ace-support-markdown!
   ace-support-test-helpers!
+  ace-support-timestamp!
   ace-taskflow!
   ace-test-runner!
-  ace-timestamp!
   bundler (~> 2.4)
   minitest (~> 5.20)
   minitest-reporters (~> 1.6)

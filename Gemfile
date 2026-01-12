@@ -20,9 +20,9 @@ gem 'ace-support-core', path: 'ace-support-core'
 gem 'ace-support-fs', path: 'ace-support-fs'
 gem 'ace-support-mac-clipboard', path: 'ace-support-mac-clipboard'
 gem 'ace-support-markdown', path: 'ace-support-markdown'
+gem 'ace-support-timestamp', path: 'ace-support-timestamp'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
-gem 'ace-timestamp', path: 'ace-timestamp'
 
 # Shared dev/test tools for all gems
 group :development, :test do
