@@ -203,6 +203,34 @@ PRs for subtasks of orchestrator tasks should target the orchestrator branch for
 - **Impact**: PR creation workflow uses saved target_branch instead of manual parent_id detection
 - **Integration points**: Used by developers when creating PRs for subtasks
 
+#### `ace-git/lib/ace/git/organisms/repo_status_loader.rb` (Enhancement)
+- **Changes**:
+  - When no PR exists for the current branch, display target_branch from worktree metadata
+  - Add "Target Branch" line in output when target_branch differs from `main`
+  - Show helpful message like "No PR yet → Target: {target_branch}" in PR section
+- **Impact**: Developers see where their PR should target before creating it
+- **Integration points**: Uses worktree metadata from ace-taskflow if available
+- **Example output**:
+  ```
+  ## Current PR
+  No PR yet → Target: 202-rename-support-gems (from worktree metadata)
+  ```
+
+#### `ace-git/handbook/workflow-instructions/rebase.wf.md` (Enhancement)
+- **Changes**:
+  - Update default target_branch to check worktree metadata first
+  - Add step to read `target_branch` from `.ace-taskflow/task.yml` before defaulting to origin/main
+  - Update Variables section: `$target_branch` now defaults to worktree metadata → origin/main fallback
+  - Add example for subtask rebase against orchestrator branch
+- **Impact**: Subtask branches automatically rebase against parent (orchestrator) branch
+- **Integration points**: Uses worktree metadata from ace-taskflow if available
+- **Example**:
+  ```bash
+  # Auto-detect target from worktree metadata
+  target_branch=$(yq eval '.worktree.target_branch // "origin/main"' .ace-taskflow/task.yml 2>/dev/null || echo "origin/main")
+  git rebase $target_branch
+  ```
+
 ### Delete
 
 ### Rename
@@ -354,6 +382,37 @@ PRs for subtasks of orchestrator tasks should target the orchestrator branch for
   > Assert: New instructions correctly describe how to use target_branch from metadata
   > Command: Manual review of create-pr.wf.md changes
 
+- [ ] **Step 10: Enhance ace-git status to show target_branch when no PR exists**
+  - Modify `ace-git/lib/ace/git/organisms/repo_status_loader.rb`
+  - When no PR exists for current branch:
+    - Check for worktree metadata in `.ace-taskflow/task.yml`
+    - If `target_branch` exists, display: "No PR yet → Target: {target_branch}"
+    - If no metadata, display: "No PR" (current behavior)
+  - Add tests for status output with/without worktree metadata
+  > TEST: Verify ace-git status shows target branch when no PR exists
+  > Type: Integration Test
+  > Assert: Output includes target_branch from worktree metadata when present
+  > Command: ace-test ace-git/test/organisms/repo_status_loader_test.rb
+
+- [ ] **Step 11: Update rebase workflow to use target_branch from metadata**
+  - Modify `ace-git/handbook/workflow-instructions/rebase.wf.md`
+  - Update Variables section to document metadata-first fallback
+  - Add new section "### 0. Determine Target Branch" before pre-rebase verification:
+    ```bash
+    # Check worktree metadata for target branch
+    if [ -f .ace-taskflow/task.yml ]; then
+      target_branch=$(yq eval '.worktree.target_branch // ""' .ace-taskflow/task.yml)
+    fi
+    target_branch=${target_branch:-origin/main}
+    echo "Rebasing against: $target_branch"
+    ```
+  - Update all `$target_branch` references to use this auto-detected value
+  - Add example pattern "Rebase Subtask Against Orchestrator"
+  > TEST: Verify workflow instructions are clear and accurate
+  > Type: Documentation Review
+  > Assert: Rebase workflow correctly describes target_branch auto-detection
+  > Command: Manual review of rebase.wf.md changes
+
 ## Acceptance Criteria
 
 - [ ] **AC 1**: WorktreeMetadata model includes target_branch field with proper serialization
@@ -365,3 +424,5 @@ PRs for subtasks of orchestrator tasks should target the orchestrator branch for
 - [ ] **AC 7**: CHANGELOG.md updated with feature description
 - [ ] **AC 8**: create-pr workflow updated to read target_branch from worktree metadata
 - [ ] **AC 9**: Workflow documentation includes fallback method for backward compatibility
+- [ ] **AC 10**: ace-git status displays target_branch when no PR exists (from worktree metadata)
+- [ ] **AC 11**: Rebase workflow auto-detects target_branch from worktree metadata
