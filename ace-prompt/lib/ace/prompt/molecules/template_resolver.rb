@@ -82,9 +82,9 @@ module Ace
           # Resolve template using ace-nav Ruby API
           def resolve_via_ace_nav(uri)
             # Try to load ace-nav and use its Ruby API
-            require "ace/nav/organisms/navigation_engine"
+            require "ace/support/nav/organisms/navigation_engine"
 
-            engine = Ace::Nav::Organisms::NavigationEngine.new
+            engine = Ace::Support::Nav::Organisms::NavigationEngine.new
             result = engine.resolve(uri)
 
             # Return the resolved path if successful
