@@ -49,11 +49,13 @@ ACE gems follow a naming pattern that clarifies their purpose:
 
 **Naming Convention (Important)**:
 - **Module namespace**: `Ace::Support::*` (e.g., `Ace::Support::Nav`, `Ace::Support::Config`)
+- **Binary name**: `ace-<name>` (drop `ace-support-` prefix)
+  - Example: `ace-support-nav` → `ace-nav` binary (NOT `ace-support-nav`)
 - **Config folder**: `.ace/<name>/` (drop `ace-support-` prefix)
   - Example: `ace-support-nav` → `.ace/nav/` (NOT `.ace/support-nav/`)
 - **Config namespace**: `<name>` (simple name, no "support" prefix)
   - Example: `ace-support-nav` uses namespace `nav` (not `support-nav`)
-  - Rationale: User configs remain compatible when gems are renamed (ace-nav → ace-support-nav)
+- **Rationale**: User configs and CLI commands remain compatible when gems are renamed (ace-nav → ace-support-nav)
 
 **Examples**:
 ```ruby
@@ -69,6 +71,9 @@ end
 # Config resolution uses simple "nav" namespace
 resolver = Ace::Support::Config.create
 resolver.resolve_namespace("nav")  # NOT "support-nav"
+
+# Binary is installed as "ace-nav" (not "ace-support-nav")
+# $ ace-nav --help
 ```
 
 ### ace-llm-providers-* Pattern (Provider Extensions)
