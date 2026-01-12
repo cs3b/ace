@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "pathname"
-require "ace/timestamp"
+require "ace/support/timestamp"
 require_relative "release_resolver"
 require_relative "config_loader"
 require_relative "../configuration"
@@ -178,9 +178,9 @@ module Ace
           if filename =~ /^([a-z0-9]+)-/
             timestamp_id = $1
             begin
-              decoded_time = Ace::Timestamp.decode(timestamp_id)
+              decoded_time = Ace::Support::Timestamp.decode(timestamp_id)
               return decoded_time.strftime("%Y-%m-%d")
-            rescue ArgumentError, Ace::Timestamp::Error
+            rescue ArgumentError, Ace::Support::Timestamp::Error
               return nil
             end
           end

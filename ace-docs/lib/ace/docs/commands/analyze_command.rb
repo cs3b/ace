@@ -4,7 +4,7 @@ require_relative "../organisms/document_registry"
 require_relative "../molecules/change_detector"
 require_relative "../prompts/document_analysis_prompt"
 require "colorize"
-require "ace/timestamp"
+require "ace/support/timestamp"
 
 # Try to load ace-llm
 begin
@@ -112,7 +112,7 @@ module Ace
 
           # Create session directory for analysis
           cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
-          compact_id = Ace::Timestamp.encode(Time.now)
+          compact_id = Ace::Support::Timestamp.encode(Time.now)
           session_dir = File.join(cache_dir, "analyze-#{compact_id}")
           FileUtils.mkdir_p(session_dir)
 

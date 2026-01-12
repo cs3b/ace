@@ -14,7 +14,7 @@
 require "fileutils"
 require "time"
 require "pathname"
-require "ace/timestamp"
+require "ace/support/timestamp"
 require_relative "../atoms/id_title_extractor"
 
 class LegacyFileMigrator
@@ -154,7 +154,7 @@ class LegacyFileMigrator
     end
 
     # Generate Base36 ID from timestamp
-    base36_id = Ace::Timestamp.encode(date_time)
+    base36_id = Ace::Support::Timestamp.encode(date_time)
 
     # Generate new filename: {base36-id}-{slug}.md
     new_filename = "#{base36_id}-#{slug}.md"

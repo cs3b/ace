@@ -1,9 +1,0 @@
-#!/usr/bin/env ruby
-# frozen_string_literal: true
-
-require "bundler/setup"
-require "ace/nav"
-
-# Start Thor CLI and exit with the returned status code
-result = Ace::Nav::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)

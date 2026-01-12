@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "ace-support-config", "~> 0.6"
-  spec.add_dependency "ace-timestamp", "~> 0.1"
+  spec.add_dependency "ace-support-timestamp", "~> 0.2"
   spec.add_dependency "ace-support-core", "~> 0.9"
   spec.add_dependency "dry-cli", "~> 1.0"
   spec.add_dependency "faraday", "~> 2.7", ">= 2.7.4"

@@ -14,4 +14,4 @@ ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
 require "bundler/setup"
 
 # Now require and run the actual ace-nav executable
-load ace_meta_root.join("ace-nav/exe/ace-nav").to_s
+load ace_meta_root.join("ace-support-nav/exe/ace-nav").to_s
