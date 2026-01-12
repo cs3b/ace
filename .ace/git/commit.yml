@@ -22,7 +22,7 @@ git:
         - ace-git-secrets
         - ace-git-worktree
         - ace-context
-        - ace-nav
+        - ace-support-nav
         - ace-taskflow
         - ace-test-runner
         - ace-support-test-helpers
