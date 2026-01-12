@@ -206,16 +206,10 @@ module Ace
           end
 
           # Load only gem defaults (for fallback on config errors)
-          # @param gem_root [String] Path to gem root directory
+          # Delegates to module-level method to avoid duplication
           # @return [Hash] Gem defaults or empty hash
           def load_gem_defaults_only
-            # Use centralized gem_root from Nav module (avoids path depth duplication)
-            default_file = File.join(Ace::Support::Nav.gem_root, ".ace-defaults", "nav", "config.yml")
-            return {} unless File.exist?(default_file)
-
-            YAML.safe_load_file(default_file, permitted_classes: [], aliases: true) || {}
-          rescue StandardError
-            {}
+            Ace::Support::Nav.load_gem_defaults_fallback
           end
 
           # Check if debug mode is enabled

@@ -53,9 +53,12 @@ ACE gems follow a naming pattern that clarifies their purpose:
   - Example: `ace-support-nav` → `ace-nav` binary (NOT `ace-support-nav`)
 - **Config folder**: `.ace/<name>/` (drop `ace-support-` prefix)
   - Example: `ace-support-nav` → `.ace/nav/` (NOT `.ace/support-nav/`)
+- **Cache directory**: `.cache/ace-<name>` (use binary name, NOT gem name)
+  - Example: `ace-support-nav` → `.cache/ace-nav/` (NOT `.cache/ace-support-nav/`)
+  - **Rationale**: User-facing paths use binary name for consistency. Data/cache paths should remain stable even when internal gem structure changes.
 - **Config namespace**: `<name>` (simple name, no "support" prefix)
   - Example: `ace-support-nav` uses namespace `nav` (not `support-nav`)
-- **Rationale**: User configs and CLI commands remain compatible when gems are renamed (ace-nav → ace-support-nav)
+- **Rationale**: User configs, cache paths, and CLI commands remain compatible when gems are renamed (ace-nav → ace-support-nav). This separation ensures internal refactoring doesn't break user-facing conventions.
 
 **Examples**:
 ```ruby
