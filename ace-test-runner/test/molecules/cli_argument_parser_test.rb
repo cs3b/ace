@@ -187,7 +187,7 @@ class CliArgumentParserTest < Minitest::Test
   def test_parses_relative_path_with_double_dot
     ace_context_dir = File.join(@project_root, "ace-context")
     Dir.chdir(ace_context_dir) do
-      test_file = "../ace-nav/test/nav_test.rb"
+      test_file = "../ace-support-nav/test/cli_test.rb"
       next unless File.exist?(test_file) # Skip if file doesn't exist
 
       argv = [test_file]
