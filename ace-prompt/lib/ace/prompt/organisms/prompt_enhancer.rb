@@ -115,9 +115,9 @@ module Ace
           # Try to resolve via ace-nav if it's a protocol URI
           if uri_or_path.include?("://")
             begin
-              require "ace/nav/organisms/navigation_engine"
+              require "ace/support/nav/organisms/navigation_engine"
 
-              engine = Ace::Nav::Organisms::NavigationEngine.new
+              engine = Ace::Support::Nav::Organisms::NavigationEngine.new
 
               # First try to get content directly (most efficient)
               content = engine.resolve(uri_or_path, content: true)

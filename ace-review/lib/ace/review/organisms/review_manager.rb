@@ -5,7 +5,7 @@ require "time"
 require "yaml"
 require "open3"
 require "ace/support/fs"
-require "ace/timestamp"
+require "ace/support/timestamp"
 
 module Ace
   module Review
@@ -802,7 +802,7 @@ module Ace
           end
 
           # Use cache directory (cache-first approach)
-          compact_id = Ace::Timestamp.encode(Time.now)
+          compact_id = Ace::Support::Timestamp.encode(Time.now)
 
           # All reviews use the same naming pattern
           session_dir = File.join(cache_dir, "review-#{compact_id}")
@@ -828,7 +828,7 @@ module Ace
 
           # Create output filename
           model_slug = Ace::Review::Atoms::SlugGenerator.generate(review_data[:model])
-          compact_id = Ace::Timestamp.encode(Time.now)
+          compact_id = Ace::Support::Timestamp.encode(Time.now)
           release_filename = "review-report-#{model_slug}-#{compact_id}.md"
           release_path = File.join(release_base_path, release_filename)
 
