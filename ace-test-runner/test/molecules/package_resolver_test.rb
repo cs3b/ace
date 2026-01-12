@@ -81,9 +81,9 @@ class PackageResolverTest < Minitest::Test
     Dir.chdir(ace_context_path) do
       resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
 
-      result = resolver.resolve("../ace-nav")
-      assert result, "Should resolve ../ace-nav"
-      assert result.end_with?("ace-nav")
+      result = resolver.resolve("../ace-support-nav")
+      assert result, "Should resolve ../ace-support-nav"
+      assert result.end_with?("ace-support-nav")
     end
   end
 
@@ -130,7 +130,7 @@ class PackageResolverTest < Minitest::Test
     packages = resolver.available_packages
     assert packages.is_a?(Array)
     assert packages.include?("ace-context"), "Should include ace-context"
-    assert packages.include?("ace-nav"), "Should include ace-nav"
+    assert packages.include?("ace-support-nav"), "Should include ace-support-nav"
     assert packages.include?("ace-test-runner"), "Should include ace-test-runner"
   end
 
