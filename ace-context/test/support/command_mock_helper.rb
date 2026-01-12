@@ -147,7 +147,7 @@ module CommandMockHelper
       }
     end
 
-    # ace-nav command (for protocol resolution)
+    # ace-support-nav command (for protocol resolution)
     mock_command(/^ace-nav/) do |command, options|
       # Extract protocol ref from command
       protocol_ref = command.match(/^ace-nav\s+"?([^"\s]+)"?/)[1] rescue "wfi://workflow"

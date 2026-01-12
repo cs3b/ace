@@ -2,7 +2,7 @@
 
 require "fileutils"
 require "time"
-require "ace/timestamp"
+require "ace/support/timestamp"
 require_relative "../molecules/retro_loader"
 require_relative "../molecules/release_resolver"
 require_relative "../molecules/config_loader"
@@ -139,7 +139,7 @@ module Ace
           FileUtils.mkdir_p(retro_dir)
 
           # Generate filename with Base36 ID and slug
-          id = Ace::Timestamp.encode(Time.now)
+          id = Ace::Support::Timestamp.encode(Time.now)
           slug = generate_slug(title)
           filename = "#{id}-#{slug}.md"
           file_path = File.join(retro_dir, filename)

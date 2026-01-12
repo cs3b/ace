@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/timestamp"
+require "ace/support/timestamp"
 
 module Ace
   module Taskflow
@@ -54,7 +54,7 @@ module Ace
           # Try Base36 ID prefix with validation: "abc123-my-idea"
           elsif basename =~ /^([0-9a-z]{6})-(.*)$/i
             potential_id = $1
-            if Ace::Timestamp.detect_format(potential_id) == :compact
+            if Ace::Support::Timestamp.detect_format(potential_id) == :compact
               title = $2
             else
               # Not a valid Base36 ID, treat entire basename as title

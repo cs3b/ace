@@ -2,7 +2,7 @@
 
 require "test_helper"
 require "ace/taskflow/molecules/file_namer"
-require "ace/timestamp"
+require "ace/support/timestamp"
 
 class FileNamerTest < AceTestCase
   include Ace::TestSupport::ConfigHelpers
@@ -215,7 +215,7 @@ class FileNamerTest < AceTestCase
   # Combines config setup with timestamp reset to reduce boilerplate
   def with_timestamp_test_context
     with_real_config do
-      Ace::Timestamp.reset_config!
+      Ace::Support::Timestamp.reset_config!
       yield
     end
   end
