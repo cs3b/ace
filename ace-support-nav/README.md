@@ -1,0 +1,198 @@
+# ace-support-nav
+
+Unified navigation and resource discovery for the ACE ecosystem.
+
+## Overview
+
+ace-support-nav provides unified navigation and path resolution across the ACE ecosystem. It automatically discovers handbooks bundled within ace-* gems, resolves resource URIs to actual file paths, and supports a multi-level override cascade (project > user > gem).
+
+> **Note**: This gem was renamed from `ace-nav` to `ace-support-nav` in version 0.17.0. The namespace changed from `Ace::Nav` to `Ace::Support::Nav`. The executable remains `ace-nav` for backwards compatibility.
+
+## Features
+
+- **Automatic Discovery**: Discovers handbooks bundled in ace-* gems without configuration
+- **URI Resolution**: Resolves resource URIs (wfi://, tmpl://, guide://, sample://, task://)
+- **Override Cascade**: Multi-level overrides with @ prefix for source-specific lookups
+- **Smart Pattern Matching**:
+  - Subdirectory/prefix patterns (e.g., `prompt://guidelines/`)
+  - Wildcard patterns auto-list without `--list` flag
+  - Intelligent detection of multi-result patterns
+- **Fuzzy Matching**: Intelligent autocorrection and partial path matching
+- **Performance**: Fast cached lookups after initial scan (< 100ms)
+- **Simple CLI**: Single command with options, no complex subcommands
+
+## Installation
+
+Add to your Gemfile:
+
+```ruby
+gem 'ace-support-nav'
+```
+
+Or install directly:
+
+```bash
+gem install ace-support-nav
+```
+
+## Usage
+
+### Basic Usage
+
+```bash
+# Cascade search (searches all sources in order)
+ace-nav wfi://setup                   # Finds first 'setup' workflow
+ace-nav tmpl://minitest              # Finds first matching template
+ace-nav guide://configuration        # Finds first matching guide
+
+# Source-specific with @ prefix
+ace-nav wfi://@ace-git/setup         # Only from ace-git gem
+ace-nav tmpl://@project/minitest     # Only from project overrides
+ace-nav wfi://@user/setup            # Only from user overrides
+```
+
+### Content Retrieval
+
+```bash
+# Get content directly
+ace-nav wfi://setup --content        # First matching content
+ace-nav wfi://@ace-git/setup --content  # From specific source
+```
+
+### Resource Creation
+
+```bash
+# Create from template
+ace-nav wfi://load-context --create  # Creates in project .ace/handbook
+ace-nav tmpl://@ace-test/minitest --create  # Uses ace-test template
+```
+
+### Resource Discovery
+
+ace-nav intelligently detects patterns that should return multiple results:
+
+```bash
+# Automatic list mode (no --list needed!)
+ace-nav prompt://                    # All prompts (protocol-only)
+ace-nav prompt://guidelines/         # All files in guidelines/ directory
+ace-nav "prompt://format/*"          # All files matching pattern
+ace-nav "wfi://create*"              # All workflows starting with 'create'
+
+# Subdirectory and prefix patterns
+ace-nav prompt://focus/               # Lists all focus modules
+ace-nav prompt://focus/quality/       # Lists quality-specific focus modules
+ace-nav wfi://review/                 # Lists all review-related workflows
+
+# Explicit list mode still works
+ace-nav 'wfi://*' --list             # All workflows
+ace-nav 'tmpl://@project/*' --list   # Project template overrides
+ace-nav 'wfi://*test*' --list        # Test-related workflows
+```
+
+### Task Navigation
+
+The `task://` protocol delegates to `ace-taskflow task` commands, providing unified navigation across all ACE resources.
+
+```bash
+# Basic task navigation
+ace-nav task://083                   # Show task summary
+ace-nav task://083 --path            # Get task file path
+ace-nav task://083 --content         # Show full task content
+ace-nav task://083 --tree            # Show task dependencies
+
+# All ace-taskflow reference formats supported
+ace-nav task://018                   # Task in current context
+ace-nav task://task.018              # Prefixed format
+ace-nav task://v.0.9.0+task.018      # Specific release
+ace-nav task://backlog+025           # Backlog tasks
+
+# Shell integration
+nvim $(ace-nav task://083 --path)    # Open task in editor
+```
+
+## Configuration
+
+Configuration is stored in `.ace/nav/` directory:
+
+```yaml
+# .ace/nav/config.yml
+handbooks:
+  sources:
+    - gem: "ace-*"              # All ace-* gems
+    - path: "/opt/handbooks"    # Custom path
+      alias: "handbooks"        # Access as @handbooks
+
+# Built-in aliases:
+# @project → ./.ace/handbook
+# @user → ~/.ace/handbook
+```
+
+## Override System
+
+The cascade priority is:
+1. **@project** - Project-specific overrides in `./.ace/handbook`
+2. **@user** - User-level overrides in `~/.ace/handbook`
+3. **@gem** - Bundled resources in ace-* gems
+
+Use @ prefix to bypass cascade and target specific sources:
+- `wfi://setup` - Cascade search (project > user > gems)
+- `wfi://@ace-git/setup` - Only from ace-git gem
+- `wfi://@project/setup` - Only from project overrides
+
+## Ruby API
+
+```ruby
+require "ace/support/nav"
+
+# Access configuration
+Ace::Support::Nav.config
+
+# Use CLI programmatically
+Ace::Support::Nav::CLI.start(["wfi://setup"])
+
+# Use navigation engine directly
+engine = Ace::Support::Nav::Organisms::NavigationEngine.new
+result = engine.resolve("wfi://setup")
+```
+
+## Migration from ace-nav
+
+If upgrading from `ace-nav` to `ace-support-nav`, update your code:
+
+```ruby
+# Before
+require "ace/nav"
+Ace::Nav.config
+Ace::Nav::CLI.start(ARGV)
+
+# After
+require "ace/support/nav"
+Ace::Support::Nav.config
+Ace::Support::Nav::CLI.start(ARGV)
+```
+
+Update your Gemfile:
+```ruby
+# Before
+gem 'ace-nav', '~> 0.16'
+
+# After
+gem 'ace-support-nav', '~> 0.17'
+```
+
+## Development
+
+After checking out the repo, run:
+
+```bash
+bundle install
+ace-test ace-support-nav
+```
+
+## Contributing
+
+Bug reports and pull requests are welcome at https://github.com/cs3b/ace-meta.
+
+## License
+
+The gem is available as open source under the terms of the MIT License.
