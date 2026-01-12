@@ -56,10 +56,10 @@ class PackageArgumentTest < Minitest::Test
 
   def test_package_with_target
     Dir.chdir(@project_root) do
-      output, status = run_ace_test_with_mock("ace-nav", "atoms")
+      output, status = run_ace_test_with_mock("ace-support-nav", "atoms")
 
       assert status.success?, "Should run specific target for package"
-      assert_match(/Running tests in ace-nav/, output)
+      assert_match(/Running tests in ace-support-nav/, output)
     end
   end
 
@@ -134,11 +134,11 @@ class PackageArgumentTest < Minitest::Test
   def test_relative_path_with_double_dot
     ace_context_dir = File.join(@project_root, "ace-context")
     Dir.chdir(ace_context_dir) do
-      output, status = run_ace_test_with_mock("../ace-nav", "atoms",
-        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_success_output(package: "ace-nav"))
+      output, status = run_ace_test_with_mock("../ace-support-nav", "atoms",
+        output: Ace::TestSupport::Fixtures::TestRunnerMocks.mock_success_output(package: "ace-support-nav"))
 
-      assert status.success?, "Should resolve ../ace-nav"
-      assert_match(/Running tests in ace-nav/, output)
+      assert status.success?, "Should resolve ../ace-support-nav"
+      assert_match(/Running tests in ace-support-nav/, output)
     end
   end
 
