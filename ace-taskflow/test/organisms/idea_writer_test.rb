@@ -27,7 +27,7 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
 
   def test_generates_correct_path_with_base36_id_and_slug
     with_real_config do
-      Ace::Timestamp.reset_config!
+      Ace::Support::Timestamp.reset_config!
 
       mock_slug_resp = mock_slug_response(folder_slug: "test-idea", file_slug: "test-content")
 
@@ -52,7 +52,7 @@ class IdeaWriterUnitTest < AceTaskflowTestCase
 
   def test_uses_configured_directory
     with_real_config do
-      Ace::Timestamp.reset_config!
+      Ace::Support::Timestamp.reset_config!
 
       custom_config = @config.merge("directory" => "/custom/ideas")
       writer = Ace::Taskflow::Organisms::IdeaWriter.new(custom_config)

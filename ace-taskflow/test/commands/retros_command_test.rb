@@ -20,14 +20,14 @@ module Ace
 
           # Create test retros using Base36 ID format (new standard)
           # Generate Base36 IDs for test dates
-          require "ace/timestamp"
+          require "ace/support/timestamp"
           time1 = Time.utc(2025, 10, 2, 0, 0, 0)
           time2 = Time.utc(2025, 10, 1, 0, 0, 0)
           time3 = Time.utc(2025, 9, 30, 0, 0, 0)
 
-          id1 = Ace::Timestamp.encode(time1)
-          id2 = Ace::Timestamp.encode(time2)
-          id3 = Ace::Timestamp.encode(time3)
+          id1 = Ace::Support::Timestamp.encode(time1)
+          id2 = Ace::Support::Timestamp.encode(time2)
+          id3 = Ace::Support::Timestamp.encode(time3)
 
           File.write(
             ".ace-taskflow/v.0.9.0/retros/#{id1}-test-retro-1.md",
