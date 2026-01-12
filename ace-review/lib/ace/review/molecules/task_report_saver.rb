@@ -2,7 +2,7 @@
 
 require "fileutils"
 require "time"
-require "ace/timestamp"
+require "ace/support/timestamp"
 
 module Ace
   module Review
@@ -85,7 +85,7 @@ module Ace
         #   - synthesis: {compact_id}-synthesis.md
         #   - regular:   {compact_id}-model-preset-review.md
         def self.generate_filename(review_data)
-          compact_id = Ace::Timestamp.encode(Time.now)
+          compact_id = Ace::Support::Timestamp.encode(Time.now)
 
           # Handle synthesis reports with special filename format
           if review_data[:report_type] == 'synthesis'

@@ -11,9 +11,9 @@ module Ace
 
         def initialize
           begin
-            require "ace/nav"
-            require "ace/nav/organisms/navigation_engine"
-            @engine = Ace::Nav::Organisms::NavigationEngine.new
+            require "ace/support/nav"
+            require "ace/support/nav/organisms/navigation_engine"
+            @engine = Ace::Support::Nav::Organisms::NavigationEngine.new
           rescue LoadError
             # Fall back to basic resolution if ace-nav is not available
             @engine = nil

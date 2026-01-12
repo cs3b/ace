@@ -205,9 +205,9 @@ module Ace
             return uri_or_path unless uri_or_path.include?("://")
 
             begin
-              require "ace/nav/organisms/navigation_engine"
+              require "ace/support/nav/organisms/navigation_engine"
 
-              engine = Ace::Nav::Organisms::NavigationEngine.new
+              engine = Ace::Support::Nav::Organisms::NavigationEngine.new
               result = engine.resolve(uri_or_path)
 
               # engine.resolve returns a String path directly (not a hash)
