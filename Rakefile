@@ -9,7 +9,7 @@ task :test do
     ace-test-support
     ace-test-runner
     ace-context
-    ace-nav
+    ace-support-nav
     ace-taskflow
     ace-git-commit
     ace-llm
@@ -82,7 +82,7 @@ desc "Install dependencies for all packages"
 task :bundle do
   system("bundle install")
 
-  %w[ace-support-core ace-test-support ace-test-runner ace-context ace-nav ace-taskflow ace-git-commit ace-llm ace-llm-providers-cli].each do |package|
+  %w[ace-support-core ace-test-support ace-test-runner ace-context ace-support-nav ace-taskflow ace-git-commit ace-llm ace-llm-providers-cli].each do |package|
     puts "Installing dependencies for #{package}..."
     Dir.chdir(package) do
       system("bundle install")
