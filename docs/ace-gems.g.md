@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-05'
+  last-updated: '2026-01-12'
 ---
 
 # ACE Gem Development Guide
@@ -46,7 +46,38 @@ ACE gems follow a naming pattern that clarifies their purpose:
   - Primarily used as dependencies by other ace-* gems
   - MAY have CLI executables if they provide user-facing tools (e.g., ace-nav, ace-timestamp)
   - Focus on reusable infrastructure, configuration, or utilities
-  - Namespace: `Ace::Support::*` (e.g., `Ace::Support::Config`)
+
+**Naming Convention (Important)**:
+- **Module namespace**: `Ace::Support::*` (e.g., `Ace::Support::Nav`, `Ace::Support::Config`)
+- **Binary name**: `ace-<name>` (drop `ace-support-` prefix)
+  - Example: `ace-support-nav` → `ace-nav` binary (NOT `ace-support-nav`)
+- **Config folder**: `.ace/<name>/` (drop `ace-support-` prefix)
+  - Example: `ace-support-nav` → `.ace/nav/` (NOT `.ace/support-nav/`)
+- **Cache directory**: `.cache/ace-<name>` (use binary name, NOT gem name)
+  - Example: `ace-support-nav` → `.cache/ace-nav/` (NOT `.cache/ace-support-nav/`)
+  - **Rationale**: User-facing paths use binary name for consistency. Data/cache paths should remain stable even when internal gem structure changes.
+- **Config namespace**: `<name>` (simple name, no "support" prefix)
+  - Example: `ace-support-nav` uses namespace `nav` (not `support-nav`)
+- **Rationale**: User configs, cache paths, and CLI commands remain compatible when gems are renamed (ace-nav → ace-support-nav). This separation ensures internal refactoring doesn't break user-facing conventions.
+
+**Examples**:
+```ruby
+# ace-support-nav module structure
+module Ace
+  module Support
+    module Nav
+      # Implementation here
+    end
+  end
+end
+
+# Config resolution uses simple "nav" namespace
+resolver = Ace::Support::Config.create
+resolver.resolve_namespace("nav")  # NOT "support-nav"
+
+# Binary is installed as "ace-nav" (not "ace-support-nav")
+# $ ace-nav --help
+```
 
 ### ace-llm-providers-* Pattern (Provider Extensions)
 - **Purpose**: Extend ace-llm with specific provider implementations
