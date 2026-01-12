@@ -107,12 +107,12 @@ ace-test                                # Run all tests with progress
 ace-test --fail-fast                    # Stop on first failure
 ace-test atoms                          # Run only atom tests
 ace-test ace-context                    # Run all tests in ace-context package
-ace-test ace-nav atoms                  # Run atom tests in ace-nav package
+ace-test ace-support-nav atoms          # Run atom tests in ace-support-nav package
 ace-test ace-lint --profile 10          # Profile slowest tests in ace-lint
 
 ace-test test/atoms/foo_test.rb         # Single file (from inside package)
 ace-test ace-search/test/atoms/foo_test.rb  # Single file (from outside with package prefix)
-ace-test ace-nav/test/foo_test.rb:42    # Single test at line number
+ace-test ace-support-nav/test/foo_test.rb:42    # Single test at line number
 
 # Prompt management
 ace-prompt                              # Process and archive current prompt
