@@ -111,25 +111,16 @@ PATH
       kramdown-parser-gfm (~> 1.0)
 
 PATH
-  remote: ace-nav
-  specs:
-    ace-nav (0.16.1)
-      ace-support-config (~> 0.6)
-      ace-support-core (~> 0.10)
-      ace-support-fs (~> 0.1)
-      dry-cli (~> 1.0)
-
-PATH
   remote: ace-prompt
   specs:
     ace-prompt (0.13.2)
       ace-context (~> 0.8)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
-      ace-nav (~> 0.8)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       ace-support-timestamp (~> 0.2)
+      ace-support-nav (~> 0.17)
       ace-taskflow (~> 0.9)
       dry-cli (~> 1.0)
 
@@ -140,10 +131,10 @@ PATH
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
-      ace-nav (~> 0.9)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       ace-support-timestamp (~> 0.2)
+      ace-support-nav (~> 0.17)
       ace-taskflow (~> 0.19)
       dry-cli (~> 1.0)
 
@@ -187,6 +178,15 @@ PATH
     ace-support-markdown (0.2.0)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
+
+PATH
+  remote: ace-support-nav
+  specs:
+    ace-support-nav (0.17.0)
+      ace-support-config (~> 0.6)
+      ace-support-core (~> 0.10)
+      ace-support-fs (~> 0.1)
+      dry-cli (~> 1.0)
 
 PATH
   remote: ace-support-test-helpers
@@ -324,7 +324,6 @@ DEPENDENCIES
   ace-llm!
   ace-llm-models-dev!
   ace-llm-providers-cli!
-  ace-nav!
   ace-prompt!
   ace-review!
   ace-search!
@@ -333,6 +332,7 @@ DEPENDENCIES
   ace-support-fs!
   ace-support-mac-clipboard!
   ace-support-markdown!
+  ace-support-nav!
   ace-support-test-helpers!
   ace-support-timestamp!
   ace-taskflow!

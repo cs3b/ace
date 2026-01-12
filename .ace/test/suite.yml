@@ -29,8 +29,8 @@ test_suite:
       group: tools
       priority: 3
 
-    - name: ace-nav
-      path: ace-nav
+    - name: ace-support-nav
+      path: ace-support-nav
       group: tools
       priority: 3
 
