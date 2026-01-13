@@ -1,0 +1,116 @@
+# frozen_string_literal: true
+
+require_relative "../test_helper"
+require "ace/llm/cli"
+require "ace/llm/commands/query"
+require "ace/test_support/config_helpers"
+require "ace/test_support/cli_helpers"
+require "webmock/minitest"
+
+class QueryCommandTest < AceLlmTestCase
+  include Ace::TestSupport::ConfigHelpers
+  include Ace::TestSupport::CliHelpers
+
+  def setup
+    super
+    WebMock.disable_net_connect!
+  end
+
+  def teardown
+    WebMock.reset!
+    WebMock.allow_net_connect!
+    super
+  end
+
+  # Stub Google LLM API for tests that verify CLI routing (not API functionality)
+  def stub_llm_api_success
+    stub_request(:post, /generativelanguage\.googleapis\.com/)
+      .to_return(
+        status: 200,
+        headers: { "Content-Type" => "application/json" },
+        body: {
+          "candidates" => [{
+            "content" => { "parts" => [{ "text" => "Mock response" }] }
+          }],
+          "usageMetadata" => { "promptTokenCount" => 5, "candidatesTokenCount" => 10 }
+        }.to_json
+      )
+  end
+
+  # Helper method to invoke CLI with routing logic
+  def invoke_llm_cli(args)
+    invoke_cli_stdout(Ace::LLM::CLI, args)
+  end
+
+  # Helper method to get full result (stdout + stderr)
+  def invoke_llm_cli_result(args)
+    result = invoke_cli(Ace::LLM::CLI, args)
+    result[:stdout] + result[:stderr]
+  end
+
+  # --- Model Flag with Provider:Model Format Tests ---
+
+  def test_model_flag_with_provider_model_format_works
+    stub_llm_api_success
+    with_real_config do
+      # This should NOT show help, but should attempt to execute
+      result = invoke_llm_cli_result(["--model", "google:gemini-2.5-flash", "What is Ruby?"])
+      # Should show something other than just help/usage - either output or provider info
+      # The output may include provider aliases or other info, but it shouldn't be the full help
+      refute_match(/^Usage: ace-llm PROVIDER\[:MODEL\]/, result)
+    end
+  end
+
+  def test_model_flag_with_provider_model_format_no_prompt_shows_help
+    with_real_config do
+      output = invoke_llm_cli(["--model", "google:gemini-2.5-flash"])
+      # Should show provider help since no prompt
+      assert_match(/alias|Usage:/i, output)
+    end
+  end
+
+  def test_model_flag_with_invalid_provider_shows_error
+    with_real_config do
+      output = invoke_llm_cli_result(["--model", "invalid:provider", "test"])
+      # Should show error about invalid provider
+      assert_match(/Error:/i, output)
+    end
+  end
+
+  def test_model_flag_with_model_only_needs_provider
+    with_real_config do
+      # Use a value that's not a known alias to test the ambiguous case
+      output = invoke_llm_cli_result(["--model", "unknown-model", "test"])
+      # When --model doesn't contain a colon and no positional provider, shows help
+      assert_match(/Usage:/i, output)
+    end
+  end
+
+  # --- Backward Compatibility Tests ---
+
+  def test_positional_provider_takes_precedence
+    stub_llm_api_success
+    with_real_config do
+      output = invoke_llm_cli_result(["google", "test", "--model", "gemini-2.0-flash-lite"])
+      # Should not show help - CLI routing should work and return API response (mocked)
+      refute_match(/^Usage: ace-llm PROVIDER\[:MODEL\]/, output)
+    end
+  end
+
+  def test_positional_provider_model_still_works
+    stub_llm_api_success
+    with_real_config do
+      output = invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?"])
+      # Should not show help - CLI routing should work and return API response (mocked)
+      refute_match(/^Usage: ace-llm PROVIDER\[:MODEL\]/, output)
+    end
+  end
+
+  def test_positional_provider_only_still_works
+    with_real_config do
+      output = invoke_llm_cli(["google"])
+      # Should show aliases/help for the provider
+      assert_match(/alias|Usage:/i, output)
+    end
+  end
+end
