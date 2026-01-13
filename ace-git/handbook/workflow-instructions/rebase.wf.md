@@ -26,8 +26,30 @@ Common rebase problems this workflow solves:
 
 ## Variables
 
-- `$target_branch`: Branch to rebase against (default: origin/main or origin/master)
+- `$target_branch`: Branch to rebase against (default: auto-detect from worktree metadata, or origin/main)
 - `$preserve_files`: Files to preserve from feature branch (defaults: CHANGELOG.md, **/version.rb)
+
+**Target Branch Auto-Detection:**
+
+For task-aware worktrees, `target_branch` is automatically read from worktree metadata (stored in task spec frontmatter):
+
+```bash
+# Auto-detect target from task spec file
+task_file=$(ls _current/*.s.md 2>/dev/null | head -1)
+if [ -n "$task_file" ]; then
+  if command -v yq >/dev/null 2>&1; then
+    target_branch=$(yq eval --front-matter=extract '.worktree.target_branch // "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
+  else
+    target_branch=$(ruby -ryaml -e 'c=File.read(ARGV[0]); puts c.start_with?("---") ? (YAML.safe_load(c.split("---",3)[1]).dig("worktree","target_branch")||"origin/main") : "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
+  fi
+else
+  target_branch="origin/main"
+fi
+```
+
+- **Subtasks**: Targets parent task's worktree branch (e.g., `202-orchestrator`)
+- **Orchestrator tasks**: Falls back to `origin/main`
+- **Manual override**: Set `target_branch` explicitly when needed
 
 ## Instructions
 
@@ -277,6 +299,36 @@ git cherry-pick <commit-hash>
 ```
 
 ## Common Patterns
+
+### Pattern: Rebase Subtask Against Parent Branch
+
+For subtasks that should target their orchestrator's branch:
+
+```bash
+# Auto-detect target from task spec file
+task_file=$(ls _current/*.s.md 2>/dev/null | head -1)
+if [ -n "$task_file" ]; then
+  if command -v yq >/dev/null 2>&1; then
+    target_branch=$(yq eval --front-matter=extract '.worktree.target_branch // "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
+  else
+    target_branch=$(ruby -ryaml -e 'c=File.read(ARGV[0]); puts c.start_with?("---") ? (YAML.safe_load(c.split("---",3)[1]).dig("worktree","target_branch")||"origin/main") : "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
+  fi
+else
+  target_branch="origin/main"
+fi
+
+# Full workflow
+git fetch origin
+cp CHANGELOG.md CHANGELOG.md.backup
+git rebase $target_branch  # Rebases against parent's branch, not main
+# Resolve conflicts preserving CHANGELOG entries
+git add CHANGELOG.md
+git rebase --continue
+diff CHANGELOG.md CHANGELOG.md.backup
+git push --force-with-lease
+```
+
+**Example**: Subtask `202.01` automatically rebases against `202-rename-support-gems` (parent's branch)
 
 ### Pattern: Rebase Against Main
 
