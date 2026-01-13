@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.208
-status: pending
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 208-track-pr-target-branch-in-worktree-metadata
+  path: "../ace-task.208"
+  created_at: '2026-01-13 12:28:09'
+  updated_at: '2026-01-13 12:28:09'
 ---
 
 # Track PR target branch in worktree metadata
