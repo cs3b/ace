@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.207
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 207-rename-ace-llm-models-dev-to-ace-support-models
+  path: "../ace-task.207"
+  created_at: '2026-01-13 14:54:26'
+  updated_at: '2026-01-13 14:54:26'
+  target_branch: main
 ---
 
 # Rename ace-llm-models-dev to ace-support-models
