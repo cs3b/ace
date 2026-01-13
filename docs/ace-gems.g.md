@@ -299,6 +299,30 @@ Symlink to `.claude/agents/` for Claude Code.
 
 ## CLI
 
+### Command Module Naming Convention
+
+**REQUIRED**: Use `Commands::` module namespace (NOT `Cli::`):
+
+```ruby
+# ✅ CORRECT - Commands:: pattern
+module Ace::Gem::Commands
+  class Process < Dry::CLI::Command
+    # ...
+  end
+end
+
+# ❌ WRONG - Cli:: pattern (inconsistent)
+module Ace::Gem::Cli
+  class Process < Dry::CLI::Command
+    # ...
+  end
+end
+```
+
+**Directory structure**: `lib/ace/gem/commands/` (not `lib/ace/gem/cli/`)
+
+This ensures consistency across all ACE gems. The `CLI` module is reserved for the registry/router (`module CLI extend Dry::CLI::Registry`), while individual command classes live in `Commands::`.
+
 ### dry-cli Pattern (Standard)
 
 New and migrated gems use `dry-cli` with the `Ace::Core::CLI::DryCli::Base` module:
@@ -740,6 +764,7 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - **CLI gems**: Return status codes from commands, never call `exit`
 - **CLI gems**: Use ConfigSummary.display() to show effective config
 - **CLI gems**: Reserve `-v` for verbose, `--version` for version
+- **CLI gems**: Use `Commands::` module namespace (not `Cli::`) for command classes
 - **Integration packages**: Use `integrations/` directory for integration assets (official pattern)
 - **Integration packages**: Include ace-nav protocol registration for workflow discovery
 - **Integration packages**: Bundle templates, documentation, and custom commands with workflows
@@ -754,6 +779,7 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - **CLI gems**: Call `exit` in command methods (kills test processes)
 - **CLI gems**: Use `-v` for version flag (reserved for verbose)
 - **CLI gems**: Skip ConfigSummary display (users need to see effective config)
+- **CLI gems**: Use `Cli::` module namespace (use `Commands::` instead)
 
 ## Examples
 

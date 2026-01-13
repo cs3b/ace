@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.297] - 2026-01-13
+
+### Changed
+
+- **ace-support-models 0.5.0**: Renamed from ace-llm-models-dev to ace-support-models
+  - Follows ace-support-* naming pattern for infrastructure gems
+  - Ruby module: `Ace::LLM::ModelsDev` → `Ace::Support::Models`
+  - CLI executable: `ace-llm-models` → `ace-models`
+  - Require path: `require 'ace/llm/models/dev'` → `require 'ace/support/models'`
+  - Cache directory: `ace-llm-models-dev` → `ace-models`
+  - All functionality remains identical, 185 tests passing
+
 ## [0.9.296] - 2026-01-13
 
 ### Fixed

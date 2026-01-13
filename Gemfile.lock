@@ -84,15 +84,6 @@ PATH
       kramdown-parser-gfm (~> 1.1)
 
 PATH
-  remote: ace-llm-models-dev
-  specs:
-    ace-llm-models-dev (0.4.1)
-      ace-support-core (~> 0.10)
-      dry-cli (~> 1.1)
-      faraday (~> 2.0)
-      faraday-retry (~> 2.0)
-
-PATH
   remote: ace-llm-providers-cli
   specs:
     ace-llm-providers-cli (0.12.0)
@@ -178,6 +169,15 @@ PATH
     ace-support-markdown (0.2.0)
       kramdown (~> 2.4)
       kramdown-parser-gfm (~> 1.1)
+
+PATH
+  remote: ace-support-models
+  specs:
+    ace-support-models (0.5.0)
+      ace-support-core (~> 0.10)
+      dry-cli (~> 1.1)
+      faraday (~> 2.0)
+      faraday-retry (~> 2.0)
 
 PATH
   remote: ace-support-nav
@@ -322,7 +322,6 @@ DEPENDENCIES
   ace-integration-claude!
   ace-lint!
   ace-llm!
-  ace-llm-models-dev!
   ace-llm-providers-cli!
   ace-prompt!
   ace-review!
@@ -332,6 +331,7 @@ DEPENDENCIES
   ace-support-fs!
   ace-support-mac-clipboard!
   ace-support-markdown!
+  ace-support-models!
   ace-support-nav!
   ace-support-test-helpers!
   ace-support-timestamp!
