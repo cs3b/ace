@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-01-12
+
+### Added
+- Git index lock retry with stale lock cleanup (task 210)
+  - `LockErrorDetector` atom to detect git index lock errors from stderr
+  - `StaleLockCleaner` atom to detect and remove stale lock files (>60s old)
+  - Automatic retry with exponential backoff (50ms → 100ms → 200ms → 400ms)
+  - `lock_retry` configuration section in `.ace-defaults/git/config.yml`
+  - Configurable retry behavior: `enabled`, `max_retries`, `initial_delay_ms`, `stale_cleanup`, `stale_threshold_seconds`
+
+### Changed
+- Modified `CommandExecutor.execute()` to wrap git commands with lock retry logic
+- Updated `CommandExecutor.repo_root()` to use `execute_once()` directly to prevent recursion
+- All 459 tests pass including 30 new tests for lock retry behavior
+
 ## [0.7.1] - 2026-01-09
 
 ### Changed

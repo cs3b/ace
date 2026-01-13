@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.210
-status: in-progress
+status: done
 priority: high
 estimate: 2h
 dependencies: []
@@ -174,21 +174,21 @@ Eliminate recurring `index.lock` errors that block ace-git-commit and other git 
 
 ### Execution Steps
 
-- [ ] Create `LockErrorDetector` atom
+- [x] Create `LockErrorDetector` atom
   > TEST: Lock Detection
   > Type: Unit Test
   > Assert: Detects "Unable to create .git/index.lock" and "Another git process" patterns
   > Command: ace-test ace-git test/atoms/lock_error_detector_test.rb
 
-- [ ] Create `StaleLockCleaner` atom
+- [x] Create `StaleLockCleaner` atom
   > TEST: Stale Lock Detection
   > Type: Unit Test
   > Assert: Correctly identifies locks older than threshold
   > Command: ace-test ace-git test/atoms/stale_lock_cleaner_test.rb
 
-- [ ] Add `lock_retry` config to `.ace-defaults/git/config.yml`
+- [x] Add `lock_retry` config to `.ace-defaults/git/config.yml`
 
-- [ ] Modify `CommandExecutor.execute()` to add retry logic
+- [x] Modify `CommandExecutor.execute()` to add retry logic
   - Detect lock errors using `LockErrorDetector`
   - On first retry, attempt stale lock cleanup with `StaleLockCleaner`
   - Implement exponential backoff: 50ms, 100ms, 200ms, 400ms
@@ -198,15 +198,15 @@ Eliminate recurring `index.lock` errors that block ace-git-commit and other git 
   > Assert: Retries on lock error, succeeds after lock cleared
   > Command: ace-test ace-git test/atoms/command_executor_test.rb
 
-- [ ] Update `ace-git/lib/ace/git.rb` to require new atoms
+- [x] Update `ace-git/lib/ace/git.rb` to require new atoms
 
-- [ ] Run full ace-git test suite
+- [x] Run full ace-git test suite
   > TEST: Full Suite
   > Type: Integration
   > Assert: All existing tests still pass
   > Command: ace-test ace-git
 
-- [ ] Manual verification with real lock file
+- [x] Manual verification with real lock file
   > TEST: E2E Stale Lock
   > Type: Manual
   > Assert: Old lock auto-cleaned, operation succeeds
@@ -230,13 +230,13 @@ Eliminate recurring `index.lock` errors that block ace-git-commit and other git 
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `LockErrorDetector` correctly identifies lock errors
-- [ ] AC 2: `StaleLockCleaner` removes only stale locks (>60s)
-- [ ] AC 3: `CommandExecutor` retries with exponential backoff
-- [ ] AC 4: Silent retries - no output unless all fail
-- [ ] AC 5: Configuration allows disabling retry/cleanup
-- [ ] AC 6: All existing ace-git tests pass
-- [ ] AC 7: Manual test: stale lock auto-cleaned successfully
+- [x] AC 1: `LockErrorDetector` correctly identifies lock errors
+- [x] AC 2: `StaleLockCleaner` removes only stale locks (>60s)
+- [x] AC 3: `CommandExecutor` retries with exponential backoff
+- [x] AC 4: Silent retries - no output unless all fail
+- [x] AC 5: Configuration allows disabling retry/cleanup
+- [x] AC 6: All existing ace-git tests pass
+- [x] AC 7: Manual test: stale lock auto-cleaned successfully
 
 ## References
 
