@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-01-13
+
+### Added
+- Target branch tracking in worktree metadata
+  - `WorktreeMetadata` now includes `target_branch` attribute for tracking PR target branch
+  - `ParentTaskResolver` molecule automatically determines target branch from parent task
+  - Subtasks target their orchestrator's worktree branch instead of defaulting to main
+  - CLI `--target-branch` option allows manual override of auto-detected target branch
+  - Fallback to `main` when parent task or worktree metadata is not found
+
+### Technical
+- New `ParentTaskResolver` molecule for resolving parent task's worktree branch
+- Updated `WorktreeMetadata` model with optional `target_branch` field
+- Updated `WorktreeCreator.create_for_task` to accept and return `target_branch`
+- Updated `TaskWorktreeOrchestrator` to determine and pass target branch through workflow
+
 ## [0.11.0] - 2026-01-07
 
 ### Changed

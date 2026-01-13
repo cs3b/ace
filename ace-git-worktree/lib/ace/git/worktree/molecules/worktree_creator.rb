@@ -40,6 +40,7 @@ module Ace
           # @param git_root [String, nil] Git repository root (auto-detected if nil)
           # @param source [String, nil] Git ref to use as start-point for the new branch
           #   If nil, uses current branch (default behavior - fixes the branch source bug)
+          # @param target_branch [String, nil] PR target branch (for subtasks)
           # @return [Hash] Result with :success, :worktree_path, :branch, :error
           #
           # @example
@@ -52,7 +53,11 @@ module Ace
           # @example With explicit source
           #   result = creator.create_for_task(task_data, config, source: "main")
           #   # => Creates branch based on 'main' instead of current branch
-          def create_for_task(task_data, config, counter: nil, git_root: nil, source: nil)
+          #
+          # @example Subtask with target branch
+          #   result = creator.create_for_task(subtask_data, config, target_branch: "202-orchestrator")
+          #   # => { success: true, target_branch: "202-orchestrator", ... }
+          def create_for_task(task_data, config, counter: nil, git_root: nil, source: nil, target_branch: nil)
             return error_result("Task data is required") unless task_data
             return error_result("Configuration is required") unless config
 
@@ -85,6 +90,7 @@ module Ace
                 directory_name: directory_name,
                 task_id: extract_task_id_from_data(task_data),
                 git_root: git_root,
+                target_branch: target_branch,
                 error: nil
               }
             rescue StandardError => e

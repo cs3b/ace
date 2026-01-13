@@ -51,6 +51,7 @@ module Ace
           option :push_remote, desc: "Remote to push to", aliases: []
           option :no_auto_navigate, desc: "Stay in current directory", type: :boolean, aliases: ["--no-auto-navigate"]
           option :commit_message, desc: "Custom commit message", aliases: []
+          option :target_branch, desc: "Override PR target branch (default: auto-detect from parent)", aliases: []
           option :force, desc: "Create even if worktree exists", type: :boolean, aliases: []
           option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
           option :verbose, type: :boolean, aliases: ["-v"], desc: "Verbose output"
