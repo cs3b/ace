@@ -57,7 +57,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.7.1)
+    ace-git (0.8.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)
@@ -119,8 +119,8 @@ PATH
       ace-llm (~> 0.8)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
-      ace-support-timestamp (~> 0.2)
       ace-support-nav (~> 0.17)
+      ace-support-timestamp (~> 0.2)
       ace-taskflow (~> 0.9)
       dry-cli (~> 1.0)
 
@@ -133,8 +133,8 @@ PATH
       ace-llm (~> 0.1)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
-      ace-support-timestamp (~> 0.2)
       ace-support-nav (~> 0.17)
+      ace-support-timestamp (~> 0.2)
       ace-taskflow (~> 0.19)
       dry-cli (~> 1.0)
 

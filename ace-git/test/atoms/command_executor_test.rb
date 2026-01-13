@@ -223,7 +223,7 @@ class CommandExecutorTest < AceGitTestCase
   def test_repo_root_with_stubbed_response
     mock_result = { success: true, output: "/path/to/repo\n", error: "", exit_code: 0 }
 
-    @executor.stub :execute, mock_result do
+    @executor.stub :execute_once, mock_result do
       result = @executor.repo_root
       assert_equal "/path/to/repo", result
     end
@@ -232,9 +232,31 @@ class CommandExecutorTest < AceGitTestCase
   def test_repo_root_stubbed_failure
     mock_result = { success: false, output: "", error: "not a git repo", exit_code: 128 }
 
-    @executor.stub :execute, mock_result do
+    @executor.stub :execute_once, mock_result do
       result = @executor.repo_root
       assert_nil result, "Should return nil on failure"
+    end
+  end
+
+  def test_repo_root_bypasses_lock_retry
+    # repo_root must call execute_once directly to avoid infinite recursion
+    # (execute_with_lock_retry calls repo_root for stale cleanup)
+    call_count = 0
+    mock_result = { success: true, output: "/path/to/repo\n", error: "", exit_code: 0 }
+
+    original_execute_once = @executor.method(:execute_once)
+    mock_execute_once = lambda do |*args, **opts|
+      call_count += 1
+      mock_result
+    end
+
+    with_lock_retry_config(enabled: true) do
+      @executor.stub :execute_once, mock_execute_once do
+        result = @executor.repo_root
+
+        assert_equal "/path/to/repo", result
+        assert_equal 1, call_count, "execute_once should be called exactly once (no retry loop)"
+      end
     end
   end
 
@@ -262,6 +284,128 @@ class CommandExecutorTest < AceGitTestCase
     @executor.stub :execute, mock_result do
       result = @executor.changed_files("HEAD..HEAD")
       assert_equal [], result, "Should return empty array on failure"
+    end
+  end
+
+  # --- Lock Retry Tests ---
+
+  def test_retry_on_lock_error_with_eventual_success
+    call_count = 0
+    lock_error_result = { success: false, output: "", error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
+    success_result = { success: true, output: "success\n", error: "", exit_code: 0 }
+
+    mock_execute = lambda do |*args, **_opts|
+      call_count += 1
+      call_count == 1 ? lock_error_result : success_result
+    end
+
+    # Stub repo_root to prevent additional execute_once calls during stale lock cleanup
+    @executor.stub :repo_root, "/fake/repo" do
+      @executor.stub :execute_once, mock_execute do
+        result = @executor.execute("git", "status")
+
+        assert result[:success], "Should succeed after retry"
+        assert_equal 2, call_count, "Should retry on lock error"
+      end
+    end
+  end
+
+  def test_no_retry_for_non_lock_errors
+    call_count = 0
+    non_lock_error = { success: false, output: "", error: "error: pathspec unknown", exit_code: 128 }
+
+    mock_execute = lambda do |*args, **_opts|
+      call_count += 1
+      non_lock_error
+    end
+
+    @executor.stub :execute_once, mock_execute do
+      result = @executor.execute("git", "status")
+
+      refute result[:success], "Should fail"
+      assert_equal 1, call_count, "Should not retry non-lock errors"
+    end
+  end
+
+  def test_no_retry_for_non_git_commands
+    call_count = 0
+    error_result = { success: false, output: "", error: "command failed", exit_code: 1 }
+
+    mock_execute = lambda do |*args, **_opts|
+      call_count += 1
+      error_result
+    end
+
+    @executor.stub :execute_once, mock_execute do
+      result = @executor.execute("non-git", "command")
+
+      refute result[:success], "Should fail"
+      assert_equal 1, call_count, "Should not retry non-git commands"
+    end
+  end
+
+  def test_retry_disabled_when_config_says_so
+    call_count = 0
+    lock_error_result = { success: false, output: "", error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
+
+    mock_execute = lambda do |*args, **_opts|
+      call_count += 1
+      lock_error_result
+    end
+
+    with_lock_retry_config(enabled: false) do
+      @executor.stub :execute_once, mock_execute do
+        result = @executor.execute("git", "status")
+
+        refute result[:success], "Should fail"
+        assert_equal 1, call_count, "Should not retry when disabled in config"
+      end
+    end
+  end
+
+  def test_exponential_backoff_between_retries
+    lock_error_result = { success: false, output: "", error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
+
+    delays = []
+    mock_sleep = lambda do |delay| delays << delay; nil end
+
+    # Stub repo_root to prevent additional execute_once calls during stale lock cleanup
+    @executor.stub :repo_root, "/fake/repo" do
+      # Always return lock error to trigger all retries
+      @executor.stub :execute_once, lock_error_result do
+        Kernel.stub :sleep, mock_sleep do
+          @executor.execute("git", "status")
+        end
+      end
+    end
+
+    # Default config: max_retries=4, initial_delay_ms=50
+    # Base delays are: 50ms, 100ms, 200ms, 400ms (with up to 25% jitter)
+    # So actual delays are in ranges: [50-62.5], [100-125], [200-250], [400-500]
+    base_delays = [50, 100, 200, 400]
+    assert_equal 4, delays.length, "Should have 4 retry delays"
+
+    delays.each_with_index do |delay, i|
+      delay_ms = delay * 1000
+      base = base_delays[i]
+      max_with_jitter = base * 1.25
+      assert delay_ms >= base, "Delay #{i} should be at least #{base}ms, got #{delay_ms}ms"
+      assert delay_ms <= max_with_jitter, "Delay #{i} should be at most #{max_with_jitter}ms, got #{delay_ms}ms"
+    end
+  end
+
+  def test_lock_error_message_augmented_after_all_retries
+    lock_error_result = { success: false, output: "", error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
+
+    # Stub repo_root to prevent additional execute_once calls during stale lock cleanup
+    @executor.stub :repo_root, "/fake/repo" do
+      @executor.stub :execute_once, lock_error_result do
+        result = @executor.execute("git", "status")
+
+        refute result[:success], "Should fail after all retries"
+        assert_includes result[:error], "Git index locked after", "Should augment error with retry context"
+        assert_includes result[:error], "retries", "Should mention retries in error message"
+      end
     end
   end
 end
