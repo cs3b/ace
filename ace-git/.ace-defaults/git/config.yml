@@ -73,6 +73,6 @@ git:
   lock_retry:
     enabled: true                   # Enable/disable retry behavior
     max_retries: 4                  # Maximum retry attempts
-    initial_delay_ms: 50            # Initial backoff delay (exponential)
-    stale_cleanup: true             # Auto-remove stale locks
-    stale_threshold_seconds: 60     # Age threshold for stale locks
+    initial_delay_ms: 500           # Fixed delay between retries (ms)
+    stale_cleanup: true             # Auto-remove orphaned/stale locks
+    stale_threshold_seconds: 60     # Age threshold for stale locks (fallback)

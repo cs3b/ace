@@ -363,7 +363,7 @@ class CommandExecutorTest < AceGitTestCase
     end
   end
 
-  def test_exponential_backoff_between_retries
+  def test_fixed_delay_between_retries
     lock_error_result = { success: false, output: "", error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
 
     delays = []
@@ -379,18 +379,13 @@ class CommandExecutorTest < AceGitTestCase
       end
     end
 
-    # Default config: max_retries=4, initial_delay_ms=50
-    # Base delays are: 50ms, 100ms, 200ms, 400ms (with up to 25% jitter)
-    # So actual delays are in ranges: [50-62.5], [100-125], [200-250], [400-500]
-    base_delays = [50, 100, 200, 400]
+    # Default config: max_retries=4, initial_delay_ms=500 (fixed delay)
+    # All delays should be exactly 500ms
     assert_equal 4, delays.length, "Should have 4 retry delays"
 
     delays.each_with_index do |delay, i|
       delay_ms = delay * 1000
-      base = base_delays[i]
-      max_with_jitter = base * 1.25
-      assert delay_ms >= base, "Delay #{i} should be at least #{base}ms, got #{delay_ms}ms"
-      assert delay_ms <= max_with_jitter, "Delay #{i} should be at most #{max_with_jitter}ms, got #{delay_ms}ms"
+      assert_equal 500, delay_ms, "Delay #{i} should be exactly 500ms, got #{delay_ms}ms"
     end
   end
 
