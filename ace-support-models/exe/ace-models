@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/support/models"
+require_relative "../lib/ace/support/models/cli"
+
+# Migration warning: Help users clean up old cache directory
+old_cache_path = File.join(Dir.home, ".cache", "ace-llm-models-dev")
+if Dir.exist?(old_cache_path)
+  warn "Note: Old cache detected at ~/.cache/ace-llm-models-dev"
+  warn "Run: ace-models cache sync && rm -rf ~/.cache/ace-llm-models-dev"
+end
+
+exit_code = Ace::Support::Models::CLI.start(ARGV)
+exit(exit_code.is_a?(Numeric) ? exit_code : 0)

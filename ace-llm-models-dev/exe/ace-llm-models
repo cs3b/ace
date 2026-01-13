@@ -1,8 +1,0 @@
-#!/usr/bin/env ruby
-# frozen_string_literal: true
-
-require_relative "../lib/ace/llm/models_dev"
-require_relative "../lib/ace/llm/models_dev/cli"
-
-exit_code = Ace::LLM::ModelsDev::CLI.start(ARGV)
-exit(exit_code.is_a?(Numeric) ? exit_code : 0)
