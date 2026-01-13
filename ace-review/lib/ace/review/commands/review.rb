@@ -144,7 +144,7 @@ module Ace
         def process_models(options)
           return unless options[:model]
 
-          # Thor's repeatable option gives us an array
+          # dry-cli's array option gives us an array
           models = Array(options[:model]).compact.map(&:strip).reject(&:empty?)
 
           if models.any?
@@ -153,7 +153,9 @@ module Ace
             # Deduplicate and validate
             models.uniq!
             validate_model_names(models)
-            options[:model] = models
+            # Store in :models (array) not :model (expects string)
+            options[:models] = models
+            options.delete(:model)
           else
             options.delete(:model)
           end

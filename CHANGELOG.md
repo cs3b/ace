@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.296] - 2026-01-13
+
+### Fixed
+
+- **ace-review 0.33.2**: Fix multi-model option handling
+  - Store parsed models in `:models` key (array) instead of `:model` key
+  - Resolves issue where multi-model reviews failed due to incorrect option key usage
+
+## [0.9.295] - 2026-01-13
+
+### Fixed
+
+- **ace-llm 0.20.2**: Query command ambiguous argument handling when `--model` doesn't contain colon
+  - Added validation to detect when positional arg is not a valid provider
+  - Shows help instead of proceeding with invalid provider/model combination
+
+## [0.9.294] - 2026-01-13
+
+### Added
+
+- **ace-git 0.8.1**: PID-based orphan detection for git lock files
+  - New `orphaned?` method checks if lock-owning process still exists
+  - Instant cleanup of orphaned locks (dead PID) regardless of age
+  - Age-based stale detection remains as fallback for edge cases
+
+### Changed
+
+- **ace-git 0.8.1**: Improved lock retry timing and cleanup strategy
+  - Lock retry now uses fixed 500ms delay (was exponential 50→100→200→400ms)
+  - Lock cleanup attempted on every retry (was only first retry)
+  - Updated `initial_delay_ms` default from 50 to 500 in config
+
 ## [0.9.293] - 2026-01-12
 
 ### Added

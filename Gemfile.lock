@@ -127,7 +127,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.33.1)
+    ace-review (0.33.2)
       ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)

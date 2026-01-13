@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-03'
+  last-updated: '2026-01-13'
 ---
 
 # Testing Patterns for ACE
@@ -210,6 +210,82 @@ def test_cli_flag
 end
 ```
 
+### WebMock for HTTP API Mocking
+
+Use WebMock (already in Gemfile) to intercept HTTP requests at the network level. This is ideal for testing code that calls external APIs (LLM providers, GitHub API, etc.) without making real network calls.
+
+**Setup pattern:**
+
+```ruby
+require "webmock/minitest"
+
+class MyAPITest < Minitest::Test
+  def setup
+    super
+    WebMock.disable_net_connect!
+  end
+
+  def teardown
+    WebMock.reset!
+    WebMock.allow_net_connect!
+    super
+  end
+end
+```
+
+**Stubbing API responses:**
+
+```ruby
+# Stub by URL pattern (regex)
+def stub_google_api_success
+  stub_request(:post, /generativelanguage\.googleapis\.com/)
+    .to_return(
+      status: 200,
+      headers: { "Content-Type" => "application/json" },
+      body: {
+        "candidates" => [{ "content" => { "parts" => [{ "text" => "Mock response" }] } }],
+        "usageMetadata" => { "promptTokenCount" => 5, "candidatesTokenCount" => 10 }
+      }.to_json
+    )
+end
+
+# Stub by exact URL
+def stub_github_api_success
+  stub_request(:get, "https://api.github.com/repos/owner/repo")
+    .to_return(status: 200, body: { "id" => 123 }.to_json)
+end
+
+# Stub error responses
+def stub_api_error(status: 401)
+  stub_request(:any, /api\.example\.com/)
+    .to_return(status: status, body: { "error" => "Unauthorized" }.to_json)
+end
+```
+
+**Usage in tests:**
+
+```ruby
+def test_cli_routing_with_api_call
+  stub_google_api_success
+  with_real_config do
+    output = invoke_cli(["google:gemini-2.5-flash", "Hello"])
+    # Test verifies CLI routing, not API functionality
+    refute_match(/^Usage:/, output)
+  end
+end
+```
+
+**When to use WebMock:**
+- Tests that verify CLI argument routing (not API responses)
+- Tests that need real config but mock network
+- Cross-provider tests where mocking at HTTP level is simpler
+
+**Existing usage:**
+- `ace-git-secrets/test/atoms/service_api_client_test.rb` - GitHub API mocking
+- `ace-llm/test/commands/query_command_test.rb` - LLM API mocking
+
+**Performance:** WebMock stubs are instant (<1ms) vs real API calls (1-10+ seconds).
+
 ## Testing Classes with Multiple External Dependencies
 
 For classes with multiple external dependencies (ENV, File, Time, etc.), apply the same pattern:
@@ -323,6 +399,8 @@ Know the cost of common operations to guide optimization:
 | Sleep in retry tests | 1-2s per sleep | Stub `Kernel.sleep` |
 | Cross-package require (cold) | ~50-100ms | Cache or stub dependencies |
 | `ace-nav` subprocess | ~150-400ms | Use `stub_synthesizer_prompt_path` |
+| Real LLM API call | 1-20s | Use WebMock to stub HTTP |
+| Real GitHub API call | 100-500ms | Use WebMock to stub HTTP |
 
 ### When Tests Exceed Targets
 
@@ -956,6 +1034,7 @@ end
 
 ### Mock & Stub Patterns
 - **Use MockGitRepo for unit tests**, real repos for integration tests
+- **Use WebMock for HTTP/API mocking** - intercepts at network level, instant responses
 - **Use thread-safe stub pattern** instead of define_method
 - **Watch for zombie mocks** - stubs that don't match actual code paths
 - **Use `with_empty_git_diff`** for cross-package git stubbing
