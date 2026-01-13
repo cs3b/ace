@@ -7,6 +7,27 @@ class XAIClientTest < AceTestCase
     @client = Ace::LLM::Organisms::XAIClient.allocate
   end
 
+  # Helper: Create a mock failed response with specified status and body
+  def create_failed_response_mock(status:, body:)
+    mock = Minitest::Mock.new
+    mock.expect :success?, false
+    mock.expect :status, status
+    mock.expect :body, body
+    mock
+  end
+
+  # Helper: Configure client with mock HTTP client that returns the given response
+  def setup_client_with_mock_response(response)
+    http_client_mock = Object.new
+    http_client_mock.define_singleton_method(:post) do |_url, _body, **_kwargs|
+      response
+    end
+
+    @client.instance_variable_set(:@http_client, http_client_mock)
+    @client.instance_variable_set(:@base_url, "https://api.x.ai")
+    @client.instance_variable_set(:@api_key, "test-key")
+  end
+
   # Test client constants
   def test_api_base_url_constant
     assert_equal "https://api.x.ai", Ace::LLM::Organisms::XAIClient::API_BASE_URL
@@ -282,26 +303,48 @@ class XAIClientTest < AceTestCase
   end
 
   def test_make_api_request_handles_malformed_error_body
-    # Response with body that raises during parsing
-    failed_response = Minitest::Mock.new
-    failed_response.expect :success?, false
-    failed_response.expect :status, 500
-    failed_response.expect :body, {}
-
-    http_client_mock = Object.new
-    http_client_mock.define_singleton_method(:post) do |_url, _body, **_kwargs|
-      failed_response
-    end
-
-    @client.instance_variable_set(:@http_client, http_client_mock)
-    @client.instance_variable_set(:@base_url, "https://api.x.ai")
-    @client.instance_variable_set(:@api_key, "test-key")
+    # Response with empty Hash body (missing error structure)
+    failed_response = create_failed_response_mock(status: 500, body: {})
+    setup_client_with_mock_response(failed_response)
 
     error = assert_raises(Ace::LLM::ProviderError) do
       @client.send(:make_api_request, {model: "grok-3", messages: []})
     end
 
     assert_match(/x.ai API error \(500\)/, error.message)
-    assert_match(/unknown - Unknown error/, error.message)
+    assert_match(/unknown - Unknown error: 500/, error.message)
+  end
+
+  def test_handles_non_json_error_response
+    # Response with String body (e.g., HTML error page from 502 gateway error)
+    failed_response = create_failed_response_mock(
+      status: 502,
+      body: "<html><body>Bad Gateway</body></html>"
+    )
+    setup_client_with_mock_response(failed_response)
+
+    error = assert_raises(Ace::LLM::ProviderError) do
+      @client.send(:make_api_request, {model: "grok-3", messages: []})
+    end
+
+    assert_match(/x.ai API error \(502\)/, error.message)
+    assert_match(/Non-JSON response: <html><body>Bad Gateway<\/body><\/html>/, error.message)
+
+    failed_response.verify
+  end
+
+  def test_handles_empty_string_error_response
+    # Response with empty String body (edge case)
+    failed_response = create_failed_response_mock(status: 502, body: "")
+    setup_client_with_mock_response(failed_response)
+
+    error = assert_raises(Ace::LLM::ProviderError) do
+      @client.send(:make_api_request, {model: "grok-3", messages: []})
+    end
+
+    assert_match(/x.ai API error \(502\)/, error.message)
+    assert_match(/Unknown error: 502/, error.message)
+
+    failed_response.verify
   end
 end
