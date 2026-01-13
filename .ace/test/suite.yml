@@ -59,8 +59,8 @@ test_suite:
       group: tools
       priority: 3
 
-    - name: ace-llm-models-dev
-      path: ace-llm-models-dev
+    - name: ace-support-models
+      path: ace-support-models
       group: tools
       priority: 3
 
