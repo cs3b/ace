@@ -8,6 +8,17 @@ module Ace
     module Atoms
       # Pure functions for executing git commands safely
       # Migrated from ace-git-diff
+      #
+      # Lock Retry Behavior:
+      # - Automatically retries git commands that encounter .git/index.lock errors
+      # - Implements exponential backoff: 50ms → 100ms → 200ms → 400ms
+      # - Auto-cleans stale lock files (>60 seconds old) on first retry
+      # - Configurable via lock_retry section in .ace/git/config.yml
+      # - Only git commands are retried; non-git commands fail immediately
+      #
+      # This retry logic prevents "Unable to create .git/index.lock" errors
+      # that commonly occur in multi-worktree environments or when operations
+      # are interrupted (Ctrl+C, crashes, timeouts).
       module CommandExecutor
         class << self
           # Execute a command safely using array arguments to prevent command injection
@@ -16,6 +27,84 @@ module Ace
           # @param env [Hash] Optional environment variables to set for the command
           # @return [Hash] Result with output, error, and success status
           def execute(*command_parts, timeout: Ace::Git.git_timeout, env: nil)
+            # Check if lock retry is enabled (default: true)
+            lock_retry_config = Ace::Git.config["lock_retry"]
+            lock_retry_enabled = lock_retry_config.nil? ? true : lock_retry_config["enabled"] != false
+
+            if lock_retry_enabled && !command_parts.empty? && command_parts.first == "git"
+              execute_with_lock_retry(command_parts, timeout: timeout, env: env, config: lock_retry_config)
+            else
+              execute_once(command_parts, timeout: timeout, env: env)
+            end
+          end
+
+          private
+
+          # Execute command with lock error retry logic
+          # @param command_parts [Array<String>] Command parts to execute
+          # @param timeout [Integer] Timeout in seconds
+          # @param env [Hash] Optional environment variables
+          # @param config [Hash] Lock retry configuration
+          # @return [Hash] Result with output, error, and success status
+          def execute_with_lock_retry(command_parts, timeout:, env:, config:)
+            config ||= {}
+            # Use fetch to respect zero values (e.g., max_retries: 0 to disable retries)
+            max_retries = config.fetch("max_retries", 4)
+            initial_delay_ms = config.fetch("initial_delay_ms", 50)
+            stale_cleanup = config.fetch("stale_cleanup", true)
+            stale_threshold = config.fetch("stale_threshold_seconds", 60)
+
+            result = nil
+            attempt_cleaned = false
+
+            (0..max_retries).each do |attempt|
+              result = execute_once(command_parts, timeout: timeout, env: env)
+
+              # Success or non-lock error - return immediately
+              break if result[:success] || !LockErrorDetector.lock_error_result?(result)
+
+              # First retry with lock error: attempt stale lock cleanup
+              if attempt == 0 && stale_cleanup && !attempt_cleaned
+                root_path = CommandExecutor.repo_root
+                if root_path
+                  clean_result = StaleLockCleaner.clean(root_path, stale_threshold)
+                  if clean_result[:cleaned]
+                    attempt_cleaned = true
+                    if ENV["ACE_DEBUG"] || ENV["DEBUG"]
+                      warn "[ace-git] #{clean_result[:message]}"
+                    end
+                  end
+                end
+              end
+
+              # Sleep with exponential backoff before retry (except on last attempt)
+              break if attempt == max_retries
+
+              base_delay_ms = initial_delay_ms * (2**attempt)
+              # Add jitter (0-25% of base delay) to prevent thundering herd
+              jitter_ms = rand(0..(base_delay_ms * 0.25).to_i)
+              delay_ms = base_delay_ms + jitter_ms
+              if ENV["ACE_DEBUG"] || ENV["DEBUG"]
+                warn "[ace-git] Lock retry: attempt #{attempt + 1}/#{max_retries + 1}, " \
+                     "waiting #{delay_ms}ms (#{command_parts.first(3).join(' ')}...)"
+              end
+              Kernel.sleep(delay_ms / 1000.0)
+            end
+
+            # Add retry context to error message if all retries failed
+            if !result[:success] && LockErrorDetector.lock_error_result?(result)
+              result[:error] = "Git index locked after #{max_retries + 1} attempts (#{max_retries} retries). #{result[:error]}"
+            end
+
+            result
+          end
+
+          # Execute command once without retry logic
+          # @param command_parts [Array<String>] Command parts to execute
+          # @param timeout [Integer] Timeout in seconds
+          # @param env [Hash] Optional environment variables
+          # @return [Hash] Result with output, error, and success status
+          def execute_once(command_parts, timeout:, env:)
             # Using Timeout to prevent hanging on network issues or stuck git operations
             Timeout.timeout(timeout) do
               # Using Open3.capture3 to avoid shell injection
@@ -49,6 +138,8 @@ module Ace
               exit_code: -1
             }
           end
+
+          public
 
           # Execute git diff command
           # @param args [Array<String>] Arguments to pass to git diff
@@ -103,7 +194,7 @@ module Ace
           # Get repository root path
           # @return [String, nil] Repository root path or nil on error
           def repo_root
-            result = execute("git", "rev-parse", "--show-toplevel")
+            result = execute_once(["git", "rev-parse", "--show-toplevel"], timeout: Ace::Git.git_timeout, env: nil)
             result[:success] ? result[:output].strip : nil
           end
 

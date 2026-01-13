@@ -68,3 +68,11 @@ git:
   #   strategy: version    # version, manual, interactive
   #   interactive: false   # Use interactive mode
   #   preserve_messages: true
+
+  # Lock retry configuration (handles .git/index.lock errors)
+  lock_retry:
+    enabled: true                   # Enable/disable retry behavior
+    max_retries: 4                  # Maximum retry attempts
+    initial_delay_ms: 50            # Initial backoff delay (exponential)
+    stale_cleanup: true             # Auto-remove stale locks
+    stale_threshold_seconds: 60     # Age threshold for stale locks

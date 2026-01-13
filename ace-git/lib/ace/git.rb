@@ -136,8 +136,8 @@ module Ace
         end
       end
 
-      # Copy other sections as-is (rebase, pr, squash, status, etc.)
-      %w[rebase pr squash status].each do |key|
+      # Copy other sections as-is (rebase, pr, squash, status, lock_retry, etc.)
+      %w[rebase pr squash status lock_retry].each do |key|
         config[key] = normalized[key] if normalized.key?(key)
       end
 
@@ -208,6 +208,8 @@ require_relative "git/atoms/repository_checker"
 require_relative "git/atoms/git_scope_filter"
 require_relative "git/atoms/time_formatter"
 require_relative "git/atoms/status_formatter"
+require_relative "git/atoms/lock_error_detector"
+require_relative "git/atoms/stale_lock_cleaner"
 
 require_relative "git/molecules/diff_generator"
 require_relative "git/molecules/config_loader"
