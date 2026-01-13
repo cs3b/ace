@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.205
-status: in-progress
+status: done
 priority: high
 estimate: 1h
 dependencies: []
@@ -55,16 +55,16 @@ LLM error: xAI API error (502): unknown - Unknown error: 502
 
 ### Success Criteria
 
-- [ ] xAI client handles String response bodies without crashing
-- [ ] Error messages include HTTP status code for debugging
-- [ ] Existing tests continue to pass
-- [ ] New test case covers String response body scenario
+- [x] xAI client handles String response bodies without crashing
+- [x] Error messages include HTTP status code for debugging
+- [x] Existing tests continue to pass
+- [x] New test case covers String response body scenario
 
 ### Validation Questions
 
 - [x] **Root Cause Identified**: The `error_body.dig()` call assumes Hash but receives String
 - [x] **Pattern Established**: OpenRouter client has the safe pattern to follow
-- [ ] **Scope Confirmed**: Fix xAI only (7 other providers deferred)
+- [x] **Scope Confirmed**: Fix xAI only (7 other providers deferred)
 
 ## Objective
 
@@ -101,7 +101,7 @@ Fix the xAI API client to handle non-JSON error responses gracefully, preventing
 
 ### Execution Steps
 
-- [ ] **Step 1**: Modify `xai_client.rb` error handling (lines 104-106)
+- [x] **Step 1**: Modify `xai_client.rb` error handling (lines 104-106)
   ```ruby
   # Replace:
   error_body = response.body rescue {}
@@ -119,7 +119,7 @@ Fix the xAI API client to handle non-JSON error responses gracefully, preventing
   > Assert: File parses without errors
   > Command: ruby -c ace-llm/lib/ace/llm/organisms/xai_client.rb
 
-- [ ] **Step 2**: Update error message to include status code
+- [x] **Step 2**: Update error message to include status code
   ```ruby
   # Change:
   error_message = error_body.dig("error", "message") || "Unknown error"
@@ -128,7 +128,7 @@ Fix the xAI API client to handle non-JSON error responses gracefully, preventing
   error_message = error_body.dig("error", "message") || "Unknown error: #{response.status}"
   ```
 
-- [ ] **Step 3**: Add test case for String response body
+- [x] **Step 3**: Add test case for String response body
   - File: `ace-llm/test/organisms/xai_client_test.rb`
   - Test: `test_handles_non_json_error_response`
   - Stub HTTP response with String body and 502 status
@@ -137,7 +137,7 @@ Fix the xAI API client to handle non-JSON error responses gracefully, preventing
   > Assert: All tests pass including new test
   > Command: ace-test ace-llm/test/organisms/xai_client_test.rb
 
-- [ ] **Step 4**: Run full test suite
+- [x] **Step 4**: Run full test suite
   > TEST: Full Suite Validation
   > Type: Integration
   > Assert: All ace-llm tests pass
@@ -145,10 +145,10 @@ Fix the xAI API client to handle non-JSON error responses gracefully, preventing
 
 ## Acceptance Criteria
 
-- [ ] xAI client handles String response bodies without crashing
-- [ ] Error messages include HTTP status code
-- [ ] All existing tests pass
-- [ ] New test case covers String response body scenario
+- [x] xAI client handles String response bodies without crashing
+- [x] Error messages include HTTP status code
+- [x] All existing tests pass
+- [x] New test case covers String response body scenario
 
 ## References
 
