@@ -51,6 +51,56 @@ class StaleLockCleanerTest < AceGitTestCase
     assert @cleaner.stale?(lock_path, 60), "Should return true with 60s threshold"
   end
 
+  # --- orphaned? tests ---
+
+  def test_orphaned_returns_true_for_non_existent_pid
+    lock_path = File.join(@git_dir, "index.lock")
+    # Use a PID that definitely doesn't exist (very high number)
+    File.write(lock_path, "999999999")
+
+    assert @cleaner.orphaned?(lock_path), "Should return true for non-existent PID"
+  end
+
+  def test_orphaned_returns_false_for_current_process_pid
+    lock_path = File.join(@git_dir, "index.lock")
+    # Use current process PID (definitely exists)
+    File.write(lock_path, Process.pid.to_s)
+
+    refute @cleaner.orphaned?(lock_path), "Should return false for running PID"
+  end
+
+  def test_orphaned_returns_false_for_invalid_pid
+    lock_path = File.join(@git_dir, "index.lock")
+    # Invalid PID (zero or negative)
+    File.write(lock_path, "0")
+    refute @cleaner.orphaned?(lock_path), "Should return false for zero PID"
+
+    File.write(lock_path, "-1")
+    refute @cleaner.orphaned?(lock_path), "Should return false for negative PID"
+  end
+
+  def test_orphaned_returns_false_for_non_numeric_content
+    lock_path = File.join(@git_dir, "index.lock")
+    File.write(lock_path, "not a pid")
+
+    refute @cleaner.orphaned?(lock_path), "Should return false for non-numeric content"
+  end
+
+  def test_orphaned_handles_pid_with_hostname
+    lock_path = File.join(@git_dir, "index.lock")
+    # Git lock files may contain "PID hostname" format
+    File.write(lock_path, "999999999 hostname.local")
+
+    assert @cleaner.orphaned?(lock_path), "Should parse PID from 'PID hostname' format"
+  end
+
+  def test_orphaned_returns_false_for_non_existent_file
+    lock_path = File.join(@git_dir, "index.lock")
+    # File doesn't exist
+
+    refute @cleaner.orphaned?(lock_path), "Should return false for non-existent file"
+  end
+
   def test_find_lock_file_returns_path_when_exists
     lock_path = File.join(@git_dir, "index.lock")
     File.write(lock_path, "lock content")
@@ -95,16 +145,30 @@ class StaleLockCleanerTest < AceGitTestCase
     refute File.exist?(lock_path), "Lock file should be deleted"
   end
 
-  def test_clean_does_not_remove_fresh_lock
+  def test_clean_does_not_remove_fresh_lock_with_running_pid
     lock_path = File.join(@git_dir, "index.lock")
-    File.write(lock_path, "lock content")
+    # Use current process PID so it's not orphaned
+    File.write(lock_path, Process.pid.to_s)
 
     result = @cleaner.clean(@temp_dir, 60)
 
     assert result[:success], "Should succeed"
     refute result[:cleaned], "Should indicate no lock was cleaned"
-    assert_includes result[:message], "fresh", "Should explain lock is fresh"
+    assert_includes result[:message], "active", "Should explain lock is active"
     assert File.exist?(lock_path), "Lock file should still exist"
+  end
+
+  def test_clean_removes_orphaned_lock_even_if_fresh
+    lock_path = File.join(@git_dir, "index.lock")
+    # Use a non-existent PID - lock is orphaned even though fresh
+    File.write(lock_path, "999999999")
+
+    result = @cleaner.clean(@temp_dir, 60)
+
+    assert result[:success], "Should succeed"
+    assert result[:cleaned], "Should indicate lock was cleaned"
+    assert_includes result[:message], "orphaned", "Should explain lock was orphaned"
+    refute File.exist?(lock_path), "Orphaned lock file should be deleted"
   end
 
   def test_clean_uses_custom_threshold
