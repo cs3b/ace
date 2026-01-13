@@ -19,17 +19,19 @@ module Ace
         # @example Load from task frontmatter
         #   metadata = WorktreeMetadata.from_task_data(task_frontmatter_hash)
         class WorktreeMetadata
-          attr_reader :branch, :path, :created_at, :updated_at
+          attr_reader :branch, :path, :target_branch, :created_at, :updated_at
 
           # Initialize a new WorktreeMetadata
           #
           # @param branch [String] Git branch name
           # @param path [String] Worktree path (relative to project root)
+          # @param target_branch [String, nil] PR target branch (default: nil for main)
           # @param created_at [Time] When the worktree was created
           # @param updated_at [Time] When the worktree was last updated
-          def initialize(branch:, path:, created_at: Time.now, updated_at: Time.now)
+          def initialize(branch:, path:, target_branch: nil, created_at: Time.now, updated_at: Time.now)
             @branch = branch.to_s
             @path = path.to_s
+            @target_branch = target_branch&.to_s
             @created_at = created_at.is_a?(Time) ? created_at : Time.parse(created_at.to_s)
             @updated_at = updated_at.is_a?(Time) ? updated_at : Time.parse(updated_at.to_s)
           end
@@ -43,6 +45,7 @@ module Ace
             WorktreeMetadata.new(
               branch: branch || @branch,
               path: path || @path,
+              target_branch: @target_branch,
               created_at: @created_at,
               updated_at: Time.now
             )
@@ -85,7 +88,9 @@ module Ace
               "path" => @path,
               "created_at" => @created_at.strftime("%Y-%m-%d %H:%M:%S"),
               "updated_at" => @updated_at.strftime("%Y-%m-%d %H:%M:%S")
-            }
+            }.tap do |hash|
+              hash["target_branch"] = @target_branch if @target_branch
+            end
           end
 
           # Convert to YAML string
@@ -105,6 +110,7 @@ module Ace
           #     "worktree" => {
           #       "branch" => "081-fix-auth",
           #       "path" => ".ace-wt/task.081",
+          #       "target_branch" => "080-parent-branch",
           #       "created_at" => "2025-11-04 13:45:00"
           #     }
           #   })
@@ -114,6 +120,7 @@ module Ace
 
             branch = worktree_data["branch"]
             path = worktree_data["path"]
+            target_branch = worktree_data["target_branch"]
             return nil unless branch && path
 
             created_at = parse_time(worktree_data["created_at"]) || Time.now
@@ -122,6 +129,7 @@ module Ace
             new(
               branch: branch,
               path: path,
+              target_branch: target_branch,
               created_at: created_at,
               updated_at: updated_at
             )
