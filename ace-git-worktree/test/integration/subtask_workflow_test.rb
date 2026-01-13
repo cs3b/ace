@@ -3,6 +3,7 @@
 require "test_helper"
 require "ace/git/worktree/models/worktree_config"
 require "ace/git/worktree/molecules/task_status_updater"
+require "ace/git/worktree/molecules/parent_task_resolver"
 require "ace/git/worktree/atoms/task_id_extractor"
 
 # Integration tests for subtask workflow
@@ -141,6 +142,58 @@ module Ace
             message = config.format_commit_message(subtask_data)
 
             assert_match(/121\.01/, message, "Commit message should include subtask suffix")
+          end
+
+          # Tests target branch resolution for subtask with parent worktree
+          def test_target_branch_resolution_for_subtask_with_parent
+            # Mock TaskFetcher that returns parent task with worktree metadata
+            mock_fetcher = Object.new
+            mock_fetcher.define_singleton_method(:fetch) do |task_ref|
+              if task_ref == "121"
+                {
+                  "id" => "v.0.9.0+task.121",
+                  "title" => "Parent Task",
+                  "worktree" => {
+                    "branch" => "121-parent-feature",
+                    "path" => ".ace-wt/task.121"
+                  }
+                }
+              end
+            end
+
+            resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
+            subtask_data = { id: "v.0.9.0+task.121.01", title: "Subtask 01" }
+
+            target = resolver.resolve_target_branch(subtask_data)
+            assert_equal "121-parent-feature", target
+          end
+
+          # Tests target branch fallback for subtask when parent has no worktree
+          def test_target_branch_fallback_when_parent_has_no_worktree
+            mock_fetcher = Object.new
+            mock_fetcher.define_singleton_method(:fetch) do |task_ref|
+              if task_ref == "121"
+                { "id" => "v.0.9.0+task.121", "title" => "Parent Task" }
+              end
+            end
+
+            resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
+            subtask_data = { id: "v.0.9.0+task.121.01", title: "Subtask 01" }
+
+            target = resolver.resolve_target_branch(subtask_data)
+            assert_equal "main", target
+          end
+
+          # Tests target branch for orchestrator task (no parent)
+          def test_target_branch_for_orchestrator_task
+            mock_fetcher = Object.new
+            mock_fetcher.define_singleton_method(:fetch) { |_| nil }
+
+            resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
+            orchestrator_data = { id: "v.0.9.0+task.121", title: "Orchestrator Task" }
+
+            target = resolver.resolve_target_branch(orchestrator_data)
+            assert_equal "main", target
           end
         end
       end

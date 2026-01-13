@@ -178,6 +178,7 @@ module Ace
               push_remote: nil,
               no_auto_navigate: false,
               commit_message: nil,
+              target_branch: nil,
               force: false,
               help: false
             }
@@ -222,6 +223,9 @@ module Ace
               when "--commit-message"
                 i += 1
                 options[:commit_message] = args[i]
+              when "--target-branch"
+                i += 1
+                options[:target_branch] = args[i]
               when "--force"
                 options[:force] = true
               when "--no-mise-trust"
@@ -367,6 +371,7 @@ module Ace
               no_pr: options[:no_pr],
               push_remote: options[:push_remote],
               commit_message: options[:commit_message],
+              target_branch: options[:target_branch],
               no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact
