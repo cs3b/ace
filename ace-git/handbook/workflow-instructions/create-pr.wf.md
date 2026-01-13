@@ -65,7 +65,51 @@ bundle exec rake test
 
 ### 2. Determine Target Branch
 
-Use `ace-taskflow status` to identify task hierarchy:
+**Use worktree metadata** (preferred method):
+
+```bash
+# Find the task spec file (stored in _current/ directory)
+task_file=$(ls _current/*.s.md 2>/dev/null | head -1)
+
+if [ -n "$task_file" ]; then
+  # Try yq first (fastest), then Ruby fallback (guaranteed available)
+  if command -v yq >/dev/null 2>&1; then
+    # yq can read YAML frontmatter from markdown files
+    target_branch=$(yq eval --front-matter=extract '.worktree.target_branch // "main"' "$task_file" 2>/dev/null || echo "main")
+  else
+    # Ruby fallback - extract YAML frontmatter and parse
+    target_branch=$(ruby -ryaml -e '
+      content = File.read(ARGV[0])
+      if content.start_with?("---")
+        frontmatter = content.split("---", 3)[1]
+        data = YAML.safe_load(frontmatter, permitted_classes: [Date])
+        puts data.dig("worktree", "target_branch") || "main"
+      else
+        puts "main"
+      end
+    ' "$task_file" 2>/dev/null || echo "main")
+  fi
+else
+  echo "Warning: No task file found in _current/, defaulting target to main" >&2
+  target_branch="main"
+fi
+
+# Verify the target branch exists (either locally or on remote)
+if ! git show-ref --verify --quiet "refs/heads/$target_branch" && \
+   ! git show-ref --verify --quiet "refs/remotes/origin/$target_branch"; then
+  echo "Warning: Target branch '$target_branch' not found, using 'main'" >&2
+  target_branch="main"
+fi
+```
+
+This method:
+- Uses the `target_branch` saved when worktree was created (in task spec frontmatter)
+- Automatically set to parent's branch for subtasks
+- Falls back to `main` for orchestrator tasks or when metadata unavailable
+- Most reliable for task-aware workflows
+- Uses Ruby fallback when `yq` is not available (Ruby guaranteed in ACE environment)
+
+**Legacy detection method** (fallback):
 
 ```bash
 ace-taskflow status
@@ -79,7 +123,7 @@ ace-taskflow status
 | Main task (no parent) | `140` | `main` |
 | No task context | - | `main` |
 
-**Detection from taskflow status:**
+**Detection from taskflow status** (when metadata unavailable):
 
 If `ace-taskflow status` shows "Parent Task" section:
 1. Get parent task ID (e.g., `140` from `v.0.9.0+task.140`)
@@ -96,7 +140,7 @@ if [ -n "$parent_id" ]; then
 fi
 ```
 
-**Important:** Always verify parent branch exists before creating PR.
+**Important:** Always verify target branch exists before creating PR.
 
 ### 3. Push Branch
 
