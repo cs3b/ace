@@ -11,8 +11,8 @@ module Ace
       #
       # Lock Retry Behavior:
       # - Automatically retries git commands that encounter .git/index.lock errors
-      # - Implements exponential backoff: 50ms → 100ms → 200ms → 400ms
-      # - Auto-cleans stale lock files (>60 seconds old) on first retry
+      # - Uses fixed 500ms delay between retries (configurable)
+      # - On each retry, attempts to clean orphaned locks (dead PID) or stale locks (>60s)
       # - Configurable via lock_retry section in .ace/git/config.yml
       # - Only git commands are retried; non-git commands fail immediately
       #
@@ -50,12 +50,11 @@ module Ace
             config ||= {}
             # Use fetch to respect zero values (e.g., max_retries: 0 to disable retries)
             max_retries = config.fetch("max_retries", 4)
-            initial_delay_ms = config.fetch("initial_delay_ms", 50)
+            delay_ms = config.fetch("initial_delay_ms", 500)
             stale_cleanup = config.fetch("stale_cleanup", true)
             stale_threshold = config.fetch("stale_threshold_seconds", 60)
 
             result = nil
-            attempt_cleaned = false
 
             (0..max_retries).each do |attempt|
               result = execute_once(command_parts, timeout: timeout, env: env)
@@ -63,27 +62,20 @@ module Ace
               # Success or non-lock error - return immediately
               break if result[:success] || !LockErrorDetector.lock_error_result?(result)
 
-              # First retry with lock error: attempt stale lock cleanup
-              if attempt == 0 && stale_cleanup && !attempt_cleaned
+              # Attempt lock cleanup on every retry (checks orphaned PID first, then age)
+              if stale_cleanup
                 root_path = CommandExecutor.repo_root
                 if root_path
                   clean_result = StaleLockCleaner.clean(root_path, stale_threshold)
-                  if clean_result[:cleaned]
-                    attempt_cleaned = true
-                    if ENV["ACE_DEBUG"] || ENV["DEBUG"]
-                      warn "[ace-git] #{clean_result[:message]}"
-                    end
+                  if clean_result[:cleaned] && (ENV["ACE_DEBUG"] || ENV["DEBUG"])
+                    warn "[ace-git] #{clean_result[:message]}"
                   end
                 end
               end
 
-              # Sleep with exponential backoff before retry (except on last attempt)
+              # Sleep before retry (except on last attempt)
               break if attempt == max_retries
 
-              base_delay_ms = initial_delay_ms * (2**attempt)
-              # Add jitter (0-25% of base delay) to prevent thundering herd
-              jitter_ms = rand(0..(base_delay_ms * 0.25).to_i)
-              delay_ms = base_delay_ms + jitter_ms
               if ENV["ACE_DEBUG"] || ENV["DEBUG"]
                 warn "[ace-git] Lock retry: attempt #{attempt + 1}/#{max_retries + 1}, " \
                      "waiting #{delay_ms}ms (#{command_parts.first(3).join(' ')}...)"
