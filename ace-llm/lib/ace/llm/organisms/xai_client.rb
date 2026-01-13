@@ -101,11 +101,8 @@ module Ace
           )
 
           unless response.success?
-            error_body = response.body rescue {}
-            error_message = error_body.dig("error", "message") || "Unknown error"
-            error_type = error_body.dig("error", "type") || "unknown"
-
-            raise Ace::LLM::ProviderError, "x.ai API error (#{response.status}): #{error_type} - #{error_message}"
+            error_type, error_message, status = parse_error_response(response)
+            raise Ace::LLM::ProviderError, "x.ai API error (#{status}): #{error_type} - #{error_message}"
           end
 
           response.body
@@ -145,6 +142,69 @@ module Ace
           metadata[:model_used] = response["model"] if response["model"]
 
           create_response(text, metadata)
+        end
+
+        # Parse error response from API
+        # Extracts error details from the response body, handling both JSON (Hash)
+        # and non-JSON (String) responses gracefully.
+        #
+        # @param response [Faraday::Response] Failed API response
+        # @return [Array(String, String, Integer)] Tuple of [error_type, error_message, status]
+        # @note response.body is cached by Faraday middleware, so multiple accesses are safe
+        def parse_error_response(response)
+          # Faraday's JSON middleware returns Hash for JSON responses, String otherwise
+          raw_body = response.body
+          status = response.status
+
+          case raw_body
+          in Hash => error_body
+            error_obj = error_body["error"]
+            case error_obj
+            when Hash
+              # OpenAI-style: {"error": {"message": "...", "type": "..."}}
+              error_message = error_obj["message"] || build_fallback_error_message(raw_body, status)
+              error_type = error_obj["type"] || "unknown"
+            when String
+              # Flat format: {"error": "simple message"}
+              error_message = error_obj
+              error_type = "unknown"
+            else
+              error_message = build_fallback_error_message(raw_body, status)
+              error_type = "unknown"
+            end
+          else
+            error_message = build_fallback_error_message(raw_body, status)
+            error_type = "unknown"
+          end
+
+          [error_type, error_message, status]
+        end
+
+        # Build fallback error message for non-JSON responses
+        #
+        # Handles various response body types gracefully, including non-JSON HTML
+        # error pages from gateway errors. Truncates long responses to 100 characters
+        # for readability.
+        #
+        # @param raw_body [Object] Raw response body (may be String, nil, or other)
+        # @param status [Integer] HTTP status code from the failed response
+        # @return [String] Human-readable error message describing the failure
+        # @example HTML error page
+        #   build_fallback_error_message("<html>Bad Gateway</html>", 502)
+        #   # => "Non-JSON response: <html>Bad Gateway</html>"
+        # @example Empty response
+        #   build_fallback_error_message("", 500)
+        #   # => "Unknown error: 500"
+        def build_fallback_error_message(raw_body, status)
+          if raw_body.is_a?(String) && !raw_body.empty?
+            # Use byteslice for safe truncation of potentially multi-byte UTF-8 strings
+            # and scrub to handle any invalid byte sequences at truncation boundaries
+            snippet = raw_body.byteslice(0, 100)&.scrub || raw_body[0, 100]
+            snippet += "..." if raw_body.bytesize > 100
+            "Non-JSON response: #{snippet}"
+          else
+            "Unknown error: #{status}"
+          end
         end
       end
     end
