@@ -319,7 +319,7 @@ class OpenRouterClientTest < AceTestCase
       error = assert_raises(Ace::LLM::ProviderError) do
         @client.send(:make_api_request, {})
       end
-      assert_match(/OpenRouter API error.*502.*unknown.*Unknown error: 502/, error.message)
+      assert_match(/OpenRouter API error.*502.*unknown.*Non-JSON response: <html>502 Bad Gateway<\/html>/, error.message)
     end
   end
 

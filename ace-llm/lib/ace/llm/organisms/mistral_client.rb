@@ -78,13 +78,68 @@ module Ace
           )
 
           unless response.success?
-            error_body = response.body rescue {}
-            error_message = error_body.dig("message") || error_body.dig("error") || "Unknown error"
-
-            raise Ace::LLM::ProviderError, "Mistral API error (#{response.status}): #{error_message}"
+            _error_type, error_message, status = parse_error_response(response)
+            raise Ace::LLM::ProviderError, "Mistral API error (#{status}): #{error_message}"
           end
 
           response.body
+        end
+
+        # Parse error response from API
+        # Extracts error details from the response body, handling both JSON (Hash)
+        # and non-JSON (String) responses gracefully.
+        #
+        # Mistral API can return errors in different formats:
+        # - {"error": {"message": "...", "type": "..."}} (OpenAI-style)
+        # - {"message": "..."} (Mistral-style)
+        # - {"error": "simple message"} (flat format)
+        #
+        # @param response [Faraday::Response] Failed API response
+        # @return [Array(String, String, Integer)] Tuple of [error_type, error_message, status]
+        def parse_error_response(response)
+          raw_body = response.body
+          status = response.status
+
+          case raw_body
+          in Hash => error_body
+            # Check for Mistral-style top-level message first
+            if error_body["message"].is_a?(String)
+              return ["unknown", error_body["message"], status]
+            end
+
+            error_obj = error_body["error"]
+            case error_obj
+            when Hash
+              error_message = error_obj["message"] || build_fallback_error_message(raw_body, status)
+              error_type = error_obj["type"] || "unknown"
+            when String
+              error_message = error_obj
+              error_type = "unknown"
+            else
+              error_message = build_fallback_error_message(raw_body, status)
+              error_type = "unknown"
+            end
+          else
+            error_message = build_fallback_error_message(raw_body, status)
+            error_type = "unknown"
+          end
+
+          [error_type, error_message, status]
+        end
+
+        # Build fallback error message for non-JSON responses
+        #
+        # @param raw_body [Object] Raw response body
+        # @param status [Integer] HTTP status code
+        # @return [String] Human-readable error message
+        def build_fallback_error_message(raw_body, status)
+          if raw_body.is_a?(String) && !raw_body.empty?
+            snippet = raw_body.byteslice(0, 100)&.scrub || raw_body[0, 100]
+            snippet += "..." if raw_body.bytesize > 100
+            "Non-JSON response: #{snippet}"
+          else
+            "Unknown error: #{status}"
+          end
         end
 
         # Parse API response
