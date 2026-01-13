@@ -106,7 +106,8 @@ module Ace
             faraday.request :json
 
             # Middleware to automatically parse JSON responses
-            faraday.response :json, content_type: /\bjson$/
+            # Pattern matches: application/json, application/json; charset=utf-8, text/json, etc.
+            faraday.response :json, content_type: /\bjson\b/
 
             # Use the default adapter
             faraday.adapter Faraday.default_adapter
