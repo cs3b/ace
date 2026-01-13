@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.2] - 2026-01-13
+
+### Fixed
+- Fix multi-model option handling: store parsed models in `:models` key (array) instead of `:model` key
+  - Resolves issue where multi-model reviews failed due to incorrect option key usage
+
+### Changed
+- Update dependencies: ace-support-nav (renamed from ace-nav), ace-support-config (renamed from ace-config)
+
 ## [0.33.1] - 2026-01-09
 
 ### Changed

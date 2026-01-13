@@ -34,6 +34,6 @@ models:
   - claude:opus              # Deep reasoning, architecture analysis
   - codex:max  # Code-focused, implementation details
   - google:pro-preview
-  - xai:grok-code-fast
+  - xai:fast
 
 # No subject section - uses CLI --subject parameter directly

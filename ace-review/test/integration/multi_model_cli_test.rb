@@ -23,7 +23,7 @@ class ReviewCommandOptionsTest < Minitest::Test
     options = command.options
 
     # Verify models were parsed and split correctly
-    assert_equal ["gemini", "gpt-4", "claude"], options[:model]
+    assert_equal ["gemini", "gpt-4", "claude"], options[:models]
   end
 
   # Test model parsing - multiple --model flags
@@ -41,7 +41,7 @@ class ReviewCommandOptionsTest < Minitest::Test
     options = command.options
 
     # Verify models were collected
-    assert_equal ["gemini", "gpt-4"], options[:model]
+    assert_equal ["gemini", "gpt-4"], options[:models]
   end
 
   # Test model deduplication
@@ -58,7 +58,7 @@ class ReviewCommandOptionsTest < Minitest::Test
     options = command.options
 
     # Verify duplicates were removed
-    assert_equal ["gemini", "gpt-4"], options[:model]
+    assert_equal ["gemini", "gpt-4"], options[:models]
   end
 
   # Test single subject parsing
