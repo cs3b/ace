@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.212
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 212-add-gemini-cli-provider-to-ace-llm-providers-cli
+  path: "../ace-task.212"
+  created_at: '2026-01-13 23:03:44'
+  updated_at: '2026-01-13 23:03:44'
+  target_branch: main
 ---
 
 # Add Gemini CLI Provider to ace-llm-providers-cli
