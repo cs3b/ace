@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.20.2] - 2026-01-13
+
+### Fixed
+- Query command ambiguous argument handling when `--model` doesn't contain colon
+  - Added validation to detect when positional arg is not a valid provider
+  - Shows help instead of proceeding with invalid provider/model combination
+  - Fixed test to use non-alias value ("unknown-model" instead of "grok")
+
+## [0.20.1] - 2026-01-13
+
+### Fixed
+- Handle non-JSON xAI API error responses gracefully (task 205)
+  - Guard against String response bodies (e.g., HTML error pages from 502 gateway errors)
+  - Include HTTP status code in error messages for better debugging
+  - Apply safe pattern from OpenRouter client with explicit StandardError rescue
+
 ## [0.20.0] - 2026-01-11
 
 ### Changed
@@ -13,8 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The executable is now `ace-llm` (previously `ace-llm-query`)
   - Update scripts and documentation to use `ace-llm` command
   - All functionality remains the same
-
-## [Unreleased]
 
 ## [0.19.1] - 2026-01-09
 
