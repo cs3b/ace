@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.293] - 2026-01-12
+
+### Added
+
+- **ace-git 0.8.0**: Git index lock retry with stale lock cleanup
+  - `LockErrorDetector` atom to detect git index lock errors from stderr
+  - `StaleLockCleaner` atom to detect and remove stale lock files (>60s old)
+  - Automatic retry with exponential backoff (50ms → 100ms → 200ms → 400ms)
+  - `lock_retry` configuration section for customizing retry behavior
+
+### Changed
+
+- **ace-git 0.8.0**: Modified `CommandExecutor.execute()` to wrap git commands with lock retry logic
+  - Prevents "Unable to create .git/index.lock" errors in multi-worktree environments
+  - Silent retries - no output unless all retries fail
+  - All 459 tests pass including 30 new tests for lock retry behavior
+
 ## [0.9.292] - 2026-01-11
 
 ### Fixed
