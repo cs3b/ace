@@ -14,9 +14,9 @@ module Ace
       #
       # Lock File Format:
       # Git lock files contain the PID and hostname of the process that created them.
-      # This information could be used for more precise verification (checking if PID
-      # is still running), but age-based detection is simpler and works reliably
-      # across different systems and scenarios (crashed processes, remote mounts, etc.).
+      # We use PID-based detection (checking if owning process is still running) as
+      # the primary method, with age-based detection as a fallback for edge cases
+      # (remote mounts, containers where PID check may not work).
       module StaleLockCleaner
         class << self
           # Check if a lock file is stale (older than threshold)
@@ -37,6 +37,38 @@ module Ace
             age_seconds > threshold_seconds
           rescue Errno::ENOENT
             false
+          end
+
+          # Check if lock file is orphaned (owning process no longer exists)
+          #
+          # Git lock files contain the PID of the process that created them.
+          # If that process no longer exists, the lock is orphaned and safe to delete.
+          #
+          # @param lock_path [String] Path to the lock file
+          # @return [Boolean] true if the lock is orphaned (PID doesn't exist)
+          #
+          # @example Orphaned lock (process crashed)
+          #   File.write(lock_path, "99999")  # Non-existent PID
+          #   orphaned?(lock_path)  # => true
+          #
+          # @example Active lock (process running)
+          #   File.write(lock_path, Process.pid.to_s)
+          #   orphaned?(lock_path)  # => false
+          def orphaned?(lock_path)
+            content = File.read(lock_path)
+            # Git lock file format: PID on first line (may include hostname)
+            pid = content.to_s.split.first.to_i
+            return false if pid <= 0
+
+            # Check if process exists (signal 0 = check existence only)
+            Process.kill(0, pid)
+            false # Process exists - lock is active
+          rescue Errno::ESRCH
+            true # No such process - lock is orphaned
+          rescue Errno::EPERM
+            false # Process exists but we can't signal it - assume active
+          rescue StandardError
+            false # Unknown error (file read failed, etc.) - be conservative
           end
 
           # Find index.lock file for a repository
@@ -82,23 +114,30 @@ module Ace
             nil
           end
 
-          # Clean a stale lock file if it exists and is stale
+          # Clean a lock file if it is orphaned (dead PID) or stale (old age)
+          #
+          # Uses PID-based detection first (instant), then falls back to age-based
+          # detection for edge cases (remote mounts, containers).
           #
           # @param repo_path [String] Path to the git repository
           # @param threshold_seconds [Integer] Age threshold for stale detection
           # @return [Hash] Result with :success, :cleaned, :message
           #
-          # @example Successfully cleaned stale lock
+          # @example Cleaned orphaned lock (dead PID)
           #   clean("/path/to/repo", 60)
-          #   # => { success: true, cleaned: true, message: "..." }
+          #   # => { success: true, cleaned: true, message: "Removed orphaned lock..." }
+          #
+          # @example Cleaned stale lock (old age)
+          #   clean("/path/to/repo", 60)
+          #   # => { success: true, cleaned: true, message: "Removed stale lock..." }
           #
           # @example No lock to clean
           #   clean("/path/to/repo", 60)
           #   # => { success: true, cleaned: false, message: "No lock found" }
           #
-          # @example Lock is fresh (not stale)
+          # @example Lock is active (PID running, fresh)
           #   clean("/path/to/repo", 60)
-          #   # => { success: true, cleaned: false, message: "Lock is fresh" }
+          #   # => { success: true, cleaned: false, message: "Lock is active..." }
           def clean(repo_path, threshold_seconds = 60)
             lock_path = find_lock_file(repo_path)
 
@@ -116,11 +155,15 @@ module Ace
               return { success: false, cleaned: false, message: "Lock path is not a regular file: #{lock_path}" }
             end
 
-            if stale?(lock_path, threshold_seconds)
+            # Check orphaned first (PID-based), then fall back to age-based stale check
+            if orphaned?(lock_path)
+              File.delete(lock_path)
+              { success: true, cleaned: true, message: "Removed orphaned lock file (dead PID): #{lock_path}" }
+            elsif stale?(lock_path, threshold_seconds)
               File.delete(lock_path)
               { success: true, cleaned: true, message: "Removed stale lock file: #{lock_path}" }
             else
-              { success: true, cleaned: false, message: "Lock file is fresh (< #{threshold_seconds}s old)" }
+              { success: true, cleaned: false, message: "Lock file is active (PID running, < #{threshold_seconds}s old)" }
             end
           rescue Errno::ENOENT
             # Handle TOCTOU race: lock file was deleted between check and delete
