@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-01-13
+
+### Changed
+- Updated create-pr workflow to use worktree metadata for target_branch detection
+  - Added `yq` command to read `target_branch` from `.ace-taskflow/task.yml`
+  - Worktree metadata is now the preferred method for determining PR target branch
+  - Falls back to legacy parent task detection when metadata unavailable
+- Updated rebase workflow with auto-detection from worktree metadata
+  - Added example for rebasing subtasks against parent branch
+  - `target_branch` now auto-detects from worktree metadata → origin/main fallback
+
 ## [0.8.0] - 2026-01-12
 
 ### Added
