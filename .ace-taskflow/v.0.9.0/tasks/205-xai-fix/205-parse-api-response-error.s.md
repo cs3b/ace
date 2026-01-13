@@ -1,9 +1,14 @@
 ---
 id: v.0.9.0+task.205
-status: pending
+status: in-progress
 priority: high
 estimate: 1h
 dependencies: []
+worktree:
+  branch: 205-fix-xai-api-response-parsing-error
+  path: "../ace-task.205"
+  created_at: '2026-01-13 12:26:28'
+  updated_at: '2026-01-13 12:26:28'
 ---
 
 # Fix xAI API Response Parsing Error
