@@ -2,6 +2,7 @@
 
 require_relative "../atoms/task_id_extractor"
 require_relative "../molecules/current_task_linker"
+require_relative "../molecules/parent_task_resolver"
 
 module Ace
   module Git
@@ -31,6 +32,7 @@ module Ace
             @task_pusher = Molecules::TaskPusher.new
             @worktree_creator = Molecules::WorktreeCreator.new
             @pr_creator = Molecules::PrCreator.new
+            @parent_task_resolver = Molecules::ParentTaskResolver.new(project_root: project_root)
           end
 
           # Create a worktree for a task with complete workflow
@@ -92,7 +94,10 @@ module Ace
               end
 
               # Step 4: Create worktree metadata
-              worktree_metadata = create_worktree_metadata(task_data)
+              # Determine target branch for PR (parent's branch for subtasks, or main)
+              target_branch = resolve_target_branch(task_data, options)
+              workflow_result[:target_branch] = target_branch
+              worktree_metadata = create_worktree_metadata(task_data, target_branch: target_branch)
               workflow_result[:steps_completed] << "metadata_prepared"
 
               # Step 5: Add worktree metadata to task file (BEFORE commit so it's included)
@@ -277,6 +282,9 @@ module Ace
               worktree_path = File.join(@config.absolute_root_path, directory_name)
               base_branch = options[:source] || "main"
 
+              # Determine target branch for PR (parent's branch for subtasks, or main)
+              target_branch = resolve_target_branch(task_data, options)
+
               # Determine upstream/PR settings (considering options)
               should_setup_upstream = @config.auto_setup_upstream? && !options[:no_upstream]
               should_create_pr = @config.auto_create_pr? && !options[:no_pr] && should_setup_upstream
@@ -300,6 +308,7 @@ module Ace
                 worktree_path: worktree_path,
                 branch: branch_name,
                 directory_name: directory_name,
+                target_branch: target_branch,
                 task_status_update: would_update_status,
                 metadata_addition: would_add_metadata,
                 task_commit: would_commit,
@@ -312,7 +321,7 @@ module Ace
                 add_started_at: should_create_pr && should_setup_upstream,
                 create_pr: should_create_pr,
                 pr_title: should_create_pr ? @config.format_pr_title(task_data) : nil,
-                pr_base: should_create_pr ? base_branch : nil,
+                pr_base: should_create_pr ? target_branch : nil,
                 hooks_count: @config.after_create_hooks.length
               }
 
@@ -515,6 +524,18 @@ module Ace
             @task_fetcher.fetch(task_ref)
           end
 
+          # Resolve target branch for PR
+          #
+          # Uses CLI-provided target_branch if present, otherwise auto-detects from parent task.
+          # For subtasks, returns parent's worktree branch. For orchestrators, returns "main".
+          #
+          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param options [Hash] Options hash (may contain :target_branch)
+          # @return [String] Target branch name
+          def resolve_target_branch(task_data, options)
+            options[:target_branch] || @parent_task_resolver.resolve_target_branch(task_data)
+          end
+
           # Check if worktree already exists for task
           #
           # @param task_data [Hash] Task data hash
@@ -535,8 +556,9 @@ module Ace
           # Create worktree metadata
           #
           # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param target_branch [String, nil] PR target branch (for subtasks)
           # @return [WorktreeMetadata] Worktree metadata
-          def create_worktree_metadata(task_data)
+          def create_worktree_metadata(task_data, target_branch: nil)
             # Generate worktree path and branch names
             directory_name = @config.format_directory(task_data)
             branch_name = @config.format_branch(task_data)
@@ -545,6 +567,7 @@ module Ace
             Models::WorktreeMetadata.new(
               branch: branch_name,
               path: File.join(@config.root_path, directory_name),
+              target_branch: target_branch,
               created_at: Time.now
             )
           end
@@ -577,7 +600,12 @@ module Ace
           # @param source [String, nil] Git ref to use as branch start-point
           # @return [Hash] Worktree creation result
           def create_worktree_for_task(task_data, worktree_metadata, source: nil)
-            @worktree_creator.create_for_task(task_data, @config, source: source)
+            @worktree_creator.create_for_task(
+              task_data,
+              @config,
+              source: source,
+              target_branch: worktree_metadata.target_branch
+            )
           end
 
           # Add worktree metadata to task
@@ -697,7 +725,9 @@ module Ace
           # @return [Hash] Result with :success, :pr_number, :pr_url, :existing, :error
           def create_pr_for_task(task_data, worktree_result, options)
             branch = worktree_result[:branch]
-            start_point = options[:source] || worktree_result[:start_point]
+            # Use target_branch from metadata if available (for subtasks)
+            # Otherwise fall back to source option or start_point
+            start_point = worktree_result[:target_branch] || options[:source] || worktree_result[:start_point]
             title = @config.format_pr_title(task_data)
 
             # Resolve base branch - handle SHA vs branch name
