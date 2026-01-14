@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.213
-status: pending
+status: in-progress
 priority: low
 estimate: 8h
 dependencies: []
+worktree:
+  branch: 213-migrate-ace-gems-cli-to-hanami-pattern
+  path: "../ace-task.213"
+  created_at: '2026-01-14 17:11:57'
+  updated_at: '2026-01-14 17:11:57'
+  target_branch: main
 ---
 
 # Migrate ACE gems CLI to Hanami pattern
