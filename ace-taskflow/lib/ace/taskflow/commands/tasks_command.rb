@@ -617,7 +617,7 @@ module Ace
           # Display orchestrators with their subtasks
           orchestrators.each do |orch|
             display_task_line(orch)
-            children = subtasks_by_parent[orch[:id]] || []
+            children = find_children_for_orchestrator(subtasks_by_parent, orch[:id])
             children.sort_by { |s| s[:id] || "" }.each_with_index do |subtask, idx|
               connector = idx == children.length - 1 ? "└─" : "├─"
               display_subtask_line(subtask, connector)
@@ -660,10 +660,52 @@ module Ace
         end
 
         # Select orphan subtasks (subtasks whose parents are not in the given orchestrators list)
+        # Excludes orchestrators themselves - they're displayed separately in the main loop
+        # Handles ID format mismatch: parent_id may be "v.0.9.0+task.211" while orchestrator id is "v.0.9.0+task.211.00"
         def select_orphan_subtasks(tasks, orchestrators)
           tasks.select do |t|
-            t[:parent_id] && !orchestrators.any? { |o| o[:id] == t[:parent_id] }
+            # Skip orchestrators - they're displayed separately
+            next false if t[:is_orchestrator]
+            # Skip tasks without parent_id
+            next false unless t[:parent_id]
+            # Check if parent is in orchestrators (handles format mismatch)
+            !orchestrator_matches_parent?(orchestrators, t[:parent_id])
           end
+        end
+
+        # Check if any orchestrator matches the given parent_id
+        # Handles format mismatch: parent_id "v.0.9.0+task.211" matches orchestrator "v.0.9.0+task.211.00"
+        def orchestrator_matches_parent?(orchestrators, parent_id)
+          orchestrators.any? do |o|
+            orchestrator_id_matches_parent?(o[:id], parent_id)
+          end
+        end
+
+        # Check if an orchestrator ID matches a parent_id (handles format mismatch)
+        # e.g., "v.0.9.0+task.211.00" matches parent_id "v.0.9.0+task.211"
+        def orchestrator_id_matches_parent?(orch_id, parent_id)
+          orch = orch_id.to_s
+          parent = parent_id.to_s
+          # Exact match or orchestrator ID starts with parent_id followed by dot
+          orch == parent || orch.start_with?("#{parent}.")
+        end
+
+        # Find children subtasks for an orchestrator, handling ID format mismatch
+        # Subtask parent_id may be "v.0.9.0+task.211" while orchestrator id is "v.0.9.0+task.211.00"
+        def find_children_for_orchestrator(subtasks_by_parent, orch_id)
+          # Try exact match first
+          children = subtasks_by_parent[orch_id]
+          return children if children
+
+          # Try matching parent_id that is a prefix of orch_id
+          # e.g., orch_id "v.0.9.0+task.211.00" should match key "v.0.9.0+task.211"
+          subtasks_by_parent.each do |parent_id, subtasks|
+            if orchestrator_id_matches_parent?(orch_id, parent_id)
+              return subtasks
+            end
+          end
+
+          []
         end
 
         # Display without subtasks, showing count instead
