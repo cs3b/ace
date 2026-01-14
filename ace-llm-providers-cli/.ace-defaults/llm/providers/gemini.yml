@@ -1,0 +1,33 @@
+name: gemini
+class: Ace::LLM::Providers::CLI::GeminiClient
+gem: ace-llm-providers-cli
+models_dev_id: google
+models:
+  - gemini-2.5-flash
+  - gemini-2.5-pro
+  - gemini-2.0-flash
+  - gemini-1.5-pro-latest
+aliases:
+  global:
+    gemini-flash: gemini:gemini-2.5-flash
+    gemini-pro: gemini:gemini-2.5-pro
+    gflash: gemini:gemini-2.5-flash
+    gpro: gemini:gemini-2.5-pro
+  model:
+    2.5-flash: gemini-2.5-flash
+    2.5-pro: gemini-2.5-pro
+    2.0-flash: gemini-2.0-flash
+    1.5-pro: gemini-1.5-pro-latest
+    flash: gemini-2.5-flash
+    pro: gemini-2.5-pro
+capabilities:
+  - text_generation
+  - code_generation
+  - vision
+default_options:
+  temperature: 0.7
+  max_tokens: 8192
+  # Maximum prompt length before switching to file-based prompts (characters)
+  # Gemini's actual token limit is ~1M, but this provides a safeguard for CLI usage
+  max_prompt_length: 100000
+  system_prompt: "Output only the direct answer to stdout. No conversational filler, no acknowledgments, no explanations. Do not attempt to use tools. Be concise and direct."

@@ -9,6 +9,9 @@ end
 
 require_relative "llm/version"
 
+# Configuration
+require_relative "llm/configuration"
+
 # Require all necessary components explicitly (no autoloading for now)
 require_relative "llm/atoms/env_reader"
 require_relative "llm/atoms/http_client"
