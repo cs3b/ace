@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-01-14
+
+### Added
+- Support for Gemini provider in all review presets
+- Google Gemini 2.5 Flash as default model for code reviews
+
+### Changed
+- Updated LLM executor to handle gemini provider configuration
+- All review presets now use gemini:gemini-2.5-flash as default model
+
 ## [0.33.2] - 2026-01-13
 
 ### Fixed
