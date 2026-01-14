@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.7] - 2026-01-14
+
 ### Fixed
 - Fix duplicate orchestrator display in hierarchical task listing
   - Orchestrator tasks were shown twice: once in main list, once as parent context
