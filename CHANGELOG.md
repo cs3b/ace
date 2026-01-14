@@ -4,6 +4,40 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.299] - 2026-01-14
+
+### Added
+
+- **ace-llm 0.21.0**: Configuration cascade for provider discovery
+  - Provider configs now cascade from gem defaults, project, and user paths
+  - Dynamic provider discovery without hardcoding in ace-llm
+  - New Configuration class and ConfigLoader molecule
+
+- **ace-review 0.34.0**: Gemini provider support in all review presets
+  - Google Gemini 2.5 Flash as default model for code reviews
+  - Updated LLM executor to handle gemini provider configuration
+
+### Changed
+
+- **ace-llm 0.21.0**: Removed CLI provider configs from ace-llm gem (.ace-defaults/)
+- **ace-llm 0.21.0**: Updated ClientRegistry to use Configuration cascade
+
+### Fixed
+
+- **ace-llm 0.21.0**: Handle non-JSON xAI API error responses gracefully
+- **ace-llm 0.21.0**: Improved CLI argument parsing for ambiguous provider/model arguments
+
+## [0.9.298] - 2026-01-13
+
+### Added
+
+- **ace-llm-providers-cli 0.13.0**: GeminiClient for Google Gemini CLI provider integration
+  - Supports Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, and Gemini 1.5 Pro models
+  - JSON output parsing for structured responses with token metadata
+  - System prompt embedding (Gemini CLI lacks native `--system-prompt` flag)
+  - Provider aliases: `gflash`, `gpro`, `gemini-flash`, `gemini-pro`
+  - Auto-registers with ace-llm provider system
+
 ## [0.9.297] - 2026-01-13
 
 ### Changed
