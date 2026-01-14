@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix duplicate orchestrator display in hierarchical task listing
+  - Orchestrator tasks were shown twice: once in main list, once as parent context
+  - Root cause: ID format mismatch between orchestrator ID (`v.0.9.0+task.211.00`) and subtask parent_id (`v.0.9.0+task.211`)
+  - Added `orchestrator_id_matches_parent?` helper to handle ID prefix matching
+  - Subtasks now correctly display under their parent orchestrator
+
 ## [0.33.6] - 2026-01-11
 
 ### Fixed
