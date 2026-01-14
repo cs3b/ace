@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-01-14
+
+### Added
+- Configuration cascade for provider discovery
+  - Provider configs now cascade from gem defaults, project, and user paths
+  - Dynamic provider discovery without hardcoding in ace-llm
+  - New Configuration class and ConfigLoader molecule
+
+### Changed
+- Removed CLI provider configs from ace-llm gem (.ace-defaults/)
+- Updated ClientRegistry to use Configuration cascade
+
+### Fixed
+- Handle non-JSON xAI API error responses gracefully
+- Improved CLI argument parsing for ambiguous provider/model arguments
+
 ## [0.20.2] - 2026-01-13
 
 ### Fixed
