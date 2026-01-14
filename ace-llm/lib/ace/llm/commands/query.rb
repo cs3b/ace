@@ -261,6 +261,7 @@ module Ace
           # Type-convert numeric options (dry-cli returns strings, Thor converted to floats/ints)
           opts[:temperature] = options[:temperature].to_f if options[:temperature]
           opts[:max_tokens] = options[:max_tokens].to_i if options[:max_tokens]
+          opts[:timeout] = options[:timeout].to_i if options[:timeout]
 
           # Pass system_append for providers that support it
           if options[:system_append] && !options[:system_append].empty?

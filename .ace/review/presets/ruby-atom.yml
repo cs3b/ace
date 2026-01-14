@@ -46,4 +46,4 @@ subject:
       - "*.rb"
       - "lib/**/*.rb"
 
-model: "google:gemini-2.5-flash"
+model: "gemini:flash-latest"
