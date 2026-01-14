@@ -25,6 +25,7 @@ module Ace
               codex_client
               open_code_client
               codex_oss_client
+              gemini_client
             ]
 
             providers.each do |provider|

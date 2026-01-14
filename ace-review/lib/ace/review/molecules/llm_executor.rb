@@ -58,11 +58,18 @@ module Ace
                          File.join(session_dir, "review-report-#{model_short}.md")
                        end
 
-          # Use Ruby API directly - no temp files needed!
+          # Build file paths for providers that support file-based prompts (e.g., Gemini CLI)
+          # These files are already saved by ReviewManager in the session directory
+          system_file = File.join(session_dir, "system.prompt.md")
+          prompt_file = File.join(session_dir, "user.prompt.md")
+
+          # Use Ruby API directly
           result = Ace::LLM::QueryInterface.query(
             model,
             user_prompt,
             system: system_prompt,
+            system_file: File.exist?(system_file) ? system_file : nil,
+            prompt_file: File.exist?(prompt_file) ? prompt_file : nil,
             output: output_file,
             format: "text",
             timeout: 600,

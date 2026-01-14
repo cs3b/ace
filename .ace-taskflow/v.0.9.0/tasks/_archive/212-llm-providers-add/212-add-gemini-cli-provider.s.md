@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.212
-status: in-progress
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -59,13 +59,13 @@ gemini --prompt "System: You are helpful\n\nUser: Hello" --output-format json --
 
 ### Success Criteria
 
-- [ ] **Provider Registration**: GeminiClient auto-registers with ace-llm provider system
-- [ ] **Basic Generation**: `ace-llm "prompt" -m gemini:gemini-2.5-flash` returns valid response
-- [ ] **System Prompt Embedding**: System prompts correctly embedded using CodexClient pattern
-- [ ] **Model Selection**: All Gemini models selectable via `-m gemini:<model>`
-- [ ] **JSON Parsing**: Response metadata (tokens, timing) extracted from JSON output
-- [ ] **Error Handling**: Clear errors for missing CLI, auth failures, API errors
-- [ ] **list_models()**: Returns array of available Gemini model definitions
+- [x] **Provider Registration**: GeminiClient auto-registers with ace-llm provider system
+- [x] **Basic Generation**: `ace-llm "prompt" -m gemini:gemini-2.5-flash` returns valid response
+- [x] **System Prompt Embedding**: System prompts correctly embedded using CodexClient pattern
+- [x] **Model Selection**: All Gemini models selectable via `-m gemini:<model>`
+- [x] **JSON Parsing**: Response metadata (tokens, timing) extracted from JSON output
+- [x] **Error Handling**: Clear errors for missing CLI, auth failures, API errors
+- [x] **list_models()**: Returns array of available Gemini model definitions
 
 ### Validation Questions
 
@@ -121,7 +121,7 @@ Enable Gemini model access through the unified ace-llm CLI interface, maintainin
 
 ### Execution Steps
 
-- [ ] Create `gemini_client.rb` with GeminiClient class
+- [x] Create `gemini_client.rb` with GeminiClient class
   - Inherit from `Ace::LLM::Organisms::BaseClient`
   - Set `provider_name` to "gemini"
   - Set `DEFAULT_MODEL` to "gemini-2.5-flash"
@@ -137,7 +137,7 @@ Enable Gemini model access through the unified ace-llm CLI interface, maintainin
   > Assert: `require 'ace/llm/providers/cli/gemini_client'` succeeds
   > Command: ruby -e "require './lib/ace/llm/providers/cli/gemini_client'"
 
-- [ ] Create `.ace-defaults/llm/providers/gemini.yml` configuration
+- [x] Create `.ace-defaults/llm/providers/gemini.yml` configuration
   - Set `name: gemini`
   - Set `class: Ace::LLM::Providers::CLI::GeminiClient`
   - Set `gem: ace-llm-providers-cli`
@@ -149,13 +149,13 @@ Enable Gemini model access through the unified ace-llm CLI interface, maintainin
   > Type: Validation
   > Assert: YAML parses without error
 
-- [ ] Update `cli.rb` to include gemini_client in providers list
+- [x] Update `cli.rb` to include gemini_client in providers list
   - Add `gemini_client` to providers array
   > TEST: Provider auto-loads
   > Type: Integration Test
   > Assert: `require 'ace/llm/providers/cli'` loads GeminiClient
 
-- [ ] Create test file `test/molecules/gemini_client_test.rb`
+- [x] Create test file `test/molecules/gemini_client_test.rb`
   - Test initialization with default model
   - Test `needs_credentials?` returns false
   - Test `list_models` returns array of model definitions
@@ -168,11 +168,11 @@ Enable Gemini model access through the unified ace-llm CLI interface, maintainin
   > Type: Unit Tests
   > Assert: ace-test ace-llm-providers-cli/test/molecules/gemini_client_test.rb passes
 
-- [ ] Update CHANGELOG.md with new feature
+- [x] Update CHANGELOG.md with new feature
   - Add entry under Unreleased or next version
   - Document: Added GeminiClient for Google Gemini CLI integration
 
-- [ ] Run full test suite
+- [x] Run full test suite
   > TEST: No regressions
   > Type: Integration
   > Assert: ace-test ace-llm-providers-cli passes
@@ -236,12 +236,12 @@ end
 
 ## Acceptance Criteria
 
-- [ ] AC 1: GeminiClient class created following existing provider patterns
-- [ ] AC 2: Provider registers automatically with ace-llm on gem load
-- [ ] AC 3: System prompts correctly embedded in user prompt text
-- [ ] AC 4: JSON output parsed for response text and metadata
-- [ ] AC 5: All unit tests pass
-- [ ] AC 6: CHANGELOG updated with new feature
+- [x] AC 1: GeminiClient class created following existing provider patterns
+- [x] AC 2: Provider registers automatically with ace-llm on gem load
+- [x] AC 3: System prompts correctly embedded in user prompt text
+- [x] AC 4: JSON output parsed for response text and metadata
+- [x] AC 5: All unit tests pass
+- [x] AC 6: CHANGELOG updated with new feature
 
 ## Out of Scope
 

@@ -1,0 +1,23 @@
+name: gemini
+last_synced: 2026-01-13
+class: Ace::LLM::Providers::CLI::GeminiClient
+gem: ace-llm-providers-cli
+models_dev_id: google
+models:
+  - gemini-2.5-flash
+  - gemini-2.5-pro
+  - gemini-3-flash-preview
+  - gemini-3-pro-preview
+aliases:
+  model:
+    flash: gemini-2.5-flash
+    pro: gemini-2.5-pro
+    flash-latest: gemini-3-flash-preview
+    pro-latest: gemini-3-pro-preview
+capabilities:
+  - text_generation
+  - code_generation
+  - vision
+default_options:
+  temperature: 0.7
+  max_tokens: 12000
