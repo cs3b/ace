@@ -198,8 +198,8 @@ module Ace
           [File.join(gem_root, ".ace-defaults", "llm", "providers")]
         end
 
-        # Load all provider configurations using Ace::Support::Config cascade
-        # ADR-022: Uses deep merge - project configs extend gem defaults
+        # Load all provider configurations using Configuration class
+        # Uses ProviderConfigReader which handles project → home → gem cascade
         def load_all_configurations
           # If custom config_paths were provided, use legacy loading
           if @config_paths != default_config_paths
@@ -207,19 +207,20 @@ module Ace
             return
           end
 
-          # Use Ace::Support::Config for standard cascade (deep merge)
-          resolver = Ace::Support::Config.create(
-            config_dir: ".ace",
-            defaults_dir: ".ace-defaults",
-            gem_path: gem_root
-          )
+          # Use Configuration class to get all providers from the cascade
+          # This properly handles project-level provider discovery
+          require_relative "../configuration"
+          providers = Ace::LLM.providers
 
-          # Get all provider file names from gem defaults (source of truth)
-          defaults_dir = File.join(gem_root, ".ace-defaults", "llm", "providers")
-          provider_files = Dir.glob(File.join(defaults_dir, "*.{yml,yaml}")).map { |f| File.basename(f) }
+          providers.each do |provider_name, config|
+            # Validate required fields
+            unless config["name"] && config["class"]
+              warn "Invalid provider configuration for #{provider_name}: missing 'name' or 'class'"
+              next
+            end
 
-          provider_files.each do |filename|
-            load_provider_with_cascade(resolver, filename)
+            normalized_name = normalize_provider_name(config["name"])
+            @providers[normalized_name] = config
           end
         rescue StandardError => e
           warn "Error loading provider configurations: #{e.message}"

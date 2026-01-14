@@ -37,4 +37,4 @@ instructions:
         presets:
           - "project"
 
-model: google:flash-preview
+model: gemini:flash-latest

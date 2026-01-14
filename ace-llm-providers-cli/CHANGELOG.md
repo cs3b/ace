@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-01-13
+
+### Added
+- **GeminiClient**: Added Google Gemini CLI provider integration
+  - Supports Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash, and Gemini 1.5 Pro models
+  - JSON output parsing for structured responses with token metadata
+  - System prompt embedding (Gemini CLI lacks native `--system-prompt` flag)
+  - Provider aliases: `gflash`, `gpro`, `gemini-flash`, `gemini-pro`
+  - Auto-registers with ace-llm provider system
+
 ## [0.12.0] - 2026-01-03
 
 ### Changed

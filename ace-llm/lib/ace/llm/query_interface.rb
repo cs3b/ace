@@ -28,6 +28,8 @@ module Ace
       # @param prompt_override [String, nil] Prompt text (overrides positional prompt if both present) (--prompt PROMPT)
       # @param fallback [Boolean, nil] Enable/disable fallback (nil = auto from env/config)
       # @param fallback_providers [Array<String>, nil] Custom fallback provider list
+      # @param system_file [String, nil] Path to system prompt file (for file-based providers)
+      # @param prompt_file [String, nil] Path to user prompt file (for file-based providers)
       #
       # @return [Hash] Response with :text, :model, :provider, and other metadata
       # @raise [Error] If provider/model invalid or request fails
@@ -43,7 +45,9 @@ module Ace
                     model: nil,
                     prompt_override: nil,
                     fallback: nil,
-                    fallback_providers: nil)
+                    fallback_providers: nil,
+                    system_file: nil,
+                    prompt_file: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -78,6 +82,8 @@ module Ace
         generation_opts = {}
         generation_opts[:temperature] = temperature if temperature
         generation_opts[:max_tokens] = max_tokens if max_tokens
+        generation_opts[:system_file] = system_file if system_file
+        generation_opts[:prompt_file] = prompt_file if prompt_file
 
         # Debug output if requested
         if debug
