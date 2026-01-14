@@ -59,14 +59,14 @@ Monitor Claude Code release notes for nested skill directory support.
 
 ## Implementation Notes
 
-**Migration script already exists**: `scripts/migrate-skills.rb`
+**Migration script**: `codemods/migrate-skills.rb` (in this task directory)
 
 ```bash
 # Dry run (preview changes)
-ruby scripts/migrate-skills.rb --dry-run
+ruby .ace-taskflow/_backlog/tasks/214-skills-refactor/codemods/migrate-skills.rb --dry-run
 
 # Execute migration
-ruby scripts/migrate-skills.rb
+ruby .ace-taskflow/_backlog/tasks/214-skills-refactor/codemods/migrate-skills.rb
 
 # Verify
 ls -la .claude/skills/ace/
