@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.300] - 2026-01-14
+
+### Fixed
+
+- **ace-taskflow 0.33.7**: Fix duplicate orchestrator display in hierarchical task listing
+  - Orchestrator tasks were shown twice: once in main list, once as parent context
+  - Root cause: ID format mismatch between orchestrator ID and subtask parent_id
+  - Added helpers to handle ID prefix matching for proper parent-child detection
+
 ## [0.9.299] - 2026-01-14
 
 ### Added
