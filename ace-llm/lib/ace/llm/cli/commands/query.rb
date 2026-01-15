@@ -5,7 +5,8 @@ require "ace/core/cli/dry_cli/base"
 
 module Ace
   module LLM
-    module Commands
+    module CLI
+      module Commands
       # Query command for ace-llm
       #
       # This command queries LLM providers through a unified interface.
@@ -22,6 +23,10 @@ module Ace
         include Ace::Core::CLI::DryCli::Base
 
         desc "Query an LLM provider"
+
+        # Positional arguments
+        argument :provider_model, required: false, desc: "PROVIDER[:MODEL] or alias (e.g., gflash, google:gemini-2.5-flash)"
+        argument :prompt_text, required: false, desc: "Prompt text (can also use --prompt flag)"
 
         # Standard options
         option :quiet, type: :boolean, default: false, desc: "Suppress config summary output"
@@ -42,23 +47,34 @@ module Ace
 
         # Execute the query command
         #
-        # @param args [Array<String>] Positional arguments (provider:MODEL, prompt)
+        # @param provider_model [String, nil] PROVIDER[:MODEL] or alias from positional arg
+        # @param prompt_text [String, nil] Prompt text from positional arg
         # @param options [Hash] Command options
         # @return [Integer] Exit code (0 for success, 1 for failure)
-        def call(*args, **options)
-          # Extract provider_model and prompt from args and options
-          @provider_model, positional_prompt = extract_provider_model_and_prompt(args, options)
+        def call(provider_model: nil, prompt_text: nil, **options)
+          # Resolve provider_model: positional arg > --model flag
+          @provider_model = provider_model
+          if @provider_model.nil? && options[:model]
+            @provider_model = options[:model]
+            @model_from_option = true # Track that model came from --model flag
+          end
 
           # Resolve prompt: --prompt flag > positional argument
-          @prompt = options[:prompt] || positional_prompt
+          @prompt = options[:prompt] || prompt_text
 
-          # If no provider_model or prompt, show help
-          if @provider_model.nil? || @provider_model.empty?
+          # If no provider and no prompt options, show help
+          if @provider_model.nil? && @prompt.nil?
             return show_help
           end
 
+          # If no prompt provided, show provider-specific help
           if @prompt.nil? || @prompt.empty?
             return show_provider_help
+          end
+
+          # If no provider specified at all, show general help
+          if @provider_model.nil? || @provider_model.empty?
+            return show_help
           end
 
           display_config_summary(options)
@@ -85,11 +101,9 @@ module Ace
         #
         # @return [Integer] Exit code (0 for success)
         def show_help
-          cmd = Ace::LLM::CLI::COMMAND_NAME
-          puts "Usage: #{cmd} PROVIDER[:MODEL] [PROMPT] [options]"
-          puts "       #{cmd} PROVIDER --prompt PROMPT [options]"
-          puts "       #{cmd} PROVIDER PROMPT --model MODEL [options]"
-          puts "       #{cmd} --model PROVIDER:MODEL PROMPT [options]"
+          puts "Usage: ace-llm-query PROVIDER[:MODEL] [PROMPT] [options]"
+          puts "       ace-llm-query PROVIDER --prompt PROMPT [options]"
+          puts "       ace-llm-query PROVIDER PROMPT --model MODEL [options]"
           puts ""
           puts "Query any LLM provider through a unified interface"
           puts ""
@@ -109,11 +123,10 @@ module Ace
           puts "  -h, --help                     Show this help message"
           puts ""
           puts "Examples:"
-          puts "  #{cmd} google:gemini-2.5-flash \"What is Ruby?\""
-          puts "  #{cmd} gflash \"Quick question\" # using alias"
-          puts "  #{cmd} google --prompt \"What is Ruby?\" # using --prompt flag"
-          puts "  #{cmd} google \"What is Ruby?\" --model gemini-2.0-flash-lite"
-          puts "  #{cmd} --model google:gemini-2.5-flash \"What is Ruby?\""
+          puts '  ace-llm-query google:gemini-2.5-flash "What is Ruby?"'
+          puts '  ace-llm-query gflash "Quick question" # using alias'
+          puts '  ace-llm-query google --prompt "What is Ruby?" # using --prompt flag'
+          puts '  ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite'
           puts ""
           puts "Provider Aliases:"
           puts "  Short aliases for common provider:MODEL combinations:"
@@ -143,7 +156,7 @@ module Ace
           end
 
           puts ""
-          puts "Use: #{Ace::LLM::CLI::COMMAND_NAME} #{@provider_model} \"your prompt here\""
+          puts "Use: ace-llm-query #{@provider_model} \"your prompt here\""
           0
         end
 
@@ -183,7 +196,12 @@ module Ace
           end
 
           # Resolve final model: --model flag > positional :MODEL > provider default
-          final_model = options[:model] || parse_result.model
+          # If model was used as provider_model (no positional args), don't use it again
+          final_model = if @model_from_option
+                          parse_result.model
+                        else
+                          options[:model] || parse_result.model
+                        end
 
           # Validate that we have a model from some source
           if final_model.nil? || final_model.empty?
@@ -261,7 +279,6 @@ module Ace
           # Type-convert numeric options (dry-cli returns strings, Thor converted to floats/ints)
           opts[:temperature] = options[:temperature].to_f if options[:temperature]
           opts[:max_tokens] = options[:max_tokens].to_i if options[:max_tokens]
-          opts[:timeout] = options[:timeout].to_i if options[:timeout]
 
           # Pass system_append for providers that support it
           if options[:system_append] && !options[:system_append].empty?
@@ -309,77 +326,8 @@ module Ace
         def error_output(message)
           $stderr.puts "Error: #{message}"
         end
-
-        # Extract provider_model and prompt from args and options
-        #
-        # When --model contains provider:model format and no positional PROVIDER is given,
-        # use --model as the source for both provider and model.
-        #
-        # @param args [Array<String>] Positional arguments (always empty without argument declarations)
-        # @param options [Hash] Command options (contains options[:args] with positional args)
-        # @return [Array<String>] [provider_model, prompt]
-        def extract_provider_model_and_prompt(args, options)
-          # CRITICAL: dry-cli puts all positional args in options[:args]
-          # Get positional arguments from options[:args]
-          args = options[:args] || []
-
-          # Special case: if --model is provided (may be alias or provider:model)
-          if options[:model]
-            # Resolve alias if needed
-            model_value = resolve_alias_if_needed(options[:model])
-
-            if model_value.include?(":")
-              # --model contains provider:model format
-              provider_model = model_value
-              prompt = args.empty? ? nil : args.join(" ")
-              return [provider_model, prompt]
-            end
-
-            # --model is just a model name (with positional provider)
-            # If the positional arg is not a known provider, we can't determine
-            # which arg is the provider vs the prompt - show help
-            if args.first && !args.first.include?(":")
-              # Check if first arg is a valid provider
-              registry = Ace::LLM::Molecules::ClientRegistry.new
-              unless registry.available_providers.include?(args.first)
-                # Not a valid provider - ambiguous case
-                return [nil, nil]
-              end
-            end
-
-            provider_model = args.first
-            prompt = args.empty? ? nil : args.join(" ")
-            return [provider_model, prompt]
-          end
-
-          # Default behavior: positional provider:model syntax
-          provider_model = args.first
-          prompt = args[1..]&.join(" ")
-          [provider_model, prompt]
-        end
-
-        # Resolve alias if needed
-        #
-        # @param model_value [String] The model value from --model option
-        # @return [String] Resolved provider:model or alias
-        def resolve_alias_if_needed(model_value)
-          # If it contains ":", it's already provider:model format
-          return model_value if model_value.include?(":")
-
-          # Otherwise, check if it's an alias
-          resolver = Ace::LLM::Molecules::LlmAliasResolver.new
-          aliases = resolver.available_aliases
-
-          # Check global aliases
-          global_aliases = aliases[:global] || {}
-          if global_aliases[model_value]
-            return global_aliases[model_value]
-          end
-
-          # Not an alias, return as-is
-          model_value
-        end
       end
     end
   end
+end
 end

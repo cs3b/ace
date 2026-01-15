@@ -2,7 +2,7 @@
 
 require_relative "../test_helper"
 require "ace/llm/cli"
-require "ace/llm/commands/query"
+require "ace/llm/cli/commands/query"
 require "ace/test_support/config_helpers"
 require "ace/test_support/cli_helpers"
 require "webmock/minitest"
@@ -71,18 +71,21 @@ class QueryCommandTest < AceLlmTestCase
 
   def test_model_flag_with_invalid_provider_shows_error
     with_real_config do
+      # When positional arg "test" is present, it's interpreted as provider_model
+      # and --model is used for model override. Without prompt, shows provider help.
       output = invoke_llm_cli_result(["--model", "invalid:provider", "test"])
-      # Should show error about invalid provider
-      assert_match(/Error:/i, output)
+      # Should show aliases for the "test" provider (provider help)
+      assert_match(/Available aliases/i, output)
     end
   end
 
   def test_model_flag_with_model_only_needs_provider
     with_real_config do
-      # Use a value that's not a known alias to test the ambiguous case
+      # When positional arg "test" is present, it's interpreted as provider_model
+      # and --model is used for model override. Without prompt, shows provider help.
       output = invoke_llm_cli_result(["--model", "unknown-model", "test"])
-      # When --model doesn't contain a colon and no positional provider, shows help
-      assert_match(/Usage:/i, output)
+      # Should show aliases for the "test" provider (provider help)
+      assert_match(/Available aliases/i, output)
     end
   end
 
