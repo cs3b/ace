@@ -5,7 +5,8 @@ require "ace/core/cli/dry_cli/base"
 
 module Ace
   module LLM
-    module Commands
+    module CLI
+      module Commands
       # ListProviders command for ace-llm
       #
       # This command lists all available LLM providers with their status
@@ -29,7 +30,7 @@ module Ace
         # @param options [Hash] Command options
         # @return [Integer] Exit code (0 for success)
         def call(*args, **options)
-          require_relative "../molecules/client_registry"
+          require "ace/llm/molecules/client_registry"
 
           registry = Ace::LLM::Molecules::ClientRegistry.new
           providers = registry.list_providers_with_status
@@ -63,4 +64,5 @@ module Ace
       end
     end
   end
+end
 end
