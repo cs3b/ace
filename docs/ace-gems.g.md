@@ -101,10 +101,11 @@ ace-gem/
 ├── .ace-defaults/gem/config.yml    # REQUIRED
 ├── lib/ace/gem/
 │   ├── atoms/, molecules/, organisms/, models/  # ATOM architecture
-│   ├── commands/                  # dry-cli command classes
+│   ├── cli/
+│   │   └── commands/              # dry-cli command classes (Hanami pattern)
 │   ├── cli.rb, version.rb
 ├── test/                          # FLAT: atoms/, molecules/, organisms/, models/
-│   ├── commands/, integration/, fixtures/
+│   ├── cli/commands/, integration/, fixtures/
 │   └── test_helper.rb
 ├── handbook/                      # CRITICAL: AI integration
 │   ├── agents/*.ag.md             # Single-purpose
@@ -299,31 +300,35 @@ Symlink to `.claude/agents/` for Claude Code.
 
 ## CLI
 
-### Command Module Naming Convention
+### Command Module Naming Convention (Hanami Pattern)
 
-**REQUIRED**: Use `Commands::` module namespace (NOT `Cli::`):
+**REQUIRED**: Use `CLI::Commands::` module namespace (Hanami/dry-cli standard):
 
 ```ruby
-# ✅ CORRECT - Commands:: pattern
-module Ace::Gem::Commands
-  class Process < Dry::CLI::Command
-    # ...
+# ✅ CORRECT - CLI::Commands:: pattern (Hanami standard)
+module Ace::Gem
+  module CLI
+    module Commands
+      class Process < Dry::CLI::Command
+        # ...
+      end
+    end
   end
 end
 
-# ❌ WRONG - Cli:: pattern (inconsistent)
-module Ace::Gem::Cli
+# ❌ WRONG - Commands:: pattern (inconsistent with Hanami)
+module Ace::Gem::Commands
   class Process < Dry::CLI::Command
     # ...
   end
 end
 ```
 
-**Directory structure**: `lib/ace/gem/commands/` (not `lib/ace/gem/cli/`)
+**Directory structure**: `lib/ace/gem/cli/commands/` (not `lib/ace/gem/commands/`)
 
-This ensures consistency across all ACE gems. The `CLI` module is reserved for the registry/router (`module CLI extend Dry::CLI::Registry`), while individual command classes live in `Commands::`.
+This follows the Hanami CLI pattern (authoritative dry-cli source). The `CLI` module extends `Dry::CLI::Registry`, and individual command classes live in `CLI::Commands::` namespace under `cli/commands/` directory.
 
-### dry-cli Pattern (Standard)
+### dry-cli Pattern (Hanami Standard)
 
 New and migrated gems use `dry-cli` with the `Ace::Core::CLI::DryCli::Base` module:
 
@@ -332,7 +337,7 @@ New and migrated gems use `dry-cli` with the `Ace::Core::CLI::DryCli::Base` modu
 require "dry/cli"
 require "set"  # REQUIRED for KNOWN_COMMANDS pattern (Set.new)
 require "ace/core"
-require_relative "commands/process"
+require_relative "cli/commands/process"
 
 module Ace::Gem
   module CLI
@@ -370,23 +375,27 @@ module Ace::Gem
   end
 end
 
-# lib/ace/gem/commands/process.rb
-module Ace::Gem::Commands
-  class Process < Dry::CLI::Command
-    include Ace::Core::CLI::DryCli::Base
+# lib/ace/gem/cli/commands/process.rb
+module Ace::Gem
+  module CLI
+    module Commands
+      class Process < Dry::CLI::Command
+        include Ace::Core::CLI::DryCli::Base
 
-    desc "Process file with auto-detection"
+        desc "Process file with auto-detection"
 
-    argument :file, required: false, desc: "File to process"
-    option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-    option :verbose, type: :boolean, aliases: %w[-v], desc: "Verbose output"
-    option :debug, type: :boolean, aliases: %w[-d], desc: "Debug output"
+        argument :file, required: false, desc: "File to process"
+        option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
+        option :verbose, type: :boolean, aliases: %w[-v], desc: "Verbose output"
+        option :debug, type: :boolean, aliases: %w[-d], desc: "Debug output"
 
-    def call(file: nil, **options)
-      # Type conversion: dry-cli returns strings for numeric options
-      # options[:limit] = options[:limit].to_i if options[:limit]
+        def call(file: nil, **options)
+          # Type conversion: dry-cli returns strings for numeric options
+          # options[:limit] = options[:limit].to_i if options[:limit]
 
-      ProcessCommand.new(file, options).execute
+          ProcessCommand.new(file, options).execute
+        end
+      end
     end
   end
 end
@@ -569,6 +578,21 @@ module CLI
   # Use nested registration for subcommand groups
   register "worktree create", Commands::WorktreeCreate
   register "worktree delete", Commands::WorktreeDelete
+end
+
+# With nested directory structure for subcommands:
+# lib/ace/gem/cli/commands/task/show.rb
+module Ace::Gem
+  module CLI
+    module Commands
+      module Task
+        class Show < Dry::CLI::Command
+          include Ace::Core::CLI::DryCli::Base
+          # ...
+        end
+      end
+    end
+  end
 end
 ```
 
@@ -764,7 +788,7 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - **CLI gems**: Return status codes from commands, never call `exit`
 - **CLI gems**: Use ConfigSummary.display() to show effective config
 - **CLI gems**: Reserve `-v` for verbose, `--version` for version
-- **CLI gems**: Use `Commands::` module namespace (not `Cli::`) for command classes
+- **CLI gems**: Use `CLI::Commands::` module namespace (Hanami pattern) for command classes
 - **Integration packages**: Use `integrations/` directory for integration assets (official pattern)
 - **Integration packages**: Include ace-nav protocol registration for workflow discovery
 - **Integration packages**: Bundle templates, documentation, and custom commands with workflows
@@ -779,7 +803,7 @@ spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
 - **CLI gems**: Call `exit` in command methods (kills test processes)
 - **CLI gems**: Use `-v` for version flag (reserved for verbose)
 - **CLI gems**: Skip ConfigSummary display (users need to see effective config)
-- **CLI gems**: Use `Cli::` module namespace (use `Commands::` instead)
+- **CLI gems**: Use `Commands::` module namespace (use `CLI::Commands::` instead - Hanami pattern)
 
 ## Examples
 
