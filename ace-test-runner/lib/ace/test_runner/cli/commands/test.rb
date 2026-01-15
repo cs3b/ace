@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require_relative "../version"
+require_relative "../../version"
 
 module Ace
   module TestRunner
-    module Commands
-      # dry-cli Command class for the test command
+    module CLI
+      module Commands
+        # dry-cli Command class for the test command
       #
       # This command runs tests with flexible package, target, and file selection.
       # All business logic is inline in this single command class.
@@ -310,4 +311,5 @@ module Ace
       end
     end
   end
+end
 end
