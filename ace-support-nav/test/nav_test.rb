@@ -14,8 +14,8 @@ module Ace
           assert_match(/\A\d+\.\d+\.\d+/, ::Ace::Support::Nav::VERSION)
         end
 
-        def test_version_is_0_17_0
-          assert_equal "0.17.0", ::Ace::Support::Nav::VERSION
+        def test_version_is_0_17_1
+          assert_equal "0.17.1", ::Ace::Support::Nav::VERSION
         end
 
         def test_config_method_exists
