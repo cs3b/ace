@@ -5,8 +5,8 @@ require "set"
 require "ace/core"
 require_relative "../llm"
 # Commands
-require_relative "commands/query"
-require_relative "commands/list_providers"
+require_relative "cli/commands/query"
+require_relative "cli/commands/list_providers"
 
 module Ace
   module LLM
