@@ -4,18 +4,21 @@ require "dry/cli"
 require "set"
 
 require_relative "version"
-require_relative "cli/create"
-require_relative "cli/list"
-require_relative "cli/switch"
-require_relative "cli/remove"
-require_relative "cli/prune"
-require_relative "cli/config"
+require_relative "cli/commands/create"
+require_relative "cli/commands/list"
+require_relative "cli/commands/switch"
+require_relative "cli/commands/remove"
+require_relative "cli/commands/prune"
+require_relative "cli/commands/config"
 require "ace/core"
 require "ace/core/cli/dry_cli/base"
 
 module Ace
   module Git
     module Worktree
+      # dry-cli based CLI registry for ace-git-worktree
+      #
+      # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
       module CLI
         extend Dry::CLI::Registry
 
@@ -43,12 +46,13 @@ module Ace
           Dry::CLI.new(self).call(arguments: args)
         end
 
-        register "create", Create, aliases: []
-        register "list", List, aliases: ["ls"]
-        register "switch", Switch, aliases: ["cd"]
-        register "remove", Remove, aliases: ["rm"]
-        register "prune", Prune, aliases: []
-        register "config", Config, aliases: []
+        # Register commands (Hanami pattern: CLI::Commands::*)
+        register "create", CLI::Commands::Create, aliases: []
+        register "list", CLI::Commands::List, aliases: ["ls"]
+        register "switch", CLI::Commands::Switch, aliases: ["cd"]
+        register "remove", CLI::Commands::Remove, aliases: ["rm"]
+        register "prune", CLI::Commands::Prune, aliases: []
+        register "config", CLI::Commands::Config, aliases: []
 
         # Version command
         version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
