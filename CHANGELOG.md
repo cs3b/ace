@@ -4,6 +4,85 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.304] - 2026-01-15
+
+### Changed
+
+- **ace-test-runner 0.10.4**: Migrate CLI to Hanami pattern (task 213 Phase 5)
+  - Move `commands/test.rb` to `cli/commands/test.rb`
+  - Update namespace from `Commands::Test` to `CLI::Commands::Test`
+
+- **ace-support-nav 0.17.1**: Migrate CLI to Hanami pattern (task 213 Phase 5)
+  - Move commands from `commands/` to `cli/commands/`
+  - Update namespace from `Commands::*` to `CLI::Commands::*`
+
+- **ace-git-secrets 0.7.1**: Migrate CLI to Hanami pattern (task 213 Phase 5)
+  - Move CLI commands from `commands/` to `cli/commands/`
+  - Update namespace from `Commands::*` to `CLI::Commands::*`
+  - Business logic command classes (`*Command`) remain in `commands/`
+
+- **ace-support-models 0.5.1**: Migrate CLI to Hanami pattern (task 213 Phase 5)
+  - Move commands from `commands/` to `cli/commands/`
+  - Update namespace from `Commands::*` to `CLI::Commands::*`
+  - Models subcommands use `ModelsSubcommands::` to avoid namespace conflict
+
+## [0.9.303] - 2026-01-14
+
+### Changed
+
+- **ace-git-worktree 0.12.1**: Migrate CLI to Hanami pattern (task 213)
+  - Moved command classes from `cli/*.rb` to `cli/commands/*.rb`
+  - Updated namespace from `CLI::*` to `CLI::Commands::*`
+  - SharedHelpers module moved to `cli/commands/shared_helpers.rb`
+
+- **ace-support-timestamp 0.2.1**: Migrate CLI to Hanami pattern (task 213)
+  - Moved command classes from `cli/*.rb` to `cli/commands/*.rb`
+  - Updated namespace from `Commands::*` to `CLI::Commands::*`
+
+## [0.9.302] - 2026-01-14
+
+### Changed
+
+- **ace-taskflow 0.33.8**: Migrate CLI to Hanami pattern (CLI::Commands::* namespace)
+  - Move wrapper classes from `cli/*.rb` to `cli/commands/*.rb`
+  - Unified command structure following ace-docs/ace-search pattern
+  - Nested commands (task/*, idea/*) remain in Commands:: namespace for compatibility
+  - All commands now follow consistent Hanami CLI pattern
+
+## [0.9.301] - 2026-01-14
+
+### Added
+
+- **ace-docs 0.18.0**: Migrate CLI commands to Hanami pattern (task 213)
+  - Move all command logic into `CLI::Commands::*` namespace under `cli/commands/` directory
+  - Remove separate `Commands::` wrapper classes - business logic now integrated into CLI commands
+  - Update command file naming to match class names (remove `_command` suffix)
+  - Full implementation for all 6 commands: analyze, analyze_consistency, discover, status, update, validate
+
+- **ace-search 0.19.0**: Migrate CLI to Hanami pattern (task 213)
+  - Move command implementation from `commands/` to `cli/commands/` directory
+  - Update module namespace to `CLI::Commands::Search` following Hanami/dry-cli standard
+  - Clean up model requires by moving them from `cli.rb` into the command file
+
+### Changed
+
+- **ace-docs 0.18.0**: Consolidate CLI structure following Hanami/dry-cli authoritative pattern
+  - Use `CLI::Commands::*` namespace throughout
+  - Clean up require paths for proper module resolution
+
+### Fixed
+
+- **ace-search 0.19.0**: Fix critical search_path bug where local variable was used instead of instance variable
+  - Changed `search_path = options[:search_path]` to `@search_path = options[:search_path]`
+  - This ensures resolve_search_path receives the correct search path value
+
+### Technical
+
+- **ace-docs 0.18.0**: Remove obsolete unit and integration tests for deleted `Commands::*` classes
+- **ace-search 0.19.0**: Update CLI pattern documentation to reflect Hanami standard
+- **ace-search 0.19.0**: Remove obsolete `commands/` directory structure
+
+
 ## [0.9.300] - 2026-01-14
 
 ### Fixed
