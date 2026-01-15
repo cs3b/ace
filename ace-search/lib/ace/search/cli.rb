@@ -5,7 +5,7 @@ require "set"
 require "ace/core"
 require_relative "../search"
 # Commands
-require_relative "commands/search"
+require_relative "cli/commands/search"
 # Atoms
 require_relative "atoms/search_path_resolver"
 require_relative "atoms/debug_logger"
@@ -87,7 +87,7 @@ module Ace
         KNOWN_COMMANDS.include?(arg)
       end
 
-      # Register the search command
+      # Register the search command (Hanami pattern: CLI::Commands::)
       register "search", Commands::Search.new
 
       # Register version command
