@@ -4,59 +4,56 @@ require_relative "../test_helper"
 require "ace/context/cli"
 
 class CliRoutingTest < AceTestCase
+  include Ace::TestSupport::CliHelpers
+
+  # Helper method to invoke CLI with routing logic
+  # Uses CLI.start to ensure default task routing is tested
+  def invoke_context_cli(args)
+    invoke_cli_stdout(Ace::Context::CLI, args)
+  end
+
   # --- Version Command Tests ---
 
   def test_cli_routes_version_command
-    output = capture_io do
-      Ace::Context::CLI.start(["version"])
-    end
-    assert_match(/\d+\.\d+\.\d+/, output.first)
+    output = invoke_context_cli(["version"])
+    assert_match(/\d+\.\d+\.\d+/, output)
   end
 
   def test_cli_routes_version_with_long_flag
-    output = capture_io do
-      Ace::Context::CLI.start(["--version"])
-    end
-    assert_match(/\d+\.\d+\.\d+/, output.first)
+    output = invoke_context_cli(["--version"])
+    assert_match(/\d+\.\d+\.\d+/, output)
   end
 
   # --- Help Command Tests ---
 
   def test_cli_routes_help_command
-    output = capture_io do
-      # dry-cli's help command is built-in
-      Ace::Context::CLI.start(["help"])
-    end
-    # Help should mention available commands
-    assert_match(/load|list|Commands/i, output.first)
+    result = invoke_cli(Ace::Context::CLI, ["help"])
+    # Help goes to stderr in dry-cli
+    output = result[:stdout] + result[:stderr]
+    assert_match(/load|list|Commands/i, output)
   end
 
   def test_cli_routes_help_with_long_flag
-    output = capture_io do
-      Ace::Context::CLI.start(["--help"])
-    end
-    assert_match(/Commands:/i, output.first)
+    result = invoke_cli(Ace::Context::CLI, ["--help"])
+    # Help goes to stderr in dry-cli
+    output = result[:stdout] + result[:stderr]
+    assert_match(/Commands:/i, output)
   end
 
   # --- List Command Tests ---
 
   def test_cli_routes_list_command
-    output = capture_io do
-      Ace::Context::CLI.start(["list"])
-    end
+    output = invoke_context_cli(["list"])
     # Should list presets (even if empty)
-    refute_nil output.first
+    refute_nil output
   end
 
   # --- Default Task Routing Tests ---
 
   def test_cli_uses_load_as_default_task
     # Any unknown input should be treated as preset/input and invoke load command
-    output = capture_io do
-      # "project" is a common preset name that should work
-      Ace::Context::CLI.start(["project"])
-    end
+    output = invoke_context_cli(["project"])
     # Should attempt to load context (may succeed or error, but should try)
-    refute_nil output.first
+    refute_nil output
   end
 end

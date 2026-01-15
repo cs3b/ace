@@ -2,12 +2,13 @@
 
 require "fileutils"
 require "ace/support/fs"
-require_relative "../atoms/line_counter"
+require_relative "../../atoms/line_counter"
 
 module Ace
   module Context
-    module Commands
-      # dry-cli Command class for the load command
+    module CLI
+      module Commands
+        # dry-cli Command class for the load command
       #
       # Loads context from preset, file, or protocol URL
       class Load < Dry::CLI::Command
@@ -303,6 +304,7 @@ module Ace
           else
             {}
           end
+        end
         end
       end
     end
