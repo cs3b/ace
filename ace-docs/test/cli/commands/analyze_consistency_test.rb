@@ -83,12 +83,16 @@ module Ace
             # Simulate dry-cli passing strings for numeric options
             options = { threshold: "80", timeout: "300" }
 
-            # The command should convert these in call method
-            result = @command.call(pattern: nil, **options)
-
-            # We can't easily test this without mocking the analyzer,
-            # but we verify the command doesn't crash on string input
-            # (the test is mainly for type conversion coverage)
+            # Use stub helpers to prevent expensive file system scanning
+            # and subprocess calls (see docs/testing-patterns.md)
+            with_mock_registry do
+              stub_ace_nav_prompts do
+                # The command should convert these in call method
+                # This will still fail because analyzer lacks proper setup,
+                # but we verify type conversion doesn't raise
+                result = @command.call(pattern: nil, **options)
+              end
+            end
           rescue StandardError
             # Expected - analyzer will fail without proper setup
             # We just want to ensure the type conversion doesn't raise
