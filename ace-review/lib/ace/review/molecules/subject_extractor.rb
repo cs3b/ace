@@ -184,7 +184,7 @@ module Ace
           # structure (context: { diffs: [...] }) for typed subject compatibility
           context_md = "#{YAML.dump(config).strip}\n---\n\n"
 
-          result = Ace::Context.load_auto(context_md, format: 'markdown')
+          result = Ace::Bundle.load_auto(context_md, format: 'markdown')
           result.content
         rescue StandardError => e
           warn "ace-context extraction failed: #{e.message}" if Ace::Review.debug?

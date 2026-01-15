@@ -108,7 +108,7 @@ module Ace
 
         def ace_context_preset_exists?(preset_name)
           # Check if this is a valid ace-context preset
-          Ace::Context.list_presets.any? { |p| p[:name] == preset_name }
+          Ace::Bundle.list_presets.any? { |p| p[:name] == preset_name }
         rescue StandardError
           false
         end
@@ -136,8 +136,8 @@ module Ace
         else
           # Fallback to direct ace-context loading without file
           begin
-            require "ace/context"
-            result = Ace::Context.load_auto(context_md, format: 'markdown')
+            require "ace/bundle"
+            result = Ace::Bundle.load_auto(context_md, format: 'markdown')
             result.content
           rescue StandardError => e
             warn "ace-context extraction failed: #{e.message}" if Ace::Review.debug?

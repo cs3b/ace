@@ -1,0 +1,4 @@
+# Project override for ace-bundle
+bundle:
+  # Split output at ~80KB (~2100 lines at avg 37 bytes/line)
+  max_lines: 2100

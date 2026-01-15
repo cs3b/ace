@@ -40,7 +40,7 @@ class AceReviewTest < Minitest::Test
     FileUtils.remove_entry(@test_dir)
   end
 
-  # Stub Ace::Context.load_file and load_auto to return fast mock data instead of executing commands
+  # Stub Ace::Bundle.load_file and load_auto to return fast mock data instead of executing commands
   def stub_ace_context
     return unless defined?(Ace::Context)
 
@@ -50,7 +50,7 @@ class AceReviewTest < Minitest::Test
     Ace::TestSupport::Fixtures::ContextMocks.stub_load_auto(@original_context_methods)
   end
 
-  # Restore original Ace::Context.load_file and load_auto methods
+  # Restore original Ace::Bundle.load_file and load_auto methods
   def restore_ace_context
     return unless @original_context_methods
 

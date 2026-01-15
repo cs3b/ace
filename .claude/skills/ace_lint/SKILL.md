@@ -6,10 +6,10 @@ description: Run ace-lint on project files with optional autofix and report
 user-invocable: true
 allowed-tools:
   - Bash(ace-lint:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
 argument-hint: [file-pattern] [--fix] [--report]
 source: ace-lint
 ---
 
-read and run `ace-context wfi://run-lint`
+read and run `ace-bundle wfi://run-lint`

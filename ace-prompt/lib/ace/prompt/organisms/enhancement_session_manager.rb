@@ -135,8 +135,8 @@ module Ace
           def load_preset_via_api(preset)
             # Try Ruby API first (faster, in-process, testable)
             begin
-              require "ace/context"
-              context_data = Ace::Context.load_preset(preset)
+              require "ace/bundle"
+              context_data = Ace::Bundle.load_preset(preset)
               content = context_data&.content
               return content if content && !content.strip.empty?
 

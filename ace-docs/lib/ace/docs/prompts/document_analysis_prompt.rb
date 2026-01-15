@@ -289,14 +289,14 @@ module Ace
         # @return [String, nil] Final prompt with embedded files or nil if unavailable
         def self.load_context_md(context_md, document:, cache_dir: nil)
           begin
-            require "ace/context"
+            require "ace/bundle"
 
             # Load context.md - ace-context processes presets and files from frontmatter
             result = if cache_dir
                       context_file = File.join(cache_dir, "context.md")
-                      Ace::Context.load_file(context_file)
+                      Ace::Bundle.load_file(context_file)
                     else
-                      Ace::Context.load_auto(context_md)
+                      Ace::Bundle.load_auto(context_md)
                     end
 
             result.content

@@ -5,7 +5,7 @@ require 'ace/support/config'
 
 # Try to load ace-context if available (required for full functionality)
 begin
-  require "ace/context"
+  require "ace/bundle"
 rescue LoadError
   # ace-context is required for context processing
   # Will raise MissingDependencyError when needed

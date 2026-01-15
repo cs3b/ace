@@ -59,7 +59,7 @@ class PerformanceRegressionTest < AceReviewTest
     # In practice, this would test specific organism operations
     assert_performance(0.05, "Individual organism operation should complete in < 50ms") do
       # Fast operation due to mocking
-      10.times { Ace::Context.load_file("test.yml") }
+      10.times { Ace::Bundle.load_file("test.yml") }
     end
   end
 
@@ -77,7 +77,7 @@ class PerformanceRegressionTest < AceReviewTest
     assert_performance(0.01, "Context loading should complete in < 10ms due to mocking") do
       # This uses the mocked Ace::Context which returns instantly
       10.times do
-        Ace::Context.load_file("test.yml")
+        Ace::Bundle.load_file("test.yml")
       end
     end
   end

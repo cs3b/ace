@@ -6,7 +6,7 @@ description: Navigate and display release information
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
 argument-hint: [list|show] [options]
 last_modified: 2026-01-09

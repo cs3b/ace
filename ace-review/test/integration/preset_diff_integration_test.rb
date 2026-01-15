@@ -130,7 +130,7 @@ class PresetDiffIntegrationTest < AceReviewTest
   end
 
   def test_extracts_from_string_git_range
-    # Git operations are mocked - Ace::Context.load_auto returns mock diff
+    # Git operations are mocked - Ace::Bundle.load_auto returns mock diff
     result = @extractor.extract("HEAD~1..HEAD")
 
     assert_kind_of String, result

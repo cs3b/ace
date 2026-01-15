@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.206
-status: pending
+status: in-progress
 priority: high
 estimate: 8h
 dependencies: []
+worktree:
+  branch: 206-rename-ace-context-to-ace-bundle
+  path: "../ace-task.206"
+  created_at: '2026-01-15 15:26:24'
+  updated_at: '2026-01-15 15:26:24'
+  target_branch: main
 ---
 
 # Rename ace-context to ace-bundle

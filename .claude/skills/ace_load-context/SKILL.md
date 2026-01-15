@@ -5,12 +5,12 @@ description: Load project context from preset names, file paths, or protocol URL
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
 argument-hint: ["preset|file-path|protocol"]
 last_modified: 2026-01-10
-source: ace-context
+source: ace-bundle
 ---
 
-Run `ace-context project`, And read the whole output (sdio and files content)
+Run `ace-bundle project`, And read the whole output (sdio and files content)
 

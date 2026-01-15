@@ -6,7 +6,7 @@ description: Fix linting issues identified in ace-lint report output
 user-invocable: true
 allowed-tools:
   - Bash(ace-lint:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Read
   - Write
@@ -17,6 +17,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-context wfi://run-lint`
+read and run `ace-bundle wfi://run-lint`
 
-read and run `ace-context wfi://commit`
+read and run `ace-bundle wfi://commit`
