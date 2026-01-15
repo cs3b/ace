@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-01-14
+
+### Changed
+- Migrate CLI to Hanami pattern (per ADR-023)
+  - Moved command classes from `cli/*.rb` to `cli/commands/*.rb`
+  - Updated namespace from `Commands::*` to `CLI::Commands::*`
+  - CLI registry updated to reference `CLI::Commands::*` classes
+
 ## [0.2.0] - 2026-01-11
 
 ### Changed
