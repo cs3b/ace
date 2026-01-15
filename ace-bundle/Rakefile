@@ -1,0 +1,22 @@
+# frozen_string_literal: true
+
+require "bundler/gem_tasks"
+require "rake/testtask"
+
+# Standard test task using Rake::TestTask (works standalone)
+Rake::TestTask.new(:test) do |t|
+  t.libs << "test"
+  t.libs << "lib"
+  t.test_files = FileList["test/**/*_test.rb"]
+end
+
+# Alias for CI environments
+task ci: :test
+
+# Convenience task for mono-repo development (uses ace-test if available)
+desc "Run tests using ace-test (mono-repo convenience)"
+task :ace do
+  sh "ace-test"
+end
+
+task default: :test

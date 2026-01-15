@@ -24,6 +24,11 @@ test_suite:
       group: foundation
       priority: 1
 
+    - name: ace-bundle
+      path: ace-bundle
+      group: tools
+      priority: 3
+
     - name: ace-context
       path: ace-context
       group: tools
