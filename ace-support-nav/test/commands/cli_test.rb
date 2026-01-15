@@ -9,7 +9,7 @@ module Ace
     module Nav
       class CliTest < Minitest::Test
         def setup
-          @resolve_cmd = Commands::Resolve.new
+          @resolve_cmd = CLI::Commands::Resolve.new
           @original_stdout = $stdout
         end
 

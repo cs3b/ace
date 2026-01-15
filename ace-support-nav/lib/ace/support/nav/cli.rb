@@ -4,11 +4,11 @@ require "dry/cli"
 require "set"
 require "ace/core"
 require_relative "../nav"
-# Commands
-require_relative "commands/resolve"
-require_relative "commands/list"
-require_relative "commands/create"
-require_relative "commands/sources"
+# Commands (Hanami pattern: CLI::Commands::)
+require_relative "cli/commands/resolve"
+require_relative "cli/commands/list"
+require_relative "cli/commands/create"
+require_relative "cli/commands/sources"
 
 module Ace
   module Support
@@ -87,17 +87,17 @@ module Ace
           KNOWN_COMMANDS.include?(arg)
         end
 
-        # Register the resolve command (default)
-        register "resolve", Commands::Resolve.new
+        # Register the resolve command (default) - Hanami pattern: CLI::Commands::
+        register "resolve", CLI::Commands::Resolve.new
 
         # Register the list command
-        register "list", Commands::List.new
+        register "list", CLI::Commands::List.new
 
         # Register the create command
-        register "create", Commands::Create.new
+        register "create", CLI::Commands::Create.new
 
         # Register the sources command
-        register "sources", Commands::Sources.new
+        register "sources", CLI::Commands::Sources.new
 
         # Register version command
         version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
