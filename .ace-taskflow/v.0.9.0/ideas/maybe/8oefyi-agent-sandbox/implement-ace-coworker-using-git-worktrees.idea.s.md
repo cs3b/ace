@@ -13,6 +13,9 @@ Today's complex agentic tasks often require isolated, sandboxed environments to 
 
 ## Solution
 Introduce the `ace-coworker` gem, an orchestrator designed to manage isolated development sessions. This tool will leverage `ace-git-worktree` to create temporary, isolated Git worktrees as the 'sandbox' environment. The workflow will be:
+
+| or use sync for folders that are not git 
+
 1. **Setup:** `ace-coworker start <task_id>` creates a dedicated worktree branch and directory.
 2. **Environment:** The tool ensures the environment (e.g., dependencies via `mise`) is correctly loaded within the worktree.
 3. **Execution:** The agent executes standard ACE CLI commands (`ace-git-commit`, `ace-lint`, `ace-test`) within the isolated worktree.
