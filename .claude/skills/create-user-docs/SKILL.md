@@ -6,7 +6,7 @@ description: Create User Docs
 user-invocable: true
 allowed-tools:
   - Bash(ace-docs:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Bash(ace-git-commit:*)
   - Read
   - Write
@@ -18,6 +18,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://create-user-docs`
+read and run `ace-context wfi://create-user-docs`
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-context wfi://commit`

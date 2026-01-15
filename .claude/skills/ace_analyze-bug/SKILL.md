@@ -6,7 +6,7 @@ description: Analyze bugs to identify root cause, reproduction status, and fix p
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - Edit
@@ -17,4 +17,4 @@ last_modified: 2025-12-09
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://analyze-bug`
+read and run `ace-context wfi://analyze-bug`

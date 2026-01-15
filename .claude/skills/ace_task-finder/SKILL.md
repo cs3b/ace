@@ -6,7 +6,7 @@ description: FIND tasks - list, filter, and discover tasks
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [list|show] [options]
 last_modified: 2026-01-09

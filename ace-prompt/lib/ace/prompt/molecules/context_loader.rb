@@ -3,7 +3,7 @@
 module Ace
   module Prompt
     module Molecules
-      # Load context via ace-bundle Ruby API
+      # Load context via ace-context Ruby API
       class ContextLoader
         # Valid context format options
         VALID_FORMATS = ['markdown-xml', 'markdown', 'xml'].freeze
@@ -23,9 +23,9 @@ module Ace
           debug_log("Loading context from: #{prompt_path}", :context_loading)
 
           begin
-            require 'ace/bundle'
+            require 'ace/context'
           rescue LoadError
-            warn "Error: ace-bundle gem not available"
+            warn "Error: ace-context gem not available"
             return ""
           end
 
@@ -59,7 +59,7 @@ module Ace
               return ""
             end
 
-            context_data = Ace::Bundle.load_file(
+            context_data = Ace::Context.load_file(
               prompt_path,
               format: options[:format] || 'markdown-xml',
               embed_source: options[:embed_source].nil? ? true : options[:embed_source]

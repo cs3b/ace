@@ -18,7 +18,7 @@ All tools below are run from your terminal using the `ace-` prefix.
 
 | Tool | Purpose | Key Commands |
 |------|---------|--------------|
-| **ace-bundle** | Load project context with wfi:// protocol support | `ace-bundle project`, `ace-bundle wfi://workflow`, `ace-bundle --list` |
+| **ace-context** | Load project context with wfi:// protocol support | `ace-context project`, `ace-context wfi://workflow`, `ace-context --list` |
 | **ace-docs** | Documentation management | `ace-docs status`, `ace-docs update file.md` |
 | **ace-git** | Repository context, PR activity, diff | `ace-git status`, `ace-git status --no-pr`, `ace-git diff` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
@@ -31,7 +31,7 @@ All tools below are run from your terminal using the `ace-` prefix.
 | **ace-taskflow** | Task management | `ace-taskflow task 018`, `ace-taskflow tasks all` |
 | **ace-git-worktree** | Worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree create --pr 26`, `ace-git-worktree list`, `ace-git-worktree switch 081` |
 | **ace-prompt** | Prompt workspace | `ace-prompt`, `ace-prompt --enhance`, `ace-prompt --task 121` |
-| **ace-test** | Run tests | `ace-test`, `ace-test atoms`, `ace-test ace-bundle`, `ace-test ace-nav atoms` |
+| **ace-test** | Run tests | `ace-test`, `ace-test atoms`, `ace-test ace-context`, `ace-test ace-nav atoms` |
 
 ## Quick Examples
 
@@ -97,16 +97,16 @@ ace-review --preset security --auto-execute  # Security review with LLM
 ace-review --subject 'diff: {ranges: ["origin/main...HEAD"]}'  # Review vs main branch
 
 # Navigation and context
-ace-bundle project --output stdio      # Load context to stdout
-ace-bundle project --embed-source      # Include source document inline
-ace-bundle wfi://work-on-task         # Load workflow via protocol
+ace-context project --output stdio      # Load context to stdout
+ace-context project --embed-source      # Include source document inline
+ace-context wfi://work-on-task         # Load workflow via protocol
 ace-nav 'wfi://*task*' --list          # Find workflow patterns
 
 # Test execution
 ace-test                                # Run all tests with progress
 ace-test --fail-fast                    # Stop on first failure
 ace-test atoms                          # Run only atom tests
-ace-test ace-bundle                    # Run all tests in ace-bundle package
+ace-test ace-context                    # Run all tests in ace-context package
 ace-test ace-support-nav atoms          # Run atom tests in ace-support-nav package
 ace-test ace-lint --profile 10          # Profile slowest tests in ace-lint
 

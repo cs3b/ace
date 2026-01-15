@@ -6,7 +6,7 @@ description: Run ace-prompt and follow the printed instructions
 user-invocable: true
 allowed-tools:
   - Bash(ace-prompt:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
 last_modified: 2026-01-10
 ---

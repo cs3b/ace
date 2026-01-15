@@ -6,13 +6,13 @@ description: Execute multiple tasks sequentially with orchestrated workflow
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - Task
 argument-hint: [task-id-pattern like 12* or *]
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://work-on-tasks`
+read and run `ace-context wfi://work-on-tasks`
 
 ARGUMENTS: $ARGUMENTS

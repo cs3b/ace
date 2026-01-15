@@ -6,7 +6,7 @@ description: Draft Task with Idea File Movement
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - TodoWrite
@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://draft-task`
+read and run `ace-context wfi://draft-task`

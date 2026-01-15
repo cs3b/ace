@@ -6,7 +6,7 @@ description: Review PR and Plan Feedback
 user-invocable: true
 allowed-tools:
   - Bash(ace-review:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - TodoWrite
   - AskUserQuestion
@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-review
 ---
 
-read and run `ace-bundle wfi://review-pr`
+read and run `ace-context wfi://review-pr`

@@ -6,7 +6,7 @@ description: Increment gem version following semver with CHANGELOG updates
 user-invocable: true
 allowed-tools:
   - Bash(ace-git:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - Edit
 argument-hint: [package-name] [patch|minor|major]
@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-handbook
 ---
 
-read and run `ace-bundle wfi://ace-bump-version`
+read and run `ace-context wfi://ace-bump-version`

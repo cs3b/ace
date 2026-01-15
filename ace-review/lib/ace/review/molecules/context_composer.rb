@@ -42,10 +42,10 @@ module Ace
         # @return [String] Content with embedded files and context
         def self.load_context_via_ace_context(context_file_path)
           begin
-            require "ace/bundle"
+            require "ace/context"
 
             # Use ace-context to load context.md - processes presets and files from frontmatter
-            result = Ace::Bundle.load_file(context_file_path)
+            result = Ace::Context.load_file(context_file_path)
             result.content
           rescue LoadError
             raise ContextComposerError, "ace-context not available - required for context.md pattern"

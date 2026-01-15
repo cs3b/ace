@@ -6,10 +6,10 @@ description: Process lint report and create tasks for manual fixes
 user-invocable: true
 allowed-tools:
   - Bash(ace-lint:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [report-path]
 source: ace-lint
 ---
 
-read and run `ace-bundle wfi://process-lint-report`
+read and run `ace-context wfi://process-lint-report`

@@ -7,11 +7,11 @@ user-invocable: true
 allowed-tools:
   - Bash(ace-git-commit:*) 
   - Bash(ace-git:*) 
-  - Bash(ace-bundle:*) 
+  - Bash(ace-context:*) 
   - Read
 argument-hint: [intention]
 last_modified: 2026-01-10
 source: ace-git-commit
 ---
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-context wfi://commit`

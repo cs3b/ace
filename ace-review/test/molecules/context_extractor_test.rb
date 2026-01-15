@@ -198,7 +198,7 @@ class ContextExtractorTest < AceReviewTest
       ace_context_result_mock = Minitest::Mock.new
       ace_context_result_mock.expect(:content, "Mock context content")
 
-      Ace::Bundle.stub(:load_auto, ace_context_result_mock) do
+      Ace::Context.stub(:load_auto, ace_context_result_mock) do
         result = @extractor.extract("mock-preset")
         assert_equal "Mock context content", result
       end

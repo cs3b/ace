@@ -6,11 +6,11 @@ description: Squash commits by version
 user-invocable: true
 allowed-tools:
   - Bash(ace-git:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
 argument-hint: [version]
 last_modified: 2026-01-10
 source: ace-git
 ---
 
-read and run `ace-bundle wfi://squash-pr`
+read and run `ace-context wfi://squash-pr`

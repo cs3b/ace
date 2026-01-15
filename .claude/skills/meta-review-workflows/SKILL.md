@@ -13,7 +13,7 @@ last_modified: 2026-01-10
 source: custom
 allowed-tools:
   - Bash(ace-handbook:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - Glob
   - LS
@@ -58,4 +58,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://review-workflows
+For detailed instructions, see: ace-context wfi://review-workflows

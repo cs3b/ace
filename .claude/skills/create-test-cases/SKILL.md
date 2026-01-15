@@ -6,7 +6,7 @@ description: Create Test Cases
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Bash(ace-git-commit:*)
   - Read
   - Write
@@ -17,6 +17,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://create-test-cases`
+read and run `ace-context wfi://create-test-cases`
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-context wfi://commit`

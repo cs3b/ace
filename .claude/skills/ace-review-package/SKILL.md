@@ -5,7 +5,7 @@ description: Review Package - Comprehensive code, docs, UX/DX review with recomm
 # agent: Explore
 user-invocable: true
 allowed-tools:
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Bash(ace-git:*)
   - Bash(gh:*)
   - Read
@@ -26,7 +26,7 @@ You will conduct a comprehensive review of the specified package and create acti
 
 ## Arguments
 
-- **package-name**: Name of the package to review (e.g., "ace-bundle", "ace-git-diff")
+- **package-name**: Name of the package to review (e.g., "ace-context", "ace-git-diff")
 
 ## Workflow Steps
 

@@ -6,7 +6,7 @@ description: Update PR description based on current work
 user-invocable: true
 allowed-tools:
   - Bash(ace-git:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Bash(gh:*)
   - Read
   - Grep
@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-git
 ---
 
-read and run `ace-bundle wfi://update-pr-description`
+read and run `ace-context wfi://update-pr-description`

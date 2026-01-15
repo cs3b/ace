@@ -59,7 +59,7 @@ class EnhancementSessionManagerTest < Minitest::Test
   def test_prepare_session_with_context_frontmatter_processes_via_ace_context
     # Skip if ace-context not available
     begin
-      require "ace/bundle"
+      require "ace/context"
     rescue LoadError
       skip "ace-context not available for testing"
     end
@@ -100,7 +100,7 @@ class EnhancementSessionManagerTest < Minitest::Test
   def test_prepare_session_fallback_when_context_loading_fails
     # Skip if ace-context not available
     begin
-      require "ace/bundle"
+      require "ace/context"
     rescue LoadError
       skip "ace-context not available for testing"
     end
@@ -139,7 +139,7 @@ class EnhancementSessionManagerTest < Minitest::Test
     # Skip this test if ace-context IS available, since we can't unload it
     # and require is idempotent (won't re-require an already-loaded gem)
     begin
-      require "ace/bundle"
+      require "ace/context"
       skip "Cannot test LoadError fallback when ace-context is already loaded"
     rescue LoadError
       # Good - ace-context is not available, so we can test the fallback
@@ -172,7 +172,7 @@ class EnhancementSessionManagerTest < Minitest::Test
   def test_prepare_session_empty_context_result_falls_back
     # Skip if ace-context not available
     begin
-      require "ace/bundle"
+      require "ace/context"
     rescue LoadError
       skip "ace-context not available for testing"
     end

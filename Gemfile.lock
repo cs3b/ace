@@ -1,7 +1,7 @@
 PATH
-  remote: ace-bundle
+  remote: ace-context
   specs:
-    ace-bundle (0.29.0)
+    ace-context (0.28.2)
       ace-git (~> 0.3)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
@@ -104,8 +104,8 @@ PATH
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.14.0)
-      ace-bundle (~> 0.29)
+    ace-prompt (0.13.2)
+      ace-context (~> 0.8)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
       ace-support-config (~> 0.6)
@@ -119,7 +119,7 @@ PATH
   remote: ace-review
   specs:
     ace-review (0.34.0)
-      ace-bundle (~> 0.29)
+      ace-context (~> 0.9)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-config (~> 0.6)
@@ -312,7 +312,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  ace-bundle!
+  ace-context!
   ace-docs!
   ace-git!
   ace-git-commit!

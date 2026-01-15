@@ -163,7 +163,7 @@ module Ace
           source_path = resolve_prompt_path("synthesis-review-reports.system.md")
 
           # Check if ace-context is available
-          unless defined?(Ace::Bundle) && File.exist?(source_path)
+          unless defined?(Ace::Context) && File.exist?(source_path)
             return fallback_system_prompt
           end
 
@@ -173,7 +173,7 @@ module Ace
 
           # Process via ace-context with embed_source to include the prompt content
           output_file = File.join(session_dir, "synthesis.system.prompt.md")
-          result = Ace::Bundle.load_file(context_file, embed_source: true)
+          result = Ace::Context.load_file(context_file, embed_source: true)
           File.write(output_file, result.content)
 
           result.content
@@ -199,7 +199,7 @@ module Ace
         # @return [String] processed user prompt content
         def prepare_user_prompt(reports, session_dir)
           # Check if ace-context is available
-          unless defined?(Ace::Bundle)
+          unless defined?(Ace::Context)
             return build_fallback_user_prompt(reports)
           end
 
@@ -210,7 +210,7 @@ module Ace
 
           # Process via ace-context with embed_source to include the prompt content
           output_file = File.join(session_dir, "synthesis.user.prompt.md")
-          result = Ace::Bundle.load_file(context_file, embed_source: true)
+          result = Ace::Context.load_file(context_file, embed_source: true)
           File.write(output_file, result.content)
 
           result.content

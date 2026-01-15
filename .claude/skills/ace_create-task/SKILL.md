@@ -6,7 +6,7 @@ description: Create complete task from plan (draft + plan + commit)
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - Write
   - Edit
@@ -16,4 +16,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://create-task`
+read and run `ace-context wfi://create-task`

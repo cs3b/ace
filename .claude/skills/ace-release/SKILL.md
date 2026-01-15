@@ -6,7 +6,7 @@ description: Bump Version and Update Both CHANGELOGs
 user-invocable: true
 allowed-tools:
   - Bash(ace-git:*)
-  - Bash(ace-bundle:*)
+  - Bash(ace-context:*)
   - Read
   - Edit
 argument-hint: [package-name] [patch|minor|major]
