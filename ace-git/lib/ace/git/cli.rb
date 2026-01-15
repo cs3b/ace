@@ -5,10 +5,10 @@ require "set"
 require "ace/core"
 require_relative "../git"
 # Commands
-require_relative "commands/diff"
-require_relative "commands/status"
-require_relative "commands/branch"
-require_relative "commands/pr"
+require_relative "cli/commands/diff"
+require_relative "cli/commands/status"
+require_relative "cli/commands/branch"
+require_relative "cli/commands/pr"
 
 module Ace
   module Git
