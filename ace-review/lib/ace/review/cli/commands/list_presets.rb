@@ -2,7 +2,8 @@
 
 module Ace
   module Review
-    module Commands
+    module CLI
+      module Commands
       # dry-cli Command class for the list-presets command
       #
       # Lists all available review presets with descriptions and sources.
@@ -56,4 +57,5 @@ module Ace
       end
     end
   end
+end
 end

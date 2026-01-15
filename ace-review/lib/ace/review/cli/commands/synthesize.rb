@@ -2,7 +2,8 @@
 
 module Ace
   module Review
-    module Commands
+    module CLI
+      module Commands
       # dry-cli Command class for the synthesize command
       #
       # Synthesizes multiple review reports into a consolidated report.
@@ -99,4 +100,5 @@ module Ace
       end
     end
   end
+end
 end
