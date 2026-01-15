@@ -6,37 +6,38 @@ require "ace/core"
 require_relative "../taskflow"
 # Molecules
 require_relative "molecules/command_router"
-# Command wrapper classes
-require_relative "cli/task"
-require_relative "cli/tasks"
-require_relative "cli/idea"
-require_relative "cli/ideas"
-require_relative "cli/release"
-require_relative "cli/releases"
-require_relative "cli/retro"
-require_relative "cli/retros"
-require_relative "cli/status"
-require_relative "cli/doctor"
-require_relative "cli/migrate"
-require_relative "cli/config"
-# Nested task subcommands
-require_relative "commands/task/create"
-require_relative "commands/task/show"
-require_relative "commands/task/start"
-require_relative "commands/task/done"
-require_relative "commands/task/undone"
-require_relative "commands/task/defer"
-require_relative "commands/task/undefer"
-require_relative "commands/task/move"
-require_relative "commands/task/update"
-require_relative "commands/task/add_dependency"
-require_relative "commands/task/remove_dependency"
-# Nested idea subcommands
-require_relative "commands/idea/create"
-require_relative "commands/idea/done"
-require_relative "commands/idea/park"
-require_relative "commands/idea/unpark"
-require_relative "commands/idea/reschedule"
+
+# CLI Commands (Hanami pattern)
+require_relative "cli/commands/task"
+require_relative "cli/commands/tasks"
+require_relative "cli/commands/idea"
+require_relative "cli/commands/ideas"
+require_relative "cli/commands/release"
+require_relative "cli/commands/releases"
+require_relative "cli/commands/retro"
+require_relative "cli/commands/retros"
+require_relative "cli/commands/status"
+require_relative "cli/commands/doctor"
+require_relative "cli/commands/migrate"
+require_relative "cli/commands/config"
+# Nested task subcommands (migrated to CLI::Commands:: namespace)
+require_relative "cli/commands/task/create"
+require_relative "cli/commands/task/show"
+require_relative "cli/commands/task/start"
+require_relative "cli/commands/task/done"
+require_relative "cli/commands/task/undone"
+require_relative "cli/commands/task/defer"
+require_relative "cli/commands/task/undefer"
+require_relative "cli/commands/task/move"
+require_relative "cli/commands/task/update"
+require_relative "cli/commands/task/add_dependency"
+require_relative "cli/commands/task/remove_dependency"
+# Nested idea subcommands (migrated to CLI::Commands:: namespace)
+require_relative "cli/commands/idea/create"
+require_relative "cli/commands/idea/done"
+require_relative "cli/commands/idea/park"
+require_relative "cli/commands/idea/unpark"
+require_relative "cli/commands/idea/reschedule"
 
 module Ace
   module Taskflow
@@ -44,6 +45,8 @@ module Ace
     #
     # This replaces the Thor-based CLI with dry-cli while maintaining
     # complete command parity and user-facing behavior.
+    #
+    # Uses the Hanami pattern: CLI::Commands::* namespace for all commands.
     module CLI
       extend Dry::CLI::Registry
 
@@ -55,14 +58,12 @@ module Ace
       ].freeze
 
       # Task subcommands (for routing disambiguation)
-      # These are the known subcommands under "task" namespace
       TASK_SUBCOMMANDS = %w[
         create show start done undone defer undefer move update
         add-dependency remove-dependency
       ].freeze
 
       # Idea subcommands (for routing disambiguation)
-      # These are the known subcommands under "idea" namespace
       IDEA_SUBCOMMANDS = %w[
         create done park unpark reschedule
       ].freeze
@@ -71,32 +72,18 @@ module Ace
       BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
 
       # Command aliases for backward compatibility
-      # - context: alias for status (historical CLI naming)
-      # - migrate-paths: alias for migrate (Thor CLI naming)
       COMMAND_ALIASES = %w[context migrate-paths].freeze
 
-      # Auto-derived from REGISTERED + BUILTIN + ALIASES (no manual maintenance needed)
-      # Using Set for O(1) lookup performance
+      # Auto-derived from REGISTERED + BUILTIN + ALIASES
       KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS + COMMAND_ALIASES).freeze
 
       # Default command to use when first argument is not a known command
       DEFAULT_COMMAND = "task"
 
       # Start the CLI with default command routing and cache clearing
-      #
-      # This method handles:
-      # 1. Cache clearing at start of each CLI invocation (from Thor version)
-      # 2. Default command routing for unknown commands (e.g., "150" -> "task 150")
-      # 3. Task subcommand routing disambiguation (e.g., "task create" vs "task 114")
-      # 4. Testable entry point for consistent behavior
-      #
-      # @param args [Array<String>] Command-line arguments
-      # @return [Integer] Exit code (0 for success, non-zero for failure)
       def self.start(args)
-        # Clear per-command caches at the start of each CLI invocation
         clear_caches!
 
-        # Apply routing rules via CommandRouter molecule
         args = Molecules::CommandRouter.route(
           args,
           default: DEFAULT_COMMAND,
@@ -108,69 +95,55 @@ module Ace
         Dry::CLI.new(self).call(arguments: args)
       end
 
-      # @deprecated Use Molecules::CommandRouter.route_task_subcommand instead
-      # Retained for backward compatibility with existing tests
-      def self.route_task_subcommand(args)
-        Molecules::CommandRouter.route_task_subcommand(
-          args,
-          task_subcommands: TASK_SUBCOMMANDS
-        )
-      end
-
-      # Check if argument is a known command
-      # @param arg [String] First argument to check
-      # @return [Boolean] true if it's a known command
       def self.known_command?(arg)
         return false if arg.nil?
         KNOWN_COMMANDS.include?(arg)
       end
 
-      # Clear per-command caches in loaders
-      # Called at the start of each CLI invocation to ensure fresh data
       def self.clear_caches!
         Ace::Taskflow::Molecules::TaskLoader.clear_cache!
         Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
       end
 
       # Register task commands
-      register "task", CLI::Task.new
-      register "task create", Commands::Task::Create
-      register "task show", Commands::Task::Show
-      register "task start", Commands::Task::Start
-      register "task done", Commands::Task::Done
-      register "task undone", Commands::Task::Undone
-      register "task defer", Commands::Task::Defer
-      register "task undefer", Commands::Task::Undefer
-      register "task move", Commands::Task::Move
-      register "task update", Commands::Task::Update
-      register "task add-dependency", Commands::Task::AddDependency
-      register "task remove-dependency", Commands::Task::RemoveDependency
-      register "tasks", CLI::Tasks.new
+      register "task", CLI::Commands::Task
+      register "task create", CLI::Commands::TaskSubcommands::Create
+      register "task show", CLI::Commands::TaskSubcommands::Show
+      register "task start", CLI::Commands::TaskSubcommands::Start
+      register "task done", CLI::Commands::TaskSubcommands::Done
+      register "task undone", CLI::Commands::TaskSubcommands::Undone
+      register "task defer", CLI::Commands::TaskSubcommands::Defer
+      register "task undefer", CLI::Commands::TaskSubcommands::Undefer
+      register "task move", CLI::Commands::TaskSubcommands::Move
+      register "task update", CLI::Commands::TaskSubcommands::Update
+      register "task add-dependency", CLI::Commands::TaskSubcommands::AddDependency
+      register "task remove-dependency", CLI::Commands::TaskSubcommands::RemoveDependency
+      register "tasks", CLI::Commands::Tasks
 
       # Register idea commands
-      register "idea", CLI::Idea.new
-      register "idea create", Commands::Idea::Create
-      register "idea done", Commands::Idea::Done
-      register "idea park", Commands::Idea::Park
-      register "idea unpark", Commands::Idea::Unpark
-      register "idea reschedule", Commands::Idea::Reschedule
-      register "ideas", CLI::Ideas.new
+      register "idea", CLI::Commands::Idea
+      register "idea create", CLI::Commands::IdeaSubcommands::Create
+      register "idea done", CLI::Commands::IdeaSubcommands::Done
+      register "idea park", CLI::Commands::IdeaSubcommands::Park
+      register "idea unpark", CLI::Commands::IdeaSubcommands::Unpark
+      register "idea reschedule", CLI::Commands::IdeaSubcommands::Reschedule
+      register "ideas", CLI::Commands::Ideas
 
-      # Register release commands
-      register "release", CLI::Release.new
-      register "releases", CLI::Releases.new
+      # Register release commands (CLI::Commands::*)
+      register "release", CLI::Commands::Release
+      register "releases", CLI::Commands::Releases
 
-      # Register retro commands
-      register "retro", CLI::Retro.new
-      register "retros", CLI::Retros.new
+      # Register retro commands (CLI::Commands::*)
+      register "retro", CLI::Commands::Retro
+      register "retros", CLI::Commands::Retros
 
-      # Register status command with alias
-      register "status", CLI::Status.new, aliases: ["context"]
+      # Register status command with alias (CLI::Commands::*)
+      register "status", CLI::Commands::Status, aliases: ["context"]
 
-      # Register utility commands
-      register "doctor", CLI::Doctor.new
-      register "migrate", CLI::Migrate.new, aliases: ["migrate-paths"]
-      register "config", CLI::Config.new
+      # Register utility commands (CLI::Commands::*)
+      register "doctor", CLI::Commands::Doctor
+      register "migrate", CLI::Commands::Migrate, aliases: ["migrate-paths"]
+      register "config", CLI::Commands::Config
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
