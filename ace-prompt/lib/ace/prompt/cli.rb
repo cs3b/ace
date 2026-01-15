@@ -4,8 +4,8 @@ require "dry/cli"
 require "set"
 require "ace/core"
 # Commands
-require_relative "commands/process"
-require_relative "commands/setup"
+require_relative "cli/commands/process"
+require_relative "cli/commands/setup"
 # Organisms (needed for command logic)
 require_relative "organisms/prompt_processor"
 require_relative "organisms/prompt_initializer"
