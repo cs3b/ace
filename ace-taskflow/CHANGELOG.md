@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.8] - 2026-01-14
+
+### Changed
+- Migrate CLI to Hanami pattern (CLI::Commands::* namespace)
+  - Moved wrapper classes from `cli/*.rb` to `cli/commands/*.rb`
+  - Unified command structure under `CLI::Commands::` namespace
+  - Maintained backward compatibility with nested commands in `Commands::Task::*` and `Commands::Idea::*`
+  - All commands now follow consistent Hanami CLI pattern
+
 ## [0.33.7] - 2026-01-14
 
 ### Fixed
