@@ -5,7 +5,8 @@ require "ace/core/cli/dry_cli/base"
 
 module Ace
   module Git
-    module Commands
+    module CLI
+      module Commands
       # dry-cli command for showing branch information
       class Branch < Dry::CLI::Command
         include Ace::Core::CLI::DryCli::Base
@@ -61,4 +62,5 @@ module Ace
       end
     end
   end
+end
 end
