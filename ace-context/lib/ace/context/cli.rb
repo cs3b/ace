@@ -5,8 +5,8 @@ require "set"
 require "ace/core"
 require_relative "../context"
 # Commands
-require_relative "commands/load"
-require_relative "commands/list"
+require_relative "cli/commands/load"
+require_relative "cli/commands/list"
 
 module Ace
   module Context
@@ -53,10 +53,10 @@ module Ace
         Dry::CLI.new(self).call(arguments: args)
       end
 
-      # Register the load command
+      # Register the load command (Hanami pattern: CLI::Commands::)
       register "load", Commands::Load.new
 
-      # Register the list command
+      # Register the list command (Hanami pattern: CLI::Commands::)
       register "list", Commands::List.new
 
       # Register version command
