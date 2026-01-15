@@ -11,7 +11,7 @@ Both human developers and AI agents use the same tools through consistent, predi
 | **ace-review** | Multi-model code review with configurable presets |
 | **ace-git-commit** | LLM-powered commit message generation |
 | **ace-git-worktree** | Git worktree management for task isolation |
-| **ace-context** | Project context loading with smart caching |
+| **ace-bundle** | Project context loading with smart caching |
 | **ace-taskflow** | Task, release, and idea management |
 | **ace-search** | Unified file and content search |
 
