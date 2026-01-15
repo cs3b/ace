@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2025-01-14
+
+### Added
+- Migrate CLI to Hanami pattern (task 213)
+  - Move command implementation from `commands/` to `cli/commands/` directory
+  - Update module namespace to `CLI::Commands::Search` following Hanami/dry-cli standard
+  - Clean up model requires by moving them from `cli.rb` into the command file
+
+### Fixed
+- Fix critical search_path bug where local variable was used instead of instance variable
+  - Changed `search_path = options[:search_path]` to `@search_path = options[:search_path]`
+  - This ensures resolve_search_path receives the correct search path value
+
+### Technical
+- Update CLI pattern documentation to reflect Hanami standard
+- Remove obsolete `commands/` directory structure
+
+
 ## [0.18.1] - 2026-01-09
 
 ### Changed
