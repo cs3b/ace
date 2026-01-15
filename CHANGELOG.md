@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **ace-bundle 0.29.1**: Create ace-bundle package (tasks 206.01-206.04)
+  - Copy ace-context to ace-bundle with Ace::Bundle module namespace
+  - Update all configuration paths to use bundle namespace (.ace/bundle/, .cache/ace-bundle/)
+  - Create bin/ace-bundle binstub pointing to ace-bundle/exe/ace-bundle
+  - Add ace-bundle to mono-repo Gemfile (alphabetical order)
+  - Update .ace/test/suite.yml to include ace-bundle in tools group
+  - Both ace-context and ace-bundle now coexist and tests pass
+
 ## [0.9.304] - 2026-01-15
 
 ### Changed
