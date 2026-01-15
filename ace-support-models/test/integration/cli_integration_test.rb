@@ -235,7 +235,7 @@ class CLIIntegrationTest < AceModelsTestCase
     create_cache_with_models("anthropic", ["claude-3-sonnet"])
 
     Ace::Support::Models::Molecules::CacheManager.stub :new, create_cache_manager do
-      cmd = Ace::Support::Models::Commands::Models::Search.new
+      cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
       _, stderr_output = capture_io do
         @exit_code = cmd.call(query: nil, filter: ["badfilter"], json: false, limit: 20)
       end
@@ -263,7 +263,7 @@ class CLIIntegrationTest < AceModelsTestCase
     write_cache(cache_data)
 
     Ace::Support::Models::Molecules::CacheManager.stub :new, create_cache_manager do
-      cmd = Ace::Support::Models::Commands::Models::Search.new
+      cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
       stdout_output = capture_io do
         @exit_code = cmd.call(query: nil, filter: ["provider:anthropic"], json: false, limit: 20)
       end.first
@@ -277,7 +277,7 @@ class CLIIntegrationTest < AceModelsTestCase
     create_cache_with_models("anthropic", ["claude-3-sonnet"])
 
     Ace::Support::Models::Molecules::CacheManager.stub :new, create_cache_manager do
-      cmd = Ace::Support::Models::Commands::Models::Search.new
+      cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
       _, stderr_output = capture_io do
         @exit_code = cmd.call(query: nil, filter: ["bad1", "provider:ok", "bad2"], json: false, limit: 20)
       end
