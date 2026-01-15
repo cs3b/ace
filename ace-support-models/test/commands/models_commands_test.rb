@@ -11,7 +11,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Search.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
         output = capture_io { cmd.call(query: "test", json: false, limit: 20) }.first
         assert_match(/test-provider:test-model/, output)
       end
@@ -24,7 +24,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Search.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
         output = capture_io { cmd.call(query: "test", json: true, limit: 20) }.first
         result = JSON.parse(output)
         assert result.key?("models")
@@ -40,7 +40,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Search.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
         output = capture_io { cmd.call(query: "test", json: true, limit: 20) }.first
         result = JSON.parse(output)
 
@@ -70,7 +70,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Search.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
         output = capture_io { cmd.call(query: nil, json: false, limit: 1) }.first
         assert_match(/Showing 1 of \d+ results/, output)
       end
@@ -83,7 +83,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Info.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Info.new
         output = capture_io { cmd.call(model_id: "test-provider:test-model", json: false, full: false) }.first
         assert_match(/Test Model/, output)
         assert_match(/Use --full for complete details/, output)
@@ -99,7 +99,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Info.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Info.new
         output = capture_io { cmd.call(model_id: "test-provider:test-model", json: false, full: true) }.first
         assert_match(/Model: Test Model/, output)
         assert_match(/Capabilities:/, output)
@@ -115,7 +115,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Info.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Info.new
         output = capture_io { cmd.call(model_id: "test-provider:test-model", json: true) }.first
         result = JSON.parse(output)
         assert_equal "test-model", result["id"]
@@ -130,7 +130,7 @@ class ModelsCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Models::Cost.new
+        cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Cost.new
         output = capture_io { cmd.call(model_id: "test-provider:test-model", json: false, input: 1000, output: 500, reasoning: 0) }.first
         assert_match(/test-provider:test-model/, output)
       end

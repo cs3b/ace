@@ -5,20 +5,20 @@ require "set"
 require "json"
 require "ace/core"
 
-# Load CLI command classes
-require_relative "commands/cache/sync"
-require_relative "commands/cache/status"
-require_relative "commands/cache/diff"
-require_relative "commands/cache/clear"
-require_relative "commands/providers/list"
-require_relative "commands/providers/show"
-require_relative "commands/providers/sync"
-require_relative "commands/models/search"
-require_relative "commands/models/info"
-require_relative "commands/models/cost"
-require_relative "commands/search"
-require_relative "commands/info"
-require_relative "commands/sync_shortcut"
+# Load CLI command classes (Hanami pattern: CLI::Commands::)
+require_relative "cli/commands/cache/sync"
+require_relative "cli/commands/cache/status"
+require_relative "cli/commands/cache/diff"
+require_relative "cli/commands/cache/clear"
+require_relative "cli/commands/providers/list"
+require_relative "cli/commands/providers/show"
+require_relative "cli/commands/providers/sync"
+require_relative "cli/commands/models/search"
+require_relative "cli/commands/models/info"
+require_relative "cli/commands/models/cost"
+require_relative "cli/commands/search"
+require_relative "cli/commands/info"
+require_relative "cli/commands/sync_shortcut"
 
 module Ace
   module Support
@@ -46,26 +46,28 @@ module Ace
           Dry::CLI.new(self).call(arguments: args)
         end
 
-        # Cache subcommands
-        register "cache sync", Commands::Cache::Sync
-        register "cache status", Commands::Cache::Status
-        register "cache diff", Commands::Cache::Diff
-        register "cache clear", Commands::Cache::Clear
+        # Cache subcommands (Hanami pattern: CLI::Commands::)
+        register "cache sync", CLI::Commands::Cache::Sync
+        register "cache status", CLI::Commands::Cache::Status
+        register "cache diff", CLI::Commands::Cache::Diff
+        register "cache clear", CLI::Commands::Cache::Clear
 
         # Providers subcommands
-        register "providers list", Commands::Providers::List
-        register "providers show", Commands::Providers::Show
-        register "providers sync", Commands::Providers::Sync
+        register "providers list", CLI::Commands::Providers::List
+        register "providers show", CLI::Commands::Providers::Show
+        register "providers sync", CLI::Commands::Providers::Sync
 
         # Models subcommands
-        register "models search", Commands::Models::Search
-        register "models info", Commands::Models::Info
-        register "models cost", Commands::Models::Cost
+        # Note: Uses ModelsSubcommands:: to avoid constant collision with outer
+        # Ace::Support::Models module (Ruby constant lookup limitation)
+        register "models search", CLI::Commands::ModelsSubcommands::Search
+        register "models info", CLI::Commands::ModelsSubcommands::Info
+        register "models cost", CLI::Commands::ModelsSubcommands::Cost
 
         # Top-level shortcuts
-        register "search", Commands::SearchShortcut
-        register "info", Commands::InfoShortcut
-        register "sync", Commands::SyncShortcut
+        register "search", CLI::Commands::SearchShortcut
+        register "info", CLI::Commands::InfoShortcut
+        register "sync", CLI::Commands::SyncShortcut
 
         # Version command
         version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

@@ -11,7 +11,7 @@ class ProvidersCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Providers::List.new
+        cmd = Ace::Support::Models::CLI::Commands::Providers::List.new
         output = capture_io { cmd.call(json: false) }.first
         assert_match(/Providers/, output)
         assert_match(/test-provider/, output)
@@ -26,7 +26,7 @@ class ProvidersCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Providers::List.new
+        cmd = Ace::Support::Models::CLI::Commands::Providers::List.new
         output = capture_io { cmd.call(json: true) }.first
         result = JSON.parse(output)
         assert result.is_a?(Array)
@@ -41,7 +41,7 @@ class ProvidersCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Providers::Show.new
+        cmd = Ace::Support::Models::CLI::Commands::Providers::Show.new
         output = capture_io { cmd.call(provider_id: "test-provider", json: false) }.first
         assert_match(/Provider: test-provider/, output)
         assert_match(/test-model/, output)
@@ -55,7 +55,7 @@ class ProvidersCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Providers::Show.new
+        cmd = Ace::Support::Models::CLI::Commands::Providers::Show.new
         output = capture_io { cmd.call(provider_id: "test-provider", json: true) }.first
         result = JSON.parse(output)
         assert_equal "test-provider", result["id"]
