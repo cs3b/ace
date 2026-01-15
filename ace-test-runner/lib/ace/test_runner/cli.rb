@@ -5,7 +5,7 @@ require "set"
 require "ace/core"
 require_relative "version"
 # Commands
-require_relative "commands/test"
+require_relative "cli/commands/test"
 
 module Ace
   module TestRunner
@@ -64,7 +64,7 @@ module Ace
         KNOWN_COMMANDS.include?(arg)
       end
 
-      # Register the test command
+      # Register the test command (Hanami pattern: CLI::Commands::)
       register "test", Commands::Test.new
 
       # Register version command
