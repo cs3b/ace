@@ -4,7 +4,8 @@ require "pathname"
 
 module Ace
   module Review
-    module Commands
+    module CLI
+      module Commands
       # dry-cli Command class for the review command
       #
       # Executes code review using presets or custom configuration.
@@ -292,4 +293,5 @@ module Ace
       end
     end
   end
+end
 end
