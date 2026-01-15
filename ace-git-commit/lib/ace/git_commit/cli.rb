@@ -5,7 +5,7 @@ require "set"
 require "ace/core"
 require_relative "../git_commit"
 # Commands
-require_relative "commands/commit"
+require_relative "cli/commands/commit"
 
 module Ace
   module GitCommit
