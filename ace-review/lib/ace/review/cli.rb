@@ -5,10 +5,10 @@ require "set"
 require "ace/core"
 require_relative "../review"
 # Commands
-require_relative "commands/review"
-require_relative "commands/synthesize"
-require_relative "commands/list_presets"
-require_relative "commands/list_prompts"
+require_relative "cli/commands/review"
+require_relative "cli/commands/synthesize"
+require_relative "cli/commands/list_presets"
+require_relative "cli/commands/list_prompts"
 
 module Ace
   module Review
