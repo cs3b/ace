@@ -1,158 +1,166 @@
 # frozen_string_literal: true
 
-require "test_helper"
-require "ace/docs/commands/status_command"
+require_relative "../test_helper"
+require "ace/docs/cli/commands/status"
 require "ace/docs/organisms/document_registry"
 require "tmpdir"
 require "fileutils"
 
 module Ace
   module Docs
-    module Commands
-      class StatusCommandIntegrationTest < AceTestCase
-        def setup
-          @temp_dir = Dir.mktmpdir("ace-docs-test")
-          @original_dir = Dir.pwd
-          Dir.chdir(@temp_dir)
+    module CLI
+      module Commands
+        class StatusIntegrationTest < AceTestCase
+          def setup
+            @temp_dir = Dir.mktmpdir("ace-docs-test")
+            @original_dir = Dir.pwd
+            Dir.chdir(@temp_dir)
 
-          # Create config to prevent registry from walking up and to discover test documents
-          FileUtils.mkdir_p(".ace/docs")
-          File.write(".ace/docs/config.yml", <<~YAML)
-            document_types:
-              guide:
-                paths:
-                  - "*.md"
-              api:
-                paths:
-                  - "*.md"
-          YAML
+            # Create config to prevent registry from walking up and to discover test documents
+            FileUtils.mkdir_p(".ace/docs")
+            File.write(".ace/docs/config.yml", <<~YAML)
+              document_types:
+                guide:
+                  paths:
+                    - "*.md"
+                api:
+                  paths:
+                    - "*.md"
+            YAML
 
-          # Create test documents
-          create_test_documents
-        end
+            # Create test documents
+            create_test_documents
+          end
 
-        def teardown
-          Dir.chdir(@original_dir)
-          FileUtils.rm_rf(@temp_dir) if @temp_dir
-        end
+          def teardown
+            Dir.chdir(@original_dir)
+            FileUtils.rm_rf(@temp_dir) if @temp_dir
+          end
 
-        def test_status_command_with_no_options
-          command = StatusCommand.new({ project_root: @temp_dir })
+          def test_status_command_with_no_options
+            command = Status.new
 
-          # Capture output
-          output = capture_io do
-            command.execute
-          end.first
+            # Capture output
+            output = capture_io do
+              command.call(project_root: @temp_dir)
+            end.first
 
-          assert output.include?("Managed Documents")
-          assert output.include?("guide1.md")
-          assert output.include?("guide")
-        end
+            assert output.include?("Managed Documents")
+            assert output.include?("guide1.md")
+            assert output.include?("guide")
+          end
 
-        def test_status_command_with_type_filter
-          command = StatusCommand.new({ type: "api", project_root: @temp_dir })
+          def test_status_command_with_type_filter
+            command = Status.new
 
-          output = capture_io do
-            command.execute
-          end.first
+            output = capture_io do
+              command.call(type: "api", project_root: @temp_dir)
+            end.first
 
-          assert output.include?("api.md")
-          refute output.include?("guide1.md")
-        end
+            assert output.include?("api.md")
+            refute output.include?("guide1.md")
+          end
 
-        def test_status_command_with_needs_update_filter
-          command = StatusCommand.new({ needs_update: true, project_root: @temp_dir })
+          def test_status_command_with_needs_update_filter
+            command = Status.new
 
-          output = capture_io do
-            command.execute
-          end.first
+            output = capture_io do
+              command.call(needs_update: true, project_root: @temp_dir)
+            end.first
 
-          # Should show outdated document
-          assert output.include?("outdated.md")
-        end
+            # Should show outdated document
+            assert output.include?("outdated.md")
+          end
 
-        def test_status_command_with_freshness_filter
-          command = StatusCommand.new({ freshness: "current", project_root: @temp_dir })
+          def test_status_command_with_freshness_filter
+            command = Status.new
 
-          output = capture_io do
-            command.execute
-          end.first
+            output = capture_io do
+              command.call(freshness: "current", project_root: @temp_dir)
+            end.first
 
-          assert output.include?("current.md")
-          refute output.include?("outdated.md")
-        end
+            assert output.include?("current.md")
+            refute output.include?("outdated.md")
+          end
 
-        def test_status_command_with_no_documents
-          # Remove all documents
-          Dir.glob("*.md").each { |f| File.delete(f) }
+          def test_status_command_with_no_documents
+            # Remove all documents
+            Dir.glob("*.md").each { |f| File.delete(f) }
 
-          command = StatusCommand.new({ project_root: @temp_dir })
+            command = Status.new
 
-          output = capture_io do
-            command.execute
-          end.first
+            exit_code = nil
+            output = capture_io do
+              exit_code = command.call(project_root: @temp_dir)
+            end
 
-          assert output.include?("No managed documents found")
-        end
+            # Verify return code (0 = success, even when no documents)
+            assert_equal 0, exit_code
 
-        private
+            # Check stderr for "No managed documents found"
+            combined = output.join
+            assert combined.include?("No managed documents found")
+          end
 
-        def create_test_documents
-          # Current document
-          File.write("current.md", <<~MARKDOWN)
-            ---
-            doc-type: guide
-            purpose: Current guide document
-            update:
-              frequency: weekly
-              last-updated: #{Date.today}
-            ---
+          private
 
-            # Current Guide
+          def create_test_documents
+            # Current document
+            File.write("current.md", <<~MARKDOWN)
+              ---
+              doc-type: guide
+              purpose: Current guide document
+              update:
+                frequency: weekly
+                last-updated: #{Date.today}
+              ---
 
-            This is current.
-          MARKDOWN
+              # Current Guide
 
-          # Outdated document
-          File.write("outdated.md", <<~MARKDOWN)
-            ---
-            doc-type: guide
-            purpose: Outdated guide document
-            update:
-              frequency: weekly
-              last-updated: #{Date.today - 30}
-            ---
+              This is current.
+            MARKDOWN
 
-            # Outdated Guide
+            # Outdated document
+            File.write("outdated.md", <<~MARKDOWN)
+              ---
+              doc-type: guide
+              purpose: Outdated guide document
+              update:
+                frequency: weekly
+                last-updated: #{Date.today - 30}
+              ---
 
-            This needs updating.
-          MARKDOWN
+              # Outdated Guide
 
-          # API document
-          File.write("api.md", <<~MARKDOWN)
-            ---
-            doc-type: api
-            purpose: API reference
-            update:
-              frequency: on-change
-            ---
+              This needs updating.
+            MARKDOWN
 
-            # API Reference
+            # API document
+            File.write("api.md", <<~MARKDOWN)
+              ---
+              doc-type: api
+              purpose: API reference
+              update:
+                frequency: on-change
+              ---
 
-            API documentation.
-          MARKDOWN
+              # API Reference
 
-          # Another guide
-          File.write("guide1.md", <<~MARKDOWN)
-            ---
-            doc-type: guide
-            purpose: First guide
-            ---
+              API documentation.
+            MARKDOWN
 
-            # First Guide
+            # Another guide
+            File.write("guide1.md", <<~MARKDOWN)
+              ---
+              doc-type: guide
+              purpose: First guide
+              ---
 
-            Content here.
-          MARKDOWN
+              # First Guide
+
+              Content here.
+            MARKDOWN
+          end
         end
       end
     end
