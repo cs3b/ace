@@ -11,7 +11,7 @@ class CacheCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Cache::Status.new
+        cmd = Ace::Support::Models::CLI::Commands::Cache::Status.new
         output = capture_io { cmd.call(json: false) }.first
         assert_match(/Cache Status:/, output)
         assert_match(/Cached: Yes/, output)
@@ -25,7 +25,7 @@ class CacheCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Cache::Status.new
+        cmd = Ace::Support::Models::CLI::Commands::Cache::Status.new
         output = capture_io { cmd.call(json: true) }.first
         result = JSON.parse(output)
         assert result["cached"]
@@ -41,7 +41,7 @@ class CacheCommandsTest < AceModelsTestCase
       assert cache_manager.exists?
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Cache::Clear.new
+        cmd = Ace::Support::Models::CLI::Commands::Cache::Clear.new
         output = capture_io { cmd.call(json: false) }.first
         assert_match(/Cache cleared/, output)
       end
@@ -54,7 +54,7 @@ class CacheCommandsTest < AceModelsTestCase
       cache_manager.write(sample_api_response)
 
       Ace::Support::Models::Molecules::CacheManager.stub :new, cache_manager do
-        cmd = Ace::Support::Models::Commands::Cache::Clear.new
+        cmd = Ace::Support::Models::CLI::Commands::Cache::Clear.new
         output = capture_io { cmd.call(json: true) }.first
         result = JSON.parse(output)
         assert_equal :success.to_s, result["status"]
