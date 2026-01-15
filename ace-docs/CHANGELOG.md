@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2025-01-14
+
+### Added
+- Migrate CLI commands to Hanami pattern (task 213)
+  - Move all command logic into `CLI::Commands::*` namespace under `cli/commands/` directory
+  - Remove separate `Commands::` wrapper classes - business logic now integrated into CLI commands
+  - Update command file naming to match class names (remove `_command` suffix)
+  - Delete legacy `commands/` directory
+- Full implementation for all 6 commands: analyze, analyze_consistency, discover, status, update, validate
+
+### Changed
+- Consolidate CLI structure following Hanami/dry-cli authoritative pattern
+  - Use `CLI::Commands::*` namespace throughout
+  - Clean up require paths for proper module resolution
+
+### Technical
+- Remove obsolete unit tests for deleted `Commands::*` classes
+- Remove obsolete integration test for `StatusCommand`
+
+
 ## [0.17.2] - 2026-01-10
 
 ### Changed

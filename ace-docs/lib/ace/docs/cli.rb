@@ -4,13 +4,13 @@ require "dry/cli"
 require "set"
 require "ace/core"
 require_relative "../docs"
-# CLI Commands
-require_relative "cli/status_command"
-require_relative "cli/discover_command"
-require_relative "cli/update_command"
-require_relative "cli/analyze_command"
-require_relative "cli/validate_command"
-require_relative "cli/analyze_consistency_command"
+# CLI Commands (Hanami pattern)
+require_relative "cli/commands/status"
+require_relative "cli/commands/discover"
+require_relative "cli/commands/update"
+require_relative "cli/commands/analyze"
+require_relative "cli/commands/validate"
+require_relative "cli/commands/analyze_consistency"
 
 module Ace
   module Docs
@@ -35,13 +35,13 @@ module Ace
       # Default command to use when first argument is not a known command
       DEFAULT_COMMAND = "status"
 
-      # Register all commands
-      register "status", StatusCommand.new
-      register "discover", DiscoverCommand.new
-      register "update", UpdateCommand.new
-      register "analyze", AnalyzeCommand.new
-      register "validate", ValidateCommand.new
-      register "analyze-consistency", AnalyzeConsistencyCommand.new
+      # Register all commands (Hanami pattern: CLI::Commands::*)
+      register "status", Commands::Status.new
+      register "discover", Commands::Discover.new
+      register "update", Commands::Update.new
+      register "analyze", Commands::Analyze.new
+      register "validate", Commands::Validate.new
+      register "analyze-consistency", Commands::AnalyzeConsistency.new
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
