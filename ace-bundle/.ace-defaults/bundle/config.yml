@@ -1,0 +1,21 @@
+# ACE Bundle Configuration
+# Complete default configuration - users only need to override what differs
+# This is the single source of truth for ace-bundle defaults (per ADR-022)
+#
+# To override, create .ace/bundle/config.yml in your project root
+
+bundle:
+  # Cache directory for context output files
+  # Default: .cache/ace-bundle (relative to project root)
+  cache_dir: ".cache/ace-bundle"
+
+  # Maximum lines per chunk before splitting output into multiple files
+  # Default: 2000 lines
+  max_lines: 2000
+
+  # Auto-format threshold: line count at which output switches from inline to file
+  # When no explicit --output mode is specified:
+  #   - Content below this threshold: displayed inline (stdout)
+  #   - Content at or above this threshold: saved to cache file (path printed)
+  # Default: 500 lines
+  auto_format_threshold: 500
