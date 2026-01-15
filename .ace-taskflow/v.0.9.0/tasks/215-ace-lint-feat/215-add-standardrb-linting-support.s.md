@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.215
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 215-add-ruby-linting-support-to-ace-lint-with-standardrb
+  path: "../ace-task.215"
+  created_at: '2026-01-15 23:21:10'
+  updated_at: '2026-01-15 23:21:10'
+  target_branch: main
 ---
 
 # Add Ruby Linting Support to ace-lint with StandardRB
