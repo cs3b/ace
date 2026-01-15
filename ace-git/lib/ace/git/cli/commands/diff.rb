@@ -7,7 +7,8 @@ require "ace/core/cli/dry_cli/base"
 
 module Ace
   module Git
-    module Commands
+    module CLI
+      module Commands
       # dry-cli command for generating diffs
       # Migrated from ace-git-diff
       class Diff < Dry::CLI::Command
@@ -229,4 +230,5 @@ module Ace
       end
     end
   end
+end
 end
