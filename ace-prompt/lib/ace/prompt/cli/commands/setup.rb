@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "../organisms/prompt_initializer"
+require_relative "../../organisms/prompt_initializer"
 
 module Ace
   module Prompt
-    module Commands
+    module CLI
+      module Commands
       # dry-cli Command class for the setup command
       #
       # This wraps the existing PromptInitializer logic in a dry-cli compatible
@@ -82,7 +83,7 @@ module Ace
         # @param task_option [String, nil] Explicit task ID from --task flag
         # @return [String, nil] Path to the-prompt.md in task's prompts directory, or nil for default
         def resolve_task_prompt_path(task_option)
-          require_relative "../atoms/task_path_resolver"
+          require_relative "../../atoms/task_path_resolver"
           require "ace/git"
 
           # If task ID is explicitly provided, use it
@@ -123,4 +124,5 @@ module Ace
       end
     end
   end
+end
 end
