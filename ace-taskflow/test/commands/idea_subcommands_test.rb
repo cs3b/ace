@@ -136,11 +136,18 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
   def test_idea_create_with_clipboard_flag
     with_real_test_project do |_dir|
       # Verify --clipboard flag is handled correctly by create subcommand
-      result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "--clipboard"])
-      output = result[:stdout] + result[:stderr]
+      # The command may raise IdeaWriterError if clipboard is empty - that's expected
+      # The important thing is that the flag is recognized and parsed
+      begin
+        result = invoke_cli(Ace::Taskflow::CLI, ["idea", "create", "--clipboard"])
+        output = result[:stdout] + result[:stderr]
 
-      # Should not reject as unknown command
-      refute_match(/unknown command/i, output)
+        # Should not reject as unknown command
+        refute_match(/unknown command/i, output)
+      rescue Ace::Taskflow::Organisms::IdeaWriterError => e
+        # Expected error when clipboard is empty - flag was recognized
+        assert_match(/No content provided/, e.message)
+      end
     end
   end
 
