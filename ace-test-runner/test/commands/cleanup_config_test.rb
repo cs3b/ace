@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/test_runner/commands/test"
+require "ace/test_runner/cli"
 require "json"
 
 class CleanupConfigTest < Minitest::Test
@@ -41,7 +41,7 @@ class CleanupConfigTest < Minitest::Test
 
       # Run cleanup WITHOUT --report-dir CLI option
       # It should read from config cascade
-      command = Ace::TestRunner::Commands::Test.new
+      command = Ace::TestRunner::CLI::Commands::Test.new
 
       output = capture_io do
         command.call(
@@ -93,7 +93,7 @@ class CleanupConfigTest < Minitest::Test
       File.write(File.join(cli_report_dir, "old_report", "summary.json"), summary_content)
 
       # Run cleanup WITH --report-dir CLI option
-      command = Ace::TestRunner::Commands::Test.new
+      command = Ace::TestRunner::CLI::Commands::Test.new
 
       capture_io do
         command.call(
