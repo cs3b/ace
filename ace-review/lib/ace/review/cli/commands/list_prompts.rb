@@ -2,7 +2,8 @@
 
 module Ace
   module Review
-    module Commands
+    module CLI
+      module Commands
       # dry-cli Command class for the list-prompts command
       #
       # Lists all available prompt modules by category.
@@ -62,4 +63,5 @@ module Ace
       end
     end
   end
+end
 end
