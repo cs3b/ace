@@ -1,0 +1,8 @@
+# ace-llm default configuration
+# Override in .ace/llm/config.yml for project-specific settings
+
+llm:
+  # Default timeout in seconds for LLM requests
+  # CLI providers (opencode, claude, codex, gemini) may need longer
+  # due to subprocess overhead and "thinking" phases
+  timeout: 120

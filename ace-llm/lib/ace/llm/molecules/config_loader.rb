@@ -9,26 +9,28 @@ module Ace
       class ConfigLoader
         class << self
           # Load configuration from cascade (project → home → gem)
+          # Uses resolve_namespace("llm") to load from llm/ subfolder
           def load
             Ace::Support::Config.create(
               config_dir: ".ace",
               defaults_dir: ".ace-defaults",
               gem_path: gem_root
-            ).resolve
+            ).resolve_namespace("llm")
           end
 
           # Get configuration value by path
+          # @param path [String] Dot-separated path like "llm.timeout"
+          # @return [Object] Value at path or nil
           def get(path)
             config = load
-            path.split(".").each do |key|
-              config = config[key] || break
-            end
-            config
+            keys = path.split(".")
+            config.get(*keys)
           end
 
           # Find gem root directory
+          # From lib/ace/llm/molecules/config_loader.rb, go 4 levels up to ace-llm/
           def gem_root
-            @gem_root ||= File.expand_path("../../..", __dir__)
+            @gem_root ||= File.expand_path("../../../..", __dir__)
           end
         end
       end
