@@ -258,7 +258,7 @@ module Ace
           registry.get_client(
             provider,
             model: model,
-            timeout: options[:timeout] || 30
+            timeout: options[:timeout] || Ace::LLM::Molecules::ConfigLoader.get("llm.timeout") || 120
           )
         rescue Ace::LLM::ProviderError => e
           error_output(e.message)
