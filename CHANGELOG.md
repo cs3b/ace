@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+
+- **ace-llm-providers-cli 0.13.1**: OpenCode CLI provider command syntax fix (task 216)
+  - Changed from `opencode generate` to `opencode run` subcommand
+  - Pass prompt as positional argument instead of `--prompt` flag
+  - Removed unsupported flags: `--format`, `--temperature`, `--max-tokens`, `--system`
+  - Handle system prompts by prepending to main prompt (no native `--system` flag)
+  - Added regression tests for correct OpenCode command building
+
 ### Added
 
 - **ace-lint 0.9.0**: Ruby linting support with StandardRB (task 215)
