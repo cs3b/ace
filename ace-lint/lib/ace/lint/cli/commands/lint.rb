@@ -17,13 +17,14 @@ module Ace
           include Ace::Core::CLI::DryCli::Base
 
           desc <<~DESC.strip
-            Lint markdown, YAML, and frontmatter files
+            Lint markdown, YAML, Ruby, and frontmatter files
 
             File Type Auto-Detection:
               File types are detected from extensions by default:
-                .md  → markdown (frontmatter validation)
-                .yml, .yaml → yaml (syntax checking)
-                *.*  → frontmatter (YAML frontmatter in any file)
+                .md, .markdown → markdown (frontmatter validation)
+                .yml, .yaml    → yaml (syntax checking)
+                .rb, .rake, .gemspec → ruby (StandardRB linting)
+                *.*            → frontmatter (YAML frontmatter in any file)
 
             Configuration:
               Global config:  ~/.ace/lint/config.yml
@@ -42,9 +43,10 @@ module Ace
             'README.md                    # Auto-detect type from extension',
             '--fix README.md              # Auto-fix and format',
             '--type yaml config.yml       # Explicit type specification',
+            '--type ruby lib/file.rb      # Lint Ruby file',
             'docs/**/*.md --format        # Format with kramdown',
-            'file1.md file2.yml --fix     # Multiple files with options',
-            '**/*.md --quiet --format     # Glob pattern with options'
+            'file1.md file2.rb --fix      # Multiple files with options',
+            '**/*.rb --quiet              # Glob pattern with options'
           ]
 
           # Define positional arguments for file paths
@@ -54,7 +56,7 @@ module Ace
           # Method options (maintaining parity with Thor implementation)
           option :fix, type: :boolean, aliases: %w[-f], desc: "Auto-fix/format files"
           option :format, type: :boolean, desc: "Format files with kramdown"
-          option :type, type: :string, aliases: %w[-t], desc: "File type (markdown, yaml, frontmatter)"
+          option :type, type: :string, aliases: %w[-t], desc: "File type (markdown, yaml, ruby, frontmatter)"
           option :line_width, type: :integer, desc: "Line width for formatting (default: 120)"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
