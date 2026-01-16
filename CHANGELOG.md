@@ -6,6 +6,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- **ace-lint 0.9.0**: Ruby linting support with StandardRB (task 215)
+  - Auto-detects .rb, .rake, and .gemspec files for Ruby linting
+  - Supports --fix flag for auto-formatting with StandardRB
+  - Helpful error message when StandardRB is not installed
+  - Skips unsupported file types instead of reporting errors
+  - Added `skipped` status to LintResult model
+  - Updated ResultReporter to display skipped files with ⊘ symbol
+  - Configuration in `.ace-defaults/lint/ruby.yml` following ADR-022 pattern
+
 - **ace-bundle 0.29.1**: Create ace-bundle package (tasks 206.01-206.04)
   - Copy ace-context to ace-bundle with Ace::Bundle module namespace
   - Update all configuration paths to use bundle namespace (.ace/bundle/, .cache/ace-bundle/)
