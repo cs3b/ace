@@ -39,7 +39,7 @@ module Ace
                     temperature: nil,
                     max_tokens: nil,
                     system: nil,
-                    timeout: 30,
+                    timeout: nil,
                     force: false,
                     debug: false,
                     model: nil,
@@ -97,6 +97,9 @@ module Ace
         fallback_config = load_fallback_config(fallback, fallback_providers)
 
         # Execute with or without fallback
+        # Resolve timeout from config cascade if not provided
+        resolved_timeout = timeout || Molecules::ConfigLoader.get("llm.timeout") || 120
+
         response = execute_with_fallback(
           provider: parse_result.provider,
           model: final_model,
@@ -104,7 +107,7 @@ module Ace
           generation_opts: generation_opts,
           registry: registry,
           fallback_config: fallback_config,
-          timeout: timeout,
+          timeout: resolved_timeout,
           debug: debug
         )
 
