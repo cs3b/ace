@@ -35,5 +35,6 @@ group :development, :test do
   gem 'minitest-reporters', '~> 1.6'
   gem 'rake', '~> 13.0'
   gem 'simplecov', '~> 0.22'
+  gem 'standardrb'
   gem 'webmock', '~> 3.19'
 end

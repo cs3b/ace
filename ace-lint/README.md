@@ -1,13 +1,14 @@
 # ace-lint
 
-Ruby-only linting gem for markdown, YAML, and frontmatter validation. No Node.js or Python required!
+Ruby-only linting gem for markdown, YAML, Ruby, and frontmatter validation. No Node.js or Python required!
 
 ## Overview
 
-ace-lint provides comprehensive validation for markdown, YAML, and frontmatter documents using **only Ruby dependencies**:
+ace-lint provides comprehensive validation for multiple file types using **only Ruby dependencies**:
 
 - **Markdown**: Validation via kramdown + kramdown-parser-gfm (Ruby gems)
 - **YAML**: Validation via Psych (Ruby built-in)
+- **Ruby**: Linting via StandardRB (zero-config RuboCop wrapper)
 - **Frontmatter**: Schema validation using Psych
 - **Auto-fix/format**: Kramdown formatter for consistent markdown styling
 - **Colorized output**: Clear, colorized terminal output
@@ -34,6 +35,18 @@ Or install directly:
 ```bash
 gem install ace-lint
 ```
+
+### Ruby Linting (StandardRB)
+
+To lint Ruby files, install StandardRB separately:
+
+```bash
+gem install standardrb
+```
+
+StandardRB is a zero-config RuboCop wrapper that provides sensible defaults for Ruby style guide enforcement.
+
+**Note**: Ruby linting is optional - ace-lint will skip Ruby files if StandardRB is not installed, showing a helpful install message.
 
 ## Quick Start
 
@@ -148,9 +161,9 @@ ace-lint version
 
 | Option | Short | Description |
 |--------|-------|-------------|
-| `--fix` | `-f` | Auto-format with kramdown |
+| `--fix` | `-f` | Auto-format with kramdown or StandardRB (Ruby files) |
 | `--format` | | Format documents with kramdown |
-| `--type TYPE` | `-t` | Specify validation type (markdown/yaml/frontmatter) |
+| `--type TYPE` | `-t` | Specify validation type (markdown/yaml/ruby/frontmatter) |
 | `--quiet` | `-q` | Suppress detailed output |
 | `--line-width NUM` | | Line width for formatting (default: 120) |
 | `--help` | `-h` | Show help message |
@@ -159,6 +172,7 @@ ace-lint version
 
 - **markdown**: Validates markdown syntax via kramdown with GFM support
 - **yaml**: Validates YAML syntax via Psych (Ruby built-in)
+- **ruby**: Lints Ruby files via StandardRB (.rb, .rake, .gemspec)
 - **frontmatter**: Validates frontmatter schema and required fields
 
 ### Examples
@@ -166,6 +180,15 @@ ace-lint version
 ```bash
 # Validate all markdown files
 ace-lint docs/*.md
+
+# Lint Ruby files (auto-detected by .rb extension)
+ace-lint lib/**/*.rb
+
+# Lint and auto-fix Ruby files with StandardRB
+ace-lint lib/code.rb --fix
+
+# Lint Rake files and gemspecs
+ace-lint Rakefile mygem.gemspec
 
 # Format markdown files
 ace-lint docs/*.md --fix
@@ -227,8 +250,10 @@ Validates frontmatter schema:
 Clear, colorized terminal output:
 
 - ✓ Green for passed files
+- (formatted) Yellow for auto-formatted files
 - ✗ Red for failed files
 - ⚠ Yellow for warnings
+- ⊘ Cyan for skipped files (unsupported file types)
 - Detailed error messages with line numbers
 
 ### Exit Codes
@@ -246,10 +271,12 @@ ace-lint follows the ATOM architecture pattern:
 lib/ace/lint/
 ├── atoms/           # Pure functions (no I/O)
 │   ├── type_detector.rb         # Detect file type
+│   ├── standardrb_runner.rb     # Execute StandardRB subprocess
 │   ├── kramdown_parser.rb       # Parse markdown with kramdown
 │   ├── yaml_parser.rb           # Parse YAML with Psych
 │   └── frontmatter_extractor.rb # Extract frontmatter
 ├── molecules/       # Focused helpers (may do I/O)
+│   ├── ruby_linter.rb           # Lint Ruby files
 │   ├── markdown_linter.rb       # Validate markdown
 │   ├── yaml_linter.rb           # Validate YAML
 │   ├── frontmatter_validator.rb # Validate frontmatter
@@ -260,8 +287,9 @@ lib/ace/lint/
 ├── models/          # Data structures
 │   ├── lint_result.rb           # Validation result
 │   └── validation_error.rb      # Error details
-└── commands/        # CLI commands
-    └── lint_command.rb          # Main CLI command
+└── cli/             # CLI commands
+    └── commands/
+        └── lint.rb                # Main CLI command
 ```
 
 ## Integration with Other Gems
@@ -303,6 +331,71 @@ bundle exec exe/ace-lint lint test/fixtures/*.md
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub.
+
+## Troubleshooting
+
+### StandardRB Not Found
+
+If you see the message `StandardRB is not installed`, install StandardRB:
+
+```bash
+gem install standardrb
+```
+
+**Verify installation:**
+
+```bash
+# Check if standardrb is in PATH
+which standardrb
+
+# Should show something like: /usr/local/bin/standardrb
+# OR: ~/.gem/ruby/3.x.x/bin/standardrb
+```
+
+**If `which standardrb` returns nothing:**
+
+Your Ruby gems bin directory may not be in PATH. Add this to your shell config (`~/.bashrc`, `~/.zshrc`, or `~/.config/fish/config.fish`):
+
+```bash
+# For bash/zsh
+export PATH="$HOME/.gem/ruby/3.3.0/bin:$PATH"
+
+# For fish shell
+set -gx PATH "$HOME/.gem/ruby/3.3.0/bin" $PATH
+```
+
+Replace `3.3.0` with your actual Ruby version (`ruby -v`).
+
+**Alternatively, use user-default gem installation:**
+
+```bash
+# Install to user directory
+gem install standardrb --user-install
+
+# Add to PATH (adjust Ruby version as needed)
+export PATH="$HOME/.gem/ruby/3.3.0/bin:$PATH"
+```
+
+### Ruby File Auto-Detection
+
+Ruby files are auto-detected by extension: `.rb`, `.rake`, `.gemspec`, and special filenames `Gemfile`, `Rakefile`. If a Ruby file is not being linted:
+
+1. **Check extension**: Ensure file has `.rb`, `.rake`, or `.gemspec` extension
+2. **Force type**: Use `--type ruby` to override auto-detection:
+   ```bash
+   ace-lint some_file --type ruby
+   ```
+
+### Batch Processing Performance
+
+Ruby files are batch-processed for performance (single StandardRB subprocess for all Ruby files). Other file types (markdown, YAML) are processed individually.
+
+If batch Ruby linting fails (e.g., StandardRB crash), all Ruby files in the batch will show the error. Fix the underlying issue or process files individually:
+
+```bash
+# Process Ruby files individually (slower, more isolated)
+ace-lint file1.rb file2.rb --no-batch
+```
 
 ## License
 
