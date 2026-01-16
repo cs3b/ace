@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.216
-status: in-progress
+status: done
 priority: high
 estimate: 1h
 dependencies: []
@@ -103,13 +103,13 @@ Fix the OpenCode CLI provider in ace-llm-providers-cli to use the correct comman
 
 ### Planning Steps
 
-- [ ] Review current `OpenCodeClient#build_opencode_command` implementation (lines 124-160)
-- [ ] Verify OpenCode CLI interface with `opencode --help` if needed
-- [ ] Check existing test patterns in `cli_execution_edge_test.rb`
+- [x] Review current `OpenCodeClient#build_opencode_command` implementation (lines 124-160)
+- [x] Verify OpenCode CLI interface with `opencode --help` if needed
+- [x] Check existing test patterns in `cli_execution_edge_test.rb`
 
 ### Execution Steps
 
-- [ ] Update `build_opencode_command` method to use correct syntax
+- [x] Update `build_opencode_command` method to use correct syntax
   - Change command from `["opencode", "generate"]` to `["opencode", "run"]`
   - Remove `--prompt` flag, pass prompt as positional argument
   - Remove unsupported flags: `--format`, `--temperature`, `--max-tokens`
@@ -120,7 +120,7 @@ Fix the OpenCode CLI provider in ace-llm-providers-cli to use the correct comman
   > Assert: Command array contains "run", model, and prompt as positional arg; no unsupported flags
   > Command: ace-test ace-llm-providers-cli/test/edge/cli_execution_edge_test.rb -n "builds correct opencode command"
 
-- [ ] Add regression test for correct command building
+- [x] Add regression test for correct command building
   - Test verifies command uses "run" not "generate"
   - Test verifies prompt is positional, not via --prompt
   - Test verifies unsupported flags are not included
@@ -130,7 +130,7 @@ Fix the OpenCode CLI provider in ace-llm-providers-cli to use the correct comman
   > Assert: New OpenCode command building tests pass
   > Command: ace-test ace-llm-providers-cli/test/edge/cli_execution_edge_test.rb
 
-- [ ] Run full ace-llm-providers-cli test suite
+- [x] Run full ace-llm-providers-cli test suite
   > TEST: Verify No Regressions
   > Type: Action Validation
   > Assert: All existing tests still pass
@@ -157,12 +157,12 @@ Fix the OpenCode CLI provider in ace-llm-providers-cli to use the correct comman
 
 ## Acceptance Criteria
 
-- [ ] AC 1: `build_opencode_command` uses `opencode run` instead of `opencode generate`
-- [ ] AC 2: Command passes prompt as positional argument, not via `--prompt` flag
-- [ ] AC 3: Unsupported flags (`--format`, `--temperature`, `--max-tokens`, `--prompt`) are removed
-- [ ] AC 4: System prompt is prepended to main prompt when provided
-- [ ] AC 5: Regression tests verify correct command structure
-- [ ] AC 6: All existing ace-llm-providers-cli tests pass
+- [x] AC 1: `build_opencode_command` uses `opencode run` instead of `opencode generate`
+- [x] AC 2: Command passes prompt as positional argument, not via `--prompt` flag
+- [x] AC 3: Unsupported flags (`--format`, `--temperature`, `--max-tokens`, `--prompt`) are removed
+- [x] AC 4: System prompt is prepended to main prompt when provided
+- [x] AC 5: Regression tests verify correct command structure
+- [x] AC 6: All existing ace-llm-providers-cli tests pass
 
 ## References
 
