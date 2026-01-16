@@ -2,21 +2,36 @@
 
 require_relative "../test_helper"
 
+# Helper module for CLI execution edge tests
+module CLIExecutionTestHelpers
+  # Create a mock status object for subprocess results
+  # @param success [Boolean] Whether the command succeeded
+  # @return [Object] Mock status object responding to success? and exitstatus
+  def mock_success_status(success: true)
+    status = Object.new
+    status.define_singleton_method(:success?) { success }
+    status.define_singleton_method(:exitstatus) { success ? 0 : 1 }
+    status
+  end
+end
+
 describe "CLI Execution Edge Cases" do
+  include CLIExecutionTestHelpers
+
   describe "ClaudeCodeClient Error Handling" do
     before do
       @client = Ace::LLM::Providers::CLI::ClaudeCodeClient.new
     end
 
     it "handles command not found gracefully" do
-      # Mock the claude_available? method to return false
-      @client.define_singleton_method(:claude_available?) { false }
+      # Use stub pattern for thread-safe mocking
+      @client.stub :claude_available?, false do
+        err = assert_raises(Ace::LLM::Error) do
+          @client.generate([{ role: "user", content: "test" }])
+        end
 
-      err = assert_raises(Ace::LLM::Error) do
-        @client.generate([{ role: "user", content: "test" }])
+        assert_match(/claude.*not.*found/i, err.message, "Should report claude CLI not found")
       end
-
-      assert_match(/claude.*not.*found/i, err.message)
     end
 
     it "handles empty prompt" do
@@ -149,14 +164,14 @@ describe "CLI Execution Edge Cases" do
 
     it "handles command not found gracefully" do
       skip "CodexClient has different error handling behavior"
-      # Mock the aider_available? method to return false
-      @client.define_singleton_method(:aider_available?) { false }
+      # Use stub pattern for thread-safe mocking
+      @client.stub :aider_available?, false do
+        err = assert_raises(Ace::LLM::Error) do
+          @client.generate([{ role: "user", content: "test" }])
+        end
 
-      err = assert_raises(Ace::LLM::Error) do
-        @client.generate([{ role: "user", content: "test" }])
+        assert_match(/aider.*not.*found/i, err.message, "Should report aider CLI not found")
       end
-
-      assert_match(/aider.*not.*found/i, err.message)
     end
 
     it "lists models without CLI available" do
@@ -186,14 +201,14 @@ describe "CLI Execution Edge Cases" do
     end
 
     it "handles command not found gracefully" do
-      # Mock the opencode_available? method to return false
-      @client.define_singleton_method(:opencode_available?) { false }
+      # Use stub pattern for thread-safe mocking
+      @client.stub :opencode_available?, false do
+        err = assert_raises(Ace::LLM::Error) do
+          @client.generate([{ role: "user", content: "test" }])
+        end
 
-      err = assert_raises(Ace::LLM::Error) do
-        @client.generate([{ role: "user", content: "test" }])
+        assert_match(/opencode.*not.*found/i, err.message, "Should report opencode CLI not found")
       end
-
-      assert_match(/opencode.*not.*found/i, err.message)
     end
 
     it "lists models without CLI available" do
@@ -206,6 +221,224 @@ describe "CLI Execution Edge Cases" do
     it "indicates no credentials needed" do
       refute @client.needs_credentials?
     end
+
+    it "builds correct opencode command with run subcommand" do
+      cmd = @client.send(:build_opencode_command, "test prompt", {})
+      assert_equal "opencode", cmd[0]
+      assert_equal "run", cmd[1]
+      refute_includes cmd, "generate"
+    end
+
+    it "builds correct opencode command with model flag" do
+      cmd = @client.send(:build_opencode_command, "test prompt", {})
+      assert_includes cmd, "--model"
+      model_idx = cmd.index("--model")
+      assert_equal "google/gemini-2.5-flash", cmd[model_idx + 1]
+    end
+
+    it "builds correct opencode command with positional prompt argument" do
+      prompt = "test prompt"
+      cmd = @client.send(:build_opencode_command, prompt, {})
+      refute_includes cmd, "--prompt"
+      # Prompt should be at the end as positional argument
+      assert_equal prompt, cmd.last
+    end
+
+    it "builds opencode command without unsupported flags" do
+      cmd = @client.send(:build_opencode_command, "test prompt",
+                         temperature: 0.7, max_tokens: 1000, format: "json")
+      refute_includes cmd, "--temperature"
+      refute_includes cmd, "--max-tokens"
+      refute_includes cmd, "--format"
+      refute_includes cmd, "--system"
+    end
+
+    it "builds opencode command with system prompt prepended" do
+      prompt = "main prompt"
+      system = "You are helpful"
+      cmd = @client.send(:build_opencode_command, prompt, system: system)
+      # System prompt should be prepended to main prompt
+      expected_prompt = "System: #{system}\n\n#{prompt}"
+      assert_equal expected_prompt, cmd.last
+      refute_includes cmd, "--system"
+    end
+
+    it "builds full prompt without system instruction when not provided" do
+      prompt = "test prompt"
+      full_prompt = @client.send(:build_full_prompt, prompt, {})
+      assert_equal prompt, full_prompt
+    end
+
+    it "builds full prompt with system instruction from various sources" do
+      prompt = "main prompt"
+      system = "You are helpful"
+
+      # Test system_instruction option
+      full_prompt = @client.send(:build_full_prompt, prompt, system_instruction: system)
+      assert_equal "System: #{system}\n\n#{prompt}", full_prompt
+
+      # Test system option
+      full_prompt = @client.send(:build_full_prompt, prompt, system: system)
+      assert_equal "System: #{system}\n\n#{prompt}", full_prompt
+
+      # Test system_prompt option
+      full_prompt = @client.send(:build_full_prompt, prompt, system_prompt: system)
+      assert_equal "System: #{system}\n\n#{prompt}", full_prompt
+    end
+
+    it "builds full prompt with system instruction from generation_config" do
+      # Create client with system_prompt in generation_config
+      client = Ace::LLM::Providers::CLI::OpenCodeClient.new(
+        generation_config: { system_prompt: "You are helpful" }
+      )
+
+      prompt = "main prompt"
+      full_prompt = client.send(:build_full_prompt, prompt, {})
+
+      assert_equal "System: You are helpful\n\n#{prompt}", full_prompt
+    end
+
+    it "prioritizes explicit options over generation_config for system prompt" do
+      # Create client with system_prompt in generation_config
+      client = Ace::LLM::Providers::CLI::OpenCodeClient.new(
+        generation_config: { system_prompt: "Config system prompt" }
+      )
+
+      prompt = "main prompt"
+      # Explicit system option should override generation_config
+      full_prompt = client.send(:build_full_prompt, prompt, system: "Explicit system prompt")
+
+      assert_equal "System: Explicit system prompt\n\n#{prompt}", full_prompt,
+        "Explicit :system option should take precedence over generation_config"
+    end
+
+    it "avoids double system prefix when messages already contain system role" do
+      # Simulate prompt that already has System: prefix from format_messages_as_prompt
+      prompt_with_system = "System: You are helpful\n\nUser: Hello"
+
+      # Even with system option provided, should not prepend another System: prefix
+      full_prompt = @client.send(:build_full_prompt, prompt_with_system, system: "Another system prompt")
+
+      # Should return original prompt unchanged to avoid duplication
+      assert_equal prompt_with_system, full_prompt,
+        "Should not prepend System: when prompt already starts with System:"
+      refute full_prompt.start_with?("System: Another system prompt"),
+        "Should not add duplicate system instruction"
+    end
+
+    it "uses explicit model over default when provided" do
+      # Create client with explicit model
+      client = Ace::LLM::Providers::CLI::OpenCodeClient.new(
+        model: "anthropic/claude-3-5-sonnet"
+      )
+
+      cmd = client.send(:build_opencode_command_with_prompt, "test prompt", {})
+      model_idx = cmd.index("--model")
+
+      assert_equal "anthropic/claude-3-5-sonnet", cmd[model_idx + 1],
+        "Should use explicit model when provided"
+    end
+
+    it "uses default model when no model specified" do
+      # Create client without explicit model - constructor uses DEFAULT_MODEL
+      client = Ace::LLM::Providers::CLI::OpenCodeClient.new
+
+      cmd = client.send(:build_opencode_command_with_prompt, "test prompt", {})
+      model_idx = cmd.index("--model")
+
+      assert_equal "google/gemini-2.5-flash", cmd[model_idx + 1],
+        "Should use default model when no model specified"
+    end
+
+    it "parses plain text output when JSON parsing fails" do
+      # Simulate non-JSON stdout from OpenCode CLI
+      stdout = "This is plain text output from the CLI"
+      stderr = ""
+      status = mock_success_status
+
+      result = @client.send(:parse_opencode_response, stdout, stderr, status, "test prompt", {})
+
+      assert_equal "This is plain text output from the CLI", result[:text],
+        "Should extract plain text as response text"
+      assert_equal "opencode", result[:metadata][:provider],
+        "Should set provider to opencode"
+      assert_equal "google/gemini-2.5-flash", result[:metadata][:model],
+        "Should use default model"
+      assert result[:metadata][:input_tokens] > 0,
+        "Should estimate positive input tokens"
+      assert result[:metadata][:output_tokens] > 0,
+        "Should estimate positive output tokens"
+    end
+
+    it "parses JSON output when available" do
+      # Simulate JSON stdout from OpenCode CLI
+      stdout = '{"result": "Generated response", "usage": {"input_tokens": 10, "output_tokens": 20}}'
+      stderr = ""
+      status = mock_success_status
+
+      result = @client.send(:parse_opencode_response, stdout, stderr, status, "test prompt", {})
+
+      assert_equal "Generated response", result[:text],
+        "Should extract result from JSON response"
+      assert_equal 10, result[:metadata][:input_tokens],
+        "Should use input_tokens from usage metadata"
+      assert_equal 20, result[:metadata][:output_tokens],
+        "Should use output_tokens from usage metadata"
+    end
+
+    it "handles empty plain text output gracefully" do
+      # Simulate empty output from OpenCode CLI
+      stdout = ""
+      stderr = ""
+      status = mock_success_status
+
+      result = @client.send(:parse_opencode_response, stdout, stderr, status, "test prompt", {})
+
+      assert_equal "", result[:text],
+        "Should handle empty output without error"
+      assert_equal "success", result[:metadata][:finish_reason],
+        "Should set finish_reason to success"
+    end
+
+    it "handles nil prompt gracefully with string coercion" do
+      # Test that nil prompt is converted to empty string via .to_s
+      cmd = @client.send(:build_opencode_command, nil, {})
+
+      # Prompt should be at the end as positional argument
+      # nil.to_s returns ""
+      assert_equal "", cmd.last
+    end
+
+    it "handles non-string prompt with string coercion" do
+      # Test that non-string prompts are converted to string via .to_s
+      cmd = @client.send(:build_opencode_command, 12345, {})
+
+      # 12345.to_s returns "12345"
+      assert_equal "12345", cmd.last
+    end
+
+    it "exercises public generate API with simple prompt" do
+      # Test the public API path (not private methods via send)
+      # This verifies the full flow works with string input
+      # We can't test actual CLI execution without opencode installed,
+      # but we can verify it doesn't crash on input
+
+      # Use stub pattern for thread-safe mocking
+      @client.stub :opencode_available?, false do
+        prompt = "test prompt"
+        messages = [{ role: "user", content: prompt }]
+
+        # This will fail with opencode availability error (expected)
+        # but validates the type handling works up to that point
+        err = assert_raises(Ace::LLM::ProviderError) do
+          @client.generate(messages)
+        end
+
+        # Should fail on availability check, not on type errors
+        assert_match(/opencode.*not.*found/i, err.message,
+          "Should fail on availability check, not type errors")
+      end
+    end
   end
 
   describe "CodexOSSClient Error Handling" do
@@ -214,14 +447,14 @@ describe "CLI Execution Edge Cases" do
     end
 
     it "handles command not found gracefully" do
-      # Mock the cursor_available? method to return false
-      @client.define_singleton_method(:cursor_available?) { false }
+      # Use stub pattern for thread-safe mocking
+      @client.stub :codexoss_available?, false do
+        err = assert_raises(Ace::LLM::Error) do
+          @client.generate([{ role: "user", content: "test" }])
+        end
 
-      err = assert_raises(Ace::LLM::Error) do
-        @client.generate([{ role: "user", content: "test" }])
+        assert_match(/codex.*not.*found/i, err.message, "Should report codex CLI not found")
       end
-
-      assert_match(/codex.*not.*found/i, err.message)
     end
 
     it "lists models without CLI available" do
