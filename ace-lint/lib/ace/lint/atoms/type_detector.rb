@@ -5,19 +5,34 @@ module Ace
     module Atoms
       # Pure function to detect file type from extension or content
       class TypeDetector
+        BASENAME_MAP = {
+          'Gemfile' => :ruby,
+          'Rakefile' => :ruby
+        }.freeze
+
         EXTENSION_MAP = {
           '.md' => :markdown,
           '.markdown' => :markdown,
           '.yml' => :yaml,
-          '.yaml' => :yaml
+          '.yaml' => :yaml,
+          '.rb' => :ruby,
+          '.rake' => :ruby,
+          '.gemspec' => :ruby
         }.freeze
 
         # Detect file type from file path and optional content
         # @param file_path [String] Path to the file
         # @param content [String, nil] File content for content-based detection
-        # @return [Symbol] File type (:markdown, :yaml, :unknown)
+        # @return [Symbol] File type (:markdown, :yaml, :ruby, :unknown)
         def self.detect(file_path, content: nil)
-          # Try extension-based detection first
+          return :unknown if file_path.nil? || file_path.to_s.empty?
+
+          # Try basename-based detection for known Ruby entrypoints
+          basename = File.basename(file_path)
+          type = BASENAME_MAP[basename]
+          return type if type
+
+          # Try extension-based detection
           ext = File.extname(file_path).downcase
           type = EXTENSION_MAP[ext]
           return type if type
