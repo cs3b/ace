@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-01-15
+
+### Added
+- Ruby file linting support using StandardRB (task 215)
+  - Auto-detects .rb, .rake, and .gemspec files
+  - Supports --fix flag for auto-formatting with StandardRB
+  - Helpful error message when StandardRB is not installed
+  - Configuration in `.ace-defaults/lint/ruby.yml` following ADR-022 pattern
+
+### Changed
+- Skip unsupported file types instead of reporting errors
+  - Added `skipped` status to LintResult model
+  - Updated ResultReporter to display skipped files with ⊘ symbol
+  - Unknown file types are now gracefully skipped with summary count
+- Renamed ace-config dependency to ace-support-config
+
+### Technical
+- Migrated CLI to Hanami pattern (task 213)
+- Eliminated wrapper pattern in CLI command
+
 ## [0.8.1] - 2026-01-09
 
 ### Changed
