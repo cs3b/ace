@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.216
-status: pending
+status: in-progress
 priority: high
 estimate: 1h
 dependencies: []
+worktree:
+  branch: 216-fix-opencode-cli-provider-command-syntax
+  path: "../ace-task.216"
+  created_at: '2026-01-16 01:21:46'
+  updated_at: '2026-01-16 01:21:46'
+  target_branch: main
 ---
 
 # Fix OpenCode CLI provider command syntax
