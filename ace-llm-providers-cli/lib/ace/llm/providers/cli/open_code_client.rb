@@ -46,10 +46,13 @@ module Ace
             # Convert messages to prompt format
             prompt = format_messages_as_prompt(messages)
 
-            cmd = build_opencode_command(prompt, options)
+            # Build full prompt with system instruction for accurate token accounting
+            full_prompt = build_full_prompt(prompt, options)
+
+            cmd = build_opencode_command_with_prompt(full_prompt, options)
             stdout, stderr, status = execute_opencode_command(cmd)
 
-            parse_opencode_response(stdout, stderr, status, prompt, options)
+            parse_opencode_response(stdout, stderr, status, full_prompt, options)
           rescue => e
             handle_opencode_error(e)
           end
@@ -121,42 +124,64 @@ module Ace
             end
           end
 
-          def build_opencode_command(prompt, options)
-            cmd = ["opencode", "generate"]
+          # Build command array with pre-built full prompt
+          # @param full_prompt [String] The complete prompt (already includes system instruction if any)
+          # @param options [Hash] Generation options (unused for command flags, kept for API compatibility)
+          # @return [Array<String>] Command array ready for execution
+          def build_opencode_command_with_prompt(full_prompt, options)
+            cmd = ["opencode", "run"]
 
-            # Add model selection
-            model_to_use = @model || DEFAULT_MODEL
+            # Add model selection with fallback chain
+            model_to_use = @model || @generation_config[:model] || DEFAULT_MODEL
             cmd << "--model" << model_to_use
 
-            # Add prompt
-            cmd << "--prompt" << prompt.to_s
+            # Prompt is passed as positional argument (not via --prompt flag)
+            # NOTE: OpenCode CLI does not support --temperature, --max-tokens, --format, or --system flags
+            # Coerce to string to handle nil or non-string inputs gracefully
+            cmd << full_prompt.to_s
 
-            # Add temperature if provided
-            temp = options[:temperature] || @generation_config[:temperature]
-            if temp
-              cmd << "--temperature" << temp.to_s
-            end
+            cmd
+          end
 
-            # Add max tokens if provided
-            max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
-            if max_tokens
-              cmd << "--max-tokens" << max_tokens.to_s
-            end
+          # Legacy method for backward compatibility and tests
+          # @deprecated Use build_full_prompt + build_opencode_command_with_prompt instead
+          def build_opencode_command(prompt, options)
+            full_prompt = build_full_prompt(prompt, options)
+            build_opencode_command_with_prompt(full_prompt, options)
+          end
 
-            # Add system prompt if provided
+          # Build full prompt by prepending system instruction if provided
+          #
+          # OpenCode CLI does not support a --system flag, so we prepend system
+          # instructions to the main prompt using the "System: " prefix format.
+          #
+          # @param prompt [String] The main user prompt (may already contain "System:" from message formatting)
+          # @param options [Hash] Options that may contain system instruction keys
+          # @return [String] Full prompt with system instruction prepended if provided
+          # @note System instruction priority order (first match wins):
+          #   1. options[:system_instruction]
+          #   2. options[:system]
+          #   3. options[:system_prompt]
+          #   4. @generation_config[:system_prompt]
+          # @note If the prompt already starts with "System:" (from format_messages_as_prompt),
+          #   the options-based system instruction is skipped to avoid duplication.
+          def build_full_prompt(prompt, options)
+            prompt_str = prompt.to_s
+
+            # Skip prepending if prompt already has a system instruction from message formatting
+            # This prevents double "System:" prefixes when messages contain role: "system"
+            return prompt_str if prompt_str.start_with?("System:")
+
             system_content = options[:system_instruction] ||
                            options[:system] ||
                            options[:system_prompt] ||
                            @generation_config[:system_prompt]
 
             if system_content
-              cmd << "--system" << system_content.to_s
+              "System: #{system_content}\n\n#{prompt_str}"
+            else
+              prompt_str
             end
-
-            # Request JSON output for consistent parsing
-            cmd << "--format" << "json"
-
-            cmd
           end
 
           def execute_opencode_command(cmd, timeout: nil)
