@@ -1,0 +1,14 @@
+# Ruby linting configuration for ace-lint
+# Follows ADR-022 configuration pattern
+
+# Ruby linting settings
+ruby:
+  # Enable Ruby linting
+  enabled: true
+
+  # Linter to use for Ruby files
+  linter: standardrb
+
+# StandardRB is intentionally zero-config
+# No additional configuration options are available
+# See: https://github.com/standardrb/standard

@@ -27,10 +27,20 @@ module Ace
         end
 
         def self.report_single_result(result, verbose:)
-          if result.success
+          if result.skipped?
+            report_skipped(result, verbose: verbose)
+          elsif result.success
             report_success(result, verbose: verbose)
           else
             report_failure(result, verbose: verbose)
+          end
+        end
+
+        def self.report_skipped(result, verbose:)
+          if result.skip_reason && verbose
+            puts "#{result.file_path}: #{'⊘'.cyan} (skipped: #{result.skip_reason})"
+          else
+            puts "#{result.file_path}: #{'⊘'.cyan} (skipped)"
           end
         end
 
@@ -66,6 +76,7 @@ module Ace
           total = results.size
           passed = results.count(&:success)
           failed = results.count(&:failed?)
+          skipped = results.count(&:skipped?)
           total_errors = results.sum(&:error_count)
           total_warnings = results.sum(&:warning_count)
 
@@ -79,6 +90,7 @@ module Ace
             puts "✗ #{failed} failed".red if failed.positive?
           end
 
+          puts "⊘ #{skipped} skipped".cyan if skipped.positive?
           puts "  #{total_errors} #{'error'.pluralize(total_errors)}".red if total_errors.positive?
           puts "  #{total_warnings} #{'warning'.pluralize(total_warnings)}".yellow if total_warnings.positive?
         end
