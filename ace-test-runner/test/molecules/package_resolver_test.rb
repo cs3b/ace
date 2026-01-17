@@ -34,18 +34,18 @@ class PackageResolverTest < Minitest::Test
   def test_resolves_package_by_exact_name
     resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
 
-    result = resolver.resolve("ace-context")
-    assert result, "Should resolve ace-context"
-    assert result.end_with?("ace-context"), "Should end with package name"
+    result = resolver.resolve("ace-bundle")
+    assert result, "Should resolve ace-bundle"
+    assert result.end_with?("ace-bundle"), "Should end with package name"
     assert Dir.exist?(result), "Resolved path should exist"
   end
 
   def test_resolves_package_without_ace_prefix
     resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
 
-    result = resolver.resolve("context")
-    assert result, "Should resolve 'context' to 'ace-context'"
-    assert result.end_with?("ace-context"), "Should resolve to ace-context"
+    result = resolver.resolve("bundle")
+    assert result, "Should resolve 'bundle' to 'ace-bundle'"
+    assert result.end_with?("ace-bundle"), "Should resolve to ace-bundle"
   end
 
   def test_returns_nil_for_nonexistent_package
@@ -60,7 +60,7 @@ class PackageResolverTest < Minitest::Test
   def test_resolves_absolute_path
     resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
 
-    ace_context_path = File.join(mono_repo_root, "ace-context")
+    ace_context_path = File.join(mono_repo_root, "ace-bundle")
     result = resolver.resolve(ace_context_path)
     assert result, "Should resolve absolute path"
     assert_equal File.realpath(ace_context_path), result
@@ -70,14 +70,14 @@ class PackageResolverTest < Minitest::Test
     Dir.chdir(mono_repo_root) do
       resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
 
-      result = resolver.resolve("./ace-context")
-      assert result, "Should resolve ./ace-context"
-      assert result.end_with?("ace-context")
+      result = resolver.resolve("./ace-bundle")
+      assert result, "Should resolve ./ace-bundle"
+      assert result.end_with?("ace-bundle")
     end
   end
 
   def test_resolves_relative_path_with_double_dot
-    ace_context_path = File.join(mono_repo_root, "ace-context")
+    ace_context_path = File.join(mono_repo_root, "ace-bundle")
     Dir.chdir(ace_context_path) do
       resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
 
@@ -129,7 +129,7 @@ class PackageResolverTest < Minitest::Test
 
     packages = resolver.available_packages
     assert packages.is_a?(Array)
-    assert packages.include?("ace-context"), "Should include ace-context"
+    assert packages.include?("ace-bundle"), "Should include ace-bundle"
     assert packages.include?("ace-support-nav"), "Should include ace-support-nav"
     assert packages.include?("ace-test-runner"), "Should include ace-test-runner"
   end
@@ -185,12 +185,12 @@ class PackageResolverTest < Minitest::Test
   end
 
   def test_resolve_current_directory_dot
-    Dir.chdir(File.join(mono_repo_root, "ace-context")) do
+    Dir.chdir(File.join(mono_repo_root, "ace-bundle")) do
       resolver = Ace::TestRunner::Molecules::PackageResolver.new(project_root: mono_repo_root)
 
       result = resolver.resolve(".")
       assert result, "Should resolve current directory with '.'"
-      assert result.end_with?("ace-context")
+      assert result.end_with?("ace-bundle")
     end
   end
 
