@@ -28,7 +28,7 @@ module Ace
 
                 diff_file_path = File.join(cache_dir, "#{subject_name}.diff")
                 File.write(diff_file_path, diff_content)
-                # Store absolute path for ace-context (it resolves relative to context.md location)
+                # Store absolute path for ace-bundle (it resolves relative to context.md location)
                 diff_files << diff_file_path
               end
             end
@@ -37,7 +37,7 @@ module Ace
             if cache_dir && Dir.exist?(cache_dir)
               diff_file_path = File.join(cache_dir, "repo-diff.diff")
               File.write(diff_file_path, diff)
-              # Store absolute path for ace-context
+              # Store absolute path for ace-bundle
               diff_files << diff_file_path
             end
           end
@@ -52,7 +52,7 @@ module Ace
             File.write(File.join(cache_dir, "context.md"), context_md)
           end
 
-          # Load via ace-context (returns instructions + embedded context + diffs)
+          # Load via ace-bundle (returns instructions + embedded context + diffs)
           embedded_content = load_context_md(context_md, document: document, cache_dir: cache_dir) || base_instructions
 
           # Calculate diff stats for metadata
@@ -118,7 +118,7 @@ module Ace
         # @param document [Document] The document to analyze
         # @param diff [String] The git diff content
         # @param since [String] Time period
-        # @param context [String, nil] Optional embedded context from ace-context
+        # @param context [String, nil] Optional embedded context from ace-bundle
         # @return [String] User prompt
         def self.build_user_prompt(document, diff, since, context: nil)
           # Extract document metadata
@@ -282,26 +282,26 @@ module Ace
           SECTION
         end
 
-        # Load context.md via ace-context (embeds files as XML)
+        # Load context.md via ace-bundle (embeds files as XML)
         # @param context_md [String] The context.md content
         # @param document [Document] The document configuration (unused, kept for compatibility)
         # @param cache_dir [String, nil] Directory containing context.md and referenced files
         # @return [String, nil] Final prompt with embedded files or nil if unavailable
         def self.load_context_md(context_md, document:, cache_dir: nil)
           begin
-            require "ace/context"
+            require "ace/bundle"
 
-            # Load context.md - ace-context processes presets and files from frontmatter
+            # Load context.md - ace-bundle processes presets and files from frontmatter
             result = if cache_dir
                       context_file = File.join(cache_dir, "context.md")
-                      Ace::Context.load_file(context_file)
+                      Ace::Bundle.load_file(context_file)
                     else
-                      Ace::Context.load_auto(context_md)
+                      Ace::Bundle.load_auto(context_md)
                     end
 
             result.content
           rescue LoadError
-            warn "ace-context not available - context embedding disabled" if Ace::Docs.debug?
+            warn "ace-bundle not available - context embedding disabled" if Ace::Docs.debug?
             nil
           rescue StandardError => e
             warn "Context loading failed: #{e.message}" if Ace::Docs.debug?
