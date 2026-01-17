@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.216
-status: pending
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 216-add-rubocop-as-fallback-for-standardrb
+  path: "../ace-task.216"
+  created_at: '2026-01-17 18:40:15'
+  updated_at: '2026-01-17 18:40:15'
+  target_branch: main
 ---
 
 # Add RuboCop as Fallback for StandardRB
