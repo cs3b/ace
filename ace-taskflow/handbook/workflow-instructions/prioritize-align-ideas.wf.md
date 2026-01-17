@@ -22,7 +22,7 @@ Systematically organize, prioritize, and align backlog ideas with current projec
 
 ## Project Context Loading
 
-- Read and follow: `ace-context wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://load-project-context`
 
 ## Process Steps
 

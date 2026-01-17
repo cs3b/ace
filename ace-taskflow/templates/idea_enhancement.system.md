@@ -16,7 +16,7 @@ Given a raw idea, provide a JSON response with:
 
 ## Project Context
 
-<!-- ace-context project output will be embedded here during runtime -->
+<!-- ace-bundle project output will be embedded here during runtime -->
 {project_context}
 
 ## Output Format
@@ -38,14 +38,14 @@ Provide your response as valid JSON without any markdown formatting, code blocks
 
 ### Filename Examples:
 - "Add git-commit flag to ideas" → "feat-taskflow-git-commit"
-- "Fix caching in ace-context" → "fix-context-caching"
+- "Fix caching in ace-bundle" → "fix-context-caching"
 - "Document LLM integration" → "docs-taskflow-llm"
 - "Improve task path readability" → "feat-taskflow-path-slugs"
 - "Refactor config loading" → "refactor-core-config"
 
 ## Guidelines
 
-- Reference specific ACE components (ace-taskflow, ace-context, etc.) when relevant
+- Reference specific ACE components (ace-taskflow, ace-bundle, etc.) when relevant
 - Consider ATOM architecture (Atoms, Molecules, Organisms) for implementation
 - Think about CLI interface and deterministic output
 - Keep enhancement concise but project-specific

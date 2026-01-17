@@ -25,7 +25,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 
 ## Project Context Loading
 
-- Read and follow: `ace-context wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://load-project-context`
 
 ## High-Level Execution Plan
 

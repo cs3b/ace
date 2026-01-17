@@ -4,7 +4,7 @@ require "open3"
 require "ostruct"
 
 # Helper module for mocking shell commands in tests
-# Intercepts Open3.capture3 calls to ace-nav and ace-context
+# Intercepts Open3.capture3 calls to ace-nav and ace-bundle
 module ShellMockHelper
   # Store original method for restoration
   @@original_capture3 = nil
@@ -21,8 +21,8 @@ module ShellMockHelper
       case cmd
       when "ace-nav"
         ShellMockHelper.handle_ace_nav_mock(args, kwargs)
-      when "ace-context"
-        ShellMockHelper.handle_ace_context_mock(args, kwargs)
+      when "ace-bundle"
+        ShellMockHelper.handle_ace_bundle_mock(args, kwargs)
       when "git"
         ShellMockHelper.handle_git_mock(args, kwargs)
       else
@@ -80,8 +80,8 @@ module ShellMockHelper
     end
   end
 
-  # Handle ace-context command mocking
-  def self.handle_ace_context_mock(args, _kwargs)
+  # Handle ace-bundle command mocking
+  def self.handle_ace_bundle_mock(args, _kwargs)
     preset = args.first
 
     case preset
@@ -95,7 +95,7 @@ module ShellMockHelper
 
         ## Components
         - ace-taskflow: Core task management
-        - ace-context: Context loading
+        - ace-bundle: Context loading
         - ace-nav: Resource navigation
         - ace-llm: LLM integration
 

@@ -53,9 +53,9 @@ class TaskSlugGeneratorTest < AceTaskflowTestCase
   end
 
   def test_generate_descriptive_part_without_number
-    slug = @generator.generate_descriptive_part("Fix bug in ace-context")
+    slug = @generator.generate_descriptive_part("Fix bug in ace-bundle")
 
-    assert_match(/^fix-context/, slug)
+    assert_match(/^fix-bundle/, slug)
     refute_match(/^\d+/, slug)
   end
 
