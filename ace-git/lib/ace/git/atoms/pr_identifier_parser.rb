@@ -10,7 +10,7 @@ module Ace
       # - Qualified reference: "owner/repo#456"
       # - GitHub URL: "https://github.com/owner/repo/pull/789"
       #
-      # Consolidated from ace-context PrIdentifierParser
+      # Consolidated from ace-bundle PrIdentifierParser
       module PrIdentifierParser
         # Parsed PR identifier result
         ParseResult = Data.define(:number, :repo, :gh_format)
