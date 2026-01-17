@@ -5,7 +5,7 @@
 # Each type can have glob patterns for automatic discovery
 document_types:
   # Core context documents
-  context:
+  bundle:
     paths:
       - "docs/*.md"              # Core documentation
     defaults:

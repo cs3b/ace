@@ -1,9 +1,9 @@
 ---
 description: Test PR context loading
-context:
+bundle:
   params:
     output: cache
-  pr: 
+  pr:
     - 75
     - 77
   files:

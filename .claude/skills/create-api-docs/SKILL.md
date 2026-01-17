@@ -6,7 +6,7 @@ description: Create API Docs
 user-invocable: true
 allowed-tools:
   - Bash(ace-docs:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Read
   - Write
@@ -18,6 +18,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-context wfi://create-api-docs`
+read and run `ace-bundle wfi://create-api-docs`
 
-read and run `ace-context wfi://commit`
+read and run `ace-bundle wfi://commit`

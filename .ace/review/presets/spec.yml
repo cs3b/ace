@@ -8,7 +8,7 @@
 description: "Specification review - goal clarity, usage expectations, tests, completeness"
 
 instructions:
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       project_context:

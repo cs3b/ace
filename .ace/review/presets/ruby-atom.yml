@@ -4,7 +4,7 @@
 description: "Ruby code review with ATOM architecture focus"
 
 instructions:
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       format:
@@ -35,7 +35,7 @@ instructions:
           - "docs/architecture.md"
           - "README.md"
 
-context: "project"
+bundle: "project"
 
 subject:
   # Use diff key for consistent filtering via ace-git

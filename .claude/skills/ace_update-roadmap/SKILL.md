@@ -6,7 +6,7 @@ description: Update project roadmap with current progress and upcoming milestone
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
   - Write
   - Edit
@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-context wfi://update-roadmap`
+read and run `ace-bundle wfi://update-roadmap`

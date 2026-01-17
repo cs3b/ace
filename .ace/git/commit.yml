@@ -21,7 +21,7 @@ git:
         - ace-git-commit
         - ace-git-secrets
         - ace-git-worktree
-        - ace-context
+        - ace-bundle
         - ace-support-nav
         - ace-taskflow
         - ace-test-runner

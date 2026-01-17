@@ -3,7 +3,7 @@
 description: "Performance review - optimization opportunities"
 
 instructions:
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       format:
@@ -27,7 +27,7 @@ instructions:
         presets:
           - "project"
 
-context: "project"
+bundle: "project"
 
 subject:
   # Use diff key for consistent filtering via ace-git

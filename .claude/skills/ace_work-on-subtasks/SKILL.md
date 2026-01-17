@@ -6,7 +6,7 @@ description: Work On Subtasks (orchestrator task delegation)
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
   - Task
   - AskUserQuestion
@@ -15,6 +15,6 @@ argument-hint: [orchestrator-task-id]
 source: ace-taskflow
 ---
 
-read and run `ace-context wfi://work-on-subtasks`
+read and run `ace-bundle wfi://work-on-subtasks`
 
 ARGUMENTS: $ARGUMENTS

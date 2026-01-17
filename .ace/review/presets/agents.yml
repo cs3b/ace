@@ -3,7 +3,7 @@
 description: "Agent definition review - structure and clarity"
 
 instructions:
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       format:
@@ -32,7 +32,7 @@ instructions:
         files:
           - "docs/agents.g.md"
 
-context: "project"
+bundle: "project"
 
 subject:
   files:
