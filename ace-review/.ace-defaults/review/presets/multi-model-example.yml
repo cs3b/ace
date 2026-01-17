@@ -16,7 +16,7 @@ subject:
     - "origin/main...HEAD"
 
 # Context: background information
-context: "project"
+bundle: "project"
 
 # System prompt composition
 system_prompt:

@@ -5,7 +5,7 @@ description: "Ruby code review with ATOM architecture focus"
 
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       format:
         title: "Format Guidelines"
@@ -31,12 +31,12 @@ instructions:
           - "docs/architecture.md"
           - "README.md"
 
-context:
+bundle:
   presets:
     - "project"
 
 subject:
-  context:
+  bundle:
     sections:
       ruby_changes:
         title: "Ruby Code Changes"

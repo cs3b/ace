@@ -34,7 +34,7 @@ defaults:
   preset: "code"  # Default preset when --preset not specified
   model: "google:gemini-2.5-flash"
   output_format: "markdown"
-  context: "project"
+  bundle: "project"
   max_concurrent_models: 3  # Max parallel LLM queries for multi-model execution
   auto_execute: false  # Set to true to auto-execute LLM query without confirmation
   auto_save: false  # Set to true to enable auto-save to task/release directories (opt-in)

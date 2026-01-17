@@ -46,7 +46,7 @@ module Ace
           # Use default synthesis model if not specified
           synthesis_model = model || default_synthesis_model
 
-          # Build synthesis prompts via ace-context
+          # Build synthesis prompts via ace-bundle
           system_prompt = prepare_system_prompt(session_dir)
           user_prompt = prepare_user_prompt(reports, session_dir)
 
@@ -155,15 +155,15 @@ module Ace
           end
         end
 
-        # Prepare system prompt via ace-context with project-base preset
+        # Prepare system prompt via ace-bundle with project-base preset
         # @param session_dir [String] session directory
         # @return [String] processed system prompt content
         def prepare_system_prompt(session_dir)
           # Get source path via ace-nav
           source_path = resolve_prompt_path("synthesis-review-reports.system.md")
 
-          # Check if ace-context is available
-          unless defined?(Ace::Context) && File.exist?(source_path)
+          # Check if ace-bundle is available
+          unless defined?(Ace::Bundle) && File.exist?(source_path)
             return fallback_system_prompt
           end
 
@@ -171,18 +171,18 @@ module Ace
           context_file = File.join(session_dir, "synthesis.system.context.md")
           FileUtils.cp(source_path, context_file)
 
-          # Process via ace-context with embed_source to include the prompt content
+          # Process via ace-bundle with embed_source to include the prompt content
           output_file = File.join(session_dir, "synthesis.system.prompt.md")
-          result = Ace::Context.load_file(context_file, embed_source: true)
+          result = Ace::Bundle.load_file(context_file, embed_source: true)
           File.write(output_file, result.content)
 
           result.content
         rescue StandardError => e
-          warn "Warning: Failed to prepare system prompt via ace-context: #{e.message}" if Ace::Review.debug?
+          warn "Warning: Failed to prepare system prompt via ace-bundle: #{e.message}" if Ace::Review.debug?
           fallback_system_prompt
         end
 
-        # Fallback system prompt when ace-context is unavailable
+        # Fallback system prompt when ace-bundle is unavailable
         # @return [String] basic system prompt
         def fallback_system_prompt
           source_path = resolve_prompt_path("synthesis-review-reports.system.md")
@@ -193,13 +193,13 @@ module Ace
           end
         end
 
-        # Prepare user prompt via ace-context with report files embedded
+        # Prepare user prompt via ace-bundle with report files embedded
         # @param reports [Array<Hash>] array of report data
         # @param session_dir [String] session directory
         # @return [String] processed user prompt content
         def prepare_user_prompt(reports, session_dir)
-          # Check if ace-context is available
-          unless defined?(Ace::Context)
+          # Check if ace-bundle is available
+          unless defined?(Ace::Bundle)
             return build_fallback_user_prompt(reports)
           end
 
@@ -208,14 +208,14 @@ module Ace
           content = build_user_context_content(reports)
           File.write(context_file, content)
 
-          # Process via ace-context with embed_source to include the prompt content
+          # Process via ace-bundle with embed_source to include the prompt content
           output_file = File.join(session_dir, "synthesis.user.prompt.md")
-          result = Ace::Context.load_file(context_file, embed_source: true)
+          result = Ace::Bundle.load_file(context_file, embed_source: true)
           File.write(output_file, result.content)
 
           result.content
         rescue StandardError => e
-          warn "Warning: Failed to prepare user prompt via ace-context: #{e.message}" if Ace::Review.debug?
+          warn "Warning: Failed to prepare user prompt via ace-bundle: #{e.message}" if Ace::Review.debug?
           # Fallback to direct prompt building
           build_fallback_user_prompt(reports)
         end
@@ -226,7 +226,7 @@ module Ace
         def build_user_context_content(reports)
           frontmatter = {
             "description" => "Synthesis user prompt with review reports",
-            "context" => {
+            "bundle" => {
               "files" => reports.map { |r| r[:path] }
             }
           }
@@ -245,7 +245,7 @@ module Ace
           "#{YAML.dump(frontmatter)}---\n\n#{body}"
         end
 
-        # Fallback user prompt when ace-context is not available
+        # Fallback user prompt when ace-bundle is not available
         # @param reports [Array<Hash>] array of report data
         # @return [String] user prompt with all reports
         def build_fallback_user_prompt(reports)

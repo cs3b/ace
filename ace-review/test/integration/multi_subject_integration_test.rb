@@ -105,7 +105,7 @@ class MultiSubjectIntegrationTest < Minitest::Test
 
   # Test that hash subjects pass through unchanged
   def test_hash_subject_passes_through
-    hash_subject = { "context" => { "files" => ["custom.rb"] } }
+    hash_subject = { "bundle" => { "files" => ["custom.rb"] } }
     subjects = [hash_subject]
 
     config = @extractor.merge_typed_subject_configs(subjects)
@@ -116,7 +116,7 @@ class MultiSubjectIntegrationTest < Minitest::Test
 
   # Test mixing hash and string subjects
   def test_mix_hash_and_string_subjects
-    hash_subject = { "context" => { "files" => ["custom.rb"] } }
+    hash_subject = { "bundle" => { "files" => ["custom.rb"] } }
     subjects = [hash_subject, "files:other.rb"]
 
     config = @extractor.merge_typed_subject_configs(subjects)

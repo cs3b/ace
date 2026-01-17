@@ -39,17 +39,17 @@ Automated review tool for the ACE framework. Provides preset-based analysis usin
 ## What's New in 0.15.0
 
 - **Section-Based Presets**: A new `instructions` format in presets allows for structured, section-based content organization for more powerful and readable reviews. See examples below.
-- **Enhanced ace-context Integration**: Deeper integration with `ace-context` for processing structured review content.
+- **Enhanced ace-bundle Integration**: Deeper integration with `ace-bundle` for processing structured review content.
 - **Backward Compatibility**: The legacy `prompt_composition` format continues to work alongside the new `instructions` format.
 - For full details, see the [CHANGELOG.md](CHANGELOG.md).
 
 ## Changes in 0.9.8
 
-- **Workflow Documentation Updated**: Updated `review.wf.md` for ace-context v0.9.6+ integration
+- **Workflow Documentation Updated**: Updated `review.wf.md` for ace-bundle integration
   - Added comprehensive configuration schema section documenting unified YAML keys
   - Enhanced examples showing `files:`, `diffs:`, `commands:`, and `presets:` usage
   - Improved troubleshooting guidance for common configuration issues
-  - All command examples now use correct ace-context schema
+  - All command examples now use correct ace-bundle schema
 
 ## Changes in 0.9.7
 
@@ -64,8 +64,8 @@ Automated review tool for the ACE framework. Provides preset-based analysis usin
 
 ## Changes in 0.9.6
 
-- **ace-context Integration**: Refactored to use ace-context for unified content aggregation
-  - SubjectExtractor and ContextExtractor now delegate to ace-context
+- **ace-bundle Integration**: Refactored to use ace-bundle for unified content aggregation
+  - SubjectExtractor and ContextExtractor now delegate to ace-bundle
   - Eliminated duplicated file/command/git extraction logic
   - Enabled `presets:` support in context configuration
   - Added support for `diffs:` key in subject/context configs
@@ -102,7 +102,7 @@ gem install ace-review
 ### Dependencies
 
 - `ace-core` (~> 0.9) - Core ACE framework utilities
-- `ace-context` (~> 0.9) - Unified content aggregation and context loading
+- `ace-bundle` (~> 0.29) - Unified content aggregation and context loading
 - `ace-nav` (~> 0.9) - Universal resource navigation and prompt resolution
 
 ## Quick Start
@@ -409,14 +409,14 @@ gh auth status --show-token
 
 ## Subject and Context Configuration
 
-Since v0.9.6, ace-review uses ace-context for unified content aggregation. Both `--subject` and `--context` accept YAML configuration with these keys:
+Since v0.9.6, ace-review uses ace-bundle for unified content aggregation. Both `--subject` and `--context` accept YAML configuration with these keys:
 
 ```yaml
 # ✅ CORRECT: Use these keys (both diff: and diffs: work identically)
 files: ["lib/**/*.rb", "docs/*.md"]      # File paths and glob patterns
 diff: {ranges: ["origin/main...HEAD"]}   # Git diff via ace-git
 commands: ["git log --oneline -5"]       # Shell commands to execute
-presets: [project, architecture]         # ace-context preset names
+presets: [project, architecture]         # ace-bundle preset names
 ```
 
 ### Examples
@@ -509,7 +509,7 @@ ace-review --preset docs --subject staged --subject files:README.md
 
 **Subject Type Resolution:**
 
-| Input | Resolves To (ace-context config) |
+| Input | Resolves To (ace-bundle config) |
 |-------|----------------------------------|
 | `commit:hash` | `{ "context" => { "diffs" => ["hash~1..hash"] } }` |
 | `diff:range` | `{ "context" => { "diffs" => ["range"] } }` |
@@ -536,7 +536,7 @@ Subject input is parsed in this order (first match wins):
 
 **Backward Compatible:** YAML syntax and auto-detection still work.
 
-**Note:** `--pr` vs `--subject pr:` - The `--pr` flag provides full PR mode (includes metadata, comments) using ace-review's GhPrFetcher. The `--subject pr:` syntax only fetches diff content through ace-context (subject-only mode).
+**Note:** `--pr` vs `--subject pr:` - The `--pr` flag provides full PR mode (includes metadata, comments) using ace-review's GhPrFetcher. The `--subject pr:` syntax only fetches diff content through ace-bundle (subject-only mode).
 
 **Note:** `task:` subject scope - The `task:` subject type reviews task specification files (`*.s.md`) only, not the implementation code. To review code implemented for a task, use `diff:` or `files:` subjects with the appropriate patterns.
 
@@ -646,10 +646,10 @@ Create `.ace/review/config.yml` in your project:
 defaults:
   model: "google:gemini-2.5-flash"
   output_format: "markdown"
-  context: "project"
+  bundle: "project"
 
-# Project documentation files for auto-context extraction
-# Used when context: "project" or context: "auto"
+# Project documentation files for auto-bundle extraction
+# Used when bundle: "project" or bundle: "auto"
 # Order matters: first found files are used first
 project_docs:
   - "README.md"
@@ -680,7 +680,7 @@ description: "Team-specific review criteria"
 # New instructions format with section-based organization
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       review_focus:
         title: "Review Focus Areas"
@@ -712,7 +712,7 @@ instructions:
           - "project"
 
 # Context: additional background information
-context: "project"
+bundle: "project"
 
 # Subject: what to review
 subject:
@@ -736,7 +736,7 @@ prompt_composition:
     - "prompt://guidelines/tone"
 
 # Context: background information for the review
-context:
+bundle:
   presets: [project]                      # Load project preset
   files: ["docs/team-guidelines.md"]      # Team-specific docs
 
@@ -746,7 +746,7 @@ subject:
   files: ["lib/**/*.rb"]                  # Ruby files
 ```
 
-**Note**: The new `instructions` format provides section-based organization that ace-context processes into structured XML-tagged output. The legacy `prompt_composition` format continues to work for backward compatibility.
+**Note**: The new `instructions` format provides section-based organization that ace-bundle processes into structured XML-tagged output. The legacy `prompt_composition` format continues to work for backward compatibility.
 
 ### Preset Composition (DRY Configuration)
 
@@ -760,7 +760,7 @@ Use the `presets:` array at the root level to compose from other presets:
 # .ace/review/presets/code.yml - Base preset
 description: "Base code review configuration"
 instructions:
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       review_focus:
@@ -777,7 +777,7 @@ presets:
 
 description: "Pull request review"
 subject:
-  context:
+  bundle:
     sections:
       code_changes:
         diffs:
@@ -828,7 +828,7 @@ ACE_REVIEW_DEBUG=1 ace-review --preset complex-nested
 # pr.yml - 150 lines
 description: "PR review"
 instructions:
-  context:
+  bundle:
     # ... many lines ...
 subject:
   diffs: ["origin...HEAD"]
@@ -836,7 +836,7 @@ subject:
 # wip.yml - 145 lines (95% duplicate)
 description: "WIP review"
 instructions:
-  context:
+  bundle:
     # ... same lines ...
 subject:
   commands: ["git diff HEAD"]
@@ -848,7 +848,7 @@ subject:
 # code.yml - 40 lines (shared base)
 description: "Base code review"
 instructions:
-  context:
+  bundle:
     # ... shared configuration ...
 
 # code-pr.yml - 10 lines

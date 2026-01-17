@@ -11,13 +11,13 @@ require_relative "../errors"
 module Ace
   module Review
     module Molecules
-      # Parses review subjects and returns ace-context configuration
-      # Delegates actual content extraction to ace-context
+      # Parses review subjects and returns ace-bundle configuration
+      # Delegates actual content extraction to ace-bundle
       #
       # == Config Passthrough API
       #
-      # The primary API returns ace-context config hashes that ReviewManager
-      # passes directly to ace-context via user.context.md:
+      # The primary API returns ace-bundle config hashes that ReviewManager
+      # passes directly to ace-bundle via user.context.md:
       #
       # - {#parse_typed_subject_config} - Single typed subject (pr:, diff:, files:, task:)
       # - {#merge_typed_subject_configs} - Multiple subjects merged into one config
@@ -48,21 +48,21 @@ module Ace
           end
         end
 
-        # Parse typed subject string and return ace-context config
-        # Does NOT extract content - returns config for direct use with ace-context
+        # Parse typed subject string and return ace-bundle config
+        # Does NOT extract content - returns config for direct use with ace-bundle
         # @param input [String] typed subject like "pr:77", "files:*.rb", "diff:HEAD~3"
-        # @return [Hash, nil] ace-context config hash or nil if not a typed subject
+        # @return [Hash, nil] ace-bundle config hash or nil if not a typed subject
         def parse_typed_subject_config(input)
           return nil unless input.is_a?(String)
 
           parse_typed_subject(input)
         end
 
-        # Merge multiple subjects into unified ace-context config
-        # Does NOT extract content - returns merged config for direct use with ace-context
+        # Merge multiple subjects into unified ace-bundle config
+        # Does NOT extract content - returns merged config for direct use with ace-bundle
         # Uses Config.merge() with :coerce_union strategy for consistent merge behavior
         # @param subjects [Array<String, Hash>] array of subject configurations
-        # @return [Hash, nil] merged ace-context config hash or nil if empty
+        # @return [Hash, nil] merged ace-bundle config hash or nil if empty
         def merge_typed_subject_configs(subjects)
           return nil unless subjects.is_a?(Array) && subjects.any?
 
@@ -92,9 +92,9 @@ module Ace
             .to_h
         end
 
-        # Resolve a single subject to ace-context config
+        # Resolve a single subject to ace-bundle config
         # @param subject [String, Hash] single subject configuration
-        # @return [Hash] ace-context config hash
+        # @return [Hash] ace-bundle config hash
         def resolve_single_subject(subject)
           case subject
           when String
@@ -110,7 +110,7 @@ module Ace
         # Parse legacy string subjects to config hash
         # Wraps extract_from_string logic to return config instead of content
         # @param input [String] legacy subject string
-        # @return [Hash] ace-context config hash
+        # @return [Hash] ace-bundle config hash
         def parse_legacy_to_config(input)
           # Try to parse as YAML first
           begin
@@ -126,7 +126,7 @@ module Ace
         def extract_from_string(input)
           # Try typed subject first (new)
           if (typed_config = parse_typed_subject(input))
-            return use_ace_context(typed_config)
+            return use_ace_bundle(typed_config)
           end
 
           # Try to parse as YAML first
@@ -137,12 +137,12 @@ module Ace
             # Continue with string processing
           end
 
-          use_ace_context(parse_keyword_or_pattern(input))
+          use_ace_bundle(parse_keyword_or_pattern(input))
         end
 
         # Parse special keywords and auto-detect patterns
         # @param input [String] input string to parse
-        # @return [Hash] ace-context config hash
+        # @return [Hash] ace-bundle config hash
         def parse_keyword_or_pattern(input)
           case input.downcase
           when "staged"
@@ -160,7 +160,7 @@ module Ace
 
         # Auto-detect whether input is a git range or file pattern
         # @param input [String] input string to analyze
-        # @return [Hash] ace-context config hash
+        # @return [Hash] ace-bundle config hash
         def auto_detect_pattern(input)
           if looks_like_git_range?(input)
             { "diffs" => [input] }
@@ -173,28 +173,28 @@ module Ace
         end
 
         def extract_from_hash(config)
-          # Pass configuration directly to ace-context without transformation
-          use_ace_context(config)
+          # Pass configuration directly to ace-bundle without transformation
+          use_ace_bundle(config)
         end
 
-        def use_ace_context(config)
-          # Use ace-context for unified content extraction
-          # Pass config directly as inline YAML - ace-context's load_inline_yaml
+        def use_ace_bundle(config)
+          # Use ace-bundle for unified content extraction
+          # Pass config directly as inline YAML - ace-bundle's load_inline_yaml
           # supports both flat keys (files, diffs, commands, pr) and nested
-          # structure (context: { diffs: [...] }) for typed subject compatibility
+          # structure (bundle: { diffs: [...] }) for typed subject compatibility
           context_md = "#{YAML.dump(config).strip}\n---\n\n"
 
-          result = Ace::Context.load_auto(context_md, format: 'markdown')
+          result = Ace::Bundle.load_auto(context_md, format: 'markdown')
           result.content
         rescue StandardError => e
-          warn "ace-context extraction failed: #{e.message}" if Ace::Review.debug?
+          warn "ace-bundle extraction failed: #{e.message}" if Ace::Review.debug?
           ""
         end
 
         def parse_typed_subject(input)
           case input
           when /^diff:(.+)$/
-            { "context" => { "diffs" => [::Regexp.last_match(1)] } }
+            { "bundle" => { "diffs" => [::Regexp.last_match(1)] } }
           when /^diff:$/
             raise ArgumentError, "Empty value for diff: subject. Usage: diff:RANGE (e.g., diff:HEAD~3...HEAD)"
           when /^pr:(.+)$/
@@ -207,7 +207,7 @@ module Ace
             pr_refs.each do |ref|
               Ace::Git::Atoms::PrIdentifierParser.parse(ref)
             end
-            { "context" => { "pr" => pr_refs } }
+            { "bundle" => { "pr" => pr_refs } }
           when /^pr:$/
             raise ArgumentError, "Empty value for pr: subject. Usage: pr:NUMBER (e.g., pr:123)"
           when /^files:(.+)$/
@@ -215,7 +215,7 @@ module Ace
             if file_patterns.empty?
               raise ArgumentError, "No valid file patterns provided. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
             end
-            { "context" => { "files" => file_patterns } }
+            { "bundle" => { "files" => file_patterns } }
           when /^files:$/
             raise ArgumentError, "Empty value for files: subject. Usage: files:PATTERN (e.g., files:src/**/*.rb)"
           when /^commit:(.+)$/
@@ -229,7 +229,7 @@ module Ace
             unless commit_hash.match?(/\A[a-f0-9]{6,40}\z/)
               raise ArgumentError, "Invalid commit hash format: '#{commit_hash}'. Must be 6-40 hexadecimal characters."
             end
-            { "context" => { "diffs" => ["#{commit_hash}~1..#{commit_hash}"] } }
+            { "bundle" => { "diffs" => ["#{commit_hash}~1..#{commit_hash}"] } }
           when /^commit:$/
             raise ArgumentError, "Empty value for commit: subject. Usage: commit:HASH"
           when /^task:(.+)$/
@@ -270,7 +270,7 @@ module Ace
           # We use File.dirname to get the task's directory and glob for all
           # solution files (*.s.md) within it - this includes the main task
           # and any subtasks (145.01.s.md, 145.02.s.md, etc.)
-          { "context" => { "files" => ["#{File.dirname(task_path)}/**/*.s.md"] } }
+          { "bundle" => { "files" => ["#{File.dirname(task_path)}/**/*.s.md"] } }
         end
 
         # Execute ace-taskflow with timeout and proper process cleanup
