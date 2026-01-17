@@ -9,11 +9,11 @@ module Ace
       # Used to stub subprocess execution and speed up integration tests
       module TestRunnerMocks
         # Standard successful test run output
-        # @param package [String] The package name (default: "ace-context")
+        # @param package [String] The package name (default: "ace-bundle")
         # @param test_count [Integer] Number of tests run (default: 2)
         # @param assertion_count [Integer] Number of assertions (default: 4)
         # @return [String] Mock test output
-        def self.mock_success_output(package: "ace-context", test_count: 2, assertion_count: 4)
+        def self.mock_success_output(package: "ace-bundle", test_count: 2, assertion_count: 4)
           <<~OUTPUT
             Running tests in #{package}
             #{'.' * test_count}
