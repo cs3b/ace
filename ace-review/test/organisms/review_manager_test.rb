@@ -4,7 +4,7 @@ require "test_helper"
 
 class ReviewManagerTest < AceReviewTest
   def setup
-    super  # IMPORTANT: Call parent to stub ace-context for fast tests
+    super  # IMPORTANT: Call parent to stub ace-bundle for fast tests
     @temp_dir = Dir.mktmpdir
 
     # Create test fixture for "pr" preset - tests should not depend on .ace/ directory
@@ -12,15 +12,15 @@ class ReviewManagerTest < AceReviewTest
       description: "Test PR preset"
       instructions:
         base: "prompt://base/system"
-        context:
+        bundle:
           sections:
             format:
               title: "Format Guidelines"
               files:
                 - "prompt://format/standard"
-      context: "project"
+      bundle: "project"
       subject:
-        context:
+        bundle:
           sections:
             code_changes:
               title: "Code Changes"
@@ -34,7 +34,7 @@ class ReviewManagerTest < AceReviewTest
 
   def teardown
     FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
-    super  # IMPORTANT: Call parent to restore ace-context
+    super  # IMPORTANT: Call parent to restore ace-bundle
   end
 
   def test_list_presets
@@ -61,7 +61,7 @@ class ReviewManagerTest < AceReviewTest
     assert result[:session_dir], "Should have session directory"
     assert Dir.exist?(result[:session_dir]), "Session directory should exist"
 
-    # Check that session files are created with v0.14.0 architecture (ace-context workflow)
+    # Check that session files are created with v0.14.0 architecture (ace-bundle workflow)
     assert File.exist?(File.join(result[:session_dir], "system.prompt.md"))
     assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
     assert File.exist?(File.join(result[:session_dir], "system.context.md"))
@@ -73,7 +73,7 @@ class ReviewManagerTest < AceReviewTest
     options = {
       preset: "pr",  # Use built-in preset that exists
       subject: "def test; end",
-      context: { "files" => [] },  # Empty files list to avoid file not found errors
+      bundle: { "files" => [] },  # Empty files list to avoid file not found errors
       auto_execute: false,
       session_dir: File.join(@temp_dir, "test_session")
     }
@@ -82,7 +82,7 @@ class ReviewManagerTest < AceReviewTest
 
     assert result[:success], "Review should succeed: #{result[:error]}"
 
-    # Check that context is handled via ace-context workflow
+    # Check that context is handled via ace-bundle workflow
     session_dir = result[:session_dir]
     system_context_file = File.join(session_dir, "system.context.md")
     assert File.exist?(system_context_file), "system.context.md should be created"
@@ -114,7 +114,7 @@ class ReviewManagerTest < AceReviewTest
     options = {
       preset: "pr",
       subject: "def test_method; puts 'hello'; end",
-      context: "project",
+      bundle: "project",
       auto_execute: false
     }
 
@@ -125,13 +125,13 @@ class ReviewManagerTest < AceReviewTest
 
     session_dir = result[:session_dir]
 
-    # Verify v0.14.0 session structure (ace-context workflow)
+    # Verify v0.14.0 session structure (ace-bundle workflow)
     assert File.exist?(File.join(session_dir, "system.context.md")), "Should have system.context.md"
     assert File.exist?(File.join(session_dir, "system.prompt.md")), "Should have system.prompt.md"
     assert File.exist?(File.join(session_dir, "user.context.md")), "Should have user.context.md"
     assert File.exist?(File.join(session_dir, "user.prompt.md")), "Should have user.prompt.md"
     assert File.exist?(File.join(session_dir, "metadata.yml")), "Should have metadata.yml"
-    # Note: subject.md is no longer created - subject content is handled via ace-context workflow
+    # Note: subject.md is no longer created - subject content is handled via ace-bundle workflow
 
     # Verify system prompt has proper structure
     system_prompt_content = File.read(File.join(session_dir, "system.prompt.md"))
@@ -269,7 +269,7 @@ class ReviewManagerTest < AceReviewTest
     config_with_instructions = {
       instructions: {
         base: "prompt://base/system",
-        context: {
+        bundle: {
           sections: {
             format: {
               title: "Format Guidelines",
@@ -308,7 +308,7 @@ class ReviewManagerTest < AceReviewTest
 
     instructions_config = {
       base: "prompt://base/system",
-      context: {
+      bundle: {
         sections: {
           format: {
             title: "Format Guidelines",
@@ -320,7 +320,7 @@ class ReviewManagerTest < AceReviewTest
             description: "Communication style and visual indicators",
             files: ["prompt://guidelines/tone", "prompt://guidelines/icons"]
           },
-          project_context: {
+          project_bundle: {
             title: "Project Context",
             description: "Project information and background",
             presets: ["project"]
@@ -351,7 +351,7 @@ class ReviewManagerTest < AceReviewTest
     assert_match(/sections:/, content, "Should contain sections in frontmatter")
     assert_match(/format:/, content, "Should contain format section")
     assert_match(/guidelines:/, content, "Should contain guidelines section")
-    assert_match(/project_context:/, content, "Should contain project_context section")
+    assert_match(/project_bundle:/, content, "Should contain project_context section")
 
     # Should preserve project context preset
     assert_match(/presets:\s*\n\s*-\s*project/, content, "Should include project preset")
@@ -366,7 +366,7 @@ class ReviewManagerTest < AceReviewTest
 
     instructions_config = {
       base: "prompt://base/system",
-      context: {
+      bundle: {
         sections: {
           test_section: {
             title: "Test Section",
@@ -402,7 +402,7 @@ class ReviewManagerTest < AceReviewTest
       "description" => "Test instructions preset",
       "instructions" => {
         "base" => "prompt://base/system",
-        "context" => {
+        "bundle" => {
           "sections" => {
             "format" => {
               "title" => "Format Guidelines",
@@ -411,7 +411,7 @@ class ReviewManagerTest < AceReviewTest
           }
         }
       },
-      "context" => { "files" => [] },  # Simple context without preset dependencies
+      "bundle" => { "files" => [] },  # Simple context without preset dependencies
       "subject" => {  # Add subject configuration
         "content" => "def test; end"
       },
@@ -449,7 +449,7 @@ class ReviewManagerTest < AceReviewTest
 
     instructions_config = {
       "base" => "prompt://base/system",
-      "context" => {
+      "bundle" => {
         "sections" => {
           "format" => {
             "title" => "Format Guidelines",
@@ -504,7 +504,7 @@ class ReviewManagerTest < AceReviewTest
       "description" => "Test new preset",
       "instructions" => {
         "base" => "prompt://base/system",
-        "context" => {
+        "bundle" => {
           "sections" => {
             "format" => {
               "title" => "Format Guidelines",
@@ -525,7 +525,7 @@ class ReviewManagerTest < AceReviewTest
         }
       },
       "subject" => {
-        "context" => {
+        "bundle" => {
           "sections" => {
             "changes" => {
               "title" => "Changes to Review",
@@ -535,7 +535,7 @@ class ReviewManagerTest < AceReviewTest
           }
         }
       },
-      "context" => "project",
+      "bundle" => "project",
       "model" => "test-model"
     }
 
@@ -579,7 +579,7 @@ class ReviewManagerTest < AceReviewTest
     FileUtils.mkdir_p(session_dir)
 
     subject_config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "code_changes" => {
             "title" => "Code Changes",
@@ -623,7 +623,7 @@ class ReviewManagerTest < AceReviewTest
     FileUtils.mkdir_p(session_dir)
 
     subject_config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "test_files" => {
             "title" => "Test Files",
@@ -669,7 +669,7 @@ class ReviewManagerTest < AceReviewTest
 
     instructions_config = {
       "base" => "prompt://base/system",
-      "context" => {
+      "bundle" => {
         "sections" => {
           "review_format" => {
             "title" => "Review Format",
@@ -681,7 +681,7 @@ class ReviewManagerTest < AceReviewTest
     }
 
     subject_config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "changes_to_review" => {
             "title" => "Changes to Review",
@@ -738,11 +738,11 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_deep_merge_hash_nested
-    base = { "context" => { "sections" => { "code" => { "files" => ["a.rb"] } } } }
-    overlay = { "context" => { "sections" => { "code" => { "files" => ["b.rb"] } } } }
+    base = { "bundle" => { "sections" => { "code" => { "files" => ["a.rb"] } } } }
+    overlay = { "bundle" => { "sections" => { "code" => { "files" => ["b.rb"] } } } }
     result = @manager.send(:deep_merge_hash, base, overlay)
 
-    expected = { "context" => { "sections" => { "code" => { "files" => ["a.rb", "b.rb"] } } } }
+    expected = { "bundle" => { "sections" => { "code" => { "files" => ["a.rb", "b.rb"] } } } }
     assert_equal expected, result
   end
 
@@ -1106,15 +1106,15 @@ class ReviewManagerTest < AceReviewTest
       description: "Test array subjects preset"
       instructions:
         base: "prompt://base/system"
-        context:
+        bundle:
           sections:
             format:
               title: "Format Guidelines"
               files:
                 - "prompt://format/standard"
-      context: "project"
+      bundle: "project"
       subject:
-        context:
+        bundle:
           sections:
             code_changes:
               title: "Code Changes"
@@ -1141,11 +1141,11 @@ class ReviewManagerTest < AceReviewTest
 
     # Verify merged config structure
     typed_config = result[:typed_subject_config]
-    assert typed_config["context"], "Should have context key"
-    assert typed_config["context"]["diffs"], "Should have diffs from diff:HEAD~3"
-    assert typed_config["context"]["files"], "Should have files from files:*.md"
-    assert_equal ["HEAD~3"], typed_config["context"]["diffs"]
-    assert_equal ["*.md"], typed_config["context"]["files"]
+    assert typed_config["bundle"], "Should have bundle key"
+    assert typed_config["bundle"]["diffs"], "Should have diffs from diff:HEAD~3"
+    assert typed_config["bundle"]["files"], "Should have files from files:*.md"
+    assert_equal ["HEAD~3"], typed_config["bundle"]["diffs"]
+    assert_equal ["*.md"], typed_config["bundle"]["files"]
   end
 
   def test_extract_review_content_merges_same_type_subjects
@@ -1153,9 +1153,9 @@ class ReviewManagerTest < AceReviewTest
       description: "Test merge preset"
       instructions:
         base: "prompt://base/system"
-      context: "project"
+      bundle: "project"
       subject:
-        context:
+        bundle:
           sections:
             code_changes:
               title: "Code Changes"
@@ -1178,7 +1178,7 @@ class ReviewManagerTest < AceReviewTest
     typed_config = result[:typed_subject_config]
 
     # Both diffs should be merged into array
-    assert_equal ["HEAD~3", "origin/main..HEAD"], typed_config["context"]["diffs"]
+    assert_equal ["HEAD~3", "origin/main..HEAD"], typed_config["bundle"]["diffs"]
   end
 
   def test_extract_review_content_preserves_context_override
@@ -1186,9 +1186,9 @@ class ReviewManagerTest < AceReviewTest
       description: "Test context override preset"
       instructions:
         base: "prompt://base/system"
-      context: "minimal"
+      bundle: "minimal"
       subject:
-        context:
+        bundle:
           sections:
             code_changes:
               title: "Code Changes"
@@ -1199,7 +1199,7 @@ class ReviewManagerTest < AceReviewTest
     options = Ace::Review::Models::ReviewOptions.new(
       preset: "context-test",
       subject: ["pr:77", "files:README.md"],
-      context: "custom-context",  # Context override
+      bundle: "custom-context",  # Context override
       auto_execute: false
     )
 
@@ -1219,7 +1219,7 @@ class ReviewManagerTest < AceReviewTest
     session_dir = File.join(@temp_dir, "resolve_test")
     FileUtils.mkdir_p(session_dir)
 
-    typed_config = { "context" => { "diffs" => ["HEAD~3"], "files" => ["*.md"] } }
+    typed_config = { "bundle" => { "diffs" => ["HEAD~3"], "files" => ["*.md"] } }
     config = { "subject" => { "diffs" => ["default"] } }
 
     result = @manager.send(
@@ -1241,7 +1241,7 @@ class ReviewManagerTest < AceReviewTest
 
     config = {
       "subject" => {
-        "context" => { "diffs" => ["default-diff"] }
+        "bundle" => { "diffs" => ["default-diff"] }
       }
     }
 
@@ -1255,7 +1255,7 @@ class ReviewManagerTest < AceReviewTest
     )
 
     # Should fall back to preset subject config
-    expected = { "context" => { "diffs" => ["default-diff"] } }
+    expected = { "bundle" => { "diffs" => ["default-diff"] } }
     assert_equal expected, result
   end
 end

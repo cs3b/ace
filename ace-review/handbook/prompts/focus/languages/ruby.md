@@ -22,11 +22,11 @@ You are reviewing Ruby code with expertise in Ruby best practices and idioms.
 - **Performance**: Efficient use of Ruby features
 - **Memory**: Proper object lifecycle management
 
-### Testing with RSpec
+### Testing with Minitest
 - Target: 90%+ test coverage
-- Test organization and naming conventions
-- Proper use of RSpec features (contexts, let, before/after)
-- Mock and stub usage appropriateness
+- Test organization and naming conventions (flat structure: test/atoms/, test/molecules/)
+- Proper use of Minitest features (setup, teardown, assertions)
+- Mock and stub usage appropriateness (use stub() for thread-safe test mocking)
 
 ### Ruby-Specific Checks
 - Proper use of blocks, procs, and lambdas

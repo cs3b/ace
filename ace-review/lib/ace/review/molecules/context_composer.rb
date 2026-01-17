@@ -5,7 +5,7 @@ require "yaml"
 module Ace
   module Review
     module Molecules
-      # Composes context.md files with YAML frontmatter for ace-context integration
+      # Composes context.md files with YAML frontmatter for ace-bundle integration
       # Follows the pattern from ace-docs DocumentAnalysisPrompt
       class ContextComposer
         # Create context.md with YAML frontmatter for review context
@@ -17,7 +17,7 @@ module Ace
           # Normalize context configuration following ace-docs pattern
           normalized_config = normalize_context_config(context_config)
 
-          frontmatter = { "context" => normalized_config }
+          frontmatter = { "bundle" => normalized_config }
 
           # Build review scope section if subject config provided
           scope_section = build_review_scope_section(subject_config) if subject_config
@@ -37,20 +37,20 @@ module Ace
           context_file_path
         end
 
-        # Load context.md via ace-context
+        # Load context.md via ace-bundle
         # @param context_file_path [String] Path to context.md file
         # @return [String] Content with embedded files and context
-        def self.load_context_via_ace_context(context_file_path)
+        def self.load_context_via_ace_bundle(context_file_path)
           begin
-            require "ace/context"
+            require "ace/bundle"
 
-            # Use ace-context to load context.md - processes presets and files from frontmatter
-            result = Ace::Context.load_file(context_file_path)
+            # Use ace-bundle to load context.md - processes presets and files from frontmatter
+            result = Ace::Bundle.load_file(context_file_path)
             result.content
           rescue LoadError
-            raise ContextComposerError, "ace-context not available - required for context.md pattern"
+            raise ContextComposerError, "ace-bundle not available - required for context.md pattern"
           rescue StandardError => e
-            raise ContextComposerError, "ace-context loading failed: #{e.message}"
+            raise ContextComposerError, "ace-bundle loading failed: #{e.message}"
           end
         end
 

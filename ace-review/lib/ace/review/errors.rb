@@ -22,8 +22,8 @@ module Ace
         end
       end
 
-      # Raised when ace-context fails to process context
-      class ContextProcessingError < Error
+      # Raised when ace-bundle fails to process bundle
+      class BundleProcessingError < Error
         attr_reader :details
 
         def initialize(message, details = nil)

@@ -9,7 +9,7 @@ class PRDiffGenerationTest < AceReviewTest
   # The ReviewManager now requires 'instructions' format for presets, and these tests need updating
 
   def setup
-    super  # IMPORTANT: Calls parent to stub ace-context and git-extractor for fast tests
+    super  # IMPORTANT: Calls parent to stub ace-bundle and git-extractor for fast tests
     @temp_dir = Dir.mktmpdir
 
     # Create test fixture for "pr" preset - tests should not depend on .ace/ directory
@@ -17,15 +17,15 @@ class PRDiffGenerationTest < AceReviewTest
       description: "Test PR preset"
       instructions:
         base: "prompt://base/system"
-        context:
+        bundle:
           sections:
             format:
               title: "Format Guidelines"
               files:
                 - "prompt://format/standard"
-      context: "project"
+      bundle: "project"
       subject:
-        context:
+        bundle:
           sections:
             code_changes:
               title: "Code Changes"
@@ -39,7 +39,7 @@ class PRDiffGenerationTest < AceReviewTest
 
   def teardown
     FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
-    super  # IMPORTANT: Call parent to restore ace-context
+    super  # IMPORTANT: Call parent to restore ace-bundle
   end
 
   def test_pr_review_overwrites_preset_subject_config
@@ -111,7 +111,7 @@ class PRDiffGenerationTest < AceReviewTest
     preset_content = <<~YAML
       description: "Test preset for non-PR review"
       subject:
-        context:
+        bundle:
           sections:
             code_changes:
               title: "Code Changes"

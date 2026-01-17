@@ -1,7 +1,7 @@
 description: "Preset without subject"
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       test:
         title: "Test"

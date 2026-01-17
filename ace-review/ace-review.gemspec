@@ -39,7 +39,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-config', '~> 0.6'
   spec.add_dependency 'ace-support-timestamp', '~> 0.2'
   spec.add_dependency 'ace-support-core', '~> 0.9' # For ProcessTerminator
-  spec.add_dependency 'ace-context', '~> 0.9'
+  spec.add_dependency 'ace-bundle', '~> 0.30'
   spec.add_dependency 'ace-git', '~> 0.3'
   # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git
   spec.add_dependency 'ace-support-nav', '~> 0.17'

@@ -6,7 +6,7 @@ require "tmpdir"
 
 class PresetDiffIntegrationTest < AceReviewTest
   def setup
-    super  # IMPORTANT: Calls parent to stub ace-context and BranchReader for fast tests
+    super  # IMPORTANT: Calls parent to stub ace-bundle and BranchReader for fast tests
     @extractor = Ace::Review::Molecules::SubjectExtractor.new
     # Git operations are mocked via stub_branch_reader in AceReviewTest
     # No need for real git repo since extraction is fully mocked
@@ -16,7 +16,7 @@ class PresetDiffIntegrationTest < AceReviewTest
     preset_content = <<~YAML
       description: "Test PR preset"
       subject:
-        context:
+        bundle:
           sections:
             changes:
               title: "Changes to Review"
@@ -36,7 +36,7 @@ class PresetDiffIntegrationTest < AceReviewTest
   def test_extracts_subject_from_new_ace_context_format
     # Git operations are mocked - no need to create real commits
     config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "changes" => {
             "title" => "Recent Changes",
@@ -49,7 +49,7 @@ class PresetDiffIntegrationTest < AceReviewTest
     result = @extractor.extract(config)
 
     assert_kind_of String, result
-    # Result should contain diff output (processed by ace-context)
+    # Result should contain diff output (processed by ace-bundle)
     assert !result.nil?
   end
 
@@ -81,9 +81,9 @@ class PresetDiffIntegrationTest < AceReviewTest
   end
 
   def test_handles_new_ace_context_format_directly
-    # Test that SubjectExtractor passes new ace-context format directly
+    # Test that SubjectExtractor passes new ace-bundle format directly
     config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "changes" => {
             "title" => "Multiple Changes",
@@ -95,7 +95,7 @@ class PresetDiffIntegrationTest < AceReviewTest
 
     result = @extractor.extract(config)
     assert_kind_of String, result
-    # Result should contain diff output (processed by ace-context)
+    # Result should contain diff output (processed by ace-bundle)
     assert !result.nil?
   end
 
@@ -123,14 +123,14 @@ class PresetDiffIntegrationTest < AceReviewTest
   end
 
   def test_extracts_from_string_special_keywords
-    # Git operations are mocked - ace-context handles git diffs via ace-git
+    # Git operations are mocked - ace-bundle handles git diffs via ace-git
     result = @extractor.extract("staged")
 
     assert_kind_of String, result
   end
 
   def test_extracts_from_string_git_range
-    # Git operations are mocked - Ace::Context.load_auto returns mock diff
+    # Git operations are mocked - Ace::Bundle.load_auto returns mock diff
     result = @extractor.extract("HEAD~1..HEAD")
 
     assert_kind_of String, result

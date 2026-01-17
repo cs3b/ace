@@ -14,7 +14,7 @@ class PresetCompositionIntegrationTest < AceReviewTest
       description: "Base code review configuration"
       instructions:
         description: "Code review instructions"
-        context:
+        bundle:
           base: "prompt://base/system"
           sections:
             review_focus:
@@ -35,7 +35,7 @@ class PresetCompositionIntegrationTest < AceReviewTest
         - code
       description: "Pull request review - comprehensive code changes review"
       subject:
-        context:
+        bundle:
           sections:
             code_changes:
               title: "Code Changes"
@@ -77,7 +77,7 @@ class PresetCompositionIntegrationTest < AceReviewTest
     create_test_preset("base", <<~YAML)
       description: "Base"
       instructions:
-        context:
+        bundle:
           sections:
             base_section:
               files:
@@ -91,7 +91,7 @@ class PresetCompositionIntegrationTest < AceReviewTest
         - base
       description: "Middle"
       instructions:
-        context:
+        bundle:
           sections:
             base_section:
               files:
@@ -108,7 +108,7 @@ class PresetCompositionIntegrationTest < AceReviewTest
         - middle
       description: "Top"
       instructions:
-        context:
+        bundle:
           sections:
             base_section:
               files:

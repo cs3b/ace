@@ -4,7 +4,7 @@ description: "Specification review - goal clarity, usage expectations, tests, co
 
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       format:
         title: "Format Guidelines"
@@ -23,7 +23,7 @@ instructions:
           - "prompt://guidelines/tone"
 
 subject:
-  context:
+  bundle:
     sections:
       spec_changes:
         title: "Specification Changes"

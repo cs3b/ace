@@ -104,7 +104,7 @@ class PresetManagerTest < AceReviewTest
     assert_equal "override-model", resolved[:model]
     assert_equal "Base preset", resolved[:description]
 
-    # Test that prompt_composition is passed through (ace-context processes it)
+    # Test that prompt_composition is passed through (ace-bundle processes it)
     assert_equal "prompt://base/system", resolved[:system_prompt]["base"]
     assert_includes resolved[:system_prompt]["focus"], "prompt://focus/quality/security"
   end
@@ -143,7 +143,7 @@ class PresetManagerTest < AceReviewTest
 
     create_test_preset("base2", <<~YAML)
       description: "Base 2"
-      context: "project"
+      bundle: "project"
     YAML
 
     create_test_preset("composed", <<~YAML)
@@ -157,7 +157,7 @@ class PresetManagerTest < AceReviewTest
     preset = manager.load_preset("composed")
     assert_equal "Composed preset", preset["description"]
     assert_equal "model-1", preset["model"]
-    assert_equal "project", preset["context"]
+    assert_equal "project", preset["bundle"]
   end
 
   def test_load_preset_with_composition_multi_level
@@ -170,7 +170,7 @@ class PresetManagerTest < AceReviewTest
       presets:
         - base
       description: "Middle"
-      context: "project"
+      bundle: "project"
     YAML
 
     create_test_preset("top", <<~YAML)
@@ -184,7 +184,7 @@ class PresetManagerTest < AceReviewTest
     preset = manager.load_preset("top")
     assert_equal "Top", preset["description"]
     assert_equal "base-model", preset["model"]
-    assert_equal "project", preset["context"]
+    assert_equal "project", preset["bundle"]
     assert_equal "json", preset["output_format"]
   end
 
@@ -219,7 +219,7 @@ class PresetManagerTest < AceReviewTest
       description: "Base"
       instructions:
         base: "prompt://base/system"
-        context:
+        bundle:
           sections:
             format:
               title: "Format"
@@ -230,7 +230,7 @@ class PresetManagerTest < AceReviewTest
         - base
       description: "Composed"
       instructions:
-        context:
+        bundle:
           sections:
             code:
               title: "Code"
@@ -239,8 +239,8 @@ class PresetManagerTest < AceReviewTest
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
     preset = manager.load_preset("composed")
     assert_equal "prompt://base/system", preset["instructions"]["base"]
-    assert preset["instructions"]["context"]["sections"]["format"]
-    assert preset["instructions"]["context"]["sections"]["code"]
+    assert preset["instructions"]["bundle"]["sections"]["format"]
+    assert preset["instructions"]["bundle"]["sections"]["code"]
   end
 
   def test_load_preset_with_composition_scalar_last_wins
@@ -361,7 +361,7 @@ class PresetManagerTest < AceReviewTest
   def test_deep_stringify_keys_complex_nested
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
     input = {
-      :context => {
+      :bundle => {
         :sections => [
           { :name => "code", :files => ["a.rb"] },
           { :name => "docs", :files => ["README.md"] }
@@ -371,7 +371,7 @@ class PresetManagerTest < AceReviewTest
     result = manager.send(:deep_stringify_keys, input)
 
     expected = {
-      "context" => {
+      "bundle" => {
         "sections" => [
           { "name" => "code", "files" => ["a.rb"] },
           { "name" => "docs", "files" => ["README.md"] }
