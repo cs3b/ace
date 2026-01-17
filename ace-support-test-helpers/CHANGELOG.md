@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-01-15
+
+### Changed
+- **Context Mocks Migration**: Updated ContextMocks to use Ace::Bundle
+  - Renamed all `Ace::Context` references to `Ace::Bundle`
+  - Updated mock methods: `stub_load_file`, `stub_load_auto`, `restore_load_file`, `restore_load_auto`
+  - Comments now reference ace-bundle instead of ace-context
+- Updated TestRunnerMocks default package from ace-context to ace-bundle
+
+### Technical
+- Updated contract tests to check for Ace::Bundle availability
+
 ## [0.11.0] - 2026-01-07
 
 ### Added
