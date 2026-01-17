@@ -19,7 +19,7 @@ Process multiple pending tasks and execute implementation work for each one in s
 ## Prerequisites
 
 - Pending tasks exist (discoverable via `ace-taskflow tasks --status pending`)
-- Access to `work-on-task` singular workflow via `ace-context wfi://work-on-task`
+- Access to `work-on-task` singular workflow via `ace-bundle wfi://work-on-task`
 - Understanding of ace-taskflow commands and git operations
 
 ## Variables
@@ -64,7 +64,7 @@ Execute work-on-task workflow for task: [task-id]
 ARGUMENTS: [task-id]
 
 Follow the complete work-on-task workflow:
-1. Read and execute: ace-context wfi://work-on-task
+1. Read and execute: ace-bundle wfi://work-on-task
 2. Execute all implementation steps
 3. Update task status to done when complete
 4. Follow all workflow steps exactly

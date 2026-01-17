@@ -45,7 +45,7 @@ module Ace
           slug = TaskSlugGenerator.generate("010", "Update ace-taskflow module")
           assert slug.include?("-taskflow-")
 
-          slug = TaskSlugGenerator.generate("011", "Fix ace-context loading")
+          slug = TaskSlugGenerator.generate("011", "Fix ace-bundle loading")
           assert slug.include?("-context-")
         end
 

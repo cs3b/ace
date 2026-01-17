@@ -3,7 +3,7 @@ name: reorganize-tasks
 allowed-tools: Bash, Read
 description: Reorganize task hierarchy using promote, demote, and convert operations
 argument-hint: "[operation] [task-ref] [parent-ref]"
-context:
+bundle:
   params:
     output: cache
   embed_document_source: true

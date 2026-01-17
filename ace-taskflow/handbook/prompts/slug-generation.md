@@ -1,6 +1,6 @@
 ---
 description: LLM prompt for generating hierarchical task and idea slugs
-context:
+bundle:
   presets:
     - project-base
   params:
