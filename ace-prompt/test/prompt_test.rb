@@ -30,17 +30,17 @@ class Ace::TestPrompt < Minitest::Test
     config = Ace::Prompt.config
 
     assert config.is_a?(Hash)
-    assert config.key?("context")
-    assert config["context"].is_a?(Hash)
-    assert config["context"].key?("enabled")
+    assert config.key?("bundle")
+    assert config["bundle"].is_a?(Hash)
+    assert config["bundle"].key?("enabled")
   end
 
-  def test_config_context_has_enabled_key
-    # Verify context.enabled key exists (value depends on project config)
+  def test_config_bundle_has_enabled_key
+    # Verify bundle.enabled key exists (value depends on project config)
     config = Ace::Prompt.config
 
-    assert config["context"].key?("enabled")
-    assert [true, false].include?(config["context"]["enabled"])
+    assert config["bundle"].key?("enabled")
+    assert [true, false].include?(config["bundle"]["enabled"])
   end
 
   def test_config_returns_hash
@@ -55,7 +55,7 @@ class Ace::TestPrompt < Minitest::Test
 
     assert config.is_a?(Hash)
     # These keys come from .ace-defaults/prompt/config.yml
-    assert config.key?("context") || config.empty?, "Config should have context key or be empty"
+    assert config.key?("bundle") || config.empty?, "Config should have bundle key or be empty"
   end
 
   def test_config_caching

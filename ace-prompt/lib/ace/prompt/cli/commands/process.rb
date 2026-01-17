@@ -27,7 +27,7 @@ module Ace
             'ace-prompt                    # Process prompt from default location',
             '--output /tmp/prompt.md       # Write to file instead of stdout',
             '--output -                    # Explicit stdout (default)',
-            '--context                    # Load context via ace-context (short: -c)',
+            '--context                    # Load context via ace-bundle (short: -c)',
             '--no-context                 # Explicitly disable context loading',
             '--enhance --model gpt-4      # Enhance via LLM',
             '--task 121                   # Use task-specific prompts'
@@ -36,7 +36,7 @@ module Ace
           option :output, type: :string, aliases: %w[-o],
                         desc: "Write content to file instead of stdout (use '-' for explicit stdout)"
           option :context, type: :boolean, aliases: %w[-c],
-                         desc: "Load context via ace-context (from frontmatter)"
+                         desc: "Load context via ace-bundle (from frontmatter)"
           option :no_context, type: :boolean,
                           desc: "Explicitly disable context loading (override config)"
           option :enhance, type: :boolean, aliases: %w[-e],

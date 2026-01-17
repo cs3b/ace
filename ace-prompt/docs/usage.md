@@ -110,8 +110,8 @@ Configuration follows the ace-* gem pattern using ace-core config cascade.
 
 ```yaml
 # .ace/prompt/config.yml
-context:
-  enabled: false  # Enable context loading via ace-context
+bundle:
+  enabled: false  # Enable context loading via ace-bundle
   sources:
     - file: "docs/vision.md"  # Default sources when enabled
     - preset: "project-overview"
@@ -136,12 +136,12 @@ The `enhance` section controls LLM-powered prompt improvement:
 
 ### Context Loading
 
-When context loading is enabled, ace-prompt integrates with [ace-context](https://github.com/your-org/ace-context) to automatically expand prompts with relevant project information.
+When context loading is enabled, ace-prompt integrates with [ace-bundle](https://github.com/your-org/ace-bundle) to automatically expand prompts with relevant project information.
 
 **How it works:**
 1. Parse YAML frontmatter in the prompt file
 2. Look for `context:` block with sources configuration
-3. Load context via ace-context (handles actual file reading and formatting)
+3. Load context via ace-bundle (handles actual file reading and formatting)
 4. Prepend formatted context to output before the original prompt content
 
 **CLI Flag Precedence:**
@@ -164,14 +164,14 @@ ace-prompt                # Uses config file or frontmatter settings
 
 ```yaml
 ---
-context:
+bundle:
   enabled: true
   sources:
     # Load specific files
     - file: "docs/architecture.md"
     - file: "README.md"
 
-    # Use ace-context presets
+    # Use ace-bundle presets
     - preset: "project-overview"
     - preset: "coding-standards"
 
@@ -193,7 +193,7 @@ Your prompt content here...
 #### Scenario 1: Configuration File Default
 ```yaml
 # .ace/prompt/config.yml
-context:
+bundle:
   enabled: true
   sources:
     - file: "docs/vision.md"
@@ -206,7 +206,7 @@ ace-prompt  # Uses config file settings
 #### Scenario 2: Frontmatter Override
 ```markdown
 ---
-context:
+bundle:
   enabled: true
   sources:
     - file: "docs/architecture.md"
@@ -226,7 +226,7 @@ ace-prompt --no-context  # Force disable (ignores everything)
 #### Scenario 4: Complex Context
 ```markdown
 ---
-context:
+bundle:
   enabled: true
   sources:
     - file: "docs/architecture.md"
@@ -238,7 +238,7 @@ context:
 Review this code change considering our architecture, standards, recent changes, and affected files.
 ```
 
-**Note**: The actual context loading and formatting is performed by the ace-context gem. ace-prompt only handles the orchestration and integration.
+**Note**: The actual context loading and formatting is performed by the ace-bundle gem. ace-prompt only handles the orchestration and integration.
 
 ## Exit Codes
 

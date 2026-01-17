@@ -1,5 +1,5 @@
 ---
-context:
+bundle:
   presets: []
   files: []
   commands: []
