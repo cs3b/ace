@@ -5,7 +5,7 @@ description: RESEARCH codebases through planned multi-search analysis
 argument-hint: "[goal] [--scope=path] [--depth=shallow|normal|deep]"
 doc-type: workflow
 purpose: research workflow instruction
-context:
+bundle:
   embed_document_source: false
 update:
   frequency: on-change

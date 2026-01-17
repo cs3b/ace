@@ -14,7 +14,7 @@ source: ace-search
 ---
 
 > **DEPRECATED**: This agent definition has been converted to a skill command.
-> **Use instead**: `/ace:research` which delegates to `ace-context wfi://research`
+> **Use instead**: `/ace:research` which delegates to `ace-bundle wfi://research`
 > **Migration**: The workflow instruction is at `ace-search/handbook/workflow-instructions/research.wf.md`
 > **Reason**: Skills are the preferred pattern for Claude Code integration
 

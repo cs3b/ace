@@ -5,7 +5,7 @@ description: RESEARCH codebases to identify feature gaps and implementation patt
 argument-hint: "[feature_description] [--scope=path] [--depth=shallow|normal|deep]"
 doc-type: workflow
 purpose: feature-research workflow instruction
-context:
+bundle:
   embed_document_source: false
 update:
   frequency: on-change

@@ -5,7 +5,7 @@ description: SEARCH code patterns and files - intelligent discovery across codeb
 argument-hint: "[pattern] [--file|--content] [options]"
 doc-type: workflow
 purpose: search workflow instruction
-context:
+bundle:
   embed_document_source: false
 update:
   frequency: on-change
