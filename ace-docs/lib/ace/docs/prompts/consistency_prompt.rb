@@ -3,11 +3,11 @@
 require 'yaml'
 require 'fileutils'
 
-# Try to load ace-context for better document embedding
+# Try to load ace-bundle for better document embedding
 begin
-  require 'ace/context'
+  require 'ace/bundle'
 rescue LoadError
-  # Will work without ace-context but with less optimal formatting
+  # Will work without ace-bundle but with less optimal formatting
 end
 
 module Ace
@@ -21,8 +21,8 @@ module Ace
         # @param session_dir [String, nil] session directory for saving context.md
         # @return [Hash] { system: String, user: String } prompts
         def build(documents, options = {}, session_dir: nil)
-          # Use ace-context if available for better document separation
-          user_content = if defined?(Ace::Context) && session_dir
+          # Use ace-bundle if available for better document separation
+          user_content = if defined?(Ace::Bundle) && session_dir
                           build_with_context(documents, options, session_dir)
                         else
                           user_prompt(documents, options)
@@ -221,7 +221,7 @@ module Ace
           areas.empty? ? ['all issue types'] : areas
         end
 
-        # Build user prompt with ace-context for better document separation
+        # Build user prompt with ace-bundle for better document separation
         def build_with_context(documents, options, session_dir)
           # Use the actual document paths directly (no copying needed)
           doc_files = documents.keys.map { |path| File.expand_path(path) }
@@ -270,13 +270,13 @@ module Ace
           context_md_path = File.join(session_dir, "context.md")
           File.write(context_md_path, context_md_content)
 
-          # Load via ace-context to get XML-embedded documents
+          # Load via ace-bundle to get XML-embedded documents
           begin
-            result = Ace::Context.load_file(context_md_path)
+            result = Ace::Bundle.load_file(context_md_path)
             result.content
           rescue StandardError => e
-            warn "ace-context embedding failed: #{e.message}, falling back to direct format" if Ace::Docs.debug?
-            # Fallback to regular prompt if ace-context fails
+            warn "ace-bundle embedding failed: #{e.message}, falling back to direct format" if Ace::Docs.debug?
+            # Fallback to regular prompt if ace-bundle fails
             user_prompt(documents, options)
           end
         end

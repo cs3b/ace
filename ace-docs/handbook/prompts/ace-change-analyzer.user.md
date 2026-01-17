@@ -62,7 +62,7 @@ coverage_ratio: [M/N]
 
 ### 🧩 1. Code Change Analysis
 **Summary:**
-Refactored `analyze` command into modular pipeline and added `--file` input flag to `ace-context`.
+Refactored `analyze` command into modular pipeline and added `--file` input flag to `ace-bundle`.
 
 **HIGH**
 - `lib/ace/docs/analyze_command.rb` — Added diff summarization pipeline. *Impact:* Enables LLM-driven diff analysis.
@@ -77,7 +77,7 @@ hunks_ambiguous: 1
 
 ### 📚 2. Documentation & Configuration Change Analysis
 **Summary:**
-Added a 598-line usage guide for `ace-docs` and expanded configuration schema for `ace-context`.
+Added a 598-line usage guide for `ace-docs` and expanded configuration schema for `ace-bundle`.
 
 **MEDIUM**
 - `ace-docs/docs/usage.md` — New guide with examples. *Impact:* Improves onboarding.

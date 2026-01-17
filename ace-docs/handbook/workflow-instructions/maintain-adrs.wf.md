@@ -1,7 +1,7 @@
 ---
 name: maintain-adrs
 purpose: Maintain ADR lifecycle including evolution, archival, and synchronization
-context: adr-management
+bundle: adr-management
 parameters:
   action:
     description: Maintenance action (review, archive, evolve, sync, check-missing)
@@ -29,7 +29,7 @@ obsolete patterns, and maintaining the decisions.md summary.
 
 ## Project Context Loading
 
-* Read and follow: `ace-context wfi://load-context`
+* Read and follow: `ace-bundle wfi://bundle`
 
 ## Maintenance Actions
 

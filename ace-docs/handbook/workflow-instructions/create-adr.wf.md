@@ -1,7 +1,7 @@
 ---
 name: create-adr
 purpose: Create structured Architecture Decision Records for significant decisions
-context: adr-management
+bundle: adr-management
 parameters:
   decision_title:
     description: Title of the architectural decision (kebab-case)
@@ -27,7 +27,7 @@ significant architectural decision, its context, rationale, and consequences.
 
 ## Project Context Loading
 
-* Read and follow: `ace-context wfi://load-context`
+* Read and follow: `ace-bundle wfi://bundle`
 
 ## High-Level Execution Plan
 
