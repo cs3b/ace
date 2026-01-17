@@ -153,7 +153,7 @@ ace-docs analyze --all --exclude-renames --exclude-moves
 3. For single-subject documents:
    - Generates one diff with all configured filters
    - Creates repo-diff.diff file
-4. Builds context with ace-context integration, embedding all diffs
+4. Builds context with ace-bundle integration, embedding all diffs
 5. Sends to LLM for intelligent analysis and recommendations
 6. Saves comprehensive session data for review and iteration
 
@@ -335,7 +335,7 @@ default_freshness_days:
 
 # Document type definitions
 document_types:
-  context:
+  bundle:
     paths:
       - "docs/*.md"
       - "!docs/archive/**"    # Exclude archived
@@ -468,9 +468,9 @@ ace-docs:
           paths:
             - "**/*.md"
 
-  # Context configuration for ace-context integration
-  context:
-    preset: project                # ace-context preset to use
+  # Context configuration for ace-bundle integration
+  bundle:
+    preset: project                # ace-bundle preset to use
     files:                        # Additional files to include
       - CHANGELOG.md
       - docs/architecture.md
@@ -511,7 +511,7 @@ update:
     - architecture
 
 # Legacy context (deprecated, use ace-docs.context)
-context:
+bundle:
   preset: standard
   includes:
     - docs/*.md
@@ -683,14 +683,14 @@ done
 ace-docs validate
 ```
 
-### Integration with ace-context
+### Integration with ace-bundle
 
 ```bash
 # Load context for documentation work
-ace-context load --preset docs
+ace-bundle load --preset docs
 
 # Check documentation status in context
-ace-docs status | ace-context add --tag doc-status
+ace-docs status | ace-bundle add --tag doc-status
 
 # Analyze changes with context
 ace-docs diff --all
@@ -785,7 +785,7 @@ DEBUG=1 ace-docs analyze docs/file.md 2>&1 | grep -i subject
 6. **Change Analysis**: Review analysis reports before major releases
 7. **Bulk Operations**: Use `--preset` for consistent updates across document sets
 8. **Version Tracking**: Update version fields for significant changes
-9. **Context Integration**: Leverage ace-context for comprehensive project awareness
+9. **Context Integration**: Leverage ace-bundle for comprehensive project awareness
 10. **ADR Management**: Use dedicated workflows for Architecture Decision Records:
     - Create ADRs: See `ace-docs/handbook/workflow-instructions/create-adr.wf.md`
     - Maintain ADRs: See `ace-docs/handbook/workflow-instructions/maintain-adrs.wf.md`
@@ -797,6 +797,6 @@ DEBUG=1 ace-docs analyze docs/file.md 2>&1 | grep -i subject
 - [create-adr.wf.md](../handbook/workflow-instructions/create-adr.wf.md) - ADR creation workflow
 - [maintain-adrs.wf.md](../handbook/workflow-instructions/maintain-adrs.wf.md) - ADR maintenance workflow
 - [ace-change-analyzer.system.md](../handbook/prompts/ace-change-analyzer.system.md) - Dual analysis prompt
-- [ace-context](../../ace-context/README.md) - Context management
+- [ace-bundle](../../ace-bundle/README.md) - Context management
 - [ace-llm](../../ace-llm/README.md) - LLM integration for analysis
 - [ace-core](../../ace-core/README.md) - Configuration cascade system

@@ -1,7 +1,7 @@
 ---
 name: update-docs
 purpose: Update documentation with ace-docs tool orchestration
-context: documentation-management
+bundle: documentation-management
 parameters:
   input:
     description: Documents to update - can be specific files, preset, type, or 'all'
@@ -268,10 +268,10 @@ This workflow provides:
 
 ## Integration Points
 
-### With ace-context
+### With ace-bundle
 Load project context for documentation:
 ```bash
-ace-context load --preset docs
+ace-bundle load --preset docs
 ```
 
 ### With LLM Analysis
