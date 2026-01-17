@@ -25,7 +25,7 @@ module Ace
       end
 
       def diff_gem(gem_name)
-        # Normalize gem name (support both "ace-context" and "context")
+        # Normalize gem name (support both "ace-bundle" and "bundle")
         gem_name = gem_name.start_with?("ace-") ? gem_name : "ace-#{gem_name}"
 
         unless ConfigTemplates.gem_exists?(gem_name)

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-01-16
+
+### Changed
+- **ContextMerger moved to ace-bundle**: ContextMerger relocated to ace-bundle package as BundleMerger (task 206)
+  - Removed `lib/ace/core/molecules/context_merger.rb`
+  - Functionality now provided by `Ace::Bundle::Molecules::BundleMerger`
+  - Tests removed from ace-support-core test suite
+
 ## [0.20.0] - 2026-01-11
 
 ### Changed
