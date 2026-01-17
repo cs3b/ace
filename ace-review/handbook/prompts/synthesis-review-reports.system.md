@@ -1,6 +1,6 @@
 ---
 description: Multi-model review synthesis system prompt
-context:
+bundle:
   presets:
     - project-base
 ---

@@ -4,7 +4,7 @@ description: "Agent definition review - structure and clarity"
 
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       format:
         title: "Format Guidelines"
@@ -29,7 +29,7 @@ instructions:
           - "docs/agents.g.md"
 
 subject:
-  context:
+  bundle:
     sections:
       agent_files:
         title: "Agent Definition Files"

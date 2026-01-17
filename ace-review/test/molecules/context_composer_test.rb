@@ -21,7 +21,7 @@ class ContextComposerTest < AceReviewTest
     )
 
     # Should contain YAML frontmatter with context section
-    assert_match(/^---\ncontext:/, result)
+    assert_match(/^---\nbundle:/, result)
     assert_match(/params:\s*\n\s*format: markdown-xml/, result)
     assert_match(/embed_document_source: true/, result)
     assert_match(/^---\n\n#{@base_instructions}/m, result)
@@ -127,20 +127,20 @@ class ContextComposerTest < AceReviewTest
     assert_equal context_md, saved_content
   end
 
-  def test_load_context_via_ace_context_missing_file
+  def test_load_context_via_ace_bundle_missing_file
     non_existent_file = File.join(@temp_dir, "nonexistent.md")
 
-    # ace-context now handles missing files gracefully by returning empty content
-    result = Ace::Review::Molecules::ContextComposer.load_context_via_ace_context(non_existent_file)
+    # ace-bundle now handles missing files gracefully by returning empty content
+    result = Ace::Review::Molecules::ContextComposer.load_context_via_ace_bundle(non_existent_file)
     assert_equal "", result
   end
 
-  def test_load_context_via_ace_context_with_existing_file
+  def test_load_context_via_ace_bundle_with_existing_file
     # Test that it successfully loads an existing context file
     context_file = File.join(@temp_dir, "context.md")
     File.write(context_file, <<~MD)
       ---
-      context:
+      bundle:
         files:
           - README.md
       ---
@@ -148,8 +148,8 @@ class ContextComposerTest < AceReviewTest
       Test context content
     MD
 
-    result = Ace::Review::Molecules::ContextComposer.load_context_via_ace_context(context_file)
-    # ace-context processes the file and returns content
+    result = Ace::Review::Molecules::ContextComposer.load_context_via_ace_bundle(context_file)
+    # ace-bundle processes the file and returns content
     refute_empty result
   end
 

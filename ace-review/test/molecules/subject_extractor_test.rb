@@ -16,7 +16,7 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_extracts_from_hash_with_new_ace_context_format
     config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "changes" => {
             "title" => "Changes to Review",
@@ -41,7 +41,7 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_passes_through_any_hash_format_directly
     config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "review" => {
             "title" => "Review Section",
@@ -76,9 +76,9 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_passes_complete_ace_context_format_directly
-    # Test that SubjectExtractor passes complete ace-context format directly
+    # Test that SubjectExtractor passes complete ace-bundle format directly
     config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "code_changes" => {
             "title" => "Code Changes",
@@ -101,9 +101,9 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_handles_both_legacy_and_new_formats
-    # Test that SubjectExtractor can handle both legacy and new ace-context formats
+    # Test that SubjectExtractor can handle both legacy and new ace-bundle formats
     new_config = {
-      "context" => {
+      "bundle" => {
         "sections" => {
           "changes" => {
             "title" => "Changes to Review",
@@ -118,7 +118,7 @@ class SubjectExtractorTest < AceReviewTest
       "files" => ["README.md"]
     }
 
-    # Both should work - passed through directly to ace-context
+    # Both should work - passed through directly to ace-bundle
     new_result = @extractor.extract(new_config)
     legacy_result = @extractor.extract(legacy_config)
 
@@ -150,7 +150,7 @@ class SubjectExtractorTest < AceReviewTest
   def test_pr_typed_subject_multiple_prs
     # Verify the config parsing produces correct PR array
     config = @extractor.parse_typed_subject_config("pr:123,456")
-    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["123", "456"] } }, config)
 
     # Also verify extraction returns a string
     result = @extractor.extract("pr:123,456")
@@ -160,7 +160,7 @@ class SubjectExtractorTest < AceReviewTest
   def test_pr_typed_subject_multiple_prs_with_whitespace
     # Verify whitespace is properly trimmed from PR refs
     config = @extractor.parse_typed_subject_config("pr: 123 , 456 ")
-    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["123", "456"] } }, config)
 
     # Also verify extraction returns a string
     result = @extractor.extract("pr: 123 , 456")
@@ -281,8 +281,8 @@ class SubjectExtractorTest < AceReviewTest
     end
   end
 
-  def test_keywords_use_ace_context
-    # Test that keywords still work (now through ace-context)
+  def test_keywords_use_ace_bundle
+    # Test that keywords still work (now through ace-bundle)
     result = @extractor.extract("staged")
     assert_kind_of String, result
 
@@ -332,19 +332,19 @@ class SubjectExtractorTest < AceReviewTest
   def test_pr_trailing_comma_rejects_empty_refs
     # Trailing comma should not produce empty string in PR array
     config = @extractor.parse_typed_subject_config("pr:123,")
-    assert_equal({ "context" => { "pr" => ["123"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["123"] } }, config)
   end
 
   def test_pr_multiple_commas_rejects_empty_refs
     # Multiple commas should not produce empty strings
     config = @extractor.parse_typed_subject_config("pr:123,,456")
-    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["123", "456"] } }, config)
   end
 
   def test_pr_duplicate_refs_deduped
     # Duplicate PR refs should be deduplicated
     config = @extractor.parse_typed_subject_config("pr:123,456,123")
-    assert_equal({ "context" => { "pr" => ["123", "456"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["123", "456"] } }, config)
   end
 
   def test_pr_only_commas_raises_error
@@ -357,21 +357,21 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_pr_qualified_ref_accepted
     # Qualified PR refs (owner/repo#number) should be accepted
-    # Validation is delegated to ace-context's PrIdentifierParser
+    # Validation is delegated to ace-bundle's PrIdentifierParser
     config = @extractor.parse_typed_subject_config("pr:owner/repo#456")
-    assert_equal({ "context" => { "pr" => ["owner/repo#456"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["owner/repo#456"] } }, config)
   end
 
   def test_pr_github_url_accepted
     # GitHub URL refs should be accepted
     config = @extractor.parse_typed_subject_config("pr:https://github.com/owner/repo/pull/789")
-    assert_equal({ "context" => { "pr" => ["https://github.com/owner/repo/pull/789"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["https://github.com/owner/repo/pull/789"] } }, config)
   end
 
   def test_pr_mixed_formats_accepted
     # Mixed numeric and qualified refs should all be accepted
     config = @extractor.parse_typed_subject_config("pr:123,owner/repo#456,789")
-    assert_equal({ "context" => { "pr" => ["123", "owner/repo#456", "789"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["123", "owner/repo#456", "789"] } }, config)
   end
 
   def test_empty_files_value_raises_helpful_error
@@ -398,7 +398,7 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_commit_typed_subject_short_hash_config
     config = @extractor.parse_typed_subject_config("commit:abc123")
-    assert_equal({ "context" => { "diffs" => ["abc123~1..abc123"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["abc123~1..abc123"] } }, config)
   end
 
   def test_commit_typed_subject_full_hash
@@ -408,13 +408,13 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_commit_typed_subject_full_hash_config
     config = @extractor.parse_typed_subject_config("commit:3cd9afbf1234567890abcd1234567890abcd1234")
-    assert_equal({ "context" => { "diffs" => ["3cd9afbf1234567890abcd1234567890abcd1234~1..3cd9afbf1234567890abcd1234567890abcd1234"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["3cd9afbf1234567890abcd1234567890abcd1234~1..3cd9afbf1234567890abcd1234567890abcd1234"] } }, config)
   end
 
   def test_commit_typed_subject_with_whitespace
     # Whitespace should be trimmed
     config = @extractor.parse_typed_subject_config("commit:  abc123  ")
-    assert_equal({ "context" => { "diffs" => ["abc123~1..abc123"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["abc123~1..abc123"] } }, config)
   end
 
   def test_commit_typed_subject_invalid_format_non_hex
@@ -446,7 +446,7 @@ class SubjectExtractorTest < AceReviewTest
   def test_commit_typed_subject_uppercase_normalized
     # Uppercase should be normalized to lowercase (improves UX)
     config = @extractor.parse_typed_subject_config("commit:ABC123")
-    assert_equal({ "context" => { "diffs" => ["abc123~1..abc123"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["abc123~1..abc123"] } }, config)
   end
 
   def test_commit_typed_subject_invalid_format_special_chars
@@ -467,12 +467,12 @@ class SubjectExtractorTest < AceReviewTest
   def test_commit_typed_subject_exact_boundaries
     # Test exactly 6 characters (lower boundary)
     config = @extractor.parse_typed_subject_config("commit:abcdef")
-    assert_equal({ "context" => { "diffs" => ["abcdef~1..abcdef"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["abcdef~1..abcdef"] } }, config)
 
     # Test exactly 40 characters (upper boundary)
     full_hash = "a" * 40
     config = @extractor.parse_typed_subject_config("commit:#{full_hash}")
-    assert_equal({ "context" => { "diffs" => ["#{full_hash}~1..#{full_hash}"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["#{full_hash}~1..#{full_hash}"] } }, config)
   end
 
 
@@ -490,22 +490,22 @@ class SubjectExtractorTest < AceReviewTest
   # parse_typed_subject_config tests - returns config hash without extraction
   def test_parse_typed_subject_config_for_pr
     config = @extractor.parse_typed_subject_config("pr:77")
-    assert_equal({ "context" => { "pr" => ["77"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["77"] } }, config)
   end
 
   def test_parse_typed_subject_config_for_diff
     config = @extractor.parse_typed_subject_config("diff:HEAD~3...HEAD")
-    assert_equal({ "context" => { "diffs" => ["HEAD~3...HEAD"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["HEAD~3...HEAD"] } }, config)
   end
 
   def test_parse_typed_subject_config_for_files
     config = @extractor.parse_typed_subject_config("files:lib/**/*.rb")
-    assert_equal({ "context" => { "files" => ["lib/**/*.rb"] } }, config)
+    assert_equal({ "bundle" => { "files" => ["lib/**/*.rb"] } }, config)
   end
 
   def test_parse_typed_subject_config_for_multiple_files
     config = @extractor.parse_typed_subject_config("files:lib/**/*.rb,test/**/*")
-    assert_equal({ "context" => { "files" => ["lib/**/*.rb", "test/**/*"] } }, config)
+    assert_equal({ "bundle" => { "files" => ["lib/**/*.rb", "test/**/*"] } }, config)
   end
 
   def test_parse_typed_subject_config_for_task
@@ -515,7 +515,7 @@ class SubjectExtractorTest < AceReviewTest
 
     @extractor.stub :run_taskflow_command, [mock_output, "", mock_status, nil] do
       config = @extractor.parse_typed_subject_config("task:145")
-      assert_equal({ "context" => { "files" => ["/path/to/task/**/*.s.md"] } }, config)
+      assert_equal({ "bundle" => { "files" => ["/path/to/task/**/*.s.md"] } }, config)
     end
 
     mock_status.verify
@@ -535,21 +535,21 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   # Content verification tests - ensure extract actually produces content
-  # NOTE: ace-context is stubbed in test_helper.rb, so these tests verify
-  # that the extract method correctly delegates to ace-context and returns
+  # NOTE: ace-bundle is stubbed in test_helper.rb, so these tests verify
+  # that the extract method correctly delegates to ace-bundle and returns
   # the mock data (which simulates real content behavior)
 
   def test_extract_diff_produces_content
     # Test with a known git range that should produce content
     result = @extractor.extract("diff:HEAD~1...HEAD")
-    # With mocked ace-context, should return non-empty mock content
+    # With mocked ace-bundle, should return non-empty mock content
     assert_kind_of String, result
     # Mock returns diff output
     assert result.length > 0, "Expected non-empty result from mock"
   end
 
   def test_extract_files_produces_file_content
-    # Test file extraction - ace-context is mocked so we get mock content
+    # Test file extraction - ace-bundle is mocked so we get mock content
     result = @extractor.extract("files:lib/**/*.rb")
     assert_kind_of String, result
     # Mock returns file content
@@ -562,7 +562,7 @@ class SubjectExtractorTest < AceReviewTest
     result = @extractor.extract(config)
 
     assert_kind_of String, result
-    # With mocked ace-context, should return mock content
+    # With mocked ace-bundle, should return mock content
     assert result.length > 0, "Expected non-empty result from mock"
   end
 
@@ -615,20 +615,20 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_deep_merge_arrays_nested_hashes
-    # Two typed subjects produce nested { "context" => { ... } } structures
+    # Two typed subjects produce nested { "bundle" => { ... } } structures
     # Must recurse into nested hashes to merge correctly
-    base = { "context" => { "diffs" => ["HEAD~3"] } }
-    overlay = { "context" => { "diffs" => ["HEAD"] } }
+    base = { "bundle" => { "diffs" => ["HEAD~3"] } }
+    overlay = { "bundle" => { "diffs" => ["HEAD"] } }
     result = @extractor.send(:deep_merge_arrays, base, overlay)
-    assert_equal({ "context" => { "diffs" => ["HEAD~3", "HEAD"] } }, result)
+    assert_equal({ "bundle" => { "diffs" => ["HEAD~3", "HEAD"] } }, result)
   end
 
   def test_deep_merge_arrays_nested_hashes_different_keys
     # Nested hashes with different keys should merge
-    base = { "context" => { "diffs" => ["HEAD~3"] } }
-    overlay = { "context" => { "files" => ["*.rb"] } }
+    base = { "bundle" => { "diffs" => ["HEAD~3"] } }
+    overlay = { "bundle" => { "files" => ["*.rb"] } }
     result = @extractor.send(:deep_merge_arrays, base, overlay)
-    assert_equal({ "context" => { "diffs" => ["HEAD~3"], "files" => ["*.rb"] } }, result)
+    assert_equal({ "bundle" => { "diffs" => ["HEAD~3"], "files" => ["*.rb"] } }, result)
   end
 
   def test_deep_merge_arrays_deeply_nested
@@ -641,8 +641,8 @@ class SubjectExtractorTest < AceReviewTest
 
   def test_deep_merge_arrays_does_not_mutate_input
     # Verify immutability - input hashes should not be modified
-    base = { "context" => { "diffs" => ["HEAD~3"] } }
-    overlay = { "context" => { "diffs" => ["HEAD"] } }
+    base = { "bundle" => { "diffs" => ["HEAD~3"] } }
+    overlay = { "bundle" => { "diffs" => ["HEAD"] } }
     base_original = Marshal.load(Marshal.dump(base))
     overlay_original = Marshal.load(Marshal.dump(overlay))
 
@@ -655,7 +655,7 @@ class SubjectExtractorTest < AceReviewTest
   def test_resolve_single_subject_string_typed
     # Typed subject string should parse to config
     result = @extractor.send(:resolve_single_subject, "diff:HEAD~3")
-    assert_equal({ "context" => { "diffs" => ["HEAD~3"] } }, result)
+    assert_equal({ "bundle" => { "diffs" => ["HEAD~3"] } }, result)
   end
 
   def test_resolve_single_subject_string_keyword
@@ -709,11 +709,11 @@ class SubjectExtractorTest < AceReviewTest
     config = @extractor.merge_typed_subject_configs(subjects)
 
     assert_kind_of Hash, config
-    assert config.key?("context"), "Should have context key"
-    assert config["context"].key?("diffs"), "Should have diffs"
-    assert config["context"].key?("files"), "Should have files"
-    assert_equal ["HEAD~3"], config["context"]["diffs"]
-    assert_equal ["*.rb"], config["context"]["files"]
+    assert config.key?("bundle"), "Should have bundle key"
+    assert config["bundle"].key?("diffs"), "Should have diffs"
+    assert config["bundle"].key?("files"), "Should have files"
+    assert_equal ["HEAD~3"], config["bundle"]["diffs"]
+    assert_equal ["*.rb"], config["bundle"]["files"]
   end
 
   def test_merge_typed_subject_configs_merges_same_type
@@ -721,7 +721,7 @@ class SubjectExtractorTest < AceReviewTest
     subjects = ["pr:77", "pr:79"]
     config = @extractor.merge_typed_subject_configs(subjects)
 
-    assert_equal({ "context" => { "pr" => ["77", "79"] } }, config)
+    assert_equal({ "bundle" => { "pr" => ["77", "79"] } }, config)
   end
 
   def test_merge_typed_subject_configs_merges_diffs
@@ -729,7 +729,7 @@ class SubjectExtractorTest < AceReviewTest
     subjects = ["diff:HEAD~3", "diff:origin/main..HEAD"]
     config = @extractor.merge_typed_subject_configs(subjects)
 
-    assert_equal({ "context" => { "diffs" => ["HEAD~3", "origin/main..HEAD"] } }, config)
+    assert_equal({ "bundle" => { "diffs" => ["HEAD~3", "origin/main..HEAD"] } }, config)
   end
 
   def test_merge_typed_subject_configs_merges_files
@@ -737,7 +737,7 @@ class SubjectExtractorTest < AceReviewTest
     subjects = ["files:lib/**/*.rb", "files:test/**/*.rb"]
     config = @extractor.merge_typed_subject_configs(subjects)
 
-    assert_equal({ "context" => { "files" => ["lib/**/*.rb", "test/**/*.rb"] } }, config)
+    assert_equal({ "bundle" => { "files" => ["lib/**/*.rb", "test/**/*.rb"] } }, config)
   end
 
   def test_merge_typed_subject_configs_handles_mixed_types
@@ -746,11 +746,11 @@ class SubjectExtractorTest < AceReviewTest
     config = @extractor.merge_typed_subject_configs(subjects)
 
     assert_kind_of Hash, config
-    # pr:77 produces { "context" => { "pr" => "77" } }
-    # files:README.md produces { "context" => { "files" => ["README.md"] } }
-    # staged produces { "diffs" => ["--staged"] } (legacy, no context wrapper)
-    assert config["context"]["pr"]
-    assert config["context"]["files"]
+    # pr:77 produces { "bundle" => { "pr" => "77" } }
+    # files:README.md produces { "bundle" => { "files" => ["README.md"] } }
+    # staged produces { "diffs" => ["--staged"] } (legacy, no bundle wrapper)
+    assert config["bundle"]["pr"]
+    assert config["bundle"]["files"]
     assert config["diffs"], "Legacy subject should add top-level diffs"
   end
 
@@ -773,40 +773,40 @@ class SubjectExtractorTest < AceReviewTest
     config = @extractor.merge_typed_subject_configs(subjects)
 
     assert_kind_of Hash, config
-    assert config["context"]["diffs"]
+    assert config["bundle"]["diffs"]
     assert config["files"], "Hash subject should add top-level files"
   end
 
   # Additional nested hash merge test (PR #79 feedback)
   def test_deep_merge_arrays_nested_mixed_keys_and_arrays
     # Test deeply nested hash merge where inner keys differ
-    base = { "context" => { "diffs" => ["a"], "pr" => "1" } }
-    overlay = { "context" => { "diffs" => ["b"], "files" => ["*.rb"] } }
+    base = { "bundle" => { "diffs" => ["a"], "pr" => "1" } }
+    overlay = { "bundle" => { "diffs" => ["b"], "files" => ["*.rb"] } }
     result = @extractor.send(:deep_merge_arrays, base, overlay)
 
     # Should merge nested hashes: preserve pr, concatenate diffs, add files
-    expected = { "context" => { "diffs" => ["a", "b"], "pr" => "1", "files" => ["*.rb"] } }
+    expected = { "bundle" => { "diffs" => ["a", "b"], "pr" => "1", "files" => ["*.rb"] } }
     assert_equal expected, result
   end
 
   def test_deep_merge_arrays_three_level_nesting_with_arrays
     # Test 3+ levels with arrays at leaf
-    base = { "context" => { "sections" => { "code" => { "files" => ["a.rb"] } } } }
-    overlay = { "context" => { "sections" => { "code" => { "files" => ["b.rb"] } } } }
+    base = { "bundle" => { "sections" => { "code" => { "files" => ["a.rb"] } } } }
+    overlay = { "bundle" => { "sections" => { "code" => { "files" => ["b.rb"] } } } }
     result = @extractor.send(:deep_merge_arrays, base, overlay)
 
-    expected = { "context" => { "sections" => { "code" => { "files" => ["a.rb", "b.rb"] } } } }
+    expected = { "bundle" => { "sections" => { "code" => { "files" => ["a.rb", "b.rb"] } } } }
     assert_equal expected, result
   end
 
   def test_deep_merge_arrays_preserves_sibling_keys
     # Ensure sibling keys at same level are preserved during merge
-    base = { "context" => { "diffs" => ["a"], "title" => "Base Title" } }
-    overlay = { "context" => { "diffs" => ["b"], "description" => "Overlay Desc" } }
+    base = { "bundle" => { "diffs" => ["a"], "title" => "Base Title" } }
+    overlay = { "bundle" => { "diffs" => ["b"], "description" => "Overlay Desc" } }
     result = @extractor.send(:deep_merge_arrays, base, overlay)
 
     expected = {
-      "context" => {
+      "bundle" => {
         "diffs" => ["a", "b"],
         "title" => "Base Title",
         "description" => "Overlay Desc"

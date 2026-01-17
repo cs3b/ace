@@ -78,8 +78,11 @@ module Ace
         end
 
         # Get the default context from configuration
+        # Supports bundle: (new) and context: (old) keys for backward compatibility
         def default_context
-          config&.dig("defaults", "context") ||
+          config&.dig("defaults", "bundle") ||
+            config&.dig("defaults", "context") ||
+            Ace::Review.get("defaults", "bundle") ||
             Ace::Review.get("defaults", "context")
         end
 
@@ -98,13 +101,16 @@ module Ace
           # Resolve models with backward compatibility
           models_config = resolve_models_config(preset, overrides)
 
+          # Support both bundle: (new) and context: (old) keys
+          preset_context = preset["bundle"] || preset["context"]
+
           {
             description: preset["description"],
-            # Extract prompt composition for ace-context frontmatter (but let ace-context process it)
+            # Extract prompt composition for ace-bundle frontmatter (but let ace-bundle process it)
             system_prompt: preset["system_prompt"] || preset["prompt_composition"],
             # Preserve instructions field for section-based context generation
             instructions: preset["instructions"],
-            context: resolve_context_config(preset["context"], overrides[:context]),
+            context: resolve_context_config(preset_context, overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             models: models_config,
             # Keep model for backward compatibility (first model in array)

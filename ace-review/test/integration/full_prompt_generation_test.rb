@@ -4,14 +4,14 @@ require "test_helper"
 
 class FullPromptGenerationTest < AceReviewTest
   def setup
-    super  # IMPORTANT: Call parent to stub ace-context for fast tests
+    super  # IMPORTANT: Call parent to stub ace-bundle for fast tests
     @manager = Ace::Review::Organisms::ReviewManager.new
     @temp_dir = Dir.mktmpdir
   end
 
   def teardown
     FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
-    super  # IMPORTANT: Call parent to restore ace-context
+    super  # IMPORTANT: Call parent to restore ace-bundle
   end
 
   def test_system_prompt_includes_embedded_sections_from_preset
@@ -19,7 +19,7 @@ class FullPromptGenerationTest < AceReviewTest
     options = {
       preset: "docs",
       subject: "# Sample Documentation\n\nThis is test content.",
-      context: { "files" => [] },  # Empty context to avoid preset dependencies
+      bundle: { "files" => [] },  # Empty context to avoid preset dependencies
       auto_execute: false,
       session_dir: @temp_dir
     }

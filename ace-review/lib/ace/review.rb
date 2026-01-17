@@ -3,11 +3,11 @@
 # Load ace-config for configuration cascade management
 require 'ace/support/config'
 
-# Try to load ace-context if available (required for full functionality)
+# Try to load ace-bundle if available (required for full functionality)
 begin
-  require "ace/context"
+  require "ace/bundle"
 rescue LoadError
-  # ace-context is required for context processing
+  # ace-bundle is required for context processing
   # Will raise MissingDependencyError when needed
 end
 
@@ -18,7 +18,6 @@ require_relative "review/version"
 require_relative "review/errors"
 
 # Require atoms
-require_relative "review/atoms/context_normalizer"
 require_relative "review/atoms/preset_validator"
 require_relative "review/atoms/slug_generator"
 require_relative "review/atoms/pr_comment_formatter"

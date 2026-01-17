@@ -183,7 +183,7 @@ module Ace
           elsif result[:session_dir]
             puts "✓ Review session prepared: #{result[:session_dir]}"
 
-            # Display prompt files for ace-context workflow
+            # Display prompt files for ace-bundle workflow
             if result[:system_prompt_file] && result[:user_prompt_file]
               puts "  System prompt: #{result[:system_prompt_file]}"
               puts "  User prompt: #{result[:user_prompt_file]}"

@@ -4,7 +4,7 @@ description: "Security review - vulnerability and risk analysis"
 
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       format:
         title: "Format Guidelines"
@@ -32,10 +32,10 @@ instructions:
         presets:
           - "project"
 
-context: "project"
+bundle: "project"
 
 subject:
-  context:
+  bundle:
     sections:
       security_changes:
         title: "Security-Relevant Changes"
