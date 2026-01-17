@@ -7,7 +7,7 @@ module Ace
   module TestRunner
     module Molecules
       # Resolves package names or paths to absolute package directories
-      # Supports: package name (ace-context), relative path (./ace-context), absolute path
+      # Supports: package name (ace-bundle), relative path (./ace-bundle), absolute path
       #
       # Note: This class depends on ace-support-fs which provides ProjectRootFinder.
       class PackageResolver
@@ -81,11 +81,11 @@ module Ace
         def resolve_by_name(name)
           return nil unless @project_root
 
-          # Try exact match first (ace-context)
+          # Try exact match first (ace-bundle)
           exact_path = File.join(@project_root, name)
           return File.realpath(exact_path) if Dir.exist?(exact_path)
 
-          # Try with ace- prefix (context -> ace-context)
+          # Try with ace- prefix (bundle -> ace-bundle)
           prefixed_path = File.join(@project_root, "ace-#{name}")
           return File.realpath(prefixed_path) if Dir.exist?(prefixed_path)
 

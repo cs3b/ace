@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.5] - 2026-01-16
+
+### Changed
+- Updated package references from ace-context to ace-bundle (task 206)
+
 ## [0.10.4] - 2026-01-15
 
 ### Changed
