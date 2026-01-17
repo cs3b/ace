@@ -184,7 +184,7 @@ mcp:
     rate_limit: requests/hour
 
 # Context configuration
-context:
+bundle:
   auto_inject: true|false
   template: embedded|path/to/template
   cache_ttl: seconds
@@ -286,11 +286,11 @@ Create reusable context templates for common patterns:
 
 ```yaml
 # Embedded template
-context:
+bundle:
   template: embedded
   
 # External template (reusable)
-context:
+bundle:
   template: .claude/contexts/project-overview.yaml
 ```
 
@@ -674,7 +674,7 @@ mcp:
     rate_limit: #{rate}/hour
 
 # Context configuration
-context:
+bundle:
   auto_inject: #{auto_inject}  # true or false
   template: embedded  # or path to external template
   cache_ttl: #{cache_seconds}  # e.g., 300 for 5 minutes
