@@ -33,7 +33,7 @@ class CLIEmbedSourceTest < AceTestCase
       @prompt_path,
       <<~MARKDOWN
         ---
-        context:
+        bundle:
           files:
             - #{@sample_path}
         ---
@@ -47,7 +47,7 @@ class CLIEmbedSourceTest < AceTestCase
       @prompt_no_embed_path,
       <<~MARKDOWN
         ---
-        context:
+        bundle:
           embed_document_source: false
           files:
             - #{@sample_path}
@@ -120,7 +120,7 @@ class CLIEmbedSourceTest < AceTestCase
       minimal_path,
       <<~MARKDOWN
         ---
-        context:
+        bundle:
           files:
             - #{@sample_path}
         ---

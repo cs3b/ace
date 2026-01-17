@@ -121,7 +121,7 @@ class PlainMarkdownLoadTest < AceTestCase
 
     content = <<~MARKDOWN
       ---
-      context:
+      bundle:
         files:
           - #{sample_file}
       ---

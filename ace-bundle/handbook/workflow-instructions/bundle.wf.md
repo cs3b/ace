@@ -2,15 +2,15 @@
 update:
   update_frequency: on-change
   last-updated: '2025-10-24'
-context:
+bundle:
   embed_document_source: true
   sections:
     available_presets:
       commands:
-        - ace-bundle --list 
+        - ace-bundle --list
 ---
 
-# Load Context Workflow Instruction
+# Load Bundle Workflow Instruction
 
 ## Purpose
 
@@ -72,21 +72,21 @@ Analyze the loaded context and prepare a concise summary covering:
 ## Usage
 
 **Presets** - Standard project context, team-shared configurations:
-> `/ace:load-context`
+> `/ace:bundle`
 > "Load default project context"
 
-> `/ace:load-context base`
+> `/ace:bundle base`
 > "Load base preset"
 
 **Files** - Task-specific context, custom one-off requirements:
-> `/ace:load-context .ace-taskflow/v.0.9.0/context/task-084.md`
+> `/ace:bundle .ace-taskflow/v.0.9.0/context/task-084.md`
 > "Load task-specific context file"
 
-> `/ace:load-context /path/to/your/project/context.yml`
+> `/ace:bundle /path/to/your/project/context.yml`
 > "Load context from absolute path"
 
 **Protocols** - Workflow-embedded context, dynamic discovery:
-> `/ace:load-context wfi://workflow-name`
+> `/ace:bundle wfi://workflow-name`
 > "Load context via protocol"
 
 ## Error Handling

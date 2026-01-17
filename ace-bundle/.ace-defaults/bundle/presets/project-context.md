@@ -1,6 +1,6 @@
 ---
 description: Example demonstrating preset-in-section functionality for project context creation
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml

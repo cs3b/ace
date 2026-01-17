@@ -30,9 +30,9 @@ class CliAutoFormatTest < AceTestCase
     stdout, stderr, status = Open3.capture3(BIN, "small-test")
 
     assert status.success?, "Command should succeed: #{stderr}"
-    # Should output content directly (not a "Context saved" message)
+    # Should output content directly (not a "Bundle saved" message)
     assert_includes stdout, "# Small Test Content"
-    refute_includes stdout, "Context saved"
+    refute_includes stdout, "Bundle saved"
     refute_includes stdout, "output file:"
   end
 
@@ -44,7 +44,7 @@ class CliAutoFormatTest < AceTestCase
 
     assert status.success?, "Command should succeed: #{stderr}"
     # Should output cache path (not raw content)
-    assert_includes stdout, "Context saved"
+    assert_includes stdout, "Bundle saved"
     assert_includes stdout, "output file:"
     assert_includes stdout, ".cache/ace-bundle"
   end
@@ -57,7 +57,7 @@ class CliAutoFormatTest < AceTestCase
 
     assert status.success?, "Command should succeed: #{stderr}"
     # Should output content directly despite being large
-    refute_includes stdout, "Context saved"
+    refute_includes stdout, "Bundle saved"
     assert_includes stdout, "# Large Test Content"
   end
 
@@ -69,7 +69,7 @@ class CliAutoFormatTest < AceTestCase
 
     assert status.success?, "Command should succeed: #{stderr}"
     # Should output cache path despite being small
-    assert_includes stdout, "Context saved"
+    assert_includes stdout, "Bundle saved"
     assert_includes stdout, "output file:"
   end
 
@@ -82,7 +82,7 @@ class CliAutoFormatTest < AceTestCase
 
     assert status.success?, "Command should succeed: #{stderr}"
     # Should go to cache (output mentions saving)
-    assert_includes stdout, "Context saved", "Content at/above threshold should go to cache"
+    assert_includes stdout, "Bundle saved", "Content at/above threshold should go to cache"
   end
 
   def test_below_threshold_goes_to_stdio
@@ -94,7 +94,7 @@ class CliAutoFormatTest < AceTestCase
 
     assert status.success?, "Command should succeed: #{stderr}"
     # Should go to stdio (shows content directly)
-    refute_includes stdout, "Context saved", "Content below threshold should go to stdio"
+    refute_includes stdout, "Bundle saved", "Content below threshold should go to stdio"
     assert_includes stdout, "# Test Content"
   end
 

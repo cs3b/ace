@@ -45,8 +45,10 @@ module Ace
           sections = create_legacy_sections(migrated)
 
           if sections.any?
-            migrated['context'] ||= {}
-            migrated['context']['sections'] = sections
+            # Use 'bundle' key for configuration
+            bundle = migrated['bundle'] || {}
+            migrated['bundle'] = bundle unless migrated['bundle']
+            migrated['bundle']['sections'] = sections
           end
 
           migrated
@@ -56,10 +58,11 @@ module Ace
         # @param config [Hash] configuration to check
         # @return [Boolean] true if has sections
         def has_sections?(config)
-          context = config['context'] || config[:context]
-          return false unless context
+          # Use 'bundle' key for configuration
+          bundle = config['bundle'] || config[:bundle]
+          return false unless bundle
 
-          sections = context['sections'] || context[:sections]
+          sections = bundle['sections'] || bundle[:sections]
           sections && !sections.empty?
         end
 
@@ -163,8 +166,8 @@ module Ace
             raise SectionValidationError, "Section preset loading failed for section '#{section_name}':\n  #{errors.join("\n  ")}\n\nPlease ensure all referenced presets exist and are accessible. Check preset names for typos and verify preset files are in the correct location."
           end
 
-          # Extract context content from presets
-          preset_contents = all_presets.map { |preset| preset[:context] || {} }
+          # Extract bundle content from presets
+          preset_contents = all_presets.map { |preset| preset[:bundle] || {} }
           merge_preset_content(*preset_contents)
         end
 
@@ -175,7 +178,7 @@ module Ace
         def merge_preset_content_into_section(section_data, preset_content)
           merged = deep_copy(section_data)
 
-          # Merge content from preset context (handle both string and symbol keys)
+          # Merge content from preset bundle (handle both string and symbol keys)
           %w[files commands ranges diffs].each do |content_type|
             preset_files = preset_content[content_type] || preset_content[content_type.to_sym]
             if preset_files&.any?
@@ -185,7 +188,7 @@ module Ace
             end
           end
 
-          # Merge sections from preset context (flatten into current section)
+          # Merge sections from preset bundle (flatten into current section)
           if preset_content['sections']&.any?
             preset_content['sections'].each do |_, preset_section|
               merged = merge_section_data(merged, preset_section)
@@ -205,7 +208,7 @@ module Ace
           merged
         end
 
-        # Merges preset content structures (similar to PresetManager but focused on context)
+        # Merges preset content structures (similar to PresetManager but focused on bundles)
         # @param preset_contents [Array<Hash>] array of preset content hashes
         # @return [Hash] merged preset content
         def merge_preset_content(*preset_contents)
@@ -301,10 +304,11 @@ module Ace
 
         # Extracts sections configuration from the main config
         def extract_sections_config(config)
-          context = config['context'] || config[:context]
-          return {} unless context
+          # Use 'bundle' key for configuration
+          bundle = config['bundle'] || config[:bundle]
+          return {} unless bundle
 
-          context['sections'] || context[:sections] || {}
+          bundle['sections'] || bundle[:sections] || {}
         end
 
         # Normalizes sections configuration (string keys to symbols, defaults, etc.)
@@ -372,11 +376,12 @@ module Ace
 
         # Merges legacy content into sections
         def merge_legacy_content(sections, config)
-          context = config['context'] || config[:context]
-          return sections unless context
+          # Use 'bundle' key for configuration
+          bundle = config['bundle'] || config[:bundle]
+          return sections unless bundle
 
           # Create attachments section for legacy content
-          legacy_content = collect_legacy_content(context)
+          legacy_content = collect_legacy_content(bundle)
 
           if legacy_content.any?
             sections['attachments'] = create_attachments_section(legacy_content)
@@ -385,23 +390,25 @@ module Ace
           sections
         end
 
-        # Collects legacy content from configuration
-        def collect_legacy_content(context)
+        # Collects legacy content from configuration (top-level files/commands/diffs)
+        # @param config [Hash] configuration hash that may have legacy top-level keys
+        # @return [Hash] legacy content with normalized keys
+        def collect_legacy_content(config)
           legacy_content = {}
 
           # Legacy files
-          if context['files'] || context[:files]
-            legacy_content[:files] = context['files'] || context[:files]
+          if config['files'] || config[:files]
+            legacy_content[:files] = config['files'] || config[:files]
           end
 
           # Legacy commands
-          if context['commands'] || context[:commands]
-            legacy_content[:commands] = context['commands'] || context[:commands]
+          if config['commands'] || config[:commands]
+            legacy_content[:commands] = config['commands'] || config[:commands]
           end
 
           # Legacy diff/diffs/ranges - normalize to ranges
-          if context['diff'] || context[:diff]
-            diff_config = context['diff'] || context[:diff]
+          if config['diff'] || config[:diff]
+            diff_config = config['diff'] || config[:diff]
             if diff_config.is_a?(Hash)
               # Extract ranges from complex diff config
               if diff_config['ranges'] || diff_config[:ranges]
@@ -415,10 +422,10 @@ module Ace
             elsif diff_config.is_a?(Array)
               legacy_content[:ranges] = diff_config
             end
-          elsif context['diffs'] || context[:diffs]
-            legacy_content[:ranges] = context['diffs'] || context[:diffs]
-          elsif context['ranges'] || context[:ranges]
-            legacy_content[:ranges] = context['ranges'] || context[:ranges]
+          elsif config['diffs'] || config[:diffs]
+            legacy_content[:ranges] = config['diffs'] || config[:diffs]
+          elsif config['ranges'] || config[:ranges]
+            legacy_content[:ranges] = config['ranges'] || config[:ranges]
           end
 
           legacy_content
@@ -434,32 +441,33 @@ module Ace
 
         # Creates legacy sections from legacy configuration
         def create_legacy_sections(config)
-          context = config['context'] || config[:context]
-          return {} unless context
+          # Use 'bundle' key for configuration
+          bundle = config['bundle'] || config[:bundle]
+          return {} unless bundle
 
           sections = {}
 
           # Files section
-          if context['files'] || context[:files]
+          if bundle['files'] || bundle[:files]
             sections['files'] = {
               title: "Files",
-              files: context['files'] || context[:files],
-              exclude: context['exclude'] || context[:exclude]
+              files: bundle['files'] || bundle[:files],
+              exclude: bundle['exclude'] || bundle[:exclude]
             }
           end
 
           # Commands section
-          if context['commands'] || context[:commands]
+          if bundle['commands'] || bundle[:commands]
             sections['commands'] = {
               title: "Commands",
-              commands: context['commands'] || context[:commands]
+              commands: bundle['commands'] || bundle[:commands]
             }
           end
 
           # Diffs section - handle diff/diffs/ranges
           ranges = nil
-          if context['diff'] || context[:diff]
-            diff_config = context['diff'] || context[:diff]
+          if bundle['diff'] || bundle[:diff]
+            diff_config = bundle['diff'] || bundle[:diff]
             if diff_config.is_a?(Hash)
               ranges = diff_config['ranges'] || diff_config[:ranges]
               if !ranges && (diff_config['since'] || diff_config[:since])
@@ -471,10 +479,10 @@ module Ace
             elsif diff_config.is_a?(Array)
               ranges = diff_config
             end
-          elsif context['diffs'] || context[:diffs]
-            ranges = context['diffs'] || context[:diffs]
-          elsif context['ranges'] || context[:ranges]
-            ranges = context['ranges'] || context[:ranges]
+          elsif bundle['diffs'] || bundle[:diffs]
+            ranges = bundle['diffs'] || bundle[:diffs]
+          elsif bundle['ranges'] || bundle[:ranges]
+            ranges = bundle['ranges'] || bundle[:ranges]
           end
 
           if ranges

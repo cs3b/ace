@@ -9,7 +9,7 @@ class PresetManagerTest < AceTestCase
     @preset_content = <<~MARKDOWN
       ---
       description: Test preset
-      context:
+      bundle:
         params:
           output: cache
           max_size: 1048576
@@ -59,10 +59,10 @@ class PresetManagerTest < AceTestCase
       assert_equal 30, preset.dig(:params, "timeout")
 
       # Check context
-      assert_equal true, preset.dig(:context, "embed_document_source")
-      assert_equal ["README.md", "docs/*.md"], preset.dig(:context, "files")
-      assert_equal ["echo \"test\""], preset.dig(:context, "commands")
-      assert_equal ["**/node_modules/**"], preset.dig(:context, "exclude")
+      assert_equal true, preset.dig(:bundle, "embed_document_source")
+      assert_equal ["README.md", "docs/*.md"], preset.dig(:bundle, "files")
+      assert_equal ["echo \"test\""], preset.dig(:bundle, "commands")
+      assert_equal ["**/node_modules/**"], preset.dig(:bundle, "exclude")
     end
   end
 
@@ -189,11 +189,11 @@ class PresetManagerTest < AceTestCase
     with_temp_dir do
       FileUtils.mkdir_p(".ace/bundle/presets")
 
-      # NEW structure: context.params instead of top-level params
+      # NEW structure: bundle.params instead of top-level params
       new_structure_content = <<~MARKDOWN
         ---
         description: New structure preset
-        context:
+        bundle:
           params:
             output: cache
             max_size: 2097152
@@ -227,9 +227,9 @@ class PresetManagerTest < AceTestCase
       assert_equal true, preset[:cache]
 
       # Check context config (embed_document_source is in context, NOT in params)
-      assert_equal true, preset.dig(:context, "embed_document_source")
-      assert_equal ["README.md", "docs/**/*.md"], preset.dig(:context, "files")
-      assert_equal ["echo \"new structure\""], preset.dig(:context, "commands")
+      assert_equal true, preset.dig(:bundle, "embed_document_source")
+      assert_equal ["README.md", "docs/**/*.md"], preset.dig(:bundle, "files")
+      assert_equal ["echo \"new structure\""], preset.dig(:bundle, "commands")
     end
   end
 

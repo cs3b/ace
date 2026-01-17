@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "ace/bundle/molecules/context_chunker"
+require "ace/bundle/molecules/bundle_chunker"
 
-class ContextChunkerTest < AceTestCase
+class BundleChunkerTest < AceTestCase
   def setup
-    @chunker = Ace::Bundle::Molecules::ContextChunker.new(10) # Small limit for testing
+    @chunker = Ace::Bundle::Molecules::BundleChunker.new(10) # Small limit for testing
   end
 
   # Basic functionality tests
@@ -33,7 +33,7 @@ class ContextChunkerTest < AceTestCase
   def test_splits_plain_text_by_line_count
     content = (1..25).map { |i| "line #{i}" }.join("\n")
     lines = content.lines
-    chunker = Ace::Bundle::Molecules::ContextChunker.new(10)
+    chunker = Ace::Bundle::Molecules::BundleChunker.new(10)
 
     chunks = chunker.send(:split_into_chunks, lines)
 
@@ -61,7 +61,7 @@ class ContextChunkerTest < AceTestCase
     XML
 
     lines = content.lines
-    chunker = Ace::Bundle::Molecules::ContextChunker.new(5) # Force split between files
+    chunker = Ace::Bundle::Molecules::BundleChunker.new(5) # Force split between files
 
     chunks = chunker.send(:split_into_chunks, lines)
 
@@ -95,7 +95,7 @@ class ContextChunkerTest < AceTestCase
     XML
 
     lines = content.lines
-    chunker = Ace::Bundle::Molecules::ContextChunker.new(4)
+    chunker = Ace::Bundle::Molecules::BundleChunker.new(4)
 
     chunks = chunker.send(:split_into_chunks, lines)
 
@@ -120,7 +120,7 @@ class ContextChunkerTest < AceTestCase
     XML
 
     lines = content.lines
-    chunker = Ace::Bundle::Molecules::ContextChunker.new(5) # Much smaller than element
+    chunker = Ace::Bundle::Molecules::BundleChunker.new(5) # Much smaller than element
 
     chunks = chunker.send(:split_into_chunks, lines)
 
@@ -140,7 +140,7 @@ class ContextChunkerTest < AceTestCase
     XML
 
     lines = content.lines
-    chunker = Ace::Bundle::Molecules::ContextChunker.new(3)
+    chunker = Ace::Bundle::Molecules::BundleChunker.new(3)
 
     chunks = chunker.send(:split_into_chunks, lines)
 
@@ -170,7 +170,7 @@ class ContextChunkerTest < AceTestCase
     assert_equal true, result[:chunked]
     assert result[:total_chunks] > 1
     assert result[:chunk_files].any?
-    assert result[:index_content].include?("Context Index")
+    assert result[:index_content].include?("Bundle Index")
   end
 
   # Edge case tests

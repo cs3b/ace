@@ -32,7 +32,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Base preset
-        context:
+        bundle:
           files:
             - file1.md
             - file2.md
@@ -49,7 +49,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Extended preset
-        context:
+        bundle:
           presets:
             - base
           files:
@@ -67,7 +67,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Circular A
-        context:
+        bundle:
           presets:
             - circular_b
         ---
@@ -81,7 +81,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Circular B
-        context:
+        bundle:
           presets:
             - circular_a
         ---
@@ -95,7 +95,7 @@ class PresetCompositionTest < AceTestCase
 
     assert result[:success]
     assert_equal "Base preset", result[:description]
-    assert_equal ["file1.md", "file2.md"], result[:context]["files"]
+    assert_equal ["file1.md", "file2.md"], result[:bundle]["files"]
   end
 
   def test_load_preset_with_composition
@@ -107,13 +107,13 @@ class PresetCompositionTest < AceTestCase
     assert_includes result[:composed_from], "extended"
 
     # Files should be merged and deduplicated
-    assert_includes result[:context]["files"], "file1.md"
-    assert_includes result[:context]["files"], "file2.md"
-    assert_includes result[:context]["files"], "file3.md"
+    assert_includes result[:bundle]["files"], "file1.md"
+    assert_includes result[:bundle]["files"], "file2.md"
+    assert_includes result[:bundle]["files"], "file3.md"
 
     # Commands should be merged
-    assert_includes result[:context]["commands"], "echo \"base\""
-    assert_includes result[:context]["commands"], "echo \"extended\""
+    assert_includes result[:bundle]["commands"], "echo \"base\""
+    assert_includes result[:bundle]["commands"], "echo \"extended\""
   end
 
   def test_circular_dependency_detection
@@ -137,7 +137,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: With duplicates
-        context:
+        bundle:
           presets:
             - base
           files:
@@ -154,13 +154,13 @@ class PresetCompositionTest < AceTestCase
     assert result[:success]
 
     # file1.md should appear only once (from base)
-    file_count = result[:context]["files"].count("file1.md")
+    file_count = result[:bundle]["files"].count("file1.md")
     assert_equal 1, file_count
 
     # All unique files should be present
-    assert_includes result[:context]["files"], "file1.md"
-    assert_includes result[:context]["files"], "file2.md"
-    assert_includes result[:context]["files"], "file4.md"
+    assert_includes result[:bundle]["files"], "file1.md"
+    assert_includes result[:bundle]["files"], "file2.md"
+    assert_includes result[:bundle]["files"], "file4.md"
   end
 
   def test_params_extracted_to_root_level
@@ -170,7 +170,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Preset with params
-        context:
+        bundle:
           params:
             output: cache
             format: yaml
@@ -209,7 +209,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Base with params
-        context:
+        bundle:
           params:
             output: stdio
             timeout: 30
@@ -226,7 +226,7 @@ class PresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Extended with param overrides
-        context:
+        bundle:
           presets:
             - base_params
           params:

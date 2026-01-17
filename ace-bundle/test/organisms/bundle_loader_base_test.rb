@@ -2,9 +2,9 @@
 
 require_relative "../test_helper"
 
-class ContextLoaderBaseTest < AceTestCase
+class BundleLoaderBaseTest < AceTestCase
   def setup
-    @env = Ace::TestSupport::TestEnvironment.new("context_base")
+    @env = Ace::TestSupport::TestEnvironment.new("bundle_base")
     @env.setup
     create_base_files
     create_test_presets
@@ -187,7 +187,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "with-base.md"), <<~PRESET)
       ---
       description: "Preset with base field"
-      context:
+      bundle:
         base: "./test/base/system.md"
       ---
     PRESET
@@ -196,7 +196,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "base-with-sections.md"), <<~PRESET)
       ---
       description: "Preset with base and sections"
-      context:
+      bundle:
         base: "./test/base/system.md"
         sections:
           test_section:
@@ -210,7 +210,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "without-base.md"), <<~PRESET)
       ---
       description: "Preset without base field"
-      context:
+      bundle:
         sections:
           test_section:
             title: "Test Section"
@@ -223,7 +223,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "invalid-base-protocol.md"), <<~PRESET)
       ---
       description: "Preset with invalid base protocol"
-      context:
+      bundle:
         base: "invalid://nonexistent/path"
         sections:
           test_section:
@@ -237,7 +237,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "missing-base-file.md"), <<~PRESET)
       ---
       description: "Preset with missing base file"
-      context:
+      bundle:
         base: "./nonexistent/file.md"
         sections:
           test_section:
@@ -251,7 +251,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "empty-base.md"), <<~PRESET)
       ---
       description: "Preset with empty base file"
-      context:
+      bundle:
         base: "./test/base/empty.md"
       ---
     PRESET
@@ -260,7 +260,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "base-only.md"), <<~PRESET)
       ---
       description: "Preset with base only"
-      context:
+      bundle:
         base: "./test/base/system.md"
       ---
     PRESET
@@ -269,7 +269,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "extensionless-base.md"), <<~PRESET)
       ---
       description: "Preset with extension-less base file"
-      context:
+      bundle:
         base: "README"
       ---
     PRESET
@@ -278,7 +278,7 @@ class ContextLoaderBaseTest < AceTestCase
     File.write(File.join(presets_dir, "inline-base.md"), <<~PRESET)
       ---
       description: "Preset with inline base content"
-      context:
+      bundle:
         base: "This is inline base content"
       ---
     PRESET

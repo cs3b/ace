@@ -34,7 +34,7 @@ class PresetValidatorTest < AceTestCase
 
   def test_extract_preset_references_from_config
     preset_data = {
-      context: {
+      bundle: {
         'presets' => ['base', 'development']
       }
     }
@@ -46,7 +46,7 @@ class PresetValidatorTest < AceTestCase
 
   def test_extract_preset_references_returns_empty_for_no_presets
     preset_data = {
-      context: {
+      bundle: {
         'files' => ['README.md']
       }
     }

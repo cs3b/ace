@@ -82,7 +82,7 @@ Context presets are defined as markdown files with YAML frontmatter in `.ace/bun
 ```yaml
 ---
 description: Project documentation
-context:
+bundle:
   params:
     output: cache                  # Default output mode: stdio, cache, or file path
     max_size: 10485760            # Max file size (10MB)
@@ -128,7 +128,7 @@ In addition to presets, ace-bundle can load configuration directly from files us
 **YAML Configuration** (config.yml):
 ```yaml
 description: Custom configuration
-context:
+bundle:
   files:
     - README.md
     - "docs/**/*.md"
@@ -143,7 +143,7 @@ context:
 ```markdown
 ---
 description: Configuration with preset composition
-context:
+bundle:
   files:
     - custom-file.md
   presets:         # Reference and compose with existing presets
@@ -171,7 +171,7 @@ ace-bundle supports multiple content sources that can be combined:
 
 **Files**: Glob patterns for file inclusion
 ```yaml
-context:
+bundle:
   files:
     - README.md
     - "lib/**/*.rb"
@@ -180,7 +180,7 @@ context:
 
 **Commands**: Execute shell commands and include output
 ```yaml
-context:
+bundle:
   commands:
     - git status --short
     - git log -5 --oneline
@@ -189,7 +189,7 @@ context:
 
 **Diffs**: Include git diff output for code review. We recommend the `diff` key for its flexibility.
 ```yaml
-context:
+bundle:
   # Recommended complex format
   diff:
     ranges:
@@ -205,7 +205,7 @@ context:
 
 **PRs**: Include GitHub Pull Request diffs (requires [GitHub CLI](https://cli.github.com/))
 ```yaml
-context:
+bundle:
   # Single PR
   pr: 123
 
@@ -220,7 +220,7 @@ PR diffs are fetched using the `gh` CLI tool. Ensure you're authenticated (`gh a
 
 **Presets**: Include other ace-bundle presets
 ```yaml
-context:
+bundle:
   presets:
     - project
     - architecture
@@ -228,7 +228,7 @@ context:
 
 **Protocols**: Reference resources via ace-nav protocols
 ```yaml
-context:
+bundle:
   files:
     - wfi://draft-task        # Workflow via wfi:// protocol
     - wfi://plan-task         # Another workflow
@@ -248,7 +248,7 @@ Supported protocols (via ace-nav):
 
 All sources can be combined in a single configuration:
 ```yaml
-context:
+bundle:
   presets: [project]
   files:
     - "lib/new-feature/**/*.rb"
@@ -334,10 +334,10 @@ Each preset can define its default output mode in the `params.output` field.
 
 ### Preset Structure
 
-Presets use YAML frontmatter with a unified `context:` section:
+Presets use YAML frontmatter with a unified `bundle:` section:
 
-1. **context.params** - Tool configuration (output, max_size, timeout)
-2. **context** - Content specification (embed_document_source, files, commands, diffs, exclude)
+1. **bundle.params** - Tool configuration (output, max_size, timeout)
+2. **bundle** - Content specification (embed_document_source, files, commands, diffs, exclude)
 
 ## Dependencies
 
