@@ -1,6 +1,6 @@
 ---
 description: Project-wide context
-context:
+bundle:
   params:
     output: cache
     max_size: 81920

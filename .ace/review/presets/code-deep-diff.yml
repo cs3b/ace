@@ -5,7 +5,7 @@ presets:
 description: "Deep code review against origin/main, excluding dev-local and _legacy"
 
 subject:
-  context:
+  bundle:
     sections:
       code_changes:
         title: "Core Code Changes"

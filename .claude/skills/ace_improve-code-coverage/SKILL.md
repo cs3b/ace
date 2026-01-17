@@ -6,7 +6,7 @@ description: Analyze coverage and create targeted test tasks to improve coverage
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Bash(ace-test:*)
   - Read
   - Write
@@ -18,4 +18,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-context wfi://improve-code-coverage`
+read and run `ace-bundle wfi://improve-code-coverage`

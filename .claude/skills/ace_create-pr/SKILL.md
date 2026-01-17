@@ -6,7 +6,7 @@ description: Create GitHub pull request with generated description and summary
 user-invocable: true
 allowed-tools:
   - Bash(ace-git:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Bash(gh:*)
   - Read
 argument-hint: [pr-type]
@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-git
 ---
 
-read and run `ace-context wfi://create-pr`
+read and run `ace-bundle wfi://create-pr`

@@ -6,13 +6,13 @@ description: Plan Multiple Draft Tasks
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
   - Task
 argument-hint: [task-id-pattern like 12* or *]
 source: ace-taskflow
 ---
 
-read and run `ace-context wfi://plan-tasks`
+read and run `ace-bundle wfi://plan-tasks`
 
 ARGUMENTS: $ARGUMENTS

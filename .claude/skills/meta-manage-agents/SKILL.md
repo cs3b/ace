@@ -13,7 +13,7 @@ last_modified: 2026-01-10
 source: custom
 allowed-tools:
   - Bash(ace-handbook:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
   - Write
   - Edit
@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-context wfi://manage-agents
+For detailed instructions, see: ace-bundle wfi://manage-agents

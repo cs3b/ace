@@ -29,11 +29,6 @@ test_suite:
       group: tools
       priority: 3
 
-    - name: ace-context
-      path: ace-context
-      group: tools
-      priority: 3
-
     - name: ace-support-nav
       path: ace-support-nav
       group: tools

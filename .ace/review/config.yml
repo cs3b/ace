@@ -5,7 +5,7 @@
 defaults:
   preset: code-multi
   output_format: "markdown"
-  context: "project"
+  bundle: "project"
   max_concurrent_models: 5  # Max parallel LLM queries for multi-model execution
   auto_execute: true  # Automatically execute LLM query without confirmation
   gh_timeout: 30  # Timeout for GitHub CLI operations in seconds
