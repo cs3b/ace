@@ -19,7 +19,7 @@ module Ace
       end
 
       def test_config_resolver_with_custom_search_paths
-        # Create configs in both .ace/context and ~/.ace/context
+        # Create configs in both .ace/bundle and ~/.ace/bundle
         local_config = {
           "context" => {
             "presets" => {
@@ -48,18 +48,18 @@ module Ace
 
         # Write configs to test environment
         # Need to manually create the directories and files since TestEnvironment
-        # expects configs to be in .ace/core, but we need them in .ace/context
-        local_path = File.join(@env.project_dir, ".ace", "context", "config.yml")
+        # expects configs to be in .ace/core, but we need them in .ace/bundle
+        local_path = File.join(@env.project_dir, ".ace", "bundle", "config.yml")
         FileUtils.mkdir_p(File.dirname(local_path))
         File.write(local_path, YAML.dump(local_config))
 
-        home_path = File.join(@env.home_dir, ".ace", "context", "config.yml")
+        home_path = File.join(@env.home_dir, ".ace", "bundle", "config.yml")
         FileUtils.mkdir_p(File.dirname(home_path))
         File.write(home_path, YAML.dump(home_config))
 
-        # Create resolver with custom search paths (like ace-context does)
+        # Create resolver with custom search paths (like ace-bundle does)
         resolver = Organisms::ConfigResolver.new(
-          search_paths: [".ace/context", "~/.ace/context"],
+          search_paths: [".ace/bundle", "~/.ace/bundle"],
           file_patterns: ["config.yml"]
         )
 
@@ -86,16 +86,16 @@ module Ace
 
       def test_config_resolver_finds_configs_in_custom_paths
         # Create configs in custom paths
-        local_path = File.join(@env.project_dir, ".ace", "context", "config.yml")
+        local_path = File.join(@env.project_dir, ".ace", "bundle", "config.yml")
         FileUtils.mkdir_p(File.dirname(local_path))
         File.write(local_path, YAML.dump({ "source" => "local" }))
 
-        home_path = File.join(@env.home_dir, ".ace", "context", "config.yml")
+        home_path = File.join(@env.home_dir, ".ace", "bundle", "config.yml")
         FileUtils.mkdir_p(File.dirname(home_path))
         File.write(home_path, YAML.dump({ "source" => "home" }))
 
         resolver = Organisms::ConfigResolver.new(
-          search_paths: [".ace/context", "~/.ace/context"],
+          search_paths: [".ace/bundle", "~/.ace/bundle"],
           file_patterns: ["config.yml"]
         )
 
@@ -107,9 +107,9 @@ module Ace
         assert_equal 2, existing.size, "Should find configs in both paths"
 
         paths = existing.map(&:path)
-        assert paths.any? { |p| p.include?(".ace/context/config.yml") },
+        assert paths.any? { |p| p.include?(".ace/bundle/config.yml") },
           "Should find local context config"
-        assert paths.any? { |p| p.include?("/.ace/context/config.yml") && !p.include?("./.ace") },
+        assert paths.any? { |p| p.include?("/.ace/bundle/config.yml") && !p.include?("./.ace") },
           "Should find home context config"
       end
 
@@ -118,16 +118,16 @@ module Ace
         local_config = { "context" => { "setting" => "local" } }
         home_config = { "context" => { "setting" => "home", "home_only" => true } }
 
-        local_path = File.join(@env.project_dir, ".ace", "context", "config.yml")
+        local_path = File.join(@env.project_dir, ".ace", "bundle", "config.yml")
         FileUtils.mkdir_p(File.dirname(local_path))
         File.write(local_path, YAML.dump(local_config))
 
-        home_path = File.join(@env.home_dir, ".ace", "context", "config.yml")
+        home_path = File.join(@env.home_dir, ".ace", "bundle", "config.yml")
         FileUtils.mkdir_p(File.dirname(home_path))
         File.write(home_path, YAML.dump(home_config))
 
         resolver = Organisms::ConfigResolver.new(
-          search_paths: [".ace/context", "~/.ace/context"],
+          search_paths: [".ace/bundle", "~/.ace/bundle"],
           file_patterns: ["config.yml"]
         )
 

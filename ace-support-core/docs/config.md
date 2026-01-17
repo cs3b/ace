@@ -60,6 +60,6 @@ ace-framework init --dry-run
 ace-framework diff --one-line
 
 # Compare specific gem (both formats work)
-ace-framework diff ace-context
-ace-framework diff context --one-line
+ace-framework diff ace-bundle
+ace-framework diff bundle --one-line
 ```
