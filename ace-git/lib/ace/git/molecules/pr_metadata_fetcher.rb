@@ -6,7 +6,7 @@ module Ace
   module Git
     module Molecules
       # Fetch PR metadata via gh CLI
-      # Consolidated from ace-context GhPrExecutor and ace-review GhPrFetcher
+      # Consolidated from ace-bundle GhPrExecutor and ace-review GhPrFetcher
       class PrMetadataFetcher
         # Error message patterns from gh CLI
         PR_NOT_FOUND_PATTERN = /not found|Could not resolve/i
