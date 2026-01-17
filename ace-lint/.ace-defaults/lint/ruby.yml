@@ -6,9 +6,14 @@ ruby:
   # Enable Ruby linting
   enabled: true
 
-  # Linter to use for Ruby files
+  # Primary linter to use for Ruby files
   linter: standardrb
 
-# StandardRB is intentionally zero-config
-# No additional configuration options are available
+  # Fallback linter when primary is unavailable
+  fallback_linter: rubocop
+
+# StandardRB is intentionally zero-config (preferred)
+# When StandardRB is not installed, RuboCop is used as fallback
+# RuboCop uses .ace-defaults/lint/.rubocop.yml for configuration
 # See: https://github.com/standardrb/standard
+# See: https://docs.rubocop.org/

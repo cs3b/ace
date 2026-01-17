@@ -1,14 +1,28 @@
 # frozen_string_literal: true
 
 require_relative '../atoms/standardrb_runner'
+require_relative '../atoms/rubocop_runner'
 require_relative '../models/lint_result'
 require_relative '../models/validation_error'
 
 module Ace
   module Lint
     module Molecules
-      # Lints Ruby files using StandardRB
+      # Lints Ruby files using StandardRB (preferred) with RuboCop fallback
       class RubyLinter
+        # Track which runner was used for result display
+        @runner_used = nil
+
+        class << self
+          attr_reader :runner_used
+
+          private
+
+          def reset_runner_used!
+            @runner_used = nil
+          end
+        end
+
         # Lint a Ruby file
         # @param file_path [String] Path to the Ruby file
         # @param options [Hash] Linting options
@@ -16,8 +30,9 @@ module Ace
         # @return [Models::LintResult] Lint result
         def self.lint(file_path, options: {})
           fix = options[:fix] || false
+          reset_runner_used!
 
-          result = Atoms::StandardrbRunner.run(file_path, fix: fix)
+          result = run_with_fallback([file_path], fix: fix)
 
           if result[:success]
             Models::LintResult.new(
@@ -46,7 +61,8 @@ module Ace
           )
         end
 
-        # Lint multiple Ruby files in a single StandardRB subprocess
+        # Lint multiple Ruby files in a single subprocess
+        # Tries StandardRB first, falls back to RuboCop
         # @param file_paths [Array<String>] Paths to Ruby files
         # @param options [Hash] Linting options
         # @option options [Boolean] :fix Apply autofix
@@ -55,7 +71,9 @@ module Ace
           return [] if file_paths.empty?
 
           fix = options[:fix] || false
-          result = Atoms::StandardrbRunner.run(file_paths, fix: fix)
+          reset_runner_used!
+
+          result = run_with_fallback(file_paths, fix: fix)
 
           # Group offenses by file
           offenses_by_file = Hash.new { |h, k| h[k] = { errors: [], warnings: [] } }
@@ -130,6 +148,30 @@ module Ace
             Models::ValidationError.new(message: message)
           end
         end
+
+        # Run linting with fallback logic
+        # Tries StandardRB first, falls back to RuboCop
+        # @param file_paths [Array<String>] Paths to Ruby files
+        # @param fix [Boolean] Apply autofix
+        # @return [Hash] Result from runner
+        def self.run_with_fallback(file_paths, fix:)
+          # Try StandardRB first (preferred, zero-config)
+          if Atoms::StandardrbRunner.available?
+            @runner_used = :standardrb
+            return Atoms::StandardrbRunner.run(file_paths, fix: fix)
+          end
+
+          # Fall back to RuboCop
+          if Atoms::RuboCopRunner.available?
+            @runner_used = :rubocop
+            return Atoms::RuboCopRunner.run(file_paths, fix: fix)
+          end
+
+          # Neither tool available - return RuboCop's error (mentions both tools)
+          @runner_used = nil
+          Atoms::RuboCopRunner.unavailable_result
+        end
+        private_class_method :run_with_fallback
 
         # Build formatted offense message
         # @param offense [Hash] Offense data

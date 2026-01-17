@@ -36,17 +36,31 @@ Or install directly:
 gem install ace-lint
 ```
 
-### Ruby Linting (StandardRB)
+### Ruby Linting (StandardRB with RuboCop Fallback)
 
-To lint Ruby files, install StandardRB separately:
+ace-lint supports Ruby linting with automatic tool detection:
+
+**Primary Tool: StandardRB** (preferred, zero-config)
 
 ```bash
 gem install standardrb
 ```
 
-StandardRB is a zero-config RuboCop wrapper that provides sensible defaults for Ruby style guide enforcement.
+**Fallback Tool: RuboCop** (automatically used if StandardRB is not installed)
 
-**Note**: Ruby linting is optional - ace-lint will skip Ruby files if StandardRB is not installed, showing a helpful install message.
+```bash
+gem install rubocop
+```
+
+StandardRB is a zero-config RuboCop wrapper that provides sensible defaults for Ruby style guide enforcement. When StandardRB is not installed, ace-lint automatically falls back to RuboCop using the minimal configuration in `.ace-defaults/lint/.rubocop.yml`.
+
+**Behavior:**
+
+1. **If StandardRB is installed**: Uses StandardRB (zero-config, preferred)
+2. **If StandardRB is NOT installed but RuboCop is**: Uses RuboCop as fallback
+3. **If neither is installed**: Shows helpful error message with installation instructions
+
+**Note**: Ruby linting is optional - ace-lint will show a helpful install message if neither StandardRB nor RuboCop is available.
 
 ## Quick Start
 
@@ -334,9 +348,27 @@ Bug reports and pull requests are welcome on GitHub.
 
 ## Troubleshooting
 
+### No Ruby Linter Available
+
+If you see the message `No Ruby linter available`, install either StandardRB (preferred) or RuboCop:
+
+**Option 1: Install StandardRB (recommended, zero-config)**
+
+```bash
+gem install standardrb
+```
+
+**Option 2: Install RuboCop (fallback option)**
+
+```bash
+gem install rubocop
+```
+
+ace-lint will automatically use StandardRB if available, falling back to RuboCop if StandardRB is not installed.
+
 ### StandardRB Not Found
 
-If you see the message `StandardRB is not installed`, install StandardRB:
+If you see the message `StandardRB is not installed`, but want to use StandardRB specifically:
 
 ```bash
 gem install standardrb
