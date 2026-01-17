@@ -225,10 +225,10 @@ module Ace
                 chunks = result[:results].select { |r| r[:file_type] == 'chunk' }
                 total_lines = chunks.sum { |r| r[:lines] || 0 }
                 total_size = chunks.sum { |r| r[:size] || 0 }
-                puts "Context saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
+                puts "Bundle saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
                 chunks.each { |r| puts r[:path] }
               else
-                puts "Context saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
+                puts "Bundle saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
                 puts cache_file
               end
               0
@@ -249,10 +249,10 @@ module Ace
                 chunks = result[:results].select { |r| r[:file_type] == 'chunk' }
                 total_lines = chunks.sum { |r| r[:lines] || 0 }
                 total_size = chunks.sum { |r| r[:size] || 0 }
-                puts "Context saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
+                puts "Bundle saved (#{total_lines} lines, #{format_size(total_size)}) in #{chunks.size} chunks:"
                 chunks.each { |r| puts r[:path] }
               else
-                puts "Context saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
+                puts "Bundle saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
                 puts file_path
               end
               0

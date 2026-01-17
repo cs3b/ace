@@ -32,7 +32,7 @@ class CLIPresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Base test preset
-        context:
+        bundle:
           params:
             timeout: 30
           files:
@@ -47,7 +47,7 @@ class CLIPresetCompositionTest < AceTestCase
       <<~PRESET
         ---
         description: Extended test preset
-        context:
+        bundle:
           presets:
             - base
           params:

@@ -6,9 +6,9 @@ require 'ace/git'
 require_relative 'bundle/version'
 
 # Main API
-require_relative 'bundle/organisms/context_loader'
+require_relative 'bundle/organisms/bundle_loader'
 require_relative 'bundle/molecules/preset_manager'
-require_relative 'bundle/molecules/context_file_writer'
+require_relative 'bundle/molecules/bundle_file_writer'
 
 # CLI and commands
 require_relative 'bundle/cli'
@@ -19,30 +19,30 @@ module Ace
     @config_mutex = Mutex.new
 
     class << self
-      # Load context using preset
+      # Load bundle using preset
       # @param preset_name [String] Name of the preset to load
       # @param options [Hash] Additional options
-      # @return [Models::ContextData] Loaded context data
+      # @return [Models::BundleData] Loaded bundle data
       def load_preset(preset_name, options = {})
-        loader = Organisms::ContextLoader.new(options)
+        loader = Organisms::BundleLoader.new(options)
         loader.load_preset(preset_name)
       end
 
       # Load multiple presets and merge them
       # @param preset_names [Array<String>] Names of presets to load
       # @param options [Hash] Additional options
-      # @return [Models::ContextData] Merged context data
+      # @return [Models::BundleData] Merged bundle data
       def load_multiple_presets(preset_names, options = {})
-        loader = Organisms::ContextLoader.new(options)
+        loader = Organisms::BundleLoader.new(options)
         loader.load_multiple_presets(preset_names)
       end
 
       # Inspect configuration of presets/files without loading files or executing commands
       # @param inputs [Array<String>] Names of presets or paths to files to inspect
       # @param options [Hash] Additional options
-      # @return [Models::ContextData] Configuration as YAML
+      # @return [Models::BundleData] Configuration as YAML
       def inspect_config(inputs, options = {})
-        loader = Organisms::ContextLoader.new(options)
+        loader = Organisms::BundleLoader.new(options)
         loader.inspect_config(inputs)
       end
 
@@ -53,30 +53,30 @@ module Ace
         manager.list_presets
       end
 
-      # Load context from file
-      # @param path [String] Path to context file
+      # Load bundle from file
+      # @param path [String] Path to bundle file
       # @param options [Hash] Additional options
-      # @return [Models::ContextData] Loaded context data
+      # @return [Models::BundleData] Loaded bundle data
       def load_file(path, options = {})
-        loader = Organisms::ContextLoader.new(options)
+        loader = Organisms::BundleLoader.new(options)
         loader.load_file(path)
       end
 
       # Load with auto-detection
       # @param input [String] File path, inline YAML, or preset name
       # @param options [Hash] Additional options
-      # @return [Models::ContextData] Loaded context data
+      # @return [Models::BundleData] Loaded bundle data
       def load_auto(input, options = {})
-        loader = Organisms::ContextLoader.new(options)
+        loader = Organisms::BundleLoader.new(options)
         loader.load_auto(input)
       end
 
       # Load multiple inputs and merge them
       # @param inputs [Array<String>] Array of inputs to load
       # @param options [Hash] Additional options
-      # @return [Models::ContextData] Merged context data
+      # @return [Models::BundleData] Merged bundle data
       def load_multiple(inputs, options = {})
-        loader = Organisms::ContextLoader.new(options)
+        loader = Organisms::BundleLoader.new(options)
         loader.load_multiple(inputs)
       end
 
@@ -84,23 +84,23 @@ module Ace
       # @param preset_names [Array<String>] Names of presets to load
       # @param file_paths [Array<String>] Paths to configuration files
       # @param options [Hash] Additional options
-      # @return [Models::ContextData] Merged context data
+      # @return [Models::BundleData] Merged bundle data
       def load_multiple_inputs(preset_names, file_paths, options = {})
-        loader = Organisms::ContextLoader.new(options)
+        loader = Organisms::BundleLoader.new(options)
         loader.load_multiple_inputs(preset_names, file_paths, options)
       end
 
-      # Write context output to file with optional chunking
-      # @param context [Models::ContextData] Context to write
+      # Write bundle output to file with optional chunking
+      # @param bundle [Models::BundleData] Bundle to write
       # @param output_path [String] Output file path
       # @param options [Hash] Additional options
       # @return [Hash] Write result with success status
-      def write_output(context, output_path, options = {})
-        writer = Molecules::ContextFileWriter.new(
+      def write_output(bundle, output_path, options = {})
+        writer = Molecules::BundleFileWriter.new(
           cache_dir: cache_dir,
           max_lines: max_lines
         )
-        writer.write_with_chunking(context, output_path, options)
+        writer.write_with_chunking(bundle, output_path, options)
       end
 
       # Get configuration for ace-bundle
@@ -132,7 +132,7 @@ module Ace
       # ---- Configuration Helper Methods (ADR-022 compliant) ----
       # These read from config instead of using hardcoded constants
 
-      # Cache directory for context output files
+      # Cache directory for bundle output files
       # @return [String] Cache directory path (default: ".cache/ace-bundle")
       def cache_dir
         config["cache_dir"] || ".cache/ace-bundle"

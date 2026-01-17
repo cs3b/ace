@@ -1,6 +1,6 @@
 ---
 description: Team context with extended timeout for CI environments
-context:
+bundle:
   presets:
     - development
   params:

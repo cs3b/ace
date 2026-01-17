@@ -59,8 +59,8 @@ module Ace
         def self.extract_preset_references(preset_data)
           return [] unless preset_data
 
-          context_config = preset_data[:context] || preset_data['context'] || {}
-          presets = context_config['presets'] || context_config[:presets] || []
+          bundle_config = preset_data[:bundle] || preset_data['bundle'] || {}
+          presets = bundle_config['presets'] || bundle_config[:presets] || []
 
           # Ensure we return an array of strings
           Array(presets).map(&:to_s)

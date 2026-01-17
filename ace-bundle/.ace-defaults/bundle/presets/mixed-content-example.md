@@ -1,6 +1,6 @@
 ---
 description: Example showing mixed content and presets in a single section
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml

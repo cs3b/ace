@@ -1,6 +1,6 @@
 ---
 description: Security-focused review context
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml

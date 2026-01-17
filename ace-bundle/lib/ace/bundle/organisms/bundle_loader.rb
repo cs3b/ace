@@ -2,7 +2,7 @@
 
 require 'pathname'
 require 'ace/core'
-require 'ace/core/molecules/context_merger'
+require_relative '../molecules/bundle_merger'
 require 'ace/core/molecules/file_aggregator'
 require 'ace/core/molecules/output_formatter'
 require 'ace/support/fs'
@@ -13,16 +13,16 @@ require 'ace/git'
 require_relative '../molecules/preset_manager'
 require_relative '../molecules/section_processor'
 require_relative '../molecules/section_formatter'
-require_relative 'pr_context_loader'
-require_relative '../models/context_data'
+require_relative 'pr_bundle_loader'
+require_relative '../models/bundle_data'
 require_relative '../atoms/content_checker'
 require_relative '../atoms/typo_detector'
 
 module Ace
   module Bundle
     module Organisms
-      # Main context loader that orchestrates preset loading using ace-core components
-      class ContextLoader
+      # Main bundle loader that orchestrates preset loading using ace-core components
+      class BundleLoader
         # Error raised when preset loading fails
         class PresetLoadError < StandardError; end
 
@@ -30,7 +30,7 @@ module Ace
           @options = options
           @preset_manager = Molecules::PresetManager.new
           @section_processor = Molecules::SectionProcessor.new
-          @merger = Ace::Core::Molecules::ContextMerger.new
+          @merger = Molecules::BundleMerger.new
           @file_aggregator = Ace::Core::Molecules::FileAggregator.new(
             max_size: options[:max_size],
             base_dir: options[:base_dir] || project_root
@@ -47,7 +47,7 @@ module Ace
 
           # Handle errors from composition loading
           unless preset[:success]
-            return Models::ContextData.new(
+            return Models::BundleData.new(
               preset_name: preset_name,
               metadata: { error: preset[:error] }
             )
@@ -57,23 +57,23 @@ module Ace
           params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
           merged_options = @options.merge(params)
 
-          # Process the preset context configuration
+          # Process the preset bundle configuration
           begin
-            context = load_from_preset_config(preset, merged_options)
+            bundle = load_from_preset_config(preset, merged_options)
           rescue PresetLoadError => e
             # Handle errors from top-level preset processing (fail-fast behavior)
-            return Models::ContextData.new(
+            return Models::BundleData.new(
               preset_name: preset_name,
               metadata: { error: e.message }
             )
           end
-          context.metadata[:preset_name] = preset_name
-          context.metadata[:output] = preset[:output]  # Store default output mode
+          bundle.metadata[:preset_name] = preset_name
+          bundle.metadata[:output] = preset[:output]  # Store default output mode
 
           # Add composition metadata if preset was composed
           if preset[:composed]
-            context.metadata[:composed] = true
-            context.metadata[:composed_from] = preset[:composed_from]
+            bundle.metadata[:composed] = true
+            bundle.metadata[:composed_from] = preset[:composed_from]
           end
 
           # Determine format - respect explicit format requests but default to markdown-xml for embedded sources
@@ -90,9 +90,9 @@ module Ace
             # Fallback to markdown
             format = 'markdown'
           end
-          format_context(context, format)
+          format_bundle(bundle, format)
 
-          context
+          bundle
         end
 
         def load_file(path)
@@ -115,19 +115,19 @@ module Ace
             max_size = @options[:max_size] || Ace::Core::Atoms::FileReader::MAX_FILE_SIZE
             result = Ace::Core::Atoms::FileReader.read(path, max_size: max_size)
 
-            context = Models::ContextData.new
+            bundle = Models::BundleData.new
             if result[:success]
-              context.add_file(path, result[:content])
+              bundle.add_file(path, result[:content])
             else
-              context.metadata[:error] = result[:error]
+              bundle.metadata[:error] = result[:error]
             end
 
-            context
+            bundle
           end
         end
 
         def load_multiple_presets(preset_names)
-          contexts = []
+          bundles = []
           warnings = []
 
           preset_names.each do |preset_name|
@@ -137,17 +137,17 @@ module Ace
             if preset[:success]
               params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
               merged_options = @options.merge(params)
-              context = load_from_preset_config(preset, merged_options)
-              context.metadata[:preset_name] = preset_name
-              context.metadata[:output] = preset[:output]  # Store preset's output mode
+              bundle = load_from_preset_config(preset, merged_options)
+              bundle.metadata[:preset_name] = preset_name
+              bundle.metadata[:output] = preset[:output]  # Store preset's output mode
 
               # Add composition metadata if preset was composed
               if preset[:composed]
-                context.metadata[:composed] = true
-                context.metadata[:composed_from] = preset[:composed_from]
+                bundle.metadata[:composed] = true
+                bundle.metadata[:composed_from] = preset[:composed_from]
               end
 
-              contexts << context
+              bundles << bundle
             else
               # Log warning but continue with other presets
               warnings << "Warning: #{preset[:error]}"
@@ -156,18 +156,18 @@ module Ace
           end
 
           # If no successful presets loaded, return error
-          if contexts.empty?
-            error_context = Models::ContextData.new(
+          if bundles.empty?
+            error_bundle = Models::BundleData.new(
               metadata: {
                 error: "No valid presets loaded",
                 warnings: warnings
               }
             )
-            return error_context
+            return error_bundle
           end
 
-          # Merge all contexts
-          merged = merge_contexts(contexts)
+          # Merge all bundles
+          merged = merge_bundles(bundles)
           merged.metadata[:warnings] = warnings if warnings.any?
 
           merged
@@ -196,7 +196,7 @@ module Ace
                 elsif has_frontmatter?(input)
                   if content.match(/\A---\s*\n(.*?)\n---\s*\n/m)
                     frontmatter = YAML.safe_load($1, aliases: true, permitted_classes: [Symbol]) || {}
-                    config = unwrap_context_config(frontmatter)
+                    config = unwrap_bundle_config(frontmatter)
                   end
                 end
 
@@ -204,11 +204,11 @@ module Ace
                 preset_refs = config['presets'] || config[:presets]
                 if preset_refs && !preset_refs.empty?
                   # Load all referenced presets first
-                  preset_contexts = []
+                  preset_bundles = []
                   preset_refs.each do |preset_name|
                     preset = @preset_manager.load_preset_with_composition(preset_name)
                     if preset[:success]
-                      preset_contexts << { context: preset[:context] }
+                      preset_bundles << { bundle: preset[:bundle] }
                     else
                       warnings << "Failed to load preset '#{preset_name}' from file #{input}"
                     end
@@ -216,9 +216,9 @@ module Ace
 
                   # Merge all presets + file config (file config last = file wins)
                   # Order: preset1, preset2, ..., file config
-                  if preset_contexts.any?
-                    merged = @preset_manager.send(:merge_preset_data, preset_contexts + [{ context: config }])
-                    config = merged[:context]
+                  if preset_bundles.any?
+                    merged = @preset_manager.send(:merge_preset_data, preset_bundles + [{ bundle: config }])
+                    config = merged[:bundle]
                   end
 
                   # Remove presets key from final config
@@ -228,7 +228,7 @@ module Ace
 
                 configs << {
                   success: true,
-                  context: config,
+                  bundle: config,
                   name: File.basename(input),
                   source_file: input
                 }
@@ -248,10 +248,10 @@ module Ace
 
           # If no successful configs, return error
           if configs.empty?
-            context = Models::ContextData.new
-            context.metadata[:error] = "No valid inputs loaded"
-            context.metadata[:warnings] = warnings
-            return context
+            bundle = Models::BundleData.new
+            bundle.metadata[:error] = "No valid inputs loaded"
+            bundle.metadata[:warnings] = warnings
+            return bundle
           end
 
           # Merge configurations (just the config, not content)
@@ -263,32 +263,32 @@ module Ace
           # Format as YAML
           yaml_output = YAML.dump(merged_config)
 
-          # Create context with YAML content
-          context = Models::ContextData.new
-          context.content = yaml_output
-          context.metadata[:inspect_mode] = true
-          context.metadata[:inputs] = inputs
+          # Create bundle with YAML content
+          bundle = Models::BundleData.new
+          bundle.content = yaml_output
+          bundle.metadata[:inspect_mode] = true
+          bundle.metadata[:inputs] = inputs
 
-          context
+          bundle
         end
 
         def load_multiple(inputs)
-          contexts = []
+          bundles = []
 
           inputs.each do |input|
-            context = load_auto(input)
-            context.metadata[:source_input] = input
-            contexts << context
+            bundle = load_auto(input)
+            bundle.metadata[:source_input] = input
+            bundles << bundle
           end
 
-          # Merge all contexts
-          merge_contexts(contexts)
+          # Merge all bundles
+          merge_bundles(bundles)
         end
 
         # Load multiple inputs (presets and files) and merge them
         # Maintains order of specification to allow proper override semantics
         def load_multiple_inputs(preset_names, file_paths, options = {})
-          contexts = []
+          bundles = []
           warnings = []
 
           # Process presets
@@ -299,18 +299,18 @@ module Ace
             if preset[:success]
               params = preset.dig(:context, :params) || preset.dig(:context, 'params') || {}
               merged_options = @options.merge(params)
-              context = load_from_preset_config(preset, merged_options)
-              context.metadata[:preset_name] = preset_name
-              context.metadata[:source_type] = 'preset'
-              context.metadata[:output] = preset[:output]  # Store preset's output mode
+              bundle = load_from_preset_config(preset, merged_options)
+              bundle.metadata[:preset_name] = preset_name
+              bundle.metadata[:source_type] = 'preset'
+              bundle.metadata[:output] = preset[:output]  # Store preset's output mode
 
               # Add composition metadata if preset was composed
               if preset[:composed]
-                context.metadata[:composed] = true
-                context.metadata[:composed_from] = preset[:composed_from]
+                bundle.metadata[:composed] = true
+                bundle.metadata[:composed_from] = preset[:composed_from]
               end
 
-              contexts << context
+              bundles << bundle
             else
               # Log warning but continue with other inputs
               warnings << "Warning: #{preset[:error]}"
@@ -321,10 +321,10 @@ module Ace
           # Process files
           file_paths.each do |file_path|
             begin
-              context = load_file(file_path)
-              context.metadata[:source_type] = 'file'
-              context.metadata[:source_path] = file_path
-              contexts << context
+              bundle = load_file(file_path)
+              bundle.metadata[:source_type] = 'file'
+              bundle.metadata[:source_path] = file_path
+              bundles << bundle
             rescue => e
               warnings << "Warning: Failed to load file #{file_path}: #{e.message}"
               warn "Warning: Failed to load file #{file_path}: #{e.message}" if @options[:debug]
@@ -332,21 +332,21 @@ module Ace
           end
 
           # Return error if all inputs failed
-          if contexts.empty? && warnings.any?
-            return Models::ContextData.new.tap do |c|
+          if bundles.empty? && warnings.any?
+            return Models::BundleData.new.tap do |c|
               c.metadata[:error] = "Failed to load any inputs"
               c.metadata[:errors] = warnings
               c.content = warnings.join("\n")
             end
           end
 
-          # Merge all contexts (with proper order for overrides)
-          merged_context = merge_contexts(contexts)
+          # Merge all bundles (with proper order for overrides)
+          merged_bundle = merge_bundles(bundles)
 
           # Add warnings to metadata if any
-          merged_context.metadata[:warnings] = warnings if warnings.any?
+          merged_bundle.metadata[:warnings] = warnings if warnings.any?
 
-          merged_context
+          merged_bundle
         end
 
         def load_auto(input)
@@ -382,25 +382,25 @@ module Ace
           begin
             require 'yaml'
             config = YAML.safe_load(yaml_string)
-            # Unwrap 'context' key if present (typed subjects use nested structure)
-            # This allows both flat configs (diffs: [...]) and nested (context: { diffs: [...] })
-            template_config = unwrap_context_config(config)
-            context = process_template_config(template_config)
+            # Unwrap 'bundle' key if present (typed subjects use nested structure)
+            # This allows both flat configs (diffs: [...]) and nested (bundle: { diffs: [...] })
+            template_config = unwrap_bundle_config(config)
+            bundle = process_template_config(template_config)
             # Process PR references if present (uses same unwrapped config)
-            pr_processed = process_pr_config(context, template_config, @options)
-            # Re-format context if PR processing added sections
-            # Note: process_template_config already formats files/diffs/commands into context.content
+            pr_processed = process_pr_config(bundle, template_config, @options)
+            # Re-format bundle if PR processing added sections
+            # Note: process_template_config already formats files/diffs/commands into bundle.content
             # We only need to re-format if process_pr_config added new sections (PR diffs)
             # If PR had no changes or failed, has_sections? returns false and we keep existing content
-            if context.has_sections? || pr_processed
+            if bundle.has_sections? || pr_processed
               format = config['format'] || @options[:format] || 'markdown-xml'
-              format_context(context, format)
+              format_bundle(bundle, format)
             end
-            context
+            bundle
           rescue => e
-            context = Models::ContextData.new
-            context.metadata[:error] = "Failed to parse inline YAML: #{e.message}"
-            context
+            bundle = Models::BundleData.new
+            bundle.metadata[:error] = "Failed to parse inline YAML: #{e.message}"
+            bundle
           end
         end
 
@@ -427,12 +427,12 @@ module Ace
             end
           end
 
-          # Check if frontmatter contains config directly (via 'context' key or template config keys)
+          # Check if frontmatter contains config directly (via 'bundle' key or template config keys)
           # This is the newer pattern for workflow files
-          if frontmatter['context'].is_a?(Hash) ||
+          if frontmatter['bundle'].is_a?(Hash) ||
              (frontmatter.keys & %w[files commands include exclude diffs]).any?
             # Use frontmatter as the main config
-            config = unwrap_context_config(frontmatter)
+            config = unwrap_bundle_config(frontmatter)
 
             # Merge params into options if present
             params = config['params']
@@ -443,55 +443,55 @@ module Ace
             # Apply CLI overrides to config (CLI takes precedence)
             config = apply_cli_overrides(config)
 
-            # Process the config (loads embedded files from context.files)
-            context = process_template_config(config)
+            # Process the config (loads embedded files from bundle.files)
+            bundle = process_template_config(config)
 
             # Process base content if present (for template files with context.base)
-            process_base_content(context, config, @options)
+            process_base_content(bundle, config, @options)
 
             # Process PR references (context.pr)
-            process_pr_config(context, config, @options)
+            process_pr_config(bundle, config, @options)
 
             # Process sections if present (same as preset loading)
-            preset_like_config = { 'context' => config }
+            preset_like_config = { 'bundle' => config }
             if @section_processor.has_sections?(preset_like_config)
               sections = @section_processor.process_sections(preset_like_config, @preset_manager)
-              context.sections = sections
+              bundle.sections = sections
 
               # Process content for each section
               sections.each do |section_name, section_data|
-                process_section_content(context, section_name, section_data, @options, config)
+                process_section_content(bundle, section_name, section_data, @options, config)
               end
             end
 
             # Replace metadata with original frontmatter (keep it unmodified)
             # Convert string keys to symbols for consistency
-            context.metadata = {}
+            bundle.metadata = {}
             frontmatter.each do |key, value|
-              context.metadata[key.to_sym] = value
+              bundle.metadata[key.to_sym] = value
             end
             # Store original YAML for output formatting
-            context.metadata[:frontmatter_yaml] = frontmatter_yaml if frontmatter_yaml
+            bundle.metadata[:frontmatter_yaml] = frontmatter_yaml if frontmatter_yaml
 
             # If embed_document_source is true, store original document and keep embedded files separate
             if config['embed_document_source']
               # Store original document (with frontmatter) as source content
               # Use original_content instead of File.read to avoid redundant I/O
-              context.content = original_content
+              bundle.content = original_content
 
-              # context.files already has embedded files from process_template_config
+              # bundle.files already has embedded files from process_template_config
               # Don't add source to files array - it will be output as raw content
 
               # Format and return
               format = config['format'] || @options[:format] || 'markdown-xml'
-              return format_context(context, format)
+              return format_bundle(bundle, format)
             end
 
-            # Format context before returning (same as preset loading)
+            # Format bundle before returning (same as preset loading)
             format = config['format'] || @options[:format] || 'markdown-xml'
-            format_context(context, format)
+            format_bundle(bundle, format)
 
-            return context
+            return bundle
           end
 
           # Check if this is plain markdown with metadata-only frontmatter
@@ -504,9 +504,9 @@ module Ace
           parse_result = Ace::Core::Atoms::TemplateParser.parse(template_content)
 
           unless parse_result[:success]
-            context = Models::ContextData.new
-            context.metadata[:error] = parse_result[:error]
-            return context
+            bundle = Models::BundleData.new
+            bundle.metadata[:error] = parse_result[:error]
+            return bundle
           end
 
           config = parse_result[:config]
@@ -515,12 +515,12 @@ module Ace
           config = frontmatter.merge(config) if frontmatter.any?
 
           # Process files and commands from template
-          context = process_template_config(config)
+          bundle = process_template_config(config)
 
           # Add frontmatter to metadata for reference
-          context.metadata[:frontmatter] = frontmatter if frontmatter.any?
+          bundle.metadata[:frontmatter] = frontmatter if frontmatter.any?
 
-          context
+          bundle
         end
 
         def load_from_config(config)
@@ -529,7 +529,7 @@ module Ace
             return load_template(config[:template])
           end
 
-          context = Models::ContextData.new(
+          bundle = Models::BundleData.new(
             preset_name: config[:name],
             metadata: config[:metadata] || {}
           )
@@ -544,83 +544,83 @@ module Ace
 
             result = aggregator.aggregate(config[:include])
 
-            # Add files to context
+            # Add files to bundle
             result[:files].each do |file_info|
-              context.add_file(file_info[:path], file_info[:content])
+              bundle.add_file(file_info[:path], file_info[:content])
             end
 
             # Add errors if any
             result[:errors].each do |error|
-              context.metadata[:errors] ||= []
-              context.metadata[:errors] << error
+              bundle.metadata[:errors] ||= []
+              bundle.metadata[:errors] << error
             end
           end
 
           # Format output
-          format_context(context, config[:format])
+          format_bundle(bundle, config[:format])
         end
 
         def load_from_preset_config(preset, options)
-          context_config = preset[:context] || {}
+          bundle_config = preset[:bundle] || {}
 
           # Apply CLI overrides to context config (CLI takes precedence)
-          context_config = apply_cli_overrides(context_config)
+          bundle_config = apply_cli_overrides(bundle_config)
 
           # Process top-level preset references (context.presets)
           # This merges files, commands, and params from referenced presets
-          context_config = process_top_level_presets(context_config)
+          bundle_config = process_top_level_presets(bundle_config)
 
-          preset[:context] = context_config
+          preset[:bundle] = bundle_config
 
-          context = Models::ContextData.new(
+          bundle = Models::BundleData.new(
             preset_name: preset[:name],
             metadata: preset[:metadata] || {}
           )
 
           # Process base content if present
-          process_base_content(context, context_config, options)
+          process_base_content(bundle, bundle_config, options)
 
           # Process sections if present
           if @section_processor.has_sections?(preset)
             sections = @section_processor.process_sections(preset, @preset_manager)
-            context.sections = sections
+            bundle.sections = sections
 
             # Process content for each section
             sections.each do |section_name, section_data|
-              process_section_content(context, section_name, section_data, options, context_config)
+              process_section_content(bundle, section_name, section_data, options, bundle_config)
             end
           else
             # Migrate legacy configuration to sections if needed
-            if should_migrate_to_sections?(context_config)
+            if should_migrate_to_sections?(bundle_config)
               migrated_config = @section_processor.migrate_legacy_to_sections(preset)
               sections = @section_processor.process_sections(migrated_config, @preset_manager)
-              context.sections = sections
+              bundle.sections = sections
 
               # Process migrated sections
               sections.each do |section_name, section_data|
-                process_section_content(context, section_name, section_data, options, context_config)
+                process_section_content(bundle, section_name, section_data, options, bundle_config)
               end
             else
               # Legacy processing for non-section configurations
-              process_legacy_content(context, context_config, options)
+              process_legacy_content(bundle, bundle_config, options)
             end
           end
 
           # Process top-level PR references (works with both sections and legacy formats)
           # Called after section processing so PR diffs merge into existing sections
-          process_pr_config(context, context_config, options)
+          process_pr_config(bundle, bundle_config, options)
 
           # If embed_document_source is true, set content to trigger XML formatting
-          if context_config['embed_document_source'] && preset[:body] && !preset[:body].empty?
-            context.content = preset[:body]
+          if bundle_config['embed_document_source'] && preset[:body] && !preset[:body].empty?
+            bundle.content = preset[:body]
           else
             # Add preset body to metadata (old behavior for non-embedded)
             if preset[:body] && !preset[:body].empty?
-              context.metadata[:preset_content] = preset[:body]
+              bundle.metadata[:preset_content] = preset[:body]
             end
           end
 
-          context
+          bundle
         end
 
         # Compose a file configuration with referenced presets
@@ -629,14 +629,15 @@ module Ace
           return file_data if preset_names.empty?
 
           # Load all referenced presets first
-          base_context = file_data[:context]
+          base_bundle = file_data[:bundle]
           composed_from = [file_data[:name]]
-          preset_contexts = []
+          preset_bundles = []
 
           preset_names.each do |preset_name|
             preset = @preset_manager.load_preset_with_composition(preset_name)
             if preset[:success]
-              preset_contexts << { context: preset[:context] }
+              preset_bundle = preset[:bundle]
+              preset_bundles << { bundle: preset_bundle }
               composed_from << preset_name
               composed_from.concat(preset[:composed_from]) if preset[:composed_from]
             else
@@ -644,18 +645,18 @@ module Ace
             end
           end
 
-          # Merge all presets + file context (file context last = file wins)
-          # Order: preset1, preset2, ..., file context
-          if preset_contexts.any?
-            merged = @preset_manager.send(:merge_preset_data, preset_contexts + [{ context: base_context }])
-            base_context = merged[:context]
+          # Merge all presets + file bundle (file bundle last = file wins)
+          # Order: preset1, preset2, ..., file bundle
+          if preset_bundles.any?
+            merged = @preset_manager.send(:merge_preset_data, preset_bundles + [{ bundle: base_bundle }])
+            base_bundle = merged[:bundle]
           end
 
-          # Remove presets key from context (it's metadata, already processed)
-          base_context.delete('presets')
-          base_context.delete(:presets)
+          # Remove presets key from bundle (it's metadata, already processed)
+          base_bundle.delete('presets')
+          base_bundle.delete(:presets)
 
-          file_data[:context] = base_context
+          file_data[:bundle] = base_bundle
           file_data[:composed] = true
           file_data[:composed_from] = composed_from.uniq
           file_data
@@ -663,12 +664,12 @@ module Ace
 
         private
 
-        # Unwrap context configuration from wrapper if present
-        # Handles both nested (context: { ... }) and flat ({ ... }) formats
-        # @param config [Hash] Configuration hash, possibly with 'context' key
-        # @return [Hash] The context configuration
-        def unwrap_context_config(config)
-          config['context'] || config
+        # Unwrap bundle configuration from wrapper if present
+        # Handles both nested (bundle: { ... }) and flat ({ ... }) formats
+        # @param config [Hash] Configuration hash, possibly with 'bundle' key
+        # @return [Hash] The bundle configuration
+        def unwrap_bundle_config(config)
+          config['bundle'] || config
         end
 
         # Apply CLI overrides to configuration
@@ -688,31 +689,32 @@ module Ace
           end
         end
 
-        # Process top-level preset references in context configuration
+        # Process top-level preset references in bundle configuration
         #
-        # When a preset or file has `context: presets: [preset-name]` at the top level,
+        # When a preset or file has `bundle: presets: [preset-name]` at the top level,
         # this method loads each referenced preset and merges their content (files,
         # commands, params) into the current configuration.
         #
         # Merge order: referenced presets first, then current config (current wins).
         # This is consistent with section-based preset handling.
         #
-        # @param context_config [Hash] The context configuration to process
+        # @param bundle_config [Hash] The bundle configuration to process
         # @return [Hash] Merged configuration with preset content incorporated
-        def process_top_level_presets(context_config)
-          return context_config unless context_config
+        def process_top_level_presets(bundle_config)
+          return bundle_config unless bundle_config
 
-          preset_refs = context_config['presets'] || context_config[:presets]
-          return context_config unless preset_refs&.any?
+          preset_refs = bundle_config['presets'] || bundle_config[:presets]
+          return bundle_config unless preset_refs&.any?
 
           # Load all referenced presets, collecting any errors
-          preset_contexts = []
+          preset_bundles = []
           errors = []
 
           preset_refs.each do |preset_name|
             preset = @preset_manager.load_preset_with_composition(preset_name)
             if preset[:success]
-              preset_contexts << { context: preset[:context] }
+              preset_bundle = preset[:bundle]
+              preset_bundles << { bundle: preset_bundle }
             else
               errors << "#{preset_name}: #{preset[:error]}"
             end
@@ -723,11 +725,11 @@ module Ace
             raise PresetLoadError, "Failed to load referenced presets: #{errors.join('; ')}"
           end
 
-          return context_config unless preset_contexts.any?
+          return bundle_config unless preset_bundles.any?
 
           # Merge: referenced presets first, then current config (current wins)
-          merged = @preset_manager.merge_preset_data(preset_contexts + [{ context: context_config }])
-          merged_config = merged[:context]
+          merged = @preset_manager.merge_preset_data(preset_bundles + [{ bundle: bundle_config }])
+          merged_config = merged[:bundle]
 
           # Remove presets key from merged config (already processed)
           merged_config.delete('presets')
@@ -747,7 +749,7 @@ module Ace
         def merge_preset_configurations(presets)
           merged = {
             'description' => nil,
-            'context' => {
+            'bundle' => {
               'params' => {},
               'files' => [],
               'commands' => []
@@ -758,68 +760,68 @@ module Ace
             # Merge description (last wins)
             merged['description'] = preset[:description] if preset[:description]
 
-            # Merge context configuration
-            if preset[:context]
-              context = preset[:context]
+            # Merge bundle configuration
+            if preset[:bundle]
+              bundle_config = preset[:bundle]
 
               # Merge params
-              if context['params']
-                merged['context']['params'].merge!(context['params'])
+              if bundle_config['params']
+                merged['bundle']['params'].merge!(bundle_config['params'])
               end
 
               # Merge files
-              if context['files']
-                merged['context']['files'].concat(context['files'])
+              if bundle_config['files']
+                merged['bundle']['files'].concat(bundle_config['files'])
               end
 
               # Merge commands
-              if context['commands']
-                merged['context']['commands'].concat(context['commands'])
+              if bundle_config['commands']
+                merged['bundle']['commands'].concat(bundle_config['commands'])
               end
 
-              # Copy other context keys (embed_document_source, etc.)
-              context.each do |key, value|
+              # Copy other bundle keys (embed_document_source, etc.)
+              bundle_config.each do |key, value|
                 next if %w[params files commands presets].include?(key)
-                merged['context'][key] = value
+                merged['bundle'][key] = value
               end
             end
           end
 
           # Deduplicate arrays
-          merged['context']['files'].uniq!
-          merged['context']['commands'].uniq!
+          merged['bundle']['files'].uniq!
+          merged['bundle']['commands'].uniq!
 
           merged
         end
 
-        def merge_contexts(contexts)
-          return Models::ContextData.new if contexts.empty?
+        def merge_bundles(bundles)
+          return Models::BundleData.new if bundles.empty?
 
           # Single context with actual processed section content: preserve sections
           # This handles presets with explicit `sections:` that have real content
-          if contexts.size == 1 && has_processed_section_content?(contexts.first)
-            result = contexts.first
+          if bundles.size == 1 && has_processed_section_content?(bundles.first)
+            result = bundles.first
             result.metadata[:merged] = true
-            result.metadata[:total_contexts] = 1
+            result.metadata[:total_bundles] = 1
             result.metadata[:sources] = [result.metadata[:preset_name] || result.metadata[:source_path]].compact
-            return format_context(result, @options[:format] || 'markdown-xml')
+            return format_bundle(result, @options[:format] || 'markdown-xml')
           end
 
           # Default path: use original merge logic for backward compatibility
-          # This creates a new context without sections (uses OutputFormatter with metadata)
-          context_hashes = contexts.map do |context|
+          # This creates a new bundle without sections (uses OutputFormatter with metadata)
+          bundle_hashes = bundles.map do |bundle|
             {
-              files: context.files,
-              metadata: context.metadata,
-              preset_name: context.metadata[:preset_name],
-              source_input: context.metadata[:source_input],
-              errors: context.metadata[:errors] || []
+              files: bundle.files,
+              metadata: bundle.metadata,
+              preset_name: bundle.metadata[:preset_name],
+              source_input: bundle.metadata[:source_input],
+              errors: bundle.metadata[:errors] || []
             }
           end
 
-          merged = @merger.merge_contexts(context_hashes)
+          merged = @merger.merge_bundles(bundle_hashes)
 
-          result = Models::ContextData.new(
+          result = Models::BundleData.new(
             metadata: merged[:metadata] || {}
           )
 
@@ -828,20 +830,20 @@ module Ace
           end
 
           result.metadata[:merged] = true
-          result.metadata[:total_contexts] = merged[:total_contexts]
+          result.metadata[:total_bundles] = merged[:total_bundles]
           result.metadata[:sources] = merged[:sources]
           result.metadata[:errors] = merged[:errors] if merged[:errors]&.any?
 
-          format_context(result, @options[:format] || 'markdown-xml')
+          format_bundle(result, @options[:format] || 'markdown-xml')
         end
 
-        # Check if context has sections with actual processed content
+        # Check if bundle has sections with actual processed content
         # Returns true if sections have _processed_files, _processed_commands, or _processed_diffs
         # Note: Section data is normalized to symbol keys by SectionProcessor
-        def has_processed_section_content?(context)
-          return false unless context.has_sections?
+        def has_processed_section_content?(bundle)
+          return false unless bundle.has_sections?
 
-          context.sections.any? do |_name, data|
+          bundle.sections.any? do |_name, data|
             processed_files = data[:_processed_files] || []
             processed_commands = data[:_processed_commands] || []
             processed_diffs = data[:_processed_diffs] || []
@@ -933,48 +935,48 @@ module Ace
           )
           formatted_content = formatter.format(data)
 
-          # Create context with formatted content
-          context = Models::ContextData.new(metadata: data[:metadata])
-          context.content = formatted_content
-          context.commands = data[:commands]
+          # Create bundle with formatted content
+          bundle = Models::BundleData.new(metadata: data[:metadata])
+          bundle.content = formatted_content
+          bundle.commands = data[:commands]
 
           # Store individual files if embed_document_source is true
           if config['embed_document_source']
             data[:files].each do |file_info|
-              context.add_file(file_info[:path], file_info[:content])
+              bundle.add_file(file_info[:path], file_info[:content])
             end
           end
 
-          context
+          bundle
         end
 
-        def format_context(context, format)
+        def format_bundle(bundle, format)
           case format
           when 'markdown', 'yaml', 'xml', 'markdown-xml', 'json'
-            # Use SectionFormatter if context has sections, otherwise fallback to OutputFormatter
-            if context.has_sections?
+            # Use SectionFormatter if bundle has sections, otherwise fallback to OutputFormatter
+            if bundle.has_sections?
               formatter = Molecules::SectionFormatter.new(format)
-              context.content = formatter.format_with_sections(context)
+              bundle.content = formatter.format_with_sections(bundle)
             else
-              # Use OutputFormatter for legacy contexts
+              # Use OutputFormatter for legacy bundles
               data = {
-                files: context.files,
-                metadata: context.metadata.dup,
-                commands: context.commands,
-                content: context.content
+                files: bundle.files,
+                metadata: bundle.metadata.dup,
+                commands: bundle.commands,
+                content: bundle.content
               }
 
               # Include preset_name at the top level for YAML format
-              if context.metadata[:preset_name]
-                data[:preset_name] = context.metadata[:preset_name]
+              if bundle.metadata[:preset_name]
+                data[:preset_name] = bundle.metadata[:preset_name]
               end
 
               formatter = Ace::Core::Molecules::OutputFormatter.new(format)
-              context.content = formatter.format(data)
+              bundle.content = formatter.format(data)
             end
-            context
+            bundle
           else
-            context
+            bundle
           end
         end
 
@@ -988,10 +990,10 @@ module Ace
           else
             # Protocol resolution failed - log warning for debugging
             warn "Warning: Failed to resolve protocol '#{protocol_ref}'" if @options[:debug]
-            context = Models::ContextData.new
-            context.metadata[:error] = "Failed to resolve protocol: #{protocol_ref}"
-            context.metadata[:protocol_ref] = protocol_ref
-            context
+            bundle = Models::BundleData.new
+            bundle.metadata[:error] = "Failed to resolve protocol: #{protocol_ref}"
+            bundle.metadata[:protocol_ref] = protocol_ref
+            bundle
           end
         end
 
@@ -1035,27 +1037,27 @@ module Ace
         end
 
         # Process content for a specific section
-        def process_section_content(context, section_name, section_data, options, context_config = {})
+        def process_section_content(bundle, section_name, section_data, options, bundle_config = {})
           # Process all content types that are present in the section
           if has_files_content?(section_data)
-            process_files_section(context, section_name, section_data, options, context_config)
+            process_files_section(bundle, section_name, section_data, options, bundle_config)
           end
 
           if has_commands_content?(section_data)
-            process_commands_section(context, section_name, section_data, options, context_config)
+            process_commands_section(bundle, section_name, section_data, options, bundle_config)
           end
 
           if has_diffs_content?(section_data)
-            process_diffs_section(context, section_name, section_data, options)
+            process_diffs_section(bundle, section_name, section_data, options)
           end
 
           if has_content_content?(section_data)
-            process_inline_content_section(context, section_name, section_data, options)
+            process_inline_content_section(bundle, section_name, section_data, options)
           end
         end
 
         # Process files section content
-        def process_files_section(context, section_name, section_data, options, context_config = {})
+        def process_files_section(bundle, section_name, section_data, options, bundle_config = {})
           files = section_data[:files] || section_data['files'] || []
           return unless files.any?
 
@@ -1083,22 +1085,22 @@ module Ace
           # Store section files in section data
           section_data[:_processed_files] = result[:files]
 
-          # Add files to context if embed_document_source is true
-          if context_config['embed_document_source']
+          # Add files to bundle if embed_document_source is true
+          if bundle_config['embed_document_source']
             result[:files].each do |file_info|
-              context.add_file(file_info[:path], file_info[:content])
+              bundle.add_file(file_info[:path], file_info[:content])
             end
           end
 
           # Add errors if any
           result[:errors].each do |error|
-            context.metadata[:errors] ||= []
-            context.metadata[:errors] << "Section '#{section_name}': #{error}"
+            bundle.metadata[:errors] ||= []
+            bundle.metadata[:errors] << "Section '#{section_name}': #{error}"
           end
         end
 
         # Process commands section content
-        def process_commands_section(context, section_name, section_data, options, context_config = {})
+        def process_commands_section(bundle, section_name, section_data, options, bundle_config = {})
           commands = section_data[:commands] || section_data['commands'] || []
           return unless commands.any?
 
@@ -1118,22 +1120,22 @@ module Ace
           # Store processed commands in section data
           section_data[:_processed_commands] = processed_commands
 
-          # Add commands to context (always, like in legacy processing)
-          context.commands = (context.commands || []) + processed_commands
+          # Add commands to bundle (always, like in legacy processing)
+          bundle.commands = (bundle.commands || []) + processed_commands
         end
 
         # Process top-level PR configuration
-        # Delegates to PrContextLoader for PR fetching and section integration
+        # Delegates to PrBundleLoader for PR fetching and section integration
         # @return [Boolean] true if PR config was present (even if fetch failed), false otherwise
-        def process_pr_config(context, context_config, options)
-          pr_refs = context_config["pr"] || context_config[:pr]
+        def process_pr_config(bundle, bundle_config, options)
+          pr_refs = bundle_config["pr"] || bundle_config[:pr]
           return false unless pr_refs
 
-          PrContextLoader.new(options).process(context, pr_refs)
+          PrBundleLoader.new(options).process(bundle, pr_refs)
         end
 
         # Process diffs section content
-        def process_diffs_section(context, section_name, section_data, options)
+        def process_diffs_section(bundle, section_name, section_data, options)
           ranges = section_data[:ranges] || section_data['ranges'] || []
           return unless ranges.any?
 
@@ -1144,9 +1146,9 @@ module Ace
             processed_diffs << result.slice(:range, :output, :success, :error)
 
             unless result[:success]
-              context.metadata[:errors] ||= []
+              bundle.metadata[:errors] ||= []
               error_prefix = result[:error_type] == :git_error ? "Git diff failed" : "Invalid diff range"
-              context.metadata[:errors] << "Section '#{section_name}': #{error_prefix} for '#{diff_range}': #{result[:error]}"
+              bundle.metadata[:errors] << "Section '#{section_name}': #{error_prefix} for '#{diff_range}': #{result[:error]}"
             end
           end
 
@@ -1155,51 +1157,51 @@ module Ace
         end
 
         # Process inline content section
-        def process_inline_content_section(context, section_name, section_data, options)
+        def process_inline_content_section(bundle, section_name, section_data, options)
           content = section_data[:content] || section_data['content']
           # Store content in section data
           section_data[:_processed_content] = content if content
         end
 
         # Process legacy content (non-section configurations)
-        def process_legacy_content(context, context_config, options)
-          # Process files from context configuration
-          if context_config['files'] && context_config['files'].any?
+        def process_legacy_content(bundle, bundle_config, options)
+          # Process files from bundle configuration
+          if bundle_config['files'] && bundle_config['files'].any?
             # Resolve any protocol references (e.g., wfi://workflow-name)
-            resolved_files = context_config['files'].map do |file_ref|
+            resolved_files = bundle_config['files'].map do |file_ref|
               resolve_file_reference(file_ref)
             end.compact
 
             aggregator = Ace::Core::Molecules::FileAggregator.new(
               max_size: options[:max_size] || options['max_size'],
               base_dir: options[:base_dir] || project_root,
-              exclude: context_config['exclude'] || []
+              exclude: bundle_config['exclude'] || []
             )
 
             # Use aggregate to handle glob patterns
             result = aggregator.aggregate(resolved_files)
 
-            # Add files to context if embed_document_source is true
-            if context_config['embed_document_source']
+            # Add files to bundle if embed_document_source is true
+            if bundle_config['embed_document_source']
               result[:files].each do |file_info|
-                context.add_file(file_info[:path], file_info[:content])
+                bundle.add_file(file_info[:path], file_info[:content])
               end
             end
 
             # Add errors if any
             result[:errors].each do |error|
-              context.metadata[:errors] ||= []
-              context.metadata[:errors] << error
+              bundle.metadata[:errors] ||= []
+              bundle.metadata[:errors] << error
             end
           end
 
           # Process commands
-          if context_config['commands'] && context_config['commands'].any?
+          if bundle_config['commands'] && bundle_config['commands'].any?
             timeout = options[:timeout] || options['timeout'] || 30
-            context_config['commands'].each do |command|
+            bundle_config['commands'].each do |command|
               cmd_result = @command_executor.execute(command, timeout: timeout, cwd: project_root)
-              context.commands ||= []
-              context.commands << {
+              bundle.commands ||= []
+              bundle.commands << {
                 command: command,
                 output: cmd_result[:stdout],
                 success: cmd_result[:success],
@@ -1210,14 +1212,14 @@ module Ace
         end
 
         # Check if configuration should be migrated to sections
-        def should_migrate_to_sections?(context_config)
+        def should_migrate_to_sections?(bundle_config)
           # Auto-migrate if there are files, commands, or diffs but no sections
-          return false if @section_processor.has_sections?({ 'context' => context_config })
+          return false if @section_processor.has_sections?({ 'context' => bundle_config })
 
-          (context_config['files'] && context_config['files'].any?) ||
-          (context_config['commands'] && context_config['commands'].any?) ||
-          (context_config['diffs'] && context_config['diffs'].any?) ||
-          (context_config['ranges'] && context_config['ranges'].any?)
+          (bundle_config['files'] && bundle_config['files'].any?) ||
+          (bundle_config['commands'] && bundle_config['commands'].any?) ||
+          (bundle_config['diffs'] && bundle_config['diffs'].any?) ||
+          (bundle_config['ranges'] && bundle_config['ranges'].any?)
         end
 
         # Process base content from context.base field
@@ -1228,8 +1230,8 @@ module Ace
         #
         # Resolution strategy prioritizes file existence to correctly handle extension-less files
         # (README, CONTEXT, etc.) while still supporting inline strings for simple use cases.
-        def process_base_content(context, context_config, options)
-          base_ref = context_config['base'] || context_config[:base]
+        def process_base_content(bundle, bundle_config, options)
+          base_ref = bundle_config['base'] || bundle_config[:base]
           return unless base_ref && !base_ref.to_s.strip.empty?
 
           # Check if base_ref looks like a file reference (has protocol, slashes, or is a known path pattern)
@@ -1250,26 +1252,26 @@ module Ace
             end
 
             # Store base content as primary content
-            context.content = base_content
-            context.metadata[:base_path] = resolved_path
-            context.metadata[:base_ref] = base_ref
-            context.metadata[:base_type] = 'file'
+            bundle.content = base_content
+            bundle.metadata[:base_path] = resolved_path
+            bundle.metadata[:base_ref] = base_ref
+            bundle.metadata[:base_type] = 'file'
           elsif looks_like_file_ref
             # It looks like a file reference but resolution failed - set error
             if !resolved_path
-              context.metadata[:base_error] = "Failed to resolve base reference: #{base_ref}"
+              bundle.metadata[:base_error] = "Failed to resolve base reference: #{base_ref}"
               warn "Warning: Failed to resolve base reference: #{base_ref}" if options[:debug]
             else
-              context.metadata[:base_error] = "Base file not found: #{resolved_path}"
+              bundle.metadata[:base_error] = "Base file not found: #{resolved_path}"
               warn "Warning: Base file not found: #{resolved_path}" if options[:debug]
             end
           else
             # Simple string without path indicators - treat as inline content
             # This allows direct definition of base context without requiring separate files
             # Example: base: "System instructions for the task"
-            context.content = base_ref.to_s.strip
-            context.metadata[:base_type] = 'inline'
-            context.metadata[:base_ref] = base_ref
+            bundle.content = base_ref.to_s.strip
+            bundle.metadata[:base_type] = 'inline'
+            bundle.metadata[:base_ref] = base_ref
           end
         end
 
@@ -1330,27 +1332,27 @@ module Ace
         # @param original_content [String] The full file content with frontmatter
         # @param frontmatter [Hash] Parsed frontmatter YAML
         # @param path [String] File path for source metadata
-        # @return [Models::ContextData] Context with original content and metadata
+        # @return [Models::BundleData] Context with original content and metadata
         def load_plain_markdown(original_content, frontmatter, path)
-          context = Models::ContextData.new
+          bundle = Models::BundleData.new
           # Use original_content (preserved before frontmatter stripping)
-          context.content = original_content
+          bundle.content = original_content
           # Store metadata from frontmatter using merge to preserve any existing metadata
           # Include frontmatter and frontmatter_yaml for parity with template path
-          context.metadata = (context.metadata || {}).merge(
+          bundle.metadata = (bundle.metadata || {}).merge(
             frontmatter.transform_keys(&:to_sym)
           ).merge(
             source: path,
             frontmatter: frontmatter
           )
           # Store frontmatter_yaml if frontmatter was present
-          context.metadata[:frontmatter_yaml] = frontmatter.to_yaml if frontmatter.any?
+          bundle.metadata[:frontmatter_yaml] = frontmatter.to_yaml if frontmatter.any?
 
           # Check for frontmatter typos and store warnings in metadata
           warnings = detect_suspicious_keys(frontmatter, path)
-          context.metadata[:warnings] = warnings if warnings.any?
+          bundle.metadata[:warnings] = warnings if warnings.any?
 
-          context
+          bundle
         end
 
         # Delegate to Atoms::TypoDetector for architectural consistency

@@ -1,6 +1,6 @@
 ---
 description: Code review context with section-based organization
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml
@@ -40,7 +40,7 @@ context:
         - "bundle exec rubocop"
         - "bundle exec rubycritical"
 
-    context:
+    bundle:
       title: "Project Context"
       description: "Project information and status"
       commands:

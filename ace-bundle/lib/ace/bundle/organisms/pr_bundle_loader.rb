@@ -5,19 +5,19 @@ require "ace/git"
 module Ace
   module Bundle
     module Organisms
-      # Loads PR diff content into context
+      # Loads PR diff content into bundle
       #
       # Responsible for:
       # - Normalizing PR references (string, array, hash formats)
       # - Fetching diffs via Ace::Git::Molecules::PrMetadataFetcher
-      # - Integrating results into context sections
+      # - Integrating results into bundle sections
       # - Error handling and surfacing
       #
       # @example Basic usage
-      #   loader = PrContextLoader.new(timeout: 60)
-      #   loader.process(context, ["123", "owner/repo#456"])
+      #   loader = PrBundleLoader.new(timeout: 60)
+      #   loader.process(bundle, ["123", "owner/repo#456"])
       #
-      class PrContextLoader
+      class PrBundleLoader
         # @param options [Hash] Configuration options
         # @option options [Integer] :timeout Timeout for gh commands (default from ace-git config)
         # @option options [Boolean] :debug Enable debug output
@@ -26,24 +26,24 @@ module Ace
           @debug = options[:debug] || false
         end
 
-        # Process PR references and add diffs to context
+        # Process PR references and add diffs to bundle
         #
-        # @param context [Models::ContextData] Context to populate
+        # @param bundle [Models::BundleData] Bundle to populate
         # @param pr_refs [Array<String>, String, Hash, nil] PR reference(s)
         # @return [Boolean] true if at least one diff was successfully fetched
-        def process(context, pr_refs)
+        def process(bundle, pr_refs)
           normalized = normalize_pr_refs(pr_refs)
           return false if normalized.empty?
 
-          processed_diffs = fetch_all_diffs(context, normalized)
+          processed_diffs = fetch_all_diffs(bundle, normalized)
           successful_diffs = processed_diffs.select { |d| d[:success] }
 
           if successful_diffs.empty?
-            surface_errors_to_content(context)
+            surface_errors_to_content(bundle)
             return false
           end
 
-          add_diffs_to_context(context, processed_diffs)
+          add_diffs_to_bundle(bundle, processed_diffs)
           true
         end
 
@@ -65,23 +65,23 @@ module Ace
           end.compact.reject(&:empty?).uniq
         end
 
-        # Fetch diffs for all PR refs, recording errors in context metadata
+        # Fetch diffs for all PR refs, recording errors in bundle metadata
         #
-        # @param context [Models::ContextData] Context for error recording
+        # @param bundle [Models::BundleData] Bundle for error recording
         # @param pr_refs [Array<String>] Normalized PR refs
         # @return [Array<Hash>] Processed diff results
-        def fetch_all_diffs(context, pr_refs)
+        def fetch_all_diffs(bundle, pr_refs)
           pr_refs.map do |pr_ref|
-            fetch_single_diff(context, pr_ref)
+            fetch_single_diff(bundle, pr_ref)
           end.compact
         end
 
         # Fetch diff for a single PR reference
         #
-        # @param context [Models::ContextData] Context for error recording
+        # @param bundle [Models::BundleData] Bundle for error recording
         # @param pr_ref [String] Single PR reference
         # @return [Hash, nil] Diff result or nil on skip
-        def fetch_single_diff(context, pr_ref)
+        def fetch_single_diff(bundle, pr_ref)
           result = Ace::Git::Molecules::PrMetadataFetcher.fetch_diff(pr_ref, timeout: @timeout)
 
           if result[:success]
@@ -92,26 +92,26 @@ module Ace
               source: :pr
             }
           else
-            record_error(context, "PR fetch failed for '#{pr_ref}': #{result[:error]}")
+            record_error(bundle, "PR fetch failed for '#{pr_ref}': #{result[:error]}")
             { range: pr_range_identifier(pr_ref), output: "Error: #{result[:error]}", success: false, error: result[:error], source: :pr }
           end
         rescue Ace::Git::Error => e
           # Catches all ace-git errors: GitError, GhNotInstalledError, GhAuthenticationError,
           # PrNotFoundError, TimeoutError (all inherit from Ace::Git::Error)
-          record_error(context, "PR fetch failed for '#{pr_ref}': #{e.message}")
+          record_error(bundle, "PR fetch failed for '#{pr_ref}': #{e.message}")
           { range: pr_range_identifier(pr_ref), output: "Error: #{e.message}", success: false, error: e.message, source: :pr }
         rescue ArgumentError => e
-          record_error(context, "Invalid PR identifier '#{pr_ref}': #{e.message}")
+          record_error(bundle, "Invalid PR identifier '#{pr_ref}': #{e.message}")
           nil
         end
 
-        # Record error in context metadata
+        # Record error in bundle metadata
         #
-        # @param context [Models::ContextData] Context to update
+        # @param bundle [Models::BundleData] Bundle to update
         # @param message [String] Error message
-        def record_error(context, message)
-          context.metadata[:errors] ||= []
-          context.metadata[:errors] << message
+        def record_error(bundle, message)
+          bundle.metadata[:errors] ||= []
+          bundle.metadata[:errors] << message
         end
 
         # Generate standardized PR range identifier for error responses
@@ -123,23 +123,23 @@ module Ace
 
         # Surface errors to content for callers who don't inspect metadata
         #
-        # @param context [Models::ContextData] Context to update
-        def surface_errors_to_content(context)
-          return unless context.metadata[:errors]&.any?
+        # @param bundle [Models::BundleData] Bundle to update
+        def surface_errors_to_content(bundle)
+          return unless bundle.metadata[:errors]&.any?
 
-          error_notice = context.metadata[:errors].map { |e| "- #{e}" }.join("\n")
-          context.content = "**PR Fetch Errors:**\n#{error_notice}\n\n" + (context.content || "")
+          error_notice = bundle.metadata[:errors].map { |e| "- #{e}" }.join("\n")
+          bundle.content = "**PR Fetch Errors:**\n#{error_notice}\n\n" + (bundle.content || "")
         end
 
-        # Add processed diffs to context's diffs section
+        # Add processed diffs to bundle's diffs section
         #
-        # @param context [Models::ContextData] Context to update
+        # @param bundle [Models::BundleData] Bundle to update
         # @param processed_diffs [Array<Hash>] Diff results to add
-        def add_diffs_to_context(context, processed_diffs)
-          context.sections ||= {}
-          context.sections["diffs"] ||= { title: "Diffs", _processed_diffs: [] }
-          context.sections["diffs"][:_processed_diffs] ||= []
-          context.sections["diffs"][:_processed_diffs].concat(processed_diffs)
+        def add_diffs_to_bundle(bundle, processed_diffs)
+          bundle.sections ||= {}
+          bundle.sections["diffs"] ||= { title: "Diffs", _processed_diffs: [] }
+          bundle.sections["diffs"][:_processed_diffs] ||= []
+          bundle.sections["diffs"][:_processed_diffs].concat(processed_diffs)
         end
       end
     end
