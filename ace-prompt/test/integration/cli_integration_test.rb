@@ -20,7 +20,7 @@ class CLIIntegrationTest < Minitest::Test
     # Store a mock default config for test isolation
     # This represents the gem defaults without loading project config
     @default_config = {
-      "context" => { "enabled" => false },
+      "bundle" => { "enabled" => false },
       "enhance" => {
         "enabled" => false,
         "model" => "glite",

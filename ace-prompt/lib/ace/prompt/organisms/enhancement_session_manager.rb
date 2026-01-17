@@ -6,7 +6,7 @@ module Ace
       # Orchestrates system prompt context loading for enhancement
       #
       # When the system prompt has a `context:` frontmatter section,
-      # it's processed via ace-context (same as user prompts).
+      # it's processed via ace-bundle (same as user prompts).
       class EnhancementSessionManager
         # Prepare enhancement session by loading and processing system prompt
         #
@@ -46,7 +46,7 @@ module Ace
             }
           end
 
-          # Process via ace-context
+          # Process via ace-bundle
           process_with_context(system_prompt_uri, system_prompt_content)
         rescue StandardError => e
           warn "Warning: EnhancementSessionManager error: #{e.message}"
@@ -69,7 +69,7 @@ module Ace
             PromptEnhancer.load_system_prompt(uri_or_path)
           end
 
-          # Process system prompt through ace-context
+          # Process system prompt through ace-bundle
           # Loads presets from frontmatter and combines with instructions
           #
           # @param uri_or_path [String] Original URI or path
@@ -96,7 +96,7 @@ module Ace
               context_parts = []
 
               presets.each do |preset|
-                # Use ace-context API to load preset (Ruby API first, CLI fallback)
+                # Use ace-bundle API to load preset (Ruby API first, CLI fallback)
                 preset_content = load_preset_via_api(preset)
                 context_parts << preset_content if preset_content && !preset_content.empty?
               end
@@ -127,7 +127,7 @@ module Ace
             end
           end
 
-          # Load preset content via ace-context
+          # Load preset content via ace-bundle
           # Tries Ruby API first (faster, in-process), falls back to CLI
           #
           # @param preset [String] Preset name
@@ -135,43 +135,43 @@ module Ace
           def load_preset_via_api(preset)
             # Try Ruby API first (faster, in-process, testable)
             begin
-              require "ace/context"
-              context_data = Ace::Context.load_preset(preset)
+              require "ace/bundle"
+              context_data = Ace::Bundle.load_preset(preset)
               content = context_data&.content
               return content if content && !content.strip.empty?
 
-              warn "Warning: ace-context returned empty content for preset '#{preset}'" unless ENV["ACE_QUIET"]
+              warn "Warning: ace-bundle returned empty content for preset '#{preset}'" unless ENV["ACE_QUIET"]
               nil
             rescue LoadError
-              # ace-context gem not available, try CLI fallback
+              # ace-bundle gem not available, try CLI fallback
               load_preset_via_cli(preset)
             rescue StandardError => e
-              warn "Warning: ace-context API failed for '#{preset}': #{e.message}" unless ENV["ACE_QUIET"]
+              warn "Warning: ace-bundle API failed for '#{preset}': #{e.message}" unless ENV["ACE_QUIET"]
               # Try CLI as fallback
               load_preset_via_cli(preset)
             end
           end
 
-          # Load preset content via ace-context CLI (fallback)
+          # Load preset content via ace-bundle CLI (fallback)
           #
           # @param preset [String] Preset name
           # @return [String, nil] Preset content or nil
           def load_preset_via_cli(preset)
             require "open3"
 
-            stdout, stderr, status = Open3.capture3("ace-context", preset, "--output", "stdio")
+            stdout, stderr, status = Open3.capture3("ace-bundle", preset, "--output", "stdio")
 
             if status.success? && !stdout.strip.empty?
               stdout
             else
-              warn "Warning: ace-context CLI failed for preset '#{preset}': #{stderr}" unless ENV["ACE_QUIET"]
+              warn "Warning: ace-bundle CLI failed for preset '#{preset}': #{stderr}" unless ENV["ACE_QUIET"]
               nil
             end
           rescue Errno::ENOENT
-            warn "Warning: ace-context CLI not found on PATH. Install ace-context or ensure it's in your PATH." unless ENV["ACE_QUIET"]
+            warn "Warning: ace-bundle CLI not found on PATH. Install ace-bundle or ensure it's in your PATH." unless ENV["ACE_QUIET"]
             nil
           rescue StandardError => e
-            warn "Warning: ace-context CLI error: #{e.message}" unless ENV["ACE_QUIET"]
+            warn "Warning: ace-bundle CLI error: #{e.message}" unless ENV["ACE_QUIET"]
             nil
           end
 

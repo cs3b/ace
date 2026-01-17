@@ -57,11 +57,11 @@ class EnhancementSessionManagerTest < Minitest::Test
   end
 
   def test_prepare_session_with_context_frontmatter_processes_via_ace_context
-    # Skip if ace-context not available
+    # Skip if ace-bundle not available
     begin
-      require "ace/context"
+      require "ace/bundle"
     rescue LoadError
-      skip "ace-context not available for testing"
+      skip "ace-bundle not available for testing"
     end
 
     # Create a system prompt with context frontmatter
@@ -77,7 +77,7 @@ class EnhancementSessionManagerTest < Minitest::Test
     prompt_path = File.join(@test_dir, "system.md")
     File.write(prompt_path, system_prompt)
 
-    # Stub ace-context to avoid actual preset loading
+    # Stub ace-bundle to avoid actual preset loading
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
       # Create a mock context data object
       mock_context_data = Object.new
@@ -85,7 +85,7 @@ class EnhancementSessionManagerTest < Minitest::Test
         "Loaded context content"
       end
 
-      Ace::Context.stub :load_preset, mock_context_data do
+      Ace::Bundle.stub :load_preset, mock_context_data do
         result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
 
         # Context was loaded
@@ -98,11 +98,11 @@ class EnhancementSessionManagerTest < Minitest::Test
   end
 
   def test_prepare_session_fallback_when_context_loading_fails
-    # Skip if ace-context not available
+    # Skip if ace-bundle not available
     begin
-      require "ace/context"
+      require "ace/bundle"
     rescue LoadError
-      skip "ace-context not available for testing"
+      skip "ace-bundle not available for testing"
     end
 
     # Create a system prompt with context frontmatter
@@ -119,9 +119,9 @@ class EnhancementSessionManagerTest < Minitest::Test
     File.write(prompt_path, system_prompt)
 
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      # Stub ace-context to raise an error (simulates API failure)
+      # Stub ace-bundle to raise an error (simulates API failure)
       # Also stub CLI fallback to fail
-      Ace::Context.stub :load_preset, ->(*_args) { raise StandardError, "Context loading failed" } do
+      Ace::Bundle.stub :load_preset, ->(*_args) { raise StandardError, "Context loading failed" } do
         Open3.stub :capture3, ["", "CLI failed", OpenStruct.new(success?: false)] do
           result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
 
@@ -136,13 +136,13 @@ class EnhancementSessionManagerTest < Minitest::Test
   end
 
   def test_prepare_session_fallback_when_ace_context_not_available
-    # Skip this test if ace-context IS available, since we can't unload it
+    # Skip this test if ace-bundle IS available, since we can't unload it
     # and require is idempotent (won't re-require an already-loaded gem)
     begin
-      require "ace/context"
-      skip "Cannot test LoadError fallback when ace-context is already loaded"
+      require "ace/bundle"
+      skip "Cannot test LoadError fallback when ace-bundle is already loaded"
     rescue LoadError
-      # Good - ace-context is not available, so we can test the fallback
+      # Good - ace-bundle is not available, so we can test the fallback
     end
 
     # Create a system prompt with context frontmatter
@@ -163,18 +163,18 @@ class EnhancementSessionManagerTest < Minitest::Test
 
       # Should fall back to body without context
       refute result[:context_loaded]
-      assert_includes result[:error], "ace-context not available"
+      assert_includes result[:error], "ace-bundle not available"
       # Still has content (the body)
       assert_includes result[:content], "You are a helpful assistant."
     end
   end
 
   def test_prepare_session_empty_context_result_falls_back
-    # Skip if ace-context not available
+    # Skip if ace-bundle not available
     begin
-      require "ace/context"
+      require "ace/bundle"
     rescue LoadError
-      skip "ace-context not available for testing"
+      skip "ace-bundle not available for testing"
     end
 
     # Create a system prompt with context frontmatter
@@ -198,7 +198,7 @@ class EnhancementSessionManagerTest < Minitest::Test
       end
 
       # Stub API to return empty content, and CLI fallback to also fail
-      Ace::Context.stub :load_preset, mock_context_data do
+      Ace::Bundle.stub :load_preset, mock_context_data do
         Open3.stub :capture3, ["", "", OpenStruct.new(success?: false)] do
           result = Ace::Prompt::Organisms::EnhancementSessionManager.prepare_session(prompt_path)
 

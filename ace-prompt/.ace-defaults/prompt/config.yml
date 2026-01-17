@@ -21,9 +21,9 @@ defaults:
     max: 2.0
 
 # Context loading configuration
-# When enabled, ace-prompt will load project context via ace-context
+# When enabled, ace-prompt will load project context via ace-bundle
 # based on frontmatter in the prompt file.
-context:
+bundle:
   enabled: false
   # sources:
   #   - file: "docs/architecture.md"

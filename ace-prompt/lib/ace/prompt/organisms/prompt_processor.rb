@@ -63,15 +63,15 @@ module Ace
 
           # Determine output content based on context flag
           output_content = if context
-                             # ace-context handles entire file processing (including frontmatter)
+                             # ace-bundle handles entire file processing (including frontmatter)
                              context_content = Molecules::ContextLoader.call(read_result[:path])
                              if context_content.empty?
-                               # Fallback: extract body ONLY if ace-context fails
-                               warn "Warning: ace-context failed, extracting prompt body only"
+                               # Fallback: extract body ONLY if ace-bundle fails
+                               warn "Warning: ace-bundle failed, extracting prompt body only"
                                extracted = Atoms::FrontmatterExtractor.extract(original_content)
                                extracted[:body]
                              else
-                               # Use ace-context processed content (includes frontmatter handling)
+                               # Use ace-bundle processed content (includes frontmatter handling)
                                context_content
                              end
                            else
