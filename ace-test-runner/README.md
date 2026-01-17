@@ -43,7 +43,7 @@ In a mono-repo with multiple ace-* packages, you can run tests for any package f
 
 ```bash
 # Run all tests in a package by name
-ace-test ace-context
+ace-test ace-bundle
 
 # Run specific test group in a package
 ace-test ace-nav atoms
@@ -62,7 +62,7 @@ When running from within a different package directory, this allows you to easil
 
 ```bash
 cd ace-search
-ace-test ace-context atoms  # Run ace-context atom tests from within ace-search
+ace-test ace-bundle atoms  # Run ace-bundle atom tests from within ace-search
 ```
 
 #### Usage Matrix
@@ -106,7 +106,7 @@ ace-test [package] [target] [options] [file-paths]
 ```
 
 **Arguments:**
-- `package` - Optional package name (e.g., `ace-context`) or path (`./ace-search`, `/path/to/ace-docs`)
+- `package` - Optional package name (e.g., `ace-bundle`) or path (`./ace-search`, `/path/to/ace-docs`)
 - `target` - Optional test group (e.g., `atoms`, `molecules`, `unit`, `all`)
 - `file-paths` - Optional specific test files to run
 

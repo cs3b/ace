@@ -8,8 +8,8 @@ module Ace
       # Parses CLI arguments to identify package, target, and test files.
       # Handles the complexity of distinguishing between:
       # - Direct file paths (./path/file.rb, ../path/file.rb, /abs/path/file.rb)
-      # - Package-prefixed file paths (ace-context/test/file.rb)
-      # - Package names (ace-context)
+      # - Package-prefixed file paths (ace-bundle/test/file.rb)
+      # - Package names (ace-bundle)
       # - Test targets (atoms, molecules, unit, etc.)
       class CliArgumentParser
         KNOWN_TARGETS = %w[atoms molecules organisms models unit integration system all quick].freeze
@@ -30,8 +30,8 @@ module Ace
         #
         # Parsing precedence (order matters for correct classification):
         # 1. Existing files (./path/file.rb, ../path/file.rb) - direct file paths
-        # 2. Package-prefixed file paths (ace-context/test/file.rb) - sets package + adds file
-        # 3. Package names (ace-context) - sets package directory
+        # 2. Package-prefixed file paths (ace-bundle/test/file.rb) - sets package + adds file
+        # 3. Package names (ace-bundle) - sets package directory
         # 4. Known targets (atoms, molecules, etc.) - sets test target
         # 5. Relative file paths within package (test/file.rb when package is set)
         # 6. Unrecognized args - treated as custom targets for PatternResolver
@@ -70,7 +70,7 @@ module Ace
         end
 
         # Split a package-prefixed path into package name and file path.
-        # Example: "ace-context/test/file.rb" -> ["ace-context", "test/file.rb"]
+        # Example: "ace-bundle/test/file.rb" -> ["ace-bundle", "test/file.rb"]
         # @param arg [String] Package-prefixed path
         # @return [Array(String, String)] [package_name, file_path]
         def split_package_prefix(arg)
@@ -99,7 +99,7 @@ module Ace
             return
           end
 
-          # Check for package-prefixed file path (e.g., ace-context/test/foo_test.rb)
+          # Check for package-prefixed file path (e.g., ace-bundle/test/foo_test.rb)
           if package_prefixed_file_path?(first_arg)
             handle_package_prefixed_path(first_arg, first_arg_index)
             return
@@ -116,7 +116,7 @@ module Ace
             next if arg.start_with?("-")
 
             # Check package-prefixed paths first (before file_with_line?) to handle
-            # cases like "ace-context/test/file.rb:42" correctly when package is resolved
+            # cases like "ace-bundle/test/file.rb:42" correctly when package is resolved
             if @package_dir && handle_remaining_package_prefixed_path(arg)
               next
             elsif file_with_line?(arg)
@@ -144,7 +144,7 @@ module Ace
         end
 
         # Handle package-prefixed file paths in remaining args when package already resolved.
-        # Example: "ace-context ace-context/test/foo.rb" - second arg should be recognized
+        # Example: "ace-bundle ace-bundle/test/foo.rb" - second arg should be recognized
         # as a file within the already-resolved package.
         # @return [Boolean] true if arg was handled as a package-prefixed file
         def handle_remaining_package_prefixed_path(arg)

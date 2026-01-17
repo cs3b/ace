@@ -21,7 +21,7 @@ module Ace
             ace-test [PACKAGE] [TARGET] [options] [files...]
 
           PACKAGE (optional):
-            ace-*         Run tests in specified package (e.g., ace-context, ace-nav)
+            ace-*         Run tests in specified package (e.g., ace-bundle, ace-nav)
             ./path        Run tests in package at relative path
             /path         Run tests in package at absolute path
 
@@ -63,7 +63,7 @@ module Ace
         example [
           "ace-test                             # All tests in current package",
           "ace-test atoms                       # Atom tests only",
-          "ace-test ace-context molecules       # Package + target",
+          "ace-test ace-bundle molecules        # Package + target",
           "ace-test test/foo_test.rb            # Specific test file",
           "ace-test --format progress           # Run with progress output",
           "ace-test --profile 10                # Profile slowest tests",
