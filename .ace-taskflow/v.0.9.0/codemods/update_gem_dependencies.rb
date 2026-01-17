@@ -4,8 +4,11 @@
 require 'fileutils'
 
 # Define the gems to update and their new versions
+# NOTE: This is a legacy codemod file from the infrastructure gem renaming
+# ace-context was renamed to ace-bundle in v0.9.0
+# NOTE: Version numbers below are placeholders and may not reflect current versions
 TIER_2_GEMS = {
-  'ace-context' => { from: '0.16.0', to: '0.16.1' },
+  'ace-bundle' => { from: '0.16.0', to: '0.29.2' },  # Update to current version
   'ace-git-commit' => { from: '0.11.0', to: '0.11.1' },
   'ace-git-diff' => { from: '0.1.1', to: '0.1.2' },
   'ace-llm' => { from: '0.9.4', to: '0.9.5' },

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Wrapper script to run ace-context with proper bundler context
+# Wrapper script to run ace-review with proper bundler context
 require 'pathname'
 
 # Find the ace-meta root directory
@@ -13,6 +13,6 @@ ENV['BUNDLE_GEMFILE'] = ace_meta_root.join('Gemfile').to_s
 # Load bundler
 require 'bundler/setup'
 
-# Now require and run the actual ace-context executable
+# Now require and run the actual ace-review executable
 load ace_meta_root.join('ace-review/exe/ace-review').to_s
 

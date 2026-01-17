@@ -11,7 +11,7 @@ cd ace-meta
 bundle install
 
 # Run commands via mono-repo binstubs
-./bin/ace-context project
+./bin/ace-bundle project
 ./bin/ace-review --help
 ```
 
