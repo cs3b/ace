@@ -61,7 +61,7 @@ ace-nav wfi://@ace-git/setup --content  # From specific source
 
 ```bash
 # Create from template
-ace-nav wfi://load-context --create  # Creates in project .ace/handbook
+ace-nav wfi://bundle --create  # Creates in project .ace/handbook
 ace-nav tmpl://@ace-test/minitest --create  # Uses ace-test template
 ```
 
