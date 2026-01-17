@@ -5,57 +5,57 @@ require_relative "../test_helper"
 module Ace
   module Bundle
     module Organisms
-      class PrContextLoaderTest < AceTestCase
+      class PrBundleLoaderTest < AceTestCase
         def setup
-          @context = Models::ContextData.new
+          @bundle = Models::BundleData.new
         end
 
         # --- normalize_pr_refs tests ---
 
         def test_normalize_pr_refs_with_string
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, "123")
           assert_equal ["123"], result
         end
 
         def test_normalize_pr_refs_with_array
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, ["123", "456"])
           assert_equal ["123", "456"], result
         end
 
         def test_normalize_pr_refs_deduplicates
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, ["123", "456", "123"])
           assert_equal ["123", "456"], result
         end
 
         def test_normalize_pr_refs_strips_whitespace
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, ["  123  ", " 456 "])
           assert_equal ["123", "456"], result
         end
 
         def test_normalize_pr_refs_removes_empty_strings
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, ["123", "", nil, "456"])
           assert_equal ["123", "456"], result
         end
 
         def test_normalize_pr_refs_handles_hash_format
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, [{ number: 123 }, { "number" => 456 }])
           assert_equal ["123", "456"], result
         end
 
         def test_normalize_pr_refs_handles_nested_arrays
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, [["123"], ["456", "789"]])
           assert_equal ["123", "456", "789"], result
         end
 
         def test_normalize_pr_refs_returns_empty_for_nil
-          loader = PrContextLoader.new
+          loader = PrBundleLoader.new
           result = loader.send(:normalize_pr_refs, nil)
           assert_equal [], result
         end
@@ -63,14 +63,14 @@ module Ace
         # --- process tests with mocking ---
 
         def test_process_returns_false_for_empty_refs
-          loader = PrContextLoader.new
-          result = loader.process(@context, [])
+          loader = PrBundleLoader.new
+          result = loader.process(@bundle, [])
           refute result
         end
 
         def test_process_returns_false_for_nil_refs
-          loader = PrContextLoader.new
-          result = loader.process(@context, nil)
+          loader = PrBundleLoader.new
+          result = loader.process(@bundle, nil)
           refute result
         end
 
@@ -86,13 +86,13 @@ module Ace
           }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "123")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "123")
 
             assert result, "Should return true for successful fetch"
-            assert @context.sections, "Should have sections"
-            assert @context.sections["diffs"], "Should have diffs section"
-            assert_equal 1, @context.sections["diffs"][:_processed_diffs].size
+            assert @bundle.sections, "Should have sections"
+            assert @bundle.sections["diffs"], "Should have diffs section"
+            assert_equal 1, @bundle.sections["diffs"][:_processed_diffs].size
           end
         end
 
@@ -107,11 +107,11 @@ module Ace
           end
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, ["123", "456"])
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, ["123", "456"])
 
             assert result
-            assert_equal 2, @context.sections["diffs"][:_processed_diffs].size
+            assert_equal 2, @bundle.sections["diffs"][:_processed_diffs].size
           end
         end
 
@@ -123,12 +123,12 @@ module Ace
           }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "999999")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "999999")
 
             refute result, "Should return false when all fetches fail"
-            assert @context.metadata[:errors], "Should have errors in metadata"
-            assert @context.metadata[:errors].any? { |e| e.include?("PR fetch failed") }
+            assert @bundle.metadata[:errors], "Should have errors in metadata"
+            assert @bundle.metadata[:errors].any? { |e| e.include?("PR fetch failed") }
           end
         end
 
@@ -140,26 +140,26 @@ module Ace
           }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
-            loader = PrContextLoader.new
-            loader.process(@context, "999999")
+            loader = PrBundleLoader.new
+            loader.process(@bundle, "999999")
 
-            assert @context.content, "Should have content"
-            assert @context.content.include?("PR Fetch Errors"), "Should surface errors in content"
+            assert @bundle.content, "Should have content"
+            assert @bundle.content.include?("PR Fetch Errors"), "Should surface errors in content"
           end
         end
 
         def test_process_uses_custom_timeout
-          loader = PrContextLoader.new(timeout: 120)
+          loader = PrBundleLoader.new(timeout: 120)
           assert_equal 120, loader.instance_variable_get(:@timeout)
         end
 
         def test_process_handles_invalid_pr_identifier
-          loader = PrContextLoader.new
-          result = loader.process(@context, "invalid-format")
+          loader = PrBundleLoader.new
+          result = loader.process(@bundle, "invalid-format")
 
           # Should handle gracefully, recording error
           refute result
-          assert @context.metadata[:errors]
+          assert @bundle.metadata[:errors]
         end
 
         # --- ace-git error type handling tests ---
@@ -168,12 +168,12 @@ module Ace
           mock_fetch = ->(_id, **_opts) { raise Ace::Git::GhNotInstalledError, "gh not installed" }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "123")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "123")
 
             refute result, "Should return false when gh not installed"
-            assert @context.metadata[:errors], "Should have errors in metadata"
-            assert @context.metadata[:errors].any? { |e| e.include?("gh not installed") }
+            assert @bundle.metadata[:errors], "Should have errors in metadata"
+            assert @bundle.metadata[:errors].any? { |e| e.include?("gh not installed") }
           end
         end
 
@@ -181,12 +181,12 @@ module Ace
           mock_fetch = ->(_id, **_opts) { raise Ace::Git::GhAuthenticationError, "not authenticated" }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "123")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "123")
 
             refute result, "Should return false when not authenticated"
-            assert @context.metadata[:errors], "Should have errors in metadata"
-            assert @context.metadata[:errors].any? { |e| e.include?("not authenticated") }
+            assert @bundle.metadata[:errors], "Should have errors in metadata"
+            assert @bundle.metadata[:errors].any? { |e| e.include?("not authenticated") }
           end
         end
 
@@ -194,12 +194,12 @@ module Ace
           mock_fetch = ->(_id, **_opts) { raise Ace::Git::PrNotFoundError, "PR #999 not found" }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "999")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "999")
 
             refute result, "Should return false when PR not found"
-            assert @context.metadata[:errors], "Should have errors in metadata"
-            assert @context.metadata[:errors].any? { |e| e.include?("PR #999 not found") }
+            assert @bundle.metadata[:errors], "Should have errors in metadata"
+            assert @bundle.metadata[:errors].any? { |e| e.include?("PR #999 not found") }
           end
         end
 
@@ -207,12 +207,12 @@ module Ace
           mock_fetch = ->(_id, **_opts) { raise Ace::Git::TimeoutError, "command timed out after 30s" }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "123")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "123")
 
             refute result, "Should return false on timeout"
-            assert @context.metadata[:errors], "Should have errors in metadata"
-            assert @context.metadata[:errors].any? { |e| e.include?("timed out") }
+            assert @bundle.metadata[:errors], "Should have errors in metadata"
+            assert @bundle.metadata[:errors].any? { |e| e.include?("timed out") }
           end
         end
 
@@ -225,12 +225,12 @@ module Ace
           }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "123")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "123")
 
             refute result, "Should return false on generic failure"
-            assert @context.metadata[:errors], "Should have errors in metadata"
-            assert @context.metadata[:errors].any? { |e| e.include?("network error") }
+            assert @bundle.metadata[:errors], "Should have errors in metadata"
+            assert @bundle.metadata[:errors].any? { |e| e.include?("network error") }
           end
         end
 
@@ -239,12 +239,12 @@ module Ace
           mock_fetch = ->(_id, **_opts) { raise Ace::Git::GitError, "unexpected git operation failed" }
 
           Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
-            loader = PrContextLoader.new
-            result = loader.process(@context, "123")
+            loader = PrBundleLoader.new
+            result = loader.process(@bundle, "123")
 
             refute result, "Should return false on GitError"
-            assert @context.metadata[:errors], "Should have errors in metadata"
-            assert @context.metadata[:errors].any? { |e| e.include?("unexpected git operation failed") }
+            assert @bundle.metadata[:errors], "Should have errors in metadata"
+            assert @bundle.metadata[:errors].any? { |e| e.include?("unexpected git operation failed") }
           end
         end
       end

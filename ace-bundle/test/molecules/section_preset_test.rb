@@ -5,7 +5,7 @@ require_relative '../../lib/ace/bundle'
 require_relative '../../lib/ace/bundle/atoms/section_validator'
 require_relative '../../lib/ace/bundle/molecules/section_processor'
 require_relative '../../lib/ace/bundle/molecules/preset_manager'
-require_relative '../../lib/ace/bundle/organisms/context_loader'
+require_relative '../../lib/ace/bundle/organisms/bundle_loader'
 
 module Ace
   module Bundle
@@ -14,7 +14,7 @@ module Ace
         @validator = Atoms::SectionValidator.new
         @preset_manager = Molecules::PresetManager.new
         @section_processor = Molecules::SectionProcessor.new
-        @context_loader = Organisms::ContextLoader.new
+        @bundle_loader = Organisms::BundleLoader.new
       end
 
       # Test SectionValidator preset validation
@@ -87,10 +87,10 @@ module Ace
         # Create mock preset manager
         mock_preset_manager = Minitest::Mock.new
         mock_preset_manager.expect(:load_preset_with_composition,
-          { success: true, context: { 'files' => ['preset-file.js'], 'commands' => ['preset-test'] } },
+          { success: true, bundle: { 'files' => ['preset-file.js'], 'commands' => ['preset-test'] } },
           ['base'])
         mock_preset_manager.expect(:load_preset_with_composition,
-          { success: true, context: { 'files' => ['dev-file.js'], 'content' => 'Dev content' } },
+          { success: true, bundle: { 'files' => ['dev-file.js'], 'content' => 'Dev content' } },
           ['development'])
 
         sections = {
@@ -103,7 +103,7 @@ module Ace
         }
 
         result = @section_processor.process_sections(
-          { 'context' => { 'sections' => sections } },
+          { 'bundle' => { 'sections' => sections } },
           mock_preset_manager
         )
 
@@ -142,7 +142,7 @@ module Ace
 
         assert_raises(Ace::Bundle::Molecules::SectionValidationError) do
           @section_processor.process_sections(
-            { 'context' => { 'sections' => sections } },
+            { 'bundle' => { 'sections' => sections } },
             mock_preset_manager
           )
         end
@@ -150,11 +150,11 @@ module Ace
         mock_preset_manager.verify
       end
 
-      # Test integration with ContextLoader
-      def test_context_loader_processes_sections_with_presets
+      # Test integration with BundleLoader
+      def test_bundle_loader_processes_sections_with_presets
         # This is an integration test that would require actual preset files
         # For now, we'll test the flow without requiring external files
-        context_config = {
+        bundle_config = {
           'sections' => {
             'project_context' => {
               'title' => 'Project Context',
@@ -164,10 +164,10 @@ module Ace
           }
         }
 
-        # Test that the context loader can handle the structure
+        # Test that the bundle loader can handle the structure
         # (Full integration test would require preset files to exist)
-        assert_kind_of Hash, context_config
-        assert context_config['sections']['project_context'].key?('presets')
+        assert_kind_of Hash, bundle_config
+        assert bundle_config['sections']['project_context'].key?('presets')
       end
 
       # Test preset content merging behavior
@@ -216,7 +216,7 @@ module Ace
         assert @validator.validate_section('test', section)
 
         result = @section_processor.process_sections(
-          { 'context' => { 'sections' => { 'test' => section } } },
+          { 'bundle' => { 'sections' => { 'test' => section } } },
           @preset_manager
         )
 
@@ -251,7 +251,7 @@ module Ace
 
         error = assert_raises(Ace::Bundle::Molecules::SectionValidationError) do
           @section_processor.process_sections(
-            { 'context' => { 'sections' => sections } },
+            { 'bundle' => { 'sections' => sections } },
             mock_preset_manager
           )
         end

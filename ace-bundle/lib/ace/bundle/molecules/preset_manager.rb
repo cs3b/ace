@@ -106,9 +106,9 @@ module Ace
           merged = {
             description: nil,
             params: {},
-            context: {},
+            bundle: {},
             body: '',
-            # Don't set format here - let ContextLoader determine the default
+            # Don't set format here - let BundleLoader determine the default
             output: nil,
             cache: false,
             metadata: {}
@@ -118,37 +118,37 @@ module Ace
           all_sections = []
 
           presets.each do |preset|
-            # Merge context configuration
-            if preset[:context]
-              context = preset[:context]
+            # Merge bundle configuration
+            if preset[:bundle]
+              bundle_config = preset[:bundle]
 
               # Merge params (scalar override)
-              if context['params']
-                merged[:context]['params'] ||= {}
-                merged[:context]['params'].merge!(context['params'])
+              if bundle_config['params']
+                merged[:bundle]['params'] ||= {}
+                merged[:bundle]['params'].merge!(bundle_config['params'])
               end
 
               # Merge files array (deduplicate)
-              if context['files']
-                merged[:context]['files'] ||= []
-                merged[:context]['files'].concat(context['files'])
+              if bundle_config['files']
+                merged[:bundle]['files'] ||= []
+                merged[:bundle]['files'].concat(bundle_config['files'])
               end
 
               # Merge commands array (deduplicate)
-              if context['commands']
-                merged[:context]['commands'] ||= []
-                merged[:context]['commands'].concat(context['commands'])
+              if bundle_config['commands']
+                merged[:bundle]['commands'] ||= []
+                merged[:bundle]['commands'].concat(bundle_config['commands'])
               end
 
               # Collect sections for separate processing
-              if context['sections']
-                all_sections << context['sections']
+              if bundle_config['sections']
+                all_sections << bundle_config['sections']
               end
 
-              # Copy other context keys
-              context.each do |key, value|
+              # Copy other bundle keys
+              bundle_config.each do |key, value|
                 next if %w[params files commands sections].include?(key)
-                merged[:context][key] = value
+                merged[:bundle][key] = value
               end
             end
 
@@ -180,22 +180,22 @@ module Ace
             require_relative 'section_processor'
             section_processor = Molecules::SectionProcessor.new
             merged_sections = section_processor.merge_sections(*all_sections)
-            merged[:context]['sections'] = merged_sections
+            merged[:bundle]['sections'] = merged_sections
           end
 
           # Deduplicate arrays
-          if merged[:context]['files']
-            merged[:context]['files'].uniq!
+          if merged[:bundle]['files']
+            merged[:bundle]['files'].uniq!
           end
 
-          if merged[:context]['commands']
-            merged[:context]['commands'].uniq!
+          if merged[:bundle]['commands']
+            merged[:bundle]['commands'].uniq!
           end
 
           # Extract all merged params to root level (maintains backward compatibility)
           # This ensures params like output, format, timeout, max_size are accessible at root
-          if merged[:context]['params']
-            merged_params = merged[:context]['params']
+          if merged[:bundle]['params']
+            merged_params = merged[:bundle]['params']
 
             # Store params hash at root level
             merged[:params] = merged_params
@@ -214,7 +214,7 @@ module Ace
 
         private
 
-        # Deep merge two hashes (similar to ContextMerger but simpler)
+        # Deep merge two hashes (similar to BundleMerger but simpler)
         def deep_merge_hash(hash1, hash2)
           merged = hash1.dup
 
@@ -263,13 +263,13 @@ module Ace
 
           return nil unless frontmatter
 
-          # Only support NEW structure: context.params
-          context_config = frontmatter['context'] || {}
-          params = context_config['params'] || {}
+          # Use 'bundle' key for preset configuration
+          bundle_config = frontmatter['bundle'] || {}
+          params = bundle_config['params'] || {}
 
           # Validate sections if present
-          if context_config['sections']
-            unless @section_validator.validate_sections(context_config['sections'])
+          if bundle_config['sections']
+            unless @section_validator.validate_sections(bundle_config['sections'])
               errors = @section_validator.errors
               warn "Warning: Section validation failed in #{file}:\n  #{errors.join("\n  ")}\n\nPlease review the sections configuration in this file. The preset will continue to load, but section functionality may be limited."
               # Don't fail loading, just warn - allow users to fix configuration
@@ -279,16 +279,16 @@ module Ace
           preset_data = {
             description: frontmatter['description'] || "#{File.basename(file, '.md')} preset",
             params: params,
-            context: context_config,
+            bundle: bundle_config,
             body: body.strip,
-            format: params['format'], # Don't set default here - let ContextLoader handle defaults
+            format: params['format'], # Don't set default here - let BundleLoader handle defaults
             output: params['output'],  # nil allows auto-format to determine output mode
             cache: params['output'] == 'cache',
             metadata: frontmatter['metadata'] || {}
           }
 
           # Add section validation metadata if sections were validated
-          if context_config['sections']
+          if bundle_config['sections']
             preset_data[:metadata][:sections_validated] = true
             preset_data[:metadata][:section_validation_errors] = @section_validator.errors unless @section_validator.errors.empty?
           end

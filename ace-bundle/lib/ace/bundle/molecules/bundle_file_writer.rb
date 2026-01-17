@@ -2,29 +2,29 @@
 
 require 'pathname'
 require 'fileutils'
-require_relative 'context_chunker'
+require_relative 'bundle_chunker'
 require_relative 'section_formatter'
 
 module Ace
   module Bundle
     module Molecules
-      # ContextFileWriter handles writing context to files with caching and chunking
+      # BundleFileWriter handles writing bundle to files with caching and chunking
       # Configuration values (cache_dir, max_lines) are loaded from Ace::Bundle.config
       # following ADR-022 pattern.
-      class ContextFileWriter
+      class BundleFileWriter
         def initialize(cache_dir: nil, max_lines: nil)
           @cache_dir = cache_dir || Ace::Bundle.cache_dir
           @max_lines = max_lines || Ace::Bundle.max_lines
-          @chunker = ContextChunker.new(@max_lines)
+          @chunker = BundleChunker.new(@max_lines)
         end
 
-        # Write context with optional chunking
-        def write_with_chunking(context, output_path, options = {})
+        # Write bundle with optional chunking
+        def write_with_chunking(bundle, output_path, options = {})
           # Check if we should organize by sections
-          if options[:organize_by_sections] && context.respond_to?(:has_sections?) && context.has_sections?
-            write_sections_organized(context, output_path, options)
+          if options[:organize_by_sections] && bundle.respond_to?(:has_sections?) && bundle.has_sections?
+            write_sections_organized(bundle, output_path, options)
           else
-            content = format_content(context, options[:format])
+            content = format_content(bundle, options[:format])
 
             # Determine actual output path
             path = resolve_output_path(output_path)
@@ -80,20 +80,20 @@ module Ace
 
         private
 
-        # Format content based on context data
-        def format_content(context, format = nil)
-          if context.respond_to?(:content)
-            context.content
-          elsif context.is_a?(Hash)
+        # Format content based on bundle data
+        def format_content(bundle, format = nil)
+          if bundle.respond_to?(:content)
+            bundle.content
+          elsif bundle.is_a?(Hash)
             formatter = Ace::Core::Molecules::OutputFormatter.new(format || 'markdown-xml')
-            formatter.format(context)
+            formatter.format(bundle)
           else
-            context.to_s
+            bundle.to_s
           end
         end
 
-        # Write context organized by sections
-        def write_sections_organized(context, output_path, options = {})
+        # Write bundle organized by sections
+        def write_sections_organized(bundle, output_path, options = {})
           base_path = resolve_output_path(output_path)
           format = options[:format] || 'markdown-xml'
 
@@ -101,13 +101,13 @@ module Ace
           section_formatter = SectionFormatter.new(format)
 
           # Write main index file
-          index_content = create_section_index(context, section_formatter)
+          index_content = create_section_index(bundle, section_formatter)
           index_result = write_single_file(index_content, base_path, options)
 
           return index_result unless index_result[:success]
 
           # Write individual section files
-          section_files = write_individual_sections(context, base_path, section_formatter, options)
+          section_files = write_individual_sections(bundle, base_path, section_formatter, options)
 
           {
             success: true,
@@ -122,16 +122,16 @@ module Ace
         end
 
         # Create section index content
-        def create_section_index(context, section_formatter)
+        def create_section_index(bundle, section_formatter)
           content = []
 
-          content << "# Context Sections Index"
+          content << "# Bundle Sections Index"
           content << ""
-          content << "This context is organized into the following sections:"
+          content << "This bundle is organized into the following sections:"
           content << ""
 
           # Add section links
-          context.sorted_sections.each do |section_name, section_data|
+          bundle.sorted_sections.each do |section_name, section_data|
             title = section_data[:title] || section_data['title'] || section_name.to_s.humanize
             content << "- [#{title}](#{section_name}.md)"
           end
@@ -139,27 +139,27 @@ module Ace
           content << ""
           content << "---"
           content << ""
-          content << "## Complete Context"
+          content << "## Complete Bundle"
           content << ""
 
-          # Add complete formatted context
-          content << section_formatter.format_with_sections(context)
+          # Add complete formatted bundle
+          content << section_formatter.format_with_sections(bundle)
 
           content.join("\n")
         end
 
         # Write individual section files
-        def write_individual_sections(context, base_path, section_formatter, options)
+        def write_individual_sections(bundle, base_path, section_formatter, options)
           section_files = []
           base_dir = File.dirname(base_path)
           base_name = File.basename(base_path, '.*')
 
-          context.sorted_sections.each do |section_name, section_data|
+          bundle.sorted_sections.each do |section_name, section_data|
             # Create section filename
             section_filename = File.join(base_dir, "#{base_name}-#{section_name}.md")
 
             # Create section content
-            section_content = create_section_content(section_name, section_data, context, section_formatter)
+            section_content = create_section_content(section_name, section_data, bundle, section_formatter)
 
             # Write section file
             result = write_single_file(section_content, section_filename, options)
@@ -179,7 +179,7 @@ module Ace
         end
 
         # Create content for an individual section
-        def create_section_content(section_name, section_data, context, section_formatter)
+        def create_section_content(section_name, section_data, bundle, section_formatter)
           content = []
 
           title = section_data[:title] || section_data['title'] || section_name.to_s.humanize
@@ -212,7 +212,7 @@ module Ace
           content << ""
           content << "---"
           content << ""
-          content << "[← Back to Index](#{File.basename(context.metadata[:output_file] || 'context.md')})"
+          content << "[← Back to Index](#{File.basename(bundle.metadata[:output_file] || 'bundle.md')})"
 
           content.join("\n")
         end

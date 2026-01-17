@@ -23,7 +23,7 @@ class CliApiParityTest < AceTestCase
     context_file = File.join(@temp_dir, "test-context.md")
     context_content = <<~CONTEXT
       ---
-      context:
+      bundle:
         base: "Base prompt content"
         sections:
           format:

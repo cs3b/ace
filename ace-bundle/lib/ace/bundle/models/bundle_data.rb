@@ -3,8 +3,8 @@
 module Ace
   module Bundle
     module Models
-      # Data model for context information
-      class ContextData
+      # Data model for bundle information
+      class BundleData
         attr_accessor :preset_name, :files, :metadata, :content, :commands, :sections
 
         def initialize(preset_name: nil, files: nil, metadata: nil, content: "", commands: nil, sections: nil)

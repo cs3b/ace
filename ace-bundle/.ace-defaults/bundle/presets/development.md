@@ -1,6 +1,6 @@
 ---
 description: Development context extending base with code files
-context:
+bundle:
   presets:
     - base
   files:

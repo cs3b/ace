@@ -1,6 +1,6 @@
 ---
 description: Documentation review with organized sections
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml

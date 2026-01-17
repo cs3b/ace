@@ -187,7 +187,7 @@ module Ace
       # Test create legacy sections with diff format
       def test_create_legacy_sections_with_diff_hash
         config = {
-          'context' => {
+          'bundle' => {
             'diff' => {
               'ranges' => ['origin/main...HEAD']
             }
@@ -203,7 +203,7 @@ module Ace
       # Test create legacy sections with since
       def test_create_legacy_sections_with_since
         config = {
-          'context' => {
+          'bundle' => {
             'diff' => {
               'since' => 'origin/main'
             }

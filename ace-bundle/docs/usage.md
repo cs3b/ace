@@ -197,7 +197,7 @@ ace-bundle prompt.md --embed-source --output stdio
 # Create prompt file with frontmatter and context configuration
 cat > prompt.md <<'EOF'
 ---
-context:
+bundle:
   presets: [base]
 ---
 My prompt content
