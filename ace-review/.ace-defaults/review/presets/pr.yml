@@ -4,7 +4,7 @@ description: "Pull request review - comprehensive code changes review"
 
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       format:
         title: "Format Guidelines"
@@ -23,10 +23,10 @@ instructions:
         presets:
           - "project"
 
-context: "project"
+bundle: "project"
 
 subject:
-  context:
+  bundle:
     sections:
       code_changes:
         title: "Code Changes"

@@ -6,7 +6,7 @@ presets:
 description: "Work-in-progress review - review uncommitted changes"
 
 subject:
-  context:
+  bundle:
     sections:
       code_changes:
         title: "Working Changes"

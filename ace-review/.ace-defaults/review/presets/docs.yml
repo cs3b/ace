@@ -4,7 +4,7 @@ description: "Documentation review - completeness and clarity"
 
 instructions:
   base: "prompt://base/system"
-  context:
+  bundle:
     sections:
       format:
         title: "Format Guidelines"
@@ -28,7 +28,7 @@ instructions:
           - "README.md"
 
 subject:
-  context:
+  bundle:
     sections:
       documentation_files:
         title: "Documentation Files"

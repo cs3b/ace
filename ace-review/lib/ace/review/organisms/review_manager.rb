@@ -6,6 +6,7 @@ require "yaml"
 require "open3"
 require "ace/support/fs"
 require "ace/support/timestamp"
+require "ace/bundle/atoms/bundle_normalizer"
 
 module Ace
   module Review
@@ -40,7 +41,7 @@ module Ace
           config_result = prepare_review_config(options)
           return config_result unless config_result[:success]
 
-          # Step 2: Create session directory early (needed for ace-context)
+          # Step 2: Create session directory early (needed for ace-bundle)
           cache_dir = create_cache_directory
           session_dir = create_session_directory(options, cache_dir)
 
@@ -48,7 +49,7 @@ module Ace
           content_result = extract_review_content(config_result[:config], options)
           return content_result unless content_result[:success]
 
-          # Step 4: Compose prompts via ace-context
+          # Step 4: Compose prompts via ace-bundle
           prompt_result = compose_review_prompt(
             config_result[:config],
             content_result[:context],
@@ -143,7 +144,7 @@ module Ace
           subject_config = options.subject || config[:subject]
 
           # Handle array of subjects - merge configs without extraction
-          # This allows multiple --subject flags to be combined into a single ace-context config
+          # This allows multiple --subject flags to be combined into a single ace-bundle config
           if subject_config.is_a?(Array)
             merged_config = @subject_extractor.merge_typed_subject_configs(subject_config)
             if merged_config
@@ -161,7 +162,7 @@ module Ace
             end
           end
 
-          # Check for typed subject - pass config directly to ace-context (no extraction)
+          # Check for typed subject - pass config directly to ace-bundle (no extraction)
           # This avoids extracting content only to save it and re-read it
           if subject_config.is_a?(String)
             typed_config = @subject_extractor.parse_typed_subject_config(subject_config)
@@ -266,7 +267,7 @@ module Ace
           info
         end
 
-        # Step 3: Generate system and user prompts via ace-context
+        # Step 3: Generate system and user prompts via ace-bundle
         def compose_review_prompt(config, context, subject, session_dir, options = nil, typed_subject_config = nil)
           # Extract prompt composition and context config
           system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
@@ -299,19 +300,19 @@ module Ace
           end
           user_context_path = create_context_file(session_dir, subject_config, nil, "user.context.md")
 
-          # Step 3c: Generate system.prompt.md via ace-context
+          # Step 3c: Generate system.prompt.md via ace-bundle
           system_prompt_path = File.join(session_dir, "system.prompt.md")
           begin
             execute_ace_context(system_context_path, system_prompt_path)
-          rescue Errors::MissingDependencyError, Errors::ContextProcessingError => e
+          rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
             return { success: false, error: "Failed to generate system prompt: #{e.message}" }
           end
 
-          # Step 3d: Generate user.prompt.md via ace-context
+          # Step 3d: Generate user.prompt.md via ace-bundle
           user_prompt_path = File.join(session_dir, "user.prompt.md")
           begin
             execute_ace_context(user_context_path, user_prompt_path)
-          rescue Errors::MissingDependencyError, Errors::ContextProcessingError => e
+          rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
             return { success: false, error: "Failed to generate user prompt: #{e.message}" }
           end
 
@@ -338,29 +339,29 @@ module Ace
           instructions && instructions.is_a?(Hash)
         end
 
-        # Unified context file processor - pass configuration directly to ace-context
+        # Unified context file processor - pass configuration directly to ace-bundle
         def create_context_file(session_dir, context_config, additional_context, output_filename)
-          # Build complete ace-context configuration
+          # Build complete ace-bundle configuration
           ace_context_config = {}
 
           # Normalize and merge context_config if provided
           if context_config
-            normalized_config = Atoms::ContextNormalizer.normalize_context_config(context_config)
+            normalized_config = Ace::Bundle::Atoms::BundleNormalizer.normalize_config(context_config)
             ace_context_config = deep_merge_context(ace_context_config, normalized_config)
           end
 
-          # Add additional context as "context" key for ace-context, but avoid duplicates
+          # Add additional context as "bundle" key for ace-bundle, but avoid duplicates
           if additional_context && additional_context != "none" && !additional_context.empty?
-            ace_context_config["context"] ||= {}
+            ace_context_config["bundle"] ||= {}
             if additional_context.is_a?(String)
               # Check if this preset is already included in the sections to avoid duplication
               existing_presets = extract_presets_from_sections(ace_context_config)
               unless existing_presets.include?(additional_context)
-                ace_context_config["context"]["presets"] ||= []
-                ace_context_config["context"]["presets"] << additional_context
+                ace_context_config["bundle"]["presets"] ||= []
+                ace_context_config["bundle"]["presets"] << additional_context
               end
             elsif additional_context.is_a?(Hash)
-              additional_normalized = Atoms::ContextNormalizer.normalize_context_config(additional_context)
+              additional_normalized = Ace::Bundle::Atoms::BundleNormalizer.normalize_config(additional_context)
               ace_context_config = deep_merge_context(ace_context_config, additional_normalized)
             end
           end
@@ -470,11 +471,11 @@ module Ace
           presets = []
           return presets unless config.is_a?(Hash)
 
-          # Check if config has context with sections
-          context = config["context"] || config[:context]
-          return presets unless context.is_a?(Hash)
+          # Check if config has bundle with sections
+          bundle = config["bundle"] || config[:bundle]
+          return presets unless bundle.is_a?(Hash)
 
-          sections = context["sections"] || context[:sections]
+          sections = bundle["sections"] || bundle[:sections]
           return presets unless sections.is_a?(Hash)
 
           # Extract presets from all sections
@@ -491,46 +492,46 @@ module Ace
         end
 
 
-        # Execute ace-context to generate prompts using Ruby API
+        # Execute ace-bundle to generate prompts using Ruby API
         # @param input_file [String] Path to context configuration file
         # @param output_file [String] Path to write rendered context
-        # @raise [Errors::MissingDependencyError] If ace-context gem not available
-        # @raise [Errors::ContextProcessingError] If context processing fails
+        # @raise [Errors::MissingDependencyError] If ace-bundle gem not available
+        # @raise [Errors::BundleProcessingError] If context processing fails
         # @return [true] On success
         def execute_ace_context(input_file, output_file)
-          # Ensure ace-context is available
+          # Ensure ace-bundle is available
           begin
-            require 'ace/context'
+            require 'ace/bundle'
           rescue LoadError => e
             raise Errors::MissingDependencyError.new(
-              "ace-context",
-              "gem install ace-context"
+              "ace-bundle",
+              "gem install ace-bundle"
             )
           end
 
-          # Check if Ace::Context is actually defined (might fail silently)
-          unless defined?(Ace::Context)
+          # Check if Ace::Bundle is actually defined (might fail silently)
+          unless defined?(Ace::Bundle)
             raise Errors::MissingDependencyError.new(
-              "ace-context",
-              "gem install ace-context"
+              "ace-bundle",
+              "gem install ace-bundle"
             )
           end
 
           begin
-            # Load context using ace-context Ruby API
-            context_result = Ace::Context.load_file(input_file)
+            # Load context using ace-bundle Ruby API
+            context_result = Ace::Bundle.load_file(input_file)
 
             # Check for fatal error in metadata
             if context_result.metadata[:error]
               error_message = context_result.metadata[:error]
-              raise Errors::ContextProcessingError.new(
+              raise Errors::BundleProcessingError.new(
                 "Failed to process context file: #{error_message}",
                 { input_file: input_file, error: error_message }
               )
             end
 
             # Surface non-fatal errors (e.g., PR fetch failures) as warnings
-            # These are stored in metadata[:errors] array by ace-context
+            # These are stored in metadata[:errors] array by ace-bundle
             if context_result.metadata[:errors]&.any?
               context_result.metadata[:errors].each do |error_msg|
                 warn "[ace-review] Warning: #{error_msg}"
@@ -540,12 +541,12 @@ module Ace
             # Write the rendered content to output file
             File.write(output_file, context_result.content)
             true
-          rescue Errors::ContextProcessingError
+          rescue Errors::BundleProcessingError
             # Re-raise our own errors
             raise
           rescue StandardError => e
-            raise Errors::ContextProcessingError.new(
-              "ace-context processing failed: #{e.message}",
+            raise Errors::BundleProcessingError.new(
+              "ace-bundle processing failed: #{e.message}",
               { input_file: input_file, error: e.message, backtrace: e.backtrace.first(5) }
             )
           end
@@ -581,10 +582,10 @@ module Ace
         # @param session_dir [String] Session directory for saving intermediate files
         # @param options [ReviewOptions, nil] Review options
         # @param typed_subject_config [Hash, nil] Parsed typed subject (pr:, files:, diff:, task:)
-        # @return [Hash, nil] Resolved subject configuration for ace-context
+        # @return [Hash, nil] Resolved subject configuration for ace-bundle
         def resolve_subject_config(config:, subject:, session_dir:, options:, typed_subject_config:)
-          # Handle typed subject config (pr:, files:, diff:, task:) - pass directly to ace-context
-          # This is the primary path - ace-context handles all content extraction
+          # Handle typed subject config (pr:, files:, diff:, task:) - pass directly to ace-bundle
+          # This is the primary path - ace-bundle handles all content extraction
           if typed_subject_config
             return typed_subject_config
           end
@@ -595,7 +596,7 @@ module Ace
             File.write(pr_diff_path, subject)
 
             return {
-              "context" => {
+              "bundle" => {
                 "sections" => {
                   "pr_changes" => {
                     "title" => "Pull Request Changes",
@@ -763,7 +764,7 @@ module Ace
 
         def save_session_files(session_dir, review_data)
           # v0.13.0+ architecture: system and user prompts are already saved as .prompt.md files
-          # Subject and context are handled directly via ace-context workflow, no need for separate files
+          # Subject and context are handled directly via ace-bundle workflow, no need for separate files
 
           # Save metadata (committable - no .tmp extension)
           metadata = create_metadata(review_data)

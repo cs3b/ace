@@ -6,7 +6,7 @@ module Ace
   module Review
     module Molecules
       # Extracts context (background information) for reviews
-      # Delegates to ContextComposer for context.md pattern and ace-context integration
+      # Delegates to ContextComposer for context.md pattern and ace-bundle integration
       class ContextExtractor
         def initialize
           @preset_manager = nil # Lazy load to avoid circular dependency
@@ -47,8 +47,8 @@ module Ace
             return extract(preset_context, cache_dir)
           end
 
-          # Check if it's an ace-context preset
-          if ace_context_preset_exists?(input)
+          # Check if it's an ace-bundle preset
+          if ace_bundle_preset_exists?(input)
             return use_context_composer({ "presets" => [input] }, cache_dir)
           end
 
@@ -103,13 +103,15 @@ module Ace
           @preset_manager ||= PresetManager.new
 
           preset = @preset_manager.load_preset(preset_name)
-          preset&.dig("context")
+          preset&.dig("bundle")
         end
 
-        def ace_context_preset_exists?(preset_name)
-          # Check if this is a valid ace-context preset
-          Ace::Context.list_presets.any? { |p| p[:name] == preset_name }
-        rescue StandardError
+        def ace_bundle_preset_exists?(preset_name)
+          # Check if this is a valid ace-bundle preset
+          Ace::Bundle.list_presets.any? { |p| p[:name] == preset_name }
+        rescue StandardError => e
+          warn "ace-bundle preset check failed: #{e.message}" if Ace::Review.debug?
+          raise e if ENV["ACE_TEST_STRICT"]
           false
         end
 
@@ -124,28 +126,28 @@ module Ace
           config
         )
 
-        # If cache_dir provided, save context.md and load via ace-context
+        # If cache_dir provided, save context.md and load via ace-bundle
         if cache_dir
           context_file_path = Ace::Review::Molecules::ContextComposer.save_context_md(
             context_md,
             cache_dir
           )
 
-          # Load via ace-context for embedded content
-          Ace::Review::Molecules::ContextComposer.load_context_via_ace_context(context_file_path)
+          # Load via ace-bundle for embedded content
+          Ace::Review::Molecules::ContextComposer.load_context_via_ace_bundle(context_file_path)
         else
-          # Fallback to direct ace-context loading without file
+          # Fallback to direct ace-bundle loading without file
           begin
-            require "ace/context"
-            result = Ace::Context.load_auto(context_md, format: 'markdown')
+            require "ace/bundle"
+            result = Ace::Bundle.load_auto(context_md, format: 'markdown')
             result.content
           rescue StandardError => e
-            warn "ace-context extraction failed: #{e.message}" if Ace::Review.debug?
+            warn "ace-bundle extraction failed: #{e.message}" if Ace::Review.debug?
             ""
           end
         end
       rescue Ace::Review::Molecules::ContextComposer::ContextComposerError => e
-        # Fail-fast error handling for ace-context failures
+        # Fail-fast error handling for ace-bundle failures
         raise ContextExtractorError, "Context extraction failed: #{e.message}"
       end
 

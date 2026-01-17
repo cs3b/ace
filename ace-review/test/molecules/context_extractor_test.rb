@@ -30,7 +30,7 @@ class ContextExtractorTest < AceReviewTest
 
     Dir.chdir(@temp_dir) do
       result = @extractor.extract("project")
-      # ace-context loads from actual project root, not test dir
+      # ace-bundle loads from actual project root, not test dir
       # Just verify we got some content
       refute_empty result
       assert_match(/Context|Metadata|ACE/, result)
@@ -47,7 +47,7 @@ class ContextExtractorTest < AceReviewTest
 
     Dir.chdir(@temp_dir) do
       result = @extractor.extract("project", cache_dir)
-      # ace-context loads from actual project root, not test dir
+      # ace-bundle loads from actual project root, not test dir
       # Just verify we got some content
       refute_empty result
       assert_match(/Context|ACE|files/, result)
@@ -57,7 +57,7 @@ class ContextExtractorTest < AceReviewTest
       assert File.exist?(context_file)
 
       context_content = File.read(context_file)
-      assert_match(/^---\ncontext:/, context_content)
+      assert_match(/^---\nbundle:/, context_content)
     end
   end
 
@@ -144,7 +144,7 @@ class ContextExtractorTest < AceReviewTest
     assert File.exist?(context_file)
 
     context_content = File.read(context_file)
-    assert_match(/^---\ncontext:/, context_content)
+    assert_match(/^---\nbundle:/, context_content)
     assert_match(/files:\s*\n\s*- test\.rb/, context_content)
     assert_match(/presets:\s*\n\s*- project/, context_content)
   end
@@ -152,7 +152,7 @@ class ContextExtractorTest < AceReviewTest
   def test_extract_with_preset_context
     # Mock preset manager to return context
     preset_manager_mock = Minitest::Mock.new
-    preset_manager_mock.expect(:load_preset, { "context" => { "files" => ["test.rb"] } }, ["test-preset"])
+    preset_manager_mock.expect(:load_preset, { "bundle" => { "files" => ["test.rb"] } }, ["test-preset"])
 
     @extractor.instance_variable_set(:@preset_manager, preset_manager_mock)
 
@@ -165,7 +165,7 @@ class ContextExtractorTest < AceReviewTest
   def test_extract_with_preset_reference_in_hash
     # Mock preset manager to return context
     preset_manager_mock = Minitest::Mock.new
-    preset_manager_mock.expect(:load_preset, { "context" => { "files" => ["test.rb"] } }, ["test-preset"])
+    preset_manager_mock.expect(:load_preset, { "bundle" => { "files" => ["test.rb"] } }, ["test-preset"])
 
     @extractor.instance_variable_set(:@preset_manager, preset_manager_mock)
 
@@ -191,14 +191,14 @@ class ContextExtractorTest < AceReviewTest
     end
   end
 
-  def test_extract_with_ace_context_preset
-    # Mock ace-context preset check
-    @extractor.stub(:ace_context_preset_exists?, true) do
-      # Mock ace-context loading
-      ace_context_result_mock = Minitest::Mock.new
-      ace_context_result_mock.expect(:content, "Mock context content")
+  def test_extract_with_ace_bundle_preset
+    # Mock ace-bundle preset check
+    @extractor.stub(:ace_bundle_preset_exists?, true) do
+      # Mock ace-bundle loading
+      ace_bundle_result_mock = Minitest::Mock.new
+      ace_bundle_result_mock.expect(:content, "Mock context content")
 
-      Ace::Context.stub(:load_auto, ace_context_result_mock) do
+      Ace::Bundle.stub(:load_auto, ace_bundle_result_mock) do
         result = @extractor.extract("mock-preset")
         assert_equal "Mock context content", result
       end

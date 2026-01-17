@@ -23,10 +23,10 @@ class SynthesisIntegrationTest < AceReviewTest
         test:
           description: "Test preset"
           instructions:
-            context:
+            bundle:
               presets: ["project"]
           subject:
-            context:
+            bundle:
               sections:
                 code:
                   title: "Code Changes"
@@ -208,10 +208,10 @@ class SynthesisIntegrationTest < AceReviewTest
         test:
           description: "Test preset"
           instructions:
-            context:
+            bundle:
               presets: ["project"]
           subject:
-            context:
+            bundle:
               sections:
                 code:
                   title: "Code Changes"

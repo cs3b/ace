@@ -25,37 +25,37 @@ class AceReviewTest < Minitest::Test
     @test_dir = Dir.mktmpdir("ace-review-test")
     Dir.chdir(@test_dir)
 
-    # Stub ace-context to prevent expensive shell command execution during tests
-    stub_ace_context
+    # Stub ace-bundle to prevent expensive shell command execution during tests
+    stub_ace_bundle
     # Stub git operations to prevent expensive git command execution during tests
     stub_branch_reader
   end
 
   def teardown
-    # Restore original ace-context and git methods
-    restore_ace_context
+    # Restore original ace-bundle and git methods
+    restore_ace_bundle
     restore_branch_reader
 
     Dir.chdir(@original_pwd)
     FileUtils.remove_entry(@test_dir)
   end
 
-  # Stub Ace::Context.load_file and load_auto to return fast mock data instead of executing commands
-  def stub_ace_context
-    return unless defined?(Ace::Context)
+  # Stub Ace::Bundle.load_file and load_auto to return fast mock data instead of executing commands
+  def stub_ace_bundle
+    return unless defined?(Ace::Bundle)
 
     # Use shared fixtures from ace-support-test-helpers
-    @original_context_methods = {}
-    Ace::TestSupport::Fixtures::ContextMocks.stub_load_file(@original_context_methods)
-    Ace::TestSupport::Fixtures::ContextMocks.stub_load_auto(@original_context_methods)
+    @original_bundle_methods = {}
+    Ace::TestSupport::Fixtures::BundleMocks.stub_load_file(@original_bundle_methods)
+    Ace::TestSupport::Fixtures::BundleMocks.stub_load_auto(@original_bundle_methods)
   end
 
-  # Restore original Ace::Context.load_file and load_auto methods
-  def restore_ace_context
-    return unless @original_context_methods
+  # Restore original Ace::Bundle.load_file and load_auto methods
+  def restore_ace_bundle
+    return unless @original_bundle_methods
 
-    Ace::TestSupport::Fixtures::ContextMocks.restore_load_file(@original_context_methods)
-    Ace::TestSupport::Fixtures::ContextMocks.restore_load_auto(@original_context_methods)
+    Ace::TestSupport::Fixtures::BundleMocks.restore_load_file(@original_bundle_methods)
+    Ace::TestSupport::Fixtures::BundleMocks.restore_load_auto(@original_bundle_methods)
   end
 
   # Stub Ace::Git::Molecules::BranchReader to prevent expensive git command execution
