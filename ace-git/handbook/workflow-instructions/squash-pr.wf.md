@@ -221,8 +221,8 @@ git add ace-support-core/lib/ ace-support-core/test/
 ace-git-commit paths --intention "delegate config to Ace::Support::Config namespace"
 git status
 
-# Commit 3: Dependent gem - ace-context
-git add ace-context/lib/ ace-context/test/ ace-context/ace-context.gemspec
+# Commit 3: Dependent gem - ace-bundle
+git add ace-bundle/lib/ ace-bundle/test/ ace-bundle/ace-bundle.gemspec
 ace-git-commit paths --intention "update for ace-config rename"
 git status
 
@@ -252,7 +252,7 @@ git status  # Should be clean (only untracked files)
 > # GOOD - Use explicit paths or find:
 > find . -maxdepth 2 -name "*.gemspec" -exec git add {} +
 > # OR list packages explicitly:
-> git add ace-context/ace-context.gemspec ace-docs/ace-docs.gemspec ...
+> git add ace-bundle/ace-bundle.gemspec ace-docs/ace-docs.gemspec ...
 > ```
 
 #### Method B: Interactive Rebase (Advanced)
