@@ -5,7 +5,7 @@ description: ENCODE and DECODE timestamps to/from compact Base36 IDs
 argument-hint: "[encode|decode|config] [value] [options]"
 doc-type: workflow
 purpose: timestamp workflow instruction
-context:
+bundle:
   embed_document_source: false
 update:
   frequency: on-change
