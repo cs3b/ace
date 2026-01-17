@@ -5,7 +5,7 @@ description: Run ace-lint on project files with optional autofix and report gene
 argument-hint: "[file-pattern] [--fix] [--report]"
 doc-type: workflow
 purpose: lint workflow instruction
-context:
+bundle:
   embed_document_source: true
   sections:
     current_repository_status:
