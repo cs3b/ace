@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.4] - 2026-01-16
+
+### Changed
+- Rename context: to bundle: keys in configuration files
+
 ## [0.16.3] - 2026-01-10
 
 ### Changed
