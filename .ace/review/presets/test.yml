@@ -3,7 +3,7 @@
 description: "Test review - coverage and quality"
 
 instructions:
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       format:
@@ -27,7 +27,7 @@ instructions:
         files:
           - "test/test_helper.rb"
 
-context: "project"
+bundle: "project"
 
 subject:
   files:

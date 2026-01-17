@@ -6,7 +6,7 @@ presets:
 description: "Pull request review - comprehensive code changes review"
 
 subject:
-  context:
+  bundle:
     sections:
       code_changes:
         title: "Code Changes"

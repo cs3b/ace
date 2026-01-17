@@ -9,7 +9,7 @@ description: "Specification review - all changed .s.md files on branch"
 base: spec
 
 subject:
-  context:
+  bundle:
     sections:
       spec_changes:
         title: "Specification Changes"

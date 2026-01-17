@@ -6,7 +6,7 @@ description: Capture development idea to structured idea file with tags
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Write
   - TodoWrite
@@ -15,6 +15,6 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-context wfi://capture-idea`
+read and run `ace-bundle wfi://capture-idea`
 
-read and run `ace-context wfi://commit`
+read and run `ace-bundle wfi://commit`

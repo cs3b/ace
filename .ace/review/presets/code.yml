@@ -4,7 +4,7 @@ description: "Base code review configuration"
 
 instructions:
   description: "Code review instructions"
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       review_focus:
