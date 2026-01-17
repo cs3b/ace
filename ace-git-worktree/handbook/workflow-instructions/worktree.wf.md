@@ -5,7 +5,7 @@ description: Manage git worktrees with task-aware automation
 argument-hint: "[create|list|switch|remove|prune|config] [options]"
 doc-type: workflow
 purpose: worktree workflow instruction
-context:
+bundle:
   embed_document_source: false
 update:
   frequency: on-change
