@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-01-17
+
+### Added
+- RuboCop fallback support for Ruby linting when StandardRB is unavailable (task 216)
+  - Automatic tool detection: tries StandardRB first, falls back to RuboCop
+  - New `RuboCopRunner` atom mirroring `StandardrbRunner` interface
+  - Updated `RubyLinter` molecule with fallback logic
+  - Minimal `.rubocop.yml` configuration in `.ace-defaults/lint/`
+  - Clear error messages when neither tool is installed
+
+### Changed
+- Updated README with Ruby linting fallback documentation
+  - Documented StandardRB as preferred (zero-config) option
+  - Documented RuboCop as automatic fallback
+  - Added troubleshooting section for "No Ruby linter available" message
+- Updated `.ace-defaults/lint/ruby.yml` with `fallback_linter: rubocop` configuration
+
 ## [0.9.1] - 2026-01-16
 
 ### Changed
