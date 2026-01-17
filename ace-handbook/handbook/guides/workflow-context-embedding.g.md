@@ -1,6 +1,6 @@
 # Workflow Context Embedding Guide
 
-This guide explains how to use `ace-context`'s `embed_document_source: true` feature to embed dynamic context directly into workflow instructions, reducing redundant command execution and improving agent efficiency.
+This guide explains how to use `ace-bundle`'s `embed_document_source: true` feature to embed dynamic context directly into workflow instructions, reducing redundant command execution and improving agent efficiency.
 
 ## Goal
 
@@ -13,7 +13,7 @@ Define clear patterns for:
 
 ## Background
 
-**PR #120** introduced `ace-context wfi://protocol` which loads workflow instructions AND any embedded context in one operation. When an agent invokes `/ace:command`, they get:
+**PR #120** introduced `ace-bundle wfi://protocol` which loads workflow instructions AND any embedded context in one operation. When an agent invokes `/ace:command`, they get:
 
 1. The workflow instructions
 2. Any embedded context (from commands, files, or protocols)
@@ -59,7 +59,7 @@ This transforms workflows from "instructions that tell agents to gather context"
 
 ```yaml
 ---
-context:
+bundle:
   embed_document_source: true
   sections:
     section_name:
@@ -77,7 +77,7 @@ context:
 
 ```yaml
 ---
-context:
+bundle:
   embed_document_source: true
   sections:
     current_repository_status:
@@ -86,7 +86,7 @@ context:
         - git diff --stat
     available_presets:
       commands:
-        - ace-context --list
+        - ace-bundle --list
 ---
 ```
 
@@ -123,7 +123,7 @@ context:
 ```markdown
 1. List available presets:
    ```bash
-   ace-context --list
+   ace-bundle --list
    ```
 
 2. Ask user which one to load
@@ -136,9 +136,9 @@ context:
    Based on the user's `$input` variable:
    - **Preset names** (simple names like "project", "base"):
      - Verify preset exists in `<available_presets>` embedded above
-     - Run: `ace-context $input`
-   - **File paths**: Run directly with `ace-context $input`
-   - **Protocols**: Run directly with `ace-context $input`
+     - Run: `ace-bundle $input`
+   - **File paths**: Run directly with `ace-bundle $input`
+   - **Protocols**: Run directly with `ace-bundle $input`
 ```
 
 ### Pattern C: "Validation"
@@ -193,7 +193,7 @@ Use these embedded sections instead of running commands to gather this informati
 
 **Frontmatter:**
 ```yaml
-context:
+bundle:
   embed_document_source: true
   sections:
     current_repository_status:
@@ -215,16 +215,16 @@ context:
    No need to run git commands - the context is already provided.
 ```
 
-### load-context.wf.md (ace-context)
+### load-context.wf.md (ace-bundle)
 
 **Frontmatter:**
 ```yaml
-context:
+bundle:
   embed_document_source: true
   sections:
     available_presets:
       commands:
-        - ace-context --list
+        - ace-bundle --list
 ```
 
 **Instructions:**
@@ -237,13 +237,13 @@ Based on the user's `$input` variable:
 
 1. **Preset names** (simple names like "project", "base"):
    - Verify preset exists in `<available_presets>` embedded above
-   - Run: `ace-context $input`
+   - Run: `ace-bundle $input`
 
 2. **File paths** (contains `/`, `./`, extensions):
-   - Run directly: `ace-context $input`
+   - Run directly: `ace-bundle $input`
 
 3. **Protocols** (contains `://`):
-   - Run directly: `ace-context $input`
+   - Run directly: `ace-bundle $input`
    - Note: Workflows with `embed_document_source: true` include their context
 ```
 
@@ -267,8 +267,8 @@ When updating a workflow to use embedded context:
 
 ## Related Documents
 
-- **PR #120**: Replace ace-nav wfi:// with ace-context wfi:// in Claude Code commands
-- **Task 152**: ace-context auto-format output by line count
+- **PR #120**: Replace ace-nav wfi:// with ace-bundle wfi:// in Claude Code commands
+- **Task 152**: ace-bundle auto-format output by line count
 - **documents-embedding.g.md**: Template and guide embedding standards
 - **CLAUDE.md**: Agent guidance for workflow usage
 

@@ -16,7 +16,7 @@ to ensure all components are properly documented and discoverable.
 
 ### Load project context preset
 
-    ace-context project
+    ace-bundle project
 {: .language-bash}
 
 ### Review target documentation files
