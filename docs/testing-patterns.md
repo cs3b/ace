@@ -967,7 +967,7 @@ end
 When your gem depends on ace-git, use DiffOrchestrator stubbing:
 
 ```ruby
-# In ace-docs, ace-context, or any gem using git diffs
+# In ace-docs, ace-bundle, or any gem using git diffs
 require 'ace/git'
 
 def test_my_feature_with_git_dependency

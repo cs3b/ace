@@ -107,7 +107,7 @@ Run these by typing directly in Claude Code conversation.
 
 | Command | Purpose |
 |---------|---------|
-| `/ace:load-context [preset]` | Load project context with AI assistance |
+| `/ace:bundle [preset]` | Load bundle with AI assistance |
 | `/ace:prompt` | Run ace-prompt and follow instructions |
 | `/ace:review-questions` | Review open questions |
 | `/ace:document-unplanned` | Document unplanned work |
@@ -122,12 +122,12 @@ Run these from your terminal (bash/fish shell).
 
 ```bash
 # Context loading
-ace-context project              # Load project context
-ace-context --list               # List available presets
-ace-context wfi://load-context   # Load via protocol
+ace-bundle project              # Load project context
+ace-bundle --list               # List available presets
+ace-bundle wfi://bundle   # Load via protocol
 
 # Navigation
-ace-context wfi://work-on-task       # Load workflow content
+ace-bundle wfi://work-on-task       # Load workflow content
 ace-nav --sources                # List available sources
 ```
 
@@ -208,7 +208,7 @@ ace-search "TODO" --staged       # Staged files only
 ```bash
 ace-test                         # All tests in package
 ace-test atoms                   # Layer-specific tests
-ace-test ace-context             # Package tests
+ace-test ace-bundle             # Package tests
 ace-test --fail-fast             # Stop on failure
 ace-test-suite                   # Full monorepo suite
 ```

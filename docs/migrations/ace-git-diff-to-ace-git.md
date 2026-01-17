@@ -118,7 +118,7 @@ The `ace-git` package provides additional functionality beyond diff generation:
 
 The following packages were updated to use ace-git in this consolidation:
 
-- ace-context
+- ace-bundle
 - ace-docs
 - ace-git-commit
 - ace-git-worktree

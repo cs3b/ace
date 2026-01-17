@@ -34,7 +34,7 @@ bundle exec rake test:ci
 ### In GitHub Actions
 
 The CI runs a matrix of:
-- **4 packages**: ace-core, ace-test-support, ace-test-runner, ace-context
+- **4 packages**: ace-core, ace-test-support, ace-test-runner, ace-bundle
 - **3 Ruby versions**: 3.2, 3.3, 3.4
 - **Total**: 12 parallel jobs
 
@@ -75,7 +75,7 @@ package:
   - ace-core
   - ace-test-support
   - ace-test-runner
-  - ace-context
+  - ace-bundle
   - your-new-package  # Add here
 ```
 
@@ -85,7 +85,7 @@ packages = %w[
   ace-core
   ace-test-support
   ace-test-runner
-  ace-context
+  ace-bundle
   your-new-package  # Add here
 ]
 ```
