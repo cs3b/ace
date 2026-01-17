@@ -6,7 +6,7 @@ description: Create well-structured Git commits using ace-git-commit's LLM-power
 argument-hint: "[intention]"
 doc-type: workflow
 purpose: commit workflow instruction
-context:
+bundle:
   embed_document_source: true
   sections:
     current_repository_status:
