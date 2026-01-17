@@ -82,7 +82,7 @@ git merge 140.01-branch into 140.02-branch
 
 ## Project Context Loading
 
-- Read and follow: `ace-context wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://load-project-context`
 
 ## Quick Start
 
@@ -256,7 +256,7 @@ For each PR:
 ace-git status
 # Look for "Current PR" section:
 #   #88 [OPEN] 140.04: Update ace-prompt to use ace-git
-#     Target: 140-enhance-ace-context-with-dynamic-git-branch-and-pr-information
+#     Target: 140-enhance-ace-bundle-with-dynamic-git-branch-and-pr-information
 
 # Review the PR (compares against PR's target branch)
 ace-review --preset code --pr 88 --auto-execute

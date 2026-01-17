@@ -137,8 +137,8 @@ module Ace
 
             # Embed context if configured
             if frontmatter["embed_context"] && frontmatter["context_preset"]
-              debug_log("Fetching ace-context preset: #{frontmatter["context_preset"]}")
-              project_context = fetch_ace_context(frontmatter["context_preset"])
+              debug_log("Fetching ace-bundle preset: #{frontmatter["context_preset"]}")
+              project_context = fetch_ace_bundle(frontmatter["context_preset"])
               prompt_body = prompt_body.gsub("{project_context}", project_context)
               debug_log("System prompt length with context: #{prompt_body.length} chars")
             end
@@ -149,9 +149,9 @@ module Ace
           end
         end
 
-        def fetch_ace_context(preset)
+        def fetch_ace_bundle(preset)
           stdout, stderr, status = Open3.capture3(
-            "ace-context", preset, "--output", "stdio"
+            "ace-bundle", preset, "--output", "stdio"
           )
 
           if status.success?
@@ -162,11 +162,11 @@ module Ace
               stdout
             end
           else
-            debug_log("Failed to load ace-context: #{stderr}")
+            debug_log("Failed to load ace-bundle: #{stderr}")
             "<!-- Project context unavailable -->"
           end
         rescue => e
-          debug_log("Error loading ace-context: #{e.message}")
+          debug_log("Error loading ace-bundle: #{e.message}")
           "<!-- Project context unavailable -->"
         end
 
