@@ -1,7 +1,7 @@
 ---
 description: Create complete task from plan (draft behavioral spec + implementation
   planning + commit)
-context:
+bundle:
   params:
     output: cache
   embed_document_source: true
@@ -42,7 +42,7 @@ This workflow automatically loads the following workflows via frontmatter `conte
 - **plan-task** (`wfi://plan-task`): Adds detailed implementation planning
 - **commit** (`wfi://commit`): Commits the completed task to git
 
-All workflow content is embedded automatically by ace-context protocol resolution.
+All workflow content is embedded automatically by ace-bundle protocol resolution.
 
 ## Process Steps
 
@@ -99,7 +99,7 @@ Path: /Users/mc/Ps/ace-meta/.ace-taskflow/v.0.9.0/t/XXX-title/task.XXX.md
 
 ### Format 1: Direct Plan Text
 ```
-ARGUMENTS: "Add git diff support to ace-context so ace-review
+ARGUMENTS: "Add git diff support to ace-bundle so ace-review
 can use unified content aggregation for files, commands, and diffs"
 ```
 
