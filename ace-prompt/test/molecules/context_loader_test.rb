@@ -57,6 +57,6 @@ class ContextLoaderTest < Minitest::Test
     assert Ace::Prompt::Molecules::ContextLoader.call("relative/path.md").is_a?(String)
   end
 
-  # Note: Full integration with ace-context is tested via integration tests.
+  # Note: Full integration with ace-bundle is tested via integration tests.
   # Unit tests focus on edge cases and error handling.
 end

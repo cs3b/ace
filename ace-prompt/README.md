@@ -99,7 +99,7 @@ Identical requests return cached results for faster iteration.
 
 ## Context Integration
 
-ace-prompt supports automatic context loading via [ace-context](https://github.com/your-org/ace-context). This allows prompts to automatically include relevant project context.
+ace-prompt supports automatic context loading via [ace-bundle](https://github.com/your-org/ace-bundle). This allows prompts to automatically include relevant project context.
 
 ### Enable Context Loading
 
@@ -120,7 +120,7 @@ Create prompts with YAML frontmatter to control context loading:
 
 ```markdown
 ---
-context:
+bundle:
   enabled: true
   sources:
     - file: "docs/architecture.md"
@@ -136,7 +136,7 @@ Please review this code for security issues, considering the project architectur
 Configure default context behavior in `.ace/prompt/config.yml`:
 
 ```yaml
-context:
+bundle:
   enabled: true  # Default: false
   sources:
     - file: "docs/vision.md"
@@ -149,7 +149,7 @@ context:
 # Create a prompt with frontmatter
 cat > .cache/ace-prompt/prompts/feature-review.md << 'EOF'
 ---
-context:
+bundle:
   enabled: true
   sources:
     - file: "docs/architecture.md"
@@ -176,7 +176,7 @@ ace-prompt works well with different prompt templates:
 #### Bug Report Template
 ```markdown
 ---
-context:
+bundle:
   enabled: true
   sources:
     - file: "CHANGELOG.md"
@@ -202,7 +202,7 @@ Please analyze this bug considering the recent changes and project history.
 #### Feature Request Template
 ```markdown
 ---
-context:
+bundle:
   enabled: true
   sources:
     - file: "docs/roadmap.md"

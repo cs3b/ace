@@ -130,7 +130,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     File.write(test_file, "# Test content")
 
     result = Ace::Prompt::Molecules::ContextLoader.call(test_file)
-    # Should return something (context or empty string based on ace-context availability)
+    # Should return something (context or empty string based on ace-bundle availability)
     assert result.is_a?(String)
   end
 
@@ -141,7 +141,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     File.write(subdir, "# Test content")
 
     result = Ace::Prompt::Molecules::ContextLoader.call(subdir)
-    # Should return something (context or empty string based on ace-context availability)
+    # Should return something (context or empty string based on ace-bundle availability)
     assert result.is_a?(String)
   end
 
@@ -159,7 +159,7 @@ class ContextLoaderSecurityTest < Minitest::Test
   def test_respects_configurable_file_size_limit
     # Mock config with different size limit
     mock_config = {
-      "context" => { "enabled" => false },
+      "bundle" => { "enabled" => false },
       "security" => { "max_file_size_mb" => 5 },
       "debug" => { "enabled" => false, "context_loading" => false }
     }
@@ -245,7 +245,7 @@ class ContextLoaderSecurityTest < Minitest::Test
   def test_debug_logging_configuration
     # Mock config with debug enabled
     mock_config = {
-      "context" => { "enabled" => false },
+      "bundle" => { "enabled" => false },
       "security" => { "max_file_size_mb" => 10 },
       "debug" => { "enabled" => true, "context_loading" => true }
     }
@@ -263,7 +263,7 @@ class ContextLoaderSecurityTest < Minitest::Test
   def test_debug_logging_with_category_filtering
     # Mock config with specific debug category enabled
     mock_config = {
-      "context" => { "enabled" => false },
+      "bundle" => { "enabled" => false },
       "security" => { "max_file_size_mb" => 10 },
       "debug" => { "enabled" => true, "context_loading" => true }
     }
@@ -288,7 +288,7 @@ class ContextLoaderSecurityTest < Minitest::Test
   def test_debug_logging_with_category_filtering_disabled
     # Mock config with debug enabled but category filtered
     mock_config = {
-      "context" => { "enabled" => false },
+      "bundle" => { "enabled" => false },
       "security" => { "max_file_size_mb" => 10 },
       "debug" => { "enabled" => true, "context_loading" => false }
     }
@@ -313,7 +313,7 @@ class ContextLoaderSecurityTest < Minitest::Test
   def test_debug_logging_disabled
     # Mock config with debug disabled
     mock_config = {
-      "context" => { "enabled" => false },
+      "bundle" => { "enabled" => false },
       "security" => { "max_file_size_mb" => 10 },
       "debug" => { "enabled" => false, "context_loading" => false }
     }
@@ -359,7 +359,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     warning_messages = []
 
     Object.stub(:warn, ->(message) { warning_messages << message }) do
-      # Mock ace-context failure to trigger fallback
+      # Mock ace-bundle failure to trigger fallback
       Ace::Prompt::Molecules::ContextLoader.stub(:call, "") do
         result = Ace::Prompt::Molecules::ContextLoader.call("#{@prompt_dir}/test.md")
       end
@@ -380,7 +380,7 @@ class ContextLoaderSecurityTest < Minitest::Test
     error_message = ""
 
     mock_config = {
-      "context" => { "enabled" => false },
+      "bundle" => { "enabled" => false },
       "security" => { "max_file_size_mb" => 10 },
       "debug" => { "enabled" => false }
     }

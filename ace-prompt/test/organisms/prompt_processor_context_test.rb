@@ -46,7 +46,7 @@ class PromptProcessorContextTest < Minitest::Test
       # Archive should contain the original content with frontmatter
       archived_content = File.read(result[:archive_path])
       assert_includes archived_content, "---"
-      assert_includes archived_content, "context:"
+      assert_includes archived_content, "bundle:"
       assert_includes archived_content, "Review this project."
     end
   end
@@ -63,7 +63,7 @@ class PromptProcessorContextTest < Minitest::Test
       extracted = Ace::Prompt::Atoms::FrontmatterExtractor.extract(content)
 
       assert extracted[:has_frontmatter]
-      assert_equal ['README.md'], extracted[:frontmatter]['context']['files']
+      assert_equal ['README.md'], extracted[:frontmatter]['bundle']['files']
       assert_equal "Review this project.\n", extracted[:body]
     end
   end
@@ -159,7 +159,7 @@ class PromptProcessorContextTest < Minitest::Test
       assert result[:success]
       # Should treat malformed frontmatter as body content
       assert_includes result[:content], "---"
-      assert_includes result[:content], "context:"
+      assert_includes result[:content], "bundle:"
       assert_includes result[:content], "files:"
       assert_includes result[:content], "invalid: yaml: content"
     end
@@ -185,7 +185,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         files:
           - README.md
       ---
@@ -208,7 +208,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         enabled: true
         sources:
           - file: "docs/architecture.md"
@@ -231,7 +231,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         sources:
           - invalid_type: "not_supported"
           - file: 12345  # invalid file reference
@@ -248,7 +248,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         sources:
           - file: "nonexistent/file.md"
           - command: "nonexistent-command"
@@ -264,7 +264,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         enabled: false
         sources:
           - file: "docs/architecture.md"
@@ -280,7 +280,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         enabled: true
         sources: []
       ---
@@ -295,7 +295,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         files:
       invalid: yaml: content
         - not_properly_formatted
@@ -311,7 +311,7 @@ class PromptProcessorContextTest < Minitest::Test
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
     File.write(prompt_path, <<~MARKDOWN)
       ---
-      context:
+      bundle:
         enabled: true
         sources:
           - command: "git log --oneline -5"

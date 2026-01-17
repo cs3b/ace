@@ -76,7 +76,7 @@ security:
 ### Secure Defaults
 
 ```yaml
-context:
+bundle:
   enabled: false  # Context loading disabled by default
 security:
   max_file_size_mb: 10  # Conservative file size limit
@@ -88,7 +88,7 @@ debug:
 
 #### Production Environment
 ```yaml
-context:
+bundle:
   enabled: true
   sources:
     - file: "docs/architecture.md"    # Specific trusted files only
@@ -104,7 +104,7 @@ debug:
 
 #### Development Environment
 ```yaml
-context:
+bundle:
   enabled: true
   sources:
     - file: "**/*.md"               # All markdown files
@@ -170,7 +170,7 @@ Result: Rejected before processing
 
 ✅ **Safe Patterns**:
 ```yaml
-context:
+bundle:
   sources:
     - file: "docs/architecture.md"
     - file: "README.md"
@@ -179,7 +179,7 @@ context:
 
 ❌ **Risky Patterns**:
 ```yaml
-context:
+bundle:
   sources:
     - file: "**/*"              # Too broad
     - file: "../../../etc/*"    # Directory traversal
@@ -226,7 +226,7 @@ debug:
 ### Error Monitoring
 
 Key error messages that require attention:
-- `"Error: ace-context gem not available"` - Dependency missing
+- `"Error: ace-bundle gem not available"` - Dependency missing
 - `"Error: File path resolves outside project"` - Security violation
 - `"Error: Prompt file too large"` - Resource limit exceeded
 

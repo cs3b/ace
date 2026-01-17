@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-01-16
+
+### Changed
+- Rename context: to bundle: keys in configuration files
+
+## [0.14.0] - 2026-01-15
+
+### Changed
+- **Dependency Migration**: Replaced ace-context dependency with ace-bundle (~> 0.29)
+  - Updated gemspec dependency from `ace-context ~> 0.8` to `ace-bundle ~> 0.29`
+  - Updated all `require 'ace/context'` to `require 'ace/bundle'`
+  - Updated all `Ace::Context` references to `Ace::Bundle`
+  - All context loading now uses the ace-bundle API
+- Updated CLI help text references from ace-context to ace-bundle
+
+### Technical
+- Updated test helpers to use ace-bundle path in load path
+- Updated test mocks and stubs to reference Ace::Bundle
+
 ## [0.13.2] - 2026-01-10
 
 ### Changed

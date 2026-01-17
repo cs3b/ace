@@ -2,7 +2,7 @@
 title: Prompt Enhancement System Prompt
 description: System prompt for LLM to enhance user prompts for clarity
 category: base
-context:
+bundle:
   presets:
     - project
 ---
