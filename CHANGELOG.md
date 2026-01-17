@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.307] - 2026-01-16
+
 ### Fixed
 
 - **ace-llm-providers-cli 0.13.1**: OpenCode CLI provider command syntax fix (task 216)
@@ -15,7 +17,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
-- **ace-lint 0.9.0**: Ruby linting support with StandardRB (task 215)
+- **ace-lint 0.9.1**: Ruby linting support with StandardRB (task 215) and bundle config migration
   - Auto-detects .rb, .rake, and .gemspec files for Ruby linting
   - Supports --fix flag for auto-formatting with StandardRB
   - Helpful error message when StandardRB is not installed
@@ -23,6 +25,7 @@ All notable changes to this project will be documented in this file.
   - Added `skipped` status to LintResult model
   - Updated ResultReporter to display skipped files with ⊘ symbol
   - Configuration in `.ace-defaults/lint/ruby.yml` following ADR-022 pattern
+  - Rename context: to bundle: keys in configuration files
 
 - **ace-bundle 0.29.1**: Create ace-bundle package (tasks 206.01-206.04)
   - Copy ace-context to ace-bundle with Ace::Bundle module namespace
@@ -31,6 +34,60 @@ All notable changes to this project will be documented in this file.
   - Add ace-bundle to mono-repo Gemfile (alphabetical order)
   - Update .ace/test/suite.yml to include ace-bundle in tools group
   - Both ace-context and ace-bundle now coexist and tests pass
+
+## [0.9.306] - 2026-01-16
+
+### Changed
+
+- **ace-bundle 0.29.2**: Rename context: to bundle: keys (task 206 completion)
+  - Updated all preset files to use bundle: key instead of context:
+  - Updated Ruby code to support both keys for backward compatibility
+  - Updated documentation examples
+
+- **ace-docs 0.18.1**: Rename context: to bundle: keys
+- **ace-git-commit 0.16.4**: Rename context: to bundle: keys
+- **ace-git-secrets 0.7.2**: Rename context: to bundle: keys
+- **ace-git-worktree 0.12.2**: Rename context: to bundle: keys
+- **ace-handbook 0.5.2**: Rename context: to bundle: keys
+- **ace-prompt 0.14.1**: Rename context: to bundle: keys
+- **ace-review 0.35.1**: Rename context: to bundle: keys
+- **ace-search 0.19.1**: Rename context: to bundle: keys
+- **ace-support-timestamp 0.2.2**: Rename context: to bundle: keys
+- **ace-taskflow 0.33.9**: Rename context: to bundle: keys
+
+- **ace-support-core 0.20.1**: ContextMerger moved to ace-bundle (task 206)
+  - Removed ContextMerger molecule (now BundleMerger in ace-bundle)
+  - Tests removed from ace-support-core
+
+- **ace-git 0.8.2**: Updated README.md workflow examples from /ace:load-context to /ace:bundle (task 206)
+- **ace-support-nav 0.17.2**: Updated README.md references from ace-context to ace-bundle (task 206)
+- **ace-integration-claude 0.3.2**: Updated CLAUDE.md template with ace-bundle references (task 206)
+- **ace-test-runner 0.10.5**: Updated package references from ace-context to ace-bundle (task 206)
+
+## [0.9.305] - 2026-01-15
+
+### Changed
+
+- **ace-prompt 0.14.0**: Migrate from ace-context to ace-bundle (task 206.05)
+  - Updated gemspec dependency from `ace-context ~> 0.8` to `ace-bundle ~> 0.29`
+  - Updated all requires and API calls to use Ace::Bundle
+  - Updated test helpers and mocks
+
+- **ace-review 0.35.0**: Migrate from ace-context to ace-bundle (task 206.06)
+  - Updated gemspec dependency from `ace-context ~> 0.9` to `ace-bundle ~> 0.29`
+  - Updated all requires and API calls to use Ace::Bundle
+  - Renamed methods: `load_context_via_ace_context` → `load_context_via_ace_bundle`
+
+- **ace-support-test-helpers 0.11.1**: Update mocks for ace-bundle (task 206)
+  - Updated ContextMocks to stub Ace::Bundle instead of Ace::Context
+  - Updated TestRunnerMocks default package
+
+### Technical
+
+- **Documentation**: Updated 66 skill files with ace-bundle references
+- **CI/CD**: Updated GitHub workflows to test ace-bundle instead of ace-context
+- **Project Config**: Updated CLAUDE.md and docs with ace-bundle references
+- **Workflow Instructions**: Updated all handbook workflow instructions
 
 ## [0.9.304] - 2026-01-15
 

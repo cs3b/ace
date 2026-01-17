@@ -26,7 +26,7 @@ jobs:
           - ace-support-core
           - ace-support-test-helpers
           - ace-test-runner
-          - ace-context
+          - ace-bundle
           - ace-support-nav
           - ace-taskflow
           - ace-git-commit

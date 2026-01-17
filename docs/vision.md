@@ -29,7 +29,7 @@ update:
 - [Workflow Examples](#workflow-examples)
   - [ace-git-commit: From Intent to Commit](#ace-git-commit-from-intent-to-commit)
   - [ace-review: Multi-Model Code Analysis](#ace-review-multi-model-code-analysis)
-  - [ace-context: One Call, All Context](#ace-context-one-call-all-context)
+  - [ace-bundle: One Call, All Context](#ace-bundle-one-call-all-context)
   - [ace-taskflow: Task Lifecycle Management](#ace-taskflow-task-lifecycle-management)
 - [Getting Started](#getting-started)
 - [Cross-References](#cross-references)
@@ -84,7 +84,7 @@ ACE packages development capabilities as Ruby gems for AI coding assistants. Eac
 ### Current Capabilities
 
 - **ace-core**: Configuration management and shared utilities
-- **ace-context**: Project context loading with smart caching
+- **ace-bundle**: Project context loading with smart caching
 - **ace-docs**: Documentation management with frontmatter-based tracking
 - **ace-git**: Unified Git operations (status, diff, branch, PR context)
 - **ace-git-commit**: Smart git commit generation with LLM integration
@@ -120,7 +120,7 @@ Every ACE tool is a standard CLI command:
 ace-git-commit          # Generate intelligent commits
 ace-review --preset pr  # Review code changes
 ace-taskflow task 123   # Show task details
-ace-context project     # Load project context
+ace-bundle project     # Load project context
 ```
 
 There is no separate "agent API." When Claude Code or another AI assistant runs `ace-git-commit`, it executes the same binary, reads the same configuration, and produces the same output as when a developer runs it manually.
@@ -395,7 +395,7 @@ flowchart TD
     subgraph Pipeline["Review Pipeline"]
         B1["1. Load Preset Configuration"]
         B2["2. Extract Review Subject"]
-        B3["3. Load Context (via ace-context)"]
+        B3["3. Load Context (via ace-bundle)"]
         B4["4. Compose Prompts"]
         B5["5. Execute with LLM(s)"]
         B6["6. Synthesize Results"]
@@ -436,18 +436,18 @@ presets:
 description: "Pull request review"
 subject:
   diff: ["origin...HEAD"]
-context:
+bundle:
   include_architecture: true
 ```
 
-### ace-context: One Call, All Context
+### ace-bundle: One Call, All Context
 
-`ace-context` is the foundation for context-aware operations. One command loads everything an agent (or developer) needs:
+`ace-bundle` is the foundation for context-aware operations. One command loads everything an agent (or developer) needs:
 
 ```mermaid
 flowchart TD
     subgraph Input["Context Request"]
-        A["ace-context project"]
+        A["ace-bundle project"]
     end
 
     subgraph Sources["Content Sources"]
@@ -489,7 +489,7 @@ flowchart TD
 **Example preset composition:**
 ```yaml
 # .ace/context/presets/project.yml
-context:
+bundle:
   files:
     - docs/architecture.md
     - docs/vision.md
@@ -504,13 +504,13 @@ context:
 **The power of one call:**
 ```bash
 # Load full project context for an agent
-ace-context project
+ace-bundle project
 
 # Load via protocol
-ace-context wfi://load-context
+ace-bundle wfi://bundle
 
 # Load with embedding
-ace-context project --embed-source
+ace-bundle project --embed-source
 ```
 
 ### ace-taskflow: Task Lifecycle Management
@@ -560,13 +560,13 @@ ace-taskflow task done 181      # Complete and archive
 
 1. **Install ACE gems** for the capabilities you need:
    ```bash
-   gem install ace-git-commit ace-review ace-context ace-taskflow
+   gem install ace-git-commit ace-review ace-bundle ace-taskflow
    ```
 
 2. **Try a command** to see ACE in action:
    ```bash
    ace-git status        # Repository overview
-   ace-context project   # Load project context
+   ace-bundle project   # Load project context
    ```
 
 3. **Customize configuration** if defaults don't fit:
@@ -578,7 +578,7 @@ ace-taskflow task done 181      # Complete and archive
 4. **Explore workflows** for AI-assisted development:
    ```bash
    ace-nav wfi://         # List available workflows
-   ace-context wfi://commit  # Load commit workflow
+   ace-bundle wfi://commit  # Load commit workflow
    ```
 
 ---
@@ -601,7 +601,7 @@ ace-taskflow task done 181      # Complete and archive
 ### Package Documentation
 - [ace-git-commit/README.md](../ace-git-commit/README.md) - Commit generation
 - [ace-review/README.md](../ace-review/README.md) - Code review
-- [ace-context/README.md](../ace-context/README.md) - Context loading
+- [ace-bundle/README.md](../ace-bundle/README.md) - Context loading
 - [ace-taskflow/README.md](../ace-taskflow/README.md) - Task management
 
 ---

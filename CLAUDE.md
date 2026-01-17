@@ -43,7 +43,7 @@ ace-test atoms              # Run atom tests
 
 Agents should recognize these command patterns:
 
-- `@.claude/skills/ace/load-context.md` → Use ace-context
+- `@.claude/skills/ace/load-context.md` → Use ace-bundle
 - `@.claude/skills/*` → Follow specific skill instructions
 
 ## Workflow Context Embedding
@@ -57,20 +57,20 @@ Agents should:
 
 **Example**: When `/ace:commit` is invoked, the workflow includes `<current_repository_status>` with git state. No need to run `git status` separately.
 
-For full patterns and guidance, run `ace-context guide://workflow-context-embedding`.
+For full patterns and guidance, run `ace-bundle guide://workflow-context-embedding`.
 
 ## CLI Tool Usage
 
 The following are CLI tools that run in your terminal (bash/fish). See also: [docs/tools.md](docs/tools.md) for complete reference.
 
-### ace-context (CLI Tool)
+### ace-bundle (CLI Tool)
 
 **Purpose**: Load project context from presets, files, or protocols
-**Command**: `ace-context [input]`
+**Command**: `ace-bundle [input]`
 **Examples**:
 
-- `ace-context project` (default context)
-- `ace-context wfi://load-context` (protocol)
+- `ace-bundle project` (default context)
+- `ace-bundle wfi://bundle` (protocol)
 
 ### ace-nav (CLI Tool)
 
@@ -79,7 +79,7 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Protocols**: wfi://, guide://, prompt://, tmpl://
 **Examples**:
 
-- `ace-context wfi://load-context` → Read output file path, then read that file
+- `ace-bundle wfi://bundle` → Read output file path, then read that file
 - `ace-nav --sources` → List available resource sources
 
 ### ace-* CLI Tools: Output Handling (Terminal)
@@ -94,12 +94,12 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Anti-pattern examples to AVOID**:
 ❌ `ace-review --pr 90 | tail -20`
 ❌ `tail -f /tmp/claude/.../output`
-❌ `ace-context project | head -100`
+❌ `ace-bundle project | head -100`
 
 **Correct patterns**:
 ✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
-✅ `ace-context project` → output is already concise; read referenced files as needed
-✅ `ace-context wfi://workflow` → returns workflow content (may include embedded context)
+✅ `ace-bundle project` → output is already concise; read referenced files as needed
+✅ `ace-bundle wfi://workflow` → returns workflow content (may include embedded context)
 
 ## Testing Constraints
 
@@ -139,7 +139,7 @@ Validate entire monorepo (final check before commits).
 
 ## Project Context
 
-For comprehensive project details, run: `ace-context project`
+For comprehensive project details, run: `ace-bundle project`
 This provides architecture, tools, conventions, and structure (1371 lines).
 
-**Key Point**: Do not duplicate project context in responses - reference ace-context output.
+**Key Point**: Do not duplicate project context in responses - reference ace-bundle output.
