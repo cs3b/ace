@@ -15,7 +15,7 @@ require_relative "test_support/base_test_case"  # Then base test case that uses 
 require_relative "test_support/config_helpers"
 require_relative "test_support/test_environment"
 require_relative "test_support/performance_helpers"  # Performance testing utilities
-require_relative "test_support/fixtures/context_mocks"  # Shared context mocks
+require_relative "test_support/fixtures/bundle_mocks"  # Shared bundle mocks
 require_relative "test_support/fixtures/git_mocks"  # Shared git mocks
 require_relative "test_support/fixtures/http_mocks"  # Shared HTTP mocks for LLM testing
 require_relative "test_support/fixtures/prompt_helpers"  # Shared prompt stubbing helpers

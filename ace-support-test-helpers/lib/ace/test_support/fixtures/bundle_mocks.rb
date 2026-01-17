@@ -6,9 +6,9 @@ require "yaml"
 module Ace
   module TestSupport
     module Fixtures
-      # Shared mock fixtures for Ace::Context testing
+      # Shared mock fixtures for Ace::Bundle testing
       # Extracted from ace-review/test/test_helper.rb to promote reusability
-      module ContextMocks
+      module BundleMocks
         # Mock content for context files (>1000 chars for integration tests)
         MOCK_CONTEXT_CONTENT = <<~CONTENT
           # Mock Context for Testing
@@ -64,7 +64,7 @@ module Ace
           delay caused by executing expensive shell commands like
           ace-taskflow queries and recursive directory scans.
 
-          By mocking ace-context, we achieve 10x faster test execution
+          By mocking ace-bundle, we achieve 10x faster test execution
           without sacrificing test coverage or reliability.
         CONTENT
 
@@ -108,7 +108,7 @@ module Ace
           +Another change
         DIFF
 
-        # Creates a mock Ace::Context.load_file result
+        # Creates a mock Ace::Bundle.load_file result
         # @param path [String] The file path (used in mock content)
         # @return [OpenStruct] Mock result with content, metadata, and success
         def self.mock_load_file_result(path)
@@ -121,7 +121,7 @@ module Ace
           )
         end
 
-        # Creates a mock Ace::Context.load_auto result
+        # Creates a mock Ace::Bundle.load_auto result
         # @param content [String] The content to process (for frontmatter parsing)
         # @param format [String] The format type (default: "markdown")
         # @return [OpenStruct] Mock result with diff content, metadata, and success
@@ -144,16 +144,16 @@ module Ace
           )
         end
 
-        # Stub Ace::Context.load_file to return fast mock data
+        # Stub Ace::Bundle.load_file to return fast mock data
         # @param original_method_holder [Hash] Hash to store original method for restoration
         # @yield Block where the stub is active
         def self.stub_load_file(original_method_holder = {})
-          return unless defined?(Ace::Context)
+          return unless defined?(Ace::Bundle)
 
-          original_method_holder[:load_file] = Ace::Context.method(:load_file) if Ace::Context.respond_to?(:load_file)
+          original_method_holder[:load_file] = Ace::Bundle.method(:load_file) if Ace::Bundle.respond_to?(:load_file)
 
-          Ace::Context.define_singleton_method(:load_file) do |path|
-            ContextMocks.mock_load_file_result(path)
+          Ace::Bundle.define_singleton_method(:load_file) do |path|
+            BundleMocks.mock_load_file_result(path)
           end
 
           yield if block_given?
@@ -161,16 +161,16 @@ module Ace
           restore_load_file(original_method_holder) if block_given?
         end
 
-        # Stub Ace::Context.load_auto to return fast mock data
+        # Stub Ace::Bundle.load_auto to return fast mock data
         # @param original_method_holder [Hash] Hash to store original method for restoration
         # @yield Block where the stub is active
         def self.stub_load_auto(original_method_holder = {})
-          return unless defined?(Ace::Context)
+          return unless defined?(Ace::Bundle)
 
-          original_method_holder[:load_auto] = Ace::Context.method(:load_auto) if Ace::Context.respond_to?(:load_auto)
+          original_method_holder[:load_auto] = Ace::Bundle.method(:load_auto) if Ace::Bundle.respond_to?(:load_auto)
 
-          Ace::Context.define_singleton_method(:load_auto) do |content, format: "markdown"|
-            ContextMocks.mock_load_auto_result(content, format: format)
+          Ace::Bundle.define_singleton_method(:load_auto) do |content, format: "markdown"|
+            BundleMocks.mock_load_auto_result(content, format: format)
           end
 
           yield if block_given?
@@ -182,9 +182,9 @@ module Ace
         # @param original_method_holder [Hash] Hash to store original methods for restoration
         # @yield Block where the stubs are active
         def self.stub_git_extractor(original_method_holder = {})
-          return unless defined?(Ace::Context::Atoms::GitExtractor)
+          return unless defined?(Ace::Bundle::Atoms::GitExtractor)
 
-          extractor = Ace::Context::Atoms::GitExtractor
+          extractor = Ace::Bundle::Atoms::GitExtractor
 
           original_method_holder[:staged_diff] = extractor.method(:staged_diff) if extractor.respond_to?(:staged_diff)
           original_method_holder[:working_diff] = extractor.method(:working_diff) if extractor.respond_to?(:working_diff)
@@ -210,28 +210,28 @@ module Ace
           restore_git_extractor(original_method_holder) if block_given?
         end
 
-        # Restore original Ace::Context.load_file method
+        # Restore original Ace::Bundle.load_file method
         # @param original_method_holder [Hash] Hash containing original method
         def self.restore_load_file(original_method_holder)
           return unless original_method_holder[:load_file]
 
-          Ace::Context.define_singleton_method(:load_file, original_method_holder[:load_file])
+          Ace::Bundle.define_singleton_method(:load_file, original_method_holder[:load_file])
         end
 
-        # Restore original Ace::Context.load_auto method
+        # Restore original Ace::Bundle.load_auto method
         # @param original_method_holder [Hash] Hash containing original method
         def self.restore_load_auto(original_method_holder)
           return unless original_method_holder[:load_auto]
 
-          Ace::Context.define_singleton_method(:load_auto, original_method_holder[:load_auto])
+          Ace::Bundle.define_singleton_method(:load_auto, original_method_holder[:load_auto])
         end
 
         # Restore original GitExtractor methods
         # @param original_method_holder [Hash] Hash containing original methods
         def self.restore_git_extractor(original_method_holder)
-          return unless defined?(Ace::Context::Atoms::GitExtractor)
+          return unless defined?(Ace::Bundle::Atoms::GitExtractor)
 
-          extractor = Ace::Context::Atoms::GitExtractor
+          extractor = Ace::Bundle::Atoms::GitExtractor
 
           extractor.define_singleton_method(:staged_diff, original_method_holder[:staged_diff]) if original_method_holder[:staged_diff]
           extractor.define_singleton_method(:working_diff, original_method_holder[:working_diff]) if original_method_holder[:working_diff]
