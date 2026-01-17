@@ -33,7 +33,7 @@ Both formats are fully supported and can be used interchangeably.
 ```yaml
 ---
 description: "Brief description of this preset"
-context:
+bundle:
   # Configuration goes here
 ---
 ```
@@ -47,7 +47,7 @@ context:
 ### Context Configuration
 
 ```yaml
-context:
+bundle:
   params:           # Output and processing parameters
   base:             # Path or protocol to a file for base content
   embed_document_source: bool  # Include the preset file itself in output
@@ -61,7 +61,7 @@ context:
 ## Parameters Configuration
 
 ```yaml
-context:
+bundle:
   params:
     output: cache|stdio|file           # Where to send output (default: stdio)
     format: markdown|markdown-xml|yaml|json  # Output format (default: markdown)
@@ -85,7 +85,7 @@ context:
 The `base` key allows you to specify a file or protocol reference that will be loaded as the primary content, appearing before any section-based output.
 
 ```yaml
-context:
+bundle:
   base: docs/system-prompt.md  # Load from a file
   # or
   base: prompt://base/system   # Load via protocol
@@ -109,7 +109,7 @@ context:
 ```yaml
 ---
 description: "Code review context with base instructions"
-context:
+bundle:
   params:
     format: markdown-xml
 
@@ -130,7 +130,7 @@ context:
 ```yaml
 ---
 description: "Simple project context"
-context:
+bundle:
   params:
     output: stdio
     format: markdown
@@ -161,7 +161,7 @@ context:
 ```yaml
 ---
 description: "Source files without tests"
-context:
+bundle:
   files:
     - src/**/*.rb
     - lib/**/*.rb
@@ -180,7 +180,7 @@ context:
 ```yaml
 ---
 description: "Include workflow files"
-context:
+bundle:
   include:
     - wfi://code-review-workflow
     - wfi://planning-session
@@ -199,7 +199,7 @@ context:
 ```yaml
 ---
 description: "Project context with sections"
-context:
+bundle:
   params:
     output: cache
     format: markdown-xml
@@ -250,7 +250,7 @@ context:
 ```yaml
 ---
 description: "Complete project context using presets"
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml
@@ -288,7 +288,7 @@ context:
 ```yaml
 ---
 description: "Comprehensive review with mixed content"
-context:
+bundle:
   sections:
     comprehensive:
       title: "Complete Review"
@@ -386,18 +386,18 @@ The `diff` format supports additional options:
 
 ```yaml
 # Simple format - direct array
-context:
+bundle:
   diffs:
     - "origin/main...HEAD"
 
 # Complex format - with options
-context:
+bundle:
   diff:
     ranges:
       - "origin/main...HEAD"
 
 # Complex format - using 'since'
-context:
+bundle:
   diff:
     since: "origin/main"        # Expands to "origin/main...HEAD"
 ```
@@ -438,7 +438,7 @@ presets:
   - "ruby-tools"
   - "testing-setup"
 
-context:
+bundle:
   files:
     - "src/**/*.rb"
   commands:
@@ -469,14 +469,14 @@ While ace-bundle supports deep preset nesting, excessive depth can impact perfor
 #### ✅ Good: Shallow Hierarchy (2-3 levels)
 ```yaml
 # base.md (level 0)
-context:
+bundle:
   files:
     - "README.md"
 
 # development.md (level 1)
 presets:
   - "base"
-context:
+bundle:
   files:
     - "src/**/*.rb"
 
@@ -484,7 +484,7 @@ context:
 presets:
   - "development"
   - "testing"
-context:
+bundle:
   files:
     - "docs/**/*.md"
 ```
@@ -615,7 +615,7 @@ This means simplified configurations still benefit from structured output when u
 ```yaml
 ---
 description: "Basic Ruby project context"
-context:
+bundle:
   params:
     output: stdio
     format: markdown
@@ -637,7 +637,7 @@ context:
 ```yaml
 ---
 description: "Security-focused Node.js review"
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml

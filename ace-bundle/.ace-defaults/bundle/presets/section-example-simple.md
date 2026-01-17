@@ -1,6 +1,6 @@
 ---
 description: Simple example showing basic section usage
-context:
+bundle:
   params:
     output: stdio
     format: markdown-xml

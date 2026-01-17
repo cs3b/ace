@@ -77,7 +77,7 @@ class PresetManagerEdgeTest < AceTestCase
         description: Prés et café 日本語
         params:
           output: cache
-        context:
+        bundle:
           files:
             - "файл.md"
             - "café/*.txt"
@@ -198,7 +198,7 @@ class PresetManagerEdgeTest < AceTestCase
         ---
         description: Empty collections
         params: {}
-        context:
+        bundle:
           files: []
           commands: []
           exclude: []
@@ -213,7 +213,7 @@ class PresetManagerEdgeTest < AceTestCase
 
       assert preset
       assert_equal({}, preset[:params]) if preset.key?(:params)
-      assert_equal([], preset.dig(:context, "files")) if preset.dig(:context, "files")
+      assert_equal([], preset.dig(:bundle, "files")) if preset.dig(:bundle, "files")
     end
   end
 

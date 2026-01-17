@@ -5,13 +5,13 @@ require_relative '../atoms/boundary_finder'
 module Ace
   module Bundle
     module Molecules
-      # ContextChunker splits large content into manageable chunks
+      # BundleChunker splits large content into manageable chunks
       # Configuration is loaded from Ace::Bundle.max_lines (ADR-022)
       #
       # Performance Note: Current implementation loads full content into memory.
       # For very large files (>100MB), consider implementing streaming chunking
       # to reduce memory footprint. This optimization can be added in future versions.
-      class ContextChunker
+      class BundleChunker
         # Fallback value if config is not available
         DEFAULT_MAX_LINES = 2_000
         DEFAULT_CHUNK_SUFFIX = '_chunk'
@@ -221,7 +221,7 @@ module Ace
         def generate_index_content(chunk_files, base_path, options)
           index_lines = []
 
-          index_lines << "# Context Index"
+          index_lines << "# Bundle Index"
           index_lines << ""
           index_lines << "This content has been split into #{chunk_files.size} chunks due to size constraints."
           index_lines << ""

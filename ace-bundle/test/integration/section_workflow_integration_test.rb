@@ -64,7 +64,7 @@ class SectionWorkflowIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/bundle/presets/comprehensive-review.md"), <<~PRESET
       ---
       description: "Comprehensive review with mixed content"
-      context:
+      bundle:
         params:
           output: stdio
           format: markdown-xml
@@ -107,7 +107,7 @@ class SectionWorkflowIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/bundle/presets/security-scanning.md"), <<~PRESET
       ---
       description: "Security scanning tools"
-      context:
+      bundle:
         commands:
           - "echo 'Security audit complete'"
           - "echo 'Security scan passed'"
@@ -122,7 +122,7 @@ class SectionWorkflowIntegrationTest < AceTestCase
     File.write(File.join(@env.project_dir, ".ace/bundle/presets/code-quality.md"), <<~PRESET
       ---
       description: "Code quality analysis"
-      context:
+      bundle:
         commands:
           - "echo 'Linting passed'"
           - "echo 'Tests passed'"

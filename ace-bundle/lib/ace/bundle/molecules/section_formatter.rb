@@ -9,15 +9,15 @@ module Ace
           @format = format
         end
 
-        # Formats context data with sections
-        # @param context [ContextData] context data with sections
+        # Formats bundle data with sections
+        # @param bundle_data [BundleData] bundle data with sections
         # @return [String] formatted output
-        def format_with_sections(context)
-          if context.has_sections?
-            format_sections_output(context)
+        def format_with_sections(bundle_data)
+          if bundle_data.has_sections?
+            format_sections_output(bundle_data)
           else
             # Fallback to regular formatting
-            format_legacy_output(context)
+            format_legacy_output(bundle_data)
           end
         end
 
@@ -45,34 +45,34 @@ module Ace
 
         private
 
-        # Formats context with sections based on format
-        def format_sections_output(context)
+        # Formats bundle data with sections based on format
+        def format_sections_output(bundle_data)
           case @format
           when 'markdown-xml'
-            format_sections_markdown_xml_full(context)
+            format_sections_markdown_xml_full(bundle_data)
           when 'markdown'
-            format_sections_markdown_full(context)
+            format_sections_markdown_full(bundle_data)
           when 'yaml'
-            format_sections_yaml_full(context)
+            format_sections_yaml_full(bundle_data)
           when 'json'
-            format_sections_json_full(context)
+            format_sections_json_full(bundle_data)
           else
-            format_sections_markdown_xml_full(context)
+            format_sections_markdown_xml_full(bundle_data)
           end
         end
 
-        # Formats full context with sections in markdown-xml format
-        def format_sections_markdown_xml_full(context)
+        # Formats full bundle data with sections in markdown-xml format
+        def format_sections_markdown_xml_full(bundle_data)
           output = []
 
           # Add any additional content FIRST (before sections)
-          if context.content && !context.content.empty?
-            output << context.content
+          if bundle_data.content && !bundle_data.content.empty?
+            output << bundle_data.content
             output << ""  # Empty line after content
           end
 
           # Add sections with XML tags
-          output << format_sections_markdown_xml(context.sorted_sections)
+          output << format_sections_markdown_xml(bundle_data.sorted_sections)
 
           output.join("\n")
         end
@@ -178,18 +178,18 @@ module Ace
           format_inline_content(content)
         end
 
-        # Formats full context with sections in markdown format
-        def format_sections_markdown_full(context)
+        # Formats full bundle data with sections in markdown format
+        def format_sections_markdown_full(bundle_data)
           output = []
 
           # Add any additional content FIRST (before sections)
-          if context.content && !context.content.empty?
-            output << context.content
+          if bundle_data.content && !bundle_data.content.empty?
+            output << bundle_data.content
             output << ""  # Empty line after content
           end
 
           # Add sections without XML tags
-          output << format_sections_markdown(context.sorted_sections)
+          output << format_sections_markdown(bundle_data.sorted_sections)
 
           output.join("\n")
         end
@@ -312,18 +312,18 @@ module Ace
           YAML.dump({ 'sections' => yaml_data })
         end
 
-        # Formats full context in YAML format
-        def format_sections_yaml_full(context)
+        # Formats full bundle data in YAML format
+        def format_sections_yaml_full(bundle_data)
           require 'yaml'
 
           yaml_data = {
-            'preset_name' => context.preset_name,
-            'sections' => format_sections_for_yaml(context.sections),
-            'metadata' => context.metadata
+            'preset_name' => bundle_data.preset_name,
+            'sections' => format_sections_for_yaml(bundle_data.sections),
+            'metadata' => bundle_data.metadata
           }
 
-          if context.content && !context.content.empty?
-            yaml_data['content'] = context.content
+          if bundle_data.content && !bundle_data.content.empty?
+            yaml_data['content'] = bundle_data.content
           end
 
           YAML.dump(yaml_data)
@@ -355,34 +355,34 @@ module Ace
           JSON.pretty_generate({ 'sections' => json_data })
         end
 
-        # Formats full context in JSON format
-        def format_sections_json_full(context)
+        # Formats full bundle data in JSON format
+        def format_sections_json_full(bundle_data)
           require 'json'
 
           json_data = {
-            'preset_name' => context.preset_name,
-            'sections' => format_sections_for_json(context.sections),
-            'metadata' => context.metadata
+            'preset_name' => bundle_data.preset_name,
+            'sections' => format_sections_for_json(bundle_data.sections),
+            'metadata' => bundle_data.metadata
           }
 
-          if context.content && !context.content.empty?
-            json_data['content'] = context.content
+          if bundle_data.content && !bundle_data.content.empty?
+            json_data['content'] = bundle_data.content
           end
 
           JSON.pretty_generate(json_data)
         end
 
-        # Fallback formatting for non-section contexts
-        def format_legacy_output(context)
+        # Fallback formatting for non-section bundle data
+        def format_legacy_output(bundle_data)
           # Use ace-core OutputFormatter as fallback
           require 'ace/core/molecules/output_formatter'
           formatter = Ace::Core::Molecules::OutputFormatter.new(@format)
 
           data = {
-            files: context.files,
-            metadata: context.metadata,
-            commands: context.commands,
-            content: context.content
+            files: bundle_data.files,
+            metadata: bundle_data.metadata,
+            commands: bundle_data.commands,
+            content: bundle_data.content
           }
 
           formatter.format(data)

@@ -1,6 +1,6 @@
 ---
 description: Base context with core project files
-context:
+bundle:
   params:
     output: stdio
     max_size: 1048576

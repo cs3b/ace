@@ -2,12 +2,12 @@
 
 require_relative "../test_helper"
 
-class ContextLoaderTest < AceTestCase
+class BundleLoaderTest < AceTestCase
   def create_preset(name, content = nil)
     content ||= <<~MARKDOWN
       ---
       description: Test preset
-      context:
+      bundle:
         params:
           output: stdio
           max_size: 1048576
@@ -38,7 +38,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("default", <<~MARKDOWN
         ---
         description: Default preset
-        context:
+        bundle:
           params:
             output: stdio
           embed_document_source: true
@@ -50,7 +50,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("default")
 
       assert_equal 2, context.file_count
@@ -61,7 +61,7 @@ class ContextLoaderTest < AceTestCase
 
   def test_loads_file_directly
     with_temp_file("Test content") do |path|
-      loader = Ace::Bundle::Organisms::ContextLoader.new
+      loader = Ace::Bundle::Organisms::BundleLoader.new
       context = loader.load_file(path)
 
       assert_equal 1, context.file_count
@@ -70,7 +70,7 @@ class ContextLoaderTest < AceTestCase
   end
 
   def test_handles_missing_preset
-    loader = Ace::Bundle::Organisms::ContextLoader.new
+    loader = Ace::Bundle::Organisms::BundleLoader.new
     context = loader.load_preset("nonexistent")
 
     assert_equal "nonexistent", context.preset_name
@@ -87,7 +87,7 @@ class ContextLoaderTest < AceTestCase
       # Create preset with exclusions
       create_preset("test")
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("test")
 
       assert_equal 1, context.file_count
@@ -104,7 +104,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("cache_test", <<~MARKDOWN
         ---
         description: Cache test
-        context:
+        bundle:
           params:
             output: cache
           embed_document_source: true
@@ -115,7 +115,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("cache_test")
 
       assert_equal "cache", context.metadata[:output]
@@ -127,7 +127,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("cmd_test", <<~MARKDOWN
         ---
         description: Command test
-        context:
+        bundle:
           params:
             output: stdio
             timeout: 5
@@ -139,7 +139,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("cmd_test")
 
       assert context.commands
@@ -156,15 +156,15 @@ class ContextLoaderTest < AceTestCase
     with_temp_dir do
       # Create ace-* structure
       FileUtils.mkdir_p("ace-core")
-      FileUtils.mkdir_p("ace-context")
+      FileUtils.mkdir_p("ace-bundle")
       File.write("ace-core/README.md", "Core readme")
-      File.write("ace-context/README.md", "Context readme")
+      File.write("ace-bundle/README.md", "Context readme")
       File.write("ace-core/test.rb", "Ruby file")
 
       create_preset("glob_test", <<~MARKDOWN
         ---
         description: Glob test
-        context:
+        bundle:
           params:
             output: stdio
           embed_document_source: true
@@ -175,7 +175,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("glob_test")
 
       assert_equal 2, context.file_count
@@ -191,7 +191,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("body_test", <<~MARKDOWN
         ---
         description: Body test
-        context:
+        bundle:
           params:
             output: stdio
           files: []
@@ -202,7 +202,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("body_test")
 
       assert context.metadata[:preset_content]
@@ -215,7 +215,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("merge_test", <<~MARKDOWN
         ---
         description: Merge test
-        context:
+        bundle:
           params:
             output: cache
             max_size: 500000
@@ -227,7 +227,7 @@ class ContextLoaderTest < AceTestCase
       )
 
       # Override some params via options
-      loader = Ace::Bundle::Organisms::ContextLoader.new(
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
         base_dir: Dir.pwd,
         max_size: 1000000,  # Override
         timeout: 20,        # Override
@@ -247,7 +247,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("format_test", <<~MARKDOWN
         ---
         description: Format test
-        context:
+        bundle:
           params:
             output: stdio
             format: yaml
@@ -259,7 +259,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("format_test")
 
       # Should be formatted as YAML
@@ -282,7 +282,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("new_structure", <<~MARKDOWN
         ---
         description: New structure test
-        context:
+        bundle:
           params:
             output: stdio
             max_size: 2097152
@@ -296,7 +296,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("new_structure")
 
       # Verify files are embedded
@@ -317,7 +317,7 @@ class ContextLoaderTest < AceTestCase
       # Create template file WITHOUT embed_document_source in frontmatter
       File.write("prompt.md", <<~MARKDOWN
         ---
-        context:
+        bundle:
           files:
             - test.md
         ---
@@ -326,7 +326,7 @@ class ContextLoaderTest < AceTestCase
       )
 
       # Load with embed_source flag enabled via CLI
-      loader = Ace::Bundle::Organisms::ContextLoader.new(
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
         base_dir: Dir.pwd,
         embed_source: true
       )
@@ -347,7 +347,7 @@ class ContextLoaderTest < AceTestCase
       # Create template file WITH embed_document_source: false in frontmatter
       File.write("prompt.md", <<~MARKDOWN
         ---
-        context:
+        bundle:
           embed_document_source: false
           files:
             - test.md
@@ -357,7 +357,7 @@ class ContextLoaderTest < AceTestCase
       )
 
       # Load with embed_source flag enabled via CLI (should override frontmatter)
-      loader = Ace::Bundle::Organisms::ContextLoader.new(
+      loader = Ace::Bundle::Organisms::BundleLoader.new(
         base_dir: Dir.pwd,
         embed_source: true
       )
@@ -378,7 +378,7 @@ class ContextLoaderTest < AceTestCase
       # Create template file WITH embed_document_source: false
       File.write("prompt.md", <<~MARKDOWN
         ---
-        context:
+        bundle:
           embed_document_source: false
           files:
             - test.md
@@ -388,7 +388,7 @@ class ContextLoaderTest < AceTestCase
       )
 
       # Load WITHOUT embed_source flag
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_file("prompt.md")
 
       # Should NOT embed source when frontmatter says false and no CLI flag
@@ -412,7 +412,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("base-preset", <<~MARKDOWN
         ---
         description: Base preset
-        context:
+        bundle:
           params:
             output: stdio
           embed_document_source: true
@@ -427,7 +427,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("extended-preset", <<~MARKDOWN
         ---
         description: Extended preset with top-level presets
-        context:
+        bundle:
           presets:
             - base-preset
           embed_document_source: true
@@ -438,7 +438,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("extended-preset")
 
       # Should have files from both presets
@@ -457,7 +457,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("base-params", <<~MARKDOWN
         ---
         description: Base preset with params
-        context:
+        bundle:
           params:
             timeout: 30
           embed_document_source: true
@@ -472,7 +472,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("override-params", <<~MARKDOWN
         ---
         description: Override preset
-        context:
+        bundle:
           params:
             timeout: 60
           presets:
@@ -483,7 +483,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("override-params")
 
       # Current preset params should win (last wins)
@@ -504,7 +504,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("existing-preset", <<~MARKDOWN
         ---
         description: Existing preset
-        context:
+        bundle:
           embed_document_source: true
           files:
             - test.md
@@ -517,7 +517,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("mixed-refs", <<~MARKDOWN
         ---
         description: Mixed references
-        context:
+        bundle:
           presets:
             - existing-preset
             - nonexistent-preset
@@ -527,7 +527,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd, debug: false)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd, debug: false)
       context = loader.load_preset("mixed-refs")
 
       # When a referenced preset is missing, the load should fail with an error
@@ -547,7 +547,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("base-files", <<~MARKDOWN
         ---
         description: Base files
-        context:
+        bundle:
           embed_document_source: true
           files:
             - base.md
@@ -560,7 +560,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("combined", <<~MARKDOWN
         ---
         description: Combined preset
-        context:
+        bundle:
           presets:
             - base-files
           embed_document_source: true
@@ -576,7 +576,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("combined")
 
       # Should have files from: top-level presets + own files + section files
@@ -592,7 +592,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("base-cmd", <<~MARKDOWN
         ---
         description: Base preset with command
-        context:
+        bundle:
           embed_document_source: true
           commands:
             - echo "from base"
@@ -605,7 +605,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("extended-cmd", <<~MARKDOWN
         ---
         description: Extended preset
-        context:
+        bundle:
           presets:
             - base-cmd
           embed_document_source: true
@@ -616,7 +616,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("extended-cmd")
 
       # Should have commands from both presets
@@ -636,7 +636,7 @@ class ContextLoaderTest < AceTestCase
     with_temp_dir do
       # Inline YAML config with PR reference
       yaml_config = <<~YAML
-        context:
+        bundle:
           pr: "123"
       YAML
 
@@ -649,7 +649,7 @@ class ContextLoaderTest < AceTestCase
       }
 
       Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, ->(_id, **_opts) { mock_response }) do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
         # Verify PR diff was integrated into context sections
@@ -668,7 +668,7 @@ class ContextLoaderTest < AceTestCase
     with_temp_dir do
       # Inline YAML config with multiple PR references
       yaml_config = <<~YAML
-        context:
+        bundle:
           pr:
             - "123"
             - "456"
@@ -684,7 +684,7 @@ class ContextLoaderTest < AceTestCase
       end
 
       Ace::Git::Molecules::PrMetadataFetcher.stub(:fetch_diff, mock_fetch) do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
         # Verify both PR diffs were integrated into sections
@@ -702,12 +702,12 @@ class ContextLoaderTest < AceTestCase
     with_temp_dir do
       # Create config file with invalid PR
       File.write("config.yml", <<~YAML
-        context:
+        bundle:
           pr: invalid-pr-format
       YAML
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_file("config.yml")
 
       # Should handle error gracefully (not crash)
@@ -760,7 +760,7 @@ class ContextLoaderTest < AceTestCase
 
       # Stub DiffOrchestrator to return mock diff
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, build_mock_diff_result do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.send(:load_inline_yaml, yaml_string)
 
         # Should contain diff output
@@ -777,7 +777,7 @@ class ContextLoaderTest < AceTestCase
 
       # Nested config (ace-review typed subject format)
       yaml_string = <<~YAML
-        context:
+        bundle:
           diffs:
             - HEAD~1..HEAD
         ---
@@ -785,7 +785,7 @@ class ContextLoaderTest < AceTestCase
 
       # Stub DiffOrchestrator to return mock diff
       Ace::Git::Organisms::DiffOrchestrator.stub :generate, build_mock_diff_result do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.send(:load_inline_yaml, yaml_string)
 
         # Should contain diff output (same as flat config)
@@ -807,13 +807,13 @@ class ContextLoaderTest < AceTestCase
       YAML
 
       nested_yaml = <<~YAML
-        context:
+        bundle:
           files:
             - test.rb
         ---
       YAML
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       flat_context = loader.send(:load_inline_yaml, flat_yaml)
       nested_context = loader.send(:load_inline_yaml, nested_yaml)
 
@@ -831,7 +831,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("test-preset", <<~MARKDOWN
         ---
         description: Test preset
-        context:
+        bundle:
           params:
             output: stdio
           sections:
@@ -842,7 +842,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("test-preset")
 
       # Manually add _processed_diffs to simulate PR processing
@@ -862,7 +862,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("test-preset", <<~MARKDOWN
         ---
         description: Test preset
-        context:
+        bundle:
           params:
             output: stdio
           sections:
@@ -873,7 +873,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("test-preset")
 
       # Manually add _processed_files
@@ -891,7 +891,7 @@ class ContextLoaderTest < AceTestCase
       create_preset("empty-preset", <<~MARKDOWN
         ---
         description: Empty preset
-        context:
+        bundle:
           params:
             output: stdio
           sections:
@@ -902,7 +902,7 @@ class ContextLoaderTest < AceTestCase
       MARKDOWN
       )
 
-      loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
       context = loader.load_preset("empty-preset")
 
       refute loader.send(:has_processed_section_content?, context),
@@ -916,7 +916,7 @@ class ContextLoaderTest < AceTestCase
   def test_generate_diff_safe_handles_ace_git_error
     with_temp_dir do
       yaml_config = <<~YAML
-        context:
+        bundle:
           diffs:
             - "HEAD~1..HEAD"
       YAML
@@ -925,7 +925,7 @@ class ContextLoaderTest < AceTestCase
       error_stub = ->(_args) { raise Ace::Git::Error, "Git operation failed" }
 
       Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
         # Should capture error in formatted content, not crash
@@ -939,7 +939,7 @@ class ContextLoaderTest < AceTestCase
   def test_generate_diff_safe_handles_timeout_error
     with_temp_dir do
       yaml_config = <<~YAML
-        context:
+        bundle:
           diffs:
             - "origin/main...HEAD"
       YAML
@@ -948,7 +948,7 @@ class ContextLoaderTest < AceTestCase
       error_stub = ->(_args) { raise Ace::Git::TimeoutError, "Operation timed out after 30s" }
 
       Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
         # Should capture timeout error in content (TimeoutError inherits from Error)
@@ -961,7 +961,7 @@ class ContextLoaderTest < AceTestCase
   def test_generate_diff_safe_handles_argument_error
     with_temp_dir do
       yaml_config = <<~YAML
-        context:
+        bundle:
           diffs:
             - "invalid..range..format"
       YAML
@@ -970,7 +970,7 @@ class ContextLoaderTest < AceTestCase
       error_stub = ->(_args) { raise ArgumentError, "Invalid range format" }
 
       Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
         context = loader.load_inline_yaml(yaml_config)
 
         # Should capture argument error with "Invalid diff range" prefix
@@ -983,7 +983,7 @@ class ContextLoaderTest < AceTestCase
   def test_generate_diff_safe_does_not_crash_on_git_error
     with_temp_dir do
       yaml_config = <<~YAML
-        context:
+        bundle:
           diffs:
             - "HEAD~1..HEAD"
       YAML
@@ -992,7 +992,7 @@ class ContextLoaderTest < AceTestCase
       error_stub = ->(_args) { raise Ace::Git::GitError, "git diff command failed" }
 
       Ace::Git::Organisms::DiffOrchestrator.stub(:generate, error_stub) do
-        loader = Ace::Bundle::Organisms::ContextLoader.new(base_dir: Dir.pwd)
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: Dir.pwd)
 
         # Should not raise - error should be captured and returned in context
         context = loader.load_inline_yaml(yaml_config)
