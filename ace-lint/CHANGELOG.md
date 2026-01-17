@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-01-16
+
+### Changed
+- Rename context: to bundle: keys in configuration files (task 206)
+
 ## [0.9.0] - 2026-01-15
 
 ### Added
