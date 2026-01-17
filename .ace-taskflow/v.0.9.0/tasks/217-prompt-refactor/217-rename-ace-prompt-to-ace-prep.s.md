@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.217
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 217-rename-ace-prompt-to-ace-prep
+  path: "../ace-task.217"
+  created_at: '2026-01-17 19:49:12'
+  updated_at: '2026-01-17 19:49:12'
+  target_branch: main
 ---
 
 # Rename ace-prompt to ace-prep
