@@ -6,13 +6,13 @@ description: Review Multiple Tasks
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
   - Task
 argument-hint: [task-id-pattern like 12* or *]
 source: ace-taskflow
 ---
 
-read and run `ace-context wfi://review-tasks`
+read and run `ace-bundle wfi://review-tasks`
 
 ARGUMENTS: $ARGUMENTS

@@ -3,7 +3,7 @@
 description: "Pull request review - comprehensive code changes review"
 
 instructions:
-  context:
+  bundle:
     base: "prompt://base/system"
     sections:
       format:

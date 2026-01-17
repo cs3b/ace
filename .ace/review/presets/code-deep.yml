@@ -16,4 +16,4 @@ models:
   # - togetherai:deepseek
   - opencode:zai-coding-plan/glm-4.7
   - opencode:opencode/grok-code
-  - opencode/big-pickle
+  # - opencode:opencode/big-pickle

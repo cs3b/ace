@@ -6,7 +6,7 @@ description: Generate structured test cases for features and code changes
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
-  - Bash(ace-context:*)
+  - Bash(ace-bundle:*)
   - Read
   - Write
   - Edit
@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-context wfi://create-test-cases`
+read and run `ace-bundle wfi://create-test-cases`
