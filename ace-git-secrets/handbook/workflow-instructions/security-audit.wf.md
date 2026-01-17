@@ -5,7 +5,7 @@ description: Perform security audits to detect leaked authentication tokens in G
 argument-hint: "[scan|check-release] [--since=SINCE] [--confidence=LEVEL] [options]"
 doc-type: workflow
 purpose: security-audit workflow instruction
-context:
+bundle:
   embed_document_source: false
 update:
   frequency: on-change
@@ -236,7 +236,7 @@ ace-git-secrets scan --branch feature-branch --since "$(git merge-base main feat
 - **Token Safety**: Never log or display full token values
 - **Gitleaks Priority**: Uses gitleaks when available for comprehensive detection
 - **False Positives**: Always verify medium/low confidence findings
-- **Remediation Workflow**: For cleanup, use `ace-context wfi://token-remediation`
+- **Remediation Workflow**: For cleanup, use `ace-bundle wfi://token-remediation`
 
 ## Command Reference
 
