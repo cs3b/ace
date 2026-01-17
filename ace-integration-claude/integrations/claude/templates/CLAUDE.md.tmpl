@@ -43,14 +43,14 @@ ace-test atoms                   # Run atom tests
 
 The following are CLI tools that run in your terminal (bash/fish).
 
-### ace-context (CLI Tool)
+### ace-bundle (CLI Tool)
 
 **Purpose**: Load project context from presets, files, or protocols
-**Command**: `ace-context [input]`
+**Command**: `ace-bundle [input]`
 **Examples**:
 
-- `ace-context project` (default context)
-- `ace-context wfi://{{workflow-name}}` (protocol-based)
+- `ace-bundle project` (default context)
+- `ace-bundle wfi://{{workflow-name}}` (protocol-based)
 
 ### ace-nav (CLI Tool)
 
@@ -73,11 +73,11 @@ The following are CLI tools that run in your terminal (bash/fish).
 
 **Anti-pattern examples to AVOID**:
 - `ace-review --pr {{pr-number}} | tail -20`
-- `ace-context project | head -100`
+- `ace-bundle project | head -100`
 
 **Correct patterns**:
 - `ace-review --pr {{pr-number}}` - then `Read` the output path
-- `ace-context project` - output is already concise
+- `ace-bundle project` - output is already concise
 
 ## Testing Constraints
 
@@ -119,9 +119,9 @@ Validate entire project (final check before commits).
 
 ## Project Context
 
-For comprehensive project details, run: `ace-context project`
+For comprehensive project details, run: `ace-bundle project`
 
-**Key Point**: Do not duplicate project context in responses - reference ace-context output.
+**Key Point**: Do not duplicate project context in responses - reference ace-bundle output.
 
 ---
 
@@ -136,7 +136,7 @@ When customizing this template, replace the following placeholders:
 | `{{task-id}}` | Task identifier format | "148", "PROJ-123" |
 | `{{workflow-name}}` | Workflow to navigate to | "work-on-task", "commit" |
 | `{{pr-number}}` | Pull request number | "90", "123" |
-| `{{package-name}}` | Package/gem name | "ace-context", "my-package" |
+| `{{package-name}}` | Package/gem name | "ace-bundle", "my-package" |
 | `{{test-name}}` | Test file name | "config_loader", "parser" |
 | `{{agent-name}}` | Custom agent name | "analyzer", "reviewer" |
 | `{{agent-description}}` | Agent purpose | "Code analysis and suggestions" |
