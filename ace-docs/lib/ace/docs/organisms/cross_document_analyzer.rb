@@ -54,7 +54,7 @@ module Ace
           puts "Saving document list..." if @options[:verbose]
           save_document_list(documents, session_dir)
 
-          # Prepare document paths (no need to load content, ace-context will do it)
+          # Prepare document paths (no need to load content, ace-bundle will do it)
           puts "Preparing document paths..." if @options[:verbose]
           document_data = prepare_document_paths(documents)
           puts "  Documents to analyze: #{document_data.size}" if @options[:verbose]
@@ -102,14 +102,14 @@ module Ace
 
         # Prepare document paths for analysis
         def prepare_document_paths(documents)
-          # Just return a hash of paths to empty string (ace-context will load the actual content)
+          # Just return a hash of paths to empty string (ace-bundle will load the actual content)
           # This maintains compatibility with the prompt builder interface
           document_paths = {}
 
           documents.each do |doc|
             # Only include files that actually exist
             if File.exist?(doc.path)
-              document_paths[doc.path] = "" # Empty content, ace-context will load it
+              document_paths[doc.path] = "" # Empty content, ace-bundle will load it
             end
           end
 

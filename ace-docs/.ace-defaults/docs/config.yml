@@ -72,7 +72,7 @@ default_freshness_days:
 # Document type definitions
 document_types:
   # Core context documents
-  context:
+  bundle:
     paths:
       - "docs/*.md"              # Core documentation
       - "!docs/archive/**"       # Exclude archived docs

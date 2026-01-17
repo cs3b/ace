@@ -14,7 +14,7 @@ significant change, ensuring users can effectively understand and utilize the fu
 
 ## Project Context Loading
 
-* Read and follow: `ace-context wfi://load-context`
+* Read and follow: `ace-bundle wfi://bundle`
 
 ## High-Level Execution Plan
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-01-16
+
+### Changed
+- Rename context: to bundle: keys in configuration files
+
 ## [0.18.0] - 2025-01-14
 
 ### Added
@@ -77,7 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Migrated 7 workflow instructions from `ace-nav wfi://` to `ace-context wfi://` for consistency
+- Migrated 7 workflow instructions from `ace-nav wfi://` to `ace-bundle wfi://` for consistency
 - Updated workflows: create-adr, create-api-docs, create-cookbook, create-user-docs, maintain-adrs, update-blueprint, update-context-docs
 
 ## [0.14.0] - 2026-01-03
@@ -393,7 +398,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Response saved to `llm-response.json` before any validation
 - **Removed unnecessary document copying**: Uses real file paths instead of copying to temp files
   - Session directory now only contains metadata and prompts, not document copies
-  - ace-context loads documents directly from their actual locations
+  - ace-bundle loads documents directly from their actual locations
   - Cleaner session directory structure and better path references in analysis
 - **Better error messages**: Shows actual API errors instead of generic "Unknown error"
 - **Added progress indicators**: Shows detailed progress during analysis phases
@@ -482,7 +487,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Critical shell expansion bug in ChangeDetector causing incorrect glob pattern matching
 - Date resolution to check ace-docs namespace before legacy update namespace
 - Multi-subject handling in build_analysis_scope_section to prevent TypeError
-- Diff file paths now use absolute paths for proper ace-context loading
+- Diff file paths now use absolute paths for proper ace-bundle loading
 
 ### Changed
 
@@ -544,7 +549,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Refactored `ace-docs analyze` from document-centric to general-purpose change analyzer
-  - Removed document embedding and ace-context integration from analysis workflow
+  - Removed document embedding and ace-bundle integration from analysis workflow
   - Simplified analysis prompts to focus on diff summarization without doc-update assumptions
   - Updated system prompt to output general change analysis instead of doc recommendations
 
@@ -570,13 +575,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **User Prompt Template**: New documentation file `handbook/prompts/document-analysis.md`
   - Documents prompt structure with examples
   - Explains XML embedding format for context
-  - Shows ace-context integration patterns
+  - Shows ace-bundle integration patterns
 
-- **ace-context Integration**: Optional structured context embedding
+- **ace-bundle Integration**: Optional structured context embedding
   - Uses `Ace::Context.load_auto()` with markdown-xml format
   - Embeds document and related files using XML tags (`<file path="...">`)
   - Creates `context.yml` configuration in analyze cache directory
-  - Graceful fallback when ace-context unavailable (optional dependency)
+  - Graceful fallback when ace-bundle unavailable (optional dependency)
 
 ### Changed
 
@@ -584,7 +589,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ```
   .cache/ace-docs/analyze-{timestamp}/
     ├── repo-diff.diff        # Filtered raw diff
-    ├── context.yml           # ace-context configuration (NEW)
+    ├── context.yml           # ace-bundle configuration (NEW)
     ├── prompt-system.md      # System prompt used
     ├── prompt-user.md        # User prompt with embedded context
     ├── analysis.md           # LLM analysis
@@ -598,7 +603,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `Ace::Docs.debug?` method for debug mode detection
 - Enhanced metadata.yml to track context configuration
-- ace-context is optional (graceful degradation when unavailable)
+- ace-bundle is optional (graceful degradation when unavailable)
 
 ## [0.4.0] - 2025-10-16
 

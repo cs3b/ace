@@ -3,7 +3,7 @@ doc-type: guide
 purpose: Example document demonstrating single-subject configuration (backward compatible)
 ace-docs:
   # Context configuration
-  context:
+  bundle:
     files:
       - README.md
     keywords:

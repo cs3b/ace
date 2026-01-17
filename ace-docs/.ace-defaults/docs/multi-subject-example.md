@@ -3,11 +3,11 @@ doc-type: reference
 purpose: Example document demonstrating multi-subject configuration
 ace-docs:
   # Context configuration - files to include for understanding
-  context:
+  bundle:
     files:
       - CHANGELOG.md
       - README.md
-    preset: project-base  # Use ace-context preset if available
+    preset: project-base  # Use ace-bundle preset if available
 
   # Multi-subject configuration - categorize changes by type
   # Each subject generates its own diff file for focused analysis
