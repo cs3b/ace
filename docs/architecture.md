@@ -68,7 +68,7 @@ Tests mirror this in `test/{atoms,molecules,organisms,models,commands}/` (flat, 
 Modular Ruby gems providing focused CLI functionality:
 
 * **ace-support-core**: Configuration management foundation
-* **ace-context**: Project context loading with protocol support
+* **ace-bundle**: Project context loading with protocol support
 * **ace-docs**: Documentation management with frontmatter-based tracking
 * **ace-git**: Unified Git operations and PR context
 * **ace-git-commit**: Smart git commit generation with LLM integration
@@ -94,7 +94,7 @@ Self-contained instruction documents for complete processes:
 * **Location**: `gem/handbook/workflow-instructions/*.wf.md`
 * **Structure**: Frontmatter (purpose, params, tools) + complete instructions + embedded templates
 * **Principle**: ADR-001 self-containment - include all context inline
-* **Discovery**: `ace-context wfi://workflow-name`
+* **Discovery**: `ace-bundle wfi://workflow-name`
 * **Use when**: Multi-step process, decision points, context management
 
 ### Agents (.ag.md)

@@ -20,7 +20,7 @@ The Ruby ecosystem has established patterns for mono-repos with multiple gems (R
 We will migrate from the multi-repository submodule architecture to a mono-repo structure with modular Ruby gems following these principles:
 
 1. **Mono-Repo Structure**: All ace-* gems live at the repository root as siblings
-2. **Gem Naming Convention**: All gems use the `ace-` prefix (ace-core, ace-context, ace-test-runner, etc.)
+2. **Gem Naming Convention**: All gems use the `ace-` prefix (ace-core, ace-bundle, ace-test-runner, etc.)
 3. **Shared Workspace**: Single root Gemfile with path-based gem references for development
 4. **ATOM Architecture**: All gems follow the same Atoms, Molecules, Organisms, Models structure
 5. **Configuration Cascade**: Use .ace/ directories for hierarchical configuration with nearest/deepest wins
@@ -39,7 +39,7 @@ The mono-repo migration is complete with **15+ production gems** (99% task compl
 - **ace-test-support** (v0.1.x): Shared testing infrastructure and helpers
 
 **Context & Navigation:**
-- **ace-context** (v0.3.x): Project context loading with caching
+- **ace-bundle** (v0.3.x): Project context loading with caching
 - **ace-nav** (v0.2.x): Resource discovery with wfi:// protocol
 
 **Development Tools:**
@@ -93,7 +93,7 @@ The mono-repo migration is complete with **15+ production gems** (99% task compl
 source "https://rubygems.org"
 
 gem "ace-core", path: "ace-core"
-gem "ace-context", path: "ace-context"
+gem "ace-bundle", path: "ace-bundle"
 gem "ace-test-runner", path: "ace-test-runner"
 gem "ace-test-support", path: "ace-test-support"
 
@@ -125,7 +125,7 @@ ace-core/
 strategy:
   matrix:
     ruby: ['3.0', '3.1', '3.2']
-    gem: ['ace-core', 'ace-context', 'ace-test-runner', 'ace-test-support']
+    gem: ['ace-core', 'ace-bundle', 'ace-test-runner', 'ace-test-support']
 ```
 
 ## Alternatives Considered

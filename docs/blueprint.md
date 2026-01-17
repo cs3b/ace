@@ -20,7 +20,7 @@ This document provides navigation guidance for the ACE codebase, highlighting wh
 ```
 ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
                 # Each gem includes handbook/ for workflows, guides, templates
-                # Key gems: ace-handbook, ace-taskflow, ace-context, ace-nav,
+                # Key gems: ace-handbook, ace-taskflow, ace-bundle, ace-nav,
                 # ace-git, ace-git-commit, ace-review, ace-docs, ace-lint,
                 # ace-search, ace-llm, ace-test-runner
 .ace-taskflow/  # Task and release management

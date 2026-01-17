@@ -1,7 +1,7 @@
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.29.1)
+    ace-bundle (0.30.0)
       ace-git (~> 0.3)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
@@ -9,18 +9,9 @@ PATH
       dry-cli (~> 1.0)
 
 PATH
-  remote: ace-context
-  specs:
-    ace-context (0.28.2)
-      ace-git (~> 0.3)
-      ace-support-config (~> 0.6)
-      ace-support-core (~> 0.10)
-      dry-cli (~> 1.0)
-
-PATH
   remote: ace-docs
   specs:
-    ace-docs (0.18.0)
+    ace-docs (0.18.1)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-config (~> 0.6)
@@ -36,7 +27,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.16.3)
+    ace-git-commit (0.16.4)
       ace-git (~> 0.3)
       ace-llm (~> 0.16)
       ace-support-config (~> 0.6)
@@ -46,7 +37,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.7.1)
+    ace-git-secrets (0.7.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       ace-support-timestamp (~> 0.2)
@@ -57,7 +48,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.12.1)
+    ace-git-worktree (0.12.2)
       ace-git (~> 0.4)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
@@ -67,7 +58,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.8.1)
+    ace-git (0.8.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)
@@ -75,17 +66,17 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.5.1)
+    ace-handbook (0.5.2)
 
 PATH
   remote: ace-integration-claude
   specs:
-    ace-integration-claude (0.3.1)
+    ace-integration-claude (0.3.2)
 
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.9.0)
+    ace-lint (0.9.1)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
       colorize (~> 1.1)
@@ -114,8 +105,8 @@ PATH
 PATH
   remote: ace-prompt
   specs:
-    ace-prompt (0.13.2)
-      ace-context (~> 0.8)
+    ace-prompt (0.14.1)
+      ace-bundle (~> 0.30)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
       ace-support-config (~> 0.6)
@@ -128,8 +119,8 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.34.0)
-      ace-context (~> 0.9)
+    ace-review (0.35.1)
+      ace-bundle (~> 0.30)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-config (~> 0.6)
@@ -142,7 +133,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.19.0)
+    ace-search (0.19.1)
       ace-git (~> 0.3)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.18)
@@ -157,7 +148,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.20.0)
+    ace-support-core (0.21.0)
       ace-support-config (~> 0.6)
       ace-support-fs (~> 0.1)
       dry-cli (~> 1.0)
@@ -192,7 +183,7 @@ PATH
 PATH
   remote: ace-support-nav
   specs:
-    ace-support-nav (0.17.1)
+    ace-support-nav (0.17.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
       ace-support-fs (~> 0.1)
@@ -201,14 +192,14 @@ PATH
 PATH
   remote: ace-support-test-helpers
   specs:
-    ace-support-test-helpers (0.11.0)
+    ace-support-test-helpers (0.12.0)
       minitest (~> 5.20)
       minitest-reporters (~> 1.6)
 
 PATH
   remote: ace-support-timestamp
   specs:
-    ace-support-timestamp (0.2.1)
+    ace-support-timestamp (0.2.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.1)
       dry-cli (~> 1.1)
@@ -216,7 +207,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.33.8)
+    ace-taskflow (0.33.9)
       ace-git (~> 0.3)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
@@ -229,7 +220,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.10.4)
+    ace-test-runner (0.10.5)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.1)
       ace-support-test-helpers (~> 0.1)
@@ -366,7 +357,6 @@ PLATFORMS
 
 DEPENDENCIES
   ace-bundle!
-  ace-context!
   ace-docs!
   ace-git!
   ace-git-commit!

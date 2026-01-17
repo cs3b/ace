@@ -50,7 +50,7 @@ We establish the following classification rules for components in the ATOM archi
 **Examples**:
 - `Ace::Lint::Molecules::KramdownLinter` - Markdown validation logic
 - `Ace::Search::Molecules::PatternMatcher` - Search pattern processing
-- `Ace::Context::Molecules::Chunker` - Context chunking logic
+- `Ace::Bundle::Molecules::BundleChunker` - Bundle chunking logic
 
 ### Organisms (`lib/ace/gem/organisms/`)
 **Definition**: Complex components that orchestrate Molecules and Atoms for business functions
@@ -64,7 +64,7 @@ We establish the following classification rules for components in the ATOM archi
 **Examples**:
 - `Ace::Llm::Organisms::ProviderClient` - Orchestrates LLM API communication
 - `Ace::Review::Organisms::CodeReviewer` - Coordinates review workflow
-- `Ace::Context::Organisms::ContextLoader` - Manages context assembly
+- `Ace::Bundle::Organisms::BundleLoader` - Manages bundle assembly
 
 ### Classification Decision Tree
 
