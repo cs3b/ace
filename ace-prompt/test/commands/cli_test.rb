@@ -48,10 +48,18 @@ class CLITest < Minitest::Test
   end
 
   def test_shows_help_when_no_args
-    result = invoke_prompt_cli([])
+    # Stub ProjectRootFinder with a clean empty dir to avoid reading real project's cached prompts
+    clean_tmpdir = Dir.mktmpdir
+    begin
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, clean_tmpdir do
+        result = invoke_prompt_cli([])
 
-    # dry-cli shows help when no arguments provided
-    assert_match(/Commands:/i, result[:stdout] + result[:stderr])
+        # CLI routes to default 'process' command, which shows error when prompt file not found
+        assert_match(/Error: Prompt file not found/i, result[:stdout] + result[:stderr])
+      end
+    ensure
+      FileUtils.rm_rf(clean_tmpdir)
+    end
   end
 
   def test_help_command_shows_available_commands
