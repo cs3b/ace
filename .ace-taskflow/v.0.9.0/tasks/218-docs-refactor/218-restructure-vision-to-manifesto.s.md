@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.218
-status: pending
+status: in-progress
 priority: medium
 estimate: 1h
 dependencies: []
+worktree:
+  branch: 218-restructure-visionmd-to-focused-manifesto
+  path: "../ace-task.218"
+  created_at: '2026-01-17 20:06:07'
+  updated_at: '2026-01-17 20:06:07'
+  target_branch: main
 ---
 
 # Restructure vision.md to focused manifesto
