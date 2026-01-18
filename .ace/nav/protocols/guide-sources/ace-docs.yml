@@ -1,0 +1,19 @@
+---
+# Guide Sources Protocol Configuration for ace-docs gem
+# This enables guide discovery from the installed ace-docs gem
+
+name: ace-docs
+type: gem
+description: Documentation guides from ace-docs gem
+priority: 15
+
+# Configuration for guide discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/guides
+
+  # Pattern for finding guide files
+  pattern: "*.g.md"
+
+  # Enable discovery
+  enabled: true
