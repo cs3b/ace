@@ -1,4 +1,4 @@
-# ADR-023: ace-git-secrets Security Model
+# ADR-025: ace-git-secrets Security Model
 
 ## Status
 

@@ -109,7 +109,7 @@ This document provides actionable decisions from Architecture Decision Records (
 ### HTTP Client Strategy
 **Decision**: Use Faraday as the standard HTTP client with retry middleware and observability integration.
 **Impact**: For all HTTP requests, use Faraday with the standard middleware stack. Never use Net::HTTP directly. Ensure retry logic and monitoring are configured.
-**Details**: [ADR-010](decisions/ADR-010-HTTP-Client-Strategy-with-Faraday.t.md)
+**Details**: [ADR-010](decisions/ADR-010-HTTP-Client-Strategy-with-Faraday.md)
 
 ### ATOM Architecture Rules
 **Decision**: Strictly follow ATOM architecture layers: Models (pure data), Molecules (focused operations), Organisms (business orchestration), Ecosystems (complete workflows).
@@ -118,22 +118,22 @@ This document provides actionable decisions from Architecture Decision Records (
 - Focused operations composing Atoms go in `molecules/` (single responsibility)
 - Business logic orchestrating Molecules goes in `organisms/` (complex coordination)
 - Never place data carriers in `molecules/` or behavior in `models/`
-**Details**: [ADR-011](decisions/ADR-011-ATOM-Architecture-House-Rules.t.md)
+**Details**: [ADR-011](decisions/ADR-011-ATOM-Architecture-House-Rules.md)
 
 ### Dynamic Provider System
 **Decision**: Implement a dynamic provider system for LLM integrations with standardized interfaces.
 **Impact**: When adding new LLM providers, follow the established provider interface pattern. Register providers dynamically through the provider system.
-**Details**: [ADR-012](decisions/ADR-012-Dynamic-Provider-System-Architecture.t.md)
+**Details**: [ADR-012](decisions/ADR-012-Dynamic-Provider-System-Architecture.md)
 
 ### Class Naming Conventions
 **Decision**: Preserve established technical acronyms in class names (JSONFormatter, HTTPClient, APICredentials) while using CamelCase for domain terms.
 **Impact**: When naming classes, keep technical acronyms uppercase (HTTP, API, JSON). Use CamelCase for domain-specific terms (LlmModelInfo, not LLMModelInfo). Note: Zeitwerk-specific inflections are legacy; current gems use explicit requires.
-**Details**: [ADR-013](decisions/ADR-013-Class-Naming-Conventions-and-Zeitwerk-Inflections.t.md)
+**Details**: [ADR-013](decisions/ADR-013-Class-Naming-Conventions-and-Zeitwerk-Inflections.md)
 
 ### LLM Integration Architecture
 **Decision**: Use hybrid approach for LLM context sizes: API-first with static fallback mappings.
 **Impact**: When integrating with LLM providers, first attempt to get context size from API. Maintain static mappings as fallback for providers without API support.
-**Details**: [ADR-014](decisions/ADR-014-LLM-Integration-Architecture.t.md)
+**Details**: [ADR-014](decisions/ADR-014-LLM-Integration-Architecture.md)
 
 ## Archived Decisions
 
