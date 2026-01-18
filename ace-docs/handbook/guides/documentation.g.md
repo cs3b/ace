@@ -349,6 +349,12 @@ For specific examples of documentation generation tools, comment styles, or conv
 languages or frameworks (e.g., JSDoc, RDoc, Sphinx, JavaDoc), please refer to the examples in the
 [./documentation/](./documentation/) sub-directory.
 
+## Formatting Conventions
+
+For markdown typography and formatting standards (em-dashes, file trees, emoji usage), see the [Markdown Style Guide](guide://markdown-style).
+
+## Related Documentation
+
 - [Coding Standards](guide://coding-standards)
 - [Project Management Guide](guide://project-management) (Task format, ADRs)
 - [ADR Template](tmpl://project-docs/adr)
