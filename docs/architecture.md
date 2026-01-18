@@ -1,12 +1,12 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 200
+  max_lines: 220
   required_sections:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-27'
+  last-updated: '2026-01-17'
 ---
 
 # ACE - System Architecture
@@ -16,6 +16,16 @@ update:
 ACE (Agentic Coding Environment) is a mono-repo ecosystem of modular Ruby gems that provide a deterministic CLI surface
 for AI-assisted software development. Both human developers and AI agents use the same tools through consistent
 interfaces.
+
+## Scope
+
+This document covers the technical architecture of ACE:
+- Component organization and ATOM pattern
+- Configuration cascade (ADR-022)
+- Key architectural decisions
+- Security and quality standards
+
+For the project vision and core principles, see [vision.md](vision.md). For CLI usage, see [tools.md](tools.md).
 
 ## Core Principles
 
@@ -146,9 +156,53 @@ dependencies.
 **ADR-001 Workflow Self-Containment**: Include all templates inline; no external dependencies except core docs; reliable
 autonomous execution.
 
-**Configuration Cascade**: `.ace/` searched current→home; nearest wins; project-specific settings.
+**Configuration Cascade**: Four-tier merge with CLI → Project → User → Gem defaults priority.
 
 **Zero-Dependency Core**: ace-support-core uses only Ruby stdlib; stable foundation; reduces conflicts.
+
+## Configuration Cascade
+
+The configuration system (ADR-022) ensures flexibility without complexity through a four-tier cascade:
+
+```mermaid
+flowchart TD
+    subgraph Load["Configuration Loading"]
+        A["Gem .ace-defaults/"] --> B["Deep Merge"]
+        C["User ~/.ace/"] --> B
+        D["Project .ace/"] --> B
+        E["CLI Flags"] --> B
+    end
+
+    B --> F["Effective Configuration"]
+
+    subgraph Example["Example: ace-git-commit"]
+        G["Default: model=glite"]
+        H["User: (none)"]
+        I["Project: model=gflash"]
+        J["CLI: (none)"]
+        K["Result: model=gflash"]
+    end
+
+    style F fill:#c8e6c9
+    style K fill:#c8e6c9
+```
+
+**Resolution priority** (highest to lowest):
+1. CLI Flags - immediate overrides
+2. Project `.ace/` - repository-specific settings
+3. User `~/.ace/` - personal preferences
+4. Gem `.ace-defaults/` - sensible defaults
+
+**Implementation:**
+```ruby
+# How ACE tools load configuration
+resolver = Ace::Support::Config.create
+config = resolver.resolve_namespace("git", filename: "commit")
+
+# Gem defaults + user overrides + project overrides = final config
+```
+
+This means you only specify what differs from defaults—no forking required to customize behavior.
 
 ## Security & Quality
 
