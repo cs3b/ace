@@ -17,7 +17,7 @@ Both human developers and AI agents use the same tools through consistent, predi
 
 Each gem is independently installable: `gem install ace-review ace-git-commit`
 
-> See [docs/vision.md](docs/vision.md#current-capabilities) for the complete list of available capabilities.
+> See [docs/architecture.md](docs/architecture.md#tools-ace--gems) for the complete list of available capabilities.
 
 ## Quick Start: ace-review
 
@@ -65,7 +65,8 @@ The same review runs identically from CLI or as a Claude Code skill.
 ACE uses a cascade configuration system:
 
 ```
-./.ace/          # Project-specific (highest priority)
+CLI flags        # Command-line arguments (highest priority)
+./.ace/          # Project-specific
 ~/.ace/          # User defaults
 gem defaults     # Bundled with each gem (lowest priority)
 ```
@@ -74,7 +75,7 @@ gem defaults     # Bundled with each gem (lowest priority)
 
 | Document | Purpose |
 |----------|---------|
-| [Vision](docs/vision.md) | Why ACE exists, core principles, workflow examples |
+| [Vision](docs/vision.md) | Why ACE exists and core principles (manifesto) |
 | [Architecture](docs/architecture.md) | System architecture and ATOM pattern |
 | [Tools Reference](docs/tools.md) | CLI command quick reference |
 
