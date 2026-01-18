@@ -75,8 +75,8 @@ We adopt a **hybrid approach** for class naming conventions:
 
 ## Related Decisions
 
-- [ADR-007: Zeitwerk for Autoloading](ADR-007-Zeitwerk-for-Autoloading.t.md) - Establishes the autoloading mechanism
-- [ADR-012: Dynamic Provider System Architecture](ADR-012-Dynamic-Provider-System-Architecture.t.md) - Eliminates hardcoded client mappings
+- [ADR-007: Zeitwerk for Autoloading](archive/ADR-007-Zeitwerk-for-Autoloading.md) - Establishes the autoloading mechanism
+- [ADR-012: Dynamic Provider System Architecture](ADR-012-Dynamic-Provider-System-Architecture.md) - Eliminates hardcoded client mappings
 
 ## References
 

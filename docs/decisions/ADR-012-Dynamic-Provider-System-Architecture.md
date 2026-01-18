@@ -59,8 +59,8 @@ We are implementing a fully dynamic provider system with the following component
 
 ## Related Decisions
 
-- [ADR-011: ATOM Architecture House Rules](ADR-011-ATOM-Architecture-House-Rules.t.md) - Defines the architectural layers this system operates within
-- [ADR-007: Zeitwerk for Autoloading](ADR-007-Zeitwerk-for-Autoloading.t.md) - Provides the autoloading mechanism that enables dynamic discovery
+- [ADR-011: ATOM Architecture House Rules](ADR-011-ATOM-Architecture-House-Rules.md) - Defines the architectural layers this system operates within
+- [ADR-007: Zeitwerk for Autoloading](archive/ADR-007-Zeitwerk-for-Autoloading.md) - Provides the autoloading mechanism that enables dynamic discovery
 
 ## References
 
