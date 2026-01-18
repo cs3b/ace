@@ -39,8 +39,9 @@ module Ace
         # Run StandardRB on file(s)
         # @param file_paths [String, Array<String>] Path(s) to lint
         # @param fix [Boolean] Apply autofix
+        # @param config_path [String, nil] Ignored - StandardRB is zero-config
         # @return [Hash] Result with :success, :errors, :warnings
-        def self.run(file_paths, fix: false)
+        def self.run(file_paths, fix: false, config_path: nil)
           paths = Array(file_paths)
           return unavailable_result unless available?
 

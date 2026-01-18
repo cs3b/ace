@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-01-18
+
+### Added
+- Multi-validator architecture for running multiple linters per file type (task 215.03)
+  - New `PatternMatcher` atom for glob pattern matching with specificity scoring
+  - New `ValidatorRegistry` atom for mapping tool names to runner classes
+  - New `ConfigLocator` atom for config file resolution with precedence rules
+  - New `GroupResolver` molecule for pattern-based validator group resolution
+  - New `ValidatorChain` molecule for executing multiple validators with deduplication
+  - New `LintDoctor` organism for configuration health diagnostics
+  - New `ace-lint doctor` CLI command for checking configuration health
+  - New `--validators` CLI flag for specifying validators (e.g., `--validators standardrb,rubocop`)
+  - Pattern-based groups configuration in `ruby.yml` for different validators per file pattern
+  - Result deduplication when running multiple validators on same files
+
+### Changed
+- Updated `RubyLinter` to support ValidatorChain for multi-validator execution
+- Updated `LintOrchestrator` with group-aware routing for Ruby files
+- Updated `ruby.yml` configuration schema with groups-based validator configuration
+
 ## [0.10.0] - 2026-01-17
 
 ### Added

@@ -4,20 +4,28 @@ require_relative '../atoms/standardrb_runner'
 require_relative '../atoms/rubocop_runner'
 require_relative '../models/lint_result'
 require_relative '../models/validation_error'
+require_relative 'validator_chain'
 
 module Ace
   module Lint
     module Molecules
       # Lints Ruby files using StandardRB (preferred) with RuboCop fallback
+      # Supports multi-validator mode via ValidatorChain
       class RubyLinter
         # Lint a Ruby file
         # @param file_path [String] Path to the Ruby file
         # @param options [Hash] Linting options
         # @option options [Boolean] :fix Apply autofix
+        # @option options [Array<Symbol>] :validators Specific validators to use
+        # @option options [Array<Symbol>] :fallback_validators Fallback validators
         # @return [Models::LintResult] Lint result
         def self.lint(file_path, options: {})
           fix = options[:fix] || false
-          result, runner = run_with_fallback([file_path], fix: fix)
+          validators = options[:validators]
+          fallback_validators = options[:fallback_validators]
+
+          result, runner = run_validators([file_path], fix: fix, validators: validators,
+                                                        fallback_validators: fallback_validators)
 
           if result[:success]
             Models::LintResult.new(
@@ -50,16 +58,28 @@ module Ace
         end
 
         # Lint multiple Ruby files in a single subprocess
-        # Tries StandardRB first, falls back to RuboCop
+        # Supports multiple validators via ValidatorChain
         # @param file_paths [Array<String>] Paths to Ruby files
         # @param options [Hash] Linting options
         # @option options [Boolean] :fix Apply autofix
+        # @option options [Array<Symbol>] :validators Specific validators to use
+        # @option options [Array<Symbol>] :fallback_validators Fallback validators
         # @return [Array<Models::LintResult>] Lint results for each file
         def self.lint_batch(file_paths, options: {})
           return [] if file_paths.empty?
 
           fix = options[:fix] || false
-          result, runner = run_with_fallback(file_paths, fix: fix)
+          validators = options[:validators]
+          fallback_validators = options[:fallback_validators]
+
+          result, runner = run_validators(file_paths, fix: fix, validators: validators,
+                                                      fallback_validators: fallback_validators)
+
+          # Surface chain-level warnings (e.g., unavailable validators)
+          chain_warnings = result[:chain_warnings] || []
+          chain_warnings.each do |warning|
+            warn "[ace-lint] #{warning}"
+          end
 
           # Group offenses by file
           offenses_by_file = Hash.new { |h, k| h[k] = { errors: [], warnings: [] } }
@@ -138,7 +158,30 @@ module Ace
           end
         end
 
-        # Run linting with fallback logic
+        # Run linting with validators (multi-validator support via ValidatorChain)
+        # Falls back to legacy behavior when no validators specified
+        # @param file_paths [Array<String>] Paths to Ruby files
+        # @param fix [Boolean] Apply autofix
+        # @param validators [Array<Symbol>, nil] Specific validators to use
+        # @param fallback_validators [Array<Symbol>, nil] Fallback validators
+        # @return [Array<Hash, Symbol|Array>] Result and runner(s) used
+        def self.run_validators(file_paths, fix:, validators: nil, fallback_validators: nil)
+          # Use ValidatorChain when validators are explicitly specified
+          if validators && !validators.empty?
+            chain = ValidatorChain.new(validators, fallback_validators: fallback_validators || [])
+            result = chain.run(file_paths, fix: fix)
+            # Return runners as array if multiple, or single symbol for compatibility
+            runners = result[:runners] || []
+            runner = runners.size == 1 ? runners.first : runners
+            return [result, runner]
+          end
+
+          # Legacy behavior: StandardRB first, RuboCop fallback
+          run_with_fallback(file_paths, fix: fix)
+        end
+        private_class_method :run_validators
+
+        # Legacy run with fallback logic (backward compatibility)
         # Tries StandardRB first, falls back to RuboCop
         # @param file_paths [Array<String>] Paths to Ruby files
         # @param fix [Boolean] Apply autofix

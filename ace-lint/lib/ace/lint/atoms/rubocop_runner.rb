@@ -40,12 +40,13 @@ module Ace
         # Run RuboCop on file(s)
         # @param file_paths [String, Array<String>] Path(s) to lint
         # @param fix [Boolean] Apply autofix
+        # @param config_path [String, nil] Explicit config path (overrides default lookup)
         # @return [Hash] Result with :success, :errors, :warnings
-        def self.run(file_paths, fix: false)
+        def self.run(file_paths, fix: false, config_path: nil)
           paths = Array(file_paths)
           return unavailable_result unless available?
 
-          cmd = build_command(paths, fix: fix)
+          cmd = build_command(paths, fix: fix, config_path: config_path)
 
           stdout, stderr, status = Open3.capture3(*cmd)
 
@@ -65,20 +66,21 @@ module Ace
         # Build RuboCop command
         # @param paths [Array<String>] File paths
         # @param fix [Boolean] Apply fixes
+        # @param config_path [String, nil] Explicit config path (takes precedence)
         # @return [Array<String>] Command and arguments
         # Flag mapping: --fix → --auto-correct, --fix-unsafely → --auto-correct-all
-        def self.build_command(paths, fix:)
+        # Config precedence: explicit config_path > bundled defaults
+        def self.build_command(paths, fix:, config_path: nil)
           # Map ace-lint flags to RuboCop flags
           # fix: false → no autofix
           # fix: true → --auto-correct (safe fixes only)
           autofix_flags = fix ? ['--auto-correct'] : []
 
-          # Find project root to locate bundled config
-          # Start from current file and go up to find .ace-defaults directory
-          config_path = find_bundled_config
+          # Use explicit config_path if provided, otherwise fall back to bundled config
+          effective_config = config_path || find_bundled_config
 
-          # Add --config flag if bundled config exists, otherwise let RuboCop use its defaults
-          config_flags = config_path ? ['--config', config_path] : []
+          # Add --config flag if config exists, otherwise let RuboCop use its defaults
+          config_flags = effective_config ? ['--config', effective_config] : []
 
           ['rubocop', *config_flags, *autofix_flags, '--format', 'json', *paths].compact
         end

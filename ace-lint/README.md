@@ -178,6 +178,7 @@ ace-lint version
 | `--fix` | `-f` | Auto-format with kramdown or StandardRB (Ruby files) |
 | `--format` | | Format documents with kramdown |
 | `--type TYPE` | `-t` | Specify validation type (markdown/yaml/ruby/frontmatter) |
+| `--validators LIST` | | Comma-separated list of validators (e.g., standardrb,rubocop) |
 | `--quiet` | `-q` | Suppress detailed output |
 | `--line-width NUM` | | Line width for formatting (default: 120) |
 | `--help` | `-h` | Show help message |
@@ -215,7 +216,115 @@ ace-lint docs/guide.md --type frontmatter
 
 # Quiet mode (only show summary)
 ace-lint docs/*.md --quiet
+
+# Run multiple validators on Ruby files
+ace-lint lib/**/*.rb --validators standardrb,rubocop
+
+# Check configuration health
+ace-lint doctor
 ```
+
+### Doctor Command
+
+The `doctor` command diagnoses your lint configuration health:
+
+```bash
+# Check configuration
+ace-lint doctor
+
+# Show all diagnostics (including info)
+ace-lint doctor --verbose
+
+# Show only errors and warnings
+ace-lint doctor --quiet
+```
+
+**Diagnostic Categories:**
+
+- **Validators**: Checks if StandardRB and RuboCop are installed
+- **Configuration Files**: Validates config file locations and syntax
+- **Pattern Groups**: Verifies group patterns match files in your project
+
+**Understanding Config Status:**
+
+The `doctor` command may report `:none` as the config source for StandardRB. This is expected behavior:
+
+- **StandardRB**: Uses its own built-in defaults when no `.standard.yml` config is found. The `:none` status indicates StandardRB will apply its default ruleset, which is intentional and correct.
+- **RuboCop**: Requires a `.rubocop.yml` config file for proper behavior. If RuboCop shows `:none`, consider adding a config file.
+
+**Exit Codes:**
+
+- `0`: Configuration is healthy
+- `1`: Configuration has warnings
+- `2`: Configuration has errors
+
+### Multi-Validator Architecture
+
+ace-lint supports running multiple validators on Ruby files with pattern-based configuration.
+
+**CLI Override:**
+
+Use the `--validators` flag to run specific validators:
+
+```bash
+# Run only RuboCop
+ace-lint lib/code.rb --validators rubocop
+
+# Run both StandardRB and RuboCop
+ace-lint lib/code.rb --validators standardrb,rubocop
+```
+
+**Groups Configuration:**
+
+Configure different validators for different file patterns in `.ace/lint/ruby.yml`:
+
+```yaml
+groups:
+  strict:
+    patterns:
+      - "lib/**/*.rb"
+      - "app/**/*.rb"
+    validators:
+      - standardrb
+      - rubocop
+  tests:
+    patterns:
+      - "test/**/*.rb"
+      - "spec/**/*.rb"
+    validators:
+      - rubocop
+  default:
+    patterns:
+      - "**/*.rb"
+    validators:
+      - standardrb
+    fallback_validators:
+      - rubocop
+```
+
+**Fallback Validators Behavior:**
+
+There are two types of fallback behavior in the multi-validator architecture:
+
+1. **Group-Level Fallbacks** (`fallback_validators` in config): These are explicit fallbacks you define in your groups configuration. When a primary `validators` list is specified but none of those validators are available on the system, the `fallback_validators` are used instead.
+
+2. **Automatic Chain-Level Fallback**: When StandardRB is specified but not available, ace-lint automatically falls back to RuboCop. This happens at the validator chain level and doesn't require configuration.
+
+**Example:**
+```yaml
+default:
+  patterns: ["**/*.rb"]
+  validators: [standardrb]      # Primary choice
+  fallback_validators: [rubocop] # Used if standardrb not available
+```
+
+**Pattern Specificity:**
+
+When multiple groups match a file, the most specific pattern wins:
+
+1. Exact filename match (e.g., `Rakefile`)
+2. Deeper glob path (e.g., `lib/ace/**/*.rb` > `lib/**/*.rb`)
+3. More specific directory (e.g., `lib/**/*.rb` > `**/*.rb`)
 
 ## Features
 
