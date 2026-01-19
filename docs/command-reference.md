@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-27'
+  last-updated: '2026-01-19'
 ---
 
 # ACE Command Reference
@@ -102,6 +102,7 @@ Run these by typing directly in Claude Code conversation.
 | `/ace:improve-code-coverage` | Analyze and improve test coverage |
 | `/ace:analyze-bug` | Analyze bugs for root cause |
 | `/ace:fix-bug` | Execute bug fix plan |
+| `/ace:run-e2e-test [package] [test-id]` | Execute E2E test scenarios |
 
 ### Context and Navigation
 
@@ -193,6 +194,9 @@ ace-docs validate file.md        # Validate structure
 ace-lint file.md                 # Lint markdown
 ace-lint file.md --fix           # Auto-fix issues
 ace-lint "**/*.md" --type markdown
+ace-lint lib/**/*.rb --validators rubocop              # Run specific validator
+ace-lint lib/**/*.rb --validators standardrb,rubocop   # Run multiple validators
+ace-lint doctor                                         # Check configuration health
 ```
 
 ### Search

@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-27'
+  last-updated: '2026-01-19'
 ---
 
 # ACE CLI Tools Reference
@@ -23,7 +23,7 @@ All tools below are run from your terminal using the `ace-` prefix.
 | **ace-git** | Repository context, PR activity, diff | `ace-git status`, `ace-git status --no-pr`, `ace-git diff` |
 | **ace-git-commit** | Generate commits | `ace-git-commit`, `ace-git-commit --staged`, `ace-git-commit --path "src/**"` |
 | **ace-git-secrets** | Detect and remove tokens | `ace-git-secrets scan`, `ace-git-secrets revoke`, `ace-git-secrets rewrite-history` |
-| **ace-lint** | Code quality linting | `ace-lint file.md`, `ace-lint file.md --fix` |
+| **ace-lint** | Code quality linting with multi-validator support | `ace-lint file.md`, `ace-lint file.md --fix`, `ace-lint doctor`, `ace-lint "**/*.rb" --validators rubocop` |
 | **ace-llm** | Query LLM providers (Claude, Codex, Gemini, OpenAI) | `ace-llm "prompt" -m gpt-4`, `ace-llm "prompt" -m gemini:gemini-2.5-flash` |
 | **ace-nav** | Resource navigation with wfi:// protocol resolution | `ace-nav wfi://workflow`, `ace-nav --sources` |
 | **ace-review** | Code review | `ace-review --preset pr`, `ace-review --task 121`, `ace-review --auto-execute` |
@@ -60,6 +60,11 @@ ace-docs validate file.md               # Validate document structure
 ace-lint file.md                        # Lint markdown file
 ace-lint file.md --fix                  # Auto-fix markdown issues
 ace-lint "**/*.md" --type markdown      # Lint all markdown files
+
+# Ruby linting with validators
+ace-lint lib/**/*.rb --validators rubocop              # Run specific validator
+ace-lint lib/**/*.rb --validators standardrb,rubocop   # Run multiple validators
+ace-lint doctor                                         # Check configuration health
 
 # Git commits
 ace-git-commit                          # Generate commit for all changes
