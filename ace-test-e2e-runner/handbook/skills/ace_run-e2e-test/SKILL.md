@@ -1,6 +1,6 @@
 ---
 name: ace:run-e2e-test
-description: Execute a manual test scenario
+description: Execute an E2E test scenario
 user-invocable: true
 allowed-tools:
   - Bash(ace-*:*)
