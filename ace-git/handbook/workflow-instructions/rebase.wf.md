@@ -245,7 +245,27 @@ bundle exec rake test
 # Tests catching integration issues is normal after rebase
 ```
 
-### 8. Clean Up
+### 8. Validate Taskflow
+
+After rebase, verify taskflow integrity:
+
+```bash
+# Check for taskflow issues
+ace-taskflow doctor
+
+# Verify task structure
+ace-taskflow tasks next --limit 5
+```
+
+**Common issues after rebase:**
+- Duplicate task IDs from parallel branches
+- Orphaned subtask files
+- Broken parent references
+- Task number conflicts
+
+If `ace-taskflow doctor` reports errors, resolve them before continuing.
+
+### 9. Clean Up
 
 ```bash
 # Remove backup files

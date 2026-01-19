@@ -4,64 +4,60 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.311] - 2026-01-19
+## [0.9.310] - 2026-01-19
 
-### Added
+### Fixed
 
-- **ace-git 0.9.0**: Package-based commit squashing strategy (default for monorepo)
-  - Documents one commit per package/module approach
-  - Includes package-prefixed commit message format (e.g., `feat(ace-lint): ...`)
-  - Added Strategy 1: Package-Based as default monorepo approach
-  - Renumbered existing strategies (Logical Grouping, Commit Per Feature, One Commit Per Version)
+- **ace-prompt-prep 0.16.2**: E2E test documentation updates
+  - Update sample-prompt.md test data to use `bundle:` format instead of legacy `context:` format
+  - Correct Base36 ID length documentation from "6-7 characters" to exactly "6 characters" (3 locations)
+
+## [0.9.309] - 2026-01-19
 
 ### Changed
 
-- **ace-git 0.9.0**: Renamed squash-pr workflow and skill to squash-commits
-  - Workflow: `squash-pr.wf.md` → `squash-commits.wf.md`
-  - Skill: `ace:squash-pr` → `ace:squash-commits`
-  - Updated ace-git-commit path handling documentation
-    - Removed incorrect `git add` + `ace-git-commit paths` pattern
-    - Documented correct pattern: `ace-git-commit <path1> <path2> --intention "..."`
-    - Added warning about passing paths directly to ace-git-commit
-  - Clarified PR-based vs commit-range-based workflow usage methods
-  - Updated for ace-bundle integration (wfi:// protocol)
+- **ace-prompt-prep 0.16.1**: Rename --context to --bundle flag (task 217)
+  - CLI: `--context/-c` → `--bundle/-b`, `--no-context` → `--no-bundle`
+  - Rename `ContextLoader` class to `BundleLoader`
+  - Rename `context_loader.rb` → `bundle_loader.rb`
+  - Add backward compatibility for legacy `"context"` config key
 
-## [0.9.310] - 2026-01-19
+- **ace-bundle 0.32.1**: Add preset/presets support in template frontmatter (task 217)
+  - Recognize `preset` and `presets` keys in workflow file frontmatter
+  - Process presets from frontmatter with error handling
+  - Store loaded presets and errors in bundle metadata
 
-### Added
-
-- **ace-lint 0.12.0**: Three-file markdown report system for workflow delegation
-  - `ok.md` - Lists files that passed with no issues
-  - `fixed.md` - Lists files that were auto-fixed (only when --fix used)
-  - `pending.md` - Groups issues by file with checkboxes for tracking
-  - Report directory output shows generated files with counts
-  - JSON report generation with timestamped directories
-
-## [0.9.309] - 2026-01-18
+## [0.9.308] - 2026-01-19
 
 ### Added
 
-- **ace-handbook 0.6.0**: Add perform-delivery workflow for multi-step delivery tracking
-  - New `perform-delivery.wf.md` workflow instruction for complete task delivery
-  - Automatic TodoWrite externalization before any implementation work
-  - Checkpoint protocol for tracking progress between steps
-  - Auto-continue protocol to prevent instruction loss in complex workflows
-  - Scope variations for implementation-only or review-only delivery
+- **ace-test-e2e-runner 0.2.0**: Add E2E test management skills for lifecycle orchestration
+  - `/ace:review-e2e-tests` - Analyze test health, coverage gaps, and outdated scenarios
+  - `/ace:create-e2e-test` - Create new test scenarios from template
+  - `/ace:manage-e2e-tests` - Orchestrate full lifecycle (review, create, run)
+  - Includes workflow instructions for all three skills
 
-## [0.9.308] - 2026-01-18
+### Changed
 
-### Added
+- **ace-prompt-prep 0.16.0**: Rename ace-prep to ace-prompt-prep (task 218)
+  - Renamed package from `ace-prep` to `ace-prompt-prep` to follow compound naming pattern
+  - Updated Ruby namespace from `Ace::Prep` to `Ace::PromptPrep`
+  - Renamed CLI binary from `ace-prep` to `ace-prompt-prep`
+  - Updated config namespace from `prep` to `prompt-prep` (`.ace/prompt-prep/`, `.cache/ace-prompt-prep/`)
+  - Updated all external references in docs, Gemfile, and skills
+  - Follows compound naming pattern like `ace-git-commit`, `ace-git-secrets`
+  - Makes semantic meaning explicit: this tool prepares prompts
+  - No backward compatibility provided per ADR-024 (pre-1.0.0)
+  - Migration: Update all references from `ace-prep` to `ace-prompt-prep` in scripts and configs
 
-- **ace-lint 0.11.0**: Multi-validator architecture for running multiple linters per file type (task 215.03)
-  - New `PatternMatcher` atom for glob pattern matching with specificity scoring
-  - New `ValidatorRegistry` atom for mapping tool names to runner classes
-  - New `ConfigLocator` atom for config file resolution with precedence rules
-  - New `GroupResolver` molecule for pattern-based validator group resolution
-  - New `ValidatorChain` molecule for executing multiple validators with deduplication
-  - New `LintDoctor` organism for configuration health diagnostics
-  - New `ace-lint doctor` CLI command for checking configuration health
-  - New `--validators` CLI flag for specifying validators (e.g., `--validators standardrb,rubocop`)
-  - Pattern-based groups configuration in `ruby.yml` for different validators per file pattern
+- **ace-prep 0.15.0**: Rename ace-prompt to ace-prep (task 217)
+  - Renamed package from `ace-prompt` to `ace-prep` to better reflect its purpose as a prompt preparation tool
+  - Updated Ruby namespace from `Ace::Prompt` to `Ace::Prep`
+  - Renamed CLI binary from `ace-prompt` to `ace-prep`
+  - Updated config namespace from `prompt` to `prep` (`.ace/prep/`, `.cache/ace-prep/`)
+  - Updated all external references in docs, Gemfile, and skills
+  - No backward compatibility provided per ADR-024 (pre-1.0.0)
+  - Migration: Update all references from `ace-prompt` to `ace-prep` in scripts and configs
 
 ## [0.9.307] - 2026-01-16
 
