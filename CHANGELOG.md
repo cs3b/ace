@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.309] - 2026-01-18
+
+### Added
+
+- **ace-handbook 0.6.0**: Add perform-delivery workflow for multi-step delivery tracking
+  - New `perform-delivery.wf.md` workflow instruction for complete task delivery
+  - Automatic TodoWrite externalization before any implementation work
+  - Checkpoint protocol for tracking progress between steps
+  - Auto-continue protocol to prevent instruction loss in complex workflows
+  - Scope variations for implementation-only or review-only delivery
+
+## [0.9.308] - 2026-01-18
+
+### Added
+
+- **ace-lint 0.11.0**: Multi-validator architecture for running multiple linters per file type (task 215.03)
+  - New `PatternMatcher` atom for glob pattern matching with specificity scoring
+  - New `ValidatorRegistry` atom for mapping tool names to runner classes
+  - New `ConfigLocator` atom for config file resolution with precedence rules
+  - New `GroupResolver` molecule for pattern-based validator group resolution
+  - New `ValidatorChain` molecule for executing multiple validators with deduplication
+  - New `LintDoctor` organism for configuration health diagnostics
+  - New `ace-lint doctor` CLI command for checking configuration health
+  - New `--validators` CLI flag for specifying validators (e.g., `--validators standardrb,rubocop`)
+  - Pattern-based groups configuration in `ruby.yml` for different validators per file pattern
+
 ## [0.9.307] - 2026-01-16
 
 ### Fixed
