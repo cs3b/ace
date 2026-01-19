@@ -1,0 +1,31 @@
+---
+# Prompt Sources Protocol Configuration for ace-prompt-prep gem
+# This enables prompt discovery from the installed ace-prompt-prep gem
+
+name: ace-prompt-prep
+type: gem
+description: Prompt enhancement system prompts from ace-prompt-prep gem
+priority: 10
+
+# Configuration for prompt discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/prompts
+
+  # Pattern for finding prompt files
+  pattern: "*.md"
+
+  # Enable discovery
+  enabled: true
+
+# Categories of prompts available
+categories:
+  - enhancement  # LLM prompt enhancement system prompts
+
+# Notes for users
+notes: |
+  ace-prompt-prep provides system prompts for LLM-powered prompt enhancement:
+  - Enhancement: System prompts for improving user prompts via LLM
+
+  Use prompt:// URIs to reference these prompts in your configurations.
+  Example: prompt://prompt-enhance-instructions
