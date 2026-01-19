@@ -58,7 +58,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.8.2)
+    ace-git (0.9.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)
@@ -76,9 +76,10 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.11.0)
+    ace-lint (0.12.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
+      ace-support-timestamp (~> 0.2)
       colorize (~> 1.1)
       dry-cli (~> 1.0)
       kramdown (~> 2.4)
