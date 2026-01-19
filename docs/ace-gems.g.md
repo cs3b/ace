@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-12'
+  last-updated: '2026-01-19'
 ---
 
 # ACE Gem Development Guide
@@ -32,7 +32,7 @@ ACE gems follow a naming pattern that clarifies their purpose:
 
 ### ace-* Pattern (Agentic Coding Tools)
 - **Purpose**: Ready-to-use tools for AI-assisted development workflows
-- **Examples**: ace-search, ace-lint, ace-docs, ace-taskflow, ace-review, ace-prompt, ace-llm
+- **Examples**: ace-search, ace-lint, ace-docs, ace-taskflow, ace-review, ace-prompt, ace-llm, ace-test-e2e-runner
 - **Characteristics**:
   - Complete, user-facing functionality
   - Have executables in `exe/` directory
@@ -92,6 +92,15 @@ resolver.resolve_namespace("nav")  # NOT "support-nav"
   - Workflows accessible via `wfi://` protocol through ace-nav
   - Templates, documentation, and custom commands bundled with gem
   - Pure workflow packages with asset packaging
+
+### ace-test-e2e-runner (Infrastructure Package)
+
+- **Purpose**: End-to-end test infrastructure for agent-executed testing
+- **Characteristics**:
+  - Workflow-first design (no CLI executable)
+  - Test scenarios in `{package}/test/e2e/*.mt.md`
+  - Executed via `/ace:run-e2e-test` skill
+  - Provides templates and conventions for E2E testing
 
 ## Standard Structure
 
