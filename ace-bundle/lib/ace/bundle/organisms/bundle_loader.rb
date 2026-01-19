@@ -430,7 +430,7 @@ module Ace
           # Check if frontmatter contains config directly (via 'bundle' key or template config keys)
           # This is the newer pattern for workflow files
           if frontmatter['bundle'].is_a?(Hash) ||
-             (frontmatter.keys & %w[files commands include exclude diffs]).any?
+             (frontmatter.keys & %w[preset presets files commands include exclude diffs]).any?
             # Use frontmatter as the main config
             config = unwrap_bundle_config(frontmatter)
 
@@ -440,11 +440,43 @@ module Ace
               @options = @options.merge(params)
             end
 
+            # Handle preset/presets keys from frontmatter
+            preset_names = []
+            if frontmatter['preset'] && !frontmatter['preset'].to_s.strip.empty?
+              preset_names << frontmatter['preset'].to_s.strip
+            end
+            if frontmatter['presets'] && frontmatter['presets'].is_a?(Array)
+              preset_names += frontmatter['presets'].compact.map(&:to_s).map(&:strip)
+            end
+
+            if preset_names.any?
+              existing_presets = config['presets'] || []
+              config['presets'] = preset_names + existing_presets
+            end
+
             # Apply CLI overrides to config (CLI takes precedence)
             config = apply_cli_overrides(config)
 
+            # Process presets from frontmatter
+            preset_error = nil
+            preset_names_loaded = []
+            if config['presets'] && config['presets'].any?
+              begin
+                preset_names_loaded = config['presets'].dup
+                config = process_top_level_presets(config)
+              rescue PresetLoadError => e
+                preset_error = e.message
+                warn "Warning: #{e.message}" if @options[:debug]
+                config.delete('presets')
+                config.delete(:presets)
+              end
+            end
+
             # Process the config (loads embedded files from bundle.files)
             bundle = process_template_config(config)
+
+            bundle.metadata[:presets] = preset_names_loaded if preset_names_loaded.any?
+            bundle.metadata[:preset_error] = preset_error if preset_error
 
             # Process base content if present (for template files with context.base)
             process_base_content(bundle, config, @options)
