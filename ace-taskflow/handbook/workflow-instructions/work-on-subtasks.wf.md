@@ -255,7 +255,7 @@ For each PR:
 # In worktree directory - get PR info from ace-git status
 ace-git status
 # Look for "Current PR" section:
-#   #88 [OPEN] 140.04: Update ace-prompt to use ace-git
+#   #88 [OPEN] 140.04: Update ace-prep to use ace-git
 #     Target: 140-enhance-ace-bundle-with-dynamic-git-branch-and-pr-information
 
 # Review the PR (compares against PR's target branch)

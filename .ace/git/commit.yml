@@ -31,7 +31,7 @@ git:
         - ace-docs
         - ace-lint
         - ace-search
-        - ace-prompt
+        - ace-prompt-prep
         - ace-integration-claude
 
         # Project areas
