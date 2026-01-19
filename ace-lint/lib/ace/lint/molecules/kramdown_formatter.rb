@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/kramdown_parser'
+require_relative "../atoms/kramdown_parser"
 
 module Ace
   module Lint
@@ -17,14 +17,14 @@ module Ace
 
           if result[:success] && result[:formatted_content]
             File.write(file_path, result[:formatted_content])
-            { success: true, formatted: true, errors: [] }
+            {success: true, formatted: true, errors: []}
           else
-            { success: false, formatted: false, errors: result[:errors] }
+            {success: false, formatted: false, errors: result[:errors]}
           end
         rescue Errno::ENOENT
-          { success: false, formatted: false, errors: ["File not found: #{file_path}"] }
-        rescue StandardError => e
-          { success: false, formatted: false, errors: ["Error formatting file: #{e.message}"] }
+          {success: false, formatted: false, errors: ["File not found: #{file_path}"]}
+        rescue => e
+          {success: false, formatted: false, errors: ["Error formatting file: #{e.message}"]}
         end
 
         # Format markdown content

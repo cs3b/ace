@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
+require_relative "../test_helper"
 
 class DoctorIntegrationTest < Minitest::Test
   def setup
@@ -9,7 +9,7 @@ class DoctorIntegrationTest < Minitest::Test
     Dir.chdir(@temp_dir)
 
     # Check if CLI is available
-    @cli_path = File.expand_path('../../../exe/ace-lint', __dir__)
+    @cli_path = File.expand_path("../../../exe/ace-lint", __dir__)
     @cli_available = File.exist?(@cli_path)
   end
 
@@ -21,7 +21,7 @@ class DoctorIntegrationTest < Minitest::Test
   def test_doctor_command_lists_available_validators
     skip "CLI not built" unless @cli_available
 
-    output, = Open3.capture3(@cli_path, 'doctor')
+    output, = Open3.capture3(@cli_path, "doctor")
 
     # Should list validators
     assert_match(/standardrb|rubocop|validator/i, output)
@@ -31,11 +31,11 @@ class DoctorIntegrationTest < Minitest::Test
     skip "CLI not built" unless @cli_available
 
     # Create a config file
-    FileUtils.mkdir_p('.ace/lint')
-    File.write('.ace/lint/config.yml', 'kramdown:
+    FileUtils.mkdir_p(".ace/lint")
+    File.write(".ace/lint/config.yml", 'kramdown:
   auto_ids: true')
 
-    output, = Open3.capture3(@cli_path, 'doctor')
+    output, = Open3.capture3(@cli_path, "doctor")
 
     # Should show config information
     assert_match(/config|configuration/i, output)
@@ -45,12 +45,12 @@ class DoctorIntegrationTest < Minitest::Test
     skip "CLI not built" unless @cli_available
 
     # Create a valid YAML config
-    FileUtils.mkdir_p('.ace/lint')
-    File.write('.ace/lint/config.yml', 'kramdown:
+    FileUtils.mkdir_p(".ace/lint")
+    File.write(".ace/lint/config.yml", 'kramdown:
   auto_ids: true
   entity_output: numeric')
 
-    output, = Open3.capture3(@cli_path, 'doctor')
+    output, = Open3.capture3(@cli_path, "doctor")
 
     # Should show YAML is valid
     assert_match(/valid|ok/i, output)
@@ -60,13 +60,13 @@ class DoctorIntegrationTest < Minitest::Test
     skip "CLI not built" unless @cli_available
 
     # Create an invalid YAML config
-    FileUtils.mkdir_p('.ace/lint')
-    File.write('.ace/lint/config.yml', 'kramdown:
+    FileUtils.mkdir_p(".ace/lint")
+    File.write(".ace/lint/config.yml", 'kramdown:
   auto_ids: true
   entity_output: numeric
     bad_indent: yes')
 
-    output, = Open3.capture3(@cli_path, 'doctor')
+    _, = Open3.capture3(@cli_path, "doctor")
 
     # Should show YAML error
     # (Note: exact output depends on implementation)
@@ -75,7 +75,7 @@ class DoctorIntegrationTest < Minitest::Test
   def test_doctor_command_with_verbosity
     skip "CLI not built" unless @cli_available
 
-    output, = Open3.capture3(@cli_path, 'doctor', '--verbose')
+    output, = Open3.capture3(@cli_path, "doctor", "--verbose")
 
     # Verbose mode should show more details
     assert_match(/standardrb|rubocop|validator/i, output)
@@ -84,7 +84,7 @@ class DoctorIntegrationTest < Minitest::Test
   def test_doctor_command_quiet_mode
     skip "CLI not built" unless @cli_available
 
-    output, = Open3.capture3(@cli_path, 'doctor', '--quiet')
+    _, = Open3.capture3(@cli_path, "doctor", "--quiet")
 
     # Quiet mode should suppress some output
     # (Exact behavior depends on CLI implementation)
@@ -97,7 +97,7 @@ class DoctorIntegrationTest < Minitest::Test
     skip "CLI not built" unless @cli_available
 
     # No config files = uses defaults, should be healthy
-    _output, _stderr, status = Open3.capture3(@cli_path, 'doctor')
+    _output, _stderr, status = Open3.capture3(@cli_path, "doctor")
 
     # Exit 0 when configuration is healthy (no errors or warnings)
     # Note: May be 1 if validators are missing, which is a warning
@@ -108,10 +108,10 @@ class DoctorIntegrationTest < Minitest::Test
     skip "CLI not built" unless @cli_available
 
     # Create an invalid YAML config that will cause an error
-    FileUtils.mkdir_p('.ace/lint')
-    File.write('.ace/lint/ruby.yml', "groups:\n  default:\n    patterns: [\"**/*.rb\"]\n    validators: [notarealvalidator")
+    FileUtils.mkdir_p(".ace/lint")
+    File.write(".ace/lint/ruby.yml", "groups:\n  default:\n    patterns: [\"**/*.rb\"]\n    validators: [notarealvalidator")
 
-    _output, _stderr, status = Open3.capture3(@cli_path, 'doctor')
+    _output, _stderr, status = Open3.capture3(@cli_path, "doctor")
 
     # Exit 2 when configuration has errors (invalid YAML)
     assert_equal 2, status.exitstatus, "Expected exit 2 for YAML syntax error"

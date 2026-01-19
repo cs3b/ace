@@ -17,8 +17,8 @@ class Ace::Lint::Atoms::PatternMatcherTest < Minitest::Test
   end
 
   def test_specificity_double_star_penalty
-    single = Ace::Lint::Atoms::PatternMatcher.specificity("lib/*.rb")
-    double = Ace::Lint::Atoms::PatternMatcher.specificity("lib/**/*.rb")
+    Ace::Lint::Atoms::PatternMatcher.specificity("lib/*.rb")
+    Ace::Lint::Atoms::PatternMatcher.specificity("lib/**/*.rb")
 
     # Double star should have penalty, but depth bonus may compensate
     # Test that single star at same depth is higher
@@ -89,9 +89,9 @@ class Ace::Lint::Atoms::PatternMatcherTest < Minitest::Test
 
   def test_best_group_match_returns_matching_group
     groups = {
-      strict: { patterns: ["lib/**/*.rb"] },
-      tests: { patterns: ["test/**/*.rb"] },
-      default: { patterns: ["**/*.rb"] }
+      strict: {patterns: ["lib/**/*.rb"]},
+      tests: {patterns: ["test/**/*.rb"]},
+      default: {patterns: ["**/*.rb"]}
     }
 
     result = Ace::Lint::Atoms::PatternMatcher.best_group_match("lib/ace/lint.rb", groups)
@@ -101,9 +101,9 @@ class Ace::Lint::Atoms::PatternMatcherTest < Minitest::Test
 
   def test_best_group_match_prefers_more_specific
     groups = {
-      specific: { patterns: ["lib/ace/**/*.rb"] },
-      general: { patterns: ["lib/**/*.rb"] },
-      default: { patterns: ["**/*.rb"] }
+      specific: {patterns: ["lib/ace/**/*.rb"]},
+      general: {patterns: ["lib/**/*.rb"]},
+      default: {patterns: ["**/*.rb"]}
     }
 
     result = Ace::Lint::Atoms::PatternMatcher.best_group_match("lib/ace/lint.rb", groups)
@@ -113,8 +113,8 @@ class Ace::Lint::Atoms::PatternMatcherTest < Minitest::Test
 
   def test_best_group_match_returns_nil_for_no_match
     groups = {
-      lib: { patterns: ["lib/**/*.rb"] },
-      app: { patterns: ["app/**/*.rb"] }
+      lib: {patterns: ["lib/**/*.rb"]},
+      app: {patterns: ["app/**/*.rb"]}
     }
 
     result = Ace::Lint::Atoms::PatternMatcher.best_group_match("scripts/deploy.sh", groups)
@@ -124,8 +124,8 @@ class Ace::Lint::Atoms::PatternMatcherTest < Minitest::Test
 
   def test_best_group_match_handles_string_keys
     groups = {
-      "strict" => { "patterns" => ["lib/**/*.rb"] },
-      "default" => { "patterns" => ["**/*.rb"] }
+      "strict" => {"patterns" => ["lib/**/*.rb"]},
+      "default" => {"patterns" => ["**/*.rb"]}
     }
 
     result = Ace::Lint::Atoms::PatternMatcher.best_group_match("lib/test.rb", groups)

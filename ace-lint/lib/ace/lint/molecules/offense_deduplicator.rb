@@ -34,11 +34,11 @@ module Ace
         # @param offense [Hash] Offense data
         # @return [String] Unique key
         def self.offense_key(offense)
-          file = offense[:file] || ''
+          file = offense[:file] || ""
           line = offense[:line] || 0
           column = offense[:column] || 0
           # Normalize message: strip cop name prefix, downcase, remove extra whitespace
-          message = normalize_message(offense[:message] || '')
+          message = normalize_message(offense[:message] || "")
 
           "#{file}:#{line}:#{column}:#{message}"
         end
@@ -49,10 +49,14 @@ module Ace
         # @return [String] Normalized message
         def self.normalize_message(message)
           # Remove cop name prefix with various formats (e.g., "Style/StringLiterals: ", "Layout/TrailingWhitespace - ")
-          # More defensive regex handles: "Name/SubName: ", "Name/SubName - ", "Name-SubName: "
-          normalized = message.sub(/\A[A-Za-z]+[\/\-][A-Za-z]+[:\s-]+/, '')
+          # Updated regex handles:
+          #   - Standard: "Style/StringLiterals: "
+          #   - With numbers: "Rails/HTTPStatus: ", "Lint/BooleanSymbol: "
+          #   - Nested: "Style/HashSyntax/Compact: "
+          #   - Hyphens: "Style-Guide: "
+          normalized = message.sub(/\A[A-Za-z0-9]+(?:[\/-][A-Za-z0-9]+)+[:\s-]+/, "")
           # Downcase and strip extra whitespace
-          normalized.downcase.gsub(/\s+/, ' ').strip
+          normalized.downcase.gsub(/\s+/, " ").strip
         end
         private_class_method :normalize_message
       end

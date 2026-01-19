@@ -4,9 +4,9 @@ require "date"
 require "set"
 require "yaml"
 
-require_relative '../atoms/validator_registry'
-require_relative '../atoms/config_locator'
-require_relative '../molecules/group_resolver'
+require_relative "../atoms/validator_registry"
+require_relative "../atoms/config_locator"
+require_relative "../molecules/group_resolver"
 
 module Ace
   module Lint
@@ -59,19 +59,19 @@ module Ace
 
           # Check registered validators
           Atoms::ValidatorRegistry.registered_validators.each do |name|
-            if Atoms::ValidatorRegistry.available?(name)
-              results << DiagnosticResult.new(
+            results << if Atoms::ValidatorRegistry.available?(name)
+              DiagnosticResult.new(
                 category: :validator,
                 level: :info,
                 message: "#{name}: available",
-                details: { validator: name, status: :available }
+                details: {validator: name, status: :available}
               )
             else
-              results << DiagnosticResult.new(
+              DiagnosticResult.new(
                 category: :validator,
                 level: :warning,
                 message: "#{name}: not installed",
-                details: { validator: name, status: :unavailable }
+                details: {validator: name, status: :unavailable}
               )
             end
           end
@@ -85,7 +85,7 @@ module Ace
                   category: :validator,
                   level: :warning,
                   message: "Configured validator '#{name}' is not available",
-                  details: { validator: name, status: :configured_unavailable }
+                  details: {validator: name, status: :configured_unavailable}
                 )
               end
             end
@@ -111,7 +111,7 @@ module Ace
                   category: :config,
                   level: :info,
                   message: "#{name}: using explicit config at #{config[:path]}",
-                  details: { validator: name, source: :explicit, path: config[:path] }
+                  details: {validator: name, source: :explicit, path: config[:path]}
                 )
                 # Validate YAML syntax
                 yaml_error = validate_yaml_syntax(config[:path], name)
@@ -121,7 +121,7 @@ module Ace
                   category: :config,
                   level: :error,
                   message: "#{name}: explicit config not found at #{config[:path]}",
-                  details: { validator: name, source: :explicit, path: config[:path], exists: false }
+                  details: {validator: name, source: :explicit, path: config[:path], exists: false}
                 )
               end
             when :ace_config
@@ -129,7 +129,7 @@ module Ace
                 category: :config,
                 level: :info,
                 message: "#{name}: using .ace/lint config at #{config[:path]}",
-                details: { validator: name, source: :ace_config, path: config[:path] }
+                details: {validator: name, source: :ace_config, path: config[:path]}
               )
               # Validate YAML syntax
               yaml_error = validate_yaml_syntax(config[:path], name)
@@ -139,7 +139,7 @@ module Ace
                 category: :config,
                 level: :info,
                 message: "#{name}: using native config at #{config[:path]}",
-                details: { validator: name, source: :native, path: config[:path] }
+                details: {validator: name, source: :native, path: config[:path]}
               )
               # Validate YAML syntax
               yaml_error = validate_yaml_syntax(config[:path], name)
@@ -149,14 +149,14 @@ module Ace
                 category: :config,
                 level: :info,
                 message: "#{name}: using gem default config",
-                details: { validator: name, source: :gem_defaults, path: config[:path] }
+                details: {validator: name, source: :gem_defaults, path: config[:path]}
               )
             when :none
               results << DiagnosticResult.new(
                 category: :config,
                 level: :info,
                 message: "#{name}: using tool defaults (no config file)",
-                details: { validator: name, source: :none }
+                details: {validator: name, source: :none}
               )
             end
           end
@@ -171,37 +171,36 @@ module Ace
           return [] unless @groups
 
           results = []
-          resolver = Molecules::GroupResolver.new(@groups)
 
           # Check for default group
-          unless @groups.key?(:default) || @groups.key?('default')
+          unless @groups.key?(:default) || @groups.key?("default")
             results << DiagnosticResult.new(
               category: :pattern,
               level: :warning,
               message: "No 'default' group defined - some files may not be matched",
-              details: { issue: :no_default_group }
+              details: {issue: :no_default_group}
             )
           end
 
           # Check for overlapping patterns (info only)
           all_patterns = []
           @groups.each do |name, config|
-            patterns = config[:patterns] || config['patterns'] || []
+            patterns = config[:patterns] || config["patterns"] || []
             patterns.each do |pattern|
-              all_patterns << { group: name, pattern: pattern }
+              all_patterns << {group: name, pattern: pattern}
             end
           end
 
           # Info about configured groups
           @groups.each do |name, config|
-            validators = config[:validators] || config['validators'] || []
-            patterns = config[:patterns] || config['patterns'] || []
+            validators = config[:validators] || config["validators"] || []
+            patterns = config[:patterns] || config["patterns"] || []
 
             results << DiagnosticResult.new(
               category: :pattern,
               level: :info,
-              message: "Group '#{name}': #{validators.join(', ')} for #{patterns.size} pattern(s)",
-              details: { group: name, validators: validators, pattern_count: patterns.size }
+              message: "Group '#{name}': #{validators.join(", ")} for #{patterns.size} pattern(s)",
+              details: {group: name, validators: validators, pattern_count: patterns.size}
             )
           end
 
@@ -243,10 +242,10 @@ module Ace
           validators = Set.new
 
           @groups.each_value do |config|
-            (config[:validators] || config['validators'] || []).each do |v|
+            (config[:validators] || config["validators"] || []).each do |v|
               validators << v.to_sym
             end
-            (config[:fallback_validators] || config['fallback_validators'] || []).each do |v|
+            (config[:fallback_validators] || config["fallback_validators"] || []).each do |v|
               validators << v.to_sym
             end
           end
@@ -268,21 +267,21 @@ module Ace
             category: :config,
             level: :error,
             message: "#{validator_name}: YAML syntax error in #{path}: #{e.message}",
-            details: { validator: validator_name, path: path, error: e.message, line: e.line, column: e.column }
+            details: {validator: validator_name, path: path, error: e.message, line: e.line, column: e.column}
           )
         rescue Psych::BadAlias => e
           DiagnosticResult.new(
             category: :config,
             level: :error,
             message: "#{validator_name}: YAML alias error in #{path}: #{e.message}",
-            details: { validator: validator_name, path: path, error: e.message }
+            details: {validator: validator_name, path: path, error: e.message}
           )
         rescue Errno::ENOENT, Errno::EACCES => e
           DiagnosticResult.new(
             category: :config,
             level: :warning,
             message: "#{validator_name}: Could not read #{path}: #{e.message}",
-            details: { validator: validator_name, path: path, error: e.message }
+            details: {validator: validator_name, path: path, error: e.message}
           )
         end
       end

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/kramdown_parser'
-require_relative '../models/lint_result'
-require_relative '../models/validation_error'
+require_relative "../atoms/kramdown_parser"
+require_relative "../models/lint_result"
+require_relative "../models/validation_error"
 
 module Ace
   module Lint
@@ -22,7 +22,7 @@ module Ace
             success: false,
             errors: [Models::ValidationError.new(message: "File not found: #{file_path}")]
           )
-        rescue StandardError => e
+        rescue => e
           Models::LintResult.new(
             file_path: file_path,
             success: false,
@@ -73,26 +73,26 @@ module Ace
             if line.match?(/^\#{1,6}\s+\S/) && next_line && !next_line.strip.empty?
               warnings << Models::ValidationError.new(
                 line: line_num,
-                message: 'Missing blank line after heading',
+                message: "Missing blank line after heading",
                 severity: :warning
               )
             end
 
             # Check: blank line before lists (unless first line or after another list item)
             prev_line = idx.positive? ? lines[idx - 1] : nil
-            if line.match?(/^[\*\-]\s+\S/) && prev_line && !prev_line.strip.empty? && !prev_line.match?(/^[\*\-]\s+\S/)
+            if line.match?(/^[*-]\s+\S/) && prev_line && !prev_line.strip.empty? && !prev_line.match?(/^[*-]\s+\S/)
               warnings << Models::ValidationError.new(
                 line: line_num,
-                message: 'Missing blank line before list',
+                message: "Missing blank line before list",
                 severity: :warning
               )
             end
 
             # Check: blank line after lists
-            if prev_line&.match?(/^[\*\-]\s+\S/) && !line.match?(/^[\*\-]\s+\S/) && !line.strip.empty?
+            if prev_line&.match?(/^[*-]\s+\S/) && !line.match?(/^[*-]\s+\S/) && !line.strip.empty?
               warnings << Models::ValidationError.new(
                 line: line_num,
-                message: 'Missing blank line after list',
+                message: "Missing blank line after list",
                 severity: :warning
               )
             end
@@ -101,7 +101,7 @@ module Ace
             if line.match?(/^```/) && prev_line && !prev_line.strip.empty?
               warnings << Models::ValidationError.new(
                 line: line_num,
-                message: 'Missing blank line before code block',
+                message: "Missing blank line before code block",
                 severity: :warning
               )
             end
@@ -110,7 +110,7 @@ module Ace
             if prev_line&.match?(/^```$/) && !line.strip.empty?
               warnings << Models::ValidationError.new(
                 line: line_num,
-                message: 'Missing blank line after code block',
+                message: "Missing blank line after code block",
                 severity: :warning
               )
             end
@@ -119,7 +119,7 @@ module Ace
           # Check: file should end with newline
           unless content.end_with?("\n")
             warnings << Models::ValidationError.new(
-              message: 'Missing trailing newline at end of file',
+              message: "Missing trailing newline at end of file",
               severity: :warning
             )
           end

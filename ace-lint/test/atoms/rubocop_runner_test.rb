@@ -8,27 +8,19 @@ class Ace::Lint::Atoms::RuboCopRunnerTest < Minitest::Test
     Ace::Lint::Atoms::RuboCopRunner.reset_availability_cache!
   end
 
-  # Helper to stub Open3.capture3 for testing
-  # Handles both 'which rubocop' (for availability) and actual rubocop commands
-  def stub_rubocop_run(output: "", stderr: "", exit_status: 0, which_success: true)
+  # Helper to stub availability check and Open3.capture3 for testing
+  # Uses system_has_command? stub for availability and Open3.capture3 for actual linting
+  def stub_rubocop_run(output: "", stderr: "", exit_status: 0, available: true)
     mock_status = Object.new
     mock_status.define_singleton_method(:success?) { exit_status == 0 }
     mock_status.define_singleton_method(:exitstatus) { exit_status }
 
-    mock_which_status = Object.new
-    mock_which_status.define_singleton_method(:success?) { which_success }
-
-    Open3.stub(:capture3, ->(*args) {
-      # First call is typically 'which rubocop' for availability check
-      # Return success for which command (controlled by which_success parameter)
-      if args.first == 'which' && args[1] == 'rubocop'
-        ["", "", mock_which_status]
-      else
-        # RuboCop command
-        [output, stderr, mock_status]
+    # Stub the availability check
+    Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, available) do
+      # Stub Open3.capture3 for the actual linting command
+      Open3.stub(:capture3, ->(*_args) { [output, stderr, mock_status] }) do
+        yield
       end
-    }) do
-      yield
     end
   end
 
@@ -39,13 +31,13 @@ class Ace::Lint::Atoms::RuboCopRunnerTest < Minitest::Test
   end
 
   def test_available_returns_false_when_rubocop_missing
-    stub_rubocop_run(exit_status: 1, which_success: false) do
+    stub_rubocop_run(exit_status: 1, available: false) do
       refute Ace::Lint::Atoms::RuboCopRunner.available?
     end
   end
 
   def test_run_returns_unavailable_result_when_rubocop_missing
-    stub_rubocop_run(exit_status: 1, which_success: false) do
+    stub_rubocop_run(exit_status: 1, available: false) do
       result = Ace::Lint::Atoms::RuboCopRunner.run("test.rb")
       refute result[:success]
       assert_match(/No Ruby linter available/, result[:errors].first[:message])
@@ -83,13 +75,13 @@ class Ace::Lint::Atoms::RuboCopRunnerTest < Minitest::Test
               "severity" => "convention",
               "message" => "Missing frozen string literal comment",
               "cop_name" => "Style/FrozenStringLiteralComment",
-              "location" => { "line" => 1, "column" => 0 }
+              "location" => {"line" => 1, "column" => 0}
             },
             {
               "severity" => "error",
               "message" => "Unexpected token",
               "cop_name" => "Syntax",
-              "location" => { "line" => 5, "column" => 10 }
+              "location" => {"line" => 5, "column" => 10}
             }
           ]
         }
@@ -180,20 +172,20 @@ class Ace::Lint::Atoms::RuboCopRunnerTest < Minitest::Test
       Ace::Lint::Atoms::RuboCopRunner.run("test.rb", fix: true)
     end
 
-    # Verify --auto-correct is in the command args (RuboCop's flag for fix)
-    # called_with is the full args array, check if it includes --auto-correct
-    assert_includes called_with, "--auto-correct"
+    # Verify --autocorrect is in the command args (RuboCop's flag for fix)
+    # called_with is the full args array, check if it includes --autocorrect
+    assert_includes called_with, "--autocorrect"
   end
 
   def test_build_command_includes_autocorrect_flag
     cmd = Ace::Lint::Atoms::RuboCopRunner.build_command(["test.rb"], fix: true)
-    assert_includes cmd, "--auto-correct"
+    assert_includes cmd, "--autocorrect"
     assert_includes cmd, "test.rb"
   end
 
   def test_build_command_without_fix
     cmd = Ace::Lint::Atoms::RuboCopRunner.build_command(["test.rb"], fix: false)
-    refute_includes cmd, "--auto-correct"
+    refute_includes cmd, "--autocorrect"
     assert_includes cmd, "test.rb"
   end
 
@@ -217,13 +209,13 @@ class Ace::Lint::Atoms::RuboCopRunnerTest < Minitest::Test
               "severity" => "convention",
               "message" => "Missing frozen string literal comment",
               "cop_name" => "Style/FrozenStringLiteralComment",
-              "location" => { "line" => 1, "column" => 0 }
+              "location" => {"line" => 1, "column" => 0}
             },
             {
               "severity" => "warning",
               "message" => "Useless assignment to variable",
               "cop_name" => "Lint/UselessAssignment",
-              "location" => { "line" => 10, "column" => 5 }
+              "location" => {"line" => 10, "column" => 5}
             }
           ]
         }
@@ -255,7 +247,7 @@ class Ace::Lint::Atoms::RuboCopRunnerTest < Minitest::Test
               "severity" => "convention",
               "message" => "Missing frozen string literal comment",
               "cop_name" => "Style/FrozenStringLiteralComment",
-              "location" => { "line" => 1, "column" => 0 }
+              "location" => {"line" => 1, "column" => 0}
             }
           ]
         }

@@ -2,7 +2,7 @@
 
 require "dry/cli"
 require "ace/core/cli/dry_cli/base"
-require_relative '../../organisms/lint_doctor'
+require_relative "../../organisms/lint_doctor"
 
 module Ace
   module Lint
@@ -11,6 +11,11 @@ module Ace
         # Doctor command for diagnosing lint configuration health
         class Doctor < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+
+          # Exit codes for diagnostic results
+          EXIT_HEALTHY = 0  # No issues found
+          EXIT_WARNINGS = 1  # Warnings present
+          EXIT_ERRORS = 2  # Errors present
 
           desc <<~DESC.strip
             Check linting configuration health
@@ -30,8 +35,8 @@ module Ace
           DESC
 
           example [
-            '                    # Check configuration health',
-            '--verbose           # Show all diagnostics including info'
+            "                    # Check configuration health",
+            "--verbose           # Show all diagnostics including info"
           ]
 
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show all diagnostics including info"
@@ -52,11 +57,11 @@ module Ace
 
             # Return exit code
             if doctor.errors?
-              2
+              EXIT_ERRORS
             elsif doctor.warnings?
-              1
+              EXIT_WARNINGS
             else
-              0
+              EXIT_HEALTHY
             end
           end
 
@@ -124,15 +129,15 @@ module Ace
             parts << "#{infos} OK" if infos > 0
 
             status = if errors > 0
-                       "Configuration has issues"
-                     elsif warnings > 0
-                       "Configuration has warnings"
-                     else
-                       "Configuration looks healthy"
-                     end
+              "Configuration has issues"
+            elsif warnings > 0
+              "Configuration has warnings"
+            else
+              "Configuration looks healthy"
+            end
 
             puts "Summary: #{status}"
-            puts "         #{parts.join(', ')}"
+            puts "         #{parts.join(", ")}"
           end
         end
       end

@@ -2,8 +2,10 @@
 
 require "dry/cli"
 require "ace/core/cli/dry_cli/base"
-require_relative '../../organisms/lint_orchestrator'
-require_relative '../../organisms/result_reporter'
+require_relative "../../atoms/validator_registry"
+require_relative "../../organisms/lint_orchestrator"
+require_relative "../../organisms/result_reporter"
+require_relative "../../organisms/report_generator"
 
 module Ace
   module Lint
@@ -40,14 +42,14 @@ module Ace
           # Examples shown in help output
           # Note: dry-cli automatically prefixes with "ace-lint lint"
           example [
-            'README.md                    # Auto-detect type from extension',
-            '--fix README.md              # Auto-fix and format',
-            '--type yaml config.yml       # Explicit type specification',
-            '--type ruby lib/file.rb      # Lint Ruby file',
-            'docs/**/*.md --format        # Format with kramdown',
-            'file1.md file2.rb --fix      # Multiple files with options',
-            '**/*.rb --quiet              # Glob pattern with options',
-            '**/*.rb --validators standardrb,rubocop  # Run multiple validators'
+            "README.md                    # Auto-detect type from extension",
+            "--fix README.md              # Auto-fix and format",
+            "--type yaml config.yml       # Explicit type specification",
+            "--type ruby lib/file.rb      # Lint Ruby file",
+            "docs/**/*.md --format        # Format with kramdown",
+            "file1.md file2.rb --fix      # Multiple files with options",
+            "**/*.rb --quiet              # Glob pattern with options",
+            "**/*.rb --validators standardrb,rubocop  # Run multiple validators"
           ]
 
           # Define positional arguments for file paths
@@ -60,6 +62,7 @@ module Ace
           option :type, type: :string, aliases: %w[-t], desc: "File type (markdown, yaml, ruby, frontmatter)"
           option :line_width, type: :integer, desc: "Line width for formatting (default: 120)"
           option :validators, type: :string, desc: "Comma-separated list of validators (e.g., standardrb,rubocop)"
+          option :no_report, type: :boolean, desc: "Disable JSON report generation"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress detailed output"
@@ -67,6 +70,10 @@ module Ace
           option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
           def call(**options)
+            # Reset availability caches to ensure fresh tool detection per invocation
+            # This handles cases where tools are installed/removed during long-lived sessions
+            Ace::Lint::Atoms::ValidatorRegistry.reset_all_caches!
+
             # Extract files array from options (dry-cli passes it as :files key)
             files = options[:files] || []
 
@@ -79,8 +86,8 @@ module Ace
 
             # Validate inputs
             if files.empty?
-              puts 'Error: No files specified'
-              puts 'Usage: ace-lint [FILES...] [OPTIONS]'
+              puts "Error: No files specified"
+              puts "Usage: ace-lint [FILES...] [OPTIONS]"
               return 1
             end
 
@@ -88,7 +95,7 @@ module Ace
             expanded_paths = expand_file_paths(files)
 
             if expanded_paths.empty?
-              puts 'Error: No files found matching the given patterns'
+              puts "Error: No files found matching the given patterns"
               return 1
             end
 
@@ -102,15 +109,42 @@ module Ace
             # Lint files
             results = orchestrator.lint_files(expanded_paths, options: lint_options)
 
+            # Generate report unless --no-report flag is set
+            report_dir = nil
+            report_files = nil
+            unless clean_options[:no_report]
+              project_root = find_project_root
+              report_result = Organisms::ReportGenerator.generate(
+                results,
+                project_root: project_root,
+                options: lint_options
+              )
+              if report_result[:success]
+                report_dir = report_result[:dir]
+                report_files = report_result[:files]
+              end
+            end
+
             # Report results
             verbose = !clean_options[:quiet]
-            Organisms::ResultReporter.report(results, verbose: verbose)
+            Organisms::ResultReporter.report(results, verbose: verbose, report_dir: report_dir, report_files: report_files)
 
             # Return exit code
             Organisms::ResultReporter.exit_code(results)
           end
 
           private
+
+          # Find the project root directory (git root or current directory)
+          # @return [String] Project root path
+          def find_project_root
+            # Try to find git root
+            git_root = `git rev-parse --show-toplevel 2>/dev/null`.chomp
+            return git_root unless git_root.empty?
+
+            # Fall back to current directory
+            Dir.pwd
+          end
 
           # Expand file paths, handling glob patterns
           # @param paths [Array<String>] File paths or glob patterns
@@ -120,7 +154,7 @@ module Ace
 
             paths.each do |path|
               # Check if it's a glob pattern
-              if path.include?('*')
+              if path.include?("*")
                 matched_files = Dir.glob(path)
                 expanded.concat(matched_files)
               elsif File.exist?(path)
@@ -163,7 +197,7 @@ module Ace
           # @param validators_str [String] Comma-separated validator names
           # @return [Array<Symbol>] Validator names as symbols
           def parse_validators(validators_str)
-            validators_str.split(',').map { |v| v.strip.downcase.to_sym }
+            validators_str.split(",").map { |v| v.strip.downcase.to_sym }
           end
         end
       end

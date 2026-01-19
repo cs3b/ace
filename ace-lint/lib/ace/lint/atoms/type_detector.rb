@@ -6,18 +6,18 @@ module Ace
       # Pure function to detect file type from extension or content
       class TypeDetector
         BASENAME_MAP = {
-          'Gemfile' => :ruby,
-          'Rakefile' => :ruby
+          "Gemfile" => :ruby,
+          "Rakefile" => :ruby
         }.freeze
 
         EXTENSION_MAP = {
-          '.md' => :markdown,
-          '.markdown' => :markdown,
-          '.yml' => :yaml,
-          '.yaml' => :yaml,
-          '.rb' => :ruby,
-          '.rake' => :ruby,
-          '.gemspec' => :ruby
+          ".md" => :markdown,
+          ".markdown" => :markdown,
+          ".yml" => :yaml,
+          ".yaml" => :yaml,
+          ".rb" => :ruby,
+          ".rake" => :ruby,
+          ".gemspec" => :ruby
         }.freeze
 
         # Detect file type from file path and optional content
