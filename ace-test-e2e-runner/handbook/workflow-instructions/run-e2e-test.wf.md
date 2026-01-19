@@ -1,14 +1,14 @@
 ---
 workflow-id: wfi-run-e2e-test
-name: Run Manual Test
-description: Execute a manual test scenario with full agent guidance
-version: "1.0"
+name: Run E2E Test
+description: Execute an E2E test scenario with full agent guidance
+version: "1.1"
 source: ace-test-e2e-runner
 ---
 
-# Run Manual Test Workflow
+# Run E2E Test Workflow
 
-This workflow guides an agent through executing a manual test scenario.
+This workflow guides an agent through executing an E2E test scenario.
 
 ## Arguments
 
