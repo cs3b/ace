@@ -36,17 +36,31 @@ Or install directly:
 gem install ace-lint
 ```
 
-### Ruby Linting (StandardRB)
+### Ruby Linting (StandardRB with RuboCop Fallback)
 
-To lint Ruby files, install StandardRB separately:
+ace-lint supports Ruby linting with automatic tool detection:
+
+**Primary Tool: StandardRB** (preferred, zero-config)
 
 ```bash
 gem install standardrb
 ```
 
-StandardRB is a zero-config RuboCop wrapper that provides sensible defaults for Ruby style guide enforcement.
+**Fallback Tool: RuboCop** (automatically used if StandardRB is not installed)
 
-**Note**: Ruby linting is optional - ace-lint will skip Ruby files if StandardRB is not installed, showing a helpful install message.
+```bash
+gem install rubocop
+```
+
+StandardRB is a zero-config RuboCop wrapper that provides sensible defaults for Ruby style guide enforcement. When StandardRB is not installed, ace-lint automatically falls back to RuboCop using the minimal configuration in `.ace-defaults/lint/.rubocop.yml`.
+
+**Behavior:**
+
+1. **If StandardRB is installed**: Uses StandardRB (zero-config, preferred)
+2. **If StandardRB is NOT installed but RuboCop is**: Uses RuboCop as fallback
+3. **If neither is installed**: Shows helpful error message with installation instructions
+
+**Note**: Ruby linting is optional - ace-lint will show a helpful install message if neither StandardRB nor RuboCop is available.
 
 ## Quick Start
 
@@ -164,6 +178,7 @@ ace-lint version
 | `--fix` | `-f` | Auto-format with kramdown or StandardRB (Ruby files) |
 | `--format` | | Format documents with kramdown |
 | `--type TYPE` | `-t` | Specify validation type (markdown/yaml/ruby/frontmatter) |
+| `--validators LIST` | | Comma-separated list of validators (e.g., standardrb,rubocop) |
 | `--quiet` | `-q` | Suppress detailed output |
 | `--line-width NUM` | | Line width for formatting (default: 120) |
 | `--help` | `-h` | Show help message |
@@ -201,7 +216,115 @@ ace-lint docs/guide.md --type frontmatter
 
 # Quiet mode (only show summary)
 ace-lint docs/*.md --quiet
+
+# Run multiple validators on Ruby files
+ace-lint lib/**/*.rb --validators standardrb,rubocop
+
+# Check configuration health
+ace-lint doctor
 ```
+
+### Doctor Command
+
+The `doctor` command diagnoses your lint configuration health:
+
+```bash
+# Check configuration
+ace-lint doctor
+
+# Show all diagnostics (including info)
+ace-lint doctor --verbose
+
+# Show only errors and warnings
+ace-lint doctor --quiet
+```
+
+**Diagnostic Categories:**
+
+- **Validators**: Checks if StandardRB and RuboCop are installed
+- **Configuration Files**: Validates config file locations and syntax
+- **Pattern Groups**: Verifies group patterns match files in your project
+
+**Understanding Config Status:**
+
+The `doctor` command may report `:none` as the config source for StandardRB. This is expected behavior:
+
+- **StandardRB**: Uses its own built-in defaults when no `.standard.yml` config is found. The `:none` status indicates StandardRB will apply its default ruleset, which is intentional and correct.
+- **RuboCop**: Requires a `.rubocop.yml` config file for proper behavior. If RuboCop shows `:none`, consider adding a config file.
+
+**Exit Codes:**
+
+- `0`: Configuration is healthy
+- `1`: Configuration has warnings
+- `2`: Configuration has errors
+
+### Multi-Validator Architecture
+
+ace-lint supports running multiple validators on Ruby files with pattern-based configuration.
+
+**CLI Override:**
+
+Use the `--validators` flag to run specific validators:
+
+```bash
+# Run only RuboCop
+ace-lint lib/code.rb --validators rubocop
+
+# Run both StandardRB and RuboCop
+ace-lint lib/code.rb --validators standardrb,rubocop
+```
+
+**Groups Configuration:**
+
+Configure different validators for different file patterns in `.ace/lint/ruby.yml`:
+
+```yaml
+groups:
+  strict:
+    patterns:
+      - "lib/**/*.rb"
+      - "app/**/*.rb"
+    validators:
+      - standardrb
+      - rubocop
+  tests:
+    patterns:
+      - "test/**/*.rb"
+      - "spec/**/*.rb"
+    validators:
+      - rubocop
+  default:
+    patterns:
+      - "**/*.rb"
+    validators:
+      - standardrb
+    fallback_validators:
+      - rubocop
+```
+
+**Fallback Validators Behavior:**
+
+There are two types of fallback behavior in the multi-validator architecture:
+
+1. **Group-Level Fallbacks** (`fallback_validators` in config): These are explicit fallbacks you define in your groups configuration. When a primary `validators` list is specified but none of those validators are available on the system, the `fallback_validators` are used instead.
+
+2. **Automatic Chain-Level Fallback**: When StandardRB is specified but not available, ace-lint automatically falls back to RuboCop. This happens at the validator chain level and doesn't require configuration.
+
+**Example:**
+```yaml
+default:
+  patterns: ["**/*.rb"]
+  validators: [standardrb]      # Primary choice
+  fallback_validators: [rubocop] # Used if standardrb not available
+```
+
+**Pattern Specificity:**
+
+When multiple groups match a file, the most specific pattern wins:
+
+1. Exact filename match (e.g., `Rakefile`)
+2. Deeper glob path (e.g., `lib/ace/**/*.rb` > `lib/**/*.rb`)
+3. More specific directory (e.g., `lib/**/*.rb` > `**/*.rb`)
 
 ## Features
 
@@ -334,9 +457,27 @@ Bug reports and pull requests are welcome on GitHub.
 
 ## Troubleshooting
 
+### No Ruby Linter Available
+
+If you see the message `No Ruby linter available`, install either StandardRB (preferred) or RuboCop:
+
+**Option 1: Install StandardRB (recommended, zero-config)**
+
+```bash
+gem install standardrb
+```
+
+**Option 2: Install RuboCop (fallback option)**
+
+```bash
+gem install rubocop
+```
+
+ace-lint will automatically use StandardRB if available, falling back to RuboCop if StandardRB is not installed.
+
 ### StandardRB Not Found
 
-If you see the message `StandardRB is not installed`, install StandardRB:
+If you see the message `StandardRB is not installed`, but want to use StandardRB specifically:
 
 ```bash
 gem install standardrb
@@ -396,6 +537,13 @@ If batch Ruby linting fails (e.g., StandardRB crash), all Ruby files in the batc
 # Process Ruby files individually (slower, more isolated)
 ace-lint file1.rb file2.rb --no-batch
 ```
+
+**Exit Status Behavior:**
+
+Note that Ruby linters (StandardRB and RuboCop) exit with non-zero status when violations are found, even for warning-level offenses. This is by design - it indicates the code doesn't meet the style guide. ace-lint propagates this exit status:
+- Warnings only (no errors) → Exit status 1, `success: false`
+- Errors present → Exit status 1, `success: false`
+- No violations → Exit status 0, `success: true`
 
 ## License
 

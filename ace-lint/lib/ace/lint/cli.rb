@@ -15,7 +15,7 @@ module Ace
       extend Dry::CLI::Registry
 
       # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[lint].freeze
+      REGISTERED_COMMANDS = %w[lint doctor].freeze
 
       # dry-cli built-in commands (standard across all CLI gems)
       BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
@@ -71,6 +71,9 @@ module Ace
 
       # Register the lint command
       register "lint", Commands::Lint.new
+
+      # Register the doctor command
+      register "doctor", Commands::Doctor.new
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
