@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.311] - 2026-01-19
+
+### Added
+
+- **ace-git 0.9.0**: Package-based commit squashing strategy (default for monorepo)
+  - Documents one commit per package/module approach
+  - Includes package-prefixed commit message format (e.g., `feat(ace-lint): ...`)
+  - Added Strategy 1: Package-Based as default monorepo approach
+  - Renumbered existing strategies (Logical Grouping, Commit Per Feature, One Commit Per Version)
+
+### Changed
+
+- **ace-git 0.9.0**: Renamed squash-pr workflow and skill to squash-commits
+  - Workflow: `squash-pr.wf.md` → `squash-commits.wf.md`
+  - Skill: `ace:squash-pr` → `ace:squash-commits`
+  - Updated ace-git-commit path handling documentation
+    - Removed incorrect `git add` + `ace-git-commit paths` pattern
+    - Documented correct pattern: `ace-git-commit <path1> <path2> --intention "..."`
+    - Added warning about passing paths directly to ace-git-commit
+  - Clarified PR-based vs commit-range-based workflow usage methods
+  - Updated for ace-bundle integration (wfi:// protocol)
+
+## [0.9.310] - 2026-01-19
+
+### Added
+
+- **ace-lint 0.12.0**: Three-file markdown report system for workflow delegation
+  - `ok.md` - Lists files that passed with no issues
+  - `fixed.md` - Lists files that were auto-fixed (only when --fix used)
+  - `pending.md` - Groups issues by file with checkboxes for tracking
+  - Report directory output shows generated files with counts
+  - JSON report generation with timestamped directories
+
 ## [0.9.309] - 2026-01-18
 
 ### Added
