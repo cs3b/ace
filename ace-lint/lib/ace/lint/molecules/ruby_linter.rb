@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/standardrb_runner'
-require_relative '../atoms/rubocop_runner'
-require_relative '../models/lint_result'
-require_relative '../models/validation_error'
-require_relative 'validator_chain'
+require_relative "../atoms/standardrb_runner"
+require_relative "../atoms/rubocop_runner"
+require_relative "../models/lint_result"
+require_relative "../models/validation_error"
+require_relative "validator_chain"
 
 module Ace
   module Lint
@@ -25,7 +25,7 @@ module Ace
           fallback_validators = options[:fallback_validators]
 
           result, runner = run_validators([file_path], fix: fix, validators: validators,
-                                                        fallback_validators: fallback_validators)
+            fallback_validators: fallback_validators)
 
           if result[:success]
             Models::LintResult.new(
@@ -46,7 +46,7 @@ module Ace
               runner: runner
             )
           end
-        rescue StandardError => e
+        rescue => e
           Models::LintResult.new(
             file_path: file_path,
             success: false,
@@ -64,25 +64,29 @@ module Ace
         # @option options [Boolean] :fix Apply autofix
         # @option options [Array<Symbol>] :validators Specific validators to use
         # @option options [Array<Symbol>] :fallback_validators Fallback validators
+        # @option options [Boolean] :quiet Suppress chain warnings (default: false)
         # @return [Array<Models::LintResult>] Lint results for each file
         def self.lint_batch(file_paths, options: {})
           return [] if file_paths.empty?
 
           fix = options[:fix] || false
+          quiet = options[:quiet] || false
           validators = options[:validators]
           fallback_validators = options[:fallback_validators]
 
           result, runner = run_validators(file_paths, fix: fix, validators: validators,
-                                                      fallback_validators: fallback_validators)
+            fallback_validators: fallback_validators)
 
-          # Surface chain-level warnings (e.g., unavailable validators)
-          chain_warnings = result[:chain_warnings] || []
-          chain_warnings.each do |warning|
-            warn "[ace-lint] #{warning}"
+          # Surface chain-level warnings (e.g., unavailable validators) unless quiet
+          unless quiet
+            chain_warnings = result[:chain_warnings] || []
+            chain_warnings.each do |warning|
+              warn "[ace-lint] #{warning}"
+            end
           end
 
           # Group offenses by file
-          offenses_by_file = Hash.new { |h, k| h[k] = { errors: [], warnings: [] } }
+          offenses_by_file = Hash.new { |h, k| h[k] = {errors: [], warnings: []} }
 
           result[:errors].each do |offense|
             offenses_by_file[offense[:file] || :_general_][:errors] << offense
@@ -130,7 +134,7 @@ module Ace
               runner: runner
             )
           end
-        rescue StandardError => e
+        rescue => e
           # If batch fails, return individual error results for each file
           # Include error context for debugging
           warn "Ruby batch linting failed: #{e.message}" if $VERBOSE
@@ -172,7 +176,7 @@ module Ace
             result = chain.run(file_paths, fix: fix)
             # Return runners as array if multiple, or single symbol for compatibility
             runners = result[:runners] || []
-            runner = runners.size == 1 ? runners.first : runners
+            runner = (runners.size == 1) ? runners.first : runners
             return [result, runner]
           end
 

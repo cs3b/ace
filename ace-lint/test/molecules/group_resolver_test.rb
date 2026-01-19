@@ -15,8 +15,8 @@ class Ace::Lint::Molecules::GroupResolverTest < Minitest::Test
 
   def test_resolve_matches_most_specific_group
     groups = {
-      strict: { patterns: ["lib/**/*.rb"], validators: [:standardrb, :rubocop] },
-      default: { patterns: ["**/*.rb"], validators: [:standardrb] }
+      strict: {patterns: ["lib/**/*.rb"], validators: [:standardrb, :rubocop]},
+      default: {patterns: ["**/*.rb"], validators: [:standardrb]}
     }
     resolver = Ace::Lint::Molecules::GroupResolver.new(groups)
 
@@ -28,8 +28,8 @@ class Ace::Lint::Molecules::GroupResolverTest < Minitest::Test
 
   def test_resolve_falls_back_to_default
     groups = {
-      lib: { patterns: ["lib/**/*.rb"], validators: [:standardrb] },
-      default: { patterns: ["**/*.rb"], validators: [:rubocop] }
+      lib: {patterns: ["lib/**/*.rb"], validators: [:standardrb]},
+      default: {patterns: ["**/*.rb"], validators: [:rubocop]}
     }
     resolver = Ace::Lint::Molecules::GroupResolver.new(groups)
 
@@ -41,7 +41,7 @@ class Ace::Lint::Molecules::GroupResolverTest < Minitest::Test
 
   def test_resolve_returns_nil_when_no_match
     groups = {
-      lib: { patterns: ["lib/**/*.rb"], validators: [:standardrb] }
+      lib: {patterns: ["lib/**/*.rb"], validators: [:standardrb]}
       # No default group
     }
     resolver = Ace::Lint::Molecules::GroupResolver.new(groups)
@@ -53,9 +53,9 @@ class Ace::Lint::Molecules::GroupResolverTest < Minitest::Test
 
   def test_resolve_batch_groups_files_correctly
     groups = {
-      lib: { patterns: ["lib/**/*.rb"], validators: [:standardrb, :rubocop] },
-      tests: { patterns: ["test/**/*.rb"], validators: [:rubocop] },
-      default: { patterns: ["**/*.rb"], validators: [:standardrb] }
+      lib: {patterns: ["lib/**/*.rb"], validators: [:standardrb, :rubocop]},
+      tests: {patterns: ["test/**/*.rb"], validators: [:rubocop]},
+      default: {patterns: ["**/*.rb"], validators: [:standardrb]}
     }
     resolver = Ace::Lint::Molecules::GroupResolver.new(groups)
 
@@ -76,7 +76,7 @@ class Ace::Lint::Molecules::GroupResolverTest < Minitest::Test
 
   def test_resolve_batch_handles_unmatched_files
     groups = {
-      lib: { patterns: ["lib/**/*.rb"], validators: [:standardrb] }
+      lib: {patterns: ["lib/**/*.rb"], validators: [:standardrb]}
       # No default group
     }
     resolver = Ace::Lint::Molecules::GroupResolver.new(groups)
@@ -119,7 +119,7 @@ class Ace::Lint::Molecules::GroupResolverTest < Minitest::Test
 
   def test_groups_accessor_returns_normalized_groups
     groups = {
-      "test" => { "patterns" => ["test/**/*.rb"], "validators" => ["rubocop"] }
+      "test" => {"patterns" => ["test/**/*.rb"], "validators" => ["rubocop"]}
     }
     resolver = Ace::Lint::Molecules::GroupResolver.new(groups)
 

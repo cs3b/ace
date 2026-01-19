@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/type_detector'
-require_relative '../molecules/markdown_linter'
-require_relative '../molecules/yaml_linter'
-require_relative '../molecules/frontmatter_validator'
-require_relative '../molecules/kramdown_formatter'
-require_relative '../molecules/ruby_linter'
-require_relative '../molecules/group_resolver'
-require_relative '../models/lint_result'
+require_relative "../atoms/type_detector"
+require_relative "../molecules/markdown_linter"
+require_relative "../molecules/yaml_linter"
+require_relative "../molecules/frontmatter_validator"
+require_relative "../molecules/kramdown_formatter"
+require_relative "../molecules/ruby_linter"
+require_relative "../molecules/group_resolver"
+require_relative "../models/lint_result"
 
 module Ace
   module Lint
@@ -41,7 +41,7 @@ module Ace
           @results = []
 
           # Process non-Ruby files individually
-          non_ruby_files = files_by_type.reject { |type, _| type == :ruby }
+          non_ruby_files = files_by_type.except(:ruby)
           non_ruby_files.each do |type, paths|
             paths.each do |file_path|
               @results << lint_single_file_by_type(file_path, type, options: options)
@@ -215,7 +215,7 @@ module Ace
         def detect_type(file_path)
           content = begin
             File.read(file_path)
-          rescue StandardError
+          rescue
             nil
           end
           Atoms::TypeDetector.detect(file_path, content: content)

@@ -263,12 +263,12 @@ mv "${STANDARDRB_PATH}.disabled" "$STANDARDRB_PATH"
 **Steps:**
 1. Force RuboCop even when StandardRB is available
    ```bash
-   ace-lint lint --validator rubocop "$TEST_DIR/valid.rb"
+   ace-lint lint --validators rubocop "$TEST_DIR/valid.rb"
    ```
 
 2. Force StandardRB explicitly
    ```bash
-   ace-lint lint --validator standardrb "$TEST_DIR/valid.rb"
+   ace-lint lint --validators standardrb "$TEST_DIR/valid.rb"
    ```
 
 **Expected:**
@@ -386,7 +386,7 @@ echo "Cleanup complete"
 - [ ] TC-003: RuboCop fallback works when StandardRB unavailable
 - [ ] TC-004: Auto-fix modifies files and reduces issues
 - [ ] TC-005: Batch linting processes all files
-- [ ] TC-006: CLI --validator flag overrides defaults
+- [ ] TC-006: CLI --validators flag overrides defaults
 - [ ] TC-007: Configuration file overrides validator selection
 - [ ] TC-008: Group-based routing directs to correct validators
 

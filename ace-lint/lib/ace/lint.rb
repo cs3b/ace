@@ -1,42 +1,46 @@
 # frozen_string_literal: true
 
-require_relative 'lint/version'
+require_relative "lint/version"
 
 # Load ace-config for configuration cascade management
-require 'ace/support/config'
+require "ace/support/config"
+
+# Load ace-support-timestamp for compact ID generation
+require "ace/support/timestamp"
 
 # Models
-require_relative 'lint/models/validation_error'
-require_relative 'lint/models/lint_result'
+require_relative "lint/models/validation_error"
+require_relative "lint/models/lint_result"
 
 # Atoms
-require_relative 'lint/atoms/type_detector'
-require_relative 'lint/atoms/kramdown_parser'
-require_relative 'lint/atoms/yaml_parser'
-require_relative 'lint/atoms/frontmatter_extractor'
-require_relative 'lint/atoms/pattern_matcher'
-require_relative 'lint/atoms/validator_registry'
-require_relative 'lint/atoms/config_locator'
+require_relative "lint/atoms/type_detector"
+require_relative "lint/atoms/kramdown_parser"
+require_relative "lint/atoms/yaml_parser"
+require_relative "lint/atoms/frontmatter_extractor"
+require_relative "lint/atoms/pattern_matcher"
+require_relative "lint/atoms/validator_registry"
+require_relative "lint/atoms/config_locator"
 
 # Molecules
-require_relative 'lint/molecules/markdown_linter'
-require_relative 'lint/molecules/yaml_linter'
-require_relative 'lint/molecules/frontmatter_validator'
-require_relative 'lint/molecules/kramdown_formatter'
-require_relative 'lint/molecules/group_resolver'
-require_relative 'lint/molecules/validator_chain'
+require_relative "lint/molecules/markdown_linter"
+require_relative "lint/molecules/yaml_linter"
+require_relative "lint/molecules/frontmatter_validator"
+require_relative "lint/molecules/kramdown_formatter"
+require_relative "lint/molecules/group_resolver"
+require_relative "lint/molecules/validator_chain"
 
 # Organisms
-require_relative 'lint/organisms/lint_orchestrator'
-require_relative 'lint/organisms/result_reporter'
-require_relative 'lint/organisms/lint_doctor'
+require_relative "lint/organisms/lint_orchestrator"
+require_relative "lint/organisms/result_reporter"
+require_relative "lint/organisms/report_generator"
+require_relative "lint/organisms/lint_doctor"
 
 # Commands
-require_relative 'lint/cli/commands/lint'
-require_relative 'lint/cli/commands/doctor'
+require_relative "lint/cli/commands/lint"
+require_relative "lint/cli/commands/doctor"
 
 # CLI
-require_relative 'lint/cli'
+require_relative "lint/cli"
 
 module Ace
   module Lint
@@ -55,7 +59,7 @@ module Ace
     def self.config
       @config ||= begin
         gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -66,7 +70,7 @@ module Ace
         # Resolve config for lint namespace
         config = resolver.resolve_namespace("lint")
         config.data
-      rescue StandardError => e
+      rescue => e
         warn "Warning: Could not load ace-lint config: #{e.message}" if debug?
         # Fall back to gem defaults instead of empty hash to prevent silent config erasure
         load_gem_defaults_fallback("lint", "config.yml")
@@ -80,7 +84,7 @@ module Ace
     def self.kramdown_config
       @kramdown_config ||= begin
         gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -91,7 +95,7 @@ module Ace
         # Resolve kramdown-specific config
         config = resolver.resolve_namespace("lint", filename: "kramdown")
         config.data
-      rescue StandardError => e
+      rescue => e
         warn "Warning: Could not load kramdown config: #{e.message}" if debug?
         # Fall back to gem defaults instead of empty hash to prevent silent config erasure
         load_gem_defaults_fallback("lint", "kramdown.yml")
@@ -105,7 +109,7 @@ module Ace
     def self.ruby_config
       @ruby_config ||= begin
         gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-                   File.expand_path("../..", __dir__)
+          File.expand_path("../..", __dir__)
 
         resolver = Ace::Support::Config.create(
           config_dir: ".ace",
@@ -116,7 +120,7 @@ module Ace
         # Resolve ruby-specific config
         config = resolver.resolve_namespace("lint", filename: "ruby")
         config.data
-      rescue StandardError => e
+      rescue => e
         warn "Warning: Could not load ruby config: #{e.message}" if debug?
         # Fall back to gem defaults instead of empty hash to prevent silent config erasure
         load_gem_defaults_fallback("lint", "ruby.yml")
@@ -138,13 +142,13 @@ module Ace
     # @return [Hash] Defaults hash or empty hash if defaults also fail
     def self.load_gem_defaults_fallback(namespace, filename)
       gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-                 File.expand_path("../..", __dir__)
+        File.expand_path("../..", __dir__)
       defaults_path = File.join(gem_root, ".ace-defaults", namespace, filename)
 
       return {} unless File.exist?(defaults_path)
 
       YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-    rescue StandardError
+    rescue
       {} # Only return empty hash if even defaults fail to load
     end
     private_class_method :load_gem_defaults_fallback
