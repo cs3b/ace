@@ -36,9 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial package structure for manual test support
-- Test scenario template (`test-scenario.template.md`)
-- Workflow for executing manual tests (`run-e2e-test.wf.md`)
-- Guide documenting manual testing conventions (`manual-testing.g.md`)
+- Initial package structure for E2E test support
+- Test scenario template (`test-e2e.template.md`)
+- Workflow for executing E2E tests (`run-e2e-test.wf.md`)
+- Guide documenting E2E testing conventions (`e2e-testing.g.md`)
 - Default configuration for test paths and patterns
-- Skill for invoking manual tests (`/ace:run-e2e-test`)
+- Skill for invoking E2E tests (`/ace:run-e2e-test`)
