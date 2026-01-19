@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-01-19
+
+### Added
+
+- E2E test management skills for lifecycle orchestration:
+  - `/ace:review-e2e-tests` - Analyze test health, coverage gaps, and outdated scenarios
+  - `/ace:create-e2e-test` - Create new test scenarios from template
+  - `/ace:manage-e2e-tests` - Orchestrate full lifecycle (review, create, run)
+- Workflow instructions for all three new skills
+- Protocol source registrations (wfi://, guide://, tmpl://)
+- PROJECT_ROOT detection in workflow and template
+- Gem entry point for programmatic access
+- Expanded best practices section with learnings:
+  - Environment setup guidance (PROJECT_ROOT capture)
+  - Tool version manager workarounds (mise shim handling)
+  - Test data and cleanup patterns
+
 ### Changed
 
 - Renamed package from `ace-support-test-manual` to `ace-test-e2e-runner`
@@ -16,16 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Made `PACKAGE` argument optional (defaults to current directory detection)
 - Made `TEST_ID` argument optional (runs all tests in package when omitted)
 - Cleanup is now optional and configurable via `cleanup.enabled` setting
-
-### Added
-
-- Protocol source registrations (wfi://, guide://, tmpl://)
-- PROJECT_ROOT detection in workflow and template
-- Gem entry point for programmatic access
-- Expanded best practices section with learnings:
-  - Environment setup guidance (PROJECT_ROOT capture)
-  - Tool version manager workarounds (mise shim handling)
-  - Test data and cleanup patterns
 
 ### Improved
 
