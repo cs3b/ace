@@ -13,8 +13,9 @@ module Ace
       # @attr formatted [Boolean] Whether file was formatted
       # @attr skipped [Boolean] Whether file was skipped (unsupported type)
       # @attr skip_reason [String] Reason for skipping (when skipped is true)
-      LintResult = Struct.new(:file_path, :success, :errors, :warnings, :formatted, :skipped, :skip_reason, keyword_init: true) do
-        def initialize(file_path:, success: true, errors: [], warnings: [], formatted: false, skipped: false, skip_reason: "Unsupported file type")
+      # @attr runner [Symbol] Which linter was used (:standardrb, :rubocop, nil)
+      LintResult = Struct.new(:file_path, :success, :errors, :warnings, :formatted, :skipped, :skip_reason, :runner, keyword_init: true) do
+        def initialize(file_path:, success: true, errors: [], warnings: [], formatted: false, skipped: false, skip_reason: "Unsupported file type", runner: nil)
           super
         end
 

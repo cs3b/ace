@@ -14,19 +14,26 @@ require_relative 'lint/atoms/type_detector'
 require_relative 'lint/atoms/kramdown_parser'
 require_relative 'lint/atoms/yaml_parser'
 require_relative 'lint/atoms/frontmatter_extractor'
+require_relative 'lint/atoms/pattern_matcher'
+require_relative 'lint/atoms/validator_registry'
+require_relative 'lint/atoms/config_locator'
 
 # Molecules
 require_relative 'lint/molecules/markdown_linter'
 require_relative 'lint/molecules/yaml_linter'
 require_relative 'lint/molecules/frontmatter_validator'
 require_relative 'lint/molecules/kramdown_formatter'
+require_relative 'lint/molecules/group_resolver'
+require_relative 'lint/molecules/validator_chain'
 
 # Organisms
 require_relative 'lint/organisms/lint_orchestrator'
 require_relative 'lint/organisms/result_reporter'
+require_relative 'lint/organisms/lint_doctor'
 
 # Commands
 require_relative 'lint/cli/commands/lint'
+require_relative 'lint/cli/commands/doctor'
 
 # CLI
 require_relative 'lint/cli'
@@ -91,10 +98,36 @@ module Ace
       end
     end
 
+    # Load Ruby-specific configuration using ace-config cascade
+    # Follows ADR-022: Configuration Default and Override Pattern
+    # Config location: .ace/lint/ruby.yml
+    # @return [Hash] Ruby configuration hash with defaults merged
+    def self.ruby_config
+      @ruby_config ||= begin
+        gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
+                   File.expand_path("../..", __dir__)
+
+        resolver = Ace::Support::Config.create(
+          config_dir: ".ace",
+          defaults_dir: ".ace-defaults",
+          gem_path: gem_root
+        )
+
+        # Resolve ruby-specific config
+        config = resolver.resolve_namespace("lint", filename: "ruby")
+        config.data
+      rescue StandardError => e
+        warn "Warning: Could not load ruby config: #{e.message}" if debug?
+        # Fall back to gem defaults instead of empty hash to prevent silent config erasure
+        load_gem_defaults_fallback("lint", "ruby.yml")
+      end
+    end
+
     # Reset config cache (useful for testing)
     def self.reset_config!
       @config = nil
       @kramdown_config = nil
+      @ruby_config = nil
     end
 
     # Load gem defaults directly as fallback when cascade resolution fails

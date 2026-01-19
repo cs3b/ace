@@ -6,6 +6,43 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-01-18
+
+### Added
+- Multi-validator architecture for running multiple linters per file type (task 215.03)
+  - New `PatternMatcher` atom for glob pattern matching with specificity scoring
+  - New `ValidatorRegistry` atom for mapping tool names to runner classes
+  - New `ConfigLocator` atom for config file resolution with precedence rules
+  - New `GroupResolver` molecule for pattern-based validator group resolution
+  - New `ValidatorChain` molecule for executing multiple validators with deduplication
+  - New `LintDoctor` organism for configuration health diagnostics
+  - New `ace-lint doctor` CLI command for checking configuration health
+  - New `--validators` CLI flag for specifying validators (e.g., `--validators standardrb,rubocop`)
+  - Pattern-based groups configuration in `ruby.yml` for different validators per file pattern
+  - Result deduplication when running multiple validators on same files
+
+### Changed
+- Updated `RubyLinter` to support ValidatorChain for multi-validator execution
+- Updated `LintOrchestrator` with group-aware routing for Ruby files
+- Updated `ruby.yml` configuration schema with groups-based validator configuration
+
+## [0.10.0] - 2026-01-17
+
+### Added
+- RuboCop fallback support for Ruby linting when StandardRB is unavailable (task 216)
+  - Automatic tool detection: tries StandardRB first, falls back to RuboCop
+  - New `RuboCopRunner` atom mirroring `StandardrbRunner` interface
+  - Updated `RubyLinter` molecule with fallback logic
+  - Minimal `.rubocop.yml` configuration in `.ace-defaults/lint/`
+  - Clear error messages when neither tool is installed
+
+### Changed
+- Updated README with Ruby linting fallback documentation
+  - Documented StandardRB as preferred (zero-config) option
+  - Documented RuboCop as automatic fallback
+  - Added troubleshooting section for "No Ruby linter available" message
+- Updated `.ace-defaults/lint/ruby.yml` with `fallback_linter: rubocop` configuration
+
 ## [0.9.1] - 2026-01-16
 
 ### Changed

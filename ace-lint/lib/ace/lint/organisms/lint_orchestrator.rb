@@ -6,17 +6,22 @@ require_relative '../molecules/yaml_linter'
 require_relative '../molecules/frontmatter_validator'
 require_relative '../molecules/kramdown_formatter'
 require_relative '../molecules/ruby_linter'
+require_relative '../molecules/group_resolver'
 require_relative '../models/lint_result'
 
 module Ace
   module Lint
     module Organisms
       # Orchestrates linting of multiple files
+      # Supports group-based validator configuration for Ruby files
       class LintOrchestrator
         attr_reader :results
 
-        def initialize
+        # Initialize orchestrator
+        # @param ruby_groups [Hash, nil] Ruby validator groups configuration
+        def initialize(ruby_groups: nil)
           @results = []
+          @group_resolver = ruby_groups ? Molecules::GroupResolver.new(ruby_groups) : nil
         end
 
         # Lint multiple files
@@ -26,6 +31,7 @@ module Ace
         # @option options [Boolean] :fix Apply fixes
         # @option options [Boolean] :format Format files
         # @option options [Hash] :kramdown_options Kramdown options
+        # @option options [Array<Symbol>] :validators CLI override for validators
         # @return [Array<Models::LintResult>] Results for all files
         def lint_files(file_paths, options: {})
           # Group files by type for batch processing
@@ -42,7 +48,7 @@ module Ace
             end
           end
 
-          # Batch process Ruby files
+          # Batch process Ruby files (with group-aware routing)
           if files_by_type[:ruby]&.any?
             ruby_results = batch_lint_ruby(files_by_type[:ruby], options: options)
             @results.concat(ruby_results)
@@ -133,24 +139,72 @@ module Ace
         # (markdown, YAML) are processed individually due to different validation
         # requirements and tool limitations.
         #
+        # When group configuration is available, files are grouped by validator
+        # configuration and each group is processed separately.
+        #
         # @param file_paths [Array<String>] Paths to Ruby files
         # @param options [Hash] Linting options
         # @return [Array<Models::LintResult>] Results for each file
         def batch_lint_ruby(file_paths, options: {})
           return [] if file_paths.empty?
 
+          # CLI --validators flag takes highest precedence
+          cli_validators = options[:validators]
+
           # Check if formatting is requested (not supported for batch)
           needs_formatting = options[:fix] || options[:format]
+
+          # Use group-based routing if resolver is available and no CLI override
+          if @group_resolver && !cli_validators
+            return batch_lint_ruby_by_groups(file_paths, options: options, needs_formatting: needs_formatting)
+          end
+
+          # Standard batch processing (with optional CLI validator override)
+          lint_options = options.dup
+          lint_options[:validators] = cli_validators if cli_validators
 
           if needs_formatting
             # Fall back to individual file processing for formatting
             file_paths.map do |file_path|
-              Molecules::RubyLinter.lint(file_path, options: options)
+              Molecules::RubyLinter.lint(file_path, options: lint_options)
             end
           else
             # Use batch processing for better performance
-            Molecules::RubyLinter.lint_batch(file_paths, options: options)
+            Molecules::RubyLinter.lint_batch(file_paths, options: lint_options)
           end
+        end
+
+        # Batch lint Ruby files grouped by validator configuration
+        # @param file_paths [Array<String>] Paths to Ruby files
+        # @param options [Hash] Linting options
+        # @param needs_formatting [Boolean] Whether formatting is needed
+        # @return [Array<Models::LintResult>] Results for each file
+        def batch_lint_ruby_by_groups(file_paths, options:, needs_formatting:)
+          grouped = @group_resolver.resolve_batch(file_paths)
+          results = []
+
+          grouped.each do |_group_name, group_data|
+            group_files = group_data[:files]
+            next if group_files.empty?
+
+            # Build options with group validators
+            group_options = options.dup
+            group_options[:validators] = group_data[:validators] unless group_data[:validators].empty?
+            group_options[:fallback_validators] = group_data[:fallback_validators]
+            group_options[:config_path] = group_data[:config_path] if group_data[:config_path]
+
+            if needs_formatting
+              # Individual file processing for formatting
+              group_files.each do |file_path|
+                results << Molecules::RubyLinter.lint(file_path, options: group_options)
+              end
+            else
+              # Batch processing for performance
+              results.concat(Molecules::RubyLinter.lint_batch(group_files, options: group_options))
+            end
+          end
+
+          results
         end
 
         def lint_single_file(file_path, options: {})
