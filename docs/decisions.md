@@ -61,7 +61,7 @@ This document provides actionable decisions from Architecture Decision Records (
 - Use `Ace::Config::Models::Config.wrap(defaults, user_config)` for merging defaults with overrides
 - Provide `reset_config!` method for test isolation
 - Support backward compatibility for renamed keys with deprecation path
-**Status**: Task 143 completed December 2025 - all applicable packages now compliant (ace-taskflow, ace-nav, ace-test-runner, ace-git-commit, ace-docs, ace-lint, ace-prompt, ace-review, ace-search). ace-git and ace-git-secrets were already compliant. ace-llm packages deferred (ENV-based). Task 157 extracted ace-config gem from ace-support-core.
+**Status**: Task 143 completed December 2025 - all applicable packages now compliant (ace-taskflow, ace-nav, ace-test-runner, ace-git-commit, ace-docs, ace-lint, ace-prompt-prep, ace-review, ace-search). ace-git and ace-git-secrets were already compliant. ace-llm packages deferred (ENV-based). Task 157 extracted ace-config gem from ace-support-core.
 **Details**: [ADR-022](decisions/ADR-022-configuration-default-and-override-pattern.md) (supersedes ADR-019)
 
 ## Gem Architecture Patterns

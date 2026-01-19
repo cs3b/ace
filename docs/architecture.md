@@ -87,7 +87,7 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-lint**: Code quality linting (markdown, YAML, frontmatter)
 * **ace-llm**: Multi-provider AI model integration with CLI-based providers
 * **ace-nav**: Resource discovery and navigation with wfi:// protocol
-* **ace-prompt**: Prompt workspace with archiving, LLM enhancement, and task integration
+* **ace-prompt-prep**: Prompt workspace with archiving, LLM enhancement, and task integration
 * **ace-review**: Preset-based code review with LLM-powered analysis
 * **ace-search**: Unified file and content search with DWIM pattern matching
 * **ace-taskflow**: Task, release, and idea management with presets

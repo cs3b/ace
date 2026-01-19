@@ -109,8 +109,8 @@ test_suite:
       group: tools
       priority: 3
 
-    - name: ace-prompt
-      path: ace-prompt
+    - name: ace-prompt-prep
+      path: ace-prompt-prep
       group: tools
       priority: 3
 

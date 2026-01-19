@@ -30,7 +30,7 @@ All tools below are run from your terminal using the `ace-` prefix.
 | **ace-search** | Search code/files | `ace-search "pattern"`, `ace-search "*.rb" --file` |
 | **ace-taskflow** | Task management | `ace-taskflow task 018`, `ace-taskflow tasks all` |
 | **ace-git-worktree** | Worktree management | `ace-git-worktree create --task 081`, `ace-git-worktree create --pr 26`, `ace-git-worktree list`, `ace-git-worktree switch 081` |
-| **ace-prompt** | Prompt workspace | `ace-prompt`, `ace-prompt --enhance`, `ace-prompt --task 121` |
+| **ace-prompt-prep** | Prompt workspace | `ace-prompt-prep`, `ace-prompt-prep --enhance`, `ace-prompt-prep --task 121` |
 | **ace-test** | Run tests | `ace-test`, `ace-test atoms`, `ace-test ace-bundle`, `ace-test ace-nav atoms` |
 
 ## Quick Examples
@@ -120,10 +120,10 @@ ace-test ace-search/test/atoms/foo_test.rb  # Single file (from outside with pac
 ace-test ace-support-nav/test/foo_test.rb:42    # Single test at line number
 
 # Prompt management
-ace-prompt                              # Process and archive current prompt
-ace-prompt --enhance                    # Enhance prompt via LLM before output
-ace-prompt --task 121                   # Use task-specific prompts
-ace-prompt setup --task 117             # Initialize prompt in task directory
+ace-prompt-prep                              # Process and archive current prompt
+ace-prompt-prep --enhance                    # Enhance prompt via LLM before output
+ace-prompt-prep --task 121                   # Use task-specific prompts
+ace-prompt-prep setup --task 117             # Initialize prompt in task directory
 ```
 
 ## Task Lookup
