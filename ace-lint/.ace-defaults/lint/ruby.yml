@@ -1,14 +1,67 @@
 # Ruby linting configuration for ace-lint
 # Follows ADR-022 configuration pattern
+#
+# MULTI-VALIDATOR ARCHITECTURE (v0.10+)
+# =====================================
+# Configure different validators for different file patterns using groups.
+# Each group has patterns (globs) and validators (ordered list to run).
+#
+# Example custom configuration (.ace/lint/ruby.yml):
+#
+#   groups:
+#     strict:
+#       patterns:
+#         - "lib/**/*.rb"
+#         - "app/**/*.rb"
+#       validators:
+#         - standardrb
+#         - rubocop
+#     tests:
+#       patterns:
+#         - "test/**/*.rb"
+#         - "spec/**/*.rb"
+#       validators:
+#         - rubocop
+#     default:
+#       patterns:
+#         - "**/*.rb"
+#       validators:
+#         - standardrb
+#       fallback_validators:
+#         - rubocop
+#
+# Pattern Specificity:
+#   More specific patterns (deeper paths, fewer wildcards) take precedence.
+#   The 'default' group catches files not matched by other patterns.
+#
+# CLI Override:
+#   Use --validators flag to override group configuration:
+#   ace-lint **/*.rb --validators standardrb,rubocop
 
 # Ruby linting settings
 ruby:
   # Enable Ruby linting
   enabled: true
 
-  # Linter to use for Ruby files
+  # Primary linter to use for Ruby files (legacy single-linter mode)
   linter: standardrb
 
-# StandardRB is intentionally zero-config
-# No additional configuration options are available
+  # Fallback linter when primary is unavailable (legacy mode)
+  fallback_linter: rubocop
+
+# Default groups configuration (backward-compatible defaults)
+# Uses StandardRB as primary with RuboCop fallback - same as legacy behavior
+groups:
+  default:
+    patterns:
+      - "**/*.rb"
+    validators:
+      - standardrb
+    fallback_validators:
+      - rubocop
+
+# StandardRB is intentionally zero-config (preferred)
+# When StandardRB is not installed, RuboCop is used as fallback
+# RuboCop uses .ace-defaults/lint/.rubocop.yml for configuration
 # See: https://github.com/standardrb/standard
+# See: https://docs.rubocop.org/
