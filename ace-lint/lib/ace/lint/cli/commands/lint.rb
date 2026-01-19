@@ -46,7 +46,8 @@ module Ace
             '--type ruby lib/file.rb      # Lint Ruby file',
             'docs/**/*.md --format        # Format with kramdown',
             'file1.md file2.rb --fix      # Multiple files with options',
-            '**/*.rb --quiet              # Glob pattern with options'
+            '**/*.rb --quiet              # Glob pattern with options',
+            '**/*.rb --validators standardrb,rubocop  # Run multiple validators'
           ]
 
           # Define positional arguments for file paths
@@ -58,6 +59,7 @@ module Ace
           option :format, type: :boolean, desc: "Format files with kramdown"
           option :type, type: :string, aliases: %w[-t], desc: "File type (markdown, yaml, ruby, frontmatter)"
           option :line_width, type: :integer, desc: "Line width for formatting (default: 120)"
+          option :validators, type: :string, desc: "Comma-separated list of validators (e.g., standardrb,rubocop)"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress detailed output"
@@ -90,8 +92,9 @@ module Ace
               return 1
             end
 
-            # Create orchestrator
-            orchestrator = Organisms::LintOrchestrator.new
+            # Create orchestrator with ruby groups configuration
+            ruby_groups = Ace::Lint.ruby_config&.dig("groups")
+            orchestrator = Organisms::LintOrchestrator.new(ruby_groups: ruby_groups)
 
             # Prepare options
             lint_options = prepare_options(clean_options)
@@ -143,12 +146,24 @@ module Ace
             prepared[:fix] = options[:fix] if options[:fix]
             prepared[:format] = options[:format] if options[:format]
 
+            # Validators option (comma-separated list)
+            if options[:validators]
+              prepared[:validators] = parse_validators(options[:validators])
+            end
+
             # Kramdown options
             kramdown_opts = {}
             kramdown_opts[:line_width] = options[:line_width] if options[:line_width]
             prepared[:kramdown_options] = kramdown_opts unless kramdown_opts.empty?
 
             prepared
+          end
+
+          # Parse comma-separated validators string into array of symbols
+          # @param validators_str [String] Comma-separated validator names
+          # @return [Array<Symbol>] Validator names as symbols
+          def parse_validators(validators_str)
+            validators_str.split(',').map { |v| v.strip.downcase.to_sym }
           end
         end
       end
