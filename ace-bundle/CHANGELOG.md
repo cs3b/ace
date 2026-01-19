@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.1] - 2026-01-19
+
+### Added
+- Support `preset` and `presets` keys in template frontmatter (Task 217)
+  - Recognize preset/presets keys in workflow file frontmatter
+  - Process presets from frontmatter with error handling
+  - Store loaded presets and errors in bundle metadata
+
 ## [0.30.0] - 2026-01-16
 
 ### Changed
