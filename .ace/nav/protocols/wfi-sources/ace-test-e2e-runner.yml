@@ -1,0 +1,11 @@
+---
+# WFI Sources Protocol Configuration for ace-test-e2e-runner gem
+name: ace-test-e2e-runner
+type: gem
+description: E2E test workflow instructions from ace-test-e2e-runner gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true
