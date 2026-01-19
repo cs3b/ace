@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-01-19
+
+### Added
+- Package-based commit squashing strategy (default for monorepo)
+  - Documents one commit per package/module approach
+  - Includes package-prefixed commit message format (e.g., `feat(ace-lint): ...`)
+  - Added Strategy 1: Package-Based as default monorepo approach
+  - Renumbered existing strategies (Logical Grouping, Commit Per Feature, One Commit Per Version)
+
+### Changed
+- Renamed squash-pr workflow and skill to squash-commits
+  - Workflow: `squash-pr.wf.md` → `squash-commits.wf.md`
+  - Skill: `ace:squash-pr` → `ace:squash-commits`
+  - Updated ace-git-commit path handling documentation
+    - Removed incorrect `git add` + `ace-git-commit paths` pattern
+    - Documented correct pattern: `ace-git-commit <path1> <path2> --intention "..."`
+    - Added warning about passing paths directly to ace-git-commit
+  - Clarified PR-based vs commit-range-based workflow usage methods
+- Updated for ace-bundle integration
+  - Workflow integration via wfi:// protocol
+  - Improved workflow discovery and loading
+
 ## [0.8.2] - 2026-01-16
 
 ### Changed

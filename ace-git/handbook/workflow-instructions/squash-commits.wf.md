@@ -1,5 +1,5 @@
 ---
-name: squash-pr
+name: squash-commits
 allowed-tools: Bash, Read
 description: Squash commits by version for clean, maintainable history
 argument-hint: "[version]"
@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: version-based commit squashing workflow
 update:
   frequency: on-change
-  last-updated: '2026-01-11'
+  last-updated: '2026-01-19'
 ---
 
 # Version-Based Commit Squashing Workflow
@@ -194,6 +194,15 @@ git log $base_commit..HEAD --format="%B" | grep -i "BREAKING"
 
 **Best for**: Most PRs, multi-package changes, when you want logical commit organization
 
+> **Two ways to use this workflow:**
+> 1. **PR-based**: Use when preparing a PR for merge (run prerequisites to find correct base)
+> 2. **Commit-range-based**: Specify exact commit to squash from (e.g., `d833b9d17`)
+>
+> The commit-range method is useful when:
+> - You know the exact starting commit SHA
+> - Working on a branch with clear history
+> - No PR exists yet
+
 ```bash
 # Step 1: Soft reset to base (keeps all changes staged)
 git reset --soft $base_commit
@@ -204,32 +213,28 @@ git reset HEAD
 # Step 3: Stage and commit by logical path groups
 
 # Generic pattern:
-# git add <new-files-or-dirs>/ <deleted-files-or-dirs>/
-# ace-git-commit paths --intention "describe the logical change"
+# ace-git-commit <path1>/ <path2>/ ... --intention "describe the logical change"
+# Note: ace-git-commit stages the specified paths directly; no separate git add needed
 
 # Example: ace-config rename organized by package
 
 # Commit 1: The renamed gem itself (new dir + deleted dir)
-# NOTE: Adding the OLD directory (ace-config/) stages the DELETIONS
-git add ace-support-config/ ace-config/
-ace-git-commit paths --intention "rename ace-config to ace-support-config gem for naming consistency"
+# NOTE: Include both NEW and OLD directory names to stage additions AND deletions
+ace-git-commit ace-support-config/ ace-config/ --intention "rename ace-config to ace-support-config gem for naming consistency"
 # CRITICAL: Verify after each commit!
 git status  # Should show only unstaged files for next commit(s)
 
 # Commit 2: Core dependency (delegation)
-git add ace-support-core/lib/ ace-support-core/test/
-ace-git-commit paths --intention "delegate config to Ace::Support::Config namespace"
+ace-git-commit ace-support-core/lib/ ace-support-core/test/ --intention "delegate config to Ace::Support::Config namespace"
 git status
 
 # Commit 3: Dependent gem - ace-bundle
-git add ace-bundle/lib/ ace-bundle/test/ ace-bundle/ace-bundle.gemspec
-ace-git-commit paths --intention "update for ace-config rename"
+ace-git-commit ace-bundle/lib/ ace-bundle/test/ ace-bundle/ace-bundle.gemspec --intention "update for ace-config rename"
 git status
 
 # Continue for each package...
 # Commit N: Monorepo files
-git add Gemfile Gemfile.lock .ace/test/suite.yml
-ace-git-commit paths --intention "update dependencies for renamed gem"
+ace-git-commit Gemfile Gemfile.lock .ace/test/suite.yml --intention "update dependencies for renamed gem"
 git status  # Should be clean (only untracked files)
 ```
 
@@ -239,6 +244,20 @@ git status  # Should be clean (only untracked files)
 - `--intention` provides context for the change
 - Verification after each commit catches issues immediately
 - No complex rebase conflicts
+
+> ⚠️ **WARNING: ace-git-commit Path Handling**
+>
+> ace-git-commit accepts paths directly as arguments and stages them automatically.
+> Do NOT use git add before ace-git-commit when committing specific paths.
+>
+> ```bash
+> # CORRECT - Pass paths directly to ace-git-commit
+> ace-git-commit ace-bundle/ ace-docs/ --intention "update dependent packages"
+>
+> # INCORRECT - git add is redundant and may cause issues
+> git add ace-bundle/ ace-docs/
+> ace-git-commit --intention "update dependent packages"
+> ```
 
 > ⚠️ **WARNING: Glob Patterns in Fish/Zsh**
 >
@@ -416,15 +435,65 @@ git log origin/$(git branch --show-current) -5 --oneline
 
 ## Squashing Strategies
 
-> **RECOMMENDED**: Use **Logical Grouping** for most PRs.
-> Squashing to a single commit loses valuable context about what changed and why.
-> Example: 16 commits → 3 logical commits (features, fixes, unrelated work)
+> **DEFAULT STRATEGY for this monorepo: One commit per package/module**
+>
+> The standard approach for this repository is:
+> - **One commit per package/module**: Each gem or package gets its own commit
+> - **One or more commits for monorepo files**: Shared files (Gemfile, configs) grouped logically
+>
+> This approach provides:
+> - Clear history by package (easy to see what changed in ace-bundle vs ace-lint)
+> - Easy cherry-picking or reverting per-package changes
+> - Clean bisect capability (identify which package introduced a bug)
+>
+> Example result: 12 development commits → 3 squashed commits
+> - `feat(ace-test-e2e-runner): add rubocop fallback support`
+> - `feat(ace-lint): add rubocop fallback support`
+> - `chore: update gem dependencies for rubocop integration`
 
-### Strategy 1: Logical Grouping (Recommended)
+### Strategy 1: Package-Based (Default for this Monorepo)
 
-**Best for**: Most PRs, feature branches, multi-topic work
+**Best for**: All PRs in this monorepo, multi-package changes
 
-Group commits by logical concern rather than squashing everything into one:
+Group commits by the package or module they affect:
+
+```bash
+# Analyze which packages are affected
+git log $base_commit..HEAD --name-only --format="" | sort -u | grep -E "^ace-"
+
+# For each affected package:
+# 1. Stage all changes for that package
+# 2. Commit with package-prefixed message
+# 3. Verify and continue to next package
+
+# Example: ace-config rename across multiple packages
+ace-git-commit ace-support-config/ ace-config/ --intention "rename ace-config to ace-support-config gem for naming consistency"
+ace-git-commit ace-support-core/lib/ ace-support-core/test/ --intention "delegate config to Ace::Support::Config namespace"
+ace-git-commit ace-bundle/ --intention "update for ace-config rename"
+ace-git-commit ace-docs/ --intention "update for ace-config rename"
+
+# Final: Monorepo-level changes (if any)
+ace-git-commit Gemfile Gemfile.lock .ace/test/suite.yml --intention "update dependencies for renamed gem"
+```
+
+**Package commit message format:**
+- `<type>(<package>): <description>`
+- Examples:
+  - `feat(ace-lint): add rubocop fallback support`
+  - `fix(ace-test): resolve race condition in test runner`
+  - `chore(ace-bundle): update dependencies`
+
+**Why this is the default:**
+- Packages are independent units - changes should be committed together
+- Easy to review per-package changes
+- Simple to revert or cherry-pick specific package updates
+- Clear semantic versioning impact per package
+
+### Strategy 2: Logical Grouping (Alternative)
+
+**Best for**: Single-package PRs, feature branches, multi-topic work within one package
+
+Group commits by logical concern within a package:
 
 ```bash
 # Analyze commits by type
@@ -450,7 +519,7 @@ git commit -m "chore: Review fixes and configuration"
 - Cherry-picking specific changes remains possible
 - History tells a coherent story
 
-### Strategy 2: Commit Per Feature
+### Strategy 3: Commit Per Feature
 
 **Best for**: PRs with multiple independent features
 
@@ -464,7 +533,7 @@ git commit -m "chore: Review fixes and configuration"
 # docs: API documentation updates
 ```
 
-### Strategy 3: One Commit Per Version
+### Strategy 4: One Commit Per Version
 
 **Best for**: Simple PRs, single-feature work, release tags
 
