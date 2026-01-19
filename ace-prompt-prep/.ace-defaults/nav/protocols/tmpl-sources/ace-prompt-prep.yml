@@ -1,0 +1,13 @@
+---
+# ace-prompt-prep template sources for ace-nav
+# Copy this file to .ace/nav/protocols/tmpl-sources/ to enable
+
+name: ace-prompt-prep
+type: gem
+description: ace-prompt-prep templates
+priority: 10
+
+config:
+  relative_path: handbook/templates
+  pattern: "*.template.md"
+  enabled: true
