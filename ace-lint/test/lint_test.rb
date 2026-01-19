@@ -24,9 +24,9 @@ class Ace::TestLint < Minitest::Test
     # Reset to ensure we get fresh config
     Ace::Lint.reset_config!
     config = Ace::Lint.kramdown_config
-    assert_equal 'GFM', config['input']
-    assert_equal 120, config['line_width']
-    assert_equal false, config['auto_ids']
+    assert_equal "GFM", config["input"]
+    assert_equal 120, config["line_width"]
+    assert_equal false, config["auto_ids"]
   end
 
   def test_module_loading

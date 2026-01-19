@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-01-19
+
+### Added
+- Three-file markdown report system for workflow delegation
+  - `ok.md` - Lists files that passed with no issues
+  - `fixed.md` - Lists files that were auto-fixed (only when --fix used)
+  - `pending.md` - Groups issues by file with checkboxes for tracking
+- Report directory output shows generated files with counts
+- JSON report generation with timestamped directories
+
+### Changed
+- Report output format now shows directory with file list instead of individual paths
+- Pending issues grouped by file with issue counts for better readability
+
+### Fixed
+- Show concise summary when report is generated (suppress per-file output)
+
+### Technical
+- Thread-safety improvements to ConfigLocator cache
+- Code style updates with RuboCop modern Ruby syntax
+- Require path and dependency consistency updates
+
 ## [0.11.0] - 2026-01-18
 
 ### Added

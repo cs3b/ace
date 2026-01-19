@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'validation_error'
+require_relative "validation_error"
 
 module Ace
   module Lint
@@ -65,6 +65,21 @@ module Ace
             skipped: true,
             skip_reason: reason
           )
+        end
+
+        # Convert result to hash for JSON serialization
+        # @return [Hash] Result as hash
+        def to_h
+          {
+            file_path: file_path,
+            success: success,
+            errors: errors.map(&:to_h),
+            warnings: warnings.map(&:to_h),
+            formatted: formatted,
+            runner: runner,
+            skipped: skipped,
+            skip_reason: skip_reason
+          }
         end
       end
     end

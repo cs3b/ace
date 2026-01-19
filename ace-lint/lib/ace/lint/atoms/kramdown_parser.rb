@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'kramdown'
-require 'kramdown-parser-gfm'
+require "kramdown"
+require "kramdown-parser-gfm"
 
 module Ace
   module Lint
@@ -16,7 +16,7 @@ module Ace
           # Minimal defaults - let kramdown use its defaults
           # Users can override via .ace/lint/config.yml
           default_options = {
-            input: 'GFM' # Use GitHub Flavored Markdown
+            input: "GFM" # Use GitHub Flavored Markdown
           }
 
           merged_options = default_options.merge(options)
@@ -34,7 +34,7 @@ module Ace
               errors: [],
               warnings: warnings
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               document: nil,
@@ -51,7 +51,7 @@ module Ace
         def self.format(content, options: {})
           parse_result = parse(content, options: options)
 
-          return { success: false, formatted_content: nil, errors: parse_result[:errors] } unless parse_result[:success]
+          return {success: false, formatted_content: nil, errors: parse_result[:errors]} unless parse_result[:success]
 
           begin
             # Convert back to markdown
@@ -62,7 +62,7 @@ module Ace
               formatted_content: formatted,
               errors: []
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               formatted_content: nil,

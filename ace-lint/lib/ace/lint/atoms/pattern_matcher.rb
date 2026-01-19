@@ -15,22 +15,22 @@ module Ace
           score = 0
 
           # Exact filename match (no glob chars) gets highest score
-          unless pattern.include?('*') || pattern.include?('?') || pattern.include?('[')
+          unless pattern.include?("*") || pattern.include?("?") || pattern.include?("[")
             return 1000 + pattern.length
           end
 
           # Directory depth: +100 per path segment
-          score += pattern.count('/') * 100
+          score += pattern.count("/") * 100
 
           # Double-star penalty: -50 per **
-          score -= pattern.scan('**').count * 50
+          score -= pattern.scan("**").count * 50
 
           # Single-star bonus: +10 per * (but not **)
-          single_stars = pattern.gsub('**', '').count('*')
+          single_stars = pattern.gsub("**", "").count("*")
           score += single_stars * 10
 
           # Literal prefix length: +1 per char before first glob
-          literal_prefix = pattern.split(/[\*\?\[]/).first || ''
+          literal_prefix = pattern.split(/[*?\[]/).first || ""
           score += literal_prefix.length
 
           score
@@ -44,7 +44,7 @@ module Ace
           return false if path.nil? || pattern.nil?
 
           # Normalize path (remove leading ./)
-          normalized_path = path.sub(%r{^\./}, '')
+          normalized_path = path.sub(%r{^\./}, "")
 
           # File.fnmatch with FNM_PATHNAME for proper ** handling
           # FNM_EXTGLOB for brace expansion {rb,rake}
@@ -77,7 +77,7 @@ module Ace
           best_score = -Float::INFINITY
 
           groups.each do |name, config|
-            patterns = config[:patterns] || config['patterns'] || []
+            patterns = config[:patterns] || config["patterns"] || []
             pattern = best_match(path, patterns)
             next unless pattern
 

@@ -8,27 +8,19 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
     Ace::Lint::Atoms::StandardrbRunner.reset_availability_cache!
   end
 
-  # Helper to stub Open3.capture3 for testing
-  # Handles both 'which standardrb' (for availability) and actual standardrb commands
-  def stub_standardrb_run(output: "", stderr: "", exit_status: 0, which_success: true)
+  # Helper to stub availability check and Open3.capture3 for testing
+  # Uses system_has_command? stub for availability and Open3.capture3 for actual linting
+  def stub_standardrb_run(output: "", stderr: "", exit_status: 0, available: true)
     mock_status = Object.new
     mock_status.define_singleton_method(:success?) { exit_status == 0 }
     mock_status.define_singleton_method(:exitstatus) { exit_status }
 
-    mock_which_status = Object.new
-    mock_which_status.define_singleton_method(:success?) { which_success }
-
-    Open3.stub(:capture3, ->(*args) {
-      # First call is typically 'which standardrb' for availability check
-      # Return success for which command (controlled by which_success parameter)
-      if args.first == 'which' && args[1] == 'standardrb'
-        ["", "", mock_which_status]
-      else
-        # StandardRB command
-        [output, stderr, mock_status]
+    # Stub the availability check
+    Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, available) do
+      # Stub Open3.capture3 for the actual linting command
+      Open3.stub(:capture3, ->(*_args) { [output, stderr, mock_status] }) do
+        yield
       end
-    }) do
-      yield
     end
   end
 
@@ -39,13 +31,13 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
   end
 
   def test_available_returns_false_when_standardrb_missing
-    stub_standardrb_run(exit_status: 1, which_success: false) do
+    stub_standardrb_run(exit_status: 1, available: false) do
       refute Ace::Lint::Atoms::StandardrbRunner.available?
     end
   end
 
   def test_run_returns_unavailable_result_when_standardrb_missing
-    stub_standardrb_run(exit_status: 1, which_success: false) do
+    stub_standardrb_run(exit_status: 1, available: false) do
       result = Ace::Lint::Atoms::StandardrbRunner.run("test.rb")
       refute result[:success]
       assert_match(/not installed/, result[:errors].first[:message])
@@ -80,13 +72,13 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
               "severity" => "convention",
               "message" => "Missing frozen string literal comment",
               "cop_name" => "Style/FrozenStringLiteralComment",
-              "location" => { "line" => 1, "column" => 0 }
+              "location" => {"line" => 1, "column" => 0}
             },
             {
               "severity" => "error",
               "message" => "Unexpected token",
               "cop_name" => "Syntax",
-              "location" => { "line" => 5, "column" => 10 }
+              "location" => {"line" => 5, "column" => 10}
             }
           ]
         }
@@ -213,13 +205,13 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
               "severity" => "convention",
               "message" => "Missing frozen string literal comment",
               "cop_name" => "Style/FrozenStringLiteralComment",
-              "location" => { "line" => 1, "column" => 0 }
+              "location" => {"line" => 1, "column" => 0}
             },
             {
               "severity" => "warning",
               "message" => "Useless assignment to variable",
               "cop_name" => "Lint/UselessAssignment",
-              "location" => { "line" => 10, "column" => 5 }
+              "location" => {"line" => 10, "column" => 5}
             }
           ]
         }
@@ -251,7 +243,7 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
               "severity" => "convention",
               "message" => "Missing frozen string literal comment",
               "cop_name" => "Style/FrozenStringLiteralComment",
-              "location" => { "line" => 1, "column" => 0 }
+              "location" => {"line" => 1, "column" => 0}
             }
           ]
         }

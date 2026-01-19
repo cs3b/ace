@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/pattern_matcher'
+require_relative "../atoms/pattern_matcher"
 
 module Ace
   module Lint
@@ -11,7 +11,7 @@ module Ace
         # Default group configuration when no groups are defined
         DEFAULT_GROUPS = {
           default: {
-            patterns: ['**/*.rb'],
+            patterns: ["**/*.rb"],
             validators: [:standardrb],
             fallback_validators: [:rubocop]
           }
@@ -39,8 +39,6 @@ module Ace
             default = @groups[:default]
             if default
               build_result(:default, default)
-            else
-              nil
             end
           end
         end
@@ -49,7 +47,7 @@ module Ace
         # @param file_paths [Array<String>] File paths to resolve
         # @return [Hash<Symbol, Hash>] Map of group_name => { files:, validators:, ... }
         def resolve_batch(file_paths)
-          result = Hash.new { |h, k| h[k] = { files: [] } }
+          result = Hash.new { |h, k| h[k] = {files: []} }
 
           file_paths.each do |file_path|
             resolution = resolve(file_path)
@@ -80,10 +78,10 @@ module Ace
 
           groups.each_with_object({}) do |(name, config), result|
             result[name.to_sym] = {
-              patterns: normalize_array(config[:patterns] || config['patterns']),
-              validators: normalize_validators(config[:validators] || config['validators']),
-              fallback_validators: normalize_validators(config[:fallback_validators] || config['fallback_validators']),
-              config_path: config[:config_path] || config['config_path']
+              patterns: normalize_array(config[:patterns] || config["patterns"]),
+              validators: normalize_validators(config[:validators] || config["validators"]),
+              fallback_validators: normalize_validators(config[:fallback_validators] || config["fallback_validators"]),
+              config_path: config[:config_path] || config["config_path"]
             }
           end
         end
