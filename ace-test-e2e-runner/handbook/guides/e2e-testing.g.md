@@ -1,25 +1,25 @@
 ---
-guide-id: g-manual-testing
-title: Manual Testing Guide
-description: Conventions and best practices for agent-executed manual tests
-version: "1.0"
+guide-id: g-e2e-testing
+title: E2E Testing Guide
+description: Conventions and best practices for agent-executed end-to-end tests
+version: "1.1"
 source: ace-test-e2e-runner
 ---
 
-# Manual Testing Guide
+# E2E Testing Guide
 
 ## Overview
 
-Manual tests are tests that are executed by an AI agent rather than an automated test runner. They are designed for scenarios that are:
+E2E (end-to-end) tests are tests that are executed by an AI agent rather than an automated test runner. They are designed for scenarios that are:
 
 - **Too slow** for regular test suites
 - **Environment-dependent** requiring specific setup
 - **Complex** requiring agent judgment
 - **Exploratory** in nature
 
-## When to Use Manual Tests
+## When to Use E2E Tests
 
-Use manual tests when:
+Use E2E tests when:
 
 1. **Integration with external tools** - Tests that require real tool installations (StandardRB, RuboCop, etc.)
 2. **Complex environment setup** - Tests needing specific file structures or configurations
@@ -27,7 +27,7 @@ Use manual tests when:
 4. **Edge cases** - Scenarios that are hard to automate
 5. **Slow operations** - Tests taking minutes to run
 
-Do NOT use manual tests when:
+Do NOT use E2E tests when:
 
 - Unit tests would suffice
 - The test can be automated with mocks
@@ -81,14 +81,14 @@ cd "$TEST_DIR"
 MT-{AREA}-{NNN}
 ```
 
-- `MT` - Manual Test prefix
+- `MT` - Test prefix (legacy: "Manual Test")
 - `{AREA}` - Area code (uppercase, e.g., LINT, REVIEW, BUILD)
 - `{NNN}` - Three-digit sequential number
 
 Examples:
-- `MT-LINT-001` - First lint manual test
-- `MT-REVIEW-015` - Fifteenth review manual test
-- `MT-GIT-003` - Third git manual test
+- `MT-LINT-001` - First lint E2E test
+- `MT-REVIEW-015` - Fifteenth review E2E test
+- `MT-GIT-003` - Third git E2E test
 
 ### Filename Convention
 
@@ -194,7 +194,7 @@ ace-bundle wfi://run-e2e-test
 
 ### Agent Responsibilities
 
-When executing a manual test, the agent should:
+When executing an E2E test, the agent should:
 
 1. **Verify prerequisites** before starting
 2. **Execute steps exactly** as documented
@@ -220,7 +220,7 @@ Fill in actual results during execution:
 
 ## Discovery
 
-### Find All Manual Tests
+### Find All E2E Tests
 
 ```bash
 find . -name "*.mt.md" -path "*/test/e2e/*"
@@ -264,7 +264,7 @@ Move obsolete tests to:
 
 ## Integration with ace-test
 
-Manual tests are automatically excluded from `ace-test` because:
+E2E tests are automatically excluded from `ace-test` because:
 - They use `.mt.md` extension (not `*_test.rb`)
 - They're in `test/e2e/` directory
 

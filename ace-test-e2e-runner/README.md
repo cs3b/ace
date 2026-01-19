@@ -40,11 +40,11 @@ ace-test-e2e-runner/
 │       └── config.yml           # Default configuration
 ├── handbook/
 │   ├── workflow-instructions/
-│   │   └── run-e2e-test.wf.md    # How to execute a manual test
+│   │   └── run-e2e-test.wf.md    # How to execute an E2E test
 │   ├── templates/
-│   │   └── test-scenario.template.md # Template for new test scenarios
+│   │   └── test-e2e.template.md      # Template for new test scenarios
 │   └── guides/
-│       └── manual-testing.g.md  # Convention documentation
+│       └── e2e-testing.g.md          # Convention documentation
 └── lib/
     └── ace/test/end_to_end_runner/
         └── version.rb
@@ -64,7 +64,7 @@ For example:
 
 ## Usage
 
-### Running a Manual Test
+### Running an E2E Test
 
 ```
 /ace:run-e2e-test <package> <test-id>
@@ -79,12 +79,12 @@ Example:
 
 Use the template:
 ```
-ace-bundle tmpl://test-scenario
+ace-bundle tmpl://test-e2e
 ```
 
 ### Discovery
 
-Find all manual tests in a package:
+Find all E2E tests in a package:
 ```bash
 find {package}/test/e2e -name "*.mt.md"
 ```
@@ -93,7 +93,7 @@ find {package}/test/e2e -name "*.mt.md"
 
 Test IDs follow the pattern: `MT-{AREA}-{NNN}`
 
-- `MT` - Manual Test prefix
+- `MT` - Test prefix (legacy: "Manual Test")
 - `{AREA}` - Area code (e.g., LINT, REVIEW, BUILD)
 - `{NNN}` - Sequential number
 
