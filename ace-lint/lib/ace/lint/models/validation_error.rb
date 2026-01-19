@@ -19,6 +19,12 @@ module Ace
             message
           end
         end
+
+        # Convert error to hash for JSON serialization
+        # @return [Hash] Error as hash
+        def to_h
+          {line: line, message: message, severity: severity}
+        end
       end
     end
   end

@@ -27,7 +27,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
                 file: file_path,
                 line: offense.dig("location", "line") || 0,
                 column: offense.dig("location", "column") || 0,
-                message: "#{offense['cop_name']}: #{offense['message']}"
+                message: "#{offense["cop_name"]}: #{offense["message"]}"
               }
               if ["error", "fatal"].include?(offense["severity"])
                 mock_result[:errors] << item
@@ -71,7 +71,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
               "severity" => "error",
               "message" => "Syntax error",
               "cop_name" => "Syntax",
-              "location" => { "line" => 5, "column" => 10 }
+              "location" => {"line" => 5, "column" => 10}
             }
           ]
         }
@@ -98,7 +98,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
               "severity" => "convention",
               "message" => "Missing frozen string literal",
               "cop_name" => "Style/FrozenStringLiteralComment",
-              "location" => { "line" => 1, "column" => 0 }
+              "location" => {"line" => 1, "column" => 0}
             }
           ]
         }
@@ -126,13 +126,13 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
               "severity" => "convention",
               "message" => "Line too long",
               "cop_name" => "Metrics/LineLength",
-              "location" => { "line" => 10, "column" => 80 }
+              "location" => {"line" => 10, "column" => 80}
             },
             {
               "severity" => "error",
               "message" => "Undefined variable",
               "cop_name" => "Lint/UndefinedVariable",
-              "location" => { "line" => 15, "column" => 5 }
+              "location" => {"line" => 15, "column" => 5}
             }
           ]
         }
@@ -150,7 +150,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
 
   def test_lint_with_fix_flag_sets_formatted
     stub_standardrb_runner(exit_status: 0) do
-      result = Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: { fix: true })
+      result = Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: {fix: true})
 
       assert result.formatted?
     end
@@ -167,7 +167,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
   def test_lint_handles_standardrb_not_available
     unavailable_result = {
       success: false,
-      errors: [{ message: "StandardRB is not installed. Install it with: gem install standardrb" }],
+      errors: [{message: "StandardRB is not installed. Install it with: gem install standardrb"}],
       warnings: []
     }
 
@@ -195,10 +195,10 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
 
     # Stub with a callable that captures arguments
     Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(file_paths, fix: false) {
-      options_passed = { fix: fix }
-      { success: true, errors: [], warnings: [] }
+      options_passed = {fix: fix}
+      {success: true, errors: [], warnings: []}
     }) do
-      Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: { fix: true })
+      Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: {fix: true})
     end
 
     assert_equal true, options_passed[:fix]
@@ -210,9 +210,9 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
         {
           "path" => @file_path,
           "offenses" => [
-            { "severity" => "convention", "message" => "Offense 1", "cop_name" => "Cop1", "location" => { "line" => 1, "column" => 0 } },
-            { "severity" => "warning", "message" => "Offense 2", "cop_name" => "Cop2", "location" => { "line" => 2, "column" => 0 } },
-            { "severity" => "convention", "message" => "Offense 3", "cop_name" => "Cop3", "location" => { "line" => 3, "column" => 0 } }
+            {"severity" => "convention", "message" => "Offense 1", "cop_name" => "Cop1", "location" => {"line" => 1, "column" => 0}},
+            {"severity" => "warning", "message" => "Offense 2", "cop_name" => "Cop2", "location" => {"line" => 2, "column" => 0}},
+            {"severity" => "convention", "message" => "Offense 3", "cop_name" => "Cop3", "location" => {"line" => 3, "column" => 0}}
           ]
         }
       ]
@@ -237,13 +237,13 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
         {
           "path" => file1,
           "offenses" => [
-            { "severity" => "convention", "message" => "Offense 1", "cop_name" => "Cop1", "location" => { "line" => 1, "column" => 0 } }
+            {"severity" => "convention", "message" => "Offense 1", "cop_name" => "Cop1", "location" => {"line" => 1, "column" => 0}}
           ]
         },
         {
           "path" => file2,
           "offenses" => [
-            { "severity" => "error", "message" => "Offense 2", "cop_name" => "Cop2", "location" => { "line" => 2, "column" => 0 } }
+            {"severity" => "error", "message" => "Offense 2", "cop_name" => "Cop2", "location" => {"line" => 2, "column" => 0}}
           ]
         },
         {
@@ -282,7 +282,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
     file2 = "lib/file2.rb"
 
     stub_standardrb_runner(output: "no offenses", exit_status: 0) do
-      results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1, file2], options: { fix: true })
+      results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1, file2], options: {fix: true})
 
       assert_equal 2, results.size
       results.each do |result|
@@ -316,14 +316,14 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
         {
           "path" => file1,
           "offenses" => [
-            { "severity" => "convention", "message" => "Warning 1", "cop_name" => "Cop1", "location" => { "line" => 1, "column" => 0 } },
-            { "severity" => "warning", "message" => "Warning 2", "cop_name" => "Cop2", "location" => { "line" => 2, "column" => 0 } }
+            {"severity" => "convention", "message" => "Warning 1", "cop_name" => "Cop1", "location" => {"line" => 1, "column" => 0}},
+            {"severity" => "warning", "message" => "Warning 2", "cop_name" => "Cop2", "location" => {"line" => 2, "column" => 0}}
           ]
         },
         {
           "path" => file2,
           "offenses" => [
-            { "severity" => "convention", "message" => "Warning 3", "cop_name" => "Cop3", "location" => { "line" => 3, "column" => 0 } }
+            {"severity" => "convention", "message" => "Warning 3", "cop_name" => "Cop3", "location" => {"line" => 3, "column" => 0}}
           ]
         }
       ]
@@ -396,7 +396,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
         # Mock RuboCop's unavailable_result
         unavailable_result = {
           success: false,
-          errors: [{ message: 'No Ruby linter available. Install StandardRB (preferred): gem install standardrb - or RuboCop: gem install rubocop' }],
+          errors: [{message: "No Ruby linter available. Install StandardRB (preferred): gem install standardrb - or RuboCop: gem install rubocop"}],
           warnings: []
         }
 
@@ -466,7 +466,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
     # First call with StandardRB
     Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
       Ace::Lint::Atoms::RuboCopRunner.stub(:available?, true) do
-        standardrb_result = { success: true, errors: [], warnings: [] }
+        standardrb_result = {success: true, errors: [], warnings: []}
         Ace::Lint::Atoms::StandardrbRunner.stub(:run, standardrb_result) do
           result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
           assert_equal :standardrb, result.runner
@@ -477,7 +477,7 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
     # Second call with RuboCop fallback
     Ace::Lint::Atoms::StandardrbRunner.stub(:available?, false) do
       Ace::Lint::Atoms::RuboCopRunner.stub(:available?, true) do
-        rubocop_result = { success: true, errors: [], warnings: [] }
+        rubocop_result = {success: true, errors: [], warnings: []}
         Ace::Lint::Atoms::RuboCopRunner.stub(:run, rubocop_result) do
           result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
           assert_equal :rubocop, result.runner

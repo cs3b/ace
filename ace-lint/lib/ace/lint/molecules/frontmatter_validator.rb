@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/frontmatter_extractor'
-require_relative '../atoms/yaml_parser'
-require_relative '../models/lint_result'
-require_relative '../models/validation_error'
+require_relative "../atoms/frontmatter_extractor"
+require_relative "../atoms/yaml_parser"
+require_relative "../models/lint_result"
+require_relative "../models/validation_error"
 
 module Ace
   module Lint
@@ -25,7 +25,7 @@ module Ace
             success: false,
             errors: [Models::ValidationError.new(message: "File not found: #{file_path}")]
           )
-        rescue StandardError => e
+        rescue => e
           Models::LintResult.new(
             file_path: file_path,
             success: false,
@@ -45,7 +45,7 @@ module Ace
           extraction = Atoms::FrontmatterExtractor.extract(content)
 
           unless extraction[:has_frontmatter]
-            error_msg = extraction[:error] || 'No frontmatter found'
+            error_msg = extraction[:error] || "No frontmatter found"
             return Models::LintResult.new(
               file_path: file_path,
               success: false,
@@ -74,7 +74,7 @@ module Ace
             return Models::LintResult.new(
               file_path: file_path,
               success: false,
-              errors: [Models::ValidationError.new(line: 1, message: 'Frontmatter must be a hash/object')]
+              errors: [Models::ValidationError.new(line: 1, message: "Frontmatter must be a hash/object")]
             )
           end
 

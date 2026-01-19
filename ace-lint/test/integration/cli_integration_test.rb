@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../test_helper'
+require_relative "../test_helper"
 
 class CLIIntegrationTest < Minitest::Test
   def setup
@@ -9,7 +9,7 @@ class CLIIntegrationTest < Minitest::Test
     Dir.chdir(@temp_dir)
 
     # Check if CLI is available
-    @cli_path = File.expand_path('../../../exe/ace-lint', __dir__)
+    @cli_path = File.expand_path("../../../exe/ace-lint", __dir__)
     @cli_available = File.exist?(@cli_path)
   end
 
@@ -21,9 +21,9 @@ class CLIIntegrationTest < Minitest::Test
   def test_cli_exit_code_with_valid_file
     skip "CLI not built" unless @cli_available
 
-    File.write('test.md', '# Test')
+    File.write("test.md", "# Test")
 
-    output, status = Open3.capture3(@cli_path, 'test.md')
+    output, status = Open3.capture3(@cli_path, "test.md")
     assert_equal 0, status.exitstatus, "CLI should exit with 0 for valid file. Output: #{output}"
     assert_match(/passed/i, output)
   end
@@ -31,9 +31,9 @@ class CLIIntegrationTest < Minitest::Test
   def test_cli_exit_code_with_invalid_file
     skip "CLI not built" unless @cli_available
 
-    File.write('test.md', '# Test\n\n   ' * 10) # Trailing whitespace
+    File.write("test.md", '# Test\n\n   ' * 10) # Trailing whitespace
 
-    output, status = Open3.capture3(@cli_path, 'test.md')
+    output, status = Open3.capture3(@cli_path, "test.md")
     refute_equal 0, status.exitstatus, "CLI should exit with non-zero for lint errors. Output: #{output}"
   end
 
@@ -41,31 +41,20 @@ class CLIIntegrationTest < Minitest::Test
     skip "CLI not built" unless @cli_available
 
     # Create group configuration
-    groups = {
-      models: {
-        patterns: ['app/models/**'],
-        validators: [:standardrb],
-        fallback_validators: [:rubocop]
-      },
-      controllers: {
-        patterns: ['app/controllers/**'],
-        validators: [:standardrb]
-      }
-    }
 
     # Create directories and files
-    FileUtils.mkdir_p('app/models')
-    FileUtils.mkdir_p('app/controllers')
+    FileUtils.mkdir_p("app/models")
+    FileUtils.mkdir_p("app/controllers")
 
-    File.write('app/models/user.rb', 'class User; end')
-    File.write('app/controllers/users_controller.rb', 'class UsersController; end')
+    File.write("app/models/user.rb", "class User; end")
+    File.write("app/controllers/users_controller.rb", "class UsersController; end")
 
     # This test verifies the group routing works end-to-end
     # The exact behavior depends on StandardRB availability
-    output, status = Open3.capture3(
+    _, status = Open3.capture3(
       @cli_path,
-      'app/models/user.rb', 'app/controllers/users_controller.rb',
-      '--verbose'
+      "app/models/user.rb", "app/controllers/users_controller.rb",
+      "--verbose"
     )
 
     # Command should complete (may fail if StandardRB not installed)
@@ -75,12 +64,12 @@ class CLIIntegrationTest < Minitest::Test
   def test_cli_output_format_with_json_flag
     skip "CLI not built" unless @cli_available
 
-    File.write('test.md', '# Test')
+    File.write("test.md", "# Test")
 
     # Test --output flag for JSON format
-    output, status = Open3.capture3(
+    _, status = Open3.capture3(
       @cli_path,
-      'test.md', '--output', '/dev/stdout'
+      "test.md", "--output", "/dev/stdout"
     )
 
     assert_kind_of(Integer, status.exitstatus)
@@ -90,8 +79,8 @@ class CLIIntegrationTest < Minitest::Test
     skip "CLI not built" unless @cli_available
 
     # Create group configuration that uses rubocop
-    FileUtils.mkdir_p('.ace/lint')
-    File.write('.ace/lint/ruby.yml', <<~YAML)
+    FileUtils.mkdir_p(".ace/lint")
+    File.write(".ace/lint/ruby.yml", <<~YAML)
       groups:
         default:
           patterns:
@@ -101,15 +90,15 @@ class CLIIntegrationTest < Minitest::Test
     YAML
 
     # Create a Ruby file
-    File.write('test.rb', 'puts "hello"')
+    File.write("test.rb", 'puts "hello"')
 
     # Run with --validators flag to override group config
     # The CLI flag should take precedence over the group config
     output, status = Open3.capture3(
       @cli_path,
-      'test.rb',
-      '--validators', 'standardrb',
-      '--verbose'
+      "test.rb",
+      "--validators", "standardrb",
+      "--verbose"
     )
 
     # Command should complete (exact result depends on tool availability)
@@ -117,9 +106,43 @@ class CLIIntegrationTest < Minitest::Test
 
     # Verbose output should show the validator being used
     # If standardrb is installed, it should be used instead of rubocop
-    if output.include?('standardrb') || output.include?('StandardRB')
+    if output.include?("standardrb") || output.include?("StandardRB")
       # CLI override worked - standardrb mentioned in output
       assert_match(/standardrb|StandardRB/i, output)
     end
+  end
+
+  def test_cli_generates_report_by_default
+    skip "CLI not built" unless @cli_available
+
+    # Initialize git repo so we can find project root
+    system("git init --quiet .")
+
+    File.write("test.md", "# Test")
+
+    output, status = Open3.capture3(@cli_path, "test.md")
+
+    # Should show report path in output
+    assert_match(/Report saved:/, output)
+    assert_match(/\.cache\/ace-lint\/[0-9a-z]{6}\/report\.json/, output)
+    assert_equal 0, status.exitstatus
+  end
+
+  def test_cli_no_report_flag_disables_generation
+    skip "CLI not built" unless @cli_available
+
+    # Initialize git repo so we can find project root
+    system("git init --quiet .")
+
+    File.write("test.md", "# Test")
+
+    output, status = Open3.capture3(@cli_path, "test.md", "--no-report")
+
+    # Should NOT show report path in output
+    refute_match(/Report saved:/, output)
+    assert_equal 0, status.exitstatus
+
+    # Should not have created cache directory
+    refute Dir.exist?(".cache/ace-lint")
   end
 end

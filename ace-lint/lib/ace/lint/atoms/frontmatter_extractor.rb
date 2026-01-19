@@ -12,7 +12,7 @@ module Ace
           return empty_result if content.nil? || content.empty?
 
           # Check if content starts with frontmatter delimiter
-          unless content.start_with?("---\n") || content.start_with?("---\r\n")
+          unless content.start_with?("---\n", "---\r\n")
             return {
               frontmatter: nil,
               body: content,
@@ -41,7 +41,7 @@ module Ace
 
           # Extract body content (after the closing delimiter)
           body_start = end_match.end(0)
-          body_content = content[body_start..-1] || ''
+          body_content = content[body_start..] || ""
 
           {
             frontmatter: frontmatter_content,
@@ -56,16 +56,16 @@ module Ace
         def self.has_frontmatter?(content)
           return false if content.nil? || content.empty?
 
-          (content.start_with?("---\n") || content.start_with?("---\r\n")) &&
+          content.start_with?("---\n", "---\r\n") &&
             (content.include?("\n---\n") || content.include?("\n---\r\n"))
         end
 
         def self.empty_result
           {
             frontmatter: nil,
-            body: '',
+            body: "",
             has_frontmatter: false,
-            error: 'Empty content'
+            error: "Empty content"
           }
         end
       end

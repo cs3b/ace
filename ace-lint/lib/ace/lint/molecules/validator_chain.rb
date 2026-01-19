@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require_relative '../atoms/validator_registry'
-require_relative '../atoms/config_locator'
-require_relative 'offense_deduplicator'
+require_relative "../atoms/validator_registry"
+require_relative "../atoms/config_locator"
+require_relative "offense_deduplicator"
 
 module Ace
   module Lint
@@ -137,7 +137,7 @@ module Ace
           {
             success: false,
             errors: [{
-              message: 'No validators available. Install StandardRB: gem install standardrb'
+              message: "No validators available. Install StandardRB: gem install standardrb"
             }],
             warnings: [],
             runners: [],

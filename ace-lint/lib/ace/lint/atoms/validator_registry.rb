@@ -8,14 +8,14 @@ module Ace
       class ValidatorRegistry
         # Map of validator name (symbol) to runner class
         VALIDATORS = {
-          standardrb: 'Ace::Lint::Atoms::StandardrbRunner',
-          rubocop: 'Ace::Lint::Atoms::RuboCopRunner'
+          standardrb: "Ace::Lint::Atoms::StandardrbRunner",
+          rubocop: "Ace::Lint::Atoms::RuboCopRunner"
         }.freeze
 
         # Aliases for common variations
         ALIASES = {
           standard: :standardrb,
-          'standard-rb': :standardrb,
+          "standard-rb": :standardrb,
           rubocop_runner: :rubocop
         }.freeze
 
@@ -30,7 +30,7 @@ module Ace
           return nil unless class_name
 
           # Resolve class from string
-          class_name.split('::').reduce(Object) { |mod, part| mod.const_get(part) }
+          class_name.split("::").reduce(Object) { |mod, part| mod.const_get(part) }
         rescue NameError
           nil
         end
@@ -54,7 +54,7 @@ module Ace
           return @availability_cache[canonical] if @availability_cache.key?(canonical)
 
           runner = runner_for(canonical)
-          result = runner && runner.respond_to?(:available?) && runner.available?
+          result = runner&.respond_to?(:available?) && runner.available?
           @availability_cache[canonical] = result
         end
 
@@ -76,7 +76,7 @@ module Ace
         def self.canonical_name(name)
           return nil if name.nil?
 
-          sym = name.to_s.downcase.gsub('-', '_').to_sym
+          sym = name.to_s.downcase.tr("-", "_").to_sym
 
           # Check direct match
           return sym if VALIDATORS.key?(sym)
@@ -86,7 +86,7 @@ module Ace
           return aliased if aliased && VALIDATORS.key?(aliased)
 
           # Check string key aliases
-          str_sym = name.to_s.downcase.gsub('_', '-').to_sym
+          str_sym = name.to_s.downcase.tr("_", "-").to_sym
           aliased = ALIASES[str_sym]
           return aliased if aliased && VALIDATORS.key?(aliased)
 
@@ -97,6 +97,15 @@ module Ace
         # @return [void]
         def self.reset_cache!
           @availability_cache = {}
+        end
+
+        # Reset all caches across the validator system
+        # Call this at CLI entry point to ensure fresh availability checks
+        # @return [void]
+        def self.reset_all_caches!
+          reset_cache!
+          StandardrbRunner.reset_availability_cache!
+          RuboCopRunner.reset_availability_cache!
         end
       end
     end

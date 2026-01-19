@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require 'yaml'
-require 'psych'
+require "yaml"
+require "psych"
 
 module Ace
   module Lint
@@ -12,7 +12,7 @@ module Ace
         # @param content [String] YAML content
         # @return [Hash] Result with :success, :data, :errors
         def self.parse(content)
-          return { success: false, data: nil, errors: ['Empty content'] } if content.nil? || content.strip.empty?
+          return {success: false, data: nil, errors: ["Empty content"]} if content.nil? || content.strip.empty?
 
           begin
             data = Psych.safe_load(
@@ -33,7 +33,7 @@ module Ace
               data: nil,
               errors: [format_psych_error(e)]
             }
-          rescue StandardError => e
+          rescue => e
             {
               success: false,
               data: nil,
