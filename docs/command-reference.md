@@ -103,13 +103,16 @@ Run these by typing directly in Claude Code conversation.
 | `/ace:analyze-bug` | Analyze bugs for root cause |
 | `/ace:fix-bug` | Execute bug fix plan |
 | `/ace:run-e2e-test [package] [test-id]` | Execute E2E test scenarios |
+| `/ace:review-e2e-tests [package]` | Review E2E test health and coverage gaps |
+| `/ace:create-e2e-test <package> <area>` | Create new E2E test scenario from template |
+| `/ace:manage-e2e-tests [package]` | Orchestrate E2E test lifecycle |
 
 ### Context and Navigation
 
 | Command | Purpose |
 |---------|---------|
 | `/ace:bundle [preset]` | Load bundle with AI assistance |
-| `/ace:prompt` | Run ace-prompt and follow instructions |
+| `/ace:prompt-prep` | Run ace-prompt-prep and follow instructions |
 | `/ace:review-questions` | Review open questions |
 | `/ace:document-unplanned` | Document unplanned work |
 
@@ -220,9 +223,9 @@ ace-test-suite                   # Full monorepo suite
 ### Prompts
 
 ```bash
-ace-prompt                       # Process prompt
-ace-prompt --enhance             # Enhance via LLM
-ace-prompt --task 121            # Task-specific
+ace-prompt-prep                       # Process prompt
+ace-prompt-prep --enhance             # Enhance via LLM
+ace-prompt-prep --task 121            # Task-specific
 ```
 
 ---

@@ -1,0 +1,191 @@
+---
+id: v.0.9.0+task.221
+status: pending
+priority: medium
+estimate: 4h
+dependencies: []
+---
+
+# Add Report Persistence and Agent Experience Reports to E2E Runner
+
+## Behavioral Specification
+
+### User Experience
+- **Input**: Agent executes E2E test via `/ace:run-e2e-test {package} {test-id}`
+- **Process**:
+  - Test executes with artifacts created in `artifacts/` subdirectory
+  - Agent captures friction points, unclear docs, and suggestions during execution
+  - Reports are written to disk at test completion
+- **Output**:
+  - `test-report.md` - pass/fail results with details
+  - `agent-experience-report.md` - friction points, root cause analysis, improvement suggestions
+  - `metadata.yml` - run metadata (duration, versions, git ref)
+  - All files persisted in `.cache/test-e2e/{run-id}/`
+
+### Expected Behavior
+
+When an agent runs an E2E test:
+1. Test artifacts are created in `.cache/test-e2e/{run-id}/artifacts/` (not the root)
+2. At test completion, three report files are written to `.cache/test-e2e/{run-id}/`:
+   - `test-report.md` with structured pass/fail results
+   - `agent-experience-report.md` with UX/DX/AX friction captured during execution
+   - `metadata.yml` with run context (duration, git branch, tool versions)
+3. Agent includes report file paths in its response
+4. Reports persist after test completion (existing behavior - cleanup disabled by default)
+
+The AX report captures valuable feedback that would otherwise be lost in conversation:
+- Documentation gaps discovered during execution
+- Tool behavior that was unexpected or confusing
+- API/CLI friction points
+- Root cause analysis for failures (WHY, not just WHAT)
+- Concrete improvement suggestions
+- Workarounds the agent had to employ
+
+### Interface Contract
+
+```bash
+# Directory structure after test run
+.cache/test-e2e/{run-id}/
+├── test-report.md               # Pass/fail results
+├── agent-experience-report.md   # AX report
+├── metadata.yml                 # Run metadata
+└── artifacts/                   # Test data files
+    ├── valid.rb
+    └── ...
+
+# Environment setup in test scenarios
+TEST_ID="$(ace-timestamp encode)"
+TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-{package}"
+mkdir -p "$TEST_DIR/artifacts"
+cd "$TEST_DIR/artifacts"
+
+# Report writing (agent responsibility)
+cat > "$TEST_DIR/test-report.md" << 'EOF'
+---
+test-id: MT-LINT-001
+...
+EOF
+
+cat > "$TEST_DIR/agent-experience-report.md" << 'EOF'
+---
+test-id: MT-LINT-001
+...
+EOF
+```
+
+**Error Handling:**
+- Missing test directory: Create automatically
+- Write permission error: Report error clearly, suggest manual intervention
+- Partial test completion: Still write reports with partial results
+
+**Edge Cases:**
+- Test aborted mid-execution: Write partial reports with status "INCOMPLETE"
+- No friction points found: AX report should note "No significant friction encountered"
+- Multiple test runs same package: Each run gets unique {run-id}
+
+### Success Criteria
+
+- [ ] **Report Persistence**: Test reports are written to disk in `.cache/test-e2e/{run-id}/`
+- [ ] **AX Report Captures Friction**: Agent experience report includes documentation gaps, tool issues, and improvement suggestions
+- [ ] **Artifact Organization**: Test data files are in `artifacts/` subdirectory, reports at root
+- [ ] **Metadata Tracked**: `metadata.yml` includes duration, git ref, tool versions
+- [ ] **Backward Compatible**: Existing E2E tests continue to work, can be updated incrementally
+
+### Validation Questions
+
+- [x] **Subfolder naming**: Should test artifacts go in `artifacts/` or `workspace/` or `cases/`?
+  - **Answer**: `artifacts/` (decided)
+- [x] **Metadata inclusion**: Should we include `metadata.yml` with run details?
+  - **Answer**: Yes (decided)
+- [ ] **Existing test migration**: Should we update existing tests (ace-lint, ace-prompt-prep) immediately or leave for future?
+- [ ] **Report format**: Is YAML frontmatter + markdown body the right format for reports?
+
+## Objective
+
+When agents run E2E tests, they discover valuable insights about documentation gaps, tool friction, and improvement opportunities. Currently this feedback is scattered in conversation and lost. This task adds systematic capture of agent experience alongside test results, creating a feedback loop for tool improvement.
+
+## Scope of Work
+
+- **User Experience Scope**: E2E test execution workflow
+- **System Behavior Scope**: Report generation and persistence
+- **Interface Scope**: Workflow instructions, templates, environment setup patterns
+
+### Deliverables
+
+#### Behavioral Specifications
+- Report format definitions (test-report, AX report, metadata)
+- Directory structure specification
+- Agent instructions for capturing friction points
+
+#### Validation Artifacts
+- Templates for each report type
+- Updated workflow instructions
+- Example reports demonstrating expected content
+
+## Out of Scope
+
+- ❌ **Implementation Details**: Specific file structures, code organization
+- ❌ **Automated Report Analysis**: No tooling to aggregate or analyze reports across runs
+- ❌ **Historical Report Management**: No cleanup, archiving, or retention policies
+- ❌ **Report Visualization**: No dashboards or UI for viewing reports
+
+## Implementation Plan
+
+### File Modifications
+
+#### Create
+- `ace-test-e2e-runner/handbook/templates/agent-experience-report.template.md` - AX report template
+- `ace-test-e2e-runner/handbook/templates/test-report.template.md` - Test results report template
+- `ace-test-e2e-runner/handbook/templates/metadata.template.yml` - Run metadata template
+
+#### Modify
+- `ace-test-e2e-runner/handbook/workflow-instructions/run-e2e-test.wf.md` - Add report persistence steps
+- `ace-test-e2e-runner/handbook/templates/test-e2e.template.md` - Update environment setup for `artifacts/`
+
+### Execution Steps
+
+- [ ] **Step 1**: Create `agent-experience-report.template.md`
+  - YAML frontmatter: test-id, package, agent, executed, status
+  - Sections: Summary, Friction Points (Documentation Gaps, Tool Behavior Issues, API/CLI Friction), Root Cause Analysis, Improvement Suggestions, Workarounds Used, Positive Observations
+
+- [ ] **Step 2**: Create `test-report.template.md`
+  - YAML frontmatter: test-id, package, agent, executed, status
+  - Sections: Results table, Overall status, Failed Test Details, Observations
+
+- [ ] **Step 3**: Create `metadata.template.yml`
+  - Fields: run-id, test-id, package, agent, started, completed, duration, status, git (branch, commit), tools (ruby, etc.)
+
+- [ ] **Step 4**: Update `run-e2e-test.wf.md`
+  - Modify Step 4 (Environment Setup): Add `artifacts/` subdirectory
+  - Add new Step 8.5: Write Reports to Disk
+    - Write test-report.md to $TEST_DIR/
+    - Write agent-experience-report.md to $TEST_DIR/
+    - Write metadata.yml to $TEST_DIR/
+  - Update Step 8 output to include report file paths
+
+- [ ] **Step 5**: Update `test-e2e.template.md`
+  - Change environment setup to use `artifacts/` subdirectory:
+    ```bash
+    mkdir -p "$TEST_DIR/artifacts"
+    cd "$TEST_DIR/artifacts"
+    ```
+  - Update test data paths to use `$TEST_DIR/artifacts/`
+
+- [ ] **Step 6**: Test the changes
+  - Run `/ace:run-e2e-test ace-lint MT-LINT-001`
+  - Verify `.cache/test-e2e/{run-id}/` contains all three reports
+  - Verify `artifacts/` contains test data files
+
+## Acceptance Criteria
+
+- [ ] Three new templates created in ace-test-e2e-runner/handbook/templates/
+- [ ] Workflow updated to write reports to disk
+- [ ] Test scenario template uses `artifacts/` subdirectory
+- [ ] Agent experience report captures friction points systematically
+- [ ] Backward compatible with existing tests
+
+## References
+
+- Plan file: `/Users/mc/.claude/plans/groovy-popping-rainbow.md`
+- Current E2E runner workflow: `ace-test-e2e-runner/handbook/workflow-instructions/run-e2e-test.wf.md`
+- Existing test template: `ace-test-e2e-runner/handbook/templates/test-e2e.template.md`
