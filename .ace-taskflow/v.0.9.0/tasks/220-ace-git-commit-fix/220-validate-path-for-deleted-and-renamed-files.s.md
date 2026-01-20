@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.220
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 220-fix-ace-git-commit-path-validation-for-deleted-and-renamed-files
+  path: "../ace-task.220"
+  created_at: '2026-01-20 00:17:59'
+  updated_at: '2026-01-20 00:17:59'
+  target_branch: main
 ---
 
 # Fix ace-git-commit path validation for deleted and renamed files

@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.222
-status: draft
+status: pending
 priority: medium
 estimate: 2h
 dependencies: []
