@@ -1,5 +1,5 @@
 ---
-title: ACE Overseer: Agentic Workflow Orchestration and Delegation Tool
+title: "ACE Overseer: Agentic Workflow Orchestration and Delegation Tool"
 filename_suggestion: feat-orchestration-overseer
 enhanced_at: 2026-01-19 20:49:02
 location: active
