@@ -105,41 +105,53 @@ Users creating subtasks from their current working branch expect the new worktre
 ### Technical Research Summary
 
 **Current Implementation Reviewed:**
-- `ParentTaskResolver#resolve_target_branch` (line 47-63) implements fallback logic
-- Current resolution order: parent's worktree branch → DEFAULT_TARGET ("main")
-- `GitCommand.current_branch` (line 93-97) is available and handles detached HEAD by returning SHA
-- Tests use `MockTaskFetcher` pattern for dependency injection
+- `ParentTaskResolver#resolve_target_branch` (lines 47-63): implements fallback logic
+- Current resolution order: parent's worktree branch → `DEFAULT_TARGET` ("main")
+- `GitCommand.current_branch` (lines 93-97): delegates to ace-git's CommandExecutor
+- ace-git's `CommandExecutor.current_branch` (lines 174-184): returns branch name, commit SHA (if detached), or nil
 
-**Key Finding:**
-- Line 79-88 (`extract_parent_branch`): Returns `DEFAULT_TARGET` when parent has no worktree
-- This is where we need to add current branch as intermediate fallback
+**Key Insight:**
+- When in detached HEAD state, `current_branch` returns the commit SHA (e.g., "abc123...")
+- We should NOT use a SHA as target_branch - only proper branch names make sense
+- Need to detect if returned value looks like a SHA (40+ hex chars or short ref)
+
+**File Locations Verified:**
+- `ace-git-worktree/lib/ace/git/worktree/molecules/parent_task_resolver.rb` - main file to modify
+- `ace-git-worktree/lib/ace/git/worktree/atoms/git_command.rb` - already requires ace-git
+- `ace-git-worktree/test/molecules/parent_task_resolver_test.rb` - test file to update
 
 ### File Modifications
 
 #### Modify: `ace-git-worktree/lib/ace/git/worktree/molecules/parent_task_resolver.rb`
 
 **Changes:**
+
 1. Add require statement at top (after line 4):
    ```ruby
    require_relative "../atoms/git_command"
    ```
 
-2. Add new private helper method after line 118:
+2. Add new private helper method (after `extract_parent_id`, ~line 118):
    ```ruby
    # Get current branch as fallback for target branch
+   # Returns nil if detached HEAD (SHA returned) or on error
    #
-   # @return [String, nil] Current branch name, or nil if detached HEAD or error
+   # @return [String, nil] Current branch name, or nil if not on a named branch
    def current_branch_fallback
-     Atoms::GitCommand.current_branch
+     branch = Atoms::GitCommand.current_branch
+     return nil unless branch
+     # Don't use commit SHAs as target branches (detached HEAD returns SHA)
+     return nil if branch.match?(/\A[0-9a-f]{7,40}\z/i)
+     branch
    rescue StandardError
      nil
    end
    ```
 
-3. Modify `extract_parent_branch` method (line 79-88):
+3. Modify `extract_parent_branch` method (lines 79-89):
    ```ruby
    def extract_parent_branch(parent_data)
-     return DEFAULT_TARGET unless parent_data
+     return current_branch_fallback || DEFAULT_TARGET unless parent_data
 
      # Support both symbol and string keys for compatibility
      worktree_data = parent_data[:worktree] || parent_data["worktree"]
@@ -153,16 +165,13 @@ Users creating subtasks from their current working branch expect the new worktre
 
 #### Modify: `ace-git-worktree/test/molecules/parent_task_resolver_test.rb`
 
-**Add new test methods** after line 191:
+**Update existing test** `test_default_target_when_parent_has_no_worktree` (lines 75-90):
+- This test must now stub `GitCommand.current_branch` to return nil to get "main"
+
+**Add new test methods** after `test_returns_default_when_task_fetcher_raises_exception` (after line 191):
 
 ```ruby
 def test_current_branch_fallback_when_parent_has_no_worktree
-  # Mock GitCommand to return specific branch
-  mock_git_command = Object.new
-  def mock_git_command.current_branch
-    "216-add-rubocop-as-fallback-for-standardrb"
-  end
-
   parent_task = {
     "id" => "v.0.9.0+task.216",
     "title" => "Parent Task"
@@ -174,15 +183,14 @@ def test_current_branch_fallback_when_parent_has_no_worktree
     title: "Subtask 01"
   }
 
-  # Stub GitCommand.current_branch
-  Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "216-add-rubocop-as-fallback-for-standardrb") do
+  Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "216-feature-branch") do
     resolver = create_resolver("216" => parent_task)
     result = resolver.resolve_target_branch(subtask_data)
-    assert_equal "216-add-rubocop-as-fallback-for-standardrb", result
+    assert_equal "216-feature-branch", result
   end
 end
 
-def test_main_fallback_when_detached_head
+def test_main_fallback_when_detached_head_returns_sha
   parent_task = {
     "id" => "v.0.9.0+task.216",
     "title" => "Parent Task"
@@ -193,7 +201,25 @@ def test_main_fallback_when_detached_head
     title: "Subtask 01"
   }
 
-  # Mock current_branch returning nil (detached HEAD simulation)
+  # Simulate detached HEAD returning commit SHA
+  Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "abc123def456") do
+    resolver = create_resolver("216" => parent_task)
+    result = resolver.resolve_target_branch(subtask_data)
+    assert_equal "main", result
+  end
+end
+
+def test_main_fallback_when_current_branch_returns_nil
+  parent_task = {
+    "id" => "v.0.9.0+task.216",
+    "title" => "Parent Task"
+  }
+
+  subtask_data = {
+    id: "v.0.9.0+task.216.01",
+    title: "Subtask 01"
+  }
+
   Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, nil) do
     resolver = create_resolver("216" => parent_task)
     result = resolver.resolve_target_branch(subtask_data)
@@ -222,25 +248,53 @@ def test_parent_worktree_branch_takes_precedence_over_current_branch
     assert_equal "216-parent-worktree-branch", result
   end
 end
+
+def test_current_branch_fallback_when_parent_worktree_has_no_branch
+  parent_task = {
+    "id" => "v.0.9.0+task.216",
+    "title" => "Parent Task",
+    "worktree" => {
+      "path" => ".ace-wt/task.216"
+      # No branch field
+    }
+  }
+
+  subtask_data = {
+    id: "v.0.9.0+task.216.01",
+    title: "Subtask 01"
+  }
+
+  Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "216-current-branch") do
+    resolver = create_resolver("216" => parent_task)
+    result = resolver.resolve_target_branch(subtask_data)
+    assert_equal "216-current-branch", result
+  end
+end
 ```
 
-### Implementation Steps
+### Execution Steps
 
-1. Add require statement for GitCommand atom
-2. Create `current_branch_fallback` helper method with error handling
-3. Modify `extract_parent_branch` to add current branch fallback at two points:
-   - When parent has no worktree metadata
-   - When parent worktree exists but has no branch field
-4. Add unit tests covering:
-   - Current branch fallback when parent has no worktree
-   - "main" fallback when detached HEAD (current_branch returns nil)
-   - Parent worktree branch precedence over current branch
-5. Run `ace-test` in ace-git-worktree package to verify
+- [ ] Add require statement for GitCommand atom at top of parent_task_resolver.rb
+- [ ] Add `current_branch_fallback` private helper method with SHA detection
+- [ ] Modify `extract_parent_branch` to use current branch fallback
+  > TEST: Existing tests still pass (backward compatibility)
+  > Command: `ace-test ace-git-worktree molecules`
+- [ ] Update `test_default_target_when_parent_has_no_worktree` to stub current_branch
+- [ ] Update `test_default_target_when_parent_worktree_has_no_branch` to stub current_branch
+- [ ] Add new test: `test_current_branch_fallback_when_parent_has_no_worktree`
+- [ ] Add new test: `test_main_fallback_when_detached_head_returns_sha`
+- [ ] Add new test: `test_main_fallback_when_current_branch_returns_nil`
+- [ ] Add new test: `test_parent_worktree_branch_takes_precedence_over_current_branch`
+- [ ] Add new test: `test_current_branch_fallback_when_parent_worktree_has_no_branch`
+  > TEST: All tests pass
+  > Command: `ace-test ace-git-worktree`
 
 ### Verification Plan
 
 **Automated:**
-- Run `ace-test` in ace-git-worktree package
+```bash
+ace-test ace-git-worktree
+```
 
 **Manual:**
 1. Create scenario matching bug report:
@@ -250,15 +304,28 @@ end
    # Verify target_branch in task file shows "216-add-rubocop..." not "main"
    ```
 
-### Edge Cases Handled
+### Risk Assessment
 
-- **Detached HEAD**: `current_branch` returns nil/SHA → falls back to "main"
-- **Git command failure**: Exception in `current_branch_fallback` → returns nil → falls back to "main"
-- **Parent worktree exists**: Still uses parent's branch (backward compatible)
-- **User provides --target-branch**: Handled by CLI before calling resolver (unchanged)
+**Technical Risks:**
+- **Risk:** SHA regex might not cover all edge cases
+  - **Probability:** Low
+  - **Impact:** Low (worst case: uses SHA as target, user can override)
+  - **Mitigation:** Regex matches 7-40 hex chars which covers short and full SHAs
+
+- **Risk:** Behavior change in existing tests
+  - **Probability:** High (expected)
+  - **Impact:** Low (tests need updating)
+  - **Mitigation:** Update 2 existing tests that assumed "main" fallback
+
+**Backward Compatibility:**
+- Parent worktree branch still takes precedence (preserved)
+- `--target-branch` CLI flag still overrides (unchanged - handled at CLI level)
+- Only change: when parent has no worktree, now uses current branch before "main"
 
 ## References
 
-- Plan file: `/Users/mc/.claude/plans/memoized-chasing-sun.md`
 - Bug report: User reported creating worktree for task 215.03 from branch 216 resulted in target_branch=main instead of 216
-- Related file: `ace-git-worktree/lib/ace/git/worktree/molecules/parent_task_resolver.rb`
+- Main file: `ace-git-worktree/lib/ace/git/worktree/molecules/parent_task_resolver.rb`
+- Test file: `ace-git-worktree/test/molecules/parent_task_resolver_test.rb`
+- GitCommand atom: `ace-git-worktree/lib/ace/git/worktree/atoms/git_command.rb`
+- ace-git CommandExecutor: `ace-git/lib/ace/git/atoms/command_executor.rb`
