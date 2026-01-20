@@ -1,5 +1,5 @@
 ---
-title: Refactor Test Suites: Isolate Minitest Units and Migrate Integration to E2E
+title: "Refactor Test Suites: Isolate Minitest Units and Migrate Integration to E2E"
 filename_suggestion: refactor-test-minitest-e2e-split
 enhanced_at: 2026-01-19 22:59:41
 location: active
