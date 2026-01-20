@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.222
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 222-fix-worktree-targetbranch-to-use-current-branch-when-parent-has-no-worktree
+  path: "../ace-task.222"
+  created_at: '2026-01-20 00:21:02'
+  updated_at: '2026-01-20 00:21:02'
+  target_branch: main
 ---
 
 # Fix worktree target_branch to use current branch when parent has no worktree
