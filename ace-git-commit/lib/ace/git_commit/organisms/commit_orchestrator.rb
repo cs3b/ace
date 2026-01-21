@@ -111,7 +111,11 @@ module Ace
             validation = @path_resolver.validate_paths(non_glob_paths)
             if validation[:invalid].any?
               puts "\n✗ Invalid path(s): #{validation[:invalid].join(', ')}"
-              puts "These paths do not exist. Please check the paths and try again."
+              if @path_resolver.last_error
+                puts "Git error: #{@path_resolver.last_error}"
+              else
+                puts "These paths do not exist or have no git changes. Please check the paths and try again."
+              end
               return false
             end
           end
@@ -128,12 +132,26 @@ module Ace
           # - Single files: pass through
           paths_to_stage = directories + single_files
 
-          # Expand glob patterns to tracked files
+          # Expand glob patterns to committable files (tracked + untracked)
           unless glob_patterns.empty?
             resolved_globs = @path_resolver.resolve_paths(glob_patterns)
             if resolved_globs.empty?
               puts "\n✗ No files found matching the specified pattern(s)"
-              puts "Glob patterns expand only to git-tracked files."
+
+              # Collect suggestions for simple glob patterns
+              suggestions = glob_patterns.filter_map do |pattern|
+                suggested = @path_resolver.suggest_recursive_pattern(pattern)
+                { original: pattern, suggested: suggested } if suggested
+              end
+
+              # Output consolidated hint if any suggestions exist
+              unless suggestions.empty?
+                puts "\nHint: The following pattern(s) only match files at the current directory level:"
+                suggestions.each do |s|
+                  puts "  '#{s[:original]}' → try '#{s[:suggested]}' for recursive matching"
+                end
+              end
+
               return false
             end
             paths_to_stage.concat(resolved_globs)

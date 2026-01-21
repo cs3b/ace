@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.311] - 2026-01-20
+
+### Fixed
+
+- **ace-git-commit 0.16.5**: Fix path validation for deleted and renamed files (task 220)
+  - PathResolver now checks git status for non-existent filesystem paths
+  - Deleted files (D status) are correctly validated as staged paths
+  - Renamed files (R status) are validated using new path from git status
+  - Graceful error handling when git commands fail
+
 ## [0.9.310] - 2026-01-19
 
 ### Fixed
