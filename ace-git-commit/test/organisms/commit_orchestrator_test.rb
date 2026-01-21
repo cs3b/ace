@@ -237,6 +237,9 @@ class CommitOrchestratorTest < TestCase
       { valid: [], invalid: ["nonexistent/"] },
       [["nonexistent/"]]
 
+    # Mock last_error to return nil (no git error, just missing path)
+    mock_path_resolver.expect :last_error, nil
+
     # Capture output
     original_stdout = $stdout
     $stdout = StringIO.new
@@ -354,6 +357,9 @@ class CommitOrchestratorTest < TestCase
     # Mock resolve_paths to return empty (no matching files)
     mock_path_resolver.expect :resolve_paths, [], [["**/*.xyz"]]
 
+    # Mock suggest_recursive_pattern (returns nil for already recursive pattern)
+    mock_path_resolver.expect :suggest_recursive_pattern, nil, ["**/*.xyz"]
+
     # Capture output
     original_stdout = $stdout
     $stdout = StringIO.new
@@ -367,7 +373,43 @@ class CommitOrchestratorTest < TestCase
 
     refute result, "Should return false when no files match pattern"
     assert_match(/No files found matching/, output)
-    assert_match(/git-tracked files/, output)
+
+    @mock_git.verify
+    mock_path_resolver.verify
+  end
+
+  def test_simple_glob_pattern_shows_recursive_hint
+    @mock_git.expect :in_repository?, true
+
+    # Add path_resolver mock
+    mock_path_resolver = Minitest::Mock.new
+    @orchestrator.instance_variable_set(:@path_resolver, mock_path_resolver)
+
+    # Mock glob_pattern? - called for validation, then for separating paths
+    mock_path_resolver.expect :glob_pattern?, true, ["*.rb"]  # In validation (reject from non_glob_paths)
+    mock_path_resolver.expect :glob_pattern?, true, ["*.rb"]  # In glob pattern check
+
+    # Mock resolve_paths to return empty (no matching files at root level)
+    mock_path_resolver.expect :resolve_paths, [], [["*.rb"]]
+
+    # Mock suggest_recursive_pattern - returns recursive alternative for simple glob
+    mock_path_resolver.expect :suggest_recursive_pattern, "**/*.rb", ["*.rb"]
+
+    # Capture output
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    result = @orchestrator.execute(
+      create_options(message: "test", files: ["*.rb"], quiet: false)
+    )
+
+    output = $stdout.string
+    $stdout = original_stdout
+
+    refute result, "Should return false when no files match pattern"
+    assert_match(/No files found matching/, output)
+    assert_match(/Hint:.*only match files at the current directory level/, output)
+    assert_match(/try '\*\*\/\*\.rb' for recursive matching/, output)
 
     @mock_git.verify
     mock_path_resolver.verify
