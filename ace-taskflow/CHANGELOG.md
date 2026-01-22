@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.10] - 2026-01-22
+
+### Fixed
+- Fix task 226 duplication in tasks listing by using TaskReferenceParser to qualify simple parent references for orchestrator matching
+  - Orchestrator ID format mismatch caused subtasks to display as orphans with duplicate parent
+  - Now converts simple parent references (e.g., "226") to qualified format (e.g., "v.0.9.0+task.226") before comparison
+  - Task 226 now appears once with subtasks properly indented underneath
+
 ## [0.33.9] - 2026-01-16
 
 ### Changed
