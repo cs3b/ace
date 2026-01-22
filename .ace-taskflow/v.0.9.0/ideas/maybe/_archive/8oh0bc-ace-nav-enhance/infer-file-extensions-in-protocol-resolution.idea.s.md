@@ -4,8 +4,9 @@ filename_suggestion: fix-nav-extension-inference
 enhanced_at: 2026-01-18 00:12:36
 location: active
 llm_model: gflash
+status: done
+completed_at: 2026-01-22T13:31:20+00:00
 ---
-
 # Enhance ace-nav Protocol Resolution to Infer File Extensions
 
 ## Problem
