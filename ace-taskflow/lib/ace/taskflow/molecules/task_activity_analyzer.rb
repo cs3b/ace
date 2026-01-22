@@ -68,7 +68,8 @@ module Ace
           return [] if done_tasks.empty?
 
           # Sort by modification time (most recent first) and limit
-          sorted = TaskFilter.sort_tasks(done_tasks, :modified, false)
+          # Note: consider_dependencies=false for temporal recency (not dependency order)
+          sorted = TaskFilter.sort_tasks(done_tasks, :modified, false, false)
 
           # Enrich with completed_at for pure formatting (I/O happens here, not in formatter)
           sorted.first(limit).map { |task| enrich_with_completed_at(task) }

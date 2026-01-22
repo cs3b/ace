@@ -171,6 +171,45 @@ class TaskActivityAnalyzerTest < AceTaskflowTestCase
     end
   end
 
+  def test_find_recently_done_sorts_by_mtime_not_dependency_order
+    # Test that recently done tasks are sorted by file mtime, NOT dependency order
+    # This is the fix for: recently done subtask not showing when it has a dependency
+    #
+    # Scenario: Task B depends on Task A
+    # - Task A (dependency): modified 1 hour ago
+    # - Task B (dependent): modified 5 minutes ago (more recent!)
+    # Expected: Task B should appear FIRST (most recent), regardless of dependency
+    Dir.mktmpdir do |tmpdir|
+      # Create two done tasks where task.002 depends on task.001
+      task_001_file = File.join(tmpdir, "task.001.md")
+      task_002_file = File.join(tmpdir, "task.002.md")
+
+      File.write(task_001_file, "---\nid: task.001\nstatus: done\n---\n# Task 001")
+      File.write(task_002_file, "---\nid: task.002\nstatus: done\ndependencies:\n  - task.001\n---\n# Task 002")
+
+      # Set task.001 to be older (1 hour ago)
+      older_time = Time.now - 3600
+      File.utime(older_time, older_time, task_001_file)
+
+      # Set task.002 to be more recent (5 minutes ago)
+      recent_time = Time.now - 300
+      File.utime(recent_time, recent_time, task_002_file)
+
+      tasks = [
+        make_task(id: "task.001", status: "done", path: task_001_file, dependencies: []),
+        make_task(id: "task.002", status: "done", path: task_002_file, dependencies: ["task.001"])
+      ]
+
+      result = @analyzer.find_recently_done(tasks, 10)
+
+      # The more recently modified task (task.002) should appear FIRST
+      # even though it depends on task.001
+      assert_equal 2, result.length
+      assert_equal "task.002", result.first[:id], "Recently done should be sorted by mtime, not dependency order"
+      assert_equal "task.001", result.last[:id]
+    end
+  end
+
   # --- find_in_progress tests ---
 
   def test_find_in_progress_filters_to_in_progress_status
