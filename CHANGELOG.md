@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.314] - 2026-01-22
+
+### Added
+
+- **ace-test-e2e-runner 0.2.1**: Container-based E2E test isolation documentation
+  - Guide updates for macOS container support (Lima, OrbStack)
+  - Template enhancements for containerized test scenarios
+
+## [0.9.313] - 2026-01-22
+
+### Fixed
+
+- **ace-git-worktree 0.12.4**: Fix branch detection bugs in WorktreeCreator (task 222)
+  - `branch_exists?`: Check local and remote refs separately (git show-ref --verify requires ALL refs, not ANY)
+  - `detect_remote_branch`: Validate remote names to prevent `feature/login` from being treated as remote branch
+
+## [0.9.312] - 2026-01-22
+
+### Fixed
+
+- **ace-git-worktree 0.12.3**: Fallback to current branch for target branch resolution (task 222)
+  - When parent task has no worktree metadata, use current branch instead of defaulting to "main"
+  - Fixes subtask creation when orchestrator doesn't use worktrees
+
 ## [0.9.311] - 2026-01-20
 
 ### Fixed
