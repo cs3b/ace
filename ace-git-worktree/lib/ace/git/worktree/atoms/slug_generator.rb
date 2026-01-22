@@ -154,6 +154,33 @@ module Ace
               slug.empty? ? "task" : slug
             end
 
+            # Convert a branch name to a safe directory name
+            #
+            # Sanitizes branch names for use as directory names by replacing
+            # characters that are not alphanumeric, hyphens, or underscores with hyphens.
+            # Also handles slash-separated branch names (e.g., "origin/feature/auth").
+            #
+            # @param branch_name [String] Branch name to convert
+            # @return [String] Directory-safe name
+            #
+            # @example Simple branch name
+            #   SlugGenerator.to_directory_name("feature-branch")
+            #   # => "feature-branch"
+            #
+            # @example Branch with slashes (remote or hierarchical)
+            #   SlugGenerator.to_directory_name("origin/feature/auth")
+            #   # => "origin-feature-auth"
+            #
+            # @example Branch with special characters
+            #   SlugGenerator.to_directory_name("fix:bug#123")
+            #   # => "fix-bug-123"
+            def to_directory_name(branch_name)
+              return "worktree" if branch_name.nil? || branch_name.empty?
+
+              # Replace slashes and any non-alphanumeric/hyphen/underscore with hyphens
+              branch_name.to_s.gsub("/", "-").gsub(/[^a-zA-Z0-9\-_]/, "-")
+            end
+
             # Check if a slug is valid for git branch names
             #
             # @param slug [String] Slug to validate
