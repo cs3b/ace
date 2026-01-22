@@ -8,4 +8,4 @@ ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
 _.path = ["./bin", "./dev-tools/exe"]
 
 [tools]
-ruby = "latest"
+ruby = "3.4.7"
