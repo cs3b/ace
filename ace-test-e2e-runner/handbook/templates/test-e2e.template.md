@@ -52,6 +52,31 @@ end
 EOF
 ```
 
+<!-- For tests that create isolated git repos and use ace-taskflow/ace-git-worktree:
+
+```bash
+# Create isolated git repository
+REPO_DIR="$TEST_DIR/test-repo"
+mkdir -p "$REPO_DIR"
+cd "$REPO_DIR"
+git init --quiet .
+git config user.email "test@example.com"
+git config user.name "Test User"
+
+# Create taskflow structure...
+mkdir -p .ace-taskflow/v.test/tasks/001-feature
+# ... create task files ...
+git add .ace-taskflow/
+git commit -m "Add taskflow structure" --quiet
+
+# IMPORTANT: Set PROJECT_ROOT_PATH for isolated testing
+# This ensures ace-* commands use the isolated repo, not the main project
+export PROJECT_ROOT_PATH="$REPO_DIR"
+```
+
+See: e2e-testing.g.md § "Environment Isolation for Taskflow-Aware Tests"
+-->
+
 ## Test Cases
 
 ### TC-001: {Test Case Name}
