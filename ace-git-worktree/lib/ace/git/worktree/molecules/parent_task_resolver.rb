@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/task_id_extractor"
+require_relative "../atoms/git_command"
 require_relative "task_fetcher"
 
 module Ace
@@ -24,6 +25,10 @@ module Ace
           # Regex pattern for extracting task number from full task ID
           # Pattern: v.0.9.0+task.202.01 -> captures "202.01"
           TASK_ID_PATTERN = /task\.(\d+(?:\.\d+)?)\z/.freeze
+
+          # SHA pattern for detecting detached HEAD state
+          # Git returns 7-40 hex characters for SHAs (7 for short, 40 for full)
+          SHA_PATTERN = /\A[0-9a-f]{7,40}\z/i.freeze
 
           # Initialize a new ParentTaskResolver
           #
@@ -74,18 +79,49 @@ module Ace
 
           # Extract parent's worktree branch from task data
           #
+          # Implements a 3-level fallback priority chain for determining the target branch:
+          #
+          # Priority 1: Parent worktree branch
+          #   - If parent task has worktree metadata with a branch, use that branch
+          #   - This enables subtasks to target their orchestrator's feature branch
+          #
+          # Priority 2: Current branch fallback
+          #   - If parent has no worktree metadata, use the current branch
+          #   - Skipped if in detached HEAD state (SHA detected)
+          #   - Allows creating subtask worktrees from the parent's context
+          #
+          # Priority 3: DEFAULT_TARGET ("main")
+          #   - Final fallback when no branch context is available
+          #   - Ensures a valid target branch is always returned
+          #
           # @param parent_data [Hash] Parent task data hash
-          # @return [String] Parent's worktree branch or DEFAULT_TARGET
+          # @return [String] Parent's worktree branch, current branch, or DEFAULT_TARGET
+          #
+          # @example Parent with worktree metadata
+          #   extract_parent_branch({ worktree: { branch: "202-feature" } })
+          #   # => "202-feature"
+          #
+          # @example Parent without worktree (uses current branch)
+          #   # When current branch is "develop"
+          #   extract_parent_branch({ id: "task.202" })
+          #   # => "develop"
+          #
+          # @example Detached HEAD state (falls back to main)
+          #   # When in detached HEAD state
+          #   extract_parent_branch({ id: "task.202" })
+          #   # => "main"
           def extract_parent_branch(parent_data)
-            return DEFAULT_TARGET unless parent_data
+            # Try parent worktree branch first
+            if parent_data
+              worktree_data = parent_data[:worktree] || parent_data["worktree"]
+              if worktree_data.is_a?(Hash)
+                branch = worktree_data[:branch] || worktree_data["branch"]
+                return branch if branch
+              end
+            end
 
-            # Support both symbol and string keys for compatibility
-            worktree_data = parent_data[:worktree] || parent_data["worktree"]
-            return DEFAULT_TARGET unless worktree_data.is_a?(Hash)
-
-            # Return parent's worktree branch (support both key types)
-            parent_branch = worktree_data[:branch] || worktree_data["branch"]
-            parent_branch || DEFAULT_TARGET
+            # Fallback: current branch (if valid) or default
+            current_branch_fallback || DEFAULT_TARGET
           end
 
           private
@@ -115,6 +151,30 @@ module Ace
 
             # Extract parent number: 202.01 -> 202
             task_number.split(".").first
+          end
+
+          # Get current branch as fallback for target branch
+          #
+          # Returns the current branch name if available and not a detached HEAD.
+          # Used when parent task has no worktree metadata.
+          #
+          # @return [String, nil] Current branch name or nil if detached/error
+          def current_branch_fallback
+            branch = Atoms::GitCommand.current_branch
+            return nil if branch.nil? || branch.empty?
+            return nil if branch == "HEAD"
+
+            # If branch looks like a SHA, verify it's not actually a branch name
+            # This handles edge case of hex-only branch names like "deadbeef"
+            if branch.match?(SHA_PATTERN)
+              # Check if refs/heads/<name> exists - if so, it's a real branch
+              return nil unless Atoms::GitCommand.ref_exists?("refs/heads/#{branch}")
+            end
+
+            branch
+          rescue StandardError => e
+            warn "[DEBUG] current_branch_fallback failed: #{e.message}" if ENV["DEBUG"]
+            nil
           end
         end
       end

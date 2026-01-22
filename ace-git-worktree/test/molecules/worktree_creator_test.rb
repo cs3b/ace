@@ -483,8 +483,13 @@ class WorktreeCreatorTest < Minitest::Test
     }
 
     remote_branches.each do |input, expected|
-      result = @creator.send(:detect_remote_branch, input)
-      assert_equal expected, result, "Failed for #{input}"
+      # Stub validate_remote_exists to return true for the expected remote
+      @creator.stub(:validate_remote_exists, ->(remote, _path) {
+        { exists: remote == expected[:remote], remotes: [expected[:remote]] }
+      }) do
+        result = @creator.send(:detect_remote_branch, input)
+        assert_equal expected, result, "Failed for #{input}"
+      end
     end
   end
 
@@ -503,6 +508,54 @@ class WorktreeCreatorTest < Minitest::Test
     invalid.each do |input|
       result = @creator.send(:detect_remote_branch, input)
       assert_nil result, "Should return nil for invalid format: #{input}"
+    end
+  end
+
+  def test_detect_remote_branch_with_local_slash_branch
+    # Branches with slashes should return nil if the first part isn't a real remote
+    # This is the bug fix: "feature/login" should NOT be treated as remote "feature" branch "login"
+    local_slash_branches = [
+      "feature/login",
+      "bugfix/issue-123",
+      "release/v1.0.0",
+      "hotfix/security-patch",
+      "epic/user-management",
+      "team/frontend/component"
+    ]
+
+    # Stub validate_remote_exists to return false (these aren't real remotes)
+    @creator.stub(:validate_remote_exists, ->(remote, _path) {
+      { exists: false, remotes: ["origin", "upstream"] }
+    }) do
+      local_slash_branches.each do |branch|
+        result = @creator.send(:detect_remote_branch, branch)
+        assert_nil result, "Should return nil for local branch with slash: #{branch}"
+      end
+    end
+  end
+
+  def test_detect_remote_branch_distinguishes_real_remotes_from_branch_prefixes
+    # "origin/feature" should be detected as remote when "origin" is configured
+    # "feature/login" should NOT be detected as remote when "feature" is not configured
+
+    @creator.stub(:validate_remote_exists, ->(remote, _path) {
+      # Only "origin" and "upstream" are real remotes
+      real_remotes = %w[origin upstream]
+      { exists: real_remotes.include?(remote), remotes: real_remotes }
+    }) do
+      # Real remote branches should be detected
+      origin_result = @creator.send(:detect_remote_branch, "origin/feature")
+      assert_equal({ remote: "origin", branch: "feature" }, origin_result)
+
+      upstream_result = @creator.send(:detect_remote_branch, "upstream/main")
+      assert_equal({ remote: "upstream", branch: "main" }, upstream_result)
+
+      # Local branches with slash prefixes should NOT be detected as remote
+      feature_result = @creator.send(:detect_remote_branch, "feature/login")
+      assert_nil feature_result, "feature/login should be nil when 'feature' is not a remote"
+
+      release_result = @creator.send(:detect_remote_branch, "release/v2.0")
+      assert_nil release_result, "release/v2.0 should be nil when 'release' is not a remote"
     end
   end
 
@@ -883,6 +936,201 @@ class WorktreeCreatorTest < Minitest::Test
           end
         end
       end
+    end
+  end
+
+  # Tests for branch existence detection (TC-002, TC-010 fix)
+  def test_branch_exists_with_local_branch
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+    # Mock show-ref to return success for local branch
+    execute_stub = lambda do |*args, **opts|
+      if args.include?("refs/heads/existing-branch")
+        { success: true, output: "", error: "", exit_code: 0 }
+      else
+        { success: false, output: "", error: "", exit_code: 1 }
+      end
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
+      assert creator.send(:branch_exists?, "existing-branch"), "Should detect existing local branch"
+      refute creator.send(:branch_exists?, "nonexistent-branch"), "Should return false for nonexistent branch"
+    end
+  end
+
+  def test_branch_exists_with_remote_tracking_branch
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+    # Mock show-ref to return failure for local but success for remote tracking branch
+    execute_stub = lambda do |*args, **opts|
+      if args.include?("refs/remotes/origin/remote-branch")
+        { success: true, output: "", error: "", exit_code: 0 }
+      else
+        { success: false, output: "", error: "", exit_code: 1 }
+      end
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
+      assert creator.send(:branch_exists?, "remote-branch"), "Should detect remote tracking branch"
+    end
+  end
+
+  def test_branch_exists_with_local_only_branch
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+    # Track calls to ensure we're testing the fix (separate calls for local and remote)
+    call_count = 0
+    execute_stub = lambda do |*args, **opts|
+      call_count += 1
+      if args.include?("refs/heads/local-only-branch")
+        { success: true, output: "", error: "", exit_code: 0 }
+      else
+        { success: false, output: "", error: "", exit_code: 1 }
+      end
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
+      result = creator.send(:branch_exists?, "local-only-branch")
+      assert result, "Should detect local-only branch (no remote tracking)"
+      # Should short-circuit after finding local branch
+      assert_equal 1, call_count, "Should short-circuit after finding local branch"
+    end
+  end
+
+  def test_branch_exists_with_remote_only_branch
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+    # Mock: local branch doesn't exist, but remote tracking does
+    execute_stub = lambda do |*args, **opts|
+      if args.include?("refs/remotes/origin/remote-only-branch")
+        { success: true, output: "", error: "", exit_code: 0 }
+      else
+        { success: false, output: "", error: "", exit_code: 1 }
+      end
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
+      result = creator.send(:branch_exists?, "remote-only-branch")
+      assert result, "Should detect remote-only branch when local doesn't exist"
+    end
+  end
+
+  def test_branch_exists_returns_false_when_neither_exists
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+    execute_stub = lambda do |*args, **opts|
+      { success: false, output: "", error: "", exit_code: 1 }
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
+      result = creator.send(:branch_exists?, "nonexistent-branch")
+      refute result, "Should return false when neither local nor remote branch exists"
+    end
+  end
+
+  def test_branch_exists_short_circuits_on_local_hit
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+    # Track which refs are checked
+    checked_refs = []
+    execute_stub = lambda do |*args, **opts|
+      ref = args.find { |a| a.start_with?("refs/") }
+      checked_refs << ref if ref
+      if args.include?("refs/heads/test-branch")
+        { success: true, output: "", error: "", exit_code: 0 }
+      else
+        { success: false, output: "", error: "", exit_code: 1 }
+      end
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:execute, execute_stub) do
+      result = creator.send(:branch_exists?, "test-branch")
+      assert result
+      # Should only check local ref since it found it
+      assert_equal ["refs/heads/test-branch"], checked_refs, "Should short-circuit after local hit"
+    end
+  end
+
+  def test_create_traditional_uses_existing_branch
+    config = mock_config(File.join(@temp_dir, "worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
+
+    # Track which method was called
+    captured_method = nil
+    captured_args = nil
+
+    # Mock branch_exists? to return true
+    creator.stub(:branch_exists?, true) do
+      # Mock create_worktree_for_existing_branch
+      creator.stub(:create_worktree_for_existing_branch) do |path, branch, root|
+        captured_method = :create_worktree_for_existing_branch
+        captured_args = { path: path, branch: branch, root: root }
+        { success: true, worktree_path: path, branch: branch, start_point: nil, git_root: root, error: nil }
+      end
+
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+        result = creator.create_traditional("existing-branch", nil, git_root: @temp_dir)
+
+        assert result[:success]
+        assert_equal :create_worktree_for_existing_branch, captured_method, "Should use create_worktree_for_existing_branch"
+        assert_equal "existing-branch", captured_args[:branch]
+      end
+    end
+  end
+
+  def test_create_traditional_creates_new_branch_when_not_exists
+    config = mock_config(File.join(@temp_dir, "worktrees"))
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new(config: config)
+
+    FileUtils.mkdir_p(File.join(@temp_dir, "worktrees"))
+
+    # Mock branch_exists? to return false
+    creator.stub(:branch_exists?, false) do
+      # Mock create_worktree to be called (new branch path)
+      Ace::Git::Worktree::Atoms::GitCommand.stub(:git_root, @temp_dir) do
+        Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, "main") do
+          Ace::Git::Worktree::Atoms::GitCommand.stub(:ref_exists?, true) do
+            captured_args = nil
+            worktree_stub = lambda do |*args, **opts|
+              captured_args = args
+              { success: true, output: "", error: nil }
+            end
+
+            Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
+              result = creator.create_traditional("new-branch", nil, git_root: @temp_dir)
+
+              assert result[:success]
+              # The -b flag indicates a new branch is being created
+              assert_includes captured_args, "-b", "Should use -b flag for new branch"
+              assert_includes captured_args, "new-branch", "Should include branch name"
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_create_worktree_for_existing_branch_uses_no_b_flag
+    creator = Ace::Git::Worktree::Molecules::WorktreeCreator.new
+
+    captured_args = nil
+    worktree_stub = lambda do |*args, **opts|
+      captured_args = args
+      { success: true, output: "", error: nil }
+    end
+
+    Ace::Git::Worktree::Atoms::GitCommand.stub(:worktree, worktree_stub) do
+      result = creator.send(:create_worktree_for_existing_branch,
+                            "/tmp/worktree-path",
+                            "existing-branch",
+                            "/repo")
+
+      assert result[:success]
+      refute_includes captured_args, "-b", "Should NOT use -b flag for existing branch"
+      assert_includes captured_args, "existing-branch", "Should include branch name"
+      assert_includes captured_args, "/tmp/worktree-path", "Should include worktree path"
     end
   end
 
