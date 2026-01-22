@@ -8,6 +8,7 @@ require_relative "../molecules/stats_formatter"
 require_relative "../molecules/command_option_parser"
 require_relative "../models/task"
 require_relative "../atoms/path_formatter"
+require_relative "../atoms/task_reference_parser"
 require_relative "helpers"
 
 module Ace
@@ -682,12 +683,28 @@ module Ace
         end
 
         # Check if an orchestrator ID matches a parent_id (handles format mismatch)
-        # e.g., "v.0.9.0+task.211.00" matches parent_id "v.0.9.0+task.211"
+        # e.g., "v.0.9.0+task.226" matches parent_id "226" (simple reference)
+        # Also handles subtask cases: "v.0.9.0+task.211.00" matches parent_id "v.0.9.0+task.211"
         def orchestrator_id_matches_parent?(orch_id, parent_id)
           orch = orch_id.to_s
           parent = parent_id.to_s
-          # Exact match or orchestrator ID starts with parent_id followed by dot
-          orch == parent || orch.start_with?("#{parent}.")
+
+          # Exact match
+          return true if orch == parent
+
+          # Orchestrator ID starts with parent_id followed by dot (for subtasks like 211.01)
+          return true if orch.start_with?("#{parent}.")
+
+          # Extract release from orchestrator ID and qualify parent reference
+          # e.g., orch_id "v.0.9.0+task.226" has release "v.0.9.0"
+          # Convert parent "226" to "v.0.9.0+task.226" and compare
+          orch_parsed = Atoms::TaskReferenceParser.parse(orch_id)
+          if orch_parsed && orch_parsed[:release]
+            qualified_parent = Atoms::TaskReferenceParser.convert(parent, :qualified, release: orch_parsed[:release])
+            return true if qualified_parent && orch == qualified_parent
+          end
+
+          false
         end
 
         # Find children subtasks for an orchestrator, handling ID format mismatch
