@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.318] - 2026-01-22
+
+### Fixed
+
+- **ace-taskflow 0.33.10**: Fix `--child-of` flag to support dry-cli's required string values
+  - Use `--child-of none` to promote subtask to standalone (was `--child-of` without value)
+  - Maintains backwards compatibility with `--child-of=` (empty string)
+  - Update legacy optparse parser to handle "none" sentinel value
+  - Fix documentation examples to use subtask reference (e.g., `187.12 --child-of none`)
+  - Add test coverage for "none" sentinel value behavior
+
+## [0.9.317] - 2026-01-22
+
+### Added
+
+- **ace-handbook 0.7.0**: New guides extracted for better discoverability (task 218.09)
+  - `prompt-caching.g.md` - PromptCacheManager patterns for LLM prompt generation
+  - `cli-dry-cli.g.md` - Complete dry-cli framework reference
+  - `mono-repo-patterns.g.md` - Mono-repo development patterns and binstubs
+
+### Changed
+
+- **docs/ace-gems.g.md**: Condensed from 826 to 221 lines with links to new guides
+- **docs/decisions.md**: Condensed and raised max_lines limit to 250
+
 ## [0.9.316] - 2026-01-22
 
 ### Fixed

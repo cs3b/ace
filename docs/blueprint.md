@@ -6,14 +6,14 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2025-12-01'
+  last-updated: '2026-01-22'
 ---
 
 # Project Blueprint: ACE (Agentic Coding Environment)
 
 ## What is a Blueprint?
 
-This document provides navigation guidance for the ACE codebase, highlighting what to modify and what to avoid.
+A blueprint is a navigation guide - not architecture documentation. It tells AI agents and developers what paths exist, which to treat carefully, and which to ignore. For architecture decisions and design patterns, see [architecture.md](architecture.md).
 
 ## Repository Structure
 
@@ -31,8 +31,6 @@ docs/           # System documentation and ADRs
 _legacy/        # Archived content (dev-handbook, dev-tools)
 ```
 
-For detailed architecture and ATOM pattern, see [architecture.md](architecture.md).
-
 ## Read-Only Paths
 
 AI agents should treat these as read-only unless explicitly instructed to modify:
@@ -43,7 +41,6 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 - `ace-*/test/**/*` # Gem test files (modify only for test updates)
 - `ace-*/handbook/**/*` # Gem workflows, guides, templates
 - `.github/workflows/**/*` # CI/CD configuration
-- `.ace-taskflow/done/**/*` # Completed tasks
 - `.ace-taskflow/v.*/retro/**/*` # Development retrospectives
 - `Gemfile.lock` # Root workspace lock file
 

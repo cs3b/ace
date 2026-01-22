@@ -1,12 +1,12 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 150
+  max_lines: 250
   required_sections:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-12'
+  last-updated: '2026-01-22'
 ---
 
 # Project Decisions
@@ -61,7 +61,7 @@ This document provides actionable decisions from Architecture Decision Records (
 - Use `Ace::Config::Models::Config.wrap(defaults, user_config)` for merging defaults with overrides
 - Provide `reset_config!` method for test isolation
 - Support backward compatibility for renamed keys with deprecation path
-**Status**: Task 143 completed December 2025 - all applicable packages now compliant (ace-taskflow, ace-nav, ace-test-runner, ace-git-commit, ace-docs, ace-lint, ace-prompt-prep, ace-review, ace-search). ace-git and ace-git-secrets were already compliant. ace-llm packages deferred (ENV-based). Task 157 extracted ace-config gem from ace-support-core.
+**Status**: All applicable packages compliant (Task 143, Dec 2025). ace-llm deferred (ENV-based). ace-config extracted (Task 157).
 **Details**: [ADR-022](decisions/ADR-022-configuration-default-and-override-pattern.md) (supersedes ADR-019)
 
 ## Gem Architecture Patterns
@@ -135,18 +135,15 @@ This document provides actionable decisions from Architecture Decision Records (
 **Impact**: When integrating with LLM providers, first attempt to get context size from API. Maintain static mappings as fallback for providers without API support.
 **Details**: [ADR-014](decisions/ADR-014-LLM-Integration-Architecture.md)
 
+### Git Secrets Security Model
+**Decision**: ace-git-secrets uses gitleaks as primary detection with Ruby fallback, multiple defense layers, and documented threat model.
+**Impact**: When working with secret detection:
+- Use gitleaks integration for production scanning
+- Understand confidence levels for effective filtering
+- Review reports with `raw_value` for revocation workflows
+- Token handling uses memory-backed tmpfs when available
+**Details**: [ADR-025](decisions/ADR-025-ace-git-secrets-security-model.md)
+
 ## Archived Decisions
 
-The following decisions are **archived** as they apply only to legacy code or have been superseded:
-- **ADR-006**: CI-Aware VCR Configuration (VCR not used in current gems)
-- **ADR-007**: Zeitwerk Autoloading (current gems use explicit requires)
-- **ADR-008**: Observability with dry-monitor (not used in current gems)
-- **ADR-009**: Centralized CLI Error Reporting (superseded by ADR-018 Thor, then ADR-023 dry-cli)
-- **ADR-018**: Thor CLI Commands Pattern (superseded by ADR-023 dry-cli due to option consumption bugs)
-- **ADR-019**: Configuration Architecture (superseded by ADR-022)
-
-See `docs/decisions/archive/README.md` for details on archived decisions.
-
-## Decision History
-
-For complete decision history and detailed rationale, refer to the individual ADR documents in `docs/decisions/`.
+ADR-006/007/008 (legacy tech), ADR-009/018/019 (superseded). See `docs/decisions/archive/README.md` for details and `docs/decisions/` for complete history.
