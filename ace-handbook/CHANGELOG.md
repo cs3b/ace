@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-01-22
+
+### Added
+- New guides extracted from ace-gems.g.md for better discoverability:
+  - `prompt-caching.g.md` - PromptCacheManager patterns for LLM prompt generation
+  - `cli-dry-cli.g.md` - Complete dry-cli framework reference
+  - `mono-repo-patterns.g.md` - Mono-repo development patterns and binstubs
+- Document IO isolation and testing pyramid patterns
+
+### Technical
+- Lower Ruby version requirement to >= 3.2.0
+
 ## [0.6.0] - 2026-01-18
 
 ### Added
