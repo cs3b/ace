@@ -1,0 +1,104 @@
+# Skill validation configuration for ace-lint
+# Follows ADR-022 configuration pattern
+#
+# This configuration defines validation rules for:
+# - SKILL.md files (Claude Code skills)
+# - *.wf.md files (workflow instructions)
+# - *.ag.md files (agent definitions)
+
+# Known tool names for allowed-tools validation
+# These are the valid tool names that can appear in allowed-tools frontmatter
+known_tools:
+  - Bash
+  - Read
+  - Edit
+  - Write
+  - Glob
+  - Grep
+  - WebFetch
+  - WebSearch
+  - TodoWrite
+  - Task
+  - NotebookEdit
+  - AskUserQuestion
+  - Skill
+  - EnterPlanMode
+  - ExitPlanMode
+  - KillShell
+  - TaskOutput
+
+# Bash pattern prefixes (for Bash(ace-*:*) patterns)
+# When allowed-tools contains "Bash(prefix:*)", the prefix must match one of these
+known_bash_prefixes:
+  - ace-bundle
+  - ace-docs
+  - ace-git
+  - ace-git-commit
+  - ace-git-worktree
+  - ace-lint
+  - ace-nav
+  - ace-prompt-prep
+  - ace-review
+  - ace-search
+  - ace-taskflow
+  - ace-test
+  - ace-test-suite
+  - firebase
+  - git
+  - gh
+  - npm
+  - npx
+  - bundle
+  - mise
+  - ruby
+
+# Schema definitions by file type
+schemas:
+  skill:
+    required_fields:
+      - name
+      - description
+      - user-invocable
+      - allowed-tools
+      - source
+    required_comments:
+      - "# bundle:"
+      - "# agent:"
+    field_validations:
+      name:
+        type: string
+        pattern: "^ace[:-]"
+        error_message: "name must start with 'ace:' or 'ace-'"
+      user-invocable:
+        type: boolean
+      allowed-tools:
+        type: array
+        validate_tools: true
+      source:
+        type: string
+
+  workflow:
+    required_fields:
+      - name
+      - description
+      - allowed-tools
+    field_validations:
+      name:
+        type: string
+        pattern: "^[a-z][a-z0-9-]*$"
+        error_message: "name must be lowercase with hyphens (e.g., 'my-workflow')"
+      allowed-tools:
+        type: array
+        validate_tools: true
+
+  agent:
+    required_fields:
+      - name
+      - description
+      - type
+    field_validations:
+      type:
+        type: string
+        values:
+          - agent
+        error_message: "type must be 'agent'"
