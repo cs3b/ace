@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-01-22
+
+### Added
+- Skill, workflow, and agent file validation (task 226)
+  - New `SkillSchemaLoader` atom for loading validation schemas from YAML
+  - New `AllowedToolsValidator` atom for validating tool declarations against known Claude tools
+  - New `CommentValidator` atom for verifying HTML-style markdown comment structure
+  - New `SkillValidator` molecule orchestrating complete skill/workflow/agent validation
+  - Extended `TypeDetector` to recognize SKILL.md, *.wf.md, and *.ag.md files
+  - Default validation schema in `.ace-defaults/lint/skills.yml`
+  - Auto-routing in `LintOrchestrator` for skill/workflow/agent file types
+
+### Technical
+- Validation checks: required frontmatter fields, allowed-tools against known tools, comment block structure
+- Support for configurable validation rules per file type (skill, workflow, agent)
+
 ## [0.12.0] - 2026-01-19
 
 ### Added
