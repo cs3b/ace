@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
                      "Includes test scenario templates and execution workflows."
   spec.homepage = "https://github.com/cs3b/ace-meta/tree/main/ace-test-e2e-runner"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.3.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
