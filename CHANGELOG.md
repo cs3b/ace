@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.320] - 2026-01-22
+
+### Fixed
+
+- **ace-taskflow 0.33.12**: Fix recently done tasks to sort by file modification time, not dependency order
+  - Task with dependencies now appears in recently done based on when it was last modified
+  - Previously, dependency ordering took precedence, causing recently completed tasks to appear incorrectly
+  - Added test case to verify temporal sorting regardless of dependencies
+
 ## [0.9.319] - 2026-01-22
 
 ### Added
