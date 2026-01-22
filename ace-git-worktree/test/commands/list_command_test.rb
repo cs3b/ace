@@ -109,4 +109,56 @@ class ListCommandTest < Minitest::Test
       assert_equal 1, result, "Should reject dangerous search: #{dangerous_search}"
     end
   end
+
+  # Tests for format option handling (TC-005 fix)
+  def test_format_option_converted_to_symbol
+    # Mock worktree manager to verify format is passed as symbol
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+      # The format should be a symbol after conversion
+      options[:format] == :json
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+    result = @command.run(["--format", "json"])
+    assert_equal 0, result
+    mock_worktree_manager.verify
+  end
+
+  def test_format_option_json_converted_to_symbol
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+      options[:format] == :json
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    result = @command.run(["--format", "json"])
+    assert_equal 0, result
+    mock_worktree_manager.verify
+  end
+
+  def test_format_option_table_converted_to_symbol
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+      options[:format] == :table
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    result = @command.run(["--format", "table"])
+    assert_equal 0, result
+    mock_worktree_manager.verify
+  end
+
+  def test_format_option_simple_converted_to_symbol
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+      options[:format] == :simple
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+    result = @command.run(["--format", "simple"])
+    assert_equal 0, result
+    mock_worktree_manager.verify
+  end
 end

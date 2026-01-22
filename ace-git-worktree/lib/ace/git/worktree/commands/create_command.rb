@@ -583,6 +583,7 @@ module Ace
             creation_options = {
               path: options[:path],
               source: options[:source],
+              dry_run: options[:dry_run],
               no_mise_trust: options[:no_mise_trust],
               force: options[:force]
             }.compact
@@ -591,7 +592,7 @@ module Ace
             result = @manager.create(options[:branch_name], creation_options)
 
             if result[:success]
-              display_traditional_creation_result(result)
+              display_traditional_creation_result(result, options[:dry_run])
               0
             else
               puts "Failed to create worktree: #{result[:error]}"
@@ -761,14 +762,23 @@ module Ace
           # Display traditional worktree creation result
           #
           # @param result [Hash] Creation result
-          def display_traditional_creation_result(result)
-            puts "\nWorktree created successfully!"
-            puts "Worktree path: #{result[:worktree_path]}"
-            puts "Branch: #{result[:branch]}"
-            puts "Git root: #{result[:git_root]}"
+          # @param dry_run [Boolean] Whether this was a dry run
+          def display_traditional_creation_result(result, dry_run = false)
+            if dry_run
+              puts "\nDry run - no changes made:"
+              puts "Would create worktree at: #{result[:would_create][:worktree_path]}"
+              puts "Would create branch: #{result[:would_create][:branch]}"
+              puts "Branch exists: #{result[:would_create][:branch_exists]}"
+              puts "Source: #{result[:would_create][:source]}"
+            else
+              puts "\nWorktree created successfully!"
+              puts "Worktree path: #{result[:worktree_path]}"
+              puts "Branch: #{result[:branch]}"
+              puts "Git root: #{result[:git_root]}"
 
-            display_warnings(result[:warnings]) if result[:warnings]
-            display_navigation_hint(result[:worktree_path])
+              display_warnings(result[:warnings]) if result[:warnings]
+              display_navigation_hint(result[:worktree_path])
+            end
           end
 
           # Display warnings

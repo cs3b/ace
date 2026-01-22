@@ -34,6 +34,9 @@ module Ace
 
               validate_options(options)
 
+              # Convert format to symbol for WorktreeLister compatibility
+              options[:format] = options[:format].to_sym if options[:format]
+
               result = @manager.list_all(options)
 
               if result[:success]
