@@ -441,6 +441,15 @@ class TaskArgParserTest < Minitest::Test
     assert_equal :promote, result[:child_of]
   end
 
+  def test_parse_move_args_child_of_none_sentinel
+    # --child-of none also means promote subtask to standalone
+    args = ["121.01", "--child-of", "none"]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "121.01", result[:task_ref]
+    assert_equal :promote, result[:child_of]
+  end
+
   def test_parse_move_args_child_of_self_for_orchestrator
     args = ["019", "--child-of", "self"]
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
