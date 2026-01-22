@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
                      "Validate model names, calculate query costs, and track pricing changes."
   spec.homepage = "https://github.com/cs3b/ace-meta"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.3.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage

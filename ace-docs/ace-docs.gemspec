@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "Comprehensive documentation management system combining deterministic tooling with intelligent workflow orchestration. Discovers documents via frontmatter, analyzes changes, validates against rules, and supports iterative agent/human collaboration."
   spec.homepage = "https://github.com/cs3b/ace-meta"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.3.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
