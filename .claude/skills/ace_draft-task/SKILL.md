@@ -1,6 +1,6 @@
 ---
 name: ace:draft-task
-description: Draft Task with Idea File Movement
+description: Draft Task with Idea File Movement (SPECS ONLY - no code)
 # context: no-fork
 # agent: general-purpose
 user-invocable: true
