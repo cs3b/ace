@@ -299,3 +299,56 @@ The `ace-test` tool only runs files matching `*_test.rb`.
 9. **Document edge cases** - Note quirks discovered during execution
 10. **Keep tests focused** - One scenario per test file
 11. **Version prerequisites** - Specify exact tool versions if critical
+
+## Environment Isolation for Taskflow-Aware Tests
+
+When E2E tests create isolated git repositories and need to use `ace-taskflow`, `ace-git-worktree`, or other tools that rely on `PROJECT_ROOT_PATH`:
+
+### The Problem
+
+Tools like `ace-taskflow` use `ProjectRootFinder` to locate the project root. By default, this traverses up from the current directory looking for markers (`.git`, `Gemfile`, etc.). In an isolated test repo, this can incorrectly find the **main project** instead of the test repo.
+
+### The Solution
+
+Export `PROJECT_ROOT_PATH` after creating the isolated repo:
+
+```bash
+# After creating isolated repo and its structure
+export PROJECT_ROOT_PATH="$REPO_DIR"
+
+# Now ace-* commands will use the isolated repo as project root
+ace-taskflow task 001  # Looks in $REPO_DIR/.ace-taskflow/
+ace-git-worktree create --task 001  # Uses isolated taskflow
+```
+
+### When to Use
+
+Set `PROJECT_ROOT_PATH` when your test:
+
+1. Creates an isolated git repository
+2. Sets up `.ace-taskflow/` structure in that repo
+3. Runs `ace-*` commands that need to find tasks or project metadata
+
+### Placement
+
+Add the export **after** creating the test repo structure but **before** running `ace-*` commands:
+
+```bash
+# Environment Setup
+REPO_DIR="$TEST_DIR/test-repo"
+mkdir -p "$REPO_DIR"
+cd "$REPO_DIR"
+git init --quiet .
+
+# Test Data - create taskflow structure
+mkdir -p .ace-taskflow/v.test/tasks/001-feature
+# ... create task files ...
+git add .ace-taskflow/
+git commit -m "Add taskflow structure" --quiet
+
+# IMPORTANT: Set PROJECT_ROOT_PATH for isolated testing
+export PROJECT_ROOT_PATH="$REPO_DIR"
+
+# Test Cases can now use ace-* commands
+ace-git-worktree create --task 001  # Uses isolated repo
+```
