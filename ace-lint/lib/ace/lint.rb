@@ -20,6 +20,9 @@ require_relative "lint/atoms/frontmatter_extractor"
 require_relative "lint/atoms/pattern_matcher"
 require_relative "lint/atoms/validator_registry"
 require_relative "lint/atoms/config_locator"
+require_relative "lint/atoms/skill_schema_loader"
+require_relative "lint/atoms/allowed_tools_validator"
+require_relative "lint/atoms/comment_validator"
 
 # Molecules
 require_relative "lint/molecules/markdown_linter"
@@ -28,6 +31,7 @@ require_relative "lint/molecules/frontmatter_validator"
 require_relative "lint/molecules/kramdown_formatter"
 require_relative "lint/molecules/group_resolver"
 require_relative "lint/molecules/validator_chain"
+require_relative "lint/molecules/skill_validator"
 
 # Organisms
 require_relative "lint/organisms/lint_orchestrator"
@@ -132,6 +136,7 @@ module Ace
       @config = nil
       @kramdown_config = nil
       @ruby_config = nil
+      Atoms::SkillSchemaLoader.reset_cache!
     end
 
     # Load gem defaults directly as fallback when cascade resolution fails

@@ -7,6 +7,7 @@ require_relative "../molecules/frontmatter_validator"
 require_relative "../molecules/kramdown_formatter"
 require_relative "../molecules/ruby_linter"
 require_relative "../molecules/group_resolver"
+require_relative "../molecules/skill_validator"
 require_relative "../models/lint_result"
 
 module Ace
@@ -120,6 +121,9 @@ module Ace
           case type
           when :markdown
             lint_markdown(file_path, options)
+          when :skill, :workflow, :agent
+            # Skill/workflow/agent files get both markdown and skill-specific validation
+            lint_skill_file(file_path, type, options)
           when :yaml
             Molecules::YamlLinter.lint(file_path)
           when :frontmatter
@@ -226,8 +230,43 @@ module Ace
           Molecules::MarkdownLinter.lint(file_path, options: kramdown_opts)
         end
 
+        # Lint skill/workflow/agent files with both markdown and skill-specific validation
+        # @param file_path [String] Path to the file
+        # @param type [Symbol] File type (:skill, :workflow, :agent)
+        # @param options [Hash] Linting options
+        # @return [Models::LintResult] Combined validation result
+        def lint_skill_file(file_path, type, options)
+          # Run standard markdown validation first
+          md_result = lint_markdown(file_path, options)
+
+          # Run skill-specific validation
+          skill_result = Molecules::SkillValidator.validate(file_path, type, options: options)
+
+          # Merge results
+          merge_lint_results(file_path, md_result, skill_result)
+        end
+
+        # Merge two lint results into one
+        # @param file_path [String] Path for the combined result
+        # @param result1 [Models::LintResult] First result
+        # @param result2 [Models::LintResult] Second result
+        # @return [Models::LintResult] Combined result
+        def merge_lint_results(file_path, result1, result2)
+          combined_errors = (result1.errors || []) + (result2.errors || [])
+          combined_warnings = (result1.warnings || []) + (result2.warnings || [])
+
+          Models::LintResult.new(
+            file_path: file_path,
+            success: combined_errors.empty?,
+            errors: combined_errors,
+            warnings: combined_warnings,
+            formatted: result1.formatted || result2.formatted
+          )
+        end
+
         def apply_formatting(file_path, type, options)
-          return nil unless type == :markdown
+          # Skill, workflow, and agent files are markdown-based and support formatting
+          return nil unless [:markdown, :skill, :workflow, :agent].include?(type)
 
           kramdown_opts = options[:kramdown_options] || {}
           format_result = Molecules::KramdownFormatter.format_file(file_path, options: kramdown_opts)
