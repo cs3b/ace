@@ -167,12 +167,13 @@ module Ace
             opts.on("--child-of [PARENT]", "-p [PARENT]",
                     "Convert task to subtask under PARENT.",
                     "  Omit PARENT to promote subtask to standalone.",
+                    "  Use 'none' to promote subtask to standalone.",
                     "  Use 'self' to convert standalone to orchestrator.") do |parent|
               # When --child-of is provided without value, parent is nil
               # When --child-of is omitted entirely, this block doesn't run
               # Note: Uses :promote symbol for "no parent" to distinguish from strings.
               # The command handler must handle: :promote (symbol), "self" (string), or any other string.
-              options[:child_of] = parent.nil? ? :promote : parent
+              options[:child_of] = parent.nil? || parent == "none" ? :promote : parent
             end
 
             opts.on("--dry-run", "-n", "Preview operations without executing") do

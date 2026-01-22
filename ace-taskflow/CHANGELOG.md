@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.11] - 2026-01-22
+
+### Fixed
+- Fix `--child-of` flag to support dry-cli's required string values
+  - Use `--child-of none` to promote subtask to standalone (was `--child-of` without value)
+  - Maintains backwards compatibility with `--child-of=` (empty string)
+  - Update legacy optparse parser to handle "none" sentinel value
+  - Fix documentation examples to use subtask reference (e.g., `187.12 --child-of none`)
+  - Add test coverage for "none" sentinel value behavior
+
 ## [0.33.10] - 2026-01-22
 
 ### Fixed

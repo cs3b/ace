@@ -24,7 +24,7 @@ module Ace
 
             example [
               '187 --child-of 150      # Make 187 a subtask of 150',
-              '187 --child-of          # Promote 187 from subtask to standalone',
+              '187.12 --child-of none  # Promote 187.12 from subtask to standalone',
               '187 --child-of self     # Convert 187 to orchestrator',
               '187 --release v.1.0.0   # Move 187 to release v.1.0.0',
               '187 --dry-run           # Preview operations without executing'
@@ -33,7 +33,7 @@ module Ace
             argument :task_ref, required: true, desc: "Task reference to move"
 
             option :"child-of", type: :string, aliases: ["-p"],
-                   desc: "Make subtask of PARENT (omit to promote to standalone, use 'self' to convert to orchestrator)"
+                   desc: "Make subtask of PARENT (use 'none' to promote to standalone, 'self' to convert to orchestrator)"
             option :release, type: :string, desc: "Move to specific release"
             option :backlog, type: :boolean, desc: "Move to backlog"
             option :"dry-run", type: :boolean, aliases: ["-n"], desc: "Preview operations without executing"
@@ -53,9 +53,11 @@ module Ace
               child_of = if child_of_value.nil?
                 nil
               elsif child_of_value.empty?
-                :promote  # --child-of without value = promote
+                :promote  # --child-of without value = promote (backwards compat)
+              elsif child_of_value == "none"
+                :promote  # --child-of none = promote to standalone
               else
-                child_of_value  # --child-of PARENT = demote
+                child_of_value  # --child-of PARENT or "self" = demote/convert
               end
 
               # Resolve release
