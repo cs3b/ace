@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.316] - 2026-01-22
+
+### Fixed
+
+- **ace-taskflow 0.33.10**: Fix task 226 duplication in tasks listing
+  - Orchestrator ID format mismatch caused subtasks to display as orphans with duplicate parent
+  - Now uses TaskReferenceParser to qualify simple parent references (e.g., "226") to qualified format (e.g., "v.0.9.0+task.226")
+  - Task 226 now appears once with subtasks properly indented underneath
+
 ## [0.9.315] - 2026-01-22
 
 ### Changed
