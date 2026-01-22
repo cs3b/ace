@@ -27,6 +27,18 @@ Orchestrates complete task creation: behavioral specification → implementation
 
 Transform a plan or behavioral requirements into a ready-to-execute task by running the draft-task and plan-task workflows sequentially, then committing the result.
 
+## ⚠️ Implementation Prohibition
+
+**This workflow produces specification files ONLY.**
+
+DO NOT during this phase:
+- ❌ Write or modify code files (.rb, .ts, .js, etc.)
+- ❌ Create implementation directories or structures
+- ❌ Run tests or builds
+- ❌ Make commits to project source code
+
+All code implementation happens during `/ace:work-on-task` (status: in-progress).
+
 ## Variables
 
 **$plan_description**: The input plan/requirements. Can be:

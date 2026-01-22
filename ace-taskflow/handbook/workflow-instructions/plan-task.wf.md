@@ -13,6 +13,18 @@ update:
 
 Create a detailed implementation plan for a task that already has a validated behavioral specification. Focus exclusively on the HOW (technical implementation approach) rather than the WHAT (behavioral requirements). Transform a draft task into a pending task with complete technical implementation details.
 
+## ⚠️ Implementation Prohibition
+
+**This workflow produces specification files ONLY.**
+
+DO NOT during this phase:
+- ❌ Write or modify code files (.rb, .ts, .js, etc.)
+- ❌ Create implementation directories or structures
+- ❌ Run tests or builds
+- ❌ Make commits to project source code
+
+All code implementation happens during `/ace:work-on-task` (status: in-progress).
+
 ## Prerequisites
 
 - Task file exists with **draft** status and validated behavioral specification

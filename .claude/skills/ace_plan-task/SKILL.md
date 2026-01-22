@@ -1,6 +1,6 @@
 ---
 name: ace:plan-task
-description: Create implementation plan for task with research and acceptance criteria
+description: Create implementation plan for task with research and acceptance criteria (SPECS ONLY - no code)
 # context: no-fork
 # agent: Plan
 user-invocable: true

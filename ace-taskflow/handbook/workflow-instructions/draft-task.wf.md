@@ -170,6 +170,18 @@ Create high-level behavioral specifications that define WHAT the system should d
 * Optional but recommended input source
 * Maintains clear separation between idea enhancement and task drafting
 
+## ⚠️ Implementation Prohibition
+
+**This workflow produces specification files ONLY.**
+
+DO NOT during this phase:
+- ❌ Write or modify code files (.rb, .ts, .js, etc.)
+- ❌ Create implementation directories or structures
+- ❌ Run tests or builds
+- ❌ Make commits to project source code
+
+All code implementation happens during `/ace:work-on-task` (status: in-progress).
+
 ## Input
 
 * Enhanced ideas from ace-taskflow idea (optional but recommended)
