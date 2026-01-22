@@ -189,6 +189,66 @@ ace-lint version
 - **yaml**: Validates YAML syntax via Psych (Ruby built-in)
 - **ruby**: Lints Ruby files via StandardRB (.rb, .rake, .gemspec)
 - **frontmatter**: Validates frontmatter schema and required fields
+- **skill**: Validates skill files (`SKILL.md`) with schema-based frontmatter validation
+- **workflow**: Validates workflow files (`*.wf.md`) with schema-based frontmatter validation
+- **agent**: Validates agent files (`*.ag.md`) with schema-based frontmatter validation
+
+### Skill/Workflow/Agent Validation
+
+ace-lint provides schema-based validation for Claude Code skill, workflow, and agent files. These are markdown files with YAML frontmatter that follow specific conventions.
+
+**Supported File Patterns:**
+
+| Type | File Pattern | Description |
+|------|--------------|-------------|
+| skill | `SKILL.md` | Claude Code skill definitions |
+| workflow | `*.wf.md` | Workflow specifications |
+| agent | `*.ag.md` | Agent configurations |
+
+**Validation Checks:**
+
+1. **Required Fields**: Validates presence of required frontmatter fields (e.g., `name`, `description`, `allowed-tools`)
+2. **Field Types**: Validates field value types (string, boolean, array)
+3. **Field Patterns**: Validates field values against regex patterns (e.g., skill names must match `ace:*` or `ace-*`)
+4. **Allowed Tools**: Validates that `allowed-tools` entries reference known Claude Code tools
+5. **Required Comments**: For skills, validates presence of required comments like `# bundle:` and `# agent:`
+6. **Markdown Syntax**: Standard kramdown markdown validation
+
+**Configuration:**
+
+Schema definitions are stored in `.ace/lint/skills.yml`. The default schema includes:
+
+```yaml
+# Skill schema example
+skill:
+  required_fields:
+    - name
+    - description
+    - user-invocable
+    - allowed-tools
+    - source
+  field_validations:
+    name:
+      type: string
+      pattern: "^ace[:-]"
+      error_message: "Skill name must start with 'ace:' or 'ace-'"
+  required_comments:
+    - "# bundle:"
+    - "# agent:"
+```
+
+**Example Usage:**
+
+```bash
+# Lint a skill file
+ace-lint .claude/skills/ace_commit/SKILL.md
+
+# Lint all workflow files
+ace-lint .claude/workflows/*.wf.md
+
+# Format a skill file
+ace-lint .claude/skills/ace_review/SKILL.md --fix
+```
 
 ### Examples
 
