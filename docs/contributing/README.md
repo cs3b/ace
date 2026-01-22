@@ -1,5 +1,7 @@
 # Contributing to ACE
 
+ACE (Agentic Coding Environment) is a toolkit of CLI tools for AI-assisted development. Each tool follows Unix philosophy - files as interchange, composable workflows, and same experience for developers and agents.
+
 ## Development Setup
 
 ```bash
@@ -19,10 +21,10 @@ bundle install
 
 ```bash
 # Test specific gem
-cd ace-review && bundle exec rake test
+ace-test ace-review
 
 # Test all gems
-bundle exec ace-test-suite
+ace-test-suite
 
 # Run tests with profiling
 ace-test --profile 10
