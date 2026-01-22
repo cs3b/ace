@@ -9,6 +9,17 @@ module Ace
     module Molecules
       # Validates markdown syntax via kramdown
       class MarkdownLinter
+        # Typography characters to detect
+        EM_DASH = "\u2014"
+        SMART_QUOTES = [
+          "\u201C", # Left double quotation mark "
+          "\u201D", # Right double quotation mark "
+          "\u2018", # Left single quotation mark '
+          "\u2019"  # Right single quotation mark '
+        ].freeze
+
+        # Fenced code block pattern (``` or ~~~, with optional up to 3 leading spaces per CommonMark)
+        FENCE_PATTERN = /^\s{0,3}(`{3,}|~{3,})/
         # Validate markdown file
         # @param file_path [String] Path to markdown file
         # @param options [Hash] Kramdown options
@@ -50,9 +61,20 @@ module Ace
           style_warnings = check_markdown_style(content)
           warnings.concat(style_warnings)
 
+          # Add typography checks
+          config = Ace::Lint.markdown_config
+          typography_issues = check_typography(content, config)
+          typography_issues.each do |issue|
+            if issue.severity == :error
+              errors << issue
+            else
+              warnings << issue
+            end
+          end
+
           Models::LintResult.new(
             file_path: file_path,
-            success: result[:success],
+            success: result[:success] && errors.empty?,
             errors: errors,
             warnings: warnings
           )
@@ -125,6 +147,67 @@ module Ace
           end
 
           warnings
+        end
+
+        # Check typography issues (em-dashes, smart quotes)
+        # Skips content inside fenced code blocks and inline code
+        # @param content [String] Markdown content
+        # @param config [Hash] Markdown configuration with typography settings
+        # @return [Array<Models::ValidationError>] Typography issues
+        def self.check_typography(content, config)
+          issues = []
+          typography_config = config["typography"] || {}
+          em_dash_severity = typography_config["em_dash"] || "warn"
+          smart_quotes_severity = typography_config["smart_quotes"] || "warn"
+
+          # Return early if both checks are disabled
+          return issues if em_dash_severity == "off" && smart_quotes_severity == "off"
+
+          lines = content.lines
+          in_code_block = false
+
+          lines.each_with_index do |line, idx|
+            line_num = idx + 1
+
+            # Track fenced code block state (supports ``` and ~~~ with optional leading spaces)
+            if line.match?(FENCE_PATTERN)
+              in_code_block = !in_code_block
+              next
+            end
+
+            # Skip lines inside code blocks
+            next if in_code_block
+
+            # Remove inline code spans before checking typography
+            line_without_code = line.gsub(/`[^`]+`/, "")
+
+            # Check for em-dashes
+            if em_dash_severity != "off" && line_without_code.include?(EM_DASH)
+              severity = (em_dash_severity == "error") ? :error : :warning
+              issues << Models::ValidationError.new(
+                line: line_num,
+                message: "Em-dash character found; use double hyphens (--) instead",
+                severity: severity
+              )
+            end
+
+            # Check for smart quotes
+            if smart_quotes_severity != "off"
+              SMART_QUOTES.each do |quote|
+                if line_without_code.include?(quote)
+                  severity = (smart_quotes_severity == "error") ? :error : :warning
+                  quote_type = ["\u201C", "\u201D"].include?(quote) ? "double" : "single"
+                  issues << Models::ValidationError.new(
+                    line: line_num,
+                    message: "Smart #{quote_type} quote found; use ASCII quotes instead",
+                    severity: severity
+                  )
+                end
+              end
+            end
+          end
+
+          issues
         end
       end
     end
