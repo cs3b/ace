@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.12] - 2026-01-22
+
+### Fixed
+- Fix recently done tasks to sort by file modification time, not dependency order
+  - Task with dependencies now appears in recently done based on when it was last modified
+  - Previously, dependency ordering took precedence, causing recently completed tasks to appear incorrectly
+  - Added test case to verify temporal sorting regardless of dependencies
+
 ## [0.33.11] - 2026-01-22
 
 ### Fixed
