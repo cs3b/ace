@@ -450,6 +450,15 @@ class TaskArgParserTest < Minitest::Test
     assert_equal :promote, result[:child_of]
   end
 
+  def test_parse_move_args_child_of_empty_string_backwards_compat
+    # --child-of= (empty string) also promotes subtask to standalone (backwards compatibility)
+    args = ["121.01", "--child-of="]
+    result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)
+
+    assert_equal "121.01", result[:task_ref]
+    assert_equal :promote, result[:child_of]
+  end
+
   def test_parse_move_args_child_of_self_for_orchestrator
     args = ["019", "--child-of", "self"]
     result = Ace::Taskflow::Molecules::TaskArgParser.parse_move_args_with_optparse(args)

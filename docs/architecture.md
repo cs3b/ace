@@ -57,7 +57,7 @@ All ace-\* gems follow the ATOM pattern for consistent, testable code organizati
 
 ### Implementation
 
-All gems use flat directory structure: `lib/ace/gem/{atoms,molecules,organisms,models}/` with `cli/commands/` for dry-cli (ADR-023).
+All gems use flat directory structure: `lib/ace/gem/{atoms,molecules,organisms,models}/` with `cli/commands/` for dry-cli. See [ADR-023](decisions/ADR-023-dry-cli-framework.md).
 Tests mirror this in `test/{atoms,molecules,organisms,models,commands}/` (flat, not nested).
 
 ## Component Types
