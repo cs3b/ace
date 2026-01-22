@@ -1,6 +1,6 @@
 ---
 name: ace:create-task
-description: Create complete task from plan (draft + plan + commit)
+description: Create complete task from plan (draft + plan + commit) (SPECS ONLY - no code)
 # context: no-fork
 # agent: general-purpose
 user-invocable: true
