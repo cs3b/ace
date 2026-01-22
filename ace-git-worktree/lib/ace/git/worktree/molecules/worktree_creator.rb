@@ -239,8 +239,14 @@ module Ace
               # Validate branch name
               return error_result("Invalid branch name") unless valid_branch_name?(branch_name)
 
-              # Create the worktree with source as start-point
-              create_worktree(worktree_path, branch_name, git_root, start_point: source)
+              # Check if branch already exists (locally or remotely)
+              if branch_exists?(branch_name)
+                # Branch exists - create worktree for existing branch
+                create_worktree_for_existing_branch(worktree_path, branch_name, git_root)
+              else
+                # Branch doesn't exist - create new branch with worktree
+                create_worktree(worktree_path, branch_name, git_root, start_point: source)
+              end
             rescue StandardError => e
               error_result("Unexpected error: #{e.message}")
             end
@@ -374,14 +380,73 @@ module Ace
             Atoms::GitCommand.git_root
           end
 
+          # Check if a branch exists locally or as a remote-tracking branch
+          #
+          # Checks local and remote refs separately since git show-ref --verify
+          # requires ALL refs to exist when given multiple refs. This ensures we
+          # correctly detect local-only branches (which have no remote tracking ref).
+          #
+          # @param branch_name [String] Branch name to check
+          # @return [Boolean] true if branch exists locally or as origin remote-tracking ref
+          def branch_exists?(branch_name)
+            require_relative "../atoms/git_command"
+
+            # Check local branch first (short-circuit if found)
+            local_result = Atoms::GitCommand.execute(
+              "show-ref", "--verify", "--quiet",
+              "refs/heads/#{branch_name}",
+              timeout: 5
+            )
+            return true if local_result[:success]
+
+            # Check remote tracking branch
+            remote_result = Atoms::GitCommand.execute(
+              "show-ref", "--verify", "--quiet",
+              "refs/remotes/origin/#{branch_name}",
+              timeout: 5
+            )
+            remote_result[:success]
+          end
+
+          # Create a worktree for an existing branch
+          #
+          # @param worktree_path [String] Path for the worktree
+          # @param branch_name [String] Existing branch name
+          # @param git_root [String] Git repository root
+          # @return [Hash] Result with :success, :worktree_path, :branch, :error
+          def create_worktree_for_existing_branch(worktree_path, branch_name, git_root)
+            require_relative "../atoms/git_command"
+
+            # Ensure parent directory exists
+            parent_dir = File.dirname(worktree_path)
+            FileUtils.mkdir_p(parent_dir) unless File.exist?(parent_dir)
+
+            # Create the worktree without -b flag (uses existing branch)
+            result = Atoms::GitCommand.worktree("add", worktree_path, branch_name, timeout: @timeout)
+
+            if result[:success]
+              {
+                success: true,
+                worktree_path: worktree_path,
+                branch: branch_name,
+                start_point: nil,
+                git_root: git_root,
+                error: nil
+              }
+            else
+              error_result("Failed to create worktree: #{result[:error]}")
+            end
+          end
+
           # Generate a default worktree path based on branch name
           #
           # @param branch_name [String] Branch name
           # @param git_root [String] Git repository root
           # @return [String] Generated worktree path
           def generate_default_worktree_path(branch_name, git_root)
+            require_relative "../atoms/slug_generator"
             # Sanitize branch name for directory use
-            sanitized_branch = branch_name.gsub(/[^a-zA-Z0-9\-_]/, "-")
+            sanitized_branch = Atoms::SlugGenerator.to_directory_name(branch_name)
 
             # Use config's root_path if available, otherwise default to .ace-wt
             if @config
@@ -450,12 +515,19 @@ module Ace
 
           # Detect if a branch name refers to a remote branch
           #
+          # Only returns a remote/branch hash if the first part is actually a configured
+          # git remote. This prevents branches like "feature/login" from being incorrectly
+          # treated as remote branches (where "feature" would be the remote).
+          #
           # @param branch_name [String] Branch name to check
           # @return [Hash, nil] { remote: "origin", branch: "feature/auth" } or nil if local
           #
           # @example
           #   detect_remote_branch("origin/feature/auth")
           #   # => { remote: "origin", branch: "feature/auth" }
+          #
+          #   detect_remote_branch("feature/login")
+          #   # => nil (when "feature" is not a configured remote)
           #
           #   detect_remote_branch("local-branch")
           #   # => nil
@@ -467,17 +539,21 @@ module Ace
             parts = branch_name.split("/", 2)
             return nil if parts.length != 2
 
-            remote = parts[0]
+            potential_remote = parts[0]
             branch = parts[1]
 
             # Basic validation
-            return nil if remote.empty? || branch.empty?
+            return nil if potential_remote.empty? || branch.empty?
             # Invalid if branch starts with / or ends with /
             return nil if branch.start_with?("/") || branch.end_with?("/")
             # Invalid if remote ends with / or starts with /
-            return nil if remote.start_with?("/") || remote.end_with?("/")
+            return nil if potential_remote.start_with?("/") || potential_remote.end_with?("/")
 
-            { remote: remote, branch: branch }
+            # Verify the potential remote is actually configured
+            remote_check = validate_remote_exists(potential_remote, Dir.pwd)
+            return nil unless remote_check[:exists]
+
+            { remote: potential_remote, branch: branch }
           end
 
           # Validate that a git remote exists
@@ -595,9 +671,10 @@ module Ace
             # For "feature/auth" -> keep as "feature/auth"
             local_branch_name = branch
 
-            # Generate directory name by replacing slashes with dashes
+            # Generate directory name by sanitizing branch for directory use
             # "feature/auth/v1" -> "feature-auth-v1"
-            directory_name = branch.gsub("/", "-").gsub(/[^a-zA-Z0-9\-_]/, "-")
+            require_relative "../atoms/slug_generator"
+            directory_name = Atoms::SlugGenerator.to_directory_name(branch)
 
             # Build worktree path
             worktree_path = File.join(config.absolute_root_path, directory_name)
@@ -656,7 +733,8 @@ module Ace
             end
 
             # Generate directory name
-            directory_name = branch_name.gsub(/[^a-zA-Z0-9\-_]/, "-")
+            require_relative "../atoms/slug_generator"
+            directory_name = Atoms::SlugGenerator.to_directory_name(branch_name)
 
             # Build worktree path
             worktree_path = File.join(config.absolute_root_path, directory_name)

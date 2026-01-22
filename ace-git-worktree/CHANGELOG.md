@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4] - 2026-01-22
+
+### Fixed
+- Correct branch existence detection in `branch_exists?` to check local and remote refs separately (git show-ref --verify requires ALL refs to exist, not ANY)
+- Correct remote branch detection in `detect_remote_branch` to validate remote names via `validate_remote_exists`, preventing branches like `feature/login` from being incorrectly treated as remote branches
+
+## [0.12.3] - 2026-01-20
+
+### Fixed
+- Fallback to current branch for target branch resolution when parent task has no worktree metadata (Task 222)
+
 ## [0.12.2] - 2026-01-16
 
 ### Changed

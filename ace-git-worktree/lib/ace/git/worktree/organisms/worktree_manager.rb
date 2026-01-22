@@ -62,6 +62,11 @@ module Ace
                 return error_result("Worktree already exists for branch: #{branch_name}")
               end
 
+              # Handle dry run
+              if options[:dry_run]
+                return dry_run_traditional_creation(branch_name, options)
+              end
+
               # Create the worktree
               result = @worktree_creator.create_traditional(
                 branch_name,
@@ -627,7 +632,8 @@ module Ace
                             branch_name
                           end
 
-            directory_name = local_branch.gsub(/[^a-zA-Z0-9\-_]/, "-")
+            require_relative "../atoms/slug_generator"
+            directory_name = Atoms::SlugGenerator.to_directory_name(local_branch)
             worktree_path = File.join(@config.absolute_root_path, directory_name)
             tracking = remote_info ? branch_name : nil
 
@@ -638,6 +644,35 @@ module Ace
                 branch: local_branch,
                 tracking: tracking,
                 directory_name: directory_name
+              }
+            }
+          end
+
+          # Dry run traditional worktree creation
+          #
+          # @param branch_name [String] Branch name
+          # @param options [Hash] Options
+          # @return [Hash] Dry run result
+          def dry_run_traditional_creation(branch_name, options)
+            # Check if branch exists (locally or remotely)
+            branch_exists = @worktree_creator.send(:branch_exists?, branch_name)
+
+            # Determine worktree path
+            worktree_path = if options[:path]
+                              options[:path]
+                            else
+                              require_relative "../atoms/slug_generator"
+                              directory_name = Atoms::SlugGenerator.to_directory_name(branch_name)
+                              File.join(@config.absolute_root_path, directory_name)
+                            end
+
+            {
+              success: true,
+              would_create: {
+                worktree_path: worktree_path,
+                branch: branch_name,
+                branch_exists: branch_exists,
+                source: options[:source] || "current branch"
               }
             }
           end
