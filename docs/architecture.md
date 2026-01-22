@@ -1,12 +1,12 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 220
+  max_lines: 160
   required_sections:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-17'
+  last-updated: '2026-01-22'
 ---
 
 # ACE - System Architecture
@@ -26,17 +26,6 @@ This document covers the technical architecture of ACE:
 - Security and quality standards
 
 For the project vision and core principles, see [vision.md](vision.md). For CLI usage, see [tools.md](tools.md).
-
-## Core Principles
-
-* **Mono-Repo**: All ace-\* gems at root with shared dependencies
-* **ATOM Pattern**: Consistent architecture (Atoms, Molecules, Organisms, Models)
-* **Config Cascade**: `.ace/` hierarchy, nearest-wins resolution
-* **Zero-Dependency Core**: ace-support-core uses only Ruby stdlib
-* **AI-Native**: Deterministic commands for autonomous execution
-
-Mono-repo contains modular gems; each follows ATOM with consistent structure. See [blueprint.md](blueprint.md) for
-organization.
 
 ## ATOM Architecture Pattern
 
@@ -68,7 +57,7 @@ All ace-\* gems follow the ATOM pattern for consistent, testable code organizati
 
 ### Implementation
 
-All gems use flat directory structure: `lib/ace/gem/{atoms,molecules,organisms,models}/` with `commands/` for Thor CLI.
+All gems use flat directory structure: `lib/ace/gem/{atoms,molecules,organisms,models}/` with `cli/commands/` for dry-cli (ADR-023).
 Tests mirror this in `test/{atoms,molecules,organisms,models,commands}/` (flat, not nested).
 
 ## Component Types
@@ -118,91 +107,43 @@ Single-purpose, composable agents for focused actions:
 
 ### Guides
 
-Development patterns and best practices:
-
-* Located in each gem's `handbook/guides/` directory
-* Generic guides in `ace-handbook/handbook/guides/`
-* Package-specific guides in respective gems (e.g., `ace-review/handbook/guides/`)
-* Reference documentation for humans and agents
+Development patterns and best practices in `handbook/guides/*.g.md`. Generic guides in `ace-handbook/`, package-specific guides in respective gems.
 
 ### Handbook Organization
 
-Each gem includes `handbook/` for AI integration:
-
-    gem/handbook/
-    ├── agents/*.ag.md               # Single-purpose, composable
-    ├── guides/*.g.md                # Development guides
-    ├── templates/**/*.template.md   # Document templates
-    └── workflow-instructions/*.wf.md  # Complete, self-contained
-
-**Agent vs Workflow**: Agents for single actions, workflows for multi-step processes. Both use frontmatter and
-standardized formats.
+Each gem includes `handbook/` with `agents/`, `guides/`, `templates/`, and `workflow-instructions/`. Agents are for single actions, workflows for multi-step processes. Both use frontmatter.
 
 ## AI Integration
 
 * **Skills**: `.claude/skills/` maps workflows to slash commands
-* **Agents**: `.claude/agents/` provides agent access; frontmatter defines capabilities
+* **Agents**: `.claude/agents/` provides agent access via frontmatter-defined capabilities
 * **Deterministic CLI**: Predictable, parseable output for autonomous execution
 * **wfi:// Protocol**: Direct workflow access via ace-nav
-* **Delegation Pattern**: Agents delegate to specialized subagents, aggregate results
 
 ## Key Architectural Decisions
 
-**ADR-015 Mono-Repo**: Migrated from submodules to mono-repo; each capability as focused ace-\* gem; simplified
-dependencies.
-
-**ADR-011 ATOM Pattern**: Clean separation of concerns; consistent across gems; testable structure.
-
-**ADR-001 Workflow Self-Containment**: Include all templates inline; no external dependencies except core docs; reliable
-autonomous execution.
-
-**Configuration Cascade**: Four-tier merge with CLI → Project → User → Gem defaults priority.
-
-**Zero-Dependency Core**: ace-support-core uses only Ruby stdlib; stable foundation; reduces conflicts.
+* **ADR-015 Mono-Repo**: Each capability as focused ace-\* gem with simplified dependencies
+* **ADR-011 ATOM Pattern**: Clean separation of concerns; consistent across gems; testable structure
+* **ADR-001 Workflow Self-Containment**: Include all templates inline; no external dependencies
+* **ADR-022 Configuration Cascade**: Four-tier merge (CLI > Project > User > Gem defaults)
+* **Zero-Dependency Core**: ace-support-core uses only Ruby stdlib
 
 ## Configuration Cascade
 
-The configuration system (ADR-022) ensures flexibility without complexity through a four-tier cascade:
+The configuration system (ADR-022) uses a four-tier cascade with nearest-wins resolution:
 
-```mermaid
-flowchart TD
-    subgraph Load["Configuration Loading"]
-        A["Gem .ace-defaults/"] --> B["Deep Merge"]
-        C["User ~/.ace/"] --> B
-        D["Project .ace/"] --> B
-        E["CLI Flags"] --> B
-    end
+1. **CLI Flags** - immediate overrides for this invocation
+2. **Project `.ace/`** - repository-specific settings (committed)
+3. **User `~/.ace/`** - personal preferences across projects
+4. **Gem `.ace-defaults/`** - sensible defaults
 
-    B --> F["Effective Configuration"]
+Settings are deep-merged, so you only specify what differs from defaults. Example: if `ace-git-commit` defaults to `model: glite` and your project sets `model: gflash` in `.ace/git/commit.yml`, the project setting wins.
 
-    subgraph Example["Example: ace-git-commit"]
-        G["Default: model=glite"]
-        H["User: (none)"]
-        I["Project: model=gflash"]
-        J["CLI: (none)"]
-        K["Result: model=gflash"]
-    end
-
-    style F fill:#c8e6c9
-    style K fill:#c8e6c9
-```
-
-**Resolution priority** (highest to lowest):
-1. CLI Flags - immediate overrides
-2. Project `.ace/` - repository-specific settings
-3. User `~/.ace/` - personal preferences
-4. Gem `.ace-defaults/` - sensible defaults
-
-**Implementation:**
 ```ruby
-# How ACE tools load configuration
 resolver = Ace::Support::Config.create
 config = resolver.resolve_namespace("git", filename: "commit")
-
-# Gem defaults + user overrides + project overrides = final config
+# Gem defaults + user + project + CLI = final config
 ```
-
-This means you only specify what differs from defaults—no forking required to customize behavior.
 
 ## Security & Quality
 

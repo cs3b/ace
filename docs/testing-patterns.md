@@ -1,15 +1,30 @@
 ---
 update:
   update_frequency: weekly
-  max_lines: 150
+  max_lines: 1150
   required_sections:
-  - overview
-  - scope
+  - testing-philosophy
+  - test-organization
   frequency: weekly
-  last-updated: '2026-01-19'
+  last-updated: '2026-01-22'
 ---
 
 # Testing Patterns for ACE
+
+## TL;DR
+
+- **Flat structure**: `test/atoms/`, `test/molecules/` - no deep nesting
+- **Naming**: `*_test.rb` suffix, descriptive names
+- **No IO in unit tests**: Use MockGitRepo, WebMock stubs, method stubbing
+- **ENV testing**: Protected method pattern for parallel-safe tests
+- **Fixtures**: YAML files in `test/fixtures/`, create via `yaml_fixture`
+- **HTTP mocking**: VCR cassettes or WebMock stubs
+- **File isolation**: `with_temp_dir` for filesystem tests
+- **Run tests**: `ace-test atoms` or `ace-test path/to/test.rb`
+
+See sections below for detailed patterns and examples.
+
+---
 
 ## Testing Philosophy
 
