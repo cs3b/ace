@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.319] - 2026-01-22
+
+### Added
+
+- **ace-lint 0.14.0**: Typography validation for markdown files (task 218.10)
+  - Detects em-dash characters (—) with suggestion to use double hyphens (--)
+  - Detects smart quotes (", ", ', ') with suggestion to use ASCII quotes
+  - Skips content inside fenced code blocks and inline code spans
+  - Configurable severity levels (error/warn/off) in `.ace/lint/markdown.yml`
+
 ## [0.9.318] - 2026-01-22
 
 ### Fixed

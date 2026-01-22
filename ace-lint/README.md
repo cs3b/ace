@@ -132,6 +132,34 @@ parse_span_html: true
 
 See `.ace-defaults/lint/kramdown.yml` for the full example configuration.
 
+### Typography Configuration
+
+ace-lint can detect problematic typography characters in markdown files that may cause issues with certain tools or renderers. Configure in `.ace/lint/markdown.yml`:
+
+```yaml
+# Typography validation settings
+typography:
+  # Em-dash character (—) detection
+  # Typically should be replaced with double hyphens (--)
+  # Values: error | warn | off
+  em_dash: warn
+
+  # Smart quote detection (", ", ', ')
+  # Typically should be replaced with ASCII quotes (" and ')
+  # Values: error | warn | off
+  smart_quotes: warn
+```
+
+**Typography Checks:**
+
+| Character | Description | Suggested Replacement |
+|-----------|-------------|----------------------|
+| `—` (em-dash) | Unicode em-dash | `--` (double hyphens) |
+| `"` `"` (smart double quotes) | Curly double quotes | `"` (ASCII quote) |
+| `'` `'` (smart single quotes) | Curly single quotes | `'` (ASCII apostrophe) |
+
+**Note:** Typography checks automatically skip content inside fenced code blocks (``` or ~~~) and inline code spans.
+
 ### Configuration Options
 
 Common kramdown options:
