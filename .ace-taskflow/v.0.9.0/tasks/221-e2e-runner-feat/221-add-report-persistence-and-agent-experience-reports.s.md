@@ -122,6 +122,10 @@ When agents run E2E tests, they discover valuable insights about documentation g
 - Updated workflow instructions
 - Example reports demonstrating expected content
 
+#### Test Project Scaffolding
+- `ace-test-e2e-runner/handbook/templates/ace-taskflow-fixture.template.md` - Template for creating valid ace-taskflow test fixtures with proper `.s.md` format and YAML frontmatter
+- Documented patterns for common E2E test setups (task structures, git repositories, worktree scenarios)
+
 ## Out of Scope
 
 - ❌ **Implementation Details**: Specific file structures, code organization
@@ -137,6 +141,7 @@ When agents run E2E tests, they discover valuable insights about documentation g
 - `ace-test-e2e-runner/handbook/templates/agent-experience-report.template.md` - AX report template
 - `ace-test-e2e-runner/handbook/templates/test-report.template.md` - Test results report template
 - `ace-test-e2e-runner/handbook/templates/metadata.template.yml` - Run metadata template
+- `ace-test-e2e-runner/handbook/templates/ace-taskflow-fixture.template.md` - Test fixture scaffolding template
 
 #### Modify
 - `ace-test-e2e-runner/handbook/workflow-instructions/run-e2e-test.wf.md` - Add report persistence steps
@@ -171,17 +176,24 @@ When agents run E2E tests, they discover valuable insights about documentation g
     ```
   - Update test data paths to use `$TEST_DIR/artifacts/`
 
-- [ ] **Step 6**: Test the changes
+- [ ] **Step 6**: Create `ace-taskflow-fixture.template.md`
+  - Template for valid ace-taskflow structure in E2E tests
+  - Includes: release directory structure (`v.{version}/tasks/`)
+  - Includes: proper `.s.md` format with YAML frontmatter (`id`, `status`, `priority`)
+  - Includes: parent/subtask patterns, worktree metadata examples
+
+- [ ] **Step 7**: Test the changes
   - Run `/ace:run-e2e-test ace-lint MT-LINT-001`
   - Verify `.cache/test-e2e/{run-id}/` contains all three reports
   - Verify `artifacts/` contains test data files
 
 ## Acceptance Criteria
 
-- [ ] Three new templates created in ace-test-e2e-runner/handbook/templates/
+- [ ] Three new report templates created in ace-test-e2e-runner/handbook/templates/
 - [ ] Workflow updated to write reports to disk
 - [ ] Test scenario template uses `artifacts/` subdirectory
 - [ ] Agent experience report captures friction points systematically
+- [ ] ace-taskflow fixture template documents valid test structures
 - [ ] Backward compatible with existing tests
 
 ## References
