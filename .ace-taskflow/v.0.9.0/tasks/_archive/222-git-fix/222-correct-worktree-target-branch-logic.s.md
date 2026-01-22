@@ -1,9 +1,10 @@
 ---
 id: v.0.9.0+task.222
-status: in-progress
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
+completed_at: '2026-01-20T12:00:00Z'
 worktree:
   branch: 222-fix-worktree-targetbranch-to-use-current-branch-when-parent-has-no-worktree
   path: "../ace-task.222"

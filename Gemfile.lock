@@ -48,7 +48,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.12.2)
+    ace-git-worktree (0.12.4)
       ace-git (~> 0.4)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
@@ -221,7 +221,7 @@ PATH
 PATH
   remote: ace-test-e2e-runner
   specs:
-    ace-test-e2e-runner (0.2.0)
+    ace-test-e2e-runner (0.2.1)
 
 PATH
   remote: ace-test-runner
