@@ -1,0 +1,16 @@
+# Markdown linting configuration for ace-lint
+# Follows ADR-022 configuration pattern
+#
+# Typography settings control detection of problematic characters
+# that should typically be replaced with ASCII equivalents.
+
+typography:
+  # Em-dash character (—) detection
+  # Typically should be replaced with double hyphens (--)
+  # Values: error | warn | off
+  em_dash: warn
+
+  # Smart quote detection (", ", ', ')
+  # Typically should be replaced with ASCII quotes (" and ')
+  # Values: error | warn | off
+  smart_quotes: warn

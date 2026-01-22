@@ -58,77 +58,30 @@ module Ace
 
     # Load general ace-lint configuration using ace-config cascade
     # Follows ADR-022: Configuration Default and Override Pattern
-    # Uses Ace::Support::Config.create() for configuration cascade resolution
     # @return [Hash] Configuration hash with defaults merged
     def self.config
-      @config ||= begin
-        gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-          File.expand_path("../..", __dir__)
-
-        resolver = Ace::Support::Config.create(
-          config_dir: ".ace",
-          defaults_dir: ".ace-defaults",
-          gem_path: gem_root
-        )
-
-        # Resolve config for lint namespace
-        config = resolver.resolve_namespace("lint")
-        config.data
-      rescue => e
-        warn "Warning: Could not load ace-lint config: #{e.message}" if debug?
-        # Fall back to gem defaults instead of empty hash to prevent silent config erasure
-        load_gem_defaults_fallback("lint", "config.yml")
-      end
+      @config ||= resolve_lint_config(nil, "config.yml")
     end
 
     # Load kramdown-specific configuration using ace-config cascade
-    # Follows ADR-022: Configuration Default and Override Pattern
     # Config location: .ace/lint/kramdown.yml
     # @return [Hash] Kramdown configuration hash with defaults merged
     def self.kramdown_config
-      @kramdown_config ||= begin
-        gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-          File.expand_path("../..", __dir__)
-
-        resolver = Ace::Support::Config.create(
-          config_dir: ".ace",
-          defaults_dir: ".ace-defaults",
-          gem_path: gem_root
-        )
-
-        # Resolve kramdown-specific config
-        config = resolver.resolve_namespace("lint", filename: "kramdown")
-        config.data
-      rescue => e
-        warn "Warning: Could not load kramdown config: #{e.message}" if debug?
-        # Fall back to gem defaults instead of empty hash to prevent silent config erasure
-        load_gem_defaults_fallback("lint", "kramdown.yml")
-      end
+      @kramdown_config ||= resolve_lint_config("kramdown", "kramdown.yml")
     end
 
     # Load Ruby-specific configuration using ace-config cascade
-    # Follows ADR-022: Configuration Default and Override Pattern
     # Config location: .ace/lint/ruby.yml
     # @return [Hash] Ruby configuration hash with defaults merged
     def self.ruby_config
-      @ruby_config ||= begin
-        gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
-          File.expand_path("../..", __dir__)
+      @ruby_config ||= resolve_lint_config("ruby", "ruby.yml")
+    end
 
-        resolver = Ace::Support::Config.create(
-          config_dir: ".ace",
-          defaults_dir: ".ace-defaults",
-          gem_path: gem_root
-        )
-
-        # Resolve ruby-specific config
-        config = resolver.resolve_namespace("lint", filename: "ruby")
-        config.data
-      rescue => e
-        warn "Warning: Could not load ruby config: #{e.message}" if debug?
-        # Fall back to gem defaults instead of empty hash to prevent silent config erasure
-        load_gem_defaults_fallback("lint", "ruby.yml")
-      end
+    # Load Markdown-specific configuration using ace-config cascade
+    # Config location: .ace/lint/markdown.yml
+    # @return [Hash] Markdown configuration hash with defaults merged
+    def self.markdown_config
+      @markdown_config ||= resolve_lint_config("markdown", "markdown.yml")
     end
 
     # Reset config cache (useful for testing)
@@ -136,8 +89,36 @@ module Ace
       @config = nil
       @kramdown_config = nil
       @ruby_config = nil
+      @markdown_config = nil
       Atoms::SkillSchemaLoader.reset_cache!
     end
+
+    # Resolve lint configuration using ace-config cascade
+    # Follows ADR-022: Configuration Default and Override Pattern
+    # @param filename_base [String, nil] Config filename without extension (nil for default config)
+    # @param fallback_filename [String] Fallback filename for gem defaults
+    # @return [Hash] Configuration hash with defaults merged
+    def self.resolve_lint_config(filename_base, fallback_filename)
+      gem_root = Gem.loaded_specs["ace-lint"]&.gem_dir ||
+        File.expand_path("../..", __dir__)
+
+      resolver = Ace::Support::Config.create(
+        config_dir: ".ace",
+        defaults_dir: ".ace-defaults",
+        gem_path: gem_root
+      )
+
+      config = if filename_base
+        resolver.resolve_namespace("lint", filename: filename_base)
+      else
+        resolver.resolve_namespace("lint")
+      end
+      config.data
+    rescue => e
+      warn "Warning: Could not load #{fallback_filename} config: #{e.message}" if debug?
+      load_gem_defaults_fallback("lint", fallback_filename)
+    end
+    private_class_method :resolve_lint_config
 
     # Load gem defaults directly as fallback when cascade resolution fails
     # This ensures configuration is never silently erased due to YAML errors

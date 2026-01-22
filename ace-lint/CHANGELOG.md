@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-01-22
+
+### Added
+- Typography validation for markdown files (task 218.10)
+  - Detects em-dash characters (—) with suggestion to use double hyphens (--)
+  - Detects smart quotes (", ", ', ') with suggestion to use ASCII quotes
+  - Skips content inside fenced code blocks and inline code spans
+  - Configurable severity levels (error/warn/off) in `.ace/lint/markdown.yml`
+  - New `markdown_config` method following ADR-022 configuration cascade pattern
+  - Default configuration in `.ace-defaults/lint/markdown.yml`
+
 ## [0.13.0] - 2026-01-22
 
 ### Added
