@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.225
-status: planned
+status: pending
 priority: medium
 estimate: 2-3h
 dependencies: []
