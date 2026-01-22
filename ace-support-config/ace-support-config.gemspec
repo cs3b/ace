@@ -14,7 +14,7 @@ Gem::Specification.new do |spec|
                      "with deep merging and priority-based resolution."
   spec.homepage = "https://github.com/cs3b/ace-meta/tree/main/ace-support-config"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.3.0"
+  spec.required_ruby_version = ">= 3.2.0"
 
   # Runtime dependencies
   spec.add_dependency "ace-support-fs", "~> 0.1"

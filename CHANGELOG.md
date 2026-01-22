@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.315] - 2026-01-22
+
+### Changed
+
+- **All 26 gemspecs**: Lower required Ruby version from >= 3.3.0 to >= 3.2.0
+  - Pattern matching (`case/in`) has been stable since Ruby 3.0
+  - `Data.define` was introduced in Ruby 3.2
+  - No Ruby 3.3-specific features are used in the codebase
+  - Allows gems to work on more Ruby versions
+
 ## [0.9.314] - 2026-01-22
 
 ### Added
