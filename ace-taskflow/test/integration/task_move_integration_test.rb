@@ -175,5 +175,171 @@ class TaskMoveIntegrationTest < AceTaskflowTestCase
       end
     end
   end
+
+  # Tests for --child-of none flag (promote to standalone)
+
+  def test_promote_subtask_with_none_sentinel
+    # Test that --child-of none promotes subtask to standalone
+    TestFactory.with_stubbed_project_root(@project_root) do
+      Dir.chdir(@project_root) do
+        # Create a parent task
+        parent_dir = File.join(@project_root, ".ace-taskflow", "v.0.9.0", "t", "150-parent-task")
+        FileUtils.mkdir_p(parent_dir)
+        File.write(File.join(parent_dir, "150-parent-task.s.md"), <<~MARKDOWN)
+          ---
+          id: v.0.9.0+task.150
+          status: pending
+          priority: medium
+          estimate: 2h
+          dependencies: []
+          ---
+
+          # Parent Task
+
+          This is a parent task.
+        MARKDOWN
+
+        # Create a subtask under the parent
+        subtask_path = File.join(parent_dir, "150.01-subtask.s.md")
+        File.write(subtask_path, <<~MARKDOWN)
+          ---
+          id: v.0.9.0+task.150.01
+          status: pending
+          priority: low
+          parent: v.0.9.0+task.150
+          ---
+
+          # Subtask One
+
+          This is a subtask that will be promoted.
+        MARKDOWN
+
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.promote_to_standalone("150.01")
+
+        assert result[:success], "Promote subtask should succeed: #{result[:message]}"
+        assert_match(/promoted.*standalone/i, result[:message])
+
+        # Verify subtask was moved to a new standalone location
+        # The new task should be in the t/ directory directly
+        new_path = result[:new_path]
+        assert new_path, "Result should include new_path"
+        assert File.exist?(new_path), "Promoted task should exist at new path"
+        refute_includes new_path, "150-parent-task", "Promoted task should not be under parent directory"
+
+        # Verify the original subtask file was deleted
+        refute File.exist?(subtask_path), "Original subtask file should be deleted"
+
+        # Verify the promoted task has no parent
+        content = File.read(new_path)
+        refute_includes content, "parent:", "Promoted task should not have parent field"
+      end
+    end
+  end
+
+  def test_promote_subtask_via_cli_with_none_sentinel
+    # Test that the CLI properly handles --child-of none
+    TestFactory.with_stubbed_project_root(@project_root) do
+      Dir.chdir(@project_root) do
+        # Create a parent task
+        parent_dir = File.join(@project_root, ".ace-taskflow", "v.0.9.0", "t", "151-parent-task")
+        FileUtils.mkdir_p(parent_dir)
+        File.write(File.join(parent_dir, "151-parent-task.s.md"), <<~MARKDOWN)
+          ---
+          id: v.0.9.0+task.151
+          status: pending
+          priority: medium
+          ---
+
+          # Parent Task
+        MARKDOWN
+
+        # Create a subtask
+        subtask_path = File.join(parent_dir, "151.01-subtask.s.md")
+        File.write(subtask_path, <<~MARKDOWN)
+          ---
+          id: v.0.9.0+task.151.01
+          status: pending
+          priority: low
+          parent: v.0.9.0+task.151
+          ---
+
+          # Subtask to Promote
+        MARKDOWN
+
+        Ace::Taskflow.reset_configuration!
+
+        # Use the dry CLI command interface
+        command = Ace::Taskflow::CLI::Commands::TaskSubcommands::Move.new
+        output = capture_stdout do
+          command.call(task_ref: "151.01", "child-of": "none", "dry-run": false)
+        end
+
+        # Verify success message mentions promotion
+        assert_match(/promoted/i, output)
+        assert_match(/standalone/i, output)
+
+        # Verify the subtask was actually moved
+        refute File.exist?(subtask_path), "Original subtask file should be deleted"
+
+        # Find the new task file
+        task_files = Dir.glob(File.join(@project_root, ".ace-taskflow", "v.0.9.0", "t", "*", "*.s.md"))
+        # Filter out the parent task and any other non-matching tasks
+        standalone_files = task_files.reject { |f| f.include?("151-parent-task") }
+        assert standalone_files.any?, "At least one new standalone task should exist"
+      end
+    end
+  end
+
+  def test_promote_subtask_with_empty_string_backwards_compat
+    # Test backwards compatibility: --child-of= (empty string) also promotes
+    # This ensures existing scripts/aliases using --child-of= still work
+    TestFactory.with_stubbed_project_root(@project_root) do
+      Dir.chdir(@project_root) do
+        # Create a parent task
+        parent_dir = File.join(@project_root, ".ace-taskflow", "v.0.9.0", "t", "152-parent-task")
+        FileUtils.mkdir_p(parent_dir)
+        File.write(File.join(parent_dir, "152-parent-task.s.md"), <<~MARKDOWN)
+          ---
+          id: v.0.9.0+task.152
+          status: pending
+          priority: medium
+          ---
+
+          # Parent Task
+        MARKDOWN
+
+        # Create a subtask
+        subtask_path = File.join(parent_dir, "152.01-subtask.s.md")
+        File.write(subtask_path, <<~MARKDOWN)
+          ---
+          id: v.0.9.0+task.152.01
+          status: pending
+          priority: low
+          parent: v.0.9.0+task.152
+          ---
+
+          # Subtest for Empty String
+        MARKDOWN
+
+        Ace::Taskflow.reset_configuration!
+
+        # Simulate dry-cli behavior: empty string for --child-of=
+        # Test the move command logic directly
+        command = Ace::Taskflow::CLI::Commands::TaskSubcommands::Move.new
+
+        # Empty string should trigger promotion (backwards compatibility)
+        output = capture_stdout do
+          command.call(task_ref: "152.01", "child-of": "", "dry-run": false)
+        end
+
+        # Verify promotion happened
+        assert_match(/promoted/i, output)
+        refute File.exist?(subtask_path), "Original subtask file should be deleted"
+      end
+    end
+  end
 end
 
