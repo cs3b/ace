@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-01-22
+
+### Changed
+- Update analyze-bug workflow to use guide:// protocol
+- Now references ace-bundle guide://testing-philosophy
+
 ## [0.33.12] - 2026-01-22
 
 ### Fixed
