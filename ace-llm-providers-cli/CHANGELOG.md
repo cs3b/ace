@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-01-22
+
+### Fixed
+- **OpenCodeClient**: Prevent client hang on 400 error and improve output
+  - Added `stdin_data: ""` to `Open3.capture3` to prevent hanging on interactive prompts
+  - Added `--format json` flag for structured output
+  - Improved 400 Bad Request error detection with clearer error messages
+  - Updated test expectations for `--format json` flag
+
 ## [0.13.1] - 2026-01-16
 
 ### Fixed
