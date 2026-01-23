@@ -8,7 +8,7 @@ require "open3"
 # It includes all the helper methods we need
 
 # Test helper methods for fast, isolated tests
-# See docs/testing-patterns.md for patterns used here
+# See guide://testing for patterns used here
 
 # Stub ace-nav subprocess calls for prompt loading
 # Prevents 150-400ms delay per ace-nav call
@@ -46,7 +46,7 @@ end
 
 # Stub git diff operations
 # Prevents real git operations via DiffOrchestrator
-# See docs/testing-patterns.md lines 914-963
+# See guide://mocking-patterns for stubbing rationale
 def with_empty_git_diff
   require "ace/git"
   empty_result = Ace::Git::Models::DiffResult.empty
