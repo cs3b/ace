@@ -1,0 +1,43 @@
+# Protocol definition for agents
+protocol: agent
+name: "Agents"
+description: "AI agent configurations and instructions"
+enabled: true
+
+# File extensions to match
+extensions:
+  - .ag.md
+  - .agent.md
+
+# Template for creating new agents
+create_template: |
+  # %{name}
+
+  ## Role
+
+  Brief description of this agent's role and purpose.
+
+  ## Objective
+
+  What this agent is designed to accomplish.
+
+  ## Context
+
+  Relevant background information, constraints, and considerations.
+
+  ## Instructions
+
+  Step-by-step instructions for the agent.
+
+  ## Tools
+
+  List of tools this agent has access to (if applicable).
+
+# Protocol capabilities
+capabilities:
+  searchable: true
+  supports_glob: true
+  supports_create: true
+  supports_content: true
+  supports_list: true
+  supports_tree: true

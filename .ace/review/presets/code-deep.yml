@@ -4,7 +4,7 @@
 presets:
   - code
 
-description: "Multi-model PR review - concurrent execution across claude:opus, codex, and gpro"
+description: "Multi-model PR review - concurrent execution across codex, gemini, and other models"
 
 models:
   - claude:opus              # Deep reasoning, architecture analysis
@@ -15,5 +15,5 @@ models:
   # - togetherai:qwen-coder
   # - togetherai:deepseek
   - opencode:zai-coding-plan/glm-4.7
-  - opencode:opencode/grok-code
+  # - opencode:opencode/grok-code
   # - opencode:opencode/big-pickle
