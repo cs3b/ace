@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.317] - 2026-01-22
+
+### Fixed
+
+- **ace-llm-providers-cli 0.13.2**: Prevent OpenCode client hang on 400 error
+  - Added `stdin_data: ""` to `Open3.capture3` to prevent hanging on interactive prompts
+  - Added `--format json` flag for structured output
+  - Improved 400 Bad Request error detection with clearer error messages
+
 ## [0.9.316] - 2026-01-22
 
 ### Fixed
