@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.323] - 2026-01-22
+
+### Changed
+
+- **ace-taskflow 0.34.0**: Update analyze-bug workflow to use guide protocols
+  - Now references ace-bundle guide://testing-philosophy
+
+## [0.9.322] - 2026-01-22
+
+### Changed
+
+- **ace-docs 0.19.0**: Move embedded-testing-guide to ace-test package
+  - Guide now available via ace-test package
+
+## [0.9.321] - 2026-01-22
+
+### Changed
+
+- **ace-test-runner 0.11.0**: Move testing guides to ace-test package
+  - Removed handbook/guides/ directory (16 files)
+  - Removed .ace-defaults/nav/protocols/guide-sources/ace-test-runner.yml
+  - Testing guides now consolidated in ace-test package
+
 ## [0.9.320] - 2026-01-22
 
 ### Fixed
@@ -12,6 +35,18 @@ All notable changes to this project will be documented in this file.
   - Task with dependencies now appears in recently done based on when it was last modified
   - Previously, dependency ordering took precedence, causing recently completed tasks to appear incorrectly
   - Added test case to verify temporal sorting regardless of dependencies
+
+### Added
+
+- **ace-test 0.1.0**: New package consolidating testing documentation (task 218.11)
+  - Testing philosophy, TDD cycles, mocking patterns, and performance guides
+  - Workflows for create-test-cases and fix-tests (moved from ace-taskflow)
+  - Language-specific guides: Ruby, Rust, TypeScript/Vue
+
+### Changed
+
+- **ace-test-runner 0.10.6**: Update references to new ace-test package
+  - Documentation now references consolidated testing guides
 
 ## [0.9.319] - 2026-01-22
 

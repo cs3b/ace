@@ -13,7 +13,6 @@ bundle:
     - docs/ace-gems.g.md
     - docs/decisions.md
     - docs/tools.md
-    - docs/testing-patterns.md
   commands:
     - pwd
     - date
