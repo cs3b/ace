@@ -1,0 +1,25 @@
+---
+name: tdd-ruby-application
+description: Task cycle for Ruby application development
+doc-type: guide
+purpose: TDD workflow for Ruby applications
+search_keywords:
+  - ruby
+  - application
+  - tdd
+  - rspec
+  - rubocop
+update:
+  frequency: on-change
+  last-updated: '2026-01-23'
+---
+
+# Implementing Task Cycle: Ruby Application
+
+This details specific steps and commands for the task cycle when working on a Ruby application within this project.
+
+1. **RSpec first**: `bundle exec rspec --only-failures` keeps focus on broken specs.
+2. **Code & RuboCop**: Auto‑correct style (`bundle exec rubocop -A`), then rerun tests.
+3. **Commit / Retrospect / Re‑commit** as per the [generic cycle](./testing-tdd-cycle.g.md).
+4. **CI** → GitHub Action runs Ruby 3.2 & 3.3 matrix with `rspec` + `rubocop`.
+5. **Deployment** handled by a separate release workflow.
