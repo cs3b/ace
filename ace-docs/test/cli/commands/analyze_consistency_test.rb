@@ -84,7 +84,7 @@ module Ace
             options = { threshold: "80", timeout: "300" }
 
             # Use stub helpers to prevent expensive file system scanning
-            # and subprocess calls (see docs/testing-patterns.md)
+            # and subprocess calls (see guide://mocking-patterns)
             with_mock_registry do
               stub_ace_nav_prompts do
                 # The command should convert these in call method
