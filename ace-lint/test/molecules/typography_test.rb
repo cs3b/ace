@@ -52,7 +52,7 @@ class Ace::Lint::Molecules::TypographyTest < Minitest::Test
 
     # Should detect both left and right double quotes
     assert_equal 2, issues.size
-    assert(issues.all? { |i| i.message.include?("Smart double quote found") })
+    assert(issues.all? { |i| i.message.include?("Smart double quote") })
   end
 
   def test_detects_right_double_quote
@@ -60,7 +60,7 @@ class Ace::Lint::Molecules::TypographyTest < Minitest::Test
     issues = @linter.check_typography(content, @default_config)
 
     assert_equal 1, issues.size
-    assert_match(/Smart double quote found/, issues.first.message)
+    assert_match(/Smart double quote/, issues.first.message)
   end
 
   def test_detects_left_single_quote
@@ -69,7 +69,7 @@ class Ace::Lint::Molecules::TypographyTest < Minitest::Test
 
     # Should detect both left and right single quotes
     assert_equal 2, issues.size
-    assert(issues.all? { |i| i.message.include?("Smart single quote found") })
+    assert(issues.all? { |i| i.message.include?("Smart single quote") })
   end
 
   def test_detects_right_single_quote
@@ -77,7 +77,7 @@ class Ace::Lint::Molecules::TypographyTest < Minitest::Test
     issues = @linter.check_typography(content, @default_config)
 
     assert_equal 1, issues.size
-    assert_match(/Smart single quote found/, issues.first.message)
+    assert_match(/Smart single quote/, issues.first.message)
   end
 
   def test_smart_quotes_with_error_severity
@@ -87,6 +87,17 @@ class Ace::Lint::Molecules::TypographyTest < Minitest::Test
 
     assert_equal 2, issues.size
     assert(issues.all? { |i| i.severity == :error })
+  end
+
+  def test_smart_quote_message_includes_actual_character
+    content = "Quote \u201Chere\u201D\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    left_quote_issue = issues.find { |i| i.message.include?("\u201C") }
+    right_quote_issue = issues.find { |i| i.message.include?("\u201D") }
+
+    assert left_quote_issue, "Should include left quote character in message"
+    assert right_quote_issue, "Should include right quote character in message"
   end
 
   def test_smart_quotes_disabled_when_off
@@ -205,6 +216,96 @@ class Ace::Lint::Molecules::TypographyTest < Minitest::Test
     # Should detect em-dashes outside inline code only (one issue per line)
     assert_equal 1, issues.size
     assert(issues.all? { |i| i.message.include?("Em-dash") })
+  end
+
+  def test_skips_double_backtick_inline_code
+    content = "Text with ``code\u2014here`` more text\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    assert_empty issues
+  end
+
+  def test_skips_double_backtick_with_single_inside
+    content = "Text with ``code `nested` here\u2014`` more text\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    assert_empty issues
+  end
+
+  # Markdown link handling tests
+  def test_skips_link_url_but_checks_link_text
+    content = "Check [link text](https://example.com/path\u2014here)\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    # URL should be stripped, link text should be checked (no issues in link text)
+    assert_empty issues
+  end
+
+  def test_detects_issues_in_link_text
+    content = "See [link\u2014text](https://example.com)\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    assert_equal 1, issues.size
+    assert_match(/Em-dash/, issues.first.message)
+  end
+
+  def test_skips_quoted_link_text_correctly
+    content = "Click [See \"here\"](https://example.com) for info\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    # ASCII quotes in link text should not trigger issues
+    assert_empty issues
+  end
+
+  def test_detects_smart_quotes_in_link_text
+    content = "See [\u201Cquoted\u201D](https://example.com)\n"
+    issues = @linter.check_typography(content, @default_config)
+
+    assert_equal 2, issues.size
+    assert(issues.all? { |i| i.message.include?("Smart double quote") })
+  end
+
+  # Fence matching tests
+  def test_fence_matching_requires_same_char
+    content = <<~MARKDOWN
+      ```
+      code with em-dash\u2014
+      ~~~
+      still in code block\u2014
+      ```
+    MARKDOWN
+    issues = @linter.check_typography(content, @default_config)
+
+    # ~~~ should not close ``` block
+    assert_empty issues
+  end
+
+  def test_fence_matching_requires_sufficient_length
+    content = <<~MARKDOWN
+      ````
+      code with em-dash\u2014
+      ```
+      still in code block\u2014
+      ````
+    MARKDOWN
+    issues = @linter.check_typography(content, @default_config)
+
+    # ``` (3) should not close ```` (4) block
+    assert_empty issues
+  end
+
+  def test_fence_can_close_with_longer_fence
+    content = <<~MARKDOWN
+      ```
+      code with em-dash\u2014
+      ````
+      outside now with em-dash\u2014
+    MARKDOWN
+    issues = @linter.check_typography(content, @default_config)
+
+    # ```` (4) can close ``` (3) block
+    assert_equal 1, issues.size
+    assert_equal 4, issues.first.line
   end
 
   # Empty file handling
