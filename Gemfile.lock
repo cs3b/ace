@@ -236,6 +236,11 @@ PATH
       minitest-reporters (~> 1.6)
       ostruct
 
+PATH
+  remote: ace-test
+  specs:
+    ace-test (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -387,6 +392,7 @@ DEPENDENCIES
   ace-support-test-helpers!
   ace-support-timestamp!
   ace-taskflow!
+  ace-test!
   ace-test-e2e-runner!
   ace-test-runner!
   bundler (~> 2.4)
