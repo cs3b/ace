@@ -1,0 +1,19 @@
+---
+# Agent Sources Protocol Configuration for ace-test gem
+# This enables agent discovery from the installed ace-test gem
+
+name: ace-test
+type: gem
+description: Testing agents from ace-test gem
+priority: 10
+
+# Configuration for agent discovery within the gem
+config:
+  # Relative path within the gem
+  relative_path: handbook/agents
+
+  # Pattern for finding agent files
+  pattern: "*.ag.md"
+
+  # Enable discovery
+  enabled: true
