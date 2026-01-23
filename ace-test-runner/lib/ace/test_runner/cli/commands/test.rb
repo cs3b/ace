@@ -289,7 +289,7 @@ module Ace
           # When ace-test uses in-process (direct) execution, test files are loaded
           # into the current process. Minitest registers an at_exit handler that would
           # re-run all tests on normal exit. Using exit! bypasses this.
-          # See docs/testing-patterns.md for details on this pattern.
+          # See guide://testable-code-patterns for details on this pattern.
 
           # Note: We cannot use exit! here and return the exit code instead.
           # The exe file wrapper will handle the exit! call.
