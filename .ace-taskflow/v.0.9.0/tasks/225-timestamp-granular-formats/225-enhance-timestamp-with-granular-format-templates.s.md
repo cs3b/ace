@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.225
-status: pending
+status: in-progress
 priority: medium
 estimate: 2-3h
 dependencies: []
+worktree:
+  branch: 225-enhance-ace-support-timestamp-with-granular-format-templates
+  path: "../ace-task.225"
+  created_at: '2026-01-23 16:06:38'
+  updated_at: '2026-01-23 16:06:38'
+  target_branch: main
 ---
 
 # Enhance ace-support-timestamp with Granular Format Templates
