@@ -135,8 +135,11 @@ module Ace
             model_to_use = @model || @generation_config[:model] || DEFAULT_MODEL
             cmd << "--model" << model_to_use
 
+            # Add JSON format for structured output (less likely to prompt interactively)
+            cmd << "--format" << "json"
+
             # Prompt is passed as positional argument (not via --prompt flag)
-            # NOTE: OpenCode CLI does not support --temperature, --max-tokens, --format, or --system flags
+            # NOTE: OpenCode CLI does not support --temperature, --max-tokens, or --system flags
             # Coerce to string to handle nil or non-string inputs gracefully
             cmd << full_prompt.to_s
 
@@ -188,7 +191,8 @@ module Ace
             # Execute with timeout to prevent hanging
             timeout_val = timeout || @options[:timeout] || 120
             Timeout.timeout(timeout_val) do
-              Open3.capture3(*cmd)
+              # Provide empty stdin to prevent hanging on interactive prompts
+              Open3.capture3(*cmd, stdin_data: "")
             end
           rescue Timeout::Error
             raise Ace::LLM::ProviderError, "OpenCode CLI execution timed out after #{timeout_val} seconds"
@@ -197,6 +201,12 @@ module Ace
           def parse_opencode_response(stdout, stderr, status, prompt, options)
             unless status.success?
               error_msg = stderr.empty? ? stdout : stderr
+
+              # Detect common error patterns for better error messages
+              if error_msg.include?("400") || error_msg.include?("Bad Request")
+                raise Ace::LLM::ProviderError, "OpenCode API request failed (400 Bad Request). The model or prompt may be invalid."
+              end
+
               raise Ace::LLM::ProviderError, "OpenCode CLI failed: #{error_msg}"
             end
 

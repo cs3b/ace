@@ -249,7 +249,9 @@ describe "CLI Execution Edge Cases" do
                          temperature: 0.7, max_tokens: 1000, format: "json")
       refute_includes cmd, "--temperature"
       refute_includes cmd, "--max-tokens"
-      refute_includes cmd, "--format"
+      # --format json is now added automatically for structured output
+      assert_includes cmd, "--format"
+      assert_equal "json", cmd[cmd.index("--format") + 1]
       refute_includes cmd, "--system"
     end
 
