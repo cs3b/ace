@@ -211,7 +211,7 @@ module Ace
         protected
 
         # Protected methods for external dependency access (testability pattern)
-        # See docs/testing-patterns.md for rationale
+        # See guide://testable-code-patterns for rationale
 
         # Check if file exists (protected for test stubbing)
         def file_exist?(path)
