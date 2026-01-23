@@ -19,7 +19,12 @@ module Ace
         ].freeze
 
         # Fenced code block pattern (``` or ~~~, with optional up to 3 leading spaces per CommonMark)
-        FENCE_PATTERN = /^\s{0,3}(`{3,}|~{3,})/
+        # Captures the fence character and length for proper matching
+        FENCE_PATTERN = /^(\s{0,3})(`{3,}|~{3,})/
+        # Markdown link pattern [text](url) - captures link text for typography checking
+        LINK_PATTERN = /\[([^\]]*)\]\([^)]*\)/
+        # Inline code pattern - handles single and double backtick spans
+        INLINE_CODE_PATTERN = /``[^`]+``|`[^`]+`/
         # Validate markdown file
         # @param file_path [String] Path to markdown file
         # @param options [Hash] Kramdown options
@@ -165,21 +170,40 @@ module Ace
 
           lines = content.lines
           in_code_block = false
+          fence_char = nil
+          fence_length = 0
 
           lines.each_with_index do |line, idx|
             line_num = idx + 1
 
-            # Track fenced code block state (supports ``` and ~~~ with optional leading spaces)
-            if line.match?(FENCE_PATTERN)
-              in_code_block = !in_code_block
+            # Track fenced code block state with proper fence matching
+            if (match = line.match(FENCE_PATTERN))
+              current_fence_char = match[2][0] # First char (` or ~)
+              current_fence_length = match[2].length
+
+              if in_code_block
+                # Only close if same char and at least same length
+                if current_fence_char == fence_char && current_fence_length >= fence_length
+                  in_code_block = false
+                  fence_char = nil
+                  fence_length = 0
+                end
+              else
+                # Opening fence
+                in_code_block = true
+                fence_char = current_fence_char
+                fence_length = current_fence_length
+              end
               next
             end
 
             # Skip lines inside code blocks
             next if in_code_block
 
-            # Remove inline code spans before checking typography
-            line_without_code = line.gsub(/`[^`]+`/, "")
+            # Remove inline code spans (handles both single and double backticks)
+            # Then remove link markup but keep link text for checking
+            line_without_code = line.gsub(INLINE_CODE_PATTERN, "")
+                                    .gsub(LINK_PATTERN, '\1')
 
             # Check for em-dashes
             if em_dash_severity != "off" && line_without_code.include?(EM_DASH)
@@ -199,7 +223,7 @@ module Ace
                   quote_type = ["\u201C", "\u201D"].include?(quote) ? "double" : "single"
                   issues << Models::ValidationError.new(
                     line: line_num,
-                    message: "Smart #{quote_type} quote found; use ASCII quotes instead",
+                    message: "Smart #{quote_type} quote (#{quote}) found; use ASCII quotes instead",
                     severity: severity
                   )
                 end
