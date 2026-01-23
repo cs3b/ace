@@ -28,6 +28,7 @@ gem 'ace-test-runner', path: 'ace-test-runner'
 group :development, :test do
   gem 'ace-handbook', path: 'ace-handbook'
   gem 'ace-integration-claude', path: 'ace-integration-claude'
+  gem 'ace-test', path: 'ace-test'
   gem 'ace-support-test-helpers', path: 'ace-support-test-helpers'
   gem 'ace-test-e2e-runner', path: 'ace-test-e2e-runner'
   gem 'bundler', '~> 2.4'
