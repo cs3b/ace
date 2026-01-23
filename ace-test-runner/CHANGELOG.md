@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-01-22
+
+### Changed
+- Move testing guides to ace-test package (16 files)
+- Removed .ace-defaults/nav/protocols/guide-sources/ace-test-runner.yml
+- Testing guides now consolidated in ace-test package
+
+## [0.10.6] - 2026-01-22
+
+### Changed
+- Update references to new ace-test package for consolidated testing documentation
+
+### Technical
+- Lower Ruby version requirement to >= 3.2.0
+- Update for ace-bundle integration
+
 ## [0.10.5] - 2026-01-16
 
 ### Changed
