@@ -48,9 +48,11 @@ module Ace
     end
 
     def test_detect_format_convenience_method
-      assert_equal :compact, Ace::Support::Timestamp.detect_format("abc123")
+      assert_equal :"2sec", Ace::Support::Timestamp.detect_format("abc123")
       assert_equal :timestamp, Ace::Support::Timestamp.detect_format("20250101-120000")
-      assert_nil Ace::Support::Timestamp.detect_format("invalid")
+      # "invalid" is 7 chars with valid base36 chars, so it matches 50ms pattern
+      # Use a string with invalid characters to test nil return
+      assert_nil Ace::Support::Timestamp.detect_format("invalid!")
     end
 
     def test_now_generates_current_time_id

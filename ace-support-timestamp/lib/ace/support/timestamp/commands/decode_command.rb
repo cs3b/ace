@@ -14,7 +14,7 @@ module Ace
         class << self
           # Execute the decode command
           #
-          # @param compact_id [String] 6-character compact ID to decode
+          # @param compact_id [String] 2-8 character compact ID to decode
           # @param options [Hash] Command options
           # @option options [Integer] :year_zero Override year_zero config
           # @option options [String] :format Output format (:iso, :timestamp, :readable)
@@ -25,7 +25,8 @@ module Ace
 
             display_config_summary("decode", config, options)
 
-            time = Atoms::CompactIdEncoder.decode(
+            # Use auto-detection to decode variable-length IDs
+            time = Atoms::CompactIdEncoder.decode_auto(
               compact_id,
               year_zero: config[:year_zero],
               alphabet: config[:alphabet]

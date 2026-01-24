@@ -19,16 +19,24 @@ module Ace
           # @param time_string [String] Time string to encode (various formats supported)
           # @param options [Hash] Command options
           # @option options [Integer] :year_zero Override year_zero config
+          # @option options [String] :format Output format
           # @option options [Boolean] :quiet Suppress config summary output
           # @return [Integer] Exit code (0 for success, 1 for error)
           def execute(time_string, options = {})
             time = parse_time(time_string)
             config = Molecules::ConfigResolver.resolve(options)
 
+            # Get format from options or config (default: :"2sec")
+            # Normalize hyphens to underscores for CLI compatibility (e.g., high-8 -> high_8)
+            format = options[:format]
+            format = format.to_s.tr("-", "_").to_sym if format
+            format ||= config[:default_format]&.to_sym || :"2sec"
+
             display_config_summary("encode", config, options)
 
-            compact_id = Atoms::CompactIdEncoder.encode(
+            compact_id = Atoms::CompactIdEncoder.encode_with_format(
               time,
+              format: format,
               year_zero: config[:year_zero],
               alphabet: config[:alphabet]
             )
@@ -83,6 +91,7 @@ module Ace
               quiet: false
             )
           end
+
         end
       end
     end

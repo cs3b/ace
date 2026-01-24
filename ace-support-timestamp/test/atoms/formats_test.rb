@@ -11,11 +11,11 @@ module Ace
         # detect Tests
         # ===================
 
-        def test_detect_compact_format
-          assert_equal :compact, Formats.detect("abc123")
-          assert_equal :compact, Formats.detect("000000")
-          assert_equal :compact, Formats.detect("zzzzzz")
-          assert_equal :compact, Formats.detect("ABC123")  # Case insensitive
+        def test_detect_2sec_format
+          assert_equal :"2sec", Formats.detect("abc123")
+          assert_equal :"2sec", Formats.detect("000000")
+          assert_equal :"2sec", Formats.detect("zzzzzz")
+          assert_equal :"2sec", Formats.detect("ABC123")  # Case insensitive
         end
 
         def test_detect_timestamp_format
@@ -25,8 +25,12 @@ module Ace
         end
 
         def test_detect_returns_nil_for_invalid
-          assert_nil Formats.detect("invalid")
-          assert_nil Formats.detect("abc")
+          # Strings with invalid characters should return nil
+          assert_nil Formats.detect("invalid!")
+          assert_nil Formats.detect("x!z")
+          assert_nil Formats.detect("ab#")
+          # String with unsupported length (9 chars)
+          assert_nil Formats.detect("123456789")
           assert_nil Formats.detect("20250101120000")  # Missing hyphen
           assert_nil Formats.detect("2025-01-01")
           assert_nil Formats.detect("")
@@ -52,7 +56,8 @@ module Ace
         end
 
         def test_compact_returns_false_for_invalid
-          refute Formats.compact?("invalid")
+          refute Formats.compact?("x!z")
+          refute Formats.compact?("invalid!")
           refute Formats.compact?(nil)
         end
 
@@ -70,7 +75,8 @@ module Ace
         end
 
         def test_timestamp_returns_false_for_invalid
-          refute Formats.timestamp?("invalid")
+          refute Formats.timestamp?("x!z")
+          refute Formats.timestamp?("invalid!")
           refute Formats.timestamp?(nil)
         end
 

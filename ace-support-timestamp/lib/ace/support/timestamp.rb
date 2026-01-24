@@ -8,6 +8,7 @@ require 'ace/support/config'
 # Atoms
 require_relative "timestamp/atoms/compact_id_encoder"
 require_relative "timestamp/atoms/formats"
+require_relative "timestamp/atoms/format_specs"
 
 # Molecules
 require_relative "timestamp/molecules/config_resolver"
@@ -36,7 +37,7 @@ module Ace
     #   # => 2025-01-06 12:30:00 UTC
     #
     # @example Format detection
-    #   Ace::Support::Timestamp.detect_format("i50jj3")      # => :compact
+    #   Ace::Support::Timestamp.detect_format("i50jj3")      # => :"2sec"
     #   Ace::Support::Timestamp.detect_format("20250106-123000") # => :timestamp
     #
     module Timestamp
@@ -51,12 +52,18 @@ module Ace
       # Encode a Time object to a compact ID (convenience method)
       #
       # @param time [Time] The time to encode
+      # @param format [Symbol, nil] Output format (default: :"2sec")
+      #   Supported formats: :month (2 chars), :week (3 chars), :day (3 chars),
+      #   :"40min" (4 chars), :"2sec" (6 chars), :"50ms" (7 chars), :ms (8 chars)
       # @param year_zero [Integer, nil] Optional year_zero override
-      # @return [String] 6-character compact ID
-      def self.encode(time, year_zero: nil)
+      # @return [String] Compact ID (length varies by format)
+      def self.encode(time, format: nil, year_zero: nil)
         config = Molecules::ConfigResolver.resolve(year_zero: year_zero)
-        Atoms::CompactIdEncoder.encode(
+        effective_format = format || config[:default_format]&.to_sym || :"2sec"
+
+        Atoms::CompactIdEncoder.encode_with_format(
           time,
+          format: effective_format,
           year_zero: config[:year_zero],
           alphabet: config[:alphabet]
         )
@@ -64,30 +71,80 @@ module Ace
 
       # Decode a compact ID to a Time object (convenience method)
       #
-      # @param compact_id [String] The 6-character compact ID
+      # @param compact_id [String] The compact ID to decode
+      # @param format [Symbol, nil] Format of the ID (default: :"2sec" for 6-char, or auto-detect)
       # @param year_zero [Integer, nil] Optional year_zero override
       # @return [Time] Decoded time in UTC
-      def self.decode(compact_id, year_zero: nil)
+      def self.decode(compact_id, format: nil, year_zero: nil)
         config = Molecules::ConfigResolver.resolve(year_zero: year_zero)
-        Atoms::CompactIdEncoder.decode(
+
+        if format
+          Atoms::CompactIdEncoder.decode_with_format(
+            compact_id,
+            format: format,
+            year_zero: config[:year_zero],
+            alphabet: config[:alphabet]
+          )
+        else
+          # Default to 2sec format for backward compatibility with 6-char IDs
+          Atoms::CompactIdEncoder.decode(
+            compact_id,
+            year_zero: config[:year_zero],
+            alphabet: config[:alphabet]
+          )
+        end
+      end
+
+      # Decode a compact ID with automatic format detection (convenience method)
+      #
+      # Automatically detects the format based on ID length and value ranges:
+      # - 2 chars: month format
+      # - 3 chars: day or week format (auto-detected by 3rd char value)
+      # - 4 chars: 40min format
+      # - 6 chars: 2sec format
+      # - 7 chars: 50ms format
+      # - 8 chars: ms format
+      #
+      # @param compact_id [String] The compact ID to decode (2-8 characters)
+      # @param year_zero [Integer, nil] Optional year_zero override
+      # @return [Time] Decoded time in UTC
+      # @raise [ArgumentError] If format cannot be detected
+      def self.decode_auto(compact_id, year_zero: nil)
+        config = Molecules::ConfigResolver.resolve(year_zero: year_zero)
+        Atoms::CompactIdEncoder.decode_auto(
           compact_id,
           year_zero: config[:year_zero],
           alphabet: config[:alphabet]
         )
       end
 
-      # Validate if a string is a valid compact ID
+      # Validate if a string is a valid 6-character compact ID (legacy method)
+      #
+      # NOTE: This method only validates 6-character "2sec" format IDs.
+      # For validating IDs of any format, use valid_any_format? instead.
       #
       # @param compact_id [String] The string to validate
-      # @return [Boolean] True if valid compact ID format
+      # @return [Boolean] True if valid 6-char compact ID format
+      # @see valid_any_format? for validating all format lengths
       def self.valid?(compact_id)
         Atoms::CompactIdEncoder.valid?(compact_id)
+      end
+
+      # Validate if a string is a valid compact ID of any format
+      #
+      # Supports all 7 formats: month (2 chars), week (3 chars), day (3 chars),
+      # 40min (4 chars), 2sec (6 chars), 50ms (7 chars), ms (8 chars).
+      #
+      # @param compact_id [String] The string to validate (2-8 characters)
+      # @return [Boolean] True if valid compact ID of any format
+      def self.valid_any_format?(compact_id)
+        Atoms::CompactIdEncoder.valid_any_format?(compact_id)
       end
 
       # Detect the format of a timestamp string
       #
       # @param value [String] The timestamp string
-      # @return [Symbol, nil] :compact, :timestamp, or nil
+      # @return [Symbol, nil] :"2sec", :timestamp, or nil
       def self.detect_format(value)
         Atoms::Formats.detect(value)
       end
