@@ -4,9 +4,13 @@
 require_relative "../lib/ace/support/timestamp"
 
 begin
-  result = Ace::Support::Timestamp::CLI.start(ARGV)
-  exit(result.is_a?(Integer) ? result : 0)
+  Ace::Support::Timestamp::CLI.start(ARGV)
+rescue ArgumentError => e
+  # Error message already printed by command
+  warn e.backtrace.first(5).join("\n") if ENV["DEBUG"]
+  exit 1
 rescue StandardError => e
-  warn "Error: #{e.message}" if ENV["DEBUG"]
+  # Error message already printed by command
+  warn e.backtrace.first(5).join("\n") if ENV["DEBUG"]
   exit 1
 end

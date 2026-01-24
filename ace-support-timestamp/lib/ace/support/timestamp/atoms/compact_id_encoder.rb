@@ -179,6 +179,67 @@ module Ace
             decode_with_format(encoded_id, format: format, year_zero: year_zero, alphabet: alphabet)
           end
 
+          # Encode a Time object into split components for hierarchical paths
+          #
+          # @param time [Time] The time to encode
+          # @param levels [Array<Symbol>, String] Split levels (month, week, day, block)
+          # @param year_zero [Integer] Base year for encoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Hash] Hash of split components, rest, path, and full
+          def encode_split(time, levels:, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            time = time.utc if time.respond_to?(:utc)
+            levels = normalize_split_levels(levels)
+            validate_split_levels!(levels)
+
+            full_compact = encode_2sec(time, year_zero: year_zero, alphabet: alphabet)
+            components = {
+              month: full_compact[0..1],
+              day: full_compact[2],
+              block: full_compact[3],
+              precision: full_compact[4..5]
+            }
+
+            week_value = calculate_week_in_month(time)
+            week_token = encode_value(week_value, 1, alphabet)
+
+            output = {}
+            levels.each do |level|
+              output[level] = level == :week ? week_token : components[level]
+            end
+
+            rest = split_rest_for(levels, full_compact)
+            output[:rest] = rest
+
+            path_components = levels.map { |level| output[level] } + [rest]
+            output[:path] = path_components.join("/")
+            output[:full] = path_components.join("")
+
+            output
+          end
+
+          # Decode a hierarchical split path into a Time object
+          #
+          # @param path_string [String] Split path string (with or without separators)
+          # @param year_zero [Integer] Base year for decoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Time] The decoded time (UTC)
+          def decode_path(path_string, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            raise ArgumentError, "Split path must be a string" unless path_string.is_a?(String)
+
+            segments = path_string.split(/[\/\\:]+/).reject(&:empty?)
+            full = segments.join
+
+            # 7-char format: month(2) + week(1) + day(1) + block(1) + precision(2) = MMWDBRR
+            # Strip week token (position 2) to get standard 6-char 2sec format: MMDBRRR
+            if full.length == 7
+              full = full[0..1] + full[3..-1]
+            elsif full.length != 6
+              raise ArgumentError, "Split path must resolve to 6 or 7 characters, got #{full.length}"
+            end
+
+            decode_2sec(full, year_zero: year_zero, alphabet: alphabet)
+          end
+
           # ===================
           # 2sec Format (6 chars, ~1.85s precision)
           # ===================
@@ -737,6 +798,65 @@ module Ace
           # @return [Integer] Week number in month (1-5)
           def calculate_week_in_month(time)
             ((time.day - 1) / 7) + 1
+          end
+
+          # Normalize split levels into symbol list
+          #
+          # @param levels [Array<Symbol>, String] Level list or comma-separated string
+          # @return [Array<Symbol>] Normalized levels
+          def normalize_split_levels(levels)
+            list = levels.is_a?(String) ? levels.split(",") : Array(levels)
+            list.map { |level| level.to_s.strip }
+                .reject(&:empty?)
+                .map(&:to_sym)
+          end
+
+          # Validate split levels ordering and hierarchy
+          #
+          # @param levels [Array<Symbol>] Normalized split levels
+          # @raise [ArgumentError] If validation fails
+          def validate_split_levels!(levels)
+            raise ArgumentError, "split levels must be provided" if levels.empty?
+
+            unknown = levels - FormatSpecs::SPLIT_LEVELS
+            unless unknown.empty?
+              raise ArgumentError, "unknown level: #{unknown.first} (valid: #{FormatSpecs::SPLIT_LEVELS.join(', ')})"
+            end
+
+            unless levels.first == :month
+              raise ArgumentError, "levels must start with month"
+            end
+
+            indices = levels.map { |level| FormatSpecs::SPLIT_LEVELS.index(level) }
+            unless indices == indices.sort && indices.uniq.length == indices.length
+              raise ArgumentError, "levels must be in order: month -> week -> day -> block"
+            end
+
+            if levels.include?(:block) && !levels.include?(:day)
+              raise ArgumentError, "block requires day"
+            end
+          end
+
+          # Determine rest component based on final split level
+          #
+          # @param levels [Array<Symbol>] Split levels
+          # @param full_compact [String] Full 2sec compact ID
+          # @return [String] Remaining precision component
+          def split_rest_for(levels, full_compact)
+            # Determine the "rest" portion of the compact ID based on the deepest split level
+            # Levels are validated by validate_split_levels! before this is called
+            case levels.last
+            when :month, :week
+              full_compact[2..5]  # After month (2 chars), rest is day+block+precision
+            when :day
+              full_compact[3..5]  # After day (3 chars total), rest is block+precision
+            when :block
+              full_compact[4..5]  # After block (4 chars total), rest is precision only
+            else
+              # Defensive fallback: treat as month/week level (should not be reached
+              # after validation, but provides safe default if called directly)
+              full_compact[2..5]
+            end
           end
 
           # Normalize minute overflow when minute >= 60

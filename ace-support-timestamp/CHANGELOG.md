@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Hierarchical split format for timestamp encoding/decoding (`encode_split`, `decode_path`)
+- CLI options: `--split`, `--path-only`, `--json` for split encoding output
+- Auto-detection of path separators (`/`, `\`, `:`) in decode
+
 ## [0.4.0] - 2026-01-24
 
 ### Added

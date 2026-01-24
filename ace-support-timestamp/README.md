@@ -58,10 +58,20 @@ Ace::Support::Timestamp.encode(Time.utc(2025, 1, 6, 12, 30, 0), format: :week)
 Ace::Support::Timestamp.encode(Time.utc(2025, 1, 6, 12, 30, 0), format: :ms)
 # => "i50jj3kmp"
 
+# Encode split output for hierarchical paths
+Ace::Support::Timestamp.encode_split(Time.utc(2025, 1, 6, 12, 30, 0), levels: [:month, :week, :day])
+# => { month: "i5", week: "1", day: "5", rest: "jj3", path: "i5/1/5/jj3", full: "i515jj3" }
+Ace::Support::Timestamp.encode_split(Time.utc(2025, 1, 6, 12, 30, 0), levels: [:month, :day], path_only: true)
+# => "i5/5/jj3"
+
 # Auto-detect format and decode
 Ace::Support::Timestamp.decode_auto("i50")   # Detects :day format
 Ace::Support::Timestamp.decode_auto("i5v")   # Detects :week format
 Ace::Support::Timestamp.decode_auto("i50jj3") # Detects :"2sec" format
+
+# Decode from a split path
+Ace::Support::Timestamp.decode_path("i5/1/5/j/j3")
+# => 2025-01-06 12:30:00 UTC
 
 # Decode a compact ID (explicit format)
 Ace::Support::Timestamp.decode("i50jj3")
@@ -104,9 +114,31 @@ ace-timestamp encode --format ms now
 # Encode current time
 ace-timestamp encode now
 
+# Encode split output for hierarchical paths
+ace-timestamp encode --split month,week,day now
+# => month: i5
+# => week: 1
+# => day: 5
+# => rest: jj3
+# => path: i5/1/5/jj3
+# => full: i515jj3
+
+ace-timestamp encode --split month,week now --path-only
+# => i5/1/5jj3
+
+ace-timestamp encode --split month,day now --json
+# => {"month":"i5","day":"5","rest":"jj3","path":"i5/5/jj3","full":"i55jj3"}
+
 # Decode a compact ID (auto-detect format)
 ace-timestamp decode i50jj3
 # => 2025-01-06 12:30:00 UTC
+
+# Decode a split path (auto-detect separators)
+ace-timestamp decode i5/1/5/j/j3
+# => 2025-01-06 12:30:00 UTC
+
+# Decode a split full string
+ace-timestamp decode i515jj3 --split
 
 # Decode with specific output format
 ace-timestamp decode i50jj3 --format iso
