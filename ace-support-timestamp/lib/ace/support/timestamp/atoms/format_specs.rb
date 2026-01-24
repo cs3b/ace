@@ -79,6 +79,7 @@ module Ace
           DAY_FORMAT_MAX = 30
           WEEK_FORMAT_MIN = 31
           WEEK_FORMAT_MAX = 35
+          SPLIT_LEVELS = %i[month week day block].freeze
 
           class << self
             # Get format specification by name
@@ -109,6 +110,24 @@ module Ace
             # @return [Array<Integer>] List of supported ID lengths
             def all_lengths
               FORMATS.values.map(&:length).uniq.sort
+            end
+
+            # Validate split level ordering and hierarchy
+            #
+            # @param levels [Array<Symbol>] Split levels to validate
+            # @return [Boolean] True if split levels are valid
+            def valid_split_levels?(levels)
+              return false unless levels.is_a?(Array)
+              return false if levels.empty?
+              return false unless levels.all? { |level| SPLIT_LEVELS.include?(level) }
+              return false unless levels.uniq.length == levels.length
+              return false unless levels.first == :month
+
+              indices = levels.map { |level| SPLIT_LEVELS.index(level) }
+              return false unless indices == indices.sort
+              return false if levels.include?(:block) && !levels.include?(:day)
+
+              true
             end
 
             # Detect format from ID string

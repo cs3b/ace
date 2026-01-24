@@ -16,6 +16,7 @@ module Ace
             argument :compact_id, required: true, desc: "2-8 character compact ID to decode (auto-detects format)"
             option :year_zero, type: :integer, aliases: ["-y"], desc: "Base year for decoding (default: 2000)"
             option :format, type: :string, aliases: ["-f"], desc: "Output format (readable, iso, timestamp)"
+            option :split, type: :boolean, desc: "Force hierarchical split decoding"
             option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
             option :verbose, type: :boolean, aliases: ["-v"], desc: "Verbose output"
             option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
@@ -29,7 +30,9 @@ module Ace
               "i50jj3z                   # Decode 7-char 50ms ID",
               "i50jj3zz                  # Decode 8-char ms ID",
               "i50jj3 --format iso       # Decode to ISO format",
-              "i50jj3 --format timestamp # Decode to YYYYMMDD-HHMMSS"
+              "i50jj3 --format timestamp # Decode to YYYYMMDD-HHMMSS",
+              "i5/1/5/j/j3               # Decode split path (auto-detect separators)",
+              "i515jj3 --split           # Decode split full string"
             ]
 
             def call(compact_id:, **options)
