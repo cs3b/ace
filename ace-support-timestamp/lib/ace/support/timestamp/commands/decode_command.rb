@@ -25,23 +25,31 @@ module Ace
 
             display_config_summary("decode", config, options)
 
-            # Use auto-detection to decode variable-length IDs
-            time = Atoms::CompactIdEncoder.decode_auto(
-              compact_id,
-              year_zero: config[:year_zero],
-              alphabet: config[:alphabet]
-            )
+            # Use split decoding for hierarchical paths, otherwise auto-detect
+            time = if options[:split] || contains_split_separator?(compact_id)
+                     Atoms::CompactIdEncoder.decode_path(
+                       compact_id,
+                       year_zero: config[:year_zero],
+                       alphabet: config[:alphabet]
+                     )
+                   else
+                     Atoms::CompactIdEncoder.decode_auto(
+                       compact_id,
+                       year_zero: config[:year_zero],
+                       alphabet: config[:alphabet]
+                     )
+                   end
 
             output = format_output(time, options[:format])
             puts output
             0
           rescue ArgumentError => e
             warn "Error: #{e.message}"
-            1
+            raise
           rescue StandardError => e
             warn "Error decoding compact ID: #{e.message}"
             warn e.backtrace.first(5).join("\n") if Ace::Support::Timestamp.debug?
-            1
+            raise
           end
 
           private
@@ -81,6 +89,14 @@ module Ace
               options: options,
               quiet: false
             )
+          end
+
+          # Detect split separators in input
+          #
+          # @param value [String] Input to check
+          # @return [Boolean] True if split separators are present
+          def contains_split_separator?(value)
+            value.is_a?(String) && value.match?(/[\/\\:]/)
           end
         end
       end

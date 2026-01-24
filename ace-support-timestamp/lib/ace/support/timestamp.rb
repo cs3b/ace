@@ -118,6 +118,39 @@ module Ace
         )
       end
 
+      # Encode a Time object into split components for hierarchical paths
+      #
+      # @param time [Time] The time to encode
+      # @param levels [Array<Symbol>, String] Split levels (month, week, day, block)
+      # @param path_only [Boolean] Return only the path string
+      # @param year_zero [Integer, nil] Optional year_zero override
+      # @return [Hash, String] Split component hash or path string
+      def self.encode_split(time, levels:, path_only: false, year_zero: nil)
+        config = Molecules::ConfigResolver.resolve(year_zero: year_zero)
+        result = Atoms::CompactIdEncoder.encode_split(
+          time,
+          levels: levels,
+          year_zero: config[:year_zero],
+          alphabet: config[:alphabet]
+        )
+
+        path_only ? result[:path] : result
+      end
+
+      # Decode a hierarchical split path into a Time object
+      #
+      # @param path_string [String] Split path string
+      # @param year_zero [Integer, nil] Optional year_zero override
+      # @return [Time] Decoded time in UTC
+      def self.decode_path(path_string, year_zero: nil)
+        config = Molecules::ConfigResolver.resolve(year_zero: year_zero)
+        Atoms::CompactIdEncoder.decode_path(
+          path_string,
+          year_zero: config[:year_zero],
+          alphabet: config[:alphabet]
+        )
+      end
+
       # Validate if a string is a valid 6-character compact ID (legacy method)
       #
       # NOTE: This method only validates 6-character "2sec" format IDs.

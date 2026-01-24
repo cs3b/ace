@@ -44,7 +44,7 @@ module Ace
           rescue StandardError => e
             warn "Error displaying config: #{e.message}"
             warn e.backtrace.first(5).join("\n") if Ace::Support::Timestamp.debug?
-            1
+            raise
           end
         end
       end
