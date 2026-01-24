@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.224
-status: pending
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 224-enhance-ace-nav-protocol-resolution-to-infer-file-extensions
+  path: "../ace-task.224"
+  created_at: '2026-01-24 21:27:49'
+  updated_at: '2026-01-24 21:27:49'
+  target_branch: main
 ---
 
 # Enhance ace-nav Protocol Resolution to Infer File Extensions
