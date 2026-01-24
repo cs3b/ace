@@ -186,6 +186,26 @@ module Ace
           config = ConfigResolver.resolve(year_zero: 2100)
           assert_equal 2100, config[:year_zero]
         end
+
+        def test_resolve_raises_on_invalid_default_format
+          error = assert_raises(ArgumentError) do
+            ConfigResolver.resolve(default_format: :invalid_format)
+          end
+
+          assert_match(/default_format must be one of/, error.message)
+          assert_match(/invalid_format/, error.message)
+        end
+
+        def test_resolve_accepts_valid_default_format
+          config = ConfigResolver.resolve(default_format: :"40min")
+          assert_equal :"40min", config[:default_format]
+        end
+
+        def test_resolve_accepts_default_format_as_string
+          config = ConfigResolver.resolve(default_format: "ms")
+          # Validation converts string to symbol for comparison
+          assert_equal "ms", config[:default_format]
+        end
       end
     end
   end

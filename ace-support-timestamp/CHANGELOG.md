@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-01-24
+
+### Added
+- Precision-based format names for better clarity: `2sec` (~1.85s), `40min` (40-min blocks), `50ms` (~50ms), `ms` (~1.4ms)
+
+### Fixed
+- **Critical**: 4-char format now correctly uses 40-minute blocks (0-35) instead of hours (0-23)
+  - This aligns with position 4 of the compact format design
+  - Time at 12:30 now encodes to block 18, not hour 12
+
+### Changed
+- **Breaking**: Format options renamed to precision-based names
+  - `compact` → `2sec`
+  - `hour` → `40min` (with bug fix)
+  - `high_7` → `50ms`
+  - `high_8` → `ms`
+  - Old format names are no longer accepted
+- Default format changed from `compact` to `2sec`
+- Updated all documentation and examples to use new format names
+
+### Technical
+- Renamed internal encoding/decoding methods to match precision-based names
+- Updated all test files to use new format names
+- Updated CLI help text with precision-based descriptions
+- Updated fallback defaults in config resolver
+
+## [0.3.0] - 2026-01-24
+
+### Added
+- Granular timestamp format templates: month (2 chars), week (3 chars), day (3 chars), hour (4 chars)
+- High-precision timestamp formats: high-7 (7 chars, ~50ms), high-8 (8 chars, ~1.4ms)
+- Format auto-detection for variable-length IDs (2-8 characters)
+- `--format` option to encode CLI for specifying output format
+- `default_format` configuration option (defaults to `compact` for backward compatibility)
+- Day/week disambiguation for 3-char IDs using 3rd character value (0-30=day, 31-35=week)
+
+### Changed
+- Decode command now supports variable-length IDs with automatic format detection
+- Updated CLI help text to reflect new format options
+
+### Technical
+- Added `atoms/format_specs.rb` with format specifications and detection logic
+- Extended `CompactIdEncoder` with format-aware encode/decode methods
+- Updated `Formats` module with patterns for all supported ID lengths
+
 ## [0.2.2] - 2026-01-16
 
 ### Changed

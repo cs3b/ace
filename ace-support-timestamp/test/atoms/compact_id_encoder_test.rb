@@ -313,6 +313,605 @@ module Ace
           assert_equal 23, decoded.hour
           # Minutes/seconds may vary due to precision
         end
+
+        # ===================
+        # Month Format Tests (2 chars)
+        # ===================
+
+        def test_encode_month_returns_2_characters
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode_month(time)
+
+          assert_equal 2, result.length
+          assert_match(/\A[0-9a-z]{2}\z/, result)
+        end
+
+        def test_encode_month_year_boundary
+          time = Time.utc(2000, 1, 1, 0, 0, 0)
+          result = @encoder.encode_month(time)
+
+          assert_equal "00", result
+        end
+
+        def test_decode_month_returns_first_day_of_month
+          result = @encoder.decode_month("00")
+
+          assert_equal 2000, result.year
+          assert_equal 1, result.month
+          assert_equal 1, result.day
+          assert_equal 0, result.hour
+          assert_equal 0, result.min
+        end
+
+        def test_month_roundtrip_preserves_year_and_month
+          original = Time.utc(2025, 6, 15, 14, 30, 45)
+          encoded = @encoder.encode_month(original)
+          decoded = @encoder.decode_month(encoded)
+
+          assert_equal original.year, decoded.year
+          assert_equal original.month, decoded.month
+          assert_equal 1, decoded.day  # Always first day
+          assert_equal 0, decoded.hour
+        end
+
+        # ===================
+        # Week Format Tests (3 chars)
+        # ===================
+
+        def test_encode_week_returns_3_characters
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode_week(time)
+
+          assert_equal 3, result.length
+          assert_match(/\A[0-9a-z]{3}\z/, result)
+        end
+
+        def test_encode_week_uses_week_in_month
+          # Week 1 (value 31 = 'v')
+          time = Time.utc(2025, 1, 1, 12, 0, 0)
+          result = @encoder.encode_week(time)
+
+          # Third char should be in 'v'-'z' range (31-35)
+          third_char_value = CompactIdEncoder::DEFAULT_ALPHABET.index(result[2].downcase)
+          assert_operator third_char_value, :>=, 31
+          assert_operator third_char_value, :<=, 35
+        end
+
+        def test_decode_week_returns_approximate_day
+          result = @encoder.decode_week("00v")  # month 00, week 1
+
+          assert_equal 2000, result.year
+          assert_equal 1, result.month
+          assert_equal 1, result.day  # First day of week
+        end
+
+        def test_week_format_third_char_in_range_31_to_35
+          time = Time.utc(2025, 1, 1, 12, 0, 0)
+          result = @encoder.encode_week(time)
+
+          third_char_value = CompactIdEncoder::DEFAULT_ALPHABET.index(result[2].downcase)
+          assert_operator third_char_value, :>=, 31
+          assert_operator third_char_value, :<=, 35
+        end
+
+        def test_whole_month_week_numbers_monotonic
+          # Test that week numbers only increase/stay same
+          # With day-based formula: days 1-7 = week 1, 8-14 = week 2, etc.
+          # Week transitions occur on days 8, 15, 22, 29
+
+          previous_week = nil
+          (1..31).each do |day|
+            test_time = Time.utc(2025, 1, day, 12, 0, 0)
+            encoded = @encoder.encode_week(test_time)
+
+            # Decode to get the components via public API
+            decoded = @encoder.decode_week(encoded)
+
+            # Calculate week number from decoded day
+            week = (decoded.day.to_f / 7).ceil
+
+            # Week should not decrease
+            if previous_week
+              assert_operator week, :>=, previous_week, "Week decreased on January #{day}"
+            end
+
+            # Week should transition on fixed day boundaries (8, 15, 22, 29)
+            if previous_week && week > previous_week
+              assert_includes [8, 15, 22, 29], day, "Week increased on unexpected day #{day}"
+            end
+
+            previous_week = week
+          end
+        end
+
+        def test_february_week_5_does_not_crash
+          # February 2025 has 28 days and starts on Saturday
+          # Week 5 should decode without "day out of range" error
+          # Encode February 28 (should be week 5)
+          time = Time.utc(2025, 2, 28, 12, 0, 0)
+          encoded = @encoder.encode_week(time)
+
+          # Should decode without error
+          decoded = @encoder.decode_week(encoded)
+          assert_equal 2025, decoded.year
+          assert_equal 2, decoded.month
+          # Day should be clamped to 28 (last day of February)
+          assert_operator decoded.day, :<=, 28
+        end
+
+        # ===================
+        # Day Format Tests (3 chars)
+        # ===================
+
+        def test_encode_day_returns_3_characters
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode_day(time)
+
+          assert_equal 3, result.length
+          assert_match(/\A[0-9a-z]{3}\z/, result)
+        end
+
+        def test_encode_day_preserves_day_of_month
+          # Day 1 (value 0 = '0')
+          time1 = Time.utc(2025, 1, 1, 12, 0, 0)
+          result1 = @encoder.encode_day(time1)
+          assert_equal "0", result1[2]
+
+          # Day 31 (value 30 = 'u')
+          time31 = Time.utc(2025, 1, 31, 12, 0, 0)
+          result31 = @encoder.encode_day(time31)
+          assert_equal "u", result31[2]
+        end
+
+        def test_decode_day_returns_midnight
+          result = @encoder.decode_day("000")  # month 00, day 0 (day 1)
+
+          assert_equal 2000, result.year
+          assert_equal 1, result.month
+          assert_equal 1, result.day
+          assert_equal 0, result.hour
+          assert_equal 0, result.min
+        end
+
+        def test_day_format_third_char_in_range_0_to_30
+          time = Time.utc(2025, 1, 15, 12, 0, 0)
+          result = @encoder.encode_day(time)
+
+          third_char_value = CompactIdEncoder::DEFAULT_ALPHABET.index(result[2].downcase)
+          assert_operator third_char_value, :<=, 30
+        end
+
+        # ===================
+        # 40min Format Tests (4 chars)
+        # ===================
+
+        def test_encode_40min_returns_4_characters
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode_40min(time)
+
+          assert_equal 4, result.length
+          assert_match(/\A[0-9a-z]{4}\z/, result)
+        end
+
+        def test_encode_40min_uses_40_minute_blocks
+          # 12:30 is 750 minutes into the day
+          # 750 / 40 = 18.75, so block 18 (720-759 minutes = 12:00-12:39)
+          time = Time.utc(2025, 1, 1, 12, 30, 0)
+          result = @encoder.encode_40min(time)
+          decoded = @encoder.decode_40min(result)
+
+          # Should decode to the start of block 18 (12:00)
+          assert_equal 12, decoded.hour
+          assert_equal 0, decoded.min
+        end
+
+        def test_40min_format_encodes_blocks_not_hours
+          # Regression test: Previously the 4-char format encoded hours (0-23),
+          # now it correctly encodes 40-minute blocks (0-35).
+          # 12:30 = 750 minutes into day, 750/40 = 18 (not hour 12)
+          time = Time.utc(2025, 1, 1, 12, 30, 0)
+          result = @encoder.encode_40min(time)
+
+          # Extract the 4th character (block value)
+          block_char = result[3]
+          block_value = CompactIdEncoder::DEFAULT_ALPHABET.index(block_char.downcase)
+
+          assert_equal 18, block_value, "12:30 should encode to block 18 (750/40=18), not hour 12"
+        end
+
+        def test_encode_40min_midnight_is_block_0
+          time = Time.utc(2025, 1, 1, 0, 0, 0)
+          result = @encoder.encode_40min(time)
+          decoded = @encoder.decode_40min(result)
+
+          assert_equal 0, decoded.hour
+          assert_equal 0, decoded.min
+        end
+
+        def test_encode_40min_last_block_is_23_20_to_23_59
+          # Block 35: 35 * 40 = 1400 minutes = 23:20
+          time = Time.utc(2025, 1, 1, 23, 45, 0)
+          result = @encoder.encode_40min(time)
+          decoded = @encoder.decode_40min(result)
+
+          assert_equal 23, decoded.hour
+          assert_equal 20, decoded.min  # Start of block 35
+        end
+
+        def test_40min_roundtrip_preserves_date_and_block
+          original = Time.utc(2025, 6, 15, 14, 30, 45)
+          encoded = @encoder.encode_40min(original)
+          decoded = @encoder.decode_40min(encoded)
+
+          assert_equal original.year, decoded.year
+          assert_equal original.month, decoded.month
+          assert_equal original.day, decoded.day
+          # 14:30 falls in block 21 (14:00-14:39)
+          assert_equal 14, decoded.hour
+          assert_equal 0, decoded.min
+          assert_equal 0, decoded.sec
+        end
+
+        # ===================
+        # 50ms Format Tests (7 chars, ~50ms)
+        # ===================
+
+        def test_encode_50ms_returns_7_characters
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode_50ms(time)
+
+          assert_equal 7, result.length
+          assert_match(/\A[0-9a-z]{7}\z/, result)
+        end
+
+        def test_encode_50ms_preserves_microsecond_precision
+          time = Time.utc(2025, 1, 1, 12, 30, 45, 123456)
+          result = @encoder.encode_50ms(time)
+          decoded = @encoder.decode_50ms(result)
+
+          assert_equal 12, decoded.hour
+          assert_equal 30, decoded.min
+          # Usec should be approximately preserved (within ~50ms)
+          assert_in_delta 45, decoded.sec, 1
+          assert_in_delta 123456, decoded.usec, 50_000
+        end
+
+        def test_decode_50ms_returns_approximate_time
+          result = @encoder.decode_50ms("0000000")
+
+          assert_equal 2000, result.year
+          assert_equal 1, result.month
+          assert_equal 1, result.day
+        end
+
+        def test_50ms_roundtrip_within_50ms_tolerance
+          original = Time.utc(2025, 6, 15, 14, 30, 45, 123456)
+          encoded = @encoder.encode_50ms(original)
+          decoded = @encoder.decode_50ms(encoded)
+
+          # Check that the times are within ~50ms of each other
+          time_diff_us = ((original - decoded).abs * 1_000_000).to_i
+          assert_operator time_diff_us, :<=, 50_000, "Times should be within 50ms, but were #{time_diff_us}μs apart"
+        end
+
+        # ===================
+        # ms Format Tests (8 chars, ~1.4ms)
+        # ===================
+
+        def test_encode_ms_returns_8_characters
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode_ms(time)
+
+          assert_equal 8, result.length
+          assert_match(/\A[0-9a-z]{8}\z/, result)
+        end
+
+        def test_encode_ms_preserves_microsecond_precision
+          time = Time.utc(2025, 1, 1, 12, 30, 45, 123456)
+          result = @encoder.encode_ms(time)
+          decoded = @encoder.decode_ms(result)
+
+          assert_equal 12, decoded.hour
+          assert_equal 30, decoded.min
+          # Usec should be approximately preserved (within ~2ms)
+          assert_in_delta 45, decoded.sec, 1
+          assert_in_delta 123456, decoded.usec, 2_000
+        end
+
+        def test_decode_ms_returns_approximate_time
+          result = @encoder.decode_ms("00000000")
+
+          assert_equal 2000, result.year
+          assert_equal 1, result.month
+          assert_equal 1, result.day
+        end
+
+        def test_ms_roundtrip_within_2ms_tolerance
+          original = Time.utc(2025, 6, 15, 14, 30, 45, 123456)
+          encoded = @encoder.encode_ms(original)
+          decoded = @encoder.decode_ms(encoded)
+
+          # Check that the times are within ~2ms of each other
+          time_diff_us = ((original - decoded).abs * 1_000_000).to_i
+          assert_operator time_diff_us, :<=, 2_000, "Times should be within 2ms, but were #{time_diff_us}μs apart"
+        end
+
+        # ===================
+        # Format Detection Tests
+        # ===================
+
+        def test_detect_format_by_length
+          assert_equal :month, @encoder.detect_format("00")
+          assert_equal :"40min", @encoder.detect_format("0000")
+          assert_equal :"2sec", @encoder.detect_format("000000")
+          assert_equal :"50ms", @encoder.detect_format("0000000")
+          assert_equal :ms, @encoder.detect_format("00000000")
+        end
+
+        def test_detect_format_disambiguates_day_and_week
+          # 3-char IDs: need to distinguish by third character value
+          # Day format: third char 0-30
+          day_id = @encoder.encode_day(Time.utc(2025, 1, 15))
+          assert_equal :day, @encoder.detect_format(day_id)
+
+          # Week format: third char 31-35
+          week_id = @encoder.encode_week(Time.utc(2025, 1, 15))
+          assert_equal :week, @encoder.detect_format(week_id)
+        end
+
+        def test_detect_format_returns_nil_for_invalid_length
+          assert_nil @encoder.detect_format("")
+          assert_nil @encoder.detect_format("0")
+          assert_nil @encoder.detect_format("00000")   # 5 chars
+          assert_nil @encoder.detect_format("0" * 9)  # 9+ chars
+        end
+
+        def test_decode_auto_auto_detects_and_decodes
+          # Test auto-detection for all formats
+          month_time = Time.utc(2025, 6, 15)
+          month_id = @encoder.encode_with_format(month_time, format: :month)
+          decoded_month = @encoder.decode_auto(month_id)
+          assert_equal month_time.year, decoded_month.year
+          assert_equal month_time.month, decoded_month.month
+
+          day_time = Time.utc(2025, 6, 15)
+          day_id = @encoder.encode_with_format(day_time, format: :day)
+          decoded_day = @encoder.decode_auto(day_id)
+          assert_equal day_time.year, decoded_day.year
+          assert_equal day_time.month, decoded_day.month
+          assert_equal day_time.day, decoded_day.day
+
+          min40_time = Time.utc(2025, 6, 15, 14)
+          min40_id = @encoder.encode_with_format(min40_time, format: :"40min")
+          decoded_min40 = @encoder.decode_auto(min40_id)
+          assert_equal min40_time.year, decoded_min40.year
+          assert_equal min40_time.month, decoded_min40.month
+          assert_equal min40_time.day, decoded_min40.day
+          # 14:00-14:39 falls in block 21, so hour should be 14
+          assert_equal 14, decoded_min40.hour
+        end
+
+        # ===================
+        # Sortability Tests
+        # ===================
+
+        def test_month_ids_are_sortable
+          times = [
+            Time.utc(2000, 1, 1),
+            Time.utc(2010, 6, 1),
+            Time.utc(2025, 12, 1)
+          ]
+
+          ids = times.map { |t| @encoder.encode_with_format(t, format: :month) }
+          sorted_ids = ids.sort
+
+          assert_equal ids, sorted_ids, "Month IDs should be sortable chronologically"
+        end
+
+        def test_day_ids_are_sortable
+          times = [
+            Time.utc(2025, 1, 1),
+            Time.utc(2025, 1, 15),
+            Time.utc(2025, 1, 31),
+            Time.utc(2025, 2, 1)
+          ]
+
+          ids = times.map { |t| @encoder.encode_with_format(t, format: :day) }
+          sorted_ids = ids.sort
+
+          assert_equal ids, sorted_ids, "Day IDs should be sortable chronologically"
+        end
+
+        def test_40min_ids_are_sortable
+          times = [
+            Time.utc(2025, 1, 1, 0),
+            Time.utc(2025, 1, 1, 12),
+            Time.utc(2025, 1, 1, 23)
+          ]
+
+          ids = times.map { |t| @encoder.encode_with_format(t, format: :"40min") }
+          sorted_ids = ids.sort
+
+          assert_equal ids, sorted_ids, "40min IDs should be sortable chronologically"
+        end
+
+        def test_week_ids_are_sortable
+          # Test week format sortability across different weeks
+          times = [
+            Time.utc(2025, 1, 1),   # Week 1
+            Time.utc(2025, 1, 15),  # Week 3
+            Time.utc(2025, 1, 28)   # Week 5
+          ]
+
+          ids = times.map { |t| @encoder.encode_with_format(t, format: :week) }
+          sorted_ids = ids.sort
+
+          assert_equal ids, sorted_ids, "Week IDs should be sortable chronologically"
+        end
+
+        # ===================
+        # Backward Compatibility Tests
+        # ===================
+
+        def test_encode_defaults_to_2sec_format
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode(time)
+
+          assert_equal 6, result.length
+        end
+
+        def test_encode_with_format_defaults_to_2sec
+          time = Time.utc(2025, 6, 15, 12, 30, 0)
+          result = @encoder.encode_with_format(time, format: :"2sec")
+
+          assert_equal 6, result.length
+          assert_match(/\A[0-9a-z]{6}\z/, result)
+        end
+
+        def test_decode_defaults_to_2sec_format
+          result = @encoder.decode("000000")
+
+          assert_equal 2000, result.year
+          assert_equal 1, result.month
+        end
+
+        # ===================
+        # encode_with_format Tests
+        # ===================
+
+        def test_encode_with_format_month
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+          result = @encoder.encode_with_format(time, format: :month)
+
+          assert_equal 2, result.length
+          assert_match(/\A[0-9a-z]{2}\z/, result)
+        end
+
+        def test_encode_with_format_week
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+          result = @encoder.encode_with_format(time, format: :week)
+
+          assert_equal 3, result.length
+          assert_match(/\A[0-9a-z]{3}\z/, result)
+        end
+
+        def test_encode_with_format_day
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+          result = @encoder.encode_with_format(time, format: :day)
+
+          assert_equal 3, result.length
+          assert_match(/\A[0-9a-z]{3}\z/, result)
+        end
+
+        def test_encode_with_format_40min
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+          result = @encoder.encode_with_format(time, format: :"40min")
+
+          assert_equal 4, result.length
+          assert_match(/\A[0-9a-z]{4}\z/, result)
+        end
+
+        def test_encode_with_format_50ms
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+          result = @encoder.encode_with_format(time, format: :"50ms")
+
+          assert_equal 7, result.length
+          assert_match(/\A[0-9a-z]{7}\z/, result)
+        end
+
+        def test_encode_with_format_ms
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+          result = @encoder.encode_with_format(time, format: :ms)
+
+          assert_equal 8, result.length
+          assert_match(/\A[0-9a-z]{8}\z/, result)
+        end
+
+        def test_encode_with_format_raises_for_invalid_format
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+
+          error = assert_raises(ArgumentError) do
+            @encoder.encode_with_format(time, format: :invalid)
+          end
+
+          assert_match(/Invalid format: invalid/, error.message)
+        end
+
+        def test_encode_with_format_suggests_new_name_for_deprecated_compact
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+
+          error = assert_raises(ArgumentError) do
+            @encoder.encode_with_format(time, format: :compact)
+          end
+
+          assert_match(/Did you mean '2sec'\?/, error.message)
+        end
+
+        def test_encode_with_format_suggests_new_name_for_deprecated_hour
+          time = Time.utc(2025, 6, 15, 12, 30, 45)
+
+          error = assert_raises(ArgumentError) do
+            @encoder.encode_with_format(time, format: :hour)
+          end
+
+          assert_match(/Did you mean '40min'\?/, error.message)
+        end
+
+        def test_decode_with_format_suggests_new_name_for_deprecated_high_7
+          error = assert_raises(ArgumentError) do
+            @encoder.decode_with_format("i500000", format: :high_7)
+          end
+
+          assert_match(/Did you mean '50ms'\?/, error.message)
+        end
+
+        def test_decode_with_format_suggests_new_name_for_deprecated_high_8
+          error = assert_raises(ArgumentError) do
+            @encoder.decode_with_format("i5000000", format: :high_8)
+          end
+
+          assert_match(/Did you mean 'ms'\?/, error.message)
+        end
+
+        # ===================
+        # decode_with_format Tests
+        # ===================
+
+        def test_decode_with_format_month
+          encoded = @encoder.encode_with_format(Time.utc(2025, 6, 15), format: :month)
+          result = @encoder.decode_with_format(encoded, format: :month)
+
+          assert_equal 2025, result.year
+          assert_equal 6, result.month
+          assert_equal 1, result.day
+        end
+
+        def test_decode_with_format_day
+          encoded = @encoder.encode_with_format(Time.utc(2025, 6, 15), format: :day)
+          result = @encoder.decode_with_format(encoded, format: :day)
+
+          assert_equal 2025, result.year
+          assert_equal 6, result.month
+          assert_equal 15, result.day
+        end
+
+        def test_decode_with_format_40min
+          encoded = @encoder.encode_with_format(Time.utc(2025, 6, 15, 14), format: :"40min")
+          result = @encoder.decode_with_format(encoded, format: :"40min")
+
+          assert_equal 2025, result.year
+          assert_equal 6, result.month
+          assert_equal 15, result.day
+          assert_equal 14, result.hour
+        end
+
+        def test_decode_with_format_raises_for_invalid_format
+          error = assert_raises(ArgumentError) do
+            @encoder.decode_with_format("000000", format: :invalid)
+          end
+
+          assert_match(/Invalid format: invalid/, error.message)
+        end
       end
     end
   end

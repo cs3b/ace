@@ -7,3 +7,7 @@ timestamp:
 
   # Base36 alphabet for encoding (0-9, a-z)
   alphabet: "0123456789abcdefghijklmnopqrstuvwxyz"
+
+  # Default output format for encode command
+  # Options: 2sec (default), month, week, day, 40min, 50ms, ms
+  default_format: "2sec"

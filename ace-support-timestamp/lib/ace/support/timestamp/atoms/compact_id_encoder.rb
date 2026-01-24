@@ -1,14 +1,27 @@
 # frozen_string_literal: true
 
 require "time"
+require "date"
+require "set"
+
+require_relative "format_specs"
 
 module Ace
   module Support
     module Timestamp
     module Atoms
-      # Encodes and decodes timestamps to/from 6-character Base36 compact IDs.
+      # Encodes and decodes timestamps to/from variable-length Base36 compact IDs.
       #
-      # Format design (6 Base36 digits):
+      # Supports 7 format types with varying precision and length:
+      # - 2sec (6 chars, ~1.85s precision) - default
+      # - month (2 chars, month precision)
+      # - week (3 chars, week precision)
+      # - day (3 chars, day precision)
+      # - 40min (4 chars, 40-minute block precision)
+      # - 50ms (7 chars, ~50ms precision)
+      # - ms (8 chars, ~1.4ms precision)
+      #
+      # Compact format design (6 Base36 digits):
       # - Positions 1-2: Month offset from year_zero (0-1295 = 108 years of months)
       # - Position 3: Day of month (0-30 maps to 1-31 calendar days)
       # - Position 4: 40-minute hour block (0-35 = 36 blocks covering 24 hours)
@@ -31,6 +44,7 @@ module Ace
       class CompactIdEncoder
         DEFAULT_YEAR_ZERO = 2000
         DEFAULT_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
+        DEFAULT_ALPHABET_SET = DEFAULT_ALPHABET.chars.to_set.freeze
 
         # 40-minute block duration (36 blocks per day = 24 * 60 / 40)
         BLOCK_MINUTES = 40
@@ -39,6 +53,10 @@ module Ace
         # Precision values within a 40-minute block
         # 36^2 = 1296 combinations for 2400 seconds = ~1.85s precision
         PRECISION_DIVISOR = 1296  # 36^2
+
+        # Additional precision for high-7 and high-8 formats
+        PRECISION_DIVISOR_3 = 46_656   # 36^3 for high-7 (~50ms precision)
+        PRECISION_DIVISOR_4 = 1_679_616  # 36^4 for high-8 (~1.4ms precision)
 
         # Maximum values for component validation
         MAX_MONTHS_OFFSET = 1295  # 108 years * 12 months
@@ -55,14 +73,126 @@ module Ace
           # @return [String] 6-character compact ID
           # @raise [ArgumentError] If time is outside supported range
           def encode(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            encode_with_format(time, format: :"2sec", year_zero: year_zero, alphabet: alphabet)
+          end
+
+          # Encode a Time object to a compact ID with specified format
+          #
+          # @param time [Time] The time to encode
+          # @param format [Symbol] Output format (:"2sec", :month, :week, :day, :"40min", :"50ms", :ms)
+          # @param year_zero [Integer] Base year for encoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [String] Variable-length compact ID (2-8 characters depending on format)
+          # @raise [ArgumentError] If time is outside supported range or format is invalid
+          def encode_with_format(time, format:, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
             time = time.utc if time.respond_to?(:utc)
 
-            # Calculate month offset from year_zero
-            months_offset = ((time.year - year_zero) * 12) + (time.month - 1)
-
-            if months_offset.negative? || months_offset > 1295
-              raise ArgumentError, "Time #{time} is outside supported range (#{year_zero} to #{year_zero + 107})"
+            case format
+            when :"2sec"
+              encode_2sec(time, year_zero: year_zero, alphabet: alphabet)
+            when :month
+              encode_month(time, year_zero: year_zero, alphabet: alphabet)
+            when :week
+              encode_week(time, year_zero: year_zero, alphabet: alphabet)
+            when :day
+              encode_day(time, year_zero: year_zero, alphabet: alphabet)
+            when :"40min"
+              encode_40min(time, year_zero: year_zero, alphabet: alphabet)
+            when :"50ms"
+              encode_50ms(time, year_zero: year_zero, alphabet: alphabet)
+            when :ms
+              encode_ms(time, year_zero: year_zero, alphabet: alphabet)
+            else
+              suggestion = suggest_format_name(format)
+              msg = "Invalid format: #{format}. Must be one of #{FormatSpecs.all_formats.join(', ')}"
+              msg += ". Did you mean '#{suggestion}'?" if suggestion
+              raise ArgumentError, msg
             end
+          end
+
+          # Decode a 6-character compact ID to a Time object
+          #
+          # @param compact_id [String] The 6-character compact ID
+          # @param year_zero [Integer] Base year for decoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Time] The decoded time (UTC)
+          # @raise [ArgumentError] If compact_id format is invalid or components out of range
+          def decode(compact_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            decode_with_format(compact_id, format: :"2sec", year_zero: year_zero, alphabet: alphabet)
+          end
+
+          # Decode a compact ID to a Time object with specified format
+          #
+          # @param compact_id [String] The compact ID to decode
+          # @param format [Symbol] Format of the compact ID
+          # @param year_zero [Integer] Base year for decoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Time] The decoded time (UTC)
+          # @raise [ArgumentError] If compact_id format is invalid or components out of range
+          def decode_with_format(compact_id, format:, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            case format
+            when :"2sec"
+              decode_2sec(compact_id, year_zero: year_zero, alphabet: alphabet)
+            when :month
+              decode_month(compact_id, year_zero: year_zero, alphabet: alphabet)
+            when :week
+              decode_week(compact_id, year_zero: year_zero, alphabet: alphabet)
+            when :day
+              decode_day(compact_id, year_zero: year_zero, alphabet: alphabet)
+            when :"40min"
+              decode_40min(compact_id, year_zero: year_zero, alphabet: alphabet)
+            when :"50ms"
+              decode_50ms(compact_id, year_zero: year_zero, alphabet: alphabet)
+            when :ms
+              decode_ms(compact_id, year_zero: year_zero, alphabet: alphabet)
+            else
+              suggestion = suggest_format_name(format)
+              msg = "Invalid format: #{format}. Must be one of #{FormatSpecs.all_formats.join(', ')}"
+              msg += ". Did you mean '#{suggestion}'?" if suggestion
+              raise ArgumentError, msg
+            end
+          end
+
+          # Detect the format of a compact ID string
+          #
+          # @param encoded_id [String] The encoded ID string
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Symbol, nil] Detected format or nil if unrecognized
+          def detect_format(encoded_id, alphabet: DEFAULT_ALPHABET)
+            FormatSpecs.detect_from_id(encoded_id, alphabet: alphabet)
+          end
+
+          # Decode a compact ID with automatic format detection
+          #
+          # @param encoded_id [String] The compact ID to decode (2-8 characters)
+          # @param year_zero [Integer] Base year for decoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Time] The decoded time (UTC)
+          # @raise [ArgumentError] If format cannot be detected or components out of range
+          def decode_auto(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            format = detect_format(encoded_id, alphabet: alphabet)
+
+            if format.nil?
+              raise ArgumentError, "Cannot detect format for compact ID: #{encoded_id} (unsupported length or invalid characters)"
+            end
+
+            decode_with_format(encoded_id, format: format, year_zero: year_zero, alphabet: alphabet)
+          end
+
+          # ===================
+          # 2sec Format (6 chars, ~1.85s precision)
+          # ===================
+
+          # Encode a Time object to a 6-character compact ID (~1.85s precision)
+          #
+          # @param time [Time] The time to encode (should already be UTC from encode_with_format)
+          # @param year_zero [Integer] Base year for encoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [String] 6-character compact ID
+          # @raise [ArgumentError] If time is outside supported range
+          def encode_2sec(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            # Note: UTC conversion handled by encode_with_format caller
+            months_offset = calculate_months_offset(time, year_zero)
 
             # Day of month (1-31 -> 0-30, fits in single base36 digit 0-35)
             day = time.day - 1
@@ -94,15 +224,16 @@ module Ace
             result.freeze
           end
 
-          # Decode a 6-character compact ID to a Time object
+          # Decode a 6-character compact ID to a Time object (~1.85s precision)
           #
           # @param compact_id [String] The 6-character compact ID
           # @param year_zero [Integer] Base year for decoding (default: 2000)
           # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
           # @return [Time] The decoded time (UTC)
           # @raise [ArgumentError] If compact_id format is invalid or components out of range
-          def decode(compact_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
-            validate_format!(compact_id, alphabet)
+          def decode_2sec(compact_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            validate_length!(compact_id, 6)
+            validate_alphabet!(compact_id, alphabet)
 
             id = compact_id.downcase
 
@@ -128,27 +259,399 @@ module Ace
             minute = (minutes_of_day % 60) + (seconds_into_block / 60)
             second = seconds_into_block % 60
 
-            # Handle minute overflow
-            if minute >= 60
-              hour += minute / 60
-              minute = minute % 60
-            end
+            hour, minute = normalize_minute_overflow(hour, minute)
 
             Time.utc(year, month, calendar_day, hour, minute, second)
           end
 
-          # Validate if a string is a valid compact ID format
+          # ===================
+          # Month Format (2 chars)
+          # ===================
+
+          # Encode to month format (2 chars: months offset only)
           #
-          # Checks both format (6 chars, valid alphabet) and semantic validity
-          # (components within valid ranges that won't cause Time.utc errors).
+          # @param time [Time] The time to encode (should already be UTC from encode_with_format)
+          # @param year_zero [Integer] Base year for encoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [String] 2-character month ID
+          def encode_month(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            # Note: UTC conversion handled by encode_with_format caller
+            months_offset = calculate_months_offset(time, year_zero)
+            encode_value(months_offset, 2, alphabet)
+          end
+
+          # Decode month format (2 chars)
           #
-          # @param compact_id [String] The string to validate
+          # @param encoded_id [String] The 2-character month ID
+          # @param year_zero [Integer] Base year for decoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [Time] The decoded time (UTC, first day of month at midnight)
+          def decode_month(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            validate_length!(encoded_id, 2)
+            validate_alphabet!(encoded_id, alphabet)
+
+            months_offset = decode_value(encoded_id.downcase, alphabet)
+
+            if months_offset > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Month offset #{months_offset} exceeds maximum (#{MAX_MONTHS_OFFSET} = 108 years)"
+            end
+
+            year = year_zero + (months_offset / 12)
+            month = (months_offset % 12) + 1
+
+            Time.utc(year, month, 1, 0, 0, 0)
+          end
+
+          # ===================
+          # Week Format (3 chars)
+          # ===================
+
+          # Encode to week format (3 chars: months + week)
+          #
+          # Week value is in range 31-35 to distinguish from day format
+          #
+          # @param time [Time] The time to encode (should already be UTC from encode_with_format)
+          # @param year_zero [Integer] Base year for encoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [String] 3-character week ID
+          def encode_week(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            # Note: UTC conversion handled by encode_with_format caller
+            months_offset = calculate_months_offset(time, year_zero)
+
+            # Calculate week in month (1-5), then offset to 31-35 range
+            week_in_month = calculate_week_in_month(time)
+            week_value = week_in_month + 30  # Offset to 31-35 range
+
+            result = String.new(capacity: 3)
+            result << encode_value(months_offset, 2, alphabet)
+            result << encode_value(week_value, 1, alphabet)
+            result.freeze
+          end
+
+          # Decode week format (3 chars)
+          #
+          # Note: For week 5 in months with fewer than 35 days (e.g., February),
+          # the result is clamped to the last day of the month. This is a lossy
+          # approximation - the encoded time may have been in the next month.
+          #
+          # @param encoded_id [String] The 3-character week ID
+          # @param year_zero [Integer] Base year for decoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [Time] The decoded time (UTC, approximate first day of week at midnight)
+          def decode_week(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            validate_length!(encoded_id, 3)
+            validate_alphabet!(encoded_id, alphabet)
+
+            id = encoded_id.downcase
+            months_offset = decode_value(id[0..1], alphabet)
+            week_value = decode_value(id[2], alphabet)
+
+            unless week_value.between?(FormatSpecs::WEEK_FORMAT_MIN, FormatSpecs::WEEK_FORMAT_MAX)
+              raise ArgumentError, "Week value #{week_value} must be between #{FormatSpecs::WEEK_FORMAT_MIN}-#{FormatSpecs::WEEK_FORMAT_MAX}"
+            end
+
+            if months_offset > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Month offset #{months_offset} exceeds maximum (#{MAX_MONTHS_OFFSET} = 108 years)"
+            end
+
+            year = year_zero + (months_offset / 12)
+            month = (months_offset % 12) + 1
+            week_in_month = week_value - 30  # Convert back to 1-5 range
+
+            # Calculate approximate day from week (week * 7 - 6 to get first day of week)
+            day = (week_in_month * 7) - 6
+
+            # Clamp day to valid range for the month (prevents February crash)
+            # Use Date to get the last day of the month reliably
+            last_day_of_month = Date.new(year, month, -1).day
+            day = [[day, 1].max, last_day_of_month].min
+
+            Time.utc(year, month, day, 0, 0, 0)
+          end
+
+          # ===================
+          # Day Format (3 chars)
+          # ===================
+
+          # Encode to day format (3 chars: months + day)
+          #
+          # Day value is in range 0-30 to distinguish from week format
+          #
+          # @param time [Time] The time to encode (should already be UTC from encode_with_format)
+          # @param year_zero [Integer] Base year for encoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [String] 3-character day ID
+          def encode_day(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            # Note: UTC conversion handled by encode_with_format caller
+            months_offset = calculate_months_offset(time, year_zero)
+            day = (time.day - 1).clamp(0, MAX_DAY)
+
+            result = String.new(capacity: 3)
+            result << encode_value(months_offset, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result.freeze
+          end
+
+          # Decode day format (3 chars)
+          #
+          # @param encoded_id [String] The 3-character day ID
+          # @param year_zero [Integer] Base year for decoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [Time] The decoded time (UTC, at midnight)
+          def decode_day(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            validate_length!(encoded_id, 3)
+            validate_alphabet!(encoded_id, alphabet)
+
+            id = encoded_id.downcase
+            months_offset = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+
+            unless day <= FormatSpecs::DAY_FORMAT_MAX
+              raise ArgumentError, "Day value #{day} exceeds day format maximum (#{FormatSpecs::DAY_FORMAT_MAX} = 31 calendar days)"
+            end
+
+            if months_offset > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Month offset #{months_offset} exceeds maximum (#{MAX_MONTHS_OFFSET} = 108 years)"
+            end
+
+            year = year_zero + (months_offset / 12)
+            month = (months_offset % 12) + 1
+            calendar_day = day + 1
+
+            Time.utc(year, month, calendar_day, 0, 0, 0)
+          end
+
+          # ===================
+          # 40min Format (4 chars, 40-minute block precision)
+          # ===================
+
+          # Encode to 40min format (4 chars: months + day + 40-minute block)
+          #
+          # Uses 40-minute blocks (0-35) for consistency with position 4 of compact format
+          #
+          # @param time [Time] The time to encode (should already be UTC from encode_with_format)
+          # @param year_zero [Integer] Base year for encoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [String] 4-character 40min ID
+          def encode_40min(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            # Note: UTC conversion handled by encode_with_format caller
+            months_offset = calculate_months_offset(time, year_zero)
+            day = (time.day - 1).clamp(0, MAX_DAY)
+
+            # Use 40-minute blocks like position 4 of compact format
+            minutes_of_day = (time.hour * 60) + time.min
+            block = minutes_of_day / BLOCK_MINUTES  # 0-35
+
+            result = String.new(capacity: 4)
+            result << encode_value(months_offset, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result << encode_value(block, 1, alphabet)
+            result.freeze
+          end
+
+          # Decode 40min format (4 chars)
+          #
+          # @param encoded_id [String] The 4-character 40min ID
+          # @param year_zero [Integer] Base year for decoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [Time] The decoded time (UTC, at start of 40-min block)
+          def decode_40min(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            validate_length!(encoded_id, 4)
+            validate_alphabet!(encoded_id, alphabet)
+
+            id = encoded_id.downcase
+            months_offset = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+            block = decode_value(id[3], alphabet)
+
+            if day > MAX_DAY
+              raise ArgumentError, "Day value #{day} exceeds maximum (#{MAX_DAY} = 31 calendar days)"
+            end
+
+            if months_offset > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Month offset #{months_offset} exceeds maximum (#{MAX_MONTHS_OFFSET} = 108 years)"
+            end
+
+            if block > MAX_BLOCK
+              raise ArgumentError, "Block value #{block} exceeds maximum (#{MAX_BLOCK} = 36 blocks per day)"
+            end
+
+            year = year_zero + (months_offset / 12)
+            month = (months_offset % 12) + 1
+            calendar_day = day + 1
+
+            # Calculate time from block (40-minute block)
+            minutes_of_day = block * BLOCK_MINUTES
+            hour = minutes_of_day / 60
+            minute = minutes_of_day % 60
+
+            Time.utc(year, month, calendar_day, hour, minute, 0)
+          end
+
+          # ===================
+          # 50ms Format (7 chars, ~50ms precision)
+          # ===================
+
+          # Encode to 50ms format (7 chars: 2sec + 1 extra precision digit)
+          # ~50ms precision
+          #
+          # @param time [Time] The time to encode (should already be UTC from encode_with_format)
+          # @param year_zero [Integer] Base year for encoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [String] 7-character 50ms ID
+          def encode_50ms(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            # Note: UTC conversion handled by encode_with_format caller
+            months_offset = calculate_months_offset(time, year_zero)
+            day = time.day - 1
+            minutes_of_day = (time.hour * 60) + time.min
+            block = minutes_of_day / BLOCK_MINUTES
+
+            # 50ms: 3 digits of precision (36^3 = 46656 combinations for ~50ms)
+            clamped_seconds = time.sec.clamp(0, 59)
+            usec = time.respond_to?(:usec) ? time.usec : 0
+            total_usecs = ((minutes_of_day % BLOCK_MINUTES) * 60 + clamped_seconds) * 1_000_000 + usec
+            block_usecs = BLOCK_SECONDS * 1_000_000
+            precision = (total_usecs * PRECISION_DIVISOR_3) / block_usecs
+            precision = precision.clamp(0, PRECISION_DIVISOR_3 - 1)
+
+            result = String.new(capacity: 7)
+            result << encode_value(months_offset, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result << encode_value(block, 1, alphabet)
+            result << encode_value(precision, 3, alphabet)
+            result.freeze
+          end
+
+          # Decode 50ms format (7 chars)
+          #
+          # @param encoded_id [String] The 7-character 50ms ID
+          # @param year_zero [Integer] Base year for decoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [Time] The decoded time (UTC, ~50ms precision)
+          def decode_50ms(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            validate_length!(encoded_id, 7)
+            validate_alphabet!(encoded_id, alphabet)
+
+            id = encoded_id.downcase
+            months_offset = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+            block = decode_value(id[3], alphabet)
+            precision = decode_value(id[4..6], alphabet)
+
+            validate_base_components!(months_offset, day, block)
+            validate_precision_range!(precision, PRECISION_DIVISOR_3)
+
+            year = year_zero + (months_offset / 12)
+            month = (months_offset % 12) + 1
+            calendar_day = day + 1
+
+            # Calculate time with 50ms precision
+            minutes_of_day = block * BLOCK_MINUTES
+            total_usecs = (precision * BLOCK_SECONDS * 1_000_000) / PRECISION_DIVISOR_3
+
+            hour = minutes_of_day / 60
+            remaining_usecs = total_usecs % 60_000_000
+            minute = (minutes_of_day % 60) + (total_usecs / 60_000_000)
+            second = (remaining_usecs / 1_000_000).to_i
+            usec = (remaining_usecs % 1_000_000).to_i
+
+            hour, minute = normalize_minute_overflow(hour, minute)
+
+            Time.utc(year, month, calendar_day, hour, minute, second, usec)
+          end
+
+          # ===================
+          # ms Format (8 chars, ~1.4ms precision)
+          # ===================
+
+          # Encode to ms format (8 chars: 50ms + 1 extra precision digit)
+          # ~1.4ms precision
+          #
+          # @param time [Time] The time to encode (should already be UTC from encode_with_format)
+          # @param year_zero [Integer] Base year for encoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [String] 8-character ms ID
+          def encode_ms(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            # Note: UTC conversion handled by encode_with_format caller
+            months_offset = calculate_months_offset(time, year_zero)
+            day = time.day - 1
+            minutes_of_day = (time.hour * 60) + time.min
+            block = minutes_of_day / BLOCK_MINUTES
+
+            # ms: 4 digits of precision (36^4 = 1679616 combinations for ~1.4ms)
+            clamped_seconds = time.sec.clamp(0, 59)
+            usec = time.respond_to?(:usec) ? time.usec : 0
+            total_usecs = ((minutes_of_day % BLOCK_MINUTES) * 60 + clamped_seconds) * 1_000_000 + usec
+            block_usecs = BLOCK_SECONDS * 1_000_000
+            precision = (total_usecs * PRECISION_DIVISOR_4) / block_usecs
+            precision = precision.clamp(0, PRECISION_DIVISOR_4 - 1)
+
+            result = String.new(capacity: 8)
+            result << encode_value(months_offset, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result << encode_value(block, 1, alphabet)
+            result << encode_value(precision, 4, alphabet)
+            result.freeze
+          end
+
+          # Decode ms format (8 chars)
+          #
+          # @param encoded_id [String] The 8-character ms ID
+          # @param year_zero [Integer] Base year for decoding
+          # @param alphabet [String] Base36 alphabet
+          # @return [Time] The decoded time (UTC, ~1.4ms precision)
+          def decode_ms(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            validate_length!(encoded_id, 8)
+            validate_alphabet!(encoded_id, alphabet)
+
+            id = encoded_id.downcase
+            months_offset = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+            block = decode_value(id[3], alphabet)
+            precision = decode_value(id[4..7], alphabet)
+
+            validate_base_components!(months_offset, day, block)
+            validate_precision_range!(precision, PRECISION_DIVISOR_4)
+
+            year = year_zero + (months_offset / 12)
+            month = (months_offset % 12) + 1
+            calendar_day = day + 1
+
+            # Calculate time with ms precision
+            minutes_of_day = block * BLOCK_MINUTES
+            total_usecs = (precision * BLOCK_SECONDS * 1_000_000) / PRECISION_DIVISOR_4
+
+            hour = minutes_of_day / 60
+            remaining_usecs = total_usecs % 60_000_000
+            minute = (minutes_of_day % 60) + (total_usecs / 60_000_000)
+            second = (remaining_usecs / 1_000_000).to_i
+            usec = (remaining_usecs % 1_000_000).to_i
+
+            hour, minute = normalize_minute_overflow(hour, minute)
+
+            Time.utc(year, month, calendar_day, hour, minute, second, usec)
+          end
+
+          # ===================
+          # Validation Methods
+          # ===================
+
+          # Validate a 6-character compact ID string (legacy method)
+          #
+          # NOTE: This method only validates the 6-character "2sec" compact format.
+          # For validating IDs of any format, use valid_any_format? instead.
+          #
+          # @param compact_id [String] The ID to validate
           # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
-          # @return [Boolean] true if valid format and semantically valid
+          # @return [Boolean] true if valid 6-char compact ID, false otherwise
+          # @see valid_any_format? for validating all format lengths
           def valid?(compact_id, alphabet: DEFAULT_ALPHABET)
             return false unless compact_id.is_a?(String)
             return false unless compact_id.length == 6
-            return false unless compact_id.downcase.chars.all? { |c| alphabet.include?(c) }
+
+            # Use Set for faster character validation (O(1) vs O(n))
+            alphabet_set = alphabet == DEFAULT_ALPHABET ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
+            return false unless compact_id.downcase.chars.all? { |c| alphabet_set.include?(c) }
 
             # Also validate semantic ranges
             id = compact_id.downcase
@@ -161,7 +664,93 @@ module Ace
             months_offset <= 1295 && day <= 30 && block <= 35 && precision <= 1295
           end
 
+          # Validate a compact ID string of any supported format
+          #
+          # Supports all 7 formats: month (2 chars), week (3 chars), day (3 chars),
+          # 40min (4 chars), 2sec (6 chars), 50ms (7 chars), ms (8 chars).
+          #
+          # @param compact_id [String] The ID to validate (2-8 characters)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Boolean] true if valid compact ID of any format, false otherwise
+          def valid_any_format?(compact_id, alphabet: DEFAULT_ALPHABET)
+            return false unless compact_id.is_a?(String)
+
+            # Use Set for faster character validation (O(1) vs O(n))
+            alphabet_set = alphabet == DEFAULT_ALPHABET ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
+            return false unless compact_id.downcase.chars.all? { |c| alphabet_set.include?(c) }
+
+            # Try to detect format
+            format = detect_format(compact_id, alphabet: alphabet)
+            return false if format.nil?
+
+            # Try to decode - if it succeeds, it's valid
+            begin
+              decode_with_format(compact_id, format: format, alphabet: alphabet)
+              true
+            rescue ArgumentError
+              false
+            end
+          end
+
           private
+
+          # ===================
+          # Helper Methods
+          # ===================
+
+          # Deprecated format name mappings (old name => new name)
+          DEPRECATED_FORMAT_NAMES = {
+            compact: :"2sec",
+            hour: :"40min",
+            high_7: :"50ms",
+            high_8: :ms
+          }.freeze
+
+          # Suggest a format name for deprecated/mistyped formats
+          #
+          # @param format [Symbol] The invalid format name
+          # @return [Symbol, nil] Suggested format name or nil
+          def suggest_format_name(format)
+            DEPRECATED_FORMAT_NAMES[format]
+          end
+
+          # Calculate months offset from year_zero
+          #
+          # @param time [Time] The time to calculate offset for
+          # @param year_zero [Integer] Base year for encoding
+          # @return [Integer] Months since year_zero (0-1295)
+          # @raise [ArgumentError] If time is outside supported range
+          def calculate_months_offset(time, year_zero)
+            months_offset = ((time.year - year_zero) * 12) + (time.month - 1)
+
+            if months_offset.negative? || months_offset > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Time #{time} is outside supported range (#{year_zero} to #{year_zero + 107})"
+            end
+
+            months_offset
+          end
+
+          # Calculate week number within month (1-5)
+          # Simple day-based calculation: days 1-7 = week 1, 8-14 = week 2, etc.
+          #
+          # @param time [Time] The time to calculate week for
+          # @return [Integer] Week number in month (1-5)
+          def calculate_week_in_month(time)
+            ((time.day - 1) / 7) + 1
+          end
+
+          # Normalize minute overflow when minute >= 60
+          #
+          # @param hour [Integer] Hour value (0-23)
+          # @param minute [Integer] Minute value (may be >= 60)
+          # @return [Array<Integer>] Normalized [hour, minute] pair
+          def normalize_minute_overflow(hour, minute)
+            if minute >= 60
+              [hour + minute / 60, minute % 60]
+            else
+              [hour, minute]
+            end
+          end
 
           # Encode a numeric value to base36 with specified width
           #
@@ -202,18 +791,42 @@ module Ace
             value
           end
 
-          # Validate compact ID format
-          #
-          # @param compact_id [String] The string to validate
-          # @param alphabet [String] Base36 alphabet
-          # @raise [ArgumentError] If format is invalid
-          def validate_format!(compact_id, alphabet)
-            raise ArgumentError, "Compact ID must be a string" unless compact_id.is_a?(String)
-            raise ArgumentError, "Compact ID must be 6 characters" unless compact_id.length == 6
+          # ===================
+          # Validation Helpers
+          # ===================
 
-            invalid_chars = compact_id.downcase.chars.reject { |c| alphabet.include?(c) }
+          # Validate length of encoded ID
+          #
+          # @param encoded_id [String] The encoded ID
+          # @param expected_length [Integer] Expected length
+          # @raise [ArgumentError] If length is incorrect
+          def validate_length!(encoded_id, expected_length)
+            raise ArgumentError, "Compact ID must be a string" unless encoded_id.is_a?(String)
+            raise ArgumentError, "Compact ID must be #{expected_length} characters, got #{encoded_id.length}" unless encoded_id.length == expected_length
+          end
+
+          # Validate alphabet of encoded ID
+          #
+          # @param encoded_id [String] The encoded ID
+          # @param alphabet [String] Expected alphabet
+          # @raise [ArgumentError] If invalid characters found
+          def validate_alphabet!(encoded_id, alphabet)
+            # Use Set for faster character validation (O(1) vs O(n))
+            alphabet_set = alphabet == DEFAULT_ALPHABET ? DEFAULT_ALPHABET_SET : alphabet.chars.to_set
+            invalid_chars = encoded_id.downcase.chars.reject { |c| alphabet_set.include?(c) }
             unless invalid_chars.empty?
               raise ArgumentError, "Invalid characters in compact ID: #{invalid_chars.join(', ')}"
+            end
+          end
+
+          # Validate precision range for high-precision formats
+          #
+          # @param precision [Integer] Precision value
+          # @param max_precision [Integer] Maximum allowed precision
+          # @raise [ArgumentError] If precision exceeds maximum
+          def validate_precision_range!(precision, max_precision)
+            if precision > max_precision
+              raise ArgumentError, "Precision value #{precision} exceeds maximum (#{max_precision})"
             end
           end
 
@@ -239,6 +852,27 @@ module Ace
 
             if precision > MAX_PRECISION
               raise ArgumentError, "Precision value #{precision} exceeds maximum (#{MAX_PRECISION} = 36^2 - 1)"
+            end
+          end
+
+          # Validate base components (month offset, day, block) without precision check
+          # Used for 50ms and ms formats where precision is validated separately
+          #
+          # @param months_offset [Integer] Months from year_zero (max 1295 = 108 years)
+          # @param day [Integer] Day of month (max 30 for calendar days 1-31)
+          # @param block [Integer] 40-minute block (max 35 for 36 blocks/day)
+          # @raise [ArgumentError] If any component is out of range
+          def validate_base_components!(months_offset, day, block)
+            if months_offset > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Month offset #{months_offset} exceeds maximum (#{MAX_MONTHS_OFFSET} = 108 years)"
+            end
+
+            if day > MAX_DAY
+              raise ArgumentError, "Day value #{day} exceeds maximum (#{MAX_DAY} for calendar days 1-31)"
+            end
+
+            if block > MAX_BLOCK
+              raise ArgumentError, "Block value #{block} exceeds maximum (#{MAX_BLOCK} for 36 blocks/day)"
             end
           end
         end

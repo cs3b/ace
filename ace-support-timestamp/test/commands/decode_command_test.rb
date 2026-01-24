@@ -74,8 +74,9 @@ module Ace
         # ===================
 
         def test_execute_with_invalid_length_returns_error
+          # 5 characters is not a valid length for any format
           _, err = capture_io do
-            exit_code = DecodeCommand.execute("abc")
+            exit_code = DecodeCommand.execute("abcde")
             assert_equal 1, exit_code
           end
 
@@ -109,6 +110,77 @@ module Ace
           output2, = capture_io { DecodeCommand.execute("000000", format: :readable) }
 
           assert_equal output1, output2
+        end
+
+        # ===================
+        # Auto-detection Tests
+        # ===================
+
+        def test_decode_auto_detects_2_char_month_id
+          # Encode a time to month format, then decode it
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 6, 15, 14, 30, 45)
+          month_id = encoder.encode_with_format(original, format: :month)
+
+          output, = capture_io { DecodeCommand.execute(month_id) }
+
+          assert_match(/2025-06/, output)
+          assert_match(/00:00:00/, output)  # Month format decodes to midnight of first day
+        end
+
+        def test_decode_auto_detects_3_char_day_id
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 6, 15, 14, 30, 45)
+          day_id = encoder.encode_with_format(original, format: :day)
+
+          output, = capture_io { DecodeCommand.execute(day_id) }
+
+          assert_match(/2025-06-15/, output)
+          assert_match(/00:00:00/, output)  # Day format decodes to midnight
+        end
+
+        def test_decode_auto_detects_3_char_week_id
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 1, 15, 14, 30, 45)
+          week_id = encoder.encode_with_format(original, format: :week)
+
+          output, = capture_io { DecodeCommand.execute(week_id) }
+
+          assert_match(/2025-01/, output)
+          # Week format decodes to first day of week
+        end
+
+        def test_decode_auto_detects_4_char_40min_id
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 6, 15, 14, 30, 45)
+          min40_id = encoder.encode_with_format(original, format: :"40min")
+
+          output, = capture_io { DecodeCommand.execute(min40_id) }
+
+          assert_match(/2025-06-15/, output)
+          assert_match(/14:00:00/, output)  # 40min format decodes to start of 40-min block
+        end
+
+        def test_decode_auto_detects_7_char_50ms_id
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 6, 15, 14, 30, 45, 123456)
+          ms50_id = encoder.encode_with_format(original, format: :"50ms")
+
+          output, = capture_io { DecodeCommand.execute(ms50_id) }
+
+          assert_match(/2025-06-15/, output)
+          assert_match(/14:30:45/, output)  # 50ms format preserves seconds
+        end
+
+        def test_decode_auto_detects_8_char_ms_id
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 6, 15, 14, 30, 45, 123456)
+          ms_id = encoder.encode_with_format(original, format: :ms)
+
+          output, = capture_io { DecodeCommand.execute(ms_id) }
+
+          assert_match(/2025-06-15/, output)
+          assert_match(/14:30:45/, output)  # ms format preserves seconds
         end
       end
     end
