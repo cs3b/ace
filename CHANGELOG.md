@@ -4,6 +4,47 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.326] - 2026-01-24
+
+### Added
+
+- **ace-support-timestamp 0.4.0**: Precision-based format names (task 225.03)
+  - New precision-based names: `2sec` (~1.85s), `40min` (40-min blocks), `50ms` (~50ms), `ms` (~1.4ms)
+  - Format names now clearly communicate the precision they provide
+
+### Fixed
+
+- **ace-support-timestamp 0.4.0**: Critical bug in 4-char format encoding
+  - Now correctly uses 40-minute blocks (0-35) instead of hours (0-23)
+  - Aligns with position 4 of compact format design
+
+### Changed
+
+- **ace-support-timestamp 0.4.0**: Breaking change - format options renamed
+  - `compact` → `2sec`
+  - `hour` → `40min` (with bug fix)
+  - `high_7` → `50ms`
+  - `high_8` → `ms`
+  - Old format names are no longer accepted
+  - Default format changed from `compact` to `2sec`
+
+## [0.9.325] - 2025-01-24
+
+### Added
+
+- **ace-support-timestamp 0.3.0**: Granular timestamp format templates (task 225)
+  - New formats: month (2 chars), week (3 chars), day (3 chars), hour (4 chars), high-7 (7 chars), high-8 (8 chars)
+  - High-precision formats: high-7 (~50ms), high-8 (~1.4ms)
+  - Format auto-detection for variable-length IDs (2-8 characters)
+  - `--format` option to encode CLI for specifying output format
+  - `default_format` configuration option (defaults to `compact` for backward compatibility)
+  - Day/week disambiguation for 3-char IDs using 3rd character value (0-30=day, 31-35=week)
+  - Backward compatible - default format remains 6-char compact IDs
+
+### Changed
+
+- **ace-support-timestamp**: Decode command now supports variable-length IDs with automatic format detection
+
 ## [0.9.324] - 2026-01-22
 
 ### Changed

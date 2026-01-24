@@ -200,7 +200,7 @@ PATH
 PATH
   remote: ace-support-timestamp
   specs:
-    ace-support-timestamp (0.2.2)
+    ace-support-timestamp (0.4.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.1)
       dry-cli (~> 1.1)
