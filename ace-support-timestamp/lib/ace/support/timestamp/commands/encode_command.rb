@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require "time"
 
 module Ace
@@ -26,30 +27,52 @@ module Ace
             time = parse_time(time_string)
             config = Molecules::ConfigResolver.resolve(options)
 
-            # Get format from options or config (default: :"2sec")
-            # Normalize hyphens to underscores for CLI compatibility (e.g., high-8 -> high_8)
-            format = options[:format]
-            format = format.to_s.tr("-", "_").to_sym if format
-            format ||= config[:default_format]&.to_sym || :"2sec"
-
             display_config_summary("encode", config, options)
 
-            compact_id = Atoms::CompactIdEncoder.encode_with_format(
-              time,
-              format: format,
-              year_zero: config[:year_zero],
-              alphabet: config[:alphabet]
-            )
+            if options[:split]
+              if options[:format]
+                raise ArgumentError, "--split and --format are mutually exclusive"
+              end
 
-            puts compact_id
+              levels = parse_split_levels(options[:split])
+              output = Atoms::CompactIdEncoder.encode_split(
+                time,
+                levels: levels,
+                year_zero: config[:year_zero],
+                alphabet: config[:alphabet]
+              )
+
+              if options[:path_only]
+                puts output[:path]
+              elsif options[:json]
+                puts JSON.generate(output.transform_keys(&:to_s))
+              else
+                display_split_output(levels, output)
+              end
+            else
+              # Get format from options or config (default: :"2sec")
+              # Normalize hyphens to underscores for CLI compatibility (e.g., high-8 -> high_8)
+              format = options[:format]
+              format = format.to_s.tr("-", "_").to_sym if format
+              format ||= config[:default_format]&.to_sym || :"2sec"
+
+              compact_id = Atoms::CompactIdEncoder.encode_with_format(
+                time,
+                format: format,
+                year_zero: config[:year_zero],
+                alphabet: config[:alphabet]
+              )
+
+              puts compact_id
+            end
             0
           rescue ArgumentError => e
             warn "Error: #{e.message}"
-            1
+            raise
           rescue StandardError => e
             warn "Error encoding timestamp: #{e.message}"
             warn e.backtrace.first(5).join("\n") if Ace::Support::Timestamp.debug?
-            1
+            raise
           end
 
           private
@@ -80,7 +103,7 @@ module Ace
           # @param config [Hash] Resolved configuration
           # @param options [Hash] Command options
           def display_config_summary(command, config, options)
-            return if options[:quiet]
+            return if options[:quiet] || options[:path_only] || options[:json]
 
             require "ace/core"
             Ace::Core::Atoms::ConfigSummary.display(
@@ -90,6 +113,32 @@ module Ace
               options: options,
               quiet: false
             )
+          end
+
+          # Normalize split levels from string or array
+          #
+          # @param levels [String, Array<Symbol>] Split level list
+          # @return [Array<Symbol>] Normalized levels
+          def parse_split_levels(levels)
+            list = levels.is_a?(String) ? levels.split(",") : Array(levels)
+            list.map { |level| level.to_s.strip }
+                .reject(&:empty?)
+                .map(&:to_sym)
+          end
+
+          # Display split output in key/value format
+          #
+          # @param levels [Array<Symbol>] Split levels in order
+          # @param output [Hash] Split output hash
+          def display_split_output(levels, output)
+            lines = []
+            levels.each do |level|
+              lines << "#{level}: #{output[level]}"
+            end
+            lines << "rest: #{output[:rest]}"
+            lines << "path: #{output[:path]}"
+            lines << "full: #{output[:full]}"
+            puts lines.join("\n")
           end
 
         end
