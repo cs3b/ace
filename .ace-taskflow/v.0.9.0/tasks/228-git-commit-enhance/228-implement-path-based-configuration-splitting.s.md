@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.228
-status: pending
+status: in-progress
 priority: high
 estimate: 8h
 dependencies: []
+worktree:
+  branch: 228-implement-path-based-configuration-splitting-in-ace-git-commit
+  path: "../ace-task.228"
+  created_at: '2026-01-24 21:27:57'
+  updated_at: '2026-01-24 21:27:57'
+  target_branch: main
 ---
 
 # Implement Path-Based Configuration Splitting in ace-git-commit
