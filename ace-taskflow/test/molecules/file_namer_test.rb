@@ -225,9 +225,9 @@ class FileNamerTest < AceTestCase
     assert_equal :timestamp, Ace::Taskflow::Molecules::FileNamer.detect_id_format("20250115-103045")
   end
 
-  def test_detect_id_format_identifies_compact
-    assert_equal :compact, Ace::Taskflow::Molecules::FileNamer.detect_id_format("abc123")
-    assert_equal :compact, Ace::Taskflow::Molecules::FileNamer.detect_id_format("i50jj3")
+  def test_detect_id_format_identifies_2sec
+    assert_equal :"2sec", Ace::Taskflow::Molecules::FileNamer.detect_id_format("abc123")
+    assert_equal :"2sec", Ace::Taskflow::Molecules::FileNamer.detect_id_format("i50jj3")
   end
 
   def test_detect_id_format_returns_nil_for_invalid
