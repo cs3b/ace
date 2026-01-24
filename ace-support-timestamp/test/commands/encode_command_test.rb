@@ -117,6 +117,55 @@ module Ace
           # Decoded time should contain the same date
           assert_match(/2025-06-15/, decoded)
         end
+
+        # ===================
+        # Format Option Tests
+        # ===================
+
+        def test_encode_with_format_option
+          time = "2025-06-15 14:30:45 UTC"
+
+          # Test month format (2 chars)
+          month_output, = capture_io { EncodeCommand.execute(time, format: :month) }
+          assert_match(/\A[0-9a-z]{2}\n\z/, month_output)
+
+          # Test day format (3 chars)
+          day_output, = capture_io { EncodeCommand.execute(time, format: :day) }
+          assert_match(/\A[0-9a-z]{3}\n\z/, day_output)
+
+          # Test 40min format (4 chars)
+          min40_output, = capture_io { EncodeCommand.execute(time, format: :"40min") }
+          assert_match(/\A[0-9a-z]{4}\n\z/, min40_output)
+
+          # Test 2sec format (6 chars)
+          sec2_output, = capture_io { EncodeCommand.execute(time, format: :"2sec") }
+          assert_match(/\A[0-9a-z]{6}\n\z/, sec2_output)
+
+          # Test 50ms format (7 chars)
+          ms50_output, = capture_io { EncodeCommand.execute(time, format: :"50ms") }
+          assert_match(/\A[0-9a-z]{7}\n\z/, ms50_output)
+
+          # Test ms format (8 chars)
+          ms_output, = capture_io { EncodeCommand.execute(time, format: :ms) }
+          assert_match(/\A[0-9a-z]{8}\n\z/, ms_output)
+        end
+
+        def test_encode_with_invalid_format_raises_error
+          _, err = capture_io do
+            exit_code = EncodeCommand.execute("2025-06-15 14:30:45 UTC", format: :invalid)
+            assert_equal 1, exit_code
+          end
+
+          assert_match(/Error.*Invalid format/i, err)
+        end
+
+        def test_encode_respects_default_format_config
+          # Pass default_format via options hash
+          output, = capture_io { EncodeCommand.execute("2025-06-15 14:30:45 UTC", default_format: :day) }
+
+          # Should produce 3-char output for day format
+          assert_match(/\A[0-9a-z]{3}\n\z/, output)
+        end
       end
     end
   end

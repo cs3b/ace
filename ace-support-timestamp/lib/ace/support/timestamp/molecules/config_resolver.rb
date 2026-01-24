@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../atoms/format_specs"
+
 module Ace
   module Support
     module Timestamp
@@ -25,7 +27,8 @@ module Ace
         # Fallback defaults (used only if .ace-defaults files cannot be loaded)
         FALLBACK_DEFAULTS = {
           year_zero: 2000,
-          alphabet: "0123456789abcdefghijklmnopqrstuvwxyz"
+          alphabet: "0123456789abcdefghijklmnopqrstuvwxyz",
+          default_format: :"2sec"
         }.freeze
 
         class << self
@@ -74,6 +77,15 @@ module Ace
             override || resolve[:alphabet]
           end
 
+          # Get the default_format value from configuration
+          #
+          # @param override [Symbol, String, nil] Optional runtime override
+          # @return [Symbol] The default_format value (always a symbol)
+          def default_format(override = nil)
+            value = override || resolve[:default_format]
+            value.is_a?(String) ? value.to_sym : value
+          end
+
           # Reset cached configuration (useful for testing)
           def reset!
             @config = nil
@@ -88,6 +100,7 @@ module Ace
           def validate_config!(config)
             alphabet = config[:alphabet]
             year_zero = config[:year_zero]
+            default_format = config[:default_format]
 
             unless alphabet.is_a?(String) && alphabet.length == 36
               raise ArgumentError, "alphabet must be exactly 36 characters, got #{alphabet&.length || 'nil'}"
@@ -100,6 +113,12 @@ module Ace
 
             unless year_zero.is_a?(Integer) && year_zero.between?(1900, 2100)
               raise ArgumentError, "year_zero must be between 1900-2100, got #{year_zero.inspect}"
+            end
+
+            # Validate default_format is a supported format
+            format_sym = default_format.is_a?(String) ? default_format.to_sym : default_format
+            unless format_sym.nil? || Ace::Support::Timestamp::Atoms::FormatSpecs.valid_format?(format_sym)
+              raise ArgumentError, "default_format must be one of #{Ace::Support::Timestamp::Atoms::FormatSpecs.all_formats.join(', ')}, got #{default_format.inspect}"
             end
           end
 
