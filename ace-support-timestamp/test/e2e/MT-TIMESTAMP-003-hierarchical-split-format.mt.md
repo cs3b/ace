@@ -9,18 +9,12 @@ automation-candidate: true
 requires:
   tools: [ace-timestamp]
   ruby: ">= 3.0"
-status: not-yet-implemented
-blocked-by: task-225.02
-last-verified: null
-verified-by: null
+status: ready-for-execution
+last-verified: 2026-01-24
+verified-by: code-review
 ---
 
 # Hierarchical Split Format
-
-> **STATUS: NOT YET IMPLEMENTED**
->
-> This test scenario covers the hierarchical split format feature planned for Task 225.02.
-> Do not execute until the feature is implemented.
 
 ## Objective
 
