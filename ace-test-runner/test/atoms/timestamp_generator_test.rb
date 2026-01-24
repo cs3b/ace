@@ -56,9 +56,9 @@ class TimestampGeneratorTest < Minitest::Test
   # Format Detection Tests
   # ======================
 
-  def test_detect_format_compact_id
+  def test_detect_format_2sec_id
     result = Ace::TestRunner::Atoms::TimestampGenerator.detect_format("i50jj3")
-    assert_equal :compact, result
+    assert_equal :"2sec", result
   end
 
   def test_detect_format_timestamp
