@@ -57,7 +57,7 @@ module Ace
 
         # Detect the format of an ID string
         # @param id_string [String] The ID to analyze
-        # @return [Symbol, nil] :compact, :timestamp, or nil
+        # @return [Symbol, nil] :"2sec", :timestamp, or nil
         def self.detect_id_format(id_string)
           Ace::Support::Timestamp.detect_format(id_string)
         end

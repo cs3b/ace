@@ -97,7 +97,7 @@ module Ace
           # - Partial name search for anything else
           format = Ace::Support::Timestamp.detect_format(reference)
 
-          if format == :compact
+          if format == :"2sec"
             # Full ID reference (compact Base36)
             ideas = load_all(release: "current", include_content: true)
             ideas.find { |idea| idea[:id] == reference }
@@ -366,7 +366,7 @@ module Ace
           return Time.now unless id
 
           format = Ace::Support::Timestamp.detect_format(id)
-          if format == :compact
+          if format == :"2sec"
             # Compact Base36 format - decode to Time
             Ace::Support::Timestamp.decode(id)
           else

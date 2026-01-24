@@ -18,7 +18,7 @@ module Ace
             # Compact Base36 format: "abc123-my-idea"
             # Validate it's actually a Base36 compact ID
             potential_id = $1
-            if Ace::Support::Timestamp.detect_format(potential_id) == :compact
+            if Ace::Support::Timestamp.detect_format(potential_id) == :"2sec"
               title = $2.tr("-", " ").strip
               [potential_id, title]
             else
@@ -40,7 +40,7 @@ module Ace
           in /^([0-9a-z]{6})-(.*)$/i
             # Remove Base36 ID prefix with validation
             potential_id = $1
-            if Ace::Support::Timestamp.detect_format(potential_id) == :compact
+            if Ace::Support::Timestamp.detect_format(potential_id) == :"2sec"
               $2
             else
               name
