@@ -132,6 +132,32 @@ module Ace
           end
 
           # ===================
+          # Split Levels Tests
+          # ===================
+
+          def test_split_levels_constant
+            assert_equal %i[month week day block], FormatSpecs::SPLIT_LEVELS
+          end
+
+          def test_valid_split_levels_accepts_supported_combinations
+            assert FormatSpecs.valid_split_levels?([:month])
+            assert FormatSpecs.valid_split_levels?([:month, :week])
+            assert FormatSpecs.valid_split_levels?([:month, :day])
+            assert FormatSpecs.valid_split_levels?([:month, :week, :day])
+            assert FormatSpecs.valid_split_levels?([:month, :day, :block])
+            assert FormatSpecs.valid_split_levels?([:month, :week, :day, :block])
+          end
+
+          def test_valid_split_levels_rejects_invalid_combinations
+            refute FormatSpecs.valid_split_levels?([])
+            refute FormatSpecs.valid_split_levels?([:day])
+            refute FormatSpecs.valid_split_levels?([:week, :month])
+            refute FormatSpecs.valid_split_levels?([:month, :block])
+            refute FormatSpecs.valid_split_levels?([:month, :day, :week])
+            refute FormatSpecs.valid_split_levels?([:month, :week, :day, :hour])
+          end
+
+          # ===================
           # get Tests
           # ===================
 

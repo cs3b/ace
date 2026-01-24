@@ -296,18 +296,18 @@ echo "========================="
 
 ### TC-008: Legacy Timestamp Format
 
-**Objective:** Verify encode accepts YYYYMMDD-HHMMSS format input.
+**Objective:** Verify encode accepts YYYYMMDD-HHMMSS format input and treats it as UTC.
 
 **Steps:**
-1. Encode using legacy format
+1. Encode using legacy format (implicitly UTC)
    ```bash
    LEGACY_ID=$(ace-timestamp encode -q '20250615-143245')
    echo "Legacy format ID: $LEGACY_ID"
    ```
 
-2. Encode using readable format
+2. Encode using readable format with explicit UTC
    ```bash
-   READABLE_ID=$(ace-timestamp encode -q '2025-06-15 14:32:45')
+   READABLE_ID=$(ace-timestamp encode -q '2025-06-15 14:32:45 UTC')
    echo "Readable format ID: $READABLE_ID"
    ```
 
@@ -317,7 +317,8 @@ echo "========================="
    ```
 
 **Expected:**
-- Legacy YYYYMMDD-HHMMSS format produces same ID as readable format
+- Legacy YYYYMMDD-HHMMSS format is treated as UTC
+- Readable format with explicit UTC produces same ID
 - Both decode to same timestamp
 
 **Actual:** [Record during execution]
@@ -420,7 +421,7 @@ echo "Cleanup complete"
 - [ ] TC-005: Invalid format name rejected
 - [ ] TC-006: Invalid compact IDs rejected
 - [ ] TC-007: Out-of-range timestamps rejected
-- [ ] TC-008: Legacy YYYYMMDD-HHMMSS format accepted
+- [ ] TC-008: Legacy YYYYMMDD-HHMMSS format treated as UTC
 - [ ] TC-009: Quiet mode suppresses extra output
 - [ ] TC-010: Version command outputs semver
 

@@ -76,8 +76,9 @@ module Ace
         def test_execute_with_invalid_length_returns_error
           # 5 characters is not a valid length for any format
           _, err = capture_io do
-            exit_code = DecodeCommand.execute("abcde")
-            assert_equal 1, exit_code
+            assert_raises(ArgumentError) do
+              DecodeCommand.execute("abcde")
+            end
           end
 
           assert_match(/Error/i, err)
@@ -85,8 +86,9 @@ module Ace
 
         def test_execute_with_invalid_characters_returns_error
           _, err = capture_io do
-            exit_code = DecodeCommand.execute("ABC!!!")
-            assert_equal 1, exit_code
+            assert_raises(ArgumentError) do
+              DecodeCommand.execute("ABC!!!")
+            end
           end
 
           assert_match(/Error/i, err)
@@ -94,8 +96,9 @@ module Ace
 
         def test_execute_with_empty_string_returns_error
           _, err = capture_io do
-            exit_code = DecodeCommand.execute("")
-            assert_equal 1, exit_code
+            assert_raises(ArgumentError) do
+              DecodeCommand.execute("")
+            end
           end
 
           assert_match(/Error/i, err)
@@ -181,6 +184,28 @@ module Ace
 
           assert_match(/2025-06-15/, output)
           assert_match(/14:30:45/, output)  # ms format preserves seconds
+        end
+
+        # ===================
+        # Split Path Tests
+        # ===================
+
+        def test_decode_with_split_path_separators
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 1, 6, 12, 30, 0)
+          split = encoder.encode_split(original, levels: [:month, :week, :day, :block])
+
+          output, = capture_io { DecodeCommand.execute(split[:path]) }
+          assert_match(/2025-01-06/, output)
+        end
+
+        def test_decode_with_split_flag_accepts_full_string
+          encoder = Ace::Support::Timestamp::Atoms::CompactIdEncoder
+          original = Time.utc(2025, 1, 6, 12, 30, 0)
+          split = encoder.encode_split(original, levels: [:month, :week, :day])
+
+          output, = capture_io { DecodeCommand.execute(split[:full], split: true) }
+          assert_match(/2025-01-06/, output)
         end
       end
     end
