@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require_relative "../test_helper"
 
 module Ace
@@ -86,8 +87,9 @@ module Ace
 
         def test_execute_with_invalid_time_returns_error
           _, err = capture_io do
-            exit_code = EncodeCommand.execute("not-a-time")
-            assert_equal 1, exit_code
+            assert_raises(ArgumentError) do
+              EncodeCommand.execute("not-a-time")
+            end
           end
 
           assert_match(/Error.*Cannot parse time/i, err)
@@ -95,8 +97,9 @@ module Ace
 
         def test_execute_with_out_of_range_year_returns_error
           _, err = capture_io do
-            exit_code = EncodeCommand.execute("1990-01-01 00:00:00 UTC", year_zero: 2000)
-            assert_equal 1, exit_code
+            assert_raises(ArgumentError) do
+              EncodeCommand.execute("1990-01-01 00:00:00 UTC", year_zero: 2000)
+            end
           end
 
           assert_match(/Error/i, err)
@@ -152,11 +155,60 @@ module Ace
 
         def test_encode_with_invalid_format_raises_error
           _, err = capture_io do
-            exit_code = EncodeCommand.execute("2025-06-15 14:30:45 UTC", format: :invalid)
-            assert_equal 1, exit_code
+            assert_raises(ArgumentError) do
+              EncodeCommand.execute("2025-06-15 14:30:45 UTC", format: :invalid)
+            end
           end
 
           assert_match(/Error.*Invalid format/i, err)
+        end
+
+        def test_encode_with_split_outputs_key_values
+          output, = capture_io do
+            exit_code = EncodeCommand.execute("2025-01-06 12:30:00 UTC", split: "month,week,day")
+            assert_equal 0, exit_code
+          end
+
+          assert_match(/month:/, output)
+          assert_match(/week:/, output)
+          assert_match(/day:/, output)
+          assert_match(/rest:/, output)
+          assert_match(/path:/, output)
+          assert_match(/full:/, output)
+        end
+
+        def test_encode_with_split_path_only
+          output, = capture_io do
+            exit_code = EncodeCommand.execute("2025-01-06 12:30:00 UTC", split: "month,week", path_only: true)
+            assert_equal 0, exit_code
+          end
+
+          assert_match(/\A[0-9a-z\/]+\n\z/, output)
+          refute_match(/month:/, output)
+        end
+
+        def test_encode_with_split_json
+          output, = capture_io do
+            exit_code = EncodeCommand.execute("2025-01-06 12:30:00 UTC", split: "month,day", json: true)
+            assert_equal 0, exit_code
+          end
+
+          parsed = JSON.parse(output)
+          assert parsed.key?("month")
+          assert parsed.key?("day")
+          assert parsed.key?("rest")
+          assert parsed.key?("path")
+          assert parsed.key?("full")
+        end
+
+        def test_encode_with_split_and_format_returns_error
+          _, err = capture_io do
+            assert_raises(ArgumentError) do
+              EncodeCommand.execute("2025-01-06 12:30:00 UTC", split: "month", format: :day)
+            end
+          end
+
+          assert_match(/split and --format are mutually exclusive/i, err)
         end
 
         def test_encode_respects_default_format_config
