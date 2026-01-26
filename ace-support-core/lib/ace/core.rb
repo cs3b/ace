@@ -15,6 +15,7 @@ require_relative "core/organisms/environment_manager"
 require_relative "core/config_discovery"
 
 # CLI infrastructure for dry-cli based commands
+require_relative "core/cli/error"
 require_relative "core/cli/dry_cli/base"
 require_relative "core/cli/dry_cli/config_summary_mixin"
 require_relative "core/cli/dry_cli/default_routing"
