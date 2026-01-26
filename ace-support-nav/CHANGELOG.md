@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Extension inference prefix matching bug (TC-004)
+  - `start_with?` was too permissive, matching `multi-ext.guide.md` when searching for `multi-ext.g`
+  - Now validates character following candidate is either end-of-string or dot separator
+
+## [0.17.3] - 2026-01-24
+
+### Added
+- Extension inference for protocol resolution (task 224)
+  - Add `ExtensionInferrer` atom for DWIM extension inference
+  - Configure inference via `.ace/nav/config.yml` with `extension_inference.enabled` and `fallback_order`
+  - Add `inferred_extensions` to protocol configs (guide.yml, wfi.yml)
+  - Update `ProtocolScanner` to use inference when exact match fails
+  - Strip extensions using both protocol and inferred extension lists
+
 ## [0.17.2] - 2026-01-16
 
 ### Changed

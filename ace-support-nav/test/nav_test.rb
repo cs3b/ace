@@ -11,11 +11,12 @@ module Ace
         end
 
         def test_version_format
-          assert_match(/\A\d+\.\d+\.\d+/, ::Ace::Support::Nav::VERSION)
+          assert_match(/\A\d+\.\d+\.\d+\z/, ::Ace::Support::Nav::VERSION)
+          refute_empty ::Ace::Support::Nav::VERSION
         end
 
-        def test_version_is_0_17_2
-          assert_equal "0.17.2", ::Ace::Support::Nav::VERSION
+        def test_version_is_frozen_string
+          assert ::Ace::Support::Nav::VERSION.frozen?
         end
 
         def test_config_method_exists

@@ -35,6 +35,9 @@ module TestHelper
       }
     }
 
+    # Merge any additional config keys (like inferred_extensions)
+    protocol_config = protocol_config.merge(config)
+
     File.write(
       File.join(protocols_dir, "#{protocol_name}.yml"),
       protocol_config.to_yaml
@@ -104,27 +107,27 @@ module TestHelper
     temp_dir
   end
 
-  # Mock ConfigLoader that uses a test directory
+  # Test-specific ConfigLoader that uses a test directory for protocol discovery
+  class TestConfigLoader < Ace::Support::Nav::Molecules::ConfigLoader
+    def initialize(test_dir)
+      super(File.join(test_dir, ".ace", "nav"))
+      @test_dir = test_dir
+    end
+
+    def discover_project_protocol_dirs
+      dirs = []
+      protocol_dir = File.join(@test_dir, ".ace", "protocols")
+      dirs << protocol_dir if Dir.exist?(protocol_dir)
+      dirs
+    end
+  end
+
+  # Create a test config loader for a test directory
   def create_test_config_loader(test_dir)
     # Reset any cached config from previous tests to prevent state pollution
     Ace::Support::Nav.reset_config!
 
-    # Create config loader with test directory without changing dirs
-    config_loader = Ace::Support::Nav::Molecules::ConfigLoader.new(
-      File.join(test_dir, ".ace", "nav")
-    )
-
-    # Monkey patch to use test directory for protocol discovery
-    config_loader.instance_variable_set(:@test_dir, test_dir)
-    def config_loader.discover_project_protocol_dirs
-      test_dir = @test_dir
-      dirs = []
-      protocol_dir = File.join(test_dir, ".ace", "protocols")
-      dirs << protocol_dir if Dir.exist?(protocol_dir)
-      dirs
-    end
-
-    config_loader
+    TestConfigLoader.new(test_dir)
   end
 
   # Assert that a file exists with optional content check

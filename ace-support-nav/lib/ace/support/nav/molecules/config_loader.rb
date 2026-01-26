@@ -82,6 +82,13 @@ module Ace
 
             @protocols = {}
 
+            # 0. Load from gem defaults (lowest priority)
+            gem_defaults_dir = File.join(Ace::Support::Nav.gem_root, ".ace-defaults", "nav", "protocols")
+            load_directory_protocols(gem_defaults_dir).each do |protocol_data|
+              key = protocol_data["protocol"]
+              @protocols[key] = protocol_data if key
+            end
+
             # 1. Load from user ~/.ace/nav/protocols/
             load_directory_protocols(File.expand_path("~/.ace/nav/protocols")).each do |protocol_data|
               key = protocol_data["protocol"]

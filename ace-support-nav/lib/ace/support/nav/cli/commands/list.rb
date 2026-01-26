@@ -75,15 +75,15 @@ module Ace
               resources = @engine.list(@pattern, tree: @options[:tree], verbose: @options[:verbose])
 
               if resources.empty?
-                puts "No resources found matching: #{@pattern}"
-              elsif @options[:verbose]
+                raise Ace::Core::CLI::Error.new("No resources found matching: #{@pattern}")
+              end
+
+              if @options[:verbose]
                 require "json"
                 puts JSON.pretty_generate(resources)
               else
                 resources.each { |resource| puts resource }
               end
-
-              0
             end
 
             private
