@@ -76,6 +76,7 @@ module Ace
       DEFAULT_COMMAND = "process"
 
       # Testable start method with default command routing
+      # Note: Returns nil (dry-cli behavior). Exit codes via exceptions.
       def self.start(args)
         if args.empty? || !KNOWN_COMMANDS.include?(args.first)
           args = [DEFAULT_COMMAND] + args
@@ -188,6 +189,142 @@ module Ace
 end
 ```
 
+### Exit Code Handling
+
+#### Understanding dry-cli's Behavior
+
+**Critical fact**: `Dry::CLI.new(registry).call(arguments: args)` returns `nil`, **NOT** the command's return value. This is by design - dry-cli maintainers consider exit codes and return values to be separate concerns ([GitHub Issue #47](https://github.com/dry-rb/dry-cli/issues/47)).
+
+The dry-cli maintainers' official recommendation is to call `exit()` directly in commands. However, this breaks testability. Hanami (dry-cli's creator) uses an exception-based pattern instead.
+
+#### ACE Pattern: Exception-Based Exit Codes (Recommended)
+
+ACE gems use an exception-based pattern for exit codes, similar to [Hanami CLI](https://github.com/hanami/cli):
+
+**1. Define CLI error class (in ace-support-core):**
+```ruby
+# lib/ace/core/cli/error.rb
+module Ace
+  module Core
+    module CLI
+      # Raise to signal non-zero exit code
+      class Error < StandardError
+        attr_reader :exit_code
+
+        def initialize(message, exit_code: 1)
+          super(message)
+          @exit_code = exit_code
+        end
+      end
+    end
+  end
+end
+```
+
+**2. Command raises error on failure:**
+```ruby
+# lib/ace/gem/cli/commands/process.rb
+def call(file:, **options)
+  raise Ace::Core::CLI::Error.new("file required") if file.nil?
+
+  result = do_work(file)
+
+  if result[:success]
+    puts result[:message]
+    # Success - no exception, exits 0
+  else
+    raise Ace::Core::CLI::Error.new(result[:error])
+  end
+end
+```
+
+**3. Exe wrapper catches and exits:**
+```ruby
+# exe/ace-gem
+#!/usr/bin/env ruby
+require "ace/gem"
+
+begin
+  Ace::Gem::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
+```
+
+#### Testing Commands
+
+The exception pattern enables clean testing:
+
+```ruby
+def test_missing_file_raises_error
+  error = assert_raises(Ace::Core::CLI::Error) do
+    capture_io { CLI.start(["process"]) }
+  end
+  assert_equal "file required", error.message
+  assert_equal 1, error.exit_code
+end
+
+def test_successful_processing
+  # No exception = success (exit 0)
+  output, = capture_io { CLI.start(["process", "test.txt"]) }
+  assert_includes output, "Processed"
+end
+```
+
+#### Exit Code Values
+
+| Code | Meaning | How to Signal |
+|------|---------|---------------|
+| 0 | Success | Return normally (no exception) |
+| 1 | Failure | `raise Ace::Core::CLI::Error.new(msg)` |
+| 2 | Warning | `raise Ace::Core::CLI::Error.new(msg, exit_code: 2)` |
+
+#### Anti-Patterns (DO NOT USE)
+
+**❌ Returning integers from commands:**
+```ruby
+# WRONG - dry-cli ignores return values
+def call(**)
+  return 1 if error?  # This does NOTHING
+  0                    # Also ignored
+end
+```
+
+**❌ Thread-local storage:**
+```ruby
+# WRONG - unnecessary complexity
+Thread.current[:exit_code] = 1  # Don't do this
+```
+
+**❌ Direct exit() calls (breaks tests):**
+```ruby
+# WRONG - untestable
+def call(**)
+  exit(1) if error?  # Terminates test process
+end
+```
+
+#### Migration Path
+
+Existing commands that return integers need updating:
+
+```ruby
+# Before (broken - always exits 0)
+def call(**options)
+  return 1 if invalid?
+  do_work
+  0
+end
+
+# After (correct - uses exceptions)
+def call(**options)
+  raise Ace::Core::CLI::Error.new("validation failed") if invalid?
+  do_work
+  # Success - exits 0
+end
+```
+
 ### Requirements
 
 **DO:**
@@ -198,11 +335,15 @@ end
 - Use `self.start(args)` for testable entry point
 - Test in `test/commands/` (unchanged from ADR-018)
 - Reserve `-v` for `--verbose` (inherited from ADR-018)
+- Raise `Ace::Core::CLI::Error` for non-zero exit codes
+- Catch `Ace::Core::CLI::Error` in exe wrappers and call `exit(e.exit_code)`
 
 **DON'T:**
 - Use Thor (deprecated)
 - Put all options in cli.rb (let commands define their own)
-- Use `exit()` in command classes (return exit codes)
+- Return integers from commands expecting them to become exit codes (dry-cli ignores returns)
+- Use `exit()` directly in command classes (breaks testability)
+- Use thread-local storage for exit codes (unnecessary complexity)
 - Duplicate helpers across command files (use SharedHelpers)
 
 ## Consequences
@@ -220,6 +361,7 @@ end
 - **Migration effort**: 13+ gems needed CLI rewrites
 - **Learning curve**: Developers must learn dry-cli patterns
 - **String option values**: dry-cli returns all option values as strings (requires explicit type conversion)
+- **Exit code pattern**: dry-cli doesn't propagate return values as exit codes; requires exception-based pattern for testable exit code handling
 
 ### Neutral
 
@@ -240,23 +382,49 @@ Key differences when migrating:
 | Help | Automatic but inconsistent | Automatic and consistent |
 | Aliases | `aliases: ["alias"]` in register | Same |
 
+## Exe Wrapper Pattern
+
+```ruby
+# exe/ace-gem
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "ace/gem"
+
+begin
+  Ace::Gem::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
+```
+
 ## Testing Pattern
 
 ```ruby
 # test/commands/cli_test.rb
 class CliTest < AceTestCase
-  def test_process_command
-    output = capture_io do
+  def test_process_command_success
+    output, = capture_io do
       Ace::Gem::CLI.start(["process", "file.txt"])
     end
-    assert_includes output.first, "Processed"
+    assert_includes output, "Processed"
+    # No exception = exit code 0
+  end
+
+  def test_process_command_failure
+    error = assert_raises(Ace::Core::CLI::Error) do
+      capture_io { Ace::Gem::CLI.start(["process"]) }
+    end
+    assert_equal 1, error.exit_code
+    assert_includes error.message, "file required"
   end
 
   def test_default_command_routing
-    output = capture_io do
+    output, = capture_io do
       Ace::Gem::CLI.start(["file.txt"])  # No command specified
     end
-    assert_includes output.first, "Processed"
+    assert_includes output, "Processed"
   end
 
   def test_alias_routing
@@ -307,6 +475,9 @@ lib/ace/search/
 ## References
 
 - **dry-cli docs**: https://dry-rb.org/gems/dry-cli/1.1/
+- **dry-cli exit code issue**: https://github.com/dry-rb/dry-cli/issues/47 (explains why returns aren't exit codes)
+- **dry-cli exit code PR**: https://github.com/dry-rb/dry-cli/pull/48 (maintainers' position on exit codes)
+- **Hanami CLI exe**: https://github.com/hanami/cli/blob/main/exe/hanami (exception-based pattern)
 - **Thor issue #489**: https://github.com/rails/thor/issues/489 (nested subcommands)
 - **Task 179**: Migration orchestrator with full rationale
 - **ace-support-core**: Base infrastructure for dry-cli
@@ -314,3 +485,5 @@ lib/ace/search/
 ---
 
 This ADR establishes dry-cli as the standard CLI framework for all ACE gems, replacing Thor (ADR-018) due to fundamental design limitations discovered in production.
+
+**January 2026 Update**: Added exception-based exit code pattern after discovering that dry-cli's `call()` method returns `nil`, not command return values. The pattern follows Hanami's approach for testable exit code handling.
