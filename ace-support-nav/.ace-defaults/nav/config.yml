@@ -22,3 +22,12 @@ fuzzy:
 output:
   color: true  # Enable colored output
   verbose: false  # Enable verbose output
+
+# Extension inference settings for protocol resolution
+extension_inference:
+  enabled: true  # Enable DWIM extension inference when exact match fails
+  fallback_order:
+    - protocol_shorthand  # e.g., .g, .wf
+    - protocol_full       # e.g., .g.md, .wf.md
+    - generic_markdown    # .md
+    - bare               # no extension

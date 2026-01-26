@@ -4,6 +4,10 @@
 require "bundler/setup"
 require "ace/support/nav"
 
-# Start CLI and exit with the returned status code
-result = Ace::Support::Nav::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)
+# Start CLI with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Support::Nav::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
