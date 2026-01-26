@@ -7,8 +7,9 @@ enabled: true
 
 # File extensions to match
 extensions:
-  - .guide.md
-  - .md
+  - .g.md        # shorthand first
+  - .guide.md    # full second
+  - .md          # generic last
 
 # Categories for organizing guides
 categories:
