@@ -6,9 +6,9 @@ enabled: true
 
 # File extensions to match
 extensions:
+  - .wf.md       # shorthand first
   - .wfi.md
   - .workflow.md
-  - .wf.md  # Standard workflow format
 
 # Template for creating new workflows
 create_template: |
