@@ -121,12 +121,14 @@ module Ace
             assert_equal [".test.md", ".tst.md"], config["extensions"]
           end
 
-          def test_load_protocol_config_returns_default_for_unknown
+          def test_load_protocol_config_returns_gem_defaults_for_standard_protocols
             config = @config_loader.load_protocol_config("wfi")
 
-            # Should return default config since no protocol file exists
-            assert config.key?("workflows")
-            assert_equal [".wfi.md", ".workflow.md"], config["workflows"]["extensions"]
+            # Should return gem default config (from .ace-defaults/nav/protocols/wfi.yml)
+            assert_equal "wfi", config["protocol"]
+            # Gem defaults have extensions at top level, not nested under "workflows"
+            assert config.key?("extensions"), "Expected extensions key in config"
+            assert_includes config["extensions"], ".wf.md"
           end
 
           def test_available_configs_lists_yml_files

@@ -40,19 +40,24 @@ module Ace
         # logic testable and ensures consistent behavior for all consumers
         # (shell, tests, internal Ruby calls).
         #
+        # Per ADR-023, this method returns nil. Exit codes are handled via
+        # Ace::Core::CLI::Error exceptions caught in the exe wrapper.
+        #
         # @param args [Array<String>] Command-line arguments
-        # @return [Integer] Exit code (0 for success, non-zero for failure)
+        # @return [nil] Returns nil (exit codes via exceptions)
         #
         # @example From shell
         #   Ace::Support::Nav::CLI.start(ARGV)
         #
         # @example From tests
-        #   result = Ace::Support::Nav::CLI.start(["wfi://setup"])
+        #   # No exception = success (exit 0)
+        #   Ace::Support::Nav::CLI.start(["wfi://setup"])
         def self.start(args)
           # Handle backward compatibility flags
           # --sources was a flag that triggered the sources command
           if args.include?("--sources")
-            return Dry::CLI.new(self).call(arguments: ["sources"])
+            Dry::CLI.new(self).call(arguments: ["sources"])
+            return
           end
 
           # --create URI was a flag that triggered create with URI argument
@@ -65,7 +70,8 @@ module Ace
             new_args << target if target && !target.start_with?("-")
             # Add any other flags
             new_args.concat(args.reject { |a| a == "--create" || a == uri || a == target })
-            return Dry::CLI.new(self).call(arguments: new_args)
+            Dry::CLI.new(self).call(arguments: new_args)
+            return
           end
 
           # If first argument isn't a known command and args aren't empty,
@@ -75,6 +81,7 @@ module Ace
           end
 
           Dry::CLI.new(self).call(arguments: args)
+          # Returns nil - exit codes handled via Ace::Core::CLI::Error
         end
 
         # Check if argument is a known command

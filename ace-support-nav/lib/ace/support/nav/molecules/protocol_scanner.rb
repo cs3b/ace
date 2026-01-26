@@ -3,6 +3,7 @@
 require "set"
 require_relative "../atoms/gem_resolver"
 require_relative "../atoms/path_normalizer"
+require_relative "../atoms/extension_inferrer"
 require_relative "../models/handbook_source"
 require_relative "config_loader"
 
@@ -14,10 +15,13 @@ module Ace
         class ProtocolScanner
           attr_reader :config_loader
 
-          def initialize(gem_resolver: nil, path_normalizer: nil, config_loader: nil)
+          def initialize(gem_resolver: nil, path_normalizer: nil, config_loader: nil, extension_inferrer: nil)
             @gem_resolver = gem_resolver || Atoms::GemResolver.new
             @path_normalizer = path_normalizer || Atoms::PathNormalizer.new
             @config_loader = config_loader || ConfigLoader.new
+            # extension_inferrer param kept for backwards compatibility but ignored
+            # ExtensionInferrer now uses class methods
+            @extension_inference_enabled = nil
           end
 
           # Get all sources for a protocol
@@ -43,6 +47,19 @@ module Ace
 
           # Find resources in a specific source (internal implementation)
           def find_resources_in_source_internal(source, protocol_config, pattern = "*")
+            # Try exact match first
+            resources = find_resources_with_extensions(source, protocol_config, pattern)
+
+            # If no results and extension inference is enabled, try with inferred extensions
+            if resources.empty? && extension_inference_enabled? && !pattern.include?("/") && pattern != "*"
+              resources = find_resources_with_inference(source, protocol_config, pattern)
+            end
+
+            resources
+          end
+
+          # Find resources using pattern and extensions (original logic)
+          def find_resources_with_extensions(source, protocol_config, pattern = "*")
             # Handle both ProtocolSource and HandbookSource objects
             if source.respond_to?(:full_path)
               return [] unless source.exists?
@@ -203,6 +220,81 @@ module Ace
             resources
           end
 
+          # Find resources using extension inference when exact match fails
+          def find_resources_with_inference(source, protocol_config, pattern)
+            # Handle both ProtocolSource and HandbookSource objects
+            if source.respond_to?(:full_path)
+              return [] unless source.exists?
+              search_path = source.full_path
+            else
+              return [] unless source.exists?
+              search_path = source.handbook_path
+            end
+
+            # Get configuration for extension inference
+            settings = @config_loader.load_settings
+            inference_config = settings["extension_inference"] || {}
+            enabled = inference_config["enabled"] != false  # Default true
+            fallback_order = inference_config["fallback_order"]
+
+            # Get protocol extensions
+            protocol_extensions = protocol_config["extensions"] || []
+            inferred_extensions = protocol_config["inferred_extensions"] || protocol_extensions
+
+            # Generate candidate patterns using extension inferrer
+            candidates = Atoms::ExtensionInferrer.infer_extensions(
+              pattern,
+              protocol_extensions: inferred_extensions,
+              enabled: enabled,
+              fallback_order: fallback_order
+            )
+
+            resources = []
+            found_paths = Set.new  # Track paths to avoid duplicates
+
+            # Try each candidate pattern in order
+            candidates.each do |candidate|
+              # For inference, we need to allow additional extensions after the inferred one
+              # e.g., "mydoc.cst" should match "mydoc.cst.md"
+              # Use brace expansion for tighter matching: exact match or with extension
+              glob_pattern = File.join(search_path, "**", candidate + "{,.*}")
+
+              Dir.glob(glob_pattern).each do |file_path|
+                next unless File.file?(file_path)
+                next if found_paths.include?(file_path)
+
+                # Only match if basename equals candidate or has candidate as prefix with dot separator
+                # This prevents "multi-ext.g" from matching "multi-ext.guide.md"
+                basename = File.basename(file_path)
+                basename_candidate = File.basename(candidate)
+                next unless basename == basename_candidate ||
+                            basename.start_with?(basename_candidate + ".")
+
+                found_paths.add(file_path)
+                resources << create_resource_info(file_path, search_path, source, protocol_config["protocol"])
+              end
+
+              # Stop at first match (DWIM: return first successful inference)
+              break if resources.any?
+            end
+
+            resources
+          end
+
+          # Check if extension inference is enabled in settings (cached)
+          def extension_inference_enabled?
+            return @extension_inference_enabled unless @extension_inference_enabled.nil?
+
+            settings = @config_loader.load_settings
+            inference_config = settings["extension_inference"] || {}
+            @extension_inference_enabled = inference_config["enabled"] != false  # Default true
+          end
+
+          # Reset extension inference cache (for testing)
+          def reset_extension_inference_cache!
+            @extension_inference_enabled = nil
+          end
+
           # Legacy wrapper method for HandbookScanner compatibility
           def find_resources_in_source(source, protocol, pattern = "*")
             # If second param is a string (protocol name), load its config
@@ -297,9 +389,13 @@ module Ace
             # Remove extension for resource path
             protocol_config = @config_loader.load_protocol_config(protocol)
             extensions = protocol_config["extensions"] || []
+            inferred_extensions = protocol_config["inferred_extensions"] || extensions
+
+            # Combine both lists for extension stripping
+            all_extensions = extensions | inferred_extensions
 
             resource_path = relative_path
-            extensions.each do |ext|
+            all_extensions.each do |ext|
               resource_path = resource_path.sub(ext, "") if resource_path.end_with?(ext)
             end
 

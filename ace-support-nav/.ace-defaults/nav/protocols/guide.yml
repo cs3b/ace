@@ -7,6 +7,15 @@ enabled: true
 
 # File extensions to match
 extensions:
+  - .g.md        # shorthand first
+  - .guide.md    # full second
+  - .md          # generic last
+
+# Extension inference for DWIM behavior
+inferred_extensions:
+  - .g
+  - .guide
+  - .g.md
   - .guide.md
   - .md
 

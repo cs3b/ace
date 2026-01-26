@@ -71,13 +71,11 @@ module Ace
               result = @engine.create(@uri, @target)
 
               if result[:error]
-                puts "Error: #{result[:error]}"
-                return 1
-              else
-                puts "Created: #{result[:created]}"
-                puts "From: #{result[:from]}" if @options[:verbose]
-                return 0
+                raise Ace::Core::CLI::Error.new(result[:error])
               end
+
+              puts "Created: #{result[:created]}"
+              puts "From: #{result[:from]}" if @options[:verbose]
             end
 
             private

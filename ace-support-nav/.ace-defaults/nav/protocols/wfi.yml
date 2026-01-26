@@ -6,9 +6,19 @@ enabled: true
 
 # File extensions to match
 extensions:
+  - .wf.md       # shorthand first
   - .wfi.md
   - .workflow.md
-  - .wf.md  # Standard workflow format
+
+# Extension inference for DWIM behavior
+inferred_extensions:
+  - .wf
+  - .wfi
+  - .workflow
+  - .wf.md
+  - .wfi.md
+  - .workflow.md
+  - .md
 
 # Template for creating new workflows
 create_template: |
