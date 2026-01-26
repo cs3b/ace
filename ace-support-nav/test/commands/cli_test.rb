@@ -46,6 +46,102 @@ module Ace
           assert @resolve_cmd.send(:magic_wildcard_pattern?, "prompt://"),
                  "Protocol-only URI should trigger wildcard pattern"
         end
+
+        def test_cli_raises_error_when_resource_not_found
+          # Test that CLI raises Ace::Core::CLI::Error when resource is not found
+          # Regression test for ADR-023 exception-based exit code pattern
+          @test_dir = setup_test_environment
+
+          begin
+            Dir.chdir(@test_dir) do
+              # Reset config to pick up test environment
+              Ace::Support::Nav.reset_config!
+
+              error = assert_raises(Ace::Core::CLI::Error) do
+                capture_io { @resolve_cmd.call(uri: "test://nonexistent") }
+              end
+
+              assert_includes error.message, "Resource not found"
+              assert_equal 1, error.exit_code
+            end
+          ensure
+            cleanup_temp_directory(@test_dir)
+            Ace::Support::Nav.reset_config!
+          end
+        end
+
+        def test_cli_raises_error_when_create_fails
+          # Test that CLI raises Ace::Core::CLI::Error when create command fails
+          # Regression test for ADR-023 exception-based exit code pattern
+          @test_dir = setup_test_environment
+
+          begin
+            Dir.chdir(@test_dir) do
+              # Reset config to pick up test environment
+              Ace::Support::Nav.reset_config!
+
+              create_cmd = CLI::Commands::Create.new
+
+              # Try to create from a nonexistent template
+              error = assert_raises(Ace::Core::CLI::Error) do
+                capture_io { create_cmd.call(uri: "wfi://nonexistent-template") }
+              end
+
+              assert_equal 1, error.exit_code
+            end
+          ensure
+            cleanup_temp_directory(@test_dir)
+            Ace::Support::Nav.reset_config!
+          end
+        end
+
+        def test_cli_honors_disabled_extension_inference_config
+          # Regression test: CLI should honor extension_inference.enabled: false
+          # When disabled, only exact matches should work (no fallback)
+          @test_dir = create_temp_ace_directory
+
+          begin
+            # Create protocol with specific extensions
+            create_test_protocol(@test_dir, "custom", {
+              "extensions" => [".custom.md"],  # Only .custom.md is valid
+              "inferred_extensions" => [".cst.md", ".custom.md", ".md"]
+            })
+
+            # Create source
+            create_test_source(@test_dir, "custom", "local", {
+              "path" => File.join(@test_dir, "test-resources", "custom")
+            })
+
+            # Create resource with shorthand extension (NOT in protocol extensions)
+            resource_dir = File.join(@test_dir, "test-resources", "custom")
+            FileUtils.mkdir_p(resource_dir)
+            File.write(File.join(resource_dir, "document.cst.md"), "# Document")
+
+            # Create config with extension inference DISABLED
+            config_dir = File.join(@test_dir, ".ace", "nav")
+            FileUtils.mkdir_p(config_dir)
+            File.write(File.join(config_dir, "config.yml"), {
+              "extension_inference" => { "enabled" => false }
+            }.to_yaml)
+
+            Dir.chdir(@test_dir) do
+              # Reset config to pick up our test config
+              Ace::Support::Nav.reset_config!
+
+              # Should NOT find the resource because:
+              # - exact match "document.custom.md" doesn't exist
+              # - inference is disabled, so won't try "document.cst.md"
+              error = assert_raises(Ace::Core::CLI::Error) do
+                capture_io { @resolve_cmd.call(uri: "custom://document") }
+              end
+
+              assert_includes error.message, "Resource not found"
+            end
+          ensure
+            cleanup_temp_directory(@test_dir)
+            Ace::Support::Nav.reset_config!
+          end
+        end
       end
     end
   end

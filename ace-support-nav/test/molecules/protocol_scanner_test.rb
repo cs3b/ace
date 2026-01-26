@@ -359,6 +359,229 @@ module Ace
               assert_equal "test", resource[:protocol]
             end
           end
+
+          def test_extension_inference_finds_file_without_extension
+            # Create a test protocol with inferred extensions
+            create_test_protocol(@test_dir, "guide", {
+              "extensions" => [".g.md", ".guide.md", ".md"],
+              "inferred_extensions" => [".g", ".guide", ".g.md", ".guide.md", ".md"]
+            })
+
+            # Create source for guide protocol
+            create_test_source(@test_dir, "guide", "guide_source", {
+              "path" => File.join(@test_dir, "guide-resources", "guide")
+            })
+
+            # Create a guide file with full extension
+            resource_dir = File.join(@test_dir, "guide-resources", "guide")
+            FileUtils.mkdir_p(resource_dir)
+            File.write(File.join(resource_dir, "markdown-style.g.md"), "# Markdown Style Guide")
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              # Find resource using base name without extension - should use inference
+              resources = @scanner.find_resources("guide", "markdown-style")
+
+              assert_equal 1, resources.length
+              assert resources[0][:path].include?("markdown-style.g.md")
+            end
+          end
+
+          def test_extension_inference_disabled_returns_no_results
+            # Create a test protocol where file extension is NOT in protocol extensions
+            create_test_protocol(@test_dir, "custom", {
+              "extensions" => [".full.md"],  # Only .full.md is protocol extension
+              "inferred_extensions" => [".sh", ".full.md", ".md"]
+            })
+
+            create_test_source(@test_dir, "custom", "custom_source", {
+              "path" => File.join(@test_dir, "custom-resources", "custom")
+            })
+
+            resource_dir = File.join(@test_dir, "custom-resources", "custom")
+            FileUtils.mkdir_p(resource_dir)
+            # Create file with shorthand extension (not in protocol extensions)
+            File.write(File.join(resource_dir, "doc.sh.md"), "# Doc")
+
+            Dir.chdir(@test_dir) do
+              # Create config with extension inference disabled
+              config_dir = File.join(@test_dir, ".ace", "nav")
+              FileUtils.mkdir_p(config_dir)
+              File.write(File.join(config_dir, "config.yml"), {
+                "extension_inference" => { "enabled" => false }
+              }.to_yaml)
+
+              # Reload config loader to pick up the new config
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              # Should not find the resource since:
+              # - exact match "doc.full.md" doesn't exist
+              # - inference is disabled, so won't try "doc.sh.md"
+              resources = @scanner.find_resources("custom", "doc")
+
+              assert_equal 0, resources.length
+            end
+          end
+
+          def test_extension_inference_with_wfi_protocol
+            # Test wfi:// protocol inference
+            create_test_protocol(@test_dir, "wfi", {
+              "extensions" => [".wf.md", ".wfi.md", ".workflow.md", ".md"],
+              "inferred_extensions" => [".wf", ".wfi", ".workflow", ".wf.md", ".wfi.md", ".workflow.md", ".md"]
+            })
+
+            create_test_source(@test_dir, "wfi", "wfi_source", {
+              "path" => File.join(@test_dir, "wfi-resources", "wfi")
+            })
+
+            resource_dir = File.join(@test_dir, "wfi-resources", "wfi")
+            FileUtils.mkdir_p(resource_dir)
+            File.write(File.join(resource_dir, "setup.wf.md"), "# Setup Workflow")
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              # Find using base name - should infer .wf.md
+              resources = @scanner.find_resources("wfi", "setup")
+
+              assert_equal 1, resources.length
+              assert resources[0][:path].include?("setup.wf.md")
+            end
+          end
+
+          def test_extension_inference_returns_first_match
+            # Test that inference stops at first match (deterministic behavior)
+            # Create a different protocol where extension is NOT in the protocol list
+            create_test_protocol(@test_dir, "custom", {
+              "extensions" => [".custom.md"],  # Only .custom.md is a valid extension
+              "inferred_extensions" => [".cst.md", ".cst", ".custom", ".custom.md", ".md"]
+            })
+
+            create_test_source(@test_dir, "custom", "custom_source", {
+              "path" => File.join(@test_dir, "custom-resources", "custom")
+            })
+
+            resource_dir = File.join(@test_dir, "custom-resources", "custom")
+            FileUtils.mkdir_p(resource_dir)
+
+            # Create file with shorthand extension that's NOT in protocol extensions
+            File.write(File.join(resource_dir, "mydoc.cst.md"), "# Shorthand Extension")
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              # Search for base name - original search won't find it (mydoc.custom.md doesn't exist)
+              # Inference will try .cst and find mydoc.cst.md
+              resources = @scanner.find_resources("custom", "mydoc")
+
+              assert_equal 1, resources.length
+              # The relative_path should be "mydoc" after extension stripping
+              # It might be "mydoc.cst" if .cst is not being stripped
+              # or "mydoc.cst.md" if no extensions are being stripped
+              assert_equal "mydoc", resources[0][:relative_path],
+                "Expected 'mydoc' but got '#{resources[0][:relative_path]}'"
+            end
+          end
+
+          def test_extension_inference_does_not_affect_exact_matches
+            # Verify that exact matches still work (no regression)
+            # Use a fresh protocol to avoid interference from setup_test_environment
+            create_test_protocol(@test_dir, "exact", {
+              "extensions" => [".exact.md"],
+              "inferred_extensions" => [".ex", ".exact.md"]
+            })
+
+            create_test_source(@test_dir, "exact", "exact_source", {
+              "path" => File.join(@test_dir, "exact-resources", "exact")
+            })
+
+            resource_dir = File.join(@test_dir, "exact-resources", "exact")
+            FileUtils.mkdir_p(resource_dir)
+            file_path = File.join(resource_dir, "exact-match.exact.md")
+            File.write(file_path, "# Exact Match")
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              # Exact match with full extension should work
+              resources = @scanner.find_resources("exact", "exact-match.exact.md")
+
+              assert_equal 1, resources.length
+              assert_equal file_path, resources[0][:path]
+            end
+          end
+
+          def test_extension_inference_prefix_collision
+            # TC-004: Shorthand prefix collision - "multi-ext.g" should NOT match "multi-ext.guide.md"
+            # The bug: start_with? was too permissive - "multi-ext.guide".start_with?("multi-ext.g") is true
+            #
+            # To trigger inference (not regular search), protocol extensions must NOT directly match files.
+            # Files have shorthand extensions (.g.md, .guide.md) that are NOT in protocol extensions,
+            # so regular search fails and inference kicks in.
+            create_test_protocol(@test_dir, "prefix", {
+              "extensions" => [".full.md"],  # Only .full.md is a protocol extension
+              "inferred_extensions" => [".g", ".guide", ".g.md", ".guide.md", ".md"]  # Inference tries .g first
+            })
+
+            create_test_source(@test_dir, "prefix", "prefix_source", {
+              "path" => File.join(@test_dir, "prefix-resources", "prefix")
+            })
+
+            resource_dir = File.join(@test_dir, "prefix-resources", "prefix")
+            FileUtils.mkdir_p(resource_dir)
+
+            # Create both files with shorthand extensions (NOT in protocol extensions)
+            File.write(File.join(resource_dir, "multi-ext.g.md"), "# Shorthand")
+            File.write(File.join(resource_dir, "multi-ext.guide.md"), "# Full Guide")
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              # Search for "multi-ext" - regular search fails (no .full.md file)
+              # Inference tries candidates in order: multi-ext.g, multi-ext.guide, etc.
+              # The bug: "multi-ext.g" incorrectly matched "multi-ext.guide.md"
+              # The fix: Only match if next char is end-of-string or dot separator
+              resources = @scanner.find_resources("prefix", "multi-ext")
+
+              assert_equal 1, resources.length
+              # Should match .g.md, NOT .guide.md
+              assert resources[0][:path].end_with?("multi-ext.g.md"),
+                "Expected multi-ext.g.md but got #{resources[0][:path]}"
+            end
+          end
+
+          def test_extension_inference_skips_wildcard_patterns
+            # Extension inference should not trigger for wildcard patterns
+            create_test_protocol(@test_dir, "wild", {
+              "extensions" => [".wild.md"],
+              "inferred_extensions" => [".wd", ".wild.md"]
+            })
+
+            create_test_source(@test_dir, "wild", "wild_source", {
+              "path" => File.join(@test_dir, "wild-resources", "wild")
+            })
+
+            resource_dir = File.join(@test_dir, "wild-resources", "wild")
+            FileUtils.mkdir_p(resource_dir)
+            File.write(File.join(resource_dir, "file1.wild.md"), "# File 1")
+
+            Dir.chdir(@test_dir) do
+              @config_loader = create_test_config_loader(@test_dir)
+              @scanner = ProtocolScanner.new(config_loader: @config_loader)
+
+              # Wildcard should work normally without inference interference
+              resources = @scanner.find_resources("wild", "*")
+
+              assert_equal 1, resources.length
+            end
+          end
         end
       end
     end

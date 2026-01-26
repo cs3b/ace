@@ -120,9 +120,59 @@ handbooks:
     - path: "/opt/handbooks"    # Custom path
       alias: "handbooks"        # Access as @handbooks
 
+# Extension inference (DWIM - Do What I Mean)
+extension_inference:
+  enabled: true                 # Enable automatic extension detection
+  fallback_order:               # Order of extension attempts
+    - shorthand                 # 1. Protocol shorthand (wfi://workflow → wfi://workflow.wfi.md)
+    - full                      # 2. Full extension (wfi://workflow.md)
+    - generic                   # 3. Generic markdown (wfi://workflow.markdown.md)
+    - bare                      # 4. No extension (wfi://workflow)
+
+# Protocol-specific inferred extensions
+protocols:
+  wfi:
+    inferred_extensions: [".wfi.md", ".md", ".markdown.md", ""]
+  tmpl:
+    inferred_extensions: [".tmpl.md", ".md", ".markdown.md", ""]
+  guide:
+    inferred_extensions: [".guide.md", ".md", ".markdown.md", ""]
+  prompt:
+    inferred_extensions: [".prompt.md", ".md", ".markdown.md", ""]
+  sample:
+    inferred_extensions: [".sample.md", ".md", ".markdown.md", ""]
+
 # Built-in aliases:
 # @project → ./.ace/handbook
 # @user → ~/.ace/handbook
+```
+
+### Extension Inference
+
+The extension inference feature enables DWIM (Do What I Mean) behavior by automatically trying common file extensions when a resource is not found. For example:
+
+- `ace-nav wfi://setup` will try: `setup.wfi.md`, `setup.md`, `setup.markdown.md`, `setup`
+- `ace-nav tmpl://custom` will try: `custom.tmpl.md`, `custom.md`, `custom.markdown.md`, `custom`
+
+This reduces the need to type full extensions while maintaining compatibility with existing resources.
+
+To disable extension inference:
+
+```yaml
+# .ace/nav/config.yml
+extension_inference:
+  enabled: false
+```
+
+To customize the fallback order:
+
+```yaml
+# .ace/nav/config.yml
+extension_inference:
+  fallback_order:
+    - bare      # Try without extension first
+    - full      # Then try .md
+    - shorthand # Then try protocol-specific (.wfi.md)
 ```
 
 ## Override System

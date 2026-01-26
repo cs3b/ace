@@ -107,9 +107,10 @@ module Ace
               result = @engine.resolve(@uri, content: @options[:content], verbose: @options[:verbose])
 
               if result.nil?
-                puts "Resource not found: #{@uri}"
-                return 1
-              elsif @options[:verbose] && result.is_a?(Hash)
+                raise Ace::Core::CLI::Error.new("Resource not found: #{@uri}")
+              end
+
+              if @options[:verbose] && result.is_a?(Hash)
                 require "json"
                 puts JSON.pretty_generate(result)
               elsif @options[:path]
@@ -118,8 +119,6 @@ module Ace
               else
                 puts result
               end
-
-              0
             end
 
             private

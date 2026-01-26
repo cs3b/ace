@@ -47,68 +47,54 @@ class TaskProtocolIntegrationTest < Minitest::Test
   end
 
   def test_task_protocol_delegation_with_simple_reference
-    # Test that delegation succeeds (exit code 0)
-    # Note: system() outputs directly to stdout, suppress with capture_io
-    exit_code = nil
+    # Test that delegation succeeds (no exception = exit code 0)
+    # Per ADR-023, CLI.start returns nil, success is no exception
     capture_io do
-      exit_code = Ace::Support::Nav::CLI.start(["task://083"])
+      Ace::Support::Nav::CLI.start(["task://083"])
     end
-
-    assert_equal 0, exit_code
+    # No exception raised = success
   end
 
   def test_task_protocol_delegation_with_full_reference
-    exit_code = nil
     capture_io do
-      exit_code = Ace::Support::Nav::CLI.start(["task://v.0.9.0+task.083"])
+      Ace::Support::Nav::CLI.start(["task://v.0.9.0+task.083"])
     end
-
-    assert_equal 0, exit_code
+    # No exception raised = success
   end
 
   def test_task_protocol_with_path_option
-    exit_code = nil
     capture_io do
-      exit_code = Ace::Support::Nav::CLI.start(["task://083", "--path"])
+      Ace::Support::Nav::CLI.start(["task://083", "--path"])
     end
-
-    assert_equal 0, exit_code
+    # No exception raised = success
   end
 
   def test_task_protocol_with_content_option
-    exit_code = nil
     capture_io do
-      exit_code = Ace::Support::Nav::CLI.start(["task://083", "--content"])
+      Ace::Support::Nav::CLI.start(["task://083", "--content"])
     end
-
-    assert_equal 0, exit_code
+    # No exception raised = success
   end
 
   def test_task_protocol_with_tree_option
-    exit_code = nil
     capture_io do
-      exit_code = Ace::Support::Nav::CLI.start(["task://083", "--tree"])
+      Ace::Support::Nav::CLI.start(["task://083", "--tree"])
     end
-
-    assert_equal 0, exit_code
+    # No exception raised = success
   end
 
   def test_task_protocol_with_backlog_reference
-    exit_code = nil
     capture_io do
-      exit_code = Ace::Support::Nav::CLI.start(["task://backlog+025"])
+      Ace::Support::Nav::CLI.start(["task://backlog+025"])
     end
-
-    assert_equal 0, exit_code
+    # No exception raised = success
   end
 
   def test_task_protocol_with_prefixed_reference
-    exit_code = nil
     capture_io do
-      exit_code = Ace::Support::Nav::CLI.start(["task://task.083"])
+      Ace::Support::Nav::CLI.start(["task://task.083"])
     end
-
-    assert_equal 0, exit_code
+    # No exception raised = success
   end
 
   def test_cmd_protocol_check_in_navigation_engine
