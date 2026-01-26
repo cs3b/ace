@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.327] - 2026-01-24
+
+### Added
+
+- **ace-support-nav 0.17.3**: Extension inference for protocol resolution (task 224)
+  - Add `ExtensionInferrer` atom for DWIM extension inference
+  - Configure inference via `.ace/nav/config.yml` with `extension_inference.enabled` and `fallback_order`
+  - Add `inferred_extensions` to protocol configs (guide.yml, wfi.yml)
+  - Update `ProtocolScanner` to use inference when exact match fails
+  - Strip extensions using both protocol and inferred extension lists
+
 ## [0.9.326] - 2026-01-24
 
 ### Added
