@@ -3,41 +3,39 @@ git:
   # Default model - uses alias from ace-llm configuration
   model: glite
 
+  # Commit scope definitions - each key is a scope name
+  # Scopes define file groupings for commit splitting
+  # Each scope can include:
+  #   - glob: pattern(s) to match files
+  #   - model: LLM model override
+  #   - type_hint: preferred commit type (docs, chore, feat, fix, etc.)
+  #   - description: scope context for better commit messages
+  scopes:
+    ace-config:
+      glob:
+        - ".ace/**"
+        - "*/.ace/**"
+        - "**/.ace/**"
+      type_hint: chore
+      description: "Project configuration files (nav protocols, git settings, bundle presets)"
+
+    taskflow:
+      glob: ".ace-taskflow/**"
+      type_hint: spec
+      description: "Task specifications, retrospectives, session notes, and workflow documentation - NOT code features"
+
+    agent-integrations:
+      glob: "{.claude/**,.codex/**,.gemini/**,AGENTS.md,CLAUDE.md}"
+      type_hint: docs
+      description: "Agent skills, workflow instructions, and AI assistant integration configs"
+
+    support-packages:
+      glob: "ace-support-*/**"
+      description: "Shared support libraries (ace-support-core, ace-support-config, etc.)"
+
   # Project-specific conventions
   conventions:
     format: conventional
-
-    # Scope configuration for ace-meta project
-    scopes:
-      enabled: true
-      detect_from_paths: true
-
-      # Custom scopes for ace-meta components
-      custom:
-        # Gem components (auto-detected from ace-* pattern)
-        - ace-support-core
-        - ace-llm
-        - ace-git
-        - ace-git-commit
-        - ace-git-secrets
-        - ace-git-worktree
-        - ace-bundle
-        - ace-support-nav
-        - ace-taskflow
-        - ace-test-runner
-        - ace-support-test-helpers
-        - ace-handbook
-        - ace-review
-        - ace-docs
-        - ace-lint
-        - ace-search
-        - ace-prompt-prep
-        - ace-integration-claude
-
-        # Project areas
-        - taskflow
-        - docs
-        - config
 
   # LLM settings for this project
   generation:
