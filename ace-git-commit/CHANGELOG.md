@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-01-27
+
+### Added
+- Path-based configuration splitting for scoped commits in mono-repos
+- Batch LLM generation for multiple commit scopes in a single run
+- Automatic scope detection based on file paths and glob patterns
+- Support for scope-specific model overrides and type hints
+- `scopes` configuration in `.ace/git/commit.yml` for defining file groupings
+
+### Changed
+- Enhanced commit workflow to support multiple atomic commits per scope
+- Improved configuration resolution with path rules from ace-support-config
+
 ## [0.16.5] - 2026-01-20
 
 ### Fixed

@@ -221,6 +221,90 @@ EOF
 
 ---
 
+### TC-004: Commit File Moves and Deletions
+
+**Objective:** Verify that ace-git-commit correctly commits file moves (renames) and deletions, ensuring both the deleted source and added destination paths are included.
+
+**Background:** Git's rename detection can collapse a file move into a single "rename" entry. The `--no-renames` flag ensures both the deletion and addition are tracked separately, preventing silent exclusion of deleted files.
+
+**Steps:**
+1. Create files to move and delete
+   ```bash
+   cat > "$TEST_DIR/to_move.rb" << 'EOF'
+# frozen_string_literal: true
+
+class ToMove
+  def location
+    "Will be moved"
+  end
+end
+EOF
+
+   cat > "$TEST_DIR/to_delete.rb" << 'EOF'
+# frozen_string_literal: true
+
+class ToDelete
+  def status
+    "Will be deleted"
+  end
+end
+EOF
+   git add .
+   git commit -m "Add files for move/delete test"
+   ```
+
+2. Move one file and delete another
+   ```bash
+   mkdir -p "$TEST_DIR/lib"
+   git mv to_move.rb lib/moved.rb
+   git rm to_delete.rb
+   ```
+
+3. Verify git shows both changes
+   ```bash
+   git status --porcelain
+   git diff --cached --name-only --no-renames
+   # Should show: lib/moved.rb, to_delete.rb, to_move.rb
+   ```
+
+4. Commit with ace-git-commit
+   ```bash
+   ace-git-commit -m "Refactor: move file to lib and remove unused file"
+   ```
+
+5. Verify all changes were committed
+   ```bash
+   git log --oneline -1
+   git show --stat HEAD
+   ```
+
+6. Verify files are in expected state
+   ```bash
+   [ ! -f "$TEST_DIR/to_move.rb" ] && echo "PASS: Source file removed" || echo "FAIL: Source still exists"
+   [ ! -f "$TEST_DIR/to_delete.rb" ] && echo "PASS: Deleted file removed" || echo "FAIL: Deleted file still exists"
+   [ -f "$TEST_DIR/lib/moved.rb" ] && echo "PASS: File moved to lib/" || echo "FAIL: Moved file missing"
+   ```
+
+7. Verify working directory is clean
+   ```bash
+   UNCOMMITTED=$(git status --porcelain)
+   [ -z "$UNCOMMITTED" ] && echo "PASS: All changes committed" || echo "FAIL: Uncommitted: $UNCOMMITTED"
+   ```
+
+**Expected:**
+- Exit code: 0
+- All file changes committed:
+  - to_move.rb deletion committed
+  - lib/moved.rb addition committed
+  - to_delete.rb deletion committed
+- Working directory clean after commit
+
+**Actual:** [Record during execution]
+
+**Status:** [ ] Pass / [ ] Fail
+
+---
+
 ## Cleanup
 
 ```bash
@@ -234,6 +318,7 @@ echo "Cleanup complete"
 - [ ] TC-001: Commit all changes with explicit message succeeds
 - [ ] TC-002: Commit with intention context accepted
 - [ ] TC-003: Dry-run mode shows changes without committing
+- [ ] TC-004: Commit file moves and deletions correctly
 
 ## Observations
 

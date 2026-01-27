@@ -5,6 +5,8 @@ module Ace
     module Organisms
       # CommitOrchestrator coordinates the entire commit process
       class CommitOrchestrator
+        # Reference the default scope name constant
+        DEFAULT_SCOPE_NAME = Ace::Support::Config::Models::ConfigGroup::DEFAULT_SCOPE_NAME
         def initialize(config = nil)
           @config = config || load_config
           @git = Atoms::GitExecutor.new
@@ -12,6 +14,13 @@ module Ace
           @file_stager = Molecules::FileStager.new(@git)
           @path_resolver = Molecules::PathResolver.new(@git)
           @message_generator = Molecules::MessageGenerator.new(@config)
+          @commit_grouper = Molecules::CommitGrouper.new
+          @split_commit_executor = Molecules::SplitCommitExecutor.new(
+            git_executor: @git,
+            diff_analyzer: @diff_analyzer,
+            file_stager: @file_stager,
+            message_generator: @message_generator
+          )
         end
 
         # Execute the commit process
@@ -40,16 +49,23 @@ module Ace
             return false
           end
 
-          # Get or generate commit message
-          message = get_commit_message(options)
+          staged_files = @file_stager.staged_files
+          groups = @commit_grouper.group(staged_files, project_root: @git.repository_root)
 
-          if options.dry_run
-            show_dry_run(message, options)
-            return true
+          if options.no_split
+            message = get_commit_message(options, config_override: @config)
+            return handle_single_commit(message, options)
           end
 
-          # Execute the commit
-          perform_commit(message, options)
+          if groups.length > 1
+            display_split_summary(groups) unless options.quiet
+            result = @split_commit_executor.execute(groups, options)
+            return result.success?
+          end
+
+          group_config = groups.first ? groups.first.config : @config
+          message = get_commit_message(options, config_override: group_config)
+          handle_single_commit(message, options)
         end
 
         private
@@ -212,9 +228,9 @@ module Ace
         # Get or generate commit message
         # @param options [Models::CommitOptions] Options
         # @return [String] Commit message
-        def get_commit_message(options)
+        def get_commit_message(options, config_override: nil)
           if options.use_llm?
-            generate_message(options)
+            generate_message(options, config_override: config_override)
           else
             options.message
           end
@@ -223,30 +239,45 @@ module Ace
         # Generate commit message using LLM
         # @param options [Models::CommitOptions] Options
         # @return [String] Generated message
-        def generate_message(options)
+        def generate_message(options, config_override: nil)
           puts "Generating commit message..." unless options.quiet
 
           # Get the diff
           diff = @diff_analyzer.get_staged_diff
           files = @diff_analyzer.changed_files(staged_only: true)
 
-          # Override model if specified
-          if options.model
-            generator = Molecules::MessageGenerator.new(@config.merge("model" => options.model))
-          else
-            generator = @message_generator
-          end
+          config = config_override || @config
+          config = config.merge("model" => options.model) if options.model
 
-          message = generator.generate(
+          message = @message_generator.generate(
             diff,
             intention: options.intention,
-            files: files
+            files: files,
+            config: config
           )
 
           puts "✓ Message generated" unless options.quiet
           puts "\nMessage:\n#{message}" if options.debug
 
           message
+        end
+
+        def handle_single_commit(message, options)
+          if options.dry_run
+            show_dry_run(message, options)
+            return true
+          end
+
+          perform_commit(message, options)
+        end
+
+        def display_split_summary(groups)
+          puts "Detected #{groups.length} configuration scopes:"
+          groups.each do |group|
+            label = group.scope_name.to_s.empty? ? DEFAULT_SCOPE_NAME : group.scope_name
+            source = group.source ? " (#{group.source})" : ""
+            puts "  - #{label}#{source}: #{group.file_count} file(s)"
+          end
         end
 
         # Show dry run information
