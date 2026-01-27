@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-timestamp:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: [encode|decode|config] [value] [options]
+argument-hint: "[encode|decode|config] [value] [options]"
 last_modified: 2026-01-09
 source: ace-support-timestamp
 ---

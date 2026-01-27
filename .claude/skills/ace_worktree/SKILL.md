@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-git-worktree:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: [create|list|switch|remove|prune|config] [options]
+argument-hint: "[create|list|switch|remove|prune|config] [options]"
 last_modified: 2026-01-09
 source: ace-git-worktree
 ---

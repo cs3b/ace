@@ -13,7 +13,7 @@ allowed-tools:
   - Skill
   - EnterPlanMode
   - ExitPlanMode
-argument-hint: [task-ref like 215.03] or [instructions]
+argument-hint: "[task-ref like 215.03] or [instructions]"
 last_modified: 2026-01-18
 source: ace-handbook
 ---

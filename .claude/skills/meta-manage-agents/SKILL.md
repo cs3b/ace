@@ -1,6 +1,6 @@
 ---
 name: meta-manage-agents
-title: Meta: Manage Agents
+title: "Meta: Manage Agents"
 command: meta-manage-agents
 description: Create, update, and maintain agent definitions following standardized guide
 # context: no-fork
@@ -21,7 +21,7 @@ allowed-tools:
   - Glob
   - LS
   - TodoWrite
-argument-hint: [agent-name] [action: create|update|review]
+argument-hint: "[agent-name] [action: create|update|review]"
 ---
 
 # Meta: Manage Agents

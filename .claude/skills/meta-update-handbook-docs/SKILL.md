@@ -1,6 +1,6 @@
 ---
 name: meta-update-handbook-docs
-title: Meta: Update Handbook Documentation
+title: "Meta: Update Handbook Documentation"
 command: meta-update-handbook-docs
 description: Update and maintain handbook documentation and README files
 # context: no-fork

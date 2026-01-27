@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-search:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: [pattern] [--file|--content] [options]
+argument-hint: "[pattern] [--file|--content] [options]"
 last_modified: 2026-01-09
 source: ace-search
 ---
