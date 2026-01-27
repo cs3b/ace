@@ -1148,10 +1148,10 @@ module Ace
         # @param release [String] Release to analyze
         # @return [Hash] Statistics
         def get_statistics(release: "all")
-          # Use glob pattern to include all tasks (including maybe/, anyday/, done/ subdirectories)
-          # Match both old format (task.NNN.s.md) and new hierarchical format (NNN-slug.s.md)
-          # IMPORTANT: Restrict to tasks/ directory to avoid matching idea files with task-like names
-          tasks = list_tasks(release: release, glob: ["tasks/**/task.[0-9][0-9][0-9]*.s.md", "tasks/**/[0-9][0-9][0-9]-*.s.md"])
+          # Use glob pattern from Configuration (single source of truth per ADR-022)
+          # Prefixed with "tasks/" to restrict to tasks directory and avoid matching idea files
+          task_globs = Ace::Taskflow.configuration.default_task_glob_pattern.map { |p| "tasks/#{p}" }
+          tasks = list_tasks(release: release, glob: task_globs)
 
           # Delegate to pure logic molecule
           Molecules::TaskStatistics.calculate(tasks)
