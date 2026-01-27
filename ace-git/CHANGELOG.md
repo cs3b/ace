@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-01-27
+
 ### Changed
 - Lock retry now detects active lock PID and increases wait time on active locks
 - Lock cleanup reports lock status metadata (pid/age) for better diagnostics
+- CLI now shows error for unknown commands instead of routing to diff
 
 ## [0.10.2] - 2026-01-27
 
