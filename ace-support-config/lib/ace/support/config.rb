@@ -9,15 +9,18 @@ require "ace/support/fs"
 # Load atoms first (no dependencies)
 require_relative "config/atoms/deep_merger"
 require_relative "config/atoms/path_validator"
+require_relative "config/atoms/path_rule_matcher"
 require_relative "config/atoms/yaml_parser"
 
 # Load models (depend on atoms)
 require_relative "config/models/cascade_path"
 require_relative "config/models/config"
+require_relative "config/models/config_group"
 
 # Load molecules (depend on atoms, models)
 require_relative "config/molecules/yaml_loader"
 require_relative "config/molecules/config_finder"
+require_relative "config/molecules/file_config_resolver"
 
 # Load organisms (depend on molecules)
 require_relative "config/organisms/config_resolver"
