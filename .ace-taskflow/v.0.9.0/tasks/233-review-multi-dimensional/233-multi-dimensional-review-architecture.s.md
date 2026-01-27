@@ -1,18 +1,18 @@
 ---
-id: v.0.9.0+task.226
-status: in-progress
+id: v.0.9.0+task.233
+status: pending
 priority: high
-estimate: TBD
+estimate: large
 dependencies: []
 type: orchestrator
 subtasks:
-  - 226.01
-  - 226.02
-  - 226.03
-  - 226.04
-  - 226.05
-  - 226.06
-  - 226.07
+  - 233.01
+  - 233.02
+  - 233.03
+  - 233.04
+  - 233.05
+  - 233.06
+  - 233.07
 ---
 
 # Multi-Dimensional Review Architecture
@@ -99,6 +99,36 @@ Preset (orchestration unit)
 ```
 
 Each subtask builds on the previous. First 4 subtasks (226.01-226.04) address the immediate problem of large PR handling. Later subtasks (226.05-226.07) add sophistication.
+
+## Error Handling Strategy
+
+All strategies must handle failures gracefully:
+
+### LLM Failures
+- **Timeout**: After 2 minutes, mark reviewer as failed, continue with others
+- **Rate limit**: Exponential backoff (1s, 2s, 4s), max 3 retries
+- **API error**: Log error, mark reviewer failed, include in output notice
+
+### Partial Results
+- **Single reviewer fails**: Continue synthesis with remaining reviewers
+- **All reviewers fail**: Return error with diagnostic info (no partial synthesis)
+- **Synthesis fails**: Return raw concatenated reviews with failure notice
+
+### Progressive Strategy Failures
+- **Summary extraction fails**: Fall back to empty summary, log warning
+- **Mid-sequence failure**: Complete remaining chunks without carryover
+
+### Output Format for Failures
+```markdown
+## Reviewer Failures
+
+- security-reviewer: Timeout after 120s
+- test-reviewer: API rate limit exceeded
+
+## Available Reviews
+
+... synthesis from successful reviewers ...
+```
 
 ## Acceptance Criteria
 
