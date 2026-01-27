@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/pr"
+require "ace/git/cli/commands/pr"
 
 class PrTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::Pr.new
+    @command = Ace::Git::CLI::Commands::Pr.new
   end
 
   def test_execute_returns_error_when_gh_not_installed
