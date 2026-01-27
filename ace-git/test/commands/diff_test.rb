@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/diff"
+require "ace/git/cli/commands/diff"
 
 class DiffTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::Diff.new
+    @command = Ace::Git::CLI::Commands::Diff.new
   end
 
   def test_execute_returns_success_with_valid_range

@@ -221,29 +221,32 @@ class CliRoutingTest < AceGitTestCase
 
   def test_cli_does_not_route_log_to_diff
     # "log" should NOT be caught by magic routing
-    assert_raises(NoMethodError) do
-      capture_io do
-        Ace::Git::CLI.start(["log"])
-      end
+    output = capture_io do
+      Ace::Git::CLI.start(["log"])
     end
+    combined = output.first.to_s + output.last.to_s
+    refute_match(/mock diff/, combined)
+    refute_empty combined
   end
 
   def test_cli_does_not_route_show_to_diff
     # "show" should NOT be caught by magic routing
-    assert_raises(NoMethodError) do
-      capture_io do
-        Ace::Git::CLI.start(["show"])
-      end
+    output = capture_io do
+      Ace::Git::CLI.start(["show"])
     end
+    combined = output.first.to_s + output.last.to_s
+    refute_match(/mock diff/, combined)
+    refute_empty combined
   end
 
   def test_cli_does_not_route_commit_to_diff
     # "commit" should NOT be caught by magic routing
-    assert_raises(NoMethodError) do
-      capture_io do
-        Ace::Git::CLI.start(["commit"])
-      end
+    output = capture_io do
+      Ace::Git::CLI.start(["commit"])
     end
+    combined = output.first.to_s + output.last.to_s
+    refute_match(/mock diff/, combined)
+    refute_empty combined
   end
 
   def test_cli_does_not_route_help_to_diff

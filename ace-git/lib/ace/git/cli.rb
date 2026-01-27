@@ -32,7 +32,7 @@ module Ace
       # Using Set for O(1) lookup performance
       KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
 
-      # Default command to use when first argument is not a known command
+      # Default command to use when no command is specified or when routing ranges
       DEFAULT_COMMAND = "diff"
 
       # Start the CLI with default command routing and git range magic routing
@@ -57,21 +57,27 @@ module Ace
         # If args is empty, route to default command
         if args.empty?
           args = [DEFAULT_COMMAND] + args
+        # Explicit help routes to usage output
+        elsif %w[help --help -h].include?(args.first)
+          puts Dry::CLI::Usage.call(get([]))
+          return 0
         # If first arg looks like a git range, route to diff
         elsif git_range_pattern?(args.first)
           args = [DEFAULT_COMMAND] + args
-        # If first arg isn't a known command, use default
         elsif !known_command?(args.first)
-          args = [DEFAULT_COMMAND] + args
+          warn "Error: Unknown command '#{args.first}'"
+          return 1
         end
 
         Dry::CLI.new(self).call(arguments: args)
+      rescue SystemExit => e
+        e.status
       end
 
       # Check if argument is a known command
       #
       # @param arg [String] First argument to check
-      # @return [Boolean] true if it's a command, false if it should be routed to default
+      # @return [Boolean] true if it's a command, false otherwise
       def self.known_command?(arg)
         return false if arg.nil?
 
