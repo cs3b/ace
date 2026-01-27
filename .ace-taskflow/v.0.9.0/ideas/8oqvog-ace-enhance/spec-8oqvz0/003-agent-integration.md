@@ -32,8 +32,8 @@ A worker is anything that can:
 ### Input Contract
 
 Workers receive context via:
-- **Environment variables**: `$ACE_TASK`, `$ACE_SESSION`, `$ACE_STEP`
-- **Context files**: `.ace/overseer/context.json`
+- **Environment variables**: `$ACE_TASK`, `$ACE_SESSION`, `$ACE_STEP`, `$ACE_CONTEXT_FILE`
+- **Context files**: `.ace/overseer/context.json` (path passed via `$ACE_CONTEXT_FILE`)
 - **Working directory**: The session worktree
 
 ### Output Contract
@@ -57,6 +57,21 @@ Workers report via:
   ]
 }
 ```
+
+## Context Hygiene
+
+Workers should receive only the context relevant to the current step. On retries, the overseer should write a fresh
+context file that includes the spec, the latest error summary, and any explicitly requested files. Avoid passing
+full logs or prior chat history.
+
+## Optional File IO Convention
+
+For richer integrations (agents or enhanced CLI tools), support an optional input/output directory convention:
+
+- Input: `.ace/overseer/steps/<step-id>/input/`
+- Output: `.ace/overseer/steps/<step-id>/output/`
+
+This keeps file-based contracts explicit without forcing changes on existing CLI tools.
 
 ## Agent Types
 
