@@ -4,6 +4,57 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.333] - 2026-01-27
+
+### Technical
+
+- **ace-git v0.10.2**: Simplified reorganize-commits workflow documentation
+  - Streamlined workflow instructions by removing verbose examples
+  - Reduced documentation from 109 lines to 26 lines while preserving essential steps
+
+## [0.9.332] - 2026-01-27
+
+### Added
+
+- **ace-git-commit v0.17.1**: Add `spec` commit type for development artifacts
+  - Add `spec` as recognized commit type for task specifications, planning docs, retros, ideas
+  - Clarify `docs` type is for software documentation (user guides, API docs, README)
+  - Fix: type_hint config now properly influences LLM commit type selection
+
+## [0.9.331] - 2026-01-27
+
+### Changed
+
+- **ace-taskflow v0.34.2**: Add explicit idea glob pattern alias and DRY improvements
+  - Add `default_idea_glob_pattern` alias for clearer method naming
+  - DRY up `get_statistics` to use `Configuration#default_task_glob_pattern`
+
+### Technical
+
+- **Task 226**: Enhance multi-dimensional review architecture specs based on review feedback
+  - Add `<context_carryover>` XML format and FindingsExtractor atom spec for progressive strategy
+  - Define overflow behavior with line-based truncation and summary size limits for chunked strategy
+  - Add map-reduce condensation and thread-safe execution for multi-dimensional synthesis
+  - Add error handling strategy section with timeout, rate limit, and partial results handling
+  - Document context parameter type with full Hash structure
+  - Add observability requirements for strategy selection logging
+  - Replace TBD estimates with small/medium/large across all subtasks
+
+## [0.9.330] - 2026-01-27
+
+### Fixed
+
+- **ace-taskflow v0.34.1**: Resolve task counting discrepancy in preset listings
+  - Add `default_task_glob_pattern` for proper task file matching (legacy, single, orchestrator/subtask formats)
+  - Update ListPresetManager to use type-appropriate default globs
+  - Update `get_statistics` glob to include orchestrator/subtask format (NNN.NN-*.s.md)
+  - Before: "0/93 tasks" with "No tasks found for preset 'draft'"
+  - After: "2/135 tasks" correctly displaying filtered tasks
+
+### Technical
+
+- Rename duplicate task 227 to 230 to resolve task ID collision
+
 ## [0.9.329] - 2026-01-27
 
 ### Added
