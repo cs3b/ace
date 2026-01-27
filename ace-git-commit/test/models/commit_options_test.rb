@@ -14,6 +14,7 @@ class CommitOptionsTest < TestCase
     assert_equal false, options.dry_run
     assert_equal false, options.debug
     assert_equal false, options.force
+    assert_equal false, options.no_split
   end
 
   def test_initialize_with_values
@@ -25,7 +26,8 @@ class CommitOptionsTest < TestCase
       only_staged: true,
       dry_run: true,
       debug: true,
-      force: true
+      force: true,
+      no_split: true
     )
 
     assert_equal "fix bug", options.intention
@@ -36,6 +38,7 @@ class CommitOptionsTest < TestCase
     assert_equal true, options.dry_run
     assert_equal true, options.debug
     assert_equal true, options.force
+    assert_equal true, options.no_split
   end
 
   def test_use_llm_when_no_message

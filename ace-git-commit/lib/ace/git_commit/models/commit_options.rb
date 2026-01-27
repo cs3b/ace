@@ -6,7 +6,7 @@ module Ace
       # CommitOptions encapsulates all options for a commit operation
       class CommitOptions
         attr_accessor :intention, :message, :model, :files,
-                      :only_staged, :dry_run, :debug, :force, :verbose, :quiet
+                      :only_staged, :dry_run, :debug, :force, :verbose, :quiet, :no_split
 
         def initialize(
           intention: nil,
@@ -18,7 +18,8 @@ module Ace
           debug: false,
           force: false,
           verbose: true,
-          quiet: false
+          quiet: false,
+          no_split: false
         )
           @intention = intention
           @message = message
@@ -30,6 +31,7 @@ module Ace
           @force = force
           @verbose = verbose
           @quiet = quiet
+          @no_split = no_split
         end
 
         # Check if we should use LLM generation
@@ -63,7 +65,8 @@ module Ace
             debug: @debug,
             force: @force,
             verbose: @verbose,
-            quiet: @quiet
+            quiet: @quiet,
+            no_split: @no_split
           }
         end
       end

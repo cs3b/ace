@@ -4,11 +4,15 @@ require_relative "../test_helper"
 require "minitest/mock"
 
 class CommitOrchestratorTest < TestCase
+  PROJECT_ROOT = "/Users/test/project"
+
   def setup
     @mock_git = Minitest::Mock.new
     @mock_diff_analyzer = Minitest::Mock.new
     @mock_file_stager = Minitest::Mock.new
     @mock_message_generator = Minitest::Mock.new
+    @mock_commit_grouper = Minitest::Mock.new
+    @mock_split_executor = Minitest::Mock.new
 
     @orchestrator = Ace::GitCommit::Organisms::CommitOrchestrator.new
 
@@ -17,6 +21,8 @@ class CommitOrchestratorTest < TestCase
     @orchestrator.instance_variable_set(:@diff_analyzer, @mock_diff_analyzer)
     @orchestrator.instance_variable_set(:@file_stager, @mock_file_stager)
     @orchestrator.instance_variable_set(:@message_generator, @mock_message_generator)
+    @orchestrator.instance_variable_set(:@commit_grouper, @mock_commit_grouper)
+    @orchestrator.instance_variable_set(:@split_commit_executor, @mock_split_executor)
 
     # Add last_error method to mock_file_stager
     def @mock_file_stager.last_error
@@ -51,6 +57,7 @@ class CommitOrchestratorTest < TestCase
     @mock_git.expect :in_repository?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["file.rb"])
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add test file"]
     @mock_git.expect :execute, "abc1234", ["rev-parse", "HEAD"]
     @mock_git.expect :execute, "abc1234 (HEAD -> main) feat: add test file", ["log", "--oneline", "abc1234", "-1"]
@@ -85,6 +92,7 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.expect :stage_paths, true, [["file1.txt"]]
     @mock_file_stager.expect :staged_files, ["file1.txt"]
     @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["file1.txt"])
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add file1"]
     @mock_git.expect :execute, "def5678", ["rev-parse", "HEAD"]
     @mock_git.expect :execute, "def5678 feat: add file1", ["log", "--oneline", "def5678", "-1"]
@@ -113,6 +121,7 @@ class CommitOrchestratorTest < TestCase
     @mock_git.expect :in_repository?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["file1.rb", "file2.rb"])
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: add all files"]
     @mock_git.expect :execute, "ghi9012", ["rev-parse", "HEAD"]
     @mock_git.expect :execute, "ghi9012 feat: add all files", ["log", "--oneline", "ghi9012", "-1"]
@@ -140,6 +149,7 @@ class CommitOrchestratorTest < TestCase
     @mock_git.expect :in_repository?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["test.txt"])
     @mock_file_stager.expect :staged_files, ["test.txt"]
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
     @mock_diff_analyzer.expect :analyze_diff, { insertions: 5, deletions: 2 }, ["diff content"]
@@ -169,6 +179,7 @@ class CommitOrchestratorTest < TestCase
     @mock_git.expect :in_repository?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["file.rb"])
     @mock_git.expect :execute, nil do |*args|
       raise Ace::GitCommit::GitError, "pre-commit hook failed"
     end
@@ -194,8 +205,10 @@ class CommitOrchestratorTest < TestCase
     @mock_diff_analyzer.expect :changed_files, ["file.txt"] do |**kwargs|
       kwargs == { staged_only: true }
     end
+    expect_single_group(["file.txt"], config: { "model" => "glite" })
     @mock_message_generator.expect :generate, "feat: generated message" do |diff, **kwargs|
-      diff == "diff content" && kwargs == { intention: "add feature", files: ["file.txt"] }
+      diff == "diff content" &&
+        kwargs == { intention: "add feature", files: ["file.txt"], config: { "model" => "glite" } }
     end
     @mock_git.expect :execute, nil, ["commit", "-m", "feat: generated message"]
     @mock_git.expect :execute, "jkl3456", ["rev-parse", "HEAD"]
@@ -219,6 +232,90 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.verify
     @mock_diff_analyzer.verify
     @mock_message_generator.verify
+  end
+
+  def test_split_commit_executes_split_executor
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, true
+    @mock_git.expect :has_staged_changes?, true
+    @mock_file_stager.expect :staged_files, ["a.md", "b.md"]
+    @mock_git.expect :repository_root, PROJECT_ROOT
+
+    groups = [
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "docs",
+        source: "#{PROJECT_ROOT}/.ace/git/commit.yml",
+        config: { "model" => "glite" },
+        files: ["a.md"]
+      ),
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "taskflow",
+        source: "#{PROJECT_ROOT}/ace-taskflow/.ace/git/commit.yml",
+        config: { "model" => "gflash" },
+        files: ["b.md"]
+      )
+    ]
+
+    @mock_commit_grouper.expect :group, groups do |files, **kwargs|
+      files == ["a.md", "b.md"] && kwargs[:project_root] == PROJECT_ROOT
+    end
+
+    split_result = Ace::GitCommit::Models::SplitCommitResult.new
+    @mock_split_executor.expect :execute, split_result do |passed_groups, passed_options|
+      passed_groups == groups && passed_options.is_a?(Ace::GitCommit::Models::CommitOptions)
+    end
+
+    result = @orchestrator.execute(create_options(message: "test", quiet: true))
+
+    assert result, "Split commit should succeed"
+    @mock_git.verify
+    @mock_file_stager.verify
+    @mock_commit_grouper.verify
+    @mock_split_executor.verify
+  end
+
+  def test_no_split_ignores_split_executor
+    @mock_git.expect :in_repository?, true
+    @mock_file_stager.expect :stage_all, true
+    @mock_git.expect :has_staged_changes?, true
+    @mock_file_stager.expect :staged_files, ["a.md", "b.md"]
+    @mock_git.expect :repository_root, PROJECT_ROOT
+
+    groups = [
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "docs",
+        source: "#{PROJECT_ROOT}/.ace/git/commit.yml",
+        config: { "model" => "glite" },
+        files: ["a.md"]
+      ),
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "taskflow",
+        source: "#{PROJECT_ROOT}/ace-taskflow/.ace/git/commit.yml",
+        config: { "model" => "gflash" },
+        files: ["b.md"]
+      )
+    ]
+
+    @mock_commit_grouper.expect :group, groups do |files, **kwargs|
+      files == ["a.md", "b.md"] && kwargs[:project_root] == PROJECT_ROOT
+    end
+
+    @mock_git.expect :execute, nil, ["commit", "-m", "test"]
+    @mock_git.expect :execute, "abc1234", ["rev-parse", "HEAD"]
+    @mock_git.expect :execute, "abc1234 feat: test", ["log", "--oneline", "abc1234", "-1"]
+    @mock_git.expect :execute, " a.md | 1 +\n b.md | 1 +\n 2 files changed, 2 insertions(+)", ["diff", "--stat", "abc1234~1", "abc1234"], capture_stderr: true
+
+    original_stdout = $stdout
+    $stdout = StringIO.new
+
+    result = @orchestrator.execute(create_options(message: "test", no_split: true))
+
+    $stdout = original_stdout
+
+    assert result, "No-split should commit once"
+    @mock_git.verify
+    @mock_file_stager.verify
+    @mock_commit_grouper.verify
   end
 
   # Integration tests for path validation and glob patterns
@@ -280,6 +377,7 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.expect :staged_files, ["lib/file1.rb", "lib/file2.rb"]
 
     @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["lib/file1.rb", "lib/file2.rb"])
     @mock_git.expect :execute, "abc123", ["commit", "-m", "test message"]
     @mock_git.expect :execute, "abc123", ["rev-parse", "HEAD"]
 
@@ -323,6 +421,7 @@ class CommitOrchestratorTest < TestCase
     @mock_file_stager.expect :staged_files, ["lib/file1.rb", "test/file1_test.rb"]
 
     @mock_git.expect :has_staged_changes?, true
+    expect_single_group(["lib/file1.rb", "test/file1_test.rb"])
     @mock_git.expect :execute, "abc123", ["commit", "-m", "test"]
     @mock_git.expect :execute, "abc123", ["rev-parse", "HEAD"]
 
@@ -417,6 +516,24 @@ class CommitOrchestratorTest < TestCase
 
   private
 
+  def expect_single_group(files = ["file.rb"], config: {})
+    @mock_file_stager.expect :staged_files, files
+    @mock_git.expect :repository_root, PROJECT_ROOT
+
+    group = Ace::GitCommit::Models::CommitGroup.new(
+      scope_name: "project default",
+      source: "#{PROJECT_ROOT}/.ace/git/commit.yml",
+      config: config,
+      files: files
+    )
+
+    @mock_commit_grouper.expect :group, [group] do |arg_files, **kwargs|
+      arg_files == files && kwargs[:project_root] == PROJECT_ROOT
+    end
+
+    group
+  end
+
   def create_options(**overrides)
     defaults = {
       message: nil,
@@ -428,7 +545,8 @@ class CommitOrchestratorTest < TestCase
       model: nil,
       force: false,
       verbose: true,
-      quiet: false
+      quiet: false,
+      no_split: false
     }
 
     Ace::GitCommit::Models::CommitOptions.new(**defaults.merge(overrides))

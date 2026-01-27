@@ -10,7 +10,7 @@ allowed-tools:
   - Write
   - Glob
   - Grep
-argument-hint: [package] [test-id]
+argument-hint: "[package] [test-id]"
 last_modified: 2026-01-19
 source: ace-test-e2e-runner
 ---

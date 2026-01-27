@@ -1,449 +1,280 @@
 ---
 name: rebase
 allowed-tools: Bash, Read
-description: Rebase feature branch with automatic CHANGELOG.md and version file preservation
-argument-hint: "[target-branch]"
+description: Rebase feature branch using intelligent commit splitting or manual strategies
+argument-hint: "[target-branch] [--strategy=reset-split|manual|interactive]"
 doc-type: workflow
-purpose: changelog-preserving rebase workflow
+purpose: changelog-preserving rebase workflow with multiple strategies
 update:
   frequency: on-change
-  last-updated: '2025-11-11'
+  last-updated: '2026-01-26'
 ---
 
-# Changelog-Preserving Rebase Workflow
+# Rebase Workflow
 
 ## Purpose
 
-Rebase feature branches against target branch (default: main/master) while automatically preserving CHANGELOG.md entries and version file changes to prevent loss of important documentation and version tracking.
+Rebase feature branches against target branch with automatic handling of CHANGELOG.md, version files, and commit organization. Supports multiple strategies from fully automatic to manual control.
 
-## Context
+## Strategies Overview
 
-Common rebase problems this workflow solves:
-- CHANGELOG.md conflicts that lose feature branch entries
-- Version file conflicts that revert version bumps
-- Manual conflict resolution introducing errors
-- Lost commit messages during rebase
+| Strategy | Best For | Complexity | CHANGELOG Handling |
+|----------|----------|------------|-------------------|
+| **reset-split** (DEFAULT) | Most rebases | Simple | Automatic via scope grouping |
+| **manual** | Preserving exact history | Medium | Manual conflict resolution |
+| **interactive** | Commit cleanup/squashing | Advanced | Manual during rebase |
 
 ## Variables
 
-- `$target_branch`: Branch to rebase against (default: auto-detect from worktree metadata, or origin/main)
-- `$preserve_files`: Files to preserve from feature branch (defaults: CHANGELOG.md, **/version.rb)
+- `$target_branch`: Branch to rebase against (default: auto-detect or origin/main)
+- `$strategy`: Rebase strategy (default: reset-split)
 
 **Target Branch Auto-Detection:**
 
-For task-aware worktrees, `target_branch` is automatically read from worktree metadata (stored in task spec frontmatter):
-
 ```bash
-# Auto-detect target from task spec file
 task_file=$(ls _current/*.s.md 2>/dev/null | head -1)
 if [ -n "$task_file" ]; then
-  if command -v yq >/dev/null 2>&1; then
-    target_branch=$(yq eval --front-matter=extract '.worktree.target_branch // "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
-  else
-    target_branch=$(ruby -ryaml -e 'c=File.read(ARGV[0]); puts c.start_with?("---") ? (YAML.safe_load(c.split("---",3)[1]).dig("worktree","target_branch")||"origin/main") : "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
-  fi
+  target_branch=$(ruby -ryaml -e 'c=File.read(ARGV[0]); puts c.start_with?("---") ? (YAML.safe_load(c.split("---",3)[1]).dig("worktree","target_branch")||"origin/main") : "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
 else
   target_branch="origin/main"
 fi
 ```
 
-- **Subtasks**: Targets parent task's worktree branch (e.g., `202-orchestrator`)
-- **Orchestrator tasks**: Falls back to `origin/main`
-- **Manual override**: Set `target_branch` explicitly when needed
+---
 
-## Instructions
+## Strategy: Reset and Re-split (DEFAULT)
 
-### 1. Pre-Rebase Verification
+**Use when:** You want clean, well-organized commits without manual conflict resolution.
 
-Check current repository state:
+This strategy leverages `ace-git-commit` path-based splitting to:
+- Automatically group files by scope (packages, config, docs, etc.)
+- Generate distinct commit messages for each scope
+- Order commits logically (implementation first, documentation last)
+- Avoid CHANGELOG conflicts entirely by re-creating commits cleanly
+
+### Instructions
+
+#### 1. Pre-Rebase Check
 
 ```bash
-# Verify you're on the correct feature branch
+# Verify current state
 git status
-
-# Check what files have changed
-git diff $target_branch --name-only
-
-# Preview commits that will be rebased
 git log $target_branch..HEAD --oneline
+
+# Ensure working directory is clean
+git stash push -m "pre-rebase" # if needed
 ```
 
-**Verify**:
-- You're on a feature branch (not main/master)
-- No uncommitted changes (or stash them: `git stash push -m "pre-rebase"`)
-- You have the changes you expect to preserve
-
-### 2. Backup Critical Files
-
-Create backups of files that might conflict:
+#### 2. Fetch and Reset
 
 ```bash
-# Backup CHANGELOG.md if it exists
-if [ -f CHANGELOG.md ]; then
-  cp CHANGELOG.md CHANGELOG.md.backup
-  echo "✓ Backed up CHANGELOG.md"
-fi
-
-# Backup version files
-find . -name "version.rb" -type f | while read file; do
-  cp "$file" "$file.backup"
-  echo "✓ Backed up $file"
-done
-```
-
-### 3. Fetch Latest Changes
-
-```bash
-# Fetch latest from origin without merging
+# Fetch latest changes
 git fetch origin
 
-# Verify target branch is up to date
-git log HEAD..$target_branch --oneline
+# Soft reset to target branch (keeps all changes staged)
+git reset --soft $target_branch
 ```
 
-### 4. Start Rebase
+#### 3. Re-commit with Path Splitting
 
 ```bash
-# Start interactive rebase for full control
-git rebase -i $target_branch
+# Let ace-git-commit handle grouping and commit creation
+ace-git-commit -i "Rebase: <brief description of feature branch work>"
+```
 
-# Or automatic rebase
+This automatically:
+- Groups files by scope (ace-* packages, .ace/, .ace-taskflow/, etc.)
+- Generates appropriate commit messages per scope
+- Orders commits: feat → fix → refactor → chore → docs
+- Creates clean, logical commit history
+
+#### 4. Verify and Push
+
+```bash
+# Verify commits look correct
+git log --oneline -10
+
+# Run tests
+ace-test
+
+# Force push
+git push --force-with-lease origin $(git branch --show-current)
+```
+
+### Example
+
+Before (messy history with CHANGELOG conflicts):
+```
+* abc1234 fix: typo in docs
+* def5678 feat: add feature X
+* ghi9012 docs: update CHANGELOG  <- conflicts!
+* jkl3456 chore: config changes
+```
+
+After reset-split:
+```
+* new1111 feat(ace-package): add feature X
+* new2222 chore(config): update configuration
+* new3333 docs(taskflow): update documentation
+```
+
+---
+
+## Strategy: Manual Conflict Resolution
+
+**Use when:** You need to preserve exact commit history or have complex interleaved changes.
+
+### Instructions
+
+#### 1. Pre-Rebase Backup
+
+```bash
+git fetch origin
+
+# Backup critical files
+cp CHANGELOG.md CHANGELOG.md.backup 2>/dev/null || true
+find . -name "version.rb" -type f -exec cp {} {}.backup \;
+```
+
+#### 2. Start Rebase
+
+```bash
 git rebase $target_branch
 ```
 
-### 5. Handle Conflicts
+#### 3. Handle CHANGELOG Conflicts
 
-#### CHANGELOG.md Conflicts
-
-When conflicts occur in CHANGELOG.md:
-
-**Strategy: Accept target branch, add your changes on top with NEW version number**
+When CHANGELOG.md conflicts:
 
 ```bash
-# 1. Accept target branch version completely
+# Accept target branch version completely
 git checkout --theirs CHANGELOG.md
 
-# 2. Find highest version number in CHANGELOG.md
-# Example: if target has [0.9.127], your new entries become [0.9.128]
+# Edit to add YOUR entries at the TOP with NEW version number
+# - Find highest version in target (e.g., [0.9.127])
+# - Add your entries as [0.9.128]
+# - DO NOT modify existing target entries
 
-# 3. Edit CHANGELOG.md to add YOUR changes at the TOP
-#    - Insert new version section [0.9.XXX] after [Unreleased]
-#    - Increment version number from what target branch has
-#    - Copy your entries from feature branch to this new section
-#    - DO NOT modify existing entries from target branch
-
-# 4. Mark as resolved
 git add CHANGELOG.md
 git rebase --continue
 ```
 
-**CRITICAL RULES:**
-- ❌ DO NOT merge chronologically
-- ❌ DO NOT modify past version entries from target branch
-- ✅ DO accept target branch history as-is
-- ✅ DO add your changes on top with incremented version number
-- ✅ DO preserve target branch's version numbers unchanged
+**CRITICAL:**
+- Accept target branch history as-is
+- Add your changes on top with incremented version
+- Never modify past version entries
 
-**Example:**
+#### 4. Handle Other Conflicts
 
-Target branch (origin/main) has:
-```markdown
-## [0.9.127] - 2025-11-13
-### Fixed
-- Feature X
-
-## [0.9.126] - 2025-11-13
-### Added
-- Feature Y
-```
-
-Your feature branch adds ace-docs changes that were originally [0.9.125].
-
-**CORRECT resolution:**
-```markdown
-## [Unreleased]
-
-## [0.9.128] - 2025-11-13
-### Added
-- **ace-docs v0.7.0**: Your new feature
-  (your entries here)
-
-## [0.9.127] - 2025-11-13
-### Fixed
-- Feature X
-  (unchanged from target)
-
-## [0.9.126] - 2025-11-13
-### Added
-- Feature Y
-  (unchanged from target)
-```
-
-**After resolving**:
 ```bash
-git add CHANGELOG.md
+# Version files - usually keep yours
+git checkout --ours lib/*/version.rb
+git add lib/*/version.rb
+
+# Code conflicts - resolve manually
+# Edit files, remove markers (<<<<, ====, >>>>)
+git add <resolved-files>
 git rebase --continue
 ```
 
-#### Version File Conflicts
-
-For version.rb or similar version files:
+#### 5. Verify and Push
 
 ```bash
-# Usually keep feature branch version (your changes)
-git checkout --ours lib/ace/gem/version.rb
-git add lib/ace/gem/version.rb
-git rebase --continue
-```
-
-#### Code Conflicts
-
-For actual code conflicts:
-
-```bash
-# Review conflicts
-git status
-
-# Edit each conflicted file to resolve
-# Remove conflict markers: <<<<<<<, =======, >>>>>>>
-# Keep semantically correct combination
-
-# After resolving each file
-git add <resolved-file>
-
-# Continue rebase
-git rebase --continue
-```
-
-### 6. Verify Preservation
-
-After rebase completes:
-
-```bash
-# Check CHANGELOG.md has all your entries
 diff CHANGELOG.md CHANGELOG.md.backup
-grep -A 5 "Unreleased" CHANGELOG.md
-
-# Verify version files kept feature branch versions
-find . -name "version.rb" -type f | while read file; do
-  echo "=== $file ==="
-  cat "$file"
-done
-
-# Check commit history
 git log --oneline -10
+ace-test
+git push --force-with-lease
 ```
 
-### 7. Run Tests
+---
+
+## Strategy: Interactive Rebase
+
+**Use when:** You need to squash, reorder, or edit individual commits.
+
+### Instructions
 
 ```bash
-# Run project tests to verify functionality
-bundle exec rake test
-# Or: npm test, make test, etc.
+git fetch origin
 
-# Fix any test failures
-# Tests catching integration issues is normal after rebase
+# Interactive rebase
+git rebase -i $target_branch
+
+# In editor:
+# - pick: keep commit as-is
+# - squash/s: combine with previous
+# - reword/r: change commit message
+# - edit/e: stop to amend
+# - drop/d: remove commit
+
+# Handle conflicts as in Manual strategy
+# Then continue:
+git rebase --continue
 ```
 
-### 8. Validate Taskflow
-
-After rebase, verify taskflow integrity:
-
+**Tip:** Squash before rebasing to reduce CHANGELOG conflicts:
 ```bash
-# Check for taskflow issues
-ace-taskflow doctor
-
-# Verify task structure
-ace-taskflow tasks next --limit 5
+git rebase -i HEAD~5  # Squash feature commits first
+git rebase $target_branch  # Then rebase (fewer conflicts)
 ```
 
-**Common issues after rebase:**
-- Duplicate task IDs from parallel branches
-- Orphaned subtask files
-- Broken parent references
-- Task number conflicts
-
-If `ace-taskflow doctor` reports errors, resolve them before continuing.
-
-### 9. Clean Up
-
-```bash
-# Remove backup files
-rm -f CHANGELOG.md.backup
-find . -name "version.rb.backup" -delete
-
-# Force push if rebasing published branch (use with caution!)
-git push --force-with-lease origin $(git branch --show-current)
-```
+---
 
 ## Recovery Procedures
 
 ### Abort Rebase
 
-If things go wrong:
-
 ```bash
-# Abort rebase and return to pre-rebase state
 git rebase --abort
-
-# Restore from backups if needed
-cp CHANGELOG.md.backup CHANGELOG.md
+cp CHANGELOG.md.backup CHANGELOG.md 2>/dev/null || true
 ```
 
-### Resume After Interruption
-
-If rebase was interrupted:
+### Lost Commits
 
 ```bash
-# Check rebase status
-git status
-
-# Skip problematic commit (use carefully)
-git rebase --skip
-
-# Or continue after resolving conflicts
-git add <resolved-files>
-git rebase --continue
-```
-
-### Lost Commit Recovery
-
-If commits seem lost after rebase:
-
-```bash
-# Find lost commits in reflog
 git reflog | head -20
-
-# Cherry-pick lost commit
 git cherry-pick <commit-hash>
 ```
 
-## Common Patterns
+### Reset-Split Recovery
 
-### Pattern: Rebase Subtask Against Parent Branch
-
-For subtasks that should target their orchestrator's branch:
-
+If reset-split produces unexpected results:
 ```bash
-# Auto-detect target from task spec file
-task_file=$(ls _current/*.s.md 2>/dev/null | head -1)
-if [ -n "$task_file" ]; then
-  if command -v yq >/dev/null 2>&1; then
-    target_branch=$(yq eval --front-matter=extract '.worktree.target_branch // "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
-  else
-    target_branch=$(ruby -ryaml -e 'c=File.read(ARGV[0]); puts c.start_with?("---") ? (YAML.safe_load(c.split("---",3)[1]).dig("worktree","target_branch")||"origin/main") : "origin/main"' "$task_file" 2>/dev/null || echo "origin/main")
-  fi
-else
-  target_branch="origin/main"
-fi
-
-# Full workflow
-git fetch origin
-cp CHANGELOG.md CHANGELOG.md.backup
-git rebase $target_branch  # Rebases against parent's branch, not main
-# Resolve conflicts preserving CHANGELOG entries
-git add CHANGELOG.md
-git rebase --continue
-diff CHANGELOG.md CHANGELOG.md.backup
-git push --force-with-lease
+# Find original HEAD in reflog
+git reflog | grep "reset.*soft"
+# The line BEFORE that shows your original HEAD
+git reset --hard <original-head>
 ```
 
-**Example**: Subtask `202.01` automatically rebases against `202-rename-support-gems` (parent's branch)
+---
 
-### Pattern: Rebase Against Main
+## Strategy Selection Guide
 
-```bash
-# Full workflow
-git fetch origin
-cp CHANGELOG.md CHANGELOG.md.backup
-git rebase origin/main
-# Resolve conflicts preserving CHANGELOG entries
-git add CHANGELOG.md
-git rebase --continue
-diff CHANGELOG.md CHANGELOG.md.backup
-git push --force-with-lease
+```
+Need to preserve exact commit history?
+├── YES → Use "manual" strategy
+└── NO
+    ├── Need to squash/reorder commits?
+    │   └── YES → Use "interactive" strategy
+    └── NO → Use "reset-split" (DEFAULT)
 ```
 
-### Pattern: Interactive Rebase for Cleanup
+**Default to reset-split** - it handles most cases with zero conflicts and produces clean history.
 
-```bash
-# Rebase and squash/reorder commits
-git rebase -i origin/main
-# In editor: pick, squash, reword commits as needed
-# Preserve CHANGELOG.md during conflicts
-```
-
-### Pattern: Rebase with Autostash
-
-```bash
-# Automatically stash uncommitted changes
-git rebase --autostash origin/main
-# Your changes are restored after rebase
-```
-
-## Configuration
-
-Place in `.ace/git/config.yml`:
-
-```yaml
-git:
-  default_branch: main  # or master
-  remote: origin
-  rebase:
-    preserve_files:
-      - CHANGELOG.md
-      - "**/version.rb"
-      - VERSION
-    auto_resolve: manual  # or 'ours' to auto-keep feature branch files
-```
+---
 
 ## Success Criteria
 
-- ✓ Feature branch rebased on target branch
-- ✓ CHANGELOG.md contains all entries from both branches
-- ✓ Version files retain feature branch versions
-- ✓ All tests pass
-- ✓ No lost commits
-- ✓ Clean commit history
-
-## Troubleshooting
-
-**Problem**: CHANGELOG.md conflicts on every commit
-
-**Solution**: Squash feature branch commits first, then rebase:
-```bash
-git rebase -i HEAD~5  # Squash your commits
-git rebase origin/main  # Now only one CHANGELOG conflict
-```
-
-**Problem**: Lost feature branch CHANGELOG entries
-
-**Solution**: Restore from backup:
-```bash
-cp CHANGELOG.md.backup CHANGELOG.md
-# Manually merge with target branch CHANGELOG
-git add CHANGELOG.md
-git rebase --continue
-```
-
-**Problem**: Version file shows wrong version
-
-**Solution**: Force feature branch version:
-```bash
-git checkout --ours lib/ace/gem/version.rb
-git add lib/ace/gem/version.rb
-git rebase --continue
-```
+- ✓ Feature branch rebased on target
+- ✓ CHANGELOG.md properly updated
+- ✓ Commits logically ordered
+- ✓ Tests pass
+- ✓ Clean history
 
 ## Response Template
 
-**Rebase Status:** ✓ Complete | ⚠ Conflicts | ✗ Aborted
-**Target Branch:** [origin/main, origin/master, etc.]
-**Conflicts Resolved:** [CHANGELOG.md, version.rb, code files]
-**Commits Rebased:** [Number of commits]
-**Tests Status:** [Pass/Fail]
-**Next Steps:** [Force push, continue work, etc.]
-
-<documents>
-<!-- Rebase workflow doesn't reference external templates but includes self-contained examples -->
-</documents>
+**Strategy Used:** reset-split | manual | interactive
+**Target Branch:** [origin/main, etc.]
+**Commits Created:** [Number and brief description]
+**Tests Status:** Pass | Fail
+**Status:** ✓ Complete | ⚠ Needs attention

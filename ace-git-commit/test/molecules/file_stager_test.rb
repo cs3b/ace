@@ -71,38 +71,53 @@ class FileStagerTest < TestCase
   end
 
   def test_checks_if_files_staged
-    @mock_git.expect :execute, "file1.txt\n", ["diff", "--cached", "--name-only"]
+    @mock_git.expect :execute, "file1.txt\n", ["diff", "--cached", "--name-only", "--no-renames"]
 
     assert @stager.files_staged?(["file1.txt"]), "Should detect staged file"
     @mock_git.verify
   end
 
   def test_checks_files_not_staged
-    @mock_git.expect :execute, "file1.txt\n", ["diff", "--cached", "--name-only"]
+    @mock_git.expect :execute, "file1.txt\n", ["diff", "--cached", "--name-only", "--no-renames"]
 
     refute @stager.files_staged?(["file2.txt"]), "Should detect unstaged file"
     @mock_git.verify
   end
 
   def test_checks_partially_staged_files
-    @mock_git.expect :execute, "file1.txt\n", ["diff", "--cached", "--name-only"]
+    @mock_git.expect :execute, "file1.txt\n", ["diff", "--cached", "--name-only", "--no-renames"]
 
     refute @stager.files_staged?(["file1.txt", "file2.txt"]), "Should detect partially staged"
     @mock_git.verify
   end
 
   def test_staged_files_returns_empty_array_when_none
-    @mock_git.expect :execute, "", ["diff", "--cached", "--name-only"]
+    @mock_git.expect :execute, "", ["diff", "--cached", "--name-only", "--no-renames"]
 
     assert_empty @stager.staged_files, "Should return empty array when no files staged"
     @mock_git.verify
   end
 
   def test_staged_files_returns_list
-    @mock_git.expect :execute, "file1.txt\nfile2.txt\n", ["diff", "--cached", "--name-only"]
+    @mock_git.expect :execute, "file1.txt\nfile2.txt\n", ["diff", "--cached", "--name-only", "--no-renames"]
 
     staged = @stager.staged_files
     assert_equal ["file1.txt", "file2.txt"], staged
+    @mock_git.verify
+  end
+
+  # Regression: Without --no-renames, git collapses rename pairs into single entries,
+  # causing deleted files from directory renames to be missing from staged_files.
+  # Example: mv old_dir/ new_dir/ would only show new_dir/file.txt, not old_dir/file.txt deletion.
+  def test_staged_files_uses_no_renames_flag_for_directory_renames
+    # Simulates output when a directory is renamed: both old (deleted) and new paths appear
+    @mock_git.expect :execute, "new_dir/file.txt\nold_dir/file.txt\n",
+                     ["diff", "--cached", "--name-only", "--no-renames"]
+
+    staged = @stager.staged_files
+
+    assert_includes staged, "new_dir/file.txt", "Should include new path"
+    assert_includes staged, "old_dir/file.txt", "Should include deleted old path"
     @mock_git.verify
   end
 
