@@ -114,6 +114,14 @@ steps:
     notify: desktop  # or: slack, email
 ```
 
+## Coworker Responsibilities (UI Layer)
+
+Coworker is a thin, user-facing layer that manages sessions and approvals. It should:
+- Create and list sessions (worktrees).
+- Surface status from overseer state files.
+- Provide approval/reject actions for human gates.
+- Avoid owning workflow execution logic (that stays in overseer).
+
 ## Claude Code Integration
 
 ### Skill: `/ace:overseer-continue`

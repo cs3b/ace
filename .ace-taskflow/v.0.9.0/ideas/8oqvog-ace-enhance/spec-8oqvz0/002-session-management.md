@@ -50,15 +50,15 @@ ace-overseer resume
 
 ```
 .ace/coworker/
-└── 228-abc123/                    # Session directory (worktree root)
-    ├── .ace/
-    │   └── overseer/
-    │       ├── session.json       # Session metadata
-    │       └── state.json         # Workflow state (from Phase 1)
+└── task-228/                        # Session directory (worktree root)
+    ├── .ace-overseer/
+    │   ├── state.json              # Workflow state
+    │   ├── logs/                   # Step logs
+    │   └── context/                # Step-scoped context files
     └── ... (worktree contents)
 ```
 
-### session.json
+### session.json (optional, if managed by overseer)
 
 ```json
 {
@@ -71,6 +71,18 @@ ace-overseer resume
   "work_branch": "task/228-implement-feature"
 }
 ```
+
+## Coworker CLI Surface (Optional UI Layer)
+
+Coworker is the user-facing layer for session lifecycle and approvals. It can be a thin CLI/TUI wrapper over
+overseer state.
+
+Commands:
+- `ace-coworker start --task <id>`
+- `ace-coworker list`
+- `ace-coworker logs <id>`
+- `ace-coworker approve <id>`
+- `ace-coworker stop <id>`
 
 ## Integration with ace-git-worktree
 
