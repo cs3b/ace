@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-01-27
+
+### Added
+- Path rules support for configuration resolution with glob pattern matching
+- Project scanning capability to discover nested package configurations
+- `PathRuleMatcher` atom for matching file paths against glob patterns
+- Support for glob arrays in path rules configuration
+
+### Changed
+- Enhanced `ConfigResolver` to support path-based configuration splitting
+- Refactored config resolution to enable scoped configuration per file path
+
 ## [0.6.0] - 2026-01-11
 
 ### Breaking Changes
