@@ -9,7 +9,7 @@ allowed-tools:
   - Bash(ace-bundle:*)
   - Read
   - Edit
-argument-hint: [package-name] [patch|minor|major]
+argument-hint: "[package-name] [patch|minor|major]"
 last_modified: 2026-01-10
 source: ace-handbook
 ---

@@ -1,6 +1,6 @@
 ---
 name: meta-manage-workflow-instructions
-title: Meta: Manage Workflow Instructions
+title: "Meta: Manage Workflow Instructions"
 command: meta-manage-workflow-instructions
 description: Create, update, and maintain workflow instruction files
 # context: no-fork
@@ -21,7 +21,7 @@ allowed-tools:
   - Glob
   - LS
   - TodoWrite
-argument-hint: [workflow-name] [action: create|update|review]
+argument-hint: "[workflow-name] [action: create|update|review]"
 ---
 
 # Meta: Manage Workflow Instructions
