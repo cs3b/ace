@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-01-27
+
+### Changed
+- Renamed squash-commits workflow and skill to reorganize-commits
+  - Workflow: `squash-commits.wf.md` → `reorganize-commits.wf.md`
+  - Skill: `ace:squash-commits` → `ace:reorganize-commits`
+  - Better reflects the workflow purpose: organizing commits into logical groups
+
+## [0.10.0] - 2026-01-26
+
+### Added
+- **Reset-split rebase strategy** as default in rebase workflow
+  - Uses `ace-git-commit` path-based splitting for zero-conflict rebases
+  - Automatically groups files by scope and generates distinct messages
+  - Orders commits logically: feat → fix → chore → docs
+  - Eliminates manual CHANGELOG conflict resolution for most rebases
+
+### Changed
+- Rebase workflow redesigned with three named strategies:
+  - `reset-split` (DEFAULT): Soft reset + ace-git-commit for clean history
+  - `manual`: Traditional rebase for preserving exact commit history
+  - `interactive`: For commit squashing/reordering
+- Simplified default rebase to 3 steps: fetch, reset --soft, ace-git-commit
+
 ## [0.9.0] - 2026-01-19
 
 ### Added

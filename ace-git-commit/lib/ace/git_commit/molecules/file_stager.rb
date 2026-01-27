@@ -52,9 +52,10 @@ module Ace
         end
 
         # Get list of staged files
+        # Uses --no-renames to ensure deleted files from directory renames are included
         # @return [Array<String>] List of staged file paths
         def staged_files
-          @git.execute("diff", "--cached", "--name-only").strip.split("\n")
+          @git.execute("diff", "--cached", "--name-only", "--no-renames").strip.split("\n")
         end
 
         # Check if specific files are staged

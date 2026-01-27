@@ -28,8 +28,9 @@ module Ace
               No need to type 'commit' explicitly
 
             Configuration:
-              Global config:  ~/.ace/git/config.yml
-              Project config: .ace/git-commit/config.yml
+              Global config:  ~/.ace/git/commit.yml
+              Project config: .ace/git/commit.yml
+              Package config: {package}/.ace/git/commit.yml
           DESC
 
           example [
@@ -37,7 +38,8 @@ module Ace
             "ace-git-commit src/auth.rb        # Commit specific file",
             "ace-git-commit -i 'fix bug'       # With intention",
             "ace-git-commit -m 'feat: add'     # With explicit message",
-            "ace-git-commit --only-staged      # Only staged changes"
+            "ace-git-commit --only-staged      # Only staged changes",
+            "ace-git-commit --no-split         # Force a single commit"
           ]
 
           # Define files as variadic argument (can be 0 or more)
@@ -50,6 +52,7 @@ module Ace
           option :only_staged, type: :boolean, aliases: %w[-s], desc: "Commit only currently staged changes"
           option :dry_run, type: :boolean, aliases: %w[-n], desc: "Show what would be committed without doing it"
           option :force, type: :boolean, aliases: %w[-f], desc: "Force operation (for future use)"
+          option :no_split, type: :boolean, desc: "Force a single commit even when multiple config scopes are detected"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary and informational messages"
@@ -107,7 +110,8 @@ module Ace
               debug: @options[:debug] || false,
               force: @options[:force] || false,
               verbose: @options[:verbose] != false,  # Default true
-              quiet: @options[:quiet] || false
+              quiet: @options[:quiet] || false,
+              no_split: @options[:no_split] || false
             )
           end
 

@@ -4,6 +4,42 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.329] - 2026-01-27
+
+### Added
+
+- **ace-git-commit v0.17.0**: Path-based configuration splitting for mono-repos (task 228)
+  - Automatic scope detection based on file paths and glob patterns
+  - Batch LLM generation for multiple commit scopes in a single run
+  - Support for scope-specific model overrides and type hints
+  - Enhanced commit workflow for multiple atomic commits per scope
+
+- **ace-support-config v0.7.0**: Path rules for configuration resolution (task 228)
+  - `PathRuleMatcher` atom for matching file paths against glob patterns
+  - Support for glob arrays in path rules configuration
+  - Project scanning capability to discover nested package configurations
+
+### Changed
+
+- **ace-git v0.10.1**: Renamed squash-commits to reorganize-commits workflow
+  - Better reflects workflow purpose of organizing commits into logical groups
+
+### Technical
+
+- Removed redundant package-level `.ace/git/commit.yml` files across 18 packages
+  - Project root configuration now handles all scopes via path-based config splitting
+
+## [0.9.328] - 2026-01-26
+
+### Added
+
+- **ace-git v0.10.0**: Reset-split rebase strategy as default (task 228)
+  - New default rebase workflow using `ace-git-commit` path-based splitting
+  - Zero-conflict rebases with automatic scope grouping and message generation
+  - Commits ordered logically: feat → fix → chore → docs
+  - Three named strategies: `reset-split` (default), `manual`, `interactive`
+  - Simplified default workflow to 3 steps: fetch, reset --soft, ace-git-commit
+
 ## [0.9.327] - 2026-01-24
 
 ### Added
