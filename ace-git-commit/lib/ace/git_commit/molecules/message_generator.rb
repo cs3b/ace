@@ -88,7 +88,7 @@ module Ace
 
             <body>
 
-            Types: feat, fix, docs, style, refactor, test, chore
+            Types: feat, fix, docs, style, refactor, test, chore, spec
 
             TYPE SELECTION - VERY IMPORTANT:
             - Each group MAY have a "PREFERRED TYPE" hint - this hint applies ONLY to that specific group
@@ -97,8 +97,9 @@ module Ace
               * fix = bug fixes
               * refactor = code restructuring without behavior change
               * test = test additions/changes
-              * docs = documentation only
+              * docs = documentation OF the software (user guides, API docs, README)
               * chore = build/config changes only
+              * spec = specifications and artifacts from making software (task specs, planning docs, retros, ideas)
             - DO NOT let hints from one group influence your type selection for other groups
             - For code packages (lib/, src/, actual implementation): prefer feat/fix/refactor based on changes
 
