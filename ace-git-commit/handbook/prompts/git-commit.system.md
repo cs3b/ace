@@ -17,7 +17,7 @@ Follow the Conventional Commits specification:
 ### Types
 - **feat**: A new feature
 - **fix**: A bug fix
-- **docs**: Documentation only changes
+- **docs**: Documentation OF the software (user guides, API docs, README)
 - **style**: Changes that do not affect the meaning of the code (white-space, formatting, etc)
 - **refactor**: A code change that neither fixes a bug nor adds a feature
 - **perf**: A code change that improves performance
@@ -26,6 +26,7 @@ Follow the Conventional Commits specification:
 - **ci**: Changes to CI configuration files and scripts
 - **chore**: Other changes that don't modify src or test files
 - **revert**: Reverts a previous commit
+- **spec**: Specifications and artifacts from making software (task specs, planning docs, retros, ideas)
 
 ### Scope
 The scope should be the name of the component, module, or area affected. Examples:
@@ -60,7 +61,8 @@ The scope should be the name of the component, module, or area affected. Example
    - New functionality → feat
    - Bug fixes → fix
    - Code cleanup without changing behavior → refactor
-   - Documentation updates → docs
+   - Documentation of the software → docs
+   - Task specs, planning docs, retros, ideas → spec
 
 3. **Identify the scope** from:
    - File paths and directories

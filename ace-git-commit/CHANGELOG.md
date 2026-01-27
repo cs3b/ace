@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-01-27
+
+### Added
+- Add `spec` commit type for task specifications and development artifacts
+- Clarify `docs` type is for software documentation (user guides, API docs, README)
+
 ## [0.17.0] - 2026-01-27
 
 ### Added
