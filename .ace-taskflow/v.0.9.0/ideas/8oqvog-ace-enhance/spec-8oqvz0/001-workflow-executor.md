@@ -72,9 +72,14 @@ State file: `.ace/overseer/state.json` (or in worktree if Phase 2)
 
 ```json
 {
+  "session_id": "228-abc123",
   "workflow": "task-completion",
+  "status": "running",
   "started_at": "2026-01-27T20:00:00Z",
-  "current_step": 2,
+  "current_step": "test",
+  "iteration": 2,
+  "max_iterations": 5,
+  "gate": null,
   "context": {
     "task": "228",
     "pr_url": null
@@ -82,6 +87,10 @@ State file: `.ace/overseer/state.json` (or in worktree if Phase 2)
   "steps": [
     { "id": "implement", "status": "completed", "exit_code": 0 },
     { "id": "test", "status": "failed", "exit_code": 1, "retries": 2 }
+  ],
+  "history": [
+    { "timestamp": "2026-01-27T20:00:00Z", "event": "started" },
+    { "timestamp": "2026-01-27T20:05:00Z", "step": "implement", "event": "completed" }
   ]
 }
 ```
@@ -89,12 +98,37 @@ State file: `.ace/overseer/state.json` (or in worktree if Phase 2)
 ## Step Execution Model
 
 1. Read state (or initialize if new)
-2. Find current step
-3. Execute action via `system()` / `Open3.capture3`
-4. Capture exit code, stdout, stderr
-5. Apply on_fail logic (retry, goto, fail)
-6. Persist state
-7. Next step (or pause at gate)
+2. Build step-scoped context bundle (spec + needed files + last error)
+3. Find current step
+4. Execute action via `system()` / `Open3.capture3` (or wait on worker report)
+5. Capture exit code, stdout, stderr, optional report
+6. Apply on_fail logic (retry, goto, fail)
+7. Persist state and append history
+8. Next step (or pause at gate)
+
+## Gate Mechanics (Pause/Resume)
+
+When a gate is reached:
+- Update state: `status: paused`, `gate: { id, status: "waiting" }`
+- Persist state immediately
+- Optionally exit the process to avoid idle loops
+
+Approval transitions the gate to `approved` and resumes the workflow. Rejection can rewind to a prior step with
+additional feedback context.
+
+## Context Hygiene & Retry Feedback
+
+Workers should only see the minimum required inputs for the current step. On retries, pass the spec and the latest
+error summary, not the full prior logs or chat history. This keeps prompts focused and avoids compounding failure
+context.
+
+Suggested context path: `.ace/overseer/context.json` (step-scoped and overwritten each run).
+
+## Observability
+
+- Persist stdout/stderr per step in `.ace/overseer/logs/<step>.log`
+- Optional step reports in `.ace/overseer/reports/<step>.json`
+- `ace-overseer status` should show current step, status, retries, and last error summary
 
 ## Key Decisions Needed
 
@@ -102,7 +136,8 @@ State file: `.ace/overseer/state.json` (or in worktree if Phase 2)
 - [ ] State file location (per-directory? Global?)
 - [ ] Variable interpolation syntax (`$var` vs `{{ var }}` vs `%{var}`)
 - [ ] How to handle long-running actions (timeout?)
-- [ ] Gate notification mechanism (just stdout? Desktop notification?)
+- [ ] Gate notification mechanism (stdout? desktop notification? webhook?)
+- [ ] Context shaping rules and size budgets for worker prompts
 
 ## Implementation Notes
 
@@ -142,5 +177,6 @@ ace-overseer/
 - [ ] Can run a 3-step workflow end-to-end
 - [ ] Can resume after manual interruption (Ctrl+C)
 - [ ] Can retry failed step automatically
-- [ ] Human gate pauses and waits for signal
-- [ ] State file reflects accurate progress
+- [ ] Human gate pauses and resumes with explicit approval
+- [ ] State file reflects accurate progress and history
+- [ ] Step context file is created and overwritten per run

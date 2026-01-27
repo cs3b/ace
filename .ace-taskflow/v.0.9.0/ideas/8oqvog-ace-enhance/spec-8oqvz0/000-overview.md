@@ -1,10 +1,44 @@
 # ACE Overseer: High-Level Overview
 
+## Core Value Proposition
+
+ACE Overseer addresses three recurring failures in agentic workflows:
+- **Context pollution**: a failure in step 5 contaminates step 6.
+- **Lost state**: crashes or pauses force a full restart.
+- **Role confusion**: one agent acts as architect, engineer, and tester in the same thread.
+
+The value unlocked is reliability (resume and retry cleanly), quality (specialized workers with scoped context),
+and observability (state and reports live in files, not chat logs).
+
 ## The Problem
 
 Today, orchestrating multi-step agent workflows requires **manual copy-paste** of instruction sequences. Agents lose context between sessions, can't resume from failures, and have no shared state across steps.
 
 The 8-step workflow pattern (work → commit → PR → review → fix → test → repeat) is executed manually, with humans serving as the orchestration layer.
+
+## Goals
+
+- Deliver a workflow executor with checkpoint/resume and human gates.
+- Keep it CLI-first and agent-agnostic; workflows and state are file-based.
+- Preserve clean context between steps and retries.
+- Be incremental: Phase 1 is useful on its own, Phases 2-3 add sessions and agents.
+
+## Non-Goals
+
+- Not a job scheduler (cron, Sidekiq) - this is interactive and session-based.
+- Not an agent framework (LangChain, AutoGPT) - agents are workers, not orchestrators.
+- Not a CI/CD system (GitHub Actions) - this runs locally with human-in-loop gates.
+- Not a full TUI/dashboard in Phase 1 (optional future layer).
+
+## Core Concepts
+
+- **Workflow**: a YAML file that lists steps in order.
+- **Step types**:
+  - `action`: run a deterministic CLI command.
+  - `worker`: delegate to an agent or human with a prompt.
+  - `gate`: pause and wait for human approval.
+- **Session** (Phase 2): worktree + state + workflow, isolated from the main repo.
+- **Context bundle**: minimal, step-scoped inputs (spec + errors), not full chat history.
 
 ## Where Is The Value
 
@@ -14,6 +48,7 @@ The 8-step workflow pattern (work → commit → PR → review → fix → test 
 | No checkpoint/resume | Failures require full restart | Step-based checkpointing |
 | Manual "what next" decisions | Human bottleneck | Declarative workflow definitions |
 | Skill vs action confusion | Agents over-analyze | Imperative action language |
+| Role confusion across phases | Blended responsibilities | Role-specific workers + clean context |
 
 **80% of value** comes from: a simple workflow executor that runs steps, checkpoints after each, and can resume.
 
@@ -45,11 +80,13 @@ steps:
   - action: gh pr create
 ```
 
-## What This Is NOT
+This same workflow language can encode the higher-level sequence (plan -> review gate -> implement -> test -> review)
+without hard-coding phases into the engine.
 
-- **Not a job scheduler** (cron, Sidekiq) - this is interactive, session-based
-- **Not an agent framework** (LangChain, AutoGPT) - agents are workers, not the orchestrator
-- **Not a CI/CD system** (GitHub Actions) - this runs locally, human-in-loop
+## Context Hygiene (Non-Negotiable)
+
+Workers should receive only the inputs they need for the current step. On retries, pass the spec and the latest
+error summary, not the entire prior conversation. This prevents context pollution and keeps responses focused.
 
 ## Phases
 
