@@ -12,9 +12,13 @@ require_relative "git_commit/molecules/diff_analyzer"
 require_relative "git_commit/molecules/message_generator"
 require_relative "git_commit/molecules/file_stager"
 require_relative "git_commit/molecules/path_resolver"
+require_relative "git_commit/molecules/commit_grouper"
 require_relative "git_commit/molecules/commit_summarizer"
+require_relative "git_commit/molecules/split_commit_executor"
 require_relative "git_commit/organisms/commit_orchestrator"
 require_relative "git_commit/models/commit_options"
+require_relative "git_commit/models/commit_group"
+require_relative "git_commit/models/split_commit_result"
 require_relative "git_commit/models/stage_result"
 require_relative "git_commit/cli"
 
@@ -23,6 +27,9 @@ module Ace
     class Error < StandardError; end
     class GitError < Error; end
     class ConfigurationError < Error; end
+
+    # Alias the default scope name constant from ace-support-config for convenience
+    DEFAULT_SCOPE_NAME = Ace::Support::Config::Models::ConfigGroup::DEFAULT_SCOPE_NAME
 
     # Check if debug mode is enabled
     # @return [Boolean] True if debug mode is enabled

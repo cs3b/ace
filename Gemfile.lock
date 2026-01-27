@@ -27,7 +27,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.16.5)
+    ace-git-commit (0.17.0)
       ace-git (~> 0.3)
       ace-llm (~> 0.16)
       ace-support-config (~> 0.6)
@@ -58,7 +58,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.9.0)
+    ace-git (0.10.1)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)
@@ -143,7 +143,7 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.6.0)
+    ace-support-config (0.7.0)
       ace-support-fs (~> 0.1)
 
 PATH

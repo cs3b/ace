@@ -13,7 +13,7 @@ LLM-powered git commit tool for streamlined, meaningful commit messages.
 - 🎯 **Intention-based commits** - Provide context for better message generation
 - 🚀 **Smart staging** - Automatically stages all changes by default
 - ✅ **Transparent feedback** - Clear staging progress and error reporting with actionable suggestions
-- 🔧 **Flexible configuration** - Customize via `.ace/git/config/git.yml`
+- 🔧 **Flexible configuration** - Customize via `.ace/git/commit.yml` with path-aware overrides
 - 💎 **Ruby integration** - Direct integration with ace-llm (no subprocess overhead)
 
 ## Installation
@@ -55,6 +55,7 @@ ace-git-commit --only-staged
 - `--model MODEL` - Override default model (e.g., glite, gflash)
 - `-s, --only-staged` - Commit only staged changes
 - `-n, --dry-run` - Preview without committing
+- `--no-split` - Force a single commit even when multiple config scopes are detected
 - `-d, --debug` - Enable debug output
 - `--verbose` - Enable verbose output (default: on, shows staging progress)
 - `-q, --quiet` - Suppress informational messages (errors only)
@@ -66,7 +67,7 @@ ace-git-commit --only-staged
 
 ### Project Configuration
 
-Create `.ace/git/config/git.yml`:
+Create `.ace/git/commit.yml`:
 
 ```yaml
 git:
@@ -81,6 +82,79 @@ git:
         - api
         - ui
 ```
+
+### Path-Based Config Splitting
+
+When staged files span multiple packages with different configs, `ace-git-commit` automatically splits them into separate commits. Use `--no-split` to force a single commit.
+
+Centralized scope rules (project-level):
+
+```yaml
+git:
+  model: glite
+  scopes:
+    taskflow-specs:
+      glob: ".ace-taskflow/**"
+      type_hint: spec
+      description: "Task specifications and workflow documentation"
+    handbook:
+      glob: "ace-handbook/**"
+      model: gflash
+```
+
+Each scope can include:
+- `glob` - Pattern(s) to match files (string or array)
+- `model` - LLM model override for this scope
+- `type_hint` - Preferred commit type (docs, chore, feat, fix, etc.)
+- `description` - Context for better commit messages
+
+#### Glob Arrays
+
+When a scope needs to match multiple unrelated patterns, use an array:
+
+```yaml
+git:
+  scopes:
+    ace-config:
+      glob:
+        - ".ace/**"
+        - "*/.ace/**"
+        - "**/.ace/**"
+      type_hint: chore
+      description: "Project configuration files"
+```
+
+This matches `.ace/` directories at any level of the project hierarchy.
+
+#### Distributed Package Config
+
+You can also place config files directly in packages (co-located):
+
+```
+ace-handbook/.ace/git/commit.yml
+```
+
+Distributed configs take precedence over centralized `scopes` rules.
+
+### Root-Level Override Behavior
+
+Keys at the root level of your config file override values nested under `git:`. This allows shorthand configuration:
+
+```yaml
+# Full nested form
+git:
+  model: glite
+  conventions:
+    format: conventional
+
+# Shorthand - root keys override nested git: values
+git:
+  conventions:
+    format: conventional
+model: gflash  # Overrides git.model
+```
+
+Both forms produce the same result, with `model: gflash` taking precedence. This is useful for quick overrides without restructuring your config.
 
 ### Available Models
 
