@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.334] - 2026-01-27
+
+### Changed
+
+- **ace-git v0.10.3**: Improve git lock detection and CLI error handling
+  - Lock retry now detects active lock PID and increases wait time on active locks
+  - Lock cleanup reports lock status metadata (pid/age) for better diagnostics
+  - CLI now shows error for unknown commands instead of routing to diff
+
 ## [0.9.333] - 2026-01-27
 
 ### Technical
