@@ -40,6 +40,17 @@ The 8-step workflow pattern (work → commit → PR → review → fix → test 
 - **Session** (Phase 2): worktree + state + workflow, isolated from the main repo.
 - **Context bundle**: minimal, step-scoped inputs (spec + errors), not full chat history.
 
+## Target Architecture (Three Components)
+
+Long-term, the system separates concerns cleanly:
+
+1. **Coworker (Office/UI)**: session lifecycle + user interaction.
+2. **Overseer (Supervisor)**: state machine and workflow execution.
+3. **Workers (Hands)**: CLI tools, agents, or humans that perform steps.
+
+This keeps the CLI-first core intact while allowing a thin UI/command layer for human gates and session control.
+Phase 1-3 can still be built incrementally, but the design should preserve this separation.
+
 ## Where Is The Value
 
 | Pain Point | Impact | Solution Target |
