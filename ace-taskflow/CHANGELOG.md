@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.2] - 2026-01-27
+
+### Added
+- Add `default_idea_glob_pattern` alias for clearer method naming in Configuration
+
+### Changed
+- DRY up `get_statistics` to use `Configuration#default_task_glob_pattern` instead of hardcoded patterns
+
+## [0.34.1] - 2026-01-27
+
+### Fixed
+- Resolve task counting discrepancy in preset listings
+  - Add `default_task_glob_pattern` to Configuration for proper task file matching
+  - Update ListPresetManager to use type-appropriate default globs (tasks vs ideas)
+  - Update `get_statistics` glob to include orchestrator/subtask format (NNN.NN-*.s.md)
+  - Before: "0/93 tasks" with "No tasks found for preset 'draft'"
+  - After: "2/135 tasks" correctly displaying filtered tasks
+- Rename duplicate task 227 to 230 to resolve task ID collision
+
 ## [0.34.0] - 2026-01-22
 
 ### Changed
