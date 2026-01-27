@@ -1,6 +1,6 @@
 ---
 name: meta-manage-guides
-title: Meta: Manage Guides
+title: "Meta: Manage Guides"
 command: meta-manage-guides
 description: Create, update, and maintain development guides
 # context: no-fork
@@ -21,7 +21,7 @@ allowed-tools:
   - Glob
   - LS
   - TodoWrite
-argument-hint: [guide-name] [action: create|update|review]
+argument-hint: "[guide-name] [action: create|update|review]"
 ---
 
 # Meta: Manage Guides

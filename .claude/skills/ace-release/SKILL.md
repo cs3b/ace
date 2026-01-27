@@ -9,7 +9,7 @@ allowed-tools:
   - Bash(ace-bundle:*)
   - Read
   - Edit
-argument-hint: [package-name] [patch|minor|major]
+argument-hint: "[package-name] [patch|minor|major]"
 last_modified: 2025-12-23
 source: ace-handbook
 warning: ALL 3 steps must be completed - there are TWO separate CHANGELOG.md files

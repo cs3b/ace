@@ -9,7 +9,7 @@ allowed-tools:
   - Read
   - Glob
   - Grep
-argument-hint: [package] [--all]
+argument-hint: "[package] [--all]"
 last_modified: 2026-01-19
 source: ace-test-e2e-runner
 ---

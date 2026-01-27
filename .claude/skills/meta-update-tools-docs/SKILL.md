@@ -1,6 +1,6 @@
 ---
 name: meta-update-tools-docs
-title: Meta: Update Tools Documentation
+title: "Meta: Update Tools Documentation"
 command: meta-update-tools-docs
 description: Update ace-* package documentation from implementation and tests
 # context: no-fork

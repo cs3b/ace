@@ -1,6 +1,6 @@
 ---
 name: meta-review-workflows
-title: Meta: Review Workflows
+title: "Meta: Review Workflows"
 command: meta-review-workflows
 description: Review and validate workflow instructions for quality and consistency
 # context: no-fork

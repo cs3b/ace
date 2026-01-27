@@ -13,7 +13,7 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-argument-hint: [package-path] [target-percent]
+argument-hint: "[package-path] [target-percent]"
 last_modified: 2026-01-10
 source: ace-taskflow
 ---

@@ -11,7 +11,7 @@ allowed-tools:
   - Read
   - Write
   - TodoWrite
-argument-hint: [release-version] [codename]
+argument-hint: "[release-version] [codename]"
 last_modified: 2026-01-10
 source: ace-taskflow
 ---

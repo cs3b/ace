@@ -1,6 +1,6 @@
 ---
 name: meta-update-integration-claude
-title: Meta: Update Claude Integration
+title: "Meta: Update Claude Integration"
 command: meta-update-integration-claude
 description: Maintain Claude Code integration and synchronize commands
 # context: no-fork
