@@ -85,6 +85,12 @@ JSON preferred for state:
 - Easy to read/write from any language
 - State is data, not config
 
+## Additional Considerations
+
+- Concurrency: do we need file locking or a single-process guarantee?
+- Schema versioning: how do we migrate `state.json` across releases?
+- Resume mechanics: how does resume reconstruct in-memory state safely?
+
 ## Decision Status
 
 - [ ] Pending discussion

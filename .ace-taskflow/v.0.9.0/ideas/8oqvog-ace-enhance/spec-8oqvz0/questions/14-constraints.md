@@ -11,6 +11,7 @@ ACE emphasizes CLI-first, agent-agnostic tooling with file-based state. Constrai
 ## Prompts
 
 - Is ace-taskflow integration required or optional?
+- Should `ace-overseer` be its own gem or live inside an existing gem?
 - Which agents/providers must be supported (Claude, Codex, Gemini)?
 - Are there limits on external dependencies?
 - Does the design require offline operation?

@@ -55,6 +55,11 @@ Gates are handled by a separate service (TUI/daemon) that notifies overseer.
 **Option A** for Phase 1: exit on gate with explicit resume command. This aligns with CLI-first, file-based state,
 and minimal complexity. Add optional notifications later.
 
+## Open Prompts
+
+- Which component validates gate transitions (overseer vs coworker)?
+- How is feedback captured on rejection (file, CLI args, prompt)?
+
 ## Decision Status
 
 - [ ] Pending discussion
