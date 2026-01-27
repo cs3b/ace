@@ -114,6 +114,35 @@ steps:
     notify: desktop  # or: slack, email
 ```
 
+## Role-Specific Workers (Optional Taxonomy)
+
+Some workflows benefit from explicit role separation (Architect, Engineer, Tester) to reduce role confusion.
+This can be encoded in prompts or worker names without introducing new schema.
+
+Example: plan -> review -> implement -> test:
+
+```yaml
+steps:
+  - id: plan
+    worker: claude-code
+    prompt: "Act as Architect. Produce spec.md with planned changes."
+
+  - id: plan-review
+    gate: human
+    prompt: "Review spec.md and approve or request changes."
+
+  - id: implement
+    worker: claude-code
+    prompt: "Act as Engineer. Implement spec.md changes."
+
+  - id: test
+    action: ace-test
+    on_fail:
+      worker: claude-code
+      prompt: "Act as Engineer. Fix failing tests from the report."
+      max_retries: 3
+```
+
 ## Coworker Responsibilities (UI Layer)
 
 Coworker is a thin, user-facing layer that manages sessions and approvals. It should:

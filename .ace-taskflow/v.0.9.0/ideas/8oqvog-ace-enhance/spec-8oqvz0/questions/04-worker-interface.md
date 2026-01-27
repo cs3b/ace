@@ -126,6 +126,14 @@ This means:
 | Agent | Full context | Report file | Claude Code |
 | Human | Prompt display | Approval signal | Review gate |
 
+## Open Prompts
+
+- Do we standardize optional input/output directories (instruction.md, context/, artifacts/)?
+- Do we define required report fields or allow free-form reports?
+- Are any exit codes reserved (timeout, invalid report, gate rejected)?
+- Do workers have full filesystem access or a sandboxed subset?
+- Do we need streaming logs to overseer or only post-run logs?
+
 ## Decision Status
 
 - [ ] Pending discussion
