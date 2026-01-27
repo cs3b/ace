@@ -21,6 +21,7 @@ Requires Phase 1 (Workflow Executor) to be functional.
 - Agent dispatch
 - Worker interface standardization
 - TUI dashboard
+- Separate coworker component (optional future layer)
 
 ## Interface
 
@@ -65,7 +66,7 @@ ace-overseer resume
   "task": "228",
   "workflow": "task-completion",
   "created_at": "2026-01-27T20:00:00Z",
-  "worktree_path": "/path/to/.ace/coworker/228-abc123",
+  "worktree_path": ".ace/coworker/228-abc123",
   "base_branch": "main",
   "work_branch": "task/228-implement-feature"
 }
@@ -140,6 +141,11 @@ Option B: Central index (explicit)
 - Faster listing, but sync issues possible
 
 Recommendation: **Option A** - simpler, self-healing
+
+## Observability
+
+Session listing should be derived from the filesystem and each session's `.ace/overseer/state.json` so status is
+inspectable and recoverable after crashes.
 
 ## Success Criteria
 
