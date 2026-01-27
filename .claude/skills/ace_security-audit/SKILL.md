@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-git-secrets:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: [scan|check-release] [--since=SINCE] [--confidence=LEVEL] [options]
+argument-hint: "[scan|check-release] [--since=SINCE] [--confidence=LEVEL] [options]"
 last_modified: 2026-01-09
 source: ace-git-secrets
 ---

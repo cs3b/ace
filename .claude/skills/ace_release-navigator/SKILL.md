@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-taskflow:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: [list|show] [options]
+argument-hint: "[list|show] [options]"
 last_modified: 2026-01-09
 source: ace-taskflow
 ---

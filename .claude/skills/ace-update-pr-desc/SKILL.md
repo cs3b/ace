@@ -10,7 +10,7 @@ allowed-tools:
   - Bash(gh:*)
   - Read
   - Grep
-argument-hint: [#]
+argument-hint: "[#]"
 last_modified: 2026-01-10
 source: ace-git
 ---

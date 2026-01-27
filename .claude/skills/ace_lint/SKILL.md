@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-lint:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: [file-pattern] [--fix] [--report]
+argument-hint: "[file-pattern] [--fix] [--report]"
 source: ace-lint
 ---
 

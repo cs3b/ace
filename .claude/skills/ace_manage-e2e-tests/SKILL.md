@@ -12,7 +12,7 @@ allowed-tools:
   - Glob
   - Grep
   - Skill
-argument-hint: [package] [--since <commit/date>] [--dry-run] [--run-tests]
+argument-hint: "[package] [--since <commit/date>] [--dry-run] [--run-tests]"
 last_modified: 2026-01-19
 source: ace-test-e2e-runner
 ---

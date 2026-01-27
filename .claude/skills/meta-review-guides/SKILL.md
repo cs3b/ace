@@ -1,6 +1,6 @@
 ---
 name: meta-review-guides
-title: Meta: Review Guides
+title: "Meta: Review Guides"
 command: meta-review-guides
 description: Review and validate development guides for quality and consistency
 # context: no-fork

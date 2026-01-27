@@ -8,7 +8,7 @@ allowed-tools:
   - Bash(ace-search:*)
   - Bash(ace-bundle:*)
   - Read
-argument-hint: [goal] [--scope=path] [--depth=shallow|normal|deep]
+argument-hint: "[goal] [--scope=path] [--depth=shallow|normal|deep]"
 last_modified: 2026-01-09
 source: ace-search
 ---
