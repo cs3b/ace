@@ -33,6 +33,60 @@ git:
       glob: "ace-support-*/**"
       description: "Shared support libraries (ace-support-core, ace-support-config, etc.)"
 
+    ace-bundle:
+      glob: "ace-bundle/**"
+
+    ace-docs:
+      glob: "ace-docs/**"
+
+    ace-git:
+      glob: "ace-git/**"
+
+    ace-git-commit:
+      glob: "ace-git-commit/**"
+
+    ace-git-secrets:
+      glob: "ace-git-secrets/**"
+
+    ace-git-worktree:
+      glob: "ace-git-worktree/**"
+
+    ace-handbook:
+      glob: "ace-handbook/**"
+
+    ace-integration-claude:
+      glob: "ace-integration-claude/**"
+
+    ace-lint:
+      glob: "ace-lint/**"
+
+    ace-llm:
+      glob: "ace-llm/**"
+
+    ace-llm-providers-cli:
+      glob: "ace-llm-providers-cli/**"
+
+    ace-prompt-prep:
+      glob: "ace-prompt-prep/**"
+
+    ace-review:
+      glob: "ace-review/**"
+
+    ace-search:
+      glob: "ace-search/**"
+
+    ace-taskflow:
+      glob: "ace-taskflow/**"
+
+    ace-test:
+      glob: "ace-test/**"
+
+    ace-test-e2e-runner:
+      glob: "ace-test-e2e-runner/**"
+
+    ace-test-runner:
+      glob: "ace-test-runner/**"
+
   # Project-specific conventions
   conventions:
     format: conventional
