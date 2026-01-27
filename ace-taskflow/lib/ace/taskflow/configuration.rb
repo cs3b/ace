@@ -77,11 +77,30 @@ module Ace
         config.dig("directories", "anyday") || "_anyday"
       end
 
-      # Get default glob pattern for all spec files
-      # This is the single source of truth for spec file matching
+      # Get default glob pattern for idea spec files
+      # This is the single source of truth for idea file matching
       # Updated: Only .idea.s.md format is supported (legacy formats removed)
       def default_glob_pattern
+        default_idea_glob_pattern
+      end
+
+      # Alias with explicit name for clarity
+      # @return [Array<String>] Glob patterns for idea spec files
+      def default_idea_glob_pattern
         ['**/*.idea.s.md']
+      end
+
+      # Get default glob pattern for task spec files
+      # Matches all task file formats:
+      # - Legacy: task.NNN.s.md
+      # - Single: NNN-slug.s.md
+      # - Orchestrator/Subtask: NNN.NN-slug.s.md
+      def default_task_glob_pattern
+        [
+          '**/task.[0-9][0-9][0-9]*.s.md',      # Legacy format
+          '**/[0-9][0-9][0-9]-*.s.md',           # Single task format
+          '**/[0-9][0-9][0-9].[0-9][0-9]-*.s.md' # Orchestrator/subtask format
+        ]
       end
 
       # Get active release selection strategy

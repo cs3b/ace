@@ -90,8 +90,13 @@ module Ace
         # Converts relative patterns like "maybe/**/*.s.md" to "ideas/maybe/**/*.s.md"
         # Uses configured folder names from config.directories
         def apply_folder_prefix(glob_patterns, folder_type)
-          # Provide default pattern if none specified
-          glob_patterns ||= @config.default_glob_pattern
+          # Provide type-appropriate default pattern if none specified
+          glob_patterns ||= case folder_type
+                            when :tasks
+                              @config.default_task_glob_pattern
+                            else
+                              @config.default_glob_pattern
+                            end
 
           # Get configured folder name
           folder_name = case folder_type
