@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/status"
+require "ace/git/cli/commands/status"
 
 class StatusTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::Status.new
+    @command = Ace::Git::CLI::Commands::Status.new
   end
 
   def test_execute_returns_success_with_context

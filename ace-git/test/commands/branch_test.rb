@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "ace/git/commands/branch"
+require "ace/git/cli/commands/branch"
 
 class BranchTest < AceGitTestCase
   def setup
     super
-    @command = Ace::Git::Commands::Branch.new
+    @command = Ace::Git::CLI::Commands::Branch.new
   end
 
   def test_execute_returns_success_with_branch_info

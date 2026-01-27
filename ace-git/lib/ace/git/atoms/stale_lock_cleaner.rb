@@ -19,6 +19,33 @@ module Ace
       # (remote mounts, containers where PID check may not work).
       module StaleLockCleaner
         class << self
+          # Extract PID from a git lock file
+          #
+          # Git lock files contain the PID on the first line, optionally followed by hostname.
+          # @param lock_path [String] Path to the lock file
+          # @return [Integer, nil] PID if present and positive, otherwise nil
+          def lock_pid(lock_path)
+            content = File.read(lock_path)
+            pid = content.to_s.split.first.to_i
+            pid > 0 ? pid : nil
+          rescue Errno::ENOENT
+            nil
+          rescue StandardError
+            nil
+          end
+
+          # Check if a process exists (signal 0 = check only)
+          # @param pid [Integer] Process ID
+          # @return [Boolean] true if process exists, false if not
+          def process_active?(pid)
+            Process.kill(0, pid)
+            true
+          rescue Errno::ESRCH
+            false
+          rescue Errno::EPERM
+            true
+          end
+
           # Check if a lock file is stale (older than threshold)
           #
           # @param lock_path [String] Path to the lock file
@@ -55,20 +82,10 @@ module Ace
           #   File.write(lock_path, Process.pid.to_s)
           #   orphaned?(lock_path)  # => false
           def orphaned?(lock_path)
-            content = File.read(lock_path)
-            # Git lock file format: PID on first line (may include hostname)
-            pid = content.to_s.split.first.to_i
-            return false if pid <= 0
+            pid = lock_pid(lock_path)
+            return false unless pid
 
-            # Check if process exists (signal 0 = check existence only)
-            Process.kill(0, pid)
-            false # Process exists - lock is active
-          rescue Errno::ESRCH
-            true # No such process - lock is orphaned
-          rescue Errno::EPERM
-            false # Process exists but we can't signal it - assume active
-          rescue StandardError
-            false # Unknown error (file read failed, etc.) - be conservative
+            !process_active?(pid)
           end
 
           # Find index.lock file for a repository
@@ -141,35 +158,85 @@ module Ace
           def clean(repo_path, threshold_seconds = 60)
             lock_path = find_lock_file(repo_path)
 
-            return { success: true, cleaned: false, message: "No lock file found" } if lock_path.nil?
+            return { success: true, cleaned: false, status: :missing, pid: nil, age_seconds: nil,
+                     message: "No lock file found" } if lock_path.nil?
 
             # Security check: ensure lock file is a regular file, not a symlink
             # This prevents accidental deletion of symlink targets, which could be
             # exploited to cause data loss or security issues.
             if File.symlink?(lock_path)
-              return { success: false, cleaned: false, message: "Lock file is a symlink, refusing to delete: #{lock_path}" }
+              return { success: false, cleaned: false, status: :symlink, pid: nil, age_seconds: nil,
+                       message: "Lock file is a symlink, refusing to delete: #{lock_path}" }
             end
 
             # Safety check: ensure it's a regular file (not directory or device)
             unless File.file?(lock_path)
-              return { success: false, cleaned: false, message: "Lock path is not a regular file: #{lock_path}" }
+              return { success: false, cleaned: false, status: :invalid, pid: nil, age_seconds: nil,
+                       message: "Lock path is not a regular file: #{lock_path}" }
             end
 
-            # Check orphaned first (PID-based), then fall back to age-based stale check
-            if orphaned?(lock_path)
-              File.delete(lock_path)
-              { success: true, cleaned: true, message: "Removed orphaned lock file (dead PID): #{lock_path}" }
-            elsif stale?(lock_path, threshold_seconds)
-              File.delete(lock_path)
-              { success: true, cleaned: true, message: "Removed stale lock file: #{lock_path}" }
-            else
-              { success: true, cleaned: false, message: "Lock file is active (PID running, < #{threshold_seconds}s old)" }
+            pid = lock_pid(lock_path)
+            age_seconds = begin
+              Time.now - File.mtime(lock_path)
+            rescue StandardError
+              nil
             end
+
+            pid_active = pid ? process_active?(pid) : false
+
+            # Check PID-based activity first
+            if pid_active
+              return {
+                success: true,
+                cleaned: false,
+                status: :active,
+                pid: pid,
+                age_seconds: age_seconds,
+                message: "Lock file is active (PID running, < #{threshold_seconds}s old)"
+              }
+            end
+
+            # Orphaned PID should be removed immediately
+            if pid && !pid_active
+              File.delete(lock_path)
+              return {
+                success: true,
+                cleaned: true,
+                status: :orphaned,
+                pid: pid,
+                age_seconds: age_seconds,
+                message: "Removed orphaned lock file (dead PID): #{lock_path}"
+              }
+            end
+
+            # Fallback to age-based stale detection
+            if stale?(lock_path, threshold_seconds)
+              File.delete(lock_path)
+              return {
+                success: true,
+                cleaned: true,
+                status: :stale,
+                pid: pid,
+                age_seconds: age_seconds,
+                message: "Removed stale lock file: #{lock_path}"
+              }
+            end
+
+            {
+              success: true,
+              cleaned: false,
+              status: :unknown,
+              pid: pid,
+              age_seconds: age_seconds,
+              message: "Lock file present but status unclear (< #{threshold_seconds}s old)"
+            }
           rescue Errno::ENOENT
             # Handle TOCTOU race: lock file was deleted between check and delete
-            { success: true, cleaned: false, message: "Lock file already removed" }
+            { success: true, cleaned: false, status: :missing, pid: nil, age_seconds: nil,
+              message: "Lock file already removed" }
           rescue StandardError => e
-            { success: false, cleaned: false, message: "Failed to clean lock: #{e.message}" }
+            { success: false, cleaned: false, status: :error, pid: nil, age_seconds: nil,
+              message: "Failed to clean lock: #{e.message}" }
           end
         end
       end

@@ -55,6 +55,8 @@ module Ace
             stale_threshold = config.fetch("stale_threshold_seconds", 60)
 
             result = nil
+            last_lock_info = nil
+            repo_root = nil
 
             (0..max_retries).each do |attempt|
               result = execute_once(command_parts, timeout: timeout, env: env)
@@ -64,9 +66,10 @@ module Ace
 
               # Attempt lock cleanup on every retry (checks orphaned PID first, then age)
               if stale_cleanup
-                root_path = CommandExecutor.repo_root
-                if root_path
-                  clean_result = StaleLockCleaner.clean(root_path, stale_threshold)
+                repo_root ||= CommandExecutor.repo_root
+                if repo_root
+                  clean_result = StaleLockCleaner.clean(repo_root, stale_threshold)
+                  last_lock_info = clean_result
                   if clean_result[:cleaned] && (ENV["ACE_DEBUG"] || ENV["DEBUG"])
                     warn "[ace-git] #{clean_result[:message]}"
                   end
@@ -76,16 +79,24 @@ module Ace
               # Sleep before retry (except on last attempt)
               break if attempt == max_retries
 
+              active_lock = last_lock_info && [:active, :unknown].include?(last_lock_info[:status])
+              sleep_ms = active_lock ? (delay_ms * (attempt + 1)) : delay_ms
+
               if ENV["ACE_DEBUG"] || ENV["DEBUG"]
+                lock_note = active_lock && last_lock_info[:pid] ? " (active PID #{last_lock_info[:pid]})" : ""
                 warn "[ace-git] Lock retry: attempt #{attempt + 1}/#{max_retries + 1}, " \
-                     "waiting #{delay_ms}ms (#{command_parts.first(3).join(' ')}...)"
+                     "waiting #{sleep_ms}ms#{lock_note} (#{command_parts.first(3).join(' ')}...)"
               end
-              Kernel.sleep(delay_ms / 1000.0)
+              Kernel.sleep(sleep_ms / 1000.0)
             end
 
             # Add retry context to error message if all retries failed
             if !result[:success] && LockErrorDetector.lock_error_result?(result)
-              result[:error] = "Git index locked after #{max_retries + 1} attempts (#{max_retries} retries). #{result[:error]}"
+              error = "Git index locked after #{max_retries + 1} attempts (#{max_retries} retries). #{result[:error]}"
+              if last_lock_info && last_lock_info[:status] == :active && last_lock_info[:pid]
+                error += " Active lock held by PID #{last_lock_info[:pid]}."
+              end
+              result[:error] = error
             end
 
             result
