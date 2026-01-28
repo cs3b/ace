@@ -62,5 +62,8 @@ and minimal complexity. Add optional notifications later.
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Option A - Exit on gate**
+
+Write state and exit. Resume via explicit command (`ace-overseer resume --approve` or `--reject --reason "..."`).
+
+**Additional:** Log gate questions to session log. If long-running agents get terminated, the log shows what's pending/missing for recovery.

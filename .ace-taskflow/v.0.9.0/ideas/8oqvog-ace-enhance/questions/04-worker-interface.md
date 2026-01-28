@@ -136,5 +136,30 @@ This means:
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Skill-based workers with simple context**
+
+**Worker model:**
+- Worker = skill run as agent (Claude Code / Codex / OpenCode)
+- Agent invokes `/ace:overseer <job, task-ids>` first → overseer CLI manages state
+- Triggered from agent (simpler), CLI manages hard data
+
+**Step configuration (YAML):**
+```yaml
+steps:
+  - name: implement
+    context: "Task 228 - implement feature X"
+    instructions: ace-bundle wfi://work-on-task 228
+    report: summary of changes made
+    verifications:
+      - ace-test passes
+      - no lint errors
+```
+
+**Communication:**
+- Plain concise English between overseer ↔ agents
+- JSONL only for hard data (one JSON per line, easy parsing)
+- Markdown files for human-readable logs
+
+**Observability (optional module for later):**
+- Log all events (hooks or explicit instrumentation)
+- JSONL + markdown for debugging by humans and agents

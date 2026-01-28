@@ -112,5 +112,10 @@ end
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Option A (Push)** - Simpler for now. Overseer acts as a state machine that:
+  - Has preconditions/checklist before each step
+  - Can spawn parallel sub-agents when planned (e.g., tests)
+  - Supports conditional repeats/loops
+  - Uses hard validations (must pass) and soft validations (warnings)
+  - Controls all flow; workers are passive executors
+  - Some workers (Claude Code) can run async, but parallelism must be explicitly planned in workflow
