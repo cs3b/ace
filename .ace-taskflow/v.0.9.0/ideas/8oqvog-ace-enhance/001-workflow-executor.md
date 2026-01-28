@@ -1,39 +1,44 @@
-# Phase 1: Workflow Executor
+# Phase 1: Workflow Executor (ace-coworker core)
 
 ## Goal
 
 A CLI tool that executes a sequence of steps, checkpoints state after each, and can resume from any point.
+Agent-driven: the agent invokes `/ace:coworker-do`, CLI manages state.
 
 ## Scope
 
 **In scope:**
-- Parse workflow definition (YAML)
-- Execute steps sequentially
-- Persist state after each step
+- Parse workflow definition (YAML/markdown)
+- Execute steps sequentially (push model)
+- Persist state after each step (job.json)
 - Resume from last checkpoint
-- Retry logic for failed steps
+- Retry logic with configurable limits
 - Human gates (pause for approval)
+- Verifications per step
+- Logging (JSONL + markdown reports)
 
-**Out of scope (Phase 2+):**
-- Worktree management
-- Session lifecycle
-- Multi-workflow orchestration
+**Out of scope:**
+- Worktree management (manual, or future ace-overseer)
+- Multi-session orchestration (future ace-overseer)
 - TUI/dashboard
 
-## Interface
+## CLI Interface
 
 ```bash
-# Run a workflow
-ace-overseer run workflow.yml
+# Start workflow (auto-resumes if session exists for task)
+ace-coworker start --task 228 --workflow task-completion
 
-# Run with task context
-ace-overseer run workflow.yml --task 228
+# Check status
+ace-coworker status [--session <id>] [--json]
 
-# Resume interrupted workflow
-ace-overseer resume
+# Resume after interruption
+ace-coworker resume [--session <id>]
 
-# Show current state
-ace-overseer status
+# Store report/artifact
+ace-coworker report <file>
+
+# List sessions
+ace-coworker list
 ```
 
 ## Workflow Definition Format
@@ -42,141 +47,198 @@ ace-overseer status
 name: task-completion
 description: Complete a task through implementation, testing, and PR
 
-context:
-  task: $TASK_ID  # Passed via --task flag
-
 steps:
-  - id: implement
-    action: ace-git-commit --staged -i "implement task $task"
+  - name: implement
+    context: "Task $task - implement the feature"
+    instructions: ace-bundle wfi://work-on-task $task
+    report: summary of changes made
+    verifications:
+      - ace-test passes
+      - no lint errors
+    retries: 5
+    timeout: 30m
+    on_repeated_failure: 3
+    restart_hint: "Focus on one failing test at a time"
 
-  - id: test
-    action: ace-test
-    on_fail: retry
-    max_retries: 3
+  - name: commit
+    instructions: ace-bundle wfi://commit
+    verifications:
+      - commit created
 
-  - id: review-gate
+  - name: test
+    instructions: ace-test
+    retries: 5
+    on_repeated_failure: 3
+
+  - name: review-gate
     gate: human
     prompt: "Review implementation before creating PR"
 
-  - id: create-pr
-    action: gh pr create --title "Task $task"
-    capture: pr_url
-
-  - id: self-review
-    action: ace-review --preset code-deep --pr $pr_url
+  - name: create-pr
+    instructions: ace-bundle wfi://create-pr
+    report: PR URL and summary
 ```
 
-## State Persistence
+## Session Files
 
-State file: `.ace/overseer/state.json` (or in worktree if Phase 2)
+Location: `.cache/ace-coworker/{ace-timestamp}/`
+
+```
+.cache/ace-coworker/8or5kx/
+├── job.json       # plan + execution status
+├── log.jsonl      # event log (all steps, all events)
+└── reports/       # delegation docs + returned reports
+    ├── 001-implement-delegation.md
+    ├── 001-implement-report.md
+    ├── 002-commit-delegation.md
+    └── ...
+```
+
+### job.json
 
 ```json
 {
-  "session_id": "228-abc123",
+  "session_id": "8or5kx",
+  "task": "228",
   "workflow": "task-completion",
   "status": "running",
   "started_at": "2026-01-27T20:00:00Z",
   "current_step": "test",
-  "iteration": 2,
-  "max_iterations": 5,
-  "gate": null,
-  "context": {
-    "task": "228",
-    "pr_url": null
-  },
   "steps": [
-    { "id": "implement", "status": "completed", "exit_code": 0 },
-    { "id": "test", "status": "failed", "exit_code": 1, "retries": 2 }
-  ],
-  "history": [
-    { "timestamp": "2026-01-27T20:00:00Z", "event": "started" },
-    { "timestamp": "2026-01-27T20:05:00Z", "step": "implement", "event": "completed" }
+    {
+      "name": "implement",
+      "status": "completed",
+      "attempts": 1,
+      "completed_at": "2026-01-27T20:15:00Z"
+    },
+    {
+      "name": "commit",
+      "status": "completed",
+      "attempts": 1,
+      "completed_at": "2026-01-27T20:16:00Z"
+    },
+    {
+      "name": "test",
+      "status": "in_progress",
+      "attempts": 2,
+      "last_error": "3 tests failed: test_a, test_b, test_c"
+    }
   ]
 }
 ```
 
-## Step Execution Model
+### log.jsonl
 
-1. Read state (or initialize if new)
-2. Build step-scoped context bundle (spec + needed files + last error)
-3. Find current step
-4. Execute action via `system()` / `Open3.capture3` (or wait on worker report)
-5. Capture exit code, stdout, stderr, optional report
-6. Apply on_fail logic (retry, goto, fail)
-7. Persist state and append history
-8. Next step (or pause at gate)
+One JSON object per line:
 
-## Gate Mechanics (Pause/Resume)
+```jsonl
+{"ts":"2026-01-27T20:00:00Z","event":"session_started","task":"228","workflow":"task-completion"}
+{"ts":"2026-01-27T20:00:01Z","event":"step_started","step":"implement"}
+{"ts":"2026-01-27T20:15:00Z","event":"step_completed","step":"implement","attempts":1}
+{"ts":"2026-01-27T20:15:01Z","event":"step_started","step":"test"}
+{"ts":"2026-01-27T20:16:00Z","event":"step_failed","step":"test","error":"3 tests failed"}
+{"ts":"2026-01-27T20:16:01Z","event":"step_retry","step":"test","attempt":2}
+```
+
+## Step Execution Model (Push)
+
+1. Read job.json (or initialize if new)
+2. Find current step from workflow
+3. Build step context (plain English):
+   ```
+   We work on: Task 228 - implement feature X
+   Current step is: test
+   Your instructions: ace-bundle wfi://run-tests
+   Last error: 3 tests failed (test_a, test_b, test_c)
+   ```
+4. Log delegation to reports/
+5. Execute (agent runs the skill/action)
+6. Capture outcome (report file)
+7. Run verifications
+8. If failed: check retry logic, update job.json
+9. If passed: advance to next step
+10. If gate: write status, exit process, wait for resume
+
+## Gate Mechanics
 
 When a gate is reached:
-- Update state: `status: paused`, `gate: { id, status: "waiting" }`
-- Persist state immediately
-- Optionally exit the process to avoid idle loops
+- Update job.json: `status: "paused"`, `gate: { prompt: "...", waiting: true }`
+- Log gate question to log.jsonl (for recovery after crashes)
+- Exit the process
 
-Approval transitions the gate to `approved` and resumes the workflow. Rejection can rewind to a prior step with
-additional feedback context.
+Resume:
+```bash
+ace-coworker resume --approve
+ace-coworker resume --reject --reason "Need to fix X first"
+```
 
-## Context Hygiene & Retry Feedback
+## Failure Handling
 
-Workers should only see the minimum required inputs for the current step. On retries, pass the spec and the latest
-error summary, not the full prior logs or chat history. This keeps prompts focused and avoids compounding failure
-context.
+| Failure Type | Behavior |
+|--------------|----------|
+| Verification failed / missing report | Retry (up to `retries`, default 5) |
+| Same error repeated | Stop after `on_repeated_failure` (default 3) |
+| Crash / unknown | Log, allow manual resume |
 
-Suggested context path: `.ace/overseer/context.json` (step-scoped and overwritten each run).
+Track all failures in log.jsonl to detect patterns.
 
 ## Observability
 
-- Persist stdout/stderr per step in `.ace/overseer/logs/<step>.log`
-- Optional step reports in `.ace/overseer/reports/<step>.json`
-- `ace-overseer status` should show current step, status, retries, and last error summary
+**`ace-coworker status` output:**
+```
+Session: 8or5kx (Task 228)
+Workflow: task-completion
+Status: running
 
-## Key Decisions Needed
+Progress: 3/5 steps
+Current: test (attempt 2/5)
+Last error: 3 tests failed
 
-- [ ] Workflow file location convention (`.ace/workflows/`? In gem?)
-- [ ] State file location (per-directory? Global?)
-- [ ] Variable interpolation syntax (`$var` vs `{{ var }}` vs `%{var}`)
-- [ ] How to handle long-running actions (timeout?)
-- [ ] Gate notification mechanism (stdout? desktop notification? webhook?)
-- [ ] Context shaping rules and size budgets for worker prompts
+Logs: .cache/ace-coworker/8or5kx/log.jsonl
+Reports: .cache/ace-coworker/8or5kx/reports/
+```
 
-## Implementation Notes
+**`ace-coworker status --json`** for machine-readable output.
 
-### Gem Structure
+## Gem Structure
 
 ```
-ace-overseer/
-├── lib/ace/overseer/
+ace-coworker/
+├── lib/ace/coworker/
 │   ├── atoms/
 │   │   ├── workflow_parser.rb
 │   │   └── variable_interpolator.rb
 │   ├── molecules/
 │   │   ├── step_executor.rb
-│   │   └── state_manager.rb
+│   │   ├── job_manager.rb
+│   │   └── log_writer.rb
 │   ├── organisms/
 │   │   └── workflow_runner.rb
 │   └── models/
 │       ├── workflow.rb
 │       ├── step.rb
-│       └── session_state.rb
-├── .ace-defaults/overseer/
+│       └── job.rb
+├── .ace-defaults/coworker/
 │   └── config.yml
-└── handbook/
-    └── workflow-instructions/
-        └── overseer.wf.md
+├── handbook/
+│   ├── agents/
+│   ├── workflow-instructions/
+│   └── guides/
+├── exe/ace-coworker
+├── CHANGELOG.md
+└── ace-coworker.gemspec
 ```
-
-### Minimal First Implementation
-
-1. WorkflowParser - load YAML, validate structure
-2. StepExecutor - run single action, return result
-3. StateManager - load/save JSON state
-4. WorkflowRunner - orchestrate the loop
 
 ## Success Criteria
 
-- [ ] Can run a 3-step workflow end-to-end
+- [ ] Can run a multi-step workflow end-to-end
 - [ ] Can resume after manual interruption (Ctrl+C)
+- [ ] Can resume after agent crash (state preserved)
 - [ ] Can retry failed step automatically
+- [ ] Detects repeated failures and stops
 - [ ] Human gate pauses and resumes with explicit approval
-- [ ] State file reflects accurate progress and history
-- [ ] Step context file is created and overwritten per run
+- [ ] job.json reflects accurate progress
+- [ ] log.jsonl captures all events
+- [ ] reports/ contains delegation and result docs
+- [ ] `ace-coworker status` shows current state
+- [ ] `ace-coworker start --task X` auto-resumes if session exists

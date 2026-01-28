@@ -1,107 +1,82 @@
-# Phase 2: Session Management
+# Phase 2: Session Management (ace-coworker)
 
 ## Goal
 
-Manage isolated work sessions with worktrees, allowing multiple concurrent workflows.
-
-## Dependency
-
-Requires Phase 1 (Workflow Executor) to be functional.
+Manage multiple sessions within a single directory (worktree or main repo), with clean isolation between them.
 
 ## Scope
 
 **In scope:**
-- Session = worktree + state + workflow
-- Create/list/destroy sessions
-- Session naming and identification
-- Worktree lifecycle (leverage `ace-git-worktree`)
+- Session creation with unique ID (ace-timestamp)
+- Session listing and status
 - Session-scoped state files
+- Auto-resume when starting with same task
+- Multiple concurrent sessions per directory
 
-**Out of scope (Phase 3):**
-- Agent dispatch
-- Worker interface standardization
-- TUI dashboard
-- Separate coworker component (optional future layer)
+**Out of scope (future ace-overseer):**
+- Worktree creation/management
+- Multi-directory orchestration
+- Spawning new coworker instances
 
-## Interface
+## Session Model
+
+Each session lives in `.cache/ace-coworker/{session-id}/`:
+
+```
+.cache/ace-coworker/
+├── 8or5kx/              # Session for task 228
+│   ├── job.json
+│   ├── log.jsonl
+│   └── reports/
+├── 8or7ab/              # Session for task 229
+│   ├── job.json
+│   ├── log.jsonl
+│   └── reports/
+└── 8or9cd/              # Another session for task 228 (different workflow)
+    ├── job.json
+    ├── log.jsonl
+    └── reports/
+```
+
+## Session ID
+
+Uses ace-timestamp format (e.g., `8or5kx`) - compact, sortable, unique.
+
+## CLI Commands
 
 ```bash
-# Create new session for a task
-ace-overseer start --task 228 --workflow task-completion
-# Creates: .ace/coworker/228-abc123/
+# Start new session (or resume existing for same task)
+ace-coworker start --task 228 --workflow task-completion
+# → Creates 8or5kx if no session exists for task 228
+# → Resumes existing session if one exists
 
-# List active sessions
-ace-overseer list
-# ID          TASK   WORKFLOW          STEP      STATUS
-# 228-abc123  228    task-completion   test      running
-# 215-def456  215    bug-fix           review    waiting
+# List all sessions
+ace-coworker list
+# SESSION   TASK   WORKFLOW          STATUS    STEP      PROGRESS
+# 8or5kx    228    task-completion   running   test      3/5
+# 8or7ab    229    bug-fix           paused    review    2/4
+# 8or9cd    228    release           complete  -         5/5
 
-# Switch to session (cd to worktree)
-ace-overseer attach 228-abc123
+# Status of specific session
+ace-coworker status --session 8or5kx
 
-# Destroy session (cleanup worktree)
-ace-overseer destroy 228-abc123
+# Resume specific session
+ace-coworker resume --session 8or5kx
 
-# Resume workflow in current session
-ace-overseer resume
+# Status of current/latest session
+ace-coworker status
 ```
 
-## Session Directory Structure
+## Auto-Resume Logic
 
-```
-.ace/coworker/
-└── task-228/                        # Session directory (worktree root)
-    ├── .ace-overseer/
-    │   ├── state.json              # Workflow state
-    │   ├── logs/                   # Step logs
-    │   └── context/                # Step-scoped context files
-    └── ... (worktree contents)
-```
+When `ace-coworker start --task 228` is called:
 
-### session.json (optional, if managed by overseer)
+1. Scan `.cache/ace-coworker/*/job.json`
+2. Find sessions where `task == 228` and `status != completed`
+3. If found: resume that session
+4. If not found: create new session
 
-```json
-{
-  "id": "228-abc123",
-  "task": "228",
-  "workflow": "task-completion",
-  "created_at": "2026-01-27T20:00:00Z",
-  "worktree_path": ".ace/coworker/228-abc123",
-  "base_branch": "main",
-  "work_branch": "task/228-implement-feature"
-}
-```
-
-## Coworker CLI Surface (Optional UI Layer)
-
-Coworker is the user-facing layer for session lifecycle and approvals. It can be a thin CLI/TUI wrapper over
-overseer state.
-
-Commands:
-- `ace-coworker start --task <id>`
-- `ace-coworker list`
-- `ace-coworker logs <id>`
-- `ace-coworker approve <id>`
-- `ace-coworker stop <id>`
-
-## Integration with ace-git-worktree
-
-Leverage existing worktree management:
-
-```ruby
-# In ace-overseer
-def create_session(task:, workflow:)
-  # Use ace-git-worktree under the hood
-  worktree = AceGitWorktree.create(
-    path: ".ace/coworker/#{session_id}",
-    branch: "task/#{task}-#{slug}",
-    base: "main"
-  )
-
-  # Initialize session state
-  initialize_session(worktree.path, task, workflow)
-end
-```
+This prevents accidental duplicate sessions for the same task.
 
 ## Session Lifecycle
 
@@ -109,61 +84,62 @@ end
 [start] → CREATED → RUNNING → PAUSED → COMPLETED
                         ↓         ↑
                     FAILED ───────┘ (resume)
-                        ↓
-                   ABANDONED
 ```
 
 States:
-- **CREATED**: Worktree exists, workflow not started
+- **CREATED**: Session initialized, workflow not started
 - **RUNNING**: Workflow executing
 - **PAUSED**: At human gate, waiting for input
 - **FAILED**: Step failed, awaiting retry/resume
 - **COMPLETED**: Workflow finished successfully
-- **ABANDONED**: Manually destroyed before completion
 
-## Key Decisions Needed
+## Session Discovery
 
-- [ ] Session ID format (`task-random` vs `timestamp` vs `uuid`)
-- [ ] Where to store session registry (`.ace/coworker/index.json`?)
-- [ ] Cleanup policy for completed sessions
-- [ ] How to handle orphaned worktrees (from crashed sessions)
+Sessions are discovered by scanning the filesystem:
 
-## Implementation Notes
-
-### Building on ace-git-worktree
-
-Check what's already available:
-
-```bash
-ace-git-worktree --help
+```ruby
+def list_sessions
+  Dir.glob(".cache/ace-coworker/*/job.json").map do |path|
+    JSON.parse(File.read(path))
+  end
+end
 ```
 
-May need to add:
-- List worktrees with metadata
-- Worktree-to-session mapping
+No central registry needed - the filesystem is the source of truth.
 
-### Session Registry
+## Cleanup
 
-Option A: Directory scan (implicit)
-- List directories in `.ace/coworker/`
-- Read `session.json` from each
+Sessions live in `.cache/` which is:
+- Gitignored (not committed)
+- Deleted when worktree is removed
+- Can be manually cleaned with `rm -rf .cache/ace-coworker/`
 
-Option B: Central index (explicit)
-- `.ace/coworker/index.json` with all sessions
-- Faster listing, but sync issues possible
+No automatic TTL for MVP. Sessions stay until manually removed or cache is cleared.
 
-Recommendation: **Option A** - simpler, self-healing
+## Worktree Considerations
 
-## Observability
+ace-coworker works in whatever directory it's run from:
+- Main repo: `.cache/ace-coworker/` in repo root
+- Worktree: `.cache/ace-coworker/` in worktree root
 
-Session listing should be derived from the filesystem and each session's `.ace/overseer/state.json` so status is
-inspectable and recoverable after crashes.
+Each worktree has its own independent sessions.
+
+**Creating worktrees is manual** (or future ace-overseer responsibility):
+
+```bash
+# Manual worktree creation
+ace-git-worktree create --task 228
+
+# Then start coworker in that worktree
+cd .ace/worktrees/task-228
+ace-coworker start --task 228 --workflow task-completion
+```
 
 ## Success Criteria
 
-- [ ] Can create session with worktree isolation
-- [ ] Can list all active sessions
-- [ ] Can attach to session (cd to worktree)
-- [ ] Can destroy session (cleanup worktree)
-- [ ] Session state persists in worktree
+- [ ] Can list all sessions in current directory
+- [ ] Can start session with unique ID
+- [ ] Auto-resumes existing session for same task
+- [ ] Session state isolated per session
 - [ ] Multiple concurrent sessions work correctly
+- [ ] Cleanup happens with cache/worktree removal
