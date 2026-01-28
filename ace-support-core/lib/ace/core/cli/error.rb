@@ -4,6 +4,7 @@ module Ace
   module Core
     module CLI
       # Exception raised to signal non-zero exit code from CLI commands.
+      # Part of the exception-based exit code pattern for ace-* CLI gems.
       #
       # This exception is used in the exception-based exit code pattern
       # defined in ADR-023. Commands raise this error on failure, and
