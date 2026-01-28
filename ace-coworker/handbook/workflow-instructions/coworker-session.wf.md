@@ -101,6 +101,7 @@ steps:
       Report when done: ace-coworker report init.md
 
   - name: implement
+    skill: ace:work-on-task      # Optional skill reference
     instructions: |
       Implement the feature.
       Report when done: ace-coworker report impl.md
@@ -110,6 +111,77 @@ steps:
       Run tests and verify.
       Report when done: ace-coworker report test.md
 ```
+
+## Skill-Aware Steps
+
+Steps can include a `skill:` field that references a Claude Code skill to invoke:
+
+### Recognizing Skill References
+
+When a step has a `skill:` field, invoke that skill as the primary action:
+
+```yaml
+- name: work-on-task
+  skill: ace:work-on-task
+  instructions: |
+    Work on task 123.
+    Follow project conventions.
+```
+
+**Agent Action**: Invoke `/ace:work-on-task 123` then follow the skill workflow.
+
+### Common Skill References
+
+| Skill | Invocation | Purpose |
+|-------|-----------|---------|
+| `onboard` | `/onboard` | Load project context |
+| `ace:work-on-task` | `/ace:work-on-task <taskref>` | Implement task changes |
+| `ace:create-pr` | `/ace:create-pr` | Create pull request |
+| `ace:review-pr` | `/ace:review-pr [pr#]` | Review code changes |
+| `ace:commit` | `/ace:commit` | Generate commit message |
+| `ace:update-pr-desc` | `/ace:update-pr-desc` | Update PR description |
+
+### Skill Invocation Pattern
+
+When executing a step with a skill:
+
+1. **Read step instructions** - Understand context and parameters
+2. **Extract parameters** - Get task IDs, PR numbers from instructions
+3. **Invoke skill** - Run the referenced skill command
+4. **Follow skill workflow** - Complete the skill's process
+5. **Report completion** - Use `ace-coworker report` with results
+
+### Parameter Passing
+
+Extract parameters from instructions for skill invocation:
+
+```yaml
+- name: work-on-task
+  skill: ace:work-on-task
+  instructions: |
+    Work on task 148.          # ← Extract "148" as taskref
+    Implement required changes.
+```
+
+**Agent Action**: Run `/ace:work-on-task 148`
+
+### Dynamic Parameter Updates
+
+Some steps need parameters from previous steps (e.g., PR number):
+
+```yaml
+- name: create-pr
+  skill: ace:create-pr
+  instructions: |
+    Create a pull request.
+    Capture the PR number for subsequent review steps.
+    Update the next steps with the PR number.
+```
+
+When completing this step:
+1. Note the PR number from the skill output
+2. Mentally track for subsequent review steps
+3. Report includes the PR number for reference
 
 ## Step File Format
 
