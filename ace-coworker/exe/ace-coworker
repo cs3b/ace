@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/coworker"
+
+# Start CLI with default command routing and exit with status code
+# The routing logic is now in CLI.start for testability
+result = Ace::Coworker::CLI.start(ARGV)
+exit(result.is_a?(Integer) ? result : 0)
