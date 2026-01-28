@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2026-01-28T01:24:11+00:00
+---
+
 # ACE Coworker: High-Level Overview
 
 ## Naming Clarification
