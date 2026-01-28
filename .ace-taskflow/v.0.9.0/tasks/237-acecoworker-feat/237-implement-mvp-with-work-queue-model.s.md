@@ -1,10 +1,16 @@
 ---
 id: v.0.9.0+task.237
-status: pending
+status: in-progress
 priority: high
 estimate: 6h
 dependencies: []
 parent: v.0.9.0+task.234
+worktree:
+  branch: 237-ace-coworker-mvp-with-work-queue-model
+  path: "../ace-task.237"
+  created_at: '2026-01-28 11:21:58'
+  updated_at: '2026-01-28 11:21:58'
+  target_branch: main
 ---
 
 # ace-coworker MVP with Work Queue Model
