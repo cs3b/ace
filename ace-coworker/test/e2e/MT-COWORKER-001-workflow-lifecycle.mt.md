@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-coworker]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-01-28
+verified-by: claude-opus-4-5
 ---
 
 # Workflow Lifecycle
