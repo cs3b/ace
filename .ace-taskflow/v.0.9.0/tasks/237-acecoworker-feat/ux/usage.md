@@ -2,37 +2,166 @@
 
 ## Overview
 
-ace-coworker manages workflow sessions using a **work queue model**. The queue represents both pending work AND execution history - failed steps are preserved, not overwritten.
+ace-coworker manages workflow sessions using a **file-based work queue model**. Each step is a separate markdown file with frontmatter - the queue is reconstructed by scanning files, not stored in a single JSON file.
 
 ## Core Concepts
 
-### Work Queue Model
+### File-Based Work Queue
 
 ```
-QUEUE STATE EXAMPLE:
-#  STATUS       NAME              NOTES
-1  done         init-project      completed (report: 001-init.md)
-2  done         write-tests       completed
-3  done         implement-foobar  completed
-4  failed       run-tests         "2 tests failed" <- PRESERVED
-5  done         fix-implementation dynamically added
-6  done         run-tests         retry of #4
-7  done         report-status     final step
+SESSION DIRECTORY:
+.cache/ace-coworker/8or5kx/
+├── session.yaml                   # Session metadata
+└── jobs/                          # Work queue files
+    ├── 010-init-project.md        # done (report appended)
+    ├── 020-write-tests.md         # done
+    ├── 030-implement-foobar.md    # done
+    ├── 040-run-tests.md           # FAILED <- preserved
+    ├── 041-fix-implementation.md  # done (dynamically added)
+    ├── 042-run-tests.md           # done (retry of 040)
+    └── 050-report-status.md       # done
 ```
 
 Key behaviors:
-- **History Preservation**: Failed items stay in queue showing what happened
-- **Retry Creates New**: Retrying step #4 creates NEW step #6, original stays
+- **History Preservation**: Failed items remain as files showing what happened
+- **Retry Creates New File**: Retrying step 040 creates 042-run-tests.md, original 040 stays
 - **Dynamic Work**: Add steps during execution with `ace-coworker add`
+- **Corruption Isolation**: One file fails, others survive
+- **Git-Friendly**: Better diffs, easier merges
+
+### Numbering Convention
+
+| Pattern | Purpose | Example |
+|---------|---------|---------|
+| `010`, `020`, `030` | Main tasks (10-step gaps) | `010-init-project.md` |
+| `010.01`, `010.02` | Subtasks of main task | `010.01-setup-dirs.md` |
+| `010.01.01` | Sub-subtasks (3 levels max) | `010.01.01-create-lib.md` |
+| `041`, `042` | Injected after existing | `041-fix-implementation.md` |
 
 ### Status States
 
 | Status | Description |
 |--------|-------------|
-| `done` | Completed successfully |
+| `pending` | Waiting to be executed |
 | `in_progress` | Currently being worked on (only one at a time) |
-| `in_queue` | Waiting to be executed |
+| `done` | Completed successfully |
 | `failed` | Failed and preserved as history |
+
+## session.yaml Schema
+
+```yaml
+session_id: 8or5kx
+name: foobar-gem-session
+description: Create a minimal Ruby gem with FooBar class
+created_at: 2026-01-28T10:30:00Z
+updated_at: 2026-01-28T11:15:00Z
+source_config: job.yaml
+```
+
+## Job File Schema (jobs/*.md)
+
+### Frontmatter Fields
+
+```yaml
+---
+name: init-project                 # Step name (required)
+status: done                       # pending | in_progress | done | failed
+started_at: 2026-01-28T10:30:00Z   # When work began (optional)
+completed_at: 2026-01-28T10:35:00Z # When finished (optional, if done/failed)
+error: null                        # Error message (optional, if failed)
+added_by: null                     # null | dynamic | retry_of:040 (optional)
+parent: 010                        # Parent task number (optional, for subtasks)
+---
+```
+
+### File Lifecycle
+
+A job file evolves through its lifecycle:
+
+**1. Initial State (pending):**
+```markdown
+---
+name: implement-foobar
+status: pending
+---
+
+# Instructions
+
+Create the FooBar class with `greet` and `shout` methods.
+
+```ruby
+class FooBar
+  def greet(name)
+    "Hello, #{name}!"
+  end
+end
+```
+```
+
+**2. Work Started (in_progress):**
+```markdown
+---
+name: implement-foobar
+status: in_progress
+started_at: 2026-01-28T10:38:00Z
+---
+
+# Instructions
+
+Create the FooBar class with `greet` and `shout` methods.
+...
+```
+
+**3. Completed (done with report appended):**
+```markdown
+---
+name: implement-foobar
+status: done
+started_at: 2026-01-28T10:38:00Z
+completed_at: 2026-01-28T10:45:00Z
+---
+
+# Instructions
+
+Create the FooBar class with `greet` and `shout` methods.
+
+```ruby
+class FooBar
+  def greet(name)
+    "Hello, #{name}!"
+  end
+end
+```
+
+---
+
+# Report
+
+Implemented FooBar class with both methods.
+- greet: returns greeting string
+- shout: returns uppercase greeting
+
+Files created:
+- lib/foo_bar.rb
+```
+
+**4. Failed State:**
+```markdown
+---
+name: run-tests
+status: failed
+started_at: 2026-01-28T10:42:00Z
+completed_at: 2026-01-28T10:43:00Z
+error: "2 tests failed: test_greet, test_shout"
+---
+
+# Instructions
+
+Run the tests:
+```bash
+ruby -Ilib:test test/foo_bar_test.rb
+```
+```
 
 ## CLI Commands
 
@@ -44,7 +173,8 @@ ace-coworker start --config job.yaml
 
 # Output:
 # Session: foobar-gem-session (8or5kx)
-# Step 1/5: init-project [in_progress]
+# Created: .cache/ace-coworker/8or5kx/
+# Step 010: init-project [in_progress]
 #
 # Instructions:
 # Create a minimal Ruby project structure:
@@ -57,13 +187,13 @@ ace-coworker start --config job.yaml
 ace-coworker status
 
 # Output:
-# QUEUE - Session: foobar-gem-session
-# #  STATUS       NAME
-# 1  done         init-project
-# 2  done         write-tests
-# 3  in_progress  implement-foobar
-# 4  in_queue     run-tests
-# 5  in_queue     report-status
+# QUEUE - Session: foobar-gem-session (8or5kx)
+# FILE                           STATUS       NAME
+# 010-init-project.md            done         init-project
+# 020-write-tests.md             done         write-tests
+# 030-implement-foobar.md        in_progress  implement-foobar
+# 040-run-tests.md               pending      run-tests
+# 050-report-status.md           pending      report-status
 ```
 
 ### Complete Step with Report
@@ -72,8 +202,9 @@ ace-coworker status
 ace-coworker report impl-report.md
 
 # Output:
-# Step 3/5 (implement-foobar) completed
-# Advancing to step 4/5: run-tests
+# Step 030 (implement-foobar) completed
+# Report appended to: jobs/030-implement-foobar.md
+# Advancing to step 040: run-tests
 #
 # Instructions:
 # Run the tests:
@@ -86,12 +217,13 @@ ace-coworker report impl-report.md
 ace-coworker fail --message "2 tests failed: test_greet, test_shout"
 
 # Output:
-# Step 4 (run-tests) marked as failed
+# Step 040 (run-tests) marked as failed
+# Updated: jobs/040-run-tests.md
 # Error: 2 tests failed: test_greet, test_shout
 #
 # Options:
 # - ace-coworker add "fix-step" to add a fix step
-# - ace-coworker retry 4 to retry this step
+# - ace-coworker retry 040 to retry this step
 ```
 
 ### Add Step Dynamically
@@ -100,23 +232,22 @@ ace-coworker fail --message "2 tests failed: test_greet, test_shout"
 ace-coworker add "fix-implementation" --instructions "Fix the FooBar bug"
 
 # Output:
-# Added step: fix-implementation
-# Queue position: after step 4 (run-tests failed)
+# Created: jobs/041-fix-implementation.md
 # Status: in_progress
 ```
 
 ### Retry Failed Step
 
 ```bash
-ace-coworker retry 4
+ace-coworker retry 040
 
 # Output:
-# Added retry of step 4 (run-tests) as step 6
-# Original step 4 preserved: failed (2 tests failed)
-# Note: Step 5 (fix-implementation) must complete first
+# Created: jobs/042-run-tests.md (retry of 040)
+# Original 040-run-tests.md preserved: failed
+# Note: Step 041 (fix-implementation) must complete first
 ```
 
-## job.yaml Format
+## job.yaml Input Format
 
 ```yaml
 session:
@@ -162,77 +293,12 @@ steps:
       ```
 
       Report with test output: ace-coworker report test-results.md
-    verifications:
-      - ruby -Ilib:test test/foo_bar_test.rb
 
   - name: report-status
     instructions: |
       Summarize what was created...
 
       Final report: ace-coworker report final-report.md
-```
-
-## job.json State Format
-
-```json
-{
-  "version": 1,
-  "session_id": "8or5kx",
-  "session_name": "foobar-gem-session",
-  "created_at": "2026-01-28T10:30:00Z",
-  "updated_at": "2026-01-28T11:15:00Z",
-  "queue": [
-    {
-      "id": 1,
-      "name": "init-project",
-      "status": "done",
-      "started_at": "2026-01-28T10:30:00Z",
-      "completed_at": "2026-01-28T10:35:00Z",
-      "report": "reports/001-init-project.md"
-    },
-    {
-      "id": 2,
-      "name": "run-tests",
-      "status": "failed",
-      "started_at": "2026-01-28T10:45:00Z",
-      "completed_at": "2026-01-28T10:46:00Z",
-      "error": "2 tests failed: test_greet, test_shout"
-    },
-    {
-      "id": 3,
-      "name": "fix-implementation",
-      "status": "done",
-      "started_at": "2026-01-28T10:46:00Z",
-      "completed_at": "2026-01-28T10:50:00Z",
-      "added_by": "dynamic",
-      "report": "reports/003-fix-implementation.md"
-    },
-    {
-      "id": 4,
-      "name": "run-tests",
-      "status": "in_progress",
-      "started_at": "2026-01-28T10:50:00Z",
-      "added_by": "retry_of:2"
-    },
-    {
-      "id": 5,
-      "name": "report-status",
-      "status": "in_queue"
-    }
-  ]
-}
-```
-
-## Session Directory Structure
-
-```
-.cache/ace-coworker/8or5kx/
-├── job.json                    # Session state
-└── reports/                    # Step reports
-    ├── 001-init-project.md
-    ├── 002-write-tests.md
-    ├── 003-fix-implementation.md
-    └── 004-run-tests.md
 ```
 
 ## Usage Scenarios
@@ -252,7 +318,7 @@ ace-coworker report final-report.md
 
 # Final status shows all done
 ace-coworker status
-# All 5 steps: done
+# All files show status: done
 ```
 
 ### Scenario 2: Failure and Recovery
@@ -274,7 +340,7 @@ ace-coworker add "fix-bug" --instructions "Fix the implementation bug"
 ace-coworker report fix-report.md
 
 # Retry tests
-ace-coworker retry 4
+ace-coworker retry 040
 ace-coworker report test-results.md
 
 # Final status shows history
@@ -282,17 +348,25 @@ ace-coworker status
 # Shows: done, done, done, FAILED (preserved), done, done
 ```
 
-### Scenario 3: Dynamic Work Addition
+### Scenario 3: Subtask Injection
 
 ```bash
-# Mid-workflow, realize more work needed
+# Mid-workflow, break down a complex step
 ace-coworker status
-# Step 3 in_progress
+# Step 030 in_progress
 
-# Add verification step
-ace-coworker add "verify-coverage" --instructions "Check test coverage > 80%"
+# Add subtasks for step 030
+ace-coworker add "030.01-design-api" --instructions "Design the API interface"
+ace-coworker add "030.02-implement-core" --instructions "Implement core logic"
+ace-coworker add "030.03-add-validation" --instructions "Add input validation"
 
-# Continue workflow - new step executes after current
+# Complete subtasks in order
+ace-coworker report design-report.md
+ace-coworker report core-report.md
+ace-coworker report validation-report.md
+
+# Then complete the parent
+ace-coworker report impl-report.md
 ```
 
 ## Error Handling
@@ -302,7 +376,7 @@ ace-coworker add "verify-coverage" --instructions "Check test coverage > 80%"
 | No session | "Error: No active session. Use 'ace-coworker start' to begin." |
 | Missing config | "Error: Config file not found: job.yaml" |
 | Missing report | "Error: Report file not found: report.md" |
-| Invalid step | "Error: Step 99 not found in queue" |
+| Invalid step | "Error: Step 099 not found in queue" |
 | Already complete | "Error: Session already completed. Start new session." |
 
 ## Exit Codes
@@ -312,4 +386,6 @@ ace-coworker add "verify-coverage" --instructions "Check test coverage > 80%"
 | 0 | Success |
 | 1 | General error |
 | 2 | No active session |
-| 3 | File not found |
+| 3 | File not found (config or report) |
+| 4 | Invalid step reference |
+| 5 | Session already completed |

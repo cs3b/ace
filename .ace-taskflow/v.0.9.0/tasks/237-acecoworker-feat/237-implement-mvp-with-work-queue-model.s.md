@@ -38,8 +38,14 @@ The ace-coworker gem manages workflow sessions using a **work queue model** wher
 4. **Status States**: Queue items have four states:
    - `done` - Completed successfully
    - `in_progress` - Currently being worked on (only one at a time)
-   - `in_queue` - Waiting to be executed
+   - `pending` - Waiting to be executed
    - `failed` - Failed and preserved as history
+
+5. **File-Based Storage**: Each step is a separate markdown file with frontmatter. This provides:
+   - Corruption isolation (one file fails, others survive)
+   - Git-friendly diffs and merges
+   - Natural subtask injection via hierarchical numbering
+   - Human-readable history aligned with ACE patterns
 
 ### Interface Contract
 
@@ -48,7 +54,8 @@ The ace-coworker gem manages workflow sessions using a **work queue model** wher
 ace-coworker start --config job.yaml
 # Output:
 # Session: foobar-gem-session (8or5kx)
-# Step 1/5: init-project [in_progress]
+# Created: .cache/ace-coworker/8or5kx/
+# Step 010: init-project [in_progress]
 #
 # Instructions:
 # Create a minimal Ruby project structure...
@@ -56,37 +63,40 @@ ace-coworker start --config job.yaml
 # Check current queue status
 ace-coworker status
 # Output:
-# QUEUE - Session: foobar-gem-session
-# #  STATUS       NAME
-# 1  done         init-project
-# 2  done         write-tests
-# 3  in_progress  implement-foobar
-# 4  in_queue     run-tests
-# 5  in_queue     report-status
+# QUEUE - Session: foobar-gem-session (8or5kx)
+# FILE                           STATUS       NAME
+# 010-init-project.md            done         init-project
+# 020-write-tests.md             done         write-tests
+# 030-implement-foobar.md        in_progress  implement-foobar
+# 040-run-tests.md               pending      run-tests
+# 050-report-status.md           pending      report-status
 
 # Complete current step with a report file
 ace-coworker report impl-report.md
 # Output:
-# Step 3/5 (implement-foobar) completed
-# Advancing to step 4/5: run-tests
+# Step 030 (implement-foobar) completed
+# Report appended to: jobs/030-implement-foobar.md
+# Advancing to step 040: run-tests
 # Instructions: ...
 
 # Mark current step as failed
 ace-coworker fail --message "2 tests failed: test_greet, test_shout"
 # Output:
-# Step 4 (run-tests) marked as failed
+# Step 040 (run-tests) marked as failed
+# Updated: jobs/040-run-tests.md
 # Error: 2 tests failed: test_greet, test_shout
 
 # Add new step dynamically
 ace-coworker add "fix-implementation" --instructions "Fix the FooBar bug"
 # Output:
-# Added step: fix-implementation (in_progress)
+# Created: jobs/041-fix-implementation.md
+# Status: in_progress
 
 # Retry a failed step (creates NEW queue item)
-ace-coworker retry 4
+ace-coworker retry 040
 # Output:
-# Added retry of step 4 (run-tests) as step 6
-# Step 5 (fix-implementation) must complete first
+# Created: jobs/042-run-tests.md (retry of 040)
+# Step 041 (fix-implementation) must complete first
 ```
 
 **Error Handling:**
@@ -97,26 +107,52 @@ ace-coworker retry 4
 
 **Edge Cases:**
 - Starting session when one exists: Warn and offer to resume or create new
-- Adding step when none in_progress: Insert after last done step
+- Adding step: If `in_progress` exists → insert after it; else → insert after last `done` step
 - Retry of already-completed step: Create new step anyway (re-verification)
 
 ### Success Criteria
 
-- [ ] `ace-coworker start --config job.yaml` creates session and shows first step
-- [ ] `ace-coworker status` displays full queue with all states (done/in_progress/in_queue/failed)
-- [ ] `ace-coworker report <file>` completes current step and advances queue
-- [ ] `ace-coworker fail --message "..."` marks step as failed (preserved in queue)
-- [ ] `ace-coworker add "step-name"` inserts new step dynamically
-- [ ] `ace-coworker retry <step-id>` creates new queue item, preserves original failed
-- [ ] Queue history shows complete execution path including all failures and retries
-- [ ] Session state persists in job.json (can resume after interruption)
+- [ ] `ace-coworker start --config job.yaml` creates session folder with `session.yaml` and `jobs/` subfolder
+- [ ] `ace-coworker status` displays full queue from `jobs/*.md` files (done/in_progress/pending/failed)
+- [ ] `ace-coworker report <file>` appends report to current step's `.md` file and advances queue
+- [ ] `ace-coworker fail --message "..."` updates frontmatter status=failed, preserves file
+- [ ] `ace-coworker add "step-name"` creates new `.md` file with next available number
+- [ ] `ace-coworker retry <step-id>` creates new `.md` file with `added_by: retry_of:NNN`
+- [ ] Queue history shows complete execution path (all files remain, including failed)
+- [ ] Session state persists as files (can resume after interruption)
 
 ### Validation Questions
 
-- [x] **Queue Position**: Where should dynamically added steps be inserted? → After current in_progress step
+- [x] **Queue Position**: Where should dynamically added steps be inserted? → After current `in_progress` step (or after last `done` if none in progress)
 - [x] **Retry Semantics**: Should retry overwrite or preserve? → PRESERVE (create new item)
 - [x] **Status Display**: Show all items or filter by state? → Show ALL (queue is history)
-- [ ] **Concurrent Sessions**: Allow multiple sessions per directory? → Defer to later task
+- [x] **Concurrent Sessions**: Allow multiple sessions per directory? → Deferred to later task (out of scope for MVP)
+- [x] **Storage Model**: Single JSON or file-based? → FILE-BASED (hierarchical markdown files)
+
+### File-Based Storage Model
+
+```
+.cache/ace-coworker/<session-id>/
+├── session.yaml                   # Session metadata
+└── jobs/                          # Work queue files (lexicographic order)
+    ├── 010-init-project.md        # Main task
+    ├── 010.01-setup-dirs.md       # Subtask of 010 (optional)
+    ├── 010.01.01-create-lib.md    # Sub-subtask (3 levels max)
+    ├── 020-write-tests.md
+    ├── 030-implement-foobar.md
+    ├── 040-run-tests.md           # [failed]
+    ├── 041-fix-implementation.md  # Injected after failure
+    ├── 042-run-tests.md           # Retry of 040
+    └── 050-report-status.md
+```
+
+**Numbering Rules:**
+- Main tasks: `010`, `020`, `030` (10-step gaps for injection room)
+- Subtasks: `.01`, `.02` (2-digit padding)
+- Sub-subtasks: `.01.01`, `.01.02` (3 levels max)
+- Dynamic injection: next available number (`041` after `040`)
+
+**Queue Reconstruction:** Scan `jobs/*.md`, sort lexicographically, parse frontmatter for status.
 
 ## Objective
 
@@ -130,14 +166,14 @@ Create a simplified ace-coworker gem that manages workflow sessions using a work
 
 - **User Experience Scope**: CLI commands for session lifecycle (start, status, report, fail, add, retry)
 - **System Behavior Scope**: Work queue management with history preservation
-- **Interface Scope**: YAML input (job.yaml), JSON state (job.json), CLI commands
+- **Interface Scope**: YAML input (job.yaml), file-based state (session.yaml + jobs/*.md), CLI commands
 
 ### Deliverables
 
 #### Behavioral Specifications
 - Complete CLI command interface with expected inputs/outputs
 - Work queue state model with status transitions
-- Session persistence format (job.json schema)
+- Session persistence format (session.yaml + jobs/*.md schemas)
 - E2E test scenario validating queue behavior
 
 #### Validation Artifacts
@@ -154,6 +190,6 @@ Create a simplified ace-coworker gem that manages workflow sessions using a work
 
 ## References
 
-- Plan file: `/Users/mc/.claude/plans/expressive-napping-allen.md`
+- Plan file: (session-local, not persisted)
 - Related task: v.0.9.0+task.234 (parent orchestrator)
 - Existing specs (reference only): 234.01-234.08 subtasks
