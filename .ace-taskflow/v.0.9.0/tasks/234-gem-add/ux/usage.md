@@ -90,9 +90,12 @@ Sessions are stored in `.cache/ace-coworker/{session-id}/`:
 
 ### job.json Schema (v1)
 
+**MVP Schema (Task 234.01):**
+
 ```json
 {
   "version": 1,
+  "session_id": "8or5kx",
   "task_id": "228",
   "workflow": "work-on-task",
   "status": "running",
@@ -106,14 +109,158 @@ Sessions are stored in `.cache/ace-coworker/{session-id}/`:
 }
 ```
 
-## Workflow Definition
+**Full Schema (Task 234.04+):**
 
-The default workflow `work-on-task` has two steps:
+```json
+{
+  "version": 1,
+  "session_id": "8or5kx",
+  "task_id": "228",
+  "workflow": "task-completion",
+  "status": "running",
+  "current_step": 2,
+  "started_at": "2026-01-27T20:00:00Z",
+  "updated_at": "2026-01-27T20:16:00Z",
+  "steps": [
+    {
+      "name": "implement",
+      "status": "completed",
+      "attempts": 1,
+      "completed_at": "2026-01-27T20:15:00Z"
+    },
+    {
+      "name": "commit",
+      "status": "completed",
+      "attempts": 1,
+      "completed_at": "2026-01-27T20:16:00Z"
+    },
+    {
+      "name": "test",
+      "status": "in_progress",
+      "attempts": 2,
+      "last_error": "3 tests failed: test_a, test_b, test_c"
+    },
+    {
+      "name": "review-gate",
+      "status": "pending"
+    },
+    {
+      "name": "create-pr",
+      "status": "pending"
+    }
+  ],
+  "gate": null
+}
+```
 
-1. **implement** - Execute the work-on-task workflow to implement the task
-2. **release** - Execute the draft-release workflow to prepare for release
+### Session Status Lifecycle
 
-Workflows are defined in `.ace-defaults/coworker/workflows/work-on-task.wf.yml`.
+```
+[start] → created → running → paused → completed
+                       ↓         ↑
+                    failed ──────┘ (resume)
+```
+
+| Status | Description |
+|--------|-------------|
+| `created` | Session initialized, workflow not started |
+| `running` | Workflow executing |
+| `paused` | At human gate, waiting for approval (234.06) |
+| `failed` | Step failed, awaiting retry/resume (234.04) |
+| `completed` | Workflow finished successfully |
+
+### Step Status Values
+
+| Status | Description |
+|--------|-------------|
+| `pending` | Not yet started |
+| `in_progress` | Currently executing |
+| `completed` | Finished successfully |
+| `failed` | Failed (may be retried) |
+| `skipped` | Skipped (future: conditional steps) |
+
+## Workflow Definition Format
+
+Workflows are YAML files in `.ace-defaults/coworker/workflows/`. Each defines a sequence of steps with instructions, verifications, and control flow.
+
+### Basic Workflow (MVP - Task 234.01)
+
+`.ace-defaults/coworker/workflows/work-on-task.wf.yml`:
+
+```yaml
+name: work-on-task
+description: Two-step task completion workflow
+
+steps:
+  - name: implement
+    instruction: |
+      Execute wfi://work-on-task workflow.
+      When complete, report results with: ace-coworker report <file>
+
+  - name: release
+    instruction: |
+      Execute wfi://draft-release workflow.
+      When complete, report results with: ace-coworker report <file>
+```
+
+### Full Workflow Schema (Task 234.04+)
+
+Complete schema with verifications, retries, and gates:
+
+```yaml
+name: task-completion
+description: Complete a task through implementation, testing, and PR
+
+steps:
+  - name: implement
+    instruction: |
+      Execute wfi://work-on-task for task $task_id.
+      When complete, report results with: ace-coworker report <file>
+    verifications:              # (Task 234.04)
+      - ace-test passes
+      - no lint errors
+    retries: 5                  # Max retry attempts
+    timeout: 30m                # Step timeout
+    on_repeated_failure: 3      # Stop after N same errors
+    restart_hint: "Focus on one failing test at a time"
+
+  - name: commit
+    instruction: |
+      Execute wfi://commit workflow.
+      When complete, report results with: ace-coworker report <file>
+    verifications:
+      - commit created
+
+  - name: review-gate           # (Task 234.06)
+    gate: human
+    prompt: "Review implementation before creating PR"
+
+  - name: create-pr
+    instruction: |
+      Execute wfi://create-pr workflow.
+      When complete, report results with: ace-coworker report <file>
+```
+
+### Step Schema Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | yes | Step identifier |
+| `instruction` | string | yes* | Instructions for agent (*not for gates) |
+| `verifications` | string[] | no | Commands that must succeed (234.04) |
+| `retries` | int | no | Max retry attempts (default: 5) |
+| `timeout` | duration | no | Step timeout (default: 30m) |
+| `on_repeated_failure` | int | no | Stop after N identical errors (default: 3) |
+| `restart_hint` | string | no | Guidance for retries |
+| `gate` | string | no | Gate type: `human` (234.06) |
+| `prompt` | string | no | Gate prompt for human approval |
+
+### Variable Interpolation
+
+Steps support variable interpolation:
+- `$task_id` - Task ID from `--task` flag
+- `$session_id` - Current session ID
+- `$step_name` - Current step name
 
 ## Agent Integration
 
