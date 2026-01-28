@@ -18,5 +18,12 @@ ACE emphasizes CLI-first, agent-agnostic tooling with file-based state. Constrai
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Minimal, independent gem**
+
+| Constraint | Decision |
+|------------|----------|
+| ace-taskflow integration | Optional - coworker defines its own schema/documents |
+| Package | New gem: `ace-coworker` |
+| Agent support | Any agent that can run CLI + read files. Thin skill layer for workflows. |
+| Dependencies | Minimal (Ruby stdlib + ace-support-*) |
+| Offline | Not our concern - agents use LLMs, if LLM is offline we work offline |

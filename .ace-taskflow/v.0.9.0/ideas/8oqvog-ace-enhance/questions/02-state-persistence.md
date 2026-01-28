@@ -93,5 +93,4 @@ JSON preferred for state:
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Hybrid approach** - `.cache/ace-overseer/{ace-timestamp}/state.json`. Each worktree (including main) has its own local cache. Session ID (ace-timestamp) allows multiple concurrent sessions per worktree. State is temporary/cache, not committed. JSON format.

@@ -106,5 +106,14 @@ This way:
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Option C - CLI Core, independent from agents**
+
+ace-overseer follows the established ace-* pattern:
+- CLI tool (`exe/ace-overseer`)
+- handbook/ (workflows, agents, templates, guides)
+- config (`.ace-defaults/`, `.ace/` cascade)
+- Works standalone without any agent
+
+**Philosophy:** Don't optimize FOR Claude Code → make sure it WORKS WITH Claude Code.
+
+Integration is separate and thin (ace-integration-claude or .claude/skills/). Core gem has zero Claude Code dependencies. Any agent that can run CLI + read files can use it.

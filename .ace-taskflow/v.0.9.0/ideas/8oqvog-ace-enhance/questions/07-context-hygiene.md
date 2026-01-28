@@ -61,5 +61,11 @@ Use a standard context template, plus an explicit include list per step.
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Option B - Step-scoped bundle**
+
+Fresh context per step with only:
+- Task/spec
+- Last error summary (on retry)
+- Step-specific includes (defined in workflow YAML per step)
+
+Workflows are self-sufficient - taskflow stores everything needed. Each step config defines what additional context to pass (as per Q3 decision). Enforce size budget to avoid prompt bloat.

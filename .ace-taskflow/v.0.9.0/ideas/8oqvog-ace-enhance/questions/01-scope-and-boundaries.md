@@ -72,5 +72,4 @@ If TUI becomes important, extract `ace-coworker` later. YAGNI applies here.
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Option C** - Two components. `ace-overseer` handles workflow + session. Workers are external. Create `ace-coworker` as backlog task for future TUI/multi-session needs.
