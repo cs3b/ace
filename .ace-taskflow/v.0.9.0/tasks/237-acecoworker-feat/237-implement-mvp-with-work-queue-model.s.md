@@ -141,14 +141,14 @@ ace-coworker retry 040
 
 ### Success Criteria
 
-- [ ] `ace-coworker start --config job.yaml` creates session folder with `session.yaml` and `jobs/` subfolder
-- [ ] `ace-coworker status` displays full queue from `jobs/*.md` files (done/in_progress/pending/failed)
-- [ ] `ace-coworker report <file>` appends report to current step's `.md` file and advances queue
-- [ ] `ace-coworker fail --message "..."` updates frontmatter status=failed, preserves file
-- [ ] `ace-coworker add "step-name"` creates new `.md` file with next available number
-- [ ] `ace-coworker retry <step-id>` creates new `.md` file with `added_by: retry_of:NNN`
-- [ ] Queue history shows complete execution path (all files remain, including failed)
-- [ ] Session state persists as files (can resume after interruption)
+- [x] `ace-coworker start --config job.yaml` creates session folder with `session.yaml` and `jobs/` subfolder
+- [x] `ace-coworker status` displays full queue from `jobs/*.md` files (done/in_progress/pending/failed)
+- [x] `ace-coworker report <file>` appends report to current step's `.md` file and advances queue
+- [x] `ace-coworker fail --message "..."` updates frontmatter status=failed, preserves file
+- [x] `ace-coworker add "step-name"` creates new `.md` file with next available number
+- [x] `ace-coworker retry <step-id>` creates new `.md` file with `added_by: retry_of:NNN`
+- [x] Queue history shows complete execution path (all files remain, including failed)
+- [x] Session state persists as files (can resume after interruption)
 
 ### Validation Questions
 
@@ -407,52 +407,52 @@ None - this is a new gem.
 
 ### Execution Steps
 
-- [ ] **Phase 1: Gem Scaffold**
-  - [ ] Create `ace-coworker/` directory structure
-  - [ ] Create gemspec with dependencies
-  - [ ] Create `lib/ace/coworker.rb` with config loading
-  - [ ] Create `lib/ace/coworker/version.rb`
-  - [ ] Create `exe/ace-coworker` entrypoint
-  - [ ] Create `.ace-defaults/coworker/config.yml`
-  - [ ] Create Rakefile, CHANGELOG.md, README.md
+- [x] **Phase 1: Gem Scaffold**
+  - [x] Create `ace-coworker/` directory structure
+  - [x] Create gemspec with dependencies
+  - [x] Create `lib/ace/coworker.rb` with config loading
+  - [x] Create `lib/ace/coworker/version.rb`
+  - [x] Create `exe/ace-coworker` entrypoint
+  - [x] Create `.ace-defaults/coworker/config.yml`
+  - [x] Create Rakefile, CHANGELOG.md, README.md
   > TEST: Gem Scaffold
   > Type: Action Validation
   > Assert: `bundle exec ruby -e "require 'ace/coworker'; puts Ace::Coworker::VERSION"` succeeds
   > Command: ace-test ace-coworker
 
-- [ ] **Phase 2: Models (Pure Data)**
-  - [ ] Create `models/session.rb` with immutable attributes
-  - [ ] Create `models/step.rb` with status enum
-  - [ ] Create `models/queue_state.rb` for queue snapshot
+- [x] **Phase 2: Models (Pure Data)**
+  - [x] Create `models/session.rb` with immutable attributes
+  - [x] Create `models/step.rb` with status enum
+  - [x] Create `models/queue_state.rb` for queue snapshot
   > TEST: Models
   > Type: Unit Tests
   > Assert: Models are pure data carriers with no behavior
   > Command: ace-test ace-coworker test/models/
 
-- [ ] **Phase 3: Atoms (Pure Functions)**
-  - [ ] Create `atoms/number_generator.rb`
+- [x] **Phase 3: Atoms (Pure Functions)**
+  - [x] Create `atoms/number_generator.rb`
     - `next_main(nil)` → "010"
     - `next_main("040")` → "050"
     - `next_after("040")` → "041"
     - `subtask("030", 1)` → "030.01"
-  - [ ] Create `atoms/step_file_parser.rb`
+  - [x] Create `atoms/step_file_parser.rb`
     - Parse frontmatter + body
     - Extract status, name, instructions, report sections
-  - [ ] Create `atoms/step_sorter.rb`
+  - [x] Create `atoms/step_sorter.rb`
     - Lexicographic sort with hierarchical awareness
   > TEST: Atoms
   > Type: Unit Tests
   > Assert: All atom functions are pure (same input → same output)
   > Command: ace-test ace-coworker test/atoms/
 
-- [ ] **Phase 4: Molecules (I/O Operations)**
-  - [ ] Create `molecules/session_manager.rb`
+- [x] **Phase 4: Molecules (I/O Operations)**
+  - [x] Create `molecules/session_manager.rb`
     - Create/load/update session.yaml
     - Generate session ID using ace-support-timestamp
-  - [ ] Create `molecules/queue_scanner.rb`
+  - [x] Create `molecules/queue_scanner.rb`
     - Glob jobs/*.md, sort, parse each
     - Build QueueState from files
-  - [ ] Create `molecules/step_writer.rb`
+  - [x] Create `molecules/step_writer.rb`
     - Create new step files with frontmatter
     - Update existing step frontmatter
     - Append report content to step file
@@ -461,8 +461,8 @@ None - this is a new gem.
   > Assert: File operations work correctly with temp directories
   > Command: ace-test ace-coworker test/molecules/
 
-- [ ] **Phase 5: Organisms (Business Logic)**
-  - [ ] Create `organisms/workflow_executor.rb`
+- [x] **Phase 5: Organisms (Business Logic)**
+  - [x] Create `organisms/workflow_executor.rb`
     - `start(config_path)`: Create session, populate initial queue, set first step in_progress
     - `advance(report_path)`: Complete current step, advance to next
     - `fail(message)`: Mark current step as failed
@@ -473,21 +473,21 @@ None - this is a new gem.
   > Assert: State machine transitions work correctly
   > Command: ace-test ace-coworker test/organisms/
 
-- [ ] **Phase 6: CLI Commands**
-  - [ ] Create `cli.rb` with dry-cli registry
-  - [ ] Create `commands/start.rb`
-  - [ ] Create `commands/status.rb`
-  - [ ] Create `commands/report.rb`
-  - [ ] Create `commands/fail.rb`
-  - [ ] Create `commands/add.rb`
-  - [ ] Create `commands/retry_cmd.rb` (avoid Ruby keyword)
+- [x] **Phase 6: CLI Commands**
+  - [x] Create `cli.rb` with dry-cli registry
+  - [x] Create `commands/start.rb`
+  - [x] Create `commands/status.rb`
+  - [x] Create `commands/report.rb`
+  - [x] Create `commands/fail.rb`
+  - [x] Create `commands/add.rb`
+  - [x] Create `commands/retry_cmd.rb` (avoid Ruby keyword)
   > TEST: CLI Commands
   > Type: Command Tests
   > Assert: All commands return correct exit codes
   > Command: ace-test ace-coworker test/commands/
 
-- [ ] **Phase 7: E2E Test Scenario**
-  - [ ] Create E2E test: MT-COWORKER-001 (Work Queue Session Lifecycle)
+- [x] **Phase 7: E2E Test Scenario**
+  - [x] Create E2E test: MT-COWORKER-001 (Work Queue Session Lifecycle)
     - Start session from job.yaml
     - Check status shows queue
     - Report completion, verify advancement
@@ -500,10 +500,10 @@ None - this is a new gem.
   > Assert: Full workflow executes correctly
   > Command: ace-test ace-coworker test/e2e/
 
-- [ ] **Phase 8: Documentation**
-  - [ ] Update README.md with installation and usage
-  - [ ] Create handbook/workflow-instructions/coworker-session.wf.md
-  - [ ] Update CHANGELOG.md
+- [x] **Phase 8: Documentation**
+  - [x] Update README.md with installation and usage
+  - [x] Create handbook/workflow-instructions/coworker-session.wf.md
+  - [x] Update CHANGELOG.md
 
 ## Test Case Summary
 
@@ -541,13 +541,13 @@ None - this is a new gem.
 
 ## Acceptance Criteria
 
-- [ ] AC 1: All 6 CLI commands implemented and tested
-- [ ] AC 2: Queue state persists across process restarts
-- [ ] AC 3: Failed steps are preserved in queue history
-- [ ] AC 4: Dynamic step addition works correctly
-- [ ] AC 5: Retry creates new linked step
-- [ ] AC 6: E2E test MT-COWORKER-001 passes
-- [ ] AC 7: All tests pass via `ace-test ace-coworker`
+- [x] AC 1: All 6 CLI commands implemented and tested
+- [x] AC 2: Queue state persists across process restarts
+- [x] AC 3: Failed steps are preserved in queue history
+- [x] AC 4: Dynamic step addition works correctly
+- [x] AC 5: Retry creates new linked step
+- [x] AC 6: E2E test MT-COWORKER-001 passes
+- [x] AC 7: All tests pass via `ace-test ace-coworker`
 
 ## References
 
