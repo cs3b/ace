@@ -60,5 +60,16 @@ avoid tight runtime coupling.
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Flip the naming**
+
+| Name | Role | Status |
+|------|------|--------|
+| **ace-coworker** | Single session workflow executor | Build first |
+| **ace-overseer** | Orchestrates multiple coworkers/sessions | Postponed (backlog) |
+
+ace-coworker works on ONE session - workflow execution, state, checkpoints, gates.
+ace-overseer (future) manages MULTIPLE coworkers - spawning sessions, distributing work.
+
+This matches natural meaning: overseer supervises multiple coworkers.
+
+**Action:** Update all plan documents (000-overview.md, etc.) to reflect this naming.

@@ -17,5 +17,26 @@ The overseer must be resilient without hiding failures. Clear retry and abort ru
 
 ## Decision Status
 
-- [ ] Pending discussion
-- [ ] Decided: _____________
+- [x] Decided: **Configurable per-step with generous defaults**
+
+**Failure types:**
+| Type | Behavior |
+|------|----------|
+| Verification failed / missing report | Retry (up to 5x default) |
+| Same status repeated (tracked in log) | 3 retries, then escalate/stop |
+| Crash / unknown | Dedicated analysis workflow |
+
+**Trust agents:** They're good at reaching goals if goals aren't too big.
+
+**Per-step config (optional, generous defaults):**
+```yaml
+steps:
+  - name: test
+    instructions: ace-bundle wfi://run-tests
+    retries: 5              # generous default
+    timeout: 30m            # generous default
+    on_repeated_failure: 3  # same error 3x → stop
+    restart_hint: "Check test output, fix one test at a time"
+```
+
+**Logging:** Track all failures in session log to detect patterns and enable analysis.
