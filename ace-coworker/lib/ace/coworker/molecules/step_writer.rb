@@ -34,7 +34,7 @@ module Ace
           frontmatter["parent"] = parent if parent
 
           content = build_file_content(frontmatter, instructions)
-          File.write(file_path, content)
+          atomic_write(file_path, content)
 
           file_path
         end
@@ -53,7 +53,7 @@ module Ace
 
           # Rebuild file
           new_content = build_file_content(new_frontmatter, parsed[:body])
-          File.write(file_path, new_content)
+          atomic_write(file_path, new_content)
 
           file_path
         end
@@ -89,7 +89,7 @@ module Ace
           new_body = "#{body}\n\n---\n\n# Report\n\n#{report_content}"
 
           new_content = build_file_content(new_frontmatter, new_body)
-          File.write(file_path, new_content)
+          atomic_write(file_path, new_content)
 
           file_path
         end
@@ -128,12 +128,20 @@ module Ace
           end
 
           new_content = build_file_content(parsed[:frontmatter], new_body)
-          File.write(file_path, new_content)
+          atomic_write(file_path, new_content)
 
           file_path
         end
 
         private
+
+        # Write content atomically using temp file + rename pattern.
+        # Prevents partial writes if process crashes mid-write.
+        def atomic_write(path, content)
+          temp_path = "#{path}.tmp.#{Process.pid}"
+          File.write(temp_path, content)
+          File.rename(temp_path, path)
+        end
 
         def build_file_content(frontmatter, body)
           yaml = frontmatter.compact.to_yaml

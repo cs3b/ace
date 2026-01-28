@@ -170,25 +170,18 @@ module Ace
 
           new_number = Atoms::NumberGenerator.next_after(base_number, existing_numbers)
 
-          # Create new step file
+          # Determine initial status upfront to avoid redundant I/O
+          initial_status = state.current ? :pending : :in_progress
+
+          # Create new step file with correct status
           file_path = step_writer.create(
             jobs_dir: session.jobs_dir,
             number: new_number,
             name: name,
             instructions: instructions,
-            status: :in_progress,
+            status: initial_status,
             added_by: "dynamic"
           )
-
-          # If there was a current step, it stays in_progress
-          # The new step becomes in_progress too (user decides order)
-          # Actually, we should mark new step as in_progress only if there's no current
-          unless state.current
-            step_writer.mark_in_progress(file_path)
-          else
-            # If there's already an in_progress step, new step should be pending
-            step_writer.update_frontmatter(file_path, { "status" => "pending" })
-          end
 
           # Update session timestamp
           session_manager.update(session)
