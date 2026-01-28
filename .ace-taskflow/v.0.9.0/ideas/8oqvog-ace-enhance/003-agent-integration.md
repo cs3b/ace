@@ -1,273 +1,255 @@
-# Phase 3: Agent Integration
+# Phase 3: Agent Integration (ace-coworker)
 
 ## Goal
 
-Define how agents (Claude Code, Codex CLI, humans) interact with the overseer as "workers."
+Define how agents (Claude Code, Codex CLI, OpenCode, humans) interact with ace-coworker as workers.
 
-## Dependency
+## Key Insight: Agent is the Driver
 
-Requires Phase 1 (Workflow Executor) and Phase 2 (Session Management).
+The agent invokes `/ace:coworker-do <task>`. ace-coworker provides workflows/skills/CLI that agents use.
+The CLI manages state; the agent executes steps.
 
-## Scope
-
-**In scope:**
-- Worker interface contract
-- Agent dispatch mechanism
-- Report/status communication
-- Claude Code skill integration
-- Human-as-worker pattern
-
-**Out of scope:**
-- TUI dashboard (separate feature)
-- Multi-agent coordination (future)
-- Remote/distributed workers (future)
-
-## The Worker Contract
-
-A worker is anything that can:
-1. **Receive context** (environment vars, files)
-2. **Perform action** (code, test, review)
-3. **Report outcome** (exit code, output files)
-
-### Input Contract
-
-Workers receive context via:
-- **Environment variables**: `$ACE_TASK`, `$ACE_SESSION`, `$ACE_STEP`, `$ACE_CONTEXT_FILE`
-- **Context files**: `.ace/overseer/context.json` (path passed via `$ACE_CONTEXT_FILE`)
-- **Working directory**: The session worktree
-
-### Output Contract
-
-Workers report via:
-- **Exit code**: 0 = success, non-zero = failure
-- **stdout/stderr**: Captured for logging
-- **Report file** (optional): `.ace/overseer/step-report.json`
-
-```json
-{
-  "step": "test",
-  "outcome": "failed",
-  "summary": "3 tests failed",
-  "details": {
-    "failed_tests": ["test_auth", "test_login", "test_session"],
-    "coverage": 0.85
-  },
-  "artifacts": [
-    "test-reports/results.xml"
-  ]
-}
+```
+User runs: claude '/ace:coworker-do work on task 225'
+    │
+    ▼
+Agent loads skill → reads workflow → calls ace-coworker CLI
+    │
+    ▼
+ace-coworker manages state (job.json, logs, reports)
+    │
+    ▼
+Agent executes steps, reports back
 ```
 
-## Context Hygiene
+## The Worker Model
 
-Workers should receive only the context relevant to the current step. On retries, the overseer should write a fresh
-context file that includes the spec, the latest error summary, and any explicitly requested files. Avoid passing
-full logs or prior chat history.
+A worker is a **skill run by an agent**. Workers receive:
+- Simple English context (not complex protocols)
+- Instructions (usually `ace-bundle wfi://...`)
+- Last error (on retry)
 
-## Optional File IO Convention
+Workers produce:
+- Reports (markdown files stored in reports/)
+- Verification outcomes
 
-For richer integrations (agents or enhanced CLI tools), support an optional input/output directory convention:
+## Context Format (Plain English)
 
-- Input: `.ace/overseer/steps/<step-id>/input/`
-- Output: `.ace/overseer/steps/<step-id>/output/`
+```
+We work on: Task 228 - implement feature X
 
-This keeps file-based contracts explicit without forcing changes on existing CLI tools.
+Current step is: test
+
+Your instructions: ace-bundle wfi://run-tests
+
+Previous attempt failed: 3 tests failed (test_a, test_b, test_c)
+```
+
+No JSON context files. No environment variable protocols. Just plain English that any agent can understand.
+
+## Communication Style
+
+| Type | Format | Example |
+|------|--------|---------|
+| Delegation | Plain English | "Your instructions: ace-bundle wfi://work-on-task 228" |
+| Reports | Markdown | `reports/001-implement-report.md` |
+| Hard data | JSONL | `log.jsonl` events |
+| Status | JSON | `ace-coworker status --json` |
 
 ## Agent Types
 
-### 1. CLI Tool (Simplest)
+### 1. Claude Code
 
-Any CLI command is a worker:
+```bash
+# User invokes skill
+claude '/ace:coworker-do work on task 228'
 
-```yaml
-steps:
-  - action: ace-test
-  - action: ace-lint --fix
-  - action: gh pr create
+# Skill loads workflow, manages execution
+# Agent runs steps, calls ace-coworker CLI for state
 ```
 
-### 2. Claude Code Agent
+Skill file: `.claude/skills/ace_coworker/SKILL.md`
 
-Invoke Claude Code as a worker:
+### 2. Codex CLI
 
-```yaml
-steps:
-  - worker: claude-code
-    prompt: |
-      Implement the feature described in the task specification.
-      Run tests after implementation.
-    timeout: 30m
-```
+Same pattern - skill/workflow file adapted for Codex prompting style.
 
-Implementation options:
-- **Option A**: Shell out to `claude` CLI
-- **Option B**: Skill that reads session state
+### 3. OpenCode / Gemini CLI / Others
 
-### 3. Human Worker
+Any agent that can:
+- Run CLI commands
+- Read files
+- Follow instructions
 
-Human gates are workers with infinite timeout:
+...can use ace-coworker. The workflow files are agent-agnostic.
+
+### 4. Human Worker
+
+Human gates are just steps where a human is the worker:
 
 ```yaml
 steps:
-  - worker: human
+  - name: review-gate
+    gate: human
     prompt: "Review the code changes and approve"
-    notify: desktop  # or: slack, email
 ```
 
-## Role-Specific Workers (Optional Taxonomy)
-
-Some workflows benefit from explicit role separation (Architect, Engineer, Tester) to reduce role confusion.
-This can be encoded in prompts or worker names without introducing new schema.
-
-Example: plan -> review -> implement -> test:
-
-```yaml
-steps:
-  - id: plan
-    worker: claude-code
-    prompt: "Act as Architect. Produce spec.md with planned changes."
-
-  - id: plan-review
-    gate: human
-    prompt: "Review spec.md and approve or request changes."
-
-  - id: implement
-    worker: claude-code
-    prompt: "Act as Engineer. Implement spec.md changes."
-
-  - id: test
-    action: ace-test
-    on_fail:
-      worker: claude-code
-      prompt: "Act as Engineer. Fix failing tests from the report."
-      max_retries: 3
+Gate pauses workflow, human reviews, then:
+```bash
+ace-coworker resume --approve
+# or
+ace-coworker resume --reject --reason "Need to fix X"
 ```
 
-## Coworker Responsibilities (UI Layer)
+## Skill Structure
 
-Coworker is a thin, user-facing layer that manages sessions and approvals. It should:
-- Create and list sessions (worktrees).
-- Surface status from overseer state files.
-- Provide approval/reject actions for human gates.
-- Avoid owning workflow execution logic (that stays in overseer).
-
-## Claude Code Integration
-
-### Skill: `/ace:overseer-continue`
+Thin wrapper that loads the workflow and manages execution:
 
 ```markdown
-## ace:overseer-continue
+# /ace:coworker-do
 
-Resume the current overseer workflow as a worker.
+## Parameters
+- task: Task ID to work on
+- workflow: Workflow name (default: task-completion)
 
-1. Read session state from `.ace/overseer/state.json`
-2. Identify current step
-3. If step.worker == "claude-code", execute the prompt
-4. Report outcome via exit code and report file
-5. Overseer advances to next step
+## Instructions
+
+1. Start or resume session:
+   \`ace-coworker start --task $task --workflow $workflow\`
+
+2. Read current status:
+   \`ace-coworker status --json\`
+
+3. For each step:
+   - Read step instructions from status
+   - Execute the instructions
+   - Store report: \`ace-coworker report <file>\`
+   - Check verifications
+
+4. If gate reached:
+   - Notify user
+   - Exit (workflow paused)
+
+5. If complete:
+   - Report final status
 ```
 
-### Workflow for Agent-Driven Steps
+## Workflow Files
+
+Workflows live in:
+- `ace-coworker/handbook/workflow-instructions/` (defaults)
+- `.ace/coworker/workflows/` (project overrides)
+
+Example: `task-completion.wf.yml`
 
 ```yaml
-name: task-with-agent
+name: task-completion
+description: Complete a task through implementation, testing, and PR
+
 steps:
-  - id: plan
-    worker: claude-code
-    prompt: "Read task spec and create implementation plan"
+  - name: implement
+    context: "Task $task"
+    instructions: ace-bundle wfi://work-on-task $task
+    verifications:
+      - ace-test passes
+    retries: 5
 
-  - id: review-plan
+  - name: commit
+    instructions: ace-bundle wfi://commit
+
+  - name: test
+    instructions: ace-test
+    retries: 5
+
+  - name: review-gate
     gate: human
+    prompt: "Review before PR"
 
-  - id: implement
-    worker: claude-code
-    prompt: "Implement according to the plan"
+  - name: create-pr
+    instructions: ace-bundle wfi://create-pr
 
-  - id: test
-    action: ace-test
-    on_fail:
-      worker: claude-code
-      prompt: "Fix the failing tests"
-      max_retries: 3
+  - name: self-review
+    instructions: ace-bundle wfi://review-pr
+
+  - name: apply-feedback
+    instructions: ace-bundle wfi://apply-feedback
+    verifications:
+      - ace-test passes
+
+  - name: update-pr
+    instructions: ace-bundle wfi://update-pr
 ```
 
-## The "Action vs Skill" Insight
+## The "Action vs Skill" Clarity
 
-From the field notes - agents confuse `/ace:commit` (skill) with `ace-git-commit` (action).
+From field notes - agents confuse `/ace:commit` (skill) with `ace-git-commit` (CLI).
 
-**Solution in workflow language:**
+**In workflow language:**
 
 ```yaml
-# This runs a CLI command directly
-- action: ace-git-commit --staged
+# Deterministic CLI command
+- name: test
+  instructions: ace-test
 
-# This invokes an agent with a prompt
-- worker: claude-code
-  prompt: "Generate a commit message and commit"
+# Agent skill (involves reasoning)
+- name: implement
+  instructions: ace-bundle wfi://work-on-task $task
 ```
 
-Clear semantic difference:
-- `action:` = deterministic, run exactly this
-- `worker:` = delegate to agent, may involve reasoning
+Both are "instructions" - the workflow doesn't distinguish. The difference is in what the instruction does:
+- `ace-test` → runs directly, returns exit code
+- `ace-bundle wfi://...` → loads workflow for agent to follow
 
-## Key Decisions Needed
+## Verification Mechanism
 
-- [ ] How to invoke Claude Code programmatically (`claude` CLI? API?)
-- [ ] Timeout handling for agent workers
-- [ ] How to pass rich context to agents (task spec, codebase summary)
-- [ ] Notification mechanism for human gates
-- [ ] How to handle agent worker failures (retry? escalate?)
-
-## Implementation Notes
-
-### Dispatching to Claude Code
-
-Option A: CLI invocation
-```ruby
-def dispatch_claude_code(prompt:, timeout:)
-  Open3.capture3(
-    "claude", "--print", "--message", prompt,
-    timeout: timeout
-  )
-end
-```
-
-Option B: Skill-based (agent pulls work)
-```markdown
-# In Claude Code session
-/ace:overseer-continue
-
-# Skill reads state, executes current step, reports back
-```
-
-Recommendation: **Start with Option B** - fits existing skill pattern, agent controls execution.
-
-### Worker Registry
-
-Allow custom worker types:
+Each step can have verifications:
 
 ```yaml
-# .ace/overseer/workers.yml
-workers:
-  claude-code:
-    command: claude --print --message "$PROMPT"
-    timeout: 30m
-
-  codex:
-    command: codex --prompt "$PROMPT"
-    timeout: 15m
-
-  review-team:
-    type: human
-    notify: slack
-    channel: "#code-review"
+verifications:
+  - ace-test passes
+  - no lint errors
+  - commit created
 ```
+
+Verifications are checked after step completion:
+- Run verification commands
+- Parse output
+- Pass → advance to next step
+- Fail → retry or stop based on config
+
+## Reporting
+
+Every delegation and result is logged:
+
+```
+reports/
+├── 001-implement-delegation.md   # What we asked
+├── 001-implement-report.md       # What came back
+├── 002-test-delegation.md
+├── 002-test-report.md            # Test results
+└── ...
+```
+
+This creates an audit trail for debugging (by humans or agents).
+
+## Agent-Agnostic Design
+
+ace-coworker follows the established ace-* pattern:
+- CLI tool (`exe/ace-coworker`)
+- handbook/ (workflows, agents, guides)
+- config (`.ace-defaults/`, `.ace/` cascade)
+- Works standalone without any agent
+
+**Philosophy:** Don't optimize FOR Claude Code → make sure it WORKS WITH Claude Code.
+
+Integration is separate and thin. Core gem has zero Claude Code dependencies.
 
 ## Success Criteria
 
-- [ ] CLI actions work as workers (exit code based)
-- [ ] Claude Code can be invoked as worker
-- [ ] Human gates pause and notify
-- [ ] Worker failures are captured and reported
-- [ ] Context flows correctly to workers
-- [ ] `/ace:overseer-continue` skill works
+- [ ] Claude Code skill works end-to-end
+- [ ] Workflow files are agent-agnostic
+- [ ] Plain English context works for all agent types
+- [ ] Reports are stored and readable
+- [ ] Verifications run after each step
+- [ ] Human gates pause and resume correctly
+- [ ] Same workflows work with different agents

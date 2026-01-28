@@ -1,8 +1,17 @@
-# ACE Overseer: High-Level Overview
+# ACE Coworker: High-Level Overview
+
+## Naming Clarification
+
+| Component | Role | Status |
+|-----------|------|--------|
+| **ace-coworker** | Single session workflow executor | Build first (MVP) |
+| **ace-overseer** | Multi-session orchestrator | Postponed (backlog) |
+
+This matches natural meaning: an overseer supervises multiple coworkers.
 
 ## Core Value Proposition
 
-ACE Overseer addresses three recurring failures in agentic workflows:
+ACE Coworker addresses three recurring failures in agentic workflows:
 - **Context pollution**: a failure in step 5 contaminates step 6.
 - **Lost state**: crashes or pauses force a full restart.
 - **Role confusion**: one agent acts as architect, engineer, and tester in the same thread.
@@ -21,35 +30,42 @@ The 8-step workflow pattern (work → commit → PR → review → fix → test 
 - Deliver a workflow executor with checkpoint/resume and human gates.
 - Keep it CLI-first and agent-agnostic; workflows and state are file-based.
 - Preserve clean context between steps and retries.
-- Be incremental: Phase 1 is useful on its own, Phases 2-3 add sessions and agents.
+- Follow established ace-* patterns (handbook, config cascade, minimal deps).
 
 ## Non-Goals
 
 - Not a job scheduler (cron, Sidekiq) - this is interactive and session-based.
 - Not an agent framework (LangChain, AutoGPT) - agents are workers, not orchestrators.
 - Not a CI/CD system (GitHub Actions) - this runs locally with human-in-loop gates.
-- Not a full TUI/dashboard in Phase 1 (optional future layer).
+- Not a worktree manager (ace-coworker works in current directory; future ace-overseer handles worktrees).
 
 ## Core Concepts
 
-- **Workflow**: a YAML file that lists steps in order.
+- **Workflow**: a YAML/markdown file that lists steps in order.
 - **Step types**:
   - `action`: run a deterministic CLI command.
-  - `worker`: delegate to an agent or human with a prompt.
+  - `worker`: delegate to an agent with a prompt/skill.
   - `gate`: pause and wait for human approval.
-- **Session** (Phase 2): worktree + state + workflow, isolated from the main repo.
+- **Session**: state + workflow in `.cache/ace-coworker/{timestamp}/`
 - **Context bundle**: minimal, step-scoped inputs (spec + errors), not full chat history.
 
-## Target Architecture (Three Components)
+## Architecture
 
-Long-term, the system separates concerns cleanly:
+```
+Agent (Claude Code / Codex / OpenCode)
+    │
+    │ invokes /ace:coworker-do <task>
+    ▼
+ace-coworker (CLI)
+    ├── job.json       # plan + execution status
+    ├── log.jsonl      # event log
+    └── reports/       # delegation docs + returned reports
+    │
+    ▼
+Workers (skills run by agent, CLI tools, humans)
+```
 
-1. **Coworker (Office/UI)**: session lifecycle + user interaction.
-2. **Overseer (Supervisor)**: state machine and workflow execution.
-3. **Workers (Hands)**: CLI tools, agents, or humans that perform steps.
-
-This keeps the CLI-first core intact while allowing a thin UI/command layer for human gates and session control.
-Phase 1-3 can still be built incrementally, but the design should preserve this separation.
+**Key insight**: Agent is the driver. ace-coworker provides workflows/skills/CLI that agents use.
 
 ## Where Is The Value
 
@@ -68,48 +84,75 @@ Phase 1-3 can still be built incrementally, but the design should preserve this 
 A developer or agent can:
 
 ```bash
-# Start a workflow for a task
-ace-overseer start --task 228 --workflow task-completion
+# Start a workflow for a task (auto-resumes if session exists)
+ace-coworker start --task 228 --workflow task-completion
 
 # Check status
-ace-overseer status
+ace-coworker status
 
 # Resume after interruption (agent crash, human gate, etc.)
-ace-overseer resume
+ace-coworker resume
+
+# List all sessions
+ace-coworker list
 ```
 
-The workflow file defines the steps imperatively:
+The workflow file defines the steps:
 
 ```yaml
 name: task-completion
 steps:
-  - action: ace-git-commit --staged
-  - action: ace-test
-    on_fail: retry 3
-  - gate: human
-    prompt: "Review code before PR"
-  - action: gh pr create
-```
+  - name: implement
+    instructions: ace-bundle wfi://work-on-task $task
+    verifications:
+      - ace-test passes
 
-This same workflow language can encode the higher-level sequence (plan -> review gate -> implement -> test -> review)
-without hard-coding phases into the engine.
+  - name: commit
+    instructions: ace-bundle wfi://commit
+
+  - name: review-gate
+    gate: human
+    prompt: "Review code before PR"
+
+  - name: create-pr
+    instructions: ace-bundle wfi://create-pr
+```
 
 ## Context Hygiene (Non-Negotiable)
 
-Workers should receive only the inputs they need for the current step. On retries, pass the spec and the latest
+Workers receive only the inputs they need for the current step. On retries, pass the spec and the latest
 error summary, not the entire prior conversation. This prevents context pollution and keeps responses focused.
 
-## Phases
+## MVP Deliverables
 
-1. **Workflow Executor** (001) - Core value: run steps, checkpoint, resume
-2. **Session Management** (002) - Worktree isolation, session lifecycle
-3. **Agent Integration** (003) - Worker interface, Claude Code integration
+1. **Agents** (markdown files) - single-purpose, composable
+2. **Workflows** (markdown/yaml files) - self-contained step sequences
+3. **Skills** (markdown files) - thin wrappers for Claude Code integration
+4. **Supportive CLI** - state management, status, resume
+
+**Core competencies to master:**
+- Delegations (pass work to sub-agents)
+- Verifications (check step success)
+- Reporting (track what happened)
+→ Run with confidence
+
+## First Workflow
+
+Full task completion cycle:
+```
+work → commit → test → release → pr → review → apply feedback → update pr/changelog
+```
 
 ## Open Questions
 
-See `questions/` for detailed analysis of each decision point.
+See `questions/` for detailed analysis of each decision point (all 14 decided).
 
-## References
+## Future: ace-overseer
 
-- Original idea: `../implement-ace-overseer-functionality.idea.s.md`
-- Field notes: `../notes-from-running-long-sequence-of-high-level-instructions.md`
+When we need multi-session orchestration:
+- Spawn multiple coworkers
+- Manage worktrees
+- Distribute work across sessions
+- Coordinate parallel execution
+
+This is explicitly postponed until ace-coworker is proven.
