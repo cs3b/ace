@@ -2,7 +2,7 @@
 guide-id: g-e2e-testing
 title: E2E Testing Guide
 description: Conventions and best practices for agent-executed end-to-end tests
-version: "1.2"
+version: "1.3"
 source: ace-test-e2e-runner
 ---
 
@@ -48,12 +48,18 @@ This convention:
 - Separates from automated tests (`test/atoms/`, `test/molecules/`, etc.)
 - Uses `.mt.md` extension to distinguish from other markdown
 
-### Test Execution Directory
+### Test Execution Directory {#directory-structure}
 
 Test artifacts are created in project-local cache:
 
 ```
 .cache/test-e2e/{timestamp}-{package}/
+├── test-report.md               # Test results (pass/fail details)
+├── agent-experience-report.md   # AX report (friction, suggestions)
+├── metadata.yml                 # Run metadata (duration, versions)
+└── artifacts/                   # Test data files
+    ├── example.rb
+    └── ...
 ```
 
 Examples:
@@ -66,14 +72,20 @@ Examples:
 - **Consistent naming** - Uses ace-timestamp for unique IDs
 - **Easy debugging** - Inspect artifacts without hunting in `/tmp`
 - **Package-scoped** - Directory name includes package for clarity
+- **Report persistence** - Test reports and AX feedback preserved for analysis
 
 **Setup in test scenarios:**
 ```bash
 TEST_ID="$(ace-timestamp encode)"
 TEST_DIR=".cache/test-e2e/${TEST_ID}-{package-name}"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+mkdir -p "$TEST_DIR/artifacts"
+cd "$TEST_DIR/artifacts"
 ```
+
+**Report Files:**
+- `test-report.md` - Structured pass/fail results with details
+- `agent-experience-report.md` - Friction points, root cause analysis, improvement suggestions
+- `metadata.yml` - Run context (duration, git branch, tool versions)
 
 ### Test ID Format
 
