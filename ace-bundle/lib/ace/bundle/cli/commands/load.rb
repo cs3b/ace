@@ -81,8 +81,8 @@ module Ace
           def call(input: nil, **options)
             # Handle --help/-h passed as input argument
             if input == "--help" || input == "-h"
-              # dry-cli will handle this, but we need to return success
-              return 0
+              # dry-cli will handle this
+              return
             end
 
             # Type-convert numeric options using Base helper for proper validation
@@ -129,11 +129,11 @@ module Ace
 
             # Handle errors
             if result[:context].metadata[:error]
-              $stderr.puts "Error: #{result[:context].metadata[:error]}"
+              msg = result[:context].metadata[:error]
               if result[:context].metadata[:errors] && options[:debug]
-                $stderr.puts result[:context].metadata[:errors].join("\n")
+                msg = "#{msg}\n#{result[:context].metadata[:errors].join("\n")}"
               end
-              return 1
+              raise Ace::Core::CLI::Error.new(msg)
             end
 
             # Handle output
@@ -198,14 +198,10 @@ module Ace
             # Handle output based on mode
             case output_mode
             when "stdio"
-              # Output to stdout
               puts context.content
-              0
             when "cache"
-              # Save to cache directory
               write_to_cache(context, input, options)
             else
-              # Save to specified file path
               write_to_file(context, output_mode, options)
             end
           end
@@ -231,10 +227,8 @@ module Ace
                 puts "Bundle saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
                 puts cache_file
               end
-              0
             else
-              $stderr.puts "Error writing cache: #{result[:error]}"
-              1
+              raise Ace::Core::CLI::Error.new("Error writing cache: #{result[:error]}")
             end
           end
 
@@ -255,10 +249,8 @@ module Ace
                 puts "Bundle saved (#{result[:lines]} lines, #{result[:size_formatted]}), output file:"
                 puts file_path
               end
-              0
             else
-              $stderr.puts "Error writing file: #{result[:error]}"
-              1
+              raise Ace::Core::CLI::Error.new("Error writing file: #{result[:error]}")
             end
           end
 
