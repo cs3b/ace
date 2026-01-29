@@ -77,13 +77,11 @@ module Ace
             orchestrator = Organisms::CommitOrchestrator.new
             success = orchestrator.execute(commit_options)
 
-            success ? 0 : 1
+            raise Ace::Core::CLI::Error.new("Commit failed") unless success
           rescue GitError => e
-            $stderr.puts "Error: #{e.message}"
-            1
+            raise Ace::Core::CLI::Error.new(e.message)
           rescue Interrupt
-            $stderr.puts "\nCommit cancelled"
-            130
+            raise Ace::Core::CLI::Error.new("Commit cancelled", exit_code: 130)
           end
 
           def display_config_summary
