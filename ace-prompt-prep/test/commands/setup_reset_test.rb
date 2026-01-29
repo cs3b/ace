@@ -14,7 +14,14 @@ class SetupResetCommandsTest < Minitest::Test
   # Helper method to invoke CLI
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
-      @_cli_result = Ace::PromptPrep::CLI.start(args)
+      begin
+        @_cli_result = Ace::PromptPrep::CLI.start(args)
+      rescue SystemExit => e
+        @_cli_result = e.status
+      rescue Ace::Core::CLI::Error => e
+        @_cli_result = e.exit_code
+        $stderr.print e.message
+      end
     end
 
     {

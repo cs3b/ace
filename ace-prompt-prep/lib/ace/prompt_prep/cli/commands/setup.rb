@@ -62,7 +62,7 @@ module Ace
             )
 
             unless result[:success]
-              return exit_failure("Setup failed: #{result[:error]}")
+              raise Ace::Core::CLI::Error.new("Setup failed: #{result[:error]}")
             end
 
             $stdout.puts "Prompt initialized:"
@@ -70,9 +70,8 @@ module Ace
             if result[:archive_path]
               $stdout.puts "  Archive: #{result[:archive_path]}"
             end
-            exit_success
           rescue StandardError => e
-            exit_failure("Setup failed: #{e.message}")
+            raise Ace::Core::CLI::Error.new("Setup failed: #{e.message}")
           end
 
           private
