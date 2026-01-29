@@ -23,7 +23,7 @@ module Ace
           if presets.empty?
             puts "No presets found"
             puts "Create presets in .ace/review/config.yml or .ace/review/presets/"
-            return 0
+            return
           end
 
           puts "Available Review Presets:"
@@ -51,8 +51,6 @@ module Ace
 
             puts format("%-20s %-50s %-10s", name, description, source)
           end
-
-          0
         end
       end
     end

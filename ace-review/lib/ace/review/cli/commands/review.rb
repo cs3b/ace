@@ -104,9 +104,7 @@ module Ace
             handle_error(result)
           end
         rescue StandardError => e
-          puts "✗ Error: #{e.message}"
-          puts e.backtrace if @options[:verbose]
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
         end
 
         def build_review_options(cli_options)
@@ -174,7 +172,7 @@ module Ace
           # Handle multi-model results
           if result[:summary]
             handle_multi_model_success(result)
-            return 0
+            return
           end
 
           # Display review saved/prepared message
@@ -218,8 +216,6 @@ module Ace
             puts result[:dry_run_preview]
             puts "=== End Preview ==="
           end
-
-          0
         end
 
         def handle_multi_model_success(result)
@@ -256,13 +252,10 @@ module Ace
 
           puts
           puts "Total duration: #{result[:summary][:total_duration]}s"
-
-          0
         end
 
         def handle_error(result)
-          puts "✗ Error: #{result[:error]}"
-          1
+          raise Ace::Core::CLI::Error.new(result[:error])
         end
 
         def display_config_summary

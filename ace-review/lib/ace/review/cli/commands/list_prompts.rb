@@ -22,7 +22,7 @@ module Ace
           prompts = manager.list_prompts
           if prompts.empty?
             puts "No prompt modules found"
-            return 0
+            return
           end
 
           puts "Available Prompt Modules:"
@@ -32,8 +32,6 @@ module Ace
             puts "  #{category}/"
             format_prompt_items(items, "    ")
           end
-
-          0
         end
 
         private
