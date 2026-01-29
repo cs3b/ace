@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-29
+
+### Added
+
+- Persistent test reports (`test-report.md`) capturing pass/fail status, test case details, and environment information
+- Agent experience reports (`agent-experience-report.md`) documenting friction points, root cause analysis, and improvement suggestions
+- Test execution metadata (`metadata.yml`) storing run-specific details like duration, Git context, and tool versions
+- ace-taskflow fixture template for standardized taskflow structure creation in E2E tests
+
+### Changed
+
+- Updated test environment structure to use `artifacts/` subdirectory for test data organization
+- Enhanced E2E testing guidelines with emphasis on error path coverage and negative test cases
+- Improved test templates with error testing best practices and reviewer checklist
+- Updated test execution workflow to automatically generate and persist reports at end of each run
+
 ## [0.2.1] - 2026-01-22
 
 ### Added
