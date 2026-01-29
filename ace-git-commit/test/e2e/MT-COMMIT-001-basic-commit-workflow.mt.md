@@ -29,8 +29,8 @@ Verify that ace-git-commit correctly executes the full commit cycle in a real gi
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-ace-git-commit"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-git-commit-MT-COMMIT-001"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
