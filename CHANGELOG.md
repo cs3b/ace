@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.343] - 2026-01-29
+
+### Added
+
+- **ace-review v0.35.2**: Enhanced review synthesis prompts with accuracy guidelines, conflict resolution rules, "Verification Required" section for unverifiable claims, and "Future Considerations" section to separate speculation from action items
+- **ace-taskflow v0.34.3**: CLI-specific sections in task draft template (exit codes, input validation, concurrency, cleanup behavior)
+- **docs**: CLI development checklist in ace-gems.g.md covering exit codes, error messages, input validation, resource cleanup, concurrency safety, and dependencies
+- **ADR-023**: SIGINT handling convention (exit code 130), expanded exit code table (codes 2-4), exit code contract documentation requirements
+
+### Changed
+
+- **ace-handbook v0.7.1**: Refine exit code handling documentation in cli-dry-cli.g.md with exception-based pattern
+- **ace-review**: Add severity classification and scope boundary guidance to base review prompt
+- **ace-taskflow**: Add data-driven feature requirements checklist and CLI task examples to templates README
+
+### Technical
+
+- Bump ace-handbook to 0.7.1, ace-review to 0.35.2, ace-taskflow to 0.34.3
+
 ## [0.9.342] - 2026-01-28
 
 ### Added
