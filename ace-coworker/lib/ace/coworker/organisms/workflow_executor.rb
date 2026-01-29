@@ -57,8 +57,18 @@ module Ace
           first_step_file = Dir.glob(File.join(session.jobs_dir, "*.j.md")).min
           step_writer.mark_in_progress(first_step_file) if first_step_file
 
-          # Archive source config into task's jobs directory
-          archive_source_config(config_path, session.id)
+          # Archive source config into task's jobs directory and update session metadata
+          archived_path = archive_source_config(config_path, session.id)
+          session = Models::Session.new(
+            id: session.id,
+            name: session.name,
+            description: session.description,
+            created_at: session.created_at,
+            updated_at: session.updated_at,
+            source_config: archived_path,
+            cache_dir: session.cache_dir
+          )
+          session_manager.update(session)
 
           # Return result
           state = queue_scanner.scan(session.jobs_dir, session: session)

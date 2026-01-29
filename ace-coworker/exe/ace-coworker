@@ -7,6 +7,6 @@ require_relative "../lib/ace/coworker"
 begin
   Ace::Coworker::CLI.start(ARGV)
 rescue Ace::Core::CLI::Error => e
-  warn e.message
+  warn e
   exit(e.exit_code)
 end
