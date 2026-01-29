@@ -99,7 +99,18 @@ Report any missing prerequisites before proceeding.
 
 ### 4. Execute Environment Setup
 
-Run the commands in the "Environment Setup" section:
+> **CRITICAL: SANDBOX REQUIRED**
+>
+> All E2E tests MUST run in an isolated sandbox under `.cache/ace-test-e2e/`.
+> NEVER execute test commands in the main repository. The test file's "Environment Setup"
+> section creates this sandbox - you MUST execute it and verify isolation BEFORE proceeding.
+
+**How this section works:**
+- The instructions below explain CONVENTIONS and PATTERNS for sandbox naming
+- The test file's "Environment Setup" section contains the ACTUAL COMMANDS to execute
+- You must run the test file's commands, then verify isolation in Section 4.1
+
+Run the commands in the "Environment Setup" section of the test file:
 
 1. **Capture project root** (before changing directories):
    ```bash
@@ -126,6 +137,17 @@ Run the commands in the "Environment Setup" section:
 
 **Important:** Always capture `PROJECT_ROOT` before `cd` operations. Use `$PROJECT_ROOT/bin/ace-lint` for absolute paths to project binaries when executing from test directories.
 
+**Execution Order:**
+1. Read the test file's "Environment Setup" section
+2. Execute THOSE commands (not the examples in this workflow)
+3. Proceed to Section 4.1 to verify sandbox isolation
+4. Only continue to Section 5 after verification passes
+
+**Workflow patterns vs. test file commands:**
+- This workflow shows the PATTERN (naming conventions, structure)
+- The test file's Environment Setup contains the COMMANDS to run
+- The test file has `cd "$TEST_DIR"` - this MUST be executed
+
 **Directory Structure & Naming Convention:**
 
 Folder names use a shortened format for readability:
@@ -151,7 +173,62 @@ Folder names use a shortened format for readability:
 
 Example: `.cache/ace-test-e2e/8oig0h-lint-mt001/`
 
+### 4.1 Sandbox Isolation Checkpoint (MANDATORY)
+
+> **STOP - Verify Before Continuing**
+>
+> Before proceeding to Test Data or Test Cases, you MUST verify sandbox isolation.
+> Failure to verify will result in polluting the main repository with test artifacts.
+
+**Run these verification commands:**
+
+```bash
+echo "=== SANDBOX ISOLATION CHECK ==="
+
+# Check 1: Current directory must be under .cache/ace-test-e2e/
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+  echo "  Location: $CURRENT_DIR"
+else
+  echo "FAIL: NOT in sandbox!"
+  echo "  Current: $CURRENT_DIR"
+  echo "  Expected: Should contain '.cache/ace-test-e2e/'"
+  echo "  ACTION: STOP - Do not proceed. Re-run Environment Setup."
+fi
+
+# Check 2: Git remote must be empty (fresh isolated repo)
+REMOTES=$(git remote -v 2>/dev/null)
+if [ -z "$REMOTES" ]; then
+  echo "PASS: No git remotes (isolated repo)"
+else
+  echo "FAIL: Git remotes found - NOT an isolated repo!"
+  echo "  Remotes: $REMOTES"
+  echo "  ACTION: STOP - You are in the main repository."
+fi
+
+# Check 3: Project root markers should NOT exist
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found - NOT an isolated repo!"
+  echo "  ACTION: STOP - You are in the main repository."
+else
+  echo "PASS: No main project markers (expected for sandbox)"
+fi
+
+echo "=== END ISOLATION CHECK ==="
+```
+
+**Interpretation:**
+- **All checks PASS**: Continue to Section 5 (Create Test Data)
+- **Any check FAILS**:
+  1. STOP immediately - do NOT execute any test commands
+  2. Return to project root: `cd "$PROJECT_ROOT"`
+  3. Re-read and re-execute the test file's Environment Setup
+  4. Re-run this checkpoint until all checks pass
+
 ### 5. Create Test Data
+
+> **Prerequisite**: Section 4.1 (Sandbox Isolation Checkpoint) must PASS before proceeding.
 
 Execute the commands in the "Test Data" section to create necessary test files:
 
@@ -162,6 +239,8 @@ Execute the commands in the "Test Data" section to create necessary test files:
 **Note:** Test data files go in `$TEST_DIR/`, while reports are written as sibling files outside the sandbox folder.
 
 ### 6. Execute Test Cases
+
+> **Reminder**: All test commands execute inside `$TEST_DIR`. If unsure, run `pwd` and verify `.cache/ace-test-e2e/` in path.
 
 For each test case (TC-NNN):
 
@@ -503,6 +582,23 @@ If environment setup fails:
 1. Report the error
 2. Attempt cleanup
 3. Suggest troubleshooting steps
+
+### Sandbox Isolation Failure
+
+If the sandbox isolation checkpoint fails:
+1. **STOP all test execution immediately**
+2. Do NOT proceed with test data or test cases
+3. Return to `$PROJECT_ROOT` and diagnose:
+   - Did you execute the test file's Environment Setup?
+   - Did `mkdir` and `cd` commands succeed?
+4. Re-execute Environment Setup from the test file
+5. Re-run the isolation checkpoint
+6. Only proceed when all checks pass
+
+**Warning signs of wrong directory:**
+- `pwd` shows main project path (no `.cache/ace-test-e2e/`)
+- `git remote -v` shows remotes
+- Files like `CLAUDE.md`, `Gemfile`, `.ace-taskflow/` exist
 
 ## Example Invocations
 
