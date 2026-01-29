@@ -89,13 +89,10 @@ module Ace
 
             command = Status.new
 
-            exit_code = nil
+            # With exception-based pattern, command completes successfully without raising
             output = capture_io do
-              exit_code = command.call(project_root: @temp_dir)
+              command.call(project_root: @temp_dir)
             end
-
-            # Verify return code (0 = success, even when no documents)
-            assert_equal 0, exit_code
 
             # Check stderr for "No managed documents found"
             combined = output.join
