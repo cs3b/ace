@@ -20,25 +20,22 @@ module Ace
                 cache_manager = Molecules::CacheManager.new
 
                 unless cache_manager.cached?
-                  warn "No cache data. Run 'ace-models cache sync' first."
-                  return 1
+                  raise Ace::Core::CLI::Error.new("No cache data. Run 'ace-models cache sync' first.")
                 end
 
                 providers = cache_manager.list_providers
 
                 if options[:json]
                   puts JSON.pretty_generate(providers)
-                  return 0
+                  return
                 end
 
                 puts "Providers (#{providers.size}):"
                 providers.sort_by { |p| -p[:model_count] }.each do |provider|
                   puts "  #{provider[:id]}: #{provider[:model_count]} models"
                 end
-                0
               rescue CacheError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               end
             end
           end
