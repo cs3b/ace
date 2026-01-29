@@ -73,8 +73,7 @@ module Ace
               show_release(subaction, display_mode: display_mode, subfolder: subfolder)
             end
           rescue StandardError => e
-            puts "Error: #{e.message}"
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def show_active_releases(display_mode: "formatted", subfolder: nil)
@@ -117,8 +116,7 @@ module Ace
             release = @manager.show_release(name)
 
             unless release
-              puts "Release '#{name}' not found."
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("Release '#{name}' not found.")
             end
 
             case display_mode
@@ -160,35 +158,31 @@ module Ace
               puts "  ace-taskflow release create authentication-refactor"
               puts "  ace-taskflow release create dark-mode --release v.0.12.0"
               puts "  ace-taskflow release create api-v2 --current"
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("Usage: ace-taskflow release create <codename> [options]")
             end
 
             creator = Organisms::ReleaseCreator.new(@manager.root_path)
             result = creator.create(codename, version: version, location: location)
 
-            if result[:success]
-              puts result[:message]
-              puts "Version: #{result[:version]}"
-              puts "Path: #{result[:path]}"
-              exit_success
-            else
-              puts "Error: #{result[:message]}"
-              exit_failure
+            unless result[:success]
+              raise Ace::Core::CLI::Error.new(result[:message])
             end
+
+            puts result[:message]
+            puts "Version: #{result[:version]}"
+            puts "Path: #{result[:path]}"
           end
 
           def promote_release(args)
             name = args.first
             result = @manager.promote_release(name)
 
-            if result[:success]
-              puts result[:message]
-              puts "Path: #{result[:path]}"
-              exit_success
-            else
-              puts "Error: #{result[:message]}"
-              exit_failure
+            unless result[:success]
+              raise Ace::Core::CLI::Error.new(result[:message])
             end
+
+            puts result[:message]
+            puts "Path: #{result[:path]}"
           end
 
           def reschedule_release(args)
@@ -199,7 +193,7 @@ module Ace
               puts "Options:"
               puts "  --status <value>           Update release status"
               puts "  --target-date <YYYY-MM-DD> Update target completion date"
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("Usage: ace-taskflow release reschedule <reference> [options]")
             end
 
             options = {}
@@ -221,13 +215,11 @@ module Ace
             scheduler = Organisms::ReleaseScheduler.new
             result = scheduler.reschedule(reference, options)
 
-            if result[:success]
-              puts result[:message]
-              exit_success
-            else
-              puts "Error: #{result[:message]}"
-              exit_failure
+            unless result[:success]
+              raise Ace::Core::CLI::Error.new(result[:message])
             end
+
+            puts result[:message]
           end
 
           def demote_release(args)
@@ -244,25 +236,19 @@ module Ace
 
             result = @manager.demote_release(name, to: to)
 
-            if result[:success]
-              puts result[:message]
-              puts "Path: #{result[:path]}"
-              exit_success
-            else
-              puts "Error: #{result[:message]}"
-              exit_failure
+            unless result[:success]
+              raise Ace::Core::CLI::Error.new(result[:message])
             end
+
+            puts result[:message]
+            puts "Path: #{result[:path]}"
           end
 
           def validate_release(args)
             name = args.first
             result = @manager.validate_release(name)
 
-            if result[:valid]
-              puts "✓ Release validation: PASSED"
-              display_statistics(result[:statistics])
-              exit_success
-            else
+            unless result[:valid]
               puts "✗ Release validation: FAILED"
               puts ""
               puts "Issues:"
@@ -271,8 +257,11 @@ module Ace
               end
               puts ""
               display_statistics(result[:statistics])
-              exit_failure
+              raise Ace::Core::CLI::Error.new("Release validation failed")
             end
+
+            puts "✓ Release validation: PASSED"
+            display_statistics(result[:statistics])
           end
 
           def generate_changelog(args)
@@ -299,8 +288,7 @@ module Ace
               final_path = subfolder ? File.join(relative_path, subfolder) : relative_path
               puts final_path
             else
-              puts "# Release has no path"
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("Release has no path")
             end
           end
 

@@ -51,7 +51,7 @@ module Ace
             @option_parser = build_option_parser
 
             result = @option_parser.parse(args, thor_options: thor_options)
-            return exit_success if result[:help_requested]
+            return if result[:help_requested]
 
             parsed_options = result[:parsed]
             parsed_options[:format] ||= :terminal
@@ -59,12 +59,13 @@ module Ace
             unless @root_path
               puts "Error: No .ace-taskflow directory found"
               puts "Please run this command from within an ace-taskflow project"
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("No .ace-taskflow directory found")
             end
 
             if parsed_options[:quiet]
               results = run_diagnosis(parsed_options)
-              return results[:valid] ? exit_success : exit_failure
+              raise Ace::Core::CLI::Error.new("Health check failed") unless results[:valid]
+              return
             end
 
             results = run_diagnosis(parsed_options)
@@ -81,11 +82,9 @@ module Ace
               handle_auto_fix(results, parsed_options)
             end
 
-            results[:valid] ? exit_success : exit_failure
+            raise Ace::Core::CLI::Error.new("Health check failed") unless results[:valid]
           rescue StandardError => e
-            puts "Error: #{e.message}"
-            puts e.backtrace if options[:verbose]
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def build_option_parser

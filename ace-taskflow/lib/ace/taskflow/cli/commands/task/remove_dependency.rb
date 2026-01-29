@@ -42,13 +42,11 @@ module Ace
               manager = Ace::Taskflow::Organisms::TaskManager.new
               result = manager.remove_dependency(task_ref, depends_on)
 
-              if result[:success]
-                puts result[:message]
-                exit_success
-              else
-                puts "Error: #{result[:message]}"
-                exit_failure
+              unless result[:success]
+                raise Ace::Core::CLI::Error.new(result[:message])
               end
+
+              puts result[:message]
             end
 
             private

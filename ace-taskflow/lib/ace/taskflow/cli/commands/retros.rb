@@ -47,7 +47,7 @@ module Ace
             @option_parser = build_option_parser
 
             result = @option_parser.parse(args, thor_options: thor_options)
-            return exit_success if result[:help_requested]
+            return if result[:help_requested]
 
             options = result[:parsed]
 
@@ -72,10 +72,8 @@ module Ace
               display_retros(retros, release, scope, options)
             end
 
-            exit_success
           rescue StandardError => e
-            puts "Error: #{e.message}"
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def build_option_parser

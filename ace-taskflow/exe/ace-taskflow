@@ -3,9 +3,10 @@
 
 require_relative "../lib/ace/taskflow"
 
-# The CLI.start method now handles:
-# 1. Cache clearing at start
-# 2. Default command routing (unknown args -> "task" command)
-# 3. Proper exit code handling
-exit_code = Ace::Taskflow::CLI.start(ARGV)
-exit(exit_code.is_a?(Integer) ? exit_code : 0)
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Taskflow::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
