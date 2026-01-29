@@ -28,21 +28,18 @@ module Ace
 
                 if options[:json]
                   puts JSON.pretty_generate(result)
-                  return 0
+                  return
                 end
 
                 case result[:status]
                 when :success
                   puts result[:message]
                   puts "Duration: #{result[:duration]}s"
-                  0
                 when :skipped
                   puts result[:message]
                   puts "Last synced: #{result[:last_sync_at]}"
-                  0
                 when :error
-                  warn "Error: #{result[:message]}"
-                  1
+                  raise Ace::Core::CLI::Error.new(result[:message])
                 end
               end
             end
