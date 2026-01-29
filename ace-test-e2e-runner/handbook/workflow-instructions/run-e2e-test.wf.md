@@ -35,7 +35,7 @@ After completing all steps, return a **minimal structured summary** instead of v
 - **Passed**: {count}
 - **Failed**: {count}
 - **Total**: {count}
-- **Report Paths**: {timestamp}-{package}-{test-id}.*
+- **Report Paths**: {timestamp}-{short-pkg}-{short-id}.*
 - **Issues**: Brief description or "None"
 ```
 
@@ -106,36 +106,50 @@ Run the commands in the "Environment Setup" section:
    PROJECT_ROOT="$(pwd)"
    ```
 2. Generate a timestamp ID using `ace-timestamp encode`
-3. Create the test directory structure:
+3. **Derive short names** for the folder:
+   ```bash
+   # Strip "ace-" prefix from package name
+   SHORT_PKG="${PACKAGE#ace-}"   # e.g., ace-git-commit → git-commit
+
+   # Convert test ID to short format: MT-COMMIT-001 → mt001
+   SHORT_ID=$(echo "{test-id}" | sed 's/MT-[A-Z]*-/mt/' | tr '[:upper:]' '[:lower:]')
+   ```
+4. Create the test directory structure:
    ```bash
    TIMESTAMP_ID="$(ace-timestamp encode)"
-   TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-{package}-{test-id}"
+   TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
    mkdir -p "$TEST_DIR"
    cd "$TEST_DIR"
    ```
-4. Set up any required environment variables
-5. Navigate to the test directory for test data creation
+5. Set up any required environment variables
+6. Navigate to the test directory for test data creation
 
 **Important:** Always capture `PROJECT_ROOT` before `cd` operations. Use `$PROJECT_ROOT/bin/ace-lint` for absolute paths to project binaries when executing from test directories.
 
-**Directory Structure:**
+**Directory Structure & Naming Convention:**
+
+Folder names use a shortened format for readability:
+- `{timestamp}` - 6-char base36 timestamp (unchanged)
+- `{short-pkg}` - package name with `ace-` prefix removed (e.g., `ace-lint` → `lint`)
+- `{short-id}` - lowercase prefix + number only (e.g., `MT-LINT-001` → `mt001`)
+
 ```
 .cache/ace-test-e2e/
-├── {timestamp}-{package}-{test-id}/           # Sandbox folder (test artifacts)
+├── 8osvnh-lint-mt001/              # Sandbox folder (shorter name)
 │   ├── (git repo, test files, etc.)
 │   └── ...
-├── {timestamp}-{package}-{test-id}-reports/   # Reports grouped in folder
-│   ├── summary.r.md                           # Test results
-│   ├── experience.r.md                        # AX report
-│   └── metadata.yml                           # Run metadata
-└── {suite-timestamp}-final-report.md          # Suite report (only final at top level)
+├── 8osvnh-lint-mt001-reports/      # Reports grouped in folder
+│   ├── summary.r.md                # Test results
+│   ├── experience.r.md             # AX report
+│   └── metadata.yml                # Run metadata
+└── 8osynv-final-report.md          # Suite report (only final at top level)
 ```
 
 **Directory Convention:**
-- Package test: `.cache/ace-test-e2e/{timestamp}-{package}-{test-id}/`
-- Project test: `.cache/ace-test-e2e/{timestamp}-{test-id}/`
+- Package test: `.cache/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}/`
+- Project test: `.cache/ace-test-e2e/{timestamp}-{short-id}/`
 
-Example: `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001/`
+Example: `.cache/ace-test-e2e/8oig0h-lint-mt001/`
 
 ### 5. Create Test Data
 
@@ -361,10 +375,10 @@ status: pass|fail|partial
 ## Reports
 
 Reports persisted to `.cache/ace-test-e2e/`:
-- {timestamp}-{package}-MT-XXX-001/ - sandbox
-- {timestamp}-{package}-MT-XXX-001-reports/summary.r.md
-- {timestamp}-{package}-MT-XXX-001-reports/experience.r.md
-- {timestamp}-{package}-MT-XXX-001-reports/metadata.yml
+- {timestamp}-{short-pkg}-mtxxx001/ - sandbox
+- {timestamp}-{short-pkg}-mtxxx001-reports/summary.r.md
+- {timestamp}-{short-pkg}-mtxxx001-reports/experience.r.md
+- {timestamp}-{short-pkg}-mtxxx001-reports/metadata.yml
 ...
 EOF
 ```
@@ -417,8 +431,8 @@ Summarize the test execution in the response. Reports have been persisted to dis
 ### Reports
 
 Reports persisted to `.cache/ace-test-e2e/`:
-- `{timestamp}-{package}-{test-id}/` - Sandbox with test artifacts
-- `{timestamp}-{package}-{test-id}-reports/` - Reports folder containing:
+- `{timestamp}-{short-pkg}-{short-id}/` - Sandbox with test artifacts
+- `{timestamp}-{short-pkg}-{short-id}-reports/` - Reports folder containing:
   - `summary.r.md` - Detailed test results
   - `experience.r.md` - Friction points and improvement suggestions
   - `metadata.yml` - Run metadata
@@ -450,8 +464,8 @@ Reports persisted to `.cache/ace-test-e2e/`:
 
 Reports persisted to `.cache/ace-test-e2e/`:
 - `{suite-timestamp}-final-report.md` - Suite summary report (only final at top level)
-- `{timestamp}-{package}-MT-XXX-001/` - Sandbox
-- `{timestamp}-{package}-MT-XXX-001-reports/` - Reports folder
+- `{timestamp}-{short-pkg}-mtxxx001/` - Sandbox
+- `{timestamp}-{short-pkg}-mtxxx001-reports/` - Reports folder
   - `summary.r.md`
   - `experience.r.md`
   - `metadata.yml`
