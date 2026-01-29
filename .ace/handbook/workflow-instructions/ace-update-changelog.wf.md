@@ -2,7 +2,7 @@
 update:
   update_frequency: on-change
   frequency: on-change
-  last-updated: '2025-10-14'
+  last-updated: '2026-01-28'
 ---
 
 # ACE Update Changelog Workflow
@@ -50,17 +50,52 @@ Calculate new version:
 - Increment PATCH from last entry: `0.9.0` → `0.9.1`
 - Or start at `0.9.1` if this is first entry for this release
 
-### 2. Gather Changes
+### 2. Audit Commits Since Last Entry
 
-**Interactive mode:**
-Ask user to describe changes in categories:
-- **Added:** New features or capabilities
-- **Changed:** Changes in existing functionality
-- **Fixed:** Bug fixes
-- **Technical:** Chores, docs, refactoring
+Get the commit hash of the last changelog entry:
+```bash
+# Find the commit that added the last changelog version
+LAST_VERSION=$(grep -E "^## \[[0-9]+\.[0-9]+\.[0-9]+\]" CHANGELOG.md | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
+git log --all --oneline --grep="$LAST_VERSION" -- CHANGELOG.md | head -1
+```
 
-**Argument mode:**
-Parse provided description and categorize automatically.
+List all commits since then:
+```bash
+git log <last-changelog-commit>..HEAD --pretty=format:"%h %s" --no-merges
+```
+
+Identify all scopes touched:
+```bash
+git diff --stat <last-changelog-commit>..HEAD | grep -oE '^[^/]+/' | sort -u
+```
+
+### 2a. Classify Each Commit
+
+Review every commit and assign exactly one category using this decision tree:
+
+| Question | If Yes → Category |
+|----------|-------------------|
+| Did it fix something that was broken/crashing? | **Fixed** |
+| Did it add net-new capability that didn't exist before? | **Added** |
+| Did it remove a feature or capability? | **Removed** |
+| Did it change how existing functionality works? | **Changed** |
+| Is it non-functional (docs, tests, chores, refactoring)? | **Technical** |
+
+**Classification rules:**
+- A rename that fixes a crash is **Fixed**, not Changed
+- A new method that supports a new input format is **Added**
+- Updating docs/examples to match code changes is **Changed** (or omit if trivial)
+- Config registrations that fix broken discovery are **Fixed**
+- New skill files are **Added**
+
+### 2b. Verify Scope Coverage
+
+Before drafting the entry, confirm:
+- [ ] Every commit from the audit is represented in at least one entry
+- [ ] All scopes from `git diff --stat` are accounted for
+- [ ] No bug fixes are listed under Added
+- [ ] No new features are listed under Fixed
+- [ ] Entries include package version references where applicable (e.g., `**ace-foo v1.2.3**:`)
 
 ### 3. Generate Changelog Entry
 
@@ -68,14 +103,17 @@ Create entry with format:
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
 
+### Fixed
+- Bug fix or crash correction
+
 ### Added
 - New feature description
 
+### Removed
+- Removed feature or capability
+
 ### Changed
 - Change description
-
-### Fixed
-- Bug fix description
 
 ### Technical
 - Maintenance changes
@@ -84,6 +122,16 @@ Create entry with format:
 **Date format:** Use current date in ISO format (YYYY-MM-DD)
 
 **Skip empty sections:** Only include sections with actual changes
+
+### 3a. Verify Entry Completeness
+
+Before inserting, cross-check the draft:
+
+1. **Commit coverage**: Re-read the commit list from step 2. Confirm each commit maps to an entry.
+2. **Category accuracy**: For each entry, re-ask: "Is this really [Fixed/Added/Changed]?"
+3. **Scope coverage**: Check the scope list from step 2b. Is every scope mentioned?
+4. **Version references**: Each package-level change should include `**package vX.Y.Z**:` prefix.
+5. **No empty categories**: Only include sections that have entries.
 
 ### 4. Update CHANGELOG.md
 
@@ -130,10 +178,11 @@ git log -1 --stat
 
 ### Change Categories
 
-- **Added:** New features, new documentation sections, new tools
-- **Changed:** Modifications to existing functionality, restructuring
-- **Fixed:** Bug fixes, error corrections, broken link fixes
-- **Technical:** Chores, dependency updates, refactoring, test improvements
+- **Fixed:** Bug fixes, crash fixes, broken behavior corrections
+- **Added:** New features, new files, new capabilities, new tools
+- **Removed:** Removed features, deleted capabilities, deprecated items
+- **Changed:** Modifications to existing functionality, renames, restructuring
+- **Technical:** Chores, dependency updates, refactoring, test improvements, doc-only changes
 
 ## Troubleshooting
 
@@ -155,14 +204,17 @@ git log -1 --stat
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
 
+### Fixed
+- Bug fix or crash correction
+
 ### Added
 - Feature or capability that was added
 
+### Removed
+- Feature or capability that was removed
+
 ### Changed
 - Modification to existing functionality
-
-### Fixed
-- Bug fix or correction
 
 ### Technical
 - Maintenance, refactoring, or infrastructure changes
