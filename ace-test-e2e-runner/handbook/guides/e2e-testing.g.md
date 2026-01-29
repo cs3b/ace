@@ -2,7 +2,7 @@
 guide-id: g-e2e-testing
 title: E2E Testing Guide
 description: Conventions and best practices for agent-executed end-to-end tests
-version: "1.1"
+version: "1.2"
 source: ace-test-e2e-runner
 ---
 
@@ -299,6 +299,98 @@ The `ace-test` tool only runs files matching `*_test.rb`.
 9. **Document edge cases** - Note quirks discovered during execution
 10. **Keep tests focused** - One scenario per test file
 11. **Version prerequisites** - Specify exact tool versions if critical
+
+## Avoiding False Positive Tests
+
+E2E tests are only valuable if they catch real bugs. A false positive test — one that passes but validates nothing real — is worse than no test at all, because it creates false confidence.
+
+### Anti-Patterns
+
+#### 1. Testing Only Happy Path with Correct Syntax
+
+**Problem:** When every test case uses the exact correct command syntax and only tests success paths, the test can't catch argument parsing bugs, missing subcommands, or crash-on-bad-input issues.
+
+**Fix:** Always include error/negative test cases that exercise wrong arguments, missing files, and invalid state. Run error TCs first, before any session or state is created.
+
+```markdown
+<!-- BAD: Only happy path -->
+### TC-001: Start Workflow
+$TOOL create config.yaml   # only correct usage tested
+
+<!-- GOOD: Error paths first -->
+### TC-001: Error — Missing Config File
+$TOOL create nonexistent.yaml   # expected: exit code 3, clear error message
+
+### TC-002: Error — Status with No Active Session
+$TOOL status   # expected: exit code 2, "No active session"
+```
+
+#### 2. Hardcoding Internal File Structures
+
+**Problem:** When a test hardcodes paths like `.coworker/sessions/` or `queue.yaml` without verifying these paths are what the tool actually creates, the test passes by checking paths that don't exist — and the agent silently adapts.
+
+**Fix:** Discover paths from CLI output or by scanning the actual cache directory. Include negative assertions for paths that should NOT exist.
+
+```markdown
+<!-- BAD: Hardcoded assumption -->
+SESSION_DIR="$TEST_DIR/.coworker/sessions/my-session"
+[ -f "$SESSION_DIR/queue.yaml" ] && echo "PASS"
+
+<!-- GOOD: Discover from reality, negative assertions -->
+SESSION_DIR=$(find "$TEST_DIR/.cache/tool-name" -maxdepth 1 -mindepth 1 -type d | head -1)
+[ -d "$SESSION_DIR" ] && echo "PASS: Session dir found" || echo "FAIL: Not found"
+[ ! -f "$SESSION_DIR/queue.yaml" ] && echo "PASS: No queue.yaml (correct)" || echo "FAIL"
+```
+
+#### 3. Verification Commands That Silently Adapt
+
+**Problem:** When a verification step uses bare `grep` or `cat` without explicit PASS/FAIL logic, the agent can observe the output and report "it looks correct" even when the assertion didn't match anything.
+
+**Fix:** Use explicit `&& PASS || FAIL` patterns. Every verification must produce an unambiguous result.
+
+```markdown
+<!-- BAD: Agent can interpret anything as success -->
+grep "status" "$SESSION_DIR/queue.yaml"
+# Agent: "I can see the status field, PASS"
+
+<!-- GOOD: Explicit binary outcome -->
+grep -q "status: done" "$FILE" && echo "PASS: Status is done" || echo "FAIL: Status is not done"
+```
+
+#### 4. Testing Commands in Isolation from User Journey
+
+**Problem:** Testing each command independently (create, then status, then report) without maintaining state between them means the test doesn't catch bugs that only appear during sequential workflow use.
+
+**Fix:** Structure TCs as a sequential workflow where each TC depends on the state left by the previous one. This mirrors how a real user interacts with the tool.
+
+#### 5. Missing Error Path Coverage
+
+**Problem:** Without testing wrong arguments, missing files, no active state, and exit codes, the test validates the "golden path" where everything works — which is the path least likely to have bugs.
+
+**Fix:** Verify specific exit codes for error commands (not just "non-zero"). Check that error messages contain actionable information. Test what happens when required state doesn't exist.
+
+```markdown
+<!-- BAD: Only check success -->
+$TOOL report file.md
+echo "PASS"
+
+<!-- GOOD: Check specific exit codes and messages -->
+OUTPUT=$($TOOL report file.md 2>&1)
+EXIT_CODE=$?
+[ "$EXIT_CODE" -eq 2 ] && echo "PASS: Exit code 2" || echo "FAIL: Expected 2, got $EXIT_CODE"
+echo "$OUTPUT" | grep -qi "no active session" && echo "PASS" || echo "FAIL: Wrong error message"
+```
+
+### Reviewer Checklist for E2E Tests
+
+Before approving a new or updated E2E test, verify:
+
+- [ ] At least one error/negative TC is present (wrong args, missing files, invalid state)
+- [ ] File paths are discovered at runtime, not hardcoded from assumptions
+- [ ] Every verification step produces explicit PASS/FAIL output
+- [ ] TCs follow a real user workflow sequence (not isolated commands)
+- [ ] Exit codes are checked for error commands (specific codes, not just non-zero)
+- [ ] Negative assertions exist (files/directories that should NOT exist are verified absent)
 
 ## Environment Isolation for Taskflow-Aware Tests
 
