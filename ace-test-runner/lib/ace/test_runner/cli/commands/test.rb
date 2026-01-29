@@ -133,22 +133,17 @@ module Ace
             parsed_args = arg_parser.parse
             test_options.merge!(parsed_args)
           rescue ArgumentError => e
-            $stderr.puts "Error: #{e.message}"
-            return 1
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           # Run tests with special exit! handling for Minitest compatibility
           run_tests_with_exit_handling(test_options)
         rescue Ace::TestRunner::Error => e
-          $stderr.puts "Error: #{e.message}"
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
         rescue Interrupt
-          $stderr.puts "\nTest execution interrupted"
-          130
+          raise Ace::Core::CLI::Error.new("Test execution interrupted", exit_code: 130)
         rescue => e
-          $stderr.puts "Unexpected error: #{e.message}"
-          $stderr.puts e.backtrace if options[:verbose]
-          1
+          raise Ace::Core::CLI::Error.new("Unexpected error: #{e.message}")
         end
 
         private
@@ -220,8 +215,6 @@ module Ace
             puts "Deleted #{deleted.size} old reports:"
             deleted.each { |path| puts "  - #{File.basename(path)}" }
           end
-
-          0
         end
 
         def handle_rake_integration(options)
@@ -232,11 +225,13 @@ module Ace
           if options[:set_default_rake]
             result = integration.set_default
             puts result[:message]
-            return (result[:success] ? 0 : 1)
+            raise Ace::Core::CLI::Error.new(result[:message]) unless result[:success]
+            return
           elsif options[:unset_default_rake]
             result = integration.unset_default
             puts result[:message]
-            return (result[:success] ? 0 : 1)
+            raise Ace::Core::CLI::Error.new(result[:message]) unless result[:success]
+            return
           elsif options[:check_rake_status]
             status = integration.check_status
             puts "Rake Test Integration Status:"
@@ -245,7 +240,7 @@ module Ace
             puts "  Message: #{status[:message]}"
             puts "  Backup exists: #{status[:backup_exists]}" if status[:backup_exists]
             puts "  Has test task: #{status[:has_test_task]}" if status.key?(:has_test_task)
-            return 0
+            return
           end
         end
 
@@ -273,8 +268,6 @@ module Ace
           else
             puts "Fixed #{fixed_count} deprecations total."
           end
-
-          0
         end
 
         def run_tests_with_exit_handling(options)
