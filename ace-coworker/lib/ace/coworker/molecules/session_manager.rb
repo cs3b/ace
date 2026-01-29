@@ -24,6 +24,9 @@ module Ace
         # @param source_config [String] Path to source config file
         # @return [Models::Session] Created session
         def create(name:, description: nil, source_config:)
+          # Ensure cache base directory exists before generate_session_id
+          FileUtils.mkdir_p(@cache_base) unless File.directory?(@cache_base)
+
           session_id = generate_session_id
           cache_dir = File.join(@cache_base, session_id)
 
