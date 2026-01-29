@@ -4,7 +4,10 @@
 require_relative "../lib/ace/docs"
 require_relative "../lib/ace/docs/cli"
 
-# Start CLI with exit status code
-# The CLI.start method now handles all routing and returns an exit code
-result = Ace::Docs::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Docs::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
