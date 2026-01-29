@@ -3,4 +3,9 @@
 
 require_relative "../lib/ace/lint"
 
-Ace::Lint::CLI.start(ARGV)
+begin
+  Ace::Lint::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end

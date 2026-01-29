@@ -55,13 +55,11 @@ module Ace
             # Display results
             display_diagnostics(diagnostics, verbose: options[:verbose])
 
-            # Return exit code
+            # Raise on errors or warnings
             if doctor.errors?
-              EXIT_ERRORS
+              raise Ace::Core::CLI::Error.new("Configuration has errors", exit_code: EXIT_ERRORS)
             elsif doctor.warnings?
-              EXIT_WARNINGS
-            else
-              EXIT_HEALTHY
+              raise Ace::Core::CLI::Error.new("Configuration has warnings", exit_code: EXIT_WARNINGS)
             end
           end
 
