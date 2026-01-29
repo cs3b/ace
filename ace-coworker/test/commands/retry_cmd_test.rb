@@ -2,7 +2,7 @@
 
 require_relative "../test_helper"
 
-class RetryCommandTest < AceCoworkerTestCase
+class RetryCmdTest < AceCoworkerTestCase
   def test_retry_creates_linked_step
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
