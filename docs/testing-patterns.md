@@ -10,6 +10,7 @@
 > ace-nav guide://mocking-patterns      # Mocking patterns (Git, HTTP, subprocess)
 > ace-nav guide://test-performance      # Performance targets and optimization
 > ace-nav guide://testable-code-patterns # Testable code design
+> ace-nav guide://e2e-testing            # E2E testing (.mt.md format)
 > ```
 
 ---
