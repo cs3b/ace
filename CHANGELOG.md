@@ -4,6 +4,106 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.342] - 2026-01-28
+
+### Added
+
+- **ace-git v0.10.4**: Bundle section to reorganize-commits workflow for context loading via ace-bundle
+
+### Technical
+
+- Bump ace-git to version 0.10.4
+
+## [0.9.341] - 2026-01-28
+
+### Fixed
+
+- **ace-coworker v0.1.7**: CLI exit code wrapper propagation via `@captured_exit_code` and `wrap_command` method for proper exit code handling
+- **ace-coworker**: Race condition in `append_report` file locking - now rewrites content in-place on locked file descriptor instead of temp file + rename (preserves POSIX locks)
+- **ace-coworker**: Session ID generation max retry limit (100 attempts) to prevent infinite loop
+
+### Added
+
+- **ace-coworker**: Prepare command stub with helpful message directing users to create job.yaml manually or use the prepare-coworker-job workflow
+- **ace-coworker**: Migration UX for deprecated commands (start → create) with warning message
+
+### Changed
+
+- **ace-coworker**: Improve error messages with actionable suggestions (e.g., "Try 'ace-coworker add' or 'ace-coworker retry'")
+- **ace-coworker**: E2E test comment alignment - "creates separate .r.md report file" (was "appends report inline")
+
+## [0.9.340] - 2026-01-28
+
+### Changed
+
+- **ace-coworker v0.1.6**: Restructure workflows into focused commands: `create-coworker-session.wf.md` for session creation, `drive-coworker-session.wf.md` for execution loop, and `prepare-coworker-job.wf.md` for job preparation (renamed from `coworker-prepare-job.wf.md` for verb-first naming)
+- **ace-coworker**: Clarify terminology by replacing "job files" with "step files" in documentation to avoid confusion with the non-existent `jobs.yml`
+
+### Fixed
+
+- **ace-coworker**: Address PR #178 review findings including report file handling, step number padding, state transitions, and error messages
+
+### Technical
+
+- Update ace-coworker MVP task file with current implementation status
+
+## [0.9.339] - 2026-01-28
+
+### Added
+
+- **ace-coworker v0.1.5**: Separate job and report files with `.j.md` and `.r.md` extensions, new `reports/` directory structure for storing completion reports separately from job files
+
+### Technical
+
+- **ace-coworker**: Add retrospective spec for first ace-coworker cycle analysis
+- **ace_work_on_task**: Update skill definition
+
+## [0.9.338] - 2026-01-28
+
+### Added
+
+- **ace-coworker v0.1.4**: Archive job.yaml to task's `jobs/` directory after session creation (`{session_id}-job.yml`)
+
+### Technical
+
+- **ace-coworker**: Document state machine assertion fixes in mt-coworker-001 spec
+
+## [0.9.337] - 2026-01-28
+
+### Changed
+
+- **ace-coworker v0.1.3**: Standardize instructions format to arrays in coworker-prepare-job workflow doc
+- **ace-test-e2e-runner**: Improve E2E testing guidelines and templates
+
+### Technical
+
+- **ace-coworker v0.1.3**: Enhance workflow lifecycle E2E tests with error paths and state verification
+- Update changelog generation instructions in workflow
+
+## [0.9.336] - 2026-01-28
+
+### Fixed
+
+- **ace-coworker v0.1.2**: CLI `start` command crashes with positional argument — renamed to `create` with positional `argument :config`
+- **ace-coworker v0.1.2**: `ace-bundle wfi://coworker-prepare-job` fails due to missing project-level wfi:// protocol registration
+
+### Added
+
+- **ace-coworker v0.1.2**: Support array format for step instructions in presets with `normalize_instructions`
+- **skills**: Add `ace:coworker-create-session` skill for session creation from job.yaml
+- **skills**: Add `ace:coworker-start` skill for driving agent execution through active session
+
+### Changed
+
+- **ace-coworker v0.1.2**: Preset files now use array instructions format, updated workflow instructions and README
+
+## [0.9.335] - 2026-01-28
+
+### Fixed
+
+- **ace-git-worktree v0.12.5**: Use current branch as target branch fallback for non-subtask tasks instead of always defaulting to main, fixing wrong PR target branch when creating worktrees from feature branches
+- **ace-coworker v0.1.1**: Persist skill field from job.yaml steps through full pipeline (StepWriter, StepFileParser, QueueScanner, Step model) and display in status command output
+
 ## [0.9.334] - 2026-01-27
 
 ### Changed
