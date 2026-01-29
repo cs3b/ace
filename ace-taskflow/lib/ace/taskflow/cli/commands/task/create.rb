@@ -63,10 +63,9 @@ module Ace
               final_title = options[:title] || title
 
               if final_title.nil? || final_title.empty?
-                puts "Error: Task title is required"
                 puts "\nUsage: ace-taskflow task create <title> [options]"
                 puts "   or: ace-taskflow task create --title 'Task title' [options]"
-                return exit_failure
+                raise Ace::Core::CLI::Error.new("Task title is required")
               end
 
               # Resolve release
@@ -78,7 +77,7 @@ module Ace
               # Handle dry-run mode
               if options[:"dry-run"]
                 display_dry_run(final_title, release, options[:"child-of"], metadata)
-                return exit_success
+                return
               end
 
               # Call TaskManager directly
@@ -95,14 +94,12 @@ module Ace
               end
 
               # Display result
-              if result[:success]
-                puts result[:message]
-                puts "Path: #{result[:path]}"
-                exit_success
-              else
-                puts "Error: #{result[:message]}"
-                exit_failure
+              unless result[:success]
+                raise Ace::Core::CLI::Error.new(result[:message])
               end
+
+              puts result[:message]
+              puts "Path: #{result[:path]}"
             end
 
             private

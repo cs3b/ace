@@ -104,7 +104,6 @@ module Ace
               ideas_cmd.execute(modified_args)
             end
 
-            exit_success
           end
 
           def show_idea_by_reference(reference, options)
@@ -115,14 +114,12 @@ module Ace
 
             idea = idea_loader.find_by_partial_name(reference, release: release)
 
-            if idea
-              full_idea = idea_loader.load_idea(idea[:path])
-              display_idea(full_idea)
-              exit_success
-            else
-              puts "No idea found matching '#{reference}' in #{release_name(release)}."
-              exit_failure
+            unless idea
+              raise Ace::Core::CLI::Error.new("No idea found matching '#{reference}' in #{release_name(release)}.")
             end
+
+            full_idea = idea_loader.load_idea(idea[:path])
+            display_idea(full_idea)
           end
 
           def parse_release(options)

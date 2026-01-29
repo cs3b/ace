@@ -54,23 +54,20 @@ module Ace
               idea = idea_loader.find_by_partial_name(reference, release: release)
 
               unless idea
-                puts "No idea found matching '#{reference}' in #{release_name(release)}."
-                return exit_failure
+                raise Ace::Core::CLI::Error.new("No idea found matching '#{reference}' in #{release_name(release)}.")
               end
 
               # Move idea to parked (maybe/)
               mover = Ace::Taskflow::Molecules::IdeaDirectoryMover.new
               result = mover.move_to_maybe(idea[:path])
 
-              if result[:success]
-                maybe_dir = Ace::Taskflow.configuration.maybe_dir
-                puts "Idea '#{reference}' parked (moved to #{maybe_dir}/)"
-                puts "Good idea but not now - restore with 'idea unpark #{reference}'"
-                exit_success
-              else
-                puts "Error: #{result[:message]}"
-                exit_failure
+              unless result[:success]
+                raise Ace::Core::CLI::Error.new(result[:message])
               end
+
+              maybe_dir = Ace::Taskflow.configuration.maybe_dir
+              puts "Idea '#{reference}' parked (moved to #{maybe_dir}/)"
+              puts "Good idea but not now - restore with 'idea unpark #{reference}'"
             end
 
             private
