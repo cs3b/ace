@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.241
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 241-fix-ace-review-multi-model-executor-hanging-on-slow-cli-providers
+  path: "../ace-task.241"
+  created_at: '2026-01-29 17:04:27'
+  updated_at: '2026-01-29 17:04:27'
+  target_branch: main
 ---
 
 # Fix ace-review multi-model executor hanging on slow CLI providers
