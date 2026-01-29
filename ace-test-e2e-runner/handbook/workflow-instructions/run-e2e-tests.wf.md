@@ -118,8 +118,8 @@ As each subagent completes, capture its return summary:
 
 | Test ID | Status | Passed | Failed | Report Path |
 |---------|--------|--------|--------|-------------|
-| MT-LINT-001 | pass | 8 | 0 | 8oig0h-ace-lint-MT-LINT-001 |
-| MT-LINT-002 | fail | 3 | 2 | 8oig1k-ace-lint-MT-LINT-002 |
+| MT-LINT-001 | pass | 8 | 0 | 8oig0h-lint-mt001 |
+| MT-LINT-002 | fail | 3 | 2 | 8oig1k-lint-mt002 |
 ```
 
 ### 5. Read Metadata Files (Optional Detail)
@@ -127,7 +127,7 @@ As each subagent completes, capture its return summary:
 For failed tests or detailed reporting, read the `metadata.yml` files from the reports folder:
 
 ```bash
-cat .cache/ace-test-e2e/{timestamp}-{package}-{test-id}-reports/metadata.yml
+cat .cache/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/metadata.yml
 ```
 
 Extract additional details:
@@ -184,7 +184,7 @@ agent: {agent-name}
 - TC-003: Expected JSON output to include "errors" key
 - TC-005: Exit code should be 1 for validation failures
 
-**Report:** `.cache/ace-test-e2e/{timestamp}-ace-lint-MT-LINT-002-reports/summary.r.md`
+**Report:** `.cache/ace-test-e2e/{timestamp}-lint-mt002-reports/summary.r.md`
 
 ## Reports
 
@@ -192,8 +192,8 @@ All reports persisted to `.cache/ace-test-e2e/`:
 
 | Test ID | Sandbox | Reports Folder |
 |---------|---------|----------------|
-| MT-LINT-001 | {ts}-ace-lint-MT-LINT-001/ | {ts}-ace-lint-MT-LINT-001-reports/ |
-| MT-LINT-002 | {ts}-ace-lint-MT-LINT-002/ | {ts}-ace-lint-MT-LINT-002-reports/ |
+| MT-LINT-001 | {ts}-lint-mt001/ | {ts}-lint-mt001-reports/ |
+| MT-LINT-002 | {ts}-lint-mt002/ | {ts}-lint-mt002-reports/ |
 
 Each reports folder contains: `summary.r.md`, `experience.r.md`, `metadata.yml`
 
@@ -258,8 +258,8 @@ Present the execution summary to the user:
 Suite report: `.cache/ace-test-e2e/{FINAL_TS}-final-report.md`
 
 Individual test reports in `.cache/ace-test-e2e/`:
-- {timestamp}-ace-lint-MT-LINT-001-reports/
-- {timestamp}-ace-lint-MT-LINT-002-reports/
+- {timestamp}-lint-mt001-reports/
+- {timestamp}-lint-mt002-reports/
 ```
 
 ## Example Invocations
