@@ -32,7 +32,7 @@ module Ace
               Ace::Git::Secrets::Commands::RevokeCommand.execute(options)
             rescue StandardError => e
               debug_log(e.full_message, options) if debug?(options)
-              exit_failure(e.message)
+              raise Ace::Core::CLI::Error.new(e.message)
             end
           end
         end
