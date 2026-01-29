@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.344] - 2026-01-29
+
+### Added
+
+- **ace-coworker v0.2.1**: CLI exit codes documentation (`docs/exit-codes.md`) documenting exit codes 0-3 with meanings and examples
+- **ace-config**: WFI source protocol for ace-test gem
+
+### Changed
+
+- **ace-coworker v0.2.1**: Updated E2E test TC-004 to reflect actual `start` command behavior (migration alias to `create` with deprecation warning), added TC-004b test case for cache directory auto-creation, added cache directory setup to E2E test environment
+
+### Fixed
+
+- **ace-coworker v0.2.1**: Cache directory initialization bug where `.cache/ace-coworker/` was never created before `generate_session_id` called `Dir.mkdir()`, causing `Errno::ENOENT` crash on first use
+
+### Technical
+
+- Bump ace-coworker to version 0.2.1
+
 ## [0.9.343] - 2026-01-29
 
 ### Added
