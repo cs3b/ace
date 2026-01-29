@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.2] - 2026-01-29
+
+### Added
+- Enhanced review synthesis prompts with accuracy and conflict resolution guidelines
+- Added "Verification Required" section for unverifiable model claims
+- Added "Future Considerations" section to separate speculation from action items
+- Added severity classification and scope boundary guidance to base review prompt
+
+### Fixed
+- Exception-based CLI error handling for consistent exit codes
+
 ## [0.35.1] - 2026-01-16
 
 ### Changed
