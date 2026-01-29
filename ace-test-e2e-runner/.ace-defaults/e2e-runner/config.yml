@@ -7,7 +7,7 @@ paths:
   # File extension for test scenarios
   extension: ".mt.md"
   # Directory for test execution artifacts (gitignored)
-  cache_dir: ".cache/test-e2e"
+  cache_dir: ".cache/ace-test-e2e"
 
 patterns:
   # Glob pattern for finding test scenarios
