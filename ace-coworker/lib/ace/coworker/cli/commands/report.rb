@@ -37,18 +37,6 @@ module Ace
                 puts "Session completed! All steps done."
               end
             end
-
-            0
-          rescue NoActiveSessionError => e
-            puts "Error: #{e.message}"
-            2
-          rescue Error => e
-            puts "Error: #{e.message}"
-            if e.message.include?("not found")
-              3
-            else
-              1
-            end
           end
         end
       end

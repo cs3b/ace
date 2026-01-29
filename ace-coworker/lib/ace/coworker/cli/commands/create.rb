@@ -15,22 +15,12 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
 
           def call(config:, **options)
-            begin
-              executor = Organisms::WorkflowExecutor.new
-              result = executor.start(config)
+            executor = Organisms::WorkflowExecutor.new
+            result = executor.start(config)
 
-              unless options[:quiet]
-                print_session_header(result[:session])
-                print_step_instructions(result[:current])
-              end
-
-              0
-            rescue ConfigNotFoundError => e
-              puts "Error: #{e.message}"
-              3
-            rescue Error => e
-              puts "Error: #{e.message}"
-              1
+            unless options[:quiet]
+              print_session_header(result[:session])
+              print_step_instructions(result[:current])
             end
           end
 

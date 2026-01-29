@@ -15,8 +15,7 @@ class CreateCommandTest < AceCoworkerTestCase
       output = capture_io do
         result = Ace::Coworker::CLI::Commands::Create.new.call(config: config_path)
       end
-
-      assert_equal 0, result
+      assert_nil result  # Verify success returns nil
       assert_includes output.first, "Session: test-session"
       assert_includes output.first, "Step 010: init"
 
@@ -25,13 +24,12 @@ class CreateCommandTest < AceCoworkerTestCase
   end
 
   def test_create_with_missing_config
-    result = nil
-    output = capture_io do
-      result = Ace::Coworker::CLI::Commands::Create.new.call(config: "nonexistent.yaml")
+    error = assert_raises(Ace::Core::CLI::Error) do
+      Ace::Coworker::CLI::Commands::Create.new.call(config: "nonexistent.yaml")
     end
 
-    assert_equal 3, result
-    assert_includes output.first, "Error:"
+    assert_equal 3, error.exit_code
+    assert_includes error.message, "not found"
   end
 
   def test_create_quiet_mode

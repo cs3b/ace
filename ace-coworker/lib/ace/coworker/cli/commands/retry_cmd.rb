@@ -29,17 +29,6 @@ module Ace
                 puts "Note: Step #{result[:state].current.number} (#{result[:state].current.name}) must complete first"
               end
             end
-
-            0
-          rescue NoActiveSessionError => e
-            puts "Error: #{e.message}"
-            2
-          rescue StepNotFoundError => e
-            puts "Error: #{e.message}"
-            4
-          rescue Error => e
-            puts "Error: #{e.message}"
-            1
           end
         end
       end

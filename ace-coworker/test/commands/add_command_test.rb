@@ -19,8 +19,7 @@ class AddCommandTest < AceCoworkerTestCase
           instructions: "Fix the bug"
         )
       end
-
-      assert_equal 0, result
+      assert_nil result  # Verify success returns nil
       assert_includes output.first, "Created: jobs/"
       assert_includes output.first, "fix-bug"
 
@@ -32,13 +31,12 @@ class AddCommandTest < AceCoworkerTestCase
     with_temp_cache do |cache_dir|
       Ace::Coworker.config["cache_dir"] = cache_dir
 
-      result = nil
-      output = capture_io do
-        result = Ace::Coworker::CLI::Commands::Add.new.call(name: "fix-bug")
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Coworker::CLI::Commands::Add.new.call(name: "fix-bug")
       end
 
-      assert_equal 2, result
-      assert_includes output.first, "No active session"
+      assert_equal 2, error.exit_code
+      assert_includes error.message, "No active session"
 
       Ace::Coworker.reset_config!
     end
