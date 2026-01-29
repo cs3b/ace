@@ -155,8 +155,24 @@ For each:
 
 - **[Model-A]**: [their position]
 - **[Model-B]**: [their position]
-- **Resolution**: [synthesized recommendation]
+- **Type**: Implementation Detail / Severity Assessment / Approach Choice
+- **Resolution**: [synthesized recommendation OR "Requires human decision"]
 - **Rationale**: [why]
+
+**CONFLICT RESOLUTION RULES:**
+- Severity disagreements (e.g., High vs Critical): Use the MORE SEVERE rating and note the disagreement
+- Implementation details (e.g., naming conventions, step numbering): Flag for human decision, do NOT auto-resolve
+- Factual disagreements (e.g., "file is missing" vs "file exists"): Flag as "Verification Required"
+- Approach choices (e.g., pattern A vs pattern B): Present both with tradeoffs, recommend but note alternatives
+
+## Future Considerations
+
+[Speculative improvements that are NOT action items. These are ideas for later, not issues to fix now.]
+
+- **[Idea]**: [description] - *From [model-name]*
+- **[Idea]**: [description] - *From [model-name]*
+
+**Note:** Future considerations are NOT bugs or required changes. They should NOT appear in Prioritized Action Items.
 
 ## Prioritized Action Items
 
@@ -194,12 +210,35 @@ Combine all findings into a prioritized list.
 7. [action item] - AI model suggestions only, no developer feedback here
 8. ...
 
+## Future Considerations
+
+[Speculative improvements suggested by models that are NOT bugs or required changes. These should NOT be in Prioritized Action Items.]
+
+- **[Suggestion]**: [description] - *From [model-name]*
+
+## Verification Required
+
+[Claims made by models that could not be verified from the diff alone.]
+
+- **[Claim type]**: [description]. Verification needed: [what to check]
+
+## Verification Required
+
+[Items where models made claims that could not be verified from the diff alone. These need human verification before action.]
+
+If no items need verification, write "No items require additional verification."
+
+- **[Claim]**: [Model] claimed [X]. Verification needed: [what to check]
+- **[File presence]**: [Model] claimed file [X] is missing. Verify file actually exists in codebase.
+
 ## Summary Statistics
 
 - **Consensus findings**: [N]
 - **Strong recommendations (2+ models)**: [N]
 - **Unique insights**: [N]
 - **Conflicts resolved**: [N]
+- **Items requiring verification**: [N]
+- **Future considerations (not action items)**: [N]
 
 ---
 
@@ -245,6 +284,14 @@ When merging overlapping findings:
 ❌ Do not omit developer comments because AI models didn't find the same issue
 ❌ Do not drop file:line references from developer comments
 
+**CRITICAL - Synthesis Accuracy Anti-Patterns:**
+❌ Do not include speculative "future improvements" in Prioritized Action Items
+❌ Do not auto-resolve implementation detail conflicts (flag for human decision)
+❌ Do not trust "file is missing" claims without verification note
+❌ Do not elevate "nice to have" suggestions to High/Critical severity
+❌ Do not include "out of scope" observations as action items requiring changes
+❌ Do not treat model hallucinations as findings (e.g., "method X still calls Y" when diff shows otherwise)
+
 ## PRE-SUBMISSION VERIFICATION
 
 Before outputting, verify:
@@ -260,3 +307,12 @@ Before outputting, verify:
 - [ ] All file:line references from developer comments are preserved
 - [ ] Every unresolved developer comment appears in "Prioritized Action Items" at Medium or higher
 - [ ] No developer feedback ranked as "Low Priority"
+
+**Synthesis Accuracy Checklist:**
+- [ ] "Future Considerations" section exists and contains speculative improvements (NOT in action items)
+- [ ] "Verification Required" section exists for unverifiable claims
+- [ ] Implementation detail conflicts flagged for human decision (not auto-resolved)
+- [ ] "Out of scope" observations noted but NOT in action items
+- [ ] File presence claims marked as "Verification needed" if not confirmed in diff
+- [ ] Severity ratings consistent across similar issues
+- [ ] No hallucinated runtime errors (claims about code state not in diff)
