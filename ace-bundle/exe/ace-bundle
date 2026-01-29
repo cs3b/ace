@@ -10,6 +10,10 @@ if ARGV.include?("--list") || ARGV.include?("--list-presets")
   ARGV.unshift("list")
 end
 
-# Start dry-cli and exit with the returned status code
-result = Ace::Bundle::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Bundle::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
