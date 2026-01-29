@@ -130,8 +130,7 @@ module Ace
 
             # Validate pattern
             if @pattern.nil? || @pattern.empty?
-              $stderr.puts "Error: No search pattern provided"
-              return 1
+              raise Ace::Core::CLI::Error.new("No search pattern provided")
             end
 
             # Resolve search path
@@ -142,7 +141,9 @@ module Ace
 
             # Execute search
             result = execute_search
-            return 1 unless result[:success]
+            unless result[:success]
+              raise Ace::Core::CLI::Error.new("Search failed")
+            end
 
             # Store result for interactive selection
             @result = result
@@ -152,11 +153,8 @@ module Ace
 
             # Format and output results
             output_results(@result)
-            0
           rescue => e
-            $stderr.puts "Error: #{e.message}"
-            $stderr.puts e.backtrace if ENV["DEBUG"]
-            1
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def resolve_search_path(search_path)
