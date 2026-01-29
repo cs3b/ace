@@ -18,8 +18,7 @@ class ReportCommandTest < AceCoworkerTestCase
       output = capture_io do
         result = Ace::Coworker::CLI::Commands::Report.new.call(file: report_path)
       end
-
-      assert_equal 0, result
+      assert_nil result  # Verify success returns nil
       assert_includes output.first, "Step 010 (init) completed"
       assert_includes output.first, "Advancing to step 020"
 
@@ -36,13 +35,11 @@ class ReportCommandTest < AceCoworkerTestCase
       executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      result = nil
-      output = capture_io do
-        result = Ace::Coworker::CLI::Commands::Report.new.call(file: "nonexistent.md")
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Coworker::CLI::Commands::Report.new.call(file: "nonexistent.md")
       end
 
-      assert_equal 3, result
-      assert_includes output.first, "Error:"
+      assert_includes error.message, "not found"
 
       Ace::Coworker.reset_config!
     end
@@ -54,13 +51,12 @@ class ReportCommandTest < AceCoworkerTestCase
 
       Ace::Coworker.config["cache_dir"] = cache_dir
 
-      result = nil
-      output = capture_io do
-        result = Ace::Coworker::CLI::Commands::Report.new.call(file: report_path)
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Coworker::CLI::Commands::Report.new.call(file: report_path)
       end
 
-      assert_equal 2, result
-      assert_includes output.first, "No active session"
+      assert_equal 2, error.exit_code
+      assert_includes error.message, "No active session"
 
       Ace::Coworker.reset_config!
     end
