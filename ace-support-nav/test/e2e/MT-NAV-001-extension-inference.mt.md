@@ -31,8 +31,8 @@ Verify that ace-nav correctly infers file extensions when resolving protocol URI
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-ace-support-nav"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-support-nav-MT-NAV-001"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
