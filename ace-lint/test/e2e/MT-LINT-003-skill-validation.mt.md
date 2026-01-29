@@ -31,8 +31,8 @@ Verify that ace-lint auto-detects SKILL.md files and runs skill-specific validat
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-skill-validation"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-lint-MT-LINT-003"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
