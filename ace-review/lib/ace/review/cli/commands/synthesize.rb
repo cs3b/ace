@@ -33,8 +33,7 @@ module Ace
         def call(**options)
           # Validate inputs
           if options[:session].nil? && options[:reports].nil?
-            $stderr.puts "✗ Error: Either --session or --reports is required"
-            return 1
+            raise Ace::Core::CLI::Error.new("Either --session or --reports is required")
           end
 
           # Determine report paths
@@ -58,18 +57,11 @@ module Ace
             output_file: options[:output]
           )
 
-          if result[:success]
-            # Success message already displayed by synthesizer
-            0
-          else
-            $stderr.puts "✗ Synthesis failed: #{result[:error]}"
-            $stderr.puts result[:backtrace].join("\n") if options[:verbose] && result[:backtrace]
-            1
+          unless result[:success]
+            raise Ace::Core::CLI::Error.new("Synthesis failed: #{result[:error]}")
           end
         rescue StandardError => e
-          $stderr.puts "✗ Error: #{e.message}"
-          $stderr.puts e.backtrace if options[:verbose]
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
         end
 
         private
