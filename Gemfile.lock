@@ -11,7 +11,7 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.1.7)
+    ace-coworker (0.2.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.18)
       ace-support-markdown (~> 0.2)
@@ -86,7 +86,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.14.0)
+    ace-lint (0.15.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
       ace-support-timestamp (~> 0.2)
@@ -159,7 +159,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.21.0)
+    ace-support-core (0.22.0)
       ace-support-config (~> 0.6)
       ace-support-fs (~> 0.1)
       dry-cli (~> 1.0)
