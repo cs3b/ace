@@ -34,14 +34,6 @@ module Ace
                 puts "Session completed!"
               end
             end
-
-            0
-          rescue NoActiveSessionError => e
-            puts "Error: #{e.message}"
-            2
-          rescue Error => e
-            puts "Error: #{e.message}"
-            1
           end
 
           private
