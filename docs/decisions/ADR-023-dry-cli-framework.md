@@ -285,8 +285,49 @@ end
 | Code | Meaning | How to Signal |
 |------|---------|---------------|
 | 0 | Success | Return normally (no exception) |
-| 1 | Failure | `raise Ace::Core::CLI::Error.new(msg)` |
-| 2 | Warning | `raise Ace::Core::CLI::Error.new(msg, exit_code: 2)` |
+| 1 | General failure | `raise Ace::Core::CLI::Error.new(msg)` |
+| 2 | Misuse/invalid args | `raise Ace::Core::CLI::Error.new(msg, exit_code: 2)` |
+| 3 | Configuration error | `raise Ace::Core::CLI::Error.new(msg, exit_code: 3)` |
+| 4 | Resource not found | `raise Ace::Core::CLI::Error.new(msg, exit_code: 4)` |
+| 130 | SIGINT (Ctrl+C) | Caught by exe wrapper (see below) |
+
+#### SIGINT Handling
+
+CLI tools should handle SIGINT (Ctrl+C) gracefully and return exit code 130 (128 + signal 2):
+
+```ruby
+# exe/ace-gem
+#!/usr/bin/env ruby
+require "ace/gem"
+
+begin
+  Ace::Gem::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+rescue Interrupt
+  # SIGINT (Ctrl+C) - convention: 128 + signal number (2)
+  warn "\nInterrupted"
+  exit(130)
+end
+```
+
+#### Exit Code Contract Documentation
+
+When implementing CLI commands, document exit codes in the command's help text or `docs/usage.md`:
+
+```markdown
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error |
+| 2 | Invalid arguments |
+| 130 | Interrupted (Ctrl+C) |
+```
+
+**Task specification requirement**: For CLI tasks, include exit code semantics in the Interface Contract section of the behavioral specification.
 
 #### Anti-Patterns (DO NOT USE)
 
