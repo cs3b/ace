@@ -159,19 +159,41 @@ example ['pattern --flag', '"*.rb" -f']
 
 ## Exit Code Handling
 
-Commands return status codes, never call `exit`:
+**IMPORTANT**: dry-cli's `call()` method returns `nil`, NOT command return values. Use exception-based exit codes:
 
 ```ruby
-# In command
-def execute
-  return 1 if invalid?
-  0  # Success
+# In command - raise exception for non-zero exit
+def call(file: nil, **options)
+  raise Ace::Core::CLI::Error.new("file required") if file.nil?
+
+  result = do_work(file)
+  raise Ace::Core::CLI::Error.new(result[:error]) unless result[:success]
+
+  puts result[:message]
+  # Success - no exception, exits 0
 end
 
-# exe/ace-gem handles exit
-exit_code = Ace::Gem::CLI.start(ARGV)
-exit(exit_code || 0)
+# exe/ace-gem catches exceptions and exits
+begin
+  Ace::Gem::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+rescue Interrupt
+  warn "\nInterrupted"
+  exit(130)
+end
 ```
+
+**Exit Code Values:**
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General failure |
+| 2 | Invalid arguments |
+| 130 | SIGINT (Ctrl+C) |
+
+See [ADR-023](../../../docs/decisions/ADR-023-dry-cli-framework.md) for full exit code documentation.
 
 ## Reserved Short Flags
 
