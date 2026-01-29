@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.346] - 2026-01-29
+
+### Added
+
+- **ace-test-e2e-runner v0.3.0**: Persistent test reports (test-report.md, agent-experience-report.md, metadata.yml) with automated generation and disk storage for comprehensive test execution tracking and agent experience insights
+- **ace-test-e2e-runner v0.3.0**: ace-taskflow fixture template for standardized taskflow structure creation in E2E tests
+
+### Changed
+
+- **ace-test-e2e-runner v0.3.0**: Updated test environment structure to use artifacts/ subdirectory for test data organization, separating test data from generated reports
+- **ace-test-e2e-runner v0.3.0**: Enhanced E2E testing guidelines with emphasis on error path coverage, negative test cases, and comprehensive error testing best practices
+
 ## [0.9.345] - 2026-01-29
 
 ### Fixed
