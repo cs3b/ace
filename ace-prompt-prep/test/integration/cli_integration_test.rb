@@ -137,9 +137,8 @@ class CLIIntegrationTest < Minitest::Test
     # Run CLI and capture output
     _stdout, stderr = run_cli_isolated(["process"])
 
-    # Verify error message is shown
-    # Note: dry-cli doesn't propagate exit codes, so we check for error output instead
-    assert_match(/Error:|does not exist/i, stderr)
+    # Verify error message is shown (CLI raises Ace::Core::CLI::Error, caught and written to stderr)
+    assert_match(/Prompt file not found|does not exist/i, stderr)
   end
 
   def test_process_with_explicit_stdout_returns_zero
@@ -522,8 +521,8 @@ class CLIIntegrationTest < Minitest::Test
 
     Ace::PromptPrep::Atoms::TaskPathResolver.stub :resolve, mock_result do
       _stdout, stderr = run_cli_isolated(["process", "--task", "999"])
-      # Note: dry-cli doesn't propagate exit codes, so we check for error output instead
-      assert_match(/Error:|Task not found/i, stderr, "Should show error for invalid task")
+      # CLI raises Ace::Core::CLI::Error, caught and written to stderr
+      assert_match(/Task not found/i, stderr, "Should show error for invalid task")
     end
   end
 
@@ -643,6 +642,8 @@ class CLIIntegrationTest < Minitest::Test
 
     begin
       Ace::PromptPrep::CLI.start(args)
+    rescue Ace::Core::CLI::Error => e
+      $stderr.print e.message
     ensure
       $stdout = old_stdout
       $stderr = old_stderr
@@ -653,19 +654,20 @@ class CLIIntegrationTest < Minitest::Test
 
   def run_cli_for_exit_code(args)
     # Run CLI and return exit code
-    # Capture output to suppress it
+    # Success returns nil, failure raises Ace::Core::CLI::Error
     old_stdout = $stdout
     old_stderr = $stderr
     $stdout = StringIO.new
     $stderr = StringIO.new
 
     begin
-      exit_code = Ace::PromptPrep::CLI.start(args)
+      Ace::PromptPrep::CLI.start(args)
+      nil
+    rescue Ace::Core::CLI::Error => e
+      e.exit_code
     ensure
       $stdout = old_stdout
       $stderr = old_stderr
     end
-
-    exit_code
   end
 end
