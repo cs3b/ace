@@ -50,21 +50,23 @@ This convention:
 
 ### Test Execution Directory {#directory-structure}
 
-Test artifacts are created in project-local cache:
+Test artifacts and reports are created in project-local cache:
 
 ```
-.cache/test-e2e/{timestamp}-{package}/
-├── test-report.md               # Test results (pass/fail details)
-├── agent-experience-report.md   # AX report (friction, suggestions)
-├── metadata.yml                 # Run metadata (duration, versions)
-└── artifacts/                   # Test data files
-    ├── example.rb
-    └── ...
+.cache/ace-test-e2e/
+├── {timestamp}-{package}-{test-id}/       # Sandbox folder (test artifacts)
+│   ├── (git repo, test files, etc.)
+│   └── ...
+├── {timestamp}-{package}-{test-id}.summary.r.md      # Test results
+├── {timestamp}-{package}-{test-id}.experience.r.md   # AX report
+├── {timestamp}-{package}-{test-id}.metadata.yml      # Run metadata
+└── {suite-timestamp}-final-report.md                 # Suite report (multi-test runs)
 ```
 
 Examples:
-- `.cache/test-e2e/8oig0h-ace-lint/` - Package-specific test
-- `.cache/test-e2e/8oig0h/` - Project-wide test
+- `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001/` - Package-specific test sandbox
+- `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001.summary.r.md` - Test results report
+- `.cache/ace-test-e2e/8osuw3-final-report.md` - Suite report (all tests in package)
 
 **Benefits:**
 - **Project-local** - Artifacts stay with the codebase
@@ -72,20 +74,22 @@ Examples:
 - **Consistent naming** - Uses ace-timestamp for unique IDs
 - **Easy debugging** - Inspect artifacts without hunting in `/tmp`
 - **Package-scoped** - Directory name includes package for clarity
-- **Report persistence** - Test reports and AX feedback preserved for analysis
+- **Test ID in name** - Each folder includes the test ID (e.g., MT-LINT-001) for easy identification
+- **Reports as siblings** - Report files sit alongside sandbox folders for easy scanning
+- **Suite reports** - Multi-test runs generate aggregate summary
 
 **Setup in test scenarios:**
 ```bash
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR=".cache/test-e2e/${TEST_ID}-{package-name}"
-mkdir -p "$TEST_DIR/artifacts"
-cd "$TEST_DIR/artifacts"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-{package-name}-{test-id}"
+mkdir -p "$TEST_DIR"
+cd "$TEST_DIR"
 ```
 
-**Report Files:**
-- `test-report.md` - Structured pass/fail results with details
-- `agent-experience-report.md` - Friction points, root cause analysis, improvement suggestions
-- `metadata.yml` - Run context (duration, git branch, tool versions)
+**Report Files (as siblings to sandbox folder):**
+- `{folder}.summary.r.md` - Structured pass/fail results with details
+- `{folder}.experience.r.md` - Friction points, root cause analysis, improvement suggestions
+- `{folder}.metadata.yml` - Run context (duration, git branch, tool versions)
 
 ### Test ID Format
 
@@ -304,7 +308,7 @@ The `ace-test` tool only runs files matching `*_test.rb`.
 
 ### Test Data & Cleanup
 6. **Use heredocs for test files** - Ensures reproducibility
-7. **Cleanup is optional** - Artifacts in `.cache/test-e2e/` are gitignored
+7. **Cleanup is optional** - Artifacts in `.cache/ace-test-e2e/` are gitignored
 8. **Configure cleanup behavior** - Set `cleanup.enabled` in config
 
 ### Documentation
