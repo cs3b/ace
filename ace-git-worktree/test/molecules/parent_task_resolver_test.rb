@@ -30,15 +30,45 @@ module Ace
             assert_equal "main", result
           end
 
-          def test_default_target_for_orchestrator_task
+          def test_orchestrator_task_uses_current_branch
             task_data = {
               id: "v.0.9.0+task.202",
               title: "Orchestrator Task"
             }
 
-            resolver = create_resolver({})
-            result = resolver.resolve_target_branch(task_data)
-            assert_equal "main", result
+            Atoms::GitCommand.stub(:current_branch, "237-ace-coworker-mvp") do
+              resolver = create_resolver({})
+              result = resolver.resolve_target_branch(task_data)
+              assert_equal "237-ace-coworker-mvp", result
+            end
+          end
+
+          def test_orchestrator_task_falls_back_to_main_when_no_current_branch
+            task_data = {
+              id: "v.0.9.0+task.202",
+              title: "Orchestrator Task"
+            }
+
+            Atoms::GitCommand.stub(:current_branch, nil) do
+              resolver = create_resolver({})
+              result = resolver.resolve_target_branch(task_data)
+              assert_equal "main", result
+            end
+          end
+
+          def test_orchestrator_task_falls_back_to_main_when_detached_head
+            task_data = {
+              id: "v.0.9.0+task.229",
+              title: "CLI Refactor"
+            }
+
+            Atoms::GitCommand.stub(:current_branch, "abc1234") do
+              Atoms::GitCommand.stub(:ref_exists?, false) do
+                resolver = create_resolver({})
+                result = resolver.resolve_target_branch(task_data)
+                assert_equal "main", result
+              end
+            end
           end
 
           def test_parent_branch_for_subtask
