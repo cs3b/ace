@@ -15,6 +15,43 @@ This workflow guides an agent through executing an E2E test scenario.
 - `PACKAGE` (optional) - The package containing the test (e.g., `ace-lint`). If omitted, looks for `test/e2e/` in project root.
 - `TEST_ID` (optional) - The test identifier (e.g., `MT-LINT-001`). If omitted, runs all tests.
 
+## Subagent Mode
+
+When invoked as a subagent (via Task tool from `/ace:run-e2e-tests` orchestrator), this workflow operates with special considerations:
+
+### Context Isolation
+
+- Each subagent runs in a clean context with no shared state
+- Timestamp IDs ensure unique report paths (no collisions with parallel runs)
+- All reports are written to disk, not returned inline
+
+### Return Contract
+
+After completing all steps, return a **minimal structured summary** instead of verbose output:
+
+```markdown
+- **Test ID**: {test-id}
+- **Status**: pass | fail | partial
+- **Passed**: {count}
+- **Failed**: {count}
+- **Total**: {count}
+- **Report Paths**: {timestamp}-{package}-{test-id}.*
+- **Issues**: Brief description or "None"
+```
+
+**Do NOT include:**
+- Full report contents (they're on disk)
+- Detailed test case output
+- Environment setup logs
+
+The orchestrator aggregates these summaries and reads report files as needed.
+
+### Report-First Design
+
+1. Write all reports to `.cache/ace-test-e2e/` (steps 7.1-7.3)
+2. Return only paths and summary counts
+3. Orchestrator reads files for detailed aggregation
+
 ## Workflow Steps
 
 ### 1. Locate Test Scenario(s)
@@ -68,45 +105,46 @@ Run the commands in the "Environment Setup" section:
    ```bash
    PROJECT_ROOT="$(pwd)"
    ```
-2. Generate a test ID using `ace-timestamp encode`
+2. Generate a timestamp ID using `ace-timestamp encode`
 3. Create the test directory structure:
    ```bash
-   TEST_ID="$(ace-timestamp encode)"
-   TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-{package}"
-   mkdir -p "$TEST_DIR/artifacts"
-   cd "$TEST_DIR/artifacts"
+   TIMESTAMP_ID="$(ace-timestamp encode)"
+   TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-{package}-{test-id}"
+   mkdir -p "$TEST_DIR"
+   cd "$TEST_DIR"
    ```
 4. Set up any required environment variables
-5. Navigate to the artifacts directory for test data creation
+5. Navigate to the test directory for test data creation
 
 **Important:** Always capture `PROJECT_ROOT` before `cd` operations. Use `$PROJECT_ROOT/bin/ace-lint` for absolute paths to project binaries when executing from test directories.
 
 **Directory Structure:**
 ```
-.cache/test-e2e/{timestamp}-{package}/
-├── test-report.md               # Test results (written at completion)
-├── agent-experience-report.md   # AX report (written at completion)
-├── metadata.yml                 # Run metadata (written at completion)
-└── artifacts/                   # Test data files (created during setup)
-    ├── valid.rb
-    └── ...
+.cache/ace-test-e2e/
+├── {timestamp}-{package}-{test-id}/       # Sandbox folder (test artifacts)
+│   ├── (git repo, test files, etc.)
+│   └── ...
+├── {timestamp}-{package}-{test-id}.summary.r.md      # Test results
+├── {timestamp}-{package}-{test-id}.experience.r.md   # AX report
+├── {timestamp}-{package}-{test-id}.metadata.yml      # Run metadata
+└── {suite-timestamp}-final-report.md                 # Suite report (multi-test runs)
 ```
 
 **Directory Convention:**
-- Package test: `.cache/test-e2e/{timestamp}-{package}/`
-- Project test: `.cache/test-e2e/{timestamp}/`
+- Package test: `.cache/ace-test-e2e/{timestamp}-{package}-{test-id}/`
+- Project test: `.cache/ace-test-e2e/{timestamp}-{test-id}/`
 
-Example: `.cache/test-e2e/8oig0h-ace-lint/`
+Example: `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001/`
 
 ### 5. Create Test Data
 
-Execute the commands in the "Test Data" section to create necessary files in the `artifacts/` directory:
+Execute the commands in the "Test Data" section to create necessary test files:
 
-1. Create all test files as specified (inside `$TEST_DIR/artifacts/`)
+1. Create all test files as specified (inside `$TEST_DIR/`)
 2. Verify files were created correctly
 3. Report file contents if needed for debugging
 
-**Note:** Test data files go in `$TEST_DIR/artifacts/`, keeping them separate from reports which are written to `$TEST_DIR/`.
+**Note:** Test data files go in `$TEST_DIR/`, while reports are written as sibling files outside the sandbox folder.
 
 ### 6. Execute Test Cases
 
@@ -132,19 +170,19 @@ Report each test case result immediately after execution.
 
 ### 7. Write Reports to Disk
 
-After test execution completes (pass or fail), write three report files to `$TEST_DIR/`.
+After test execution completes (pass or fail), write three report files as siblings to the `$TEST_DIR/` sandbox folder.
 
 **Important:** Replace all `{placeholder}` values with actual data before writing. Do not copy placeholders literally - substitute them with real values from test execution.
 
 **Error Handling:**
-- If `$TEST_DIR` doesn't exist, create it with `mkdir -p "$TEST_DIR"`
+- If the cache directory doesn't exist, create it with `mkdir -p "$(dirname "$TEST_DIR")"`
 - If write fails (permissions), report the error and suggest manual intervention
 - For partial test completion, still write reports with status "partial" or "incomplete"
 
-#### 7.1 Write test-report.md
+#### 7.1 Write summary report (.summary.r.md)
 
 ```bash
-cat > "$TEST_DIR/test-report.md" << 'EOF'
+cat > "${TEST_DIR}.summary.r.md" << 'EOF'
 ---
 test-id: {test-id}
 package: {package}
@@ -182,10 +220,10 @@ total: {count}
 EOF
 ```
 
-#### 7.2 Write agent-experience-report.md
+#### 7.2 Write agent experience report (.experience.r.md)
 
 ```bash
-cat > "$TEST_DIR/agent-experience-report.md" << 'EOF'
+cat > "${TEST_DIR}.experience.r.md" << 'EOF'
 ---
 test-id: {test-id}
 test-title: {test-title}
@@ -227,10 +265,10 @@ EOF
 
 **Note:** If no friction was encountered, the AX report should note "No significant friction encountered" in the Summary section.
 
-#### 7.3 Write metadata.yml
+#### 7.3 Write metadata (.metadata.yml)
 
 ```bash
-cat > "$TEST_DIR/metadata.yml" << EOF
+cat > "${TEST_DIR}.metadata.yml" << EOF
 run-id: "${TEST_ID}"
 test-id: "{test-id}"
 package: "{package}"
@@ -256,10 +294,71 @@ EOF
 After writing reports, include the paths in the response:
 
 ```
-Reports written to: $TEST_DIR/
-- test-report.md
-- agent-experience-report.md
-- metadata.yml
+Reports written to: $(dirname "$TEST_DIR")/
+- $(basename "${TEST_DIR}").summary.r.md
+- $(basename "${TEST_DIR}").experience.r.md
+- $(basename "${TEST_DIR}").metadata.yml
+```
+
+### 7.5 Write Suite Final Report (Multi-Test Runs Only)
+
+When running multiple tests (e.g., all tests in a package), generate a suite-level final report after all tests complete.
+
+**Trigger:** Only when multiple test scenarios were executed in steps 2-7.
+
+**Suite Report Path:**
+```bash
+SUITE_ID="$(ace-timestamp encode)"  # Generate once at start of suite run
+SUITE_REPORT="$PROJECT_ROOT/.cache/ace-test-e2e/${SUITE_ID}-final-report.md"
+```
+
+**Content:**
+```bash
+cat > "$SUITE_REPORT" << 'EOF'
+---
+suite-id: {suite-id}
+package: {package}
+agent: {agent-name}
+executed: {timestamp}
+tests-run: {count}
+status: pass|fail|partial
+---
+
+# E2E Test Suite Report
+
+**Package:** {package}
+**Tests Run:** {count}
+**Executed:** {timestamp}
+**Agent:** {agent-name}
+
+## Summary
+
+| Test ID | Title | Status | Passed | Failed |
+|---------|-------|--------|--------|--------|
+| MT-XXX-001 | {title} | Pass/Fail | {n} | {n} |
+| MT-XXX-002 | {title} | Pass/Fail | {n} | {n} |
+...
+
+**Overall:** {total-passed}/{total-cases} test cases passed ({percentage}%)
+
+## Test Details
+
+### MT-XXX-001: {title} ({passed}/{total} passed)
+- TC-001: {description} - Pass/Fail
+- TC-002: {description} - Pass/Fail
+...
+
+### MT-XXX-002: {title} ({passed}/{total} passed)
+...
+
+## Reports
+
+Reports persisted to `.cache/ace-test-e2e/`:
+- {timestamp}-{package}-MT-XXX-001/ - sandbox
+- {timestamp}-{package}-MT-XXX-001.summary.r.md
+- {timestamp}-{package}-MT-XXX-001.experience.r.md
+...
+EOF
 ```
 
 ### 8. Run Cleanup (Optional)
@@ -272,12 +371,13 @@ If cleanup is enabled, execute:
 
 ```bash
 rm -rf "$TEST_DIR"
+rm -f "${TEST_DIR}.summary.r.md" "${TEST_DIR}.experience.r.md" "${TEST_DIR}.metadata.yml"
 ```
 
-**Note:** Test directories in `.cache/test-e2e/` are gitignored, so keeping artifacts doesn't affect the repository. Old test directories can be removed manually with:
+**Note:** Test directories in `.cache/ace-test-e2e/` are gitignored, so keeping artifacts doesn't affect the repository. Old test directories can be removed manually with:
 
 ```bash
-rm -rf .cache/test-e2e/*
+rm -rf .cache/ace-test-e2e/*
 ```
 
 ### 9. Generate Summary Report
@@ -308,10 +408,11 @@ Summarize the test execution in the response. Reports have been persisted to dis
 
 ### Reports
 
-Reports persisted to `{$TEST_DIR}/`:
-- `test-report.md` - Detailed test results
-- `agent-experience-report.md` - Friction points and improvement suggestions
-- `metadata.yml` - Run metadata
+Reports persisted to `.cache/ace-test-e2e/`:
+- `{timestamp}-{package}-{test-id}/` - Sandbox with test artifacts
+- `{timestamp}-{package}-{test-id}.summary.r.md` - Detailed test results
+- `{timestamp}-{package}-{test-id}.experience.r.md` - Friction points and improvement suggestions
+- `{timestamp}-{package}-{test-id}.metadata.yml` - Run metadata
 ```
 
 **Multiple tests (package-wide):**
@@ -338,10 +439,13 @@ Reports persisted to `{$TEST_DIR}/`:
 
 ### Reports
 
-Reports persisted to `{$TEST_DIR}/`:
-- `test-report.md` - Detailed test results
-- `agent-experience-report.md` - Friction points and improvement suggestions
-- `metadata.yml` - Run metadata
+Reports persisted to `.cache/ace-test-e2e/`:
+- `{suite-timestamp}-final-report.md` - Suite summary report
+- `{timestamp}-{package}-MT-XXX-001/` - Sandbox
+- `{timestamp}-{package}-MT-XXX-001.summary.r.md`
+- `{timestamp}-{package}-MT-XXX-001.experience.r.md`
+- `{timestamp}-{package}-MT-XXX-001.metadata.yml`
+...
 ```
 
 ### 10. Update Test Scenario (if needed)
