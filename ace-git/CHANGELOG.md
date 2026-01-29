@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.5] - 2026-01-29
+
+### Added
+- Integrate exception-based CLI error handling
+- Enhance commit reorganization workflow with bundle integration
+
+### Technical
+- Clarify reorganize-commits workflow: reorganize means reorder, not squash
+
 ## [0.10.4] - 2026-01-28
 
 ### Added
