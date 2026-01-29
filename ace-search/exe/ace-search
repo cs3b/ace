@@ -3,7 +3,10 @@
 
 require_relative "../lib/ace/search"
 
-# Start CLI with default command routing and exit with status code
-# The routing logic is now in CLI.start for testability
-result = Ace::Search::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Search::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
