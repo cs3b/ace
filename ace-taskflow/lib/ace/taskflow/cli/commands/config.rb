@@ -37,7 +37,6 @@ module Ace
             puts "Defaults:"
             puts "  Idea location: #{config_loader['defaults']['idea_location']}"
             puts "  Task location: #{config_loader['defaults']['task_location']}"
-            exit_success
           end
         end
       end

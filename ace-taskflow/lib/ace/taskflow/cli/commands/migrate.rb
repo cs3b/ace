@@ -43,14 +43,14 @@ module Ace
             parsed_options = {}  # Initialize for rescue block
 
             result = @option_parser.parse(args, thor_options: thor_options)
-            return exit_success if result[:help_requested]
+            return if result[:help_requested]
 
             parsed_options = result[:parsed]
 
             unless @root_path
               puts "Error: No .ace-taskflow directory found"
               puts "Please run this command from within an ace-taskflow project"
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("No .ace-taskflow directory found")
             end
 
             in_git_repo = git_repository?
@@ -74,11 +74,9 @@ module Ace
 
             display_results(results, parsed_options)
 
-            results[:errors].empty? ? exit_success : exit_failure
+            raise Ace::Core::CLI::Error.new("Migration completed with errors") unless results[:errors].empty?
           rescue StandardError => e
-            puts "Error: #{e.message}"
-            puts e.backtrace if parsed_options && parsed_options[:verbose]
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def build_option_parser

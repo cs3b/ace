@@ -50,7 +50,7 @@ module Ace
             @option_parser = build_option_parser
 
             result = @option_parser.parse(args, thor_options: thor_options)
-            return exit_success if result[:help_requested]
+            return if result[:help_requested]
 
             options = result[:parsed]
             remaining = result[:remaining]
@@ -64,8 +64,7 @@ module Ace
 
             execute_with_preset(preset_name, options)
           rescue StandardError => e
-            puts "Error: #{e.message}"
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def build_option_parser
@@ -89,16 +88,16 @@ module Ace
           def execute_with_preset(preset_name, options)
             if options[:stats]
               show_statistics_for_preset(preset_name)
-              return exit_success
+              return
             end
 
             if options[:filter_clear]
               preset_config = @preset_manager.apply_preset(preset_name, {}, :releases)
-              return exit_failure unless preset_config
+              raise Ace::Core::CLI::Error.new("Failed to apply preset '#{preset_name}'") unless preset_config
               preset_config[:filters] = {}
             else
               preset_config = @preset_manager.apply_preset(preset_name, options, :releases)
-              return exit_failure unless preset_config
+              raise Ace::Core::CLI::Error.new("Failed to apply preset '#{preset_name}'") unless preset_config
             end
 
             if options[:filter_specs]
@@ -114,10 +113,8 @@ module Ace
 
             if releases.empty?
               puts "No releases found for preset '#{preset_name}'."
-              exit_success
             else
               display_releases_with_preset(releases, preset_config, original_count, options[:limit])
-              exit_success
             end
           end
 
