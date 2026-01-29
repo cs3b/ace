@@ -165,14 +165,51 @@ No per-gem Gemfile; use root Gemfile. See [mono-repo-patterns.g.md](../ace-handb
 - Use `Ace::Support::Config.create.resolve_namespace()` for config cascade
 - Flat test structure: `test/atoms/` not `test/ace/gem/atoms/`
 - Include `handbook/**/*` in spec.files for ALL gems
-- Return status codes from commands, never call `exit`
+- Use exception-based exit codes (see ADR-023)
 - Use `CLI::Commands::` namespace (Hanami pattern)
+- Handle SIGINT and return exit code 130
 
 **DON'T:**
 - Hardcode default values in Ruby
 - Include `Gemfile` in individual gems
 - Use `-v` for version (reserved for verbose)
 - Skip CHANGELOG updates
+- Call `exit()` directly in command classes
+
+## CLI Development Checklist
+
+When developing CLI commands, verify these items before PR:
+
+### Exit Code Handling
+- [ ] Commands raise `Ace::Core::CLI::Error` for failures (not `return 1`)
+- [ ] Exit codes documented in `docs/usage.md` or command help
+- [ ] SIGINT handled with exit code 130 in exe wrapper
+- [ ] Exit code semantics match documented behavior
+
+### Error Messages
+- [ ] Error messages are actionable (tell user what to do)
+- [ ] Consistent prefix handling (messages via `Error#to_s` get "Error: " prefix)
+- [ ] No duplicate "Error: " prefixes in output
+
+### Input Validation
+- [ ] Required arguments validated before processing
+- [ ] Data file schemas validated (e.g., job.yaml required fields)
+- [ ] Graceful handling of missing/malformed input files
+
+### Resource Cleanup
+- [ ] Temp files cleaned up on failure (atomic write patterns)
+- [ ] Partial state cleaned up on interruption
+- [ ] No orphan `.tmp.*` files on error paths
+
+### Concurrency Safety
+- [ ] File operations are atomic where needed
+- [ ] No TOCTOU (time-of-check-time-of-use) race conditions
+- [ ] Session/ID generation handles concurrent access
+
+### Dependencies
+- [ ] All required modules explicitly `require`d
+- [ ] No reliance on load order for implicit requires
+- [ ] `FileUtils` and other stdlib modules explicitly required
 
 ## Testing
 
