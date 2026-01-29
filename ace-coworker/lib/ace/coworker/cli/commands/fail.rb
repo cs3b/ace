@@ -30,14 +30,6 @@ module Ace
               puts "- ace-coworker add \"fix-step\" to add a fix step"
               puts "- ace-coworker retry #{failed.number} to retry this step"
             end
-
-            0
-          rescue NoActiveSessionError => e
-            puts "Error: #{e.message}"
-            2
-          rescue Error => e
-            puts "Error: #{e.message}"
-            1
           end
         end
       end
