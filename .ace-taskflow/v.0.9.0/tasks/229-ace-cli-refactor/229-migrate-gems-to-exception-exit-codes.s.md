@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.229
-status: pending
+status: in-progress
 priority: high
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 229-migrate-ace-cli-gems-to-exception-based-exit-code-pattern
+  path: "../ace-task.229"
+  created_at: '2026-01-28 20:44:55'
+  updated_at: '2026-01-28 20:44:55'
+  target_branch: 237-ace-coworker-mvp-with-work-queue-model
 ---
 
 # Migrate ACE CLI gems to exception-based exit code pattern
