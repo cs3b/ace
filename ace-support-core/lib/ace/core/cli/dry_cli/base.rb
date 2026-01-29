@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
+require_relative "../error"
 
 module Ace
   module Core
@@ -12,7 +13,7 @@ module Ace
         # CLI commands using the dry-cli framework. It provides:
         #
         # - Standard option definitions (quiet, verbose, debug)
-        # - Exit code handling patterns
+        # - Exception-based exit code handling (per ADR-023)
         # - Common command utilities
         #
         # @example Creating a command registry
@@ -33,11 +34,9 @@ module Ace
         #         option :debug, type: :boolean, default: false
         #
         #         def call(**options)
-        #           # implementation
-        #           0 # Success exit code
-        #         rescue StandardError => e
-        #           warn "Error: #{e.message}"
-        #           1 # Failure exit code
+        #           # implementation - return normally for success
+        #         rescue MyGem::DomainError => e
+        #           raise Ace::Core::CLI::Error.new(e.message)
         #         end
         #       end
         #
@@ -140,31 +139,21 @@ module Ace
             $stderr.puts "DEBUG: #{message}" if debug?(options)
           end
 
-          # Return a success exit code
+          # Raise a CLI error to signal failure with a non-zero exit code.
           #
-          # @return [Integer] 0 for success
+          # This raises Ace::Core::CLI::Error which is caught by the exe wrapper
+          # and translated into a process exit code (per ADR-023).
           #
-          # @example
-          #   def call(**options)
-          #     # ... successful work ...
-          #     exit_success
-          #   end
-          def exit_success
-            0
-          end
-
-          # Return a failure exit code
-          #
-          # @param message [String, nil] Optional error message to output
-          # @return [Integer] 1 for failure
+          # @param message [String] Error message to display
+          # @param exit_code [Integer] Exit code (default: 1)
+          # @raise [Ace::Core::CLI::Error] always
           #
           # @example
           #   def call(**options)
-          #     return exit_failure("Invalid input") unless valid?
+          #     raise_cli_error("Invalid input") unless valid?
           #   end
-          def exit_failure(message = nil)
-            warn "Error: #{message}" if message
-            1
+          def raise_cli_error(message, exit_code: 1)
+            raise Ace::Core::CLI::Error.new(message, exit_code: exit_code)
           end
 
           # Validate that required options are present

@@ -34,16 +34,12 @@ module Ace
                 else
                   puts format_model_info_brief(model)
                 end
-                0
               rescue ProviderNotFoundError => e
-                warn "Error: Model '#{e.model_id || model_id}' not found in provider '#{e.provider_id}'"
-                1
+                raise Ace::Core::CLI::Error.new("Model '#{e.model_id || model_id}' not found in provider '#{e.provider_id}'")
               rescue ModelNotFoundError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               rescue CacheError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               end
 
               private

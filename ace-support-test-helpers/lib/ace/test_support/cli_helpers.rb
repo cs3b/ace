@@ -37,13 +37,18 @@ module Ace
       #   result = invoke_cli(Ace::Search::CLI, ["search", "TODO", "--max-results", "10"])
       #   assert_equal 0, result[:result]
       #
-      # @note dry-cli calls exit(0) for --help, so we catch SystemExit
+      # @note dry-cli calls exit(0) for --help, so we catch SystemExit.
+      #   Commands raise Ace::Core::CLI::Error for controlled failures
+      #   (exception-based exit code pattern per ADR-023).
       def invoke_cli(cli_class, args)
         stdout, stderr = capture_io do
           begin
             @_cli_result = cli_class.start(args)
           rescue SystemExit => e
             @_cli_result = e.status
+          rescue Ace::Core::CLI::Error => e
+            $stderr.puts e.message
+            @_cli_result = e.exit_code
           end
         end
 

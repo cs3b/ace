@@ -3,14 +3,10 @@
 
 require_relative "../lib/ace/support/timestamp"
 
+# Start dry-cli with exception-based exit code handling (per ADR-023)
 begin
   Ace::Support::Timestamp::CLI.start(ARGV)
-rescue ArgumentError => e
-  # Error message already printed by command
-  warn e.backtrace.first(5).join("\n") if ENV["DEBUG"]
-  exit 1
-rescue StandardError => e
-  # Error message already printed by command
-  warn e.backtrace.first(5).join("\n") if ENV["DEBUG"]
-  exit 1
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
 end

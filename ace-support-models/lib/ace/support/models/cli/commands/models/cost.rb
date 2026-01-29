@@ -40,13 +40,10 @@ module Ace
                 else
                   puts calculator.format(result)
                 end
-                0
               rescue ProviderNotFoundError, ModelNotFoundError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               rescue CacheError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               end
             end
           end
