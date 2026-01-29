@@ -36,6 +36,9 @@ git:
     ace-bundle:
       glob: "ace-bundle/**"
 
+    ace-coworker:
+      glob: "ace-coworker/**"
+
     ace-docs:
       glob: "ace-docs/**"
 
