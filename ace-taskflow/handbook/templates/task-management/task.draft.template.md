@@ -31,7 +31,7 @@ dependencies: {dependencies}
 command-name [options] <arguments>
 # Expected outputs, error messages, and status codes
 
-# API Interface (if applicable)  
+# API Interface (if applicable)
 GET/POST/PUT/DELETE /endpoint
 # Request/response formats, error responses, status codes
 
@@ -39,13 +39,39 @@ GET/POST/PUT/DELETE /endpoint
 # User interactions, form behaviors, navigation flows
 ```
 
+**Exit Codes** (CLI tasks):
+<!-- Define exit code semantics - what each code means -->
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | General error |
+| 2 | Invalid arguments/usage |
+| 130 | Interrupted (Ctrl+C) |
+
 **Error Handling:**
 - [Error condition 1]: [Expected system response]
 - [Error condition 2]: [Expected system response]
 
+**Input Validation** (data-driven features):
+<!-- Define what validation is required for input data -->
+- [Required field 1]: [Validation rule and error if missing]
+- [Required field 2]: [Validation rule and error if missing]
+
 **Edge Cases:**
 - [Edge case 1]: [Expected behavior]
 - [Edge case 2]: [Expected behavior]
+
+**Concurrency Considerations** (if applicable):
+<!-- Document multi-process safety requirements -->
+- [ ] File operations: [Atomic write requirements]
+- [ ] ID generation: [Uniqueness guarantees under concurrent access]
+- [ ] State management: [Race condition handling]
+
+**Cleanup Behavior:**
+<!-- What happens to resources on success, failure, and interruption -->
+- Success: [Expected cleanup]
+- Failure: [Expected cleanup - no orphan temp files]
+- Interruption: [Expected cleanup on SIGINT]
 
 ### Success Criteria
 <!-- Define measurable, observable criteria that indicate successful completion -->
