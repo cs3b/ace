@@ -64,20 +64,69 @@ module Ace
 
         private
 
+        # Grace period (seconds) added to llm_timeout for Thread.join deadline.
+        # This allows the inner Timeout.timeout to fire first in normal cases,
+        # while the outer Thread.join deadline acts as a safety net for threads
+        # stuck in uninterruptible system calls (e.g., CLI providers).
+        # @return [Integer] grace period in seconds
+        JOIN_GRACE_PERIOD = 30
+
         # Execute a batch of models concurrently
+        #
+        # Two-tier timeout strategy:
+        # 1. Timeout.timeout (inner): Catches most slow operations, can interrupt
+        #    Ruby-level sleep and IO. Used in execute_single_model.
+        # 2. Thread.join with deadline (outer): Safety net for when (1) cannot interrupt
+        #    the thread (e.g., CLI provider stuck in uninterruptible system call).
+        #
+        # Uses deadline-based join to ensure total wait time is bounded regardless
+        # of how many threads are stuck. Each subsequent join gets the remaining
+        # time until the absolute deadline, not a fresh timeout.
+        #
+        # Note: Thread.kill may leave orphaned CLI subprocesses (from Open3.capture3).
+        # These will complete naturally and exit. True subprocess cleanup would require
+        # provider-level changes to track and terminate child processes.
         def execute_batch(models, system_prompt, user_prompt, session_dir)
           batch_results = {}
           threads = []
 
           models.each do |model|
             thread = Thread.new do
+              # Suppress IOError noise from killed threads
+              Thread.current.report_on_exception = false
+              Thread.current[:model] = model  # Store model for warning display
               execute_single_model(model, system_prompt, user_prompt, session_dir, batch_results)
             end
             threads << thread
           end
 
-          # Wait for all threads to complete
-          threads.each(&:join)
+          # Wait for all threads to complete with deadline-based timeout
+          # Use absolute deadline to ensure total wait is bounded to llm_timeout + grace period
+          # regardless of how many threads are stuck
+          total_timeout = @llm_timeout + JOIN_GRACE_PERIOD
+          deadline = monotonic_now + total_timeout
+          threads.each do |thread|
+            remaining = [deadline - monotonic_now, 0].max
+            unless thread.join(remaining)
+              # Thread didn't finish in time, kill it
+              model = thread[:model]
+              thread.kill
+
+              # Only display/record if not already recorded (avoid duplicate messages)
+              should_display = false
+              @mutex.synchronize do
+                unless batch_results.key?(model)
+                  should_display = true
+                  batch_results[model] = {
+                    success: false,
+                    error: "killed after #{total_timeout}s timeout",
+                    duration: total_timeout.to_f
+                  }
+                end
+              end
+              display_progress_killed(model, total_timeout) if should_display
+            end
+          end
 
           batch_results
         end
@@ -180,6 +229,22 @@ module Ace
             $stderr.puts message
             $stderr.flush
           end
+        end
+
+        # Display warning for killed thread
+        # @param model [String] model identifier
+        # @param timeout [Integer] timeout duration in seconds
+        def display_progress_killed(model, timeout)
+          @mutex.synchronize do
+            $stderr.puts "  ⚠ #{model}: killed after #{timeout}s timeout"
+            $stderr.flush
+          end
+        end
+
+        # Returns monotonic time in seconds (immune to system clock changes)
+        # @return [Float] monotonic time in seconds
+        def monotonic_now
+          Process.clock_gettime(Process::CLOCK_MONOTONIC)
         end
       end
     end
