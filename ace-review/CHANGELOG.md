@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.3] - 2026-01-29
+
+### Fixed
+- Multi-model executor hanging on slow CLI providers by adding timeout to Thread.join
+- Added deadline-based join to ensure total wait is bounded regardless of stuck threads
+- Suppressed IOError exceptions from killed threads for cleaner output
+- Added warning display for threads killed after timeout
+
 ## [0.35.2] - 2026-01-29
 
 ### Added
