@@ -21,12 +21,12 @@ module Ace
 
                 if options[:json]
                   puts JSON.pretty_generate(result.to_h)
-                  return 0
+                  return
                 end
 
                 unless result.any_changes?
                   puts "No changes since last sync"
-                  return 0
+                  return
                 end
 
                 if result.added_providers.any?
@@ -62,10 +62,8 @@ module Ace
                 end
 
                 puts "Summary: #{result.summary}"
-                0
               rescue CacheError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               end
             end
           end

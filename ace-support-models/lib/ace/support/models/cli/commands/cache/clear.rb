@@ -22,20 +22,17 @@ module Ace
 
                 if options[:json]
                   puts JSON.pretty_generate(result)
-                  return 0
+                  return
                 end
 
                 if result[:status] == :success
                   puts "Cache cleared successfully"
                   puts "Deleted: #{result[:deleted_files].join(', ')}" if result[:deleted_files]&.any?
-                  0
                 else
-                  warn "Error: #{result[:message]}"
-                  1
+                  raise Ace::Core::CLI::Error.new(result[:message])
                 end
               rescue StandardError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               end
             end
           end

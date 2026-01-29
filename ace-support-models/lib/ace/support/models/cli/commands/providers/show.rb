@@ -21,20 +21,18 @@ module Ace
                 cache_manager = Molecules::CacheManager.new
 
                 unless cache_manager.cached?
-                  warn "No cache data. Run 'ace-models cache sync' first."
-                  return 1
+                  raise Ace::Core::CLI::Error.new("No cache data. Run 'ace-models cache sync' first.")
                 end
 
                 provider_data = cache_manager.get_provider(provider_id)
 
                 unless provider_data
-                  warn "Provider '#{provider_id}' not found"
-                  return 1
+                  raise Ace::Core::CLI::Error.new("Provider '#{provider_id}' not found")
                 end
 
                 if options[:json]
                   puts JSON.pretty_generate(provider_data)
-                  return 0
+                  return
                 end
 
                 puts "Provider: #{provider_id}"
@@ -44,10 +42,8 @@ module Ace
                   puts "  #{model[:id]}#{status}"
                   puts "    #{model[:name]}"
                 end
-                0
               rescue CacheError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               end
             end
           end
