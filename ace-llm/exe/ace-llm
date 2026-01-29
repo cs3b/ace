@@ -13,6 +13,10 @@ $LOAD_PATH.unshift(ace_support_core_lib) if File.directory?(ace_support_core_lib
 require "ace/llm"
 Ace::LLM::Atoms::EnvReader.load_env_cascade
 
-# Start Thor CLI and exit with the returned status code
-result = Ace::LLM::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::LLM::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
