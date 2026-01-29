@@ -30,8 +30,8 @@ Verify core git worktree operations (list, create, switch, remove, prune) work c
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-git-worktree"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-git-worktree-MT-WORKTREE-001"
 WORKTREES_ROOT="$TEST_DIR/worktrees"
 mkdir -p "$TEST_DIR" "$WORKTREES_ROOT"
 
