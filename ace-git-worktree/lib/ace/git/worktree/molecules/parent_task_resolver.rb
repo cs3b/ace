@@ -54,7 +54,10 @@ module Ace
 
             # Extract parent task ID from task ID
             parent_id = extract_parent_id(task_data[:id])
-            return DEFAULT_TARGET unless parent_id
+            unless parent_id
+              # Non-subtask: use current branch (e.g., feature branch) instead of defaulting to main
+              return current_branch_fallback || DEFAULT_TARGET
+            end
 
             # Load parent task data
             parent_task = load_parent_task(parent_id)
