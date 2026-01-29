@@ -220,33 +220,27 @@ class CliRoutingTest < AceGitTestCase
   # See test_cli_routes_status_command above
 
   def test_cli_does_not_route_log_to_diff
-    # "log" should NOT be caught by magic routing
-    output = capture_io do
+    # "log" should NOT be caught by magic routing - raises CLI::Error for unknown command
+    error = assert_raises(Ace::Core::CLI::Error) do
       Ace::Git::CLI.start(["log"])
     end
-    combined = output.first.to_s + output.last.to_s
-    refute_match(/mock diff/, combined)
-    refute_empty combined
+    assert_match(/Unknown command/, error.message)
   end
 
   def test_cli_does_not_route_show_to_diff
-    # "show" should NOT be caught by magic routing
-    output = capture_io do
+    # "show" should NOT be caught by magic routing - raises CLI::Error for unknown command
+    error = assert_raises(Ace::Core::CLI::Error) do
       Ace::Git::CLI.start(["show"])
     end
-    combined = output.first.to_s + output.last.to_s
-    refute_match(/mock diff/, combined)
-    refute_empty combined
+    assert_match(/Unknown command/, error.message)
   end
 
   def test_cli_does_not_route_commit_to_diff
-    # "commit" should NOT be caught by magic routing
-    output = capture_io do
+    # "commit" should NOT be caught by magic routing - raises CLI::Error for unknown command
+    error = assert_raises(Ace::Core::CLI::Error) do
       Ace::Git::CLI.start(["commit"])
     end
-    combined = output.first.to_s + output.last.to_s
-    refute_match(/mock diff/, combined)
-    refute_empty combined
+    assert_match(/Unknown command/, error.message)
   end
 
   def test_cli_does_not_route_help_to_diff
