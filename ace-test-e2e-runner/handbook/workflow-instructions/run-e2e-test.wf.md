@@ -121,13 +121,14 @@ Run the commands in the "Environment Setup" section:
 **Directory Structure:**
 ```
 .cache/ace-test-e2e/
-├── {timestamp}-{package}-{test-id}/       # Sandbox folder (test artifacts)
+├── {timestamp}-{package}-{test-id}/           # Sandbox folder (test artifacts)
 │   ├── (git repo, test files, etc.)
 │   └── ...
-├── {timestamp}-{package}-{test-id}.summary.r.md      # Test results
-├── {timestamp}-{package}-{test-id}.experience.r.md   # AX report
-├── {timestamp}-{package}-{test-id}.metadata.yml      # Run metadata
-└── {suite-timestamp}-final-report.md                 # Suite report (multi-test runs)
+├── {timestamp}-{package}-{test-id}-reports/   # Reports grouped in folder
+│   ├── summary.r.md                           # Test results
+│   ├── experience.r.md                        # AX report
+│   └── metadata.yml                           # Run metadata
+└── {suite-timestamp}-final-report.md          # Suite report (only final at top level)
 ```
 
 **Directory Convention:**
@@ -170,19 +171,25 @@ Report each test case result immediately after execution.
 
 ### 7. Write Reports to Disk
 
-After test execution completes (pass or fail), write three report files as siblings to the `$TEST_DIR/` sandbox folder.
+After test execution completes (pass or fail), write three report files to a `-reports/` folder alongside the sandbox folder.
 
 **Important:** Replace all `{placeholder}` values with actual data before writing. Do not copy placeholders literally - substitute them with real values from test execution.
+
+**Create reports directory first:**
+```bash
+REPORTS_DIR="${TEST_DIR}-reports"
+mkdir -p "$REPORTS_DIR"
+```
 
 **Error Handling:**
 - If the cache directory doesn't exist, create it with `mkdir -p "$(dirname "$TEST_DIR")"`
 - If write fails (permissions), report the error and suggest manual intervention
 - For partial test completion, still write reports with status "partial" or "incomplete"
 
-#### 7.1 Write summary report (.summary.r.md)
+#### 7.1 Write summary report (summary.r.md)
 
 ```bash
-cat > "${TEST_DIR}.summary.r.md" << 'EOF'
+cat > "${REPORTS_DIR}/summary.r.md" << 'EOF'
 ---
 test-id: {test-id}
 package: {package}
@@ -220,10 +227,10 @@ total: {count}
 EOF
 ```
 
-#### 7.2 Write agent experience report (.experience.r.md)
+#### 7.2 Write agent experience report (experience.r.md)
 
 ```bash
-cat > "${TEST_DIR}.experience.r.md" << 'EOF'
+cat > "${REPORTS_DIR}/experience.r.md" << 'EOF'
 ---
 test-id: {test-id}
 test-title: {test-title}
@@ -265,10 +272,10 @@ EOF
 
 **Note:** If no friction was encountered, the AX report should note "No significant friction encountered" in the Summary section.
 
-#### 7.3 Write metadata (.metadata.yml)
+#### 7.3 Write metadata (metadata.yml)
 
 ```bash
-cat > "${TEST_DIR}.metadata.yml" << EOF
+cat > "${REPORTS_DIR}/metadata.yml" << EOF
 run-id: "${TEST_ID}"
 test-id: "{test-id}"
 package: "{package}"
@@ -294,10 +301,10 @@ EOF
 After writing reports, include the paths in the response:
 
 ```
-Reports written to: $(dirname "$TEST_DIR")/
-- $(basename "${TEST_DIR}").summary.r.md
-- $(basename "${TEST_DIR}").experience.r.md
-- $(basename "${TEST_DIR}").metadata.yml
+Reports written to: ${REPORTS_DIR}/
+- summary.r.md
+- experience.r.md
+- metadata.yml
 ```
 
 ### 7.5 Write Suite Final Report (Multi-Test Runs Only)
@@ -355,8 +362,9 @@ status: pass|fail|partial
 
 Reports persisted to `.cache/ace-test-e2e/`:
 - {timestamp}-{package}-MT-XXX-001/ - sandbox
-- {timestamp}-{package}-MT-XXX-001.summary.r.md
-- {timestamp}-{package}-MT-XXX-001.experience.r.md
+- {timestamp}-{package}-MT-XXX-001-reports/summary.r.md
+- {timestamp}-{package}-MT-XXX-001-reports/experience.r.md
+- {timestamp}-{package}-MT-XXX-001-reports/metadata.yml
 ...
 EOF
 ```
@@ -371,7 +379,7 @@ If cleanup is enabled, execute:
 
 ```bash
 rm -rf "$TEST_DIR"
-rm -f "${TEST_DIR}.summary.r.md" "${TEST_DIR}.experience.r.md" "${TEST_DIR}.metadata.yml"
+rm -rf "${TEST_DIR}-reports"
 ```
 
 **Note:** Test directories in `.cache/ace-test-e2e/` are gitignored, so keeping artifacts doesn't affect the repository. Old test directories can be removed manually with:
@@ -410,9 +418,10 @@ Summarize the test execution in the response. Reports have been persisted to dis
 
 Reports persisted to `.cache/ace-test-e2e/`:
 - `{timestamp}-{package}-{test-id}/` - Sandbox with test artifacts
-- `{timestamp}-{package}-{test-id}.summary.r.md` - Detailed test results
-- `{timestamp}-{package}-{test-id}.experience.r.md` - Friction points and improvement suggestions
-- `{timestamp}-{package}-{test-id}.metadata.yml` - Run metadata
+- `{timestamp}-{package}-{test-id}-reports/` - Reports folder containing:
+  - `summary.r.md` - Detailed test results
+  - `experience.r.md` - Friction points and improvement suggestions
+  - `metadata.yml` - Run metadata
 ```
 
 **Multiple tests (package-wide):**
@@ -440,11 +449,12 @@ Reports persisted to `.cache/ace-test-e2e/`:
 ### Reports
 
 Reports persisted to `.cache/ace-test-e2e/`:
-- `{suite-timestamp}-final-report.md` - Suite summary report
+- `{suite-timestamp}-final-report.md` - Suite summary report (only final at top level)
 - `{timestamp}-{package}-MT-XXX-001/` - Sandbox
-- `{timestamp}-{package}-MT-XXX-001.summary.r.md`
-- `{timestamp}-{package}-MT-XXX-001.experience.r.md`
-- `{timestamp}-{package}-MT-XXX-001.metadata.yml`
+- `{timestamp}-{package}-MT-XXX-001-reports/` - Reports folder
+  - `summary.r.md`
+  - `experience.r.md`
+  - `metadata.yml`
 ...
 ```
 
