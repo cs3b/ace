@@ -61,16 +61,15 @@ module Ace
 
             if documents.empty?
               $stderr.puts "No managed documents found."
-              return exit_success
+              return
             end
 
             display_status(documents)
             display_summary(documents, registry)
-            exit_success
           rescue StandardError => e
             $stderr.puts "Error showing status: #{e.message}"
             $stderr.puts e.backtrace.join("\n") if debug?(options)
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def create_registry(project_root = nil)
