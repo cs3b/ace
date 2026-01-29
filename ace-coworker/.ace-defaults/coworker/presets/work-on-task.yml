@@ -1,0 +1,29 @@
+# Simple task implementation workflow
+# Usage: /ace:coworker-prepare work-on-task --taskref 123
+
+name: work-on-task
+description: Work on a single task with implementation and commit
+
+parameters:
+  taskref:
+    required: true
+    description: Task reference (e.g., task-123 or 123)
+
+steps:
+  - name: onboard
+    skill: onboard
+    instructions:
+      - Onboard yourself to the codebase.
+      - Load context and understand the project structure.
+
+  - name: work-on-task
+    skill: ace:work-on-task
+    instructions:
+      - "Work on task {{taskref}}."
+      - Implement the required changes following project conventions.
+
+  - name: finalize
+    skill: ace:commit
+    instructions:
+      - Commit all changes with a descriptive message.
+      - Ensure all tests pass before completing.
