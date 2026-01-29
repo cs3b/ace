@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.3] - 2026-01-29
+
+### Added
+- Expand task draft template with CLI-specific sections: exit codes, input validation, concurrency, cleanup
+- Add CLI task example and requirements documentation to task templates README
+- Add data-driven feature requirements checklist
+
+### Fixed
+- Exception-based exit codes for consistent CLI error handling
+
 ## [0.34.2] - 2026-01-27
 
 ### Added
