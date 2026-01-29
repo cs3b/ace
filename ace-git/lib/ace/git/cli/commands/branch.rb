@@ -26,8 +26,7 @@ module Ace
           branch_info = Molecules::BranchReader.full_info
 
           if branch_info[:error]
-            warn "Error: #{branch_info[:error]}"
-            return 1
+            raise Ace::Core::CLI::Error.new(branch_info[:error])
           end
 
           # Output based on format
@@ -38,10 +37,8 @@ module Ace
             output_text(branch_info)
           end
 
-          0
         rescue Ace::Git::Error => e
-          warn "Error: #{e.message}"
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
         end
 
         private
