@@ -231,7 +231,7 @@ PATH
 PATH
   remote: ace-test-e2e-runner
   specs:
-    ace-test-e2e-runner (0.2.1)
+    ace-test-e2e-runner (0.3.0)
 
 PATH
   remote: ace-test-runner
