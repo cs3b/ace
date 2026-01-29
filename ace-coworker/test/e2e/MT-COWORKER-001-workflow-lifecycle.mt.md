@@ -33,6 +33,10 @@ TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-ace-coworker"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
+# Ensure cache base directory exists (for first-time runs)
+CACHE_BASE="$PROJECT_ROOT/.cache/ace-coworker"
+mkdir -p "$CACHE_BASE"
+
 # Set up command alias for ace-coworker
 ACE_COWORKER="bundle exec $PROJECT_ROOT/ace-coworker/exe/ace-coworker"
 
@@ -158,9 +162,9 @@ cat "$TEST_DIR/job.yaml"
 
 ---
 
-### TC-004: Error — Deprecated `start` Command
+### TC-004: Deprecated `start` Command Migration
 
-**Objective:** Verify that using the old `start` command name does not crash with a TypeError and does not create a session. Since `start` is not a known command, CLI routing treats it as `status start job.yaml` which finds no active session.
+**Objective:** Verify that the deprecated `start` command works as a migration alias to `create` with a deprecation warning, creating a session successfully.
 
 **Steps:**
 1. Attempt to use the old `start` command
@@ -171,27 +175,67 @@ cat "$TEST_DIR/job.yaml"
    echo "Output: $OUTPUT"
    ```
 
-2. Verify non-zero exit code (no crash)
+2. Verify exit code is 0 (success)
    ```bash
-   [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Exit code is non-zero ($EXIT_CODE)" || echo "FAIL: Expected non-zero exit code, got 0"
+   [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
    ```
 
-3. Verify no TypeError or stack trace
+3. Verify deprecation warning is shown
    ```bash
-   echo "$OUTPUT" | grep -qi "TypeError" && echo "FAIL: TypeError crash detected" || echo "PASS: No TypeError crash"
-   echo "$OUTPUT" | grep -q "undefined method" && echo "FAIL: NoMethodError detected" || echo "PASS: No NoMethodError"
+   echo "$OUTPUT" | grep -qi "deprecated" && echo "PASS: Deprecation warning shown" || echo "FAIL: No deprecation warning found"
    ```
 
-4. Verify no session was created
+4. Verify session was created
    ```bash
-   SESSION_COUNT=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
-   [ "$SESSION_COUNT" -eq 0 ] && echo "PASS: No session created by 'start'" || echo "FAIL: Session was created by 'start' ($SESSION_COUNT found)"
+   SESSION_COUNT=$(find "$PROJECT_ROOT/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+   [ "$SESSION_COUNT" -gt 0 ] && echo "PASS: Session created by 'start' ($SESSION_COUNT found)" || echo "FAIL: No session created"
+   ```
+
+5. Verify output matches `create` command (contains session ID and first step)
+   ```bash
+   echo "$OUTPUT" | grep -qE "Session:.*\(" && echo "PASS: Output shows session info" || echo "FAIL: No session info in output"
+   echo "$OUTPUT" | grep -q "analyze" && echo "PASS: First step shown" || echo "FAIL: First step not shown"
    ```
 
 **Expected:**
-- Exit code: non-zero (2 — NoActiveSessionError from status path)
-- No TypeError or NoMethodError crash
-- No session directory created
+- Exit code: 0 (success)
+- Stderr contains: "deprecated" warning
+- Session IS created (migration works)
+- Output matches `create` command output
+
+**Actual:** [Record during execution]
+
+**Status:** [ ] Pass / [ ] Fail
+
+---
+
+### TC-004b: Cache Directory Auto-Creation
+
+**Objective:** Verify that the cache base directory is created automatically on first use.
+
+**Steps:**
+1. Remove cache directory if it exists
+   ```bash
+   CACHE_BASE="$PROJECT_ROOT/.cache/ace-coworker"
+   rm -rf "$CACHE_BASE"
+   [ ! -d "$CACHE_BASE" ] && echo "PASS: Cache removed" || echo "FAIL: Cache still exists"
+   ```
+
+2. Create a session (should auto-create cache directory)
+   ```bash
+   OUTPUT=$($ACE_COWORKER create "$TEST_DIR/job.yaml" 2>&1)
+   EXIT_CODE=$?
+   [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Session created" || echo "FAIL: Creation failed (exit $EXIT_CODE)"
+   ```
+
+3. Verify cache directory was created
+   ```bash
+   [ -d "$CACHE_BASE" ] && echo "PASS: Cache directory auto-created" || echo "FAIL: Cache missing"
+   ```
+
+**Expected:**
+- Cache directory created automatically
+- Session creation succeeds
 
 **Actual:** [Record during execution]
 
@@ -201,7 +245,7 @@ cat "$TEST_DIR/job.yaml"
 
 ### TC-005: Create Session from YAML Config
 
-**Objective:** Verify that `ace-coworker create job.yaml` creates a session with the first step in_progress.
+**Objective:** Verify that `ace-coworker create job.yaml` creates a session with the first step in_progress. Note: TC-004 already created a session via the deprecated `start` command, so this creates a second session.
 
 **Steps:**
 1. Create workflow from config
@@ -728,7 +772,8 @@ echo "Cleanup complete"
 - [ ] TC-001: Nonexistent config file exits with code 3
 - [ ] TC-002: Status with no session exits with code 2
 - [ ] TC-003: Report with no session exits with code 2
-- [ ] TC-004: Deprecated `start` command — no crash, non-zero exit, no session created
+- [ ] TC-004: Deprecated `start` command works as migration alias with deprecation warning (exit 0)
+- [ ] TC-004b: Cache directory is auto-created on first use
 - [ ] TC-005: Create session from YAML config succeeds
 - [ ] TC-006: File structure correct, array instructions normalized, negative assertions pass
 - [ ] TC-007: Status displays all steps, current step, and skill field
@@ -745,9 +790,15 @@ echo "Cleanup complete"
 
 ### 0.1.2 Fixes Reflected in This Test
 
-- **`start` renamed to `create`** — the old `start` positional arg crash is fixed; TC-004 guards against regression
+- **`start` renamed to `create`** — the old `start` positional arg is now a migration alias to `create` with deprecation warning; TC-004 verifies the migration behavior
 - **Array instructions supported** — `normalize_instructions` joins arrays into step body; TC-006 verifies both array (analyze) and string (implement/verify) formats
 - **`wfi://coworker-prepare-job` protocol registered** — no longer missing
+
+### Cache Directory Auto-Creation (added in v0.1.8)
+
+- **Cache base directory initialization** — TC-004b verifies that `.cache/ace-coworker/` is automatically created on first use
+- Previously, the base cache directory had to be created manually or the first session creation would fail with `Errno::ENOENT`
+- The fix ensures `FileUtils.mkdir_p(@cache_base)` is called before `generate_session_id` in `SessionManager.create()`
 
 ### State Machine Assertions (added in review)
 
