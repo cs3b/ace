@@ -2,7 +2,7 @@
 workflow-id: wfi-run-e2e-test
 name: Run E2E Test
 description: Execute an E2E test scenario with full agent guidance
-version: "1.1"
+version: "1.2"
 source: ace-test-e2e-runner
 ---
 
@@ -69,11 +69,28 @@ Run the commands in the "Environment Setup" section:
    PROJECT_ROOT="$(pwd)"
    ```
 2. Generate a test ID using `ace-timestamp encode`
-3. Create the test directory in `.cache/test-e2e/{test-id}-{package}/`
+3. Create the test directory structure:
+   ```bash
+   TEST_ID="$(ace-timestamp encode)"
+   TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-{package}"
+   mkdir -p "$TEST_DIR/artifacts"
+   cd "$TEST_DIR/artifacts"
+   ```
 4. Set up any required environment variables
-5. Navigate to the test directory
+5. Navigate to the artifacts directory for test data creation
 
 **Important:** Always capture `PROJECT_ROOT` before `cd` operations. Use `$PROJECT_ROOT/bin/ace-lint` for absolute paths to project binaries when executing from test directories.
+
+**Directory Structure:**
+```
+.cache/test-e2e/{timestamp}-{package}/
+├── test-report.md               # Test results (written at completion)
+├── agent-experience-report.md   # AX report (written at completion)
+├── metadata.yml                 # Run metadata (written at completion)
+└── artifacts/                   # Test data files (created during setup)
+    ├── valid.rb
+    └── ...
+```
 
 **Directory Convention:**
 - Package test: `.cache/test-e2e/{timestamp}-{package}/`
@@ -83,11 +100,13 @@ Example: `.cache/test-e2e/8oig0h-ace-lint/`
 
 ### 5. Create Test Data
 
-Execute the commands in the "Test Data" section to create necessary files:
+Execute the commands in the "Test Data" section to create necessary files in the `artifacts/` directory:
 
-1. Create all test files as specified
+1. Create all test files as specified (inside `$TEST_DIR/artifacts/`)
 2. Verify files were created correctly
 3. Report file contents if needed for debugging
+
+**Note:** Test data files go in `$TEST_DIR/artifacts/`, keeping them separate from reports which are written to `$TEST_DIR/`.
 
 ### 6. Execute Test Cases
 
@@ -104,11 +123,150 @@ For each test case (TC-NNN):
 
 Report each test case result immediately after execution.
 
-### 7. Run Cleanup (Optional)
+**During execution, track friction points** for the Agent Experience Report:
+- Documentation gaps discovered
+- Unexpected tool behavior
+- Confusing error messages
+- Workarounds needed
+- Positive observations
+
+### 7. Write Reports to Disk
+
+After test execution completes (pass or fail), write three report files to `$TEST_DIR/`.
+
+**Important:** Replace all `{placeholder}` values with actual data before writing. Do not copy placeholders literally - substitute them with real values from test execution.
+
+**Error Handling:**
+- If `$TEST_DIR` doesn't exist, create it with `mkdir -p "$TEST_DIR"`
+- If write fails (permissions), report the error and suggest manual intervention
+- For partial test completion, still write reports with status "partial" or "incomplete"
+
+#### 7.1 Write test-report.md
+
+```bash
+cat > "$TEST_DIR/test-report.md" << 'EOF'
+---
+test-id: {test-id}
+package: {package}
+agent: {agent-name}
+executed: {timestamp}
+status: pass|fail|partial|incomplete
+passed: {count}
+failed: {count}
+total: {count}
+---
+
+# E2E Test Report: {test-id}
+
+## Test Information
+
+| Field | Value |
+|-------|-------|
+| Test ID | {test-id} |
+| Title | {test-title} |
+| Package | {package} |
+| Agent | {agent-name} |
+| Executed | {timestamp} |
+| Duration | {duration} |
+
+## Results Summary
+
+| Test Case | Description | Status |
+|-----------|-------------|--------|
+| TC-001 | {description} | Pass/Fail |
+...
+
+## Overall Status: {PASS/FAIL/PARTIAL}
+
+{Include failed test details, environment info, observations}
+EOF
+```
+
+#### 7.2 Write agent-experience-report.md
+
+```bash
+cat > "$TEST_DIR/agent-experience-report.md" << 'EOF'
+---
+test-id: {test-id}
+test-title: {test-title}
+package: {package}
+agent: {agent-name}
+executed: {timestamp}
+status: complete|partial|incomplete
+---
+
+# Agent Experience Report: {test-id}
+
+## Summary
+{Brief summary of execution experience and friction level}
+
+## Friction Points
+
+### Documentation Gaps
+- {Any missing or unclear documentation}
+
+### Tool Behavior Issues
+- {Unexpected behavior, confusing errors}
+
+### API/CLI Friction
+- {Inconsistent flags, awkward workflows}
+
+## Root Cause Analysis
+{For failures: WHY not just WHAT}
+
+## Improvement Suggestions
+- [ ] {Actionable improvements}
+
+## Workarounds Used
+- {What required workarounds}
+
+## Positive Observations
+- {What worked well}
+EOF
+```
+
+**Note:** If no friction was encountered, the AX report should note "No significant friction encountered" in the Summary section.
+
+#### 7.3 Write metadata.yml
+
+```bash
+cat > "$TEST_DIR/metadata.yml" << EOF
+run-id: "${TEST_ID}"
+test-id: "{test-id}"
+package: "{package}"
+agent: "{agent-name}"
+started: "{start-timestamp}"
+completed: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+duration: "{duration-seconds}s"
+status: "{pass|fail|partial}"
+results:
+  passed: {count}
+  failed: {count}
+  total: {count}
+git:
+  branch: "$(git symbolic-ref --short HEAD 2>/dev/null || echo 'detached-HEAD')"
+  commit: "$(git rev-parse --short HEAD)"
+tools:
+  ruby: "$(ruby --version | cut -d' ' -f2)"
+EOF
+```
+
+#### 7.4 Report file paths
+
+After writing reports, include the paths in the response:
+
+```
+Reports written to: $TEST_DIR/
+- test-report.md
+- agent-experience-report.md
+- metadata.yml
+```
+
+### 8. Run Cleanup (Optional)
 
 Cleanup is controlled by the `cleanup.enabled` setting in `.ace-defaults/e2e-runner/config.yml`.
 
-**Default: disabled** - Artifacts are preserved for debugging.
+**Default: disabled** - Artifacts and reports are preserved for debugging and analysis.
 
 If cleanup is enabled, execute:
 
@@ -122,9 +280,9 @@ rm -rf "$TEST_DIR"
 rm -rf .cache/test-e2e/*
 ```
 
-### 8. Generate Summary Report
+### 9. Generate Summary Report
 
-Summarize the test execution:
+Summarize the test execution in the response. Reports have been persisted to disk in step 7.
 
 **Single test:**
 ```markdown
@@ -147,6 +305,13 @@ Summarize the test execution:
 ### Observations
 
 {Any observations or issues noted during execution}
+
+### Reports
+
+Reports persisted to `{$TEST_DIR}/`:
+- `test-report.md` - Detailed test results
+- `agent-experience-report.md` - Friction points and improvement suggestions
+- `metadata.yml` - Run metadata
 ```
 
 **Multiple tests (package-wide):**
@@ -170,9 +335,16 @@ Summarize the test execution:
 ### Failed Tests
 
 {Details of any failed tests}
+
+### Reports
+
+Reports persisted to `{$TEST_DIR}/`:
+- `test-report.md` - Detailed test results
+- `agent-experience-report.md` - Friction points and improvement suggestions
+- `metadata.yml` - Run metadata
 ```
 
-### 9. Update Test Scenario (if needed)
+### 10. Update Test Scenario (if needed)
 
 If all tests pass, update the test scenario frontmatter:
 

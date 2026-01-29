@@ -32,17 +32,19 @@ PROJECT_ROOT="$(pwd)"
 
 TEST_ID="$(ace-timestamp encode)"
 TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-{package-name}"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+mkdir -p "$TEST_DIR/artifacts"
+cd "$TEST_DIR/artifacts"
 
 # Use $PROJECT_ROOT/bin/ace-{tool} for project binaries
 ```
 
+**Directory Structure:** See [e2e-testing.g.md](../guides/e2e-testing.g.md#directory-structure) for the full directory layout.
+
 ## Test Data
 
 ```bash
-# Create test files
-cat > "$TEST_DIR/example.rb" << 'EOF'
+# Create test files in artifacts/ directory
+cat > "$TEST_DIR/artifacts/example.rb" << 'EOF'
 # Example Ruby file for testing
 class Example
   def hello
@@ -55,8 +57,8 @@ EOF
 <!-- For tests that create isolated git repos and use ace-taskflow/ace-git-worktree:
 
 ```bash
-# Create isolated git repository
-REPO_DIR="$TEST_DIR/test-repo"
+# Create isolated git repository within artifacts/
+REPO_DIR="$TEST_DIR/artifacts/test-repo"
 mkdir -p "$REPO_DIR"
 cd "$REPO_DIR"
 git init --quiet .
@@ -168,8 +170,12 @@ END OF ERROR TC TEMPLATE -->
 
 ## Cleanup
 
+Cleanup is optional. The workflow controls this via `cleanup.enabled` setting (default: disabled).
+Artifacts in `.cache/test-e2e/` are gitignored, so keeping them doesn't affect the repository.
+
 ```bash
-rm -rf "$TEST_DIR"
+# Only run if cleanup is enabled - reports are preserved by default
+# rm -rf "$TEST_DIR"
 ```
 
 ## Success Criteria
