@@ -96,6 +96,26 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 - Return appropriate message if no draft tasks exist
 ```
 
+### CLI Task (Exit Codes & Validation)
+```markdown
+### Interface Contract
+**Exit Codes:**
+| Code | Meaning |
+|------|---------|
+| 0 | Success - tasks listed |
+| 1 | General error |
+| 2 | Invalid filter syntax |
+
+**Input Validation:**
+- Filter format: Must be `key:value` pairs
+- Missing filter: Returns all tasks (no error)
+
+**Cleanup Behavior:**
+- Success: No temp files
+- Failure: Partial output cleared
+- Interruption: Graceful exit with code 130
+```
+
 ### Good Pending Task (Implementation Focus)
 ```markdown
 ### Execution Steps
@@ -112,6 +132,13 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 - **Draft**: Focus on command syntax, output format, error messages
 - **Pending**: Focus on argument parsing, validation logic, output formatting
 
+**CLI-Specific Requirements** (must include in draft):
+- Exit code contract (what each code means)
+- Input validation rules (required fields, format validation)
+- Concurrency considerations (if file-based state)
+- Cleanup behavior (temp files, partial state)
+- SIGINT handling (interruption behavior)
+
 ### UI Features
 - **Draft**: Focus on user interactions, visual feedback, navigation flows
 - **Pending**: Focus on component structure, state management, styling
@@ -119,6 +146,16 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 ### Backend Features
 - **Draft**: Focus on data transformations, business rules, external interfaces
 - **Pending**: Focus on data models, service layer, integration patterns
+
+### Data-Driven Features
+- **Draft**: Focus on input format, validation rules, error messages
+- **Pending**: Focus on parsing, schema validation, error handling
+
+**Data-Driven Requirements** (must include in draft):
+- Schema/format specification
+- Required vs optional fields
+- Validation error messages
+- Fallback/default behavior
 
 ## Quality Checklist
 
