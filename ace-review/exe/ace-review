@@ -12,6 +12,10 @@ $LOAD_PATH.unshift lib_path unless $LOAD_PATH.include?(lib_path)
 
 require "ace/review"
 
-# Start dry-cli and exit with the returned status code
-result = Ace::Review::CLI.start(ARGV)
-exit(result.is_a?(Integer) ? result : 0)
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Review::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
