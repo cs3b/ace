@@ -60,13 +60,12 @@ module Ace
         # Explicit help routes to usage output
         elsif %w[help --help -h].include?(args.first)
           puts Dry::CLI::Usage.call(get([]))
-          return 0
+          return
         # If first arg looks like a git range, route to diff
         elsif git_range_pattern?(args.first)
           args = [DEFAULT_COMMAND] + args
         elsif !known_command?(args.first)
-          warn "Error: Unknown command '#{args.first}'"
-          return 1
+          raise Ace::Core::CLI::Error.new("Unknown command '#{args.first}'")
         end
 
         Dry::CLI.new(self).call(arguments: args)

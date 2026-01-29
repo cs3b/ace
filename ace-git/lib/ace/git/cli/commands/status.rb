@@ -45,8 +45,7 @@ module Ace
 
           # Check for errors
           if status.branch.nil? && status.repository_type == :not_git
-            warn "Error: Not in a git repository"
-            return 1
+            raise Ace::Core::CLI::Error.new("Not in a git repository")
           end
 
           # Output based on format
@@ -76,10 +75,8 @@ module Ace
             end
           end
 
-          0
         rescue Ace::Git::Error => e
-          warn "Error: #{e.message}"
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
         end
       end
     end
