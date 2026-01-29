@@ -96,11 +96,8 @@ module Ace
               output_markdown(context, display_options)
             end
 
-            exit_success
           rescue StandardError => e
-            $stderr.puts "Error: #{e.message}"
-            $stderr.puts e.backtrace.join("\n") if ENV["DEBUG"]
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def output_json(context, display_options = {})

@@ -78,40 +78,37 @@ module Ace
               else
                 # Release move (no --child-of)
                 unless release
-                  puts "Error: Target release required (use --release VERSION or --backlog)"
                   puts ""
                   puts "Usage: ace-taskflow task move TASK_REF --release VERSION"
                   puts "   or: ace-taskflow task move TASK_REF --backlog"
                   puts "   or: ace-taskflow task move TASK_REF --child-of PARENT"
-                  return exit_failure
+                  raise Ace::Core::CLI::Error.new("Target release required (use --release VERSION or --backlog)")
                 end
 
                 if options[:"dry-run"]
                   puts "Note: --dry-run is not yet supported for release moves. Showing what would happen:"
                   puts "  - Move task #{task_ref} to release #{release}"
-                  return exit_success
+                  return
                 end
 
                 manager.move_task(task_ref, release)
               end
 
               # Display result
-              if result[:success]
-                puts result[:message]
-                if result[:dry_run] && result[:operations]
-                  puts "\nOperations that would be performed:"
-                  result[:operations].each { |op| puts "  - #{op}" }
-                end
-                puts "New reference: #{result[:new_reference]}" if result[:new_reference]
-                puts "Subtask: #{result[:subtask_id]}" if result[:subtask_id] && !result[:dry_run]
-                puts "Orchestrator: #{result[:orchestrator_path]}" if result[:orchestrator_path] && !result[:dry_run]
-                puts "Subtask file: #{result[:subtask_path]}" if result[:subtask_path] && !result[:dry_run]
-                puts "Path: #{result[:new_path]}" if result[:new_path] && !result[:dry_run]
-                exit_success
-              else
-                puts "Error: #{result[:message]}"
-                exit_failure
+              unless result[:success]
+                raise Ace::Core::CLI::Error.new(result[:message])
               end
+
+              puts result[:message]
+              if result[:dry_run] && result[:operations]
+                puts "\nOperations that would be performed:"
+                result[:operations].each { |op| puts "  - #{op}" }
+              end
+              puts "New reference: #{result[:new_reference]}" if result[:new_reference]
+              puts "Subtask: #{result[:subtask_id]}" if result[:subtask_id] && !result[:dry_run]
+              puts "Orchestrator: #{result[:orchestrator_path]}" if result[:orchestrator_path] && !result[:dry_run]
+              puts "Subtask file: #{result[:subtask_path]}" if result[:subtask_path] && !result[:dry_run]
+              puts "Path: #{result[:new_path]}" if result[:new_path] && !result[:dry_run]
             end
 
             private
