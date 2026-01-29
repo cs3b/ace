@@ -119,6 +119,53 @@ See: e2e-testing.g.md § "Environment Isolation for Taskflow-Aware Tests"
 
 ---
 
+<!-- ERROR / NEGATIVE TEST CASES (Required)
+
+Every E2E test MUST include at least one error/negative test case. These catch
+crashes, missing error handling, and wrong exit codes — bugs that happy-path-only
+tests consistently miss.
+
+Place error TCs BEFORE happy-path TCs when they test pre-condition failures
+(e.g., missing config file, no active session). This ensures errors are caught
+from clean state before any session/state is created.
+
+Examples of error TCs to consider:
+- Wrong arguments or positional vs flag mismatch
+- Missing required files (config, input data)
+- Command run without required prior state (no session, no login)
+- Invalid input format (malformed YAML, wrong file type)
+- Exit code verification (specific codes, not just non-zero)
+
+### TC-0XX: Error — {Error Scenario Name}
+
+**Objective:** Verify that {tool} handles {error condition} with a clear error
+message and correct exit code.
+
+**Steps:**
+1. {Trigger the error condition}
+   ```bash
+   OUTPUT=$({command with wrong args} 2>&1)
+   EXIT_CODE=$?
+   echo "Exit code: $EXIT_CODE"
+   echo "Output: $OUTPUT"
+   ```
+
+2. Verify exit code and error message
+   ```bash
+   [ "$EXIT_CODE" -eq {expected_code} ] && echo "PASS: Correct exit code" || echo "FAIL: Expected {expected_code}, got $EXIT_CODE"
+   echo "$OUTPUT" | grep -qi "{expected_text}" && echo "PASS: Error message correct" || echo "FAIL: Wrong error message"
+   ```
+
+**Expected:**
+- Exit code: {specific exit code}
+- Output contains: "{expected error message}"
+
+**Actual:** [Record during execution]
+
+**Status:** [ ] Pass / [ ] Fail
+
+END OF ERROR TC TEMPLATE -->
+
 ## Cleanup
 
 ```bash
@@ -138,3 +185,7 @@ rm -rf "$TEST_DIR"
 
 - {Any additional notes about this test scenario}
 - {Known limitations or considerations}
+- Structure TCs as a real user workflow — each TC should build on the state left by previous TCs
+- Discover file paths at runtime from CLI output or directory scanning, not from assumptions
+- Include negative assertions: verify that wrong/old paths do NOT exist
+- See: e2e-testing.g.md § "Avoiding False Positive Tests" for anti-patterns and reviewer checklist

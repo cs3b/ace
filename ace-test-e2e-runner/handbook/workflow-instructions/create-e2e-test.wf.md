@@ -113,33 +113,57 @@ If a context description was provided, enhance the test with:
 1. Examine the relevant code in `{PACKAGE}/lib/`
 2. Check existing tests for patterns
 3. Understand the feature being tested
+4. **Run the tool** to observe actual behavior, output format, file paths, and exit codes
 
 **Generate test content:**
 1. Write a clear objective based on the context
 2. Identify prerequisites for the test
 3. Create appropriate test data setup
-4. Generate test cases:
-   - **TC-001:** Happy path (expected success)
-   - **TC-002:** Error handling (expected failure)
-   - **TC-003:** Edge cases (boundary conditions)
+4. Generate test cases following the rules below
 5. Define success criteria
+
+#### Test Case Generation Rules
+
+**MUST (required for all E2E tests):**
+- Include at least one error/negative TC (wrong args, missing files, invalid state)
+- Verify actual file paths by running the tool first — never hardcode paths from documentation or assumptions
+- Use explicit `&& echo "PASS" || echo "FAIL"` patterns for every verification step
+- Check specific exit codes for error commands (not just "non-zero")
+
+**SHOULD (strongly recommended):**
+- Test the real user journey — structure TCs as a sequential workflow, not isolated commands
+- Verify exit codes for all commands, not just error cases
+- Include negative assertions (files/directories that should NOT exist)
+- Capture and check CLI output content, not just exit codes
+- Verify that status values match actual implementation (e.g., `done` vs `completed`)
+
+#### Recommended TC Ordering
+
+1. **Error paths first** — wrong args, missing files, no prior state (run from clean state)
+2. **Happy path start** — create/init with correct args, verify output
+3. **Structure verification** — check actual on-disk file structure with negative assertions
+4. **Lifecycle operations** — status, advance, fail, retry in workflow order
+5. **End state** — verify completion message, all steps terminal
+
+This ordering ensures error TCs run before any state is created (clean environment), and happy-path TCs build on each other sequentially.
+
+See: **e2e-testing.g.md § "Avoiding False Positive Tests"** for the full list of anti-patterns and the reviewer checklist.
 
 **Example for "Test config file validation":**
 ```markdown
-## Objective
-
-Verify that the config file validation correctly identifies valid and invalid configuration files, providing appropriate error messages for malformed configs.
-
 ## Test Cases
 
-### TC-001: Valid Config File
+### TC-001: Error — Missing Config File
+**Objective:** Verify that a nonexistent config file produces exit code 3 and a clear error
+
+### TC-002: Error — Malformed YAML Config
+**Objective:** Verify malformed YAML is handled gracefully with actionable error message
+
+### TC-003: Valid Config File
 **Objective:** Verify valid configuration files are accepted
 
-### TC-002: Invalid Config - Missing Required Field
-**Objective:** Verify missing required fields produce clear errors
-
-### TC-003: Invalid Config - Malformed YAML
-**Objective:** Verify malformed YAML is handled gracefully
+### TC-004: Verify On-Disk Structure
+**Objective:** Check actual file paths created, with negative assertions for wrong paths
 ```
 
 ### 8. Write Test File
