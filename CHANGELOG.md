@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.348] - 2026-01-29
+
+### Changed
+
+- **ace-git v0.10.5**: Clarified reorganize-commits workflow to emphasize that reorganize means reorder into logical groups, not squash into fewer commits
+
+## [0.9.347] - 2026-01-29
+
+### Added
+
+- **ace-test-e2e-runner v0.4.0**: Parallel E2E test execution with subagents via `/ace:run-e2e-tests` orchestrator skill enabling concurrent test runs with aggregated suite reports
+- **ace-test-e2e-runner v0.4.0**: Subagent return contract for structured result passing between orchestrator and worker skills
+- **docs**: Skill definition for parallel E2E test runner in agent-integrations documentation
+
+### Changed
+
+- **ace-test-e2e-runner v0.4.0**: Renamed cache directory from `test-e2e` to `ace-test-e2e` for clear namespace identification
+- **ace-test-e2e-runner v0.4.0**: Enhanced sandbox naming with test ID inclusion (`{timestamp}-{package}-{test-id}/`) for unique identification
+- **ace-test-e2e-runner v0.4.0**: Moved reports outside sandbox as sibling files (`.summary.r.md`, `.experience.r.md`, `.metadata.yml`) enabling suite-level aggregation
+
+### Technical
+
+- Updated E2E tests across packages (ace-git-commit, ace-coworker, ace-git-worktree, ace-lint, ace-prompt-prep, ace-support-timestamp) for consistent cache directory naming convention
+- Documented unplanned work from session 221 (tasks 244, 245)
+
 ## [0.9.346] - 2026-01-29
 
 ### Added
