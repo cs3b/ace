@@ -72,11 +72,10 @@ module Ace
 
               # Validate that content is provided (either via --note, positional, or --clipboard)
               if capture_options[:content].empty? && !capture_options[:clipboard]
-                puts "Error: Idea content is required"
                 puts "\nUsage: ace-taskflow idea create <content> [options]"
                 puts "   or: ace-taskflow idea create --note 'Idea content' [options]"
                 puts "   or: ace-taskflow idea create --clipboard [options]"
-                return exit_failure
+                raise Ace::Core::CLI::Error.new("Idea content is required")
               end
 
               # Execute idea creation
@@ -151,8 +150,7 @@ module Ace
                 if release_path
                   target_config["directory"] = File.join(release_path, "ideas")
                 else
-                  puts "Error: Release '#{location}' not found"
-                  return exit_failure
+                  raise Ace::Core::CLI::Error.new("Release '#{location}' not found")
                 end
               else
                 # Active release (default or explicit --current)
@@ -163,9 +161,8 @@ module Ace
                 else
                   # If --current was explicitly provided but no release exists, error
                   if explicit_current
-                    puts "Error: No current release found."
                     puts "Use 'ace-taskflow release create' to create a release, or omit --current to save to backlog."
-                    return exit_failure
+                    raise Ace::Core::CLI::Error.new("No current release found.")
                   end
                   # Fall back to backlog if no active release (implicit/default behavior)
                   target_config["directory"] = File.join(root_path, "backlog", "ideas")
@@ -184,7 +181,6 @@ module Ace
               # Use project root, not .ace-taskflow root
               relative_path = Ace::Taskflow::Atoms::PathFormatter.format_relative_path(path, Dir.pwd)
               puts "Idea captured: #{relative_path}"
-              exit_success
             end
 
             # Determine idea location from capture options

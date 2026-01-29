@@ -53,40 +53,37 @@ module Ace
                 puts "  ace-taskflow task update 090 --field priority=high"
                 puts "  ace-taskflow task update 090 --field worktree.branch=feature-name"
                 puts "  ace-taskflow task update 090 --field priority=high --field estimate='2 weeks'"
-                return exit_failure
+                raise Ace::Core::CLI::Error.new("At least one --field argument required")
               end
 
               # Parse field updates
               begin
                 field_updates = Ace::Taskflow::Molecules::TaskFieldUpdater.parse_field_updates(field_args)
               rescue Ace::Taskflow::Molecules::TaskFieldUpdater::FieldUpdateError => e
-                puts "Error: #{e.message}"
                 puts ""
                 puts "Expected format: --field key=value"
                 puts "Examples:"
                 puts "  --field priority=high"
                 puts "  --field 'estimate=2 weeks'"
                 puts "  --field worktree.branch=feature-name"
-                return exit_failure
+                raise Ace::Core::CLI::Error.new(e.message)
               end
 
               # Call TaskManager
               manager = Ace::Taskflow::Organisms::TaskManager.new
               result = manager.update_task_fields(task_ref, field_updates)
 
-              if result[:success]
-                puts "Task updated: #{result[:task][:id] || task_ref}"
-                puts "Updated fields:"
-                result[:updated_fields].each do |field|
-                  value = field_updates[field]
-                  puts "  #{field}: #{value.inspect}"
-                end
-                puts "Task path: #{result[:path]}"
-                exit_success
-              else
-                puts "Error: #{result[:message]}"
-                exit_failure
+              unless result[:success]
+                raise Ace::Core::CLI::Error.new(result[:message])
               end
+
+              puts "Task updated: #{result[:task][:id] || task_ref}"
+              puts "Updated fields:"
+              result[:updated_fields].each do |field|
+                value = field_updates[field]
+                puts "  #{field}: #{value.inspect}"
+              end
+              puts "Task path: #{result[:path]}"
             end
 
             private

@@ -53,15 +53,13 @@ module Ace
               mark_retro_done(args)
             when "--help", "-h"
               show_help
-              exit_success
             when nil, "list"
               show_active_retros
             else
               show_retro([subaction] + args)
             end
           rescue StandardError => e
-            puts "Error: #{e.message}"
-            exit_failure
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           def build_create_parser
@@ -73,29 +71,27 @@ module Ace
 
           def create_retro(args)
             result = @create_parser.parse(args)
-            return exit_success if result[:help_requested]
+            return if result[:help_requested]
 
             options = result[:parsed]
             title = result[:remaining].join(" ")
 
             if title.empty?
               puts @create_parser.help_text
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("Title is required")
             end
 
             release = options[:release] || "current"
             create_result = @manager.create_retro(title, release: release)
 
-            if create_result[:success]
-              puts create_result[:message]
-              root_path = Dir.pwd
-              relative_path = Atoms::PathFormatter.format_relative_path(create_result[:path], root_path)
-              puts "Path: #{relative_path}"
-              exit_success
-            else
-              puts "Error: #{create_result[:message]}"
-              exit_failure
+            unless create_result[:success]
+              raise Ace::Core::CLI::Error.new(create_result[:message])
             end
+
+            puts create_result[:message]
+            root_path = Dir.pwd
+            relative_path = Atoms::PathFormatter.format_relative_path(create_result[:path], root_path)
+            puts "Path: #{relative_path}"
           end
 
           def show_retro(args)
@@ -104,19 +100,17 @@ module Ace
             unless reference
               puts "Usage: ace-taskflow retro show <reference>"
               puts "Example: ace-taskflow retro show ace-test-runner"
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("Reference is required")
             end
 
             release = parse_release(args)
             retro = @manager.load_retro(reference, release: release)
 
-            if retro
-              display_retro(retro)
-              exit_success
-            else
-              puts "Retro '#{reference}' not found in #{release_name(release)}."
-              exit_failure
+            unless retro
+              raise Ace::Core::CLI::Error.new("Retro '#{reference}' not found in #{release_name(release)}.")
             end
+
+            display_retro(retro)
           end
 
           def mark_retro_done(args)
@@ -125,23 +119,21 @@ module Ace
             unless reference
               puts "Usage: ace-taskflow retro done <reference>"
               puts "Example: ace-taskflow retro done ace-test-runner"
-              return exit_failure
+              raise Ace::Core::CLI::Error.new("Reference is required")
             end
 
             release = parse_release(args)
             result = @manager.mark_retro_done(reference, release: release)
 
-            if result[:success]
-              puts result[:message]
-              root_path = Dir.pwd
-              relative_path = Atoms::PathFormatter.format_relative_path(result[:path], root_path)
-              puts "Path: #{relative_path}"
-              puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
-              exit_success
-            else
-              puts "Error: #{result[:message]}"
-              exit_failure
+            unless result[:success]
+              raise Ace::Core::CLI::Error.new(result[:message])
             end
+
+            puts result[:message]
+            root_path = Dir.pwd
+            relative_path = Atoms::PathFormatter.format_relative_path(result[:path], root_path)
+            puts "Path: #{relative_path}"
+            puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
           end
 
           def display_retro(retro)
@@ -196,7 +188,7 @@ module Ace
               puts "No active retrospective notes found in current release."
               puts ""
               puts "Use 'ace-taskflow retro create <title>' to create your first reflection note."
-              return exit_success
+              return
             end
 
             puts "Active Retrospective Notes (current release):"
@@ -204,7 +196,6 @@ module Ace
             retros.each { |retro| display_retro_line(retro) }
             puts ""
             puts "Total: #{retros.count} retro#{retros.count == 1 ? '' : 's'}"
-            exit_success
           end
 
           def display_retro_line(retro)

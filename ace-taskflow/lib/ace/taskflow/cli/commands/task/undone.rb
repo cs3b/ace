@@ -43,14 +43,12 @@ module Ace
               manager = Ace::Taskflow::Organisms::TaskManager.new
               result = manager.reopen_task(task_ref)
 
-              if result[:success]
-                puts result[:message]
-                puts "Reopened at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
-                exit_success
-              else
-                puts "Error: #{result[:message]}"
-                exit_failure
+              unless result[:success]
+                raise Ace::Core::CLI::Error.new(result[:message])
               end
+
+              puts result[:message]
+              puts "Reopened at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
             end
 
             private

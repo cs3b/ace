@@ -53,14 +53,12 @@ module Ace
               manager = Ace::Taskflow::Organisms::TaskManager.new
               task = manager.show_task(task_ref)
 
-              if task
-                display_task(task, display_mode)
-                exit_success
-              else
-                puts "Error: Task '#{task_ref}' not found."
+              unless task
                 puts "Valid formats: 018, task.018, v.0.9.0+018, backlog+025"
-                exit_failure
+                raise Ace::Core::CLI::Error.new("Task '#{task_ref}' not found.")
               end
+
+              display_task(task, display_mode)
             end
 
             private
@@ -113,8 +111,7 @@ module Ace
                 relative_path = Ace::Taskflow::Atoms::PathFormatter.format_relative_path(task.path, root_path)
                 puts relative_path
               else
-                puts "# Task has no path"
-                exit_failure
+                raise Ace::Core::CLI::Error.new("Task has no path")
               end
             end
 
