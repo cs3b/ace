@@ -32,8 +32,8 @@ Verify the core ace-prompt-prep workflow: setup creates workspace with template,
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-ace-prompt-prep"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-prompt-prep-MT-PREP-001"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
