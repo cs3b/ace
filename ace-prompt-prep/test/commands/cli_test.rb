@@ -22,6 +22,9 @@ class CLITest < Minitest::Test
         @_cli_result = Ace::PromptPrep::CLI.start(args)
       rescue SystemExit => e
         @_cli_result = e.status
+      rescue Ace::Core::CLI::Error => e
+        @_cli_result = e.exit_code
+        $stderr.print e.message
       end
     end
 
@@ -60,8 +63,8 @@ class CLITest < Minitest::Test
     Ace::PromptPrep::Molecules::PromptReader.stub(:call, ->(**kwargs) { error_response }) do
       result = invoke_prompt_cli([])
 
-      # CLI routes to default 'process' command, which shows error when prompt file not found
-      assert_match(/Error: Prompt file not found/i, result[:stdout] + result[:stderr])
+      # CLI routes to default 'process' command, which raises Ace::Core::CLI::Error when prompt file not found
+      assert_match(/Prompt file not found/i, result[:stdout] + result[:stderr])
     end
   end
 

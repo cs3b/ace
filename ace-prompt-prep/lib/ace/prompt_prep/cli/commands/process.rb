@@ -76,7 +76,7 @@ module Ace
             )
 
             unless result[:success]
-              return exit_failure(result[:error])
+              raise Ace::Core::CLI::Error.new(result[:error])
             end
 
             # Handle output
@@ -85,7 +85,6 @@ module Ace
             if output_mode == "-"
               # Output to stdout
               puts result[:content]
-              return exit_success
             else
               # Write to file
               require "fileutils"
@@ -97,13 +96,12 @@ module Ace
                 $stdout.puts "Prompt archived and saved:"
                 $stdout.puts "  Archive: #{result[:archive_path]}"
                 $stdout.puts "  Output:  #{File.expand_path(output_mode)}"
-                return exit_success
               rescue StandardError => e
-                return exit_failure("Failed to write output file: #{e.message}")
+                raise Ace::Core::CLI::Error.new("Failed to write output file: #{e.message}")
               end
             end
           rescue Ace::PromptPrep::Error => e
-            exit_failure(e.message)
+            raise Ace::Core::CLI::Error.new(e.message)
           end
 
           private
