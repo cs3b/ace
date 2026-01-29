@@ -19,8 +19,7 @@ class RetryCommandTest < AceCoworkerTestCase
       output = capture_io do
         result = Ace::Coworker::CLI::Commands::RetryCmd.new.call(step_ref: "020")
       end
-
-      assert_equal 0, result
+      assert_nil result  # Verify success returns nil
       assert_includes output.first, "retry of 020"
 
       Ace::Coworker.reset_config!
@@ -36,13 +35,12 @@ class RetryCommandTest < AceCoworkerTestCase
       executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
       executor.start(config_path)
 
-      result = nil
-      output = capture_io do
-        result = Ace::Coworker::CLI::Commands::RetryCmd.new.call(step_ref: "999")
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Coworker::CLI::Commands::RetryCmd.new.call(step_ref: "999")
       end
 
-      assert_equal 4, result
-      assert_includes output.first, "not found"
+      assert_equal 4, error.exit_code
+      assert_includes error.message, "not found"
 
       Ace::Coworker.reset_config!
     end
@@ -52,13 +50,12 @@ class RetryCommandTest < AceCoworkerTestCase
     with_temp_cache do |cache_dir|
       Ace::Coworker.config["cache_dir"] = cache_dir
 
-      result = nil
-      output = capture_io do
-        result = Ace::Coworker::CLI::Commands::RetryCmd.new.call(step_ref: "010")
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Coworker::CLI::Commands::RetryCmd.new.call(step_ref: "010")
       end
 
-      assert_equal 2, result
-      assert_includes output.first, "No active session"
+      assert_equal 2, error.exit_code
+      assert_includes error.message, "No active session"
 
       Ace::Coworker.reset_config!
     end
