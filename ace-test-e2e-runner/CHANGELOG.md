@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-01-29
+
+### Added
+
+- Parallel E2E test execution with subagents via `/ace:run-e2e-tests` orchestrator skill
+- Suite-level report aggregation for multi-test runs
+- Subagent return contract for structured result passing between orchestrator and workers
+
+### Changed
+
+- Renamed cache directory from `test-e2e` to `ace-test-e2e` for clear namespace
+- Enhanced sandbox naming with test ID inclusion (`{timestamp}-{package}-{test-id}/`)
+- Moved reports outside sandbox as sibling files (`.summary.r.md`, `.experience.r.md`, `.metadata.yml`)
+
 ## [0.3.0] - 2026-01-29
 
 ### Added
