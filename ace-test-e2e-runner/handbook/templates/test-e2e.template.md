@@ -30,10 +30,10 @@ verified-by: {agent-name}
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-{package-name}"
-mkdir -p "$TEST_DIR/artifacts"
-cd "$TEST_DIR/artifacts"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-{package-name}-{test-id}"
+mkdir -p "$TEST_DIR"
+cd "$TEST_DIR"
 
 # Use $PROJECT_ROOT/bin/ace-{tool} for project binaries
 ```
@@ -171,11 +171,12 @@ END OF ERROR TC TEMPLATE -->
 ## Cleanup
 
 Cleanup is optional. The workflow controls this via `cleanup.enabled` setting (default: disabled).
-Artifacts in `.cache/test-e2e/` are gitignored, so keeping them doesn't affect the repository.
+Artifacts in `.cache/ace-test-e2e/` are gitignored, so keeping them doesn't affect the repository.
 
 ```bash
 # Only run if cleanup is enabled - reports are preserved by default
 # rm -rf "$TEST_DIR"
+# rm -f "${TEST_DIR}.summary.r.md" "${TEST_DIR}.experience.r.md" "${TEST_DIR}.metadata.yml"
 ```
 
 ## Success Criteria
