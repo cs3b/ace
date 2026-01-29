@@ -237,11 +237,12 @@ class CLIIntegrationTest < AceModelsTestCase
     Ace::Support::Models::Molecules::CacheManager.stub :new, create_cache_manager do
       cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
       _, stderr_output = capture_io do
-        @exit_code = cmd.call(query: nil, filter: ["badfilter"], json: false, limit: 20)
+        assert_raises(Ace::Core::CLI::Error) do
+          cmd.call(query: nil, filter: ["badfilter"], json: false, limit: 20)
+        end
       end
 
-      # Verify: error returned
-      assert_equal 1, @exit_code, "Invalid filter should return error exit code"
+      # Verify: error message on stderr
       assert_match(/Invalid filter format 'badfilter'/, stderr_output)
     end
   end
@@ -268,7 +269,7 @@ class CLIIntegrationTest < AceModelsTestCase
         @exit_code = cmd.call(query: nil, filter: ["provider:anthropic"], json: false, limit: 20)
       end.first
 
-      assert_equal 0, @exit_code, "Valid filter should succeed"
+      # No exception raised means success (exception-based exit pattern)
       assert_match(/claude-3-sonnet/, stdout_output)
     end
   end
@@ -279,10 +280,11 @@ class CLIIntegrationTest < AceModelsTestCase
     Ace::Support::Models::Molecules::CacheManager.stub :new, create_cache_manager do
       cmd = Ace::Support::Models::CLI::Commands::ModelsSubcommands::Search.new
       _, stderr_output = capture_io do
-        @exit_code = cmd.call(query: nil, filter: ["bad1", "provider:ok", "bad2"], json: false, limit: 20)
+        assert_raises(Ace::Core::CLI::Error) do
+          cmd.call(query: nil, filter: ["bad1", "provider:ok", "bad2"], json: false, limit: 20)
+        end
       end
 
-      assert_equal 1, @exit_code
       assert_match(/Invalid filter format 'bad1'/, stderr_output)
       assert_match(/Invalid filter format 'bad2'/, stderr_output)
     end

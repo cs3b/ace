@@ -46,6 +46,13 @@ module Ace
           super(message)
           @exit_code = exit_code
         end
+
+        # Prepend "Error: " to message for consistent user-facing output.
+        # exe wrappers use warn e.message which calls this method.
+        # @return [String] Message with "Error: " prefix
+        def to_s
+          "Error: #{super}"
+        end
       end
     end
   end

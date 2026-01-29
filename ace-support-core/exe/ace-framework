@@ -4,4 +4,10 @@
 require "ace/core"
 require "ace/core/cli"
 
-Ace::Core::CLI.start(ARGV)
+# Start CLI with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Core::CLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end

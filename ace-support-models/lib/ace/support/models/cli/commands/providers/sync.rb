@@ -44,8 +44,7 @@ module Ace
                 )
 
                 if result[:status] == :error
-                  warn "Error: #{result[:message]}"
-                  return 1
+                  raise Ace::Core::CLI::Error.new(result[:message])
                 end
 
                 if options[:json]
@@ -53,14 +52,10 @@ module Ace
                 else
                   puts orchestrator.format_result(result)
                 end
-                0
               rescue CacheError => e
-                warn "Error: #{e.message}"
-                warn "Run 'ace-models cache sync' first to download model data."
-                1
+                raise Ace::Core::CLI::Error.new("#{e.message}. Run 'ace-models cache sync' first to download model data.")
               rescue ConfigError => e
-                warn "Config error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new("Config error: #{e.message}")
               end
             end
           end

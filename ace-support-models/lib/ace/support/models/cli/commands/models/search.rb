@@ -34,7 +34,7 @@ module Ace
                 filter_errors = Atoms::ModelFilter.validate(options[:filter])
                 unless filter_errors.empty?
                   filter_errors.each { |e| warn "Error: #{e}" }
-                  return 1
+                  raise Ace::Core::CLI::Error.new("Invalid model search filters")
                 end
 
                 searcher = Molecules::ModelSearcher.new
@@ -61,7 +61,7 @@ module Ace
                     message += " with filters: #{options[:filter].join(', ')}" if options[:filter]&.any?
                     puts message
                   end
-                  return 0
+                  return
                 end
 
                 if options[:json]
@@ -83,10 +83,8 @@ module Ace
                     puts "    #{model.name}"
                   end
                 end
-                0
               rescue CacheError => e
-                warn "Error: #{e.message}"
-                1
+                raise Ace::Core::CLI::Error.new(e.message)
               end
 
               private
