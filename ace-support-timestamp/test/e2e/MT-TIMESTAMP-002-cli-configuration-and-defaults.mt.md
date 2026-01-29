@@ -28,8 +28,8 @@ Verify that ace-timestamp CLI correctly handles configuration, defaults, error c
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-TEST_ID="$(ace-timestamp encode -q)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-timestamp-config"
+TIMESTAMP_ID="$(ace-timestamp encode -q)"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-support-timestamp-MT-TIMESTAMP-002"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
