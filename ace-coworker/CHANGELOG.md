@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-01-29
+
+### Fixed
+
+- Cache directory initialization bug where `.cache/ace-coworker/` was never created before `generate_session_id` called `Dir.mkdir()`, causing `Errno::ENOENT` crash on first use
+
+### Added
+
+- CLI exit codes documentation (`docs/exit-codes.md`) documenting exit codes 0-3 with meanings and examples
+
+### Changed
+
+- Updated E2E test TC-004 to reflect actual `start` command behavior (migration alias to `create` with deprecation warning, exit 0)
+- Added TC-004b test case to verify cache directory auto-creation on first use
+- Added cache directory setup to E2E test environment setup to prevent ENOENT errors on first-time runs
+
 ## [0.1.7] - 2026-01-28
 
 ### Fixed
