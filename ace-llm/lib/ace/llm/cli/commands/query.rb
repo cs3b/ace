@@ -82,17 +82,9 @@ module Ace
           # Execute the query
           execute_query(options)
         rescue Ace::LLM::Error => e
-          error_output(e.message)
-          1
-        rescue StandardError => e
-          if debug?(options)
-            error_output("Error: #{e.class}: #{e.message}")
-            error_output(e.backtrace.join("\n"))
-          else
-            error_output("Error: #{e.message}")
-            error_output("Use --debug for more information")
-          end
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
+        rescue ArgumentError, EncodingError => e
+          raise Ace::Core::CLI::Error.new(e.message)
         end
 
         private
@@ -134,7 +126,6 @@ module Ace
           puts "    glite     → google:gemini-2.0-flash-lite"
           puts "    gpt4      → openai:gpt-4"
           puts "    claude    → anthropic:claude-3-5-sonnet"
-          0
         end
 
         # Show provider-specific help with aliases
@@ -157,7 +148,6 @@ module Ace
 
           puts ""
           puts "Use: ace-llm-query #{@provider_model} \"your prompt here\""
-          0
         end
 
         # Display configuration summary
@@ -191,8 +181,7 @@ module Ace
           parse_result = parser.parse(@provider_model)
 
           unless parse_result.valid?
-            error_output(parse_result.error)
-            return 1
+            raise Ace::Core::CLI::Error.new(parse_result.error)
           end
 
           # Resolve final model: --model flag > positional :MODEL > provider default
@@ -205,9 +194,7 @@ module Ace
 
           # Validate that we have a model from some source
           if final_model.nil? || final_model.empty?
-            error_output("No model specified and no default available for #{parse_result.provider}")
-            error_output("Use --model MODEL or PROVIDER:MODEL syntax")
-            return 1
+            raise Ace::Core::CLI::Error.new("No model specified and no default available for #{parse_result.provider}\nUse --model MODEL or PROVIDER:MODEL syntax")
           end
 
           # Load prompt content
@@ -224,7 +211,6 @@ module Ace
 
           # Format and output response
           output_response(response, options)
-          0
         end
 
         # Build message array from prompt and system instructions
