@@ -86,17 +86,14 @@ module Ace
 
             # Validate inputs
             if files.empty?
-              puts "Error: No files specified"
-              puts "Usage: ace-lint [FILES...] [OPTIONS]"
-              return 1
+              raise Ace::Core::CLI::Error.new("No files specified\nUsage: ace-lint [FILES...] [OPTIONS]")
             end
 
             # Expand globs
             expanded_paths = expand_file_paths(files)
 
             if expanded_paths.empty?
-              puts "Error: No files found matching the given patterns"
-              return 1
+              raise Ace::Core::CLI::Error.new("No files found matching the given patterns")
             end
 
             # Create orchestrator with ruby groups configuration
@@ -129,8 +126,12 @@ module Ace
             verbose = !clean_options[:quiet]
             Organisms::ResultReporter.report(results, verbose: verbose, report_dir: report_dir, report_files: report_files)
 
-            # Return exit code
-            Organisms::ResultReporter.exit_code(results)
+            # Raise on lint failures
+            if results.any?(&:failed?)
+              failed_count = results.count(&:failed?)
+              exit_code = Organisms::ResultReporter.exit_code(results)
+              raise Ace::Core::CLI::Error.new("#{failed_count} file(s) had lint errors", exit_code: exit_code)
+            end
           end
 
           private
