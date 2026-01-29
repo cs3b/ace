@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.221
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 221-add-report-persistence-and-agent-experience-reports-to-e2e-runner
+  path: "../ace-task.221"
+  created_at: '2026-01-29 17:07:34'
+  updated_at: '2026-01-29 17:07:34'
+  target_branch: main
 ---
 
 # Add Report Persistence and Agent Experience Reports to E2E Runner
