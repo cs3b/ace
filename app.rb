@@ -9,3 +9,7 @@ class Application
     puts "Running #{@name}"
   end
 end
+
+  def stop
+    puts "Stopping #{@name}"
+  end
