@@ -2,10 +2,18 @@
 
 ## Status
 
-Accepted
-Date: January 7, 2026
+**Implemented** - January 29, 2026
+Accepted: January 7, 2026
 
 Supersedes: ADR-018 (Thor CLI Commands Pattern)
+
+### Implementation Notes
+
+- All 25+ ace-* CLI gems migrated to dry-cli with exception-based exit code pattern
+- `Ace::Core::CLI::Error` in ace-support-core v0.22.0+
+- Task 229 completed migration
+- Error messages automatically prefixed with "Error: " via `Error#to_s`
+- Domain errors (e.g., ace-coworker) can inherit from `Ace::Core::CLI::Error` for direct exit code support
 
 ## Context
 
