@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.345] - 2026-01-29
+
+### Fixed
+
+- **ace-review v0.35.3**: Multi-model executor hanging on slow CLI providers by adding timeout to Thread.join with deadline-based join and error suppression for killed threads
+- **ace-taskflow**: Use correct 'cancelled' status for skipped tasks per config valid_values (.ace/taskflow/config.yml)
+- **ace-coworker**: Error handling showing exception object instead of message, improved session archiving with cache base directory creation
+
+### Added
+
+- **ace-coworker**: Fork context for jobs, enabling execution via Task tool in isolated agent context with dynamic workflows
+- **ace-coworker**: Automatic review verification and auto-judgment using Chain of Verification (CoV) pattern for validated feedback
+
 ## [0.9.344] - 2026-01-29
 
 ### Added
