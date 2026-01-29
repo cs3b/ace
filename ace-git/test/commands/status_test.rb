@@ -19,7 +19,7 @@ class StatusTest < AceGitTestCase
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.call(format: nil)
-        assert_equal 0, result
+        assert_nil result
       end
       # Should output markdown by default
       assert_match(/main/, output.first)
@@ -33,11 +33,10 @@ class StatusTest < AceGitTestCase
     )
 
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
-      output = capture_io do
-        result = @command.call(format: nil)
-        assert_equal 1, result
+      error = assert_raises(Ace::Core::CLI::Error) do
+        @command.call(format: nil)
       end
-      assert_match(/Not in a git repository/, output.last)
+      assert_match(/Not in a git repository/, error.message)
     end
   end
 
@@ -51,7 +50,7 @@ class StatusTest < AceGitTestCase
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.call(format: "json")
-        assert_equal 0, result
+        assert_nil result
       end
       json = JSON.parse(output.first)
       assert_equal "feature/test", json["branch"]
@@ -69,7 +68,7 @@ class StatusTest < AceGitTestCase
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.call(format: "markdown")
-        assert_equal 0, result
+        assert_nil result
       end
       # Markdown output should contain formatted info
       refute_empty output.first
@@ -78,11 +77,10 @@ class StatusTest < AceGitTestCase
 
   def test_execute_handles_ace_git_error
     Ace::Git::Organisms::RepoStatusLoader.stub :load, ->(_opts){ raise Ace::Git::Error, "Context loading failed" } do
-      output = capture_io do
-        result = @command.call(format: nil)
-        assert_equal 1, result
+      error = assert_raises(Ace::Core::CLI::Error) do
+        @command.call(format: nil)
       end
-      assert_match(/Context loading failed/, output.last)
+      assert_match(/Context loading failed/, error.message)
     end
   end
 
@@ -100,7 +98,7 @@ class StatusTest < AceGitTestCase
       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_diff, mock_diff_result do
         output = capture_io do
           result = @command.call(format: nil, with_diff: true)
-          assert_equal 0, result
+          assert_nil result
         end
         assert_match(/PR Diff/, output.first)
         assert_match(/\+added line/, output.first)
@@ -121,7 +119,7 @@ class StatusTest < AceGitTestCase
         output = capture_io do
           result = @command.call(format: nil, with_diff: true)
           # Should still succeed - diff errors are silently skipped
-          assert_equal 0, result
+          assert_nil result
         end
         # Should NOT contain error message
         refute_match(/Diff failed/, output.join)
@@ -144,7 +142,7 @@ class StatusTest < AceGitTestCase
     } do
       capture_io do
         result = @command.call(format: nil, no_pr: true)
-        assert_equal 0, result
+        assert_nil result
       end
 
       # Verify that include_pr and include_pr_activity are false
@@ -189,7 +187,7 @@ class StatusTest < AceGitTestCase
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.call(format: nil)
-        assert_equal 0, result
+        assert_nil result
       end
 
       assert_match(/## PR Activity/, output.first)
@@ -212,7 +210,7 @@ class StatusTest < AceGitTestCase
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.call(format: "json")
-        assert_equal 0, result
+        assert_nil result
       end
 
       json = JSON.parse(output.first)
@@ -274,7 +272,7 @@ class StatusTest < AceGitTestCase
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.call(format: nil)
-        assert_equal 0, result
+        assert_nil result
       end
 
       assert_match(/## Position/, output.first)
@@ -296,7 +294,7 @@ class StatusTest < AceGitTestCase
     Ace::Git::Organisms::RepoStatusLoader.stub :load, mock_context do
       output = capture_io do
         result = @command.call(format: nil)
-        assert_equal 0, result
+        assert_nil result
       end
 
       assert_match(/## Recent Commits/, output.first)

@@ -21,7 +21,7 @@ class BranchTest < AceGitTestCase
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
         result = @command.call
-        assert_equal 0, result
+        assert_nil result
       end
       assert_match(/main/, output.first)
       assert_match(/origin\/main/, output.first)
@@ -39,7 +39,7 @@ class BranchTest < AceGitTestCase
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
         result = @command.call
-        assert_equal 0, result
+        assert_nil result
       end
       assert_match(/abc1234/, output.first)
       assert_match(/detached HEAD/, output.first)
@@ -50,11 +50,10 @@ class BranchTest < AceGitTestCase
     mock_info = { error: "fatal: not a git repository" }
 
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
-      output = capture_io do
-        result = @command.call
-        assert_equal 1, result
+      error = assert_raises(Ace::Core::CLI::Error) do
+        @command.call
       end
-      assert_match(/not a git repository/, output.last)
+      assert_match(/not a git repository/, error.message)
     end
   end
 
@@ -72,7 +71,7 @@ class BranchTest < AceGitTestCase
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
         result = @command.call(format: "json")
-        assert_equal 0, result
+        assert_nil result
       end
       json = JSON.parse(output.first)
       assert_equal "feature/test", json["name"]
@@ -93,7 +92,7 @@ class BranchTest < AceGitTestCase
     Ace::Git::Molecules::BranchReader.stub :full_info, mock_info do
       output = capture_io do
         result = @command.call
-        assert_equal 0, result
+        assert_nil result
       end
       assert_match(/ahead 3/, output.first)
     end
@@ -101,11 +100,10 @@ class BranchTest < AceGitTestCase
 
   def test_execute_handles_ace_git_error
     Ace::Git::Molecules::BranchReader.stub :full_info, ->{ raise Ace::Git::Error, "Something went wrong" } do
-      output = capture_io do
-        result = @command.call
-        assert_equal 1, result
+      error = assert_raises(Ace::Core::CLI::Error) do
+        @command.call
       end
-      assert_match(/Something went wrong/, output.last)
+      assert_match(/Something went wrong/, error.message)
     end
   end
 end

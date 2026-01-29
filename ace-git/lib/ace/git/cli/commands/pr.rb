@@ -28,8 +28,7 @@ module Ace
         def call(number: nil, **options)
           # Check if gh is installed
           unless Molecules::PrMetadataFetcher.gh_installed?
-            warn "Error: GitHub CLI (gh) not installed. Install with: brew install gh"
-            return 1
+            raise Ace::Core::CLI::Error.new("GitHub CLI (gh) not installed. Install with: brew install gh")
           end
 
           # Determine PR identifier
@@ -39,8 +38,7 @@ module Ace
                          # Try to find PR for current branch
                          found = Molecules::PrMetadataFetcher.find_pr_for_branch
                          unless found
-                           warn "Error: No PR found for current branch. Specify a PR number."
-                           return 1
+                           raise Ace::Core::CLI::Error.new("No PR found for current branch. Specify a PR number.")
                          end
                          found
                        end
@@ -53,8 +51,7 @@ module Ace
                    end
 
           unless result[:success]
-            warn "Error: #{result[:error]}"
-            return 1
+            raise Ace::Core::CLI::Error.new(result[:error])
           end
 
           # Output based on format
@@ -67,15 +64,10 @@ module Ace
             output_markdown(result[:metadata], result[:diff], options)
           end
 
-          0
         rescue Ace::Git::Error => e
-          # Handle all ace-git errors (GhNotInstalledError, GhAuthenticationError,
-          # PrNotFoundError, TimeoutError, etc.) with consistent error output
-          warn "Error: #{e.message}"
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
         rescue ArgumentError => e
-          warn "Error: #{e.message}"
-          1
+          raise Ace::Core::CLI::Error.new(e.message)
         end
 
         private
