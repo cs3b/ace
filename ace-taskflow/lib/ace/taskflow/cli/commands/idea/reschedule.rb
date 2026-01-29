@@ -55,13 +55,11 @@ module Ace
               scheduler = Ace::Taskflow::Organisms::IdeaScheduler.new(root_path)
               result = scheduler.reschedule(reference, scheduler_options)
 
-              if result[:success]
-                puts result[:message]
-                exit_success
-              else
-                puts "Error: #{result[:message]}"
-                exit_failure
+              unless result[:success]
+                raise Ace::Core::CLI::Error.new(result[:message])
               end
+
+              puts result[:message]
             end
 
             private
