@@ -141,7 +141,8 @@ Write the suite summary report:
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-SUITE_REPORT="$PROJECT_ROOT/.cache/ace-test-e2e/${SUITE_ID}-final-report.md"
+FINAL_TS="$(ace-timestamp encode)"
+SUITE_REPORT="$PROJECT_ROOT/.cache/ace-test-e2e/${FINAL_TS}-final-report.md"
 ```
 
 **Report content:**
@@ -149,6 +150,7 @@ SUITE_REPORT="$PROJECT_ROOT/.cache/ace-test-e2e/${SUITE_ID}-final-report.md"
 ```markdown
 ---
 suite-id: {SUITE_ID}
+final-ts: {FINAL_TS}
 package: {package}
 execution-mode: parallel|sequential
 status: pass|fail|partial
@@ -193,7 +195,7 @@ All reports persisted to `.cache/ace-test-e2e/`:
 | MT-LINT-001 | {ts}-ace-lint-MT-LINT-001.summary.r.md | {ts}-ace-lint-MT-LINT-001.experience.r.md | {ts}-ace-lint-MT-LINT-001.metadata.yml |
 | MT-LINT-002 | {ts}-ace-lint-MT-LINT-002.summary.r.md | {ts}-ace-lint-MT-LINT-002.experience.r.md | {ts}-ace-lint-MT-LINT-002.metadata.yml |
 
-**Suite Report:** `{SUITE_ID}-final-report.md`
+**Suite Report:** `{FINAL_TS}-final-report.md`
 ```
 
 ### 7. Display Summary
@@ -219,7 +221,7 @@ Present the execution summary to the user:
 
 ### Reports
 
-Suite report: `.cache/ace-test-e2e/{SUITE_ID}-final-report.md`
+Suite report: `.cache/ace-test-e2e/{FINAL_TS}-final-report.md`
 
 Individual test reports in `.cache/ace-test-e2e/`:
 - {timestamp}-ace-lint-MT-LINT-001.summary.r.md
