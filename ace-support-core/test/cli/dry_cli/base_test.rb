@@ -79,30 +79,21 @@ module Ace
             refute_includes err, "DEBUG: Test message"
           end
 
-          # exit_success tests
+          # raise_cli_error tests
 
-          def test_exit_success_returns_zero
-            assert_equal 0, @command.exit_success
-          end
-
-          # exit_failure tests
-
-          def test_exit_failure_returns_one
-            assert_equal 1, @command.exit_failure
-          end
-
-          def test_exit_failure_outputs_message
-            _, err = capture_io do
-              @command.exit_failure("Test error")
+          def test_raise_cli_error_raises_cli_error
+            error = assert_raises(Ace::Core::CLI::Error) do
+              @command.raise_cli_error("Test error")
             end
-            assert_includes err, "Error: Test error"
+            assert_equal "Test error", error.message
+            assert_equal 1, error.exit_code
           end
 
-          def test_exit_failure_without_message
-            _, err = capture_io do
-              @command.exit_failure
+          def test_raise_cli_error_with_custom_exit_code
+            error = assert_raises(Ace::Core::CLI::Error) do
+              @command.raise_cli_error("Test error", exit_code: 2)
             end
-            refute_includes err, "Error:"
+            assert_equal 2, error.exit_code
           end
 
           # validate_required! tests

@@ -21,12 +21,11 @@ module Ace
 
                 if options[:json]
                   puts JSON.pretty_generate(status_data)
-                  return 0
+                  return
                 end
 
                 unless status_data[:cached]
-                  warn "No cache data. Run 'ace-models cache sync' first."
-                  return 1
+                  raise Ace::Core::CLI::Error.new("No cache data. Run 'ace-models cache sync' first.")
                 end
 
                 puts "Cache Status:"
@@ -45,7 +44,6 @@ module Ace
                     puts "  #{provider}: #{count}"
                   end
                 end
-                0
               end
             end
           end
