@@ -124,10 +124,10 @@ As each subagent completes, capture its return summary:
 
 ### 5. Read Metadata Files (Optional Detail)
 
-For failed tests or detailed reporting, read the `.metadata.yml` files:
+For failed tests or detailed reporting, read the `metadata.yml` files from the reports folder:
 
 ```bash
-cat .cache/ace-test-e2e/{timestamp}-{package}-{test-id}.metadata.yml
+cat .cache/ace-test-e2e/{timestamp}-{package}-{test-id}-reports/metadata.yml
 ```
 
 Extract additional details:
@@ -184,18 +184,52 @@ agent: {agent-name}
 - TC-003: Expected JSON output to include "errors" key
 - TC-005: Exit code should be 1 for validation failures
 
-**Report:** `.cache/ace-test-e2e/{timestamp}-ace-lint-MT-LINT-002.summary.r.md`
+**Report:** `.cache/ace-test-e2e/{timestamp}-ace-lint-MT-LINT-002-reports/summary.r.md`
 
 ## Reports
 
 All reports persisted to `.cache/ace-test-e2e/`:
 
-| Test ID | Summary | Experience | Metadata |
-|---------|---------|------------|----------|
-| MT-LINT-001 | {ts}-ace-lint-MT-LINT-001.summary.r.md | {ts}-ace-lint-MT-LINT-001.experience.r.md | {ts}-ace-lint-MT-LINT-001.metadata.yml |
-| MT-LINT-002 | {ts}-ace-lint-MT-LINT-002.summary.r.md | {ts}-ace-lint-MT-LINT-002.experience.r.md | {ts}-ace-lint-MT-LINT-002.metadata.yml |
+| Test ID | Sandbox | Reports Folder |
+|---------|---------|----------------|
+| MT-LINT-001 | {ts}-ace-lint-MT-LINT-001/ | {ts}-ace-lint-MT-LINT-001-reports/ |
+| MT-LINT-002 | {ts}-ace-lint-MT-LINT-002/ | {ts}-ace-lint-MT-LINT-002-reports/ |
 
-**Suite Report:** `{FINAL_TS}-final-report.md`
+Each reports folder contains: `summary.r.md`, `experience.r.md`, `metadata.yml`
+
+**Suite Report:** `{FINAL_TS}-final-report.md` (only final report at top level)
+
+## Agent Experience Insights
+
+Aggregated feedback from {tests-run} test executions.
+
+### Friction Summary
+
+| Category | Count | Tests Affected |
+|----------|-------|----------------|
+| Documentation Gaps | {n} | {test-ids} |
+| Tool Behavior Issues | {n} | {test-ids} |
+| API/CLI Friction | {n} | {test-ids} |
+
+### Improvement Suggestions
+
+**High Priority:**
+- [ ] {suggestion from test with most friction}
+- [ ] {suggestion affecting multiple tests}
+
+**Medium Priority:**
+- [ ] {suggestion from single test}
+
+### Workarounds Used
+
+| Issue | Workaround | Tests |
+|-------|------------|-------|
+| {issue description} | {workaround used} | {test-ids} |
+
+### Positive Observations
+
+- {positive observation from test 1}
+- {positive observation from test 2}
 ```
 
 ### 7. Display Summary
@@ -224,8 +258,8 @@ Present the execution summary to the user:
 Suite report: `.cache/ace-test-e2e/{FINAL_TS}-final-report.md`
 
 Individual test reports in `.cache/ace-test-e2e/`:
-- {timestamp}-ace-lint-MT-LINT-001.summary.r.md
-- {timestamp}-ace-lint-MT-LINT-002.summary.r.md
+- {timestamp}-ace-lint-MT-LINT-001-reports/
+- {timestamp}-ace-lint-MT-LINT-002-reports/
 ```
 
 ## Example Invocations
