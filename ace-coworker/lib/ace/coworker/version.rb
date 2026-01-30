@@ -2,6 +2,6 @@
 
 module Ace
   module Coworker
-    VERSION = "0.3.1"
+    VERSION = "0.4.3"
   end
 end

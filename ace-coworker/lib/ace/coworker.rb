@@ -2,7 +2,9 @@
 
 require_relative "coworker/version"
 require "ace/support/config"
+require "ace/support/fs"
 require "ace/core/cli/error"
+require "pathname"
 
 # CLI and commands
 require_relative "coworker/cli"
@@ -100,9 +102,18 @@ module Ace
     end
 
     # Default cache directory for sessions
-    # @return [String] Cache directory path
+    # Returns an absolute path resolved from project root.
+    # Respects PROJECT_ROOT_PATH environment variable for sandboxed/isolated testing.
+    # @return [String] Cache directory path (absolute)
     def self.cache_dir
-      config["cache_dir"] || ".cache/ace-coworker"
+      relative_path = config["cache_dir"] || ".cache/ace-coworker"
+
+      # If already absolute, return as-is
+      return relative_path if Pathname.new(relative_path).absolute?
+
+      # Resolve relative to project root (respects PROJECT_ROOT_PATH)
+      project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+      File.join(project_root, relative_path)
     end
 
     # Load gem defaults from .ace-defaults/coworker/config.yml
