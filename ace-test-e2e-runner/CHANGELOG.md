@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-01-30
+
+### Fixed
+
+- Updated report path documentation from sibling pattern to subfolder pattern (`-reports/`)
+- Removed incorrect `artifacts/` subdirectory from test data path examples
+
+### Technical
+
+- Added pre-creation sandbox verification gate to workflow instructions
+- Enhanced directory structure diagrams for consistency across guides and templates
+
+## [0.4.0] - 2026-01-29
+
+### Added
+
+- Parallel E2E test execution with subagents via `/ace:run-e2e-tests` orchestrator skill
+- Suite-level report aggregation for multi-test runs
+- Subagent return contract for structured result passing between orchestrator and workers
+
+### Changed
+
+- Enhanced sandbox naming with test ID inclusion (`{timestamp}-{package}-{test-id}/`)
+- Moved reports outside sandbox as sibling files (`.summary.r.md`, `.experience.r.md`, `.metadata.yml`)
+
+### Breaking Changes
+
+- **Cache directory renamed**: `.cache/test-e2e/` → `.cache/ace-test-e2e/`. External scripts referencing the old path will need updating.
+
+## [0.3.0] - 2026-01-29
+
+### Added
+
+- Persistent test reports (`test-report.md`) capturing pass/fail status, test case details, and environment information
+- Agent experience reports (`agent-experience-report.md`) documenting friction points, root cause analysis, and improvement suggestions
+- Test execution metadata (`metadata.yml`) storing run-specific details like duration, Git context, and tool versions
+- ace-taskflow fixture template for standardized taskflow structure creation in E2E tests
+
+### Changed
+
+- Updated test environment structure to use `artifacts/` subdirectory for test data organization
+- Enhanced E2E testing guidelines with emphasis on error path coverage and negative test cases
+- Improved test templates with error testing best practices and reviewer checklist
+- Updated test execution workflow to automatically generate and persist reports at end of each run
+
 ## [0.2.1] - 2026-01-22
 
 ### Added
