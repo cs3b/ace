@@ -28,7 +28,7 @@ module Ace
         def run
           validate_packages!
 
-          display_manager = DisplayManager.new(@packages, @config)
+          display_manager = create_display_manager
           process_monitor = ProcessMonitor.new(@config.dig("test_suite", "max_parallel") || 10)
 
           # Sort packages by priority
@@ -85,6 +85,17 @@ module Ace
             if package["path"] && !package["path"].start_with?("/")
               package["path"] = File.join(@project_root, package["path"])
             end
+          end
+        end
+
+        # Select display manager based on --progress flag.
+        # Default: SimpleDisplayManager (line-by-line, pipe-friendly)
+        # With --progress: DisplayManager (animated ANSI progress bars)
+        def create_display_manager
+          if @config.dig("test_suite", "progress")
+            DisplayManager.new(@packages, @config)
+          else
+            SimpleDisplayManager.new(@packages, @config)
           end
         end
       end
