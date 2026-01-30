@@ -54,18 +54,19 @@ Test artifacts and reports are created in project-local cache:
 
 ```
 .cache/ace-test-e2e/
-├── {timestamp}-{package}-{test-id}/       # Sandbox folder (test artifacts)
+├── {timestamp}-{package}-{test-id}/           # Sandbox folder (test artifacts)
 │   ├── (git repo, test files, etc.)
 │   └── ...
-├── {timestamp}-{package}-{test-id}.summary.r.md      # Test results
-├── {timestamp}-{package}-{test-id}.experience.r.md   # AX report
-├── {timestamp}-{package}-{test-id}.metadata.yml      # Run metadata
-└── {suite-timestamp}-final-report.md                 # Suite report (multi-test runs)
+├── {timestamp}-{package}-{test-id}-reports/   # Reports subfolder
+│   ├── summary.r.md
+│   ├── experience.r.md
+│   └── metadata.yml
+└── {suite-timestamp}-final-report.md          # Suite report (multi-test runs)
 ```
 
 Examples:
 - `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001/` - Package-specific test sandbox
-- `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001.summary.r.md` - Test results report
+- `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001-reports/summary.r.md` - Test results report
 - `.cache/ace-test-e2e/8osuw3-final-report.md` - Suite report (all tests in package)
 
 **Benefits:**
@@ -75,7 +76,7 @@ Examples:
 - **Easy debugging** - Inspect artifacts without hunting in `/tmp`
 - **Package-scoped** - Directory name includes package for clarity
 - **Test ID in name** - Each folder includes the test ID (e.g., MT-LINT-001) for easy identification
-- **Reports as siblings** - Report files sit alongside sandbox folders for easy scanning
+- **Reports in subfolder** - Report files go in a `-reports/` subfolder for organization
 - **Suite reports** - Multi-test runs generate aggregate summary
 
 **Setup in test scenarios:**
@@ -86,10 +87,10 @@ mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 ```
 
-**Report Files (as siblings to sandbox folder):**
-- `{folder}.summary.r.md` - Structured pass/fail results with details
-- `{folder}.experience.r.md` - Friction points, root cause analysis, improvement suggestions
-- `{folder}.metadata.yml` - Run context (duration, git branch, tool versions)
+**Report Files (in reports subfolder):**
+- `{folder}-reports/summary.r.md` - Structured pass/fail results with details
+- `{folder}-reports/experience.r.md` - Friction points, root cause analysis, improvement suggestions
+- `{folder}-reports/metadata.yml` - Run context (duration, git branch, tool versions)
 
 ### Test ID Format
 
