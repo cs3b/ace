@@ -31,7 +31,9 @@ Verify core git worktree operations (list, create, switch, remove, prune) work c
 PROJECT_ROOT="$(pwd)"
 
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-git-worktree-MT-WORKTREE-001"
+SHORT_PKG="git-worktree"
+SHORT_ID="mt001"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 WORKTREES_ROOT="$TEST_DIR/worktrees"
 mkdir -p "$TEST_DIR" "$WORKTREES_ROOT"
 
