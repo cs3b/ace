@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "set"
 require "yaml"
 
 module Ace
@@ -11,12 +12,16 @@ module Ace
       # Implements the state machine for queue operations:
       # start → advance → complete (with fail/add/retry branches)
       class WorkflowExecutor
-        attr_reader :session_manager, :queue_scanner, :step_writer
+        attr_reader :session_manager, :queue_scanner, :step_writer, :job_renumberer
 
         def initialize(cache_base: nil)
           @session_manager = Molecules::SessionManager.new(cache_base: cache_base)
           @queue_scanner = Molecules::QueueScanner.new
           @step_writer = Molecules::StepWriter.new
+          @job_renumberer = Molecules::JobRenumberer.new(
+            step_writer: @step_writer,
+            queue_scanner: @queue_scanner
+          )
         end
 
         # Start a new workflow session from config file
@@ -96,6 +101,11 @@ module Ace
 
         # Complete current step with report and advance
         #
+        # Uses hierarchical completion rules:
+        # - A step with children cannot complete until all children are done
+        # - After completing a child step, the next step is another pending child or sibling
+        # - Parent steps auto-complete when all children are done
+        #
         # @param report_path [String] Path to report file
         # @return [Hash] Result with updated state
         def advance(report_path)
@@ -108,14 +118,32 @@ module Ace
           current = state.current
           raise Error, "No step currently in progress. Try 'ace-coworker add' to add a new step or 'ace-coworker retry' to retry a failed step." unless current
 
+          # Enforce hierarchy: cannot mark parent as done with incomplete children
+          if state.has_incomplete_children?(current.number)
+            incomplete = state.children_of(current.number).reject { |c| c.status == :done }
+            incomplete_nums = incomplete.map(&:number).join(", ")
+            raise Error, "Cannot complete step #{current.number}: has incomplete children (#{incomplete_nums}). Complete children first or use 'ace-coworker fail' to mark as failed."
+          end
+
           # Read report content
           report_content = File.read(report_path)
 
           # Mark current step as done
           step_writer.mark_done(current.file_path, report_content: report_content, reports_dir: session.reports_dir)
 
-          # Advance to next step
-          next_step = state.next_pending
+          # Rescan to get updated state after marking done
+          state = queue_scanner.scan(session.jobs_dir, session: session)
+
+          # Auto-complete parent steps if all their children are done
+          auto_complete_parents(state, session)
+
+          # Re-scan to get fresh state after auto-completions
+          # (auto_complete_parents modifies files, so state is stale)
+          state = queue_scanner.scan(session.jobs_dir, session: session)
+
+          # Find next step to work on using hierarchical rules
+          # Uses next_workable to respect hierarchy (skip parents with incomplete children)
+          next_step = find_next_step(state, current.number)
           if next_step
             step_writer.mark_in_progress(next_step.file_path)
           end
@@ -164,30 +192,46 @@ module Ace
         #
         # @param name [String] Step name
         # @param instructions [String] Step instructions
+        # @param after [String, nil] Insert after this step number (optional)
+        # @param as_child [Boolean] Insert as child of 'after' step (default: false, sibling)
         # @return [Hash] Result with new step
-        def add(name, instructions)
+        def add(name, instructions, after: nil, as_child: false)
           session = session_manager.find_active
           raise NoActiveSessionError, "No active session. Use 'ace-coworker create <job.yaml>' to begin." unless session
 
           state = queue_scanner.scan(session.jobs_dir, session: session)
-
-          # Determine insertion point
-          # If there's a current in_progress step, insert after it
-          # Otherwise, insert after last done step (or at beginning if all pending)
           existing_numbers = queue_scanner.step_numbers(session.jobs_dir)
 
-          base_number = if state.current
-                          state.current.number
-                        elsif state.last_done
-                          state.last_done.number
-                        else
-                          "000" # Will generate 001
-                        end
+          # Validate --after job exists
+          if after && !existing_numbers.include?(after)
+            raise StepNotFoundError, "Job #{after} not found. Available jobs: #{existing_numbers.join(', ')}"
+          end
 
-          new_number = Atoms::NumberGenerator.next_after(base_number, existing_numbers)
+          new_number, renumbered = calculate_insertion_point(
+            after: after,
+            as_child: as_child,
+            state: state,
+            existing_numbers: existing_numbers
+          )
+
+          # Renumber existing jobs if needed (uses molecule with rollback support)
+          if renumbered.any?
+            job_renumberer.renumber(session.jobs_dir, renumbered)
+            # Refresh existing numbers after renumbering
+            existing_numbers = queue_scanner.step_numbers(session.jobs_dir)
+          end
 
           # Determine initial status upfront to avoid redundant I/O
           initial_status = state.current ? :pending : :in_progress
+
+          # Build added_by metadata for audit trail
+          added_by = if after && as_child
+                       "child_of:#{after}"
+                     elsif after
+                       "injected_after:#{after}"
+                     else
+                       "dynamic"
+                     end
 
           # Create new step file with correct status
           file_path = step_writer.create(
@@ -196,7 +240,8 @@ module Ace
             name: name,
             instructions: instructions,
             status: initial_status,
-            added_by: "dynamic"
+            added_by: added_by,
+            parent: as_child ? after : nil
           )
 
           # Update session timestamp
@@ -209,7 +254,8 @@ module Ace
           {
             session: session,
             state: new_state,
-            added: new_step
+            added: new_step,
+            renumbered: renumbered
           }
         end
 
@@ -301,6 +347,119 @@ module Ace
           return "" if instructions.nil?
 
           instructions.is_a?(Array) ? instructions.join("\n") : instructions.to_s
+        end
+
+        # Auto-complete parent steps when all their children are done.
+        # Walks up the hierarchy marking parents as done, handling multi-level
+        # completion in a single pass (grandparents become eligible when parents complete).
+        #
+        # @param state [Models::QueueState] Current queue state
+        # @param session [Models::Session] Current session
+        def auto_complete_parents(state, session)
+          completed_any = true
+          # Track completed step numbers in this pass (avoids fragile ivar mutation)
+          completed_this_pass = Set.new
+
+          # Safety guard: max iterations = total steps to prevent infinite loops
+          max_iterations = state.steps.size
+
+          # Loop until no more parents can be completed
+          # This handles multi-level hierarchies where completing a parent
+          # makes the grandparent eligible for completion
+          iterations = 0
+          while completed_any && iterations < max_iterations
+            iterations += 1
+            completed_any = false
+
+            # Find all pending/in_progress parent steps that have children
+            eligible_parents = state.steps.select do |s|
+              (s.status == :pending || s.status == :in_progress) &&
+                !completed_this_pass.include?(s.number)
+            end
+
+            eligible_parents.each do |step|
+              children = state.children_of(step.number)
+              next if children.empty?
+
+              # If all children are done (or completed this pass), mark parent as done too
+              all_done = children.all? do |c|
+                c.status == :done || completed_this_pass.include?(c.number)
+              end
+
+              if all_done
+                step_writer.mark_done(
+                  step.file_path,
+                  report_content: "Auto-completed: all child jobs finished.",
+                  reports_dir: session.reports_dir
+                )
+                completed_this_pass << step.number
+                completed_any = true
+              end
+            end
+          end
+
+          # Warn if safety limit was reached while still completing parents
+          if iterations >= max_iterations && completed_any
+            warn "[ace-coworker] Warning: auto_complete_parents reached iteration limit (#{max_iterations}). " \
+                 "Some parent jobs may not have been auto-completed."
+          end
+        end
+
+        # Find the next step to work on using hierarchical rules.
+        #
+        # @param state [Models::QueueState] Current queue state
+        # @param completed_number [String] Number of just-completed step
+        # @return [Models::Step, nil] Next step to work on
+        def find_next_step(state, completed_number)
+          # First priority: pending children of the completed step
+          children = state.children_of(completed_number)
+          pending_child = children.find { |c| c.status == :pending }
+          return pending_child if pending_child
+
+          # Second priority: next workable step (respects hierarchy)
+          # Uses next_workable to skip parents that have incomplete children
+          state.next_workable
+        end
+
+        # Calculate insertion point for a new step.
+        #
+        # @param after [String, nil] Insert after this step number
+        # @param as_child [Boolean] Insert as child (true) or sibling (false)
+        # @param state [Models::QueueState] Current queue state
+        # @param existing_numbers [Array<String>] Existing step numbers
+        # @return [Array<String, Array>] [new_number, jobs_to_renumber]
+        def calculate_insertion_point(after:, as_child:, state:, existing_numbers:)
+          if after
+            if as_child
+              # Insert as first child of 'after'
+              new_number = Atoms::JobNumbering.next_child(after, existing_numbers)
+              [new_number, []]
+            else
+              # Insert as sibling after 'after'
+              new_number = Atoms::JobNumbering.next_sibling(after)
+
+              # Check if this number already exists
+              if existing_numbers.include?(new_number)
+                # Need to renumber
+                renumber_list = Atoms::JobNumbering.jobs_to_renumber(new_number, existing_numbers)
+                [new_number, renumber_list]
+              else
+                [new_number, []]
+              end
+            end
+          else
+            # Default behavior: insert after current or last done
+            base_number = if state.current
+                            state.current.number
+                          elsif state.last_done
+                            state.last_done.number
+                          else
+                            "000" # Will generate 001
+                          end
+
+            new_number = Atoms::NumberGenerator.next_after(base_number, existing_numbers)
+            [new_number, []]
+          end
         end
       end
     end

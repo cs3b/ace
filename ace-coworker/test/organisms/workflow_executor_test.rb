@@ -307,4 +307,148 @@ class WorkflowExecutorTest < AceCoworkerTestCase
       assert implement_step.fork?
     end
   end
+
+  # === Hierarchical Job Tests ===
+
+  def test_add_with_after_creates_sibling
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      # Add a step after 010 (init)
+      result = executor.add("verify", "Verify initialization", after: "010")
+
+      assert_equal "verify", result[:added].name
+      assert_equal "011", result[:added].number
+      assert_equal "injected_after:010", result[:added].added_by
+    end
+  end
+
+  def test_add_with_after_renumbers_existing
+    with_temp_cache do |cache_dir|
+      # Create session with steps at 010, 020, 030
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      # Add a step after 010 - should create 011
+      # Existing 020 and 030 should remain unchanged (they're not siblings of 010.xx)
+      result = executor.add("verify", "Verify", after: "010")
+
+      # The new step should be 011
+      assert_equal "011", result[:added].number
+
+      # Get all current numbers
+      numbers = result[:state].all_numbers
+      assert_includes numbers, "010"
+      assert_includes numbers, "011"
+      assert_includes numbers, "020"
+      assert_includes numbers, "030"
+    end
+  end
+
+  def test_add_with_as_child_creates_nested_job
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      # Add a child step under 010 (init)
+      result = executor.add("verify", "Verify initialization", after: "010", as_child: true)
+
+      assert_equal "verify", result[:added].name
+      assert_equal "010.01", result[:added].number
+    end
+  end
+
+  def test_add_multiple_children
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      # Add first child
+      executor.add("verify-1", "First verify", after: "010", as_child: true)
+
+      # Add second child
+      result = executor.add("verify-2", "Second verify", after: "010", as_child: true)
+
+      assert_equal "010.02", result[:added].number
+
+      # Verify both children exist
+      numbers = result[:state].all_numbers
+      assert_includes numbers, "010.01"
+      assert_includes numbers, "010.02"
+    end
+  end
+
+  def test_hierarchical_display
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      # Add nested jobs
+      executor.add("verify-init", "Verify", after: "010", as_child: true)
+      result = executor.add("fix-init", "Fix issues", after: "010.01")
+
+      # Get hierarchical structure
+      hierarchy = result[:state].hierarchical
+
+      # Should have 3 top-level jobs (010, 020, 030)
+      assert_equal 3, hierarchy.size
+
+      # First job (010) should have children
+      first = hierarchy[0]
+      assert_equal "010", first[:step].number
+      assert first[:children].size >= 1
+    end
+  end
+
+  def test_children_of_returns_direct_children
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      # Add nested jobs
+      executor.add("verify", "Verify", after: "010", as_child: true) # 010.01
+      executor.add("deep", "Deep", after: "010.01", as_child: true)  # 010.01.01
+
+      result = executor.status
+
+      # children_of should return only direct children
+      children = result[:state].children_of("010")
+      assert_equal 1, children.size
+      assert_equal "010.01", children[0].number
+    end
+  end
+
+  def test_descendants_of_returns_all_nested
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      # Add nested jobs
+      executor.add("verify", "Verify", after: "010", as_child: true) # 010.01
+      executor.add("deep", "Deep", after: "010.01", as_child: true)  # 010.01.01
+
+      result = executor.status
+
+      # descendants_of should return all nested
+      descendants = result[:state].descendants_of("010")
+      assert_equal 2, descendants.size
+      numbers = descendants.map(&:number).sort
+      assert_equal ["010.01", "010.01.01"], numbers
+    end
+  end
 end

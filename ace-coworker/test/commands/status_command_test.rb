@@ -20,7 +20,7 @@ class StatusCommandTest < AceCoworkerTestCase
       assert_nil result  # Verify success returns nil
       assert_includes output.first, "QUEUE - Session: test-session"
       assert_includes output.first, "010-init.j.md"
-      assert_includes output.first, "In Progress"
+      assert_includes output.first, "Active"
 
       Ace::Coworker.reset_config!
     end
