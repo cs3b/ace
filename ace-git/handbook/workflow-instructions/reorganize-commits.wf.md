@@ -72,6 +72,8 @@ git reset --soft $base
 ace-git-commit -i "brief intention"
 ```
 
+**IMPORTANT:** Do NOT specify file paths. Let the tool group by scope automatically.
+
 `ace-git-commit` handles grouping and messages automatically.
 
 **Expected Output**: Multiple commits, one per scope:
