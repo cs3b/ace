@@ -35,6 +35,10 @@ TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
+# Set PROJECT_ROOT_PATH for isolated testing
+# This tells ace-coworker to use the sandbox as project root for cache resolution
+export PROJECT_ROOT_PATH="$TEST_DIR"
+
 # Ensure cache base directory exists (for first-time runs)
 CACHE_BASE="$TEST_DIR/.cache/ace-coworker"
 mkdir -p "$CACHE_BASE"
@@ -189,7 +193,7 @@ cat "$TEST_DIR/job.yaml"
 
 4. Verify session was created
    ```bash
-   SESSION_COUNT=$(find "$PROJECT_ROOT/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+   SESSION_COUNT=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
    [ "$SESSION_COUNT" -gt 0 ] && echo "PASS: Session created by 'start' ($SESSION_COUNT found)" || echo "FAIL: No session created"
    ```
 
