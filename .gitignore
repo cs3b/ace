@@ -37,3 +37,12 @@ _current
 .ace-worktrees
 .ace-wt
 *.gem
+
+# E2E test fixtures that may escape sandbox
+# These patterns prevent accidental commits if sandbox isolation fails
+/config.rb
+/main.rb
+/app.rb
+/helper.rb
+/to_delete.rb
+/to_move.rb
