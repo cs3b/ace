@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.355] - 2026-01-30
+
+### Changed
+
+- **ace-coworker v0.4.3**: Rewrote MT-COWORKER-003 E2E test to match implemented behavior (dynamic hierarchy via `add --after --child` instead of static config)
+- **ace-test-e2e-runner**: Improved E2E test creation workflow with lessons learned from test spec/implementation mismatches
+
+### Technical
+
+- **ace-coworker v0.4.3**: Version bump and E2E test verification stamp
+
+## [0.9.354] - 2026-01-30
+
+### Fixed
+
+- **ace-coworker v0.4.2**: MAX_DEPTH constant corrected to 2 (allowing 3 levels max: 010.01.01) to match documented behavior
+- **ace-coworker v0.4.2**: CLI `add --child` command validates depth upfront with clear error message
+
+### Changed
+
+- **ace-coworker v0.4.2**: `auto_complete_parents` emits warning when safety iteration limit is reached
+- **ace-coworker v0.4.2**: `rollback_renames` captures and reports rollback failures instead of silently swallowing them
+
+## [0.9.353] - 2026-01-30
+
+### Fixed
+
+- **ace-coworker v0.4.1**: Cache directory now respects `PROJECT_ROOT_PATH` for sandboxed/isolated E2E testing
+
+## [0.9.352] - 2026-01-30
+
+### Added
+
+- **ace-coworker v0.4.0**: Hierarchical job structure - jobs can now have nested sub-jobs (010.01, 010.02) with parent-child relationships
+- **ace-coworker v0.4.0**: `--after` and `--child` options for `add` command to inject jobs dynamically
+- **ace-coworker v0.4.0**: `--flat` option for `status` command to show flat list without hierarchy
+- **ace-coworker v0.4.0**: New `JobNumbering` atom for hierarchical number operations
+- **ace-coworker v0.4.0**: Audit trail metadata (`added_by`, `parent`, `renumbered_from`) for job history tracking
+
+### Fixed
+
+- **ace-coworker v0.4.0**: Cascade renumbering to descendants when jobs are shifted (prevents orphaning)
+- **ace-coworker v0.4.0**: Enforce hierarchy in advance - cannot mark parent done with incomplete children
+- **ace-coworker v0.4.0**: Re-scan state after auto-completion to ensure fresh data for next step selection
+
+### Changed
+
+- **ace-coworker v0.4.0**: Auto-complete parents handles multi-level hierarchies in single pass
+- **ace-coworker v0.4.0**: Uses `next_workable` instead of `next_pending` to respect hierarchy
+
 ## [0.9.351] - 2026-01-30
 
 ### Fixed
