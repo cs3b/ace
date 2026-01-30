@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.349] - 2026-01-30
+
+### Fixed
+
+- **ace-test-e2e-runner v0.4.1**: Updated report path documentation from sibling pattern to subfolder pattern (`-reports/`) for consistency with implementation
+- **ace-test-e2e-runner v0.4.1**: Removed incorrect `artifacts/` subdirectory from test data path examples in templates
+
+### Technical
+
+- **ace-test-e2e-runner v0.4.1**: Added pre-creation sandbox verification gate to workflow instructions
+- **ace-test-e2e-runner v0.4.1**: Enhanced directory structure diagrams for consistency across guides and templates
+- Added E2E test fixture files to project .gitignore
+
 ## [0.9.348] - 2026-01-29
 
 ### Changed
