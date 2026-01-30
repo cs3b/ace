@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.244
-status: in-progress
+status: done
 priority: medium
 estimate: 4h
 dependencies: []
@@ -82,12 +82,12 @@ ace-test-suite --progress --parallel 16
 
 ### Success Criteria
 
-- [ ] **Default output is simple**: Running `ace-test-suite` produces line-by-line output without ANSI cursor control
-- [ ] **Pipe-friendly**: `ace-test-suite 2>&1 | cat` produces clean, readable output
-- [ ] **Progress mode available**: `--progress` flag enables current animated display
-- [ ] **No redundant output**: Progress mode doesn't redraw final results table (already shown inline)
-- [ ] **Same exit codes**: Exit 0 for success, 1 for failures, 130 for interrupt
-- [ ] **Same summary format**: Summary section content unchanged in both modes
+- [x] **Default output is simple**: Running `ace-test-suite` produces line-by-line output without ANSI cursor control
+- [x] **Pipe-friendly**: `ace-test-suite 2>&1 | cat` produces clean, readable output
+- [x] **Progress mode available**: `--progress` flag enables current animated display
+- [x] **No redundant output**: Progress mode doesn't redraw final results table (already shown inline)
+- [x] **Same exit codes**: Exit 0 for success, 1 for failures, 130 for interrupt
+- [x] **Same summary format**: Summary section content unchanged in both modes
 
 ## Objective
 
@@ -139,7 +139,7 @@ The current animated ANSI output causes problems when piped or captured by agent
 
 ### Execution Steps
 
-- [ ] **Step 1**: Create `SimpleDisplayManager` class
+- [x] **Step 1**: Create `SimpleDisplayManager` class
   - Create new file `ace-test-runner/lib/ace/test_runner/suite/simple_display_manager.rb`
   - Implement same interface as DisplayManager but with line-by-line output
   - `initialize_display`: Print "Running tests for N packages..."
@@ -152,7 +152,7 @@ The current animated ANSI output causes problems when piped or captured by agent
   > Assert: Class exists and responds to required methods
   > Command: ace-test test/suite/simple_display_manager_test.rb
 
-- [ ] **Step 2**: Add `--progress` flag to CLI
+- [x] **Step 2**: Add `--progress` flag to CLI
   - Edit `ace-test-runner/exe/ace-test-suite`
   - Add option: `opts.on("--progress", "Enable live animated display with progress bars")`
   - Wire to config: `config["test_suite"]["progress"] = true if options[:progress]`
@@ -160,7 +160,7 @@ The current animated ANSI output causes problems when piped or captured by agent
   > Type: Manual verification
   > Assert: `ace-test-suite --help` shows --progress option
 
-- [ ] **Step 3**: Modify Orchestrator to select display manager
+- [x] **Step 3**: Modify Orchestrator to select display manager
   - Edit `ace-test-runner/lib/ace/test_runner/suite/orchestrator.rb`
   - Change line ~31 to conditionally select display manager
   - Use `DisplayManager` when `config.dig("test_suite", "progress")`, else `SimpleDisplayManager`
@@ -168,31 +168,31 @@ The current animated ANSI output causes problems when piped or captured by agent
   > Type: Integration test
   > Assert: Default uses SimpleDisplayManager, --progress uses DisplayManager
 
-- [ ] **Step 4**: Update DisplayManager for progress mode
+- [x] **Step 4**: Update DisplayManager for progress mode
   - Edit `ace-test-runner/lib/ace/test_runner/suite/display_manager.rb`
   - Simplify `show_final_results`: just move cursor past display area, don't redraw table
   > TEST: No redundant output
   > Type: Manual verification
   > Assert: --progress mode doesn't show final results table twice
 
-- [ ] **Step 5**: Update suite.rb loader
+- [x] **Step 5**: Update suite.rb loader
   - Add require for simple_display_manager
   > TEST: Require works
   > Type: Load test
   > Assert: `require 'ace/test_runner/suite'` succeeds
 
-- [ ] **Step 6**: Add tests for SimpleDisplayManager
+- [x] **Step 6**: Add tests for SimpleDisplayManager
   - Create `ace-test-runner/test/suite/simple_display_manager_test.rb`
   - Test output formatting, package completion handling
 
 ## Acceptance Criteria
 
-- [ ] `ace-test-suite` produces line-by-line output (no ANSI cursor control)
-- [ ] `ace-test-suite --progress` shows animated progress bars
-- [ ] `ace-test-suite 2>&1 | cat` works cleanly
-- [ ] Exit codes unchanged: 0 (success), 1 (failure), 130 (interrupt)
-- [ ] Summary section identical in both modes
-- [ ] `--progress` flag documented in `--help`
+- [x] `ace-test-suite` produces line-by-line output (no ANSI cursor control)
+- [x] `ace-test-suite --progress` shows animated progress bars
+- [x] `ace-test-suite 2>&1 | cat` works cleanly
+- [x] Exit codes unchanged: 0 (success), 1 (failure), 130 (interrupt)
+- [x] Summary section identical in both modes
+- [x] `--progress` flag documented in `--help`
 
 ## References
 
