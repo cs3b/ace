@@ -29,7 +29,7 @@ When invoked as a subagent (via Task tool from `/ace:run-e2e-tests`), return a s
 - **Passed**: {count}
 - **Failed**: {count}
 - **Total**: {count}
-- **Report Paths**: {timestamp}-{package}-{test-id}.*
+- **Report Paths**: {timestamp}-{short-pkg}-{short-id}.*
 - **Issues**: Brief description or "None"
 ```
 
