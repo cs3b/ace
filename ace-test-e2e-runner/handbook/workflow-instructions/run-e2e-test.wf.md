@@ -123,6 +123,7 @@ Run the commands in the "Environment Setup" section of the test file:
    SHORT_PKG="${PACKAGE#ace-}"   # e.g., ace-git-commit → git-commit
 
    # Convert test ID to short format: MT-COMMIT-001 → mt001
+   # Note: This sed pattern is POSIX-compatible (works on BSD/macOS and GNU)
    SHORT_ID=$(echo "{test-id}" | sed 's/MT-[A-Z]*-/mt/' | tr '[:upper:]' '[:lower:]')
    ```
 4. Create the test directory structure:
@@ -157,14 +158,13 @@ Folder names use a shortened format for readability:
 
 ```
 .cache/ace-test-e2e/
-├── 8osvnh-lint-mt001/              # Sandbox folder (shorter name)
+├── 8osvnh-lint-mt001/                      # Sandbox folder (test artifacts)
 │   ├── (git repo, test files, etc.)
 │   └── ...
-├── 8osvnh-lint-mt001-reports/      # Reports grouped in folder
-│   ├── summary.r.md                # Test results
-│   ├── experience.r.md             # AX report
-│   └── metadata.yml                # Run metadata
-└── 8osynv-final-report.md          # Suite report (only final at top level)
+├── 8osvnh-lint-mt001.summary.r.md          # Test results (sibling file)
+├── 8osvnh-lint-mt001.experience.r.md       # AX report (sibling file)
+├── 8osvnh-lint-mt001.metadata.yml          # Run metadata (sibling file)
+└── 8osynv-final-report.md                  # Suite report (multi-test runs)
 ```
 
 **Directory Convention:**
@@ -264,14 +264,15 @@ Report each test case result immediately after execution.
 
 ### 7. Write Reports to Disk
 
-After test execution completes (pass or fail), write three report files to a `-reports/` folder alongside the sandbox folder.
+After test execution completes (pass or fail), write three report files as siblings to the sandbox folder.
 
 **Important:** Replace all `{placeholder}` values with actual data before writing. Do not copy placeholders literally - substitute them with real values from test execution.
 
-**Create reports directory first:**
+**Set up report paths (sibling files to sandbox):**
 ```bash
-REPORTS_DIR="${TEST_DIR}-reports"
-mkdir -p "$REPORTS_DIR"
+# Reports are sibling files to the sandbox folder (not inside a subfolder)
+REPORT_BASE="${TEST_DIR}"  # e.g., .cache/ace-test-e2e/8osvnh-lint-mt001
+# Report files: ${REPORT_BASE}.summary.r.md, ${REPORT_BASE}.experience.r.md, ${REPORT_BASE}.metadata.yml
 ```
 
 **Error Handling:**
@@ -282,7 +283,7 @@ mkdir -p "$REPORTS_DIR"
 #### 7.1 Write summary report (summary.r.md)
 
 ```bash
-cat > "${REPORTS_DIR}/summary.r.md" << 'EOF'
+cat > "${REPORT_BASE}.summary.r.md" << 'EOF'
 ---
 test-id: {test-id}
 package: {package}
@@ -323,7 +324,7 @@ EOF
 #### 7.2 Write agent experience report (experience.r.md)
 
 ```bash
-cat > "${REPORTS_DIR}/experience.r.md" << 'EOF'
+cat > "${REPORT_BASE}.experience.r.md" << 'EOF'
 ---
 test-id: {test-id}
 test-title: {test-title}
@@ -368,8 +369,8 @@ EOF
 #### 7.3 Write metadata (metadata.yml)
 
 ```bash
-cat > "${REPORTS_DIR}/metadata.yml" << EOF
-run-id: "${TEST_ID}"
+cat > "${REPORT_BASE}.metadata.yml" << EOF
+run-id: "${TIMESTAMP_ID}"
 test-id: "{test-id}"
 package: "{package}"
 agent: "{agent-name}"
@@ -394,10 +395,10 @@ EOF
 After writing reports, include the paths in the response:
 
 ```
-Reports written to: ${REPORTS_DIR}/
-- summary.r.md
-- experience.r.md
-- metadata.yml
+Reports written:
+- ${REPORT_BASE}.summary.r.md
+- ${REPORT_BASE}.experience.r.md
+- ${REPORT_BASE}.metadata.yml
 ```
 
 ### 7.5 Write Suite Final Report (Multi-Test Runs Only)
