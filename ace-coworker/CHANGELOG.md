@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-01-30
+
+### Fixed
+
+- Job files already in a `jobs/` directory are kept in place instead of being moved to a nested path when creating sessions
+
 ## [0.3.0] - 2026-01-30
 
 ### Added

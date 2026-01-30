@@ -220,7 +220,7 @@ steps:
 
 ### 8. Output Result
 
-Default output: `job.yaml` in the task folder (e.g., `.ace-taskflow/v.0.9.0/tasks/229-ace-cli-refactor/job.yaml`)
+Default output: `<task>/jobs/<timestamp>-job.yml` (e.g., `.ace-taskflow/v.0.9.0/tasks/229-xxx/jobs/k5abc123-job.yml`)
 
 Custom output: Use `--output path/to/custom.yaml`
 
@@ -352,4 +352,4 @@ ace-coworker status
 /ace:coworker-drive-session
 ```
 
-**Note:** When `ace-coworker create job.yaml` runs, the source job.yaml is automatically archived to `<task>/jobs/{session_id}-job.yml`. This keeps the task folder clean while preserving the job recipe for provenance. The archived file is for historical reference only—always use `ace-coworker status` to query the current session state.
+**Note:** Job files created in `<task>/jobs/` stay in place when `ace-coworker create` runs. Files created elsewhere are moved to `<task>/jobs/<session_id>-job.yml` for provenance. Always use `ace-coworker status` to query the current session state.
