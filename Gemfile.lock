@@ -11,7 +11,7 @@ PATH
 PATH
   remote: ace-coworker
   specs:
-    ace-coworker (0.2.1)
+    ace-coworker (0.3.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.18)
       ace-support-markdown (~> 0.2)
