@@ -17,9 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Renamed cache directory from `test-e2e` to `ace-test-e2e` for clear namespace
 - Enhanced sandbox naming with test ID inclusion (`{timestamp}-{package}-{test-id}/`)
 - Moved reports outside sandbox as sibling files (`.summary.r.md`, `.experience.r.md`, `.metadata.yml`)
+
+### Breaking Changes
+
+- **Cache directory renamed**: `.cache/test-e2e/` → `.cache/ace-test-e2e/`. External scripts referencing the old path will need updating.
 
 ## [0.3.0] - 2026-01-29
 
