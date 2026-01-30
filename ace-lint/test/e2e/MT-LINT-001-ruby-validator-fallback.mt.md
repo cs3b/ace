@@ -30,7 +30,9 @@ Verify that ace-lint correctly uses StandardRB as primary Ruby linter and falls 
 
 ```bash
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-ace-lint-MT-LINT-001"
+SHORT_PKG="lint"
+SHORT_ID="mt001"
+TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
