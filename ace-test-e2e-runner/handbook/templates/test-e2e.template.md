@@ -31,7 +31,9 @@ verified-by: {agent-name}
 PROJECT_ROOT="$(pwd)"
 
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-{package-name}-{test-id}"
+SHORT_PKG="{short-pkg}"    # e.g., git-commit (package name without ace- prefix)
+SHORT_ID="{short-id}"      # e.g., mt001 (lowercase test number)
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
