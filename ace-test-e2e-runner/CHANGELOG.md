@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-01-30
+
+### Fixed
+
+- Updated report path documentation from sibling pattern to subfolder pattern (`-reports/`)
+- Removed incorrect `artifacts/` subdirectory from test data path examples
+
+### Technical
+
+- Added pre-creation sandbox verification gate to workflow instructions
+- Enhanced directory structure diagrams for consistency across guides and templates
+
 ## [0.4.0] - 2026-01-29
 
 ### Added
