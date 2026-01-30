@@ -4,6 +4,79 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.361] - 2026-01-30
+
+### Changed
+
+- **ace-test-runner v0.12.5**: Code quality improvements from PR review
+  - Clarified DisplayHelpers docstring to explain `color()`/`colorize()` relationship
+  - Package column width now calculated dynamically from actual package list
+  - Removed unused `build_summary_text` method (dead code cleanup)
+  - Added factory method tests for `create_display_manager`
+
+## [0.9.360] - 2026-01-30
+
+### Fixed
+
+- **ace-test-runner v0.12.4**: Discovered and fixed orphaned suite tests
+  - Tests in `test/suite/` were not being run by test runner (not a recognized group)
+  - Moved to `test/integration/suite/` where they are now discovered and executed
+  - Fixed test assertions to match current `DisplayHelpers` output format
+  - Added 22 previously invisible tests to the test suite
+
+## [0.9.359] - 2026-01-30
+
+### Changed
+
+- **ace-test-runner v0.12.3**: Aligned progress mode output format with simple mode
+  - Consistent column ordering: status icon, time, package name, progress/stats
+  - Status icons: `·` (waiting), `⋯` (running), `✓`/`?`/`✗` (completed)
+  - Package name without brackets (25 chars, left-justified)
+  - Columnar stats for completed: `N tests  M asserts  F fail`
+
+## [0.9.358] - 2026-01-30
+
+### Changed
+
+- **ace-test-runner v0.12.2**: Refactored suite summary output for better visibility
+  - Status line (`✓ ALL TESTS PASSED`) now appears last, always visible when run completes
+  - Skipped packages shown as compact single line: `Skipped: pkg1 (2), pkg2 (14)`
+  - Simplified stat format: removed totals, shows just `passed, failed`
+  - Added checkmark/cross prefixes to status messages
+
+## [0.9.357] - 2026-01-30
+
+### Changed
+
+- **ace-test-runner v0.12.1**: Improved output format for better readability
+  - Status icon first (✓/✗/?) for easy visual scanning
+  - Time second (right-aligned) to spot slow packages
+  - Columnar stats with abbreviated labels (tests/asserts/fail)
+  - Example: `✓   1.46s  ace-support-core  221 tests  601 asserts  0 fail`
+
+## [0.9.356] - 2026-01-30
+
+### Added
+
+- **ace-test-runner v0.12.0**: Simple output mode as new default for `ace-test-suite` (task 244)
+  - Line-by-line results without ANSI cursor control
+  - New `--progress` flag enables animated progress bars (previous default)
+  - `SimpleDisplayManager` class for agent-friendly output
+  - `DisplayHelpers` module for shared display formatting logic
+- **ace-test-runner v0.12.0**: Exception-based exit codes for cleaner CLI error handling
+
+### Fixed
+
+- **ace-test-runner v0.12.0**: Test require paths and fixtures in DisplayHelpersTest
+
+### Changed
+
+- **ace-test-runner v0.12.0**: Default display mode switched from animated to simple output (better for CI/CD, logs, and agents)
+
+### Technical
+
+- **ace-test-e2e-runner**: Refined E2E test creation workflow documentation
+
 ## [0.9.355] - 2026-01-30
 
 ### Changed
