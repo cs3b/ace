@@ -7,6 +7,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.5] - 2026-01-30
+
+### Changed
+- **DisplayHelpers Docstring Clarified**: Improved documentation to explain `color()`/`colorize()` relationship
+- **Dynamic Package Column Width**: Package names now use dynamically calculated width based on actual package list
+
+### Removed
+- **Dead Code Cleanup**: Removed unused `build_summary_text` method and its tests
+
+### Technical
+- Added `create_display_manager` factory tests for orchestrator
+
+## [0.12.4] - 2026-01-30
+
+### Fixed
+- **Orphaned Tests Discovered**: Suite tests in `test/suite/` were not being run by test runner
+  - Moved to `test/integration/suite/` where they are now discovered and executed
+  - Fixed require paths for new location
+  - Updated test assertions to match current `DisplayHelpers` output format
+
+## [0.12.3] - 2026-01-30
+
+### Changed
+- **Progress Mode Aligned with Simple Mode**: Consistent column ordering across display modes
+  - Status icon first: `·` (waiting), `⋯` (running), `✓`/`?`/`✗` (completed)
+  - Time second (right-aligned 5.2f format)
+  - Package name without brackets (25 chars, left-justified)
+  - Progress bar and count for running state
+  - Columnar stats for completed: `N tests  M asserts  F fail`
+
+## [0.12.2] - 2026-01-30
+
+### Changed
+- **Summary Output Reorder**: Status line now appears last for better visibility
+  - Skipped packages shown as compact single line at top: `Skipped: pkg1 (2), pkg2 (14)`
+  - Stats (duration, packages, tests, assertions) in middle
+  - Pass/fail status (`✓ ALL TESTS PASSED`) at bottom, always visible
+  - Simplified stat format: removed totals, shows just `passed, failed`
+
+## [0.12.1] - 2026-01-30
+
+### Changed
+- **Improved Output Format**: Columnar format for better readability
+  - Status icon first (✓/✗/?) for easy visual scanning
+  - Time second (right-aligned) to spot slow packages
+  - Package name without brackets (cleaner)
+  - Abbreviated labels: `tests`, `asserts`, `fail`
+  - Example: `✓   1.46s  ace-support-core  221 tests  601 asserts  0 fail`
+
+## [0.12.0] - 2026-01-30
+
+### Added
+- **Simple Output Mode**: New default output mode with line-by-line results (task 244)
+  - `ace-test-suite` now produces clean, pipe-friendly output by default
+  - One line per package as it completes (printed in completion order)
+  - No ANSI cursor control or screen clearing
+  - Works cleanly when piped: `ace-test-suite 2>&1 | cat`
+  - New `SimpleDisplayManager` class for agent-friendly output
+  - Columnar format: `✓  1.46s  package-name  65 tests  186 asserts  0 fail`
+  - Status first (✓/✗/?), time second for easy scanning
+
+- **Progress Flag**: `--progress` flag enables animated progress bars
+  - Enables original animated ANSI display with live progress bars
+  - Skips redundant final results table (results shown inline during updates)
+  - Preserves same summary format and exit codes
+
+- **DisplayHelpers Module**: Extracted shared display formatting logic
+  - Shared `build_summary_text` and `render_summary` methods
+  - Reduces code duplication between display managers
+
+- **Exception-based Exit Codes**: Improved CLI error handling
+  - Commands now use exception-based exit codes for cleaner control flow
+
+### Changed
+- **Default Display Mode**: Switched from animated to simple output mode
+  - Better for CI/CD pipelines, log files, and agent consumption
+  - Use `--progress` flag for interactive terminal experience
+
+### Fixed
+- Fixed timestamp generator for new compact ID format
+- Fixed test require paths and fixtures in DisplayHelpersTest
+
 ## [0.11.0] - 2026-01-22
 
 ### Changed

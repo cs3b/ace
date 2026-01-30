@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
+require_relative "display_helpers"
+
 module Ace
   module TestRunner
     module Suite
       class DisplayManager
+        include DisplayHelpers
+
         attr_reader :packages, :config, :lines, :start_time
 
         def initialize(packages, config)
@@ -57,126 +61,20 @@ module Ace
           @last_refresh = Time.now
         end
 
-        def show_final_results
-          # Move to after all package lines
+        # Finalize display by moving cursor past the display area.
+        # In progress mode, package results are already shown inline during updates,
+        # so we skip redrawing the results table. The overall summary is handled by show_summary.
+        def finalize_display
           move_to_line(@footer_line + 1)
-
           puts
-          puts separator
-          puts "  FINAL RESULTS"
-          puts separator
-
-          # Show each package's final status
-          @packages.each do |package|
-            status = @package_status[package["name"]]
-            next unless status[:completed]
-
-            results = status[:results] || {}
-            name = package["name"].ljust(18)
-
-            if status[:success]
-              skipped = results[:skipped] || 0
-              icon = package_status_icon(true, skipped)
-              tests = results[:tests] || 0
-              assertions = results[:assertions] || 0
-              failures = results[:failures] || 0
-              duration = results[:duration] || status[:elapsed] || 0
-
-              if assertions > 0
-                summary_text = "#{tests.to_s.rjust(3)} tests, #{assertions.to_s.rjust(3)} assertions, #{failures} failures"
-                summary_text = append_skipped_text(summary_text, skipped)
-                puts "#{name} #{icon} #{summary_text}".ljust(50) + sprintf("%6.2fs", duration)
-              else
-                summary_text = "#{tests.to_s.rjust(3)} tests, #{failures} failures"
-                summary_text = append_skipped_text(summary_text, skipped)
-                puts "#{name} #{icon} #{summary_text}".ljust(50) + sprintf("%6.2fs", duration)
-              end
-            else
-              icon = package_status_icon(false, 0)
-              tests = results[:tests] || 0
-              assertions = results[:assertions] || 0
-              failures = results[:failures] || 0
-              errors = results[:errors] || 0
-              skipped = results[:skipped] || 0
-              duration = results[:duration] || status[:elapsed] || 0
-
-              failure_text = []
-              failure_text << "#{failures} failures" if failures > 0
-              failure_text << "#{errors} errors" if errors > 0
-              failure_text << "#{skipped} skipped" if skipped > 0
-
-              if assertions > 0
-                puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{assertions.to_s.rjust(3)} assertions, #{failure_text.join(', ')}".ljust(50) +
-                     sprintf("%6.2fs", duration)
-              else
-                puts "#{name} #{icon} #{tests.to_s.rjust(3)} tests, #{failure_text.join(', ')}".ljust(50) +
-                     sprintf("%6.2fs", duration)
-              end
-            end
-          end
         end
 
+        # Alias for backward compatibility
+        alias show_final_results finalize_display
+
+        # Display the summary section using shared helpers
         def show_summary(summary)
-          puts
-          puts separator
-
-          total_duration = Time.now - @start_time
-
-          # Overall status
-          total_skipped = summary[:total_skipped] || 0
-          if summary[:packages_failed] == 0 && total_skipped == 0
-            puts color("✅ ALL TESTS PASSED!", :green)
-          elsif summary[:packages_failed] == 0 && total_skipped > 0
-            puts color("⚠️ ALL TESTS PASSED (with #{total_skipped} skipped)", :yellow)
-          else
-            puts color("❌ SOME TESTS FAILED", :red)
-          end
-
-          puts
-          total_packages = summary[:packages_passed] + summary[:packages_failed]
-          puts "Packages:  #{summary[:packages_passed]}/#{total_packages} passed, #{summary[:packages_failed]} failed"
-
-          # Tests line
-          if summary[:total_tests] > 0
-            if total_skipped > 0
-              puts "Tests:     #{summary[:total_tests]} total, #{summary[:total_passed]} passed, #{summary[:total_failed]} failed, #{total_skipped} skipped"
-            else
-              puts "Tests:     #{summary[:total_passed]}/#{summary[:total_tests]} passed, #{summary[:total_failed]} failed"
-            end
-          end
-
-          # Assertions line if available
-          if summary[:total_assertions] && summary[:total_assertions] > 0
-            assertions_failed = summary[:assertions_failed] || 0
-            assertions_passed = summary[:total_assertions] - assertions_failed
-            puts "Assertions: #{assertions_passed}/#{summary[:total_assertions]} passed, #{assertions_failed} failed"
-          end
-
-          puts "Duration:  #{sprintf('%.2f', total_duration)}s (wall time)"
-
-          # Show failed packages
-          if summary[:failed_packages] && !summary[:failed_packages].empty?
-            puts
-            puts "Failed packages:"
-            summary[:failed_packages].each do |pkg|
-              puts "  - #{pkg[:name]}: #{pkg[:failures]} failures, #{pkg[:errors]} errors"
-              puts Ace::TestRunner::Molecules::FailedPackageReporter.format_for_display(pkg)
-            end
-          end
-
-          # Show packages with skipped tests
-          if total_skipped > 0
-            packages_with_skips = summary[:results].select { |r| (r[:skipped] || 0) > 0 }
-            if !packages_with_skips.empty?
-              puts
-              puts "Packages with skips:"
-              packages_with_skips.each do |pkg|
-                puts "  - #{pkg[:package]}: #{pkg[:skipped]} skipped"
-              end
-            end
-          end
-
-          puts separator
+          render_summary(summary, @start_time, separator)
         end
 
         private
@@ -188,78 +86,64 @@ module Ace
           move_to_line(line)
           print "\033[K"  # Clear line
 
-          # Format package name (fixed width)
-          pkg_name = "[#{name}]".ljust(20)
+          # Format package name (fixed width, no brackets)
+          pkg_name = name.ljust(25)
 
           case status[:status]
           when :waiting
-            print "#{pkg_name} #{color('[············]', :gray)} Waiting...".ljust(60)
+            icon = color("·", :gray)
+            elapsed = "  0.00s"
+            progress = "[············]  waiting"
+            print "#{icon}  #{elapsed}  #{pkg_name}  #{progress}"
+
           when :running
-            # Show progress bar
+            icon = color("⋯", :cyan)
+            elapsed = sprintf("%5.2fs", status[:elapsed] || 0)
             progress_bar = build_progress_bar(status)
-            elapsed = sprintf("%.1f", status[:elapsed] || 0)
             if status[:total] && status[:total] > 0
-              print "#{pkg_name} #{progress_bar} #{status[:progress]}/#{status[:total]} tests".ljust(50) +
-                    "#{elapsed}s"
+              count = "#{status[:progress]}/#{status[:total]}"
             else
-              # Show dots if no total count
-              dots = (status[:dots] || "").chars.last(10).join
-              print "#{pkg_name} #{progress_bar} #{dots}".ljust(50) + "#{elapsed}s"
+              count = "running"
             end
+            print "#{icon}  #{elapsed}  #{pkg_name}  #{progress_bar}  #{count}"
+
           when :completed
             results = status[:results] || {}
-            elapsed = sprintf("%.2f", status[:elapsed] || 0)
+            elapsed = sprintf("%5.2fs", status[:elapsed] || 0)
+
+            tests = results[:tests] || 0
+            assertions = results[:assertions] || 0
+            failures = results[:failures] || 0
+            errors = results[:errors] || 0
+            skipped = results[:skipped] || 0
 
             if status[:success]
-              tests = results[:tests] || 0
-              assertions = results[:assertions] || 0
-              skipped = results[:skipped] || 0
               icon = package_status_icon(true, skipped)
-
-              if assertions > 0
-                summary_text = "#{tests} tests, #{assertions} assertions, 0 failures"
-                summary_text = append_skipped_text(summary_text, skipped)
-                print "#{pkg_name} #{icon} #{summary_text}".ljust(60) + "#{elapsed}s"
-              else
-                summary_text = "#{tests} tests, 0 failures"
-                summary_text = append_skipped_text(summary_text, skipped)
-                print "#{pkg_name} #{icon} #{summary_text}".ljust(60) + "#{elapsed}s"
-              end
+              failure_count = failures
             else
-              tests = results[:tests] || 0
-              assertions = results[:assertions] || 0
-              failures = results[:failures] || 0
-              errors = results[:errors] || 0
-              skipped = results[:skipped] || 0
-              failure_count = failures + errors
               icon = package_status_icon(false, 0)
-
-              if assertions > 0
-                summary_text = "#{tests} tests, #{assertions} assertions, #{failure_count} failures"
-                summary_text = append_skipped_text(summary_text, skipped)
-                print "#{pkg_name} #{icon} #{summary_text}".ljust(60) + "#{elapsed}s"
-              else
-                summary_text = "#{tests} tests, #{failure_count} failures"
-                summary_text = append_skipped_text(summary_text, skipped)
-                print "#{pkg_name} #{icon} #{summary_text}".ljust(60) + "#{elapsed}s"
-              end
+              failure_count = failures + errors
             end
+
+            # Format: ICON  TIME  PACKAGE  TESTS  ASSERTS  FAIL [SKIP]
+            tests_col = "#{tests.to_s.rjust(4)} tests"
+            asserts_col = "#{assertions.to_s.rjust(5)} asserts"
+            fail_col = "#{failure_count.to_s.rjust(3)} fail"
+
+            line_text = "#{icon}  #{elapsed}  #{pkg_name}  #{tests_col}  #{asserts_col}  #{fail_col}"
+            line_text += "  #{skipped} skip" if skipped > 0
+
+            print line_text
           end
         end
 
         # Determines the appropriate status icon for a package
-        # Returns ⚠️ (yellow) for successful packages with skipped tests (informational)
-        # Returns ✅ (green) for successful packages without skipped tests
-        # Returns ❌ (red) for failed packages
+        # Returns ? (yellow) for successful packages with skipped tests (informational)
+        # Returns ✓ (green) for successful packages without skipped tests
+        # Returns ✗ (red) for failed packages
         def package_status_icon(success, skipped_count)
-          return color("❌", :red) unless success
-          skipped_count > 0 ? color("⚠️", :yellow) : color("✅", :green)
-        end
-
-        # Appends skipped count text to a summary string if skipped > 0
-        # This provides consistent formatting across all display methods
-        def append_skipped_text(summary_text, skipped_count)
-          skipped_count > 0 ? "#{summary_text}, #{skipped_count} skipped" : summary_text
+          return color("✗", :red) unless success
+          skipped_count > 0 ? color("?", :yellow) : color("✓", :green)
         end
 
         def build_progress_bar(status)

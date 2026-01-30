@@ -10,7 +10,8 @@ options = {
   config: ".ace/test/suite.yml",
   parallel: nil,
   group: nil,
-  verbose: false
+  verbose: false,
+  progress: false
 }
 
 parser = OptionParser.new do |opts|
@@ -34,6 +35,10 @@ parser = OptionParser.new do |opts|
     options[:verbose] = true
   end
 
+  opts.on("--progress", "Enable live animated display with progress bars") do
+    options[:progress] = true
+  end
+
   opts.on("--no-color", "Disable colored output") do
     options[:no_color] = true
   end
@@ -50,7 +55,8 @@ parser = OptionParser.new do |opts|
 
   opts.separator ""
   opts.separator "Examples:"
-  opts.separator "  ace-test-suite                    # Run all configured packages"
+  opts.separator "  ace-test-suite                    # Run all (simple line-by-line output)"
+  opts.separator "  ace-test-suite --progress         # Show live animated progress bars"
   opts.separator "  ace-test-suite --parallel 16      # Run with 16 parallel processes"
   opts.separator "  ace-test-suite --group foundation # Run only foundation group"
   opts.separator "  ace-test-suite --verbose          # Show detailed test output"
@@ -115,6 +121,10 @@ end
 if options[:verbose]
   config["test_suite"]["test_options"] ||= {}
   config["test_suite"]["test_options"]["verbose"] = true
+end
+
+if options[:progress]
+  config["test_suite"]["progress"] = true
 end
 
 # Run the test suite with the config
