@@ -189,7 +189,7 @@ Combining all patterns:
 
 ```bash
 # Create isolated git repository
-REPO_DIR="$TEST_DIR/artifacts/test-repo"
+REPO_DIR="$TEST_DIR/test-repo"
 mkdir -p "$REPO_DIR"
 cd "$REPO_DIR"
 git init --quiet .
