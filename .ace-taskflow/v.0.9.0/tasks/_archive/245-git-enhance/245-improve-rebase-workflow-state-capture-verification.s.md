@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.245
-status: in-progress
+status: done
 priority: medium
 estimate: 2h
 dependencies: []
@@ -71,11 +71,11 @@ When a user invokes the rebase workflow:
 
 ### Success Criteria
 
-- [ ] **Pre-rebase state captured**: Cache directory contains metadata, commits, diff, and stats
-- [ ] **Simple rebase default**: Attempts `git rebase` first before falling back
-- [ ] **Cherry-pick fallback**: Switches to per-commit cherry-pick when conflicts detected
-- [ ] **Post-rebase verification**: Compares pre/post diff stats and reports discrepancies
-- [ ] **Recovery support**: Cache data enables recovery from failed rebases
+- [x] **Pre-rebase state captured**: Cache directory contains metadata, commits, diff, and stats
+- [x] **Simple rebase default**: Attempts `git rebase` first before falling back
+- [x] **Cherry-pick fallback**: Switches to per-commit cherry-pick when conflicts detected
+- [x] **Post-rebase verification**: Compares pre/post diff stats and reports discrepancies
+- [x] **Recovery support**: Cache data enables recovery from failed rebases
 
 ## Objective
 
@@ -109,17 +109,17 @@ This improves reliability by catching unexpected changes (verification) and simp
 ### Planning Steps
 
 * [x] Review current rebase.wf.md structure and strategies
-* [x] Research ace-support-timestamp for compact ID generation
+* [x] Research ace-timestamp for compact ID generation
 * [x] Analyze existing cache patterns in ace-docs, ace-review
 
 ### Execution Steps
 
-- [ ] **Phase 1: Rewrite workflow frontmatter**
+- [x] **Phase 1: Rewrite workflow frontmatter**
   - Update description to reflect new approach
   - Keep existing allowed-tools: Bash, Read
   - Update argument-hint to `"[target-branch] [--no-verify]"`
 
-- [ ] **Phase 2: Write State Capture section**
+- [x] **Phase 2: Write State Capture section**
   - Document cache directory structure
   - Provide bash commands for capturing:
     - `metadata.yml` with session info
@@ -131,12 +131,12 @@ This improves reliability by catching unexpected changes (verification) and simp
   > Assert: Cache directory created with all 4 files
   > Command: ls -la .cache/ace-git/*-rebase/
 
-- [ ] **Phase 3: Write Simple Rebase section (default)**
+- [x] **Phase 3: Write Simple Rebase section (default)**
   - Document simple `git rebase $target` attempt
   - Add conflict detection logic (check for .git/rebase-merge or .git/rebase-apply)
   - Document abort and fallback trigger
 
-- [ ] **Phase 4: Write Cherry-Pick Fallback section**
+- [x] **Phase 4: Write Cherry-Pick Fallback section**
   - Document branch creation from target
   - Provide cherry-pick loop using commits.txt
   - Add per-commit conflict resolution guidance
@@ -145,7 +145,7 @@ This improves reliability by catching unexpected changes (verification) and simp
   > Assert: All commits applied or paused at conflict
   > Command: git log --oneline $merge_base..HEAD
 
-- [ ] **Phase 5: Write Verification section**
+- [x] **Phase 5: Write Verification section**
   - Document post-rebase stats generation
   - Add comparison logic for files/insertions/deletions
   - Document verification report format
@@ -154,28 +154,28 @@ This improves reliability by catching unexpected changes (verification) and simp
   > Assert: Pre/post stats comparison displayed
   > Command: diff .cache/ace-git/*-rebase/pre-rebase.stats .cache/ace-git/*-rebase/post-rebase.stats
 
-- [ ] **Phase 6: Write Recovery section**
+- [x] **Phase 6: Write Recovery section**
   - Document how to use cache data for recovery
   - Add reflog-based recovery instructions
   - Document cache cleanup guidance
 
-- [ ] **Phase 7: Update Strategy Overview table**
+- [x] **Phase 7: Update Strategy Overview table**
   - Replace reset-split as default with simple rebase
   - Keep manual and interactive as advanced options
   - Document when each strategy is triggered
 
-- [ ] **Phase 8: Update Success Criteria and Response Template**
+- [x] **Phase 8: Update Success Criteria and Response Template**
   - Add verification status to success criteria
   - Update response template with verification report
 
 ## Acceptance Criteria
 
-- [ ] Workflow captures pre-rebase state to `.cache/ace-git/{id}-rebase/`
-- [ ] Simple `git rebase` is attempted first
-- [ ] Cherry-pick fallback triggered on conflicts
-- [ ] Post-rebase verification compares diff stats
-- [ ] Recovery procedures documented using cached data
-- [ ] Old strategies (manual, interactive) still available
+- [x] Workflow captures pre-rebase state to `.cache/ace-git/{id}-rebase/`
+- [x] Simple `git rebase` is attempted first
+- [x] Cherry-pick fallback triggered on conflicts
+- [x] Post-rebase verification compares diff stats
+- [x] Recovery procedures documented using cached data
+- [x] Old strategies (manual, interactive) still available
 
 ## References
 
