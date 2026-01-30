@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.351] - 2026-01-30
+
+### Fixed
+
+- **ace-coworker v0.3.1**: Job files already in a `jobs/` directory are kept in place instead of being moved to a nested path when creating sessions
+
+### Changed
+
+- **ace-release skill**: Updated instructions to use `Action: Skill('/ace:command')` format for clearer agent invocation
+
 ## [0.9.350] - 2026-01-30
 
 ### Added
