@@ -34,7 +34,9 @@ Verify task-integrated worktree creation works correctly with ace-taskflow integ
 PROJECT_ROOT="$(pwd)"
 
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-git-worktree-MT-WORKTREE-002"
+SHORT_PKG="git-worktree"
+SHORT_ID="mt002"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 WORKTREES_ROOT="$TEST_DIR/worktrees"
 mkdir -p "$TEST_DIR" "$WORKTREES_ROOT"
 
