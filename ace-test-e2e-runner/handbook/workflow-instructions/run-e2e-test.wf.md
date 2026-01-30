@@ -230,6 +230,23 @@ echo "=== END ISOLATION CHECK ==="
 
 > **Prerequisite**: Section 4.1 (Sandbox Isolation Checkpoint) must PASS before proceeding.
 
+**Pre-Creation Sandbox Verification (MANDATORY):**
+
+Before creating ANY test files, run this verification gate:
+
+```bash
+echo "=== PRE-CREATION SANDBOX VERIFICATION ==="
+if [[ "$(pwd)" != *".cache/ace-test-e2e/"* ]]; then
+  echo "FATAL: Not in sandbox. Refusing to create files."
+  echo "  Current: $(pwd)"
+  echo "  ACTION: Re-run Environment Setup and isolation checkpoint"
+  exit 1
+fi
+echo "OK: Confirmed in sandbox - safe to create test data"
+```
+
+**Why this matters:** If the `cd "$TEST_DIR"` command in Environment Setup failed silently, this gate prevents polluting the main repository with test fixtures.
+
 Execute the commands in the "Test Data" section to create necessary test files:
 
 1. Create all test files as specified (inside `$TEST_DIR/`)
