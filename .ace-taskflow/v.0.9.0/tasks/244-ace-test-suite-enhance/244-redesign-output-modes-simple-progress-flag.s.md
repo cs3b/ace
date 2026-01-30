@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.244
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 244-redesign-ace-test-suite-output-modes-simple-default-progress-flag
+  path: "../ace-task.244"
+  created_at: '2026-01-30 16:23:50'
+  updated_at: '2026-01-30 16:23:50'
+  target_branch: main
 ---
 
 # Redesign ace-test-suite output modes: simple default + --progress flag
