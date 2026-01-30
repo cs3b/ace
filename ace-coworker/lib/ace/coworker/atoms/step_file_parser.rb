@@ -74,16 +74,22 @@ module Ace
           body.strip
         end
 
-        # Parse filename to extract number and name
+        # Parse filename to extract number, name, and parent.
         #
         # @param filename [String] Filename like "010-init-project.j.md" or "010-init-project.r.md"
-        # @return [Hash] Extracted number and name
+        # @return [Hash] Extracted number, name, and parent (if nested)
         #
-        # @example
+        # @example Top-level job
         #   parse_filename("010-init-project.j.md")
-        #   # => { number: "010", name: "init-project" }
+        #   # => { number: "010", name: "init-project", parent: nil }
+        #
+        # @example Nested job
         #   parse_filename("010.01-setup-dirs.j.md")
-        #   # => { number: "010.01", name: "setup-dirs" }
+        #   # => { number: "010.01", name: "setup-dirs", parent: "010" }
+        #
+        # @example Deeply nested job
+        #   parse_filename("010.01.02-verify.j.md")
+        #   # => { number: "010.01.02", name: "verify", parent: "010.01" }
         def self.parse_filename(filename)
           # Remove .j.md or .r.md extension
           base = filename.sub(/\.[jr]\.md$/, "")
@@ -92,10 +98,31 @@ module Ace
           match = base.match(/^([\d.]+)-(.+)$/)
 
           if match
-            { number: match[1], name: match[2] }
+            number = match[1]
+            name = match[2]
+            parent = extract_parent_from_number(number)
+            { number: number, name: name, parent: parent }
           else
-            { number: nil, name: base }
+            { number: nil, name: base, parent: nil }
           end
+        end
+
+        # Extract parent number from a hierarchical job number.
+        #
+        # @param number [String] Job number (e.g., "010.01")
+        # @return [String, nil] Parent number or nil for top-level
+        #
+        # @example
+        #   extract_parent_from_number("010.01") # => "010"
+        #   extract_parent_from_number("010.01.02") # => "010.01"
+        #   extract_parent_from_number("010") # => nil
+        def self.extract_parent_from_number(number)
+          return nil if number.nil?
+
+          parts = number.split(".")
+          return nil if parts.length <= 1
+
+          parts[0..-2].join(".")
         end
 
         # Generate job filename from number and name

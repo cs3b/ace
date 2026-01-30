@@ -97,8 +97,54 @@ Each step has:
 | Pattern | Purpose | Example |
 |---------|---------|---------|
 | `010`, `020`, `030` | Main tasks (10-step gaps) | `010-init.j.md` |
-| `010.01`, `010.02` | Subtasks | `010.01-setup.j.md` |
+| `010.01`, `010.02` | Nested jobs (children) | `010.01-setup.j.md` |
 | `041`, `042` | Injected after existing | `041-fix.j.md` |
+| `010.01.01` | Deeply nested (up to 3 levels) | `010.01.01-detail.j.md` |
+
+**Limits**: Max 999 top-level jobs, 99 children per parent, 3 nesting levels.
+
+## Hierarchical Jobs
+
+Jobs can be nested to create parent-child relationships. Parent jobs automatically complete when all their children are done.
+
+### Creating Child Jobs
+
+```bash
+# Add a child job under parent 010
+ace-coworker add verify --after 010 --child -i "Verify the setup"
+# Creates: 010.01-verify.j.md
+
+# Add another child
+ace-coworker add test --after 010 --child -i "Test the setup"
+# Creates: 010.02-test.j.md
+```
+
+### Creating Sibling Jobs
+
+```bash
+# Add a sibling after 010 (creates 011, renumbers existing if needed)
+ace-coworker add hotfix --after 010 -i "Apply hotfix"
+# Creates: 011-hotfix.j.md (renumbers 011+ to 012+ if they exist)
+```
+
+### Hierarchy Rules
+
+1. **Completion cascades up**: When all children of a job are done, the parent is auto-completed
+2. **Work cascades down**: A parent with pending children is skipped; its first pending child becomes current
+3. **Renumbering cascades down**: When a parent is renumbered, all descendants are updated too
+
+### Status Display
+
+Hierarchical status shows the tree structure:
+
+```
+NUMBER       STATUS      NAME                           CHILDREN
+----------------------------------------------------------------------
+010          ▶ Active    setup                          (1/2 done)
+|-- 010.01   ✓ Done      verify
+\-- 010.02   ○ Pending   test
+020          ○ Pending   implement
+```
 
 ## Commands
 
@@ -106,7 +152,7 @@ Each step has:
 Create a new session from YAML config.
 
 ### `status`
-Display current queue state.
+Display current queue state (shows hierarchy by default, use `--flat` for flat view).
 
 ### `report FILE`
 Complete current step with report content.
@@ -114,8 +160,25 @@ Complete current step with report content.
 ### `fail --message TEXT`
 Mark current step as failed.
 
-### `add NAME [--instructions TEXT]`
+### `add NAME [OPTIONS]`
 Add a new step dynamically.
+
+Options:
+- `--instructions, -i TEXT` - Step instructions
+- `--after, -a NUMBER` - Insert after this job number
+- `--child, -c` - Insert as child of `--after` job (requires `--after`)
+
+Examples:
+```bash
+# Add after current step
+ace-coworker add fix -i "Fix the bug"
+
+# Add as sibling after specific job
+ace-coworker add verify --after 010 -i "Verify"
+
+# Add as child of specific job
+ace-coworker add sub-task --after 010 --child -i "Sub-task"
+```
 
 ### `retry STEP_REF`
 Retry a failed step (creates new step linked to original).

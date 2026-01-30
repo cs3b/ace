@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-01-30
+
+### Changed
+
+- Rewrote MT-COWORKER-003 E2E test to match implemented behavior (dynamic hierarchy via `add --after --child` instead of static config)
+
+### Technical
+
+- MT-COWORKER-003 test verified and stamped
+
+## [0.4.2] - 2026-01-30
+
+### Fixed
+
+- MAX_DEPTH constant corrected to 2 (allowing 3 levels max: 010.01.01) to match documented behavior
+- CLI `add --child` command now validates depth upfront with clear error message before calling executor
+
+### Changed
+
+- `auto_complete_parents` now emits warning when safety iteration limit is reached
+- `rollback_renames` now captures and reports rollback failures instead of silently swallowing them
+
+## [0.4.1] - 2026-01-30
+
+### Changed
+
+- `Ace::Coworker.cache_dir` now returns an absolute path resolved from project root
+- Cache directory respects `PROJECT_ROOT_PATH` environment variable for sandboxed/isolated testing
+
+## [0.4.0] - 2026-01-30
+
+### Added
+
+- **Hierarchical job structure**: Jobs can now have nested sub-jobs (010.01, 010.02) with parent-child relationships
+- New `JobNumbering` atom for parsing and generating hierarchical job numbers
+- `--after` option for `add` command: inject jobs after specific job numbers (`ace-coworker add verify --after 010`)
+- `--child` option for `add` command: create nested child jobs (`ace-coworker add verify --after 010 --child`)
+- `--flat` option for `status` command: show flat list without hierarchy indentation
+- Automatic job renumbering when inserting jobs at occupied positions
+- `children_of`, `descendants_of`, `has_incomplete_children?` methods on QueueState for hierarchy traversal
+- `hierarchical` method on QueueState for tree-structured display
+- Parent number extraction from filenames in `StepFileParser.parse_filename`
+- Audit trail metadata: `added_by`, `parent`, `renumbered_from`, `renumbered_at` fields for tracking job history
+- O(1) child lookups via parent index in QueueState for improved performance
+
+### Changed
+
+- Auto-complete parents now handles multi-level hierarchies in a single pass (grandparents complete when parents complete)
+- Auto-complete now includes in_progress parents (not just pending) when all children finish
+- Status command now shows hierarchical structure when nested jobs exist
+- Advance operation respects hierarchy: parent jobs wait for all children to complete
+
+### Fixed
+
+- Cascade renumbering to descendants: when a job is shifted, all its children are also renamed to prevent orphaning
+- Enforce hierarchy in `advance`: prevent marking parent as done while children are incomplete
+- Validate `--after` job existence before injection (raises StepNotFoundError if not found)
+- Replace fragile `instance_variable_set` mutation with local tracking Set in auto_complete_parents
+- Add safety guard to prevent infinite loops in auto-completion (max iterations = step count)
+- Re-scan state after auto_complete_parents to ensure find_next_step uses fresh data
+- Use `next_workable` instead of `next_pending` in find_next_step to respect hierarchy
+- QueueState now supports `top_level`, `all_numbers`, and `next_workable` methods
+
 ## [0.3.1] - 2026-01-30
 
 ### Fixed

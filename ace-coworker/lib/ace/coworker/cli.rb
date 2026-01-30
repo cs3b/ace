@@ -11,6 +11,7 @@ require_relative "models/step"
 require_relative "models/queue_state"
 
 # Atoms
+require_relative "atoms/job_numbering"
 require_relative "atoms/number_generator"
 require_relative "atoms/step_file_parser"
 require_relative "atoms/step_sorter"
@@ -19,6 +20,7 @@ require_relative "atoms/step_sorter"
 require_relative "molecules/session_manager"
 require_relative "molecules/queue_scanner"
 require_relative "molecules/step_writer"
+require_relative "molecules/job_renumberer"
 
 # Organisms
 require_relative "organisms/workflow_executor"
