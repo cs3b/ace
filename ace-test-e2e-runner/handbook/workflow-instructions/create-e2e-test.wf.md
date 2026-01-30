@@ -111,10 +111,12 @@ Initial values for optional fields:
 If a context description was provided, enhance the test with:
 
 **Research the package:**
-1. Examine the relevant code in `{PACKAGE}/lib/`
-2. Check existing tests for patterns
-3. Understand the feature being tested
-4. **Run the tool** to observe actual behavior, output format, file paths, and exit codes
+1. **Run unit tests first** (`ace-test` in the package) — they are the ground truth for implemented behavior
+2. Examine the relevant code in `{PACKAGE}/lib/`
+3. Check existing unit tests for expected behavior patterns
+4. Understand the feature being tested
+5. **Run the tool** to observe actual behavior, output format, file paths, and exit codes
+6. **Verify config/input formats** by reading the actual parsing code — never assume formats from design specs or task descriptions
 
 **Generate test content:**
 1. Write a clear objective based on the context
@@ -126,6 +128,8 @@ If a context description was provided, enhance the test with:
 #### Test Case Generation Rules
 
 **MUST (required for all E2E tests):**
+- **Verify the feature is implemented** before writing the test — read the actual implementation code, not just task specs or design documents
+- **Verify config/input formats** by reading the parsing code — never assume formats from BDD specs, task descriptions, or documentation
 - Include at least one error/negative TC (wrong args, missing files, invalid state)
 - Verify actual file paths by running the tool first — never hardcode paths from documentation or assumptions
 - Use explicit `&& echo "PASS" || echo "FAIL"` patterns for every verification step
@@ -149,6 +153,19 @@ If a context description was provided, enhance the test with:
 This ordering ensures error TCs run before any state is created (clean environment), and happy-path TCs build on each other sequentially.
 
 See: **e2e-testing.g.md § "Avoiding False Positive Tests"** for the full list of anti-patterns and the reviewer checklist.
+
+#### Common Anti-Patterns to Avoid
+
+**Writing tests from design specs before implementation:**
+- Task descriptions and BDD specs often describe *intended* behavior with *proposed* config formats
+- The actual implementation may use different formats, different commands, or different workflows
+- Example: A spec might describe `jobs:` with explicit `number:` and `parent:` fields, but implementation uses `steps:` with auto-generated numbers and dynamic hierarchy via `add --after --child`
+- **Fix:** Always read the actual implementation code (especially config parsing) before writing test data
+
+**Assuming static vs dynamic behavior:**
+- Tests may assume features work at config-time (static) when they actually work at runtime (dynamic)
+- Example: Assuming hierarchy is defined in config when it's actually built dynamically via commands
+- **Fix:** Trace the actual code path for the feature being tested
 
 **Example for "Test config file validation":**
 ```markdown
