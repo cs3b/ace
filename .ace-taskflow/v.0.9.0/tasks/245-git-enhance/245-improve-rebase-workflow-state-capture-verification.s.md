@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.245
-status: pending
+status: in-progress
 priority: medium
 estimate: 2h
 dependencies: []
+worktree:
+  branch: 245-improve-rebase-workflow-with-state-capture-and-verification
+  path: "../ace-task.245"
+  created_at: '2026-01-30 16:23:29'
+  updated_at: '2026-01-30 16:23:29'
+  target_branch: main
 ---
 
 # Improve rebase workflow with state capture and verification
