@@ -120,6 +120,68 @@ Add a new step dynamically.
 ### `retry STEP_REF`
 Retry a failed step (creates new step linked to original).
 
+## Fork Context
+
+Jobs can declare `context: fork` in frontmatter to run in isolated agent contexts.
+
+### When to Use
+
+- Complex multi-step work that benefits from focused agent attention
+- Work requiring clean agent context without conversation history
+- Independent execution that can proceed without orchestrator oversight
+
+### Job File Structure
+
+```markdown
+---
+status: pending
+context: fork
+---
+
+## Onboard
+
+Load context before starting work:
+- `ace-bundle project`
+- `ace-bundle task://{{taskref}}`
+
+## Work
+
+[Main instructions for the forked agent]
+
+## Report
+
+Return structured summary:
+- **Status**: completed | partial | blocked
+- **Changes**: files modified
+- **Issues**: problems encountered
+```
+
+### Execution Flow
+
+When `ace-coworker status` encounters a fork job:
+
+1. Outputs Task tool instructions instead of raw instructions
+2. Orchestrating agent invokes Task tool with job content
+3. Subagent executes in isolated context
+4. Orchestrator captures response and submits via `ace-coworker report`
+
+### Best Practice: Separate Work and Verification
+
+Workers should not verify their own work. Use separate jobs:
+
+```yaml
+steps:
+  - name: implement
+    context: fork
+    instructions: Implement the feature...
+
+  - name: verify
+    # No fork - orchestrator runs verification
+    instructions: Run ace-test and verify results
+```
+
+See [Fork Context Guide](handbook/guides/fork-context.g.md) for detailed documentation.
+
 ## License
 
 MIT

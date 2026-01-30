@@ -125,4 +125,71 @@ class StepTest < AceCoworkerTestCase
     assert_equal "in_progress", fm["status"]
     assert_equal "2026-01-28T12:00:00Z", fm["started_at"]
   end
+
+  def test_fork_detection
+    step = Ace::Coworker::Models::Step.new(
+      number: "020",
+      name: "implement",
+      status: :pending,
+      instructions: "Implement the feature",
+      context: "fork"
+    )
+
+    assert step.fork?
+    assert_equal "fork", step.context
+  end
+
+  def test_not_fork_when_context_nil
+    step = Ace::Coworker::Models::Step.new(
+      number: "010",
+      name: "init",
+      status: :pending,
+      instructions: "Test"
+    )
+
+    refute step.fork?
+    assert_nil step.context
+  end
+
+  def test_rejects_invalid_context
+    error = assert_raises(ArgumentError) do
+      Ace::Coworker::Models::Step.new(
+        number: "010",
+        name: "init",
+        status: :pending,
+        instructions: "Test",
+        context: "inline"
+      )
+    end
+
+    assert_match(/Invalid context 'inline'/, error.message)
+    assert_match(/fork/, error.message)
+  end
+
+  def test_to_frontmatter_includes_context
+    step = Ace::Coworker::Models::Step.new(
+      number: "020",
+      name: "implement",
+      status: :pending,
+      instructions: "Test",
+      context: "fork"
+    )
+
+    fm = step.to_frontmatter
+
+    assert_equal "fork", fm["context"]
+  end
+
+  def test_to_frontmatter_excludes_nil_context
+    step = Ace::Coworker::Models::Step.new(
+      number: "010",
+      name: "init",
+      status: :pending,
+      instructions: "Test"
+    )
+
+    fm = step.to_frontmatter
+
+    refute fm.key?("context")
+  end
 end

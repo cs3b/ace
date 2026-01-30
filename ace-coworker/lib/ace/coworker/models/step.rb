@@ -19,8 +19,11 @@ module Ace
         # Valid status values
         STATUSES = %i[pending in_progress done failed].freeze
 
+        # Valid context values for execution context
+        VALID_CONTEXTS = %w[fork].freeze
+
         attr_reader :number, :name, :status, :instructions, :report, :error,
-                    :started_at, :completed_at, :added_by, :parent, :file_path, :skill
+                    :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context
 
         # @param number [String] Step number (e.g., "010", "010.01")
         # @param name [String] Step name
@@ -34,10 +37,12 @@ module Ace
         # @param parent [String, nil] Parent task number (for subtasks)
         # @param file_path [String, nil] Path to step file
         # @param skill [String, nil] Skill reference for this step (e.g., "ace:work-on-task")
+        # @param context [String, nil] Execution context ("fork" for Task tool execution)
         def initialize(number:, name:, status:, instructions:, report: nil, error: nil,
                        started_at: nil, completed_at: nil, added_by: nil, parent: nil,
-                       file_path: nil, skill: nil)
+                       file_path: nil, skill: nil, context: nil)
           validate_status!(status)
+          validate_context!(context) if context
 
           @number = number.freeze
           @name = name.freeze
@@ -51,6 +56,7 @@ module Ace
           @parent = parent&.freeze
           @file_path = file_path&.freeze
           @skill = skill&.freeze
+          @context = context&.freeze
         end
 
         # Check if step is complete (done or failed)
@@ -71,6 +77,12 @@ module Ace
           added_by&.start_with?("retry_of:")
         end
 
+        # Check if this step should run in a forked context (subagent)
+        # @return [Boolean]
+        def fork?
+          context == "fork"
+        end
+
         # Get the original step number if this is a retry
         # @return [String, nil] Original step number
         def retry_of
@@ -86,6 +98,7 @@ module Ace
             "name" => name,
             "status" => status.to_s,
             "skill" => skill,
+            "context" => context,
             "started_at" => started_at&.iso8601,
             "completed_at" => completed_at&.iso8601,
             "error" => error,
@@ -111,6 +124,12 @@ module Ace
           return if STATUSES.include?(status)
 
           raise ArgumentError, "Invalid status: #{status}. Must be one of: #{STATUSES.join(', ')}"
+        end
+
+        def validate_context!(context)
+          return if VALID_CONTEXTS.include?(context)
+
+          raise ArgumentError, "Invalid context '#{context}'. Valid values: #{VALID_CONTEXTS.join(', ')}"
         end
       end
     end

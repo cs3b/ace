@@ -47,10 +47,14 @@ module Ace
           fm = parsed[:frontmatter]
           body = parsed[:body]
 
+          context = fm["context"]
+          validate_context!(context)
+
           {
             name: fm["name"],
             status: (fm["status"] || "pending").to_sym,
             skill: fm["skill"],
+            context: context, # "fork" triggers Task tool execution
             started_at: parse_time(fm["started_at"]),
             completed_at: parse_time(fm["completed_at"]),
             error: fm["error"],
@@ -117,6 +121,16 @@ module Ace
         end
 
         private
+
+        def self.validate_context!(context)
+          return if context.nil?
+
+          valid_contexts = Ace::Coworker::Models::Step::VALID_CONTEXTS
+          return if valid_contexts.include?(context)
+
+          raise ArgumentError, "Invalid context '#{context}'. Valid values: #{valid_contexts.join(', ')}"
+        end
+        private_class_method :validate_context!
 
         def self.parse_time(value)
           return nil if value.nil?
