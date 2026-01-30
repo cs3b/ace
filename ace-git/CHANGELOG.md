@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.7] - 2026-01-30
+
+### Changed
+- Simplify rebase workflow from 677 to 373 lines (45% reduction)
+
+## [0.10.6] - 2026-01-30
+
+### Added
+- Improve rebase workflow with state capture and verification
+
+### Technical
+- Apply review feedback to rebase workflow documentation
+- Clarify ace-git-commit usage for automatic scope grouping
+
 ## [0.10.5] - 2026-01-29
 
 ### Added
