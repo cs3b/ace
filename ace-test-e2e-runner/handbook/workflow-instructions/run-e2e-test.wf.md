@@ -158,13 +158,14 @@ Folder names use a shortened format for readability:
 
 ```
 .cache/ace-test-e2e/
-├── 8osvnh-lint-mt001/                      # Sandbox folder (test artifacts)
-│   ├── (git repo, test files, etc.)
+├── 8osvnh-lint-mt001/                      # Sandbox folder
+│   ├── (test artifacts)
 │   └── ...
-├── 8osvnh-lint-mt001.summary.r.md          # Test results (sibling file)
-├── 8osvnh-lint-mt001.experience.r.md       # AX report (sibling file)
-├── 8osvnh-lint-mt001.metadata.yml          # Run metadata (sibling file)
-└── 8osynv-final-report.md                  # Suite report (multi-test runs)
+├── 8osvnh-lint-mt001-reports/              # Reports subfolder
+│   ├── summary.r.md
+│   ├── experience.r.md
+│   └── metadata.yml
+└── 8osynv-final-report.md                  # Suite report (sibling)
 ```
 
 **Directory Convention:**
@@ -253,7 +254,7 @@ Execute the commands in the "Test Data" section to create necessary test files:
 2. Verify files were created correctly
 3. Report file contents if needed for debugging
 
-**Note:** Test data files go in `$TEST_DIR/`, while reports are written as sibling files outside the sandbox folder.
+**Note:** Test data files go in `$TEST_DIR/`, while reports are written to a reports subfolder (`${TEST_DIR}-reports/`).
 
 ### 6. Execute Test Cases
 
@@ -281,15 +282,16 @@ Report each test case result immediately after execution.
 
 ### 7. Write Reports to Disk
 
-After test execution completes (pass or fail), write three report files as siblings to the sandbox folder.
+After test execution completes (pass or fail), write three report files to a reports subfolder.
 
 **Important:** Replace all `{placeholder}` values with actual data before writing. Do not copy placeholders literally - substitute them with real values from test execution.
 
-**Set up report paths (sibling files to sandbox):**
+**Set up report paths (reports subfolder):**
 ```bash
-# Reports are sibling files to the sandbox folder (not inside a subfolder)
-REPORT_BASE="${TEST_DIR}"  # e.g., .cache/ace-test-e2e/8osvnh-lint-mt001
-# Report files: ${REPORT_BASE}.summary.r.md, ${REPORT_BASE}.experience.r.md, ${REPORT_BASE}.metadata.yml
+# Reports go in a subfolder alongside the sandbox folder
+REPORT_DIR="${TEST_DIR}-reports"  # e.g., .cache/ace-test-e2e/8osvnh-lint-mt001-reports
+mkdir -p "$REPORT_DIR"
+# Report files: ${REPORT_DIR}/summary.r.md, ${REPORT_DIR}/experience.r.md, ${REPORT_DIR}/metadata.yml
 ```
 
 **Error Handling:**
@@ -300,7 +302,7 @@ REPORT_BASE="${TEST_DIR}"  # e.g., .cache/ace-test-e2e/8osvnh-lint-mt001
 #### 7.1 Write summary report (summary.r.md)
 
 ```bash
-cat > "${REPORT_BASE}.summary.r.md" << 'EOF'
+cat > "${REPORT_DIR}/summary.r.md" << 'EOF'
 ---
 test-id: {test-id}
 package: {package}
@@ -341,7 +343,7 @@ EOF
 #### 7.2 Write agent experience report (experience.r.md)
 
 ```bash
-cat > "${REPORT_BASE}.experience.r.md" << 'EOF'
+cat > "${REPORT_DIR}/experience.r.md" << 'EOF'
 ---
 test-id: {test-id}
 test-title: {test-title}
@@ -386,7 +388,7 @@ EOF
 #### 7.3 Write metadata (metadata.yml)
 
 ```bash
-cat > "${REPORT_BASE}.metadata.yml" << EOF
+cat > "${REPORT_DIR}/metadata.yml" << EOF
 run-id: "${TIMESTAMP_ID}"
 test-id: "{test-id}"
 package: "{package}"
@@ -413,9 +415,9 @@ After writing reports, include the paths in the response:
 
 ```
 Reports written:
-- ${REPORT_BASE}.summary.r.md
-- ${REPORT_BASE}.experience.r.md
-- ${REPORT_BASE}.metadata.yml
+- ${REPORT_DIR}/summary.r.md
+- ${REPORT_DIR}/experience.r.md
+- ${REPORT_DIR}/metadata.yml
 ```
 
 ### 7.5 Write Suite Final Report (Multi-Test Runs Only)

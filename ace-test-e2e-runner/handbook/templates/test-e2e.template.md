@@ -43,8 +43,8 @@ cd "$TEST_DIR"
 ## Test Data
 
 ```bash
-# Create test files in artifacts/ directory
-cat > "$TEST_DIR/artifacts/example.rb" << 'EOF'
+# Create test files in $TEST_DIR
+cat > "$TEST_DIR/example.rb" << 'EOF'
 # Example Ruby file for testing
 class Example
   def hello
@@ -57,8 +57,8 @@ EOF
 <!-- For tests that create isolated git repos and use ace-taskflow/ace-git-worktree:
 
 ```bash
-# Create isolated git repository within artifacts/
-REPO_DIR="$TEST_DIR/artifacts/test-repo"
+# Create isolated git repository within $TEST_DIR
+REPO_DIR="$TEST_DIR/test-repo"
 mkdir -p "$REPO_DIR"
 cd "$REPO_DIR"
 git init --quiet .
@@ -176,7 +176,7 @@ Artifacts in `.cache/ace-test-e2e/` are gitignored, so keeping them doesn't affe
 ```bash
 # Only run if cleanup is enabled - reports are preserved by default
 # rm -rf "$TEST_DIR"
-# rm -f "${TEST_DIR}.summary.r.md" "${TEST_DIR}.experience.r.md" "${TEST_DIR}.metadata.yml"
+# rm -rf "${TEST_DIR}-reports"
 ```
 
 ## Success Criteria
