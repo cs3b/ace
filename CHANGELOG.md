@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.350] - 2026-01-30
+
+### Added
+
+- **ace-coworker v0.3.0**: Fork context support for jobs - enable job steps to run in isolated agent contexts via `context: fork` frontmatter with Task tool integration, context validation, and comprehensive documentation
+
 ## [0.9.349] - 2026-01-30
 
 ### Fixed
