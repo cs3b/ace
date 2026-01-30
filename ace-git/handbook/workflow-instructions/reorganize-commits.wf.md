@@ -20,6 +20,18 @@ bundle:
 
 Reorganize multiple commits into clean, logical commits.
 
+## Key Principle
+
+**Reorganize = Reorder, NOT Squash**
+
+The goal is to reorder commits into logical groups while preserving per-scope granularity.
+`ace-git-commit` creates one commit per configuration scope by design - this is expected behavior, not a problem to fix.
+
+| Term | Meaning |
+|------|---------|
+| Reorganize | Reorder commits into logical groups |
+| Squash | Combine multiple commits into one (NOT the goal here) |
+
 ## Steps
 
 ### 1. Identify Base
@@ -60,7 +72,18 @@ git reset --soft $base
 ace-git-commit -i "brief intention"
 ```
 
-| `ace-git-commit` handles grouping and messages automatically.
+`ace-git-commit` handles grouping and messages automatically.
+
+**Expected Output**: Multiple commits, one per scope:
+```
+[1/5] Committing ace-foo changes...
+abc1234 feat(ace-foo): Implement feature X
+[2/5] Committing ace-bar changes...
+def5678 test(ace-bar): Update tests for feature X
+...
+```
+
+This is correct behavior - do NOT try to combine these into fewer commits.
 
 ---
 
@@ -73,9 +96,14 @@ git reset --hard HEAD@{n}
 
 ---
 
-## Manual Override (rare)
+## Manual Override (almost never needed)
 
-Only if `ace-git-commit` groups incorrectly AND adjusting the intention doesn't help:
+**Before using manual override, verify**:
+- Did you try adjusting the intention? (usually fixes grouping issues)
+- Are you trying to squash commits? (that's not the goal - stop)
+- Is the auto-grouping actually wrong, or just different from expectation?
+
+Only use if `ace-git-commit` groups files incorrectly AND adjusting the intention doesn't help:
 
 ```bash
 git reset --soft $base && git reset HEAD

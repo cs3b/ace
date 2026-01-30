@@ -68,7 +68,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.10.4)
+    ace-git (0.10.5)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)
@@ -231,7 +231,7 @@ PATH
 PATH
   remote: ace-test-e2e-runner
   specs:
-    ace-test-e2e-runner (0.2.1)
+    ace-test-e2e-runner (0.4.1)
 
 PATH
   remote: ace-test-runner

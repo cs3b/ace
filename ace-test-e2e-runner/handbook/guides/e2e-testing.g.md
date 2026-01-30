@@ -2,7 +2,7 @@
 guide-id: g-e2e-testing
 title: E2E Testing Guide
 description: Conventions and best practices for agent-executed end-to-end tests
-version: "1.2"
+version: "1.3"
 source: ace-test-e2e-runner
 ---
 
@@ -48,17 +48,30 @@ This convention:
 - Separates from automated tests (`test/atoms/`, `test/molecules/`, etc.)
 - Uses `.mt.md` extension to distinguish from other markdown
 
-### Test Execution Directory
+### Test Execution Directory {#directory-structure}
 
-Test artifacts are created in project-local cache:
+Test artifacts and reports are created in project-local cache:
 
 ```
-.cache/test-e2e/{timestamp}-{package}/
+.cache/ace-test-e2e/
+├── {timestamp}-{short-pkg}-{short-id}/        # Sandbox folder (test artifacts)
+│   ├── (git repo, test files, etc.)
+│   └── ...
+├── {timestamp}-{short-pkg}-{short-id}-reports/  # Reports subfolder
+│   ├── summary.r.md
+│   ├── experience.r.md
+│   └── metadata.yml
+└── {suite-timestamp}-final-report.md          # Suite report (multi-test runs)
 ```
+
+**Naming convention (SHORT format):**
+- `{short-pkg}` = package name without `ace-` prefix (e.g., `lint`, `git-commit`)
+- `{short-id}` = lowercase test number (e.g., `mt001`, `mt002`)
 
 Examples:
-- `.cache/test-e2e/8oig0h-ace-lint/` - Package-specific test
-- `.cache/test-e2e/8oig0h/` - Project-wide test
+- `.cache/ace-test-e2e/8oig0h-lint-mt001/` - Package-specific test sandbox
+- `.cache/ace-test-e2e/8oig0h-lint-mt001-reports/summary.r.md` - Test results report
+- `.cache/ace-test-e2e/8osuw3-final-report.md` - Suite report (all tests in package)
 
 **Benefits:**
 - **Project-local** - Artifacts stay with the codebase
@@ -66,14 +79,24 @@ Examples:
 - **Consistent naming** - Uses ace-timestamp for unique IDs
 - **Easy debugging** - Inspect artifacts without hunting in `/tmp`
 - **Package-scoped** - Directory name includes package for clarity
+- **Test ID in name** - Each folder includes the test ID (e.g., MT-LINT-001) for easy identification
+- **Reports in subfolder** - Report files go in a `-reports/` subfolder for organization
+- **Suite reports** - Multi-test runs generate aggregate summary
 
 **Setup in test scenarios:**
 ```bash
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR=".cache/test-e2e/${TEST_ID}-{package-name}"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+SHORT_PKG="{short-pkg}"    # e.g., git-commit (package name without ace- prefix)
+SHORT_ID="{short-id}"      # e.g., mt001 (lowercase test number)
+TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 ```
+
+**Report Files (in reports subfolder):**
+- `{folder}-reports/summary.r.md` - Structured pass/fail results with details
+- `{folder}-reports/experience.r.md` - Friction points, root cause analysis, improvement suggestions
+- `{folder}-reports/metadata.yml` - Run context (duration, git branch, tool versions)
 
 ### Test ID Format
 
@@ -292,7 +315,7 @@ The `ace-test` tool only runs files matching `*_test.rb`.
 
 ### Test Data & Cleanup
 6. **Use heredocs for test files** - Ensures reproducibility
-7. **Cleanup is optional** - Artifacts in `.cache/test-e2e/` are gitignored
+7. **Cleanup is optional** - Artifacts in `.cache/ace-test-e2e/` are gitignored
 8. **Configure cleanup behavior** - Set `cleanup.enabled` in config
 
 ### Documentation

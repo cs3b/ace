@@ -94,7 +94,8 @@ Replace template placeholders with actual values:
 |-------------|-------|
 | `{AREA}` | Area code (uppercase) |
 | `{NNN}` | Sequential number (3 digits) |
-| `{package-name}` | Package name |
+| `{short-pkg}` | Package name without `ace-` prefix (e.g., `git-commit`) |
+| `{short-id}` | Lowercase test number (e.g., `mt001`) |
 | `{Descriptive Title}` | Generated from context or area |
 | `{area-name}` | Area code (lowercase) |
 

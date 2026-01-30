@@ -30,8 +30,10 @@ Verify that ace-git-commit correctly handles path-based configuration splitting.
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-TEST_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/test-e2e/${TEST_ID}-ace-git-commit-split"
+TIMESTAMP_ID="$(ace-timestamp encode)"
+SHORT_PKG="git-commit"
+SHORT_ID="mt004"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
