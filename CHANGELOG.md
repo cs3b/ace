@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.363] - 2026-01-30
+
+### Changed
+
+- **ace-git v0.10.7**: Simplify rebase workflow from 677 to 373 lines (45% reduction)
+
+## [0.9.362] - 2026-01-30
+
+### Added
+
+- **ace-git v0.10.6**: Improve rebase workflow with state capture and verification
+
+### Technical
+
+- **ace-git v0.10.6**: Apply review feedback to rebase workflow documentation
+
 ## [0.9.361] - 2026-01-30
 
 ### Changed
