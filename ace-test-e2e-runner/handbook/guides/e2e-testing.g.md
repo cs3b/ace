@@ -54,19 +54,23 @@ Test artifacts and reports are created in project-local cache:
 
 ```
 .cache/ace-test-e2e/
-├── {timestamp}-{package}-{test-id}/           # Sandbox folder (test artifacts)
+├── {timestamp}-{short-pkg}-{short-id}/        # Sandbox folder (test artifacts)
 │   ├── (git repo, test files, etc.)
 │   └── ...
-├── {timestamp}-{package}-{test-id}-reports/   # Reports subfolder
+├── {timestamp}-{short-pkg}-{short-id}-reports/  # Reports subfolder
 │   ├── summary.r.md
 │   ├── experience.r.md
 │   └── metadata.yml
 └── {suite-timestamp}-final-report.md          # Suite report (multi-test runs)
 ```
 
+**Naming convention (SHORT format):**
+- `{short-pkg}` = package name without `ace-` prefix (e.g., `lint`, `git-commit`)
+- `{short-id}` = lowercase test number (e.g., `mt001`, `mt002`)
+
 Examples:
-- `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001/` - Package-specific test sandbox
-- `.cache/ace-test-e2e/8oig0h-ace-lint-MT-LINT-001-reports/summary.r.md` - Test results report
+- `.cache/ace-test-e2e/8oig0h-lint-mt001/` - Package-specific test sandbox
+- `.cache/ace-test-e2e/8oig0h-lint-mt001-reports/summary.r.md` - Test results report
 - `.cache/ace-test-e2e/8osuw3-final-report.md` - Suite report (all tests in package)
 
 **Benefits:**
@@ -82,7 +86,9 @@ Examples:
 **Setup in test scenarios:**
 ```bash
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-{package-name}-{test-id}"
+SHORT_PKG="{short-pkg}"    # e.g., git-commit (package name without ace- prefix)
+SHORT_ID="{short-id}"      # e.g., mt001 (lowercase test number)
+TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 ```
