@@ -270,18 +270,25 @@ module Ace
         private
 
         # Archive source config into the task's jobs/ directory.
-        # Moves job.yaml to <task>/jobs/<session_id>-job.yml for provenance.
+        # If config is already in a jobs/ directory, keeps it in place.
+        # Otherwise moves job.yaml to <task>/jobs/<session_id>-job.yml for provenance.
         #
         # @param config_path [String] Path to the original job.yaml
         # @param session_id [String] Session identifier for filename prefix
         # @return [String] Path to archived file
         def archive_source_config(config_path, session_id)
-          task_dir = File.dirname(File.expand_path(config_path))
-          jobs_dir = File.join(task_dir, "jobs")
+          expanded_path = File.expand_path(config_path)
+          parent_dir = File.dirname(expanded_path)
+
+          # If already in a jobs/ directory, keep it there
+          return expanded_path if File.basename(parent_dir) == "jobs"
+
+          # Otherwise, move to task's jobs/ directory
+          jobs_dir = File.join(parent_dir, "jobs")
           FileUtils.mkdir_p(jobs_dir)
 
           dest = File.join(jobs_dir, "#{session_id}-job.yml")
-          FileUtils.mv(File.expand_path(config_path), dest)
+          FileUtils.mv(expanded_path, dest)
           dest
         end
 
