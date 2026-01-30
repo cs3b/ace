@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.349] - 2026-01-30
+
+### Fixed
+
+- **ace-test-e2e-runner v0.4.1**: Updated report path documentation from sibling pattern to subfolder pattern (`-reports/`) for consistency with implementation
+- **ace-test-e2e-runner v0.4.1**: Removed incorrect `artifacts/` subdirectory from test data path examples in templates
+
+### Technical
+
+- **ace-test-e2e-runner v0.4.1**: Added pre-creation sandbox verification gate to workflow instructions
+- **ace-test-e2e-runner v0.4.1**: Enhanced directory structure diagrams for consistency across guides and templates
+- Added E2E test fixture files to project .gitignore
+
+## [0.9.348] - 2026-01-29
+
+### Changed
+
+- **ace-git v0.10.5**: Clarified reorganize-commits workflow to emphasize that reorganize means reorder into logical groups, not squash into fewer commits
+
+## [0.9.347] - 2026-01-29
+
+### Added
+
+- **ace-test-e2e-runner v0.4.0**: Parallel E2E test execution with subagents via `/ace:run-e2e-tests` orchestrator skill enabling concurrent test runs with aggregated suite reports
+- **ace-test-e2e-runner v0.4.0**: Subagent return contract for structured result passing between orchestrator and worker skills
+- **docs**: Skill definition for parallel E2E test runner in agent-integrations documentation
+
+### Changed
+
+- **ace-test-e2e-runner v0.4.0**: Renamed cache directory from `test-e2e` to `ace-test-e2e` for clear namespace identification
+- **ace-test-e2e-runner v0.4.0**: Enhanced sandbox naming with test ID inclusion (`{timestamp}-{package}-{test-id}/`) for unique identification
+- **ace-test-e2e-runner v0.4.0**: Moved reports outside sandbox as sibling files (`.summary.r.md`, `.experience.r.md`, `.metadata.yml`) enabling suite-level aggregation
+
+### Technical
+
+- Updated E2E tests across packages (ace-git-commit, ace-coworker, ace-git-worktree, ace-lint, ace-prompt-prep, ace-support-timestamp) for consistent cache directory naming convention
+- Documented unplanned work from session 221 (tasks 244, 245)
+
+## [0.9.346] - 2026-01-29
+
+### Added
+
+- **ace-test-e2e-runner v0.3.0**: Persistent test reports (test-report.md, agent-experience-report.md, metadata.yml) with automated generation and disk storage for comprehensive test execution tracking and agent experience insights
+- **ace-test-e2e-runner v0.3.0**: ace-taskflow fixture template for standardized taskflow structure creation in E2E tests
+
+### Changed
+
+- **ace-test-e2e-runner v0.3.0**: Updated test environment structure to use artifacts/ subdirectory for test data organization, separating test data from generated reports
+- **ace-test-e2e-runner v0.3.0**: Enhanced E2E testing guidelines with emphasis on error path coverage, negative test cases, and comprehensive error testing best practices
+
 ## [0.9.345] - 2026-01-29
 
 ### Fixed
