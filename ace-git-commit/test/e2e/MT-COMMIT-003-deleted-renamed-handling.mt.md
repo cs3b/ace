@@ -31,7 +31,9 @@ Verify that ace-git-commit correctly handles deleted and renamed files. This tes
 ```bash
 PROJECT_ROOT="$(pwd)"
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-git-commit-MT-COMMIT-003"
+SHORT_PKG="git-commit"
+SHORT_ID="mt003"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 

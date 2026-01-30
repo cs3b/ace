@@ -30,7 +30,9 @@ Verify that ace-git-commit correctly executes the full commit cycle in a real gi
 ```bash
 PROJECT_ROOT="$(pwd)"
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-git-commit-MT-COMMIT-001"
+SHORT_PKG="git-commit"
+SHORT_ID="mt001"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 

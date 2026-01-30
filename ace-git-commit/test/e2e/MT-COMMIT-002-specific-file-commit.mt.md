@@ -30,7 +30,9 @@ Verify that ace-git-commit correctly handles selective staging with path argumen
 ```bash
 PROJECT_ROOT="$(pwd)"
 TIMESTAMP_ID="$(ace-timestamp encode)"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-ace-git-commit-MT-COMMIT-002"
+SHORT_PKG="git-commit"
+SHORT_ID="mt002"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
