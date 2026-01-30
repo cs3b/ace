@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-01-30
+
+### Added
+
+- **Fork context support for jobs**: Enable job files to declare `context: fork` in frontmatter to run steps in isolated agent contexts via Claude Code's Task tool
+- New `context` field in Step model with `fork?` predicate method
+- Context validation rejecting invalid values with helpful error messages (valid values: `fork`)
+- `handbook/guides/fork-context.g.md` documentation for the fork context feature
+- Status command outputs Task tool instructions for fork-context jobs
+- Shell escaping for step names in Task tool description field
+- E2E test (TC-005) for fork context feature validation
+
+### Changed
+
+- Centralized `VALID_CONTEXTS` constant in Step model, referenced by parser
+- QueueScanner surfaces ArgumentError for invalid job files instead of silent nil return
+- Status output uses plain text separators instead of markdown backticks for better terminal compatibility
+- Use deterministic project root from cache_dir instead of Dir.pwd
+- Updated `work-on-task` preset to demonstrate fork pattern
+
 ## [0.2.1] - 2026-01-29
 
 ### Fixed

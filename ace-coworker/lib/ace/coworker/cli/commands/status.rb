@@ -26,9 +26,18 @@ module Ace
                 if result[:current].skill
                   puts "Skill: #{result[:current].skill}"
                 end
+                if result[:current].context
+                  puts "Context: #{result[:current].context}"
+                end
                 puts
-                puts "Instructions:"
-                puts result[:current].instructions
+
+                if result[:current].fork?
+                  # Fork context: output Task tool instructions
+                  print_fork_instructions(result[:current], result[:session])
+                else
+                  puts "Instructions:"
+                  puts result[:current].instructions
+                end
               elsif result[:state].complete?
                 puts
                 puts "Session completed!"
@@ -75,6 +84,30 @@ module Ace
             when :failed then "Failed"
             else status.to_s.capitalize
             end
+          end
+
+          # Print Task tool instructions for a fork context job
+          def print_fork_instructions(step, session)
+            escaped_name = step.name.gsub('"', '\\"')
+            # Derive project root from cache_dir: /project/.cache/ace-coworker/session-id -> /project
+            project_root = session.cache_dir ? File.expand_path("../../..", session.cache_dir) : Dir.pwd
+
+            puts "Execute this job in a forked context:"
+            puts
+            puts "  Task tool parameters:"
+            puts "    description: \"#{escaped_name}\""
+            puts "    prompt: (see below)"
+            puts
+            puts "  Prompt for forked agent:"
+            puts "  ========================"
+            puts step.instructions
+            puts "  ========================"
+            puts
+            puts "  Working directory: #{project_root}"
+            puts "  Session: #{session.id}"
+            puts
+            puts "After completing, create a report file and run:"
+            puts "  ace-coworker report <report-file.md>"
           end
         end
       end

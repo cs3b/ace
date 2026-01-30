@@ -255,4 +255,56 @@ class WorkflowExecutorTest < AceCoworkerTestCase
       refute_includes job_content, "All done!"
     end
   end
+
+  def test_start_persists_context_in_step_files
+    with_temp_cache do |cache_dir|
+      steps = [
+        { "name" => "prepare", "instructions" => "Load context" },
+        { "name" => "implement", "context" => "fork", "instructions" => "Do the work" },
+        { "name" => "verify", "instructions" => "Run tests" }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      # Verify context is persisted in step files
+      jobs_dir = result[:session].jobs_dir
+      step_files = Dir.glob(File.join(jobs_dir, "*.j.md")).sort
+
+      # First step has no context
+      first_content = File.read(step_files[0])
+      refute_includes first_content, "context:"
+
+      # Second step has fork context
+      second_content = File.read(step_files[1])
+      assert_includes second_content, "context: fork"
+
+      # Third step has no context
+      third_content = File.read(step_files[2])
+      refute_includes third_content, "context:"
+    end
+  end
+
+  def test_start_persists_context_readable_by_queue_scanner
+    with_temp_cache do |cache_dir|
+      steps = [
+        { "name" => "prepare", "instructions" => "Load context" },
+        { "name" => "implement", "context" => "fork", "instructions" => "Do the work" }
+      ]
+      config_path = create_test_config(cache_dir, steps: steps)
+
+      executor = Ace::Coworker::Organisms::WorkflowExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      # First step (current) has no context
+      assert_nil result[:current].context
+      refute result[:current].fork?
+
+      # Second step has fork context
+      implement_step = result[:state].steps[1]
+      assert_equal "fork", implement_step.context
+      assert implement_step.fork?
+    end
+  end
 end

@@ -50,6 +50,38 @@ class StepFileParserTest < AceCoworkerTestCase
     assert_equal "dynamic", result[:added_by]
   end
 
+  def test_extract_fields_with_context_fork
+    parsed = {
+      frontmatter: {
+        "name" => "implement",
+        "status" => "pending",
+        "context" => "fork"
+      },
+      body: "Implement the feature."
+    }
+
+    result = Ace::Coworker::Atoms::StepFileParser.extract_fields(parsed)
+
+    assert_equal "implement", result[:name]
+    assert_equal :pending, result[:status]
+    assert_equal "fork", result[:context]
+    assert_equal "Implement the feature.", result[:instructions]
+  end
+
+  def test_extract_fields_without_context
+    parsed = {
+      frontmatter: {
+        "name" => "init",
+        "status" => "pending"
+      },
+      body: "Initialize."
+    }
+
+    result = Ace::Coworker::Atoms::StepFileParser.extract_fields(parsed)
+
+    assert_nil result[:context]
+  end
+
   def test_extract_instructions
     body = "Just instructions here."
     result = Ace::Coworker::Atoms::StepFileParser.extract_instructions(body)
@@ -89,5 +121,23 @@ class StepFileParserTest < AceCoworkerTestCase
   def test_generate_report_filename_sanitizes
     result = Ace::Coworker::Atoms::StepFileParser.generate_report_filename("030", "Build/Test Project!")
     assert_equal "030-build-test-project.r.md", result
+  end
+
+  def test_extract_fields_with_invalid_context_raises
+    parsed = {
+      frontmatter: {
+        "name" => "implement",
+        "status" => "pending",
+        "context" => "frok" # typo
+      },
+      body: "Implement the feature."
+    }
+
+    error = assert_raises(ArgumentError) do
+      Ace::Coworker::Atoms::StepFileParser.extract_fields(parsed)
+    end
+
+    assert_match(/Invalid context 'frok'/, error.message)
+    assert_match(/fork/, error.message)
   end
 end

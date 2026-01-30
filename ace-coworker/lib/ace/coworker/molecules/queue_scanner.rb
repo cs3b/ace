@@ -78,8 +78,14 @@ module Ace
             added_by: fields[:added_by],
             parent: fields[:parent],
             skill: fields[:skill],
+            context: fields[:context],
             file_path: file_path
           )
+        rescue ArgumentError => e
+          # ArgumentError indicates invalid data (e.g., invalid context value)
+          # Surface these errors visibly to help users fix configuration
+          warn "Invalid step file #{file_path}: #{e.message}"
+          nil
         rescue StandardError => e
           warn "Failed to parse step file #{file_path}: #{e.message}" if Ace::Coworker.debug?
           nil
