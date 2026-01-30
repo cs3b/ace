@@ -36,7 +36,7 @@ mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
 # Ensure cache base directory exists (for first-time runs)
-CACHE_BASE="$PROJECT_ROOT/.cache/ace-coworker"
+CACHE_BASE="$TEST_DIR/.cache/ace-coworker"
 mkdir -p "$CACHE_BASE"
 
 # Set up command alias for ace-coworker
@@ -218,7 +218,7 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Remove cache directory if it exists
    ```bash
-   CACHE_BASE="$PROJECT_ROOT/.cache/ace-coworker"
+   CACHE_BASE="$TEST_DIR/.cache/ace-coworker"
    rm -rf "$CACHE_BASE"
    [ ! -d "$CACHE_BASE" ] && echo "PASS: Cache removed" || echo "FAIL: Cache still exists"
    ```
