@@ -25,12 +25,12 @@ Complete version bump for a package including BOTH CHANGELOGs:
 ---
 
 ## Step 1: Ensure all changes are committed
-Run: `/ace:commit`
+Action: Skill('/ace:commit')
 
 ---
 
 ## Step 2: Bump package version (updates package CHANGELOG)
-Run: `/ace-bump-version $package-name $level`
+Action: Skill('/ace-bump-version $package-name $level')
 
 This updates:
 - `lib/ace/[package]/version.rb` (e.g., 0.23.1 → 0.24.0)
@@ -40,7 +40,7 @@ This updates:
 ---
 
 ## Step 3: Update main project CHANGELOG ⚠️ OFTEN MISSED
-Run: `/ace-update-changelog`
+Action: Skill('/ace-update-changelog')
 
 This updates:
 - `/CHANGELOG.md` at project root (main changelog)
