@@ -13,6 +13,7 @@ require_relative "models/queue_state"
 # Atoms
 require_relative "atoms/job_numbering"
 require_relative "atoms/number_generator"
+require_relative "atoms/preset_expander"
 require_relative "atoms/step_file_parser"
 require_relative "atoms/step_sorter"
 

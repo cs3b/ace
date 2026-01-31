@@ -1,0 +1,94 @@
+# Multi-task implementation workflow with expansion
+# Usage: /ace:coworker-prepare work-on-tasks --taskrefs 148,149,150
+#        /ace:coworker-prepare work-on-tasks --taskrefs 148-152
+#        /ace:coworker-prepare work-on-tasks --taskrefs "240.*"
+#
+# This preset uses expansion directives to generate:
+# - A batch parent step (010) that auto-completes when children done
+# - Child steps (010.01, 010.02, ...) for each task, with fork context
+# - Review and finalize steps after all tasks complete
+
+name: work-on-tasks
+description: Work on multiple tasks with consolidated review
+
+parameters:
+  taskrefs:
+    required: true
+    type: array
+    description: Task references (comma-separated, range, or pattern)
+  review_preset:
+    required: false
+    default: batch
+    description: ace-review preset for consolidated review
+
+expansion:
+  batch-parent:
+    name: batch-tasks
+    number: "010"
+    instructions: |
+      Batch container for multiple task implementations.
+      This step auto-completes when all child tasks are done.
+
+      Tasks to implement: {{taskrefs}}
+
+      Workflow:
+      1. Each task runs in a forked context with full project context
+      2. After all tasks complete, consolidated review runs
+      3. Final commit captures any remaining changes
+
+  foreach: taskrefs
+  child-template:
+    name: "work-on-{{item}}"
+    parent: "010"
+    context: fork
+    instructions: |
+      ## Onboard
+
+      Load context before starting work:
+      - Run `ace-bundle project` to load project context
+      - Run `ace-taskflow task {{item}}` to load task details
+
+      ## Work
+
+      Implement task {{item}} following the specification:
+      - Follow project conventions and coding standards
+      - Make incremental commits as you progress
+      - Run tests after significant changes
+
+      ## Report
+
+      Return a structured summary:
+      - **Task**: task ID and title
+      - **Status**: completed | partial | blocked
+      - **Changes**: list of files modified and what changed
+      - **Commits**: commit hashes and messages created
+      - **Issues**: any problems encountered or deferred decisions
+
+steps:
+  - name: consolidated-review
+    number: "020"
+    skill: ace:review
+    instructions: |
+      Review all batch changes using consolidated review preset.
+
+      Run: `ace-review --preset {{review_preset}}`
+
+      Review focus:
+      - Cross-task consistency (naming, patterns, style)
+      - Integration points between tasks
+      - Test coverage across all changes
+      - Any shared code or refactoring opportunities
+
+      Tasks reviewed: {{taskrefs}}
+
+  - name: finalize
+    number: "030"
+    skill: ace:commit
+    instructions: |
+      Commit any remaining uncommitted changes with a batch summary.
+
+      If there are changes:
+      - Create commit summarizing the batch work
+      - Reference all task IDs in commit message
+
+      Tasks completed: {{taskrefs}}

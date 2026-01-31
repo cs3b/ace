@@ -2,13 +2,13 @@
 name: prepare-coworker-job
 allowed-tools: Bash, Read, Write
 description: Prepare job.yaml from preset or informal instructions
-argument-hint: "[preset-name] [--taskref value] [--output path]"
+argument-hint: "[preset-name] [--taskref value] [--taskrefs values] [--output path]"
 doc-type: workflow
 purpose: workflow instruction for preparing ace-coworker job configurations
 
 update:
   frequency: on-change
-  last-updated: '2026-01-28'
+  last-updated: '2026-01-31'
 ---
 
 # Prepare Coworker Job Workflow
@@ -53,6 +53,7 @@ Presets are stored in `ace-coworker/.ace-defaults/coworker/presets/`:
 |--------|-------------|
 | `work-on-task` | Simple task implementation with commit |
 | `work-on-task-with-pr` | Full workflow with PR and 3 review cycles |
+| `work-on-tasks` | Multi-task batch with consolidated review |
 
 List available presets:
 ```bash
@@ -60,6 +61,8 @@ ls ace-coworker/.ace-defaults/coworker/presets/
 ```
 
 ## Preset File Format
+
+### Basic Preset
 
 ```yaml
 name: preset-name
@@ -80,6 +83,71 @@ steps:
       - Step instruction line one.
       - "Step instruction with {{parameter}} placeholder."
 ```
+
+### Preset with Expansion Directives
+
+For multi-task presets, use the `expansion` section to generate hierarchical steps:
+
+```yaml
+name: work-on-tasks
+description: Work on multiple tasks with consolidated review
+
+parameters:
+  taskrefs:
+    required: true
+    type: array  # Accepts comma-separated, range, or pattern
+    description: Task references (e.g., "148,149,150" or "148-152")
+
+expansion:
+  batch-parent:
+    name: batch-tasks
+    number: "010"
+    instructions: |
+      Batch container - auto-completes when children done.
+      Tasks: {{taskrefs}}
+
+  foreach: taskrefs  # Parameter name to iterate over
+  child-template:
+    name: "work-on-{{item}}"  # {{item}} is current iteration value
+    parent: "010"
+    context: fork  # Each child runs in isolated context
+    instructions: |
+      Implement task {{item}} per specification.
+
+steps:
+  # Steps after expansion are appended with their own numbers
+  - name: consolidated-review
+    number: "020"
+    instructions: Review all batch changes.
+```
+
+#### Array Parameter Syntax
+
+The `--taskrefs` parameter accepts multiple formats:
+
+| Format | Example | Result |
+|--------|---------|--------|
+| Comma-separated | `148,149,150` | Tasks 148, 149, 150 |
+| Range | `148-152` | Tasks 148, 149, 150, 151, 152 |
+| Pattern | `240.*` | All subtasks of 240 |
+
+#### Generated Job Structure
+
+For `--taskrefs 148,149,150`, expansion generates:
+
+```
+010 batch-tasks (parent, auto-completes)
+├── 010.01 work-on-148 (fork context)
+├── 010.02 work-on-149 (fork context)
+└── 010.03 work-on-150 (fork context)
+020 consolidated-review
+030 finalize
+```
+
+The hierarchical numbering enables:
+- Parent auto-completion when all children are done
+- Fork context for isolated task execution
+- Progress tracking per-task
 
 ## Parameter Placeholders
 
@@ -164,11 +232,14 @@ cat ace-coworker/.ace-defaults/coworker/presets/<preset-name>.yml
 ### 3. Extract Parameters
 
 From command-line flags:
-- `--taskref 123` → `taskref: "123"`
+- `--taskref 123` → `taskref: "123"` (single task)
+- `--taskrefs 148,149,150` → `taskrefs: ["148", "149", "150"]` (multi-task)
+- `--taskrefs 148-152` → `taskrefs: ["148", "149", "150", "151", "152"]` (range)
 - `--output custom-job.yaml` → output path
 
 From informal instructions:
 - "task 123" → `taskref: "123"`
+- "tasks 148, 149, 150" → `taskrefs: ["148", "149", "150"]`
 - "PR 45" → `pr_number: "45"`
 
 ### 4. Apply Customizations (if prose provided)
@@ -178,9 +249,24 @@ Parse modifications:
 - "add security review" → insert security review step
 - "only 2 cycles" → adjust loop count
 
-### 5. Inject Parameters
+### 5. Expand and Inject Parameters
 
-Replace all `{{parameter}}` placeholders in instructions:
+For presets with `expansion` section, use `Ace::Coworker::Atoms::PresetExpander.expand()`:
+
+```ruby
+require "ace/coworker"
+
+preset = YAML.load_file("work-on-tasks.yml")
+params = { "taskrefs" => ["148", "149", "150"], "review_preset" => "batch" }
+steps = Ace::Coworker::Atoms::PresetExpander.expand(preset, params)
+```
+
+This generates hierarchical steps with:
+- Pre-assigned numbers (010, 010.01, 010.02, etc.)
+- Parent-child relationships
+- All `{{placeholder}}` tokens resolved
+
+For standard presets (no expansion), replace `{{parameter}}` placeholders:
 
 ```yaml
 # Before
@@ -325,10 +411,42 @@ Parses instructions and creates job with:
 
 Writes configuration to specified path.
 
+### Example 5: Multi-Task Batch (Comma-Separated)
+
+```
+/ace:coworker-prepare work-on-tasks --taskrefs 148,149,150
+```
+
+Creates job with hierarchical structure:
+- batch-tasks (010) - parent container
+  - work-on-148 (010.01) - fork context
+  - work-on-149 (010.02) - fork context
+  - work-on-150 (010.03) - fork context
+- consolidated-review (020)
+- finalize (030)
+
+### Example 6: Multi-Task Batch (Range)
+
+```
+/ace:coworker-prepare work-on-tasks --taskrefs 148-152
+```
+
+Expands range to tasks 148, 149, 150, 151, 152.
+
+### Example 7: Multi-Task Batch (Pattern)
+
+```
+/ace:coworker-prepare work-on-tasks --taskrefs "240.*"
+```
+
+Expands pattern to match subtasks (requires resolution at prepare time).
+
 ## Success Criteria
 
 - [ ] Input correctly parsed (preset, parameters, or prose)
 - [ ] Preset loaded and parameters injected
+- [ ] Expansion directives processed (if present)
+- [ ] Hierarchical steps numbered correctly
 - [ ] Loops expanded into separate steps
 - [ ] All placeholders resolved
 - [ ] Valid job.yaml generated
