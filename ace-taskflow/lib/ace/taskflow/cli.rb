@@ -84,6 +84,12 @@ module Ace
       def self.start(args)
         clear_caches!
 
+        # Handle help explicitly (dry-cli doesn't handle registry-level help)
+        if args.first && %w[help --help -h].include?(args.first)
+          puts Dry::CLI::Usage.call(get([]))
+          return 0
+        end
+
         args = Molecules::CommandRouter.route(
           args,
           default: DEFAULT_COMMAND,
