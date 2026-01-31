@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-01-31
+
+### Technical
+- Stub ace-nav subprocess calls in document_analysis_prompt tests (3.4s → 0.7s, 80% faster)
+
 ## [0.19.0] - 2026-01-22
 
 ### Changed
