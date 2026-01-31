@@ -4,6 +4,197 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.388] - 2026-01-31
+
+### Added
+
+- **ace-handbook v0.8.0**: Multi-agent research synthesis capabilities - guide, workflows, templates, and skills for parallel agent research and output synthesis (Task 254)
+
+## [0.9.387] - 2026-01-31
+
+### Fixed
+
+- **ace-git-secrets v0.7.4**: Optimize slow tests by stubbing subprocess calls - convert clean_working_directory? tests from real git calls to stubbed Open3.capture2, remove flaky availability test, suite time improved ~23%
+
+## [0.9.386] - 2026-01-31
+
+### Fixed
+
+- **ace-lint v0.15.3**: Eliminate random slow tests by pre-warming availability caches and ensuring all tests stub availability checks (consistent ~60-70ms vs previous 60ms-1.6s variance)
+
+## [0.9.385] - 2026-01-31
+
+### Technical
+
+- **ace-taskflow v0.34.6**: Optimize slow tests with minimal fixtures instead of full test project setup
+
+## [0.9.384] - 2026-01-31
+
+### Technical
+
+- **ace-lint v0.15.2**: Stub subprocess calls in slow tests to avoid real system() calls for availability checks, reducing test suite time from ~2.1s to ~69ms
+
+## [0.9.383] - 2026-01-31
+
+### Fixed
+
+- **ace-taskflow v0.34.5**: Update `test_missing_title_returns_error` to expect `CLI::Error` exception per ADR-023
+
+## [0.9.382] - 2026-01-31
+
+### Fixed
+
+- **ace-support-core v0.22.2**: Preserve original message in `CLI::Error#message`, fix Ruby 3 keyword args in tests, fix `Dry::CLI::Registry` usage
+
+## [0.9.381] - 2026-01-31
+
+### Fixed
+
+- **ace-support-test-helpers v0.12.2**: Add `respond_to?(:get)` check to `test_stub_ace_core_config_integration` skip condition
+
+## [0.9.380] - 2026-01-31
+
+### Fixed
+
+- **ace-test-runner v0.15.2**: Fix `--profile` verbose mode to inject `--verbose` into Minitest ARGV; update result parser to support both Minitest::Reporters and standard Minitest formats
+
+## [0.9.379] - 2026-01-31
+
+### Performance
+
+- **ace-bundle v0.30.3**: Moved CLI integration tests to E2E format (~2.1s savings)
+  - `cli_api_parity_test.rb` → `test/e2e/cli-api-parity.mt.md`
+  - `cli_auto_format_test.rb` → `test/e2e/cli-auto-format.mt.md`
+
+## [0.9.378] - 2026-01-31
+
+### Added
+
+- **ace-test-runner v0.15.1**: Expanded default test patterns (smoke, commands, cli, prompts, fixtures, support, edge) for comprehensive test discovery
+
+### Changed
+
+- **Project config**: Updated `.ace/test/runner.yml` patterns: cli_commands → cli, added prompts, fixtures, support
+
+## [0.9.377] - 2026-01-31
+
+### Fixed
+
+- **ace-taskflow v0.34.4**: Update require paths, class references, and fix stub leak in create command tests
+
+## [0.9.376] - 2026-01-31
+
+### Fixed
+
+- **ace-support-test-helpers v0.12.1**: Improve `stub_ace_core_config` isolation with `respond_to?` guard and `define_singleton_method`
+
+## [0.9.375] - 2026-01-31
+
+### Fixed
+
+- **ace-support-core v0.22.1**: Move GemClassMixin inside ConfigSummaryMixin to fix test isolation constant reference issues
+
+## [0.9.374] - 2026-01-31
+
+### Fixed
+
+- **ace-search v0.19.2**: Reset config in test setup to prevent test isolation issues
+
+## [0.9.373] - 2026-01-31
+
+### Technical
+
+- **ace-docs v0.19.1**: Stub ace-nav subprocess calls in document_analysis_prompt tests (3.4s → 0.7s, 80% faster)
+
+## [0.9.372] - 2026-01-31
+
+### Added
+
+- **ace-test-runner v0.15.0**: Execution mode CLI flags for `ace-test`
+  - `--run-in-sequence`/`--ris`: Run test groups sequentially (default behavior)
+  - `--run-in-single-batch`/`--risb`: Run all tests together in a single batch
+  - `ace-test-suite` now passes `--run-in-single-batch` to each package for cleaner output
+
+## [0.9.371] - 2026-01-31
+
+### Fixed
+
+- **ace-git v0.10.9**: `load_for_pr` no longer fetches unnecessary PR activity
+
+### Technical
+
+- **ace-git v0.10.9**: Add missing test stubs for PR activity fetchers (2.3s → 16ms)
+
+## [0.9.370] - 2026-01-31
+
+### Fixed
+
+- **ace-test-runner v0.14.0**: Fix profiling with grouped execution
+  - `ace-test package --profile N` now shows actual test times instead of 0.000s
+  - Bypasses grouped mode when profiling without a specific target
+  - Group-specific profiling (`ace-test package group --profile N`) unchanged
+
+## [0.9.369] - 2026-01-31
+
+### Technical
+
+- **ace-git v0.10.8**: Stub `Kernel.sleep` in lock retry tests for 98% speedup (2.5s → 32ms)
+
+## [0.9.368] - 2026-01-31
+
+### Added
+
+- **ace-test-runner v0.13.0**: Slowest-first package scheduling for `ace-test-suite`
+  - New `DurationEstimator` reads historical duration from `test-reports/latest/summary.json`
+  - Orchestrator sorts packages by expected duration (descending), then priority
+  - Prevents slow packages from becoming bottlenecks at end of parallel test runs
+
+### Changed
+
+- **ace-test-suite config**: Reduced `max_parallel` from 20 to 10
+  - Balances speed vs resource contention on typical dev machines
+
+## [0.9.367] - 2026-01-31
+
+### Fixed
+
+- **ace-test-runner v0.12.6**: Fix test suite timing discrepancy
+  - Display managers now use `results[:duration]` instead of wall-clock `status[:elapsed]`
+  - Eliminates subprocess startup overhead (~5s) from reported package times
+  - `ace-test-suite` now shows accurate Minitest execution duration
+
+## [0.9.366] - 2026-01-31
+
+### Changed
+
+- **ace-review v0.35.5**: Optimized test suite performance (62% reduction)
+  - Added SharedTempDir module for opt-in per-class temp directory sharing
+  - Migrated 58 integration-style tests to E2E format (MT-REVIEW-004, MT-REVIEW-005)
+  - Test execution time reduced from 14.68s to 5.52s
+
+## [0.9.365] - 2026-01-31
+
+### Changed
+
+- **ace-lint v0.15.1**: Moved CLI integration tests to E2E suite
+  - Created MT-LINT-004 and MT-LINT-005 for CLI and doctor command tests
+- **ace-git-secrets v0.7.3**: Moved integration tests to E2E suite
+  - Created MT-SECRETS-001, MT-SECRETS-002, MT-SECRETS-003
+  - Test execution time reduced from 4.5s to ~1.8s (60% reduction)
+- **ace-bundle v0.30.2**: Moved section workflow tests to E2E suite
+  - Created MT-BUNDLE-001 for section workflow tests
+- **ace-review v0.35.4**: Moved integration tests to E2E suite and consolidated deep_merge_hash
+  - Created MT-REVIEW-001, MT-REVIEW-002, MT-REVIEW-003
+  - Consolidated duplicate deep_merge_hash to centralized DeepMerger
+  - Test execution time reduced from 19.52s to ~13.5s (31% reduction)
+
+## [0.9.364] - 2026-01-31
+
+### Changed
+
+- **ace-support-timestamp v0.4.1**: Moved CLI integration tests to E2E suite
+  - Test execution time reduced from 13.93s to ~61ms (99.6% reduction)
+
 ## [0.9.363] - 2026-01-30
 
 ### Changed
