@@ -68,6 +68,12 @@ module Ace
         # Reset captured exit code
         @captured_exit_code = nil
 
+        # Handle help explicitly (dry-cli doesn't handle registry-level help)
+        if args.first && %w[help --help -h].include?(args.first)
+          puts Dry::CLI::Usage.call(get([]))
+          return 0
+        end
+
         # Check for deprecated commands
         if args.first && DEPRECATED_COMMANDS.key?(args.first)
           old_cmd = args.first
