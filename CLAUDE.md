@@ -101,6 +101,8 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 ✅ `ace-bundle project` → output is already concise; read referenced files as needed
 ✅ `ace-bundle wfi://workflow` → returns workflow content (may include embedded context)
 
+Never reset or discard changes you didn't make - use `ace-git-commit $paths` to commit only your changes.
+
 ## Testing Constraints
 
 **CRITICAL**: NEVER use `bundle exec rake test` or `bundle exec ruby` for running tests in this project.
