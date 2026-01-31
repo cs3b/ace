@@ -157,7 +157,7 @@ class GitContractTest < AceTestCase
 
   # Integration test: Verify stub_ace_core_config works correctly
   def test_stub_ace_core_config_integration
-    skip "ace-core not available" unless defined?(Ace::Core)
+    skip "Ace::Core.get not available" unless defined?(Ace::Core) && Ace::Core.respond_to?(:get)
 
     test_config = { "test" => "value" }
 
