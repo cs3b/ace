@@ -98,7 +98,8 @@ module Ace
 
           when :running
             icon = color("⋯", :cyan)
-            elapsed = sprintf("%5.2fs", status[:elapsed] || 0)
+            duration = status.dig(:results, :duration) || status[:elapsed] || 0
+            elapsed = sprintf("%5.2fs", duration)
             progress_bar = build_progress_bar(status)
             if status[:total] && status[:total] > 0
               count = "#{status[:progress]}/#{status[:total]}"
@@ -109,7 +110,8 @@ module Ace
 
           when :completed
             results = status[:results] || {}
-            elapsed = sprintf("%5.2fs", status[:elapsed] || 0)
+            duration = results[:duration] || status[:elapsed] || 0
+            elapsed = sprintf("%5.2fs", duration)
 
             tests = results[:tests] || 0
             assertions = results[:assertions] || 0
@@ -153,8 +155,8 @@ module Ace
             filled = (progress.to_f / status[:total] * bar_width).round
           else
             # Animate based on elapsed time if no total
-            elapsed = status[:elapsed] || 0
-            filled = ((elapsed % 3) * bar_width / 3).round
+            duration = status.dig(:results, :duration) || status[:elapsed] || 0
+            filled = ((duration % 3) * bar_width / 3).round
           end
 
           filled = [filled, bar_width].min

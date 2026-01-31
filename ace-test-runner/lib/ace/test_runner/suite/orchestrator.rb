@@ -31,8 +31,13 @@ module Ace
           display_manager = create_display_manager
           process_monitor = ProcessMonitor.new(@config.dig("test_suite", "max_parallel") || 10)
 
-          # Sort packages by priority
-          sorted_packages = @packages.sort_by { |p| p["priority"] || 999 }
+          # Enrich packages with historical duration data for scheduling
+          estimator = DurationEstimator.new
+          estimator.enrich_packages(@packages)
+
+          # Sort by expected duration (descending), then priority (ascending)
+          # This ensures slowest packages start first, preventing end-of-run bottlenecks
+          sorted_packages = @packages.sort_by { |p| [-(p["expected_duration"] || 0), p["priority"] || 999] }
 
           # Initialize display
           display_manager.initialize_display
