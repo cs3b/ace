@@ -45,8 +45,11 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
       end
     end
 
-    Ace::Lint::Atoms::StandardrbRunner.stub(:run, mock_result) do
-      yield
+    # Stub both available? (to skip subprocess check) and run (to return mock result)
+    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+      Ace::Lint::Atoms::StandardrbRunner.stub(:run, mock_result) do
+        yield
+      end
     end
   end
 
@@ -171,22 +174,26 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
       warnings: []
     }
 
-    Ace::Lint::Atoms::StandardrbRunner.stub(:run, unavailable_result) do
-      result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
+    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+      Ace::Lint::Atoms::StandardrbRunner.stub(:run, unavailable_result) do
+        result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
 
-      refute result.success?
-      assert_equal 1, result.errors.size
-      assert_match(/not installed/, result.errors.first.message)
+        refute result.success?
+        assert_equal 1, result.errors.size
+        assert_match(/not installed/, result.errors.first.message)
+      end
     end
   end
 
   def test_lint_handles_exception_gracefully
-    Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(*) { raise "Boom!" }) do
-      result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
+    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+      Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(*) { raise "Boom!" }) do
+        result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
 
-      refute result.success?
-      assert_equal 1, result.errors.size
-      assert_match(/Ruby linting failed/, result.errors.first.message)
+        refute result.success?
+        assert_equal 1, result.errors.size
+        assert_match(/Ruby linting failed/, result.errors.first.message)
+      end
     end
   end
 
@@ -194,11 +201,13 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
     options_passed = nil
 
     # Stub with a callable that captures arguments
-    Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(file_paths, fix: false) {
-      options_passed = {fix: fix}
-      {success: true, errors: [], warnings: []}
-    }) do
-      Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: {fix: true})
+    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+      Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(file_paths, fix: false) {
+        options_passed = {fix: fix}
+        {success: true, errors: [], warnings: []}
+      }) do
+        Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: {fix: true})
+      end
     end
 
     assert_equal true, options_passed[:fix]
@@ -295,14 +304,16 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
     file1 = "lib/file1.rb"
     file2 = "lib/file2.rb"
 
-    Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(*) { raise "Batch failed" }) do
-      results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1, file2])
+    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+      Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(*) { raise "Batch failed" }) do
+        results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1, file2])
 
-      assert_equal 2, results.size
-      results.each do |result|
-        refute result.success?
-        assert_equal 1, result.errors.size
-        assert_match(/Batch linting failed/, result.errors.first.message)
+        assert_equal 2, results.size
+        results.each do |result|
+          refute result.success?
+          assert_equal 1, result.errors.size
+          assert_match(/Batch linting failed/, result.errors.first.message)
+        end
       end
     end
   end

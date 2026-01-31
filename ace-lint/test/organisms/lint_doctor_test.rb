@@ -66,11 +66,14 @@ class Ace::Lint::Organisms::LintDoctorTest < Minitest::Test
   end
 
   def test_warnings_accessor
-    doctor = Ace::Lint::Organisms::LintDoctor.new(project_root: @temp_dir)
-    doctor.diagnose
+    # Stub validator availability to avoid subprocess calls
+    Ace::Lint::Atoms::ValidatorRegistry.stub(:available?, ->(_name) { true }) do
+      doctor = Ace::Lint::Organisms::LintDoctor.new(project_root: @temp_dir)
+      doctor.diagnose
 
-    assert_kind_of Array, doctor.warnings
-    assert doctor.warnings.all? { |w| w.respond_to?(:warning?) && w.warning? }
+      assert_kind_of Array, doctor.warnings
+      assert doctor.warnings.all? { |w| w.respond_to?(:warning?) && w.warning? }
+    end
   end
 
   # YAML validation tests
@@ -115,12 +118,15 @@ class Ace::Lint::Organisms::LintDoctorTest < Minitest::Test
       }
     }
 
-    doctor = Ace::Lint::Organisms::LintDoctor.new(project_root: @temp_dir, groups: groups)
-    doctor.diagnose
+    # Stub validator availability to avoid subprocess calls
+    Ace::Lint::Atoms::ValidatorRegistry.stub(:available?, ->(_name) { true }) do
+      doctor = Ace::Lint::Organisms::LintDoctor.new(project_root: @temp_dir, groups: groups)
+      doctor.diagnose
 
-    # Should have pattern diagnostics when groups are provided
-    pattern_diagnostics = doctor.diagnostics.select { |d| d.category == :pattern }
-    refute_empty pattern_diagnostics
+      # Should have pattern diagnostics when groups are provided
+      pattern_diagnostics = doctor.diagnostics.select { |d| d.category == :pattern }
+      refute_empty pattern_diagnostics
+    end
   end
 
   def test_warns_on_missing_default_group
