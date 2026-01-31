@@ -61,7 +61,8 @@ module Ace
         # OK     1.57s  ace-handbook                   1          3       0
         def print_completion_line(package, status)
           results = status[:results] || {}
-          elapsed = sprintf("%5.2fs", status[:elapsed] || 0)
+          duration = results[:duration] || status[:elapsed] || 0
+          elapsed = sprintf("%5.2fs", duration)
 
           tests = results[:tests] || 0
           assertions = results[:assertions] || 0

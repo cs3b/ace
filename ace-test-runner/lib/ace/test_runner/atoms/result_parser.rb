@@ -18,7 +18,13 @@ module Ace
           duration: /Finished in ([\d.]+)s/,
           deprecation: /DEPRECATION WARNING: (.+)/,
           # Pattern to capture individual test times from verbose output
-          test_time: /^\s+(test_[\w_]+).*?\s+(PASS|FAIL|ERROR|SKIP)\s+\(([\d.]+)s\)/
+          # Matches Minitest::Reporters DefaultReporter format:
+          #   "  test_name                     PASS (0.00s)"
+          test_time: /^\s+(test_[\w_]+).*?\s+(PASS|FAIL|ERROR|SKIP)\s+\(([\d.]+)s\)/,
+          # Pattern for standard Minitest verbose format:
+          # 1. "ClassName#test_name = 0.00 s = ."
+          # 2. "ClassName#test_name 0.00 = ."
+          test_time_standard: /^(\S+)#(test_[\w_]+)\s+(?:=\s+)?([\d.]+)\s*s?\s*=\s*([.FEWS])/
         }.freeze
 
         def parse_output(output)
@@ -116,6 +122,8 @@ module Ace
             location_index[name] ||= "#{file}:#{line}"
           end
 
+          # Try Minitest::Reporters DefaultReporter format first (most common)
+          # Format: "  test_name                     PASS (0.00s)"
           clean_output.scan(PATTERNS[:test_time]) do |test_name, status, time|
             test_times << {
               name: test_name,
@@ -123,6 +131,27 @@ module Ace
               duration: time.to_f,
               location: location_index[test_name]
             }
+          end
+
+          # If no matches, try standard Minitest verbose format
+          # Format: "ClassName#test_name = 0.00 s = ." or "ClassName#test_name 0.00 = ."
+          if test_times.empty?
+            clean_output.scan(PATTERNS[:test_time_standard]) do |class_name, test_name, time, status_char|
+              status = case status_char
+                       when "." then "PASS"
+                       when "F" then "FAIL"
+                       when "E" then "ERROR"
+                       when "S" then "SKIP"
+                       else "UNKNOWN"
+                       end
+              test_times << {
+                name: test_name,
+                class_name: class_name,
+                status: status,
+                duration: time.to_f,
+                location: location_index[test_name]
+              }
+            end
           end
 
           test_times.sort_by { |t| -t[:duration] }

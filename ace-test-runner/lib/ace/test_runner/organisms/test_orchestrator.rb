@@ -312,6 +312,15 @@ module Ace
           # Only use sequential groups if execution_mode is "grouped"
           return false unless @configuration.execution_mode == "grouped"
 
+          # Explicit --run-in-single-batch bypasses grouped execution
+          return false if @configuration.run_in_single_batch
+
+          # When profiling without a specific target, run as single batch for accurate timing
+          # Profiling requires verbose output which works better with all-at-once execution
+          if @configuration.profile && !@configuration.target
+            return false
+          end
+
           # If no target specified, default to "all" group for grouped mode
           target = @configuration.target || "all"
 
@@ -361,7 +370,8 @@ module Ace
             failure_limits: config_with_options.failure_limits,
             profile: options[:profile],
             execution: config_with_options.execution || {},
-            files: options[:files]
+            files: options[:files],
+            run_in_single_batch: options[:run_in_single_batch]
           )
         end
 
