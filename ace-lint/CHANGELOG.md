@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-01-31
+
+### Fixed
+- Eliminate random slow tests by pre-warming availability caches and ensuring all tests stub availability checks
+  - Moved cache resets from test setup into stub helper methods
+  - Added dual-runner cache pre-population in stub helpers
+  - Added `available?` stubs to tests that only stubbed `:run`
+  - Test suite now consistently runs in ~60-70ms (previously varied 60ms-1.6s randomly)
+
+## [0.15.2] - 2026-01-31
+
+### Performance
+- Stub subprocess calls in slow tests to avoid real system() calls (task 251)
+  - Tests now stub `available?` method instead of running real `rubocop --version` etc.
+  - Test suite time reduced from ~2.1s to ~69ms
+  - Affected tests: `standardrb_runner_test.rb`, `rubocop_runner_test.rb`, `validator_registry_test.rb`, `lint_doctor_test.rb`
+
+## [0.15.1] - 2026-01-31
+
+### Performance
+- Moved CLI integration tests to E2E test suite (task 251.03)
+  - Created `test/e2e/MT-LINT-004-cli-exit-codes.mt.md` for CLI behavior tests
+  - Created `test/e2e/MT-LINT-005-doctor-command.mt.md` for doctor command tests
+  - Removed `test/integration/cli_integration_test.rb` (7 tests)
+  - Removed `test/integration/doctor_integration_test.rb` (8 tests)
+  - Tests now run via `/ace:run-e2e-test ace-lint MT-LINT-004` and `MT-LINT-005`
+  - Existing atom/molecule tests already use Open3 mocks (no additional mocking needed)
+
 ## [0.14.0] - 2026-01-22
 
 ### Added
