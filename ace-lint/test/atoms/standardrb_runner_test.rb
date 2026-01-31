@@ -3,11 +3,6 @@
 require "test_helper"
 
 class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
-  def setup
-    # Reset cached availability before each test
-    Ace::Lint::Atoms::StandardrbRunner.reset_availability_cache!
-  end
-
   # Helper to stub availability check and Open3.capture3 for testing
   # Uses system_has_command? stub for availability and Open3.capture3 for actual linting
   def stub_standardrb_run(output: "", stderr: "", exit_status: 0, available: true)
@@ -15,11 +10,21 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
     mock_status.define_singleton_method(:success?) { exit_status == 0 }
     mock_status.define_singleton_method(:exitstatus) { exit_status }
 
+    # Reset BOTH caches before stubbing so stubs are called (not cached results)
+    Ace::Lint::Atoms::StandardrbRunner.reset_availability_cache!
+    Ace::Lint::Atoms::RuboCopRunner.reset_availability_cache!
+
     # Stub the availability check
     Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, available) do
-      # Stub Open3.capture3 for the actual linting command
-      Open3.stub(:capture3, ->(*_args) { [output, stderr, mock_status] }) do
-        yield
+      # Also stub RuboCop to avoid real subprocess calls when tests interleave
+      Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, true) do
+        # Stub Open3.capture3 for the actual linting command
+        Open3.stub(:capture3, ->(*_args) { [output, stderr, mock_status] }) do
+          # Pre-populate BOTH caches with stub values so subsequent tests hit cache
+          Ace::Lint::Atoms::StandardrbRunner.available?
+          Ace::Lint::Atoms::RuboCopRunner.available?
+          yield
+        end
       end
     end
   end
@@ -161,12 +166,14 @@ class Ace::Lint::Atoms::StandardrbRunnerTest < Minitest::Test
   def test_run_includes_fix_flag_when_requested
     called_with = nil
 
-    # Stub to capture what command was built
-    Open3.stub(:capture3, ->(*args) {
-      called_with = args
-      ["", "", Object.new.tap { |s| s.define_singleton_method(:success?) { true } }]
-    }) do
-      Ace::Lint::Atoms::StandardrbRunner.run("test.rb", fix: true)
+    # Stub availability check to avoid subprocess, then capture command
+    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+      Open3.stub(:capture3, ->(*args) {
+        called_with = args
+        ["", "", Object.new.tap { |s| s.define_singleton_method(:success?) { true } }]
+      }) do
+        Ace::Lint::Atoms::StandardrbRunner.run("test.rb", fix: true)
+      end
     end
 
     # Verify --fix is in the command args
