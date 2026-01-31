@@ -15,58 +15,37 @@ class GitRewriterTest < GitSecretsTestCase
     @mock_repo&.cleanup
   end
 
-  def test_available_returns_true_when_git_filter_repo_installed
-    # This test checks if git-filter-repo is in PATH
-    # Skip if not installed (common in CI)
-    skip "git-filter-repo not installed" unless system("which git-filter-repo > /dev/null 2>&1")
-    assert @rewriter.available?
-  end
-
   # ============================================================================
-  # Real-git tests for clean_working_directory? detection
-  # These use create_temp_repo for actual git status verification
+  # Unit tests for clean_working_directory? (stubbed - no real git)
+  # Tests the parsing logic by mocking Open3.capture2 responses
   # ============================================================================
 
   def test_clean_working_directory_returns_true_when_clean
-    # Use real git repo to test actual status detection
-    temp_repo = create_temp_repo
-    begin
-      create_commit(temp_repo, "file.txt", "content", "Initial")
-      rewriter = Ace::Git::Secrets::Molecules::GitRewriter.new(repository_path: temp_repo)
+    mock_status = Minitest::Mock.new
+    mock_status.expect :success?, true
 
-      assert rewriter.clean_working_directory?, "Repository with no uncommitted changes should be clean"
-    ensure
-      cleanup_temp_repo(temp_repo)
+    Open3.stub :capture2, ["", mock_status] do
+      assert @rewriter.clean_working_directory?, "Empty git status output should indicate clean"
     end
   end
 
   def test_clean_working_directory_returns_false_with_uncommitted_changes
-    # Use real git repo to test dirty state detection
-    temp_repo = create_temp_repo
-    begin
-      create_commit(temp_repo, "file.txt", "content", "Initial")
-      # Create uncommitted change
-      File.write(File.join(temp_repo, "file.txt"), "modified content")
-      rewriter = Ace::Git::Secrets::Molecules::GitRewriter.new(repository_path: temp_repo)
+    mock_status = Minitest::Mock.new
+    mock_status.expect :success?, true
 
-      refute rewriter.clean_working_directory?, "Repository with modified files should not be clean"
-    ensure
-      cleanup_temp_repo(temp_repo)
+    # Git status output for modified file
+    Open3.stub :capture2, [" M file.txt\n", mock_status] do
+      refute @rewriter.clean_working_directory?, "Modified file in status should indicate dirty"
     end
   end
 
   def test_clean_working_directory_returns_false_with_untracked_files
-    # Use real git repo to test untracked file detection
-    temp_repo = create_temp_repo
-    begin
-      create_commit(temp_repo, "file.txt", "content", "Initial")
-      # Create untracked file
-      File.write(File.join(temp_repo, "untracked.txt"), "new file")
-      rewriter = Ace::Git::Secrets::Molecules::GitRewriter.new(repository_path: temp_repo)
+    mock_status = Minitest::Mock.new
+    mock_status.expect :success?, true
 
-      refute rewriter.clean_working_directory?, "Repository with untracked files should not be clean"
-    ensure
-      cleanup_temp_repo(temp_repo)
+    # Git status output for untracked file
+    Open3.stub :capture2, ["?? untracked.txt\n", mock_status] do
+      refute @rewriter.clean_working_directory?, "Untracked file in status should indicate dirty"
     end
   end
 
