@@ -3,15 +3,13 @@
 require "test_helper"
 
 class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
-  def setup
-    # Reset availability caches
+  # Helper to stub both runners' availability and linting
+  def stub_runners(standardrb: {available: true, result: nil}, rubocop: {available: true, result: nil})
+    # Reset caches before stubbing so stubs are called (not cached results)
     Ace::Lint::Atoms::StandardrbRunner.reset_availability_cache!
     Ace::Lint::Atoms::RuboCopRunner.reset_availability_cache!
     Ace::Lint::Atoms::ValidatorRegistry.reset_cache!
-  end
 
-  # Helper to stub both runners' availability and linting
-  def stub_runners(standardrb: {available: true, result: nil}, rubocop: {available: true, result: nil})
     # Stub availability checks for both runners
     Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, standardrb[:available]) do
       Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, rubocop[:available]) do
@@ -36,6 +34,9 @@ class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
             ["", "", mock_fail]
           end
         }) do
+          # Pre-populate both caches with stub values so subsequent tests hit cache
+          Ace::Lint::Atoms::StandardrbRunner.available?
+          Ace::Lint::Atoms::RuboCopRunner.available?
           yield
         end
       end
@@ -202,6 +203,11 @@ class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
     mock_status.define_singleton_method(:success?) { false }
     mock_status.define_singleton_method(:exitstatus) { 1 }
 
+    # Reset caches before stubbing so stubs are called (not cached results)
+    Ace::Lint::Atoms::StandardrbRunner.reset_availability_cache!
+    Ace::Lint::Atoms::RuboCopRunner.reset_availability_cache!
+    Ace::Lint::Atoms::ValidatorRegistry.reset_cache!
+
     # Stub availability for both runners
     Ace::Lint::Atoms::StandardrbRunner.stub(:system_has_command?, true) do
       Ace::Lint::Atoms::RuboCopRunner.stub(:system_has_command?, true) do
@@ -212,6 +218,10 @@ class Ace::Lint::Molecules::ValidatorChainTest < Minitest::Test
             [rubocop_result.to_json, "", mock_status]
           end
         }) do
+          # Pre-populate both caches with stub values so subsequent tests hit cache
+          Ace::Lint::Atoms::StandardrbRunner.available?
+          Ace::Lint::Atoms::RuboCopRunner.available?
+
           chain = Ace::Lint::Molecules::ValidatorChain.new([:standardrb, :rubocop])
           result = chain.run(["test.rb"])
 
