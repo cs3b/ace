@@ -298,14 +298,17 @@ class CommandExecutorTest < AceGitTestCase
       call_count += 1
       call_count == 1 ? lock_error_result : success_result
     end
+    mock_sleep = ->(_) { nil }
 
     # Stub repo_root to prevent additional execute_once calls during stale lock cleanup
     @executor.stub :repo_root, "/fake/repo" do
       @executor.stub :execute_once, mock_execute do
-        result = @executor.execute("git", "status")
+        Kernel.stub :sleep, mock_sleep do
+          result = @executor.execute("git", "status")
 
-        assert result[:success], "Should succeed after retry"
-        assert_equal 2, call_count, "Should retry on lock error"
+          assert result[:success], "Should succeed after retry"
+          assert_equal 2, call_count, "Should retry on lock error"
+        end
       end
     end
   end
@@ -391,15 +394,18 @@ class CommandExecutorTest < AceGitTestCase
 
   def test_lock_error_message_augmented_after_all_retries
     lock_error_result = { success: false, output: "", error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
+    mock_sleep = ->(_) { nil }
 
     # Stub repo_root to prevent additional execute_once calls during stale lock cleanup
     @executor.stub :repo_root, "/fake/repo" do
       @executor.stub :execute_once, lock_error_result do
-        result = @executor.execute("git", "status")
+        Kernel.stub :sleep, mock_sleep do
+          result = @executor.execute("git", "status")
 
-        refute result[:success], "Should fail after all retries"
-        assert_includes result[:error], "Git index locked after", "Should augment error with retry context"
-        assert_includes result[:error], "retries", "Should mention retries in error message"
+          refute result[:success], "Should fail after all retries"
+          assert_includes result[:error], "Git index locked after", "Should augment error with retry context"
+          assert_includes result[:error], "retries", "Should mention retries in error message"
+        end
       end
     end
   end
