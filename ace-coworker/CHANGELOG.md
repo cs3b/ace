@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-01-31
+
+### Fixed
+
+- `prepare` CLI now uses Base36 timestamps (e.g., `8ouxjt`) instead of datetime format
+- `prepare` CLI now outputs job files to task's `jobs/` folder (e.g., `.ace-taskflow/v.0.9.0/tasks/253-xxx/jobs/`) when task refs provided
+- Correctly extracts parent task ID from subtask refs (e.g., `253.01` -> task folder `253-xxx`)
+
 ## [0.5.1] - 2026-01-31
 
 ### Fixed
