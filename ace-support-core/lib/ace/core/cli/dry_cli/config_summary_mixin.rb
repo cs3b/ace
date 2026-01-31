@@ -119,44 +119,44 @@ module Ace
           def gem_defaults
             raise NotImplementedError, "#{self.class} must implement #gem_defaults"
           end
-        end
 
-        # Extended mixin with configurable gem class support.
-        #
-        # This version allows specifying the gem class directly rather than
-        # implementing gem_config and gem_defaults methods.
-        #
-        # @example Usage with gem class
-        #   class MyCommand < Dry::CLI::Command
-        #     include Ace::Core::CLI::DryCli::ConfigSummaryMixin::GemClass
-        #
-        #     # Specify the gem class
-        #     def self.gem_class
-        #       MyGem
-        #     end
-        #
-        #     def call(**options)
-        #       display_config_summary("my-command", options)
-        #     end
-        #   end
-        #
-        module GemClassMixin
-          include ConfigSummaryMixin
-
-          private
-
-          # Get the gem's effective configuration from the gem class.
+          # Extended mixin with configurable gem class support.
           #
-          # @return [Hash] Gem's effective configuration
-          def gem_config
-            self.class.gem_class.config
-          end
-
-          # Get the gem's default configuration from the gem class.
+          # This version allows specifying the gem class directly rather than
+          # implementing gem_config and gem_defaults methods.
           #
-          # @return [Hash] Gem's default configuration
-          def gem_defaults
-            self.class.gem_class.default_config
+          # @example Usage with gem class
+          #   class MyCommand < Dry::CLI::Command
+          #     include Ace::Core::CLI::DryCli::ConfigSummaryMixin::GemClass
+          #
+          #     # Specify the gem class
+          #     def self.gem_class
+          #       MyGem
+          #     end
+          #
+          #     def call(**options)
+          #       display_config_summary("my-command", options)
+          #     end
+          #   end
+          #
+          module GemClassMixin
+            include ConfigSummaryMixin
+
+            private
+
+            # Get the gem's effective configuration from the gem class.
+            #
+            # @return [Hash] Gem's effective configuration
+            def gem_config
+              self.class.gem_class.config
+            end
+
+            # Get the gem's default configuration from the gem class.
+            #
+            # @return [Hash] Gem's default configuration
+            def gem_defaults
+              self.class.gem_class.default_config
+            end
           end
         end
       end
