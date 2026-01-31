@@ -1,0 +1,19 @@
+---
+# TMPL Sources Protocol Configuration for ace-handbook gem
+# This enables template discovery from the ace-handbook gem
+
+name: ace-handbook
+type: gem
+description: Templates from ace-handbook gem
+priority: 10
+
+# Configuration for template discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/templates)
+  relative_path: handbook/templates
+
+  # Pattern for finding template files
+  pattern: "*.template.md"
+
+  # Enable discovery
+  enabled: true
