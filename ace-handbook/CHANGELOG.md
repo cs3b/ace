@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-01-31
+
+### Added
+- Multi-agent research synthesis capabilities (Task 254):
+  - `multi-agent-research.g.md` guide explaining when/how to use parallel agents
+  - `research-comparison.template.md` for structured synthesis comparison
+  - `parallel-research.wf.md` workflow for setting up parallel agent research
+  - `synthesize-research.wf.md` workflow for combining agent outputs
+  - `research.wf.md` with single/multi-agent decision criteria
+- Template protocol source configuration for ace-handbook templates
+
 ## [0.7.1] - 2026-01-29
 
 ### Fixed
