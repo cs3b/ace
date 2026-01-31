@@ -97,8 +97,8 @@ module Ace
           def load_for_pr(pr_identifier, options = {})
             timeout = options.fetch(:timeout, Ace::Git.network_timeout)
 
-            # Get basic status
-            status = load(include_pr: false)
+            # Get basic status (skip PR activity since we're fetching a specific PR)
+            status = load(include_pr: false, include_pr_activity: false)
 
             # Fetch specific PR metadata
             begin
