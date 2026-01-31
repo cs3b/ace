@@ -2,7 +2,7 @@
 
 require "test_helper"
 require "ace/core"
-require "ace/taskflow/commands/task/create"
+require "ace/taskflow/cli/commands/task/create"
 
 module Ace
   module Taskflow
@@ -10,7 +10,7 @@ module Ace
       module Task
         class CreateTest < Minitest::Test
           def setup
-            @command = Create.new
+            @command = Ace::Taskflow::CLI::Commands::TaskSubcommands::Create.new
           end
 
           # Test: Title precedence: --title wins over positional when both provided

@@ -2,7 +2,7 @@
 
 require_relative "../test_helper"
 require "ace/core"
-require "ace/taskflow/commands/task/create"
+require "ace/taskflow/cli/commands/task/create"
 require "ace/taskflow/commands/task_command"
 
 # Integration tests for the Create command (nested dry-cli subcommand)
@@ -12,7 +12,14 @@ class CreateCommandIntegrationTest < AceTaskflowTestCase
 
   def setup
     super
-    @command = Ace::Taskflow::Commands::Task::Create.new
+    @command = Ace::Taskflow::CLI::Commands::TaskSubcommands::Create.new
+    @original_slug_method = nil
+  end
+
+  def teardown
+    # Restore original method if it was stubbed
+    restore_llm_slug_generation if @original_slug_method
+    super
   end
 
   # Test: Dry-run mode shows preview without creating files
@@ -73,15 +80,15 @@ class CreateCommandIntegrationTest < AceTaskflowTestCase
     end
   end
 
-  # Test: Missing title returns error
+  # Test: Missing title raises CLI error (per ADR-023)
   def test_missing_title_returns_error
     with_real_test_project do |_dir|
-      output = capture_stdout do
-        exit_code = @command.call(title: nil)
-        assert_equal 1, exit_code
+      error = assert_raises(Ace::Core::CLI::Error) do
+        @command.call(title: nil)
       end
 
-      assert_match(/Error: Task title is required/, output)
+      assert_equal 1, error.exit_code
+      assert_match(/Task title is required/, error.message)
     end
   end
 
@@ -115,9 +122,22 @@ class CreateCommandIntegrationTest < AceTaskflowTestCase
   end
 
   # Stub LLM slug generation for predictable test output
+  # Saves original method for restoration in teardown
   def stub_llm_slug_generation(folder_slug, file_slug)
-    Ace::Taskflow::Molecules::LlmSlugGenerator.define_method(:generate_task_slugs) do |_title, _metadata|
+    klass = Ace::Taskflow::Molecules::LlmSlugGenerator
+    @original_slug_method ||= klass.instance_method(:generate_task_slugs)
+
+    klass.define_method(:generate_task_slugs) do |_title, _metadata|
       { folder_slug: folder_slug, file_slug: file_slug, source: :stub }
     end
+  end
+
+  # Restore original LLM slug generation method
+  def restore_llm_slug_generation
+    return unless @original_slug_method
+
+    klass = Ace::Taskflow::Molecules::LlmSlugGenerator
+    klass.define_method(:generate_task_slugs, @original_slug_method)
+    @original_slug_method = nil
   end
 end
