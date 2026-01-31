@@ -52,6 +52,12 @@ module Ace
       # @example From tests
       #   result = Ace::Review::CLI.start(["--preset", "code-pr"])
       def self.start(args)
+        # Handle help explicitly (dry-cli doesn't handle registry-level help)
+        if args.first && %w[help --help -h].include?(args.first)
+          puts Dry::CLI::Usage.call(get([]))
+          return 0
+        end
+
         # Pre-process args to handle dry-cli's array option accumulation limitation
         # dry-cli only returns the last occurrence of --subject/--model flags,
         # but Thor accumulated all. We merge multiple occurrences into comma-separated
