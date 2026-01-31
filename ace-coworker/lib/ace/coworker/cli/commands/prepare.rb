@@ -2,6 +2,7 @@
 
 require "yaml"
 require "fileutils"
+require "ace/support/timestamp"
 
 module Ace
   module Coworker
@@ -21,6 +22,7 @@ module Ace
           option :review_preset, type: :string, default: "batch", desc: "Review preset for batch workflows"
 
           def call(preset:, **options)
+            @parameters = nil # Reset for each call
             # Find and load preset
             preset_path = find_preset(preset)
             unless preset_path
@@ -56,7 +58,7 @@ module Ace
             }
 
             # Determine output path
-            output_path = options[:output] || default_output_path
+            output_path = options[:output] || default_output_path(parameters)
 
             # Write job.yaml
             FileUtils.mkdir_p(File.dirname(output_path))
@@ -156,9 +158,71 @@ module Ace
             "#{preset}-#{suffix}"
           end
 
-          def default_output_path
-            timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-            "job-#{timestamp}.yaml"
+          def default_output_path(parameters)
+            timestamp = Ace::Support::Timestamp.encode(Time.now.utc)
+
+            # Try to find task folder from parameters
+            task_folder = find_task_folder(parameters)
+
+            if task_folder
+              File.join(task_folder, "jobs", "#{timestamp}-job.yml")
+            else
+              # Fallback to current directory
+              "#{timestamp}-job.yml"
+            end
+          end
+
+          # Find task folder from taskref or taskrefs parameters
+          #
+          # @param parameters [Hash] Parsed parameters
+          # @return [String, nil] Path to task folder or nil
+          def find_task_folder(parameters)
+            # Determine primary task ID
+            task_id = extract_primary_task_id(parameters)
+            return nil unless task_id
+
+            # Search for task folder in .ace-taskflow structure
+            # Pattern: .ace-taskflow/*/tasks/<id>-*
+            taskflow_base = ".ace-taskflow"
+            return nil unless Dir.exist?(taskflow_base)
+
+            # Find release directories
+            Dir.glob(File.join(taskflow_base, "*", "tasks")).each do |tasks_dir|
+              # Look for folder matching task ID
+              matches = Dir.glob(File.join(tasks_dir, "#{task_id}-*"))
+              return matches.first if matches.any?
+
+              # Also check for exact match (just the ID)
+              exact = File.join(tasks_dir, task_id.to_s)
+              return exact if Dir.exist?(exact)
+            end
+
+            nil
+          end
+
+          # Extract the primary task ID from parameters
+          #
+          # For subtask refs like "253.01", extracts parent "253"
+          # For patterns like "253.*", extracts base "253"
+          # For plain refs like "253", returns "253"
+          #
+          # @param parameters [Hash] Parsed parameters
+          # @return [String, nil] Task ID
+          def extract_primary_task_id(parameters)
+            ref = if parameters["taskref"]
+                    parameters["taskref"].to_s
+                  elsif parameters["taskrefs"]&.any?
+                    parameters["taskrefs"].first.to_s
+                  end
+
+            return nil unless ref
+
+            # Remove task- prefix if present
+            ref = ref.gsub(/^task-?/i, "")
+
+            # Extract base ID before any dot (handles subtasks and patterns)
+            # "253.01" -> "253", "253.*" -> "253", "253" -> "253"
+            ref.split(".").first
           end
         end
       end
