@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.3] - 2026-01-31
+
+### Performance
+- Moved CLI integration tests to E2E test suite (Task 251.06)
+  - Created `test/e2e/cli-api-parity.mt.md` for CLI/API output parity tests
+  - Created `test/e2e/cli-auto-format.mt.md` for auto-format behavior tests
+  - Removed `test/integration/cli_api_parity_test.rb` (1 test, ~0.94s)
+  - Removed `test/integration/cli_auto_format_test.rb` (6 tests, ~1.2s)
+  - Tests now run via `/ace:run-e2e-test ace-bundle MT-BUNDLE-002`
+  - Saves ~2.1s of subprocess overhead from regular test runs
+
+## [0.30.2] - 2026-01-31
+
+### Performance
+- Moved section workflow integration tests to E2E test suite (Task 251.05)
+  - Created `test/e2e/MT-BUNDLE-001-section-workflow.mt.md` for section workflow tests
+  - Removed `test/integration/section_workflow_integration_test.rb` (2 tests)
+  - Tests now run via `/ace:run-e2e-test ace-bundle MT-BUNDLE-001`
+  - Existing molecule tests already use proper mocking patterns
+
 ## [0.30.1] - 2026-01-19
 
 ### Added
