@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.9] - 2026-01-31
+
+### Fixed
+- `load_for_pr` no longer fetches unnecessary PR activity (saves ~1s per call)
+
+### Technical
+- Add missing stubs for `fetch_recently_merged`/`fetch_open_prs` in test helper (2.3s → 16ms)
+
+## [0.10.8] - 2026-01-31
+
+### Technical
+- Stub Kernel.sleep in lock retry tests for 98% speedup (2.5s → 32ms)
+
 ## [0.10.7] - 2026-01-30
 
 ### Changed

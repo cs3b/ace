@@ -38,6 +38,8 @@ class RepoStatusLoaderTest < AceGitTestCase
   # @param prs [Hash, Proc] Mock PR data for fetch_all_prs
   # @param find_pr_for_branch [Hash, nil] Mock PR data for find_pr_for_branch (defaults to nil for hermeticity)
   # @param fetch_metadata [Proc, nil] Custom metadata fetcher stub
+  # @param recently_merged [Hash] Mock data for fetch_recently_merged (defaults to empty for hermeticity)
+  # @param open_prs [Hash] Mock data for fetch_open_prs (defaults to empty for hermeticity)
   # @param git_status [Hash] Mock git status output
   # @param commits [Hash, Proc] Mock recent commits data
   def with_mock_repo_load(**options)
@@ -50,6 +52,8 @@ class RepoStatusLoaderTest < AceGitTestCase
     prs = options.fetch(:prs, @empty_prs)
     find_pr_for_branch = options.fetch(:find_pr_for_branch, nil)
     fetch_metadata = options.fetch(:fetch_metadata, nil)
+    recently_merged = options.fetch(:recently_merged, { success: true, prs: [] })
+    open_prs = options.fetch(:open_prs, { success: true, prs: [] })
     git_status = options.fetch(:git_status, @mock_status)
     commits = options.fetch(:commits, @mock_commits)
 
@@ -68,7 +72,12 @@ class RepoStatusLoaderTest < AceGitTestCase
                       # Default fetch_metadata to failure response for hermeticity
                       stubbed_metadata = fetch_metadata || ->(*) { { success: false } }
                       Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_metadata, stubbed_metadata do
-                        yield
+                        # Stub fetch_recently_merged and fetch_open_prs for hermeticity
+                        Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_recently_merged, recently_merged do
+                          Ace::Git::Molecules::PrMetadataFetcher.stub :fetch_open_prs, open_prs do
+                            yield
+                          end
+                        end
                       end
                     end
                   end
