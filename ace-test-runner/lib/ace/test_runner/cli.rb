@@ -45,6 +45,12 @@ module Ace
       # @example From tests
       #   result = Ace::TestRunner::CLI.start(["atoms", "--verbose"])
       def self.start(args)
+        # Handle help explicitly (dry-cli doesn't handle registry-level help)
+        if args.first && %w[help --help -h].include?(args.first)
+          puts Dry::CLI::Usage.call(get([]))
+          return 0
+        end
+
         # If args is empty OR first argument isn't a known command,
         # prepend the default command. This maintains Thor's default_task parity.
         if args.empty? || !known_command?(args.first)
