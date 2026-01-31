@@ -61,6 +61,12 @@ module Ace
       # @example From tests
       #   result = Ace::Search::CLI.start(["pattern", "--max-results", "10"])
       def self.start(args)
+        # Handle help explicitly (dry-cli doesn't handle registry-level help)
+        if args.first && %w[help --help -h].include?(args.first)
+          puts Dry::CLI::Usage.call(get([]))
+          return 0
+        end
+
         # If first argument isn't a known command and args aren't empty,
         # prepend the default command. This maintains Thor's default_task parity.
         #
