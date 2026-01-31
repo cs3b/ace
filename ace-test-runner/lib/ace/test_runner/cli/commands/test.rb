@@ -93,6 +93,8 @@ module Ace
         option :per_file, type: :boolean, desc: "Execute each test file separately (slower, for debugging)"
         option :direct, type: :boolean, desc: "Force in-process execution (faster, less isolation)"
         option :subprocess, type: :boolean, desc: "Force subprocess execution (slower, full isolation)"
+        option :run_in_sequence, type: :boolean, aliases: %w[--ris], desc: "Run test groups sequentially (default)"
+        option :run_in_single_batch, type: :boolean, aliases: %w[--risb], desc: "Run all tests together in single batch"
 
         # Rake integration options
         option :set_default_rake, type: :boolean, desc: "Set ace-test as default rake test runner"
@@ -153,6 +155,15 @@ module Ace
           # Transform to symbol keys for consistent access patterns throughout the codebase.
           symbolized_options = cli_options.transform_keys(&:to_sym)
 
+          # Handle mutually exclusive run mode options
+          # --run-in-sequence sets run_in_single_batch to false (default behavior)
+          # --run-in-single-batch sets run_in_single_batch to true
+          if symbolized_options[:run_in_sequence]
+            symbolized_options[:run_in_single_batch] = false
+          end
+          # Remove the run_in_sequence key as it's only used to set run_in_single_batch
+          symbolized_options.delete(:run_in_sequence)
+
           # Default options - symbolized_options will override these for any explicit values
           {
             format: "progress",
@@ -161,7 +172,8 @@ module Ace
             fail_fast: false,
             fix_deprecations: false,
             color: true,
-            per_file: false
+            per_file: false,
+            run_in_single_batch: false
           }.merge(symbolized_options)
         end
 

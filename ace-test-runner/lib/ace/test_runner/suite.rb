@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "suite/display_helpers"
+require_relative "suite/duration_estimator"
 require_relative "suite/orchestrator"
 require_relative "suite/process_monitor"
 require_relative "suite/display_manager"

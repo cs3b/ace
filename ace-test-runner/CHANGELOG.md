@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.2] - 2026-01-31
+
+### Fixed
+- **Profile verbose mode**: Fix `--profile` to inject `--verbose` into Minitest ARGV instead of Ruby interpreter
+  - Ruby's `--verbose` flag only sets `$VERBOSE = true` (Ruby warnings), not Minitest verbose mode
+  - Minitest needs `--verbose` in ARGV to enable per-test timing output for profiling
+  - Fixes `ace-test package --profile N` not showing slowest tests
+  - Affects: multiple files, single files, and line-number test execution
+- **Result parser test_time pattern**: Support both Minitest::Reporters and standard Minitest verbose formats
+  - Minitest::Reporters format: `  test_name                     PASS (0.00s)`
+  - Standard Minitest format: `ClassName#test_name = 0.00 s = .`
+
+## [0.15.1] - 2026-01-31
+
+### Added
+- Expanded default test patterns: smoke, commands, cli, prompts, fixtures, support, edge
+- Unit group now includes all expanded patterns for comprehensive test discovery
+
+## [0.15.0] - 2026-01-31
+
+### Added
+- **Execution Mode CLI Flags**: New `--run-in-sequence`/`--ris` and `--run-in-single-batch`/`--risb` flags
+  - `--run-in-sequence` (default): Run test groups sequentially (atoms → molecules → organisms)
+  - `--run-in-single-batch`: Run all tests together in a single batch, bypassing grouped execution
+  - `ace-test-suite` now passes `--run-in-single-batch` to each package for cleaner output
+
+## [0.14.0] - 2026-01-31
+
+### Fixed
+- **Profiling with Grouped Execution**: Bypass grouped mode when `--profile` is used without a specific target
+  - Previously, `ace-test package --profile N` showed 0.000s for all tests due to grouped execution
+  - Now runs all tests in a single batch when profiling without target, enabling accurate timing
+  - Group-specific profiling (`ace-test package group --profile N`) unchanged
+
+## [0.13.0] - 2026-01-31
+
+### Added
+- **Slowest-First Package Scheduling**: Packages with longest expected duration now start first
+  - New `DurationEstimator` reads historical duration from `test-reports/latest/summary.json`
+  - Orchestrator sorts by expected duration (descending), then priority
+  - Prevents slow packages from becoming bottlenecks at end of parallel test runs
+
+## [0.12.6] - 2026-01-31
+
+### Fixed
+- **Test Suite Timing Accuracy**: Display managers now use `results[:duration]` instead of wall-clock `status[:elapsed]`
+  - Previously reported times included subprocess startup overhead (~5s per package)
+  - Now shows actual Minitest execution duration from `summary.json`
+  - Affected files: `DisplayManager`, `SimpleDisplayManager`
+
 ## [0.12.5] - 2026-01-30
 
 ### Changed
