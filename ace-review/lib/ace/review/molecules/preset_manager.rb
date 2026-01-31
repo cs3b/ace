@@ -259,45 +259,12 @@ module Ace
         # Arrays are concatenated and deduplicated (first occurrence wins)
         # Hashes are deep merged recursively
         # Scalars follow "last wins" strategy
+        # Uses centralized DeepMerger from ace-support-config for consistency
         def merge_preset_data(presets)
           return presets.first if presets.size == 1
 
-          merged = {}
-
-          presets.each do |preset|
-            # Deep merge each preset into the result
-            merged = deep_merge_hash(merged, preset)
-          end
-
-          merged
-        end
-
-        # Deep merge two hashes with special handling for arrays
-        # This is distinct from the simple deep_merge method which is used for merging
-        # with defaults. This method implements the composition-specific merge strategy:
-        # - Arrays: concatenate and deduplicate
-        # - Nested hashes: merge recursively
-        # - Scalars: last value wins
-        def deep_merge_hash(hash1, hash2)
-          merged = hash1.dup
-
-          hash2.each do |key, value2|
-            if merged.key?(key)
-              value1 = merged[key]
-              merged[key] = if value1.is_a?(Hash) && value2.is_a?(Hash)
-                              deep_merge_hash(value1, value2)
-                            elsif value1.is_a?(Array) && value2.is_a?(Array)
-                              # Arrays are concatenated and deduplicated, preserving order
-                              (value1 + value2).uniq
-                            else
-                              value2  # Last wins
-                            end
-            else
-              merged[key] = value2
-            end
-          end
-
-          merged
+          # Use DeepMerger with :union strategy to concatenate and deduplicate arrays
+          Ace::Support::Config::Atoms::DeepMerger.merge_all(presets, array_strategy: :union)
         end
 
         def find_project_root

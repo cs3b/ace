@@ -395,75 +395,8 @@ module Ace
         #
         # @api private
         def deep_merge_context(base, overlay)
-          result = base.dup
-
-          overlay.each do |key, value|
-            if result[key].is_a?(Hash) && value.is_a?(Hash)
-              result[key] = deep_merge_hash(result[key], value)
-            else
-              result[key] = value
-            end
-          end
-
-          result
-        end
-
-        # Deep merge two hashes with smart type handling
-        #
-        # Recursively merges two hashes following these rules:
-        # - Hashes: Recursively merged (keys from both hashes preserved)
-        # - Arrays: Concatenated and deduplicated (first occurrence preserved)
-        # - Scalars: Overlay value wins (replaces base value)
-        # - Type conflicts: Overlay value wins (e.g., hash vs array)
-        #
-        # @param base [Hash] Base hash (lower priority)
-        # @param overlay [Hash] Overlay hash (higher priority)
-        # @return [Hash] Deeply merged result
-        #
-        # @example Simple merge
-        #   deep_merge_hash({a: 1}, {b: 2})
-        #   #=> {a: 1, b: 2}
-        #
-        # @example Nested hash merge (3 levels)
-        #   base = {context: {sections: {code: {files: ["a.rb"]}}}}
-        #   overlay = {context: {sections: {code: {files: ["b.rb"]}}}}
-        #   deep_merge_hash(base, overlay)
-        #   #=> {context: {sections: {code: {files: ["a.rb", "b.rb"]}}}}
-        #
-        # @example Array concatenation with deduplication
-        #   deep_merge_hash({files: ["a.rb", "b.rb"]}, {files: ["b.rb", "c.rb"]})
-        #   #=> {files: ["a.rb", "b.rb", "c.rb"]}  # "b.rb" appears only once
-        #
-        # @example Scalar override
-        #   deep_merge_hash({model: "gpt-4"}, {model: "claude"})
-        #   #=> {model: "claude"}
-        #
-        # @example Type conflict (hash vs array)
-        #   deep_merge_hash({files: {a: 1}}, {files: ["a.rb"]})
-        #   #=> {files: ["a.rb"]}  # overlay array wins over base hash
-        #
-        # @note Array merge preserves order of first occurrence. The concatenation
-        #   is (base + overlay).uniq, so if an element appears in both arrays,
-        #   it will appear at its position in the base array.
-        #
-        # @api private
-        def deep_merge_hash(base, overlay)
-          result = base.dup
-
-          overlay.each do |key, value|
-            if result[key].is_a?(Hash) && value.is_a?(Hash)
-              # Recursively merge nested hashes
-              result[key] = deep_merge_hash(result[key], value)
-            elsif result[key].is_a?(Array) && value.is_a?(Array)
-              # Concatenate arrays and remove duplicates (first occurrence wins)
-              result[key] = (result[key] + value).uniq
-            else
-              # For scalars or type conflicts, overlay wins
-              result[key] = value
-            end
-          end
-
-          result
+          # Use centralized DeepMerger with :union strategy for array deduplication
+          Ace::Support::Config::Atoms::DeepMerger.merge(base, overlay, array_strategy: :union)
         end
 
         # Extract preset names from sections to avoid duplication

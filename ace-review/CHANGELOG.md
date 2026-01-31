@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.5] - 2026-01-31
+
+### Performance
+
+- Optimized test suite from 14.68s to 5.52s (62% reduction)
+  - Added `SharedTempDir` module for opt-in per-class temp directory sharing
+  - Reduces setup/teardown overhead from ~10ms per test to near-zero
+  - Test classes opt-in with `def self.use_shared_temp_dir?; true; end`
+
+### Changed
+
+- Migrated 58 integration-style molecule tests to E2E format
+  - Created MT-REVIEW-004 (GitHub CLI integration) - 7 test cases
+  - Created MT-REVIEW-005 (multi-model executor) - 5 test cases
+  - Removed gh_cli_executor_test.rb (13 tests)
+  - Removed gh_pr_fetcher_test.rb (13 tests)
+  - Removed gh_pr_comment_fetcher_test.rb (19 tests)
+  - Removed multi_model_executor_test.rb (13 tests)
+
+## [0.35.4] - 2026-01-31
+
+### Refactored
+
+- Consolidated `deep_merge_hash` utility into centralized `Ace::Support::Config::Atoms::DeepMerger`
+  - Removed duplicate implementations from `PresetManager` and `ReviewManager`
+  - Both now use `DeepMerger.merge(base, overlay, array_strategy: :union)`
+  - Improves maintainability and aligns with ATOM architecture (ADR-011)
+
+### Performance
+
+- Moved 8 integration test files to E2E test suite
+  - Created MT-REVIEW-001 (preset composition), MT-REVIEW-002 (multi-subject), MT-REVIEW-003 (auto-save workflow)
+  - E2E tests run via `/ace:run-e2e-test ace-review MT-REVIEW-001`
+  - Test execution time reduced from 19.52s to ~13.5s (31% reduction)
+  - Remaining time due to legitimate timeout tests in molecules layer
+
+### Changed
+
+- Removed integration test files (replaced by E2E tests):
+  - preset_composition_integration_test.rb (12 tests)
+  - multi_subject_integration_test.rb (8 tests)
+  - auto_save_integration_test.rb (E2E flow moved, unit tests covered elsewhere)
+  - preset_diff_integration_test.rb
+  - multi_model_cli_test.rb
+  - full_prompt_generation_test.rb
+  - pr_diff_generation_test.rb
+  - synthesis_test.rb
+
 ## [0.35.3] - 2026-01-29
 
 ### Fixed
