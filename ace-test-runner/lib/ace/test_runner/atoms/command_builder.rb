@@ -27,11 +27,6 @@ module Ace
           # Note: fail_fast is handled by test executor, not minitest
           # We don't use minitest/fail_fast gem to avoid extra dependencies
 
-          # Add verbose mode if profile is requested
-          if options[:profile]
-            cmd_parts << "--verbose"
-          end
-
           # Add the test files
           if files.is_a?(Array)
             # Check if any file has a line number (file:line format)
@@ -39,7 +34,7 @@ module Ace
 
             if has_line_numbers
               # For files with line numbers, resolve to test names and filter
-              build_line_number_command(cmd_parts, files)
+              build_line_number_command(cmd_parts, files, options)
             else
               # Build a Ruby script that requires each file and fails on LoadError
               requires_script = files.map do |f|
@@ -50,18 +45,36 @@ module Ace
                 "begin; require '#{escaped_path}'; rescue LoadError => e; STDERR.puts \\\"Failed to load #{escaped_path}: \\\" + e.message; exit(1); end"
               end.join("; ")
 
+              # Build the script parts
+              script_parts = []
+              # Inject ARGV with --verbose for Minitest if profile is requested
+              # (Ruby's --verbose flag only sets $VERBOSE, doesn't enable Minitest verbose mode)
+              script_parts << "ARGV.replace(['--verbose'])" if options[:profile]
+              script_parts << requires_script
+              script_parts << "exit_code = Minitest.autorun"
+              script_parts << "exit(exit_code)"
+
               # Execute the requires and then run Minitest
               cmd_parts << "-e"
               # Use double quotes to wrap the entire script
-              cmd_parts << "\"#{requires_script}; exit_code = Minitest.autorun; exit(exit_code)\""
+              cmd_parts << "\"#{script_parts.join("; ")}\""
             end
           else
             # Check if single file has line number
             if files.match?(/:\d+$/)
-              build_line_number_command(cmd_parts, [files])
+              build_line_number_command(cmd_parts, [files], options)
             else
-              # Single file without line number - just pass it as argument (Minitest autoruns)
-              cmd_parts << files
+              # Single file without line number
+              if options[:profile]
+                # Inject ARGV with --verbose for Minitest profiling
+                cmd_parts << "-e"
+                escaped_path = files.gsub("'", "\\\\'")
+                path = files.start_with?('/') || files.start_with?('./') ? escaped_path : "./#{escaped_path}"
+                cmd_parts << "\"ARGV.replace(['--verbose']); require '#{path}'; exit_code = Minitest.autorun; exit(exit_code)\""
+              else
+                # Just pass file as argument (Minitest autoruns)
+                cmd_parts << files
+              end
             end
           end
 
@@ -91,7 +104,7 @@ module Ace
 
         private
 
-        def build_line_number_command(cmd_parts, files)
+        def build_line_number_command(cmd_parts, files, options = {})
           # For files with line numbers, we need to:
           # 1. Load each file
           # 2. Resolve line numbers to test names
@@ -127,12 +140,16 @@ module Ace
           # Require all files
           script_parts << file_requires.join("; ")
 
-          # Set up ARGV with --name filter if we found test names
+          # Set up ARGV with --name filter and --verbose if needed
+          argv_args = []
+          argv_args << "--verbose" if options[:profile]
           if test_names.any?
             # Create a regex pattern that matches any of the test names
             pattern = test_names.map { |name| Regexp.escape(name) }.join("|")
-            script_parts << "ARGV.replace(['--name', '/#{pattern}/'])"
+            argv_args << "--name"
+            argv_args << "/#{pattern}/"
           end
+          script_parts << "ARGV.replace([#{argv_args.map { |a| "'#{a}'" }.join(", ")}])" if argv_args.any?
 
           # Run Minitest
           script_parts << "exit_code = Minitest.autorun"
