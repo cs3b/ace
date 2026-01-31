@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-01-31
+
+### Fixed
+- Optimize slow tests by stubbing subprocess calls
+  - Convert clean_working_directory? tests from real git calls to stubbed Open3.capture2
+  - Remove flaky test_available_returns_true_when_git_filter_repo_installed
+  - Suite time improved from ~1.4s to ~1.1s (~23% faster)
+
+## [0.7.3] - 2026-01-31
+
+### Performance
+- Moved git integration tests to E2E test suite
+  - Tests now run via `/ace:run-e2e-test ace-git-secrets MT-SECRETS-001`
+  - Added HistoryScanner unit tests with mocked gitleaks
+  - Test execution time reduced from 4.5s to ~1.8s (60% reduction)
+
 ## [0.7.2] - 2026-01-16
 
 ### Changed
