@@ -111,9 +111,7 @@ class MigrateCommandTest < AceTaskflowTestCase
   end
 
   def test_migrate_no_folders_to_migrate
-    with_test_project do |dir|
-      taskflow_root = File.join(dir, ".ace-taskflow")
-
+    with_minimal_project do |dir, taskflow_root|
       # Create only new-style folders
       FileUtils.mkdir_p(File.join(taskflow_root, "_archive"))
       FileUtils.mkdir_p(File.join(taskflow_root, "_backlog"))
