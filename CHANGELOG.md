@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.390] - 2026-01-31
+
+### Fixed
+
+- **ace-coworker v0.5.2**: Implement working `prepare` CLI command - uses Base36 timestamps, outputs to task's `jobs/` folder, correctly extracts parent task ID from subtask refs
+
 ## [0.9.389] - 2026-01-31
 
 ### Fixed
