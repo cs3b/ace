@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-01-31
+
+### Fixed
+- Add `respond_to?(:get)` check to `test_stub_ace_core_config_integration` skip condition
+
+## [0.12.1] - 2026-01-31
+
+### Fixed
+- Improve `stub_ace_core_config` isolation with `respond_to?` guard and `define_singleton_method`
+
 ## [0.11.1] - 2026-01-15
 
 ### Changed

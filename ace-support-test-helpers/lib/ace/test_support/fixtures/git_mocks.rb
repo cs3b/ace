@@ -126,11 +126,14 @@ module Ace
         # @param config_data [Hash] The configuration data to return
         # @yield Block where the stub is active
         def self.stub_ace_core_config(config_data = {})
-          return unless defined?(Ace::Core)
+          return yield unless defined?(Ace::Core)
+          return yield unless Ace::Core.respond_to?(:get)
 
-          Ace::Core.stub(:get, config_data) do
-            yield
-          end
+          original = Ace::Core.method(:get)
+          Ace::Core.define_singleton_method(:get) { |*| config_data }
+          yield
+        ensure
+          Ace::Core.define_singleton_method(:get, original) if original
         end
 
         # Stub ace-taskflow CLI output
