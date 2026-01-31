@@ -85,6 +85,18 @@ module Ace
       ensure
         $stdout = original_stdout
       end
+
+      # Capture only stderr and return as string (convenience wrapper)
+      def capture_stderr
+        require 'stringio'
+
+        original_stderr = $stderr
+        $stderr = StringIO.new
+        yield
+        $stderr.string
+      ensure
+        $stderr = original_stderr
+      end
     end
   end
 end
