@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-01-31
+
+### Fixed
+
+- `prepare` CLI command now actually works - implements preset loading, parameter parsing, and job.yaml generation (was just a stub in 0.5.0)
+
 ## [0.5.0] - 2026-01-31
 
 ### Added
