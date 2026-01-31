@@ -209,4 +209,29 @@ class CLIChecker
 end
 
 # Run the checker
-CLIChecker.run if __FILE__ == $0
+if __FILE__ == $0
+  # Handle --help explicitly
+  if ARGV.include?("--help") || ARGV.include?("-h") || ARGV.include?("help")
+    puts <<~HELP
+      Usage: ace-llm-providers-cli-check
+
+      Checks availability and authentication status of CLI-based LLM tools.
+
+      Options:
+        -h, --help    Display this help message
+
+      This utility checks for the following CLI tools:
+        - Claude Code (claude)
+        - Codex (codex)
+        - OpenCode (opencode)
+        - Codex OSS (codex-oss)
+
+      Exit codes:
+        0 - At least one CLI tool is available
+        1 - No CLI tools are available
+    HELP
+    exit 0
+  end
+
+  CLIChecker.run
+end
