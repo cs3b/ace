@@ -39,6 +39,9 @@ module Ace
           # Standard dry-cli built-in commands (should be included in BUILTIN_COMMANDS)
           STANDARD_BUILTINS = %w[version help --help -h --version].freeze
 
+          # Help flags that should trigger usage output
+          HELP_FLAGS = %w[help --help -h].freeze
+
           # Start the CLI with default command routing.
           #
           # @param args [Array<String>] Command-line arguments
@@ -48,6 +51,14 @@ module Ace
           def start(args)
             # Ensure required constants are defined
             validate_routing_constants!
+
+            # Handle help explicitly (dry-cli doesn't handle registry-level help)
+            # Without this, --help returns exit code 1 because dry-cli's spell_checker
+            # is invoked when the registry can't find the command
+            if args.first && HELP_FLAGS.include?(args.first)
+              puts Dry::CLI::Usage.call(get([]))
+              return 0
+            end
 
             # If args is empty OR first arg isn't a known command,
             # prepend the default command. This maintains Thor's default_task parity.
