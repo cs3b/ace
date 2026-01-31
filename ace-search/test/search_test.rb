@@ -7,6 +7,7 @@ class Ace::TestSearch < AceSearchTestCase
   def setup
     super
     Ace::Support::Config.test_mode = false
+    Ace::Search.reset_config! # Clear cache after mode change
   end
 
   def teardown
