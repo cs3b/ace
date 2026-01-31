@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-01-31
+
+### Added
+
+- **Multi-task job preparation**: New `work-on-tasks` preset enables batch processing of multiple tasks in a single job
+- `PresetExpander` atom for expanding preset templates with `expansion:` directives
+- Support for `batch-parent` and `foreach` expansion directives in presets
+- Array parameter parsing supporting comma-separated (`148,149,150`), range (`148-152`), and pattern (`240.*`) syntax
+- Pre-assigned step numbers in job.yaml are now preserved by WorkflowExecutor
+- Updated prepare-coworker-job workflow documentation with multi-task examples
+
+### Fixed
+
+- CLI help commands now return exit code 0 correctly
+
 ## [0.4.3] - 2026-01-30
 
 ### Changed
