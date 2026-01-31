@@ -1,13 +1,13 @@
 test_suite:
-  # Maximum parallel processes
-  max_parallel: 20
+  # Maximum parallel processes (10 balances speed vs resource contention)
+  max_parallel: 12
 
   # Packages to test in order of priority
   packages:
     - name: ace-support-core
       path: ace-support-core
       group: foundation
-      priority: 1
+      priority: 2
 
     - name: ace-support-config
       path: ace-support-config
@@ -22,22 +22,22 @@ test_suite:
     - name: ace-test-runner
       path: ace-test-runner
       group: foundation
-      priority: 1
+      priority: 2
 
     - name: ace-bundle
       path: ace-bundle
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-support-nav
       path: ace-support-nav
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-taskflow
       path: ace-taskflow
       group: tools
-      priority: 3
+      priority: 1
 
     - name: ace-support-timestamp
       path: ace-support-timestamp
@@ -47,72 +47,72 @@ test_suite:
     - name: ace-git-commit
       path: ace-git-commit
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-llm
       path: ace-llm
       group: tools
-      priority: 3
+      priority: 1
 
     - name: ace-llm-providers-cli
       path: ace-llm-providers-cli
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-support-models
       path: ace-support-models
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-search
       path: ace-search
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-docs
       path: ace-docs
       group: tools
-      priority: 3
+      priority: 1
 
     - name: ace-git-worktree
       path: ace-git-worktree
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-lint
       path: ace-lint
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-review
       path: ace-review
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-git
       path: ace-git
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-git-secrets
       path: ace-git-secrets
       group: tools
-      priority: 3
+      priority: 1
 
     - name: ace-handbook
       path: ace-handbook
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-integration-claude
       path: ace-integration-claude
       group: tools
-      priority: 3
+      priority: 2
 
     - name: ace-prompt-prep
       path: ace-prompt-prep
       group: tools
-      priority: 3
+      priority: 1
 
     - name: ace-support-markdown
       path: ace-support-markdown

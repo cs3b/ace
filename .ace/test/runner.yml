@@ -28,7 +28,10 @@ patterns:
   organisms: "test/organisms/**/*_test.rb"
   models: "test/models/**/*_test.rb"
   commands: "test/commands/**/*_test.rb"
-  cli_commands: "test/cli/commands/**/*_test.rb"
+  cli: "test/cli/**/*_test.rb"
+  prompts: "test/prompts/**/*_test.rb"
+  fixtures: "test/fixtures/**/*_test.rb"
+  support: "test/support/**/*_test.rb"
   edge: "test/edge/**/*_test.rb"
   integration: "test/integration/**/*_test.rb"
   system: "test/system/**/*_test.rb"
@@ -42,7 +45,10 @@ groups:
     - organisms
     - models
     - commands
-    - cli_commands
+    - cli
+    - prompts
+    - fixtures
+    - support
   all:
     - unit
     - edge
