@@ -65,14 +65,10 @@ class TaskLoaderTest < AceTaskflowTestCase
   end
 
   def test_load_invalid_task_file
-    with_test_project do |dir|
-      Dir.chdir(dir) do
-        invalid_file = File.join(dir, "nonexistent.md")
-        task = @loader.load_task(invalid_file)
+    invalid_file = "/tmp/nonexistent_#{Process.pid}.md"
+    task = @loader.load_task(invalid_file)
 
-        assert_nil task
-      end
-    end
+    assert_nil task
   end
 
   def test_load_malformed_task

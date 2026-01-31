@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.6] - 2026-01-31
+
+### Technical
+- Optimize slow tests with minimal fixtures instead of full test project setup
+
+## [0.34.5] - 2026-01-31
+
+### Fixed
+- Update `test_missing_title_returns_error` to expect `Ace::Core::CLI::Error` exception per ADR-023
+
+## [0.34.4] - 2026-01-31
+
+### Fixed
+- Update require paths and class references in create command tests
+- Fix stub leak in `stub_llm_slug_generation` with proper teardown restoration
+
 ## [0.34.3] - 2026-01-29
 
 ### Added
