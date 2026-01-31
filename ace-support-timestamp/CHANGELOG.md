@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-01-31
+
 ### Added
 - Hierarchical split format for timestamp encoding/decoding (`encode_split`, `decode_path`)
 - CLI options: `--split`, `--path-only`, `--json` for split encoding output
 - Auto-detection of path separators (`/`, `\`, `:`) in decode
+
+### Performance
+- Moved CLI integration tests to E2E test suite
+  - Tests now run via `/ace:run-e2e-test ace-support-timestamp MT-TIMESTAMP-004`
+  - Test execution time reduced from 13.93s to ~61ms (99.6% reduction)
 
 ## [0.4.0] - 2026-01-24
 
