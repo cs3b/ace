@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.389] - 2026-01-31
+
+### Fixed
+
+- **ace-bundle v0.9.4**: Correctly handle --help exit code
+- **ace-coworker v0.5.0**: Ensure 0 exit code for help requests
+- **ace-git-secrets v0.7.5**: Resolve non-zero exit code for --help
+- **ace-git-worktree v0.3.1**: Prevent non-zero exit on help command
+- **ace-lint v0.15.4**: Ensure help commands exit with status 0
+- **ace-llm v0.5.5**: Correct help command exit status
+- **ace-llm-providers-cli v0.1.1**: Handle --help flag correctly
+- **ace-review v0.14.8**: Guarantee 0 exit code for help requests
+- **ace-search v0.2.7**: Ensure help command returns exit code 0
+- **ace-taskflow v0.34.7**: Correctly handle --help exit code
+- **ace-test-runner v0.12.6**: Ensure help commands exit with status 0
+
+### Added
+
+- **ace-coworker v0.5.0**: Multi-task job preparation with PresetExpander atom - supports batch-parent/foreach expansion directives, array parameter parsing (comma, range, pattern syntax), and hierarchical step generation
+- **ace-review v0.14.8**: Batch review preset for consolidated evaluation of multiple task implementations
+
+### Changed
+
+- **ace-core v0.4.3**: Standardize explicit help handling in CLI default routing pattern
+- **docs**: Add warning about resetting uncommitted changes to agent integrations guide
+
 ## [0.9.388] - 2026-01-31
 
 ### Added
