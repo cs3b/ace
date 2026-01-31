@@ -53,6 +53,12 @@ module Ace
         #   # No exception = success (exit 0)
         #   Ace::Support::Nav::CLI.start(["wfi://setup"])
         def self.start(args)
+          # Handle help explicitly (dry-cli doesn't handle registry-level help)
+          if args.first && %w[help --help -h].include?(args.first)
+            puts Dry::CLI::Usage.call(get([]))
+            return 0
+          end
+
           # Handle backward compatibility flags
           # --sources was a flag that triggered the sources command
           if args.include?("--sources")

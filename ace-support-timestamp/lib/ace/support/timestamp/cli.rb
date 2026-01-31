@@ -44,6 +44,12 @@ module Ace
 
         # Testable start method with default command routing
         def self.start(args)
+          # Handle help explicitly (dry-cli doesn't handle registry-level help)
+          if args.first && %w[help --help -h].include?(args.first)
+            puts Dry::CLI::Usage.call(get([]))
+            return 0
+          end
+
           if args.empty? || !KNOWN_COMMANDS.include?(args.first)
             args = [DEFAULT_COMMAND] + args
           end
