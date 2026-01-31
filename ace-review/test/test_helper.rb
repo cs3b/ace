@@ -15,14 +15,93 @@ require "minitest/pride"
 # Load shared test support for mocking fixtures
 require "ace/test_support"
 
+# Module providing shared temp directory functionality for test classes.
+# Test classes can opt-in to share a temp directory across all tests in the class,
+# reducing setup/teardown overhead from ~10ms per test to near-zero.
+#
+# Usage:
+#   class MyTest < AceReviewTest
+#     def self.use_shared_temp_dir?
+#       true
+#     end
+#   end
+module SharedTempDir
+  # Track all shared temp dirs for cleanup at suite end
+  @shared_temp_dirs = {}
+  @mutex = Mutex.new
+
+  class << self
+    attr_reader :shared_temp_dirs, :mutex
+
+    # Register a shared temp dir for a test class
+    def register(klass, dir)
+      mutex.synchronize { shared_temp_dirs[klass] = dir }
+    end
+
+    # Get the shared temp dir for a test class
+    def get(klass)
+      mutex.synchronize { shared_temp_dirs[klass] }
+    end
+
+    # Clean up all shared temp dirs
+    def cleanup_all
+      mutex.synchronize do
+        shared_temp_dirs.each_value do |dir|
+          FileUtils.remove_entry(dir) if dir && Dir.exist?(dir)
+        end
+        shared_temp_dirs.clear
+      end
+    end
+  end
+
+  # Returns the shared temp directory for this test class.
+  # Creates the directory lazily on first call.
+  def shared_test_dir
+    existing = SharedTempDir.get(self.class)
+    return existing if existing
+
+    dir = Dir.mktmpdir("ace-review-shared-#{self.class.name&.gsub("::", "-") || "test"}")
+    SharedTempDir.register(self.class, dir)
+    dir
+  end
+
+  # Clear all files in the shared temp directory without removing the directory itself.
+  # This is faster than recreating the directory.
+  def clear_shared_test_dir
+    dir = SharedTempDir.get(self.class)
+    return unless dir && Dir.exist?(dir)
+
+    Dir.children(dir).each do |child|
+      FileUtils.remove_entry(File.join(dir, child))
+    end
+  end
+end
+
+# Register cleanup of shared temp dirs when test suite finishes
+Minitest.after_run do
+  SharedTempDir.cleanup_all
+end
+
 # Base test class
 class AceReviewTest < Minitest::Test
   # Include shared prompt stubbing helpers from ace-support-test-helpers
   include Ace::TestSupport::Fixtures::PromptHelpers
+  # Include shared temp dir functionality for opt-in performance optimization
+  include SharedTempDir
 
   def setup
     @original_pwd = Dir.pwd
-    @test_dir = Dir.mktmpdir("ace-review-test")
+
+    # Check if test class opts into shared temp dir (reduces ~10ms overhead per test)
+    if self.class.respond_to?(:use_shared_temp_dir?) && self.class.use_shared_temp_dir?
+      @using_shared_temp_dir = true
+      @test_dir = shared_test_dir
+      clear_shared_test_dir
+    else
+      @using_shared_temp_dir = false
+      @test_dir = Dir.mktmpdir("ace-review-test")
+    end
+
     Dir.chdir(@test_dir)
 
     # Stub ace-bundle to prevent expensive shell command execution during tests
@@ -37,7 +116,12 @@ class AceReviewTest < Minitest::Test
     restore_branch_reader
 
     Dir.chdir(@original_pwd)
-    FileUtils.remove_entry(@test_dir)
+
+    # Only remove temp dir if not using shared mode
+    # Shared temp dirs are cleaned up by Minitest.after_run
+    unless @using_shared_temp_dir
+      FileUtils.remove_entry(@test_dir)
+    end
   end
 
   # Stub Ace::Bundle.load_file and load_auto to return fast mock data instead of executing commands

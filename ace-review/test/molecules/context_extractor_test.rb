@@ -12,6 +12,28 @@ class ContextExtractorTest < AceReviewTest
     FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
+  # Helper to create mock ace-bundle result
+  def mock_bundle_result(content = "Mock context content")
+    mock = Minitest::Mock.new
+    mock.expect(:content, content)
+    mock
+  end
+
+  # Helper to stub ContextComposer.load_context_via_ace_bundle for cache_dir tests
+  def with_mocked_ace_bundle_loading(content = "Mocked bundle content")
+    Ace::Review::Molecules::ContextComposer.stub(:load_context_via_ace_bundle, content) do
+      yield
+    end
+  end
+
+  # Helper to stub Ace::Bundle.load_auto for non-cache tests
+  def with_mocked_ace_bundle_auto(content = "Mocked bundle content")
+    mock = mock_bundle_result(content)
+    Ace::Bundle.stub(:load_auto, mock) do
+      yield
+    end
+  end
+
   def test_extract_none_returns_empty_string
     result = @extractor.extract(nil)
     assert_equal "", result
@@ -80,12 +102,15 @@ class ContextExtractorTest < AceReviewTest
     cache_dir = File.join(@temp_dir, "cache")
     FileUtils.mkdir_p(cache_dir)
 
-    result = @extractor.extract(yaml_config, cache_dir)
-    refute_empty result
+    # Mock ace-bundle loading to avoid slow real project context loading
+    with_mocked_ace_bundle_loading("Mocked YAML config context") do
+      result = @extractor.extract(yaml_config, cache_dir)
+      assert_equal "Mocked YAML config context", result
 
-    # Verify context.md was created
-    context_file = File.join(cache_dir, "context.md")
-    assert File.exist?(context_file)
+      # Verify context.md was created (file creation is not mocked)
+      context_file = File.join(cache_dir, "context.md")
+      assert File.exist?(context_file)
+    end
   end
 
   def test_extract_from_string_file_path
@@ -136,17 +161,21 @@ class ContextExtractorTest < AceReviewTest
     cache_dir = File.join(@temp_dir, "cache")
     FileUtils.mkdir_p(cache_dir)
 
-    result = @extractor.extract(config, cache_dir)
-    refute_empty result
+    # Mock ace-bundle loading to avoid slow real project context loading
+    with_mocked_ace_bundle_loading("Mocked hash config context") do
+      result = @extractor.extract(config, cache_dir)
+      assert_equal "Mocked hash config context", result
 
-    # Verify context.md was created
-    context_file = File.join(cache_dir, "context.md")
-    assert File.exist?(context_file)
+      # Verify context.md was created (file creation is not mocked)
+      context_file = File.join(cache_dir, "context.md")
+      assert File.exist?(context_file)
 
-    context_content = File.read(context_file)
-    assert_match(/^---\nbundle:/, context_content)
-    assert_match(/files:\s*\n\s*- test\.rb/, context_content)
-    assert_match(/presets:\s*\n\s*- project/, context_content)
+      # Verify context.md content structure (ContextComposer still runs)
+      context_content = File.read(context_file)
+      assert_match(/^---\nbundle:/, context_content)
+      assert_match(/files:\s*\n\s*- test\.rb/, context_content)
+      assert_match(/presets:\s*\n\s*- project/, context_content)
+    end
   end
 
   def test_extract_with_preset_context
