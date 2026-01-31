@@ -45,9 +45,11 @@ module Ace
           )
 
           # Create initial step files
+          # Steps may have pre-assigned numbers (from expansion) or need auto-numbering
           steps_config.each_with_index do |step, index|
-            number = Atoms::NumberGenerator.from_index(index)
-            extra = step.reject { |k, _| %w[name instructions].include?(k) }
+            # Use pre-assigned number if present, otherwise generate from index
+            number = step["number"] || Atoms::NumberGenerator.from_index(index)
+            extra = step.reject { |k, _| %w[name instructions number].include?(k) }
             step_writer.create(
               jobs_dir: session.jobs_dir,
               number: number,
