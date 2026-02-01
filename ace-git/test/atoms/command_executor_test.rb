@@ -366,7 +366,7 @@ class CommandExecutorTest < AceGitTestCase
     end
   end
 
-  def test_fixed_delay_between_retries
+  def test_progressive_delay_between_retries
     lock_error_result = { success: false, output: "", error: "fatal: Unable to create '.git/index.lock': File exists.", exit_code: 128 }
 
     delays = []
@@ -377,19 +377,15 @@ class CommandExecutorTest < AceGitTestCase
       # Always return lock error to trigger all retries
       @executor.stub :execute_once, lock_error_result do
         Kernel.stub :sleep, mock_sleep do
-          @executor.execute("git", "status")
+          # Capture stderr to suppress warning output during test
+          _captured = capture_io { @executor.execute("git", "status") }
         end
       end
     end
 
-    # Default config: max_retries=4, initial_delay_ms=500 (fixed delay)
-    # All delays should be exactly 500ms
+    # Progressive delays: 1s, 2s, 3s, 4s (total 10s across 4 retries)
     assert_equal 4, delays.length, "Should have 4 retry delays"
-
-    delays.each_with_index do |delay, i|
-      delay_ms = delay * 1000
-      assert_equal 500, delay_ms, "Delay #{i} should be exactly 500ms, got #{delay_ms}ms"
-    end
+    assert_equal [1, 2, 3, 4], delays, "Should use progressive delays: 1s, 2s, 3s, 4s"
   end
 
   def test_lock_error_message_augmented_after_all_retries

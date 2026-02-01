@@ -9,7 +9,7 @@ module Ace
       # - Previous git operations were interrupted (Ctrl+C, crashes, timeouts)
       # - Agents are blocked mid-operation leaving orphan lock files
       #
-      # A stale lock is one that hasn't been modified recently (>60 seconds by default),
+      # A stale lock is one that hasn't been modified recently (>10 seconds by default),
       # indicating the owning process is no longer active.
       #
       # Lock File Format:
@@ -49,7 +49,7 @@ module Ace
           # Check if a lock file is stale (older than threshold)
           #
           # @param lock_path [String] Path to the lock file
-          # @param threshold_seconds [Integer] Age threshold in seconds (default: 60)
+          # @param threshold_seconds [Integer] Age threshold in seconds (default: 10)
           # @return [Boolean] true if the lock file is stale
           #
           # @example Fresh lock (active process)
@@ -59,7 +59,7 @@ module Ace
           # @example Stale lock (orphaned)
           #   File.utime(Time.now - 120, Time.now - 120, lock_path)
           #   stale?(lock_path, 60)  # => true
-          def stale?(lock_path, threshold_seconds = 60)
+          def stale?(lock_path, threshold_seconds = 10)
             age_seconds = Time.now - File.mtime(lock_path)
             age_seconds > threshold_seconds
           rescue Errno::ENOENT
@@ -155,7 +155,7 @@ module Ace
           # @example Lock is active (PID running, fresh)
           #   clean("/path/to/repo", 60)
           #   # => { success: true, cleaned: false, message: "Lock is active..." }
-          def clean(repo_path, threshold_seconds = 60)
+          def clean(repo_path, threshold_seconds = 10)
             lock_path = find_lock_file(repo_path)
 
             return { success: true, cleaned: false, status: :missing, pid: nil, age_seconds: nil,
