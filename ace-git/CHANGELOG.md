@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.10] - 2026-02-01
+
+### Changed
+- Use progressive retry delays (1s, 2s, 3s, 4s) for lock handling instead of fixed 500ms
+- Lower stale lock threshold from 60s to 10s for faster orphan detection
+- Always show lock wait messages (not just in debug mode)
+
 ## [0.10.9] - 2026-01-31
 
 ### Fixed
