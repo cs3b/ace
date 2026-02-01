@@ -5,6 +5,7 @@ require "ace/git/worktree/models/worktree_config"
 require "ace/git/worktree/molecules/task_status_updater"
 require "ace/git/worktree/molecules/parent_task_resolver"
 require "ace/git/worktree/atoms/task_id_extractor"
+require "ace/git/worktree/atoms/git_command"
 
 # Integration tests for subtask workflow
 #
@@ -177,11 +178,13 @@ module Ace
               end
             end
 
-            resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
-            subtask_data = { id: "v.0.9.0+task.121.01", title: "Subtask 01" }
+            Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, nil) do
+              resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
+              subtask_data = { id: "v.0.9.0+task.121.01", title: "Subtask 01" }
 
-            target = resolver.resolve_target_branch(subtask_data)
-            assert_equal "main", target
+              target = resolver.resolve_target_branch(subtask_data)
+              assert_equal "main", target
+            end
           end
 
           # Tests target branch for orchestrator task (no parent)
@@ -189,11 +192,13 @@ module Ace
             mock_fetcher = Object.new
             mock_fetcher.define_singleton_method(:fetch) { |_| nil }
 
-            resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
-            orchestrator_data = { id: "v.0.9.0+task.121", title: "Orchestrator Task" }
+            Ace::Git::Worktree::Atoms::GitCommand.stub(:current_branch, nil) do
+              resolver = Molecules::ParentTaskResolver.new(task_fetcher: mock_fetcher)
+              orchestrator_data = { id: "v.0.9.0+task.121", title: "Orchestrator Task" }
 
-            target = resolver.resolve_target_branch(orchestrator_data)
-            assert_equal "main", target
+              target = resolver.resolve_target_branch(orchestrator_data)
+              assert_equal "main", target
+            end
           end
         end
       end
