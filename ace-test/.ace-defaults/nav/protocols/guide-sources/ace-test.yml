@@ -13,7 +13,7 @@ config:
   relative_path: handbook/guides
 
   # Pattern for finding guide files
-  pattern: "**/*.g.md"
+  pattern: "*.g.md"
 
   # Enable discovery
   enabled: true

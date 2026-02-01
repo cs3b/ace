@@ -191,6 +191,39 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/cs3b/a
 
 The gem is available as open source under the terms of the MIT License.
 
+## Testing Guidance
+
+### Strategy & Planning Guides
+
+| Guide | Purpose |
+|-------|---------|
+| [Test Layer Decision](handbook/guides/test-layer-decision.g.md) | Decide unit vs integration vs E2E |
+| [Testing Strategy](handbook/guides/testing-strategy.g.md) | Fast/Slow loop architecture |
+| [Test Responsibility Map](handbook/guides/test-responsibility-map.g.md) | Map behaviors to test layers |
+
+### Quality & Health Guides
+
+| Guide | Purpose |
+|-------|---------|
+| [Test Mocking Patterns](handbook/guides/test-mocking-patterns.g.md) | Behavior testing, zombie mock detection |
+| [Test Suite Health](handbook/guides/test-suite-health.g.md) | Metrics, CI integration, periodic audits |
+| [Test Review Checklist](handbook/guides/test-review-checklist.g.md) | Quick checklist for reviewing test PRs |
+
+### Testing Workflows
+
+| Skill | Purpose |
+|-------|---------|
+| `/ace:plan-tests` | Plan test coverage before coding |
+| `/ace:verify-test-suite` | Audit test suite health (quick/standard/deep) |
+| `/ace:optimize-tests` | Profile and fix slow tests |
+| `/ace:test-performance-audit` | Profile tests and document slow cases with actionable fixes |
+| `/ace:test-review` | Review test PR for quality |
+| `/ace:setup-e2e-sandbox` | Set up safe E2E environment |
+
+Load guides via: `ace-bundle guide://test-layer-decision`
+
+See [handbook/guides/SUMMARY.md](handbook/guides/SUMMARY.md) for the complete navigation index.
+
 ## ACE Integration
 
 This gem is part of the ACE (Agentic Coding Environment) ecosystem. For more information:

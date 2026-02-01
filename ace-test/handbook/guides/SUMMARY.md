@@ -16,6 +16,26 @@ Navigation index for all testing guides in the ace-test package.
 | TDD Cycle | `guide://testing-tdd-cycle` | Test-driven development implementation cycle |
 | Embedded Testing | `guide://embedded-testing-guide` | Embedded testing in workflows |
 
+## Test Strategy & Planning
+
+Decision frameworks for test design and layer assignment.
+
+| Guide | Protocol | Description |
+|-------|----------|-------------|
+| Testing Strategy | `guide://testing-strategy` | Fast/Slow loop strategy for high-performance test suites |
+| Test Layer Decision | `guide://test-layer-decision` | Decision matrix for unit vs integration vs E2E |
+| Test Responsibility Map | `guide://test-responsibility-map` | Map behaviors to test layers to avoid redundant coverage |
+
+## Test Quality & Health
+
+Patterns for maintaining test suite quality and performance.
+
+| Guide | Protocol | Description |
+|-------|----------|-------------|
+| Test Mocking Patterns | `guide://test-mocking-patterns` | Behavior testing, zombie mock detection, contract testing |
+| Test Suite Health | `guide://test-suite-health` | Metrics, CI integration, periodic audits |
+| Test Review Checklist | `guide://test-review-checklist` | Quick checklist for reviewing test PRs |
+
 ## Technology-Specific Guides
 
 ### Testing by Technology
@@ -58,6 +78,14 @@ ace-nav guide://mocking-patterns
 
 # TDD cycle
 ace-nav guide://testing-tdd-cycle
+
+# New test strategy guides
+ace-nav guide://testing-strategy
+ace-nav guide://test-layer-decision
+ace-nav guide://test-mocking-patterns
+ace-nav guide://test-suite-health
+ace-nav guide://test-responsibility-map
+ace-nav guide://test-review-checklist
 ```
 
 ## See Also
