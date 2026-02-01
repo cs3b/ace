@@ -105,49 +105,19 @@ Report any missing prerequisites before proceeding.
 > NEVER execute test commands in the main repository. The test file's "Environment Setup"
 > section creates this sandbox - you MUST execute it and verify isolation BEFORE proceeding.
 
-**How this section works:**
-- The instructions below explain CONVENTIONS and PATTERNS for sandbox naming
-- The test file's "Environment Setup" section contains the ACTUAL COMMANDS to execute
-- You must run the test file's commands, then verify isolation in Section 4.1
-
-Run the commands in the "Environment Setup" section of the test file:
-
-1. **Capture project root** (before changing directories):
-   ```bash
-   PROJECT_ROOT="$(pwd)"
-   ```
-2. Generate a timestamp ID using `ace-timestamp encode`
-3. **Derive short names** for the folder:
-   ```bash
-   # Strip "ace-" prefix from package name
-   SHORT_PKG="${PACKAGE#ace-}"   # e.g., ace-git-commit → git-commit
-
-   # Convert test ID to short format: MT-COMMIT-001 → mt001
-   # Note: This sed pattern is POSIX-compatible (works on BSD/macOS and GNU)
-   SHORT_ID=$(echo "{test-id}" | sed 's/MT-[A-Z]*-/mt/' | tr '[:upper:]' '[:lower:]')
-   ```
-4. Create the test directory structure:
-   ```bash
-   TIMESTAMP_ID="$(ace-timestamp encode)"
-   TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
-   mkdir -p "$TEST_DIR"
-   cd "$TEST_DIR"
-   ```
-5. Set up any required environment variables
-6. Navigate to the test directory for test data creation
-
-**Important:** Always capture `PROJECT_ROOT` before `cd` operations. Use `$PROJECT_ROOT/bin/ace-lint` for absolute paths to project binaries when executing from test directories.
+**Authoritative Reference:** Read `wfi://setup-e2e-sandbox` for the complete sandbox setup pattern including the Standard Setup Script section.
 
 **Execution Order:**
 1. Read the test file's "Environment Setup" section
-2. Execute THOSE commands (not the examples in this workflow)
+2. Execute the test file's commands (they follow the `wfi://setup-e2e-sandbox` pattern)
 3. Proceed to Section 4.1 to verify sandbox isolation
 4. Only continue to Section 5 after verification passes
 
-**Workflow patterns vs. test file commands:**
-- This workflow shows the PATTERN (naming conventions, structure)
-- The test file's Environment Setup contains the COMMANDS to run
-- The test file has `cd "$TEST_DIR"` - this MUST be executed
+**Expected Variables After Setup:**
+- `PROJECT_ROOT` - Original project directory (for accessing binaries like `$PROJECT_ROOT/bin/ace-lint`)
+- `TEST_DIR` - Sandbox directory (current working directory after setup)
+- `REPORTS_DIR` - Reports directory for test outputs
+- `TIMESTAMP_ID` - Unique identifier for this test run
 
 **Directory Structure & Naming Convention:**
 
