@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.6] - 2026-02-01
+
+### Fixed
+- Prevent non-zero exit on help command
+- Correct target branch fallback for non-subtask worktrees
+- Stub `GitCommand.current_branch` in integration tests to prevent tests from reading actual git branch
+
+### Technical
+- Adopt exception-based exit codes
+- Standardize E2E test artifact paths
+- Update E2E test directory structure for worktree operations
+
 ## [0.12.5] - 2026-01-28
 
 ### Fixed
