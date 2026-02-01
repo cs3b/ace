@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-01
+
+### Added
+
+- Sandbox isolation checkpoint with 3-check verification (path, git remotes, project markers)
+- Standard Setup Script section as authoritative copy-executable source for sandbox setup
+- Expected Variables documentation (PROJECT_ROOT, TEST_DIR, REPORTS_DIR, TIMESTAMP_ID)
+
+### Changed
+
+- Consolidated sandbox setup by moving `e2e-sandbox-setup.wf.md` into this package
+- Renamed workflow to `setup-e2e-sandbox.wf.md` following verb-first convention
+- Updated `run-e2e-test.wf.md` to delegate sandbox setup to `wfi://setup-e2e-sandbox`
+- Removed ~30 lines of duplicated inline sandbox logic from run-e2e-test workflow
+- Renamed skill from `ace_e2e-sandbox-setup` to `ace_setup-e2e-sandbox`
+
 ## [0.4.1] - 2026-01-30
 
 ### Fixed
