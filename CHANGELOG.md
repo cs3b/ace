@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.392] - 2026-02-01
+
+### Changed
+
+- **ace-test-e2e-runner v0.5.0**: Consolidate E2E sandbox setup - move workflow from ace-test, add isolation checkpoint, delegate from run-e2e-test
+
+## [0.9.391] - 2026-02-01
+
+### Added
+- **ace-taskflow**: Complete testing strategy subtasks
+- **ace-test**: Integrate 6 testing guides into handbook
+- **ace-test**: Integrate 4 new testing templates
+- **ace-test**: Add 6 Claude skills for testing workflows
+
+### Changed
+- **ace-review**: Move subprocess test to integration layer
+
+### Fixed
+- **ace-git-worktree v0.12.6**: Stub `GitCommand.current_branch` in integration tests to prevent tests from reading actual git branch
+- **ace-test**: Address code review feedback items
+
+### Technical
+- Document new testing skills in tools reference
+- Add comprehensive testing guidance to ace-test README
+- Register tmpl-sources for ace-test discovery
+- Add 4 new testing workflows to handbook
+- Register ace-test gem for guide protocol discovery
+
 ## [0.9.390] - 2026-01-31
 
 ### Fixed
