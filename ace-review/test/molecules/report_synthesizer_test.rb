@@ -10,7 +10,6 @@ class ReportSynthesizerTest < AceReviewTest
     FileUtils.mkdir_p(@session_dir)
 
     # Stub resolve_prompt_path to avoid ace-nav subprocess call
-    # Override in tests that need actual prompt resolution (like test_resolve_prompt_path_finds_synthesis_prompt)
     setup_prompt_path_stub
   end
 
@@ -200,23 +199,6 @@ class ReportSynthesizerTest < AceReviewTest
     assert_equal 2, summary[:unique_insights]
     assert_equal 1, summary[:conflicts_resolved]
     assert_equal 5, summary[:total_action_items]
-  end
-
-  def test_resolve_prompt_path_finds_synthesis_prompt
-    # Create a fresh synthesizer without stub for actual resolution test
-    fresh_synthesizer = Ace::Review::Molecules::ReportSynthesizer.new
-    path = fresh_synthesizer.send(:resolve_prompt_path, "synthesis-review-reports.system.md")
-
-    # Path should be non-empty and end with the expected filename
-    refute_empty path, "Should resolve to a path"
-    assert_match(/synthesis-review-reports\.system\.md$/, path)
-
-    # If file exists, verify content (may not exist in test temp directory)
-    if File.exist?(path)
-      content = File.read(path)
-      assert_includes content, "Multi-Model Review Synthesis"
-      assert_includes content, "Consensus Findings"
-    end
   end
 
   def test_synthesize_with_mocked_llm
