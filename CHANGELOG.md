@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.394] - 2026-02-01
+
+### Changed
+
+- **ace-git v0.10.10**: Improve stale git index lock handling - use progressive retry delays (1s, 2s, 3s, 4s) instead of fixed 500ms, lower stale threshold from 60s to 10s, always show lock wait messages
+
 ## [0.9.393] - 2026-02-01
 
 ### Changed
