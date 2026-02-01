@@ -11,8 +11,8 @@ module Ace
       #
       # Lock Retry Behavior:
       # - Automatically retries git commands that encounter .git/index.lock errors
-      # - Uses fixed 500ms delay between retries (configurable)
-      # - On each retry, attempts to clean orphaned locks (dead PID) or stale locks (>60s)
+      # - Uses progressive delays: 1s, 2s, 3s, 4s (total 10s across 4 retries)
+      # - On each retry, attempts to clean orphaned locks (dead PID) or stale locks (>10s)
       # - Configurable via lock_retry section in .ace/git/config.yml
       # - Only git commands are retried; non-git commands fail immediately
       #
@@ -50,9 +50,8 @@ module Ace
             config ||= {}
             # Use fetch to respect zero values (e.g., max_retries: 0 to disable retries)
             max_retries = config.fetch("max_retries", 4)
-            delay_ms = config.fetch("initial_delay_ms", 500)
             stale_cleanup = config.fetch("stale_cleanup", true)
-            stale_threshold = config.fetch("stale_threshold_seconds", 60)
+            stale_threshold = config.fetch("stale_threshold_seconds", 10)
 
             result = nil
             last_lock_info = nil
@@ -79,15 +78,11 @@ module Ace
               # Sleep before retry (except on last attempt)
               break if attempt == max_retries
 
-              active_lock = last_lock_info && [:active, :unknown].include?(last_lock_info[:status])
-              sleep_ms = active_lock ? (delay_ms * (attempt + 1)) : delay_ms
-
-              if ENV["ACE_DEBUG"] || ENV["DEBUG"]
-                lock_note = active_lock && last_lock_info[:pid] ? " (active PID #{last_lock_info[:pid]})" : ""
-                warn "[ace-git] Lock retry: attempt #{attempt + 1}/#{max_retries + 1}, " \
-                     "waiting #{sleep_ms}ms#{lock_note} (#{command_parts.first(3).join(' ')}...)"
-              end
-              Kernel.sleep(sleep_ms / 1000.0)
+              # Progressive delays: 1s, 2s, 3s, 4s (total 10s across 4 retries)
+              sleep_seconds = attempt + 1
+              pid_note = last_lock_info&.dig(:pid) ? " (PID #{last_lock_info[:pid]})" : ""
+              warn "[ace-git] Lock detected#{pid_note}, waiting #{sleep_seconds}s (attempt #{attempt + 1}/#{max_retries + 1})..."
+              Kernel.sleep(sleep_seconds)
             end
 
             # Add retry context to error message if all retries failed
