@@ -59,6 +59,17 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 | `ace-test ace-bundle` | Run tests in specific package |
 | `ace-test-suite` | Run all tests across monorepo |
 
+### Testing Skills
+
+| Skill | Purpose |
+|-------|---------|
+| `/ace:plan-tests` | Plan test coverage before coding |
+| `/ace:verify-test-suite` | Audit test suite health (quick/standard/deep) |
+| `/ace:optimize-tests` | Profile and fix slow tests |
+| `/ace:test-review` | Review test PR for quality |
+| `/ace:setup-e2e-sandbox` | Set up safe E2E environment |
+| `/ace:test-performance-audit` | Generate test performance audit report |
+
 ## Linting
 
 | Tool | Purpose |
