@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.393] - 2026-02-01
+
+### Changed
+
+- **ace-coworker v0.5.3**: Remove `prepare` CLI command - use `/ace:coworker-prepare` workflow instead
+
 ## [0.9.392] - 2026-02-01
 
 ### Changed
