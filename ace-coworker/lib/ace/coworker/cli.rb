@@ -33,7 +33,6 @@ require_relative "cli/commands/report"
 require_relative "cli/commands/fail"
 require_relative "cli/commands/add"
 require_relative "cli/commands/retry_cmd"
-require_relative "cli/commands/prepare"
 
 module Ace
   module Coworker
@@ -42,7 +41,7 @@ module Ace
       extend Dry::CLI::Registry
 
       # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[create status report fail add retry prepare].freeze
+      REGISTERED_COMMANDS = %w[create status report fail add retry].freeze
 
       # Deprecated commands and their replacements
       DEPRECATED_COMMANDS = {
@@ -129,7 +128,6 @@ module Ace
       register "fail", wrap_command(Commands::Fail)
       register "add", wrap_command(Commands::Add)
       register "retry", wrap_command(Commands::RetryCmd)
-      register "prepare", wrap_command(Commands::Prepare)
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
