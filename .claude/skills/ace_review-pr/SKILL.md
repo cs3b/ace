@@ -9,7 +9,6 @@ allowed-tools:
   - Bash(ace-bundle:*)
   - Read
   - TodoWrite
-  - AskUserQuestion
 argument-hint: "[#]"
 last_modified: 2026-01-10
 source: ace-review

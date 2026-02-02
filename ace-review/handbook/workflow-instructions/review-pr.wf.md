@@ -2,7 +2,7 @@
 name: review-pr
 description: Review PR and plan feedback application with comment resolution
 argument-hint: "[pr-number] [--preset <name>] [flags]"
-allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
+allowed-tools: Read, Bash, TodoWrite
 update:
   frequency: on-change
   last-updated: '2025-12-30'
@@ -149,17 +149,17 @@ Priority indicators: 🔴 Critical/Blocking, 🟡 High, 🟢 Medium, 🔵 Low
 
 Note: Items from **Developer Feedback** require PR comment resolution after implementation.
 
-### Step 7: Ask for Priority Threshold
+### Step 7: Apply Priority Threshold
 
-Use AskUserQuestion:
-- "Which priority level should I implement?"
-- Options:
-  - All items
-  - Medium and higher (skip Low)
-  - High and higher (skip Low, Medium)
-  - Critical only
+**Default behavior**: Implement **Medium and higher** priority items (skip Low).
 
-Only proceed with implementation after user confirmation.
+This means:
+- 🔴 Critical → Implement
+- 🟡 High → Implement
+- 🟢 Medium → Implement
+- 🔵 Low → Skip (unless explicitly requested)
+
+Proceed directly to implementation.
 
 ### Step 8: Implement Fixes
 
