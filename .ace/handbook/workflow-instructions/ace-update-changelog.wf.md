@@ -151,18 +151,6 @@ Verify format:
 grep -A 5 "## \[$NEW_VERSION\]" CHANGELOG.md
 ```
 
-### 5. Commit Changes
-
-Use ace-git-commit:
-```bash
-ace-git-commit CHANGELOG.md -m "docs: update CHANGELOG to version X.Y.Z"
-```
-
-Verify:
-```bash
-git log -1 --stat
-```
-
 ## Versioning Rules
 
 ### Version Calculation
@@ -303,4 +291,4 @@ Result:
 * Patch level increments for **any** change (no semantic versioning rules)
 * Changes are documented immediately, no batching required
 * Follow Keep a Changelog format for consistency
-* Commit does NOT auto-push - review before pushing
+* **This workflow does NOT commit changes** - use `/ace-release` for complete release with commit
