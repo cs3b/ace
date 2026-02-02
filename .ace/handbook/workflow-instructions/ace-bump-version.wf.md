@@ -11,7 +11,7 @@ update:
 
 ## Goal
 
-Perform automated semantic version bumping for a single ACE gem package by analyzing committed changes (or using explicit bump level), updating version files and changelog, and creating an atomic commit.
+Perform automated semantic version bumping for a single ACE gem package by analyzing committed changes (or using explicit bump level), updating version files and changelog.
 
 ## Prerequisites
 
@@ -144,36 +144,6 @@ This ensures Gemfile.lock reflects the new version for mono-repo workspace depen
 - Remove type prefix: `feat(api): add auth` → `add auth`
 - Capitalize first letter
 - Add bullet point
-
-### 7. Commit Changes
-
-Use `ace-git-commit` with specific files and direct message:
-```bash
-ace-git-commit \
-  ace-[package]/CHANGELOG.md \
-  ace-[package]/lib/ace/[package]/version.rb \
-  Gemfile.lock \
-  -m "chore: bumping patch version to X.Y.Z"
-```
-
-Or for minor/major bumps:
-```bash
-ace-git-commit \
-  ace-[package]/CHANGELOG.md \
-  ace-[package]/lib/ace/[package]/version.rb \
-  Gemfile.lock \
-  -m "chore: bumping minor version to X.Y.Z"
-```
-
-**Important:** In mono-repo setups with workspace dependencies, `Gemfile.lock` at the project root is updated when package versions change. Always include it in version bump commits to keep the lockfile synchronized with package versions.
-
-**For commit workflow details:** See `ace-nav wfi://commit`
-
-Verify:
-```bash
-git log -1 --stat
-# Should show 3 files: CHANGELOG.md, version.rb, Gemfile.lock
-```
 
 ## Semantic Versioning Rules
 
@@ -323,9 +293,9 @@ Error: CHANGELOG.md missing
 
 * This workflow handles **single package** version bumping only
 * For multi-package coordinated releases, use `publish-release` workflow
-* Version bump does NOT auto-push - review commit before pushing
 * Only committed changes are analyzed - uncommitted work is ignored
 * BREAKING CHANGE must appear in commit body for MAJOR bump detection
 * **Explicit bump level** (patch|minor|major) overrides automatic detection
 * Use explicit bump when you want to force a specific version change regardless of commits
-* **Mono-repo lockfile management**: In workspace setups, `Gemfile.lock` at project root is updated when package versions change and must be committed with version bumps to maintain dependency synchronization
+* **Mono-repo lockfile management**: In workspace setups, `Gemfile.lock` at project root is updated when package versions change
+* **This workflow does NOT commit changes** - use `/ace-release` for complete release with commit
