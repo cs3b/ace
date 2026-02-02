@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.396] - 2026-02-02
+
+### Changed
+
+- **ace-release workflow**: Streamlined to single commit - `/ace-bump-version` and `/ace-update-changelog` no longer commit independently; `/ace-release` orchestrates both and creates one atomic release commit with all 4 files (version.rb, package CHANGELOG, main CHANGELOG, Gemfile.lock)
+
 ## [0.9.395] - 2026-02-02
 
 ### Changed
