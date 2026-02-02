@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.6] - 2026-02-02
+
+### Added
+
+- Batch review preset for consolidated task evaluation
+- Integration test for prompt path resolution
+
+### Changed
+
+- Review workflows now default to "medium and higher" priority threshold for coworker automation
+- Removed AskUserQuestion from review skill allowed-tools (no longer needed)
+- Migrated integration tests to E2E format with consolidated DeepMerger
+
+### Fixed
+
+- Guarantee 0 exit code for help requests
+
 ## [0.35.5] - 2026-01-31
 
 ### Performance
