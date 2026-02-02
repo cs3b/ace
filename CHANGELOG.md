@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.395] - 2026-02-02
+
+### Changed
+
+- **ace-review v0.35.6**: Review workflows now default to "medium and higher" priority threshold for coworker automation, removing need for user confirmation
+
 ## [0.9.394] - 2026-02-01
 
 ### Changed
