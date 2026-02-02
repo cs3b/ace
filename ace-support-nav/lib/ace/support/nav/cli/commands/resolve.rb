@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require "ace/core"
+require_relative "../../molecules/config_loader"
 require_relative "../../organisms/navigation_engine"
 require_relative "../../organisms/command_delegator"
 
@@ -76,6 +77,9 @@ module Ace
             option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
             def call(uri:, **options)
+              # Normalize bare protocol names to protocol:// format for listing
+              uri = normalize_protocol_shorthand(uri)
+
               # Handle magic patterns (wildcards → list)
               if magic_wildcard_pattern?(uri)
                 # Delegate to list command
@@ -122,6 +126,20 @@ module Ace
             end
 
             private
+
+            # Normalize bare protocol names (e.g., "wfi") to protocol:// format
+            # This allows users to type "ace-nav wfi" instead of "ace-nav wfi://"
+            def normalize_protocol_shorthand(uri)
+              return uri if uri.include?("://")
+
+              # Check if input is a known protocol name
+              config_loader = Molecules::ConfigLoader.new
+              if config_loader.valid_protocol?(uri)
+                "#{uri}://"
+              else
+                uri
+              end
+            end
 
             # Check if URI pattern should trigger list mode
             def magic_wildcard_pattern?(uri)
