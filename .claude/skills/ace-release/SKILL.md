@@ -42,18 +42,19 @@ Follow all steps (1-4). This updates the main project CHANGELOG.md.
 
 ---
 
-## Step 3: Commit all release files
+## Step 3: Commit all package changes
 
-Use ace-git-commit with all release files:
+Commit **all changed files** in the package directory plus root release files:
 
 ```bash
 ace-git-commit \
-  ace-[package]/lib/ace/[package]/version.rb \
-  ace-[package]/CHANGELOG.md \
+  ace-[package]/ \
   CHANGELOG.md \
   Gemfile.lock \
   -m "chore(ace-[package]): release v[NEW_VERSION]"
 ```
+
+This ensures any code changes in the package are included with the release.
 
 ---
 
@@ -61,6 +62,7 @@ ace-git-commit \
 
 | File | Location | Updated In |
 |------|----------|------------|
+| Package code | `ace-[package]/` (all changed files) | Before release |
 | version.rb | `ace-[package]/lib/ace/[package]/version.rb` | Step 1 |
 | Package CHANGELOG | `ace-[package]/CHANGELOG.md` | Step 1 |
 | Main CHANGELOG | `/CHANGELOG.md` (project root) | Step 2 |
