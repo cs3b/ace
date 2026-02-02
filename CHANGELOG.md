@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.397] - 2026-02-02
+
+### Fixed
+
+- **ace-support-nav v0.17.4**: Fix protocol listing with empty path and bare protocol names
+  - `ace-nav wfi://` now correctly lists all resources (empty path normalized to nil)
+  - `ace-nav wfi` (bare protocol) now auto-expands to `wfi://` for listing
+  - Both shorthand forms now work identically to `ace-nav wfi://*`
+
 ## [0.9.396] - 2026-02-02
 
 ### Changed
