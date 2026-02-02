@@ -2,7 +2,7 @@
 name: review
 description: Review code with preset and plan feedback application
 argument-hint: "[preset] [subjects...]"
-allowed-tools: Read, Bash, TodoWrite, AskUserQuestion
+allowed-tools: Read, Bash, TodoWrite
 update:
   frequency: on-change
   last-updated: '2026-01-05'
@@ -146,17 +146,17 @@ List items that need fixing with priority indicators:
 
 Priority indicators: 🔴 Critical/Blocking, 🟡 High, 🟢 Medium, 🔵 Low
 
-### Step 6: Ask for Priority Threshold
+### Step 6: Apply Priority Threshold
 
-Use AskUserQuestion:
-- "Which priority level should I implement?"
-- Options:
-  - All items
-  - Medium and higher (skip Low)
-  - High and higher (skip Low, Medium)
-  - Critical only
+**Default behavior**: Implement **Medium and higher** priority items (skip Low).
 
-Only proceed with implementation after user confirmation.
+This means:
+- 🔴 Critical → Implement
+- 🟡 High → Implement
+- 🟢 Medium → Implement
+- 🔵 Low → Skip (unless explicitly requested)
+
+Proceed directly to implementation.
 
 ### Step 7: Implement Fixes
 

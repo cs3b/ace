@@ -8,7 +8,6 @@ allowed-tools:
   - Bash(ace-review:*)
   - Bash(ace-bundle:*)
   - Read
-  - Write
   - TodoWrite
 argument-hint: [file-path or commit-ref]
 last_modified: 2026-01-10
