@@ -1,52 +1,59 @@
 ---
 name: ace-release
 description: Bump Version and Update Both CHANGELOGs
-# context: no-fork
-# agent: general-purpose
 user-invocable: true
 allowed-tools:
   - Bash(ace-git:*)
   - Bash(ace-bundle:*)
+  - Bash(bundle:*)
   - Read
   - Edit
 argument-hint: "[package-name] [patch|minor|major]"
-last_modified: 2025-12-23
+last_modified: 2026-02-02
 source: ace-handbook
-warning: ALL 3 steps must be completed - there are TWO separate CHANGELOG.md files
+warning: ALL steps must be completed - there are TWO separate CHANGELOG.md files
 ---
 
 # Release Package
 
-Complete version bump for a package including BOTH CHANGELOGs:
+Complete version bump for a package including BOTH CHANGELOGs in a single commit.
 
-1. **Package CHANGELOG** (`ace-[package]/CHANGELOG.md`) - semantic versioning
-2. **Main project CHANGELOG** (`/CHANGELOG.md`) - release-based versioning
-
----
-
-## Step 1: Ensure all changes are committed
-Action: Skill('/ace:commit')
+**Files updated:**
+- `ace-[package]/lib/ace/[package]/version.rb`
+- `ace-[package]/CHANGELOG.md` (package changelog)
+- `/CHANGELOG.md` (main project changelog)
+- `/Gemfile.lock`
 
 ---
 
-## Step 2: Bump package version (updates package CHANGELOG)
-Action: Skill('/ace-bump-version $package-name $level')
+## Step 1: Bump package version
 
-This updates:
-- `lib/ace/[package]/version.rb` (e.g., 0.23.1 → 0.24.0)
-- `ace-[package]/CHANGELOG.md` (package-specific changelog)
-- `Gemfile.lock`
+Run workflow: `ace-bundle wfi://ace-bump-version`
+
+Follow all steps (1-6). This updates version.rb, package CHANGELOG, and Gemfile.lock.
 
 ---
 
-## Step 3: Update main project CHANGELOG ⚠️ OFTEN MISSED
-Action: Skill('/ace-update-changelog')
+## Step 2: Update main CHANGELOG
 
-This updates:
-- `/CHANGELOG.md` at project root (main changelog)
-- Version follows current release (e.g., 0.9.179 → 0.9.180)
+Run workflow: `ace-bundle wfi://ace-update-changelog`
 
-⚠️ **IMPORTANT**: This is a DIFFERENT file than the package CHANGELOG from step 2!
+Follow all steps (1-4). This updates the main project CHANGELOG.md.
+
+---
+
+## Step 3: Commit all release files
+
+Use ace-git-commit with all release files:
+
+```bash
+ace-git-commit \
+  ace-[package]/lib/ace/[package]/version.rb \
+  ace-[package]/CHANGELOG.md \
+  CHANGELOG.md \
+  Gemfile.lock \
+  -m "chore(ace-[package]): release v[NEW_VERSION]"
+```
 
 ---
 
@@ -54,7 +61,7 @@ This updates:
 
 | File | Location | Updated In |
 |------|----------|------------|
-| version.rb | `ace-[package]/lib/ace/[package]/version.rb` | Step 2 |
-| Package CHANGELOG | `ace-[package]/CHANGELOG.md` | Step 2 |
-| Main CHANGELOG | `/CHANGELOG.md` (project root) | **Step 3** |
-| Gemfile.lock | `/Gemfile.lock` (project root) | Step 2 |
+| version.rb | `ace-[package]/lib/ace/[package]/version.rb` | Step 1 |
+| Package CHANGELOG | `ace-[package]/CHANGELOG.md` | Step 1 |
+| Main CHANGELOG | `/CHANGELOG.md` (project root) | Step 2 |
+| Gemfile.lock | `/Gemfile.lock` (project root) | Step 1 |
