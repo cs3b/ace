@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-02-02
+
 ### Fixed
+- Protocol listing with empty path (`wfi://`) now correctly lists all resources
+  - Empty path after `://` is now normalized to `nil` in `ResourceUri`
+  - Enables `pattern = uri.path || "*"` to default to wildcard
+- Bare protocol names (`wfi`, `tmpl`, `guide`) now auto-expand to `protocol://` format
+  - Added `normalize_protocol_shorthand` in Resolve command
+  - Both `ace-nav wfi` and `ace-nav wfi://` now list all workflow instructions
 - Extension inference prefix matching bug (TC-004)
   - `start_with?` was too permissive, matching `multi-ext.guide.md` when searching for `multi-ext.g`
   - Now validates character following candidate is either end-of-string or dot separator

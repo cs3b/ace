@@ -68,7 +68,7 @@ module Ace
             else
               # No source specified - cascade search
               @source = nil
-              @path = parts[1]
+              @path = parts[1].empty? ? nil : parts[1]
             end
           end
         end
