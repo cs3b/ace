@@ -6,9 +6,16 @@ require "ace/core"
 require_relative "../review"
 # Commands
 require_relative "cli/commands/review"
-require_relative "cli/commands/synthesize"
 require_relative "cli/commands/list_presets"
 require_relative "cli/commands/list_prompts"
+# Feedback commands
+require_relative "cli/commands/feedback"
+require_relative "cli/commands/feedback/create"
+require_relative "cli/commands/feedback/list"
+require_relative "cli/commands/feedback/show"
+require_relative "cli/commands/feedback/verify"
+require_relative "cli/commands/feedback/skip"
+require_relative "cli/commands/feedback/resolve"
 
 module Ace
   module Review
@@ -20,7 +27,10 @@ module Ace
       extend Dry::CLI::Registry
 
       # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[review synthesize list-presets list-prompts].freeze
+      REGISTERED_COMMANDS = %w[review list-presets list-prompts feedback].freeze
+
+      # Feedback subcommands (for routing disambiguation)
+      FEEDBACK_SUBCOMMANDS = %w[create list show verify skip resolve].freeze
 
       # dry-cli built-in commands (standard across all CLI gems)
       BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
@@ -164,14 +174,20 @@ module Ace
       # Register the review command (default)
       register "review", Commands::Review
 
-      # Register the synthesize command
-      register "synthesize", Commands::Synthesize
-
       # Register the list-presets command
       register "list-presets", Commands::ListPresets
 
       # Register the list-prompts command
       register "list-prompts", Commands::ListPrompts
+
+      # Register feedback commands
+      register "feedback", Commands::Feedback
+      register "feedback create", Commands::FeedbackSubcommands::Create
+      register "feedback list", Commands::FeedbackSubcommands::List
+      register "feedback show", Commands::FeedbackSubcommands::Show
+      register "feedback verify", Commands::FeedbackSubcommands::Verify
+      register "feedback skip", Commands::FeedbackSubcommands::Skip
+      register "feedback resolve", Commands::FeedbackSubcommands::Resolve
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

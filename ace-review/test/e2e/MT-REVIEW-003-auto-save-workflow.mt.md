@@ -307,34 +307,7 @@ echo "# Branch is now: $(git branch --show-current)"
 
 ---
 
-### TC-007: Synthesis Report Filename
-
-**Objective:** Verify that synthesis reports have correct filename pattern.
-
-**Steps:**
-1. Generate synthesis filename pattern
-   ```bash
-   cd "$TEST_DIR"
-   TIMESTAMP=$(ace-timestamp encode)
-   SYNTHESIS_FILENAME="${TIMESTAMP}-synthesis.md"
-   echo "Synthesis filename: $SYNTHESIS_FILENAME"
-   ```
-
-2. Verify synthesis filename pattern
-   ```bash
-   echo "$SYNTHESIS_FILENAME" | grep -qE "^[0-9a-z]{6}-synthesis\.md$" && echo "PASS: Synthesis filename correct" || echo "FAIL: Synthesis filename wrong"
-   ```
-
-**Expected:**
-- Synthesis filename: {timestamp}-synthesis.md
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-008: Feature Branch Pattern Recognition
+### TC-007: Feature Branch Pattern Recognition
 
 **Objective:** Verify that feature/123-name branch pattern is recognized.
 
@@ -380,8 +353,7 @@ Artifacts in `.cache/ace-test-e2e/` are gitignored, so keeping them doesn't affe
 - [ ] TC-004: Reviews subdirectory created
 - [ ] TC-005: Report filename includes timestamp
 - [ ] TC-006: Missing directory handled gracefully
-- [ ] TC-007: Synthesis report filename correct
-- [ ] TC-008: Feature branch pattern recognized
+- [ ] TC-007: Feature branch pattern recognized
 
 ## Observations
 

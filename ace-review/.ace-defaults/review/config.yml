@@ -56,10 +56,11 @@ defaults:
 #   base_path: ".ace-taskflow/%{release}/reviews"
 #   auto_organize: true
 
-# Synthesis configuration for multi-model review reports
-synthesis:
-  enabled: true  # Set to false to disable automatic synthesis
-  model: "claude:sonnet"  # Model to use for synthesis (best format compliance)
+# Feedback extraction configuration
+# Feedback items are extracted from review reports for tracking and verification
+feedback:
+  enabled: true                           # Enable feedback extraction (default: true)
+  synthesis_model: google:gemini-2.5-flash  # Model for synthesizing feedback items
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability

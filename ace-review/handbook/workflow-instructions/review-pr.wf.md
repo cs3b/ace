@@ -5,14 +5,14 @@ argument-hint: "[pr-number] [--preset <name>] [flags]"
 allowed-tools: Read, Bash, TodoWrite
 update:
   frequency: on-change
-  last-updated: '2025-12-30'
+  last-updated: '2026-02-03'
 ---
 
 # Review PR and Plan Feedback Workflow
 
 ## Goal
 
-Review a GitHub Pull Request using ace-review, read the synthesis report, and create a plan for applying the feedback. When feedback comes from PR comments, resolve those comments after implementing fixes.
+Review a GitHub Pull Request using ace-review, verify feedback items, and create a plan for applying the feedback. When feedback comes from PR comments, resolve those comments after implementing fixes.
 
 ## Arguments
 
@@ -47,47 +47,81 @@ ace-review --pr $(gh pr view --json number -q '.number') [additional-flags]
 
 **Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
-Wait for the review to complete. Note the synthesis report path from the output.
+Wait for the review to complete. Note the session directory path from the output.
 
 The review includes:
 - LLM model reviews (e.g., `review-gemini.md`, `review-gpt4.md`)
 - Developer feedback from PR comments (`review-dev-feedback.md`) - if the PR has comments
-- Synthesis combining all sources (`synthesis-report.md`)
+- Feedback items in `feedback/` directory
 
-### Step 3: Read Synthesis Report
+### Step 3: List Feedback Items
 
-Read the synthesis report path shown in the command output.
+List the feedback items extracted from the review:
 
-Note which feedback items come from **Developer Feedback** - these are from PR comments and should be resolved after implementation.
+```bash
+ace-review feedback list --status draft
+```
 
-### Step 4: Verify Action Items
+This shows all draft feedback items with their IDs, severity, summaries, and sources (LLM or Developer).
 
-Before presenting action items to the user, verify each Critical and High priority item.
+#### Understanding Feedback Context
 
-**For each item:**
+Feedback items are **session-scoped**. The `feedback list` command discovers items based on:
+1. Explicit `--session <path>` flag (if provided)
+2. Explicit `--task <ref>` flag (if provided)
+3. Current task context (from git branch pattern)
+4. `.ace-review-session` cache file in current directory
+
+If `feedback list` returns empty after a review, the session may not be linked to current context.
+Use `ace-review feedback list --session <session-dir>` to list from a specific session:
+
+```bash
+# List feedback from a specific session (path shown in review output)
+ace-review feedback list --session .cache/ace-review/sessions/review-8p2pk3
+```
+
+### Step 4: Verify Each Feedback Item
+
+For each feedback item (prioritize Critical and High severity):
+
+```bash
+# Read the finding details
+ace-review feedback show {id}
+```
+
+**Note which items come from Developer Feedback** - these are from PR comments and should be resolved after implementation.
+
+**Then verify in the codebase:**
 
 1. **Check the claim** - Use grep/read to verify the issue exists:
    - If claim is "X doesn't exist" → `grep -rn "class X" lib/`
    - If claim is "method missing" → check the actual file
    - If claim is "file not deleted" → `ls path/to/file`
 
-2. **Categorize the result:**
+2. **Mark the verification result:**
 
-   | Status | Meaning | Action |
-   |--------|---------|--------|
-   | ✅ VALID | Issue confirmed in code | Include in plan |
-   | ❌ INVALID | False positive, code is correct | Exclude from plan |
-   | ⚠️ EDGE CASE | Known limitation, not a bug | Note as limitation |
-   | 📝 SUGGESTION | Code improvement, not required | Include as optional |
+   ```bash
+   # If issue is confirmed (valid finding)
+   ace-review feedback verify {id} --valid --research "Confirmed: issue exists at line X"
 
-3. **Document verification** - Note what was checked and the result
+   # If issue is not real (false positive)
+   ace-review feedback verify {id} --invalid --research "False positive: handled by Y"
+   ```
+
+3. **Categorization guide:**
+
+   | Result | Command | When |
+   |--------|---------|------|
+   | ✅ VALID | `--valid` | Issue confirmed in code |
+   | ❌ INVALID | `--invalid` | False positive, code is correct |
+   | ⚠️ SKIP | `feedback skip {id}` | Out of scope, known limitation |
 
 **Example verification:**
 ```bash
 # Claim: "TaskPatternExtractor is undefined"
 grep -rn "class TaskPatternExtractor" ace-git/lib/
 # Result: Found at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10
-# Status: ❌ INVALID - class exists
+ace-review feedback verify {id} --invalid --research "Class exists at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10"
 ```
 
 **Skip verification for:**
@@ -96,62 +130,19 @@ grep -rn "class TaskPatternExtractor" ace-git/lib/
 - Style/formatting recommendations
 - Developer Feedback items (these are human-verified)
 
-### Step 5: Categorize Results
+### Step 5: List Pending Items
 
-Based on verification results, categorize each item:
+After verification, list items ready to work on:
 
-**Goes to "No Action Needed" (no numbering):**
-- INVALID - False positives, LLM hallucinations, code is correct
-- VERIFIED CORRECT - LLM suggested to verify, but verification confirmed code is correct
-
-**Goes to "Action Items" (numbered with priority):**
-- VALID - Issue confirmed, needs fixing
-- SUGGESTION - Optional improvement
-- Developer Feedback - From PR comments (always valid, needs resolution)
-
-### Step 6: Present Results
-
-Present results in two separate sections:
-
-#### No Action Needed
-
-List items that don't require changes (no numbering):
-- Description + why it's invalid/correct
-- Verification evidence
-
-#### Action Items
-
-List items that need fixing with priority indicators:
-
-```
-🔴 #1 [Critical] Issue description
-   File: path/to/file.rb:123
-   Source: LLM (gemini-2.5-flash)
-   Fix: What needs to be done
-
-🟡 #2 [High] Developer feedback item
-   File: another/file.rb:45
-   Source: Developer Feedback
-   Fix: Address reviewer comment
-
-🟢 #3 [Medium] Improvement suggestion
-   File: path/to/file.rb:89
-   Source: LLM (gpt-4)
-   Fix: Optional enhancement
-
-🔵 #4 [Low] Nice-to-have
-   File: path/to/file.rb:12
-   Source: LLM
-   Fix: Minor improvement
+```bash
+ace-review feedback list --status pending
 ```
 
-Priority indicators: 🔴 Critical/Blocking, 🟡 High, 🟢 Medium, 🔵 Low
+This shows only verified valid items that need fixing.
 
-Note: Items from **Developer Feedback** require PR comment resolution after implementation.
+### Step 6: Apply Priority Threshold
 
-### Step 7: Apply Priority Threshold
-
-**Default behavior**: Implement **Medium and higher** priority items (skip Low).
+**Default behavior**: Implement **Medium and higher** severity items (skip Low).
 
 This means:
 - 🔴 Critical → Implement
@@ -159,13 +150,32 @@ This means:
 - 🟢 Medium → Implement
 - 🔵 Low → Skip (unless explicitly requested)
 
-Proceed directly to implementation.
+### Step 7: Implement Fixes
 
-### Step 8: Implement Fixes
+For each pending item:
 
-Implement the confirmed fixes. After each fix:
-- Commit with a clear message referencing the issue
-- Note the commit SHA for PR comment resolution
+1. **Read the full details:**
+   ```bash
+   ace-review feedback show {id}
+   ```
+
+2. **Implement the fix** based on the recommendation
+
+3. **Mark as resolved:**
+   ```bash
+   ace-review feedback resolve {id} --resolution "Fixed in commit abc123"
+   ```
+
+4. **Commit the fix** with a clear message referencing the feedback item
+5. **Note the commit SHA** for PR comment resolution (if from Developer Feedback)
+
+### Step 8: Handle Not-Applicable Items
+
+For items that are out of scope or not worth fixing:
+
+```bash
+ace-review feedback skip {id} --reason "Out of scope for this PR"
+```
 
 ### Step 9: Resolve PR Comments (for Developer Feedback items)
 
@@ -198,12 +208,30 @@ Note: The thread IDs are included in `review-dev-feedback.md` in the format `(th
 | Developer Feedback (issue comment) | Reply with commit reference |
 | Developer Feedback (review thread) | Reply with commit reference AND resolve thread |
 
+## Quick Reference
+
+```bash
+# Feedback commands
+ace-review feedback list                      # All feedback
+ace-review feedback list --status draft       # Unverified items
+ace-review feedback list --status pending     # Verified valid items
+ace-review feedback list --session <path>     # From specific session
+ace-review feedback show {id}                 # Full item details
+ace-review feedback verify {id} --valid       # Mark as valid
+ace-review feedback verify {id} --invalid     # Mark as false positive
+ace-review feedback resolve {id}              # Mark as fixed
+ace-review feedback skip {id}                 # Mark as skipped
+
+# PR comment resolution
+gh pr comment $PR --body "Fixed in $(git rev-parse --short HEAD)"
+```
+
 ## Output / Success Criteria
 
-- [ ] PR review completed with synthesis report
-- [ ] Action items verified (Critical/High priority)
-- [ ] False positives identified and excluded
-- [ ] Feedback plan created and confirmed by user
+- [ ] PR review completed with feedback items
+- [ ] Feedback items verified (Critical/High priority)
+- [ ] False positives marked as invalid
 - [ ] Confirmed items implemented
 - [ ] PR comments addressed with commit references
 - [ ] Review threads resolved (if applicable)
+- [ ] All items marked as resolved or skipped
