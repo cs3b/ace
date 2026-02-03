@@ -5,6 +5,8 @@
 # Add the bin directory to PATH for executable commands
 PROJECT_ROOT_PATH = "{{ config_root }}"
 ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
+LANG = "en_US.UTF-8"
+LC_ALL = "en_US.UTF-8"
 _.path = ["./bin", "./dev-tools/exe"]
 
 [tools]
