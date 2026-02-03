@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-02-03
+
+### Added
+- Step 3b "Implementation Subprocess Detection" in verify-test-suite workflow
+- Explicit subprocess source file search in molecules checklist
+- Test base class check (Section 6) in test-review-checklist guide
+
+### Changed
+- Molecules checklist now requires searching SOURCE files for subprocess patterns
+- Renumbered E2E section to 7 in test-review-checklist guide
+
 ## [0.1.0] - 2026-01-22
 
 ### Added
