@@ -7,6 +7,9 @@ module Ace
     module Molecules
       # Executes LLM queries for code reviews using Ruby API
       class LlmExecutor
+        # Warning threshold: 80% of typical 200K context window
+        PROMPT_SIZE_WARNING_THRESHOLD = 160_000
+
         def initialize
           @default_model = Ace::Review.get("defaults", "model") || "google:gemini-2.5-flash"
         end
@@ -20,6 +23,9 @@ module Ace
         # @return [Hash] result with success, response, output_file, metadata, and error keys
         def execute(system_prompt:, user_prompt:, model: nil, session_dir:, output_file: nil)
           model ||= @default_model
+
+          # Warn if prompt is large
+          warn_if_prompt_large(system_prompt, user_prompt, model)
 
           # Check if ace-llm Ruby API is available
           unless ruby_api_available?
@@ -41,6 +47,24 @@ module Ace
         end
 
         private
+
+        # Warn if prompt size may exceed model context limits
+        #
+        # Uses rough estimate of 4 characters per token. Warns at 80% of
+        # typical context window to give user advance notice before execution fails.
+        #
+        # @param system_prompt [String, nil] system prompt
+        # @param user_prompt [String, nil] user prompt
+        # @param model [String] model identifier
+        def warn_if_prompt_large(system_prompt, user_prompt, model)
+          total_chars = (system_prompt&.length || 0) + (user_prompt&.length || 0)
+          estimated_tokens = total_chars / 4  # Rough estimate: 4 chars per token
+
+          return unless estimated_tokens > PROMPT_SIZE_WARNING_THRESHOLD
+
+          warn "Warning: Prompt size (~#{estimated_tokens.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens) " \
+               "may exceed #{model} context limits"
+        end
 
         # Check if Ruby API is available
         def ruby_api_available?

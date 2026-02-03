@@ -5,14 +5,14 @@ argument-hint: "[preset] [subjects...]"
 allowed-tools: Read, Bash, TodoWrite
 update:
   frequency: on-change
-  last-updated: '2026-01-05'
+  last-updated: '2026-02-03'
 ---
 
 # Code Review Workflow
 
 ## Goal
 
-Review code using ace-review, read the synthesis report, and create a plan for applying feedback.
+Review code using ace-review, verify feedback items, and create a plan for applying fixes.
 
 ## Arguments
 
@@ -50,49 +50,78 @@ ace-review --subject pr:76 --subject files:CHANGELOG.md --auto-execute
 
 **Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
-Wait for the review to complete. Note the synthesis report path from the output.
+Wait for the review to complete. Note the session directory path from the output.
 
 The review generates:
 - LLM model reviews (e.g., `review-gemini.md`)
-- Synthesis combining all findings (`synthesis-report.md`)
+- Feedback items in `feedback/` directory
 
-### Step 2: Read Synthesis Report
+### Step 2: List Feedback Items
 
-Read the synthesis report path shown in the command output.
+List the feedback items extracted from the review:
 
-Focus on:
-- **Prioritized Action Items** - what needs fixing
-- **Priority levels** - Critical, High, Medium, Low
-- **Locations** - file:line references
+```bash
+ace-review feedback list --status draft
+```
 
-### Step 3: Verify Action Items
+This shows all draft feedback items with their IDs, severity, and summaries.
 
-Before presenting action items to the user, verify each Critical and High priority item.
+#### Understanding Feedback Context
 
-**For each item:**
+Feedback items are **session-scoped**. The `feedback list` command discovers items based on:
+1. Explicit `--session <path>` flag (if provided)
+2. Explicit `--task <ref>` flag (if provided)
+3. Current task context (from git branch pattern)
+4. `.ace-review-session` cache file in current directory
+
+If `feedback list` returns empty after a review, the session may not be linked to current context.
+Use `ace-review feedback list --session <session-dir>` to list from a specific session:
+
+```bash
+# List feedback from a specific session (path shown in review output)
+ace-review feedback list --session .cache/ace-review/sessions/review-8p2pk3
+```
+
+### Step 3: Verify Each Feedback Item
+
+For each feedback item (prioritize Critical and High severity):
+
+```bash
+# Read the finding details
+ace-review feedback show {id}
+```
+
+**Then verify in the codebase:**
 
 1. **Check the claim** - Use grep/read to verify the issue exists:
    - If claim is "X doesn't exist" → `grep -rn "class X" lib/`
    - If claim is "method missing" → check the actual file
    - If claim is "file not deleted" → `ls path/to/file`
 
-2. **Categorize the result:**
+2. **Mark the verification result:**
 
-   | Status | Meaning | Action |
-   |--------|---------|--------|
-   | ✅ VALID | Issue confirmed in code | Include in plan |
-   | ❌ INVALID | False positive, code is correct | Exclude from plan |
-   | ⚠️ EDGE CASE | Known limitation, not a bug | Note as limitation |
-   | 📝 SUGGESTION | Code improvement, not required | Include as optional |
+   ```bash
+   # If issue is confirmed (valid finding)
+   ace-review feedback verify {id} --valid --research "Confirmed: issue exists at line X"
 
-3. **Document verification** - Note what was checked and the result
+   # If issue is not real (false positive)
+   ace-review feedback verify {id} --invalid --research "False positive: handled by Y"
+   ```
+
+3. **Categorization guide:**
+
+   | Result | Command | When |
+   |--------|---------|------|
+   | ✅ VALID | `--valid` | Issue confirmed in code |
+   | ❌ INVALID | `--invalid` | False positive, code is correct |
+   | ⚠️ SKIP | `feedback skip {id}` | Out of scope, known limitation |
 
 **Example verification:**
 ```bash
 # Claim: "TaskPatternExtractor is undefined"
 grep -rn "class TaskPatternExtractor" ace-git/lib/
 # Result: Found at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10
-# Status: ❌ INVALID - class exists
+ace-review feedback verify {id} --invalid --research "Class exists at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10"
 ```
 
 **Skip verification for:**
@@ -100,55 +129,19 @@ grep -rn "class TaskPatternExtractor" ace-git/lib/
 - Documentation-only suggestions
 - Style/formatting recommendations
 
-### Step 4: Categorize Results
+### Step 4: List Pending Items
 
-Based on verification results, categorize each item:
+After verification, list items ready to work on:
 
-**Goes to "No Action Needed" (no numbering):**
-- INVALID - False positives, LLM hallucinations, code is correct
-- VERIFIED CORRECT - LLM suggested to verify, but verification confirmed code is correct
-
-**Goes to "Action Items" (numbered with priority):**
-- VALID - Issue confirmed, needs fixing
-- SUGGESTION - Optional improvement
-
-### Step 5: Present Results
-
-Present results in two separate sections:
-
-#### No Action Needed
-
-List items that don't require changes (no numbering):
-- Description + why it's invalid/correct
-- Verification evidence
-
-#### Action Items
-
-List items that need fixing with priority indicators:
-
-```
-🔴 #1 [Critical] Issue description
-   File: path/to/file.rb:123
-   Fix: What needs to be done
-
-🟡 #2 [High] Another issue
-   File: another/file.rb:45
-   Fix: Suggested fix
-
-🟢 #3 [Medium] Improvement suggestion
-   File: path/to/file.rb:89
-   Fix: Optional enhancement
-
-🔵 #4 [Low] Nice-to-have
-   File: path/to/file.rb:12
-   Fix: Minor improvement
+```bash
+ace-review feedback list --status pending
 ```
 
-Priority indicators: 🔴 Critical/Blocking, 🟡 High, 🟢 Medium, 🔵 Low
+This shows only verified valid items that need fixing.
 
-### Step 6: Apply Priority Threshold
+### Step 5: Apply Priority Threshold
 
-**Default behavior**: Implement **Medium and higher** priority items (skip Low).
+**Default behavior**: Implement **Medium and higher** severity items (skip Low).
 
 This means:
 - 🔴 Critical → Implement
@@ -156,13 +149,31 @@ This means:
 - 🟢 Medium → Implement
 - 🔵 Low → Skip (unless explicitly requested)
 
-Proceed directly to implementation.
+### Step 6: Implement Fixes
 
-### Step 7: Implement Fixes
+For each pending item:
 
-Implement the confirmed fixes. After each fix:
-- Commit with a clear message referencing the issue
-- Mark completion in the plan
+1. **Read the full details:**
+   ```bash
+   ace-review feedback show {id}
+   ```
+
+2. **Implement the fix** based on the recommendation
+
+3. **Mark as resolved:**
+   ```bash
+   ace-review feedback resolve {id} --resolution "Fixed in commit abc123"
+   ```
+
+4. **Commit the fix** with a clear message referencing the feedback item
+
+### Step 7: Handle Not-Applicable Items
+
+For items that are out of scope or not worth fixing:
+
+```bash
+ace-review feedback skip {id} --reason "Out of scope for this PR"
+```
 
 ## Quick Reference
 
@@ -178,6 +189,17 @@ ace-review --list-prompts   # Available prompt modules
 --subject pr:123                    # PR diff
 --subject files:lib/**/*.rb         # File pattern
 --subject task:145                  # Task context
+
+# Feedback commands
+ace-review feedback list                      # All feedback
+ace-review feedback list --status draft       # Unverified items
+ace-review feedback list --status pending     # Verified valid items
+ace-review feedback list --session <path>     # From specific session
+ace-review feedback show {id}                 # Full item details
+ace-review feedback verify {id} --valid       # Mark as valid
+ace-review feedback verify {id} --invalid     # Mark as false positive
+ace-review feedback resolve {id}              # Mark as fixed
+ace-review feedback skip {id}                 # Mark as skipped
 
 # Common patterns
 ace-review --auto-execute                                  # Default preset
@@ -204,8 +226,8 @@ The type prefix (`files:`, `pr:`, `diff:`, `task:`) is **required** for all subj
 
 ## Success Criteria
 
-- [ ] Review completed with synthesis report
-- [ ] Action items verified (Critical/High priority)
-- [ ] False positives identified and excluded
-- [ ] Feedback plan created and confirmed by user
+- [ ] Review completed with feedback items
+- [ ] Feedback items verified (Critical/High priority)
+- [ ] False positives marked as invalid
 - [ ] Confirmed items implemented with commits
+- [ ] Items marked as resolved with commit references

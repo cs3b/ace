@@ -21,6 +21,9 @@ require_relative "review/errors"
 require_relative "review/atoms/preset_validator"
 require_relative "review/atoms/slug_generator"
 require_relative "review/atoms/pr_comment_formatter"
+require_relative "review/atoms/feedback_id_generator"
+require_relative "review/atoms/feedback_slug_generator"
+require_relative "review/atoms/feedback_state_validator"
 
 # Require all necessary components explicitly
 require_relative "review/molecules/context_composer"
@@ -37,11 +40,16 @@ require_relative "review/molecules/gh_pr_comment_fetcher"
 require_relative "review/molecules/gh_comment_poster"
 require_relative "review/molecules/gh_comment_resolver"
 require_relative "review/molecules/multi_model_executor"
-require_relative "review/molecules/report_synthesizer"
+require_relative "review/molecules/feedback_file_writer"
+require_relative "review/molecules/feedback_file_reader"
+require_relative "review/molecules/feedback_directory_manager"
+require_relative "review/molecules/feedback_synthesizer"
 
 require_relative "review/organisms/review_manager"
+require_relative "review/organisms/feedback_manager"
 
 require_relative "review/models/review_options"
+require_relative "review/models/feedback_item"
 
 require_relative "review/cli"
 

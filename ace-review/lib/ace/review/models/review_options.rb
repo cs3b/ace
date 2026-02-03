@@ -10,8 +10,8 @@ module Ace
                       :prompt_guidelines, :model, :models, :dry_run, :verbose,
                       :auto_execute, :save_session, :session_dir,
                       :task, :pr, :post_comment, :pr_metadata, :gh_timeout,
-                      :pr_comments, :pr_comment_data,
-                      :no_synthesize, :synthesis_model, :no_auto_save,
+                      :pr_comments, :pr_comment_data, :no_auto_save,
+                      :no_feedback, :feedback_model,
                       :list_presets, :list_prompts, :help
 
         def initialize(hash = {})
@@ -55,12 +55,12 @@ module Ace
           @pr_comments = hash[:pr_comments]  # nil = use default, true/false = explicit
           @pr_comment_data = nil  # Populated during execution
 
-          # Synthesis options
-          @no_synthesize = hash[:no_synthesize] || false
-          @synthesis_model = hash[:synthesis_model]
-
           # Auto-save options
           @no_auto_save = hash[:no_auto_save] || false
+
+          # Feedback extraction options
+          @no_feedback = hash[:no_feedback] || false
+          @feedback_model = hash[:feedback_model]
 
           # List commands
           @list_presets = hash[:list_presets] || false
@@ -108,6 +108,11 @@ module Ace
         # Check if output should be saved
         def save_output?
           !dry_run && save_session
+        end
+
+        # Check if feedback extraction is enabled
+        def feedback_enabled?
+          !@no_feedback
         end
 
         # Get effective model (single model for backward compatibility)
