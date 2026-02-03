@@ -126,7 +126,26 @@ ace-test <package> --profile 10
 
 **Verification**: Temporarily break the code, test should fail.
 
-### 6. E2E Specific
+### 6. Test Base Class Check
+
+- [ ] All tests in `test/molecules/` inherit from `<Package>Test` base class
+- [ ] NOT directly from `Minitest::Test`
+
+**Red Flag**: Test using `Minitest::Test` without access to package helpers
+
+```ruby
+# BAD: Missing package helpers (stub_prompt_path, shared temp dir, etc.)
+class FeedbackExtractorTest < Minitest::Test
+  # No access to stub_prompt_path, must manually stub
+end
+
+# GOOD: Has access to all package test helpers
+class FeedbackExtractorTest < AceReviewTest
+  # Can use stub_prompt_path(@extractor), shared temp dir, etc.
+end
+```
+
+### 7. E2E Specific
 
 For tests in `test/e2e/*.mt.md`:
 
