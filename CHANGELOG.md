@@ -4,6 +4,162 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.410] - 2026-02-03
+
+### Fixed
+
+- **ace-review v0.36.11**: Missing `feedback.synthesis_model` configuration in default config files
+  - Added `feedback` section to `ace-review/.ace-defaults/review/config.yml` (package defaults)
+  - Added `feedback` section to `.ace/review/config.yml` (project config)
+
+## [0.9.409] - 2026-02-03
+
+### Fixed
+
+- **ace-review v0.36.10**: JSON parsing for Claude Opus feedback synthesis
+  - `FeedbackSynthesizer.parse_synthesis_response` now handles LLM responses with text before JSON code fence
+  - Fixes "Based on my analysis..." preamble causing `JSON::ParserError`
+
+### Technical
+
+- Extracted `extract_json_from_response` helper for robust JSON extraction from various LLM response formats
+
+## [0.9.408] - 2026-02-03
+
+### Changed
+
+- **ace-review v0.36.9**: Feedback model configuration simplified
+  - Removed `extraction_model` config alias (legacy) - use `synthesis_model` only
+  - `FeedbackSynthesizer.default_synthesis_model` cascade simplified
+  - `ReviewManager.extract_feedback` cascade simplified
+  - Unified prompts - deleted `extract-feedback.system.md` (now uses `synthesize-feedback.system.md`)
+
+### Technical
+
+- ace-review test mock improvement for context extractor
+
+## [0.9.407] - 2026-02-03
+
+### Removed
+
+- **ace-review v0.36.8**: Simplified feedback system - session-scoped only
+  - `FeedbackContextResolver` molecule - task-based path resolution removed as overengineered
+  - `--task` option from all feedback commands (create, list, show, verify, skip, resolve)
+  - ~546 lines of code and tests removed
+
+### Changed
+
+- **ace-review v0.36.8**: Feedback is now session-scoped with `--session` flag across all commands
+  - All feedback commands use consistent session-based resolution pattern
+  - Latest session used as default when no `--session` specified
+
+## [0.9.406] - 2026-02-03
+
+### Fixed
+
+- **ace-review v0.36.7**: PR review fixes
+  - Documentation drift: ID format updated from "10-char" to "8-char" in feedback-workflow.md
+  - Test base class violations: FeedbackFileWriter, FeedbackFileReader, FeedbackDirectoryManager tests now inherit from AceReviewTest
+  - Missing trailing newline in .ace-defaults/review/config.yml
+
+## [0.9.405] - 2026-02-03
+
+### Removed
+
+- **ace-review v0.36.6**: Dead code cleanup
+  - `FeedbackDeduplicator` atom - superseded by LLM-based deduplication in FeedbackSynthesizer
+  - `FeedbackExtractor` molecule - replaced by FeedbackSynthesizer which handles multi-report synthesis
+  - ~600 lines of code and tests removed
+
+## [0.9.404] - 2026-02-03
+
+### Added
+
+- **ace-review v0.36.5**: Post-review improvements from PR 189 feedback
+  - Prompt size warning before LLM execution (warns at ~160K tokens, 80% of typical context)
+  - `--session` flag for `feedback list` command to specify explicit session directory
+  - Documentation for session-scoped feedback context in workflow instructions
+
+### Fixed
+
+- **ace-review v0.36.5**: Lock file (.feedback.lock) now cleaned up after writes
+
+## [0.9.403] - 2026-02-03
+
+### Changed
+
+- **ace-review v0.36.4**: Remove synthesis entirely, feedback is now the primary output
+  - FeedbackIdGenerator uses 8-char millisecond timestamp format (was 10-char with random suffix)
+  - Workflow instructions updated to use feedback verification commands
+
+### Removed
+
+- **ace-review v0.36.4**: Synthesis system completely removed
+  - `ReportSynthesizer` molecule and `ace-review synthesize` CLI command removed
+  - `--synthesize`, `--no-synthesize`, `--synthesis-model` CLI flags removed
+  - `synthesis:` and `feedback.enabled` config sections removed
+
+## [0.9.402] - 2026-02-03
+
+### Changed
+
+- **ace-review v0.36.3**: Make feedback files the primary output (disable synthesis by default)
+  - Synthesis now disabled by default per task 227 spec
+  - Added `--synthesize` flag to opt-in to synthesis-report.md generation
+  - Added explicit `feedback.enabled: true` default to config
+  - Updated `should_synthesize?` to default to false, check for --synthesize CLI flag
+  - ReviewOptions now includes :synthesize attribute
+
+## [0.9.401] - 2026-02-03
+
+### Added
+
+- **ace-review v0.36.2**: Multi-reviewer consensus synthesis for feedback system
+  - New `FeedbackSynthesizer` molecule with LLM-based consensus detection
+  - Support for multiple reviewers per `FeedbackItem` (reviewers array format)
+  - Consensus flag marks items agreed upon by 3+ models
+  - Synthesis workflow integrated into review pipeline for multi-model reviews
+  - New prompt template: `handbook/prompts/synthesize-feedback.system.md`
+
+### Changed
+
+- **ace-review v0.36.2**: FeedbackItem model updates for multi-reviewer support
+  - New `reviewers` array attribute (replaces single `reviewer`)
+  - Legacy `reviewer` accessor returns first reviewer for backward compatibility
+  - `FeedbackFileWriter` handles new multi-reviewer format
+  - `FeedbackManager` and `ReviewManager` integrate synthesis workflow
+
+## [0.9.400] - 2026-02-03
+
+### Added
+
+- **ace-test v0.1.1**: Improve verify-test-suite workflow to detect unstubbed subprocess calls
+  - Add Step 3b "Implementation Subprocess Detection" - search SOURCE files for subprocess patterns
+  - Explicit subprocess source file search checklist for molecules tests
+  - Add test base class check to test-review-checklist guide
+
+## [0.9.399] - 2026-02-03
+
+### Changed
+
+- **ace-review v0.36.1**: Session symlink architecture for task reviews
+  - Task reviews now symlink to session directories instead of copying files
+  - Multiple review sessions can be linked to the same task
+  - All session artifacts (prompts, metadata, feedback) accessible via symlink
+  - Feedback stays in session directory (gitignored via .cache)
+
+## [0.9.398] - 2026-02-03
+
+### Added
+
+- **ace-review v0.36.0**: Feedback-based review output architecture
+  - Replace monolithic synthesis reports with tracked feedback items
+  - `FeedbackItem` model with full lifecycle (pending → verified/skipped → resolved)
+  - CLI commands: `feedback list`, `show`, `verify`, `skip`, `resolve`
+  - Task integration with automatic `feedback/` directory creation
+  - Single-model and multi-model feedback extraction
+  - LLM-based extraction with semantic deduplication
+
 ## [0.9.397] - 2026-02-02
 
 ### Fixed
