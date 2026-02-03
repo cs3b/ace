@@ -110,6 +110,34 @@ end
 - Stub method name doesn't exist in current code
 - Test passes regardless of stub return value
 
+### Step 3b: Implementation Subprocess Detection
+
+For each slow molecule test (>100ms):
+
+1. **Identify the class under test** from the test filename:
+   ```bash
+   # test/molecules/feedback_extractor_test.rb tests:
+   # lib/<package>/molecules/feedback_extractor.rb
+   ```
+
+2. **Search implementation for subprocess patterns**:
+   ```bash
+   # Search for backticks, system(), Open3, IO.popen in the source file
+   grep -E '`[^`]+`|system\(|Open3\.|IO\.popen' lib/*/molecules/feedback_extractor.rb
+   ```
+
+3. **For each subprocess found**, verify it's stubbed in the test:
+   - Check if test uses `stub_prompt_path`, `stub(:available?)`, or similar
+   - If not stubbed → **Layer Violation: unstubbed subprocess**
+
+**Common subprocess patterns to search for**:
+| Pattern | Typical Cost | Standard Stub |
+|---------|-------------|---------------|
+| `` `ace-nav ...` `` | ~200ms | `stub_prompt_path(object)` |
+| `` `git ...` `` | ~100ms | MockGitRepo or stub |
+| `Open3.capture3` | ~150ms | Stub `:capture3` |
+| `system("...")` | ~100ms | Stub `:system` |
+
 ### Step 4: Layer Classification Audit (standard+)
 
 For each test file, verify it's at the correct layer:
@@ -122,7 +150,9 @@ For each test file, verify it's at the correct layer:
 - [ ] Test time <50ms each
 
 **Check molecules/ tests**:
-- [ ] Subprocess calls are stubbed
+- [ ] Subprocess calls are stubbed:
+  - [ ] Search SOURCE file for: backticks, system(), Open3, IO.popen
+  - [ ] Each subprocess has corresponding stub in test
 - [ ] Network calls use WebMock
 - [ ] Git uses MockGitRepo or stubs
 - [ ] Test time <200ms each

@@ -7,20 +7,20 @@ doc-type: workflow
 purpose: create-test-cases workflow instruction
 update:
   frequency: on-change
-  last-updated: '2025-10-02'
+  last-updated: '2026-02-03'
 ---
 
 # Create Test Cases Workflow Instruction
 
 ## Goal
 
-Generate a structured list of test cases (unit, integration, performance, etc.) for a specific feature, task, or code change based on requirements and comprehensive testing principles.
+Generate a structured list of test cases following the ACE testing approach (atoms, molecules, organisms, e2e) for a specific feature, task, or code change based on requirements and comprehensive testing principles.
 
 ## Prerequisites
 
 - Clear understanding of the feature/task requirements
 - Knowledge of the code changes or implementation approach
-- Understanding of different test types and their purposes
+- Understanding of ACE test layers and their IO policies
 - Access to existing test patterns in the codebase
 
 ## Project Context Loading
@@ -33,7 +33,7 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 
 - [ ] Analyze requirements and identify testable components
 - [ ] Identify test scenarios across different categories (happy path, edge cases, errors)
-- [ ] Categorize tests by type (unit, integration, end-to-end, performance, security)
+- [ ] Assign tests to ACE layers (atoms, molecules, organisms, e2e)
 
 ### Execution Steps
 
@@ -43,27 +43,30 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
 - [ ] Review and refine test cases for completeness
 - [ ] Save test cases in appropriate project location
 
-## Framework Detection
+## ACE Testing Framework
 
-**Auto-detect testing framework by checking project files:**
+All ACE packages use Minitest with layer-specific conventions:
 
-**Ruby:**
-- Check `Gemfile` for `rspec`, `minitest`
-- Check for `spec/` directory → RSpec
-- Check for `test/` directory → Minitest
+| Layer | Directory | IO Policy | Performance Target |
+|-------|-----------|-----------|-------------------|
+| Atoms | `test/atoms/` | **No IO** | <10ms (max 50ms) |
+| Molecules | `test/molecules/` | **No IO** | <50ms (max 100ms) |
+| Organisms | `test/organisms/` | **Mocked IO** | <100ms (max 200ms) |
+| E2E | `test/e2e/*.mt.md` | **Real IO** | <2s (max 5s) |
 
-**JavaScript:**
-- Check `package.json` for `jest`, `mocha`, `jasmine`, `vitest`
-- Check for `jest.config.js` → Jest
-- Check for `.mocharc.*` → Mocha
+**All tests MUST inherit from the package test base class:**
 
-**Python:**
-- Check `requirements.txt` or `pyproject.toml` for `pytest`, `unittest`
-- Check for `pytest.ini` → pytest
-- Check for `test_*.py` or `*_test.py` → pytest/unittest
+```ruby
+# CORRECT: Has access to package helpers
+class FeedbackExtractorTest < AceReviewTest
+  # Can use stub_prompt_path, shared temp dir, etc.
+end
 
-**Go:**
-- Check for `*_test.go` files → Go testing package
+# INCORRECT: Missing package helpers
+class FeedbackExtractorTest < Minitest::Test
+  # No access to stub_prompt_path
+end
+```
 
 ## Process Steps
 
@@ -113,148 +116,240 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    - Message queues
    - Third-party services
 
-3. **Categorize by Test Type:**
+3. **Assign to ACE Test Layer:**
 
-   **Unit Tests** (Isolated component testing):
-   - Individual functions/methods
-   - Class behavior
-   - Pure logic validation
-   - Mock external dependencies
+   ### ACE Test Layer Assignment
 
-   **Integration Tests** (Component interaction):
-   - API endpoint testing
-   - Database integration
-   - Service communication
-   - Configuration loading
+   | Layer | Directory | IO Policy | Performance Target |
+   |-------|-----------|-----------|-------------------|
+   | Atoms | `test/atoms/` | **No IO** | <10ms (max 50ms) |
+   | Molecules | `test/molecules/` | **No IO** | <50ms (max 100ms) |
+   | Organisms | `test/organisms/` | **Mocked IO** | <100ms (max 200ms) |
+   | E2E | `test/e2e/*.mt.md` | **Real IO** | <2s (max 5s) |
 
-   **End-to-End Tests** (Full workflow):
-   - Complete user journeys
-   - Multi-step processes
-   - Cross-system flows
-   - UI interaction (if applicable)
+   **Layer Decision Matrix:**
 
-   **Performance Tests** (Speed and scale):
-   - Response time benchmarks
-   - Throughput limits
-   - Resource usage
-   - Concurrent user load
+   | Test This... | At Layer | Because |
+   |-------------|----------|---------|
+   | Pure logic (input → output) | Atoms | No dependencies |
+   | Component composition | Molecules | Stubs external calls |
+   | Business workflows | Organisms | Mocked boundaries |
+   | CLI parity (ONE per file) | Organisms | Real subprocess |
+   | Critical user journeys | E2E | Full system validation |
 
-   **Security Tests** (Vulnerability checks):
-   - Authentication bypass
-   - Authorization violations
-   - Input injection
-   - Data exposure
+4. **Apply IO Isolation Requirements:**
 
-4. **Create Test Case Structure:**
+   **Atoms & Molecules (Unit Tests):**
+   - [ ] No filesystem operations (use temp dirs or mocks)
+   - [ ] No network calls (use WebMock)
+   - [ ] No subprocess calls (stub `Open3`, `system`, backticks)
+   - [ ] No real git operations (use MockGitRepo)
+   - [ ] No sleep calls (stub `Kernel.sleep`)
+
+   **Organisms (Integration):**
+   - [ ] External services stubbed
+   - [ ] ONE real CLI test per file maximum
+   - [ ] All other subprocess calls mocked
+
+   **Common Subprocess Patterns to Stub:**
+   | Pattern | Typical Cost | Standard Stub |
+   |---------|-------------|---------------|
+   | `` `ace-nav ...` `` | ~200ms | `stub_prompt_path(object)` |
+   | `` `git ...` `` | ~100ms | MockGitRepo or stub |
+   | `Open3.capture3` | ~150ms | Stub `:capture3` |
+
+5. **Create Test Case Structure:**
 
    Use the test case template embedded below.
 
-5. **Generate Comprehensive Test Cases:**
+6. **Generate Comprehensive Test Cases:**
 
-   **Example: User Authentication Feature**
+   **Example: Feedback Extraction Feature**
 
    ```markdown
-   # Test Cases: User Authentication
+   # Test Cases: Feedback Extraction
 
-   ## Unit Tests
+   ## Atoms
 
-   ### TC-001: Valid Password Validation
-   **Category**: Unit
+   ### TC-001: Extract File Path from Line
+   **Layer**: Atoms
    **Priority**: High
-   **Component**: PasswordValidator
+   **Component**: PatternAnalyzer
+   **Target**: <10ms
 
-   **Description**: Verify password meets all security requirements
+   **Description**: Extract file path from review feedback line
 
    **Test Steps**:
-   1. Call validatePassword("SecureP@ss123")
-   2. Check return value
+   1. Parse "src/foo.rb:42: warning: unused variable"
+   2. Extract file path component
 
-   **Expected**: Returns true for valid password
+   **Expected**: Returns "src/foo.rb"
 
    ---
 
-   ### TC-002: Weak Password Rejection
-   **Category**: Unit
+   ### TC-002: Parse Feedback Severity
+   **Layer**: Atoms
    **Priority**: High
-   **Component**: PasswordValidator
-
-   **Description**: Verify weak passwords are rejected
+   **Component**: FeedbackParser
+   **Target**: <10ms
 
    **Test Cases**:
-   - "123456" → false (too simple)
-   - "password" → false (common word)
-   - "short" → false (too short)
-   - "" → false (empty)
-   - null → false (null input)
+   | Input | Expected Severity | Expected Code |
+   |-------|-------------------|---------------|
+   | "error: missing method" | error | E001 |
+   | "warning: unused var" | warning | W001 |
+   | "info: style issue" | info | I001 |
 
    ---
 
-   ## Integration Tests
+   ## Molecules
 
-   ### TC-010: Successful Login Flow
-   **Category**: Integration
+   ### TC-010: Extract Feedback from Review Output
+   **Layer**: Molecules
    **Priority**: High
-   **Component**: AuthenticationService
+   **Component**: FeedbackExtractor
+   **Target**: <50ms
+   **Stubs Required**: `stub_prompt_path(@extractor)`
 
-   **Description**: Verify complete login process with valid credentials
+   **Description**: Parse review output and extract structured feedback
 
-   **Prerequisites**:
-   - Test user exists in database
-   - Authentication service running
-
-   **Test Steps**:
-   1. POST /api/login with valid credentials
-   2. Verify response status 200
-   3. Check returned JWT token
-   4. Validate token contains correct user claims
-
-   **Expected**:
-   - Status: 200 OK
-   - Valid JWT token
-   - User session created
-
-   ---
-
-   ### TC-011: Failed Login - Invalid Credentials
-   **Category**: Integration
-   **Priority**: High
-   **Component**: AuthenticationService
-
-   **Test Matrix**:
-   | Username | Password | Expected Status | Error Message |
-   |----------|----------|----------------|---------------|
-   | valid@email | wrong_pass | 401 | Invalid credentials |
-   | wrong@email | valid_pass | 401 | Invalid credentials |
-   | "" | valid_pass | 400 | Email required |
-   | valid@email | "" | 400 | Password required |
-
-   ---
-
-   ## Performance Tests
-
-   ### TC-020: Login Response Time
-   **Category**: Performance
-   **Priority**: Medium
-   **Component**: AuthenticationService
-
-   **Description**: Verify login completes within acceptable time
-
-   **Test Steps**:
-   1. Measure single login request time
-   2. Repeat 100 times
-   3. Calculate average, min, max, p95
-
-   **Expected**:
-   - Average response time < 200ms
-   - 95th percentile < 500ms
-   - No requests > 1000ms
+   **Setup**:
+   ```ruby
+   stub_prompt_path(@extractor)  # Stubs ace-nav subprocess
    ```
 
-6. **Include Test Implementation Hints:**
+   **Test Steps**:
+   1. Create extractor with mocked prompt path
+   2. Call extract with review text
+   3. Verify parsed feedback items
 
-   Use the test implementation examples from the embedded template.
+   **Expected**:
+   - Returns array of FeedbackItem objects
+   - File paths correctly extracted
+   - Severity levels parsed
 
-7. **Review and Refine:**
+   ---
+
+   ## Organisms
+
+   ### TC-020: Coordinate Multi-Model Review
+   **Layer**: Organisms
+   **Priority**: High
+   **Component**: ReviewOrchestrator
+   **Target**: <100ms
+   **Stubs Required**: Mock LLM, MockGitRepo
+
+   **Description**: Orchestrate review across multiple models
+
+   **Setup**:
+   ```ruby
+   mock_llm = Minitest::Mock.new
+   mock_llm.expect(:complete, response, [prompt])
+   ```
+
+   **Test Steps**:
+   1. Create orchestrator with mocked LLM
+   2. Submit diff for review
+   3. Verify LLM called correctly
+   4. Assert result.success?
+
+   **Expected**:
+   - LLM receives correct prompt
+   - Response properly parsed
+   - Result marked successful
+
+   ---
+
+   ## E2E
+
+   ### TC-030: Full Review Workflow
+   **Layer**: E2E
+   **Priority**: Medium
+   **Component**: CLI
+   **Target**: <2s
+   **Real IO**: Yes
+
+   **Description**: Complete review workflow from CLI invocation
+
+   **Prerequisites**:
+   - Git repository with staged changes
+   - ACE tools installed
+
+   **Test Steps**:
+   1. Run `ace-review` on test repo
+   2. Verify exit code is 0
+   3. Check feedback file created
+   4. Verify feedback content
+
+   **Expected**:
+   - Exit code: 0
+   - Feedback file: `.ace/review/feedback.json`
+   - Contains structured feedback
+   ```
+
+7. **Include Test Implementation Hints:**
+
+   **Atom test - pure logic, no IO:**
+   ```ruby
+   class PatternAnalyzerTest < AceLintTest
+     def test_extracts_file_path_from_line
+       line = "src/foo.rb:42: warning: unused variable"
+       result = PatternAnalyzer.extract_path(line)
+       assert_equal "src/foo.rb", result
+     end
+   end
+   ```
+
+   **Molecule test - stubs subprocess calls:**
+   ```ruby
+   class FeedbackExtractorTest < AceReviewTest
+     def setup
+       @extractor = FeedbackExtractor.new
+       stub_prompt_path(@extractor)  # Stubs ace-nav subprocess
+     end
+
+     def test_extracts_feedback_from_review
+       result = @extractor.extract(review_text)
+       assert_equal 3, result.items.length
+     end
+   end
+   ```
+
+   **Organism test - mocked boundaries:**
+   ```ruby
+   class ReviewOrchestratorTest < AceReviewTest
+     def test_coordinates_multi_model_review
+       mock_llm = Minitest::Mock.new
+       mock_llm.expect(:complete, response, [prompt])
+
+       orchestrator = ReviewOrchestrator.new(llm: mock_llm)
+       result = orchestrator.review(diff)
+
+       assert result.success?
+       mock_llm.verify
+     end
+   end
+   ```
+
+8. **Verification:**
+
+   After creating test cases, validate with:
+
+   ```bash
+   # Verify tests meet performance targets
+   ace-test <package> --profile 10
+
+   # Full suite health check
+   /ace:verify-test-suite <package>
+   ```
+
+   Expected:
+   - All atoms <50ms
+   - All molecules <100ms
+   - All organisms <200ms
+   - No unstubbed subprocess calls in unit tests
+
+9. **Review and Refine:**
 
    **Test Case Review Checklist:**
    - [ ] All requirements have corresponding tests
@@ -264,9 +359,11 @@ Generate a structured list of test cases (unit, integration, performance, etc.) 
    - [ ] Test data is realistic
    - [ ] Tests are independent
    - [ ] Clear pass/fail criteria
-   - [ ] Appropriate test types chosen
+   - [ ] Appropriate layer chosen (atoms/molecules/organisms/e2e)
+   - [ ] IO isolation requirements met
+   - [ ] Performance targets achievable
 
-8. **Save Test Cases:**
+10. **Save Test Cases:**
 
    **File Organization:**
 
@@ -395,13 +492,23 @@ This workflow ensures thorough test coverage through systematic identification a
 
 ## Test Case: [TC-001] [Descriptive Name]
 
-**Category**: [Unit | Integration | E2E | Performance | Security]
+**Layer**: [Atoms | Molecules | Organisms | E2E]
 **Priority**: [High | Medium | Low]
 **Component**: [Component/Module being tested]
+**Target**: [<10ms | <50ms | <100ms | <2s]
+**Stubs Required**: [List stubs needed for atoms/molecules/organisms]
 
 ### Description
 
 Brief explanation of what this test validates.
+
+### IO Isolation Checklist
+
+- [ ] No filesystem operations (atoms/molecules)
+- [ ] No network calls (atoms/molecules/organisms)
+- [ ] No subprocess calls without stubs (atoms/molecules)
+- [ ] No sleep calls (atoms/molecules)
+- [ ] At most ONE real CLI call (organisms)
 
 ### Prerequisites
 
@@ -446,71 +553,123 @@ Brief explanation of what this test validates.
 }
 ```
 
-## Test Implementation Examples
+## ACE Minitest Implementation Examples
 
-### Jest/JavaScript Example
-
-```javascript
-describe('[Feature Name]', () => {
-  test('[Test Case Description]', () => {
-    // Arrange
-    const input = 'test data';
-
-    // Act
-    const result = featureFunction(input);
-
-    // Assert
-    expect(result).toBe('expected value');
-  });
-});
-```
-
-### RSpec/Ruby Example
+### Atom Test Example
 
 ```ruby
-describe '[Feature Name]' do
-  it '[Test Case Description]' do
-    # Arrange
-    input = 'test data'
+# test/atoms/pattern_analyzer_test.rb
+class PatternAnalyzerTest < AceLintTest
+  def test_extracts_file_path_from_line
+    line = "src/foo.rb:42: warning: unused variable"
+    result = PatternAnalyzer.extract_path(line)
+    assert_equal "src/foo.rb", result
+  end
 
-    # Act
-    result = feature_function(input)
-
-    # Assert
-    expect(result).to eq('expected value')
+  def test_returns_nil_for_invalid_line
+    result = PatternAnalyzer.extract_path("invalid line")
+    assert_nil result
   end
 end
 ```
 
-### Pytest/Python Example
+### Molecule Test Example
 
-```python
-def test_feature_name():
-    # Arrange
-    input_data = 'test data'
+```ruby
+# test/molecules/feedback_extractor_test.rb
+class FeedbackExtractorTest < AceReviewTest
+  def setup
+    @extractor = FeedbackExtractor.new
+    stub_prompt_path(@extractor)  # Stubs ace-nav subprocess
+  end
 
-    # Act
-    result = feature_function(input_data)
+  def test_extracts_feedback_from_review
+    review_text = "src/foo.rb:42: warning: unused variable"
+    result = @extractor.extract(review_text)
 
-    # Assert
-    assert result == 'expected value'
+    assert_equal 1, result.items.length
+    assert_equal "src/foo.rb", result.items.first.file
+  end
+
+  def test_handles_empty_review
+    result = @extractor.extract("")
+    assert_empty result.items
+  end
+end
 ```
 
-### Go Testing Example
+### Organism Test Example
 
-```go
-func TestFeatureName(t *testing.T) {
-    // Arrange
-    input := "test data"
+```ruby
+# test/organisms/review_orchestrator_test.rb
+class ReviewOrchestratorTest < AceReviewTest
+  def test_coordinates_multi_model_review
+    mock_llm = Minitest::Mock.new
+    mock_llm.expect(:complete, mock_response, [Hash])
 
-    // Act
-    result := featureFunction(input)
+    orchestrator = ReviewOrchestrator.new(llm: mock_llm)
+    result = orchestrator.review(diff)
 
-    // Assert
-    if result != "expected value" {
-        t.Errorf("Expected 'expected value', got '%s'", result)
-    }
-}
+    assert result.success?
+    mock_llm.verify
+  end
+
+  def test_handles_llm_failure_gracefully
+    mock_llm = Minitest::Mock.new
+    mock_llm.expect(:complete, nil) { raise StandardError }
+
+    orchestrator = ReviewOrchestrator.new(llm: mock_llm)
+    result = orchestrator.review(diff)
+
+    refute result.success?
+    assert result.error
+  end
+end
+```
+
+### E2E Test Example
+
+```markdown
+<!-- test/e2e/review-workflow.mt.md -->
+# E2E: Review Workflow
+
+## Setup
+
+```bash
+TEMP_DIR=$(mktemp -d)
+cd $TEMP_DIR
+git init
+echo "def foo; end" > app.rb
+git add app.rb
+```
+
+## Test: Basic Review Workflow
+
+```bash
+ace-review
+
+# Verify exit code
+[ $? -eq 0 ] && echo PASS || echo FAIL
+
+# Verify feedback file created
+[ -f .ace/review/feedback.json ] && echo PASS || echo FAIL
+
+# Verify feedback content
+jq -e '.items | length > 0' .ace/review/feedback.json && echo PASS || echo FAIL
+```
+
+## Error Case: Missing Git Repo
+
+```bash
+cd /tmp
+ace-review 2>&1 | grep -q "not a git repository"
+[ $? -eq 0 ] && echo PASS || echo FAIL
+```
+
+## Cleanup
+
+```bash
+rm -rf $TEMP_DIR
 ```
 
 </template>
