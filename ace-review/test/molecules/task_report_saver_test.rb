@@ -96,16 +96,6 @@ class TaskReportSaverTest < Minitest::Test
     assert_match(/my-custom-preset/, filename)
   end
 
-  def test_generate_filename_for_synthesis_report
-    review_data = { preset: "code-multi", model: "google:gemini-2.5-flash", report_type: 'synthesis' }
-
-    filename = Ace::Review::Molecules::TaskReportSaver.generate_filename(review_data)
-
-    # Should match pattern: {compact_id}-synthesis.md
-    # Compact ID is 6 chars Base36 (0-9, a-z)
-    assert_match(/^[0-9a-z]{6}-synthesis\.md$/, filename)
-  end
-
   def test_extract_provider_from_prefixed_model
     provider = Ace::Review::Molecules::TaskReportSaver.extract_provider("google:gemini-2.5-flash")
     assert_equal "google", provider
@@ -243,5 +233,157 @@ class TaskReportSaverTest < Minitest::Test
       refute result[:success], "Expected save_to_release to fail"
       assert_includes result[:error], "Failed to save to release"
     end
+  end
+
+  # ============================================================================
+  # Feedback Methods Tests (Task 227.07)
+  # ============================================================================
+
+  def test_feedback_path_returns_correct_path
+    task_path = "/project/.ace-taskflow/v.0.9.0/tasks/227-feature"
+
+    feedback_path = Ace::Review::Molecules::TaskReportSaver.feedback_path(task_path)
+
+    assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/227-feature/feedback", feedback_path
+  end
+
+  def test_feedback_archive_path_returns_correct_path
+    task_path = "/project/.ace-taskflow/v.0.9.0/tasks/227-feature"
+
+    archive_path = Ace::Review::Molecules::TaskReportSaver.feedback_archive_path(task_path)
+
+    assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/227-feature/feedback/_archived", archive_path
+  end
+
+  def test_save_feedback_creates_feedback_directory
+    # Create a feedback file
+    feedback_file = File.join(@session_dir, "abc123-sql-injection.s.md")
+    File.write(feedback_file, "# SQL Injection\nDescription of the issue")
+
+    result = Ace::Review::Molecules::TaskReportSaver.save_feedback(@task_dir, feedback_file)
+
+    assert result[:success], "Expected save_feedback to succeed: #{result[:error]}"
+    assert Dir.exist?(File.join(@task_dir, "feedback")), "Expected feedback/ directory to be created"
+  end
+
+  def test_save_feedback_copies_file_to_correct_location
+    # Create a feedback file
+    feedback_file = File.join(@session_dir, "abc123-sql-injection.s.md")
+    File.write(feedback_file, "# SQL Injection\nDescription of the issue")
+
+    result = Ace::Review::Molecules::TaskReportSaver.save_feedback(@task_dir, feedback_file)
+
+    assert result[:success], "Expected save_feedback to succeed: #{result[:error]}"
+    assert File.exist?(result[:path]), "Expected feedback file to exist at #{result[:path]}"
+
+    # Verify the path is in the feedback directory
+    assert_match(/feedback\/abc123-sql-injection\.s\.md$/, result[:path])
+
+    # Verify content was copied
+    content = File.read(result[:path])
+    assert_includes content, "SQL Injection"
+  end
+
+  def test_save_feedback_preserves_original_filename
+    # Create a feedback file with specific ID and slug
+    feedback_file = File.join(@session_dir, "xyz789-n-plus-one-query.s.md")
+    File.write(feedback_file, "# N+1 Query\nPerformance issue")
+
+    result = Ace::Review::Molecules::TaskReportSaver.save_feedback(@task_dir, feedback_file)
+
+    assert result[:success]
+    assert_equal "xyz789-n-plus-one-query.s.md", File.basename(result[:path])
+  end
+
+  def test_save_feedback_returns_error_for_missing_task_dir
+    feedback_file = File.join(@session_dir, "abc123-issue.s.md")
+    File.write(feedback_file, "# Issue")
+    non_existent_dir = File.join(@temp_dir, "nonexistent")
+
+    result = Ace::Review::Molecules::TaskReportSaver.save_feedback(non_existent_dir, feedback_file)
+
+    refute result[:success], "Expected save_feedback to fail"
+    assert_includes result[:error], "Task directory not found"
+  end
+
+  def test_save_feedback_returns_error_for_missing_feedback_file
+    non_existent_file = File.join(@session_dir, "nonexistent.s.md")
+
+    result = Ace::Review::Molecules::TaskReportSaver.save_feedback(@task_dir, non_existent_file)
+
+    refute result[:success], "Expected save_feedback to fail"
+    assert_includes result[:error], "Feedback file not found"
+  end
+
+  def test_archive_feedback_moves_to_archived_directory
+    # Create feedback directory with a file
+    feedback_dir = File.join(@task_dir, "feedback")
+    FileUtils.mkdir_p(feedback_dir)
+
+    feedback_file = File.join(feedback_dir, "abc123-resolved-issue.s.md")
+    File.write(feedback_file, "# Resolved Issue\nThis was fixed")
+
+    result = Ace::Review::Molecules::TaskReportSaver.archive_feedback(@task_dir, feedback_file)
+
+    assert result[:success], "Expected archive_feedback to succeed: #{result[:error]}"
+    assert Dir.exist?(File.join(feedback_dir, "_archived")), "Expected _archived/ directory to be created"
+
+    # Verify file was moved
+    refute File.exist?(feedback_file), "Original file should be removed"
+    assert File.exist?(result[:path]), "Archived file should exist at #{result[:path]}"
+    assert_match(/_archived\/abc123-resolved-issue\.s\.md$/, result[:path])
+  end
+
+  def test_archive_feedback_creates_archived_directory_if_needed
+    # Create feedback directory without _archived subdirectory
+    feedback_dir = File.join(@task_dir, "feedback")
+    FileUtils.mkdir_p(feedback_dir)
+
+    feedback_file = File.join(feedback_dir, "abc123-issue.s.md")
+    File.write(feedback_file, "# Issue")
+
+    archive_dir = File.join(feedback_dir, "_archived")
+    refute Dir.exist?(archive_dir), "_archived/ should not exist before archive"
+
+    result = Ace::Review::Molecules::TaskReportSaver.archive_feedback(@task_dir, feedback_file)
+
+    assert result[:success]
+    assert Dir.exist?(archive_dir), "_archived/ should be created"
+  end
+
+  def test_archive_feedback_returns_error_for_missing_task_dir
+    non_existent_dir = File.join(@temp_dir, "nonexistent")
+
+    result = Ace::Review::Molecules::TaskReportSaver.archive_feedback(
+      non_existent_dir,
+      "/some/file.s.md"
+    )
+
+    refute result[:success]
+    assert_includes result[:error], "Task directory not found"
+  end
+
+  def test_archive_feedback_returns_error_for_missing_feedback_file
+    result = Ace::Review::Molecules::TaskReportSaver.archive_feedback(
+      @task_dir,
+      File.join(@task_dir, "feedback", "nonexistent.s.md")
+    )
+
+    refute result[:success]
+    assert_includes result[:error], "Feedback file not found"
+  end
+
+  def test_save_feedback_with_metadata
+    # Test that metadata parameter is accepted (for future extension)
+    feedback_file = File.join(@session_dir, "abc123-issue.s.md")
+    File.write(feedback_file, "# Issue")
+
+    result = Ace::Review::Molecules::TaskReportSaver.save_feedback(
+      @task_dir,
+      feedback_file,
+      { priority: "high", category: "security" }
+    )
+
+    assert result[:success], "Should accept metadata parameter"
   end
 end

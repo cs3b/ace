@@ -80,17 +80,10 @@ module Ace
         end
 
         # Generate filename with compact ID for review report
-        # @param review_data [Hash] Review metadata (preset, model, report_type, etc.)
-        # @return [String] Filename with format depending on report_type:
-        #   - synthesis: {compact_id}-synthesis.md
-        #   - regular:   {compact_id}-model-preset-review.md
+        # @param review_data [Hash] Review metadata (preset, model, etc.)
+        # @return [String] Filename with format: {compact_id}-model-preset-review.md
         def self.generate_filename(review_data)
           compact_id = Ace::Support::Timestamp.encode(Time.now)
-
-          # Handle synthesis reports with special filename format
-          if review_data[:report_type] == 'synthesis'
-            return "#{compact_id}-synthesis.md"
-          end
 
           # Use full model slug for uniqueness (e.g., "google:gemini-2.5-flash" -> "google-gemini-2-5-flash")
           model = review_data[:model] || "unknown"
@@ -121,6 +114,84 @@ module Ace
               # Fallback: sanitize entire model name
               model.gsub(/[^a-zA-Z0-9\-_]/, '-').downcase.split('-').first
             end
+          end
+        end
+
+        # ============================================================================
+        # Feedback Methods
+        # ============================================================================
+
+        # Get the feedback directory path for a task
+        # @param task_path [String] Path to the task directory
+        # @return [String] The feedback directory path
+        def self.feedback_path(task_path)
+          File.join(task_path, "feedback")
+        end
+
+        # Get the feedback archive directory path for a task
+        # @param task_path [String] Path to the task directory
+        # @return [String] The feedback archive directory path
+        def self.feedback_archive_path(task_path)
+          File.join(task_path, "feedback", "_archived")
+        end
+
+        # Save a feedback file to a task's feedback/ directory
+        # @param task_path [String] Path to the task directory
+        # @param feedback_file [String] Path to the feedback file to copy
+        # @param feedback_data [Hash] Optional metadata (currently unused, for future extension)
+        # @return [Hash] Result with :success, :path, or :error
+        def self.save_feedback(task_path, feedback_file, feedback_data = {})
+          # Validate inputs
+          return { success: false, error: "Task directory not found: #{task_path}" } unless Dir.exist?(task_path)
+          return { success: false, error: "Feedback file not found: #{feedback_file}" } unless File.exist?(feedback_file)
+
+          # Create feedback/ subdirectory if it doesn't exist
+          feedback_dir = feedback_path(task_path)
+          begin
+            FileUtils.mkdir_p(feedback_dir)
+          rescue => e
+            return { success: false, error: "Cannot create feedback directory: #{e.message}" }
+          end
+
+          # Use original filename for feedback files (they already have meaningful names)
+          filename = File.basename(feedback_file)
+          output_path = File.join(feedback_dir, filename)
+
+          # Copy feedback file to task directory
+          begin
+            FileUtils.cp(feedback_file, output_path)
+            { success: true, path: output_path }
+          rescue => e
+            { success: false, error: "Failed to save feedback: #{e.message}" }
+          end
+        end
+
+        # Archive a feedback file by moving it to the task's feedback/_archived/ directory
+        # @param task_path [String] Path to the task directory
+        # @param feedback_file [String] Path to the feedback file to archive
+        # @return [Hash] Result with :success, :path, or :error
+        def self.archive_feedback(task_path, feedback_file)
+          # Validate inputs
+          return { success: false, error: "Task directory not found: #{task_path}" } unless Dir.exist?(task_path)
+          return { success: false, error: "Feedback file not found: #{feedback_file}" } unless File.exist?(feedback_file)
+
+          # Create feedback/_archived/ subdirectory if it doesn't exist
+          archive_dir = feedback_archive_path(task_path)
+          begin
+            FileUtils.mkdir_p(archive_dir)
+          rescue => e
+            return { success: false, error: "Cannot create archive directory: #{e.message}" }
+          end
+
+          # Move feedback file to archive
+          filename = File.basename(feedback_file)
+          archive_path = File.join(archive_dir, filename)
+
+          begin
+            FileUtils.mv(feedback_file, archive_path)
+            { success: true, path: archive_path }
+          rescue => e
+            { success: false, error: "Failed to archive feedback: #{e.message}" }
           end
         end
       end

@@ -7,6 +7,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.11] - 2026-02-03
+
+### Fixed
+- Missing `feedback.synthesis_model` configuration in default config files
+
+## [0.36.10] - 2026-02-03
+
+### Fixed
+- JSON parsing for Claude Opus responses that include text before JSON code fence
+- `FeedbackSynthesizer.parse_synthesis_response` now handles "Based on my analysis..." preamble
+
+### Technical
+- Extracted `extract_json_from_response` helper for robust JSON extraction from LLM responses
+- Added test case for text-before-JSON-fence pattern
+
+## [0.36.9] - 2026-02-03
+
+### Removed
+- `extraction_model` config option (legacy alias) - use `synthesis_model` only
+- `extract-feedback.system.md` prompt - unified into `synthesize-feedback.system.md`
+
+### Changed
+- Feedback model configuration simplified to single `synthesis_model` option
+- `FeedbackSynthesizer.default_synthesis_model` cascade simplified to remove `extraction_model` fallback
+- `ReviewManager.extract_feedback` cascade simplified to use `synthesis_model` only
+
+### Technical
+- Removed ~140 lines of legacy prompt code
+- Simplified configuration cascade - reduces confusion from duplicate config options
+
+## [0.36.8] - 2026-02-03
+
+### Removed
+- `FeedbackContextResolver` molecule - task-based path resolution no longer needed
+- `--task` option from all feedback commands (create, list, show, verify, skip, resolve)
+
+### Changed
+- **Feedback is now session-scoped only** - all commands use `--session` flag with latest session default
+- Simplified path resolution across all feedback commands to use consistent session-based pattern
+- Updated test helper to remove `with_context_resolver_stub` helper
+- All feedback command tests updated to use `session:` option directly
+
+### Technical
+- Removed ~546 lines of overengineered task-based resolution code
+- Simplified feedback path resolution to: explicit session → latest session cache
+
+### Fixed
+- Documentation drift: ID format updated from "10-char" to "8-char" in feedback-workflow.md
+- Test base class violations: FeedbackFileWriter, FeedbackFileReader, FeedbackDirectoryManager tests now inherit from AceReviewTest
+- Missing trailing newline in .ace-defaults/review/config.yml
+
+## [0.36.6] - 2026-02-03
+
+### Removed
+- `FeedbackDeduplicator` atom - superseded by LLM-based deduplication in FeedbackSynthesizer
+- `FeedbackExtractor` molecule - replaced by FeedbackSynthesizer which handles multi-report synthesis
+
+### Technical
+- Removed ~600 lines of dead code and tests that were not used in the current feedback architecture
+
+## [0.36.5] - 2026-02-03
+
+### Added
+- Prompt size warning before LLM execution - warns when prompt exceeds 80% of typical context window (~160K tokens)
+- `--session` flag for `feedback list` command - allows explicit session directory path
+- Documentation for session-scoped feedback context in workflow instructions
+
+### Fixed
+- Lock file (.feedback.lock) now cleaned up after writes - prevents clutter in feedback directories
+
+### Technical
+- Added LlmExecutor and MultiModelExecutor prompt size warning with formatted token count
+- Updated FeedbackFileWriter with ensure block for lock file cleanup
+- Added tests for prompt size warning, lock file cleanup, and --session flag
+
+## [0.36.4] - 2026-02-03
+
+### Changed
+- **Feedback is now the primary output** - synthesis-report.md has been removed entirely
+- FeedbackIdGenerator now uses 8-char millisecond timestamp format (was 10-char with random suffix)
+- `should_extract_feedback?` always returns true if results exist (no config toggle)
+- Workflow instructions updated to use feedback commands instead of synthesis
+
+### Removed
+- **ReportSynthesizer molecule** - no longer needed with feedback-first architecture
+- `ace-review synthesize` CLI command removed
+- `--synthesize`, `--no-synthesize`, `--synthesis-model` CLI flags removed
+- `synthesis:` config section removed from config files
+- `feedback.enabled` config removed (feedback always runs)
+- `synthesize`, `no_synthesize`, `synthesis_model` options from ReviewOptions
+
+### Technical
+- Updated review.wf.md and review-pr.wf.md with feedback verification workflow
+- Simplified ReviewManager by removing synthesis-related methods
+- Tests updated for new 8-char feedback IDs and removed synthesis tests
+
+## [0.36.3] - 2026-02-03
+
+### Fixed
+- Synthesis now disabled by default (feedback files are primary output per task 227 spec)
+- Added `--synthesize` flag to opt-in to synthesis-report.md generation
+- Added explicit `feedback.enabled: true` default to config
+
+### Changed
+- `should_synthesize?` now defaults to false, checks for --synthesize CLI flag
+- ReviewOptions now includes :synthesize attribute
+
+### Technical
+- Updated default config to clarify synthesis is opt-in
+
+## [0.36.2] - 2026-02-03
+
+### Added
+- FeedbackSynthesizer molecule for multi-reviewer consensus analysis
+- Support for multiple reviewers per FeedbackItem (reviewers array format)
+- Consensus detection: marks items agreed upon by 3+ models
+- Synthesize feedback prompt template at handbook/prompts/synthesize-feedback.system.md
+
+### Changed
+- FeedbackItem now stores multiple reviewers with consensus flag
+- FeedbackFileWriter handles new multi-reviewer format
+- FeedbackManager integrates synthesis workflow
+- ReviewManager adds synthesis step for multi-model reviews
+
+### Technical
+- Added FeedbackSynthesizer with LLM-based consensus detection
+- Updated tests for multi-reviewer workflow
+
+## [0.36.1] - 2026-02-03
+
+### Changed
+- **Session Symlink Architecture**: Task reviews now symlink to session directories instead of copying files
+  - Multiple review sessions can be linked to the same task
+  - All session artifacts (prompts, metadata, feedback) accessible via symlink
+  - Feedback stays in session directory (gitignored via .cache)
+  - New methods: `link_session_to_task`, `link_session_to_task_if_requested`, `auto_link_session_if_enabled`
+  - Deprecated: `save_to_task_if_requested`, `save_multi_model_to_task`, `save_synthesis_to_task`
+
+### Technical
+- Simplified `determine_feedback_path` to always return session directory
+- Updated feedback-workflow.md documentation for symlink architecture
+
+## [0.36.0] - 2026-02-03
+
+### Added
+- **Feedback System**: Replace monolithic synthesis reports with tracked feedback items
+  - `FeedbackItem` model with full lifecycle support (task 227.01)
+  - File I/O with atomic writes and locking (task 227.02)
+  - LLM-based feedback extraction with deduplication (task 227.03)
+  - `FeedbackManager` organism for lifecycle orchestration (task 227.04)
+  - Integration with review pipeline via `--no-feedback` flag (task 227.05)
+  - CLI commands: `feedback list`, `show`, `verify`, `skip`, `resolve` (task 227.06)
+  - Task integration with automatic directory creation (task 227.07)
+  - Single-model feedback extraction (previously only multi-model supported)
+  - Documentation at `docs/feedback-workflow.md` (task 227.08)
+
+### Fixed
+- Use blocking lock for reliable concurrent feedback file access
+- Expand branch pattern to match `task-` prefix for auto-save
+- Merge files on deduplication instead of discarding
+- Use `extraction_model` config key for consistency
+- Use dynamic distance threshold for deduplication
+- Use dedicated lock file for concurrent write coordination
+- Add random suffix to FeedbackIdGenerator for uniqueness
+
+### Technical
+- Update ID format documentation from 6-char to 10-char
+
 ## [0.35.6] - 2026-02-02
 
 ### Added
