@@ -17,11 +17,6 @@ defaults:
     - '^feature/(\d+)-'     # Feature branches: feature/123-name
   auto_save_release_fallback: true
 
-# Synthesis configuration for multi-model review reports
-synthesis:
-  enabled: true  # Set to false to disable automatic synthesis
-  model: "google:flash-preview"  # Model to use for synthesis
-
 # Storage configuration
 # storage:
 #   # Where to store review outputs
@@ -31,6 +26,11 @@ synthesis:
 #   # You can override with custom path (supports %{release} placeholder):
 #   base_path: ".ace-taskflow/%{release}/reviews"
 #   auto_organize: true
+
+# Feedback extraction configuration
+feedback:
+  enabled: true
+  synthesis_model: google:gemini-2.5-flash
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability
