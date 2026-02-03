@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "ace/review/molecules/task_resolver"
+require "ace/review/molecules/task_report_saver"
 
 class ReviewManagerTest < AceReviewTest
   def setup
@@ -754,10 +756,11 @@ class ReviewManagerTest < AceReviewTest
   end
 
   # ============================================================================
-  # Auto-save orchestration tests
+  # Auto-save orchestration tests (deprecated - testing legacy methods)
   # ============================================================================
 
   def test_auto_save_review_if_enabled_with_no_auto_save_flag
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     # Create a mock options object with no_auto_save = true
     options = Struct.new(:no_auto_save).new(true)
 
@@ -769,6 +772,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_when_disabled_in_config
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = "/tmp/review.md"
@@ -784,6 +788,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_with_explicit_task_reference
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     # When @task_reference is set, auto-save should not run (explicit --task takes precedence)
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
@@ -804,6 +809,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_falls_back_to_release_on_no_branch
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -824,6 +830,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_task_resolution_success
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -856,6 +863,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_task_not_found_falls_back_to_release
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -881,6 +889,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_handles_invalid_branch_gracefully
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -902,6 +911,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_handles_head_state
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -921,6 +931,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_release_fallback_on_no_branch_success
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -946,6 +957,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_release_fallback_on_task_not_found_success
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -977,6 +989,7 @@ class ReviewManagerTest < AceReviewTest
   end
 
   def test_auto_save_review_if_enabled_release_fallback_on_task_save_failure
+    # NOTE: auto_save_review_if_enabled is deprecated, use auto_link_session_if_enabled
     options = Struct.new(:no_auto_save).new(false)
     review_data = { preset: "pr", model: "claude" }
     review_file = File.join(@temp_dir, "review.md")
@@ -1176,5 +1189,821 @@ class ReviewManagerTest < AceReviewTest
     # Should fall back to preset subject config
     expected = { "bundle" => { "diffs" => ["default-diff"] } }
     assert_equal expected, result
+  end
+
+  # ============================================================================
+  # Feedback Extraction Integration Tests (Task 227.05)
+  # ============================================================================
+
+  def test_should_extract_feedback_returns_true_by_default
+    # Feedback always runs by default with successful results
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      auto_execute: true
+    )
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/to/report1.md" },
+        "model2" => { success: true, output_file: "/path/to/report2.md" }
+      }
+    }
+
+    assert @manager.send(:should_extract_feedback?, result, options),
+           "Should extract feedback by default"
+  end
+
+  def test_should_extract_feedback_returns_false_with_no_feedback_flag
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      no_feedback: true
+    )
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/to/report1.md" }
+      }
+    }
+
+    refute @manager.send(:should_extract_feedback?, result, options),
+           "Should not extract feedback when --no-feedback flag is set"
+  end
+
+  def test_should_extract_feedback_returns_false_with_no_successful_results
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr"
+    )
+
+    result = {
+      results: {
+        "model1" => { success: false, error: "Failed" },
+        "model2" => { success: false, error: "Also failed" }
+      }
+    }
+
+    refute @manager.send(:should_extract_feedback?, result, options),
+           "Should not extract feedback when no successful results"
+  end
+
+  def test_collect_report_paths_includes_model_reports
+    session_dir = File.join(@temp_dir, "collect_test")
+    FileUtils.mkdir_p(session_dir)
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/to/report1.md" },
+        "model2" => { success: true, output_file: "/path/to/report2.md" },
+        "model3" => { success: false, error: "Failed" }
+      }
+    }
+
+    paths = @manager.send(:collect_report_paths, result, session_dir)
+
+    assert_includes paths, "/path/to/report1.md"
+    assert_includes paths, "/path/to/report2.md"
+    assert_equal 2, paths.length, "Should only include successful model reports"
+  end
+
+  def test_collect_report_paths_only_includes_model_reports
+    # FeedbackSynthesizer reads individual review reports and produces
+    # deduplicated findings directly - no synthesis needed
+    session_dir = File.join(@temp_dir, "collect_model_only_test")
+    FileUtils.mkdir_p(session_dir)
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/to/report1.md" }
+      }
+    }
+
+    paths = @manager.send(:collect_report_paths, result, session_dir)
+
+    assert_includes paths, "/path/to/report1.md"
+    assert_equal 1, paths.length, "Should only include model report"
+  end
+
+  def test_collect_report_paths_includes_dev_feedback_if_exists
+    session_dir = File.join(@temp_dir, "collect_feedback_test")
+    FileUtils.mkdir_p(session_dir)
+
+    # Create dev-feedback file
+    dev_feedback_path = File.join(session_dir, "review-dev-feedback.md")
+    File.write(dev_feedback_path, "# Developer Feedback\nSome comments")
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/to/report1.md" }
+      }
+    }
+
+    paths = @manager.send(:collect_report_paths, result, session_dir)
+
+    assert_includes paths, "/path/to/report1.md"
+    assert_includes paths, dev_feedback_path
+  end
+
+  def test_determine_feedback_path_always_returns_session_dir
+    # With session-symlink architecture, feedback always lives in session
+    review_data = { preset: "pr", model: "test-model" }
+    session_dir = File.join(@temp_dir, "session")
+    FileUtils.mkdir_p(session_dir)
+
+    # Even with task reference, should return session_dir
+    @manager.instance_variable_set(:@task_reference, "227")
+
+    path = @manager.send(:determine_feedback_path, review_data, session_dir)
+    assert_equal session_dir, path, "Should always return session_dir for feedback"
+  ensure
+    @manager.instance_variable_set(:@task_reference, nil)
+  end
+
+  def test_determine_feedback_path_returns_session_dir_without_task
+    review_data = { preset: "pr", model: "test-model" }
+    session_dir = File.join(@temp_dir, "session")
+    FileUtils.mkdir_p(session_dir)
+
+    # No task reference set
+    @manager.instance_variable_set(:@task_reference, nil)
+
+    path = @manager.send(:determine_feedback_path, review_data, session_dir)
+    assert_equal session_dir, path, "Should return session directory"
+  end
+
+  def test_extract_feedback_calls_feedback_manager
+    session_dir = File.join(@temp_dir, "extract_test")
+    FileUtils.mkdir_p(session_dir)
+
+    # Create test report files
+    report1_path = File.join(session_dir, "report1.md")
+    report2_path = File.join(session_dir, "report2.md")
+    File.write(report1_path, "# Report 1\nFinding 1")
+    File.write(report2_path, "# Report 2\nFinding 2")
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: report1_path },
+        "model2" => { success: true, output_file: report2_path }
+      }
+    }
+
+    review_data = { preset: "pr", model: "test-model" }
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      feedback_model: "extraction-model"
+    )
+
+    # Mock FeedbackManager
+    mock_feedback_manager = Minitest::Mock.new
+    mock_feedback_manager.expect(:extract_and_save, {
+      success: true,
+      items_count: 3,
+      paths: ["/path/to/feedback1.s.md", "/path/to/feedback2.s.md", "/path/to/feedback3.s.md"]
+    }) do |**kwargs|
+      kwargs[:report_paths].include?(report1_path) &&
+        kwargs[:report_paths].include?(report2_path) &&
+        kwargs[:base_path] == session_dir &&
+        kwargs[:model] == "extraction-model"
+    end
+
+    Ace::Review::Organisms::FeedbackManager.stub :new, mock_feedback_manager do
+      feedback_result = @manager.send(:extract_feedback, result, session_dir, review_data, options)
+
+      assert feedback_result[:success]
+      assert_equal 3, feedback_result[:items_count]
+    end
+
+    mock_feedback_manager.verify
+  end
+
+  def test_extract_feedback_handles_errors_gracefully
+    session_dir = File.join(@temp_dir, "error_test")
+    FileUtils.mkdir_p(session_dir)
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/nonexistent/path.md" }
+      }
+    }
+
+    review_data = { preset: "pr", model: "test-model" }
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    # Mock FeedbackManager to raise an error
+    error_manager = Minitest::Mock.new
+    error_manager.expect(:extract_and_save, nil) do |**kwargs|
+      raise StandardError, "LLM extraction failed"
+    end
+
+    output = capture_io do
+      Ace::Review::Organisms::FeedbackManager.stub :new, error_manager do
+        feedback_result = @manager.send(:extract_feedback, result, session_dir, review_data, options)
+
+        refute feedback_result[:success]
+        assert_equal "LLM extraction failed", feedback_result[:error]
+      end
+    end
+
+    assert_match(/Warning: Feedback extraction failed/, output[1])
+    error_manager.verify
+  end
+
+  def test_build_multi_model_response_includes_feedback_info
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/report1.md" },
+        "model2" => { success: true, output_file: "/path/report2.md" }
+      },
+      summary: { total_models: 2, success_count: 2 }
+    }
+
+    session_dir = "/path/to/session"
+    task_paths = ["/path/to/task/report1.md"]
+    feedback_result = {
+      success: true,
+      items_count: 5,
+      paths: ["/path/feedback1.s.md", "/path/feedback2.s.md"]
+    }
+
+    response = @manager.send(
+      :build_multi_model_response,
+      result, session_dir, task_paths, feedback_result
+    )
+
+    assert response[:success]
+    assert_equal 5, response[:feedback_count]
+    assert_equal ["/path/feedback1.s.md", "/path/feedback2.s.md"], response[:feedback_paths]
+  end
+
+  def test_build_multi_model_response_without_feedback
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/report1.md" }
+      },
+      summary: { total_models: 1, success_count: 1 }
+    }
+
+    session_dir = "/path/to/session"
+
+    response = @manager.send(
+      :build_multi_model_response,
+      result, session_dir, nil, nil
+    )
+
+    assert response[:success]
+    refute response.key?(:feedback_count)
+    refute response.key?(:feedback_paths)
+  end
+
+  def test_review_options_feedback_enabled_defaults_to_true
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    assert options.feedback_enabled?, "Feedback should be enabled by default"
+  end
+
+  def test_review_options_feedback_enabled_false_with_no_feedback
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      no_feedback: true
+    )
+
+    refute options.feedback_enabled?, "Feedback should be disabled with no_feedback flag"
+  end
+
+  def test_review_options_includes_feedback_model
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      feedback_model: "custom-extraction-model"
+    )
+
+    assert_equal "custom-extraction-model", options.feedback_model
+  end
+
+  # ============================================================================
+  # Task Integration for Feedback Tests (Task 227.07)
+  # ============================================================================
+
+  def test_task_feedback_path_returns_correct_path
+    task_path = "/project/.ace-taskflow/v.0.9.0/tasks/227-feature"
+
+    path = @manager.send(:task_feedback_path, task_path)
+
+    assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/227-feature/feedback", path
+  end
+
+  def test_ensure_task_feedback_directory_creates_directories
+    task_dir = File.join(@temp_dir, "tasks", "227-feature")
+    FileUtils.mkdir_p(task_dir)
+
+    @manager.send(:ensure_task_feedback_directory, task_dir)
+
+    assert Dir.exist?(File.join(task_dir, "feedback")), "feedback/ should be created"
+    assert Dir.exist?(File.join(task_dir, "feedback", "_archived")), "feedback/_archived/ should be created"
+  end
+
+  def test_ensure_task_feedback_directory_is_idempotent
+    task_dir = File.join(@temp_dir, "tasks", "227-feature")
+    FileUtils.mkdir_p(task_dir)
+
+    # Call multiple times - should not raise errors
+    @manager.send(:ensure_task_feedback_directory, task_dir)
+    @manager.send(:ensure_task_feedback_directory, task_dir)
+    @manager.send(:ensure_task_feedback_directory, task_dir)
+
+    assert Dir.exist?(File.join(task_dir, "feedback")), "feedback/ should exist"
+    assert Dir.exist?(File.join(task_dir, "feedback", "_archived")), "feedback/_archived/ should exist"
+  end
+
+  def test_resolve_task_for_feedback_returns_task_info
+    task_dir = File.join(@temp_dir, "tasks", "227")
+    FileUtils.mkdir_p(task_dir)
+
+    expected_info = { path: task_dir, task_id: "227" }
+
+    Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
+      expected_info if task_id == "227"
+    } do
+      result = @manager.send(:resolve_task_for_feedback, "227")
+
+      assert_equal expected_info, result
+    end
+  end
+
+  def test_resolve_task_for_feedback_returns_nil_on_error
+    Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
+      raise "Resolution failed"
+    } do
+      output = capture_io do
+        result = @manager.send(:resolve_task_for_feedback, "227")
+        assert_nil result, "Should return nil on error"
+      end
+
+      assert_match(/Could not resolve task for feedback/, output[1])
+    end
+  end
+
+  # ============================================================================
+  # Session Symlink Tests (Task 227 Architecture)
+  # ============================================================================
+
+  def test_link_session_to_task_creates_symlink
+    task_dir = File.join(@temp_dir, "tasks", "227-feature")
+    session_dir = File.join(@temp_dir, ".cache", "ace-review", "sessions", "review-8p2h11")
+    FileUtils.mkdir_p(task_dir)
+    FileUtils.mkdir_p(session_dir)
+
+    # Create some files in session
+    File.write(File.join(session_dir, "review.md"), "# Review")
+    File.write(File.join(session_dir, "metadata.yml"), "timestamp: now")
+
+    link_path = @manager.send(:link_session_to_task, session_dir, task_dir)
+
+    assert link_path, "Should return link path"
+    assert File.symlink?(link_path), "Should create symlink"
+    assert_equal File.join(task_dir, "reviews", "review-8p2h11"), link_path
+
+    # Verify symlink target
+    target = File.readlink(link_path)
+    assert target.include?("review-8p2h11"), "Symlink should point to session"
+
+    # Verify files are accessible via symlink
+    assert File.exist?(File.join(link_path, "review.md")), "review.md should be accessible"
+    assert File.exist?(File.join(link_path, "metadata.yml")), "metadata.yml should be accessible"
+  end
+
+  def test_link_session_to_task_creates_reviews_directory
+    task_dir = File.join(@temp_dir, "tasks", "227-feature")
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-abc123")
+    FileUtils.mkdir_p(task_dir)
+    FileUtils.mkdir_p(session_dir)
+
+    refute Dir.exist?(File.join(task_dir, "reviews")), "reviews/ should not exist initially"
+
+    @manager.send(:link_session_to_task, session_dir, task_dir)
+
+    assert Dir.exist?(File.join(task_dir, "reviews")), "reviews/ should be created"
+  end
+
+  def test_link_session_to_task_returns_nil_for_invalid_inputs
+    task_dir = File.join(@temp_dir, "tasks", "227")
+    session_dir = File.join(@temp_dir, "nonexistent-session")
+    FileUtils.mkdir_p(task_dir)
+
+    # Nonexistent session
+    result = @manager.send(:link_session_to_task, session_dir, task_dir)
+    assert_nil result, "Should return nil for nonexistent session"
+
+    # Nil inputs
+    assert_nil @manager.send(:link_session_to_task, nil, task_dir)
+    assert_nil @manager.send(:link_session_to_task, session_dir, nil)
+  end
+
+  def test_link_session_to_task_is_idempotent
+    task_dir = File.join(@temp_dir, "tasks", "227")
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-xyz")
+    FileUtils.mkdir_p(task_dir)
+    FileUtils.mkdir_p(session_dir)
+
+    # Create symlink twice
+    link1 = @manager.send(:link_session_to_task, session_dir, task_dir)
+    link2 = @manager.send(:link_session_to_task, session_dir, task_dir)
+
+    assert_equal link1, link2, "Should return same path"
+    assert File.symlink?(link1), "Should still be a symlink"
+  end
+
+  def test_link_session_to_task_multiple_sessions_to_same_task
+    task_dir = File.join(@temp_dir, "tasks", "227-feature")
+    FileUtils.mkdir_p(task_dir)
+
+    # Create multiple session directories
+    session1 = File.join(@temp_dir, ".cache", "sessions", "review-8p2h11")
+    session2 = File.join(@temp_dir, ".cache", "sessions", "review-8p2fo1")
+    session3 = File.join(@temp_dir, ".cache", "sessions", "review-8p2xyz")
+    [session1, session2, session3].each do |s|
+      FileUtils.mkdir_p(s)
+      File.write(File.join(s, "review.md"), "# Review from #{File.basename(s)}")
+    end
+
+    # Link all sessions to same task
+    link1 = @manager.send(:link_session_to_task, session1, task_dir)
+    link2 = @manager.send(:link_session_to_task, session2, task_dir)
+    link3 = @manager.send(:link_session_to_task, session3, task_dir)
+
+    # All should succeed with unique paths
+    assert File.symlink?(link1)
+    assert File.symlink?(link2)
+    assert File.symlink?(link3)
+
+    # Each should have unique name
+    refute_equal link1, link2
+    refute_equal link2, link3
+
+    # All reviews accessible
+    reviews_dir = File.join(task_dir, "reviews")
+    assert_equal 3, Dir.glob(File.join(reviews_dir, "review-*")).count
+  end
+
+  def test_link_session_to_task_if_requested_with_task_reference
+    task_dir = File.join(@temp_dir, "tasks", "227")
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-test")
+    FileUtils.mkdir_p(task_dir)
+    FileUtils.mkdir_p(session_dir)
+
+    @manager.instance_variable_set(:@task_reference, "227")
+
+    Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
+      { path: task_dir, task_id: task_id } if task_id == "227"
+    } do
+      link_path = @manager.send(:link_session_to_task_if_requested, session_dir)
+
+      assert link_path, "Should return link path"
+      assert File.symlink?(link_path), "Should create symlink"
+    end
+  ensure
+    @manager.instance_variable_set(:@task_reference, nil)
+  end
+
+  def test_link_session_to_task_if_requested_without_task_reference
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-test")
+    FileUtils.mkdir_p(session_dir)
+
+    @manager.instance_variable_set(:@task_reference, nil)
+
+    result = @manager.send(:link_session_to_task_if_requested, session_dir)
+    assert_nil result, "Should return nil without task reference"
+  end
+
+  def test_link_session_to_task_if_requested_task_not_found
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-test")
+    FileUtils.mkdir_p(session_dir)
+
+    @manager.instance_variable_set(:@task_reference, "nonexistent")
+
+    output = capture_io do
+      Ace::Review::Molecules::TaskResolver.stub :resolve, nil do
+        result = @manager.send(:link_session_to_task_if_requested, session_dir)
+        assert_nil result, "Should return nil when task not found"
+      end
+    end
+
+    assert_match(/Task 'nonexistent' not found/, output[1])
+  ensure
+    @manager.instance_variable_set(:@task_reference, nil)
+  end
+
+  def test_auto_link_session_if_enabled_links_to_detected_task
+    task_dir = File.join(@temp_dir, "tasks", "126")
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-abc")
+    FileUtils.mkdir_p(task_dir)
+    FileUtils.mkdir_p(session_dir)
+
+    options = Struct.new(:no_auto_save).new(false)
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "defaults" && key == "auto_save"
+      return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
+      nil
+    } do
+      Ace::Git::Molecules::BranchReader.stub :current_branch, "126-feature" do
+        Ace::Review::Molecules::TaskResolver.stub :resolve, ->(task_id) {
+          { path: task_dir, task_id: task_id } if task_id == "126"
+        } do
+          link_path = @manager.send(:auto_link_session_if_enabled, session_dir, options)
+
+          assert link_path, "Should return link path"
+          assert File.symlink?(link_path), "Should create symlink"
+        end
+      end
+    end
+  end
+
+  def test_auto_link_session_if_enabled_returns_nil_when_disabled
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-abc")
+    FileUtils.mkdir_p(session_dir)
+
+    # no_auto_save flag set
+    options = Struct.new(:no_auto_save).new(true)
+
+    result = @manager.send(:auto_link_session_if_enabled, session_dir, options)
+    assert_nil result, "Should return nil when auto_save disabled by flag"
+  end
+
+  def test_auto_link_session_if_enabled_returns_nil_when_config_disabled
+    session_dir = File.join(@temp_dir, ".cache", "sessions", "review-abc")
+    FileUtils.mkdir_p(session_dir)
+
+    options = Struct.new(:no_auto_save).new(false)
+
+    Ace::Review.stub :get, ->(section, key) {
+      return false if section == "defaults" && key == "auto_save"
+      nil
+    } do
+      result = @manager.send(:auto_link_session_if_enabled, session_dir, options)
+      assert_nil result, "Should return nil when auto_save disabled in config"
+    end
+  end
+
+  # ============================================================================
+  # Single-Model Feedback Extraction Tests (Task 227.08)
+  # ============================================================================
+
+  def test_maybe_extract_single_model_feedback_returns_nil_when_disabled
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      no_feedback: true
+    )
+
+    result = { success: true, output_file: "/path/to/report.md" }
+    review_data = { preset: "pr", model: "test-model" }
+    session_dir = @temp_dir
+
+    feedback_result = @manager.send(
+      :maybe_extract_single_model_feedback,
+      result, session_dir, review_data, options, "test-model"
+    )
+
+    assert_nil feedback_result, "Should return nil when feedback is disabled"
+  end
+
+  def test_maybe_extract_single_model_feedback_delegates_to_extract_feedback
+    session_dir = File.join(@temp_dir, "single_model_test")
+    FileUtils.mkdir_p(session_dir)
+
+    # Create a test report file
+    report_path = File.join(session_dir, "review.md")
+    File.write(report_path, "# Review Report\nSome finding here")
+
+    result = { success: true, output_file: report_path }
+    review_data = { preset: "pr", model: "test-model" }
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      feedback_model: "extraction-model"
+    )
+
+    # Mock FeedbackManager
+    mock_feedback_manager = Minitest::Mock.new
+    mock_feedback_manager.expect(:extract_and_save, {
+      success: true,
+      items_count: 2,
+      paths: ["/path/to/fb1.s.md", "/path/to/fb2.s.md"]
+    }) do |**kwargs|
+      # Verify the result was wrapped in multi-model format
+      kwargs[:report_paths].include?(report_path) &&
+        kwargs[:base_path] == session_dir &&
+        kwargs[:model] == "extraction-model"
+    end
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "feedback" && key == "enabled"
+      nil
+    } do
+      Ace::Review::Organisms::FeedbackManager.stub :new, mock_feedback_manager do
+        feedback_result = @manager.send(
+          :maybe_extract_single_model_feedback,
+          result, session_dir, review_data, options, "test-model"
+        )
+
+        assert feedback_result[:success]
+        assert_equal 2, feedback_result[:items_count]
+      end
+    end
+
+    mock_feedback_manager.verify
+  end
+
+  def test_maybe_extract_single_model_feedback_wraps_in_multimodel_format
+    session_dir = File.join(@temp_dir, "wrap_test")
+    FileUtils.mkdir_p(session_dir)
+
+    report_path = File.join(session_dir, "review.md")
+    File.write(report_path, "# Review")
+
+    result = { success: true, output_file: report_path }
+    review_data = { preset: "pr", model: "claude-3" }
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    # Capture the arguments passed to extract_feedback
+    captured_result = nil
+
+    Ace::Review.stub :get, ->(section, key) {
+      return true if section == "feedback" && key == "enabled"
+      nil
+    } do
+      # Stub extract_feedback to capture its arguments
+      @manager.stub :extract_feedback, ->(result_arg, *_rest) {
+        captured_result = result_arg
+        { success: true, items_count: 0, paths: [] }
+      } do
+        @manager.send(
+          :maybe_extract_single_model_feedback,
+          result, session_dir, review_data, options, "claude-3"
+        )
+      end
+    end
+
+    # Verify the result was wrapped correctly
+    assert captured_result, "extract_feedback should have been called"
+    assert captured_result[:results], "Should have :results key"
+    assert captured_result[:results]["claude-3"], "Should have model as key"
+    assert captured_result[:results]["claude-3"][:success]
+    assert_equal report_path, captured_result[:results]["claude-3"][:output_file]
+  end
+
+  def test_execute_single_model_extracts_feedback_when_enabled
+    # This is an integration test to verify execute_single_model calls feedback extraction
+    session_dir = File.join(@temp_dir, "execute_single_test")
+    FileUtils.mkdir_p(session_dir)
+
+    review_data = {
+      system_prompt: "System prompt",
+      user_prompt: "User prompt",
+      preset: "pr",
+      model: "test-model"
+    }
+
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    # Mock LlmExecutor
+    mock_executor = Minitest::Mock.new
+    mock_executor.expect(:execute, {
+      success: true,
+      output_file: File.join(session_dir, "review.md"),
+      metadata: nil
+    }) do |**kwargs|
+      # Create the review file
+      File.write(File.join(session_dir, "review.md"), "# Review Output")
+      true
+    end
+
+    # Track if feedback extraction was called
+    feedback_called = false
+    feedback_result = { success: true, items_count: 3, paths: ["/fb1.s.md"] }
+
+    Ace::Review::Molecules::LlmExecutor.stub :new, mock_executor do
+      # Mock preset manager for copy_to_release
+      @manager.instance_variable_get(:@preset_manager).stub :review_base_path, @temp_dir do
+        Ace::Review.stub :get, ->(section, key) {
+          return true if section == "feedback" && key == "enabled"
+          return false if section == "defaults" && key == "auto_save"
+          nil
+        } do
+          @manager.stub :maybe_extract_single_model_feedback, ->(*_args) {
+            feedback_called = true
+            feedback_result
+          } do
+            result = @manager.send(:execute_single_model, review_data, session_dir, options, "test-model")
+
+            assert result[:success]
+            assert feedback_called, "Feedback extraction should have been called"
+            assert_equal 3, result[:feedback_count]
+            assert_equal ["/fb1.s.md"], result[:feedback_paths]
+          end
+        end
+      end
+    end
+
+    mock_executor.verify
+  end
+
+  def test_execute_single_model_skips_feedback_when_disabled
+    session_dir = File.join(@temp_dir, "execute_skip_test")
+    FileUtils.mkdir_p(session_dir)
+
+    review_data = {
+      system_prompt: "System prompt",
+      user_prompt: "User prompt",
+      preset: "pr",
+      model: "test-model"
+    }
+
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      no_feedback: true
+    )
+
+    # Mock LlmExecutor
+    mock_executor = Minitest::Mock.new
+    mock_executor.expect(:execute, {
+      success: true,
+      output_file: File.join(session_dir, "review.md"),
+      metadata: nil
+    }) do |**kwargs|
+      File.write(File.join(session_dir, "review.md"), "# Review Output")
+      true
+    end
+
+    feedback_called = false
+
+    Ace::Review::Molecules::LlmExecutor.stub :new, mock_executor do
+      @manager.instance_variable_get(:@preset_manager).stub :review_base_path, @temp_dir do
+        Ace::Review.stub :get, ->(section, key) {
+          return false if section == "defaults" && key == "auto_save"
+          nil
+        } do
+          @manager.stub :maybe_extract_single_model_feedback, ->(*_args) {
+            feedback_called = true
+            nil
+          } do
+            result = @manager.send(:execute_single_model, review_data, session_dir, options, "test-model")
+
+            assert result[:success]
+            # Feedback should be called but return nil (disabled)
+            assert feedback_called
+            refute result.key?(:feedback_count), "Should not have feedback_count when disabled"
+            refute result.key?(:feedback_paths), "Should not have feedback_paths when disabled"
+          end
+        end
+      end
+    end
+
+    mock_executor.verify
+  end
+
+  def test_execute_single_model_handles_feedback_failure_gracefully
+    session_dir = File.join(@temp_dir, "execute_fail_test")
+    FileUtils.mkdir_p(session_dir)
+
+    review_data = {
+      system_prompt: "System prompt",
+      user_prompt: "User prompt",
+      preset: "pr",
+      model: "test-model"
+    }
+
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    mock_executor = Minitest::Mock.new
+    mock_executor.expect(:execute, {
+      success: true,
+      output_file: File.join(session_dir, "review.md"),
+      metadata: nil
+    }) do |**kwargs|
+      File.write(File.join(session_dir, "review.md"), "# Review Output")
+      true
+    end
+
+    # Return a failure result from feedback extraction
+    feedback_result = { success: false, error: "Extraction failed" }
+
+    Ace::Review::Molecules::LlmExecutor.stub :new, mock_executor do
+      @manager.instance_variable_get(:@preset_manager).stub :review_base_path, @temp_dir do
+        Ace::Review.stub :get, ->(section, key) {
+          return true if section == "feedback" && key == "enabled"
+          return false if section == "defaults" && key == "auto_save"
+          nil
+        } do
+          @manager.stub :maybe_extract_single_model_feedback, ->(*_args) { feedback_result } do
+            result = @manager.send(:execute_single_model, review_data, session_dir, options, "test-model")
+
+            # Review should still succeed even if feedback fails
+            assert result[:success]
+            refute result.key?(:feedback_count), "Should not have feedback_count on failure"
+            refute result.key?(:feedback_paths), "Should not have feedback_paths on failure"
+          end
+        end
+      end
+    end
+
+    mock_executor.verify
   end
 end

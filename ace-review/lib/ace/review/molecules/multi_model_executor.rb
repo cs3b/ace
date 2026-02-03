@@ -14,6 +14,9 @@ module Ace
         # Default timeout for LLM queries (5 minutes)
         DEFAULT_LLM_TIMEOUT = 300
 
+        # Warning threshold: 80% of typical 200K context window
+        PROMPT_SIZE_WARNING_THRESHOLD = 160_000
+
         def initialize(max_concurrent: nil, llm_timeout: nil)
           # Read from config, fallback to default of 3, clamp to minimum 1
           @max_concurrent = [
@@ -35,6 +38,9 @@ module Ace
         def execute(models:, system_prompt:, user_prompt:, session_dir:)
           start_time = Time.now
           results = {}
+
+          # Warn once before executing any models
+          warn_if_prompt_large(system_prompt, user_prompt, models)
 
           # Display execution header
           display_header(models)
@@ -245,6 +251,25 @@ module Ace
         # @return [Float] monotonic time in seconds
         def monotonic_now
           Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        end
+
+        # Warn if prompt size may exceed model context limits
+        #
+        # Uses rough estimate of 4 characters per token. Warns at 80% of
+        # typical context window to give user advance notice before execution fails.
+        #
+        # @param system_prompt [String, nil] system prompt
+        # @param user_prompt [String, nil] user prompt
+        # @param models [Array<String>] model identifiers
+        def warn_if_prompt_large(system_prompt, user_prompt, models)
+          total_chars = (system_prompt&.length || 0) + (user_prompt&.length || 0)
+          estimated_tokens = total_chars / 4  # Rough estimate: 4 chars per token
+
+          return unless estimated_tokens > PROMPT_SIZE_WARNING_THRESHOLD
+
+          model_list = models.join(", ")
+          warn "Warning: Prompt size (~#{estimated_tokens.to_s.gsub(/(\d)(?=(\d{3})+(?!\d))/, '\\1,')} tokens) " \
+               "may exceed context limits for: #{model_list}"
         end
       end
     end
