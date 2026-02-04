@@ -68,7 +68,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.10.10)
+    ace-git (0.10.11)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)
@@ -76,7 +76,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.8.0)
+    ace-handbook (0.9.0)
 
 PATH
   remote: ace-integration-claude
@@ -130,7 +130,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.36.11)
+    ace-review (0.36.16)
       ace-bundle (~> 0.30)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
@@ -210,7 +210,7 @@ PATH
 PATH
   remote: ace-support-timestamp
   specs:
-    ace-support-timestamp (0.4.1)
+    ace-support-timestamp (0.5.0)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.1)
       dry-cli (~> 1.1)
