@@ -24,6 +24,7 @@ require_relative "review/atoms/pr_comment_formatter"
 require_relative "review/atoms/feedback_id_generator"
 require_relative "review/atoms/feedback_slug_generator"
 require_relative "review/atoms/feedback_state_validator"
+require_relative "review/atoms/priority_filter"
 
 # Require all necessary components explicitly
 require_relative "review/molecules/context_composer"

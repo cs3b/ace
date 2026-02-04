@@ -67,6 +67,51 @@ class FeedbackListCommandTest < AceReviewTest
     refute_match(/abc222/, output) # medium priority
   end
 
+  def test_list_filters_by_priority_range_medium_plus
+    create_test_items_all_priorities
+
+    output = capture_cli_output { run_list_command(priority: "medium+") }
+
+    assert_match(/crit01/, output)  # critical matches medium+
+    assert_match(/high01/, output)  # high matches medium+
+    assert_match(/med001/, output)  # medium matches medium+
+    refute_match(/low001/, output)  # low does not match medium+
+  end
+
+  def test_list_filters_by_priority_range_high_plus
+    create_test_items_all_priorities
+
+    output = capture_cli_output { run_list_command(priority: "high+") }
+
+    assert_match(/crit01/, output)  # critical matches high+
+    assert_match(/high01/, output)  # high matches high+
+    refute_match(/med001/, output)  # medium does not match high+
+    refute_match(/low001/, output)  # low does not match high+
+  end
+
+  def test_list_filters_by_priority_range_critical_plus
+    create_test_items_all_priorities
+
+    output = capture_cli_output { run_list_command(priority: "critical+") }
+
+    assert_match(/crit01/, output)  # critical matches critical+
+    refute_match(/high01/, output)  # high does not match critical+
+    refute_match(/med001/, output)  # medium does not match critical+
+    refute_match(/low001/, output)  # low does not match critical+
+  end
+
+  def test_list_filters_by_priority_range_low_plus
+    create_test_items_all_priorities
+
+    output = capture_cli_output { run_list_command(priority: "low+") }
+
+    # low+ matches all priorities
+    assert_match(/crit01/, output)
+    assert_match(/high01/, output)
+    assert_match(/med001/, output)
+    assert_match(/low001/, output)
+  end
+
   def test_list_filters_by_status_and_priority
     create_test_items_mixed
 
@@ -306,6 +351,24 @@ class FeedbackListCommandTest < AceReviewTest
     assert_match(/arch01/, output)
   end
 
+  def test_list_session_all_filters_archived_by_priority_range
+    create_multi_session_structure_with_archived_priorities
+
+    output = capture_cli_output do
+      cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
+      cmd.define_singleton_method(:find_all_sessions) do
+        [@session1_dir, @session2_dir]
+      end
+      cmd.instance_variable_set(:@session1_dir, @session1_dir)
+      cmd.instance_variable_set(:@session2_dir, @session2_dir)
+      cmd.call(session: "all", archived: true, priority: "high+")
+    end
+
+    # Should include high+ priority archived items
+    assert_match(/archhi/, output)  # high priority archived
+    refute_match(/archlo/, output)  # low priority archived should not match
+  end
+
   def test_list_session_all_json_includes_session_field
     create_multi_session_structure
 
@@ -383,6 +446,19 @@ class FeedbackListCommandTest < AceReviewTest
     items.each { |item| writer.write(item, @feedback_dir) }
   end
 
+  def create_test_items_all_priorities
+    writer = Ace::Review::Molecules::FeedbackFileWriter.new
+
+    items = [
+      create_test_item(id: "crit01", title: "Critical item", status: "draft", priority: "critical"),
+      create_test_item(id: "high01", title: "High item", status: "draft", priority: "high"),
+      create_test_item(id: "med001", title: "Medium item", status: "draft", priority: "medium"),
+      create_test_item(id: "low001", title: "Low item", status: "draft", priority: "low")
+    ]
+
+    items.each { |item| writer.write(item, @feedback_dir) }
+  end
+
   def create_archived_items
     archive_dir = File.join(@feedback_dir, "_archived")
     FileUtils.mkdir_p(archive_dir)
@@ -446,5 +522,21 @@ class FeedbackListCommandTest < AceReviewTest
     writer = Ace::Review::Molecules::FeedbackFileWriter.new
     archived_item = create_test_item(id: "arch01", title: "Archived item", status: "done")
     writer.write(archived_item, archive_dir)
+  end
+
+  def create_multi_session_structure_with_archived_priorities
+    create_multi_session_structure
+
+    # Add archived items with different priorities to session 1
+    archive_dir = File.join(@session1_dir, "feedback", "_archived")
+    FileUtils.mkdir_p(archive_dir)
+
+    writer = Ace::Review::Molecules::FeedbackFileWriter.new
+
+    archived_high = create_test_item(id: "archhi", title: "High priority archived", status: "done", priority: "high")
+    archived_low = create_test_item(id: "archlo", title: "Low priority archived", status: "done", priority: "low")
+
+    writer.write(archived_high, archive_dir)
+    writer.write(archived_low, archive_dir)
   end
 end

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-02-04
+
+### Added
+- Priority range filtering with `+` suffix for `feedback list` command
+- `--priority medium+` filters for medium, high, and critical items
+- `--priority high+` filters for high and critical items
+- New `PriorityFilter` atom for priority filtering logic
+
 ## [0.36.17] - 2026-02-04
 
 ### Added
