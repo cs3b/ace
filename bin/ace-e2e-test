@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Wrapper script to run ace-e2e-test with proper bundler context
+require "pathname"
+
+ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
+ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+
+require "bundler/setup"
+
+load ace_meta_root.join("ace-test-e2e-runner-cli/exe/ace-e2e-test").to_s
