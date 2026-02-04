@@ -725,6 +725,71 @@ module Ace
             months_offset <= 1295 && day <= 30 && block <= 35 && precision <= 1295
           end
 
+          # Generate a sequence of sequential compact IDs starting from a time
+          #
+          # @param time [Time] The starting time
+          # @param count [Integer] Number of IDs to generate
+          # @param format [Symbol] Output format (:"2sec", :month, :week, :day, :"40min", :"50ms", :ms)
+          # @param year_zero [Integer] Base year for encoding (default: 2000)
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [Array<String>] Array of sequential compact IDs
+          # @raise [ArgumentError] If count <= 0 or format is invalid
+          def encode_sequence(time, count:, format:, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
+            raise ArgumentError, "count must be greater than 0" if count <= 0
+
+            time = time.utc if time.respond_to?(:utc)
+
+            # Generate the first ID
+            first_id = encode_with_format(time, format: format, year_zero: year_zero, alphabet: alphabet)
+
+            return [first_id] if count == 1
+
+            # Generate subsequent IDs by incrementing
+            result = [first_id]
+            current_id = first_id
+
+            (count - 1).times do
+              current_id = increment_id(current_id, format: format, alphabet: alphabet)
+              result << current_id
+            end
+
+            result
+          end
+
+          # Increment a compact ID to the next sequential value
+          #
+          # Increments the smallest unit for the format, handling overflow cascade:
+          # ms → 50ms → 2sec → block → day → month
+          #
+          # @param compact_id [String] The compact ID to increment
+          # @param format [Symbol] Format of the compact ID
+          # @param alphabet [String] Base36 alphabet (default: 0-9a-z)
+          # @return [String] The next sequential compact ID
+          # @raise [ArgumentError] If overflow would exceed month range
+          def increment_id(compact_id, format:, alphabet: DEFAULT_ALPHABET)
+            base = alphabet.length
+            id = compact_id.downcase
+
+            case format
+            when :month
+              increment_month_id(id, alphabet, base)
+            when :week
+              increment_week_id(id, alphabet, base)
+            when :day
+              increment_day_id(id, alphabet, base)
+            when :"40min"
+              increment_40min_id(id, alphabet, base)
+            when :"2sec"
+              increment_2sec_id(id, alphabet, base)
+            when :"50ms"
+              increment_50ms_id(id, alphabet, base)
+            when :ms
+              increment_ms_id(id, alphabet, base)
+            else
+              raise ArgumentError, "Invalid format: #{format}"
+            end
+          end
+
           # Validate a compact ID string of any supported format
           #
           # Supports all 7 formats: month (2 chars), week (3 chars), day (3 chars),
@@ -994,6 +1059,195 @@ module Ace
             if block > MAX_BLOCK
               raise ArgumentError, "Block value #{block} exceeds maximum (#{MAX_BLOCK} for 36 blocks/day)"
             end
+          end
+
+          # ===================
+          # Increment ID Helpers
+          # ===================
+
+          # Increment month format ID (2 chars)
+          # Overflow: month → ERROR
+          def increment_month_id(id, alphabet, base)
+            month = decode_value(id[0..1], alphabet)
+            month += 1
+
+            if month > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Cannot increment: would exceed month range (max #{MAX_MONTHS_OFFSET})"
+            end
+
+            encode_value(month, 2, alphabet)
+          end
+
+          # Increment week format ID (3 chars)
+          # Overflow: week → month
+          def increment_week_id(id, alphabet, base)
+            month = decode_value(id[0..1], alphabet)
+            week = decode_value(id[2], alphabet)
+
+            week += 1
+            if week > FormatSpecs::WEEK_FORMAT_MAX
+              week = FormatSpecs::WEEK_FORMAT_MIN
+              month += 1
+              if month > MAX_MONTHS_OFFSET
+                raise ArgumentError, "Cannot increment: would exceed month range (max #{MAX_MONTHS_OFFSET})"
+              end
+            end
+
+            result = String.new(capacity: 3)
+            result << encode_value(month, 2, alphabet)
+            result << encode_value(week, 1, alphabet)
+            result.freeze
+          end
+
+          # Increment day format ID (3 chars)
+          # Overflow: day → month
+          def increment_day_id(id, alphabet, base)
+            month = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+
+            day += 1
+            if day > MAX_DAY
+              day = 0
+              month += 1
+              if month > MAX_MONTHS_OFFSET
+                raise ArgumentError, "Cannot increment: would exceed month range (max #{MAX_MONTHS_OFFSET})"
+              end
+            end
+
+            result = String.new(capacity: 3)
+            result << encode_value(month, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result.freeze
+          end
+
+          # Increment 40min format ID (4 chars)
+          # Overflow: block → day → month
+          def increment_40min_id(id, alphabet, base)
+            month = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+            block = decode_value(id[3], alphabet)
+
+            block += 1
+            if block > MAX_BLOCK
+              block = 0
+              day += 1
+              if day > MAX_DAY
+                day = 0
+                month += 1
+                if month > MAX_MONTHS_OFFSET
+                  raise ArgumentError, "Cannot increment: would exceed month range (max #{MAX_MONTHS_OFFSET})"
+                end
+              end
+            end
+
+            result = String.new(capacity: 4)
+            result << encode_value(month, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result << encode_value(block, 1, alphabet)
+            result.freeze
+          end
+
+          # Increment 2sec format ID (6 chars)
+          # Overflow: precision → block → day → month
+          def increment_2sec_id(id, alphabet, base)
+            month = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+            block = decode_value(id[3], alphabet)
+            precision = decode_value(id[4..5], alphabet)
+
+            precision += 1
+            if precision > MAX_PRECISION
+              precision = 0
+              block += 1
+              if block > MAX_BLOCK
+                block = 0
+                day += 1
+                if day > MAX_DAY
+                  day = 0
+                  month += 1
+                  if month > MAX_MONTHS_OFFSET
+                    raise ArgumentError, "Cannot increment: would exceed month range (max #{MAX_MONTHS_OFFSET})"
+                  end
+                end
+              end
+            end
+
+            result = String.new(capacity: 6)
+            result << encode_value(month, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result << encode_value(block, 1, alphabet)
+            result << encode_value(precision, 2, alphabet)
+            result.freeze
+          end
+
+          # Increment 50ms format ID (7 chars)
+          # Overflow: precision → block → day → month
+          def increment_50ms_id(id, alphabet, base)
+            month = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+            block = decode_value(id[3], alphabet)
+            precision = decode_value(id[4..6], alphabet)
+
+            max_precision_50ms = PRECISION_DIVISOR_3 - 1  # 46655
+
+            precision += 1
+            if precision > max_precision_50ms
+              precision = 0
+              block += 1
+              if block > MAX_BLOCK
+                block = 0
+                day += 1
+                if day > MAX_DAY
+                  day = 0
+                  month += 1
+                  if month > MAX_MONTHS_OFFSET
+                    raise ArgumentError, "Cannot increment: would exceed month range (max #{MAX_MONTHS_OFFSET})"
+                  end
+                end
+              end
+            end
+
+            result = String.new(capacity: 7)
+            result << encode_value(month, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result << encode_value(block, 1, alphabet)
+            result << encode_value(precision, 3, alphabet)
+            result.freeze
+          end
+
+          # Increment ms format ID (8 chars)
+          # Overflow: precision → block → day → month
+          def increment_ms_id(id, alphabet, base)
+            month = decode_value(id[0..1], alphabet)
+            day = decode_value(id[2], alphabet)
+            block = decode_value(id[3], alphabet)
+            precision = decode_value(id[4..7], alphabet)
+
+            max_precision_ms = PRECISION_DIVISOR_4 - 1  # 1679615
+
+            precision += 1
+            if precision > max_precision_ms
+              precision = 0
+              block += 1
+              if block > MAX_BLOCK
+                block = 0
+                day += 1
+                if day > MAX_DAY
+                  day = 0
+                  month += 1
+                  if month > MAX_MONTHS_OFFSET
+                    raise ArgumentError, "Cannot increment: would exceed month range (max #{MAX_MONTHS_OFFSET})"
+                  end
+                end
+              end
+            end
+
+            result = String.new(capacity: 8)
+            result << encode_value(month, 2, alphabet)
+            result << encode_value(day, 1, alphabet)
+            result << encode_value(block, 1, alphabet)
+            result << encode_value(precision, 4, alphabet)
+            result.freeze
           end
         end
       end
