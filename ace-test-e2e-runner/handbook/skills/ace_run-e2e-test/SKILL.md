@@ -1,6 +1,6 @@
 ---
 name: ace:run-e2e-test
-description: Execute an E2E test scenario
+description: Run E2E tests via ace-e2e-test CLI
 user-invocable: true
 allowed-tools:
   - Bash(ace-*:*)
@@ -11,13 +11,11 @@ allowed-tools:
   - Glob
   - Grep
 argument-hint: "[package] [test-id]"
-last_modified: 2026-01-29
+last_modified: 2026-02-04
 source: ace-test-e2e-runner
 ---
 
-read and run `ace-bundle wfi://run-e2e-test`
-
-ARGUMENTS: $ARGUMENTS
+Run: `ace-e2e-test $ARGUMENTS`
 
 ## Subagent Return Contract
 

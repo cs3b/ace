@@ -1,6 +1,6 @@
 ---
 name: ace:run-e2e-tests
-description: Execute multiple E2E tests in parallel using subagents
+description: Run E2E test suite via ace-e2e-test-suite CLI
 user-invocable: true
 allowed-tools:
   - Bash(ace-*:*)
@@ -10,10 +10,8 @@ allowed-tools:
   - Grep
   - Task
 argument-hint: "[package] [--sequential] [--all]"
-last_modified: 2026-01-29
+last_modified: 2026-02-04
 source: ace-test-e2e-runner
 ---
 
-read and run `ace-bundle wfi://run-e2e-tests`
-
-ARGUMENTS: $ARGUMENTS
+Run: `ace-e2e-test-suite $ARGUMENTS`
