@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: simplified commit reorganization workflow
 update:
   frequency: on-change
-  last-updated: '2026-01-29'
+  last-updated: '2026-02-04'
 bundle:
   embed_document_source: true
   sections:
@@ -32,22 +32,45 @@ The goal is to reorder commits into logical groups while preserving per-scope gr
 | Reorganize | Reorder commits into logical groups |
 | Squash | Combine multiple commits into one (NOT the goal here) |
 
+## Scope Determination
+
+**If user provides explicit scope** (commit list, range, or PR reference):
+- Use the user-provided scope directly
+- Trust the user's intent - they know what they want to reorganize
+- Do NOT second-guess with embedded status
+
+**If no explicit scope provided**:
+- Use embedded repository status as the default
+- "ahead N" means N unpushed commits (reasonable default)
+- If user seems to expect more commits, ASK before proceeding
+
+**Mismatch Warning**: If embedded status shows fewer commits than user seems to expect (e.g., user provides a commit list longer than "ahead N"), STOP and clarify:
+- Did user want to reorganize all PR commits (use merge-base)?
+- Or just the unpushed ones (use embedded status)?
+
+---
+
 ## Steps
 
 ### 1. Identify Base
 
-Use information from current repository status to determine the base commit:
+Determine base commit using **Scope Determination** above.
+
+**Common patterns**:
 
 ```bash
-# For PR (merge-base with target branch)
-base=$(git merge-base HEAD $origin/feature-branch)
+# From user-provided commit range (user said "reorganize abc123..HEAD")
+base=abc123
 
-# By commit count
+# From merge-base for full PR (user wants all PR commits)
+base=$(git merge-base HEAD origin/main)
+
+# From embedded status (default: unpushed commits only)
+# If status shows "ahead 5", use HEAD~5
 base=HEAD~5
-
-# By specific commit
-base=abc1234
 ```
+
+> ⚠️ **When in doubt**: If user provides explicit commits or range, use that. Otherwise use embedded status but verify it matches user's expectations.
 
 ### 2. Identify Commit Intentions
 
@@ -111,4 +134,34 @@ Only use if `ace-git-commit` groups files incorrectly AND adjusting the intentio
 git reset --soft $base && git reset HEAD
 ace-git-commit <paths> -i "group 1"
 ace-git-commit <paths> -i "group 2"
+```
+
+---
+
+## Examples
+
+### User Provides Explicit Scope
+
+```
+User: "Reorganize these commits: abc, def, ghi, jkl..."
+→ Use merge-base to include all listed commits
+→ Do NOT use "ahead 5" from embedded status
+```
+
+### No Explicit Scope (Use Default)
+
+```
+User: "Reorganize commits"
+Embedded status: "ahead 5"
+→ Use HEAD~5 (unpushed commits)
+→ If user expected more, they would have specified
+```
+
+### Mismatch - ASK Before Proceeding
+
+```
+User: "Here are the 12 commits to reorganize: ..."
+Embedded status: "ahead 5"
+→ User provided 12, status shows 5
+→ ASK: "Do you want all 12 commits (from main) or just the 5 unpushed?"
 ```
