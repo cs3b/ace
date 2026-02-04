@@ -21,7 +21,7 @@ module Ace
             prompt_builder.build(test_scenario),
             system: Atoms::PromptBuilder::SYSTEM_PROMPT,
             timeout: @config[:defaults][:timeout],
-            temperature: @config[:defaults][:temperature],
+            temperature: resolved_temperature,
             max_tokens: @config[:defaults][:max_tokens]
           )
 
@@ -68,6 +68,16 @@ module Ace
 
         def provider_model
           @config[:defaults][:provider] || "google:gemini-2.5-flash"
+        end
+
+        def resolved_temperature
+          return nil if provider_name == "claude"
+
+          @config[:defaults][:temperature]
+        end
+
+        def provider_name
+          provider_model.to_s.split(":", 2).first
         end
       end
     end
