@@ -4,14 +4,77 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.426] - 2026-02-04
+
+### Added
+
+- **ace-review v0.37.3**: Priority range filtering with `+` suffix for `feedback list`
+  - `--priority medium+` filters for medium, high, and critical items
+  - `--priority high+` filters for high and critical items
+  - New `PriorityFilter` atom for clean priority filtering logic
+
+## [0.9.425] - 2026-02-04
+
+### Added
+
+- **ace-review v0.37.2**: SubjectFilter molecule and documentation (Task 233 feedback)
+  - Extracted file filtering logic to `SubjectFilter` molecule (ATOM architecture)
+  - README: Subject Strategy Configuration (strategy types, adaptive mode)
+  - README: Reviewers Format documentation (attributes, file patterns, migration)
+  - `ContextLimitResolver` now queries ace-llm provider config for context limits
+
+## [0.9.424] - 2026-02-04
+
+### Added
+
+- **ace-llm v0.21.1**: Provider config `context_limit` field for model context window sizes
+  - Google: 1M tokens (Gemini models)
+  - Anthropic: 200K tokens (Claude models)
+  - OpenAI: 128K tokens (GPT models)
+  - Default 128K for unknown models in config.yml
+
+## [0.9.423] - 2026-02-04
+
+### Fixed
+
+- **ace-review v0.37.1**: Graceful error handling for preset composition failures
+  - Added nil check in `prepare_review_config()` for circular deps and missing refs
+  - Returns actionable error message instead of crashing with nil method error
+  - Updated E2E test MT-REVIEW-001 with valid test data (instructions, model format)
+
+## [0.9.422] - 2026-02-04
+
+### Added
+
+- **ace-handbook v0.9.1**: Preference hierarchy for selfimprove workflow search targets
+  - Workflows and guides preferred over skills for process improvements
+  - Documents rationale: versioning, sharing, protocol support
+
+## [0.9.421] - 2026-02-04
+
+### Added
+
+- **ace-test-e2e-runner v0.5.1**: CLI-Based Testing Requirement section in create-e2e-test workflow
+  - Documents that E2E tests must test through CLI interface, not library imports
+  - Provides valid/invalid approach examples and guidance for execution tests
+
 ## [0.9.420] - 2026-02-04
 
 ### Added
 
-- **ace-review v0.37.0**: Priority range filtering with `+` suffix for `feedback list`
-  - `--priority medium+` filters for medium, high, and critical items
-  - `--priority high+` filters for high and critical items
-  - New `PriorityFilter` atom for clean priority filtering logic
+- **ace-review v0.37.0**: Multi-dimensional review architecture (Task 233)
+  - Token estimation atoms: `TokenEstimator` (chars/4), `ContextLimitResolver` (model limits)
+  - Subject strategy system: `FullStrategy`, `ChunkedStrategy`, `AdaptiveStrategy`
+  - `Reviewer` entity model with configurable focus, patterns, and prompt additions
+  - `DiffBoundaryFinder` for parsing unified diffs into file blocks
+
+### Changed
+
+- **ace-review v0.37.0**: `FullStrategy` accepts `headroom` config option
+
+### Fixed
+
+- **ace-review v0.37.0**: GPT-4 variant handling and diff header preservation
 
 ## [0.9.419] - 2026-02-04
 
