@@ -224,8 +224,12 @@ module Ace
           data = JSON.parse(cleaned)
           findings = data["findings"] || []
 
-          items = findings.filter_map do |finding|
-            create_feedback_item(finding, available_reviewers)
+          # Pre-generate unique sequential IDs for all findings
+          # This ensures uniqueness even when items are created in rapid succession
+          ids = findings.empty? ? [] : Atoms::FeedbackIdGenerator.generate_sequence(findings.length)
+
+          items = findings.each_with_index.filter_map do |finding, idx|
+            create_feedback_item(finding, available_reviewers, id: ids[idx])
           end
 
           metadata = {
@@ -273,14 +277,15 @@ module Ace
         #
         # @param finding [Hash] Synthesized finding data
         # @param available_reviewers [Array<String>] List of available reviewers
+        # @param id [String, nil] Pre-generated ID (optional, generates new if nil)
         # @return [FeedbackItem, nil] Created item or nil if invalid
-        def create_feedback_item(finding, available_reviewers)
+        def create_feedback_item(finding, available_reviewers, id: nil)
           # Skip findings without required fields
           return nil if finding["title"].nil? || finding["title"].to_s.strip.empty?
           return nil if finding["finding"].nil? || finding["finding"].to_s.strip.empty?
 
-          # Generate unique ID
-          id = Atoms::FeedbackIdGenerator.generate
+          # Use provided ID or generate a new one
+          id ||= Atoms::FeedbackIdGenerator.generate
 
           # Normalize priority
           priority = normalize_priority(finding["priority"])

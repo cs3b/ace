@@ -373,6 +373,70 @@ class FeedbackSynthesizerTest < AceReviewTest
   end
 
   # ============================================================================
+  # Unique ID Tests
+  # ============================================================================
+
+  def test_synthesize_generates_unique_ids_for_all_items
+    report_path = create_report_file("report.md", sample_report_content)
+
+    # Create response with many findings to test uniqueness
+    response = {
+      findings: (1..20).map do |i|
+        {
+          title: "Finding #{i}",
+          finding: "Description for finding #{i}",
+          priority: "medium"
+        }
+      end
+    }.to_json
+
+    @mock_executor.set_response(response)
+
+    result = @synthesizer.synthesize(
+      report_paths: [report_path],
+      session_dir: @session_dir
+    )
+
+    assert result[:success], "Expected synthesis to succeed: #{result[:error]}"
+    assert_equal 20, result[:items].length
+
+    # All IDs should be unique
+    ids = result[:items].map(&:id)
+    assert_equal ids.length, ids.uniq.length,
+      "All feedback items should have unique IDs"
+  end
+
+  def test_synthesize_generates_sequential_ids
+    report_path = create_report_file("report.md", sample_report_content)
+
+    response = {
+      findings: (1..5).map do |i|
+        {
+          title: "Finding #{i}",
+          finding: "Description #{i}",
+          priority: "medium"
+        }
+      end
+    }.to_json
+
+    @mock_executor.set_response(response)
+
+    result = @synthesizer.synthesize(
+      report_paths: [report_path],
+      session_dir: @session_dir
+    )
+
+    assert result[:success]
+    ids = result[:items].map(&:id)
+
+    # IDs should be in ascending order (sequential generation)
+    ids.each_cons(2) do |prev_id, curr_id|
+      assert prev_id < curr_id,
+        "IDs should be strictly increasing: #{prev_id} < #{curr_id}"
+    end
+  end
+
+  # ============================================================================
   # Session Directory Tests
   # ============================================================================
 

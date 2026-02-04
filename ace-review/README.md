@@ -25,8 +25,8 @@ Automated review tool for the ACE framework. Provides preset-based analysis usin
   - Standalone command: `ace-review synthesize --session <dir>`
   - Auto-triggered after multi-model execution with 2+ models
   - Identifies consensus findings, strong recommendations, unique insights, and conflicting views
-  - Configurable synthesis model via `--synthesis-model` or `synthesis.model` config
-  - Skip with `--no-synthesize` flag or `synthesis.enabled: false` config
+  - Configurable synthesis model via `synthesis.model` config
+  - Disable feedback extraction with `--no-feedback` flag
 
 ## What's New in 0.16.0
 

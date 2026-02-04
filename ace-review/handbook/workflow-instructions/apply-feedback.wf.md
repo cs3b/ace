@@ -18,7 +18,7 @@ Work through verified (pending) feedback items one by one, implementing fixes an
 
 - `$1`: Optional session path or priority filter
   - `--session <path>` - Specific session directory
-  - `--priority medium+` - Filter by priority (critical, high, medium, or "medium+" for medium and above)
+  - `--priority <level>` - Filter by priority (critical, high, medium, or low)
 
 ## Prerequisites
 
@@ -99,19 +99,69 @@ Example:
 ace-review feedback resolve 8p3abc --resolution "Added input validation in user_handler.rb"
 ```
 
-### Step 3: Handle Items That Can't Be Fixed
+### Step 3: Handle Items That Won't Be Fixed
 
-For items that are out of scope or not worth fixing:
+Before skipping any item, complete the **verification checklist**:
+
+#### Verification Checklist (Required Before Skip)
+
+- [ ] **Read the code** - Did you check if the issue still exists?
+- [ ] **Check current changes** - Was this already addressed in this PR?
+- [ ] **Consider effort** - Is this a quick win (< 5 min) that should just be done?
+
+#### Decision Table
+
+| Finding | Verdict | Action |
+|---------|---------|--------|
+| Not actually an issue | INVALID | `feedback verify {id} --invalid` |
+| Fixed in this PR | DONE | `feedback resolve {id}` |
+| Quick win (< 5 min) | DO IT | Implement, then `feedback resolve {id}` |
+| Design decision | SKIP | `feedback skip {id} --reason "Design: ..."` |
+| Important but not this PR | DEFER | `feedback skip {id} --reason "Tracked in task XXX"` + create task |
+
+#### Valid Skip Reasons
 
 ```bash
-ace-review feedback skip <id> --reason "Out of scope for this PR"
+# Design decision - intentionally this way
+ace-review feedback skip <id> --reason "Design: uses polling for simplicity"
+
+# False positive confirmed
+ace-review feedback skip <id> --reason "False positive: validation exists in middleware"
+
+# Duplicate of another item
+ace-review feedback skip <id> --reason "Duplicate of 8p3xyz"
+
+# Deferred with task tracking (important items)
+ace-review feedback skip <id> --reason "Tracked in task 253"
 ```
 
-Valid reasons for skipping:
-- Out of scope for current work
-- Would require significant refactoring
-- Known limitation, documented elsewhere
-- Low priority, deferred to future work
+#### NOT Valid Skip Reasons
+
+These should NOT be used as skip reasons - use alternatives instead:
+
+| Don't Say | Instead |
+|-----------|---------|
+| "Out of scope" | Create a follow-up task, reference it in skip reason |
+| "Would need refactoring" | Create a follow-up task for the refactoring |
+| "Low priority" | Check if it's a quick win first, then defer with task |
+| "E2E tests needed" | Create task for E2E tests, reference in skip reason |
+
+#### Quick Win Guidelines
+
+Not all "low priority" items should be skipped. Consider effort vs value:
+
+| Effort | Impact | Decision |
+|--------|--------|----------|
+| < 5 min | Improves readability/maintainability | **DO IT** |
+| Any | Removes dead code, fixes warnings | **DO IT** |
+| > 15 min | Nice-to-have, optional | DEFER with task |
+| Any | Housekeeping, archival | DEFER with task |
+
+**Examples of quick wins to just do:**
+- Document terminology (5 min)
+- Remove unused variable (1 min)
+- Fix typo in error message (1 min)
+- Add missing type annotation (2 min)
 
 ### Step 4: Final Check
 
@@ -143,7 +193,7 @@ ace-review feedback list
 ace-review feedback list --status pending     # Items ready to fix
 ace-review feedback show <id>                 # View details
 ace-review feedback resolve <id> --resolution "Fixed in commit abc"
-ace-review feedback skip <id> --reason "Out of scope"
+ace-review feedback skip <id> --reason "Design: intentional choice"
 
 # If feedback is empty, try specifying session
 ace-review feedback list --session .cache/ace-review/sessions/review-xxx
@@ -154,5 +204,8 @@ ace-review feedback list --session .cache/ace-review/sessions/review-xxx
 - [ ] All critical/high priority items addressed
 - [ ] Medium priority items addressed (unless explicitly deferred)
 - [ ] Each fixed item marked as resolved with commit reference
-- [ ] Skipped items have documented reasons
+- [ ] Skipped items have valid reasons (design decision or task reference)
+- [ ] No items skipped with vague "out of scope" reason
+- [ ] Quick wins (< 5 min) implemented rather than skipped
+- [ ] Important deferred items have follow-up tasks created
 - [ ] No pending items remain (or only intentionally deferred Low items)

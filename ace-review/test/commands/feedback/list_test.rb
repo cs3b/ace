@@ -166,6 +166,54 @@ class FeedbackListCommandTest < AceReviewTest
     assert_match(/skip01/, output)
   end
 
+  def test_list_shows_archived_hint_in_summary
+    create_test_items
+    create_archived_items
+
+    output = capture_cli_output { run_list_command }
+
+    assert_match(/Total: 2 item\(s\) \(2 archived\)/, output)
+  end
+
+  def test_list_no_archived_hint_when_viewing_archived
+    create_test_items
+    create_archived_items
+
+    output = capture_cli_output { run_list_command(archived: true) }
+
+    # Should show total without archived hint since we're viewing all
+    assert_match(/Total: 4 item\(s\)$/, output)
+    refute_match(/archived\)/, output)
+  end
+
+  def test_list_shows_archived_message_when_all_archived
+    # Only create archived items, no active items
+    create_archived_items
+
+    output = capture_cli_output { run_list_command }
+
+    assert_match(/No active feedback items\. 2 archived item\(s\) exist\./, output)
+    assert_match(/Use --archived to include them\./, output)
+  end
+
+  # ============================================================================
+  # Sorting Tests
+  # ============================================================================
+
+  def test_list_sorts_by_status_then_id
+    create_items_with_mixed_statuses
+
+    output = capture_cli_output { run_list_command }
+
+    # Extract IDs from output in order
+    lines = output.lines.select { |l| l.match?(/^[a-z0-9]+\s+(draft|pending|done|skip|invalid)/) }
+    ids = lines.map { |l| l.split.first }
+
+    # Expected order: draft first, then pending, then done, skip, invalid
+    # Within same status, sorted by ID
+    assert_equal %w[drf001 drf002 pnd001 pnd002 don001 skp001 inv001], ids
+  end
+
   # ============================================================================
   # Helper Methods
   # ============================================================================
@@ -235,5 +283,22 @@ class FeedbackListCommandTest < AceReviewTest
     ]
 
     items.each { |item| writer.write(item, archive_dir) }
+  end
+
+  def create_items_with_mixed_statuses
+    writer = Ace::Review::Molecules::FeedbackFileWriter.new
+
+    # Create items in random order to verify sorting
+    items = [
+      create_test_item(id: "pnd002", title: "Pending 2", status: "pending"),
+      create_test_item(id: "inv001", title: "Invalid 1", status: "invalid"),
+      create_test_item(id: "drf001", title: "Draft 1", status: "draft"),
+      create_test_item(id: "skp001", title: "Skip 1", status: "skip"),
+      create_test_item(id: "don001", title: "Done 1", status: "done"),
+      create_test_item(id: "pnd001", title: "Pending 1", status: "pending"),
+      create_test_item(id: "drf002", title: "Draft 2", status: "draft")
+    ]
+
+    items.each { |item| writer.write(item, @feedback_dir) }
   end
 end

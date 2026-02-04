@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.16] - 2026-02-03
+
+### Added
+- `SessionDiscovery` shared module for DRY session resolution across feedback CLI commands
+
+### Changed
+- Refactored 6 feedback CLI commands to use shared `SessionDiscovery` module
+- Updated CLI descriptions and error messages to remove obsolete `--task` references
+- Added warn statement for lock file cleanup failures in `FeedbackFileWriter`
+
+### Removed
+- 5 deprecated auto-save methods from `ReviewManager` (~150 lines of dead code):
+  - `save_multi_model_to_task`
+  - `auto_save_review_if_enabled`
+  - `auto_save_multi_model_reports`
+  - `auto_save_to_release`
+  - `save_to_task_if_requested`
+- 11 deprecated auto-save tests (~270 lines)
+
+### Fixed
+- Documentation referencing outdated `--no-synthesize` flag in README.md
+- Documentation referencing removed `--task` flag in feedback-workflow.md
+
+## [0.36.15] - 2026-02-03
+
+### Added
+- Feedback list shows archived count when no active items exist with helpful hint to use `--archived`
+- Status-based sorting for feedback list: draft → pending → done → skip → invalid (then by ID)
+
+### Changed
+- Feedback list summary now shows archived count hint when viewing active items only
+
+## [0.36.14] - 2026-02-03
+
+### Fixed
+- Feedback CLI commands failing from subdirectories - now uses `ProjectRootFinder` for session discovery
+
+## [0.36.13] - 2026-02-03
+
+### Fixed
+- Workflow documentation referencing removed `--task` CLI flag in session discovery
+
+### Changed
+- Improved feedback categorization guide in review workflows with clearer skip/defer semantics
+
+## [0.36.12] - 2026-02-03
+
+### Fixed
+- Non-unique feedback IDs when multiple items created in rapid succession within same millisecond
+
+### Added
+- `FeedbackIdGenerator.generate_sequence(count)` for batch unique ID generation using `encode_sequence`
+
+### Changed
+- `FeedbackSynthesizer.parse_synthesis_response` pre-generates unique sequential IDs for all findings
+- `FeedbackSynthesizer.create_feedback_item` accepts optional `id:` keyword argument
+
 ## [0.36.11] - 2026-02-03
 
 ### Fixed
@@ -38,6 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified configuration cascade - reduces confusion from duplicate config options
 
 ## [0.36.8] - 2026-02-03
+
+**BREAKING CHANGES**: Feedback CLI now session-scoped only (--task option removed)
 
 ### Removed
 - `FeedbackContextResolver` molecule - task-based path resolution no longer needed
@@ -83,6 +142,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added tests for prompt size warning, lock file cleanup, and --session flag
 
 ## [0.36.4] - 2026-02-03
+
+**BREAKING CHANGES**: Feedback-first architecture replaces synthesis-report.md output
 
 ### Changed
 - **Feedback is now the primary output** - synthesis-report.md has been removed entirely
