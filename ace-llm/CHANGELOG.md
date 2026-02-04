@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-02-04
+
+### Added
+- Provider config now includes `context_limit` field for model context window sizes
+  - Google: 1M tokens (Gemini models)
+  - Anthropic: 200K tokens (Claude models)
+  - OpenAI: 128K tokens (GPT models)
+  - Other providers: 128K default
+- Default `context_limit` in main config.yml for unknown models
+
+### Technical
+- Lower Ruby version requirement to >= 3.2.0 across all gemspecs
+
 ## [0.21.0] - 2026-01-14
 
 ### Added

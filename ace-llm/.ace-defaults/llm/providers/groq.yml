@@ -1,6 +1,7 @@
 name: groq
 class: Ace::LLM::Organisms::GroqClient
 gem: ace-llm
+context_limit: 128000  # Groq models typically have 128K context window
 models:
   - openai/gpt-oss-120b
   - openai/gpt-oss-20b
