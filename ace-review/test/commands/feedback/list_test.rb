@@ -215,6 +215,118 @@ class FeedbackListCommandTest < AceReviewTest
   end
 
   # ============================================================================
+  # --session all Tests
+  # ============================================================================
+
+  def test_list_session_all_aggregates_from_multiple_sessions
+    create_multi_session_structure
+
+    output = capture_cli_output do
+      cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
+      # Stub find_all_sessions to return our test sessions
+      cmd.define_singleton_method(:find_all_sessions) do
+        [@session1_dir, @session2_dir]
+      end
+      cmd.instance_variable_set(:@session1_dir, @session1_dir)
+      cmd.instance_variable_set(:@session2_dir, @session2_dir)
+      cmd.call(session: "all")
+    end
+
+    # Should show SESSION column
+    assert_match(/SESSION\s+ID\s+STATUS\s+PRIORITY\s+TITLE/, output)
+    # Should show items from both sessions
+    assert_match(/sess01/, output)
+    assert_match(/sess02/, output)
+    assert_match(/review-abc123/, output)
+    assert_match(/review-def456/, output)
+  end
+
+  def test_list_session_all_shows_empty_when_no_sessions
+    # Don't create any sessions
+    output = capture_cli_output do
+      cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
+      cmd.define_singleton_method(:find_all_sessions) { [] }
+      cmd.call(session: "all")
+    end
+
+    assert_match(/No sessions found/, output)
+  end
+
+  def test_list_session_all_includes_session_column_in_output
+    create_multi_session_structure
+
+    output = capture_cli_output do
+      cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
+      cmd.define_singleton_method(:find_all_sessions) do
+        [@session1_dir, @session2_dir]
+      end
+      cmd.instance_variable_set(:@session1_dir, @session1_dir)
+      cmd.instance_variable_set(:@session2_dir, @session2_dir)
+      cmd.call(session: "all")
+    end
+
+    # Header should have SESSION column
+    assert_match(/^SESSION\s+ID/, output)
+    # Separator line should be wider
+    assert output.include?("-" * 72)
+  end
+
+  def test_list_session_all_filters_by_status
+    create_multi_session_structure
+
+    output = capture_cli_output do
+      cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
+      cmd.define_singleton_method(:find_all_sessions) do
+        [@session1_dir, @session2_dir]
+      end
+      cmd.instance_variable_set(:@session1_dir, @session1_dir)
+      cmd.instance_variable_set(:@session2_dir, @session2_dir)
+      cmd.call(session: "all", status: "pending")
+    end
+
+    # sess02 is pending, sess01 is draft
+    assert_match(/sess02/, output)
+    refute_match(/sess01/, output)
+  end
+
+  def test_list_session_all_includes_archived_when_requested
+    create_multi_session_structure_with_archived
+
+    output = capture_cli_output do
+      cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
+      cmd.define_singleton_method(:find_all_sessions) do
+        [@session1_dir, @session2_dir]
+      end
+      cmd.instance_variable_set(:@session1_dir, @session1_dir)
+      cmd.instance_variable_set(:@session2_dir, @session2_dir)
+      cmd.call(session: "all", archived: true)
+    end
+
+    # Should include archived items
+    assert_match(/arch01/, output)
+  end
+
+  def test_list_session_all_json_includes_session_field
+    create_multi_session_structure
+
+    output = capture_cli_output do
+      cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::List.new
+      cmd.define_singleton_method(:find_all_sessions) do
+        [@session1_dir, @session2_dir]
+      end
+      cmd.instance_variable_set(:@session1_dir, @session1_dir)
+      cmd.instance_variable_set(:@session2_dir, @session2_dir)
+      cmd.call(session: "all", format: "json")
+    end
+
+    json = JSON.parse(output)
+    assert json.all? { |item| item.key?("session") }
+    sessions = json.map { |item| item["session"] }.uniq.sort
+    assert_includes sessions, "review-abc123"
+    assert_includes sessions, "review-def456"
+  end
+
+  # ============================================================================
   # Helper Methods
   # ============================================================================
 
@@ -300,5 +412,39 @@ class FeedbackListCommandTest < AceReviewTest
     ]
 
     items.each { |item| writer.write(item, @feedback_dir) }
+  end
+
+  def create_multi_session_structure
+    # Create two session directories
+    @session1_dir = File.join(@temp_dir, "sessions", "review-abc123")
+    @session2_dir = File.join(@temp_dir, "sessions", "review-def456")
+
+    session1_feedback = File.join(@session1_dir, "feedback")
+    session2_feedback = File.join(@session2_dir, "feedback")
+
+    FileUtils.mkdir_p(session1_feedback)
+    FileUtils.mkdir_p(session2_feedback)
+
+    writer = Ace::Review::Molecules::FeedbackFileWriter.new
+
+    # Items in session 1
+    item1 = create_test_item(id: "sess01", title: "Session 1 item", status: "draft")
+    writer.write(item1, session1_feedback)
+
+    # Items in session 2
+    item2 = create_test_item(id: "sess02", title: "Session 2 item", status: "pending")
+    writer.write(item2, session2_feedback)
+  end
+
+  def create_multi_session_structure_with_archived
+    create_multi_session_structure
+
+    # Add archived item to session 1
+    archive_dir = File.join(@session1_dir, "feedback", "_archived")
+    FileUtils.mkdir_p(archive_dir)
+
+    writer = Ace::Review::Molecules::FeedbackFileWriter.new
+    archived_item = create_test_item(id: "arch01", title: "Archived item", status: "done")
+    writer.write(archived_item, archive_dir)
   end
 end
