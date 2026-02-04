@@ -9,6 +9,8 @@ module Ace
   module Scheduler
     module Molecules
       class StateManager
+        LOCK_TIMEOUT = 30
+
         def initialize(state_dir: ".ace/scheduler/state")
           @state_dir = state_dir
         end
@@ -50,7 +52,14 @@ module Ace
           end
 
           entries
-        rescue StandardError
+        rescue Errno::ENOENT
+          # No history file exists yet - expected scenario
+          []
+        rescue JSON::ParserError => e
+          warn "[StateManager] Corrupt history entry: #{e.message}"
+          []
+        rescue StandardError => e
+          warn "[StateManager] Error reading history: #{e.class} - #{e.message}"
           []
         end
 
@@ -59,7 +68,13 @@ module Ace
         def with_lock
           FileUtils.mkdir_p(@state_dir)
           File.open(lock_file, File::RDWR | File::CREAT) do |file|
-            file.flock(File::LOCK_EX)
+            deadline = Time.now + LOCK_TIMEOUT
+            until file.flock(File::LOCK_EX | File::LOCK_NB)
+              if Time.now >= deadline
+                raise Ace::Scheduler::Error, "Failed to acquire state lock within #{LOCK_TIMEOUT}s"
+              end
+              sleep 0.1
+            end
             yield
           ensure
             file.flock(File::LOCK_UN)

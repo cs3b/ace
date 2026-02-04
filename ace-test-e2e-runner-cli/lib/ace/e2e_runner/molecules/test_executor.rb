@@ -43,7 +43,9 @@ module Ace
             test_id: test_scenario.id,
             status: "error",
             error_type: "llm_error",
+            error_class: e.class.name,
             error_message: e.message,
+            error_backtrace: e.backtrace&.first(10),
             duration: Time.now - start_time,
             package: test_scenario.package,
             path: test_scenario.path
@@ -53,7 +55,9 @@ module Ace
             test_id: test_scenario.id,
             status: "error",
             error_type: "execution_error",
+            error_class: e.class.name,
             error_message: e.message,
+            error_backtrace: e.backtrace&.first(10),
             duration: Time.now - start_time,
             package: test_scenario.package,
             path: test_scenario.path

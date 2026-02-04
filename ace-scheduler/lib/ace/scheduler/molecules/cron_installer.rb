@@ -56,14 +56,18 @@ module Ace
         end
 
         def write_crontab(content, fallback: nil)
-          _stdout, _stderr, status = Open3.capture3("crontab", "-", stdin_data: content)
+          _stdout, stderr, status = Open3.capture3("crontab", "-", stdin_data: content)
           return if status.success?
 
           if fallback
-            Open3.capture3("crontab", "-", stdin_data: fallback)
+            _stdout, rollback_stderr, rollback_status = Open3.capture3("crontab", "-", stdin_data: fallback)
+            unless rollback_status.success?
+              raise Ace::Scheduler::Error,
+                    "Failed to update crontab and rollback failed: #{stderr.strip}; rollback error: #{rollback_stderr.strip}"
+            end
           end
 
-          raise Ace::Scheduler::Error, "Failed to update crontab"
+          raise Ace::Scheduler::Error, "Failed to update crontab: #{stderr.strip}"
         end
       end
     end
