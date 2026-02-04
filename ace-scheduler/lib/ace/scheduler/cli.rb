@@ -3,6 +3,11 @@
 require "dry/cli"
 require "set"
 require "ace/core"
+require_relative "cli/commands/list"
+require_relative "cli/commands/run"
+require_relative "cli/commands/emit"
+require_relative "cli/commands/status"
+require_relative "cli/commands/cron"
 require_relative "version"
 
 module Ace
@@ -11,7 +16,7 @@ module Ace
     module CLI
       extend Dry::CLI::Registry
 
-      REGISTERED_COMMANDS = [].freeze
+      REGISTERED_COMMANDS = %w[list run emit status cron].freeze
       BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
       KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
       DEFAULT_COMMAND = "help"
@@ -27,6 +32,13 @@ module Ace
         end
         Dry::CLI.new(self).call(arguments: args)
       end
+
+      # Command registrations
+      register "list", CLI::Commands::List
+      register "run", CLI::Commands::Run
+      register "emit", CLI::Commands::Emit
+      register "status", CLI::Commands::Status
+      register "cron", CLI::Commands::Cron
 
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
         gem_name: "ace-scheduler",
