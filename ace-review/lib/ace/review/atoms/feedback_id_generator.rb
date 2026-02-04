@@ -37,6 +37,29 @@ module Ace
         def self.generate_for(time)
           Ace::Support::Timestamp.encode(time.utc, format: :ms)
         end
+
+        # Generate a sequence of unique, sequential IDs
+        #
+        # Uses ace-support-timestamp's encode_sequence to generate IDs that are
+        # guaranteed unique even when created in rapid succession. Each ID is
+        # strictly greater than the previous (lexicographically).
+        #
+        # @param count [Integer] Number of IDs to generate
+        # @return [Array<String>] Array of unique 8-character Base36 IDs
+        # @raise [ArgumentError] If count <= 0
+        #
+        # @example Generate 5 unique IDs
+        #   ids = FeedbackIdGenerator.generate_sequence(5)
+        #   ids.length #=> 5
+        #   ids.uniq.length #=> 5  # All unique
+        #   ids == ids.sort #=> true  # Already sorted
+        def self.generate_sequence(count)
+          Ace::Support::Timestamp::Atoms::CompactIdEncoder.encode_sequence(
+            Time.now.utc,
+            count: count,
+            format: :ms
+          )
+        end
       end
     end
   end

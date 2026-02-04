@@ -2,7 +2,7 @@
 doc-type: guide
 purpose: User guide for feedback-based review workflow
 update:
-  last-updated: '2026-02-02'
+  last-updated: '2026-02-03'
 ---
 
 # Feedback-Based Review Workflow
@@ -88,14 +88,14 @@ ace-review feedback list --archived
 # Output as JSON
 ace-review feedback list --format json
 
-# Use specific task context
-ace-review feedback list --task 227
+# Use specific session
+ace-review feedback list --session .cache/ace-review/sessions/review-8p2h11
 ```
 
 **Options:**
 - `--status STATUS` - Filter by status (draft/pending/invalid/skip/done)
 - `--priority PRIORITY` - Filter by priority (critical/high/medium/low)
-- `--task TASK` - Task reference for context
+- `--session PATH` - Session directory containing feedback
 - `--archived` - Include archived items
 - `--format FORMAT` - Output format (table/json)
 
@@ -110,8 +110,8 @@ ace-review feedback show abc123
 # Show by partial ID (minimum 3 characters)
 ace-review feedback show abc
 
-# Use specific task context
-ace-review feedback show abc123 --task 227
+# Use specific session
+ace-review feedback show abc123 --session .cache/ace-review/sessions/review-8p2h11
 ```
 
 **Output includes:**
@@ -143,7 +143,7 @@ ace-review feedback verify abc123 --invalid --research "False positive: handled 
 - `--valid` - Mark as valid (moves to pending status)
 - `--invalid` - Mark as invalid (archives the item)
 - `--research TEXT` - Add verification research notes
-- `--task TASK` - Task reference for context
+- `--session PATH` - Session directory containing feedback
 
 ### `ace-review feedback skip <id>`
 
@@ -160,7 +160,7 @@ ace-review feedback skip abc123 --reason "Technical debt, tracking separately"
 
 **Options:**
 - `--reason TEXT` - Reason for skipping
-- `--task TASK` - Task reference for context
+- `--session PATH` - Session directory containing feedback
 
 ### `ace-review feedback resolve <id>`
 
@@ -169,12 +169,12 @@ Resolves a pending item with resolution text.
 ```bash
 ace-review feedback resolve abc123 --resolution "Fixed in commit def456"
 ace-review feedback resolve abc123 --resolution "Added input validation in UserController"
-ace-review feedback resolve abc123 --resolution "Refactored to use parameterized queries" --task 227
+ace-review feedback resolve abc123 --resolution "Refactored to use parameterized queries"
 ```
 
 **Options:**
 - `--resolution TEXT` - (required) How the issue was resolved
-- `--task TASK` - Task reference for context
+- `--session PATH` - Session directory containing feedback
 
 ## Configuration
 
@@ -207,22 +207,15 @@ feedback:
   synthesis_model: google:gemini-2.5-flash
 ```
 
-## Task Context Detection
+## Session Context
 
-Feedback is saved based on context detection, with the following priority:
+Feedback is stored within session directories and discovered via:
 
-1. **`--task` flag** (explicit): `ace-review feedback list --task 227`
-2. **Branch name pattern**: Extracts task number from branch names like `227-feature-name` or `task-227`
-3. **Current directory**: If working within `.ace-taskflow` task directory
-4. **Session cache**: Remembers last used context
-5. **Current working directory**: Fallback to pwd
+1. **`--session` flag** (explicit): `ace-review feedback list --session .cache/ace-review/sessions/review-8p2h11`
+2. **`.ace-review-session` cache file**: Auto-created after reviews, remembers the latest session
+3. **Current working directory**: Fallback to pwd
 
-### Supported Task Reference Formats
-
-- `227` - Plain task number
-- `227.01` - Subtask reference
-- `task.227` - Prefixed format
-- `v.0.9.0+227` - Release-qualified format
+Session directories are automatically symlinked to task directories for organization.
 
 ## File Format
 
@@ -359,20 +352,16 @@ Solutions:
 Feedback is stored within session directories, which are symlinked to task directories.
 
 Possible causes:
-- Task reference not recognized
-- Branch name doesn't match task pattern
-- Task directory doesn't exist
-- Permission issues creating symlinks
+- No review session found in cache
+- Session directory doesn't exist
+- Permission issues accessing session
 
 Solutions:
-- Specify task explicitly with `--task 227`
-- Check branch naming follows pattern: `227-description`
-- Verify task directory exists in `.ace-taskflow`
-- Check write permissions on task/reviews/ directory
+- Run a review first to create a session
+- Specify session explicitly with `--session .cache/ace-review/sessions/review-xyz`
 - Ensure .cache/ace-review/sessions/ exists and is writable
 
-Note: Feedback is accessible via the session symlink at:
-`task/reviews/{session-name}/feedback/`
+Note: Feedback is stored in each session's `feedback/` directory.
 
 ### Partial ID matching fails
 
@@ -401,22 +390,25 @@ Archived items are in `feedback/_archived/` subdirectory within each session.
 
 ### Multiple sessions for the same task
 
-Each review execution creates a new session. Multiple sessions can be linked to the same task:
+Each review execution creates a new session:
 
 ```bash
 # First review
-ace-review --pr 189 --preset code-pr --auto-execute --task 227
+ace-review --pr 189 --preset code-pr
 
 # Second review (different PR or updated code)
-ace-review --pr 190 --preset code-pr --auto-execute --task 227
+ace-review --pr 190 --preset code-pr
 
-# List all linked sessions
-ls -la .ace-taskflow/v.0.9.0/tasks/227-*/reviews/
-# review-8p2h11 -> ../../../../../.cache/ace-review/sessions/review-8p2h11
-# review-8p2xyz -> ../../../../../.cache/ace-review/sessions/review-8p2xyz
+# List all sessions
+ls -la .cache/ace-review/sessions/
+# review-8p2h11/
+# review-8p2xyz/
+
+# Work with a specific session
+ace-review feedback list --session .cache/ace-review/sessions/review-8p2h11
 ```
 
 This enables:
-- Historical record of all reviews for a task
+- Historical record of all reviews
 - Separate feedback tracking per review cycle
 - Iterative refinement based on multiple review passes

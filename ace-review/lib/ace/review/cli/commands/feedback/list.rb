@@ -3,6 +3,7 @@
 require "dry/cli"
 require "ace/core"
 require "json"
+require_relative "session_discovery"
 
 module Ace
   module Review
@@ -14,11 +15,12 @@ module Ace
           # Lists feedback items with optional filters.
           class List < Dry::CLI::Command
             include Ace::Core::CLI::DryCli::Base
+            include SessionDiscovery
 
             desc <<~DESC.strip
               List feedback items with optional filters
 
-              Displays feedback items from the current task context or specified task.
+              Displays feedback items from the latest review session or specified session.
               By default shows active (non-archived) items in table format.
             DESC
 
@@ -44,11 +46,11 @@ module Ace
             option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
             def call(**options)
-              # Resolve feedback path from session or task context
+              # Resolve feedback path from session context
               base_path = resolve_feedback_path(options)
 
               unless base_path
-                raise Ace::Core::CLI::Error.new("Could not determine feedback path. Use --session or --task to specify context.")
+                raise Ace::Core::CLI::Error.new("Could not determine feedback path. Use --session to specify a review session.")
               end
 
               debug_log("Feedback base path: #{base_path}", options)
@@ -63,6 +65,9 @@ module Ace
                 priority: options[:priority]
               )
 
+              # Get archived count for summary (always, for UX awareness)
+              archived_count = count_archived_items(base_path, manager)
+
               # Include archived items if requested
               if options[:archived]
                 archive_dir = manager.directory_manager.archive_path(base_path)
@@ -75,59 +80,59 @@ module Ace
                 end
               end
 
-              # Sort by ID (chronological)
-              items.sort_by!(&:id)
+              # Sort by status priority, then by ID (chronological)
+              items.sort_by! { |item| [status_sort_order(item.status), item.id] }
 
               # Output in requested format
               case options[:format]
               when "json"
                 output_json(items)
               else
-                output_table(items, options)
+                output_table(items, archived_count, options)
               end
             end
 
             private
 
-            # Resolve feedback path from session context
+            # Count archived items for UX awareness
             #
-            # Priority:
-            # 1. --session flag (explicit session directory)
-            # 2. Most recent session in cache directory (default)
-            #
-            # @param options [Hash] Command options
-            # @return [String, nil] Base path for feedback directory
-            def resolve_feedback_path(options)
-              # Check explicit session flag first
-              if options[:session]
-                session_path = File.expand_path(options[:session])
-                return session_path if Dir.exist?(session_path)
+            # @param base_path [String] Base path for feedback directory
+            # @param manager [Organisms::FeedbackManager] Feedback manager instance
+            # @return [Integer] Count of archived items
+            def count_archived_items(base_path, manager)
+              archive_dir = manager.directory_manager.archive_path(base_path)
+              return 0 unless Dir.exist?(archive_dir)
 
-                raise Ace::Core::CLI::Error.new("Session not found: #{session_path}")
-              end
-
-              # Default: use most recent session
-              find_latest_session
+              Dir.glob(File.join(archive_dir, "*.s.md")).count
             end
 
-            # Find the most recent session directory
+            # Status sort order for display
+            # Priority: draft, pending, done, skip, invalid (unknown statuses at end)
+            STATUS_SORT_ORDER = {
+              "draft" => 0,
+              "pending" => 1,
+              "done" => 2,
+              "skip" => 3,
+              "invalid" => 4
+            }.freeze
+
+            # Get sort order for a status
             #
-            # @return [String, nil] Path to latest session or nil
-            def find_latest_session
-              cache_dir = File.join(Dir.pwd, ".cache", "ace-review", "sessions")
-              return nil unless Dir.exist?(cache_dir)
-
-              sessions = Dir.glob(File.join(cache_dir, "review-*"))
-                            .select { |p| File.directory?(p) }
-              return nil if sessions.empty?
-
-              sessions.max_by { |p| File.mtime(p) }
+            # @param status [String] Status value
+            # @return [Integer] Sort order (unknown statuses sort last)
+            def status_sort_order(status)
+              STATUS_SORT_ORDER.fetch(status.to_s, 99)
             end
 
             # Output items as table
-            def output_table(items, options)
+            def output_table(items, archived_count, options)
               if items.empty?
-                puts "No feedback items found."
+                if archived_count > 0
+                  puts "No active feedback items. #{archived_count} archived item(s) exist."
+                  puts "Use --archived to include them."
+                else
+                  puts "No feedback items found."
+                end
                 return
               end
 
@@ -144,9 +149,10 @@ module Ace
                 puts format("%-8s %-8s %-10s %s", item.id, item.status, item.priority, title)
               end
 
-              # Summary
+              # Summary with archived hint
               puts
-              puts "Total: #{items.length} item(s)"
+              archived_hint = archived_count > 0 && !options[:archived] ? " (#{archived_count} archived)" : ""
+              puts "Total: #{items.length} item(s)#{archived_hint}"
             end
 
             # Output items as JSON
