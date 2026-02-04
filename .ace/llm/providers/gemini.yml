@@ -3,6 +3,7 @@ last_synced: 2026-01-13
 class: Ace::LLM::Providers::CLI::GeminiClient
 gem: ace-llm-providers-cli
 models_dev_id: google
+context_limit: 1000000
 models:
   - gemini-2.5-flash
   - gemini-2.5-pro
