@@ -1,6 +1,7 @@
 name: openrouter
 class: Ace::LLM::Organisms::OpenRouterClient
 gem: ace-llm
+context_limit: 128000  # Default context limit; varies by model
 models:
   # Fast inference (:nitro = throughput priority → Groq/Cerebras)
   - openai/gpt-oss-120b:nitro
