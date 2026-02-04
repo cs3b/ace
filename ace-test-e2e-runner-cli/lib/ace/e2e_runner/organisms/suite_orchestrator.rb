@@ -44,20 +44,20 @@ module Ace
                       end
                     end
 
-          report_dir = write_reports(results, config)
+          report_map = write_reports(results, config, scenarios)
           results.each do |result|
             formatter.on_test_complete(
               result.test_id,
               result.status,
               result.duration,
-              report_dir ? File.join(report_dir, result.test_id.to_s, "summary.r.md") : nil
+              report_map.dig(result.test_id, :summary_path)
             ) if formatter
           end
           status = results.all?(&:success?) ? :passed : :failed
           summary = build_summary(results)
           formatter.on_finish(summary) if formatter
 
-          { results: results, report_dir: report_dir, status: status }
+          { results: results, report_dir: report_map&.values&.first&.dig(:report_dir), status: status }
         end
 
         private
@@ -115,11 +115,12 @@ module Ace
           path.split(File::SEPARATOR).first
         end
 
-        def write_reports(results, config)
-          timestamp = Time.now.utc.strftime("%Y%m%d-%H%M%S")
+        def write_reports(results, config, scenarios)
+          run_id = Atoms::RunIdGenerator.new.generate
           report_dir = config[:defaults][:report_dir] || ".cache/ace-test-e2e"
-          writer = Molecules::ReportWriter.new(report_dir: report_dir, timestamp: timestamp)
-          writer.write_all(results)
+          writer = Molecules::ReportWriter.new(report_dir: report_dir, run_id: run_id)
+          scenario_map = scenarios.to_h { |scenario| [scenario.id, scenario] }
+          writer.write_all(results, scenarios: scenario_map, suite_report: results.length > 1)
         end
 
         def build_formatter(config, options)

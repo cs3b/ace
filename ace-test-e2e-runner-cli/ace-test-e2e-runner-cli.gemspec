@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-core", ">= 0.1"
   spec.add_dependency "ace-support-config", ">= 0.1"
   spec.add_dependency "ace-llm", ">= 0.1"
+  spec.add_dependency "ace-support-timestamp", ">= 0.2"
   spec.add_dependency "dry-cli", "~> 1.0"
 
   spec.add_development_dependency "bundler", "~> 2.0"

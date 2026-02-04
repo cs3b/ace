@@ -16,14 +16,23 @@ module Ace
             package: "ace-test"
           )
 
-          writer = Molecules::ReportWriter.new(report_dir: dir, timestamp: "20260204-120000")
-          report_dir = writer.write_all([result])
+          scenario = Models::TestScenario.new(
+            id: "MT-TEST-001",
+            title: "Sample",
+            area: "test",
+            package: "ace-test",
+            path: "test/e2e/MT-TEST-001.mt.md",
+            content: "body",
+            frontmatter: {}
+          )
 
-          summary_path = File.join(report_dir, "summary.r.md")
-          test_summary = File.join(report_dir, "MT-TEST-001", "summary.r.md")
+          writer = Molecules::ReportWriter.new(report_dir: dir, run_id: "8p3ywe")
+          report_map = writer.write_all([result], scenarios: { "MT-TEST-001" => scenario })
 
-          assert File.exist?(summary_path)
-          assert File.exist?(test_summary)
+          report_dir = report_map["MT-TEST-001"][:report_dir]
+          assert File.exist?(File.join(report_dir, "summary.r.md"))
+          assert File.exist?(File.join(report_dir, "experience.r.md"))
+          assert File.exist?(File.join(report_dir, "metadata.yml"))
         end
       end
     end

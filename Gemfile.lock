@@ -244,6 +244,7 @@ PATH
       ace-llm (>= 0.1)
       ace-support-config (>= 0.1)
       ace-support-core (>= 0.1)
+      ace-support-timestamp (>= 0.2)
       dry-cli (~> 1.0)
 
 PATH

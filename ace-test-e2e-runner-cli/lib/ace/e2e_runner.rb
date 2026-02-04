@@ -13,6 +13,8 @@ require_relative "e2e_runner/atoms/frontmatter_parser"
 require_relative "e2e_runner/atoms/prompt_builder"
 require_relative "e2e_runner/atoms/result_parser"
 require_relative "e2e_runner/atoms/lazy_loader"
+require_relative "e2e_runner/atoms/run_id_generator"
+require_relative "e2e_runner/atoms/report_path_builder"
 
 # Molecules
 require_relative "e2e_runner/molecules/config_loader"
