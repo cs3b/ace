@@ -4,7 +4,7 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-10-02'
+  last-updated: '2026-02-04'
 ---
 
 # Draft Release Workflow Instruction
@@ -28,6 +28,17 @@ user-provided release scope into actionable tasks.
 - Read and follow: `ace-bundle wfi://load-project-context`
 
 ## Process Steps
+
+0. **Pre-Release Verification (NEW)**
+   * Before creating release tasks, verify the codebase is ready:
+     1. Run scheduler pre-release gates:
+        ```bash
+        ace-scheduler emit release-started
+        ```
+     2. Confirm core checks:
+        - Unit tests: `ace-test-suite`
+        - E2E tests: `ace-e2e-test-suite --all`
+   * If any checks fail, address issues before proceeding.
 
 1. **Gather Release Metadata**
    * Ask the user for:

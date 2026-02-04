@@ -4,7 +4,7 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-09-25'
+  last-updated: '2026-02-04'
 ---
 
 # Publish Release Workflow Instruction
@@ -68,7 +68,11 @@ Execute the final deployment and archival phase of project releases, transitioni
    - Run code quality checks: `# Run project-specific lint command`
    - Verify no critical issues remain unresolved
 
-5. **Security Check (Token Scan):**
+5. **Verify E2E Results (NEW):**
+   - Check recent scheduler status: `ace-scheduler status`
+   - If no recent E2E run is recorded, run: `ace-e2e-test-suite --all`
+
+6. **Security Check (Token Scan):**
    - Scan Git history for leaked authentication tokens: `ace-git-secrets check-release`
    - For strict mode (fail on medium confidence too): `ace-git-secrets check-release --strict`
    - If tokens are detected:
@@ -79,7 +83,7 @@ Execute the final deployment and archival phase of project releases, transitioni
 
 ### 2. Version Finalization
 
-6. **Update Version Numbers:**
+7. **Update Version Numbers:**
    - Update all project files containing version numbers (e.g., `package.json`, `Cargo.toml`, `VERSION` files)
    - Ensure version consistency across all relevant files
    - Common version file locations:
@@ -89,37 +93,37 @@ Execute the final deployment and archival phase of project releases, transitioni
      - `Gemfile` or `*.gemspec` (Ruby)
      - `VERSION` or `version.txt` files
 
-7. **Generate Final Changelog:**
+8. **Generate Final Changelog:**
    - Create or update `CHANGELOG.md` at project root
    - Move entries from `[Unreleased]` section to new version section
    - Add release date: `## [X.Y.Z] - YYYY-MM-DD`
    - Include comparison links at bottom of file
    - Follow the changelog template:
 
-8. **Validate Documentation Consistency:**
+9. **Validate Documentation Consistency:**
    - Verify release documentation file follows naming convention: `v.x.y.z-codename.md`
    - Check that all internal references and links are accurate
    - Confirm documentation reflects actual implemented features
 
 ### 3. Release Artifact Creation
 
-9. **Commit Version Updates:**
+10. **Commit Version Updates:**
    - Stage all version-related changes with enhanced validation: `git-add <version_files> CHANGELOG.md`
    - Commit with guided message generation: `git-commit --guided -m "chore(release): prepare v<X.Y.Z> publication"`
    - Example: `git-commit --guided -m "chore(release): prepare v0.3.0 publication"`
 
-10. **Create Release Tag:**
+11. **Create Release Tag:**
    - Create annotated Git tag with enhanced validation: `git tag -a v<X.Y.Z> -m "Release v<X.Y.Z> <codename>"`
    - Example: `git tag -a v0.3.0 -m "Release v0.3.0 feedback-after-meta"`
    - Verify tag creation: `git tag -l v<X.Y.Z>`
 
-11. **Push Release Changes:**
+12. **Push Release Changes:**
     - Push commits with safety checks: `git-push --safe origin <current_branch>`
     - Push tags with validation: `git-push --safe origin v<X.Y.Z>` or `git-push --safe origin --tags`
 
 ### 4. Package Publication (If Applicable)
 
-12. **Authenticate with Package Registry (if applicable):**
+13. **Authenticate with Package Registry (if applicable):**
     - Note: If the project is distributed as a Git submodule (like dev-tools), skip to step 14
     - For packages published to registries:
       - npm: `npm login` or use `.npmrc` with auth token
@@ -127,7 +131,7 @@ Execute the final deployment and archival phase of project releases, transitioni
       - RubyGems: `gem signin` or use API key (for traditional Ruby gems)
       - Cargo: `cargo login` with token
 
-13. **Execute Package Publication (if applicable):**
+14. **Execute Package Publication (if applicable):**
     - Note: Skip this for Git submodule projects
     - For published packages:
       - npm: `npm publish`
@@ -135,20 +139,20 @@ Execute the final deployment and archival phase of project releases, transitioni
       - RubyGems: `gem push *.gem` (for traditional Ruby gems)
       - Cargo: `cargo publish`
 
-14. **Verify Package Availability:**
+15. **Verify Package Availability:**
     - Confirm package appears on registry website
     - Test installation/download of published package
     - Verify package metadata (version, description, dependencies) is correct
 
 ### 5. Documentation Archival
 
-15. **Archive Release Documentation:**
+16. **Archive Release Documentation:**
     - Create archive directory: `mkdir -p .ace-taskflow/done/`
     - Move current release documentation: `mv .ace-taskflow/$(ace-taskflow release --path)/* .ace-taskflow/done/v<X.Y.Z>-<codename>/`
     - Example: `mv .ace-taskflow/$(ace-taskflow release --path)/v.0.3.0-feedback-after-meta.v.0.2 .ace-taskflow/done/`
     - Verify move completed successfully and `.ace-taskflow/$(ace-taskflow release --path)/` is empty
 
-16. **Update Roadmap (Remove Completed Release):**
+17. **Update Roadmap (Remove Completed Release):**
     - Remove the completed release from roadmap's "Planned Major Releases" table
     - Update cross-release dependencies that reference the completed release
     - Update roadmap's `last_reviewed` date and add entry to Update History
@@ -164,23 +168,23 @@ Execute the final deployment and archival phase of project releases, transitioni
       "docs(roadmap): remove completed v<X.Y.Z>-<codename> from planned releases"
       ```
 
-17. **Commit Documentation Archival:**
+18. **Commit Documentation Archival:**
     - Stage archival changes: `git add .ace-taskflow/done/v<X.Y.Z>-<codename>/ .ace-taskflow/$(ace-taskflow release --path)/`
     - Commit archival: `git commit -m "chore(release): archive v<X.Y.Z>-<codename> documentation"`
     - Example: `git commit -m "chore(release): archive v0.3.0-feedback-after-meta documentation"`
 
-18. **Push Archival Changes:**
+19. **Push Archival Changes:**
     - Push archival commit: `git push origin <current_branch>`
 
 ### 6. Release Communication
 
-19. **Prepare Release Announcement:**
+20. **Prepare Release Announcement:**
     - Draft release announcement highlighting key changes
     - Include installation/update instructions
     - Reference changelog for detailed change information
     - Prepare announcements for relevant channels (internal teams, users, community)
 
-20. **Execute Release Communication:**
+21. **Execute Release Communication:**
     - Publish release announcement through appropriate channels
     - Update project documentation or website if applicable
     - Notify stakeholders and team members
@@ -188,12 +192,12 @@ Execute the final deployment and archival phase of project releases, transitioni
 
 ### 7. Post-Release Monitoring
 
-21. **Initialize Release Monitoring:**
+22. **Initialize Release Monitoring:**
     - Set up monitoring for error rates and performance metrics
     - Establish alerting for critical issues
     - Begin collecting user feedback on the release
 
-22. **Verify Release Success:**
+23. **Verify Release Success:**
     - Confirm all release steps completed successfully
     - Validate that published artifacts are accessible and functional
     - Check that documentation archival preserved all necessary information
