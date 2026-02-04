@@ -143,6 +143,80 @@ module Ace
           assert Ace::Support::Timestamp.valid_any_format?(id),
             "Generated ID '#{id}' should be valid ms format"
         end
+
+        # Sequence generation tests
+
+        def test_generate_sequence_returns_array
+          ids = @generator.generate_sequence(5)
+
+          assert_instance_of Array, ids
+          assert_equal 5, ids.length
+        end
+
+        def test_generate_sequence_returns_unique_ids
+          ids = @generator.generate_sequence(10)
+
+          assert_equal ids.length, ids.uniq.length,
+            "All IDs in sequence should be unique"
+        end
+
+        def test_generate_sequence_returns_sequential_ids
+          ids = @generator.generate_sequence(10)
+
+          # Each ID should be strictly greater than the previous
+          ids.each_cons(2) do |prev_id, curr_id|
+            assert prev_id < curr_id,
+              "IDs should be strictly increasing: #{prev_id} < #{curr_id}"
+          end
+        end
+
+        def test_generate_sequence_with_count_1
+          ids = @generator.generate_sequence(1)
+
+          assert_equal 1, ids.length
+          assert_equal 8, ids.first.length
+        end
+
+        def test_generate_sequence_ids_are_8_chars
+          ids = @generator.generate_sequence(5)
+
+          ids.each do |id|
+            assert_equal 8, id.length, "Expected 8-char ms format ID"
+          end
+        end
+
+        def test_generate_sequence_ids_are_base36
+          ids = @generator.generate_sequence(5)
+
+          ids.each do |id|
+            assert_match(/\A[0-9a-z]{8}\z/, id)
+          end
+        end
+
+        def test_generate_sequence_raises_for_zero_count
+          error = assert_raises(ArgumentError) do
+            @generator.generate_sequence(0)
+          end
+
+          assert_match(/count must be greater than 0/, error.message)
+        end
+
+        def test_generate_sequence_raises_for_negative_count
+          error = assert_raises(ArgumentError) do
+            @generator.generate_sequence(-1)
+          end
+
+          assert_match(/count must be greater than 0/, error.message)
+        end
+
+        def test_generate_sequence_ids_are_valid_ms_format
+          ids = @generator.generate_sequence(5)
+
+          ids.each do |id|
+            assert Ace::Support::Timestamp.valid_any_format?(id),
+              "Generated ID '#{id}' should be valid ms format"
+          end
+        end
       end
     end
   end

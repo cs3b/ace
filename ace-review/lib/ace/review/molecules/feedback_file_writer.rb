@@ -167,7 +167,11 @@ module Ace
           { success: false, error: "File lock timeout: #{e.message}" }
         ensure
           # Clean up lock file after write completes
-          FileUtils.rm_f(lock_file_path) rescue nil
+          begin
+            FileUtils.rm_f(lock_file_path)
+          rescue StandardError => e
+            warn "Failed to clean up lock file #{lock_file_path}: #{e.message}"
+          end
         end
 
         # Attempt to acquire an exclusive file lock

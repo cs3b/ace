@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require "ace/core"
+require_relative "session_discovery"
 
 module Ace
   module Review
@@ -13,6 +14,7 @@ module Ace
           # Displays detailed information about a feedback item.
           class Show < Dry::CLI::Command
             include Ace::Core::CLI::DryCli::Base
+            include SessionDiscovery
 
             desc <<~DESC.strip
               Show detailed information about a feedback item
@@ -62,37 +64,6 @@ module Ace
             end
 
             private
-
-            # Resolve feedback path from session context
-            #
-            # @param options [Hash] Command options
-            # @return [String, nil] Base path for feedback directory
-            def resolve_feedback_path(options)
-              # Explicit session path
-              if options[:session]
-                session_path = File.expand_path(options[:session])
-                return session_path if Dir.exist?(session_path)
-
-                raise Ace::Core::CLI::Error.new("Session not found: #{session_path}")
-              end
-
-              # Default: latest session
-              find_latest_session
-            end
-
-            # Find the most recent session directory
-            #
-            # @return [String, nil] Path to latest session or nil
-            def find_latest_session
-              cache_dir = File.join(Dir.pwd, ".cache", "ace-review", "sessions")
-              return nil unless Dir.exist?(cache_dir)
-
-              sessions = Dir.glob(File.join(cache_dir, "review-*"))
-                            .select { |p| File.directory?(p) }
-              return nil if sessions.empty?
-
-              sessions.max_by { |p| File.mtime(p) }
-            end
 
             # Find item by ID with partial matching
             #
