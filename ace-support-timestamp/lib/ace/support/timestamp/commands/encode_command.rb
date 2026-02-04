@@ -29,9 +29,13 @@ module Ace
 
             display_config_summary("encode", config, options)
 
+            # Validate mutually exclusive options
             if options[:split]
               if options[:format]
                 raise ArgumentError, "--split and --format are mutually exclusive"
+              end
+              if options[:count]
+                raise ArgumentError, "--count and --split are mutually exclusive"
               end
 
               levels = parse_split_levels(options[:split])
@@ -56,14 +60,31 @@ module Ace
               format = format.to_s.tr("-", "_").to_sym if format
               format ||= config[:default_format]&.to_sym || :"2sec"
 
-              compact_id = Atoms::CompactIdEncoder.encode_with_format(
-                time,
-                format: format,
-                year_zero: config[:year_zero],
-                alphabet: config[:alphabet]
-              )
+              if options[:count]
+                count = options[:count].to_i
+                ids = Atoms::CompactIdEncoder.encode_sequence(
+                  time,
+                  count: count,
+                  format: format,
+                  year_zero: config[:year_zero],
+                  alphabet: config[:alphabet]
+                )
 
-              puts compact_id
+                if options[:json]
+                  puts JSON.generate(ids)
+                else
+                  ids.each { |id| puts id }
+                end
+              else
+                compact_id = Atoms::CompactIdEncoder.encode_with_format(
+                  time,
+                  format: format,
+                  year_zero: config[:year_zero],
+                  alphabet: config[:alphabet]
+                )
+
+                puts compact_id
+              end
             end
             0
           rescue ArgumentError => e
