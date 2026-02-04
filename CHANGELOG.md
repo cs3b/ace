@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.419] - 2026-02-04
+
+### Added
+
+- **ace-review v0.36.17**: Support for `--session all` in feedback list command
+  - Aggregate feedback from all sessions in `.cache/ace-review/sessions/`
+  - New `find_all_sessions` helper in `SessionDiscovery` module
+  - SESSION column in table output when viewing all sessions
+  - `session` field in JSON output for programmatic access
+
 ## [0.9.418] - 2026-02-04
 
 ### Changed
