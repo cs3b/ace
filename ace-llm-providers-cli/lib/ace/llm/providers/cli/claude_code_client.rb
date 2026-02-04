@@ -152,11 +152,7 @@ module Ace
               cmd << "--append-system-prompt" << append_content.to_s
             end
 
-            # Add temperature if provided
-            temp = options[:temperature] || @generation_config[:temperature]
-            if temp
-              cmd << "--temperature" << temp.to_s
-            end
+            # Claude CLI does not support temperature flags; omit for compatibility
 
             # Add max tokens if provided
             max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
