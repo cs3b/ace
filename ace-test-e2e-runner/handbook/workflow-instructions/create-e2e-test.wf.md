@@ -154,6 +154,30 @@ This ordering ensures error TCs run before any state is created (clean environme
 
 See: **e2e-testing.g.md § "Avoiding False Positive Tests"** for the full list of anti-patterns and the reviewer checklist.
 
+#### CLI-Based Testing Requirement
+
+**E2E tests MUST test through the CLI interface, not library imports.**
+
+**Valid approach:**
+```bash
+OUTPUT=$(ace-review review --preset code --subject "diff:HEAD~1" --auto-execute 2>&1)
+EXIT_CODE=$?
+[ "$EXIT_CODE" -eq 0 ] && echo "PASS" || echo "FAIL"
+```
+
+**Invalid approach (this is integration/unit testing, not E2E):**
+```bash
+bundle exec ruby -e '
+  require_relative "lib/ace/review"
+  result = Ace::Review::SomeClass.method(args)
+'
+```
+
+**For execution tests (LLM, API calls):**
+- Use `--auto-execute` to make real API calls
+- Using only `--dry-run` cannot verify actual execution behavior
+- Keep costs minimal: cheap models, tiny prompts, small diffs
+
 #### Common Anti-Patterns to Avoid
 
 **Writing tests from design specs before implementation:**
