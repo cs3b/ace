@@ -1,6 +1,7 @@
 name: groq
 class: Ace::LLM::Organisms::GroqClient
 gem: ace-llm
+context_limit: 128000
 models:
   - openai/gpt-oss-120b
   - openai/gpt-oss-20b
