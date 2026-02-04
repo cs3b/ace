@@ -130,7 +130,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.36.17)
+    ace-review (0.37.0)
       ace-bundle (~> 0.30)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
