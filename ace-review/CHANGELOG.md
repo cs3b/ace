@@ -7,13 +7,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.37.0] - 2026-02-04
+## [0.37.3] - 2026-02-04
 
 ### Added
 - Priority range filtering with `+` suffix for `feedback list` command
 - `--priority medium+` filters for medium, high, and critical items
 - `--priority high+` filters for high and critical items
 - New `PriorityFilter` atom for priority filtering logic
+
+## [0.37.2] - 2026-02-04
+
+### Added
+- `SubjectFilter` molecule extracting file filtering logic from Reviewer model
+- README documentation for Subject Strategy Configuration (strategy types, adaptive mode)
+- README documentation for Reviewers Format (attributes, file patterns, migration)
+- `ContextLimitResolver` integration with ace-llm provider config for context limits
+
+### Changed
+- `Reviewer` model now delegates filtering to `SubjectFilter` molecule (ATOM architecture)
+
+### Technical
+- Comprehensive tests for `SubjectFilter` molecule
+
+## [0.37.1] - 2026-02-04
+
+### Fixed
+- Graceful error handling for preset composition failures (circular deps, missing refs)
+- E2E test MT-REVIEW-001 preset data now includes required `instructions:` key
+- E2E test MT-REVIEW-001 uses valid model provider format
+
+## [0.37.0] - 2026-02-04
+
+### Added
+- Token estimation foundation with `TokenEstimator` (chars/4 heuristic) and `ContextLimitResolver`
+- `DiffBoundaryFinder` atom for parsing unified diffs into file blocks
+- Subject strategy system with `SubjectStrategy` factory and registry
+- `FullStrategy` for complete subject pass-through when content fits context
+- `ChunkedStrategy` for file-boundary diff splitting of large subjects
+- `AdaptiveStrategy` for auto-selecting between Full/Chunked based on token estimate
+- `Reviewer` entity model with configurable focus, file patterns, and prompt additions
+
+### Changed
+- `FullStrategy` accepts `headroom` config option to customize context margin (aligns with `AdaptiveStrategy`)
+
+### Fixed
+- GPT-4 variant handling for 32k and preview models (gpt-4-32k, gpt-4-NNNN)
+- Extended diff header preservation during truncation (rename operations)
+- Chunk edge cases with non-positive available tokens
 
 ## [0.36.17] - 2026-02-04
 

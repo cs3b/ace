@@ -46,6 +46,22 @@ defaults:
   gh_simple_timeout: 10  # Timeout for simple gh commands (--version, auth status)
   llm_timeout: 300  # Timeout for LLM queries in seconds (5 minutes)
 
+# Subject strategy configuration
+# Controls how large diffs are handled when they exceed model context limits
+#
+# Strategy Types:
+# - adaptive (default): Auto-selects full or chunked based on model capabilities
+# - full: Send complete diff in single request (for large context models)
+# - chunked: Split diff at file boundaries (for smaller context models)
+#
+# Example:
+#   subject_strategy:
+#     type: adaptive      # or: full, chunked
+#     headroom: 0.15      # Reserve 15% for system prompt (default)
+#     chunking:
+#       max_tokens_per_chunk: 100000  # Max tokens per chunk
+#       include_change_summary: true  # Include file summary in each chunk
+
 # Storage configuration
 # storage:
 #   # Where to store review outputs
