@@ -6,3 +6,8 @@ llm:
   # CLI providers (opencode, claude, codex, gemini) may need longer
   # due to subprocess overhead and "thinking" phases
   timeout: 120
+
+  # Default context limit for unknown models (in tokens)
+  # Provider-specific limits are defined in providers/*.yml
+  context_limit:
+    default: 128000
