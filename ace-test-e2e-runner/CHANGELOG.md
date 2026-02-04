@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-02-04
+
+### Added
+
+- CLI-Based Testing Requirement section to create-e2e-test workflow documenting that E2E tests must test through CLI interface, not library imports
+
 ## [0.5.0] - 2026-02-01
 
 ### Added
