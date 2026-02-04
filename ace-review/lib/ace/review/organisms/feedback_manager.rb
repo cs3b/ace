@@ -170,8 +170,8 @@ module Ace
           # Apply status filter
           items = items.select { |item| item.status == status } if status
 
-          # Apply priority filter
-          items = items.select { |item| item.priority == priority } if priority
+          # Apply priority filter (supports exact match "high" or range "high+")
+          items = items.select { |item| Atoms::PriorityFilter.matches?(item.priority, priority) } if priority
 
           # Sort by ID (chronological since IDs are timestamp-based)
           items.sort_by(&:id)
