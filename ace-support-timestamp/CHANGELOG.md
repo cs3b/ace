@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-03
+
+### Added
+- Sequence generation for multiple sequential IDs (`--count` / `-n` option)
+  - `ace-timestamp encode --count 10 --format ms now` generates 10 sequential ms-precision IDs
+  - `ace-timestamp encode -n 5 --format day now` generates 5 consecutive day IDs
+  - JSON output support: `--count 3 --json` outputs as JSON array
+- `CompactIdEncoder.encode_sequence` method for programmatic sequence generation
+- `CompactIdEncoder.increment_id` method for incrementing any format ID
+- Overflow cascade handling for all formats (ms → 50ms → 2sec → block → day → month)
+
 ## [0.4.1] - 2026-01-31
 
 ### Added

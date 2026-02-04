@@ -912,6 +912,244 @@ module Ace
 
           assert_match(/Invalid format: invalid/, error.message)
         end
+
+        # ===================
+        # encode_sequence Tests
+        # ===================
+
+        def test_encode_sequence_returns_array_of_ids
+          time = Time.utc(2025, 1, 6, 12, 30, 0)
+          result = @encoder.encode_sequence(time, count: 5, format: :"2sec")
+
+          assert_instance_of Array, result
+          assert_equal 5, result.length
+          result.each { |id| assert_equal 6, id.length }
+        end
+
+        def test_encode_sequence_count_1_returns_single_id
+          time = Time.utc(2025, 1, 6, 12, 30, 0)
+          result = @encoder.encode_sequence(time, count: 1, format: :"2sec")
+
+          assert_equal 1, result.length
+          assert_equal @encoder.encode_with_format(time, format: :"2sec"), result.first
+        end
+
+        def test_encode_sequence_ids_are_sequential
+          time = Time.utc(2025, 1, 6, 12, 30, 0)
+          result = @encoder.encode_sequence(time, count: 10, format: :"2sec")
+
+          # Each ID should be greater than the previous (lexicographically sorted)
+          result.each_cons(2) do |prev, curr|
+            assert_operator prev, :<, curr, "IDs should be strictly increasing"
+          end
+        end
+
+        def test_encode_sequence_works_for_all_formats
+          time = Time.utc(2025, 1, 6, 12, 30, 0)
+
+          formats_and_lengths = {
+            month: 2,
+            week: 3,
+            day: 3,
+            "40min": 4,
+            "2sec": 6,
+            "50ms": 7,
+            ms: 8
+          }
+
+          formats_and_lengths.each do |format, expected_length|
+            result = @encoder.encode_sequence(time, count: 3, format: format)
+
+            assert_equal 3, result.length, "Failed for format #{format}"
+            result.each do |id|
+              assert_equal expected_length, id.length, "Wrong length for format #{format}"
+            end
+          end
+        end
+
+        def test_encode_sequence_raises_for_count_zero
+          time = Time.utc(2025, 1, 6, 12, 30, 0)
+
+          error = assert_raises(ArgumentError) do
+            @encoder.encode_sequence(time, count: 0, format: :"2sec")
+          end
+
+          assert_match(/count must be greater than 0/, error.message)
+        end
+
+        def test_encode_sequence_raises_for_negative_count
+          time = Time.utc(2025, 1, 6, 12, 30, 0)
+
+          error = assert_raises(ArgumentError) do
+            @encoder.encode_sequence(time, count: -1, format: :"2sec")
+          end
+
+          assert_match(/count must be greater than 0/, error.message)
+        end
+
+        # ===================
+        # increment_id Tests
+        # ===================
+
+        def test_increment_id_increments_2sec_format
+          # Simple increment within precision
+          id = "i50000"
+          result = @encoder.increment_id(id, format: :"2sec")
+
+          assert_equal "i50001", result
+        end
+
+        def test_increment_id_handles_2sec_precision_overflow_to_block
+          # Precision at max (zz = 1295), should overflow to block
+          id = "i500zz"
+          result = @encoder.increment_id(id, format: :"2sec")
+
+          # Block increments, precision resets
+          assert_equal "i50100", result
+        end
+
+        def test_increment_id_handles_2sec_block_overflow_to_day
+          # Block at max (z = 35), precision at max (zz)
+          id = "i50zzz"
+          result = @encoder.increment_id(id, format: :"2sec")
+
+          # Day increments, block and precision reset
+          assert_equal "i51000", result
+        end
+
+        def test_increment_id_handles_2sec_day_overflow_to_month
+          # Day at max (u = 30), block at max, precision at max
+          id = "i5uzzz"
+          result = @encoder.increment_id(id, format: :"2sec")
+
+          # Month increments, day/block/precision reset
+          assert_equal "i60000", result
+        end
+
+        def test_increment_id_handles_ms_format
+          id = "i5000000"
+          result = @encoder.increment_id(id, format: :ms)
+
+          assert_equal "i5000001", result
+        end
+
+        def test_increment_id_handles_50ms_format
+          id = "i500000"
+          result = @encoder.increment_id(id, format: :"50ms")
+
+          assert_equal "i500001", result
+        end
+
+        def test_increment_id_handles_40min_format
+          id = "i500"
+          result = @encoder.increment_id(id, format: :"40min")
+
+          assert_equal "i501", result
+        end
+
+        def test_increment_id_handles_40min_block_overflow
+          # Block at max (z = 35)
+          id = "i50z"
+          result = @encoder.increment_id(id, format: :"40min")
+
+          # Day increments, block resets
+          assert_equal "i510", result
+        end
+
+        def test_increment_id_handles_day_format
+          id = "i50"
+          result = @encoder.increment_id(id, format: :day)
+
+          assert_equal "i51", result
+        end
+
+        def test_increment_id_handles_day_overflow_to_month
+          # Day at max (u = 30)
+          id = "i5u"
+          result = @encoder.increment_id(id, format: :day)
+
+          # Month increments, day resets
+          assert_equal "i60", result
+        end
+
+        def test_increment_id_handles_week_format
+          # Week value is in 31-35 range (v-z)
+          id = "i5v"  # week 1 (31 = 'v')
+          result = @encoder.increment_id(id, format: :week)
+
+          assert_equal "i5w", result  # week 2 (32 = 'w')
+        end
+
+        def test_increment_id_handles_week_overflow_to_month
+          # Week at max (z = 35)
+          id = "i5z"
+          result = @encoder.increment_id(id, format: :week)
+
+          # Month increments, week resets to 31 (v)
+          assert_equal "i6v", result
+        end
+
+        def test_increment_id_handles_month_format
+          id = "i5"
+          result = @encoder.increment_id(id, format: :month)
+
+          assert_equal "i6", result
+        end
+
+        def test_increment_id_raises_on_month_overflow
+          # Month at max (zz = 1295)
+          id = "zz"
+
+          error = assert_raises(ArgumentError) do
+            @encoder.increment_id(id, format: :month)
+          end
+
+          assert_match(/would exceed month range/, error.message)
+        end
+
+        def test_increment_id_raises_on_full_overflow_2sec
+          # All components at max for 2sec format
+          id = "zzuzzz"
+
+          error = assert_raises(ArgumentError) do
+            @encoder.increment_id(id, format: :"2sec")
+          end
+
+          assert_match(/would exceed month range/, error.message)
+        end
+
+        # ===================
+        # Overflow Cascade Tests
+        # ===================
+
+        def test_sequence_handles_block_boundary_crossover
+          # Start near end of a block in 2sec format
+          # Precision "zz" = 1295 (max), so next ID should overflow
+          start_id = "i500zz"
+          result = @encoder.encode_sequence(
+            @encoder.decode_with_format(start_id, format: :"2sec"),
+            count: 3,
+            format: :"2sec"
+          )
+
+          # First ID is the starting point, then we get 2 more
+          # The sequence should span across the block boundary
+          assert_equal 3, result.length
+          assert_operator result[0], :<, result[1]
+          assert_operator result[1], :<, result[2]
+        end
+
+        def test_sequence_handles_day_boundary_crossover
+          # Start at last block of day
+          time = Time.utc(2025, 1, 1, 23, 59, 0)
+          result = @encoder.encode_sequence(time, count: 5, format: :"40min")
+
+          # Should produce sorted, increasing IDs even across day boundary
+          assert_equal 5, result.length
+          result.each_cons(2) do |prev, curr|
+            assert_operator prev, :<, curr
+          end
+        end
       end
     end
   end
