@@ -1,16 +1,22 @@
 ---
 id: v.0.9.0+task.233
-status: pending
+status: in-progress
 priority: high
 estimate: large
 dependencies: []
 type: orchestrator
 subtasks:
-  - 233.01
-  - 233.02
-  - 233.03
-  - 233.04
-  - 233.06
+- 233.01
+- 233.02
+- 233.03
+- 233.04
+- 233.06
+worktree:
+  branch: 233-multi-dimensional-review-architecture
+  path: "../ace-task.233"
+  created_at: '2026-02-04 01:20:02'
+  updated_at: '2026-02-04 01:20:02'
+  target_branch: main
 ---
 
 # Multi-Dimensional Review Architecture
