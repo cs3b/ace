@@ -1,6 +1,7 @@
 name: codexoss
 class: Ace::LLM::Providers::CLI::CodexOSSClient
 gem: ace-llm-providers-cli
+context_limit: 128000
 models:
   - default
 aliases:
