@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.420] - 2026-02-04
+
+### Added
+
+- **ace-review v0.37.0**: Priority range filtering with `+` suffix for `feedback list`
+  - `--priority medium+` filters for medium, high, and critical items
+  - `--priority high+` filters for high and critical items
+  - New `PriorityFilter` atom for clean priority filtering logic
+
 ## [0.9.419] - 2026-02-04
 
 ### Added
