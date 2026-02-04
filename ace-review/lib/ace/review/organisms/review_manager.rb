@@ -128,6 +128,14 @@ module Ace
           # Resolve preset with options
           config = @preset_manager.resolve_preset(preset_name, options.to_h)
 
+          # Check for composition failure (circular deps, missing refs return nil)
+          unless config
+            return {
+              success: false,
+              error: "Failed to load preset '#{preset_name}'. Check for circular dependencies or missing preset references."
+            }
+          end
+
           # Merge options with config
           options.merge_config(config)
 

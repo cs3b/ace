@@ -80,51 +80,40 @@ Use `ace-review feedback list --session <session-dir>` to list from a specific s
 ace-review feedback list --session .cache/ace-review/sessions/review-8p2pk3
 ```
 
-### Step 3: Verify Each Feedback Item
+### Step 3: Verify Feedback Items
 
-For each feedback item (prioritize Critical and High severity):
+**For thorough verification**, use the dedicated verification workflow:
+
+```
+/ace:verify-feedback
+```
+
+This workflow guides you through multi-dimensional claim analysis:
+- **Existence claims**: Does the code/issue actually exist?
+- **Scope claims**: Does the issue apply where claimed (CI, production, etc.)?
+- **Documentation claims**: Are there docs/handling elsewhere?
+- **Pattern claims**: Is this consistent with codebase patterns?
+
+**For quick verification** of straightforward items:
 
 ```bash
 # Read the finding details
 ace-review feedback show {id}
+
+# Verify and mark result
+ace-review feedback verify {id} --valid --research "Confirmed: issue exists at line X"
+ace-review feedback verify {id} --invalid --research "False positive: handled by Y"
 ```
 
-**Then verify in the codebase:**
+**Categorization guide:**
 
-1. **Check the claim** - Use grep/read to verify the issue exists:
-   - If claim is "X doesn't exist" → `grep -rn "class X" lib/`
-   - If claim is "method missing" → check the actual file
-   - If claim is "file not deleted" → `ls path/to/file`
-
-2. **Mark the verification result:**
-
-   ```bash
-   # If issue is confirmed (valid finding)
-   ace-review feedback verify {id} --valid --research "Confirmed: issue exists at line X"
-
-   # If issue is not real (false positive)
-   ace-review feedback verify {id} --invalid --research "False positive: handled by Y"
-   ```
-
-3. **Categorization guide:**
-
-   | Result | Command | When |
-   |--------|---------|------|
-   | ✅ VALID | `--valid` | Issue confirmed in code |
-   | ❌ INVALID | `--invalid` | False positive, code is correct |
-   | ✅ DONE | `feedback resolve {id}` | Already fixed in this PR |
-   | ⏭️ SKIP | `feedback skip {id} --reason "Design: ..."` | Intentional design decision |
-   | 📋 DEFER | `feedback skip {id} --reason "Tracked in task XXX"` | Important, but not this PR (create task first) |
-
-   **Before skipping**: Always verify the issue still exists by reading the code. Never skip with "out of scope" - either it's a design decision or it should be tracked in a task.
-
-**Example verification:**
-```bash
-# Claim: "TaskPatternExtractor is undefined"
-grep -rn "class TaskPatternExtractor" ace-git/lib/
-# Result: Found at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10
-ace-review feedback verify {id} --invalid --research "Class exists at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10"
-```
+| Result | Command | When |
+|--------|---------|------|
+| ✅ VALID | `--valid` | Issue confirmed in code |
+| ❌ INVALID | `--invalid` | False positive, code is correct |
+| ✅ DONE | `feedback resolve {id}` | Already fixed in this PR |
+| ⏭️ SKIP | `feedback skip {id} --reason "Design: ..."` | Intentional design decision |
+| 📋 DEFER | `feedback skip {id} --reason "Tracked in task XXX"` | Important, but not this PR (create task first) |
 
 **Skip verification for:**
 - Low priority items (verify only if time permits)
