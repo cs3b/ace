@@ -1,0 +1,298 @@
+session:
+  name: task-255-subtasks-linear-with-pr
+  description: Linear execution of 255.01–255.05 with PR workflow, reviews, and consolidated review.
+
+steps:
+  - name: onboard
+    skill: onboard
+    instructions:
+      - Onboard yourself to the codebase.
+      - Load context and understand the project structure.
+
+  - name: prepare-batch
+    instructions:
+      - "Confirm task list: 255.01–255.05 (exclude 255.00 and 255)."
+      - Run `ace-taskflow task 255.01` and summarize key deliverables.
+      - Run `ace-taskflow task 255.02` and summarize key deliverables.
+      - Run `ace-taskflow task 255.03` and summarize key deliverables.
+      - Run `ace-taskflow task 255.04` and summarize key deliverables.
+      - Run `ace-taskflow task 255.05` and summarize key deliverables.
+
+  - name: prepare-255.01
+    instructions:
+      - Load task context with `ace-taskflow task 255.01`.
+      - Review task requirements and acceptance criteria.
+      - Report task title and key deliverables.
+
+  - name: implement-255.01
+    instructions: |
+      ## Onboard
+
+      Load context before starting work:
+      - Run `ace-bundle project` to load project context
+      - Run `ace-taskflow task 255.01` to load task details
+
+      ## Work
+
+      Implement task 255.01 following the specification:
+      - Follow project conventions and coding standards
+      - Make incremental commits as you progress
+      - Run tests after significant changes
+
+      ## Report
+
+      Return a structured summary:
+      - **Task**: task ID and title
+      - **Status**: completed | partial | blocked
+      - **Changes**: list of files modified and what changed
+      - **Commits**: commit hashes and messages created
+      - **Issues**: any problems encountered or deferred decisions
+
+  - name: verify-255.01
+    instructions:
+      - Run `ace-test` for relevant package(s) touched by task 255.01.
+      - Check all acceptance criteria are met.
+      - Report test results and any issues found.
+
+  - name: commit-255.01
+    skill: ace:commit
+    instructions:
+      - Commit any remaining changes with a descriptive message.
+      - Ensure all tests pass before completing.
+
+  - name: prepare-255.02
+    instructions:
+      - Load task context with `ace-taskflow task 255.02`.
+      - Review task requirements and acceptance criteria.
+      - Report task title and key deliverables.
+
+  - name: implement-255.02
+    instructions: |
+      ## Onboard
+
+      Load context before starting work:
+      - Run `ace-bundle project` to load project context
+      - Run `ace-taskflow task 255.02` to load task details
+
+      ## Work
+
+      Implement task 255.02 following the specification:
+      - Follow project conventions and coding standards
+      - Make incremental commits as you progress
+      - Run tests after significant changes
+
+      ## Report
+
+      Return a structured summary:
+      - **Task**: task ID and title
+      - **Status**: completed | partial | blocked
+      - **Changes**: list of files modified and what changed
+      - **Commits**: commit hashes and messages created
+      - **Issues**: any problems encountered or deferred decisions
+
+  - name: verify-255.02
+    instructions:
+      - Run `ace-test` for relevant package(s) touched by task 255.02.
+      - Check all acceptance criteria are met.
+      - Report test results and any issues found.
+
+  - name: commit-255.02
+    skill: ace:commit
+    instructions:
+      - Commit any remaining changes with a descriptive message.
+      - Ensure all tests pass before completing.
+
+  - name: prepare-255.03
+    instructions:
+      - Load task context with `ace-taskflow task 255.03`.
+      - Review task requirements and acceptance criteria.
+      - Report task title and key deliverables.
+
+  - name: implement-255.03
+    instructions: |
+      ## Onboard
+
+      Load context before starting work:
+      - Run `ace-bundle project` to load project context
+      - Run `ace-taskflow task 255.03` to load task details
+
+      ## Work
+
+      Implement task 255.03 following the specification:
+      - Follow project conventions and coding standards
+      - Make incremental commits as you progress
+      - Run tests after significant changes
+
+      ## Report
+
+      Return a structured summary:
+      - **Task**: task ID and title
+      - **Status**: completed | partial | blocked
+      - **Changes**: list of files modified and what changed
+      - **Commits**: commit hashes and messages created
+      - **Issues**: any problems encountered or deferred decisions
+
+  - name: verify-255.03
+    instructions:
+      - Run `ace-test` for relevant package(s) touched by task 255.03.
+      - Check all acceptance criteria are met.
+      - Report test results and any issues found.
+
+  - name: commit-255.03
+    skill: ace:commit
+    instructions:
+      - Commit any remaining changes with a descriptive message.
+      - Ensure all tests pass before completing.
+
+  - name: prepare-255.04
+    instructions:
+      - Load task context with `ace-taskflow task 255.04`.
+      - Review task requirements and acceptance criteria.
+      - Report task title and key deliverables.
+
+  - name: implement-255.04
+    instructions: |
+      ## Onboard
+
+      Load context before starting work:
+      - Run `ace-bundle project` to load project context
+      - Run `ace-taskflow task 255.04` to load task details
+
+      ## Work
+
+      Implement task 255.04 following the specification:
+      - Follow project conventions and coding standards
+      - Make incremental commits as you progress
+      - Run tests after significant changes
+
+      ## Report
+
+      Return a structured summary:
+      - **Task**: task ID and title
+      - **Status**: completed | partial | blocked
+      - **Changes**: list of files modified and what changed
+      - **Commits**: commit hashes and messages created
+      - **Issues**: any problems encountered or deferred decisions
+
+  - name: verify-255.04
+    instructions:
+      - Run `ace-test` for relevant package(s) touched by task 255.04.
+      - Check all acceptance criteria are met.
+      - Report test results and any issues found.
+
+  - name: commit-255.04
+    skill: ace:commit
+    instructions:
+      - Commit any remaining changes with a descriptive message.
+      - Ensure all tests pass before completing.
+
+  - name: prepare-255.05
+    instructions:
+      - Load task context with `ace-taskflow task 255.05`.
+      - Review task requirements and acceptance criteria.
+      - Report task title and key deliverables.
+
+  - name: implement-255.05
+    instructions: |
+      ## Onboard
+
+      Load context before starting work:
+      - Run `ace-bundle project` to load project context
+      - Run `ace-taskflow task 255.05` to load task details
+
+      ## Work
+
+      Implement task 255.05 following the specification:
+      - Follow project conventions and coding standards
+      - Make incremental commits as you progress
+      - Run tests after significant changes
+
+      ## Report
+
+      Return a structured summary:
+      - **Task**: task ID and title
+      - **Status**: completed | partial | blocked
+      - **Changes**: list of files modified and what changed
+      - **Commits**: commit hashes and messages created
+      - **Issues**: any problems encountered or deferred decisions
+
+  - name: verify-255.05
+    instructions:
+      - Run `ace-test` for relevant package(s) touched by task 255.05.
+      - Check all acceptance criteria are met.
+      - Report test results and any issues found.
+
+  - name: commit-255.05
+    skill: ace:commit
+    instructions:
+      - Commit any remaining changes with a descriptive message.
+      - Ensure all tests pass before completing.
+
+  - name: create-pr
+    skill: ace:create-pr
+    instructions:
+      - Create a pull request for the changes.
+      - Capture the PR number for subsequent review steps.
+      - Update the next steps with the PR number.
+
+  - name: review-cycle-1
+    skill: ace:review-pr
+    instructions:
+      - Review the code (iteration 1 of 3).
+      - Focus on correctness and architecture.
+
+  - name: apply-feedback-1
+    instructions:
+      - Apply feedback from review (medium+ priority).
+      - Commit changes with descriptive messages.
+
+  - name: review-cycle-2
+    skill: ace:review-pr
+    instructions:
+      - Review the code (iteration 2 of 3).
+      - Focus on edge cases and error handling.
+
+  - name: apply-feedback-2
+    instructions:
+      - Apply feedback from review (medium+ priority).
+
+  - name: review-cycle-3
+    skill: ace:review-pr
+    instructions:
+      - Review the code (iteration 3 of 3).
+      - Final polish and documentation check.
+
+  - name: apply-feedback-3
+    instructions:
+      - Apply final feedback from review.
+
+  - name: consolidated-review
+    skill: ace:review
+    instructions: |
+      Review all batch changes using consolidated review preset.
+
+      Run: `ace-review --preset batch`
+
+      Review focus:
+      - Cross-task consistency (naming, patterns, style)
+      - Integration points between tasks
+      - Test coverage across all changes
+      - Any shared code or refactoring opportunities
+
+      Tasks reviewed: 255.01, 255.02, 255.03, 255.04, 255.05
+
+  - name: finalize
+    skill: ace:update-pr-desc
+    instructions:
+      - Update PR description with implementation summary.
+      - Push all changes to remote.
+      - Ensure PR is ready for human review.
+
+  - name: mark-tasks-done
+    instructions:
+      - Run `ace-taskflow task done 255.01`.
+      - Run `ace-taskflow task done 255.02`.
+      - Run `ace-taskflow task done 255.03`.
+      - Run `ace-taskflow task done 255.04`.
+      - Run `ace-taskflow task done 255.05`.
+      - Confirm status updated for each.
