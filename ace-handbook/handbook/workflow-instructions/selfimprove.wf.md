@@ -85,11 +85,18 @@ ace-bundle guide://{relevant-guide}
 ace-bundle skill://{relevant-skill}
 ```
 
-**Search targets:**
-- Workflow instructions (`ace-handbook/handbook/workflow-instructions/*.wf.md`)
-- Guides (`ace-handbook/handbook/guides/*.g.md`)
-- Skills (`.claude/skills/*/SKILL.md`)
-- CLAUDE.md files (project-level instructions)
+**Search targets (in preference order):**
+
+1. **Workflow instructions** (`ace-handbook/handbook/workflow-instructions/*.wf.md`) - Preferred for process improvements
+2. **Guides** (`ace-handbook/handbook/guides/*.g.md`) - Preferred for best practices and conventions
+3. **Skills** (`.claude/skills/*/SKILL.md`) - Only when workflow/guide doesn't exist for the topic
+4. **CLAUDE.md files** - Project-level overrides only
+
+**Why prefer workflows/guides over skills?**
+- Workflows and guides are versioned with the handbook package
+- Skills are local to the Claude integration and harder to share/version
+- Workflows support embedding and protocol references (`wfi://`, `guide://`)
+- When a skill exists without a backing workflow, consider creating the workflow first
 
 ### Step 4: Draft the Fix
 
