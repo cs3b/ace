@@ -5,7 +5,7 @@ update:
   update_frequency: weekly
   max_lines: 150
   required_sections: []
-  last-updated: '2026-01-30'
+  last-updated: '2026-02-04'
 ---
 
 # ACE CLI Tools Reference
@@ -58,6 +58,8 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 | `ace-test atoms` | Run atom tests only |
 | `ace-test ace-bundle` | Run tests in specific package |
 | `ace-test-suite` | Run all tests across monorepo |
+| `ace-e2e-test <package> [test-id]` | Run E2E tests for a package or test |
+| `ace-e2e-test-suite` | Run all E2E tests across packages |
 
 ### Testing Skills
 
@@ -83,6 +85,17 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 |------|---------|
 | `ace-docs status` | Check document status |
 | `ace-docs update file.md` | Update document metadata |
+
+## Scheduling
+
+| Tool | Purpose |
+|------|---------|
+| `ace-scheduler list` | List scheduled tasks and events |
+| `ace-scheduler run <task>` | Run a scheduled task immediately |
+| `ace-scheduler emit <event>` | Trigger event-based actions |
+| `ace-scheduler status` | Show next runs and recent history |
+| `ace-scheduler cron install` | Install scheduler crontab entries |
+| `ace-scheduler cron uninstall` | Remove scheduler crontab entries |
 
 ## Context & Navigation
 
