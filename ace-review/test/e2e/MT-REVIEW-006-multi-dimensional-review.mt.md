@@ -1,6 +1,6 @@
 ---
-test-id: MT-REVIEW-005
-title: Multi-Model Executor
+test-id: MT-REVIEW-006
+title: Multi-Dimensional Review Architecture (CLI)
 area: review
 package: ace-review
 priority: high
@@ -14,17 +14,17 @@ last-verified: null
 verified-by: null
 ---
 
-# Multi-Model Executor
+# Multi-Dimensional Review Architecture (CLI)
 
 ## Objective
 
-Verify that ace-review's multi-model executor correctly handles single and multiple model execution, output file generation, and error handling with real API calls.
+Verify that ace-review's multi-dimensional review features (multi-model execution, reviewers format) work correctly through the CLI interface with real API calls.
 
 ## Prerequisites
 
 - Ruby >= 3.0 installed
-- ace-review CLI available in PATH
-- API keys configured (GOOGLE_API_KEY)
+- ace-review CLI available
+- API keys configured (GOOGLE_API_KEY, OPENAI_API_KEY)
 - git installed
 
 ## Environment Setup
@@ -35,12 +35,12 @@ PROJECT_ROOT="$(pwd)"
 
 TIMESTAMP_ID="$(ace-timestamp encode)"
 SHORT_PKG="review"
-SHORT_ID="mt005"
+SHORT_ID="mt006"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
 
-# Initialize git repo (needed for project root detection)
+# Initialize git repo
 git init --quiet .
 git config user.email "test@example.com"
 git config user.name "Test User"
@@ -48,34 +48,37 @@ git config user.name "Test User"
 # Set PROJECT_ROOT_PATH for isolated testing
 export PROJECT_ROOT_PATH="$TEST_DIR"
 
-echo "=== Tool Verification ==="
-which ace-review && ace-review --version || echo "ace-review not in PATH"
+echo "=== Environment Verification ==="
+which ace-review && ace-review --version
+ruby --version
+echo "PROJECT_ROOT: $PROJECT_ROOT"
+echo "TEST_DIR: $TEST_DIR"
 echo "========================="
 ```
 
 ## Test Data
 
 ```bash
-# Create preset directory
+# Create preset directories
 mkdir -p "$TEST_DIR/.ace/review/presets"
 
-# Minimal config
+# Create minimal config
 cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
 defaults:
   model: "google:gemini-2.5-flash"
 EOF
 
-# Single model preset (minimal cost)
-cat > "$TEST_DIR/.ace/review/presets/single.yml" << 'EOF'
-description: "Single model E2E test"
+# Preset 1: Single model (minimal cost)
+cat > "$TEST_DIR/.ace/review/presets/minimal.yml" << 'EOF'
+description: "Minimal E2E test preset"
 model: google:gemini-2.5-flash
 instructions:
-  system: "Brief code review."
-  user: "List issues in 1-2 sentences."
+  system: "You are a code reviewer. Be brief."
+  user: "Review this code. List any issues in 1-2 sentences."
 EOF
 
-# Multi-model preset (2 cheap models)
-cat > "$TEST_DIR/.ace/review/presets/multi.yml" << 'EOF'
+# Preset 2: Multi-model (2 cheap models)
+cat > "$TEST_DIR/.ace/review/presets/multi-model.yml" << 'EOF'
 description: "Multi-model E2E test"
 models:
   - google:gemini-2.5-flash
@@ -85,12 +88,29 @@ instructions:
   user: "List issues only."
 EOF
 
-# Test file
-cat > "$TEST_DIR/sample.rb" << 'EOF'
-# Sample Ruby file for review testing
+# Preset 3: New reviewers format
+cat > "$TEST_DIR/.ace/review/presets/reviewers-test.yml" << 'EOF'
+description: "Reviewers format E2E test"
+reviewers:
+  - name: "reviewer-1"
+    model: "google:gemini-2.5-flash"
+  - name: "reviewer-2"
+    model: "google:gemini-2.5-flash"
+instructions:
+  system: "Brief review."
+  user: "Review:"
+EOF
+
+# Create test file
+cat > "$TEST_DIR/calculator.rb" << 'EOF'
+# Simple calculator for E2E testing
 class Calculator
   def add(a, b)
     a + b
+  end
+
+  def subtract(a, b)
+    a - b
   end
 end
 EOF
@@ -99,34 +119,34 @@ EOF
 git add .
 git commit -m "Initial commit" --quiet
 
-# Make a change for diff
-cat >> "$TEST_DIR/sample.rb" << 'EOF'
+# Make a small change for diff
+cat >> "$TEST_DIR/calculator.rb" << 'EOF'
 
   def multiply(a, b)
     a * b
   end
 EOF
 
-git add sample.rb
-git commit -m "Add multiply" --quiet
+git add calculator.rb
+git commit -m "Add multiply method" --quiet
 
 echo "Test data created successfully"
 ```
 
 ## Test Cases
 
-### TC-001: Single Model Execution
+### TC-001: Single Model Review via CLI
 
-**Objective:** Verify that ace-review executes with a single model and produces output.
+**Objective:** Verify basic ace-review execution with a single model.
 
 **Steps:**
-1. Run ace-review with single model preset
+1. Run ace-review with minimal preset
    ```bash
    cd "$TEST_DIR"
    SESSION_DIR="$TEST_DIR/session-tc001"
 
    OUTPUT=$(ace-review review \
-     --preset single \
+     --preset minimal \
      --subject "diff:HEAD~1" \
      --session-dir "$SESSION_DIR" \
      --auto-execute \
@@ -138,28 +158,28 @@ echo "Test data created successfully"
    echo "$OUTPUT"
    ```
 
-2. Verify execution
+2. Verify results
    ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
-   # Check session directory
+   # Check session directory was created
    [ -d "$SESSION_DIR" ] && echo "PASS: Session directory created" || echo "FAIL: No session directory"
 
-   # Check review file exists and has content
+   # Check review file exists
    REVIEW_FILE=$(ls "$SESSION_DIR"/*.md 2>/dev/null | grep -v prompt | head -1)
+   [ -n "$REVIEW_FILE" ] && echo "PASS: Review file created: $REVIEW_FILE" || echo "FAIL: No review file"
+
+   # Check review has content
    if [ -n "$REVIEW_FILE" ]; then
-     echo "PASS: Review file created: $(basename $REVIEW_FILE)"
      LINES=$(wc -l < "$REVIEW_FILE")
-     [ "$LINES" -gt 3 ] && echo "PASS: Review has content ($LINES lines)" || echo "FAIL: Review too short"
-   else
-     echo "FAIL: No review file"
+     [ "$LINES" -gt 5 ] && echo "PASS: Review has content ($LINES lines)" || echo "FAIL: Review too short"
    fi
    ```
 
 **Expected:**
 - Exit code: 0
 - Session directory created
-- Review file with actual content
+- Review markdown file created with content
 
 **Actual:** [Record during execution]
 
@@ -169,7 +189,7 @@ echo "Test data created successfully"
 
 ### TC-002: Multi-Model Execution
 
-**Objective:** Verify that ace-review can execute with multiple models.
+**Objective:** Verify ace-review can execute with multiple models.
 
 **Steps:**
 1. Run ace-review with multi-model preset
@@ -178,7 +198,7 @@ echo "Test data created successfully"
    SESSION_DIR="$TEST_DIR/session-tc002"
 
    OUTPUT=$(ace-review review \
-     --preset multi \
+     --preset multi-model \
      --subject "diff:HEAD~1" \
      --session-dir "$SESSION_DIR" \
      --auto-execute \
@@ -190,30 +210,27 @@ echo "Test data created successfully"
    echo "$OUTPUT"
    ```
 
-2. Verify multi-model execution
+2. Verify results
    ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
    # Check session directory
    [ -d "$SESSION_DIR" ] && echo "PASS: Session directory created" || echo "FAIL: No session directory"
 
-   # Check for review output (may be multiple files or consolidated)
+   # Check multiple review files (one per model)
    REVIEW_COUNT=$(ls "$SESSION_DIR"/*.md 2>/dev/null | grep -v prompt | wc -l | tr -d ' ')
-   echo "Review files: $REVIEW_COUNT"
+   echo "Review files found: $REVIEW_COUNT"
    [ "$REVIEW_COUNT" -ge 1 ] && echo "PASS: Review file(s) created" || echo "FAIL: No review files"
 
-   # Check for metadata
-   [ -f "$SESSION_DIR/metadata.yml" ] && echo "PASS: Metadata file created" || echo "INFO: No metadata file"
-
-   # List contents
+   # List session contents
    echo "Session contents:"
    ls -la "$SESSION_DIR"
    ```
 
 **Expected:**
 - Exit code: 0
-- Review output created for multi-model execution
-- Session contains output files
+- Multiple review files created (or single consolidated review)
+- Session contains metadata
 
 **Actual:** [Record during execution]
 
@@ -221,46 +238,52 @@ echo "Test data created successfully"
 
 ---
 
-### TC-003: Execution Timing
+### TC-003: Reviewers Format Preset
 
-**Objective:** Verify execution completes within reasonable time bounds.
+**Objective:** Verify the new reviewers format (Task 233) works via CLI.
 
 **Steps:**
-1. Measure execution time
+1. Run ace-review with reviewers-format preset
    ```bash
    cd "$TEST_DIR"
    SESSION_DIR="$TEST_DIR/session-tc003"
 
-   START_TIME=$(date +%s)
    OUTPUT=$(ace-review review \
-     --preset single \
+     --preset reviewers-test \
      --subject "diff:HEAD~1" \
      --session-dir "$SESSION_DIR" \
      --auto-execute \
      --quiet 2>&1)
    EXIT_CODE=$?
-   END_TIME=$(date +%s)
-   DURATION=$((END_TIME - START_TIME))
 
    echo "Exit code: $EXIT_CODE"
-   echo "Duration: ${DURATION}s"
+   echo "Output:"
+   echo "$OUTPUT"
    ```
 
-2. Verify timing
+2. Verify results
    ```bash
-   [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Execution succeeded" || echo "FAIL: Execution failed"
+   [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
-   # Should complete within 60 seconds (generous for API latency)
-   [ "$DURATION" -lt 60 ] && echo "PASS: Completed in ${DURATION}s (< 60s)" || echo "FAIL: Took too long: ${DURATION}s"
+   # Check session directory
+   [ -d "$SESSION_DIR" ] && echo "PASS: Session directory created" || echo "FAIL: No session directory"
 
-   # Should take at least 1 second (real API call)
-   [ "$DURATION" -ge 1 ] && echo "PASS: Duration indicates real execution" || echo "INFO: Very fast execution"
+   # Check review file exists
+   REVIEW_COUNT=$(ls "$SESSION_DIR"/*.md 2>/dev/null | grep -v prompt | wc -l | tr -d ' ')
+   [ "$REVIEW_COUNT" -ge 1 ] && echo "PASS: Review file(s) created" || echo "FAIL: No review files"
+
+   # Check metadata exists
+   [ -f "$SESSION_DIR/metadata.yml" ] && echo "PASS: Metadata file created" || echo "INFO: No metadata file (may be normal)"
+
+   # List session contents
+   echo "Session contents:"
+   ls -la "$SESSION_DIR"
    ```
 
 **Expected:**
 - Exit code: 0
-- Completes within 60 seconds
-- Takes > 1 second (indicates real API call)
+- Preset with reviewers format is parsed and executed
+- Review output created
 
 **Actual:** [Record during execution]
 
@@ -268,29 +291,17 @@ echo "Test data created successfully"
 
 ---
 
-### TC-004: Error Handling - Invalid Model
+### TC-004: Error Handling - Invalid Preset
 
-**Objective:** Verify graceful handling of invalid model configuration.
+**Objective:** Verify ace-review handles invalid preset gracefully.
 
 **Steps:**
-1. Create preset with invalid model
+1. Run ace-review with nonexistent preset
    ```bash
    cd "$TEST_DIR"
 
-   # Create preset with invalid model name
-   cat > "$TEST_DIR/.ace/review/presets/invalid-model.yml" << 'EOF'
-description: "Invalid model test"
-model: nonexistent:fake-model-xyz
-instructions:
-  system: "Test"
-  user: "Test"
-EOF
-   ```
-
-2. Run ace-review with invalid model
-   ```bash
    OUTPUT=$(ace-review review \
-     --preset invalid-model \
+     --preset nonexistent-preset-xyz \
      --subject "diff:HEAD~1" \
      --auto-execute 2>&1)
    EXIT_CODE=$?
@@ -300,20 +311,19 @@ EOF
    echo "$OUTPUT"
    ```
 
-3. Verify error handling
+2. Verify error handling
    ```bash
-   # Should fail (non-zero exit)
-   [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit for invalid model" || echo "FAIL: Expected non-zero exit"
+   [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit for invalid preset" || echo "FAIL: Expected non-zero exit"
 
-   # Should have error message
-   echo "$OUTPUT" | grep -qi "error\|invalid\|failed\|not found\|unknown" && \
+   # Check for error message
+   echo "$OUTPUT" | grep -qi "not found\|unknown\|error\|invalid" && \
      echo "PASS: Error message present" || \
-     echo "INFO: Error format may vary"
+     echo "FAIL: No clear error message"
    ```
 
 **Expected:**
 - Exit code: non-zero
-- Error message indicates model issue
+- Error message indicates preset not found
 
 **Actual:** [Record during execution]
 
@@ -333,10 +343,10 @@ Artifacts in `.cache/ace-test-e2e/` are gitignored, so keeping them doesn't affe
 
 ## Success Criteria
 
-- [ ] TC-001: Single model execution produces review output
+- [ ] TC-001: Single model review executes successfully
 - [ ] TC-002: Multi-model execution works
-- [ ] TC-003: Execution completes within reasonable time
-- [ ] TC-004: Invalid model is handled gracefully
+- [ ] TC-003: Reviewers format preset works
+- [ ] TC-004: Invalid preset returns error
 
 ## Observations
 
@@ -344,8 +354,11 @@ Artifacts in `.cache/ace-test-e2e/` are gitignored, so keeping them doesn't affe
 
 ## Notes
 
-- Tests use real API calls with cheap models (google:gemini-2.5-flash)
-- Cost control: minimal prompts, tiny diff (~10 lines)
+- Tests use real API calls to verify end-to-end functionality
+- Cost is minimized by using:
+  - `google:gemini-2.5-flash` (cheapest model)
+  - Minimal prompts (no bundle, short system/user prompts)
+  - Tiny diffs (~10 lines)
 - Estimated cost per full test run: ~$0.001
-- Multi-model test uses same model twice to test execution path without extra API costs
-- Previous version used --dry-run which couldn't verify actual execution
+- Strategy selection (full/chunked/adaptive) is internal and not verified directly
+- Future enhancement: Add strategy metadata to session output for deeper E2E verification
