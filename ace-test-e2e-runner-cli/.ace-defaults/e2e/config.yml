@@ -1,6 +1,8 @@
 defaults:
   provider: "google:gemini-2.5-flash"
   timeout: 300
+  temperature: 0.1
+  max_tokens: 4096
   report_dir: ".cache/ace-test-e2e"
 execution:
   max_parallel: 4
