@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-02-03
+
+### Added
+- Self-improve workflow (`selfimprove.wf.md`) for transforming agent mistakes into system improvements
+
 ## [0.8.0] - 2026-01-31
 
 ### Added
