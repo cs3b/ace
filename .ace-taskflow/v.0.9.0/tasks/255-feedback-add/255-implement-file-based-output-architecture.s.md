@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.255
-status: draft
+status: in-progress
 priority: high
 estimate: 8h
 dependencies: []
+worktree:
+  branch: 255-simplified-feedback-system-file-based-output-architecture
+  path: "../ace-task.255"
+  created_at: '2026-02-04 00:32:08'
+  updated_at: '2026-02-04 00:32:08'
+  target_branch: main
 ---
 
 # Simplified Feedback System - File-Based Output Architecture
