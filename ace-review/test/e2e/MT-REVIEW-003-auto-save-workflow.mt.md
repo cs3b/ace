@@ -188,7 +188,7 @@ echo "# Branch is now: $(git branch --show-current)"
 1. Switch to main branch
    ```bash
    cd "$TEST_DIR"
-   git checkout -b main --quiet 2>/dev/null || git checkout main --quiet
+   git checkout main --quiet 2>/dev/null || git checkout -b main --quiet
    BRANCH=$(git branch --show-current)
    echo "Current branch: $BRANCH"
    ```

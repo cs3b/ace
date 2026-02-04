@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-review, ace-bundle]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-04
+verified-by: claude-opus-4-5
 ---
 
 # Preset Composition and Inheritance
@@ -95,7 +95,9 @@ EOF
 # Multi-level inheritance: level_1 (base)
 cat > "$TEST_DIR/.ace/review/presets/level_1.yml" << 'EOF'
 description: "Level 1"
-model: "base-model"
+model: "google:gemini-2.5-flash"
+instructions:
+  description: "Level 1 instructions"
 EOF
 
 # Multi-level inheritance: level_2 extends level_1
@@ -104,6 +106,8 @@ presets:
   - level_1
 description: "Level 2"
 context_2: "data_2"
+instructions:
+  description: "Level 2 instructions"
 EOF
 
 # Multi-level inheritance: level_3 extends level_2
@@ -112,6 +116,8 @@ presets:
   - level_2
 description: "Level 3"
 context_3: "data_3"
+instructions:
+  description: "Level 3 instructions"
 EOF
 
 # Circular dependency: preset_a
@@ -138,7 +144,9 @@ EOF
 # Array deduplication: base_sections
 cat > "$TEST_DIR/.ace/review/presets/base_sections.yml" << 'EOF'
 description: "Base with sections"
+model: "google:gemini-2.5-flash"
 instructions:
+  description: "Base section instructions"
   bundle:
     sections:
       files_section:
@@ -153,6 +161,7 @@ presets:
   - base_sections
 description: "Extended sections"
 instructions:
+  description: "Extended section instructions"
   bundle:
     sections:
       files_section:
@@ -164,7 +173,7 @@ EOF
 # Create minimal config file
 cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
 defaults:
-  model: "test-model"
+  model: "google:gemini-2.5-flash"
 EOF
 
 # Create a test file for subject

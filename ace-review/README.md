@@ -164,6 +164,77 @@ models:
   - gpro
 ```
 
+### Reviewers Format
+
+The `reviewers` format provides fine-grained control over individual reviewers in a multi-model review.
+
+#### Reviewer Configuration
+
+```yaml
+# .ace/review/presets/my-preset.yml
+reviewers:
+  - name: "code-quality"
+    model: "google:gemini-2.5-pro"
+    focus: "code_quality"
+    system_prompt_additions: "Focus on SOLID principles..."
+    file_patterns:
+      include: ["lib/**/*.rb"]
+      exclude: ["**/*_test.rb"]
+    weight: 1.0
+    critical: false
+
+  - name: "security"
+    model: "openai:gpt-4o"
+    focus: "security"
+    weight: 0.8
+    critical: true
+```
+
+#### Reviewer Attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `name` | String | Human-readable identifier for the reviewer |
+| `model` | String | LLM model identifier (e.g., "google:gemini-2.5-pro") |
+| `focus` | String | Review focus area (code_quality, security, etc.) |
+| `system_prompt_additions` | String | Additional text appended to system prompt |
+| `file_patterns` | Hash | Include/exclude patterns for file filtering |
+| `weight` | Float | Contribution weight 0.0-1.0 (default: 1.0) |
+| `critical` | Boolean | Always highlight findings (default: false) |
+
+#### File Patterns
+
+Filter which files each reviewer sees:
+
+```yaml
+file_patterns:
+  include:
+    - "lib/**/*.rb"        # Only Ruby files in lib/
+    - "src/**/*.ts"        # TypeScript files in src/
+  exclude:
+    - "**/*_test.rb"       # Skip test files
+    - "**/*.spec.ts"       # Skip spec files
+```
+
+- **Include patterns**: File must match at least one (if any specified)
+- **Exclude patterns**: File must not match any
+
+#### Migration from Legacy Format
+
+```yaml
+# Legacy format (still supported)
+models:
+  - claude:opus
+  - codex:gpt-5.1-codex-max
+
+# New reviewers format
+reviewers:
+  - name: "reviewer-1"
+    model: "claude:opus"
+  - name: "reviewer-2"
+    model: "codex:gpt-5.1-codex-max"
+```
+
 ### Configuration Options
 
 Set defaults in `.ace/review/config.yml`:
@@ -539,6 +610,63 @@ Subject input is parsed in this order (first match wins):
 **Note:** `--pr` vs `--subject pr:` - The `--pr` flag provides full PR mode (includes metadata, comments) using ace-review's GhPrFetcher. The `--subject pr:` syntax only fetches diff content through ace-bundle (subject-only mode).
 
 **Note:** `task:` subject scope - The `task:` subject type reviews task specification files (`*.s.md`) only, not the implementation code. To review code implemented for a task, use `diff:` or `files:` subjects with the appropriate patterns.
+
+## Subject Strategy Configuration
+
+When review subjects exceed model context limits, ace-review uses strategies to handle them intelligently.
+
+### Strategy Types
+
+| Strategy | Description | Use Case |
+|----------|-------------|----------|
+| `adaptive` | Auto-selects full or chunked based on model capabilities | Default - works for most cases |
+| `full` | Sends complete diff in single request | Large context models (Gemini, Claude) |
+| `chunked` | Splits diff at file boundaries | Smaller context models or huge diffs |
+
+### Configuration
+
+```yaml
+# .ace/review/config.yml
+subject_strategy:
+  type: adaptive      # or: full, chunked
+  headroom: 0.15      # Reserve 15% of context for prompts/output
+  chunking:
+    max_tokens_per_chunk: 100000
+    include_change_summary: true
+```
+
+### Strategy Selection (Adaptive Mode)
+
+The adaptive strategy automatically selects based on:
+
+1. **Token estimation**: Estimates tokens in subject content
+2. **Model context limit**: Looks up context limit for the target model
+3. **Headroom calculation**: Reserves space for system prompts and output
+
+If subject fits within `(model_limit * (1 - headroom))`, uses full strategy; otherwise chunked.
+
+### Chunking Behavior
+
+When chunking is triggered:
+
+- Diff is split at file boundaries (never mid-file)
+- Each chunk stays under `max_tokens_per_chunk`
+- Optional change summary provides context across chunks
+- Findings are merged from all chunks in synthesis
+
+### Model Context Limits
+
+Context limits are resolved via ace-llm provider configuration:
+
+```yaml
+# ace-llm/.ace-defaults/llm/providers/google.yml
+context_limit: 1000000  # 1M tokens for Gemini
+
+# ace-llm/.ace-defaults/llm/providers/anthropic.yml
+context_limit: 200000   # 200K tokens for Claude
+```
+
+Unknown models fall back to a conservative 128K default.
 
 ## Task Integration
 
