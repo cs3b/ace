@@ -4,6 +4,77 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.418] - 2026-02-04
+
+### Changed
+
+- **ace-git v0.10.11**: Improved reorganize-commits workflow with scope determination guidance
+  - Added "Scope Determination" section to handle user-provided vs embedded status scope
+  - When user provides explicit commit list/range, trust user's intent over embedded status
+  - When mismatch detected (user provides 12 commits, status shows 5), ask for clarification
+  - Added examples section showing common scenarios
+
+## [0.9.417] - 2026-02-03
+
+### Added
+
+- **ace-handbook v0.9.0**: Self-improve workflow for transforming agent mistakes into system improvements
+  - New `/ace:selfimprove` skill to analyze mistakes and improve processes
+  - `selfimprove.wf.md` workflow with root cause analysis and fix templates
+
+## [0.9.416] - 2026-02-03
+
+### Changed
+
+- **ace-review v0.36.16**: Refactored feedback CLI and removed legacy code
+  - Added `SessionDiscovery` shared module for DRY session resolution (6 commands)
+  - Removed 5 deprecated auto-save methods from `ReviewManager` (~150 lines)
+  - Removed 11 deprecated auto-save tests (~270 lines)
+  - Fixed documentation referencing obsolete `--task` and `--no-synthesize` flags
+
+## [0.9.415] - 2026-02-03
+
+### Added
+
+- **ace-review v0.36.15**: Improved feedback list UX with archived item awareness
+  - Shows archived count when no active items exist with hint to use `--archived`
+  - Status-based sorting: draft → pending → done → skip → invalid (then by ID)
+  - Summary line shows archived count hint when viewing active items only
+
+## [0.9.414] - 2026-02-03
+
+### Fixed
+
+- **ace-review v0.36.14**: Feedback CLI commands failing when run from subdirectories
+  - Replaced `Dir.pwd` with `ProjectRootFinder.find_or_current` in all 6 feedback commands
+  - Session discovery now correctly finds project root regardless of current working directory
+
+## [0.9.413] - 2026-02-03
+
+### Fixed
+
+- **ace-review v0.36.13**: Workflow documentation referencing removed `--task` CLI flag
+  - Updated session discovery docs in `review.wf.md` and `review-pr.wf.md`
+  - Improved feedback categorization guide with clearer skip/defer semantics
+
+## [0.9.412] - 2026-02-03
+
+### Fixed
+
+- **ace-review v0.36.12**: Non-unique feedback IDs when batch-creating items in rapid succession
+  - Pre-generate sequential IDs using `FeedbackIdGenerator.generate_sequence`
+  - Uses ace-support-timestamp v0.5.0 `encode_sequence` for guaranteed uniqueness
+
+## [0.9.411] - 2026-02-03
+
+### Added
+
+- **ace-support-timestamp v0.5.0**: Sequence generation for multiple sequential IDs
+  - `--count` / `-n` option to generate N sequential IDs from a starting timestamp
+  - JSON array output with `--count --json`
+  - `CompactIdEncoder.encode_sequence` and `increment_id` methods
+  - Overflow cascade handling (ms → 50ms → 2sec → block → day → month)
+
 ## [0.9.410] - 2026-02-03
 
 ### Fixed
