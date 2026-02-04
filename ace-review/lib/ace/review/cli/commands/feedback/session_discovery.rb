@@ -45,15 +45,21 @@ module Ace
             #
             # @return [String, nil] Path to latest session or nil
             def find_latest_session
+              sessions = find_all_sessions
+              sessions.first
+            end
+
+            # Find all session directories
+            #
+            # @return [Array<String>] All session directory paths, sorted by mtime (newest first)
+            def find_all_sessions
               root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
               cache_dir = File.join(root, ".cache", "ace-review", "sessions")
-              return nil unless Dir.exist?(cache_dir)
+              return [] unless Dir.exist?(cache_dir)
 
-              sessions = Dir.glob(File.join(cache_dir, "review-*"))
-                            .select { |p| File.directory?(p) }
-              return nil if sessions.empty?
-
-              sessions.max_by { |p| File.mtime(p) }
+              Dir.glob(File.join(cache_dir, "review-*"))
+                 .select { |p| File.directory?(p) }
+                 .sort_by { |p| -File.mtime(p).to_i }
             end
           end
         end

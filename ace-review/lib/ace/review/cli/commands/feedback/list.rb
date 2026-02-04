@@ -31,12 +31,13 @@ module Ace
               '--status pending --priority critical',
               '--archived                 # Include archived items',
               '--format json              # Output as JSON',
-              '--session .cache/ace-review/sessions/review-abc123  # From specific session'
+              '--session .cache/ace-review/sessions/review-abc123  # From specific session',
+              '--session all              # List from all sessions'
             ]
 
             option :status, type: :string, desc: "Filter by status (draft/pending/invalid/skip/done)"
             option :priority, type: :string, desc: "Filter by priority (critical/high/medium/low)"
-            option :session, type: :string, desc: "Session directory containing feedback"
+            option :session, type: :string, desc: "Session directory or 'all' for all sessions"
             option :archived, type: :boolean, default: false, desc: "Include archived items"
             option :format, type: :string, default: "table", desc: "Output format (table/json)"
 
@@ -46,6 +47,12 @@ module Ace
             option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
             def call(**options)
+              # Handle --session all
+              if options[:session] == "all"
+                call_all_sessions(options)
+                return
+              end
+
               # Resolve feedback path from session context
               base_path = resolve_feedback_path(options)
 
@@ -89,6 +96,66 @@ module Ace
                 output_json(items)
               else
                 output_table(items, archived_count, options)
+              end
+            end
+
+            # Handle --session all: aggregate feedback from all sessions
+            #
+            # @param options [Hash] Command options
+            def call_all_sessions(options)
+              sessions = find_all_sessions
+
+              if sessions.empty?
+                puts "No sessions found."
+                return
+              end
+
+              debug_log("Found #{sessions.length} sessions", options)
+
+              manager = Organisms::FeedbackManager.new
+              all_items = []
+              total_archived = 0
+
+              sessions.each do |session_path|
+                session_name = File.basename(session_path)
+
+                # List items with filters
+                items = manager.list(
+                  session_path,
+                  status: options[:status],
+                  priority: options[:priority]
+                )
+
+                # Tag items with session name
+                items.each { |item| item.instance_variable_set(:@_session_name, session_name) }
+
+                # Get archived count
+                total_archived += count_archived_items(session_path, manager)
+
+                # Include archived items if requested
+                if options[:archived]
+                  archive_dir = manager.directory_manager.archive_path(session_path)
+                  if Dir.exist?(archive_dir)
+                    archived_items = manager.file_reader.read_all(archive_dir)
+                    archived_items = archived_items.select { |i| i.status == options[:status] } if options[:status]
+                    archived_items = archived_items.select { |i| i.priority == options[:priority] } if options[:priority]
+                    archived_items.each { |item| item.instance_variable_set(:@_session_name, session_name) }
+                    items.concat(archived_items)
+                  end
+                end
+
+                all_items.concat(items)
+              end
+
+              # Sort by status priority, then by ID
+              all_items.sort_by! { |item| [status_sort_order(item.status), item.id] }
+
+              # Output in requested format
+              case options[:format]
+              when "json"
+                output_json_all_sessions(all_items)
+              else
+                output_table_all_sessions(all_items, total_archived, options)
               end
             end
 
@@ -158,6 +225,51 @@ module Ace
             # Output items as JSON
             def output_json(items)
               json_items = items.map(&:to_h)
+              puts JSON.pretty_generate(json_items)
+            end
+
+            # Output all sessions items as table
+            def output_table_all_sessions(items, archived_count, options)
+              if items.empty?
+                if archived_count > 0
+                  puts "No active feedback items. #{archived_count} archived item(s) exist across all sessions."
+                  puts "Use --archived to include them."
+                else
+                  puts "No feedback items found across all sessions."
+                end
+                return
+              end
+
+              # Header with SESSION column
+              puts format("%-14s %-8s %-8s %-10s %s", "SESSION", "ID", "STATUS", "PRIORITY", "TITLE")
+              puts "-" * 72
+
+              # Rows
+              items.each do |item|
+                session_name = item.instance_variable_get(:@_session_name) || "unknown"
+                # Truncate session name if too long
+                session_name = session_name[0..11] + ".." if session_name.length > 13
+
+                # Truncate title if too long
+                title = item.title.to_s
+                title = title[0..28] + "..." if title.length > 31
+
+                puts format("%-14s %-8s %-8s %-10s %s", session_name, item.id, item.status, item.priority, title)
+              end
+
+              # Summary with archived hint
+              puts
+              archived_hint = archived_count > 0 && !options[:archived] ? " (#{archived_count} archived)" : ""
+              puts "Total: #{items.length} item(s)#{archived_hint}"
+            end
+
+            # Output all sessions items as JSON
+            def output_json_all_sessions(items)
+              json_items = items.map do |item|
+                h = item.to_h
+                h[:session] = item.instance_variable_get(:@_session_name)
+                h
+              end
               puts JSON.pretty_generate(json_items)
             end
           end
