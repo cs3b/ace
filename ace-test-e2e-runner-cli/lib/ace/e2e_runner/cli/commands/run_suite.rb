@@ -11,16 +11,25 @@ module Ace
 
           desc "Run all E2E tests across packages"
 
+          argument :unused, required: false
+
           option :provider, type: :string, desc: "LLM provider:model"
           option :timeout, type: :integer, desc: "Timeout in seconds"
           option :temperature, type: :float, desc: "LLM temperature"
           option :max_tokens, type: :integer, desc: "Max tokens"
           option :report_dir, type: :string, desc: "Report directory"
+          option :format, type: :string, desc: "Output format: progress (default), progress-file, json"
           option :parallel, type: :integer, desc: "Parallel execution"
           option :dry_run, type: :boolean, desc: "List tests without executing"
           option :config, type: :string, aliases: %w[-c], desc: "Config file path"
 
-          def call(**options)
+          def call(unused: nil, **options)
+            if unused
+              raise Ace::Core::CLI::Error.new(
+                "ace-e2e-test-suite runs globally; use ace-e2e-test <package>"
+              )
+            end
+
             orchestrator = Organisms::SuiteOrchestrator.new
             outcome = orchestrator.run(options: options)
 
@@ -40,13 +49,11 @@ module Ace
             end
 
             report_dir = outcome[:report_dir]
-            puts "Report: #{report_dir}" if report_dir && !options[:quiet]
+            if report_dir && !options[:quiet] && options[:format] != "json"
+              puts "Report: #{report_dir}"
+            end
 
-            failed = results.count(&:failure?)
-            passed = results.count(&:success?)
-            puts "Summary: #{passed}/#{results.length} passed" unless options[:quiet]
-
-            failed.zero? ? 0 : 1
+            results.count(&:failure?).zero? ? 0 : 1
           rescue Interrupt
             raise Ace::Core::CLI::Error.new("E2E test execution interrupted", exit_code: 130)
           end

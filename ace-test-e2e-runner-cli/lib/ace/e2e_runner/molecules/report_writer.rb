@@ -30,7 +30,7 @@ module Ace
           FileUtils.mkdir_p(test_dir)
           summary_path = File.join(test_dir, "summary.r.md")
 
-          content = "# E2E Test Report\n\n"
+          content = String.new("# E2E Test Report\n\n")
           content << "- Test ID: #{result.test_id}\n"
           content << "- Status: #{result.status}\n"
           content << "- Duration: #{format_duration(result.duration)}\n" if result.duration
@@ -64,7 +64,7 @@ module Ace
             "failed" => results.count(&:failure?)
           }
 
-          content = "---\n"
+          content = String.new("---\n")
           content << frontmatter.to_yaml
           content << "---\n\n"
           content << "# E2E Test Summary\n\n"

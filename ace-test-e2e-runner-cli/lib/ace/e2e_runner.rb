@@ -12,6 +12,7 @@ require_relative "e2e_runner/atoms/test_discoverer"
 require_relative "e2e_runner/atoms/frontmatter_parser"
 require_relative "e2e_runner/atoms/prompt_builder"
 require_relative "e2e_runner/atoms/result_parser"
+require_relative "e2e_runner/atoms/lazy_loader"
 
 # Molecules
 require_relative "e2e_runner/molecules/config_loader"
@@ -34,6 +35,7 @@ module Ace
     module Molecules; end
     module Organisms; end
     module Models; end
+    module Formatters; end
     module Commands; end
   end
 end

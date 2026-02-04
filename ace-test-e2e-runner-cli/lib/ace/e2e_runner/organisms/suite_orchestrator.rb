@@ -18,6 +18,7 @@ module Ace
           discoverer = Atoms::TestDiscoverer.new
           frontmatter = Atoms::FrontmatterParser.new
           executor = Molecules::TestExecutor.new(config)
+          formatter = build_formatter(config, options)
 
           test_paths = discoverer.find_all_tests
           return { results: [], report_dir: nil, status: :no_tests } if test_paths.empty?
@@ -28,25 +29,40 @@ module Ace
             return { results: scenarios, report_dir: nil, status: :dry_run }
           end
 
+          formatter.on_start(scenarios.length) if formatter
+
           max_parallel = config[:execution][:max_parallel].to_i
           max_parallel = 1 if max_parallel <= 0
           max_parallel = options[:parallel].to_i if options[:parallel]
 
           results = if max_parallel > 1
-                      run_parallel(scenarios, executor, max_parallel)
+                      run_parallel(scenarios, executor, max_parallel, formatter)
                     else
-                      scenarios.map { |scenario| executor.execute(scenario) }
+                      scenarios.map do |scenario|
+                        formatter.on_test_start(scenario.id, scenario.package) if formatter
+                        executor.execute(scenario)
+                      end
                     end
 
           report_dir = write_reports(results, config)
+          results.each do |result|
+            formatter.on_test_complete(
+              result.test_id,
+              result.status,
+              result.duration,
+              report_dir ? File.join(report_dir, result.test_id.to_s, "summary.r.md") : nil
+            ) if formatter
+          end
           status = results.all?(&:success?) ? :passed : :failed
+          summary = build_summary(results)
+          formatter.on_finish(summary) if formatter
 
           { results: results, report_dir: report_dir, status: status }
         end
 
         private
 
-        def run_parallel(scenarios, executor, max_parallel)
+        def run_parallel(scenarios, executor, max_parallel, formatter)
           queue = Queue.new
           scenarios.each { |scenario| queue << scenario }
 
@@ -59,6 +75,7 @@ module Ace
                 scenario = queue.pop(true) rescue nil
                 next unless scenario
 
+                formatter.on_test_start(scenario.id, scenario.package) if formatter
                 result = executor.execute(scenario)
                 results_mutex.synchronize { results << result }
               end
@@ -103,6 +120,22 @@ module Ace
           report_dir = config[:defaults][:report_dir] || ".cache/ace-test-e2e"
           writer = Molecules::ReportWriter.new(report_dir: report_dir, timestamp: timestamp)
           writer.write_all(results)
+        end
+
+        def build_formatter(config, options)
+          format = config[:defaults][:format] || "progress"
+          formatter_class = Atoms::LazyLoader.load_formatter(format)
+          formatter_class.new(options)
+        rescue StandardError
+          nil
+        end
+
+        def build_summary(results)
+          {
+            total: results.length,
+            passed: results.count(&:success?),
+            failed: results.count(&:failure?)
+          }
         end
       end
     end

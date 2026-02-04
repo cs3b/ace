@@ -42,6 +42,7 @@ module Ace
           merged[:defaults][:temperature] = options[:temperature] if options[:temperature]
           merged[:defaults][:max_tokens] = options[:max_tokens] if options[:max_tokens]
           merged[:defaults][:report_dir] = options[:report_dir] if options[:report_dir]
+          merged[:defaults][:format] = options[:format] if options[:format]
 
           merged[:execution][:max_parallel] = options[:parallel] if options[:parallel]
 

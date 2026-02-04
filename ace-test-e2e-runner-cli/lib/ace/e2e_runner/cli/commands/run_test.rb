@@ -20,6 +20,7 @@ module Ace
           option :temperature, type: :float, desc: "LLM temperature"
           option :max_tokens, type: :integer, desc: "Max tokens"
           option :report_dir, type: :string, desc: "Report directory"
+          option :format, type: :string, desc: "Output format: progress (default), progress-file, json"
           option :parallel, type: :integer, desc: "Parallel execution (suite only)"
           option :affected, type: :boolean, desc: "Run tests for packages affected by git changes"
           option :dry_run, type: :boolean, desc: "List tests without executing"
@@ -70,13 +71,11 @@ module Ace
             end
 
             report_dir = outcome[:report_dir]
-            puts "Report: #{report_dir}" if report_dir && !options[:quiet]
+            if report_dir && !options[:quiet] && options[:format] != "json"
+              puts "Report: #{report_dir}"
+            end
 
-            failed = results.count(&:failure?)
-            passed = results.count(&:success?)
-            puts "Summary: #{passed}/#{results.length} passed" unless options[:quiet]
-
-            failed.zero? ? 0 : 1
+            results.count(&:failure?).zero? ? 0 : 1
           end
 
           def detect_affected_packages

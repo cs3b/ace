@@ -58,8 +58,8 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 | `ace-test atoms` | Run atom tests only |
 | `ace-test ace-bundle` | Run tests in specific package |
 | `ace-test-suite` | Run all tests across monorepo |
-| `ace-e2e-test <package> [test-id]` | Run E2E tests for a package or test |
-| `ace-e2e-test-suite` | Run all E2E tests across packages |
+| `ace-e2e-test <package> [test-id]` | Run E2E tests for a package or test (use `--format` for output style) |
+| `ace-e2e-test-suite` | Run all E2E tests across packages (use `--format` for output style) |
 
 ### Testing Skills
 
