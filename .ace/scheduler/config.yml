@@ -1,0 +1,25 @@
+tasks:
+  daily-tests:
+    description: "Run test suite with profiling"
+    cron: "0 9 * * *"
+    command: ace-test-suite --profile 10
+    enabled: true
+
+  weekly-e2e:
+    description: "Full E2E test run"
+    cron: "0 6 * * 1"
+    command: ace-e2e-test-suite --all
+    enabled: true
+
+events:
+  pr-merged:
+    description: "Post-merge verification"
+    triggers:
+      - command: ace-test-suite --changed
+      - command: ace-e2e-test --affected
+
+  release-started:
+    description: "Pre-release gates"
+    triggers:
+      - command: ace-test-suite
+      - command: ace-e2e-test-suite --all
