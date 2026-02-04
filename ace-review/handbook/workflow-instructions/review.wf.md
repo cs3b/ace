@@ -70,9 +70,7 @@ This shows all draft feedback items with their IDs, severity, and summaries.
 
 Feedback items are **session-scoped**. The `feedback list` command discovers items based on:
 1. Explicit `--session <path>` flag (if provided)
-2. Explicit `--task <ref>` flag (if provided)
-3. Current task context (from git branch pattern)
-4. `.ace-review-session` cache file in current directory
+2. `.ace-review-session` cache file in current directory (auto-created after reviews)
 
 If `feedback list` returns empty after a review, the session may not be linked to current context.
 Use `ace-review feedback list --session <session-dir>` to list from a specific session:
@@ -114,7 +112,11 @@ ace-review feedback show {id}
    |--------|---------|------|
    | ✅ VALID | `--valid` | Issue confirmed in code |
    | ❌ INVALID | `--invalid` | False positive, code is correct |
-   | ⚠️ SKIP | `feedback skip {id}` | Out of scope, known limitation |
+   | ✅ DONE | `feedback resolve {id}` | Already fixed in this PR |
+   | ⏭️ SKIP | `feedback skip {id} --reason "Design: ..."` | Intentional design decision |
+   | 📋 DEFER | `feedback skip {id} --reason "Tracked in task XXX"` | Important, but not this PR (create task first) |
+
+   **Before skipping**: Always verify the issue still exists by reading the code. Never skip with "out of scope" - either it's a design decision or it should be tracked in a task.
 
 **Example verification:**
 ```bash
@@ -169,11 +171,25 @@ For each pending item:
 
 ### Step 7: Handle Not-Applicable Items
 
-For items that are out of scope or not worth fixing:
+Before skipping, complete the verification checklist:
+
+1. **Read the code** - Does the issue actually still exist?
+2. **Check current changes** - Was this already fixed in this PR?
+3. **Consider effort** - Is this a quick win (< 5 min) that should just be done?
+
+For items that won't be fixed in this PR:
 
 ```bash
-ace-review feedback skip {id} --reason "Out of scope for this PR"
+# Design decision - intentionally this way
+ace-review feedback skip {id} --reason "Design: uses polling for simplicity"
+
+# Important but deferred - ALWAYS create/reference a task
+ace-review feedback skip {id} --reason "Tracked in task 253"
 ```
+
+**Never skip with "out of scope"** - either:
+- It's a design decision (explain why)
+- It needs a follow-up task (create one and reference it)
 
 ## Quick Reference
 

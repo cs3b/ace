@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require "ace/core"
+require_relative "session_discovery"
 
 module Ace
   module Review
@@ -15,6 +16,7 @@ module Ace
           # deduplicated feedback items with reviewer attribution.
           class Create < Dry::CLI::Command
             include Ace::Core::CLI::DryCli::Base
+            include SessionDiscovery
 
             desc <<~DESC.strip
               Create feedback items from review reports
@@ -90,46 +92,6 @@ module Ace
             end
 
             private
-
-            # Resolve session directory from options
-            #
-            # Priority:
-            # 1. --session flag (explicit path)
-            # 2. Most recent session in cache directory (default)
-            #
-            # @param options [Hash] Command options
-            # @return [String, nil] Session directory path
-            def resolve_session_dir(options)
-              # Explicit session path
-              if options[:session]
-                session_path = File.expand_path(options[:session])
-                return session_path if Dir.exist?(session_path)
-
-                raise Ace::Core::CLI::Error.new("Session not found: #{session_path}")
-              end
-
-              # Default: use most recent session
-              find_latest_session
-            end
-
-            # Find the most recent session directory
-            #
-            # @return [String, nil] Path to latest session or nil
-            def find_latest_session
-              # Look in standard cache location
-              cache_dir = File.join(Dir.pwd, ".cache", "ace-review", "sessions")
-              return nil unless Dir.exist?(cache_dir)
-
-              # Find all session directories (review-*)
-              sessions = Dir.glob(File.join(cache_dir, "review-*"))
-                            .select { |p| File.directory?(p) }
-
-              return nil if sessions.empty?
-
-              # Sort by modification time, most recent first
-              latest = sessions.max_by { |p| File.mtime(p) }
-              latest
-            end
 
             # Find review report files in session directory
             #

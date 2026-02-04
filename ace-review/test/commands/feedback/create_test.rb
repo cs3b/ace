@@ -118,8 +118,8 @@ class FeedbackCreateCommandTest < AceReviewTest
     # Create review reports in the newer session
     File.write(File.join(new_session, "review-report-test.md"), "# Test Review")
 
-    # Mock current working directory
-    Dir.stub(:pwd, @temp_dir) do
+    # Stub ProjectRootFinder to return temp dir (simulates running from project root)
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub(:find_or_current, @temp_dir) do
       cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::Create.new
       latest = cmd.send(:find_latest_session)
 
@@ -128,7 +128,7 @@ class FeedbackCreateCommandTest < AceReviewTest
   end
 
   def test_create_returns_nil_when_no_sessions_exist
-    Dir.stub(:pwd, @temp_dir) do
+    Ace::Support::Fs::Molecules::ProjectRootFinder.stub(:find_or_current, @temp_dir) do
       cmd = Ace::Review::CLI::Commands::FeedbackSubcommands::Create.new
       latest = cmd.send(:find_latest_session)
 
