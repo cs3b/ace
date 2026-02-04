@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.17] - 2026-02-04
+
+### Added
+- `--session all` flag for `feedback list` to aggregate feedback from all sessions
+- `find_all_sessions` helper in `SessionDiscovery` module
+- SESSION column in table output when viewing all sessions
+- `session` field in JSON output when using `--session all`
+
 ## [0.36.16] - 2026-02-03
 
 ### Added
