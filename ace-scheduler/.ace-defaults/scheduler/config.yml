@@ -1,0 +1,4 @@
+version: 1
+tasks: {}
+events: {}
+state_dir: ".ace/scheduler/state"
