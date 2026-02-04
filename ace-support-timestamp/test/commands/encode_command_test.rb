@@ -218,6 +218,96 @@ module Ace
           # Should produce 3-char output for day format
           assert_match(/\A[0-9a-z]{3}\n\z/, output)
         end
+
+        # ===================
+        # Count Option Tests
+        # ===================
+
+        def test_encode_with_count_outputs_multiple_ids
+          output, = capture_io do
+            exit_code = EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: 5)
+            assert_equal 0, exit_code
+          end
+
+          lines = output.strip.split("\n")
+          assert_equal 5, lines.length
+          lines.each { |line| assert_match(/\A[0-9a-z]{6}\z/, line) }
+        end
+
+        def test_encode_with_count_and_format
+          output, = capture_io do
+            exit_code = EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: 3, format: :ms)
+            assert_equal 0, exit_code
+          end
+
+          lines = output.strip.split("\n")
+          assert_equal 3, lines.length
+          lines.each { |line| assert_match(/\A[0-9a-z]{8}\z/, line) }
+        end
+
+        def test_encode_with_count_and_json
+          output, = capture_io do
+            exit_code = EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: 4, json: true)
+            assert_equal 0, exit_code
+          end
+
+          parsed = JSON.parse(output)
+          assert_instance_of Array, parsed
+          assert_equal 4, parsed.length
+          parsed.each { |id| assert_match(/\A[0-9a-z]{6}\z/, id) }
+        end
+
+        def test_encode_with_count_1_outputs_single_id
+          output, = capture_io do
+            exit_code = EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: 1)
+            assert_equal 0, exit_code
+          end
+
+          lines = output.strip.split("\n")
+          assert_equal 1, lines.length
+          assert_match(/\A[0-9a-z]{6}\z/, lines.first)
+        end
+
+        def test_encode_with_count_ids_are_sequential
+          output, = capture_io do
+            EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: 10, format: :ms)
+          end
+
+          lines = output.strip.split("\n")
+          lines.each_cons(2) do |prev, curr|
+            assert_operator prev, :<, curr, "IDs should be strictly increasing"
+          end
+        end
+
+        def test_encode_with_count_and_split_returns_error
+          _, err = capture_io do
+            assert_raises(ArgumentError) do
+              EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: 5, split: "month,day")
+            end
+          end
+
+          assert_match(/count and --split are mutually exclusive/i, err)
+        end
+
+        def test_encode_with_count_zero_returns_error
+          _, err = capture_io do
+            assert_raises(ArgumentError) do
+              EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: 0)
+            end
+          end
+
+          assert_match(/count must be greater than 0/i, err)
+        end
+
+        def test_encode_with_negative_count_returns_error
+          _, err = capture_io do
+            assert_raises(ArgumentError) do
+              EncodeCommand.execute("2025-01-06 12:30:00 UTC", count: -1)
+            end
+          end
+
+          assert_match(/count must be greater than 0/i, err)
+        end
       end
     end
   end
