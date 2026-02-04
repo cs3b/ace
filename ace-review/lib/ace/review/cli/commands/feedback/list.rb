@@ -36,7 +36,7 @@ module Ace
             ]
 
             option :status, type: :string, desc: "Filter by status (draft/pending/invalid/skip/done)"
-            option :priority, type: :string, desc: "Filter by priority (critical/high/medium/low)"
+            option :priority, type: :string, desc: "Filter by priority (critical/high/medium/low, append + for 'and higher')"
             option :session, type: :string, desc: "Session directory or 'all' for all sessions"
             option :archived, type: :boolean, default: false, desc: "Include archived items"
             option :format, type: :string, default: "table", desc: "Output format (table/json)"
@@ -82,7 +82,7 @@ module Ace
                   archived_items = manager.file_reader.read_all(archive_dir)
                   # Apply filters to archived items
                   archived_items = archived_items.select { |i| i.status == options[:status] } if options[:status]
-                  archived_items = archived_items.select { |i| i.priority == options[:priority] } if options[:priority]
+                  archived_items = archived_items.select { |i| Atoms::PriorityFilter.matches?(i.priority, options[:priority]) } if options[:priority]
                   items.concat(archived_items)
                 end
               end
@@ -138,7 +138,7 @@ module Ace
                   if Dir.exist?(archive_dir)
                     archived_items = manager.file_reader.read_all(archive_dir)
                     archived_items = archived_items.select { |i| i.status == options[:status] } if options[:status]
-                    archived_items = archived_items.select { |i| i.priority == options[:priority] } if options[:priority]
+                    archived_items = archived_items.select { |i| Atoms::PriorityFilter.matches?(i.priority, options[:priority]) } if options[:priority]
                     archived_items.each { |item| item.instance_variable_set(:@_session_name, session_name) }
                     items.concat(archived_items)
                   end
