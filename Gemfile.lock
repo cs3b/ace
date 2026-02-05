@@ -238,19 +238,14 @@ PATH
       dry-cli (~> 1.0)
 
 PATH
-  remote: ace-test-e2e-runner-cli
+  remote: ace-test-e2e-runner
   specs:
-    ace-test-e2e-runner-cli (0.1.0)
+    ace-test-e2e-runner (0.5.0)
       ace-llm (>= 0.1)
       ace-support-config (>= 0.1)
       ace-support-core (>= 0.1)
       ace-support-timestamp (>= 0.2)
       dry-cli (~> 1.0)
-
-PATH
-  remote: ace-test-e2e-runner
-  specs:
-    ace-test-e2e-runner (0.5.0)
 
 PATH
   remote: ace-test-runner
@@ -434,7 +429,6 @@ DEPENDENCIES
   ace-taskflow!
   ace-test!
   ace-test-e2e-runner!
-  ace-test-e2e-runner-cli!
   ace-test-runner!
   bundler (~> 2.4)
   minitest (~> 5.20)

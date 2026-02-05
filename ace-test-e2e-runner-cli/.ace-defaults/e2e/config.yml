@@ -1,9 +1,0 @@
-defaults:
-  provider: "claude:sonnet"
-  timeout: 300
-  temperature: 0.1
-  report_dir: ".cache/ace-test-e2e"
-  format: "progress"
-execution:
-  max_parallel: 4
-  retry_count: 1
