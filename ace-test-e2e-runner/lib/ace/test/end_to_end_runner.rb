@@ -7,10 +7,12 @@ module Ace
     module EndToEndRunner
       # Entry point for gem
       #
-      # This gem provides infrastructure for agent-executed end-to-end tests:
+      # This gem provides infrastructure and CLI support for agent-executed
+      # end-to-end tests:
       # - Workflows for test execution (run-e2e-test.wf.md)
       # - Templates for test scenarios (test-e2e.template.md)
       # - Conventions for E2E testing (e2e-testing.g.md)
+      # - CLI commands (ace-e2e-test, ace-e2e-test-suite)
       #
       # Tests are executed by AI agents, not by automated test runners.
       # See handbook/ for workflows and guides.

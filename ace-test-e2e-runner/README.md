@@ -4,14 +4,14 @@ End-to-end test runner infrastructure for agent-executed testing.
 
 ## Core Principles
 
-- **Workflow-First**: No CLI executable - agents follow workflow instructions directly
+- **Workflow-First**: Agents can follow workflow instructions or use the CLI
 - **Transparent**: Test scenarios are readable markdown with clear steps
 - **Reproducible**: Documented setup, execution, and cleanup for consistent results
 - **Package-Local**: Test scenarios stored with the code they test
 
 ## Architecture
 
-This package provides infrastructure only - no ATOM layers or CLI commands:
+This package provides both workflow infrastructure and CLI commands:
 
 ```
 handbook/
@@ -24,7 +24,7 @@ Tests themselves live in individual packages: `{package}/test/e2e/*.mt.md`
 
 ## Overview
 
-This package provides the "HOW" for end-to-end testing - workflows, templates, and conventions for tests that are:
+This package provides the "HOW" for end-to-end testing and a CLI runner for tests that are:
 
 - **NOT run by regular test runner** (`ace-test`)
 - **Executed by an AI agent** who sets up environment and runs tests
@@ -64,7 +64,18 @@ For example:
 
 ## Usage
 
-### Running an E2E Test
+### Running an E2E Test (CLI)
+
+```bash
+ace-e2e-test <package> [test-id]
+```
+
+Example:
+```bash
+ace-e2e-test ace-lint MT-LINT-001
+```
+
+### Running an E2E Test (Workflow)
 
 ```
 /ace:run-e2e-test <package> <test-id>
