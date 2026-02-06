@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-02-06
+
+### Fixed
+- Honor `--` sentinel in ArgsNormalizer: args after `--` now pass through verbatim without auto-prefixing
+- User CLI args now take precedence over command-generated flags (moved to end of command construction in all 4 clients)
+
 ## [0.14.0] - 2026-02-05
 
 ### Added

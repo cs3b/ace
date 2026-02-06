@@ -46,6 +46,14 @@ module Ace
               assert_equal [], @normalizer.normalize_cli_args("")
               assert_equal [], @normalizer.normalize_cli_args([])
             end
+
+            def test_sentinel_passes_remaining_args_verbatim
+              assert_equal ["--", "foo", "bar"], @normalizer.normalize_cli_args("-- foo bar")
+            end
+
+            def test_sentinel_after_flags
+              assert_equal ["--verbose", "--", "foo"], @normalizer.normalize_cli_args("--verbose -- foo")
+            end
           end
         end
       end
