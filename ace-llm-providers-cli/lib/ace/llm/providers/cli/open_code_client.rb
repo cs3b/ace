@@ -5,6 +5,8 @@ require "json"
 require "shellwords"
 require "timeout"
 
+require_relative "cli_args_support"
+
 module Ace
   module LLM
     module Providers
@@ -12,6 +14,7 @@ module Ace
         # Client for interacting with OpenCode CLI
         # Provides access to multiple AI providers through OpenCode's unified platform
         class OpenCodeClient < Ace::LLM::Organisms::BaseClient
+          include CliArgsSupport
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://models.dev"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -130,6 +133,7 @@ module Ace
           # @return [Array<String>] Command array ready for execution
           def build_opencode_command_with_prompt(full_prompt, options)
             cmd = ["opencode", "run"]
+            cmd.concat(normalized_cli_args(options))
 
             # Add model selection with fallback chain
             model_to_use = @model || @generation_config[:model] || DEFAULT_MODEL
@@ -186,6 +190,7 @@ module Ace
               prompt_str
             end
           end
+
 
           def execute_opencode_command(cmd, timeout: nil)
             # Execute with timeout to prevent hanging

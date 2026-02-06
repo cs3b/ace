@@ -5,6 +5,8 @@ require "json"
 require "shellwords"
 require "timeout"
 
+require_relative "cli_args_support"
+
 module Ace
   module LLM
     module Providers
@@ -12,6 +14,7 @@ module Ace
         # Client for interacting with Codex OSS CLI
         # Provides access to open source code models through subprocess execution
         class CodexOSSClient < Ace::LLM::Organisms::BaseClient
+          include CliArgsSupport
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://codex-oss.dev"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -121,6 +124,7 @@ module Ace
 
           def build_codexoss_command(prompt, options)
             cmd = ["codex-oss", "generate"]
+            cmd.concat(normalized_cli_args(options))
 
             # Add prompt
             cmd << "--prompt" << prompt.to_s
@@ -152,6 +156,7 @@ module Ace
 
             cmd
           end
+
 
           def execute_codexoss_command(cmd)
             # Execute with timeout to prevent hanging

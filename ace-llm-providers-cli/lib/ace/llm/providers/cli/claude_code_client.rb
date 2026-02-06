@@ -5,6 +5,8 @@ require "json"
 require "shellwords"
 require "timeout"
 
+require_relative "cli_args_support"
+
 module Ace
   module LLM
     module Providers
@@ -12,6 +14,7 @@ module Ace
         # Client for interacting with Claude Code via the Claude CLI
         # Provides access to Claude Code models through subprocess execution
         class ClaudeCodeClient < Ace::LLM::Organisms::BaseClient
+          include CliArgsSupport
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://claude.ai"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -118,7 +121,9 @@ module Ace
           end
 
           def build_claude_command(prompt, options)
-            cmd = ["claude", "-p"]
+            cmd = ["claude"]
+            cmd.concat(normalized_cli_args(options))
+            cmd << "-p"
 
             # Add prompt (from string or file)
             if prompt.is_a?(String) && File.exist?(prompt)
@@ -166,6 +171,7 @@ module Ace
 
             cmd
           end
+
 
           def execute_claude_command(cmd)
             # Execute with timeout to prevent hanging

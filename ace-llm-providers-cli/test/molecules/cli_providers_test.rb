@@ -36,6 +36,22 @@ describe "CLI Providers" do
       formatted = @client.send(:format_messages_as_prompt, prompt)
       assert_equal "Just a string", formatted
     end
+
+    it "passes cli_args into the subprocess command" do
+      status = Struct.new(:success?).new(true)
+      captured_cmd = nil
+
+      @client.stub :validate_claude_availability!, true do
+        @client.stub :execute_claude_command, lambda { |cmd|
+          captured_cmd = cmd
+          ['{"result":"ok","usage":{}}', "", status]
+        } do
+          @client.generate([{ role: "user", content: "hi" }], cli_args: "--verbose")
+        end
+      end
+
+      assert_includes captured_cmd, "--verbose"
+    end
   end
 
   describe "CodexClient" do
