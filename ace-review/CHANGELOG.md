@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.4] - 2026-02-06
+
+### Changed
+- Embed CLI help reference in apply-feedback and verify-feedback workflows via bundle frontmatter
+- Agents now see exact flag syntax per subcommand (verify/resolve/skip) when workflows load
+
 ## [0.37.3] - 2026-02-04
 
 ### Added
