@@ -51,10 +51,10 @@ ace-git-commit \
   ace-[package]/ \
   CHANGELOG.md \
   Gemfile.lock \
-  -m "chore(ace-[package]): release v[NEW_VERSION]"
+  -i "release v[NEW_VERSION] for ace-[package]"
 ```
 
-This ensures any code changes in the package are included with the release.
+This lets the LLM analyze each scope's actual diff and assign appropriate commit types (e.g., `fix` for code changes, `chore` for changelog/lockfile). The `-i` flag provides release context without overriding per-scope message generation.
 
 ---
 
