@@ -133,7 +133,6 @@ module Ace
           # @return [Array<String>] Command array ready for execution
           def build_opencode_command_with_prompt(full_prompt, options)
             cmd = ["opencode", "run"]
-            cmd.concat(normalized_cli_args(options))
 
             # Add model selection with fallback chain
             model_to_use = @model || @generation_config[:model] || DEFAULT_MODEL
@@ -141,6 +140,10 @@ module Ace
 
             # Add JSON format for structured output (less likely to prompt interactively)
             cmd << "--format" << "json"
+
+            # User CLI args after generated flags so they take precedence (last-wins),
+            # but before positional prompt arg
+            cmd.concat(normalized_cli_args(options))
 
             # Prompt is passed as positional argument (not via --prompt flag)
             # NOTE: OpenCode CLI does not support --temperature, --max-tokens, or --system flags

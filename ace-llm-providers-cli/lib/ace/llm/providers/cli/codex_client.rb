@@ -138,7 +138,6 @@ module Ace
           def build_codex_command(prompt, options)
             # Use codex exec for non-interactive execution
             cmd = ["codex", "exec"]
-            cmd.concat(normalized_cli_args(options))
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
@@ -147,6 +146,9 @@ module Ace
 
             # Note: Codex exec doesn't support direct system prompts or temperature/max_tokens
             # These would need to be incorporated into the prompt itself
+
+            # User CLI args last so they take precedence (last-wins in most CLIs)
+            cmd.concat(normalized_cli_args(options))
 
             cmd
           end
