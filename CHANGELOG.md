@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.427] - 2026-02-05
+
+### Added
+
+- **ace-llm v0.22.0**: `--cli-args` passthrough for CLI providers with docs and integration tests
+
+### Fixed
+
+- **ace-llm v0.22.0**: `--timeout` parsing in CLI query command to avoid string timeout errors
+
+## [0.9.428] - 2026-02-05
+
+### Added
+
+- **ace-llm-providers-cli v0.14.0**: CLI argument passthrough support with normalization
+
+### Fixed
+
+- **ace-llm-providers-cli v0.14.0**: Improved CLI argument error reporting and provider command wiring
+
 ## [0.9.426] - 2026-02-04
 
 ### Added
@@ -6459,4 +6479,3 @@ Changes in this period are summarized by their release version.
 * Established initial project infrastructure.
 * Set up the project structure and documentation framework.
 * Documented the initial release process.
-
