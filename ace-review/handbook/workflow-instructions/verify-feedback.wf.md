@@ -3,9 +3,16 @@ name: verify-feedback
 description: Verify feedback items through multi-dimensional claim analysis
 argument-hint: "[--session <path>] [--status draft]"
 allowed-tools: Read, Bash, Grep, Glob
+bundle:
+  embed_document_source: true
+  sections:
+    feedback_cli_reference:
+      commands:
+        - ace-review feedback verify --help
+        - ace-review feedback skip --help
 update:
   frequency: on-change
-  last-updated: '2026-02-04'
+  last-updated: '2026-02-06'
 ---
 
 # Verify Feedback Workflow
@@ -213,6 +220,8 @@ ace-review feedback verify <id> --invalid --research "Email validated in AuthMid
 ```
 
 ## Quick Reference
+
+> **Tip**: Exact flag syntax per subcommand is available in the embedded `<feedback_cli_reference>` section above (loaded via ace-bundle).
 
 ```bash
 # List items to verify

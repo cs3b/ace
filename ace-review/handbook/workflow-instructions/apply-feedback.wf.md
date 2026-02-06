@@ -3,9 +3,17 @@ name: apply-feedback
 description: Apply verified feedback items from code review
 argument-hint: "[--session <path>] [--priority <level>]"
 allowed-tools: Read, Bash, Write, Edit, Grep, Glob
+bundle:
+  embed_document_source: true
+  sections:
+    feedback_cli_reference:
+      commands:
+        - ace-review feedback verify --help
+        - ace-review feedback resolve --help
+        - ace-review feedback skip --help
 update:
   frequency: on-change
-  last-updated: '2026-02-03'
+  last-updated: '2026-02-06'
 ---
 
 # Apply Feedback Workflow
@@ -187,6 +195,8 @@ ace-review feedback list
 | Low | Optional - skip unless specifically requested |
 
 ## Quick Reference
+
+> **Tip**: Exact flag syntax per subcommand is available in the embedded `<feedback_cli_reference>` section above (loaded via ace-bundle).
 
 ```bash
 # Feedback commands
