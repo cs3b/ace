@@ -5,6 +5,8 @@ require "json"
 require "open3"
 require "timeout"
 
+require_relative "cli_args_support"
+
 module Ace
   module LLM
     module Providers
@@ -12,6 +14,7 @@ module Ace
         # Client for interacting with Google Gemini CLI
         # Provides access to Gemini models through subprocess execution
         class GeminiClient < Ace::LLM::Organisms::BaseClient
+          include CliArgsSupport
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://generativelanguage.googleapis.com"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -155,7 +158,9 @@ module Ace
             new_prompt = file_refs.join("\n")
 
             # Build gemini CLI command with file reading enabled
-            cmd = ["gemini", new_prompt, "--output-format", "json", "--allowed-tools", "read_file"]
+            cmd = ["gemini"]
+            append_cli_args(cmd, options)
+            cmd << new_prompt << "--output-format" << "json" << "--allowed-tools" << "read_file"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
@@ -175,7 +180,9 @@ module Ace
 
             # Build gemini CLI command for headless execution
             # Note: prompt is passed as positional argument for one-shot mode
-            cmd = ["gemini", prompt, "--output-format", "json"]
+            cmd = ["gemini"]
+            append_cli_args(cmd, options)
+            cmd << prompt << "--output-format" << "json"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
@@ -213,7 +220,9 @@ module Ace
             # Build gemini CLI command for one-shot execution with file reading
             # Note: prompt is passed as positional argument (not -i which conflicts with stdin)
             # Enable read_file tool without confirmation for headless execution
-            cmd = ["gemini", new_prompt, "--output-format", "json", "--allowed-tools", "read_file"]
+            cmd = ["gemini"]
+            append_cli_args(cmd, options)
+            cmd << new_prompt << "--output-format" << "json" << "--allowed-tools" << "read_file"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
@@ -228,6 +237,11 @@ module Ace
             FileUtils.mkdir_p(cache_dir) unless Dir.exist?(cache_dir)
             cache_dir
           end
+
+          def append_cli_args(cmd, options)
+            cmd.concat(normalized_cli_args(options))
+          end
+
 
           def execute_gemini_command(cmd, prompt, options)
             # Execute with timeout to prevent hanging

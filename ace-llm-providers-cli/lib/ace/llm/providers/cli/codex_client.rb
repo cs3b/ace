@@ -5,6 +5,8 @@ require "json"
 require "shellwords"
 require "timeout"
 
+require_relative "cli_args_support"
+
 module Ace
   module LLM
     module Providers
@@ -12,6 +14,7 @@ module Ace
         # Client for interacting with Codex CLI (OpenAI)
         # Provides access to Codex models through subprocess execution
         class CodexClient < Ace::LLM::Organisms::BaseClient
+          include CliArgsSupport
           # Not used for CLI interaction but required by BaseClient
           API_BASE_URL = "https://api.openai.com"
           DEFAULT_GENERATION_CONFIG = {}.freeze
@@ -135,6 +138,7 @@ module Ace
           def build_codex_command(prompt, options)
             # Use codex exec for non-interactive execution
             cmd = ["codex", "exec"]
+            cmd.concat(normalized_cli_args(options))
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
@@ -146,6 +150,7 @@ module Ace
 
             cmd
           end
+
 
           def execute_codex_command(cmd, prompt, options)
             # Prepare the input - combine system prompt with user prompt if needed
