@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.430] - 2026-02-06
+
+### Changed
+
+- **ace-review v0.37.4**: Embed CLI help reference in apply-feedback and verify-feedback workflows via bundle frontmatter
+- **ace-release skill**: Replace hardcoded `-m` commit message with `-i` intention flag for per-scope LLM message generation
+
 ## [0.9.429] - 2026-02-06
 
 ### Fixed
