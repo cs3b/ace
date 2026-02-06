@@ -122,7 +122,6 @@ module Ace
 
           def build_claude_command(prompt, options)
             cmd = ["claude"]
-            cmd.concat(normalized_cli_args(options))
             cmd << "-p"
 
             # Add prompt (from string or file)
@@ -168,6 +167,9 @@ module Ace
             if max_tokens
               cmd << "--max-tokens" << max_tokens.to_s
             end
+
+            # User CLI args last so they take precedence (last-wins in most CLIs)
+            cmd.concat(normalized_cli_args(options))
 
             cmd
           end

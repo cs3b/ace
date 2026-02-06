@@ -25,11 +25,23 @@ module Ace
 
               normalized = []
               previous_flag = false
+              seen_sentinel = false
 
               args.each do |arg|
+                if seen_sentinel
+                  normalized << arg
+                  next
+                end
+
+                if arg == "--"
+                  normalized << arg
+                  seen_sentinel = true
+                  next
+                end
+
                 if arg.start_with?("-")
                   normalized << arg
-                  previous_flag = arg != "--" && !arg.include?("=")
+                  previous_flag = !arg.include?("=")
                   next
                 end
 

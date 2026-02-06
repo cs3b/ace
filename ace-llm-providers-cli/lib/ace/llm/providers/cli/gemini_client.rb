@@ -159,13 +159,17 @@ module Ace
 
             # Build gemini CLI command with file reading enabled
             cmd = ["gemini"]
-            append_cli_args(cmd, options)
-            cmd << new_prompt << "--output-format" << "json" << "--allowed-tools" << "read_file"
+            cmd << "--output-format" << "json" << "--allowed-tools" << "read_file"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
               cmd << "--model" << @model
             end
+
+            # User CLI args after generated flags so they take precedence (last-wins),
+            # but before positional prompt arg
+            append_cli_args(cmd, options)
+            cmd << new_prompt
 
             cmd
           end
@@ -181,13 +185,17 @@ module Ace
             # Build gemini CLI command for headless execution
             # Note: prompt is passed as positional argument for one-shot mode
             cmd = ["gemini"]
-            append_cli_args(cmd, options)
-            cmd << prompt << "--output-format" << "json"
+            cmd << "--output-format" << "json"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
               cmd << "--model" << @model
             end
+
+            # User CLI args after generated flags so they take precedence (last-wins),
+            # but before positional prompt arg
+            append_cli_args(cmd, options)
+            cmd << prompt
 
             cmd
           end
@@ -221,13 +229,17 @@ module Ace
             # Note: prompt is passed as positional argument (not -i which conflicts with stdin)
             # Enable read_file tool without confirmation for headless execution
             cmd = ["gemini"]
-            append_cli_args(cmd, options)
-            cmd << new_prompt << "--output-format" << "json" << "--allowed-tools" << "read_file"
+            cmd << "--output-format" << "json" << "--allowed-tools" << "read_file"
 
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
               cmd << "--model" << @model
             end
+
+            # User CLI args after generated flags so they take precedence (last-wins),
+            # but before positional prompt arg
+            append_cli_args(cmd, options)
+            cmd << new_prompt
 
             cmd
           end
