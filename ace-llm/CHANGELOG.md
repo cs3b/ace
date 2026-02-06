@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-02-05
+
+### Added
+- `--cli-args` passthrough for CLI providers, with documentation and integration tests
+
+### Fixed
+- `--timeout` parsing in CLI query command to avoid string timeout errors
+
 ## [0.21.1] - 2026-02-04
 
 ### Added

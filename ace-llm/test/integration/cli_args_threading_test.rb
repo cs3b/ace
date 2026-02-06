@@ -1,0 +1,67 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+module Ace
+  module LLM
+    class CliArgsThreadingTest < AceLlmTestCase
+      FakeClient = Struct.new(:received_options) do
+        def generate(_messages, **options)
+          self.received_options = options
+          { text: "ok", metadata: {} }
+        end
+      end
+
+      class FakeRegistry
+        def initialize(client)
+          @client = client
+        end
+
+        def available_providers
+          ["claude"]
+        end
+
+        def models_for_provider(_provider)
+          ["sonnet"]
+        end
+
+        def resolve_alias(input)
+          input
+        end
+
+        def available_aliases
+          { global: {}, model: {} }
+        end
+
+        def get_client(_provider, model:, timeout: nil)
+          @client
+        end
+      end
+
+      def test_query_interface_threads_cli_args
+        client = FakeClient.new
+        registry = FakeRegistry.new(client)
+
+        Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+          QueryInterface.query("claude:sonnet", "hi", cli_args: "dangerously-skip-permissions")
+        end
+
+        assert_equal "dangerously-skip-permissions", client.received_options[:cli_args]
+      end
+
+      def test_cli_command_threads_cli_args
+        client = FakeClient.new
+        registry = FakeRegistry.new(client)
+        command = Ace::LLM::CLI::Commands::Query.new
+
+        capture_io do
+          Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+            command.call(provider_model: "claude:sonnet", prompt_text: "hi", cli_args: "--verbose")
+          end
+        end
+
+        assert_equal "--verbose", client.received_options[:cli_args]
+      end
+    end
+  end
+end
