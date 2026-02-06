@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.429] - 2026-02-06
+
+### Fixed
+
+- **ace-llm-providers-cli v0.14.1**: Honor `--` sentinel in ArgsNormalizer and fix CLI args precedence ordering
+
 ## [0.9.427] - 2026-02-05
 
 ### Added
