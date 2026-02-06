@@ -30,6 +30,7 @@ module Ace
       # @param fallback_providers [Array<String>, nil] Custom fallback provider list
       # @param system_file [String, nil] Path to system prompt file (for file-based providers)
       # @param prompt_file [String, nil] Path to user prompt file (for file-based providers)
+      # @param cli_args [String, Array<String>, nil] Extra args for CLI providers (auto-prefixed with --)
       #
       # @return [Hash] Response with :text, :model, :provider, and other metadata
       # @raise [Error] If provider/model invalid or request fails
@@ -47,7 +48,8 @@ module Ace
                     fallback: nil,
                     fallback_providers: nil,
                     system_file: nil,
-                    prompt_file: nil)
+                    prompt_file: nil,
+                    cli_args: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -84,6 +86,7 @@ module Ace
         generation_opts[:max_tokens] = max_tokens if max_tokens
         generation_opts[:system_file] = system_file if system_file
         generation_opts[:prompt_file] = prompt_file if prompt_file
+        generation_opts[:cli_args] = cli_args if cli_args && !(cli_args.respond_to?(:empty?) && cli_args.empty?)
 
         # Debug output if requested
         if debug

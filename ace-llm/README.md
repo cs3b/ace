@@ -82,6 +82,31 @@ ace-llm gflash --prompt prompt.txt --output response.md
 ace-llm google --prompt 'Query with "quotes" and $vars'  # Avoid escaping issues
 ```
 
+### CLI Provider Args Passthrough
+
+For CLI-based providers (Claude Code, Codex, OpenCode, Gemini CLI), you can pass
+extra CLI flags directly to the underlying tool:
+
+```bash
+# Single flag (auto-prefixed with --)
+ace-llm claude:sonnet "Hello" --cli-args dangerously-skip-permissions
+
+# Multiple flags
+ace-llm claude:sonnet "Hello" --cli-args "dangerously-skip-permissions verbose"
+
+# Flags with values (preferred: use --flag value or flag=value)
+ace-llm claude:sonnet "Hello" --cli-args "--model=claude-sonnet-4-0 --max-tokens=200"
+ace-llm claude:sonnet "Hello" --cli-args "--model claude-sonnet-4-0"
+```
+
+Notes:
+- Tokens without a leading `-` are auto-prefixed with `--`.
+- Value arguments following a flag (e.g., `--model claude-sonnet-4-0`) are preserved.
+- For flags that accept multiple values, prefer `--flag=value` or repeat the flag: `--flag=value1 --flag=value2`.
+- API-based providers ignore `--cli-args`.
+- `QueryInterface.query` also accepts `cli_args:` for programmatic use.
+- Pass-through principle: `--cli-args` is forwarded directly to provider CLIs. Use only flags you trust and understand.
+
 ### System Prompt Control
 
 Control how system prompts are handled by different providers:

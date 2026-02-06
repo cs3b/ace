@@ -40,6 +40,7 @@ module Ace
         option :max_tokens, type: :integer, aliases: %w[m], desc: "Maximum output tokens"
         option :system, type: :string, aliases: %w[s], desc: "System instruction/prompt"
         option :system_append, type: :string, desc: "Append to system prompt"
+        option :cli_args, type: :string, desc: "Extra args for CLI providers (auto-prefixed with --; use --flag value or flag=value for values)"
         option :timeout, type: :integer, desc: "Request timeout in seconds"
         option :model, type: :string, desc: "Model name (overrides PROVIDER[:MODEL])"
         option :prompt, type: :string, desc: "Prompt text (overrides positional PROMPT)"
@@ -106,6 +107,7 @@ module Ace
           puts "  -m, --max-tokens INT           Maximum output tokens"
           puts "  -s, --system TEXT              System instruction/prompt"
           puts "      --system-append TEXT       Append to system prompt"
+          puts "      --cli-args TEXT            Extra args for CLI providers (auto-prefixed with --; use --flag value or flag=value)"
           puts "      --timeout SECONDS          Request timeout in seconds"
           puts "      --model MODEL              Model name (overrides PROVIDER[:MODEL])"
           puts "      --prompt PROMPT            Prompt text (overrides positional PROMPT)"
@@ -119,6 +121,8 @@ module Ace
           puts '  ace-llm-query gflash "Quick question" # using alias'
           puts '  ace-llm-query google --prompt "What is Ruby?" # using --prompt flag'
           puts '  ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite'
+          puts '  ace-llm-query claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
+          puts '  ace-llm-query claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
           puts ""
           puts "Provider Aliases:"
           puts "  Short aliases for common provider:MODEL combinations:"
@@ -160,7 +164,7 @@ module Ace
           require "ace/core"
           # Filter out sensitive keys (prompt, system) from config summary
           # These contain the full query text which should not be dumped to stderr
-          summary_keys = %w[provider_model temperature max_tokens format timeout system_append]
+          summary_keys = %w[provider_model temperature max_tokens format timeout system_append cli_args]
           Ace::Core::Atoms::ConfigSummary.display(
             command: "query",
             config: options.merge(provider_model: @provider_model),
@@ -241,10 +245,14 @@ module Ace
         # @param options [Hash] Command options
         # @return [Object] LLM client instance
         def create_client(registry, provider, model, options)
+          timeout_value = if options.key?(:timeout)
+            options[:timeout].nil? ? nil : options[:timeout].to_i
+          end
+
           registry.get_client(
             provider,
             model: model,
-            timeout: options[:timeout] || Ace::LLM::Molecules::ConfigLoader.get("llm.timeout") || 120
+            timeout: timeout_value || Ace::LLM::Molecules::ConfigLoader.get("llm.timeout") || 120
           )
         rescue Ace::LLM::ProviderError => e
           error_output(e.message)
@@ -271,6 +279,10 @@ module Ace
             file_handler = Ace::LLM::Molecules::FileIoHandler.new
             append_content = file_handler.read_content(options[:system_append])
             opts[:system_append] = append_content unless append_content.nil? || append_content.empty?
+          end
+
+          if options[:cli_args] && !options[:cli_args].empty?
+            opts[:cli_args] = options[:cli_args]
           end
 
           opts
