@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
-require "open3"
 require "json"
+require "open3"
 require "shellwords"
-require "timeout"
 
 require_relative "cli_args_support"
 
@@ -196,14 +195,9 @@ module Ace
 
 
           def execute_opencode_command(cmd, timeout: nil)
-            # Execute with timeout to prevent hanging
             timeout_val = timeout || @options[:timeout] || 120
-            Timeout.timeout(timeout_val) do
-              # Provide empty stdin to prevent hanging on interactive prompts
-              Open3.capture3(*cmd, stdin_data: "")
-            end
-          rescue Timeout::Error
-            raise Ace::LLM::ProviderError, "OpenCode CLI execution timed out after #{timeout_val} seconds"
+            # Provide empty stdin to prevent hanging on interactive prompts
+            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: "", provider_name: "OpenCode")
           end
 
           def parse_opencode_response(stdout, stderr, status, prompt, options)

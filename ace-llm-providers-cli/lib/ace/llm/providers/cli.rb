@@ -2,6 +2,7 @@
 
 require "ace/llm"
 require_relative "cli/version"
+require_relative "cli/molecules/safe_capture"
 
 module Ace
   module LLM
@@ -26,6 +27,7 @@ module Ace
               open_code_client
               codex_oss_client
               gemini_client
+              pi_client
             ]
 
             providers.each do |provider|
