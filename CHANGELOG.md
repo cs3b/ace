@@ -4,38 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.430] - 2026-02-06
-
-### Changed
-
-- **ace-review v0.37.4**: Embed CLI help reference in apply-feedback and verify-feedback workflows via bundle frontmatter
-- **ace-release skill**: Replace hardcoded `-m` commit message with `-i` intention flag for per-scope LLM message generation
-
-## [0.9.429] - 2026-02-06
-
-### Fixed
-
-- **ace-llm-providers-cli v0.14.1**: Honor `--` sentinel in ArgsNormalizer and fix CLI args precedence ordering
-
-## [0.9.427] - 2026-02-05
+## [0.9.453] - 2026-02-07
 
 ### Added
+
+- **ace-test-e2e-runner v0.9.0**: LLM-based E2E test execution CLI command with ATOM architecture
+  - `ace-test-e2e` CLI for running E2E tests with parallel execution, display managers, and LLM-synthesized reports
+  - Skill-based execution for CLI providers with configurable prompts and result parsing
+  - Comma-separated test IDs support: `ace-test-e2e ace-lint 002,007`
+  - Deterministic report paths via `run_id` and agent metadata reading
+  - Enhanced CLI output with `[started]` messages, test case counts, and structured summaries
+  - LLM-synthesized suite reports with root cause analysis, friction insights, and improvement suggestions
+
+- **ace-llm-providers-cli v0.16.0**: New Pi CLI provider for multi-provider terminal AI agent access
+  - Codex CLI skill command rewriting (`/name` → `$name` format)
+  - Provider-agnostic `CommandRewriter` base class with configurable formatters
+  - Thread-safe `SafeCapture` atom using process-level timeout
 
 - **ace-llm v0.22.0**: `--cli-args` passthrough for CLI providers with docs and integration tests
 
-### Fixed
-
-- **ace-llm v0.22.0**: `--timeout` parsing in CLI query command to avoid string timeout errors
-
-## [0.9.428] - 2026-02-05
-
-### Added
-
-- **ace-llm-providers-cli v0.14.0**: CLI argument passthrough support with normalization
+- **ace-support-timestamp v0.1.0**: New gem for Base36 timestamp encoding/decoding
 
 ### Fixed
 
-- **ace-llm-providers-cli v0.14.0**: Improved CLI argument error reporting and provider command wiring
+- **ace-lint v0.15.11**: Fix single-file `lint()` success inconsistency, help command exit codes, and E2E test fixtures
+  - Convention/warning-only offenses now return `success: true`, matching `lint_batch()` behavior
+  - Consolidated and optimized E2E tests for parallel execution (5→8 files, 36→31 cases)
+  - Added MT-LINT-006 (report markdown), MT-LINT-007 (validator overrides), MT-LINT-008 (doctor modes)
+  - Reduced bash blocks to minimize LLM round-trips and avoid E2E timeouts
 
 ## [0.9.426] - 2026-02-04
 
