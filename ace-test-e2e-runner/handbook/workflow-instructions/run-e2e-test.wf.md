@@ -14,6 +14,7 @@ This workflow guides an agent through executing an E2E test scenario.
 
 - `PACKAGE` (optional) - The package containing the test (e.g., `ace-lint`). If omitted, looks for `test/e2e/` in project root.
 - `TEST_ID` (optional) - The test identifier (e.g., `MT-LINT-001`). If omitted, runs all tests.
+- `RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths. Passed via `--run-id ID`. When provided, use this instead of generating a new timestamp.
 
 ## Subagent Mode
 
@@ -118,6 +119,8 @@ Report any missing prerequisites before proceeding.
 - `TEST_DIR` - Sandbox directory (current working directory after setup)
 - `REPORTS_DIR` - Reports directory for test outputs
 - `TIMESTAMP_ID` - Unique identifier for this test run
+
+**Pre-generated Run ID:** If `RUN_ID` was provided as an argument (via `--run-id`), set `TIMESTAMP_ID=$RUN_ID` instead of calling `ace-timestamp encode`. This ensures the orchestrator knows the exact report path.
 
 **Directory Structure & Naming Convention:**
 
@@ -388,68 +391,6 @@ Reports written:
 - ${REPORT_DIR}/summary.r.md
 - ${REPORT_DIR}/experience.r.md
 - ${REPORT_DIR}/metadata.yml
-```
-
-### 7.5 Write Suite Final Report (Multi-Test Runs Only)
-
-When running multiple tests (e.g., all tests in a package), generate a suite-level final report after all tests complete.
-
-**Trigger:** Only when multiple test scenarios were executed in steps 2-7.
-
-**Suite Report Path:**
-```bash
-SUITE_ID="$(ace-timestamp encode)"  # Generate once at start of suite run
-SUITE_REPORT="$PROJECT_ROOT/.cache/ace-test-e2e/${SUITE_ID}-final-report.md"
-```
-
-**Content:**
-```bash
-cat > "$SUITE_REPORT" << 'EOF'
----
-suite-id: {suite-id}
-package: {package}
-agent: {agent-name}
-executed: {timestamp}
-tests-run: {count}
-status: pass|fail|partial
----
-
-# E2E Test Suite Report
-
-**Package:** {package}
-**Tests Run:** {count}
-**Executed:** {timestamp}
-**Agent:** {agent-name}
-
-## Summary
-
-| Test ID | Title | Status | Passed | Failed |
-|---------|-------|--------|--------|--------|
-| MT-XXX-001 | {title} | Pass/Fail | {n} | {n} |
-| MT-XXX-002 | {title} | Pass/Fail | {n} | {n} |
-...
-
-**Overall:** {total-passed}/{total-cases} test cases passed ({percentage}%)
-
-## Test Details
-
-### MT-XXX-001: {title} ({passed}/{total} passed)
-- TC-001: {description} - Pass/Fail
-- TC-002: {description} - Pass/Fail
-...
-
-### MT-XXX-002: {title} ({passed}/{total} passed)
-...
-
-## Reports
-
-Reports persisted to `.cache/ace-test-e2e/`:
-- {timestamp}-{short-pkg}-mtxxx001/ - sandbox
-- {timestamp}-{short-pkg}-mtxxx001-reports/summary.r.md
-- {timestamp}-{short-pkg}-mtxxx001-reports/experience.r.md
-- {timestamp}-{short-pkg}-mtxxx001-reports/metadata.yml
-...
-EOF
 ```
 
 ### 8. Run Cleanup (Optional)
