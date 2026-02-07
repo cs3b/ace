@@ -12,6 +12,6 @@ models:
   - gemini:pro-latest
   # - xai:fast
   # - openrouter:minimax
-  # - opencode:zai-coding-plan/glm-4.7
+  # - opencode:glm
   # - opencode:opencode/grok-code
   # - opencode:opencode/big-pickle
