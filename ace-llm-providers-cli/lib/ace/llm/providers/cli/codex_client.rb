@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
-require "open3"
 require "json"
+require "open3"
 require "shellwords"
-require "timeout"
 
 require_relative "cli_args_support"
+require_relative "atoms/command_rewriter"
+require_relative "atoms/command_formatters"
+require_relative "molecules/skill_name_reader"
 
 module Ace
   module LLM
@@ -32,6 +34,7 @@ module Ace
             # Skip normal BaseClient initialization that requires API key
             @options = options
             @generation_config = options[:generation_config] || {}
+            @skill_name_reader = Molecules::SkillNameReader.new
           end
 
           # Override to indicate this client doesn't need API credentials
@@ -48,6 +51,7 @@ module Ace
 
             # Convert messages to prompt format
             prompt = format_messages_as_prompt(messages)
+            prompt = rewrite_skill_commands(prompt)
 
             cmd = build_codex_command(prompt, options)
             stdout, stderr, status = execute_codex_command(cmd, prompt, options)
@@ -168,13 +172,8 @@ module Ace
               input = "System: #{system_content}\n\nUser: #{input}"
             end
 
-            # Execute with timeout to prevent hanging, piping prompt via stdin
             timeout_val = @options[:timeout] || 120
-            Timeout.timeout(timeout_val) do
-              Open3.capture3(*cmd, stdin_data: input)
-            end
-          rescue Timeout::Error
-            raise Ace::LLM::ProviderError, "Codex CLI execution timed out after #{timeout_val} seconds"
+            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: input, provider_name: "Codex")
           end
 
           def parse_codex_response(stdout, stderr, status, prompt, options)
@@ -194,7 +193,7 @@ module Ace
               # Extract text after the "codex" line, skipping empty lines
               response_lines = lines[(response_start + 1)..-1]
               # Remove token usage lines at the end
-              response_lines = response_lines.reject { |line| line.include?("tokens used:") }
+              response_lines = response_lines.reject { |line| line.include?("tokens used") }
               text = response_lines.join("\n").strip
             else
               # Fallback: use entire output if we can't parse the format
@@ -231,6 +230,24 @@ module Ace
           def handle_codex_error(error)
             # Re-raise the error for proper handling by the base client error flow
             raise error
+          end
+
+          def rewrite_skill_commands(prompt)
+            skills_dir = resolve_skills_dir
+            return prompt unless skills_dir
+
+            skill_names = @skill_name_reader.call(skills_dir)
+            return prompt if skill_names.empty?
+
+            Atoms::CommandRewriter.call(prompt, skill_names: skill_names, formatter: Atoms::CommandFormatters::CODEX_FORMATTER)
+          end
+
+          def resolve_skills_dir
+            configured = @options[:skills_dir] || @generation_config[:skills_dir]
+            return configured if configured && Dir.exist?(configured)
+
+            default_dir = File.join(Dir.pwd, ".claude", "skills")
+            default_dir if Dir.exist?(default_dir)
           end
         end
       end

@@ -2,8 +2,6 @@
 
 require "fileutils"
 require "json"
-require "open3"
-require "timeout"
 
 require_relative "cli_args_support"
 
@@ -256,15 +254,9 @@ module Ace
 
 
           def execute_gemini_command(cmd, prompt, options)
-            # Execute with timeout to prevent hanging
             timeout_val = options[:timeout] || @options[:timeout] || 120
-            Timeout.timeout(timeout_val) do
-              # Run in project root for consistent behavior across environments
-              project_root = find_project_root
-              Open3.capture3(*cmd, chdir: project_root)
-            end
-          rescue Timeout::Error
-            raise Ace::LLM::ProviderError, "Gemini CLI execution timed out after #{timeout_val} seconds"
+            project_root = find_project_root
+            Molecules::SafeCapture.call(cmd, timeout: timeout_val, chdir: project_root, provider_name: "Gemini")
           end
 
           def find_project_root

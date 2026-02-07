@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-02-07
+
+### Fixed
+- **PiClient**: Thread-safety fix — removed `@pending_system_prompt` shared mutable state; `build_full_prompt` now returns `[prompt, system_prompt]` tuple passed explicitly to `build_pi_command`
+- **SkillCommandRewriter**: Replaced misleading "Deprecated" docstring with accurate "Convenience wrapper" description
+
+### Changed
+- **SafeCapture**: Moved from `atoms/` to `molecules/` to comply with ATOM architecture (performs I/O via Open3, Process.kill, Thread spawning)
+- Updated all 6 CLI clients to reference `Molecules::SafeCapture` instead of `Atoms::SafeCapture`
+
+### Technical
+- 215 tests, 511 assertions, 0 failures (10 skipped)
+
+## [0.16.1] - 2026-02-07
+
+### Fixed
+- **PiClient**: Handle nested provider pattern with colon (e.g., `openrouter:openai/gpt-oss-120b`)
+  - Updated `split_provider_model` to correctly parse provider:model format
+  - Now splits on `:` before `/` when colon is present in model string
+  - Added regression tests for standard provider/model format
+
+### Technical
+- 2 new tests for nested provider model parsing
+
+## [0.16.0] - 2026-02-07
+
+### Added
+- **CodexClient**: Skill command rewriting support transforms `/name` → `$name` for Codex CLI skill discovery
+- **CodexClient**: `skill_rewriting` capability and `skills_dir` configuration option in provider defaults
+
+### Changed
+- Refactored skill command rewriting into provider-agnostic `CommandRewriter` base class with configurable formatter proc
+- `SkillCommandRewriter` now a thin wrapper using `CommandRewriter` with `PI_FORMATTER` for backward compatibility
+- `PiClient` updated to use `CommandRewriter` with `CommandFormatters::PI_FORMATTER`
+
+### Technical
+- New `CommandRewriter` atom in `atoms/command_rewriter.rb` for provider-agnostic command rewriting
+- New `CommandFormatters` module in `atoms/command_formatters.rb` with `PI_FORMATTER` and `CODEX_FORMATTER`
+- 20 tests for `CommandRewriter` covering both Pi and Codex formatters
+- 25 tests for `CodexClient` covering skill rewriting and configuration
+
+## [0.15.0] - 2026-02-07
+
+### Added
+- **PiClient**: New CLI provider for Pi (v0.52.7), a multi-provider terminal AI agent
+  - Supports ZAI, Anthropic, Google Gemini, and OpenAI Codex models via Pi's unified platform
+  - Skill command rewriting: transforms `/name` → `/skill:name` for Pi's skill discovery
+  - NDJSON response parsing with plain text fallback
+  - System prompt support via native `--system-prompt` flag
+  - 17 tests for `SkillCommandRewriter` atom covering code blocks, URLs, edge cases
+  - 37 tests for `PiClient` covering command building, prompt preprocessing, NDJSON parsing
+
+### Technical
+- New `SkillCommandRewriter` atom in `atoms/skill_command_rewriter.rb` for pure function skill command rewriting
+- New `SkillNameReader` molecule in `molecules/skill_name_reader.rb` for reading skill names from SKILL.md frontmatter
+
+## [0.14.2] - 2026-02-06
+
+### Fixed
+- Replace unsafe `Timeout.timeout { Open3.capture3 }` with thread-safe `SafeCapture` atom using `Open3.popen3` + `Process.kill` for process-level timeout — eliminates "stream closed in another thread (IOError)" errors during parallel CLI execution
+
+### Technical
+- New `SafeCapture` atom in `atoms/safe_capture.rb` with 7 tests covering stdout/stderr capture, timeout kill, stdin_data, chdir, and error messages
+- Updated all 5 CLI clients (Claude, Codex, Codex OSS, Gemini, OpenCode) to use `SafeCapture`
+- Updated Gemini client test stub from `Open3.capture3` to `SafeCapture.call`
+
 ## [0.14.1] - 2026-02-06
 
 ### Fixed
