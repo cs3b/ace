@@ -16,22 +16,27 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.2.0"
 
+  spec.add_dependency "dry-cli", "~> 1.0"
+  spec.add_dependency "ace-support-core", ">= 0.10"
+  spec.add_dependency "ace-support-config", ">= 0.6"
+  spec.add_dependency "ace-llm", ">= 0.1"
+  spec.add_dependency "ace-support-timestamp", ">= 0.3"
+
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
 
   spec.files = Dir.glob(%w[
     lib/**/*
     handbook/**/*
+    exe/*
     .ace-defaults/**/*
     *.md
     LICENSE
     Rakefile
   ]).select { |f| File.file?(f) }
+  spec.bindir = "exe"
+  spec.executables = ["ace-test-e2e"]
   spec.require_paths = ["lib"]
-
-  # No executables - this is a workflow-first package where AI agents
-  # follow the workflow instructions directly rather than invoking a CLI.
-  # See handbook/workflow-instructions/run-e2e-test.wf.md
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "https://github.com/cs3b/ace-meta"
