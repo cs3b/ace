@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-lint, ace-timestamp]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-07
+verified-by: claude-opus-4-6
 ---
 
 # Skill File Validation
@@ -139,8 +139,8 @@ EOF
 
 3. Verify report mentions missing 'source' field
    ```bash
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //')
-   grep -qi "source" "${REPORT_DIR}pending.md" && echo "PASS: Report mentions 'source' field" || echo "FAIL: Report should mention missing 'source' field"
+   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
+   grep -qi "source" "${REPORT_DIR}/pending.md" && echo "PASS: Report mentions 'source' field" || echo "FAIL: Report should mention missing 'source' field"
    ```
 
 **Expected:**
