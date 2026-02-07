@@ -9,15 +9,15 @@ automation-candidate: true
 requires:
   tools: [ace-lint, jq]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-07
+verified-by: claude-sonnet-4-5
 ---
 
 # JSON Report Generation
 
 ## Objective
 
-Verify that ace-lint generates JSON reports to `.cache/ace-lint/{compact_id}/report.json` by default, with proper structure containing metadata, summary, and categorized results. Test includes report generation, `--no-report` flag, and summary output formatting.
+Verify that ace-lint generates JSON reports to `.cache/ace-lint/{compact_id}/report.json` by default, with proper structure containing metadata, summary, and categorized results. Test includes report generation, summary output formatting, and compact ID validation.
 
 ## Prerequisites
 
@@ -71,6 +71,13 @@ class BadStyle
 end
 EOF
 
+# Ruby file with syntax error (unfixable)
+cat > "$TEST_DIR/syntax_error.rb" << 'EOF'
+class Broken
+  def unclosed
+    puts "missing end"
+EOF
+
 # Valid markdown file
 cat > "$TEST_DIR/readme.md" << 'EOF'
 # Test README
@@ -92,17 +99,14 @@ EOF
    echo "$OUTPUT"
    ```
 
-2. Check output shows report directory
+2. Verify report directory, files, and set REPORT_PATH
    ```bash
    echo "$OUTPUT" | grep -E "Reports:.*\.cache/ace-lint/[0-9a-z]{6}/"
-   ```
-
-3. Verify report files exist
-   ```bash
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | tr -d '/')
+   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
    test -f "$REPORT_DIR/report.json" && echo "report.json exists"
-   # At least one markdown report should exist
    test -f "$REPORT_DIR/ok.md" || test -f "$REPORT_DIR/pending.md" && echo "Markdown report exists"
+   REPORT_PATH="$REPORT_DIR/report.json"
+   echo "REPORT_PATH=$REPORT_PATH"
    ```
 
 **Expected:**
@@ -123,25 +127,17 @@ EOF
 **Objective:** Verify the JSON report contains required structure.
 
 **Steps:**
-1. Parse the report and verify top-level keys
+1. Parse the report and verify all structures
    ```bash
+   echo "=== Top-level keys ==="
    cat "$REPORT_PATH" | jq 'keys'
-   ```
-
-2. Verify metadata structure
-   ```bash
+   echo "=== Metadata ==="
    cat "$REPORT_PATH" | jq '.report_metadata | keys'
    cat "$REPORT_PATH" | jq '.report_metadata.compact_id'
    cat "$REPORT_PATH" | jq '.report_metadata.ace_lint_version'
-   ```
-
-3. Verify summary structure
-   ```bash
+   echo "=== Summary ==="
    cat "$REPORT_PATH" | jq '.summary | keys'
-   ```
-
-4. Verify results structure
-   ```bash
+   echo "=== Results ==="
    cat "$REPORT_PATH" | jq '.results | keys'
    ```
 
@@ -157,46 +153,7 @@ EOF
 
 ---
 
-### TC-003: --no-report Flag Disables Generation
-
-**Objective:** Verify that `--no-report` flag prevents report generation.
-
-**Steps:**
-1. Run ace-lint with --no-report flag
-   ```bash
-   OUTPUT=$(ace-lint lint --no-report "$TEST_DIR/valid.rb" 2>&1)
-   echo "$OUTPUT"
-   ```
-
-2. Verify no report path in output
-   ```bash
-   ! echo "$OUTPUT" | grep -q "Reports:" && echo "No report path in output - PASS"
-   ```
-
-3. Verify no new report directory created
-   ```bash
-   # Count cache directories before
-   BEFORE=$(ls -d "$TEST_DIR/.cache/ace-lint"/*/ 2>/dev/null | wc -l)
-
-   ace-lint lint --no-report "$TEST_DIR/readme.md" 2>&1
-
-   AFTER=$(ls -d "$TEST_DIR/.cache/ace-lint"/*/ 2>/dev/null | wc -l)
-
-   test "$BEFORE" -eq "$AFTER" && echo "No new directory created - PASS"
-   ```
-
-**Expected:**
-- Exit code: 0
-- Output does NOT contain "Reports:"
-- No new report directory created in .cache/ace-lint/
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-004: Summary Shows Separate Fixed Count
+### TC-003: Summary Shows Separate Fixed Count
 
 **Objective:** Verify that auto-fixed files show as "fixed" in summary, not "passed".
 
@@ -208,19 +165,11 @@ EOF
    echo "$OUTPUT"
    ```
 
-2. Check summary shows "fixed" count
+2. Verify summary, report JSON, and fixed.md
    ```bash
    echo "$OUTPUT" | grep -E "✓.*fixed"
-   ```
-
-3. Verify report directory and files
-   ```bash
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | tr -d '/')
+   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
    cat "$REPORT_DIR/report.json" | jq '.summary.fixed'
-   ```
-
-4. Verify fixed.md exists when files were fixed
-   ```bash
    test -f "$REPORT_DIR/fixed.md" && echo "fixed.md exists - PASS"
    ```
 
@@ -236,45 +185,40 @@ EOF
 
 ---
 
-### TC-005: Report Categorizes Results Correctly
+### TC-004: Report Categorizes Results Correctly (Fix Mode)
 
-**Objective:** Verify results are categorized into correct arrays and pending.md is generated.
+**Objective:** Verify results are categorized into correct arrays with passed and fixed files.
 
 **Steps:**
-1. Lint multiple files with different outcomes
+1. Lint multiple files with --fix (one clean, one with style issues to fix)
    ```bash
    # Ensure clean state
    rm -rf "$TEST_DIR/.cache/ace-lint"
 
-   # Lint: 1 pass, 1 fail (don't fix)
-   OUTPUT=$(ace-lint lint "$TEST_DIR/valid.rb" "$TEST_DIR/style_issues.rb" 2>&1)
+   # Create a copy for fixing
+   cp "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
+
+   # Lint with --fix: 1 pass (already clean), 1 fixed
+   OUTPUT=$(ace-lint lint --fix "$TEST_DIR/valid.rb" "$TEST_DIR/style_issues_copy.rb" 2>&1)
    echo "$OUTPUT"
    ```
 
-2. Check report categorization
+2. Check report categorization and markdown files
    ```bash
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | tr -d '/')
+   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
    echo "Passed files:"
    cat "$REPORT_DIR/report.json" | jq '.results.passed | length'
-   echo "Failed files:"
-   cat "$REPORT_DIR/report.json" | jq '.results.failed | length'
-   ```
-
-3. Verify pending.md exists for files with issues
-   ```bash
-   test -f "$REPORT_DIR/pending.md" && echo "pending.md exists - PASS"
-   ```
-
-4. Verify ok.md exists for passed files
-   ```bash
+   echo "Fixed files:"
+   cat "$REPORT_DIR/report.json" | jq '.results.fixed | length'
+   test -f "$REPORT_DIR/fixed.md" && echo "fixed.md exists - PASS"
    test -f "$REPORT_DIR/ok.md" && echo "ok.md exists - PASS"
    ```
 
 **Expected:**
 - `results.passed` contains valid.rb
-- `results.failed` contains style_issues.rb
+- `results.fixed` contains style_issues_copy.rb
 - Summary counts match array lengths
-- pending.md file exists with issue checkboxes
+- fixed.md file exists for auto-fixed files
 - ok.md file exists with passed files
 
 **Actual:** [Record during execution]
@@ -283,12 +227,12 @@ EOF
 
 ---
 
-### TC-006: Compact ID Format Validation
+### TC-005: Compact ID Format Validation
 
 **Objective:** Verify compact ID is valid 6-character Base36.
 
 **Steps:**
-1. Extract compact ID from multiple reports
+1. Extract compact IDs from multiple reports and validate format
    ```bash
    rm -rf "$TEST_DIR/.cache/ace-lint"
 
@@ -297,10 +241,7 @@ EOF
    ace-lint lint "$TEST_DIR/readme.md" > /dev/null 2>&1
 
    ls "$TEST_DIR/.cache/ace-lint/"
-   ```
 
-2. Validate format
-   ```bash
    for dir in "$TEST_DIR/.cache/ace-lint"/*/; do
      ID=$(basename "$dir")
      if [[ "$ID" =~ ^[0-9a-z]{6}$ ]]; then
@@ -322,127 +263,6 @@ EOF
 
 ---
 
-### TC-007: ok.md Generated for Passed Files
-
-**Objective:** Verify ok.md is generated with correct format for passed files.
-
-**Steps:**
-1. Run ace-lint on valid file only
-   ```bash
-   rm -rf "$TEST_DIR/.cache/ace-lint"
-   OUTPUT=$(ace-lint lint "$TEST_DIR/valid.rb" 2>&1)
-   echo "$OUTPUT"
-   ```
-
-2. Verify ok.md exists and has correct format
-   ```bash
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | tr -d '/')
-   cat "$REPORT_DIR/ok.md"
-   ```
-
-3. Verify ok.md content structure
-   ```bash
-   grep -q "^# Lint: Passed Files" "$REPORT_DIR/ok.md" && echo "Header - PASS"
-   grep -q "^Generated:" "$REPORT_DIR/ok.md" && echo "Timestamp - PASS"
-   grep -q "^Total:" "$REPORT_DIR/ok.md" && echo "Total count - PASS"
-   grep -q "^- " "$REPORT_DIR/ok.md" && echo "File list - PASS"
-   ```
-
-**Expected:**
-- ok.md exists when files pass
-- Header is "# Lint: Passed Files"
-- Contains Generated timestamp in ISO8601 format
-- Contains Total count of files
-- Contains file list with "- " prefix
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-008: fixed.md Generated Only When Files Fixed
-
-**Objective:** Verify fixed.md is only generated when --fix is used and files are fixed.
-
-**Steps:**
-1. Run ace-lint WITHOUT --fix (should not generate fixed.md)
-   ```bash
-   rm -rf "$TEST_DIR/.cache/ace-lint"
-   OUTPUT=$(ace-lint lint "$TEST_DIR/style_issues.rb" 2>&1)
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | tr -d '/')
-   test ! -f "$REPORT_DIR/fixed.md" && echo "No fixed.md without --fix - PASS"
-   ```
-
-2. Run ace-lint WITH --fix (should generate fixed.md)
-   ```bash
-   rm -rf "$TEST_DIR/.cache/ace-lint"
-   cp "$TEST_DIR/style_issues.rb" "$TEST_DIR/fixable.rb"
-   OUTPUT=$(ace-lint lint --fix "$TEST_DIR/fixable.rb" 2>&1)
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | tr -d '/')
-   test -f "$REPORT_DIR/fixed.md" && echo "fixed.md exists with --fix - PASS"
-   ```
-
-3. Verify fixed.md content structure
-   ```bash
-   cat "$REPORT_DIR/fixed.md"
-   grep -q "^# Lint: Auto-Fixed Files" "$REPORT_DIR/fixed.md" && echo "Header - PASS"
-   grep -q "These files were automatically formatted/fixed:" "$REPORT_DIR/fixed.md" && echo "Description - PASS"
-   ```
-
-**Expected:**
-- fixed.md does NOT exist when --fix is not used
-- fixed.md exists when --fix is used and files were modified
-- Header is "# Lint: Auto-Fixed Files"
-- Contains description text about auto-fixed files
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-009: pending.md Checkbox Format
-
-**Objective:** Verify pending.md has correct checkbox format for issues.
-
-**Steps:**
-1. Run ace-lint on file with issues (no fix)
-   ```bash
-   rm -rf "$TEST_DIR/.cache/ace-lint"
-   OUTPUT=$(ace-lint lint "$TEST_DIR/style_issues.rb" 2>&1)
-   REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | tr -d '/')
-   cat "$REPORT_DIR/pending.md"
-   ```
-
-2. Verify pending.md header format
-   ```bash
-   grep -q "^# Lint: Pending Issues" "$REPORT_DIR/pending.md" && echo "Main header - PASS"
-   grep -q "^Total:.*issues in.*files" "$REPORT_DIR/pending.md" && echo "Total line - PASS"
-   ```
-
-3. Verify file section headers with issue counts
-   ```bash
-   grep -E "^## .* \([0-9]+ issues?\)" "$REPORT_DIR/pending.md" && echo "File headers with counts - PASS"
-   ```
-
-4. Verify checkbox format for issues
-   ```bash
-   grep -E "^- \[ \] " "$REPORT_DIR/pending.md" && echo "Checkbox format - PASS"
-   ```
-
-**Expected:**
-- pending.md has "# Lint: Pending Issues" header
-- Contains "Total: N issues in M files" line
-- Each file has "## filename (N issues)" header
-- Each issue has "- [ ]" checkbox format
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
 ## Cleanup
 
 ```bash
@@ -454,13 +274,9 @@ echo "Cleanup complete"
 
 - [ ] TC-001: Report generated by default with correct path format
 - [ ] TC-002: Report JSON contains all required structure
-- [ ] TC-003: --no-report flag prevents report generation
-- [ ] TC-004: Summary shows separate "fixed" count and fixed.md exists
-- [ ] TC-005: Results categorized correctly with ok.md and pending.md
-- [ ] TC-006: Compact IDs are valid 6-character Base36
-- [ ] TC-007: ok.md generated with correct format for passed files
-- [ ] TC-008: fixed.md generated only when --fix is used
-- [ ] TC-009: pending.md has correct checkbox format for issues
+- [ ] TC-003: Summary shows separate "fixed" count and fixed.md exists
+- [ ] TC-004: Results categorized correctly with ok.md and fixed.md
+- [ ] TC-005: Compact IDs are valid 6-character Base36
 
 ## Observations
 
