@@ -1,6 +1,9 @@
 # mise configuration for ace-meta monorepo
 # This file configures the development environment for the ace-meta project
 
+[vars]
+_.file = ["~/.ace/.env"]
+
 [env]
 # Add the bin directory to PATH for executable commands
 PROJECT_ROOT_PATH = "{{ config_root }}"
@@ -8,6 +11,10 @@ ACE_TASKFLOW_PATH = "{{ config_root }}/.ace-taskflow"
 LANG = "en_US.UTF-8"
 LC_ALL = "en_US.UTF-8"
 _.path = ["./bin", "./dev-tools/exe"]
+
+## exposed api keys:
+ZAI_API_KEY = { value = "{{vars.ZAI_API_KEY}}", redact = true }
+OPENROUTER_API_KEY = { value = "{{vars.OPENROUTER_API_KEY}}", redact = true }
 
 [tools]
 ruby = "3.4.7"

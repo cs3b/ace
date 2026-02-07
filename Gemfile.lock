@@ -86,7 +86,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.15.3)
+    ace-lint (0.15.11)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
       ace-support-timestamp (~> 0.2)
@@ -98,7 +98,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.14.1)
+    ace-llm-providers-cli (0.16.2)
       ace-llm (~> 0.16)
 
 PATH
@@ -231,7 +231,12 @@ PATH
 PATH
   remote: ace-test-e2e-runner
   specs:
-    ace-test-e2e-runner (0.5.1)
+    ace-test-e2e-runner (0.9.0)
+      ace-llm (>= 0.1)
+      ace-support-config (>= 0.6)
+      ace-support-core (>= 0.10)
+      ace-support-timestamp (>= 0.3)
+      dry-cli (~> 1.0)
 
 PATH
   remote: ace-test-runner
@@ -266,7 +271,7 @@ GEM
       bigdecimal
       rexml
     docile (1.4.1)
-    dry-cli (1.4.0)
+    dry-cli (1.4.1)
     faraday (2.14.0)
       faraday-net_http (>= 2.0, < 3.5)
       json
@@ -288,9 +293,9 @@ GEM
     ffi (1.17.3-x86_64-linux-musl)
     fileutils (1.8.0)
     hashdiff (1.2.1)
-    json (2.18.0)
-    kramdown (2.5.1)
-      rexml (>= 3.3.9)
+    json (2.18.1)
+    kramdown (2.5.2)
+      rexml (>= 3.4.4)
     kramdown-parser-gfm (1.1.0)
       kramdown (~> 2.0)
     language_server-protocol (3.17.0.5)
