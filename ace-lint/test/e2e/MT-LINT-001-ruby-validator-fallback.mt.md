@@ -9,15 +9,15 @@ automation-candidate: false
 requires:
   tools: [standardrb, rubocop]
   ruby: ">= 3.0"
-last-verified: 2026-01-19
-verified-by: claude-opus-4.5
+last-verified: 2026-02-07
+verified-by: claude-opus-4.6
 ---
 
 # Ruby Validator Fallback Behavior
 
 ## Objective
 
-Verify that ace-lint correctly uses StandardRB as primary Ruby linter and falls back to RuboCop when StandardRB is unavailable. Test includes validator selection, auto-fix, batch processing, and configuration overrides.
+Verify that ace-lint correctly uses StandardRB as primary Ruby linter and falls back to RuboCop when StandardRB is unavailable. Test includes validator selection, auto-fix, and batch processing.
 
 ## Prerequisites
 
@@ -126,20 +126,32 @@ EOF
 
 ---
 
-### TC-002: StandardRB Available - Style Issues
+### TC-002: StandardRB Available - Fix Mode Detects and Fixes Style Issues
 
-**Objective:** Verify that StandardRB detects style issues in Ruby code.
+**Objective:** Verify that StandardRB detects and fixes style issues in `--fix` mode.
 
 **Steps:**
-1. Lint the file with style issues
+1. Create a copy of the style issues file
    ```bash
-   ace-lint lint "$TEST_DIR/style_issues.rb"
+   cp "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
+   ```
+
+2. Run lint with --fix on the copy
+   ```bash
+   ace-lint lint --fix "$TEST_DIR/style_issues_copy.rb"
+   EXIT_CODE=$?
+   echo "Exit code: $EXIT_CODE"
+   ```
+
+3. Verify the file was modified by comparing to original
+   ```bash
+   diff "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
    ```
 
 **Expected:**
-- Exit code: non-zero (indicates issues)
-- Output lists specific style violations
-- Mentions fixable issues (spacing, boolean comparison, etc.)
+- Exit code: 0 (fix mode auto-corrects and succeeds)
+- diff shows differences between original and copy (style fixes applied)
+- StandardRB was used (check output or logs)
 
 **Actual:** [Record during execution]
 
@@ -258,122 +270,6 @@ mv "${STANDARDRB_PATH}.disabled" "$STANDARDRB_PATH"
 
 ---
 
-### TC-006: CLI Validator Override
-
-**Objective:** Verify that the validator can be explicitly specified via CLI.
-
-**Steps:**
-1. Force RuboCop even when StandardRB is available
-   ```bash
-   ace-lint lint --validators rubocop "$TEST_DIR/valid.rb"
-   ```
-
-2. Force StandardRB explicitly
-   ```bash
-   ace-lint lint --validators standardrb "$TEST_DIR/valid.rb"
-   ```
-
-**Expected:**
-- First command uses RuboCop (verify from output)
-- Second command uses StandardRB (verify from output)
-- Both produce valid lint results
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-007: Configuration Override
-
-**Objective:** Verify that validator selection can be configured via .ace/lint/config.yml.
-
-**Steps:**
-1. Create configuration to prefer RuboCop
-   ```bash
-   mkdir -p "$TEST_DIR/.ace/lint"
-   cat > "$TEST_DIR/.ace/lint/ruby.yml" << 'EOF'
-   groups:
-     default:
-       patterns:
-         - "**/*.rb"
-       validators:
-         - rubocop
-   EOF
-   ```
-
-2. Lint from directory with config
-   ```bash
-   cd "$TEST_DIR"
-   ace-lint lint valid.rb
-   ```
-
-3. Verify RuboCop was used (check output)
-
-**Expected:**
-- Configuration is respected
-- RuboCop is used despite StandardRB being available
-- Output confirms validator selection
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-008: Group-based Routing
-
-**Objective:** Verify that file groups route to correct validators.
-
-**Steps:**
-1. Create configuration with group routing
-   ```bash
-   mkdir -p "$TEST_DIR/.ace/lint"
-   cat > "$TEST_DIR/.ace/lint/ruby.yml" << 'EOF'
-   groups:
-     legacy:
-       patterns:
-         - "**/legacy/**/*.rb"
-       validators:
-         - rubocop
-     modern:
-       patterns:
-         - "**/modern/**/*.rb"
-       validators:
-         - standardrb
-     default:
-       patterns:
-         - "**/*.rb"
-       validators:
-         - standardrb
-   EOF
-   ```
-
-2. Create test files in groups
-   ```bash
-   mkdir -p "$TEST_DIR/legacy" "$TEST_DIR/modern"
-   cp "$TEST_DIR/valid.rb" "$TEST_DIR/legacy/"
-   cp "$TEST_DIR/valid.rb" "$TEST_DIR/modern/"
-   ```
-
-3. Lint each group
-   ```bash
-   cd "$TEST_DIR"
-   ace-lint lint legacy/valid.rb
-   ace-lint lint modern/valid.rb
-   ```
-
-**Expected:**
-- Legacy file uses RuboCop
-- Modern file uses StandardRB
-- Both are linted successfully
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
 ## Cleanup
 
 ```bash
@@ -384,13 +280,10 @@ echo "Cleanup complete"
 ## Success Criteria
 
 - [ ] TC-001: Valid Ruby file passes linting with StandardRB
-- [ ] TC-002: Style issues are detected correctly
+- [ ] TC-002: Fix mode detects and fixes style issues
 - [ ] TC-003: RuboCop fallback works when StandardRB unavailable
 - [ ] TC-004: Auto-fix modifies files and reduces issues
 - [ ] TC-005: Batch linting processes all files
-- [ ] TC-006: CLI --validators flag overrides defaults
-- [ ] TC-007: Configuration file overrides validator selection
-- [ ] TC-008: Group-based routing directs to correct validators
 
 ## Observations
 

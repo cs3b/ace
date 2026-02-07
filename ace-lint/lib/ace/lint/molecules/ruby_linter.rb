@@ -24,28 +24,28 @@ module Ace
           validators = options[:validators]
           fallback_validators = options[:fallback_validators]
 
+          # Read file content before running validators to detect actual changes
+          before_content = fix ? File.read(file_path) : nil
+
           result, runner = run_validators([file_path], fix: fix, validators: validators,
             fallback_validators: fallback_validators)
 
-          if result[:success]
-            Models::LintResult.new(
-              file_path: file_path,
-              success: true,
-              errors: [],
-              warnings: convert_to_validation_errors(result[:warnings]),
-              formatted: fix,
-              runner: runner
-            )
-          else
-            Models::LintResult.new(
-              file_path: file_path,
-              success: false,
-              errors: convert_to_validation_errors(result[:errors]),
-              warnings: convert_to_validation_errors(result[:warnings]),
-              formatted: fix,
-              runner: runner
-            )
-          end
+          # Determine success by error count, not runner exit status
+          # (runner exits non-zero for convention warnings too)
+          file_errors = result[:errors] || []
+          file_warnings = result[:warnings] || []
+
+          # Read file once after validation to detect formatting changes
+          after_content = fix ? File.read(file_path) : nil
+
+          Models::LintResult.new(
+            file_path: file_path,
+            success: file_errors.empty?,
+            errors: convert_to_validation_errors(file_errors),
+            warnings: convert_to_validation_errors(file_warnings),
+            formatted: fix && before_content != after_content,
+            runner: runner
+          )
         rescue => e
           Models::LintResult.new(
             file_path: file_path,
@@ -73,6 +73,9 @@ module Ace
           quiet = options[:quiet] || false
           validators = options[:validators]
           fallback_validators = options[:fallback_validators]
+
+          # Read file contents before running validators to detect actual changes
+          before_contents = fix ? file_paths.to_h { |fp| [fp, File.read(fp)] } : {}
 
           result, runner = run_validators(file_paths, fix: fix, validators: validators,
             fallback_validators: fallback_validators)
@@ -116,6 +119,9 @@ module Ace
             end
           end
 
+          # Read files once after validation to detect formatting changes
+          after_contents = fix ? file_paths.to_h { |fp| [fp, File.read(fp)] } : {}
+
           # Create a LintResult for each file
           file_paths.map do |file_path|
             offenses = offenses_by_file[file_path]
@@ -130,7 +136,7 @@ module Ace
               success: file_errors.empty?,
               errors: convert_to_validation_errors(file_errors),
               warnings: convert_to_validation_errors(file_warnings),
-              formatted: fix,
+              formatted: fix && before_contents[file_path] != after_contents[file_path],
               runner: runner
             )
           end

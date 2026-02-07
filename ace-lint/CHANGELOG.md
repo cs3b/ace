@@ -6,6 +6,71 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.15.11] - 2026-02-07
+
+### Changed
+- Further consolidate MT-LINT-004 bash blocks (10→7) and remove no-op cleanup block
+
+## [0.15.10] - 2026-02-07
+
+### Changed
+- Consolidate bash blocks in E2E tests to reduce LLM round-trips and avoid timeouts
+  - MT-LINT-002: 21→11 blocks (merge jq queries, verification steps)
+  - MT-LINT-004: 17→10 blocks (merge exit code checks, report verification)
+  - MT-LINT-007: 10→7 blocks (merge lint calls, config+lint steps)
+
+## [0.15.9] - 2026-02-07
+
+### Changed
+- Split E2E tests for parallel execution: 5 files (36 cases) → 8 files (31 cases)
+  - MT-LINT-001: 8→5 cases (validator overrides extracted to MT-LINT-007)
+  - MT-LINT-002: 9→5 cases (markdown reports extracted to MT-LINT-006, --no-report duplicate removed)
+  - MT-LINT-004: 7→5 cases (report default and --validators duplicates removed)
+  - MT-LINT-005: 8→4 cases (modes/exit codes extracted to MT-LINT-008)
+- Remove 5 duplicate test cases across files (--no-report, --validators override, report generation)
+
+### Added
+- MT-LINT-006: Report markdown files (ok.md, fixed.md, pending.md) — 3 cases
+- MT-LINT-007: Validator configuration overrides (CLI, config, group routing) — 3 cases
+- MT-LINT-008: Doctor modes and exit codes (quiet, verbose, healthy, syntax error) — 4 cases
+
+## [0.15.8] - 2026-02-07
+
+### Fixed
+- Fix single-file `lint()` success inconsistency with `lint_batch()` — convention/warning-only offenses now return `success: true` instead of relying on runner exit status (which exits non-zero for any offense)
+
+## [0.15.7] - 2026-02-07
+
+### Fixed
+- Fix E2E test MT-LINT-004 TC-002 fixture: use `syntax_error.rb` instead of `style_issues.rb` which only has convention/warning-severity offenses (exit 0)
+- Add clarifying note to MT-LINT-002 TC-009 explaining severity-to-exit-code behavior
+
+## [0.15.6] - 2026-02-07
+
+### Fixed
+- Fix `formatted` flag in RubyLinter to reflect actual file changes instead of just the fix option
+  - Files are now marked as `formatted: true` only when their content actually changes
+  - Previously, all files processed with `--fix` were incorrectly marked as formatted
+  - E2E test improvements: fixed path extraction (`tr -d '/'` → `sed 's|/$||'`), added explicit PASS/FAIL echoes for weaker models
+  - TC-002 in MT-LINT-004 now uses `style_issues.rb` instead of `invalid.md` (which only had warnings)
+
+## [0.15.5] - 2026-02-07
+
+### Fixed
+
+- Update E2E tests (MT-LINT-001 through MT-LINT-005) with verified results and improved test cases
+  - TC-002: Test fix mode instead of lint-only for style issues
+  - TC-005: Test fix mode categorization with passed/fixed results
+  - TC-008: Use syntax error file for pending.md testing (unfixable errors)
+  - MT-LINT-004: Simplify invalid markdown fixture, remove unsupported TC-005 (--output flag)
+  - MT-LINT-005: Fix invalid config fixtures with proper git init and file paths
+
+## [0.15.4] - 2026-02-07
+
+### Fixed
+- Ensure help commands exit with status 0
+- Migrate CLI and doctor integration tests to E2E, optimize with subprocess stubs
+
 ## [0.15.3] - 2026-01-31
 
 ### Fixed

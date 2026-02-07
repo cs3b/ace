@@ -152,10 +152,27 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
   end
 
   def test_lint_with_fix_flag_sets_formatted
-    stub_standardrb_runner(exit_status: 0) do
-      result = Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: {fix: true})
+    # Use a real tempfile so we can verify content actually changed
+    Tempfile.create(["test_lint_", ".rb"]) do |file|
+      original_content = "# Original content\n"
+      file.write(original_content)
+      file.rewind
 
-      assert result.formatted?
+      # Stub runner that modifies the file
+      Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+        Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(paths, fix:) {
+          if fix
+            # Simulate StandardRB fixing the file
+            File.write(paths.first, "# Fixed content\n")
+          end
+          {success: true, errors: [], warnings: []}
+        }) do
+          result = Ace::Lint::Molecules::RubyLinter.lint(file.path, options: {fix: true})
+
+          assert result.formatted?, "File should be marked as formatted when fix modifies content"
+          assert_equal "# Fixed content\n", File.read(file.path), "File should be modified by fix runner"
+        end
+      end
     end
   end
 
@@ -164,6 +181,28 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
       result = Ace::Lint::Molecules::RubyLinter.lint(@file_path)
 
       refute result.formatted?
+    end
+  end
+
+  def test_lint_with_fix_flag_unmodified_not_formatted
+    # Use a real tempfile to verify content doesn't change
+    Tempfile.create(["test_lint_", ".rb"]) do |file|
+      original_content = "# Already well-formatted content\n"
+      file.write(original_content)
+      file.rewind
+
+      # Stub runner that doesn't modify the file
+      Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+        Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(*) {
+          # Don't modify the file
+          {success: true, errors: [], warnings: []}
+        }) do
+          result = Ace::Lint::Molecules::RubyLinter.lint(file.path, options: {fix: true})
+
+          refute result.formatted?, "File should not be marked as formatted when fix doesn't modify content"
+          assert_equal original_content, File.read(file.path), "File should remain unchanged"
+        end
+      end
     end
   end
 
@@ -200,17 +239,23 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
   def test_lint_passes_options_to_runner
     options_passed = nil
 
-    # Stub with a callable that captures arguments
-    Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
-      Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(file_paths, fix: false) {
-        options_passed = {fix: fix}
-        {success: true, errors: [], warnings: []}
-      }) do
-        Ace::Lint::Molecules::RubyLinter.lint(@file_path, options: {fix: true})
-      end
-    end
+    # Use a real tempfile since the code reads file content when fix: true
+    Tempfile.create(["test_lint_", ".rb"]) do |file|
+      file.write("# test content\n")
+      file.rewind
 
-    assert_equal true, options_passed[:fix]
+      # Stub with a callable that captures arguments
+      Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+        Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(file_paths, fix: false) {
+          options_passed = {fix: fix}
+          {success: true, errors: [], warnings: []}
+        }) do
+          Ace::Lint::Molecules::RubyLinter.lint(file.path, options: {fix: true})
+        end
+      end
+
+      assert_equal true, options_passed[:fix]
+    end
   end
 
   def test_multiple_offenses_parsed_correctly
@@ -287,15 +332,57 @@ class Ace::Lint::Molecules::RubyLinterTest < Minitest::Test
   end
 
   def test_batch_lint_with_fix_flag
-    file1 = "lib/file1.rb"
-    file2 = "lib/file2.rb"
+    # Use real tempfiles to verify content changes
+    Tempfile.create(["test_batch_", ".rb"]) do |file1|
+      Tempfile.create(["test_batch_", ".rb"]) do |file2|
+        file1.write("# File 1 content\n")
+        file2.write("# File 2 content\n")
+        file1.rewind
+        file2.rewind
 
-    stub_standardrb_runner(output: "no offenses", exit_status: 0) do
-      results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1, file2], options: {fix: true})
+        # Stub runner that doesn't modify files (no offenses)
+        Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+          Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(*) {
+            {success: true, errors: [], warnings: []}
+          }) do
+            results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1.path, file2.path], options: {fix: true})
 
-      assert_equal 2, results.size
-      results.each do |result|
-        assert result.formatted?
+            assert_equal 2, results.size
+            # Files weren't modified, so formatted should be false
+            results.each do |result|
+              refute result.formatted?, "File should not be marked as formatted when fix doesn't modify content"
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def test_batch_lint_fix_mixed_modifications
+    # Test with some files modified, some not
+    Tempfile.create(["test_batch_", ".rb"]) do |file1|
+      Tempfile.create(["test_batch_", ".rb"]) do |file2|
+        file1.write("# File 1 needs fixing\n")
+        file2.write("# File 2 already good\n")
+        file1.rewind
+        file2.rewind
+
+        # Stub runner that only modifies file1
+        Ace::Lint::Atoms::StandardrbRunner.stub(:available?, true) do
+          Ace::Lint::Atoms::StandardrbRunner.stub(:run, ->(paths, fix:) {
+            if fix
+              # Only modify the first file
+              File.write(paths.first, "# File 1 fixed\n")
+            end
+            {success: true, errors: [], warnings: []}
+          }) do
+            results = Ace::Lint::Molecules::RubyLinter.lint_batch([file1.path, file2.path], options: {fix: true})
+
+            assert_equal 2, results.size
+            assert results[0].formatted?, "File 1 should be marked as formatted (was modified)"
+            refute results[1].formatted?, "File 2 should not be marked as formatted (not modified)"
+          end
+        end
       end
     end
   end
