@@ -2,18 +2,54 @@
 
 require_relative "end_to_end_runner/version"
 
+# Models
+require_relative "end_to_end_runner/models/test_scenario"
+require_relative "end_to_end_runner/models/test_result"
+
+# Atoms
+require_relative "end_to_end_runner/atoms/prompt_builder"
+require_relative "end_to_end_runner/atoms/result_parser"
+require_relative "end_to_end_runner/atoms/skill_prompt_builder"
+require_relative "end_to_end_runner/atoms/skill_result_parser"
+require_relative "end_to_end_runner/atoms/suite_report_prompt_builder"
+require_relative "end_to_end_runner/atoms/display_helpers"
+
+# Molecules
+require_relative "end_to_end_runner/molecules/config_loader"
+require_relative "end_to_end_runner/molecules/test_discoverer"
+require_relative "end_to_end_runner/molecules/scenario_parser"
+require_relative "end_to_end_runner/molecules/test_executor"
+require_relative "end_to_end_runner/molecules/report_writer"
+require_relative "end_to_end_runner/molecules/suite_report_writer"
+require_relative "end_to_end_runner/molecules/simple_display_manager"
+require_relative "end_to_end_runner/molecules/progress_display_manager"
+
+# Organisms
+require_relative "end_to_end_runner/organisms/test_orchestrator"
+
+# CLI
+require_relative "end_to_end_runner/cli/commands/run_test"
+require_relative "end_to_end_runner/cli"
+
 module Ace
   module Test
     module EndToEndRunner
       # Entry point for gem
       #
       # This gem provides infrastructure for agent-executed end-to-end tests:
+      # - CLI command (ace-test-e2e) for running tests via LLM
       # - Workflows for test execution (run-e2e-test.wf.md)
       # - Templates for test scenarios (test-e2e.template.md)
       # - Conventions for E2E testing (e2e-testing.g.md)
       #
-      # Tests are executed by AI agents, not by automated test runners.
+      # Tests can be executed by AI agents or via the CLI tool.
       # See handbook/ for workflows and guides.
+
+      # Module namespaces
+      module Atoms; end
+      module Molecules; end
+      module Organisms; end
+      module Models; end
     end
   end
 end
