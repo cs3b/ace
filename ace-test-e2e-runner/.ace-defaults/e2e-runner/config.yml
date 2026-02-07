@@ -31,6 +31,40 @@ cleanup:
   # Set to false to keep artifacts for debugging
   enabled: false
 
+# Reporting defaults (suite final report LLM synthesis)
+reporting:
+  # LLM model alias for suite report generation
+  model: "glite"
+  # Timeout in seconds for report generation
+  timeout: 60
+
+# Execution defaults
+execution:
+  # Default LLM provider:model for test execution
+  provider: "claude:sonnet"
+  # Timeout per test in seconds
+  timeout: 300
+  # Number of tests to run in parallel (1 = sequential)
+  parallel: 3
+
+# Provider configuration
+providers:
+  # CLI providers can execute commands (skill/workflow mode)
+  cli:
+    - claude
+    - gemini
+    - codex
+    - codexoss
+    - opencode
+    - pi
+  # Skill-aware CLI providers (use /ace:run-e2e-test invocation)
+  skill_aware:
+    - claude
+  # Required CLI args per provider (merged with user-provided --cli-args)
+  cli_args:
+    claude: "dangerously-skip-permissions"
+    codex: "full-auto"
+
 # Test ID format validation
 test_id:
   # Pattern: MT-{AREA}-{NNN}
