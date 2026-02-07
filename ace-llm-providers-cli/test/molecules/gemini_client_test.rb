@@ -144,7 +144,7 @@ describe "GeminiClient" do
       mock_status.define_singleton_method(:success?) { success }
       mock_status.define_singleton_method(:exitstatus) { success ? 0 : 1 }
 
-      Open3.stub(:capture3, lambda { |*_| [stdout, stderr, mock_status] }) do
+      Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub(:call, lambda { |*_args, **_kwargs| [stdout, stderr, mock_status] }) do
         yield
       end
     end

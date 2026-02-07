@@ -1,9 +1,8 @@
 # frozen_string_literal: true
 
-require "open3"
 require "json"
+require "open3"
 require "shellwords"
-require "timeout"
 
 require_relative "cli_args_support"
 
@@ -176,13 +175,8 @@ module Ace
 
 
           def execute_claude_command(cmd)
-            # Execute with timeout to prevent hanging
             timeout_val = @options[:timeout] || 120
-            Timeout.timeout(timeout_val) do
-              Open3.capture3(*cmd)
-            end
-          rescue Timeout::Error
-            raise Ace::LLM::ProviderError, "Claude CLI execution timed out after #{timeout_val} seconds"
+            Molecules::SafeCapture.call(cmd, timeout: timeout_val, provider_name: "Claude")
           end
 
           def parse_claude_response(stdout, stderr, status, prompt, options)
