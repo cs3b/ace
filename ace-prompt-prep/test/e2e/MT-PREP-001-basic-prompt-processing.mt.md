@@ -9,8 +9,8 @@ automation-candidate: false
 requires:
   tools: [ace-prompt-prep, ace-bundle, ace-timestamp]
   ruby: ">= 3.0"
-last-verified:
-verified-by:
+last-verified: 2026-02-08
+verified-by: claude-sonnet-4-5
 ---
 
 # Basic Prompt Processing Workflow
@@ -29,34 +29,14 @@ Verify the core ace-prompt-prep workflow: setup creates workspace with template,
 ## Environment Setup
 
 ```bash
-# Capture project root before changing directories
-PROJECT_ROOT="$(pwd)"
-
-TIMESTAMP_ID="$(ace-timestamp encode)"
-SHORT_PKG="prompt-prep"
-SHORT_ID="mt001"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
-
-# Create isolated prompt workspace for testing
-export ACE_PROMPT_PREP_ROOT="$TEST_DIR/prompt-workspace"
-mkdir -p "$ACE_PROMPT_PREP_ROOT"
-
-# Verify tools are available
-echo "=== Tool Verification ==="
-which ruby && ruby --version
-which ace-prompt-prep && ace-prompt-prep --version
-which ace-bundle && ace-bundle --version 2>/dev/null || echo "ace-bundle available"
-which ace-timestamp && ace-timestamp --version 2>/dev/null || echo "ace-timestamp available"
-echo "========================="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create a sample prompt file
-cat > "$TEST_DIR/sample-prompt.md" << 'EOF'
+cat > "sample-prompt.md" << 'EOF'
 ---
 bundle:
   presets:
@@ -77,20 +57,21 @@ This is for the ACE project.
 EOF
 
 # Create a minimal prompt (no frontmatter)
-cat > "$TEST_DIR/minimal-prompt.md" << 'EOF'
+cat > "minimal-prompt.md" << 'EOF'
 Help me debug this error in my Ruby code.
 
 The error message is: undefined method 'foo' for nil:NilClass
 EOF
 
 # Create a prompt for task-specific testing
-cat > "$TEST_DIR/task-prompt.md" << 'EOF'
+cat > "task-prompt.md" << 'EOF'
 ---
 task: 121
 ---
 
 Work on task 121: Fix the authentication bug.
 EOF
+SANDBOX
 ```
 
 ## Test Cases
@@ -102,18 +83,17 @@ EOF
 **Steps:**
 1. Run setup command
    ```bash
-   cd "$TEST_DIR"
-   ace-prompt-prep setup
+   ace-test-e2e-sh "$TEST_DIR" ace-prompt-prep setup
    ```
 
 2. Verify directory structure was created
    ```bash
-   ls -la "$ACE_PROMPT_PREP_ROOT/prompts/" 2>/dev/null || ls -la .cache/ace-prompt-prep/prompts/
+   ace-test-e2e-sh "$TEST_DIR" ls -la "$ACE_PROMPT_PREP_ROOT/prompts/" 2>/dev/null || ls -la .cache/ace-prompt-prep/prompts/
    ```
 
 3. Verify template file exists
    ```bash
-   cat .cache/ace-prompt-prep/prompts/the-prompt.md 2>/dev/null | head -20
+   ace-test-e2e-sh "$TEST_DIR" cat .cache/ace-prompt-prep/prompts/the-prompt.md 2>/dev/null | head -20
    ```
 
 **Expected:**
@@ -135,22 +115,22 @@ EOF
 **Steps:**
 1. Copy sample prompt to workspace
    ```bash
-   cp "$TEST_DIR/sample-prompt.md" .cache/ace-prompt-prep/prompts/the-prompt.md
+   ace-test-e2e-sh "$TEST_DIR" cp "sample-prompt.md" .cache/ace-prompt-prep/prompts/the-prompt.md
    ```
 
 2. Process the prompt
    ```bash
-   ace-prompt-prep
+   ace-test-e2e-sh "$TEST_DIR" ace-prompt-prep
    ```
 
 3. List archived files
    ```bash
-   ls -la .cache/ace-prompt-prep/prompts/
+   ace-test-e2e-sh "$TEST_DIR" ls -la .cache/ace-prompt-prep/prompts/
    ```
 
 4. Verify archive file naming (Base36 format: 6 alphanumeric chars)
    ```bash
-   ls .cache/ace-prompt-prep/prompts/*.md | grep -E '[a-z0-9]{6}\.md'
+   ace-test-e2e-sh "$TEST_DIR" ls .cache/ace-prompt-prep/prompts/*.md | grep -E '[a-z0-9]{6}\.md'
    ```
 
 **Expected:**
@@ -172,22 +152,22 @@ EOF
 **Steps:**
 1. Ensure we have a processed prompt from TC-002
    ```bash
-   ls -la .cache/ace-prompt-prep/prompts/
+   ace-test-e2e-sh "$TEST_DIR" ls -la .cache/ace-prompt-prep/prompts/
    ```
 
 2. Check symlink exists and target
    ```bash
-   ls -la .cache/ace-prompt-prep/prompts/_previous.md
+   ace-test-e2e-sh "$TEST_DIR" ls -la .cache/ace-prompt-prep/prompts/_previous.md
    ```
 
 3. Verify symlink points to an archive file
    ```bash
-   readlink .cache/ace-prompt-prep/prompts/_previous.md
+   ace-test-e2e-sh "$TEST_DIR" readlink .cache/ace-prompt-prep/prompts/_previous.md
    ```
 
 4. Verify content matches
    ```bash
-   diff .cache/ace-prompt-prep/prompts/_previous.md "$TEST_DIR/sample-prompt.md"
+   ace-test-e2e-sh "$TEST_DIR" diff .cache/ace-prompt-prep/prompts/_previous.md "sample-prompt.md"
    ```
 
 **Expected:**
@@ -208,31 +188,37 @@ EOF
 **Steps:**
 1. Process first prompt (should already exist from TC-002)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    FIRST_ARCHIVE=$(readlink .cache/ace-prompt-prep/prompts/_previous.md)
    echo "First archive: $FIRST_ARCHIVE"
+   SANDBOX
    ```
 
 2. Copy and process a different prompt
    ```bash
-   cp "$TEST_DIR/minimal-prompt.md" .cache/ace-prompt-prep/prompts/the-prompt.md
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cp "minimal-prompt.md" .cache/ace-prompt-prep/prompts/the-prompt.md
    sleep 1  # Ensure different timestamp
    ace-prompt-prep
+   SANDBOX
    ```
 
 3. Get second archive
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SECOND_ARCHIVE=$(readlink .cache/ace-prompt-prep/prompts/_previous.md)
    echo "Second archive: $SECOND_ARCHIVE"
+   SANDBOX
    ```
 
 4. Verify archives are different
    ```bash
-   [ "$FIRST_ARCHIVE" != "$SECOND_ARCHIVE" ] && echo "Archives are different (PASS)" || echo "Archives are same (FAIL)"
+   ace-test-e2e-sh "$TEST_DIR" [ "$FIRST_ARCHIVE" != "$SECOND_ARCHIVE" ] && echo "Archives are different (PASS)" || echo "Archives are same (FAIL)"
    ```
 
 5. List all archives
    ```bash
-   ls -la .cache/ace-prompt-prep/prompts/
+   ace-test-e2e-sh "$TEST_DIR" ls -la .cache/ace-prompt-prep/prompts/
    ```
 
 **Expected:**
@@ -253,18 +239,20 @@ EOF
 **Steps:**
 1. Copy prompt with bundle frontmatter
    ```bash
-   cp "$TEST_DIR/sample-prompt.md" .cache/ace-prompt-prep/prompts/the-prompt.md
+   ace-test-e2e-sh "$TEST_DIR" cp "sample-prompt.md" .cache/ace-prompt-prep/prompts/the-prompt.md
    ```
 
 2. Process with bundle flag
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    cd "$PROJECT_ROOT"  # Need to be in project root for bundle processing
    ace-prompt-prep --bundle 2>&1 | head -50
+   SANDBOX
    ```
 
 3. Verify output includes bundled content
    ```bash
-   ace-prompt-prep --bundle 2>&1 | grep -E "(Project Context|Files|Context loaded)" || echo "Check output manually"
+   ace-test-e2e-sh "$TEST_DIR" ace-prompt-prep --bundle 2>&1 | grep -E "(Project Context|Files|Context loaded)" || echo "Check output manually"
    ```
 
 **Expected:**
