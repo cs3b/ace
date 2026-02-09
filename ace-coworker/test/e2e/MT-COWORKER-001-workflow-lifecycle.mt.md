@@ -28,12 +28,12 @@ Verify that ace-coworker correctly manages the full workflow lifecycle including
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="coworker"
 SHORT_ID="mt001"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Set PROJECT_ROOT_PATH for isolated testing
 # This tells ace-coworker to use the sandbox as project root for cache resolution
@@ -50,13 +50,42 @@ ACE_COWORKER="bundle exec $PROJECT_ROOT/ace-coworker/exe/ace-coworker"
 echo "=== Tool Verification ==="
 $ACE_COWORKER --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create job.yaml with 3 steps for testing (includes skill field on analyze step)
-cat > "$TEST_DIR/job.yaml" << 'EOF'
+cat > job.yaml << 'EOF'
 name: test-workflow
 description: Test workflow for E2E testing
 steps:
@@ -72,7 +101,8 @@ steps:
 EOF
 
 echo "Test data created:"
-cat "$TEST_DIR/job.yaml"
+cat job.yaml
+SANDBOX
 ```
 
 ## Test Cases
@@ -84,16 +114,20 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Attempt to create a session with a nonexistent config
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$($ACE_COWORKER create nonexistent.yaml 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code and error message
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 3 ] && echo "PASS: Exit code is 3" || echo "FAIL: Expected exit code 3, got $EXIT_CODE"
    echo "$OUTPUT" | grep -qi "not found" && echo "PASS: Error mentions 'not found'" || echo "FAIL: Error message does not mention 'not found'"
+   SANDBOX
    ```
 
 **Expected:**
@@ -113,16 +147,20 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Run status command from clean state (no session exists)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$($ACE_COWORKER status 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code and error message
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 2 ] && echo "PASS: Exit code is 2" || echo "FAIL: Expected exit code 2, got $EXIT_CODE"
    echo "$OUTPUT" | grep -qi "no active session" && echo "PASS: Error mentions 'No active session'" || echo "FAIL: Error message missing expected text"
+   SANDBOX
    ```
 
 **Expected:**
@@ -142,20 +180,26 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Create a dummy report file
    ```bash
-   echo "# Dummy" > "$TEST_DIR/dummy-report.md"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   echo "# Dummy" > dummy-report.md
+   SANDBOX
    ```
 
 2. Run report command from clean state
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$($ACE_COWORKER report "$TEST_DIR/dummy-report.md" 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify exit code
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 2 ] && echo "PASS: Exit code is 2" || echo "FAIL: Expected exit code 2, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -175,32 +219,42 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Attempt to use the old `start` command
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$($ACE_COWORKER start "$TEST_DIR/job.yaml" 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code is 0 (success)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 3. Verify deprecation warning is shown
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qi "deprecated" && echo "PASS: Deprecation warning shown" || echo "FAIL: No deprecation warning found"
+   SANDBOX
    ```
 
 4. Verify session was created
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SESSION_COUNT=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
    [ "$SESSION_COUNT" -gt 0 ] && echo "PASS: Session created by 'start' ($SESSION_COUNT found)" || echo "FAIL: No session created"
+   SANDBOX
    ```
 
 5. Verify output matches `create` command (contains session ID and first step)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qE "Session:.*\(" && echo "PASS: Output shows session info" || echo "FAIL: No session info in output"
    echo "$OUTPUT" | grep -q "analyze" && echo "PASS: First step shown" || echo "FAIL: First step not shown"
+   SANDBOX
    ```
 
 **Expected:**
@@ -222,21 +276,27 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Remove cache directory if it exists
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    CACHE_BASE="$TEST_DIR/.cache/ace-coworker"
    rm -rf "$CACHE_BASE"
    [ ! -d "$CACHE_BASE" ] && echo "PASS: Cache removed" || echo "FAIL: Cache still exists"
+   SANDBOX
    ```
 
 2. Create a session (should auto-create cache directory)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$($ACE_COWORKER create "$TEST_DIR/job.yaml" 2>&1)
    EXIT_CODE=$?
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Session created" || echo "FAIL: Creation failed (exit $EXIT_CODE)"
+   SANDBOX
    ```
 
 3. Verify cache directory was created
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ -d "$CACHE_BASE" ] && echo "PASS: Cache directory auto-created" || echo "FAIL: Cache missing"
+   SANDBOX
    ```
 
 **Expected:**
@@ -256,34 +316,44 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Create workflow from config
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    CREATE_OUTPUT=$($ACE_COWORKER create "$TEST_DIR/job.yaml" 2>&1)
    CREATE_EXIT=$?
    echo "Exit code: $CREATE_EXIT"
    echo "Output:"
    echo "$CREATE_OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$CREATE_EXIT" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $CREATE_EXIT"
+   SANDBOX
    ```
 
 3. Verify output contains session ID
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$CREATE_OUTPUT" | grep -qE "Session:.*\(" && echo "PASS: Output shows session info" || echo "FAIL: No session info in output"
+   SANDBOX
    ```
 
 4. Extract session ID from output for later tests
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SESSION_ID=$(echo "$CREATE_OUTPUT" | grep -oE '\(([a-z0-9]+)\)' | head -1 | tr -d '()')
    echo "Session ID: $SESSION_ID"
    [ -n "$SESSION_ID" ] && echo "PASS: Session ID extracted" || echo "FAIL: Could not extract session ID"
+   SANDBOX
    ```
 
 5. Verify output mentions first step
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$CREATE_OUTPUT" | grep -q "analyze" && echo "PASS: First step 'analyze' shown" || echo "FAIL: First step not shown in output"
    echo "$CREATE_OUTPUT" | grep -q "in_progress" && echo "PASS: Step status shown as in_progress" || echo "FAIL: Step status not shown"
+   SANDBOX
    ```
 
 **Expected:**
@@ -304,60 +374,89 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Verify session directory exists in `.cache/ace-coworker/`
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    [ -d "$SESSION_DIR" ] && echo "PASS: Session directory found at $SESSION_DIR" || echo "FAIL: No session directory in .cache/ace-coworker/"
+   SANDBOX
    ```
 
 2. Verify session.yaml exists
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    [ -f "$SESSION_DIR/session.yaml" ] && echo "PASS: session.yaml exists" || echo "FAIL: session.yaml missing"
+   SANDBOX
    ```
 
 3. Verify jobs/ directory with step files (.j.md extension)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    [ -d "$SESSION_DIR/jobs" ] && echo "PASS: jobs/ directory exists" || echo "FAIL: jobs/ directory missing"
    STEP_COUNT=$(ls "$SESSION_DIR/jobs/"*.j.md 2>/dev/null | wc -l | tr -d ' ')
    [ "$STEP_COUNT" -eq 3 ] && echo "PASS: 3 step files created" || echo "FAIL: Expected 3 step files, found $STEP_COUNT"
+   SANDBOX
    ```
 
 4. Verify step file naming convention (010-analyze.j.md, 020-implement.j.md, 030-verify.j.md)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    [ -f "$SESSION_DIR/jobs/010-analyze.j.md" ] && echo "PASS: 010-analyze.j.md exists" || echo "FAIL: 010-analyze.j.md missing"
    [ -f "$SESSION_DIR/jobs/020-implement.j.md" ] && echo "PASS: 020-implement.j.md exists" || echo "FAIL: 020-implement.j.md missing"
    [ -f "$SESSION_DIR/jobs/030-verify.j.md" ] && echo "PASS: 030-verify.j.md exists" || echo "FAIL: 030-verify.j.md missing"
+   SANDBOX
    ```
 
 5. Verify reports/ directory exists (for split report files)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    [ -d "$SESSION_DIR/reports" ] && echo "PASS: reports/ directory exists" || echo "FAIL: reports/ directory missing"
+   SANDBOX
    ```
 
 6. Verify first step frontmatter has status in_progress
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "status: in_progress" "$SESSION_DIR/jobs/010-analyze.j.md" && echo "PASS: Step 010 is in_progress" || echo "FAIL: Step 010 not in_progress"
+   SANDBOX
    ```
 
 7. Verify skill field preserved in step file
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q 'skill:.*ace:research' "$SESSION_DIR/jobs/010-analyze.j.md" && echo "PASS: skill field preserved in step file" || echo "FAIL: skill field missing from step file"
+   SANDBOX
    ```
 
 8. Verify array instructions were joined in step file (normalize_instructions)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "Analyze the codebase structure" "$SESSION_DIR/jobs/010-analyze.j.md" && echo "PASS: First instruction line present" || echo "FAIL: First instruction line missing"
    grep -q "Identify key components and dependencies" "$SESSION_DIR/jobs/010-analyze.j.md" && echo "PASS: Second instruction line present" || echo "FAIL: Second instruction line missing"
+   SANDBOX
    ```
 
 9. Verify plain string instructions also work (020-implement.j.md)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "Implement the required changes" "$SESSION_DIR/jobs/020-implement.j.md" && echo "PASS: Plain string instructions preserved" || echo "FAIL: Plain string instructions missing"
+   SANDBOX
    ```
 
 10. Negative assertions — wrong paths must NOT exist
     ```bash
+    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
     [ ! -d "$TEST_DIR/.coworker" ] && echo "PASS: .coworker/ does NOT exist (correct)" || echo "FAIL: .coworker/ exists (wrong path)"
     [ ! -f "$SESSION_DIR/queue.yaml" ] && echo "PASS: queue.yaml does NOT exist (correct)" || echo "FAIL: queue.yaml exists (wrong format)"
     [ ! -f "$SESSION_DIR/jobs/010-analyze.md" ] && echo "PASS: No .md files (correct)" || echo "FAIL: .md files exist (should be .j.md)"
+    SANDBOX
     ```
 
 **Expected:**
@@ -384,34 +483,44 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Run status command
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    STATUS_OUTPUT=$($ACE_COWORKER status 2>&1)
    STATUS_EXIT=$?
    echo "Exit code: $STATUS_EXIT"
    echo "Output:"
    echo "$STATUS_OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$STATUS_EXIT" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $STATUS_EXIT"
+   SANDBOX
    ```
 
 3. Verify all three steps shown in output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$STATUS_OUTPUT" | grep -q "analyze" && echo "PASS: analyze step shown" || echo "FAIL: analyze step missing"
    echo "$STATUS_OUTPUT" | grep -q "implement" && echo "PASS: implement step shown" || echo "FAIL: implement step missing"
    echo "$STATUS_OUTPUT" | grep -q "verify" && echo "PASS: verify step shown" || echo "FAIL: verify step missing"
+   SANDBOX
    ```
 
 4. Verify current step indicator
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$STATUS_OUTPUT" | grep -q "in_progress" && echo "PASS: in_progress status shown" || echo "FAIL: in_progress not shown"
    echo "$STATUS_OUTPUT" | grep -q "Current Step:.*analyze" && echo "PASS: Current step is analyze" || echo "FAIL: Current step not analyze"
+   SANDBOX
    ```
 
 5. Verify skill field displayed
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$STATUS_OUTPUT" | grep -q "Skill:.*ace:research" && echo "PASS: Skill field displayed" || echo "FAIL: Skill field not displayed"
+   SANDBOX
    ```
 
 **Expected:**
@@ -433,7 +542,8 @@ cat "$TEST_DIR/job.yaml"
 **Steps:**
 1. Create report content
    ```bash
-   cat > "$TEST_DIR/report.md" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat > report.md << 'EOF'
 # Analysis Report
 
 ## Findings
@@ -443,47 +553,66 @@ cat "$TEST_DIR/job.yaml"
 ## Recommendation
 Proceed with implementation
 EOF
+   SANDBOX
    ```
 
 2. Complete current step with report
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    REPORT_OUTPUT=$($ACE_COWORKER report "$TEST_DIR/report.md" 2>&1)
    REPORT_EXIT=$?
    echo "Exit code: $REPORT_EXIT"
    echo "Output:"
    echo "$REPORT_OUTPUT"
+   SANDBOX
    ```
 
 3. Verify exit code
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$REPORT_EXIT" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $REPORT_EXIT"
+   SANDBOX
    ```
 
 4. Find session directory
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+   SANDBOX
    ```
 
 5. Verify step 010 marked as `done` (NOT `completed`)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "status: done" "$SESSION_DIR/jobs/010-analyze.j.md" && echo "PASS: Step 010 is done" || echo "FAIL: Step 010 not marked done"
    grep -q "status: completed" "$SESSION_DIR/jobs/010-analyze.j.md" && echo "FAIL: Step uses 'completed' instead of 'done'" || echo "PASS: Step does not use 'completed'"
+   SANDBOX
    ```
 
 6. Verify report file created in reports/ directory
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    [ -f "$SESSION_DIR/reports/010-analyze.r.md" ] && echo "PASS: Report file created at reports/010-analyze.r.md" || echo "FAIL: Report file not found"
    grep -q "Analysis Report" "$SESSION_DIR/reports/010-analyze.r.md" && echo "PASS: Report content in .r.md file" || echo "FAIL: Report content not found in .r.md file"
+   SANDBOX
    ```
 
 7. Verify report NOT appended inline to job file
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "Analysis Report" "$SESSION_DIR/jobs/010-analyze.j.md" && echo "FAIL: Report content incorrectly appended to job file" || echo "PASS: Report content NOT in job file (correct)"
+   SANDBOX
    ```
 
 8. Verify next step (020) is now in_progress
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "status: in_progress" "$SESSION_DIR/jobs/020-implement.j.md" && echo "PASS: Step 020 is in_progress" || echo "FAIL: Step 020 not in_progress"
+   SANDBOX
    ```
 
 **Expected:**
@@ -506,51 +635,70 @@ EOF
 **Steps:**
 1. Mark current step as failed
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    FAIL_OUTPUT=$($ACE_COWORKER fail -m "Test failure: encountered blocking issue" 2>&1)
    FAIL_EXIT=$?
    echo "Exit code: $FAIL_EXIT"
    echo "Output:"
    echo "$FAIL_OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$FAIL_EXIT" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $FAIL_EXIT"
+   SANDBOX
    ```
 
 3. Find session directory
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+   SANDBOX
    ```
 
 4. Verify step 020 marked as failed
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "status: failed" "$SESSION_DIR/jobs/020-implement.j.md" && echo "PASS: Step 020 marked failed" || echo "FAIL: Step 020 not marked failed"
+   SANDBOX
    ```
 
 5. Verify error message recorded in step file
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "blocking issue" "$SESSION_DIR/jobs/020-implement.j.md" && echo "PASS: Error message recorded" || echo "FAIL: Error message not found in step file"
+   SANDBOX
    ```
 
 6. Verify no auto-advance — step 030 should still be pending
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "status: pending" "$SESSION_DIR/jobs/030-verify.j.md" && echo "PASS: Step 030 still pending (no auto-advance)" || echo "FAIL: Step 030 is not pending"
+   SANDBOX
    ```
 
 7. Verify queue is stalled — status shows no current step
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    STALL_STATUS=$($ACE_COWORKER status 2>&1)
    echo "$STALL_STATUS" | grep -q "Current Step:" && echo "FAIL: Queue should be stalled but shows a current step" || echo "PASS: No current step — queue is stalled after fail"
+   SANDBOX
    ```
 
 8. Verify report is rejected when queue is stalled
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "# Dummy" > "$TEST_DIR/stall-dummy-report.md"
    STALL_OUTPUT=$($ACE_COWORKER report "$TEST_DIR/stall-dummy-report.md" 2>&1)
    STALL_EXIT=$?
    [ "$STALL_EXIT" -ne 0 ] && echo "PASS: Report rejected on stalled queue (exit $STALL_EXIT)" || echo "FAIL: Report should fail on stalled queue"
    echo "$STALL_OUTPUT" | grep -q "No step currently in progress" && echo "PASS: Correct stall error message" || echo "FAIL: Expected 'No step currently in progress' message"
+   SANDBOX
    ```
 
 **Expected:**
@@ -574,81 +722,112 @@ EOF
 **Steps:**
 1. Add a dynamic step (queue is stalled after TC-009 fail)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ADD_OUTPUT=$($ACE_COWORKER add "fix-issue" -i "Fix the blocking issue that caused failure" 2>&1)
    ADD_EXIT=$?
    echo "Exit code: $ADD_EXIT"
    echo "Output:"
    echo "$ADD_OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$ADD_EXIT" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $ADD_EXIT"
+   SANDBOX
    ```
 
 3. Find session directory and verify dynamic step file exists
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    DYNAMIC_STEP=$(ls "$SESSION_DIR/jobs/"*fix-issue* 2>/dev/null | head -1)
    [ -f "$DYNAMIC_STEP" ] && echo "PASS: Dynamic step file created at $DYNAMIC_STEP" || echo "FAIL: Dynamic step file not found"
+   SANDBOX
    ```
 
 4. Verify dynamic step has `added_by: dynamic`
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+   DYNAMIC_STEP=$(ls "$SESSION_DIR/jobs/"*fix-issue* 2>/dev/null | head -1)
    grep -q "added_by.*dynamic" "$DYNAMIC_STEP" && echo "PASS: added_by: dynamic present" || echo "FAIL: added_by: dynamic missing"
+   SANDBOX
    ```
 
 5. Verify add auto-activated the step (queue was stalled, so new step becomes in_progress)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+   DYNAMIC_STEP=$(ls "$SESSION_DIR/jobs/"*fix-issue* 2>/dev/null | head -1)
    grep -q "status: in_progress" "$DYNAMIC_STEP" && echo "PASS: Dynamic step auto-activated (in_progress)" || echo "FAIL: Dynamic step not auto-activated"
    ADD_STATUS=$($ACE_COWORKER status 2>&1)
    echo "$ADD_STATUS" | grep -q "Current Step:.*fix-issue" && echo "PASS: Current step is fix-issue" || echo "FAIL: Current step is not fix-issue"
+   SANDBOX
    ```
 
 6. Complete the dynamic step
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    cat > "$TEST_DIR/fix-report.md" << 'EOF'
 # Fix Report
 
 Issue has been resolved.
 EOF
    $ACE_COWORKER report "$TEST_DIR/fix-report.md"
+   SANDBOX
    ```
 
 7. Verify auto-advance after completing fix-issue: 030-verify should now be in_progress
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+   DYNAMIC_STEP=$(ls "$SESSION_DIR/jobs/"*fix-issue* 2>/dev/null | head -1)
    grep -q "status: done" "$DYNAMIC_STEP" && echo "PASS: fix-issue step marked done" || echo "FAIL: fix-issue step not marked done"
    grep -q "status: in_progress" "$SESSION_DIR/jobs/030-verify.j.md" && echo "PASS: 030-verify auto-advanced to in_progress" || echo "FAIL: 030-verify not in_progress"
    ADV_STATUS=$($ACE_COWORKER status 2>&1)
    echo "$ADV_STATUS" | grep -q "Current Step:.*verify" && echo "PASS: Current step is verify after auto-advance" || echo "FAIL: Current step is not verify"
+   SANDBOX
    ```
 
 8. Retry the failed step (020) — should NOT change current step
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    RETRY_OUTPUT=$($ACE_COWORKER retry 020 2>&1)
    RETRY_EXIT=$?
    echo "Exit code: $RETRY_EXIT"
    echo "Output:"
    echo "$RETRY_OUTPUT"
+   SANDBOX
    ```
 
 9. Verify retry exit code
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$RETRY_EXIT" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0, got $RETRY_EXIT"
+   SANDBOX
    ```
 
 10. Verify retry step created with link to original
     ```bash
+    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
     RETRY_STEP=$(ls "$SESSION_DIR/jobs/"*implement* 2>/dev/null | grep -v "020-implement" | head -1)
     [ -f "$RETRY_STEP" ] && echo "PASS: Retry step file created at $RETRY_STEP" || echo "FAIL: Retry step file not found"
     grep -q "retry_of.*020" "$RETRY_STEP" && echo "PASS: Retry linked to original step 020" || echo "FAIL: Retry not linked to step 020"
+    SANDBOX
     ```
 
 11. Verify retry did NOT auto-activate — 030-verify is still current, retry is pending
     ```bash
+    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+    RETRY_STEP=$(ls "$SESSION_DIR/jobs/"*implement* 2>/dev/null | grep -v "020-implement" | head -1)
     grep -q "status: pending" "$RETRY_STEP" && echo "PASS: Retry step is pending (not auto-activated)" || echo "FAIL: Retry step should be pending"
     RETRY_STATUS=$($ACE_COWORKER status 2>&1)
     echo "$RETRY_STATUS" | grep -q "Current Step:.*verify" && echo "PASS: 030-verify still current after retry" || echo "FAIL: Current step changed after retry"
+    SANDBOX
     ```
 
 **Expected:**
@@ -680,6 +859,7 @@ EOF
 **Steps:**
 1. Complete the verify step (030-verify, currently in_progress)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    cat > "$TEST_DIR/verify-report.md" << 'EOF'
 # Verification Report
@@ -690,19 +870,24 @@ EOF
    VERIFY_EXIT=$?
    echo "Exit code: $VERIFY_EXIT"
    [ "$VERIFY_EXIT" -eq 0 ] && echo "PASS: Report accepted" || echo "FAIL: Report rejected (exit $VERIFY_EXIT)"
+   SANDBOX
    ```
 
 2. Verify 030-verify is now done and retry step (031) auto-advanced to in_progress
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    grep -q "status: done" "$SESSION_DIR/jobs/030-verify.j.md" && echo "PASS: 030-verify marked done" || echo "FAIL: 030-verify not done"
    RETRY_STEP=$(ls "$SESSION_DIR/jobs/"*implement*.j.md 2>/dev/null | grep -v "020-implement" | head -1)
    grep -q "status: in_progress" "$RETRY_STEP" && echo "PASS: Retry step (031) auto-advanced to in_progress" || echo "FAIL: Retry step not in_progress"
    TC011_STATUS=$($ACE_COWORKER status 2>&1)
    echo "$TC011_STATUS" | grep -q "Current Step:.*implement" && echo "PASS: Current step is now implement (retry)" || echo "FAIL: Current step is not implement"
+   SANDBOX
    ```
 
 3. Complete the retry step (031-implement, auto-advanced after verify)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    cat > "$TEST_DIR/implement-report.md" << 'EOF'
 # Implementation Report
 
@@ -712,43 +897,58 @@ EOF
    IMPL_EXIT=$?
    echo "Exit code: $IMPL_EXIT"
    [ "$IMPL_EXIT" -eq 0 ] && echo "PASS: Report accepted" || echo "FAIL: Report rejected (exit $IMPL_EXIT)"
+   SANDBOX
    ```
 
 4. Verify retry step is now done
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+   RETRY_STEP=$(ls "$SESSION_DIR/jobs/"*implement*.j.md 2>/dev/null | grep -v "020-implement" | head -1)
    grep -q "status: done" "$RETRY_STEP" && echo "PASS: Retry step marked done" || echo "FAIL: Retry step not done"
+   SANDBOX
    ```
 
 5. Check final status
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    FINAL_STATUS=$($ACE_COWORKER status 2>&1)
    FINAL_EXIT=$?
    echo "Exit code: $FINAL_EXIT"
    echo "Output:"
    echo "$FINAL_STATUS"
+   SANDBOX
    ```
 
 6. Verify "Session completed!" in output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$FINAL_STATUS" | grep -q "Session completed!" && echo "PASS: Session shows completed" || echo "FAIL: Session not shown as completed"
+   SANDBOX
    ```
 
 7. Verify all steps are done or failed (none pending/in_progress)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    PENDING=$(grep -rl "status: pending" "$SESSION_DIR/jobs/" 2>/dev/null | wc -l | tr -d ' ')
    IN_PROGRESS=$(grep -rl "status: in_progress" "$SESSION_DIR/jobs/" 2>/dev/null | wc -l | tr -d ' ')
    [ "$PENDING" -eq 0 ] && echo "PASS: No pending steps remain" || echo "FAIL: $PENDING pending steps remain"
    [ "$IN_PROGRESS" -eq 0 ] && echo "PASS: No in_progress steps remain" || echo "FAIL: $IN_PROGRESS in_progress steps remain"
+   SANDBOX
    ```
 
 8. Count completed steps
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR=$(find "$TEST_DIR/.cache/ace-coworker" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
    DONE_COUNT=$(grep -rl "status: done" "$SESSION_DIR/jobs/" 2>/dev/null | wc -l | tr -d ' ')
    FAILED_COUNT=$(grep -rl "status: failed" "$SESSION_DIR/jobs/" 2>/dev/null | wc -l | tr -d ' ')
    echo "Done: $DONE_COUNT, Failed: $FAILED_COUNT"
    TOTAL=$((DONE_COUNT + FAILED_COUNT))
    STEP_COUNT=$(ls "$SESSION_DIR/jobs/"*.md 2>/dev/null | wc -l | tr -d ' ')
    [ "$TOTAL" -eq "$STEP_COUNT" ] && echo "PASS: All $STEP_COUNT steps are terminal (done or failed)" || echo "FAIL: $TOTAL of $STEP_COUNT steps are terminal"
+   SANDBOX
    ```
 
 **Expected:**
