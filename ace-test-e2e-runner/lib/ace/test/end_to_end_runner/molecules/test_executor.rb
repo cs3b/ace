@@ -30,12 +30,13 @@ module Ace
           # @param scenario [Models::TestScenario] The test scenario to execute
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param run_id [String, nil] Pre-generated run ID for deterministic report paths
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Models::TestResult] Test execution result
-          def execute(scenario, cli_args: nil, run_id: nil)
+          def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil)
             if Atoms::SkillPromptBuilder.cli_provider?(@provider)
-              execute_via_skill(scenario, cli_args: cli_args, run_id: run_id)
+              execute_via_skill(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases)
             else
-              execute_via_prompt(scenario, cli_args: cli_args)
+              execute_via_prompt(scenario, cli_args: cli_args, test_cases: test_cases)
             end
           end
 
@@ -46,16 +47,17 @@ module Ace
           # @param scenario [Models::TestScenario] The test scenario
           # @param cli_args [String, nil] User-provided CLI args
           # @param run_id [String, nil] Pre-generated run ID for deterministic report paths
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Models::TestResult]
-          def execute_via_skill(scenario, cli_args: nil, run_id: nil)
+          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil)
             started_at = Time.now
 
             if Atoms::SkillPromptBuilder.skill_aware?(@provider)
-              prompt = @skill_prompt_builder.build_skill_prompt(scenario, run_id: run_id)
+              prompt = @skill_prompt_builder.build_skill_prompt(scenario, run_id: run_id, test_cases: test_cases)
               system = nil
             else
               workflow_content = load_workflow_content
-              prompt = @skill_prompt_builder.build_workflow_prompt(scenario, workflow_content: workflow_content, run_id: run_id)
+              prompt = @skill_prompt_builder.build_workflow_prompt(scenario, workflow_content: workflow_content, run_id: run_id, test_cases: test_cases)
               system = @skill_prompt_builder.system_prompt_for(@provider)
             end
 
@@ -117,11 +119,12 @@ module Ace
           #
           # @param scenario [Models::TestScenario] The test scenario
           # @param cli_args [String, nil] Extra args
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Models::TestResult]
-          def execute_via_prompt(scenario, cli_args: nil)
+          def execute_via_prompt(scenario, cli_args: nil, test_cases: nil)
             started_at = Time.now
 
-            prompt = @prompt_builder.build(scenario)
+            prompt = @prompt_builder.build(scenario, test_cases: test_cases)
 
             response = Ace::LLM::QueryInterface.query(
               @provider,

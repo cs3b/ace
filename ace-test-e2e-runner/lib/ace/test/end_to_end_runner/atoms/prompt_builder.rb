@@ -58,22 +58,35 @@ module Ace
           # Build the user prompt for a test scenario
           #
           # @param scenario [Models::TestScenario] The test scenario to execute
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [String] The user prompt containing the test scenario
-          def build(scenario)
+          def build(scenario, test_cases: nil)
+            filter_instruction = if test_cases&.any?
+              "\n**IMPORTANT:** Execute ONLY the following test cases: #{test_cases.join(', ')}. Skip all other test cases.\n"
+            else
+              ""
+            end
+
+            execute_instruction = if test_cases&.any?
+              "Execute only the specified test cases (#{test_cases.join(', ')}) and return the JSON results as specified in your instructions."
+            else
+              "Execute all test cases in this scenario and return the JSON results as specified in your instructions."
+            end
+
             <<~PROMPT
               # Execute E2E Test: #{scenario.test_id}
 
               **Package:** #{scenario.package}
               **Title:** #{scenario.title}
               **Priority:** #{scenario.priority}
-
+              #{filter_instruction}
               ## Test Scenario
 
               #{scenario.content}
 
               ---
 
-              Execute all test cases in this scenario and return the JSON results as specified in your instructions.
+              #{execute_instruction}
             PROMPT
           end
         end

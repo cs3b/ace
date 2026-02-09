@@ -342,6 +342,31 @@ Execute the commands in the "Test Data" section to create necessary test files:
 
 **Note:** Test data files go in `$TEST_DIR/`, while reports are written to a reports subfolder (`${TEST_DIR}-reports/`).
 
+### 5.5. Test Case Filter Verification (MANDATORY when TEST_CASES provided)
+
+> **STOP - Verify Filter Before Executing**
+>
+> When TEST_CASES argument was provided, you MUST verify the filter before executing any test cases.
+> Failure to verify will result in executing unintended test cases.
+
+**Run this verification when FILTERED_CASES is set:**
+
+```bash
+if [ -n "${FILTERED_CASES+x}" ]; then
+  echo "=== TEST CASE FILTER VERIFICATION ==="
+  echo "Filter active. Will execute ONLY: ${FILTERED_CASES[*]}"
+  echo "Total test cases to execute: ${#FILTERED_CASES[@]}"
+  echo "All other test cases will be SKIPPED"
+  echo "=== END FILTER VERIFICATION ==="
+fi
+```
+
+**Interpretation:**
+- If this checkpoint prints test cases, you MUST skip all test cases NOT in the list
+- For each test case in the test file, check: "Is this TC-ID in FILTERED_CASES?"
+- If NO → Skip entirely, log "Skipping TC-NNN (not in filter)"
+- If YES → Execute normally
+
 ### 6. Execute Test Cases
 
 > **CRITICAL: Use `ace-test-e2e-sh` for ALL test case commands**
@@ -353,6 +378,18 @@ Execute the commands in the "Test Data" section to create necessary test files:
 
 - If `FILTERED_CASES` is set (from step 2.5), execute **only** test cases whose IDs are in the `FILTERED_CASES` array. Skip all other test cases.
 - If `FILTERED_CASES` is not set, execute **all** test cases in the scenario (default behavior).
+
+**Example: Filtering in action**
+
+If `FILTERED_CASES=(TC-002)` and the test file has TC-001, TC-002, TC-003:
+
+```
+TC-001: Check filter → "TC-001" not in ["TC-002"] → SKIP, log "Skipping TC-001 (not in filter)"
+TC-002: Check filter → "TC-002" in ["TC-002"] → EXECUTE
+TC-003: Check filter → "TC-003" not in ["TC-002"] → SKIP, log "Skipping TC-003 (not in filter)"
+```
+
+**Result**: Only TC-002 executes, report shows 1 test case total.
 
 For each test case (TC-NNN):
 
@@ -659,6 +696,13 @@ If the sandbox isolation checkpoint fails:
 - `pwd` shows main project path (no `.cache/ace-test-e2e/`)
 - `git remote -v` shows remotes
 - Files like `CLAUDE.md`, `Gemfile`, `.ace-taskflow/` exist
+
+### Test Case Filter Failure
+
+If you realize you executed test cases that should have been filtered:
+1. **STOP** - Do not write reports with incorrect data
+2. Note the error in your response
+3. Offer to re-run with correct filtering
 
 ## Example Invocations
 
