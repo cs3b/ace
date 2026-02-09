@@ -9,7 +9,7 @@ automation-candidate: false
 requires:
   tools: [standardrb, rubocop]
   ruby: ">= 3.0"
-last-verified: 2026-02-07
+last-verified: 2026-02-08
 verified-by: claude-opus-4.6
 ---
 
@@ -29,12 +29,16 @@ Verify that ace-lint correctly uses StandardRB as primary Ruby linter and falls 
 ## Environment Setup
 
 ```bash
-TIMESTAMP_ID="$(ace-timestamp encode)"
+PROJECT_ROOT="$(pwd)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="lint"
 SHORT_ID="mt001"
-TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
 
 # Verify tools are available
 echo "=== Tool Verification ==="
@@ -42,13 +46,42 @@ which ruby && ruby --version
 which standardrb && standardrb --version
 which rubocop && rubocop --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Valid Ruby file (passes all linters)
-cat > "$TEST_DIR/valid.rb" << 'EOF'
+cat > valid.rb << 'EOF'
 # frozen_string_literal: true
 
 class Greeter
@@ -59,7 +92,7 @@ end
 EOF
 
 # Ruby file with style issues (fixable)
-cat > "$TEST_DIR/style_issues.rb" << 'EOF'
+cat > style_issues.rb << 'EOF'
 class BadStyle
   def method_with_issues( arg1,arg2 )
     if arg1 == true
@@ -72,15 +105,15 @@ end
 EOF
 
 # Ruby file with syntax error
-cat > "$TEST_DIR/syntax_error.rb" << 'EOF'
+cat > syntax_error.rb << 'EOF'
 class Broken
   def unclosed
     puts "missing end"
 EOF
 
 # Create multiple files for batch testing
-mkdir -p "$TEST_DIR/batch"
-cat > "$TEST_DIR/batch/file1.rb" << 'EOF'
+mkdir -p batch
+cat > batch/file1.rb << 'EOF'
 # frozen_string_literal: true
 
 def file_one
@@ -88,19 +121,20 @@ def file_one
 end
 EOF
 
-cat > "$TEST_DIR/batch/file2.rb" << 'EOF'
+cat > batch/file2.rb << 'EOF'
 def file_two()
   "two"
 end
 EOF
 
-cat > "$TEST_DIR/batch/file3.rb" << 'EOF'
+cat > batch/file3.rb << 'EOF'
 # frozen_string_literal: true
 
 class FileThree
   def run = "three"
 end
 EOF
+SANDBOX
 ```
 
 ## Test Cases
@@ -112,7 +146,7 @@ EOF
 **Steps:**
 1. Lint the valid file
    ```bash
-   ace-lint lint "$TEST_DIR/valid.rb"
+   ace-test-e2e-sh "$TEST_DIR" ace-lint lint valid.rb
    ```
 
 **Expected:**
@@ -133,19 +167,21 @@ EOF
 **Steps:**
 1. Create a copy of the style issues file
    ```bash
-   cp "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
+   ace-test-e2e-sh "$TEST_DIR" cp style_issues.rb style_issues_copy.rb
    ```
 
 2. Run lint with --fix on the copy
    ```bash
-   ace-lint lint --fix "$TEST_DIR/style_issues_copy.rb"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   ace-lint lint --fix style_issues_copy.rb
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 3. Verify the file was modified by comparing to original
    ```bash
-   diff "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
+   ace-test-e2e-sh "$TEST_DIR" diff style_issues.rb style_issues_copy.rb
    ```
 
 **Expected:**
@@ -166,26 +202,30 @@ EOF
 **Steps:**
 1. Temporarily hide StandardRB from PATH
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ORIGINAL_PATH="$PATH"
    # Create a temporary bin directory without standardrb
-   mkdir -p "$TEST_DIR/fake_bin"
+   mkdir -p fake_bin
    for tool in ruby rubocop ace-lint; do
-     ln -sf "$(which $tool)" "$TEST_DIR/fake_bin/"
+     ln -sf "$(which $tool)" fake_bin/
    done
    export PATH="$TEST_DIR/fake_bin:$PATH"
 
    # Verify standardrb is not available
    which standardrb 2>/dev/null && echo "ERROR: standardrb still found" || echo "OK: standardrb not in PATH"
+   SANDBOX
    ```
 
 2. Run linting (should fall back to RuboCop)
    ```bash
-   ace-lint lint "$TEST_DIR/valid.rb" 2>&1
+   ace-test-e2e-sh "$TEST_DIR" ace-lint lint valid.rb 2>&1
    ```
 
 3. Restore PATH
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    export PATH="$ORIGINAL_PATH"
+   SANDBOX
    ```
 
 **Expected:**
@@ -201,6 +241,7 @@ EOF
 
 **Recommended alternative for mise environments:**
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Find and temporarily rename the actual standardrb binary
 STANDARDRB_PATH="$(mise which standardrb)"
 mv "$STANDARDRB_PATH" "${STANDARDRB_PATH}.disabled"
@@ -209,6 +250,7 @@ mv "$STANDARDRB_PATH" "${STANDARDRB_PATH}.disabled"
 
 # Restore after test
 mv "${STANDARDRB_PATH}.disabled" "$STANDARDRB_PATH"
+SANDBOX
 ```
 
 ---
@@ -220,22 +262,22 @@ mv "${STANDARDRB_PATH}.disabled" "$STANDARDRB_PATH"
 **Steps:**
 1. Create a copy of the style issues file
    ```bash
-   cp "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
+   ace-test-e2e-sh "$TEST_DIR" cp style_issues.rb style_issues_copy.rb
    ```
 
 2. Run linting with auto-fix
    ```bash
-   ace-lint lint --fix "$TEST_DIR/style_issues_copy.rb"
+   ace-test-e2e-sh "$TEST_DIR" ace-lint lint --fix style_issues_copy.rb
    ```
 
 3. Verify file was modified
    ```bash
-   diff "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
+   ace-test-e2e-sh "$TEST_DIR" diff style_issues.rb style_issues_copy.rb
    ```
 
 4. Re-lint the fixed file
    ```bash
-   ace-lint lint "$TEST_DIR/style_issues_copy.rb"
+   ace-test-e2e-sh "$TEST_DIR" ace-lint lint style_issues_copy.rb
    ```
 
 **Expected:**
@@ -256,7 +298,7 @@ mv "${STANDARDRB_PATH}.disabled" "$STANDARDRB_PATH"
 **Steps:**
 1. Lint all files in batch directory
    ```bash
-   ace-lint lint "$TEST_DIR/batch/"*.rb
+   ace-test-e2e-sh "$TEST_DIR" ace-lint lint batch/*.rb
    ```
 
 **Expected:**

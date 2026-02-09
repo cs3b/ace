@@ -9,7 +9,7 @@ automation-candidate: true
 requires:
   tools: [ace-lint, ace-timestamp]
   ruby: ">= 3.0"
-last-verified: 2026-02-07
+last-verified: 2026-02-08
 verified-by: claude-opus-4-6
 ---
 
@@ -31,12 +31,15 @@ Verify that ace-lint auto-detects SKILL.md files and runs skill-specific validat
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="lint"
 SHORT_ID="mt003"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
 
 # Initialize git repo (needed for project root detection)
 git init --quiet .
@@ -44,13 +47,42 @@ git init --quiet .
 echo "=== Tool Verification ==="
 which ace-lint && ace-lint --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Valid SKILL.md with all required fields and comments
-cat > "$TEST_DIR/SKILL.md" << 'EOF'
+cat > SKILL.md << 'EOF'
 ---
 name: ace:example-skill
 description: A valid example skill for testing
@@ -67,8 +99,8 @@ This skill demonstrates proper structure.
 EOF
 
 # Invalid SKILL.md missing required 'source' field
-mkdir -p "$TEST_DIR/invalid"
-cat > "$TEST_DIR/invalid/SKILL.md" << 'EOF'
+mkdir -p invalid
+cat > invalid/SKILL.md << 'EOF'
 ---
 name: ace:invalid-skill
 description: A skill missing the source field
@@ -81,6 +113,7 @@ allowed-tools:
 
 This skill is missing the required source field.
 EOF
+SANDBOX
 ```
 
 ## Test Cases
@@ -92,20 +125,26 @@ EOF
 **Steps:**
 1. Lint the valid SKILL.md file
    ```bash
-   OUTPUT=$(ace-lint lint "$TEST_DIR/SKILL.md" 2>&1)
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   OUTPUT=$(ace-lint lint SKILL.md 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify exit code is 0
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    test "$EXIT_CODE" -eq 0 && echo "PASS: Exit code is 0" || echo "FAIL: Exit code is $EXIT_CODE"
+   SANDBOX
    ```
 
 3. Verify output indicates pass
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qE "(passed|ok|✓)" && echo "PASS: Output indicates success" || echo "FAIL: No success indicator in output"
+   SANDBOX
    ```
 
 **Expected:**
@@ -126,21 +165,27 @@ EOF
 **Steps:**
 1. Lint the invalid SKILL.md file
    ```bash
-   OUTPUT=$(ace-lint lint "$TEST_DIR/invalid/SKILL.md" 2>&1)
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   OUTPUT=$(ace-lint lint invalid/SKILL.md 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify output shows file failed validation
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qE "(failed|error)" && echo "PASS: Output indicates failure" || echo "FAIL: Output should indicate failure"
+   SANDBOX
    ```
 
 3. Verify report mentions missing 'source' field
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
    grep -qi "source" "${REPORT_DIR}/pending.md" && echo "PASS: Report mentions 'source' field" || echo "FAIL: Report should mention missing 'source' field"
+   SANDBOX
    ```
 
 **Expected:**

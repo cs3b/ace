@@ -9,7 +9,7 @@ automation-candidate: false
 requires:
   tools: [standardrb, rubocop]
   ruby: ">= 3.0"
-last-verified: 2026-02-07
+last-verified: 2026-02-08
 verified-by: claude-opus-4-6
 ---
 
@@ -32,12 +32,15 @@ Verify that ace-lint supports validator selection overrides via CLI `--validator
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="lint"
 SHORT_ID="mt007"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
 
 # Initialize git repo (needed for project root detection)
 git init --quiet .
@@ -58,6 +61,34 @@ class Greeter
   end
 end
 EOF
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Cases
@@ -69,11 +100,13 @@ EOF
 **Steps:**
 1. Force RuboCop and StandardRB explicitly via --validators flag
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "=== TC-001: CLI Validator Override ==="
    echo "=== Force RuboCop ==="
-   ace-lint lint --validators rubocop "$TEST_DIR/valid.rb"
+   ace-lint lint --validators rubocop valid.rb
    echo "=== Force StandardRB ==="
-   ace-lint lint --validators standardrb "$TEST_DIR/valid.rb"
+   ace-lint lint --validators standardrb valid.rb
+   SANDBOX
    ```
 
 **Expected:**
@@ -94,9 +127,10 @@ EOF
 **Steps:**
 1. Create configuration to prefer RuboCop, lint, then overwrite with group routing config and lint each group
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "=== TC-002: Configuration Override ==="
-   mkdir -p "$TEST_DIR/.ace/lint"
-   cat > "$TEST_DIR/.ace/lint/ruby.yml" << 'EOF'
+   mkdir -p .ace/lint
+   cat > .ace/lint/ruby.yml << 'EOF'
    groups:
      default:
        patterns:
@@ -104,11 +138,10 @@ EOF
        validators:
          - rubocop
    EOF
-   cd "$TEST_DIR"
    ace-lint lint valid.rb
 
    echo "=== TC-003: Group-based Routing ==="
-   cat > "$TEST_DIR/.ace/lint/ruby.yml" << 'EOF'
+   cat > .ace/lint/ruby.yml << 'EOF'
    groups:
      legacy:
        patterns:
@@ -126,14 +159,14 @@ EOF
        validators:
          - standardrb
    EOF
-   mkdir -p "$TEST_DIR/legacy" "$TEST_DIR/modern"
-   cp "$TEST_DIR/valid.rb" "$TEST_DIR/legacy/"
-   cp "$TEST_DIR/valid.rb" "$TEST_DIR/modern/"
-   cd "$TEST_DIR"
+   mkdir -p legacy modern
+   cp valid.rb legacy/
+   cp valid.rb modern/
    echo "=== Legacy (expect RuboCop) ==="
    ace-lint lint legacy/valid.rb
    echo "=== Modern (expect StandardRB) ==="
    ace-lint lint modern/valid.rb
+   SANDBOX
    ```
 
 **Expected:**
