@@ -75,6 +75,52 @@ class ReportWriterTest < Minitest::Test
     end
   end
 
+  def test_metadata_includes_empty_failed_test_cases_when_all_pass
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(status: "pass", test_cases: [
+        { id: "TC-001", description: "First", status: "pass" },
+        { id: "TC-002", description: "Second", status: "pass" }
+      ])
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      metadata = YAML.safe_load_file(paths[:metadata])
+
+      assert_equal [], metadata["failed_test_cases"]
+    end
+  end
+
+  def test_metadata_includes_failed_test_case_ids
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(status: "fail", test_cases: [
+        { id: "TC-001", description: "Valid file", status: "pass" },
+        { id: "TC-002", description: "Style issues", status: "fail" },
+        { id: "TC-003", description: "Syntax errors", status: "fail" }
+      ])
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      metadata = YAML.safe_load_file(paths[:metadata])
+
+      assert_equal ["TC-002", "TC-003"], metadata["failed_test_cases"]
+    end
+  end
+
+  def test_metadata_failed_test_cases_with_empty_test_cases
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(test_cases: [])
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      metadata = YAML.safe_load_file(paths[:metadata])
+
+      assert_equal [], metadata["failed_test_cases"]
+    end
+  end
+
   def test_creates_report_directory
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "nested", "reports")

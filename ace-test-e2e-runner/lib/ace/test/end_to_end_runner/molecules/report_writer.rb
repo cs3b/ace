@@ -143,7 +143,8 @@ module Ace
                 "passed" => result.passed_count,
                 "failed" => result.failed_count,
                 "total" => result.total_count
-              }
+              },
+              "failed_test_cases" => result.failed_test_case_ids
             }
 
             File.write(path, YAML.dump(metadata))
