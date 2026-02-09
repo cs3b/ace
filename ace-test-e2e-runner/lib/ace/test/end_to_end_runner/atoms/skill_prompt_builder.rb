@@ -85,9 +85,11 @@ module Ace
           #
           # @param scenario [Models::TestScenario] The test scenario
           # @param run_id [String, nil] Pre-generated run ID for deterministic report paths
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [String] Skill invocation prompt
-          def build_skill_prompt(scenario, run_id: nil)
+          def build_skill_prompt(scenario, run_id: nil, test_cases: nil)
             cmd = "/ace:run-e2e-test #{scenario.package} #{scenario.test_id}"
+            cmd += " #{test_cases.join(',')}" if test_cases&.any?
             cmd += " --run-id #{run_id}" if run_id
             cmd
           end
@@ -97,14 +99,16 @@ module Ace
           # @param scenario [Models::TestScenario] The test scenario
           # @param workflow_content [String] Content of run-e2e-test.wf.md
           # @param run_id [String, nil] Pre-generated run ID for deterministic report paths
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [String] Prompt with embedded workflow and scenario
-          def build_workflow_prompt(scenario, workflow_content:, run_id: nil)
+          def build_workflow_prompt(scenario, workflow_content:, run_id: nil, test_cases: nil)
             <<~PROMPT
               # Execute E2E Test: #{scenario.test_id}
 
               **Package:** #{scenario.package}
               **Title:** #{scenario.title}
               #{"**Run ID:** #{run_id}" if run_id}
+              #{"**Test Cases:** #{test_cases.join(', ')}" if test_cases&.any?}
 
               ## Workflow Instructions
 
@@ -118,6 +122,7 @@ module Ace
 
               ---
 
+              #{test_cases_instruction(test_cases)}
               Execute this test following the workflow instructions above. After completion,
               return a structured summary in this exact format:
 
@@ -130,6 +135,20 @@ module Ace
               - **Issues**: Brief description or "None"
             PROMPT
           end
+
+          private
+
+          # Build test cases filtering instruction for prompts
+          #
+          # @param test_cases [Array<String>, nil] Test case IDs to filter
+          # @return [String] Instruction text or empty string
+          def test_cases_instruction(test_cases)
+            return "" unless test_cases&.any?
+
+            "**IMPORTANT:** Execute ONLY the following test cases: #{test_cases.join(', ')}. Skip all other test cases.\n\n"
+          end
+
+          public
 
           # Get system prompt for E2E execution (overrides provider defaults)
           #
