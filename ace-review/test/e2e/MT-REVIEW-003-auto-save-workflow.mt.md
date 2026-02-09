@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-review, ace-git, ace-taskflow]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Auto-Save Workflow and Task Resolution
@@ -32,12 +32,12 @@ Verify that ace-review auto-save workflow correctly extracts task IDs from branc
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="review"
 SHORT_ID="mt003"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Initialize git repo
 git init --quiet .
@@ -52,16 +52,45 @@ which ace-review && ace-review --version || echo "ace-review not in PATH"
 which ace-taskflow && ace-taskflow --version || echo "ace-taskflow not in PATH"
 which git && git --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create taskflow structure
-mkdir -p "$TEST_DIR/.ace-taskflow/v.test/tasks/126-feature"
+mkdir -p .ace-taskflow/v.test/tasks/126-feature
 
 # Create task spec file
-cat > "$TEST_DIR/.ace-taskflow/v.test/tasks/126-feature/126.00-orchestrator.s.md" << 'EOF'
+cat > .ace-taskflow/v.test/tasks/126-feature/126.00-orchestrator.s.md << 'EOF'
 ---
 id: v.test+task.126
 status: in-progress
@@ -76,8 +105,8 @@ Test task for E2E auto-save testing.
 EOF
 
 # Create subtask directory
-mkdir -p "$TEST_DIR/.ace-taskflow/v.test/tasks/126-feature"
-cat > "$TEST_DIR/.ace-taskflow/v.test/tasks/126-feature/126.03-auto-save.s.md" << 'EOF'
+mkdir -p .ace-taskflow/v.test/tasks/126-feature
+cat > .ace-taskflow/v.test/tasks/126-feature/126.03-auto-save.s.md << 'EOF'
 ---
 id: v.test+task.126.03
 status: in-progress
@@ -93,19 +122,19 @@ Test subtask for E2E auto-save testing.
 EOF
 
 # Create review presets
-mkdir -p "$TEST_DIR/.ace/review/presets"
-cat > "$TEST_DIR/.ace/review/presets/test.yml" << 'EOF'
+mkdir -p .ace/review/presets
+cat > .ace/review/presets/test.yml << 'EOF'
 description: "Test preset"
 model: "test-model"
 EOF
 
-cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
+cat > .ace/review/config.yml << 'EOF'
 defaults:
   model: "test-model"
 EOF
 
 # Create test files
-cat > "$TEST_DIR/test.rb" << 'EOF'
+cat > test.rb << 'EOF'
 # Test file for review
 class TestClass
   def test_method
@@ -121,6 +150,7 @@ git commit -m "Initial commit" --quiet
 # Create a task branch
 git checkout -b 126-feature-test --quiet
 echo "# Branch is now: $(git branch --show-current)"
+SANDBOX
 ```
 
 ## Test Cases
@@ -132,14 +162,17 @@ echo "# Branch is now: $(git branch --show-current)"
 **Steps:**
 1. Verify current branch name
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    BRANCH=$(git branch --show-current)
    echo "Current branch: $BRANCH"
+   SANDBOX
    ```
 
 2. Verify branch matches task pattern
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$BRANCH" | grep -qE "^[0-9]+" && echo "PASS: Branch has task ID prefix" || echo "FAIL: Branch doesn't match task pattern"
+   SANDBOX
    ```
 
 **Expected:**
@@ -159,15 +192,18 @@ echo "# Branch is now: $(git branch --show-current)"
 **Steps:**
 1. Create and switch to subtask branch
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    git checkout -b 126.03-auto-save-detection --quiet
    BRANCH=$(git branch --show-current)
    echo "Current branch: $BRANCH"
+   SANDBOX
    ```
 
 2. Verify subtask pattern matches
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$BRANCH" | grep -qE "^[0-9]+\.[0-9]+" && echo "PASS: Branch has subtask ID" || echo "FAIL: Branch doesn't match subtask pattern"
+   SANDBOX
    ```
 
 **Expected:**
@@ -187,15 +223,18 @@ echo "# Branch is now: $(git branch --show-current)"
 **Steps:**
 1. Switch to main branch
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    git checkout main --quiet 2>/dev/null || git checkout -b main --quiet
    BRANCH=$(git branch --show-current)
    echo "Current branch: $BRANCH"
+   SANDBOX
    ```
 
 2. Verify main branch doesn't have task ID
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$BRANCH" | grep -qE "^[0-9]+" && echo "FAIL: main branch shouldn't have task ID prefix" || echo "PASS: main branch correctly has no task ID"
+   SANDBOX
    ```
 
 **Expected:**
@@ -215,20 +254,24 @@ echo "# Branch is now: $(git branch --show-current)"
 **Steps:**
 1. Switch back to task branch
    ```bash
-   cd "$TEST_DIR"
-   git checkout 126-feature-test --quiet
+   ace-test-e2e-sh "$TEST_DIR" git checkout 126-feature-test --quiet
    ```
 
 2. Verify reviews directory doesn't exist yet
    ```bash
-   TASK_DIR="$TEST_DIR/.ace-taskflow/v.test/tasks/126-feature"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   TASK_DIR=".ace-taskflow/v.test/tasks/126-feature"
    ! test -d "$TASK_DIR/reviews" && echo "PASS: reviews/ doesn't exist yet" || echo "INFO: reviews/ already exists"
+   SANDBOX
    ```
 
 3. Create reviews directory (simulating what TaskReportSaver does)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   TASK_DIR=".ace-taskflow/v.test/tasks/126-feature"
    mkdir -p "$TASK_DIR/reviews"
    test -d "$TASK_DIR/reviews" && echo "PASS: reviews/ directory created" || echo "FAIL: reviews/ not created"
+   SANDBOX
    ```
 
 **Expected:**
@@ -247,23 +290,28 @@ echo "# Branch is now: $(git branch --show-current)"
 **Steps:**
 1. Generate a timestamp ID
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    TIMESTAMP=$(ace-timestamp encode)
    echo "Generated timestamp: $TIMESTAMP"
+   SANDBOX
    ```
 
 2. Verify timestamp format (6 chars Base36)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$TIMESTAMP" | grep -qE "^[0-9a-z]{6}$" && echo "PASS: Timestamp is 6-char Base36" || echo "FAIL: Invalid timestamp format"
+   SANDBOX
    ```
 
 3. Construct expected filename pattern
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Pattern: {timestamp}-{model-slug}-{preset}-review.md
    EXPECTED_PATTERN="^[0-9a-z]{6}-google-gemini-2-5-flash-code-review\.md$"
    SAMPLE_FILENAME="${TIMESTAMP}-google-gemini-2-5-flash-code-review.md"
    echo "Sample filename: $SAMPLE_FILENAME"
    echo "$SAMPLE_FILENAME" | grep -qE "$EXPECTED_PATTERN" && echo "PASS: Filename matches pattern" || echo "FAIL: Filename doesn't match"
+   SANDBOX
    ```
 
 **Expected:**
@@ -283,18 +331,22 @@ echo "# Branch is now: $(git branch --show-current)"
 **Steps:**
 1. Attempt to create review in nonexistent directory
    ```bash
-   cd "$TEST_DIR"
-   NONEXISTENT_DIR="$TEST_DIR/.ace-taskflow/v.test/tasks/999-nonexistent"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   NONEXISTENT_DIR=".ace-taskflow/v.test/tasks/999-nonexistent"
 
    # Try to create file in nonexistent directory
    mkdir -p "$NONEXISTENT_DIR/reviews" 2>/dev/null
    test -d "$NONEXISTENT_DIR/reviews" && echo "INFO: Directory created (mkdir -p succeeds)" || echo "FAIL: mkdir -p failed"
+   SANDBOX
    ```
 
 2. Verify directory was created with mkdir -p
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   NONEXISTENT_DIR=".ace-taskflow/v.test/tasks/999-nonexistent"
    # mkdir -p creates parent directories, so this should succeed
    test -d "$NONEXISTENT_DIR" && echo "PASS: Parent directories created" || echo "FAIL: Directory not created"
+   SANDBOX
    ```
 
 **Expected:**
@@ -314,15 +366,18 @@ echo "# Branch is now: $(git branch --show-current)"
 **Steps:**
 1. Create feature branch
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    git checkout -b feature/123-add-login --quiet
    BRANCH=$(git branch --show-current)
    echo "Current branch: $BRANCH"
+   SANDBOX
    ```
 
 2. Verify feature branch pattern
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$BRANCH" | grep -qE "^feature/[0-9]+" && echo "PASS: Feature branch pattern detected" || echo "FAIL: Feature branch not detected"
+   SANDBOX
    ```
 
 **Expected:**

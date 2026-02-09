@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-review, ace-bundle]
   ruby: ">= 3.0"
-last-verified: 2026-02-04
-verified-by: claude-opus-4-5
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Preset Composition and Inheritance
@@ -31,12 +31,12 @@ Verify that ace-review preset composition system correctly handles multi-level i
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="review"
 SHORT_ID="mt001"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Initialize git repo (needed for project root detection)
 git init --quiet .
@@ -49,16 +49,45 @@ export PROJECT_ROOT_PATH="$TEST_DIR"
 echo "=== Tool Verification ==="
 which ace-review && ace-review --version || echo "ace-review not in PATH"
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create preset directory
-mkdir -p "$TEST_DIR/.ace/review/presets"
+mkdir -p .ace/review/presets
 
 # Base code preset
-cat > "$TEST_DIR/.ace/review/presets/code.yml" << 'EOF'
+cat > .ace/review/presets/code.yml << 'EOF'
 description: "Base code review configuration"
 instructions:
   description: "Code review instructions"
@@ -78,7 +107,7 @@ model: gpro
 EOF
 
 # Composed code-pr preset that extends code
-cat > "$TEST_DIR/.ace/review/presets/code-pr.yml" << 'EOF'
+cat > .ace/review/presets/code-pr.yml << 'EOF'
 presets:
   - code
 description: "Pull request review - comprehensive code changes review"
@@ -93,7 +122,7 @@ subject:
 EOF
 
 # Multi-level inheritance: level_1 (base)
-cat > "$TEST_DIR/.ace/review/presets/level_1.yml" << 'EOF'
+cat > .ace/review/presets/level_1.yml << 'EOF'
 description: "Level 1"
 model: "google:gemini-2.5-flash"
 instructions:
@@ -101,7 +130,7 @@ instructions:
 EOF
 
 # Multi-level inheritance: level_2 extends level_1
-cat > "$TEST_DIR/.ace/review/presets/level_2.yml" << 'EOF'
+cat > .ace/review/presets/level_2.yml << 'EOF'
 presets:
   - level_1
 description: "Level 2"
@@ -111,7 +140,7 @@ instructions:
 EOF
 
 # Multi-level inheritance: level_3 extends level_2
-cat > "$TEST_DIR/.ace/review/presets/level_3.yml" << 'EOF'
+cat > .ace/review/presets/level_3.yml << 'EOF'
 presets:
   - level_2
 description: "Level 3"
@@ -121,28 +150,28 @@ instructions:
 EOF
 
 # Circular dependency: preset_a
-cat > "$TEST_DIR/.ace/review/presets/preset_a.yml" << 'EOF'
+cat > .ace/review/presets/preset_a.yml << 'EOF'
 presets:
   - preset_b
 description: "Preset A"
 EOF
 
 # Circular dependency: preset_b
-cat > "$TEST_DIR/.ace/review/presets/preset_b.yml" << 'EOF'
+cat > .ace/review/presets/preset_b.yml << 'EOF'
 presets:
   - preset_a
 description: "Preset B"
 EOF
 
 # Missing reference preset
-cat > "$TEST_DIR/.ace/review/presets/broken.yml" << 'EOF'
+cat > .ace/review/presets/broken.yml << 'EOF'
 presets:
   - nonexistent_base
 description: "Broken composition"
 EOF
 
 # Array deduplication: base_sections
-cat > "$TEST_DIR/.ace/review/presets/base_sections.yml" << 'EOF'
+cat > .ace/review/presets/base_sections.yml << 'EOF'
 description: "Base with sections"
 model: "google:gemini-2.5-flash"
 instructions:
@@ -156,7 +185,7 @@ instructions:
 EOF
 
 # Array deduplication: extended_sections
-cat > "$TEST_DIR/.ace/review/presets/extended_sections.yml" << 'EOF'
+cat > .ace/review/presets/extended_sections.yml << 'EOF'
 presets:
   - base_sections
 description: "Extended sections"
@@ -171,15 +200,16 @@ instructions:
 EOF
 
 # Create minimal config file
-cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
+cat > .ace/review/config.yml << 'EOF'
 defaults:
   model: "google:gemini-2.5-flash"
 EOF
 
 # Create a test file for subject
-echo "# Test File" > "$TEST_DIR/test.rb"
+echo "# Test File" > test.rb
 git add .
 git commit -m "Initial commit" --quiet
+SANDBOX
 ```
 
 ## Test Cases
@@ -191,7 +221,7 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Use ace-review to show resolved preset configuration
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Use list-presets to verify presets are discovered
    OUTPUT=$(ace-review list-presets 2>&1)
    echo "$OUTPUT"
@@ -199,6 +229,7 @@ git commit -m "Initial commit" --quiet
    # Verify code-pr preset is found
    echo "$OUTPUT" | grep -q "code-pr" && echo "PASS: code-pr preset discovered" || echo "FAIL: code-pr not found"
    echo "$OUTPUT" | grep -q "code" && echo "PASS: code preset discovered" || echo "FAIL: code not found"
+   SANDBOX
    ```
 
 **Expected:**
@@ -218,7 +249,7 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Run ace-review with code-pr preset in dry-run mode
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Use --dry-run to avoid actual LLM calls and verify resolved configuration
    OUTPUT=$(ace-review --preset code-pr --subject "test.rb" --dry-run 2>&1)
    EXIT_CODE=$?
@@ -227,11 +258,14 @@ git commit -m "Initial commit" --quiet
 
    # Verify model was inherited from base preset (gpro from code.yml)
    echo "$OUTPUT" | grep -qi "gpro\|model" && echo "PASS: Model setting visible in output" || echo "INFO: Model may be resolved internally"
+   SANDBOX
    ```
 
 2. Verify exit code is 0 (dry-run success)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Dry-run succeeded" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -251,16 +285,19 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Run ace-review with level_3 preset
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset level_3 --subject "test.rb" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify command completes successfully
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Multi-level composition succeeded" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -280,17 +317,20 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Attempt to use preset with circular dependency
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset preset_a --subject "test.rb" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify error handling
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Circular dependency rejected with non-zero exit" || echo "FAIL: Expected non-zero exit code"
    echo "$OUTPUT" | grep -qi "circular\|cycle\|error\|failed" && echo "PASS: Error message present" || echo "INFO: Specific error message may vary"
+   SANDBOX
    ```
 
 **Expected:**
@@ -310,17 +350,20 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Attempt to use preset with missing reference
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset broken --subject "test.rb" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify error handling
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Missing reference rejected with non-zero exit" || echo "FAIL: Expected non-zero exit code"
    echo "$OUTPUT" | grep -qi "not found\|missing\|error\|failed" && echo "PASS: Error message present" || echo "INFO: Specific error message may vary"
+   SANDBOX
    ```
 
 **Expected:**
@@ -340,16 +383,19 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Run ace-review with extended_sections preset
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset extended_sections --subject "test.rb" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify command completes
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Array merging preset processed" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -369,17 +415,20 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Attempt to use nonexistent preset
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset totally_nonexistent --subject "test.rb" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify error handling
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Nonexistent preset rejected with non-zero exit" || echo "FAIL: Expected non-zero exit code"
    echo "$OUTPUT" | grep -qi "not found\|unknown\|error" && echo "PASS: Error message present" || echo "INFO: Error message may vary"
+   SANDBOX
    ```
 
 **Expected:**

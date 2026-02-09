@@ -33,12 +33,12 @@ Verify that ace-review's multi-dimensional review features (multi-model executio
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="review"
 SHORT_ID="mt006"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Initialize git repo
 git init --quiet .
@@ -54,22 +54,51 @@ ruby --version
 echo "PROJECT_ROOT: $PROJECT_ROOT"
 echo "TEST_DIR: $TEST_DIR"
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create preset directories
-mkdir -p "$TEST_DIR/.ace/review/presets"
+mkdir -p .ace/review/presets
 
 # Create minimal config
-cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
+cat > .ace/review/config.yml << 'EOF'
 defaults:
   model: "google:gemini-2.5-flash"
 EOF
 
 # Preset 1: Single model (minimal cost)
-cat > "$TEST_DIR/.ace/review/presets/minimal.yml" << 'EOF'
+cat > .ace/review/presets/minimal.yml << 'EOF'
 description: "Minimal E2E test preset"
 model: google:gemini-2.5-flash
 instructions:
@@ -78,7 +107,7 @@ instructions:
 EOF
 
 # Preset 2: Multi-model (2 cheap models)
-cat > "$TEST_DIR/.ace/review/presets/multi-model.yml" << 'EOF'
+cat > .ace/review/presets/multi-model.yml << 'EOF'
 description: "Multi-model E2E test"
 models:
   - google:gemini-2.5-flash
@@ -89,7 +118,7 @@ instructions:
 EOF
 
 # Preset 3: New reviewers format
-cat > "$TEST_DIR/.ace/review/presets/reviewers-test.yml" << 'EOF'
+cat > .ace/review/presets/reviewers-test.yml << 'EOF'
 description: "Reviewers format E2E test"
 reviewers:
   - name: "reviewer-1"
@@ -102,7 +131,7 @@ instructions:
 EOF
 
 # Create test file
-cat > "$TEST_DIR/calculator.rb" << 'EOF'
+cat > calculator.rb << 'EOF'
 # Simple calculator for E2E testing
 class Calculator
   def add(a, b)
@@ -120,7 +149,7 @@ git add .
 git commit -m "Initial commit" --quiet
 
 # Make a small change for diff
-cat >> "$TEST_DIR/calculator.rb" << 'EOF'
+cat >> calculator.rb << 'EOF'
 
   def multiply(a, b)
     a * b
@@ -131,6 +160,7 @@ git add calculator.rb
 git commit -m "Add multiply method" --quiet
 
 echo "Test data created successfully"
+SANDBOX
 ```
 
 ## Test Cases
@@ -142,8 +172,8 @@ echo "Test data created successfully"
 **Steps:**
 1. Run ace-review with minimal preset
    ```bash
-   cd "$TEST_DIR"
-   SESSION_DIR="$TEST_DIR/session-tc001"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc001"
 
    OUTPUT=$(ace-review review \
      --preset minimal \
@@ -156,10 +186,13 @@ echo "Test data created successfully"
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify results
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc001"
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
    # Check session directory was created
@@ -174,6 +207,7 @@ echo "Test data created successfully"
      LINES=$(wc -l < "$REVIEW_FILE")
      [ "$LINES" -gt 5 ] && echo "PASS: Review has content ($LINES lines)" || echo "FAIL: Review too short"
    fi
+   SANDBOX
    ```
 
 **Expected:**
@@ -194,8 +228,8 @@ echo "Test data created successfully"
 **Steps:**
 1. Run ace-review with multi-model preset
    ```bash
-   cd "$TEST_DIR"
-   SESSION_DIR="$TEST_DIR/session-tc002"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc002"
 
    OUTPUT=$(ace-review review \
      --preset multi-model \
@@ -208,10 +242,13 @@ echo "Test data created successfully"
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify results
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc002"
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
    # Check session directory
@@ -225,6 +262,7 @@ echo "Test data created successfully"
    # List session contents
    echo "Session contents:"
    ls -la "$SESSION_DIR"
+   SANDBOX
    ```
 
 **Expected:**
@@ -245,8 +283,8 @@ echo "Test data created successfully"
 **Steps:**
 1. Run ace-review with reviewers-format preset
    ```bash
-   cd "$TEST_DIR"
-   SESSION_DIR="$TEST_DIR/session-tc003"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc003"
 
    OUTPUT=$(ace-review review \
      --preset reviewers-test \
@@ -259,10 +297,13 @@ echo "Test data created successfully"
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify results
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc003"
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
    # Check session directory
@@ -278,6 +319,7 @@ echo "Test data created successfully"
    # List session contents
    echo "Session contents:"
    ls -la "$SESSION_DIR"
+   SANDBOX
    ```
 
 **Expected:**
@@ -298,8 +340,7 @@ echo "Test data created successfully"
 **Steps:**
 1. Run ace-review with nonexistent preset
    ```bash
-   cd "$TEST_DIR"
-
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review review \
      --preset nonexistent-preset-xyz \
      --subject "diff:HEAD~1" \
@@ -309,16 +350,19 @@ echo "Test data created successfully"
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify error handling
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit for invalid preset" || echo "FAIL: Expected non-zero exit"
 
    # Check for error message
    echo "$OUTPUT" | grep -qi "not found\|unknown\|error\|invalid" && \
      echo "PASS: Error message present" || \
      echo "FAIL: No clear error message"
+   SANDBOX
    ```
 
 **Expected:**

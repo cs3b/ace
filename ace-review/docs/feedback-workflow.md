@@ -34,21 +34,28 @@ Key benefits:
    # Verify a draft item as valid
    ace-review feedback verify abc123 --valid --research "Confirmed issue in production logs"
 
-   # Resolve a pending item
-   ace-review feedback resolve abc123 --resolution "Fixed in commit def456"
+   # Verify as invalid (false positive)
+   ace-review feedback verify abc123 --invalid --research "False positive: validation exists"
 
    # Skip an item that's not applicable
-   ace-review feedback skip abc123 --reason "Out of scope for this PR"
+   ace-review feedback verify abc123 --skip --research "Out of scope for this PR"
+
+   # Resolve a pending item
+   ace-review feedback resolve abc123 --resolution "Fixed in commit def456"
    ```
 
 ## Feedback Item Lifecycle
 
 ```
 draft --> (verify --valid) --> pending --> (resolve) --> done [archived]
-      \                               \
-       --> (verify --invalid) ---------> invalid [archived]
-        \                              /
-         --> (skip) ------------------> skip [archived]
+      \
+       --> (verify --invalid) --------------> invalid [archived]
+        \
+         --> (verify --skip) ---------------> skip [archived]
+
+pending --> (resolve) --> done [archived]
+         \
+          --> (verify --skip) -------------> skip [archived]
 ```
 
 ### Status Definitions
@@ -125,7 +132,7 @@ ace-review feedback show abc123 --session .cache/ace-review/sessions/review-8p2h
 
 ### `ace-review feedback verify <id>`
 
-Verifies a draft item as valid or invalid.
+Verifies a draft item as valid, invalid, or skipped.
 
 ```bash
 # Mark as valid (moves to pending)
@@ -134,33 +141,72 @@ ace-review feedback verify abc123 --valid
 # Mark as invalid (archives the item)
 ace-review feedback verify abc123 --invalid
 
+# Mark as skipped (archives the item)
+ace-review feedback verify abc123 --skip
+
 # Add research notes
 ace-review feedback verify abc123 --valid --research "Confirmed: code path is reachable"
 ace-review feedback verify abc123 --invalid --research "False positive: handled elsewhere"
+ace-review feedback verify abc123 --skip --research "Design: using polling for simplicity"
 ```
 
 **Options:**
 - `--valid` - Mark as valid (moves to pending status)
 - `--invalid` - Mark as invalid (archives the item)
-- `--research TEXT` - Add verification research notes
+- `--skip` - Mark as skipped (archives the item)
+- `--research TEXT` - Add verification research notes (what we learned/decided)
 - `--session PATH` - Session directory containing feedback
 
-### `ace-review feedback skip <id>`
+## Choosing Between Verification Modes
 
-Skips a feedback item (marks as not applicable).
+All three modes archive feedback items, but they mean different things:
 
-```bash
-# Skip without reason
-ace-review feedback skip abc123
-
-# Skip with reason
-ace-review feedback skip abc123 --reason "Out of scope for this PR"
-ace-review feedback skip abc123 --reason "Technical debt, tracking separately"
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Is the feedback claim factually correct?                        │
+├─────────────────┬───────────────────────────────────────────────┤
+│  NO             │  YES                                          │
+│  → verify --invalid  │  → Are you fixing it?                      │
+│  (False positive)  │     ├─ YES → verify --valid (then resolve)  │
+│                    │     └─ NO → verify --skip "..."            │
+│                    │           (Not applicable)                  │
+└────────────────────┴─────────────────────────────────────────────┘
 ```
 
-**Options:**
-- `--reason TEXT` - Reason for skipping
-- `--session PATH` - Session directory containing feedback
+| Question | `verify --invalid` | `verify --skip` |
+|----------|-------------------|-----------------|
+| Is the claim factually wrong? | ✅ Yes | ❌ No |
+| Is the finding correct but not fixed? | ❌ No | ✅ Yes |
+| Does it archive the item? | ✅ Yes | ✅ Yes |
+| `--research` meaning | Why it's incorrect | Why we're skipping |
+
+### Concrete Examples
+
+**Use `verify --invalid` for false positives (incorrect findings):**
+
+```bash
+# Claimed code doesn't exist, but it does
+ace-review feedback verify abc123 --invalid --research "Class exists at lib/extractor.rb:42"
+
+# Claimed missing validation, but it exists elsewhere
+ace-review feedback verify abc124 --invalid --research "Validation exists in AuthMiddleware:23"
+
+# Claimed issue in CI, but code doesn't run in CI
+ace-review feedback verify abc125 --invalid --research "E2E tests are agent-executed, not in CI"
+```
+
+**Use `verify --skip` for correct findings that won't be fixed:**
+
+```bash
+# Design decision - intentionally choosing this approach
+ace-review feedback verify abc126 --skip --research "Design: using polling for simplicity"
+
+# Deferred - correct issue, but tracking separately
+ace-review feedback verify abc127 --skip --research "Tracked in task 253"
+
+# Duplicate - already covered by another item
+ace-review feedback verify abc128 --skip --research "Duplicate of abc120"
+```
 
 ### `ace-review feedback resolve <id>`
 
