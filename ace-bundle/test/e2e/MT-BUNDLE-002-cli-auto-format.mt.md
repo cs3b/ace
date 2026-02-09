@@ -9,8 +9,8 @@ automation-candidate: false
 requires:
   tools: [ace-bundle]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # CLI Auto-Format Behavior
@@ -29,26 +29,63 @@ Verify that ace-bundle CLI automatically chooses stdio vs cache output based on 
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="bundle"
 SHORT_ID="mt002"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
+
+# Init git repo so ProjectRootFinder finds sandbox as root
+git init "$TEST_DIR"
+git -C "$TEST_DIR" config user.email "test@example.com"
+git -C "$TEST_DIR" config user.name "Test User"
 
 echo "=== Tool Verification ==="
 which ace-bundle && ace-bundle --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create minimal .ace structure
-mkdir -p "$TEST_DIR/.ace/bundle/presets"
+mkdir -p .ace/bundle/presets
 
 # Create small preset (under 500 lines) - should output to stdio
-cat > "$TEST_DIR/.ace/bundle/presets/small-test.md" << 'EOF'
+cat > .ace/bundle/presets/small-test.md << 'EOF'
 ---
 name: small-test
 ---
@@ -72,7 +109,7 @@ EOF
   for i in $(seq 1 600); do
     echo "Line $i of large content"
   done
-} > "$TEST_DIR/.ace/bundle/presets/large-test.md"
+} > .ace/bundle/presets/large-test.md
 
 # Create at-threshold preset (~498 content lines + wrapper = ~500 total)
 {
@@ -87,7 +124,7 @@ EOF
   for i in $(seq 1 493); do
     echo "Line $i"
   done
-} > "$TEST_DIR/.ace/bundle/presets/at-threshold-test.md"
+} > .ace/bundle/presets/at-threshold-test.md
 
 # Create below-threshold preset (100 lines)
 {
@@ -102,7 +139,8 @@ EOF
   for i in $(seq 1 95); do
     echo "Line $i"
   done
-} > "$TEST_DIR/.ace/bundle/presets/below-threshold-test.md"
+} > .ace/bundle/presets/below-threshold-test.md
+SANDBOX
 ```
 
 ## Test Cases
@@ -112,32 +150,18 @@ EOF
 **Objective:** Verify that content under 500 lines is output directly to stdout.
 
 **Steps:**
-1. Load small preset
+1. Load small preset and verify
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-bundle small-test 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
-   ```
 
-2. Verify success
-   ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
-   ```
-
-3. Verify content is output directly (not cache message)
-   ```bash
    echo "$OUTPUT" | grep -q "# Small Test Content" && echo "PASS: Content output directly" || echo "FAIL: Content not in stdout"
-   ```
-
-4. Verify no cache save message
-   ```bash
    ! echo "$OUTPUT" | grep -q "Bundle saved" && echo "PASS: No cache message" || echo "FAIL: Unexpected cache message"
-   ```
-
-5. Verify no output file reference
-   ```bash
    ! echo "$OUTPUT" | grep -q "output file:" && echo "PASS: No file reference" || echo "FAIL: Unexpected file reference"
+   SANDBOX
    ```
 
 **Expected:**
@@ -157,32 +181,18 @@ EOF
 **Objective:** Verify that content over 500 lines is saved to cache and path is returned.
 
 **Steps:**
-1. Load large preset
+1. Load large preset and verify
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-bundle large-test 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
-   ```
 
-2. Verify success
-   ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
-   ```
-
-3. Verify cache save message
-   ```bash
    echo "$OUTPUT" | grep -q "Bundle saved" && echo "PASS: Cache message present" || echo "FAIL: No cache message"
-   ```
-
-4. Verify output file reference
-   ```bash
    echo "$OUTPUT" | grep -q "output file:" && echo "PASS: File reference present" || echo "FAIL: No file reference"
-   ```
-
-5. Verify cache path mentioned
-   ```bash
    echo "$OUTPUT" | grep -q ".cache/ace-bundle" && echo "PASS: Cache path in output" || echo "FAIL: No cache path"
+   SANDBOX
    ```
 
 **Expected:**
@@ -202,27 +212,17 @@ EOF
 **Objective:** Verify that `--output stdio` forces large content to stdout.
 
 **Steps:**
-1. Load large preset with explicit stdio output
+1. Load large preset with explicit stdio output and verify
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-bundle large-test --output stdio 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
-   ```
 
-2. Verify success
-   ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
-   ```
-
-3. Verify content is output directly
-   ```bash
    echo "$OUTPUT" | grep -q "# Large Test Content" && echo "PASS: Content output directly" || echo "FAIL: Content not in stdout"
-   ```
-
-4. Verify no cache save message
-   ```bash
    ! echo "$OUTPUT" | grep -q "Bundle saved" && echo "PASS: No cache message" || echo "FAIL: Unexpected cache message"
+   SANDBOX
    ```
 
 **Expected:**
@@ -241,27 +241,17 @@ EOF
 **Objective:** Verify that `--output cache` forces small content to cache file.
 
 **Steps:**
-1. Load small preset with explicit cache output
+1. Load small preset with explicit cache output and verify
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-bundle small-test --output cache 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
-   ```
 
-2. Verify success
-   ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
-   ```
-
-3. Verify cache save message
-   ```bash
    echo "$OUTPUT" | grep -q "Bundle saved" && echo "PASS: Cache message present" || echo "FAIL: No cache message"
-   ```
-
-4. Verify output file reference
-   ```bash
    echo "$OUTPUT" | grep -q "output file:" && echo "PASS: File reference present" || echo "FAIL: No file reference"
+   SANDBOX
    ```
 
 **Expected:**
@@ -280,22 +270,16 @@ EOF
 **Objective:** Verify that content at/above 500 lines goes to cache.
 
 **Steps:**
-1. Load at-threshold preset
+1. Load at-threshold preset and verify
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-bundle at-threshold-test 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
-   ```
 
-2. Verify success
-   ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
-   ```
-
-3. Verify cache behavior (at threshold = cache)
-   ```bash
    echo "$OUTPUT" | grep -q "Bundle saved" && echo "PASS: At threshold goes to cache" || echo "FAIL: Expected cache output"
+   SANDBOX
    ```
 
 **Expected:**
@@ -313,27 +297,17 @@ EOF
 **Objective:** Verify that content clearly below 500 lines goes to stdio.
 
 **Steps:**
-1. Load below-threshold preset
+1. Load below-threshold preset and verify
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-bundle below-threshold-test 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
-   ```
 
-2. Verify success
-   ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
-   ```
-
-3. Verify stdio behavior
-   ```bash
    ! echo "$OUTPUT" | grep -q "Bundle saved" && echo "PASS: Below threshold goes to stdio" || echo "FAIL: Unexpected cache"
-   ```
-
-4. Verify content present
-   ```bash
    echo "$OUTPUT" | grep -q "# Test Content" && echo "PASS: Content in stdout" || echo "FAIL: Content not found"
+   SANDBOX
    ```
 
 **Expected:**
@@ -349,10 +323,8 @@ EOF
 
 ## Cleanup
 
-```bash
-# Artifacts preserved for debugging - cleanup optional
-# rm -rf "$TEST_DIR"
-```
+Cleanup is optional. The workflow controls this via `cleanup.enabled` setting (default: disabled).
+Artifacts in `.cache/ace-test-e2e/` are gitignored, so keeping them doesn't affect the repository.
 
 ## Success Criteria
 
