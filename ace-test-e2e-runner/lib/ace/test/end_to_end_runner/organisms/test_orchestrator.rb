@@ -48,10 +48,11 @@ module Ace
           #
           # @param package [String] Package name (e.g., "ace-lint")
           # @param test_id [String, nil] Optional test ID to run specific test
+          # @param test_cases [Array<String>, nil] Optional normalized test case IDs to filter
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param output [IO] Output stream for progress messages (default: $stdout)
           # @return [Array<Models::TestResult>] List of test results
-          def run(package:, test_id: nil, cli_args: nil, run_id: nil, output: $stdout)
+          def run(package:, test_id: nil, test_cases: nil, cli_args: nil, run_id: nil, output: $stdout)
             # Discover tests
             files = @discoverer.find_tests(
               package: package,
@@ -69,9 +70,9 @@ module Ace
             timestamp = run_id || generate_timestamp
 
             if files.size == 1
-              run_single_test(files.first, timestamp, cli_args, output)
+              run_single_test(files.first, timestamp, cli_args, output, test_cases: test_cases)
             else
-              run_package_tests(files, package, timestamp, cli_args, output)
+              run_package_tests(files, package, timestamp, cli_args, output, test_cases: test_cases)
             end
           end
 
@@ -84,16 +85,20 @@ module Ace
           end
 
           # Run a single test
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Array<Models::TestResult>] Single-element result array
-          def run_single_test(file, timestamp, cli_args, output)
+          def run_single_test(file, timestamp, cli_args, output, test_cases: nil)
             scenario = @parser.parse(file)
             display = build_display_manager([scenario], output)
 
             output.puts "Running E2E test: #{scenario.test_id} (#{scenario.package})"
+            if test_cases
+              output.puts "Filtering test cases: #{test_cases.join(', ')}"
+            end
             output.puts "Executing via #{@provider}#{cli_provider? ? " (skill mode)" : ""}..."
 
             run_id = cli_provider? ? timestamp : nil
-            result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id)
+            result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases)
 
             report_dir = report_dir_for(scenario, timestamp)
 
@@ -119,8 +124,9 @@ module Ace
           end
 
           # Run all tests in a package
+          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Array<Models::TestResult>] Results for all tests
-          def run_package_tests(files, package, timestamp, cli_args, output)
+          def run_package_tests(files, package, timestamp, cli_args, output, test_cases: nil)
             # Parse scenarios upfront for titles and report generation
             scenarios = files.map { |f| @parser.parse(f) }
 
@@ -158,7 +164,7 @@ module Ace
                     display.test_started(scenario)
                   end
 
-                  result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id)
+                  result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases)
 
                   report_dir = report_dir_for(scenario, run_id || timestamp)
 

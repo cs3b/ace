@@ -16,7 +16,7 @@ class TestOrchestratorTest < Minitest::Test
       @summary = summary
     end
 
-    def execute(scenario, cli_args: nil, run_id: nil)
+    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil)
       TestResult.new(
         test_id: scenario.test_id,
         status: @status,
@@ -277,7 +277,7 @@ class TestOrchestratorTest < Minitest::Test
       call_count = 0
       # Executor that alternates pass/fail
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
         call_count += 1
         TestResult.new(
           test_id: scenario.test_id,
@@ -447,7 +447,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received_run_id = nil
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
         received_run_id = run_id
         TestResult.new(
           test_id: scenario.test_id,
@@ -481,7 +481,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received_run_id = :not_called
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
         received_run_id = run_id
         TestResult.new(
           test_id: scenario.test_id,
@@ -516,7 +516,7 @@ class TestOrchestratorTest < Minitest::Test
       received_run_ids = []
       mutex = Mutex.new
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
         mutex.synchronize { received_run_ids << run_id }
         TestResult.new(
           test_id: scenario.test_id,
@@ -594,7 +594,7 @@ class TestOrchestratorTest < Minitest::Test
       mutex = Mutex.new
 
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
         mutex.synchronize { execution_order << scenario.test_id }
         TestResult.new(
           test_id: scenario.test_id,
@@ -672,7 +672,7 @@ class TestOrchestratorTest < Minitest::Test
       # Executor where test 1 is slow, test 2/3 are fast
       # With parallel > 1, test 2 may finish before test 1
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
         sleep(0.05) if scenario.test_id == "MT-TEST-001"
         TestResult.new(
           test_id: scenario.test_id,

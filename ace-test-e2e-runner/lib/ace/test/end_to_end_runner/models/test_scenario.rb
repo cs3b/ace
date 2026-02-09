@@ -49,6 +49,15 @@ module Ace
             test_id.downcase.gsub(/[^a-z0-9]/, "")
           end
 
+          # Extract test case IDs from the scenario content
+          #
+          # Delegates to TestCaseParser to find TC-NNN headers in the markdown.
+          #
+          # @return [Array<String>] List of test case IDs (e.g., ["TC-001", "TC-002"])
+          def test_case_ids
+            @test_case_ids ||= Atoms::TestCaseParser.extract_from_content(content)
+          end
+
           # Build a directory name for sandbox/reports
           # @param timestamp [String] Timestamp ID (7-char Base36)
           # @return [String] Directory name (e.g., "8xyz12-lint-mt001")
