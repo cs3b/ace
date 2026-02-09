@@ -3,7 +3,7 @@
 module Ace
   module Test
     module EndToEndRunner
-      VERSION = "0.9.0"
+      VERSION = "0.11.0"
     end
   end
 end

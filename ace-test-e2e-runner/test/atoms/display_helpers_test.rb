@@ -75,4 +75,77 @@ class DisplayHelpersTest < Minitest::Test
     result = DisplayHelpers.color("fail", :red, use_color: true)
     assert_equal "\033[31mfail\033[0m", result
   end
+
+  # Suite-level formatting tests
+
+  def test_double_separator
+    assert_equal "\u2550" * 65, DisplayHelpers.double_separator
+    assert_equal 65, DisplayHelpers.double_separator.length
+  end
+
+  def test_format_suite_duration_under_60
+    assert_equal "45.3s", DisplayHelpers.format_suite_duration(45.3)
+  end
+
+  def test_format_suite_duration_over_60
+    assert_equal "4m 25s", DisplayHelpers.format_suite_duration(265)
+  end
+
+  def test_format_suite_duration_exact_minute
+    assert_equal "2m 00s", DisplayHelpers.format_suite_duration(120)
+  end
+
+  def test_format_suite_elapsed_short
+    result = DisplayHelpers.format_suite_elapsed(45.3)
+    assert_equal "  45.3s", result
+    assert_equal 7, result.length
+  end
+
+  def test_format_suite_elapsed_minutes
+    result = DisplayHelpers.format_suite_elapsed(265)
+    assert_equal " 4m 25s", result
+    assert_equal 7, result.length
+  end
+
+  def test_format_suite_test_line
+    line = DisplayHelpers.format_suite_test_line(
+      "\u2713", 265, "ace-bundle", "MT-BUNDLE-001-section-workflow", "5/5 cases",
+      pkg_width: 12, name_width: 35
+    )
+    assert_includes line, "\u2713"
+    assert_includes line, "4m 25s"
+    assert_includes line, "ace-bundle"
+    assert_includes line, "MT-BUNDLE-001-section-workflow"
+    assert_includes line, "5/5 cases"
+  end
+
+  def test_format_suite_summary_all_passed
+    lines = DisplayHelpers.format_suite_summary(
+      { total: 5, passed: 5, failed: 0, errors: 0, duration: 265, failed_details: [] },
+      use_color: false
+    )
+    text = lines.join("\n")
+    assert_includes text, "Duration:"
+    assert_includes text, "4m 25s"
+    assert_includes text, "5 passed, 0 failed"
+    assert_includes text, "\u2713 ALL TESTS PASSED"
+    refute_includes text, "Failed tests:"
+  end
+
+  def test_format_suite_summary_with_failures
+    lines = DisplayHelpers.format_suite_summary(
+      {
+        total: 5, passed: 3, failed: 2, errors: 0, duration: 120,
+        failed_details: [
+          { package: "ace-lint", test_name: "MT-LINT-002", cases: "3/5 cases" }
+        ]
+      },
+      use_color: false
+    )
+    text = lines.join("\n")
+    assert_includes text, "Failed tests:"
+    assert_includes text, "ace-lint/MT-LINT-002: 3/5 cases"
+    assert_includes text, "3 passed, 2 failed"
+    assert_includes text, "\u2717 SOME TESTS FAILED"
+  end
 end

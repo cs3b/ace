@@ -41,16 +41,16 @@ module Ace
           end
 
           # Generate short test ID for directory naming
-          # @return [String] Short ID (e.g., "mt001" from "MT-LINT-001")
+          # @return [String] Short ID (e.g., "mt001" from "MT-LINT-001", "mt001a" from "MT-LINT-001a")
           def short_id
-            match = test_id.match(/MT-[A-Z]+-(\d+)/)
+            match = test_id.match(/MT-[A-Z]+-(\d+[a-z]*)/)
             return "mt#{match[1]}" if match
 
             test_id.downcase.gsub(/[^a-z0-9]/, "")
           end
 
           # Build a directory name for sandbox/reports
-          # @param timestamp [String] Timestamp ID (6-char Base36)
+          # @param timestamp [String] Timestamp ID (7-char Base36)
           # @return [String] Directory name (e.g., "8xyz12-lint-mt001")
           def dir_name(timestamp)
             "#{timestamp}-#{short_package}-#{short_id}"

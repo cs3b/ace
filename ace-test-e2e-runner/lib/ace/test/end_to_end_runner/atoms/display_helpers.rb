@@ -17,13 +17,55 @@ module Ace
           }.freeze
 
           SEPARATOR = "=" * 65
+          DOUBLE_SEPARATOR = "\u2550" * 65
+
+          # Unicode and ASCII fallback icons for progress display
+          UNICODE_ICONS = {
+            waiting: "\u00b7",    # · (middle dot)
+            running: "\u22ef",    # ⋯ (midline horizontal ellipsis)
+            check: "\u2713",      # ✓ (check mark)
+            cross: "\u2717"       # ✗ (ballot x)
+          }.freeze
+
+          ASCII_ICONS = {
+            waiting: ".",
+            running: "...",
+            check: "OK",
+            cross: "XX"
+          }.freeze
 
           module_function
 
+          # Detect if the current terminal supports Unicode
+          # Checks LANG/LC_ALL environment variables for UTF-8 encoding
+          # @return [Boolean] true if terminal likely supports Unicode
+          def unicode_terminal?
+            lang = ENV["LANG"] || ENV["LC_ALL"] || ""
+            lang.include?("UTF-8") || lang.include?("utf-8")
+          end
+
+          # @return [String] 65-char double-line separator (═ or =)
+          def double_separator
+            unicode_terminal? ? DOUBLE_SEPARATOR : SEPARATOR
+          end
+
           # @param success [Boolean]
-          # @return [String] "✓" or "✗"
+          # @return [String] "✓" or "✗" (or ASCII fallback)
           def status_icon(success)
-            success ? "\u2713" : "\u2717"
+            icons = unicode_terminal? ? UNICODE_ICONS : ASCII_ICONS
+            success ? icons[:check] : icons[:cross]
+          end
+
+          # Get the waiting icon for progress display
+          # @return [String] "·" or "."
+          def waiting_icon
+            unicode_terminal? ? UNICODE_ICONS[:waiting] : ASCII_ICONS[:waiting]
+          end
+
+          # Get the running icon for progress display
+          # @return [String] "⋯" or "..."
+          def running_icon
+            unicode_terminal? ? UNICODE_ICONS[:running] : ASCII_ICONS[:running]
           end
 
           # Right-aligned elapsed seconds for columnar output
@@ -67,6 +109,69 @@ module Ace
             return text unless use_color
 
             "#{ANSI_COLORS[color_name]}#{text}#{ANSI_COLORS[:reset]}"
+          end
+
+          # Duration formatted for suite-level display (minute-range values)
+          # @param seconds [Numeric]
+          # @return [String] e.g. "4m 25s" or "45.3s"
+          def format_suite_duration(seconds)
+            if seconds >= 60
+              "#{(seconds / 60).floor}m %02ds" % (seconds % 60).round(0)
+            else
+              sprintf("%.1fs", seconds)
+            end
+          end
+
+          # Right-aligned elapsed for suite columnar output (wider field)
+          # @param seconds [Numeric]
+          # @return [String] e.g. " 4m 25s" (7 chars wide)
+          def format_suite_elapsed(seconds)
+            sprintf("%7s", format_suite_duration(seconds))
+          end
+
+          # Build a columnar test result line for suite display
+          # @param icon [String] status icon (may include ANSI)
+          # @param elapsed [Numeric] seconds
+          # @param package [String] package name
+          # @param test_name [String] test name
+          # @param cases_str [String] e.g. "5/5 cases" or ""
+          # @param pkg_width [Integer] column width for package
+          # @param name_width [Integer] column width for test name
+          # @return [String]
+          def format_suite_test_line(icon, elapsed, package, test_name, cases_str, pkg_width:, name_width:)
+            time_col = format_suite_elapsed(elapsed)
+            pkg_col = package.ljust(pkg_width)
+            name_col = test_name.ljust(name_width)
+            "#{icon}  #{time_col}  #{pkg_col}  #{name_col}  #{cases_str}"
+          end
+
+          # Build the full suite summary block
+          # @param results_data [Hash] with keys :total, :passed, :failed, :errors, :packages, :duration, :failed_details
+          # @param use_color [Boolean]
+          # @return [Array<String>] lines to print
+          def format_suite_summary(results_data, use_color: false)
+            lines = ["", double_separator]
+
+            failed_details = results_data[:failed_details] || []
+            if failed_details.any?
+              lines << "Failed tests:"
+              failed_details.each do |detail|
+                lines << "  - #{detail[:package]}/#{detail[:test_name]}: #{detail[:cases]}"
+              end
+              lines << ""
+            end
+
+            lines << "Duration:    #{format_suite_duration(results_data[:duration])}"
+            lines << "Tests:       #{results_data[:passed]} passed, #{results_data[:failed] + results_data[:errors]} failed"
+
+            lines << ""
+            if results_data[:failed] + results_data[:errors] == 0
+              lines << color("\u2713 ALL TESTS PASSED", :green, use_color: use_color)
+            else
+              lines << color("\u2717 SOME TESTS FAILED", :red, use_color: use_color)
+            end
+            lines << double_separator
+            lines
           end
 
           # Format summary lines for display after a test run
