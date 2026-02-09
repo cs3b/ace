@@ -10,8 +10,8 @@ requires:
   tools: [ace-timestamp]
   ruby: ">= 3.0"
 status: ready-for-execution
-last-verified: 2026-01-24
-verified-by: code-review
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Hierarchical Split Format
@@ -29,25 +29,12 @@ Verify that ace-timestamp correctly handles hierarchical split encoding and deco
 ## Environment Setup
 
 ```bash
-PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode -q)"
-SHORT_PKG="support-timestamp"
-SHORT_ID="mt003"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
-
-# Verify tools are available
-echo "=== Tool Verification ==="
-which ace-timestamp && ace-timestamp version
-echo "========================="
 ```
 
 ## Test Data
 
 ```bash
-# Test timestamp for consistent results
-TEST_TS="2025-06-15 14:32:45"
+ace-test-e2e-sh "$TEST_DIR" TEST_TS="2025-06-15 14:32:45"
 ```
 
 ## Test Cases
@@ -59,19 +46,21 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Encode with month split
    ```bash
-   ace-timestamp encode --split month -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month -q "$TEST_TS"
    ```
 
 2. Verify output structure
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp encode --split month "$TEST_TS")
    echo "$OUTPUT"
    # Expected: month component + rest
+   SANDBOX
    ```
 
 3. Verify path format
    ```bash
-   ace-timestamp encode --split month --path-only -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month --path-only -q "$TEST_TS"
    ```
 
 **Expected:**
@@ -91,18 +80,20 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Encode with month,week split
    ```bash
-   ace-timestamp encode --split month,week -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,week -q "$TEST_TS"
    ```
 
 2. Verify hierarchical output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp encode --split month,week "$TEST_TS")
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 3. Verify path format
    ```bash
-   ace-timestamp encode --split month,week --path-only -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,week --path-only -q "$TEST_TS"
    ```
 
 **Expected:**
@@ -122,18 +113,20 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Encode with month,day split (skipping week)
    ```bash
-   ace-timestamp encode --split month,day -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,day -q "$TEST_TS"
    ```
 
 2. Verify output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp encode --split month,day "$TEST_TS")
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 3. Verify path format
    ```bash
-   ace-timestamp encode --split month,day --path-only -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,day --path-only -q "$TEST_TS"
    ```
 
 **Expected:**
@@ -153,18 +146,20 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Encode with full hierarchy
    ```bash
-   ace-timestamp encode --split month,week,day -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,week,day -q "$TEST_TS"
    ```
 
 2. Verify output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp encode --split month,week,day "$TEST_TS")
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 3. Verify path format
    ```bash
-   ace-timestamp encode --split month,week,day --path-only -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,week,day --path-only -q "$TEST_TS"
    ```
 
 **Expected:**
@@ -184,18 +179,20 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Encode with full hierarchy including block
    ```bash
-   ace-timestamp encode --split month,week,day,block -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,week,day,block -q "$TEST_TS"
    ```
 
 2. Verify output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp encode --split month,week,day,block "$TEST_TS")
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 3. Verify path format
    ```bash
-   ace-timestamp encode --split month,week,day,block --path-only -q "$TEST_TS"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,week,day,block --path-only -q "$TEST_TS"
    ```
 
 **Expected:**
@@ -215,20 +212,26 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Get path-only output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    PATH_ONLY=$(ace-timestamp encode --split month,week --path-only -q "$TEST_TS")
    echo "Path: $PATH_ONLY"
+   SANDBOX
    ```
 
 2. Verify single line
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    LINE_COUNT=$(echo "$PATH_ONLY" | wc -l)
    [ "$LINE_COUNT" -eq 1 ] && echo "PASS: Single line" || echo "FAIL: Multiple lines"
+   SANDBOX
    ```
 
 3. Verify usable in shell
    ```bash
-   mkdir -p "$TEST_DIR/$PATH_ONLY"
-   [ -d "$TEST_DIR/$PATH_ONLY" ] && echo "PASS: Valid path" || echo "FAIL: Invalid path"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p "$PATH_ONLY"
+   [ -d "$PATH_ONLY" ] && echo "PASS: Valid path" || echo "FAIL: Invalid path"
+   SANDBOX
    ```
 
 **Expected:**
@@ -248,19 +251,23 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Get JSON output
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    JSON_OUT=$(ace-timestamp encode --split month,week,day --json -q "$TEST_TS")
    echo "$JSON_OUT"
+   SANDBOX
    ```
 
 2. Verify valid JSON
    ```bash
-   echo "$JSON_OUT" | jq . > /dev/null 2>&1 && echo "PASS: Valid JSON" || echo "FAIL: Invalid JSON"
+   ace-test-e2e-sh "$TEST_DIR" echo "$JSON_OUT" | jq . > /dev/null 2>&1 && echo "PASS: Valid JSON" || echo "FAIL: Invalid JSON"
    ```
 
 3. Verify structure contains expected keys
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$JSON_OUT" | jq -e '.month' > /dev/null && echo "PASS: Has month key" || echo "FAIL: Missing month"
    echo "$JSON_OUT" | jq -e '.path' > /dev/null && echo "PASS: Has path key" || echo "FAIL: Missing path"
+   SANDBOX
    ```
 
 **Expected:**
@@ -281,33 +288,41 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Encode to get path
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    PATH_ID=$(ace-timestamp encode --split month,week,day --path-only -q "$TEST_TS")
    echo "Path: $PATH_ID"
+   SANDBOX
    ```
 
 2. Decode from forward-slash path
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED_SLASH=$(ace-timestamp decode -q "$PATH_ID")
    echo "Decoded /: $DECODED_SLASH"
+   SANDBOX
    ```
 
 3. Convert to backslash and decode
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    BACKSLASH_PATH=$(echo "$PATH_ID" | tr '/' '\\')
    DECODED_BACK=$(ace-timestamp decode -q "$BACKSLASH_PATH")
    echo "Decoded \\: $DECODED_BACK"
+   SANDBOX
    ```
 
 4. Convert to colon and decode
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    COLON_PATH=$(echo "$PATH_ID" | tr '/' ':')
    DECODED_COLON=$(ace-timestamp decode -q "$COLON_PATH")
    echo "Decoded :: $DECODED_COLON"
+   SANDBOX
    ```
 
 5. Verify all decode to same result
    ```bash
-   [ "$DECODED_SLASH" = "$DECODED_BACK" ] && [ "$DECODED_BACK" = "$DECODED_COLON" ] && echo "PASS: All separators work" || echo "FAIL: Different results"
+   ace-test-e2e-sh "$TEST_DIR" [ "$DECODED_SLASH" = "$DECODED_BACK" ] && [ "$DECODED_BACK" = "$DECODED_COLON" ] && echo "PASS: All separators work" || echo "FAIL: Different results"
    ```
 
 **Expected:**
@@ -329,31 +344,39 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Encode original timestamp
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ORIGINAL_ID=$(ace-timestamp encode -q "$TEST_TS")
    echo "Original ID: $ORIGINAL_ID"
+   SANDBOX
    ```
 
 2. Encode with split
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SPLIT_PATH=$(ace-timestamp encode --split month,week,day --path-only -q "$TEST_TS")
    echo "Split path: $SPLIT_PATH"
+   SANDBOX
    ```
 
 3. Decode split path
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED_TS=$(ace-timestamp decode -q "$SPLIT_PATH")
    echo "Decoded: $DECODED_TS"
+   SANDBOX
    ```
 
 4. Decode original for comparison
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ORIGINAL_TS=$(ace-timestamp decode -q "$ORIGINAL_ID")
    echo "Original decoded: $ORIGINAL_TS"
+   SANDBOX
    ```
 
 5. Verify same timestamp
    ```bash
-   [ "$DECODED_TS" = "$ORIGINAL_TS" ] && echo "PASS: Roundtrip successful" || echo "FAIL: Different timestamps"
+   ace-test-e2e-sh "$TEST_DIR" [ "$DECODED_TS" = "$ORIGINAL_TS" ] && echo "PASS: Roundtrip successful" || echo "FAIL: Different timestamps"
    ```
 
 **Expected:**
@@ -373,19 +396,21 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Try invalid order: day,month
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode --split day,month "$TEST_TS" 2>&1
    RESULT=$?
    echo "Exit code: $RESULT"
+   SANDBOX
    ```
 
 2. Verify error
    ```bash
-   [ $RESULT -ne 0 ] && echo "PASS: Invalid order rejected" || echo "FAIL: Should have failed"
+   ace-test-e2e-sh "$TEST_DIR" [ $RESULT -ne 0 ] && echo "PASS: Invalid order rejected" || echo "FAIL: Should have failed"
    ```
 
 3. Verify error message is helpful
    ```bash
-   ace-timestamp encode --split day,month "$TEST_TS" 2>&1 | grep -qi "order\|invalid\|must\|error" && echo "PASS: Error message present" || echo "CHECK: Review error"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split day,month "$TEST_TS" 2>&1 | grep -qi "order\|invalid\|must\|error" && echo "PASS: Error message present" || echo "CHECK: Review error"
    ```
 
 **Expected:**
@@ -406,19 +431,21 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Try block without day: month,block
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode --split month,block "$TEST_TS" 2>&1
    RESULT=$?
    echo "Exit code: $RESULT"
+   SANDBOX
    ```
 
 2. Verify error
    ```bash
-   [ $RESULT -ne 0 ] && echo "PASS: Missing dependency rejected" || echo "FAIL: Should have failed"
+   ace-test-e2e-sh "$TEST_DIR" [ $RESULT -ne 0 ] && echo "PASS: Missing dependency rejected" || echo "FAIL: Should have failed"
    ```
 
 3. Verify error message mentions dependency
    ```bash
-   ace-timestamp encode --split month,block "$TEST_TS" 2>&1 | grep -qi "require\|depend\|day\|error" && echo "PASS: Dependency error shown" || echo "CHECK: Review error"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,block "$TEST_TS" 2>&1 | grep -qi "require\|depend\|day\|error" && echo "PASS: Dependency error shown" || echo "CHECK: Review error"
    ```
 
 **Expected:**
@@ -439,19 +466,21 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Try both options
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode --split month --format day "$TEST_TS" 2>&1
    RESULT=$?
    echo "Exit code: $RESULT"
+   SANDBOX
    ```
 
 2. Verify error
    ```bash
-   [ $RESULT -ne 0 ] && echo "PASS: Mutual exclusivity enforced" || echo "FAIL: Should have failed"
+   ace-test-e2e-sh "$TEST_DIR" [ $RESULT -ne 0 ] && echo "PASS: Mutual exclusivity enforced" || echo "FAIL: Should have failed"
    ```
 
 3. Verify error message
    ```bash
-   ace-timestamp encode --split month --format day "$TEST_TS" 2>&1 | grep -qi "mutual\|exclusive\|both\|cannot\|error" && echo "PASS: Error message present" || echo "CHECK: Review error"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month --format day "$TEST_TS" 2>&1 | grep -qi "mutual\|exclusive\|both\|cannot\|error" && echo "PASS: Error message present" || echo "CHECK: Review error"
    ```
 
 **Expected:**
@@ -472,19 +501,21 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Try unknown level
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode --split month,invalid "$TEST_TS" 2>&1
    RESULT=$?
    echo "Exit code: $RESULT"
+   SANDBOX
    ```
 
 2. Verify error
    ```bash
-   [ $RESULT -ne 0 ] && echo "PASS: Unknown level rejected" || echo "FAIL: Should have failed"
+   ace-test-e2e-sh "$TEST_DIR" [ $RESULT -ne 0 ] && echo "PASS: Unknown level rejected" || echo "FAIL: Should have failed"
    ```
 
 3. Verify suggestions provided
    ```bash
-   ace-timestamp encode --split month,invalid "$TEST_TS" 2>&1 | grep -qi "week\|day\|block\|valid\|error" && echo "PASS: Suggests valid levels" || echo "CHECK: Review error"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split month,invalid "$TEST_TS" 2>&1 | grep -qi "week\|day\|block\|valid\|error" && echo "PASS: Suggests valid levels" || echo "CHECK: Review error"
    ```
 
 **Expected:**
@@ -505,25 +536,29 @@ TEST_TS="2025-06-15 14:32:45"
 **Steps:**
 1. Try starting with week
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode --split week,day "$TEST_TS" 2>&1
    RESULT=$?
    echo "Exit code: $RESULT"
+   SANDBOX
    ```
 
 2. Try starting with day
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode --split day "$TEST_TS" 2>&1
    DAY_RESULT=$?
+   SANDBOX
    ```
 
 3. Verify both fail
    ```bash
-   [ $RESULT -ne 0 ] && [ $DAY_RESULT -ne 0 ] && echo "PASS: Must start with month" || echo "FAIL: Should require month first"
+   ace-test-e2e-sh "$TEST_DIR" [ $RESULT -ne 0 ] && [ $DAY_RESULT -ne 0 ] && echo "PASS: Must start with month" || echo "FAIL: Should require month first"
    ```
 
 4. Verify error message
    ```bash
-   ace-timestamp encode --split week,day "$TEST_TS" 2>&1 | grep -qi "month\|start\|first\|error" && echo "PASS: Error mentions month" || echo "CHECK: Review error"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --split week,day "$TEST_TS" 2>&1 | grep -qi "month\|start\|first\|error" && echo "PASS: Error mentions month" || echo "CHECK: Review error"
    ```
 
 **Expected:**

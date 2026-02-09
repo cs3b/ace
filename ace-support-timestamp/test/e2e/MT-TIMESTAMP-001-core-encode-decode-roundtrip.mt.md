@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-timestamp]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Core Encode/Decode Roundtrip
@@ -27,28 +27,18 @@ Verify that ace-timestamp correctly encodes timestamps to all 7 format precision
 ## Environment Setup
 
 ```bash
-PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode -q)"
-SHORT_PKG="support-timestamp"
-SHORT_ID="mt001"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
-
-# Verify tools are available
-echo "=== Tool Verification ==="
-which ace-timestamp && ace-timestamp version
-echo "========================="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Test timestamps spanning different scenarios
 TEST_TS_CURRENT="$(date '+%Y-%m-%d %H:%M:%S')"
 TEST_TS_FIXED="2025-06-15 14:32:45"
 TEST_TS_MONTH_BOUNDARY="2025-01-01 00:00:00"
 TEST_TS_YEAR_END="2025-12-31 23:59:59"
+SANDBOX
 ```
 
 ## Test Cases
@@ -60,25 +50,29 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode timestamp to month format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    MONTH_ID=$(ace-timestamp encode --format month -q '2025-06-15 14:32:45')
    echo "Month ID: $MONTH_ID"
    echo "Length: ${#MONTH_ID}"
+   SANDBOX
    ```
 
 2. Verify length is exactly 2
    ```bash
-   [ ${#MONTH_ID} -eq 2 ] && echo "PASS: Length is 2" || echo "FAIL: Length is ${#MONTH_ID}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#MONTH_ID} -eq 2 ] && echo "PASS: Length is 2" || echo "FAIL: Length is ${#MONTH_ID}"
    ```
 
 3. Decode and verify result
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$MONTH_ID")
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 4. Verify decoded is 1st of month at midnight
    ```bash
-   echo "$DECODED" | grep -q '2025-06-01 00:00:00' && echo "PASS: Decodes to 1st of month" || echo "FAIL: Expected 2025-06-01 00:00:00"
+   ace-test-e2e-sh "$TEST_DIR" echo "$DECODED" | grep -q '2025-06-01 00:00:00' && echo "PASS: Decodes to 1st of month" || echo "FAIL: Expected 2025-06-01 00:00:00"
    ```
 
 **Expected:**
@@ -98,27 +92,33 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode timestamp to week format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    WEEK_ID=$(ace-timestamp encode --format week -q '2025-06-15 14:32:45')
    echo "Week ID: $WEEK_ID"
    echo "Length: ${#WEEK_ID}"
+   SANDBOX
    ```
 
 2. Verify length is exactly 3
    ```bash
-   [ ${#WEEK_ID} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#WEEK_ID}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#WEEK_ID} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#WEEK_ID}"
    ```
 
 3. Extract and verify 3rd character is in v-z range
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    THIRD_CHAR="${WEEK_ID:2:1}"
    echo "3rd char: $THIRD_CHAR"
    [[ "$THIRD_CHAR" =~ ^[v-z]$ ]] && echo "PASS: 3rd char in v-z range" || echo "FAIL: 3rd char not in week range"
+   SANDBOX
    ```
 
 4. Decode and verify roundtrip
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$WEEK_ID")
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 **Expected:**
@@ -139,27 +139,33 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode timestamp to day format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DAY_ID=$(ace-timestamp encode --format day -q '2025-06-15 14:32:45')
    echo "Day ID: $DAY_ID"
    echo "Length: ${#DAY_ID}"
+   SANDBOX
    ```
 
 2. Verify length is exactly 3
    ```bash
-   [ ${#DAY_ID} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#DAY_ID}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#DAY_ID} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#DAY_ID}"
    ```
 
 3. Extract and verify 3rd character is in 0-u range
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    THIRD_CHAR="${DAY_ID:2:1}"
    echo "3rd char: $THIRD_CHAR"
    [[ "$THIRD_CHAR" =~ ^[0-9a-u]$ ]] && echo "PASS: 3rd char in 0-u range" || echo "FAIL: 3rd char not in day range"
+   SANDBOX
    ```
 
 4. Decode and verify roundtrip
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$DAY_ID")
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 **Expected:**
@@ -180,37 +186,44 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode same timestamp to both formats
    ```bash
-   WEEK_ID=$(ace-timestamp encode --format week -q '2025-06-15 14:32:45')
-   DAY_ID=$(ace-timestamp encode --format day -q '2025-06-15 14:32:45')
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   # Use mid-week date (Wednesday) so week-start and day-start differ
+   WEEK_ID=$(ace-timestamp encode --format week -q '2025-06-18 14:32:45')
+   DAY_ID=$(ace-timestamp encode --format day -q '2025-06-18 14:32:45')
    echo "Week ID: $WEEK_ID"
    echo "Day ID: $DAY_ID"
+   SANDBOX
    ```
 
 2. Verify 3rd characters are different ranges
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    WEEK_CHAR="${WEEK_ID:2:1}"
    DAY_CHAR="${DAY_ID:2:1}"
    echo "Week 3rd char: $WEEK_CHAR (should be v-z)"
    echo "Day 3rd char: $DAY_CHAR (should be 0-u)"
+   SANDBOX
    ```
 
 3. Decode both without specifying format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    WEEK_DECODED=$(ace-timestamp decode -q "$WEEK_ID")
    DAY_DECODED=$(ace-timestamp decode -q "$DAY_ID")
    echo "Week decoded: $WEEK_DECODED"
    echo "Day decoded: $DAY_DECODED"
+   SANDBOX
    ```
 
 4. Verify different results
    ```bash
-   [ "$WEEK_DECODED" != "$DAY_DECODED" ] && echo "PASS: Different decode results" || echo "FAIL: Same results"
+   ace-test-e2e-sh "$TEST_DIR" [ "$WEEK_DECODED" != "$DAY_DECODED" ] && echo "PASS: Different decode results" || echo "FAIL: Same results"
    ```
 
 **Expected:**
 - Week and day IDs both 3 characters but different 3rd char ranges
 - Decoder correctly distinguishes between formats
-- Week decodes to week start, day decodes to day start
+- Week decodes to week start (Monday), day decodes to day start (Wednesday)
 
 **Actual:** [Record during execution]
 
@@ -225,28 +238,34 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode timestamp to 40min format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    BLOCK_ID=$(ace-timestamp encode --format 40min -q '2025-06-15 14:32:45')
    echo "40min ID: $BLOCK_ID"
    echo "Length: ${#BLOCK_ID}"
+   SANDBOX
    ```
 
 2. Verify length is exactly 4
    ```bash
-   [ ${#BLOCK_ID} -eq 4 ] && echo "PASS: Length is 4" || echo "FAIL: Length is ${#BLOCK_ID}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#BLOCK_ID} -eq 4 ] && echo "PASS: Length is 4" || echo "FAIL: Length is ${#BLOCK_ID}"
    ```
 
 3. Decode and verify block alignment
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$BLOCK_ID")
    echo "Decoded: $DECODED"
    # 14:32 should align to 14:00 block (blocks are 0:00, 0:40, 1:20, 2:00, ...)
+   SANDBOX
    ```
 
 4. Verify minutes are 0, 40, or 20 (40-min block boundary)
    ```bash
-   MINUTES=$(echo "$DECODED" | sed 's/.*:\([0-9][0-9]\):[0-9][0-9]$/\1/')
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   MINUTES=$(echo "$DECODED" | sed 's/ UTC$//' | sed 's/.*:\([0-9][0-9]\):[0-9][0-9]$/\1/')
    echo "Minutes: $MINUTES"
    [[ "$MINUTES" =~ ^(00|20|40)$ ]] && echo "PASS: On 40-min boundary" || echo "FAIL: Not on boundary"
+   SANDBOX
    ```
 
 **Expected:**
@@ -266,30 +285,36 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode timestamp to 2sec format (default)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SEC_ID=$(ace-timestamp encode -q '2025-06-15 14:32:45')
    echo "2sec ID: $SEC_ID"
    echo "Length: ${#SEC_ID}"
+   SANDBOX
    ```
 
 2. Verify length is exactly 6
    ```bash
-   [ ${#SEC_ID} -eq 6 ] && echo "PASS: Length is 6" || echo "FAIL: Length is ${#SEC_ID}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#SEC_ID} -eq 6 ] && echo "PASS: Length is 6" || echo "FAIL: Length is ${#SEC_ID}"
    ```
 
 3. Decode and verify roundtrip
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$SEC_ID")
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 4. Verify precision loss is within ~2 seconds
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Extract seconds and compare (original 45, decoded should be within 2s)
    ORIG_SEC=45
-   DEC_SEC=$(echo "$DECODED" | sed 's/.*:\([0-9][0-9]\)$/\1/')
+   DEC_SEC=$(echo "$DECODED" | sed 's/ UTC$//' | sed 's/.*:\([0-9][0-9]\)$/\1/')
    echo "Original seconds: $ORIG_SEC, Decoded seconds: $DEC_SEC"
    DIFF=$((ORIG_SEC - DEC_SEC))
    [ ${DIFF#-} -le 2 ] && echo "PASS: Within 2-second precision" || echo "FAIL: Precision loss > 2s"
+   SANDBOX
    ```
 
 **Expected:**
@@ -309,20 +334,24 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode timestamp to 50ms format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    MS50_ID=$(ace-timestamp encode --format 50ms -q '2025-06-15 14:32:45')
    echo "50ms ID: $MS50_ID"
    echo "Length: ${#MS50_ID}"
+   SANDBOX
    ```
 
 2. Verify length is exactly 7
    ```bash
-   [ ${#MS50_ID} -eq 7 ] && echo "PASS: Length is 7" || echo "FAIL: Length is ${#MS50_ID}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#MS50_ID} -eq 7 ] && echo "PASS: Length is 7" || echo "FAIL: Length is ${#MS50_ID}"
    ```
 
 3. Decode and verify roundtrip
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$MS50_ID")
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 **Expected:**
@@ -342,20 +371,24 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode timestamp to ms format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    MS_ID=$(ace-timestamp encode --format ms -q '2025-06-15 14:32:45')
    echo "ms ID: $MS_ID"
    echo "Length: ${#MS_ID}"
+   SANDBOX
    ```
 
 2. Verify length is exactly 8
    ```bash
-   [ ${#MS_ID} -eq 8 ] && echo "PASS: Length is 8" || echo "FAIL: Length is ${#MS_ID}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#MS_ID} -eq 8 ] && echo "PASS: Length is 8" || echo "FAIL: Length is ${#MS_ID}"
    ```
 
 3. Decode and verify roundtrip
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$MS_ID")
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 **Expected:**
@@ -375,6 +408,7 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode multiple timestamps in random order
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ID1=$(ace-timestamp encode -q '2025-01-01 00:00:00')
    ID2=$(ace-timestamp encode -q '2025-06-15 12:00:00')
    ID3=$(ace-timestamp encode -q '2025-12-31 23:59:59')
@@ -383,19 +417,24 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
    echo "Jun 15: $ID2"
    echo "Dec 31: $ID3"
    echo "Mar 15: $ID4"
+   SANDBOX
    ```
 
 2. Sort lexicographically
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    SORTED=$(echo -e "$ID1\n$ID2\n$ID3\n$ID4" | sort)
    echo "Sorted order:"
    echo "$SORTED"
+   SANDBOX
    ```
 
 3. Verify chronological order
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    EXPECTED=$(echo -e "$ID1\n$ID4\n$ID2\n$ID3")
    [ "$SORTED" = "$EXPECTED" ] && echo "PASS: Lexicographic = Chronological" || echo "FAIL: Order mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -414,22 +453,25 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Record current time and encode "now"
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    BEFORE=$(date +%s)
    NOW_ID=$(ace-timestamp encode -q now)
    AFTER=$(date +%s)
    echo "Encoded 'now': $NOW_ID"
+   SANDBOX
    ```
 
 2. Decode and convert to epoch
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$NOW_ID" --format iso)
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 3. Verify decoded time is between before and after
    ```bash
-   # Just verify it decodes successfully and is recent
-   echo "$DECODED" | grep -q "$(date +%Y)" && echo "PASS: Current year" || echo "FAIL: Wrong year"
+   ace-test-e2e-sh "$TEST_DIR" echo "$DECODED" | grep -q "$(date +%Y)" && echo "PASS: Current year" || echo "FAIL: Wrong year"
    ```
 
 **Expected:**
@@ -449,32 +491,42 @@ TEST_TS_YEAR_END="2025-12-31 23:59:59"
 **Steps:**
 1. Encode a test timestamp
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    TEST_ID=$(ace-timestamp encode -q '2025-06-15 14:32:45')
    echo "Test ID: $TEST_ID"
+   SANDBOX
    ```
 
 2. Decode with readable format (default)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    READABLE=$(ace-timestamp decode -q "$TEST_ID")
    echo "Readable: $READABLE"
+   SANDBOX
    ```
 
 3. Decode with ISO format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ISO=$(ace-timestamp decode -q "$TEST_ID" --format iso)
    echo "ISO: $ISO"
+   SANDBOX
    ```
 
 4. Decode with timestamp format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    TIMESTAMP=$(ace-timestamp decode -q "$TEST_ID" --format timestamp)
    echo "Timestamp: $TIMESTAMP"
+   SANDBOX
    ```
 
 5. Verify formats are different and valid
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [[ "$ISO" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]] && echo "PASS: ISO format valid" || echo "FAIL: ISO format invalid"
    [[ "$TIMESTAMP" =~ ^[0-9]{8}-[0-9]{6}$ ]] && echo "PASS: Timestamp format valid" || echo "FAIL: Timestamp format invalid"
+   SANDBOX
    ```
 
 **Expected:**
