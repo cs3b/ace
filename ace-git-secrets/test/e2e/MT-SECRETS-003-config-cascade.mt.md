@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-git-secrets, git]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Configuration Cascade
@@ -31,12 +31,12 @@ Verify that ace-git-secrets correctly implements the ADR-022 configuration casca
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="secrets"
 SHORT_ID="mt003"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Create isolated git repository
 git init --quiet .
@@ -49,18 +49,48 @@ export PROJECT_ROOT_PATH="$TEST_DIR"
 echo "=== Tool Verification ==="
 which ace-git-secrets && ace-git-secrets --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create minimal repository
-cat > "$TEST_DIR/README.md" << 'EOF'
+cat > README.md << 'EOF'
 # Test Project
 EOF
 
 git add README.md
 git commit -q -m "Initial commit"
+SANDBOX
 ```
 
 ## Test Cases
@@ -72,25 +102,31 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Ensure no user config exists
    ```bash
-   rm -rf "$TEST_DIR/.ace"
+   ace-test-e2e-sh "$TEST_DIR" rm -rf .ace
    ```
 
 2. Run ace-git-secrets scan (should use defaults)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify command completes successfully
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Command completed with defaults" || echo "FAIL: Command failed"
+   SANDBOX
    ```
 
 4. Verify output indicates normal operation
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qiE "no tokens|clean|scan" && echo "PASS: Normal output" || echo "INFO: Check output"
+   SANDBOX
    ```
 
 **Expected:**
@@ -111,35 +147,42 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Create user config with custom settings
    ```bash
-   mkdir -p "$TEST_DIR/.ace/git-secrets"
-   cat > "$TEST_DIR/.ace/git-secrets/config.yml" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p .ace/git-secrets
+   cat > .ace/git-secrets/config.yml << 'EOF'
    output:
      format: json
    whitelist:
      - file: "test/*"
        reason: "Test config override"
    EOF
+   SANDBOX
    ```
 
 2. Run ace-git-secrets scan
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify command completes
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ge 0 ] && echo "PASS: Command completed" || echo "FAIL: Command error"
+   SANDBOX
    ```
 
 4. Verify user config was loaded (whitelist should be active)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Create a test file that would match whitelist
-   mkdir -p "$TEST_DIR/test"
-   cat > "$TEST_DIR/test/fixture.txt" << 'EOF'
-   TOKEN=ghp_test_config_override_1234567890AB
+   mkdir -p test
+   cat > test/fixture.txt << 'EOF'
+   TOKEN=literal:[REDACTED:github-pat]
    EOF
    git add test/fixture.txt
    git commit -q -m "Add test fixture"
@@ -147,6 +190,7 @@ git commit -q -m "Initial commit"
    OUTPUT2=$(ace-git-secrets scan 2>&1)
    # Whitelist should exclude test/* files
    echo "$OUTPUT2"
+   SANDBOX
    ```
 
 **Expected:**
@@ -166,31 +210,39 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Set up project config with one format
    ```bash
-   mkdir -p "$TEST_DIR/.ace/git-secrets"
-   cat > "$TEST_DIR/.ace/git-secrets/config.yml" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p .ace/git-secrets
+   cat > .ace/git-secrets/config.yml << 'EOF'
    output:
      format: table
    EOF
+   SANDBOX
    ```
 
 2. Run with CLI override
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan --format json 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify CLI option took precedence (JSON report saved)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qE "Report saved:.*\.json" && echo "PASS: CLI override worked (JSON report)" || echo "INFO: Check format"
+   SANDBOX
    ```
 
 4. Run without CLI override (should use config)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT2=$(ace-git-secrets scan 2>&1)
    echo "Output without CLI override:"
    echo "$OUTPUT2"
+   SANDBOX
    ```
 
 **Expected:**
@@ -210,30 +262,38 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Create empty config file
    ```bash
-   mkdir -p "$TEST_DIR/.ace/git-secrets"
-   echo "" > "$TEST_DIR/.ace/git-secrets/config.yml"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p .ace/git-secrets
+   echo "" > .ace/git-secrets/config.yml
+   SANDBOX
    ```
 
 2. Run ace-git-secrets scan
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify no error about empty config
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ! echo "$OUTPUT" | grep -qi "error.*config\|invalid.*config" && echo "PASS: No config error" || echo "FAIL: Config error"
+   SANDBOX
    ```
 
 4. Test with malformed YAML (optional - may cause warning)
    ```bash
-   echo "invalid: yaml: content:" > "$TEST_DIR/.ace/git-secrets/config.yml"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   echo "invalid: yaml: content:" > .ace/git-secrets/config.yml
    OUTPUT2=$(ace-git-secrets scan 2>&1)
    EXIT_CODE2=$?
    # Command should either work with fallback or show helpful error
    echo "Exit code with invalid YAML: $EXIT_CODE2"
+   SANDBOX
    ```
 
 **Expected:**
@@ -253,8 +313,9 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Create config with valid settings
    ```bash
-   mkdir -p "$TEST_DIR/.ace/git-secrets"
-   cat > "$TEST_DIR/.ace/git-secrets/config.yml" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p .ace/git-secrets
+   cat > .ace/git-secrets/config.yml << 'EOF'
    output:
      format: table
      mask_tokens: true
@@ -263,25 +324,31 @@ git commit -q -m "Initial commit"
      - "*.lock"
      - "vendor/**/*"
    EOF
+   SANDBOX
    ```
 
 2. Run scan
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify command works with valid config
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ge 0 ] && echo "PASS: Valid config accepted" || echo "FAIL: Valid config rejected"
+   SANDBOX
    ```
 
 4. Verify exclusions are applied (create a lock file with secret)
    ```bash
-   cat > "$TEST_DIR/package.lock" << 'EOF'
-   TOKEN=ghp_test_exclusion_check_1234567890AB
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat > package.lock << 'EOF'
+   TOKEN=literal:[REDACTED:github-pat]
    EOF
    git add package.lock
    git commit -q -m "Add lock file"
@@ -290,6 +357,7 @@ git commit -q -m "Initial commit"
    EXIT_CODE2=$?
    echo "Exit code with lock file: $EXIT_CODE2"
    # Lock file should be excluded, so exit should be 0 if no other secrets
+   SANDBOX
    ```
 
 **Expected:**
