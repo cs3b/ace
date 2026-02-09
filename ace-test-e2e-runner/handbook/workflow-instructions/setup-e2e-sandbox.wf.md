@@ -125,13 +125,17 @@ else
 fi
 
 # Check 2: Git remote must be empty (fresh isolated repo)
-REMOTES=$(git remote -v 2>/dev/null)
-if [ -z "$REMOTES" ]; then
-  echo "PASS: No git remotes (isolated repo)"
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT an isolated repo!"
+    echo "  Remotes: $REMOTES"
+    echo "  ACTION: STOP - You are in the main repository."
+  fi
 else
-  echo "FAIL: Git remotes found - NOT an isolated repo!"
-  echo "  Remotes: $REMOTES"
-  echo "  ACTION: STOP - You are in the main repository."
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
 fi
 
 # Check 3: Project root markers should NOT exist
@@ -395,12 +399,16 @@ else
 fi
 
 # Check 2: Git remotes
-REMOTES=$(git remote -v 2>/dev/null)
-if [ -z "$REMOTES" ]; then
-  echo "PASS: No git remotes (isolated repo)"
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
 else
-  echo "FAIL: Git remotes found - NOT isolated!"
-  exit 1
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
 fi
 
 # Check 3: Project markers
@@ -422,6 +430,37 @@ export PROJECT_ROOT TEST_DIR REPORTS_DIR TIMESTAMP_ID
 - `TEST_DIR` - Sandbox directory (current working directory after setup)
 - `REPORTS_DIR` - Reports directory for test outputs
 - `TIMESTAMP_ID` - Unique identifier for this test run
+
+## Using `ace-test-e2e-sh` After Setup
+
+After Environment Setup completes, all subsequent bash blocks (Test Data, Test Cases) MUST use the `ace-test-e2e-sh` wrapper to ensure sandbox isolation persists across separate shell invocations.
+
+**Why:** Each `bash` block in a test scenario runs in a fresh shell. The `cd "$TEST_DIR"` from Environment Setup does not carry over. The wrapper enforces the correct working directory and `PROJECT_ROOT_PATH` for every command.
+
+**Single command:**
+```bash
+ace-test-e2e-sh "$TEST_DIR" git add README.md
+```
+
+**Multi-command block (heredoc):**
+```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+cat > README.md << 'EOF'
+# Test Repository
+EOF
+git add README.md
+git commit -m "Initial commit"
+SANDBOX
+```
+
+**Worktree tests:** Use `$REPO_DIR` (a subdirectory of `$TEST_DIR`) instead:
+```bash
+ace-test-e2e-sh "$REPO_DIR" git status
+```
+
+**Skip wrapping for:**
+- The Environment Setup block itself (it creates and enters the sandbox)
+- Report-writing blocks (Section 7) that use absolute `$REPORT_DIR` paths
 
 ## See Also
 

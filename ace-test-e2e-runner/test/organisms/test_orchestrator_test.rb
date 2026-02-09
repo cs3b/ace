@@ -620,6 +620,51 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_run_uses_externally_provided_run_id
+    Dir.mktmpdir do |tmpdir|
+      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        timestamp_generator: -> { "should_not_use" }
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "MT-TEST-001",
+        run_id: "ext123",
+        output: @output
+      )
+
+      # The external run_id should be used in the report dir path
+      assert results.first.report_dir.include?("ext123"),
+        "Should use externally provided run_id, got: #{results.first.report_dir}"
+      refute results.first.report_dir.include?("should_not_use"),
+        "Should NOT use timestamp generator when run_id provided"
+    end
+  end
+
+  def test_run_generates_timestamp_when_no_run_id
+    Dir.mktmpdir do |tmpdir|
+      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        timestamp_generator: -> { "gen789" }
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "MT-TEST-001",
+        output: @output
+      )
+
+      # Should fall back to timestamp generator when no run_id provided
+      assert results.first.report_dir.include?("gen789"),
+        "Should use timestamp generator when no run_id, got: #{results.first.report_dir}"
+    end
+  end
+
   def test_parallel_results_preserve_order
     Dir.mktmpdir do |tmpdir|
       create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002 MT-TEST-003])
