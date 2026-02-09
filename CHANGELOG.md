@@ -4,6 +4,94 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.465] - 2026-02-08
+
+### Added
+
+- **ace-test-e2e-runner v0.11.0**: `ace-test-e2e-sh` sandbox wrapper script — enforces working directory and `PROJECT_ROOT_PATH` isolation for every bash command in E2E tests, preventing test artifacts from escaping the sandbox across separate shell invocations; all 43 E2E test files updated to use wrapper
+
+## [0.9.464] - 2026-02-08
+
+### Added
+
+- **ace-test-e2e-runner v0.10.10**: Batch timestamp generation for `ace-test-suite-e2e` — `SuiteOrchestrator` pre-generates unique 50ms-offset run IDs and passes them via `--run-id` to subprocesses, giving coordinated sandbox/report paths across suite runs; `TestOrchestrator#run` accepts external `run_id:` for deterministic paths when invoked by suite
+
+## [0.9.463] - 2026-02-08
+
+### Fixed
+
+- **ace-test-e2e-runner v0.10.9**: Surface silent failures in `SuiteOrchestrator#generate_suite_report` — replace blanket `rescue => _e; nil` with `warn` that prints error class and message; strip whitespace from `report_dir` regex captures to prevent path mismatches
+
+## [0.9.462] - 2026-02-08
+
+### Added
+
+- **ace-test-e2e-runner v0.10.8**: Package filtering for `ace-test-suite-e2e` — optional comma-separated `packages` positional argument filters suite execution to specific packages (e.g., `ace-test-suite-e2e ace-bundle,ace-lint`), composable with `--affected` via intersection
+
+## [0.9.461] - 2026-02-08
+
+### Added
+
+- **ace-test-e2e-runner v0.10.7**: Suite-level final report generation in `SuiteOrchestrator` — wires existing `SuiteReportWriter` into multi-package E2E runs, converting subprocess result hashes into `TestResult`/`TestScenario` models and producing LLM-synthesized reports after all tests complete
+
+## [0.9.460] - 2026-02-08
+
+### Fixed
+
+- **ace-test-e2e-runner v0.10.6**: Unify timestamp precision to 7-char (`:"50ms"`) across all E2E paths — eliminates mixed 6/7-char timestamps in report folder names by making `default_timestamp` use `Timestamp.encode` with `:"50ms"` format and removing the `count <= 1` early return in `generate_timestamps`
+
+## [0.9.459] - 2026-02-08
+
+### Changed
+
+- **ace-test-e2e-runner v0.10.5**: Extract `REFRESH_INTERVAL` constant for 4Hz refresh rate — replaces `0.25` magic number across both orchestrators and both progress display managers
+
+## [0.9.458] - 2026-02-08
+
+### Added
+
+- **ace-test-e2e-runner v0.10.4**: Live timer refresh for single-package `--progress` display
+  - Dedicated 4Hz refresh thread in `TestOrchestrator` updates running timers while tests execute
+  - `ProgressDisplayManager#refresh` throttled to 250ms (matching `SuiteProgressDisplayManager` pattern)
+  - New `ProgressDisplayManager` test coverage (header rendering, state transitions, throttle behavior)
+
+## [0.9.457] - 2026-02-08
+
+### Changed
+
+- **ace-test-e2e-runner v0.10.3**: Throttle progress display refresh to ~4Hz (250ms) — reduces terminal I/O while keeping the poll loop responsive for process completion detection
+
+## [0.9.456] - 2026-02-08
+
+### Added
+
+- **ace-test-e2e-runner v0.10.2**: `--progress` animated display for `ace-test-suite-e2e`
+  - `SuiteProgressDisplayManager` with ANSI in-place row updates, running timers, and Active/Completed/Waiting footer
+  - `SuiteSimpleDisplayManager` extracted from SuiteOrchestrator for default line-by-line display
+  - SuiteOrchestrator delegates to pluggable display managers (matching TestOrchestrator pattern)
+
+## [0.9.455] - 2026-02-08
+
+### Changed
+
+- **ace-test-e2e-runner v0.10.1**: Polished `ace-test-suite-e2e` output with columnar alignment and structured summary
+  - Suite header with double-line `═` separators showing test/package counts
+  - Per-test progress lines with aligned icon, duration, package, test name, and case counts
+  - Structured summary block with failed test details, duration, pass/fail stats, and colored status
+  - Suite-level `DisplayHelpers` formatting methods for duration, elapsed, test lines, and summary
+  - Test case count extraction from subprocess output for richer progress display
+
+## [0.9.454] - 2026-02-08
+
+### Added
+
+- **ace-test-e2e-runner v0.10.0**: `ace-test-suite-e2e` command for parallel E2E test execution across packages
+  - `SuiteOrchestrator` organism for multi-package test orchestration
+  - `AffectedDetector` molecule for detecting packages with recent changes
+  - `--parallel N` option and `--affected` filter for targeted test runs
+  - Shell injection prevention with array-based command execution
+  - FrozenError fix in parallel execution output buffering
+
 ## [0.9.453] - 2026-02-07
 
 ### Added
