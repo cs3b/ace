@@ -305,6 +305,63 @@ class FeedbackManagerTest < AceReviewTest
     assert_match(/Invalid transition from 'pending' to 'pending'/, result[:error])
   end
 
+  def test_verify_skip_from_draft_archives_item
+    create_feedback_directory_with_items
+
+    result = @manager.verify(@temp_dir, "abc111", skip: true, research: "Out of scope")
+
+    assert result[:success]
+    assert_equal "skip", result[:item].status
+    assert_equal "Out of scope", result[:item].research
+
+    # Verify file was archived
+    archive_dir = File.join(@temp_dir, "feedback", "_archived")
+    archived_files = Dir.glob(File.join(archive_dir, "abc111-*.s.md"))
+    assert_equal 1, archived_files.length
+  end
+
+  def test_verify_skip_from_pending_archives_item
+    create_feedback_directory_with_items
+
+    # abc333 is "pending"
+    result = @manager.verify(@temp_dir, "abc333", skip: true, research: "Won't fix")
+
+    assert result[:success]
+    assert_equal "skip", result[:item].status
+
+    # Verify file was archived
+    archive_dir = File.join(@temp_dir, "feedback", "_archived")
+    archived_files = Dir.glob(File.join(archive_dir, "abc333-*.s.md"))
+    assert_equal 1, archived_files.length
+  end
+
+  def test_verify_rejects_both_valid_and_skip
+    create_feedback_directory_with_items
+
+    result = @manager.verify(@temp_dir, "abc111", valid: true, skip: true)
+
+    refute result[:success]
+    assert_match(/Cannot specify both valid: and skip:/, result[:error])
+  end
+
+  def test_verify_rejects_both_invalid_and_skip
+    create_feedback_directory_with_items
+
+    result = @manager.verify(@temp_dir, "abc111", valid: false, skip: true)
+
+    refute result[:success]
+    assert_match(/Cannot specify both valid: and skip:/, result[:error])
+  end
+
+  def test_verify_requires_valid_or_skip_mode
+    create_feedback_directory_with_items
+
+    result = @manager.verify(@temp_dir, "abc111")
+
+    refute result[:success]
+    assert_match(/Must specify either valid: or skip:/, result[:error])
+  end
+
   # ============================================================================
   # Skip Tests
   # ============================================================================

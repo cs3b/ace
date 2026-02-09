@@ -10,8 +10,8 @@ requires:
   tools: [ace-review, git]
   ruby: ">= 3.0"
   api-keys: [GOOGLE_API_KEY]
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Multi-Model Executor
@@ -33,12 +33,12 @@ Verify that ace-review's multi-model executor correctly handles single and multi
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="review"
 SHORT_ID="mt005"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Initialize git repo (needed for project root detection)
 git init --quiet .
@@ -51,22 +51,51 @@ export PROJECT_ROOT_PATH="$TEST_DIR"
 echo "=== Tool Verification ==="
 which ace-review && ace-review --version || echo "ace-review not in PATH"
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create preset directory
-mkdir -p "$TEST_DIR/.ace/review/presets"
+mkdir -p .ace/review/presets
 
 # Minimal config
-cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
+cat > .ace/review/config.yml << 'EOF'
 defaults:
   model: "google:gemini-2.5-flash"
 EOF
 
 # Single model preset (minimal cost)
-cat > "$TEST_DIR/.ace/review/presets/single.yml" << 'EOF'
+cat > .ace/review/presets/single.yml << 'EOF'
 description: "Single model E2E test"
 model: google:gemini-2.5-flash
 instructions:
@@ -75,7 +104,7 @@ instructions:
 EOF
 
 # Multi-model preset (2 cheap models)
-cat > "$TEST_DIR/.ace/review/presets/multi.yml" << 'EOF'
+cat > .ace/review/presets/multi.yml << 'EOF'
 description: "Multi-model E2E test"
 models:
   - google:gemini-2.5-flash
@@ -86,7 +115,7 @@ instructions:
 EOF
 
 # Test file
-cat > "$TEST_DIR/sample.rb" << 'EOF'
+cat > sample.rb << 'EOF'
 # Sample Ruby file for review testing
 class Calculator
   def add(a, b)
@@ -100,7 +129,7 @@ git add .
 git commit -m "Initial commit" --quiet
 
 # Make a change for diff
-cat >> "$TEST_DIR/sample.rb" << 'EOF'
+cat >> sample.rb << 'EOF'
 
   def multiply(a, b)
     a * b
@@ -111,6 +140,7 @@ git add sample.rb
 git commit -m "Add multiply" --quiet
 
 echo "Test data created successfully"
+SANDBOX
 ```
 
 ## Test Cases
@@ -122,8 +152,8 @@ echo "Test data created successfully"
 **Steps:**
 1. Run ace-review with single model preset
    ```bash
-   cd "$TEST_DIR"
-   SESSION_DIR="$TEST_DIR/session-tc001"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc001"
 
    OUTPUT=$(ace-review review \
      --preset single \
@@ -136,10 +166,13 @@ echo "Test data created successfully"
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify execution
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc001"
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
    # Check session directory
@@ -154,6 +187,7 @@ echo "Test data created successfully"
    else
      echo "FAIL: No review file"
    fi
+   SANDBOX
    ```
 
 **Expected:**
@@ -174,8 +208,8 @@ echo "Test data created successfully"
 **Steps:**
 1. Run ace-review with multi-model preset
    ```bash
-   cd "$TEST_DIR"
-   SESSION_DIR="$TEST_DIR/session-tc002"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc002"
 
    OUTPUT=$(ace-review review \
      --preset multi \
@@ -188,10 +222,13 @@ echo "Test data created successfully"
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify multi-model execution
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc002"
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Exit code $EXIT_CODE"
 
    # Check session directory
@@ -208,6 +245,7 @@ echo "Test data created successfully"
    # List contents
    echo "Session contents:"
    ls -la "$SESSION_DIR"
+   SANDBOX
    ```
 
 **Expected:**
@@ -228,8 +266,8 @@ echo "Test data created successfully"
 **Steps:**
 1. Measure execution time
    ```bash
-   cd "$TEST_DIR"
-   SESSION_DIR="$TEST_DIR/session-tc003"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   SESSION_DIR="$PWD/session-tc003"
 
    START_TIME=$(date +%s)
    OUTPUT=$(ace-review review \
@@ -244,10 +282,12 @@ echo "Test data created successfully"
 
    echo "Exit code: $EXIT_CODE"
    echo "Duration: ${DURATION}s"
+   SANDBOX
    ```
 
 2. Verify timing
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Execution succeeded" || echo "FAIL: Execution failed"
 
    # Should complete within 60 seconds (generous for API latency)
@@ -255,6 +295,7 @@ echo "Test data created successfully"
 
    # Should take at least 1 second (real API call)
    [ "$DURATION" -ge 1 ] && echo "PASS: Duration indicates real execution" || echo "INFO: Very fast execution"
+   SANDBOX
    ```
 
 **Expected:**
@@ -275,20 +316,21 @@ echo "Test data created successfully"
 **Steps:**
 1. Create preset with invalid model
    ```bash
-   cd "$TEST_DIR"
-
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Create preset with invalid model name
-   cat > "$TEST_DIR/.ace/review/presets/invalid-model.yml" << 'EOF'
+   cat > .ace/review/presets/invalid-model.yml << 'EOF'
 description: "Invalid model test"
 model: nonexistent:fake-model-xyz
 instructions:
   system: "Test"
   user: "Test"
 EOF
+   SANDBOX
    ```
 
 2. Run ace-review with invalid model
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review review \
      --preset invalid-model \
      --subject "diff:HEAD~1" \
@@ -298,10 +340,12 @@ EOF
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 3. Verify error handling
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Should fail (non-zero exit)
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit for invalid model" || echo "FAIL: Expected non-zero exit"
 
@@ -309,6 +353,7 @@ EOF
    echo "$OUTPUT" | grep -qi "error\|invalid\|failed\|not found\|unknown" && \
      echo "PASS: Error message present" || \
      echo "INFO: Error format may vary"
+   SANDBOX
    ```
 
 **Expected:**

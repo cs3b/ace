@@ -19,23 +19,40 @@ module Ace
             desc <<~DESC.strip
               Verify a draft feedback item
 
-              Marks a draft feedback item as either valid (moves to pending)
-              or invalid (archives the item). You must specify either --valid
-              or --invalid.
+              Marks a draft feedback item as valid, invalid, or skipped.
+
+              Use --valid when: The finding is correct and needs to be fixed
+              Use --invalid when: The finding is a false positive (factually incorrect)
+              Use --skip when: The finding is correct but not being fixed
+
+              Examples of --invalid (false positive):
+                - Claimed code doesn't exist, but it does
+                - Claimed missing validation, but it exists elsewhere
+                - Claimed issue in CI, but code doesn't run in CI
+
+              Examples of --skip (correct but not fixing):
+                - Design decision: Intentionally choosing this approach
+                - Deferred: Correct issue, but tracking in a separate task
+                - Duplicate: Already covered by another feedback item
             DESC
 
             example [
-              'abc123 --valid                    # Mark as valid (pending)',
-              'abc123 --invalid                  # Mark as invalid (archived)',
-              'abc123 --valid --research "Confirmed: code path is reachable"',
-              'abc123 --invalid --research "False positive: handled elsewhere"',
+              'abc123 --valid                                    # Correct issue, needs fix',
+              'abc123 --invalid                                  # False positive (incorrect)',
+              'abc123 --skip                                     # Correct but not fixing',
+              'abc123 --valid --research "Confirmed: missing null check at line 42"',
+              'abc123 --invalid --research "False positive: validation exists in middleware"',
+              'abc123 --skip --research "Design: using polling for simplicity"',
+              'abc123 --skip --research "Tracked in task 253"',
+              'abc123 --skip --research "Duplicate of abc120"',
               'abc123 --valid --session .cache/ace-review/sessions/review-xyz'
             ]
 
             argument :id, required: true, desc: "Feedback ID"
             option :valid, type: :boolean, desc: "Mark as valid (moves to pending)"
             option :invalid, type: :boolean, desc: "Mark as invalid (archives)"
-            option :research, type: :string, desc: "Add research notes"
+            option :skip, type: :boolean, desc: "Mark as skipped (archives)"
+            option :research, type: :string, desc: "Add research notes (what we learned/decided)"
             option :session, type: :string, desc: "Session directory containing feedback"
 
             # Standard options
@@ -44,13 +61,15 @@ module Ace
             option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
             def call(id:, **options)
-              # Validate: must specify --valid or --invalid (but not both)
-              if options[:valid] && options[:invalid]
-                raise Ace::Core::CLI::Error.new("Cannot specify both --valid and --invalid.")
+              # Validate: must specify exactly one of --valid, --invalid, or --skip
+              mode_count = [options[:valid], options[:invalid], options[:skip]].count { |v| v }
+
+              if mode_count > 1
+                raise Ace::Core::CLI::Error.new("Cannot specify multiple modes. Use exactly one of: --valid, --invalid, --skip.")
               end
 
-              unless options[:valid] || options[:invalid]
-                raise Ace::Core::CLI::Error.new("Must specify either --valid or --invalid.")
+              unless mode_count == 1
+                raise Ace::Core::CLI::Error.new("Must specify exactly one of: --valid, --invalid, --skip.")
               end
 
               # Resolve feedback path from session context
@@ -74,12 +93,19 @@ module Ace
               result = manager.verify(
                 base_path,
                 resolved_id,
-                valid: options[:valid] == true,
+                valid: options[:valid] == true ? true : (options[:invalid] == true ? false : nil),
+                skip: options[:skip] == true ? true : nil,
                 research: options[:research]
               )
 
               if result[:success]
-                status = options[:valid] ? "valid (pending)" : "invalid (archived)"
+                status = if options[:valid]
+                           "valid (pending)"
+                         elsif options[:invalid]
+                           "invalid (archived)"
+                         else
+                           "skipped (archived)"
+                         end
                 puts "Feedback #{resolved_id} marked as #{status}."
                 puts "Research: #{options[:research]}" if options[:research] && !quiet?(options)
               else

@@ -16,7 +16,40 @@ class FeedbackSkipCommandTest < AceReviewTest
   end
 
   # ============================================================================
-  # Skip From Draft Tests
+  # Deprecation Warning Tests
+  # ============================================================================
+
+  def test_skip_shows_deprecation_warning
+    create_draft_item("abc111")
+
+    output = capture_cli_output { run_skip_command("abc111") }
+
+    assert_match(/DEPRECATED/, output)
+    assert_match(/verify --skip/, output)
+  end
+
+  def test_skip_with_reason_shows_deprecation_warning
+    create_draft_item("abc111")
+
+    output = capture_cli_output do
+      run_skip_command("abc111", reason: "Out of scope")
+    end
+
+    assert_match(/DEPRECATED/, output)
+  end
+
+  def test_skip_quiet_mode_suppresses_deprecation_warning
+    create_draft_item("abc111")
+
+    output = capture_cli_output do
+      run_skip_command("abc111", quiet: true)
+    end
+
+    refute_match(/DEPRECATED/, output)
+  end
+
+  # ============================================================================
+  # Backward Compatibility Tests
   # ============================================================================
 
   def test_skip_from_draft_archives_item
@@ -44,7 +77,7 @@ class FeedbackSkipCommandTest < AceReviewTest
     end
 
     assert_match(/abc111 skipped/, output)
-    assert_match(/Reason:/, output)
+    assert_match(/Research:/, output)
 
     # Read from archive and verify reason
     archive_dir = File.join(@feedback_dir, "_archived")
@@ -54,6 +87,44 @@ class FeedbackSkipCommandTest < AceReviewTest
 
     assert result[:success]
     assert_equal "Out of scope for this sprint", result[:feedback_item].research
+  end
+
+  def test_skip_with_research_flag_adds_notes
+    create_draft_item("abc111")
+
+    output = capture_cli_output do
+      run_skip_command("abc111", research: "Tracked in task 253")
+    end
+
+    assert_match(/abc111 skipped/, output)
+    assert_match(/Research:/, output)
+
+    # Read from archive and verify research
+    archive_dir = File.join(@feedback_dir, "_archived")
+    files = Dir.glob(File.join(archive_dir, "abc111-*.s.md"))
+    reader = Ace::Review::Molecules::FeedbackFileReader.new
+    result = reader.read(files.first)
+
+    assert result[:success]
+    assert_equal "Tracked in task 253", result[:feedback_item].research
+  end
+
+  def test_skip_research_flag_takes_precedence_over_reason
+    create_draft_item("abc111")
+
+    capture_cli_output do
+      run_skip_command("abc111", reason: "Old reason", research: "New research")
+    end
+
+    # Read from archive and verify research flag was used
+    archive_dir = File.join(@feedback_dir, "_archived")
+    files = Dir.glob(File.join(archive_dir, "abc111-*.s.md"))
+    reader = Ace::Review::Molecules::FeedbackFileReader.new
+    result = reader.read(files.first)
+
+    # Research flag should take precedence (reason is aliased to research)
+    # In the implementation, we check research first, then reason
+    assert_equal "New research", result[:feedback_item].research
   end
 
   # ============================================================================
