@@ -32,12 +32,15 @@ Verify that ace-lint CLI returns correct exit codes for valid and invalid files,
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="lint"
 SHORT_ID="mt004"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
 
 # Initialize git repo (needed for project root detection)
 git init --quiet .
@@ -47,26 +50,55 @@ which ace-lint && ace-lint --version
 which standardrb && standardrb --version || echo "StandardRB not available"
 which rubocop && rubocop --version || echo "RuboCop not available"
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Valid markdown file (passes linting)
-cat > "$TEST_DIR/valid.md" << 'EOF'
+cat > valid.md << 'EOF'
 # Valid Document
 
 This is a valid markdown file with no issues.
 EOF
 
 # Markdown file with style error (no blank line after heading)
-cat > "$TEST_DIR/invalid.md" << 'EOF'
+cat > invalid.md << 'EOF'
 # Invalid Document
 This line has no blank line after the heading.
 EOF
 
 # Valid Ruby file
-cat > "$TEST_DIR/valid.rb" << 'EOF'
+cat > valid.rb << 'EOF'
 # frozen_string_literal: true
 
 class Greeter
@@ -77,7 +109,7 @@ end
 EOF
 
 # Ruby file with style issues
-cat > "$TEST_DIR/style_issues.rb" << 'EOF'
+cat > style_issues.rb << 'EOF'
 class BadStyle
   def method_with_issues( arg1,arg2 )
     puts    "extra spaces"
@@ -86,17 +118,17 @@ end
 EOF
 
 # Ruby file with syntax error (unfixable, always fails)
-cat > "$TEST_DIR/syntax_error.rb" << 'EOF'
+cat > syntax_error.rb << 'EOF'
 class Broken
   def unclosed
     puts "missing end"
 EOF
 
 # Create directories for group routing test
-mkdir -p "$TEST_DIR/app/models"
-mkdir -p "$TEST_DIR/app/controllers"
+mkdir -p app/models
+mkdir -p app/controllers
 
-cat > "$TEST_DIR/app/models/user.rb" << 'EOF'
+cat > app/models/user.rb << 'EOF'
 # frozen_string_literal: true
 
 class User
@@ -106,7 +138,7 @@ class User
 end
 EOF
 
-cat > "$TEST_DIR/app/controllers/users_controller.rb" << 'EOF'
+cat > app/controllers/users_controller.rb << 'EOF'
 # frozen_string_literal: true
 
 class UsersController
@@ -115,9 +147,41 @@ class UsersController
   end
 end
 EOF
+SANDBOX
 ```
 
 ## Test Cases
+
+### TC-000: Create Ruby Group Configuration
+
+**Objective:** Create Ruby validator configuration before tests that need it.
+
+**Steps:**
+1. Create the Ruby group configuration
+   ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p .ace/lint
+   cat > .ace/lint/ruby.yml << 'EOF'
+   groups:
+     default:
+       patterns:
+         - "**/*.rb"
+       validators:
+         - standardrb
+   EOF
+   cat .ace/lint/ruby.yml
+   echo "PASS: Ruby config created"
+   SANDBOX
+   ```
+
+**Expected:**
+- .ace/lint/ruby.yml file exists with valid YAML
+
+**Actual:** [Record during execution]
+
+**Status:** [ ] Pass / [ ] Fail
+
+---
 
 ### TC-001: Valid File Exits with Code 0
 
@@ -126,10 +190,12 @@ EOF
 **Steps:**
 1. Lint a valid markdown file and verify exit code
    ```bash
-   ace-lint lint "$TEST_DIR/valid.md"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   ace-lint lint valid.md
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -149,10 +215,12 @@ EOF
 **Steps:**
 1. Lint a Ruby file with syntax errors and verify non-zero exit
    ```bash
-   ace-lint lint "$TEST_DIR/syntax_error.rb"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   ace-lint lint syntax_error.rb
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Exit code is non-zero ($EXIT_CODE)" || echo "FAIL: Expected non-zero, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -172,13 +240,15 @@ EOF
 **Steps:**
 1. Clean previous reports, run ace-lint with --no-report, and verify
    ```bash
-   rm -rf "$TEST_DIR/.cache/ace-lint"
-   OUTPUT=$(ace-lint lint --no-report "$TEST_DIR/valid.md" 2>&1)
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   rm -rf .cache/ace-lint
+   OUTPUT=$(ace-lint lint --no-report valid.md 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
    ! echo "$OUTPUT" | grep -qE "Reports?:" && echo "PASS: No report path in output" || echo "FAIL: Report path found"
-   ! test -d "$TEST_DIR/.cache/ace-lint" && echo "PASS: No cache directory" || echo "FAIL: Cache directory exists"
+   ! test -d .cache/ace-lint && echo "PASS: No cache directory" || echo "FAIL: Cache directory exists"
+   SANDBOX
    ```
 
 **Expected:**
@@ -197,23 +267,16 @@ EOF
 **Objective:** Verify that Ruby files are correctly routed through group configuration.
 
 **Steps:**
-1. Create group configuration, lint Ruby files, and verify completion
+1. Verify Ruby config exists, then lint Ruby files and verify completion
    ```bash
-   mkdir -p "$TEST_DIR/.ace/lint"
-   cat > "$TEST_DIR/.ace/lint/ruby.yml" << 'EOF'
-   groups:
-     default:
-       patterns:
-         - "**/*.rb"
-       validators:
-         - standardrb
-   EOF
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat .ace/lint/ruby.yml && echo "PASS: Ruby config exists"
    OUTPUT=$(ace-lint lint app/models/user.rb app/controllers/users_controller.rb --verbose 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
    [ "$EXIT_CODE" -ge 0 ] && echo "PASS: Command completed with exit code $EXIT_CODE" || echo "FAIL: Unexpected exit"
+   SANDBOX
    ```
 
 **Expected:**
@@ -234,12 +297,14 @@ EOF
 **Steps:**
 1. Attempt to lint a nonexistent file and verify error handling
    ```bash
-   OUTPUT=$(ace-lint lint "$TEST_DIR/does_not_exist.md" 2>&1)
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   OUTPUT=$(ace-lint lint does_not_exist.md 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Correct non-zero exit code" || echo "FAIL: Expected non-zero exit"
    echo "$OUTPUT" | grep -qi "not found\|no such file\|does not exist\|error" && echo "PASS: Error message present" || echo "FAIL: No error message"
+   SANDBOX
    ```
 
 **Expected:**
@@ -254,6 +319,7 @@ EOF
 
 ## Success Criteria
 
+- [ ] TC-000: Ruby group configuration created
 - [ ] TC-001: Valid file exits with code 0
 - [ ] TC-002: Invalid file exits with non-zero code
 - [ ] TC-003: --no-report flag disables report generation

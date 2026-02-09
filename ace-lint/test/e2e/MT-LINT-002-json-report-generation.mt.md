@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-lint, jq]
   ruby: ">= 3.0"
-last-verified: 2026-02-07
-verified-by: claude-sonnet-4-5
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # JSON Report Generation
@@ -32,12 +32,15 @@ Verify that ace-lint generates JSON reports to `.cache/ace-lint/{compact_id}/rep
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="lint"
 SHORT_ID="mt002"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
 
 # Initialize git repo (needed for project root detection)
 git init --quiet .
@@ -46,13 +49,42 @@ echo "=== Tool Verification ==="
 which ace-lint && ace-lint --version
 which jq && jq --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Valid Ruby file (will pass)
-cat > "$TEST_DIR/valid.rb" << 'EOF'
+cat > valid.rb << 'EOF'
 # frozen_string_literal: true
 
 class Greeter
@@ -63,7 +95,7 @@ end
 EOF
 
 # Ruby file with style issues (will fail or be fixed)
-cat > "$TEST_DIR/style_issues.rb" << 'EOF'
+cat > style_issues.rb << 'EOF'
 class BadStyle
   def method_with_issues( arg1,arg2 )
     puts    "extra spaces"
@@ -72,18 +104,19 @@ end
 EOF
 
 # Ruby file with syntax error (unfixable)
-cat > "$TEST_DIR/syntax_error.rb" << 'EOF'
+cat > syntax_error.rb << 'EOF'
 class Broken
   def unclosed
     puts "missing end"
 EOF
 
 # Valid markdown file
-cat > "$TEST_DIR/readme.md" << 'EOF'
+cat > readme.md << 'EOF'
 # Test README
 
 This is a valid markdown file.
 EOF
+SANDBOX
 ```
 
 ## Test Cases
@@ -95,18 +128,22 @@ EOF
 **Steps:**
 1. Run ace-lint on a valid file
    ```bash
-   OUTPUT=$(ace-lint lint "$TEST_DIR/valid.rb" 2>&1)
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   OUTPUT=$(ace-lint lint valid.rb 2>&1)
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify report directory, files, and set REPORT_PATH
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -E "Reports:.*\.cache/ace-lint/[0-9a-z]{6}/"
    REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
    test -f "$REPORT_DIR/report.json" && echo "report.json exists"
    test -f "$REPORT_DIR/ok.md" || test -f "$REPORT_DIR/pending.md" && echo "Markdown report exists"
    REPORT_PATH="$REPORT_DIR/report.json"
    echo "REPORT_PATH=$REPORT_PATH"
+   SANDBOX
    ```
 
 **Expected:**
@@ -129,6 +166,7 @@ EOF
 **Steps:**
 1. Parse the report and verify all structures
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "=== Top-level keys ==="
    cat "$REPORT_PATH" | jq 'keys'
    echo "=== Metadata ==="
@@ -139,6 +177,7 @@ EOF
    cat "$REPORT_PATH" | jq '.summary | keys'
    echo "=== Results ==="
    cat "$REPORT_PATH" | jq '.results | keys'
+   SANDBOX
    ```
 
 **Expected:**
@@ -160,17 +199,21 @@ EOF
 **Steps:**
 1. Run ace-lint with --fix on file with style issues
    ```bash
-   cp "$TEST_DIR/style_issues.rb" "$TEST_DIR/to_fix.rb"
-   OUTPUT=$(ace-lint lint --fix "$TEST_DIR/to_fix.rb" 2>&1)
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cp style_issues.rb to_fix.rb
+   OUTPUT=$(ace-lint lint --fix to_fix.rb 2>&1)
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify summary, report JSON, and fixed.md
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -E "✓.*fixed"
    REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
    cat "$REPORT_DIR/report.json" | jq '.summary.fixed'
    test -f "$REPORT_DIR/fixed.md" && echo "fixed.md exists - PASS"
+   SANDBOX
    ```
 
 **Expected:**
@@ -192,19 +235,22 @@ EOF
 **Steps:**
 1. Lint multiple files with --fix (one clean, one with style issues to fix)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Ensure clean state
-   rm -rf "$TEST_DIR/.cache/ace-lint"
+   rm -rf .cache/ace-lint
 
    # Create a copy for fixing
-   cp "$TEST_DIR/style_issues.rb" "$TEST_DIR/style_issues_copy.rb"
+   cp style_issues.rb style_issues_copy.rb
 
    # Lint with --fix: 1 pass (already clean), 1 fixed
-   OUTPUT=$(ace-lint lint --fix "$TEST_DIR/valid.rb" "$TEST_DIR/style_issues_copy.rb" 2>&1)
+   OUTPUT=$(ace-lint lint --fix valid.rb style_issues_copy.rb 2>&1)
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Check report categorization and markdown files
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    REPORT_DIR=$(echo "$OUTPUT" | grep "Reports:" | sed 's/Reports: //' | sed 's|/$||')
    echo "Passed files:"
    cat "$REPORT_DIR/report.json" | jq '.results.passed | length'
@@ -212,6 +258,7 @@ EOF
    cat "$REPORT_DIR/report.json" | jq '.results.fixed | length'
    test -f "$REPORT_DIR/fixed.md" && echo "fixed.md exists - PASS"
    test -f "$REPORT_DIR/ok.md" && echo "ok.md exists - PASS"
+   SANDBOX
    ```
 
 **Expected:**
@@ -234,15 +281,16 @@ EOF
 **Steps:**
 1. Extract compact IDs from multiple reports and validate format
    ```bash
-   rm -rf "$TEST_DIR/.cache/ace-lint"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   rm -rf .cache/ace-lint
 
-   ace-lint lint "$TEST_DIR/valid.rb" > /dev/null 2>&1
+   ace-lint lint valid.rb > /dev/null 2>&1
    sleep 1
-   ace-lint lint "$TEST_DIR/readme.md" > /dev/null 2>&1
+   ace-lint lint readme.md > /dev/null 2>&1
 
-   ls "$TEST_DIR/.cache/ace-lint/"
+   ls .cache/ace-lint/
 
-   for dir in "$TEST_DIR/.cache/ace-lint"/*/; do
+   for dir in .cache/ace-lint/*/; do
      ID=$(basename "$dir")
      if [[ "$ID" =~ ^[0-9a-z]{6}$ ]]; then
        echo "$ID - valid format"
@@ -250,6 +298,7 @@ EOF
        echo "$ID - INVALID format"
      fi
    done
+   SANDBOX
    ```
 
 **Expected:**
