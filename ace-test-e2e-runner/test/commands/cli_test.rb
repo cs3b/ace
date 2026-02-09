@@ -29,6 +29,7 @@ class CLITest < Minitest::Test
 
   def test_known_command_recognizes_registered
     assert CLI.known_command?("run")
+    assert CLI.known_command?("suite")
     assert CLI.known_command?("version")
   end
 

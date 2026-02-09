@@ -51,7 +51,7 @@ module Ace
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param output [IO] Output stream for progress messages (default: $stdout)
           # @return [Array<Models::TestResult>] List of test results
-          def run(package:, test_id: nil, cli_args: nil, output: $stdout)
+          def run(package:, test_id: nil, cli_args: nil, run_id: nil, output: $stdout)
             # Discover tests
             files = @discoverer.find_tests(
               package: package,
@@ -65,8 +65,8 @@ module Ace
               return []
             end
 
-            # Generate timestamp for this run
-            timestamp = generate_timestamp
+            # Generate timestamp for this run (use external run_id when provided)
+            timestamp = run_id || generate_timestamp
 
             if files.size == 1
               run_single_test(files.first, timestamp, cli_args, output)
@@ -138,6 +138,17 @@ module Ace
             completed = 0
 
             thread_count = [@parallel, files.size].min
+            done = false
+
+            refresh_thread = if @progress
+              Thread.new do
+                until done
+                  sleep REFRESH_INTERVAL
+                  mutex.synchronize { display.refresh }
+                end
+              end
+            end
+
             threads = thread_count.times.map do
               Thread.new do
                 while (item = begin; queue.pop(true); rescue ThreadError; nil; end)
@@ -174,6 +185,8 @@ module Ace
             end
 
             threads.each(&:join)
+            done = true
+            refresh_thread&.join
 
             # Write suite report
             report_path = @suite_report_writer.write(
@@ -223,7 +236,7 @@ module Ace
           end
 
           # Generate a timestamp ID via injected generator
-          # @return [String] 6-char timestamp ID
+          # @return [String] 7-char timestamp ID
           def generate_timestamp
             @timestamp_generator.call
           end
@@ -236,8 +249,6 @@ module Ace
           # @param count [Integer] Number of unique timestamps needed
           # @return [Array<String>] Array of unique timestamp strings
           def generate_timestamps(count)
-            return [generate_timestamp] if count <= 1
-
             count.times.map do |i|
               time = Time.now.utc + (i * 0.05) # 50ms offset per ID
               Ace::Support::Timestamp.encode(time, format: :"50ms")
@@ -283,9 +294,9 @@ module Ace
           end
 
           # Default timestamp generator using Ace::Support::Timestamp library
-          # @return [String] 6-char timestamp ID
+          # @return [String] 7-char timestamp ID
           def default_timestamp
-            Ace::Support::Timestamp.now
+            Ace::Support::Timestamp.encode(Time.now.utc, format: :"50ms")
           end
         end
       end

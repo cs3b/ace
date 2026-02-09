@@ -23,12 +23,17 @@ require_relative "end_to_end_runner/molecules/report_writer"
 require_relative "end_to_end_runner/molecules/suite_report_writer"
 require_relative "end_to_end_runner/molecules/simple_display_manager"
 require_relative "end_to_end_runner/molecules/progress_display_manager"
+require_relative "end_to_end_runner/molecules/suite_simple_display_manager"
+require_relative "end_to_end_runner/molecules/suite_progress_display_manager"
+require_relative "end_to_end_runner/molecules/affected_detector"
 
 # Organisms
 require_relative "end_to_end_runner/organisms/test_orchestrator"
+require_relative "end_to_end_runner/organisms/suite_orchestrator"
 
 # CLI
 require_relative "end_to_end_runner/cli/commands/run_test"
+require_relative "end_to_end_runner/cli/commands/run_suite"
 require_relative "end_to_end_runner/cli"
 
 module Ace
@@ -44,6 +49,8 @@ module Ace
       #
       # Tests can be executed by AI agents or via the CLI tool.
       # See handbook/ for workflows and guides.
+
+      REFRESH_INTERVAL = 0.25
 
       # Module namespaces
       module Atoms; end

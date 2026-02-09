@@ -48,6 +48,8 @@ module Ace
             option :parallel, type: :string, default: Molecules::ConfigLoader.default_parallel.to_s,
                    desc: "Number of tests to run in parallel (1 = sequential)"
             option :progress, type: :boolean, desc: "Enable live animated display"
+            option :run_id, type: :string,
+                   desc: "Pre-generated run ID for deterministic report paths"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress detailed output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
@@ -66,6 +68,7 @@ module Ace
                 package: package,
                 test_id: test_id,
                 cli_args: options[:cli_args],
+                run_id: options[:run_id],
                 output: quiet?(options) ? StringIO.new : $stdout
               )
 
