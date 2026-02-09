@@ -111,10 +111,19 @@ ace-review feedback show {id}
    | Result | Command | When |
    |--------|---------|------|
    | ✅ VALID | `--valid` | Issue confirmed in code |
-   | ❌ INVALID | `--invalid` | False positive, code is correct |
+   | ❌ INVALID | `--invalid` | **False positive** - claim is factually incorrect |
    | ✅ DONE | `feedback resolve {id}` | Already fixed in this PR |
-   | ⏭️ SKIP | `feedback skip {id} --reason "Design: ..."` | Intentional design decision |
-   | 📋 DEFER | `feedback skip {id} --reason "Tracked in task XXX"` | Important, but not this PR (create task first) |
+   | ⏭️ SKIP | `verify --skip --research "Design: ..."` | **Correct finding**, but not being fixed |
+   | 📋 DEFER | `verify --skip --research "Tracked in task XXX"` | Important, but not this PR (create task first) |
+
+   **Key distinction:**
+   - `verify --invalid`: The finding is **wrong** (false positive)
+     - "Code doesn't exist" → Actually exists
+     - "Missing validation" → Exists elsewhere
+     - "Fails in CI" → Doesn't run in CI
+   - `verify --skip`: The finding is **correct**, but you're not fixing it
+     - Design decision: Intentional choice
+     - Deferred: Tracking in separate task
 
    **Before skipping**: Always verify the issue still exists by reading the code. Never skip with "out of scope" - either it's a design decision or it should be tracked in a task.
 
@@ -188,10 +197,10 @@ For items that won't be fixed in this PR:
 
 ```bash
 # Design decision - intentionally this way
-ace-review feedback skip {id} --reason "Design: uses polling for simplicity"
+ace-review feedback verify {id} --skip --research "Design: uses polling for simplicity"
 
 # Important but deferred - ALWAYS create/reference a task
-ace-review feedback skip {id} --reason "Tracked in task 253"
+ace-review feedback verify {id} --skip --research "Tracked in task 253"
 ```
 
 **Never skip with "out of scope"** - either:
@@ -240,8 +249,8 @@ ace-review feedback list --session <path>     # From specific session
 ace-review feedback show {id}                 # Full item details
 ace-review feedback verify {id} --valid       # Mark as valid
 ace-review feedback verify {id} --invalid     # Mark as false positive
+ace-review feedback verify {id} --skip        # Mark as skipped
 ace-review feedback resolve {id}              # Mark as fixed
-ace-review feedback skip {id}                 # Mark as skipped
 
 # PR comment resolution
 gh pr comment $PR --body "Fixed in $(git rev-parse --short HEAD)"

@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-review, git]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Multi-Subject Merging and Type Detection
@@ -31,12 +31,12 @@ Verify that ace-review correctly handles multiple subjects from different source
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="review"
 SHORT_ID="mt002"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Initialize git repo with some commits for diff testing
 git init --quiet .
@@ -50,14 +50,43 @@ echo "=== Tool Verification ==="
 which ace-review && ace-review --version || echo "ace-review not in PATH"
 which git && git --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create some test files
-mkdir -p "$TEST_DIR/lib"
-cat > "$TEST_DIR/lib/example.rb" << 'EOF'
+mkdir -p lib
+cat > lib/example.rb << 'EOF'
 # frozen_string_literal: true
 
 class Example
@@ -67,7 +96,7 @@ class Example
 end
 EOF
 
-cat > "$TEST_DIR/README.md" << 'EOF'
+cat > README.md << 'EOF'
 # Example Project
 
 This is a test project for E2E testing.
@@ -78,14 +107,14 @@ git add .
 git commit -m "Initial commit" --quiet
 
 # Make some changes for diff testing
-cat >> "$TEST_DIR/lib/example.rb" << 'EOF'
+cat >> lib/example.rb << 'EOF'
 
   def goodbye
     "Goodbye!"
   end
 EOF
 
-cat >> "$TEST_DIR/README.md" << 'EOF'
+cat >> README.md << 'EOF'
 
 ## Features
 - Example feature
@@ -95,7 +124,7 @@ git add .
 git commit -m "Add features" --quiet
 
 # Create another file for testing
-cat > "$TEST_DIR/lib/helper.rb" << 'EOF'
+cat > lib/helper.rb << 'EOF'
 # frozen_string_literal: true
 
 module Helper
@@ -109,17 +138,18 @@ git add .
 git commit -m "Add helper" --quiet
 
 # Create preset directory with a simple test preset
-mkdir -p "$TEST_DIR/.ace/review/presets"
-cat > "$TEST_DIR/.ace/review/presets/test.yml" << 'EOF'
+mkdir -p .ace/review/presets
+cat > .ace/review/presets/test.yml << 'EOF'
 description: "Test preset for multi-subject testing"
 model: "test-model"
 EOF
 
 # Create minimal config
-cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
+cat > .ace/review/config.yml << 'EOF'
 defaults:
   model: "test-model"
 EOF
+SANDBOX
 ```
 
 ## Test Cases
@@ -131,16 +161,19 @@ EOF
 **Steps:**
 1. Run ace-review with a single diff subject
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test --subject "diff:HEAD~1" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify command completes successfully
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Single diff subject processed" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -160,16 +193,19 @@ EOF
 **Steps:**
 1. Run ace-review with a files subject
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test --subject "files:*.md" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify command completes
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Files subject processed" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -189,7 +225,7 @@ EOF
 **Steps:**
 1. Run ace-review with multiple subjects
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test \
      --subject "diff:HEAD~2" \
      --subject "files:lib/*.rb" \
@@ -197,11 +233,14 @@ EOF
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify command processes both subjects
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Multiple subjects merged" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -221,7 +260,7 @@ EOF
 **Steps:**
 1. Run ace-review with duplicate subjects
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test \
      --subject "diff:HEAD~1" \
      --subject "diff:HEAD~1" \
@@ -230,11 +269,14 @@ EOF
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify command completes (deduplication happens internally)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Duplicate subjects handled" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -254,7 +296,7 @@ EOF
 **Steps:**
 1. Run ace-review with mixed empty and valid subjects
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test \
      --subject "" \
      --subject "diff:HEAD~1" \
@@ -262,11 +304,14 @@ EOF
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify command completes with valid subject
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Empty subjects filtered" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -286,7 +331,7 @@ EOF
 **Steps:**
 1. Run ace-review with three subjects
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test \
      --subject "files:README.md" \
      --subject "diff:HEAD~1" \
@@ -295,11 +340,14 @@ EOF
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify all subjects processed
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Three subjects processed" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 **Expected:**
@@ -319,18 +367,21 @@ EOF
 **Steps:**
 1. Run ace-review without any subject
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test --dry-run 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Check behavior (may succeed with default or fail)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    # Note: behavior depends on whether preset has default subject
    echo "Exit code was: $EXIT_CODE"
    [ "$EXIT_CODE" -eq 0 ] && echo "INFO: No subject - used default from preset or empty" || echo "INFO: No subject - command failed as expected"
+   SANDBOX
    ```
 
 **Expected:**
@@ -350,27 +401,32 @@ EOF
 **Steps:**
 1. Make and stage some changes
    ```bash
-   cd "$TEST_DIR"
-   echo "# New comment" >> "$TEST_DIR/lib/example.rb"
-   git add "$TEST_DIR/lib/example.rb"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   echo "# New comment" >> lib/example.rb
+   git add lib/example.rb
+   SANDBOX
    ```
 
 2. Run ace-review with staged subject
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-review --preset test --subject "staged" --dry-run 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 3. Verify command processes staged changes
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Staged changes processed" || echo "FAIL: Expected exit code 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 4. Clean up staged changes
    ```bash
-   git checkout -- "$TEST_DIR/lib/example.rb"
+   ace-test-e2e-sh "$TEST_DIR" git checkout -- lib/example.rb
    ```
 
 **Expected:**

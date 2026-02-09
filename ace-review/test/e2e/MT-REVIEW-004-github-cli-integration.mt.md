@@ -33,12 +33,12 @@ Verify that ace-review's GitHub CLI integration correctly handles gh CLI detecti
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="review"
 SHORT_ID="mt004"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Initialize git repo (needed for project root detection)
 git init --quiet .
@@ -58,28 +58,58 @@ echo "=== Tool Verification ==="
 which gh && gh --version || echo "gh not in PATH"
 which ace-review && ace-review --version || echo "ace-review not in PATH"
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create minimal preset for testing
-mkdir -p "$TEST_DIR/.ace/review/presets"
+mkdir -p .ace/review/presets
 
-cat > "$TEST_DIR/.ace/review/presets/pr.yml" << 'EOF'
+cat > .ace/review/presets/pr.yml << 'EOF'
 description: "PR review preset for testing"
 model: test-model
 EOF
 
-cat > "$TEST_DIR/.ace/review/config.yml" << 'EOF'
+cat > .ace/review/config.yml << 'EOF'
 defaults:
   model: "test-model"
 EOF
 
 # Create a test file for subject when needed
-echo "# Test File" > "$TEST_DIR/test.rb"
+echo "# Test File" > test.rb
 git add .
 git commit -m "Initial commit" --quiet
+SANDBOX
 ```
 
 ## Test Cases
@@ -91,17 +121,20 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Check gh CLI version
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(gh --version 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify gh is installed
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: gh CLI is installed" || echo "FAIL: gh CLI not found"
    echo "$OUTPUT" | grep -q "gh version" && echo "PASS: gh version string present" || echo "FAIL: Version string missing"
+   SANDBOX
    ```
 
 **Expected:**
@@ -121,17 +154,20 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Check authentication status
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(gh auth status 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify authenticated
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: gh is authenticated" || echo "FAIL: gh not authenticated"
    echo "$OUTPUT" | grep -qi "logged in\|authenticated" && echo "PASS: Auth status confirmed" || echo "INFO: Auth message may vary"
+   SANDBOX
    ```
 
 **Expected:**
@@ -151,20 +187,23 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Fetch diff for a known PR
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(gh pr diff "$TEST_PR_NUMBER" --repo "$TEST_REPO" 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Diff length: ${#OUTPUT} characters"
    echo "First 500 chars:"
    echo "${OUTPUT:0:500}"
+   SANDBOX
    ```
 
 2. Verify diff content
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Diff fetched successfully" || echo "FAIL: Failed to fetch diff"
    [ ${#OUTPUT} -gt 0 ] && echo "PASS: Diff has content" || echo "FAIL: Diff is empty"
    echo "$OUTPUT" | grep -qE "^(\+|\-|diff|@@)" && echo "PASS: Diff format looks correct" || echo "INFO: May be a no-change PR"
+   SANDBOX
    ```
 
 **Expected:**
@@ -184,20 +223,23 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Fetch PR metadata
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(gh pr view "$TEST_PR_NUMBER" --repo "$TEST_REPO" --json number,state,title,author,isDraft,baseRefName,headRefName 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify metadata content
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Metadata fetched successfully" || echo "FAIL: Failed to fetch metadata"
    echo "$OUTPUT" | jq -e '.number' > /dev/null 2>&1 && echo "PASS: Valid JSON with number field" || echo "FAIL: Invalid JSON or missing number"
    echo "$OUTPUT" | jq -e '.state' > /dev/null 2>&1 && echo "PASS: State field present" || echo "FAIL: State field missing"
    echo "$OUTPUT" | jq -e '.title' > /dev/null 2>&1 && echo "PASS: Title field present" || echo "FAIL: Title field missing"
+   SANDBOX
    ```
 
 **Expected:**
@@ -217,7 +259,9 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Fetch PR comments using GraphQL
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   # Prerequisite: GitHub authentication required
+   gh auth status >/dev/null 2>&1 || { echo "SKIP: GitHub auth required for TC-005"; exit 0; }
    # Extract owner and repo from TEST_REPO
    OWNER=$(echo "$TEST_REPO" | cut -d'/' -f1)
    REPO=$(echo "$TEST_REPO" | cut -d'/' -f2)
@@ -257,14 +301,17 @@ git commit -m "Initial commit" --quiet
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT" | jq '.' 2>/dev/null || echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify GraphQL response
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: GraphQL query succeeded" || echo "FAIL: GraphQL query failed"
    echo "$OUTPUT" | jq -e '.data.repository.pullRequest.number' > /dev/null 2>&1 && echo "PASS: PR data in response" || echo "FAIL: Missing PR data"
    echo "$OUTPUT" | jq -e '.data.repository.pullRequest.comments' > /dev/null 2>&1 && echo "PASS: Comments field present" || echo "FAIL: Comments missing"
    echo "$OUTPUT" | jq -e '.data.repository.pullRequest.reviewThreads' > /dev/null 2>&1 && echo "PASS: Review threads field present" || echo "FAIL: Review threads missing"
+   SANDBOX
    ```
 
 **Expected:**
@@ -284,18 +331,23 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Attempt to fetch a non-existent PR
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   # Prerequisite: GitHub authentication required
+   gh auth status >/dev/null 2>&1 || { echo "SKIP: GitHub auth required for TC-006"; exit 0; }
    OUTPUT=$(gh pr view "$NONEXISTENT_PR_NUMBER" --repo "$TEST_REPO" 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify error handling
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit for missing PR" || echo "FAIL: Expected non-zero exit code"
    echo "$OUTPUT" | grep -qi "not found\|could not\|no pull request" && echo "PASS: Appropriate error message" || echo "INFO: Error message may vary"
+   SANDBOX
    ```
 
 **Expected:**
@@ -315,18 +367,23 @@ git commit -m "Initial commit" --quiet
 **Steps:**
 1. Attempt to access invalid repository
    ```bash
-   cd "$TEST_DIR"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   # Prerequisite: GitHub authentication required
+   gh auth status >/dev/null 2>&1 || { echo "SKIP: GitHub auth required for TC-007"; exit 0; }
    OUTPUT=$(gh pr view 1 --repo "nonexistent-user-xyz/nonexistent-repo-abc" 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify error handling
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit for invalid repo" || echo "FAIL: Expected non-zero exit code"
    echo "$OUTPUT" | grep -qi "not found\|could not resolve\|error" && echo "PASS: Error indicates failure" || echo "INFO: Error message may vary"
+   SANDBOX
    ```
 
 **Expected:**

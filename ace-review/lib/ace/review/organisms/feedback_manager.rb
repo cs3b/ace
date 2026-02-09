@@ -233,11 +233,12 @@ module Ace
         # State Transitions
         # ========================================================================
 
-        # Verify a feedback item (draft -> pending or draft -> invalid)
+        # Verify a feedback item (draft -> pending, draft -> invalid, or draft/pending -> skip)
         #
         # @param base_path [String] Base project path
         # @param id [String] Feedback item ID
-        # @param valid [Boolean] Whether the feedback is valid
+        # @param valid [Boolean, nil] Whether the feedback is valid (mutually exclusive with skip:)
+        # @param skip [Boolean, nil] Whether to skip the feedback (mutually exclusive with valid:)
         # @param research [String, nil] Verification research notes (optional)
         # @return [Hash] Result with :success, :item or :error
         #
@@ -246,13 +247,37 @@ module Ace
         #
         # @example Mark as invalid
         #   result = manager.verify("/project", "abc123", valid: false, research: "False positive")
-        def verify(base_path, id, valid:, research: nil)
-          target_status = valid ? "pending" : "invalid"
+        #
+        # @example Skip
+        #   result = manager.verify("/project", "abc123", skip: true, research: "Design decision")
+        def verify(base_path, id, valid: nil, skip: nil, research: nil)
+          # Validate mutually exclusive options
+          if valid.nil? && skip.nil?
+            return { success: false, error: "Must specify either valid: or skip:" }
+          end
+          if !valid.nil? && !skip.nil?
+            return { success: false, error: "Cannot specify both valid: and skip:" }
+          end
+
+          target_status = if skip
+                            "skip"
+                          elsif valid
+                            "pending"
+                          else
+                            "invalid"
+                          end
+
+          allowed_from = if skip
+                           %w[draft pending]
+                         else
+                           ["draft"]
+                         end
+
           transition(
             base_path: base_path,
             id: id,
             to_status: target_status,
-            allowed_from: ["draft"],
+            allowed_from: allowed_from,
             updates: research ? { research: research } : {}
           )
         end
@@ -261,19 +286,15 @@ module Ace
         #
         # @param base_path [String] Base project path
         # @param id [String] Feedback item ID
-        # @param reason [String, nil] Reason for skipping (optional)
+        # @param reason [String, nil] Reason for skipping (optional, aliased to research)
         # @return [Hash] Result with :success, :item or :error
         #
         # @example
         #   result = manager.skip("/project", "abc123", reason: "Out of scope for this PR")
+        #
+        # @note For new code, prefer verify(base_path, id, skip: true, research: reason)
         def skip(base_path, id, reason: nil)
-          transition(
-            base_path: base_path,
-            id: id,
-            to_status: "skip",
-            allowed_from: %w[draft pending],
-            updates: reason ? { research: reason } : {}
-          )
+          verify(base_path, id, skip: true, research: reason)
         end
 
         # Resolve a feedback item (pending -> done)

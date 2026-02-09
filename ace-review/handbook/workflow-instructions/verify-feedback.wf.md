@@ -19,7 +19,7 @@ update:
 
 ## Goal
 
-Verify each feedback item through systematic claim analysis, marking items as valid or invalid based on evidence gathered from the codebase, documentation, and execution context.
+Verify each feedback item through systematic claim analysis, marking items as valid, invalid, or skipped based on evidence gathered from the codebase, documentation, and execution context.
 
 ## Why This Workflow Exists
 
@@ -58,7 +58,7 @@ If no items appear, the review may not have generated extractable feedback.
 
 ### Step 2: For Each Item, Run Multi-Dimensional Verification
 
-For each feedback item, verify claims across multiple dimensions before marking valid/invalid.
+For each feedback item, verify claims across multiple dimensions before marking valid/invalid/skipped.
 
 #### 2a. Read the Feedback Item
 
@@ -141,6 +141,12 @@ ace-review feedback verify <id> --valid --research "Confirmed: <evidence>"
 **Invalid Finding** - Any claim dimension fails:
 ```bash
 ace-review feedback verify <id> --invalid --research "<dimension> incorrect: <evidence>"
+```
+
+**Skip Finding** - Valid but not being fixed:
+```bash
+ace-review feedback verify <id> --skip --research "Design: <reason>"
+ace-review feedback verify <id> --skip --research "Tracked in task XXX"
 ```
 
 ### Step 3: Common False Positive Patterns
@@ -236,11 +242,47 @@ ace-review feedback verify <id> --valid --research "Evidence..."
 # Mark as invalid (false positive)
 ace-review feedback verify <id> --invalid --research "Reason..."
 
+# Mark as skipped (valid but not fixing)
+ace-review feedback verify <id> --skip --research "Design: reason..."
+
 # Search helpers
 grep -rn "pattern" path/           # Find code
 cat file | head -30                # Check frontmatter
 ls .github/workflows/              # Check CI config
 ```
+
+## Choosing Between Verification Modes
+
+All three modes archive feedback items, but they mean different things:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Is the feedback claim factually correct?                        │
+├─────────────────┬───────────────────────────────────────────────┤
+│  NO             │  YES                                          │
+│  → verify --invalid  │  → Are you fixing it?                      │
+│  (False positive)  │     ├─ YES → verify --valid (then resolve)  │
+│                    │     └─ NO → verify --skip "..."            │
+│                    │           (Not applicable)                  │
+└────────────────────┴─────────────────────────────────────────────┘
+```
+
+| Question | `verify --invalid` | `verify --skip` |
+|----------|-------------------|-----------------|
+| Is the claim factually wrong? | ✅ Yes | ❌ No |
+| Is the finding correct but not fixed? | ❌ No | ✅ Yes |
+
+### Quick Examples
+
+**`verify --invalid`** - The finding is incorrect:
+- "Code doesn't exist" → Actually exists
+- "Missing validation" → Exists elsewhere
+- "Fails in CI" → Doesn't run in CI
+
+**`verify --skip`** - The finding is correct but not being fixed:
+- "Design: using polling for simplicity"
+- "Tracked in task 253"
+- "Duplicate of abc120"
 
 ## Success Criteria
 

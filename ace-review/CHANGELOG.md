@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.37.4] - 2026-02-06
+## [0.38.0] - 2026-02-08
+
+### Added
+- Unified feedback verification workflow with single `verify` command supporting three modes
+- `--skip` option to `feedback verify` for marking items as skipped (correct but not fixing)
+- Support for skipping both draft and pending status items (previously skip only worked on draft)
+- Enhanced documentation with clear examples for when to use --valid, --invalid, or --skip
+- Comprehensive test coverage for --skip mode and backward compatibility
+
+### Changed
+- `FeedbackManager.verify()` now supports `skip:` mode in addition to `valid:` parameter
+- `FeedbackManager.skip()` now delegates to `verify()` with `skip: true` (backward compatible)
+- Enhanced verification workflow documentation with clear decision criteria
+- Improved CLI help text with examples for each verification mode
+
+### Technical
+- Added tests for skip mode transition from both draft and pending states
+- Added tests for mutually exclusive validation in verify command
+- Ensured backward compatibility for existing skip command usage
 
 ### Changed
 - Embed CLI help reference in apply-feedback and verify-feedback workflows via bundle frontmatter
