@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-timestamp]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # CLI Integration Tests
@@ -27,27 +27,17 @@ Verify that ace-timestamp CLI correctly handles encode/decode roundtrips across 
 ## Environment Setup
 
 ```bash
-PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode -q)"
-SHORT_PKG="support-timestamp"
-SHORT_ID="mt004"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
-
-# Verify tools are available
-echo "=== Tool Verification ==="
-which ace-timestamp && ace-timestamp version
-echo "========================="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Test timestamps and invalid inputs
 TEST_TIMESTAMP="2025-06-15 12:30:45 UTC"
 INVALID_ID="invalid!!!"
 INVALID_FORMAT="nonexistent"
+SANDBOX
 ```
 
 ## Test Cases
@@ -59,16 +49,20 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Attempt to decode an invalid ID
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp decode "invalid!!!" 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code and error message
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit code" || echo "FAIL: Expected non-zero, got $EXIT_CODE"
    echo "$OUTPUT" | grep -qi "error" && echo "PASS: Error message present" || echo "FAIL: No error message"
+   SANDBOX
    ```
 
 **Expected:**
@@ -88,16 +82,20 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Attempt to encode with an invalid format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp encode --format nonexistent '2025-06-15' 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code and error message
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ne 0 ] && echo "PASS: Non-zero exit code" || echo "FAIL: Expected non-zero, got $EXIT_CODE"
    echo "$OUTPUT" | grep -qi "error" && echo "PASS: Error message present" || echo "FAIL: No error message"
+   SANDBOX
    ```
 
 **Expected:**
@@ -117,27 +115,35 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Encode a specific timestamp
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ENCODED=$(ace-timestamp encode -q '2025-06-15 12:30:45 UTC')
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
+   SANDBOX
    ```
 
 2. Verify encoded ID is 6 characters
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ ${#ENCODED} -eq 6 ] && echo "PASS: Length is 6" || echo "FAIL: Length is ${#ENCODED}"
    [[ "$ENCODED" =~ ^[0-9a-z]+$ ]] && echo "PASS: Valid base36" || echo "FAIL: Invalid characters"
+   SANDBOX
    ```
 
 3. Decode the ID
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$ENCODED")
    echo "Decoded: $DECODED"
+   SANDBOX
    ```
 
 4. Verify decoded date and approximate time
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$DECODED" | grep -q "2025-06-15" && echo "PASS: Date matches" || echo "FAIL: Date mismatch"
    echo "$DECODED" | grep -q "12:3" && echo "PASS: Approximate time matches" || echo "FAIL: Time mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -158,21 +164,25 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Encode to month format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ENCODED=$(ace-timestamp encode --format month -q '2025-06-15 12:30:45 UTC')
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
+   SANDBOX
    ```
 
 2. Verify encoded ID is 2 characters
    ```bash
-   [ ${#ENCODED} -eq 2 ] && echo "PASS: Length is 2" || echo "FAIL: Length is ${#ENCODED}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#ENCODED} -eq 2 ] && echo "PASS: Length is 2" || echo "FAIL: Length is ${#ENCODED}"
    ```
 
 3. Decode and verify
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$ENCODED")
    echo "Decoded: $DECODED"
    echo "$DECODED" | grep -q "2025-06" && echo "PASS: Month matches" || echo "FAIL: Month mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -192,21 +202,25 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Encode to day format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ENCODED=$(ace-timestamp encode --format day -q '2025-06-15 12:30:45 UTC')
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
+   SANDBOX
    ```
 
 2. Verify encoded ID is 3 characters
    ```bash
-   [ ${#ENCODED} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#ENCODED}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#ENCODED} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#ENCODED}"
    ```
 
 3. Decode and verify
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$ENCODED")
    echo "Decoded: $DECODED"
    echo "$DECODED" | grep -q "2025-06-15" && echo "PASS: Date matches" || echo "FAIL: Date mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -226,21 +240,25 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Encode to week format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ENCODED=$(ace-timestamp encode --format week -q '2025-06-15 12:30:45 UTC')
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
+   SANDBOX
    ```
 
 2. Verify encoded ID is 3 characters
    ```bash
-   [ ${#ENCODED} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#ENCODED}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#ENCODED} -eq 3 ] && echo "PASS: Length is 3" || echo "FAIL: Length is ${#ENCODED}"
    ```
 
 3. Decode and verify
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$ENCODED")
    echo "Decoded: $DECODED"
    echo "$DECODED" | grep -q "2025-06" && echo "PASS: Month matches" || echo "FAIL: Month mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -260,21 +278,25 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Encode to 40min format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ENCODED=$(ace-timestamp encode --format 40min -q '2025-06-15 12:30:45 UTC')
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
+   SANDBOX
    ```
 
 2. Verify encoded ID is 4 characters
    ```bash
-   [ ${#ENCODED} -eq 4 ] && echo "PASS: Length is 4" || echo "FAIL: Length is ${#ENCODED}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#ENCODED} -eq 4 ] && echo "PASS: Length is 4" || echo "FAIL: Length is ${#ENCODED}"
    ```
 
 3. Decode and verify
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$ENCODED")
    echo "Decoded: $DECODED"
    echo "$DECODED" | grep -q "2025-06-15" && echo "PASS: Date matches" || echo "FAIL: Date mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -294,21 +316,25 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Encode to 50ms format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ENCODED=$(ace-timestamp encode --format 50ms -q '2025-06-15 12:30:45 UTC')
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
+   SANDBOX
    ```
 
 2. Verify encoded ID is 7 characters
    ```bash
-   [ ${#ENCODED} -eq 7 ] && echo "PASS: Length is 7" || echo "FAIL: Length is ${#ENCODED}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#ENCODED} -eq 7 ] && echo "PASS: Length is 7" || echo "FAIL: Length is ${#ENCODED}"
    ```
 
 3. Decode and verify
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$ENCODED")
    echo "Decoded: $DECODED"
    echo "$DECODED" | grep -q "2025-06-15" && echo "PASS: Date matches" || echo "FAIL: Date mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -328,21 +354,25 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Encode to ms format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ENCODED=$(ace-timestamp encode --format ms -q '2025-06-15 12:30:45 UTC')
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
+   SANDBOX
    ```
 
 2. Verify encoded ID is 8 characters
    ```bash
-   [ ${#ENCODED} -eq 8 ] && echo "PASS: Length is 8" || echo "FAIL: Length is ${#ENCODED}"
+   ace-test-e2e-sh "$TEST_DIR" [ ${#ENCODED} -eq 8 ] && echo "PASS: Length is 8" || echo "FAIL: Length is ${#ENCODED}"
    ```
 
 3. Decode and verify
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    DECODED=$(ace-timestamp decode -q "$ENCODED")
    echo "Decoded: $DECODED"
    echo "$DECODED" | grep -q "2025-06-15" && echo "PASS: Date matches" || echo "FAIL: Date mismatch"
+   SANDBOX
    ```
 
 **Expected:**
@@ -362,17 +392,21 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Run help command
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp --help 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output:"
    echo "$OUTPUT"
+   SANDBOX
    ```
 
 2. Verify help content includes main commands
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qi "encode" && echo "PASS: Shows encode command" || echo "FAIL: Missing encode"
    echo "$OUTPUT" | grep -qi "decode" && echo "PASS: Shows decode command" || echo "FAIL: Missing decode"
+   SANDBOX
    ```
 
 **Expected:**
@@ -392,16 +426,20 @@ INVALID_FORMAT="nonexistent"
 **Steps:**
 1. Run version command
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-timestamp version 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify version format (semver)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Non-zero exit"
    echo "$OUTPUT" | grep -qE "[0-9]+\.[0-9]+\.[0-9]+" && echo "PASS: Valid semver format" || echo "FAIL: Invalid version format"
+   SANDBOX
    ```
 
 **Expected:**

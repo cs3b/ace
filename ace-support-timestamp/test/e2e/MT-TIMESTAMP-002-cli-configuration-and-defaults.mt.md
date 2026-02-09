@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [ace-timestamp]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # CLI Configuration and Defaults
@@ -27,18 +27,6 @@ Verify that ace-timestamp CLI correctly handles configuration, defaults, error c
 ## Environment Setup
 
 ```bash
-PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode -q)"
-SHORT_PKG="support-timestamp"
-SHORT_ID="mt002"
-TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
-
-# Verify tools are available
-echo "=== Tool Verification ==="
-which ace-timestamp && ace-timestamp version
-echo "========================="
 ```
 
 ## Test Cases
@@ -50,17 +38,17 @@ echo "========================="
 **Steps:**
 1. Run config command
    ```bash
-   ace-timestamp config
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp config
    ```
 
 2. Verify year_zero default is 2000
    ```bash
-   ace-timestamp config | grep -q "year_zero.*2000" && echo "PASS: year_zero is 2000" || echo "FAIL: year_zero mismatch"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp config | grep -q "year_zero.*2000" && echo "PASS: year_zero is 2000" || echo "FAIL: year_zero mismatch"
    ```
 
 3. Verify alphabet is displayed
    ```bash
-   ace-timestamp config | grep -qi "alphabet" && echo "PASS: Alphabet shown" || echo "FAIL: Alphabet missing"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp config | grep -qi "alphabet" && echo "PASS: Alphabet shown" || echo "FAIL: Alphabet missing"
    ```
 
 **Expected:**
@@ -81,19 +69,21 @@ echo "========================="
 **Steps:**
 1. Run verbose config
    ```bash
-   ace-timestamp config --verbose
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp config --verbose
    ```
 
 2. Verify year range is displayed
    ```bash
-   ace-timestamp config --verbose | grep -qi "range\|years\|2000.*2108" && echo "PASS: Year range shown" || echo "CHECK: Review year range output"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp config --verbose | grep -qi "range\|years\|2000.*2108" && echo "PASS: Year range shown" || echo "CHECK: Review year range output"
    ```
 
 3. Verify more detail than basic config
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    BASIC=$(ace-timestamp config | wc -l)
    VERBOSE=$(ace-timestamp config --verbose | wc -l)
    [ "$VERBOSE" -ge "$BASIC" ] && echo "PASS: Verbose has more/equal output" || echo "FAIL: Verbose has less output"
+   SANDBOX
    ```
 
 **Expected:**
@@ -114,24 +104,28 @@ echo "========================="
 **Steps:**
 1. Encode with default year_zero (2000)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ID_2000=$(ace-timestamp encode -q --year-zero 2000 '2025-06-15 12:00:00')
    echo "Year zero 2000: $ID_2000"
+   SANDBOX
    ```
 
 2. Encode with different year_zero (2020)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ID_2020=$(ace-timestamp encode -q --year-zero 2020 '2025-06-15 12:00:00')
    echo "Year zero 2020: $ID_2020"
+   SANDBOX
    ```
 
 3. Verify IDs are different
    ```bash
-   [ "$ID_2000" != "$ID_2020" ] && echo "PASS: Different year_zero produces different IDs" || echo "FAIL: Same IDs"
+   ace-test-e2e-sh "$TEST_DIR" [ "$ID_2000" != "$ID_2020" ] && echo "PASS: Different year_zero produces different IDs" || echo "FAIL: Same IDs"
    ```
 
 4. Verify 2020 ID is "smaller" (fewer years from base)
    ```bash
-   [[ "$ID_2020" < "$ID_2000" ]] && echo "PASS: 2020-based ID is smaller" || echo "CHECK: Compare IDs manually"
+   ace-test-e2e-sh "$TEST_DIR" [[ "$ID_2020" < "$ID_2000" ]] && echo "PASS: 2020-based ID is smaller" || echo "CHECK: Compare IDs manually"
    ```
 
 **Expected:**
@@ -151,30 +145,36 @@ echo "========================="
 **Steps:**
 1. Encode with year_zero 2020
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ID=$(ace-timestamp encode -q --year-zero 2020 '2025-06-15 12:00:00')
    echo "Encoded with year_zero=2020: $ID"
+   SANDBOX
    ```
 
 2. Decode with matching year_zero
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    CORRECT=$(ace-timestamp decode -q --year-zero 2020 "$ID")
    echo "Decoded with year_zero=2020: $CORRECT"
+   SANDBOX
    ```
 
 3. Decode with default year_zero (mismatched)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    WRONG=$(ace-timestamp decode -q --year-zero 2000 "$ID")
    echo "Decoded with year_zero=2000: $WRONG"
+   SANDBOX
    ```
 
 4. Verify correct decode matches original
    ```bash
-   echo "$CORRECT" | grep -q "2025-06-15" && echo "PASS: Correct year_zero decodes correctly" || echo "FAIL: Decode mismatch"
+   ace-test-e2e-sh "$TEST_DIR" echo "$CORRECT" | grep -q "2025-06-15" && echo "PASS: Correct year_zero decodes correctly" || echo "FAIL: Decode mismatch"
    ```
 
 5. Verify mismatched decode is different
    ```bash
-   [ "$CORRECT" != "$WRONG" ] && echo "PASS: Mismatched year_zero gives different result" || echo "FAIL: Same results"
+   ace-test-e2e-sh "$TEST_DIR" [ "$CORRECT" != "$WRONG" ] && echo "PASS: Mismatched year_zero gives different result" || echo "FAIL: Same results"
    ```
 
 **Expected:**
@@ -194,18 +194,20 @@ echo "========================="
 **Steps:**
 1. Try invalid format name
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode --format invalid '2025-06-15' 2>&1
    RESULT=$?
+   SANDBOX
    ```
 
 2. Verify non-zero exit code
    ```bash
-   [ $RESULT -ne 0 ] && echo "PASS: Non-zero exit code" || echo "FAIL: Should have failed"
+   ace-test-e2e-sh "$TEST_DIR" [ $RESULT -ne 0 ] && echo "PASS: Non-zero exit code" || echo "FAIL: Should have failed"
    ```
 
 3. Verify error message is helpful
    ```bash
-   ace-timestamp encode --format invalid '2025-06-15' 2>&1 | grep -qi "invalid\|unknown\|error" && echo "PASS: Error message present" || echo "FAIL: No error message"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp encode --format invalid '2025-06-15' 2>&1 | grep -qi "invalid\|unknown\|error" && echo "PASS: Error message present" || echo "FAIL: No error message"
    ```
 
 **Expected:**
@@ -226,28 +228,34 @@ echo "========================="
 **Steps:**
 1. Try ID with invalid characters
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp decode '!@#$%' 2>&1
    INVALID_CHAR=$?
    echo "Invalid chars exit code: $INVALID_CHAR"
+   SANDBOX
    ```
 
 2. Try ID with wrong length (1 char)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp decode 'a' 2>&1
    SHORT=$?
    echo "Too short exit code: $SHORT"
+   SANDBOX
    ```
 
 3. Try ID that's too long (10 chars)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp decode 'abcdefghij' 2>&1
    LONG=$?
    echo "Too long exit code: $LONG"
+   SANDBOX
    ```
 
 4. Verify all produce errors
    ```bash
-   [ $INVALID_CHAR -ne 0 ] && [ $SHORT -ne 0 ] && [ $LONG -ne 0 ] && echo "PASS: All invalid IDs rejected" || echo "FAIL: Some invalid IDs accepted"
+   ace-test-e2e-sh "$TEST_DIR" [ $INVALID_CHAR -ne 0 ] && [ $SHORT -ne 0 ] && [ $LONG -ne 0 ] && echo "PASS: All invalid IDs rejected" || echo "FAIL: Some invalid IDs accepted"
    ```
 
 **Expected:**
@@ -268,21 +276,25 @@ echo "========================="
 **Steps:**
 1. Try year before range (1999 with default year_zero 2000)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode -q '1999-01-01 00:00:00' 2>&1
    BEFORE=$?
    echo "Before range exit code: $BEFORE"
+   SANDBOX
    ```
 
 2. Try year after range (2109 with default year_zero 2000)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp encode -q '2109-01-01 00:00:00' 2>&1
    AFTER=$?
    echo "After range exit code: $AFTER"
+   SANDBOX
    ```
 
 3. Verify both produce errors
    ```bash
-   [ $BEFORE -ne 0 ] && [ $AFTER -ne 0 ] && echo "PASS: Out-of-range rejected" || echo "FAIL: Out-of-range accepted"
+   ace-test-e2e-sh "$TEST_DIR" [ $BEFORE -ne 0 ] && [ $AFTER -ne 0 ] && echo "PASS: Out-of-range rejected" || echo "FAIL: Out-of-range accepted"
    ```
 
 **Expected:**
@@ -303,19 +315,23 @@ echo "========================="
 **Steps:**
 1. Encode using legacy format (implicitly UTC)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    LEGACY_ID=$(ace-timestamp encode -q '20250615-143245')
    echo "Legacy format ID: $LEGACY_ID"
+   SANDBOX
    ```
 
 2. Encode using readable format with explicit UTC
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    READABLE_ID=$(ace-timestamp encode -q '2025-06-15 14:32:45 UTC')
    echo "Readable format ID: $READABLE_ID"
+   SANDBOX
    ```
 
 3. Verify same result
    ```bash
-   [ "$LEGACY_ID" = "$READABLE_ID" ] && echo "PASS: Legacy format accepted" || echo "FAIL: Different IDs"
+   ace-test-e2e-sh "$TEST_DIR" [ "$LEGACY_ID" = "$READABLE_ID" ] && echo "PASS: Legacy format accepted" || echo "FAIL: Different IDs"
    ```
 
 **Expected:**
@@ -336,27 +352,33 @@ echo "========================="
 **Steps:**
 1. Encode without quiet (observe output format)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "=== Without quiet ==="
    ace-timestamp encode '2025-06-15 14:32:45'
    WITHOUT_QUIET_LINES=$(ace-timestamp encode '2025-06-15 14:32:45' 2>&1 | wc -l)
+   SANDBOX
    ```
 
 2. Encode with quiet flag
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "=== With quiet ==="
    ace-timestamp encode -q '2025-06-15 14:32:45'
    WITH_QUIET_LINES=$(ace-timestamp encode -q '2025-06-15 14:32:45' 2>&1 | wc -l)
+   SANDBOX
    ```
 
 3. Verify quiet has fewer lines
    ```bash
-   [ "$WITH_QUIET_LINES" -le "$WITHOUT_QUIET_LINES" ] && echo "PASS: Quiet reduces output" || echo "FAIL: Quiet has more output"
+   ace-test-e2e-sh "$TEST_DIR" [ "$WITH_QUIET_LINES" -le "$WITHOUT_QUIET_LINES" ] && echo "PASS: Quiet reduces output" || echo "FAIL: Quiet has more output"
    ```
 
 4. Verify quiet output is just the ID
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    QUIET_OUTPUT=$(ace-timestamp encode -q '2025-06-15 14:32:45')
    [[ "$QUIET_OUTPUT" =~ ^[0-9a-z]+$ ]] && echo "PASS: Quiet output is just ID" || echo "CHECK: Review quiet output"
+   SANDBOX
    ```
 
 **Expected:**
@@ -376,23 +398,25 @@ echo "========================="
 **Steps:**
 1. Run version command
    ```bash
-   ace-timestamp version
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp version
    ```
 
 2. Also check --version flag
    ```bash
-   ace-timestamp --version
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp --version
    ```
 
 3. Verify output contains semver pattern
    ```bash
-   ace-timestamp version | grep -qE '[0-9]+\.[0-9]+\.[0-9]+' && echo "PASS: Semver format" || echo "FAIL: Not semver"
+   ace-test-e2e-sh "$TEST_DIR" ace-timestamp version | grep -qE '[0-9]+\.[0-9]+\.[0-9]+' && echo "PASS: Semver format" || echo "FAIL: Not semver"
    ```
 
 4. Verify exit code is 0
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ace-timestamp version > /dev/null 2>&1
    [ $? -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Non-zero exit"
+   SANDBOX
    ```
 
 **Expected:**
