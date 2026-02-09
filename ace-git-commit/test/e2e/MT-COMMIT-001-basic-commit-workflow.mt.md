@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [git, ace-git-commit]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Basic Commit Workflow
@@ -29,12 +29,15 @@ Verify that ace-git-commit correctly executes the full commit cycle in a real gi
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="git-commit"
 SHORT_ID="mt001"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
 
 # Initialize test git repo
 git init
@@ -46,13 +49,42 @@ echo "=== Tool Verification ==="
 which git && git --version
 which ace-git-commit && ace-git-commit --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create initial commit to establish repo history
-cat > "$TEST_DIR/README.md" << 'EOF'
+cat > README.md << 'EOF'
 # Test Repository
 
 This is a test repository for ace-git-commit E2E tests.
@@ -62,7 +94,7 @@ git add README.md
 git commit -m "Initial commit"
 
 # Create test files for subsequent tests
-cat > "$TEST_DIR/app.rb" << 'EOF'
+cat > app.rb << 'EOF'
 # frozen_string_literal: true
 
 class Application
@@ -76,7 +108,7 @@ class Application
 end
 EOF
 
-cat > "$TEST_DIR/helper.rb" << 'EOF'
+cat > helper.rb << 'EOF'
 # frozen_string_literal: true
 
 module Helper
@@ -85,6 +117,7 @@ module Helper
   end
 end
 EOF
+SANDBOX
 ```
 
 ## Test Cases
@@ -96,23 +129,25 @@ EOF
 **Steps:**
 1. Stage all new files
    ```bash
-   git add app.rb helper.rb
+   ace-test-e2e-sh "$TEST_DIR" git add app.rb helper.rb
    ```
 
 2. Commit with explicit message using -m flag
    ```bash
-   ace-git-commit -m "Add application and helper modules"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit -m "Add application and helper modules"
    ```
 
 3. Verify commit was created
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    git log --oneline -1
    git show --stat HEAD
+SANDBOX
    ```
 
 4. Verify working directory is clean
    ```bash
-   git status --porcelain
+   ace-test-e2e-sh "$TEST_DIR" git status --porcelain
    ```
 
 **Expected:**
@@ -134,28 +169,32 @@ EOF
 **Steps:**
 1. Modify an existing file
    ```bash
-   cat >> "$TEST_DIR/app.rb" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat >> app.rb << 'EOF'
 
   def stop
     puts "Stopping #{@name}"
   end
 EOF
+SANDBOX
    ```
 
 2. Stage changes
    ```bash
-   git add app.rb
+   ace-test-e2e-sh "$TEST_DIR" git add app.rb
    ```
 
 3. Commit with intention context (use -m to test the flow without actual LLM)
    ```bash
-   ace-git-commit -i "add stop functionality" -m "feat(app): add stop method to Application class"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit -i "add stop functionality" -m "feat(app): add stop method to Application class"
    ```
 
 4. Verify commit
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    git log --oneline -1
    git show --stat HEAD
+SANDBOX
    ```
 
 **Expected:**
@@ -177,38 +216,42 @@ EOF
 **Steps:**
 1. Make a modification
    ```bash
-   cat >> "$TEST_DIR/helper.rb" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat >> helper.rb << 'EOF'
 
   def self.debug(msg)
     "[DEBUG] #{msg}"
   end
 EOF
+SANDBOX
    ```
 
 2. Stage changes
    ```bash
-   git add helper.rb
+   ace-test-e2e-sh "$TEST_DIR" git add helper.rb
    ```
 
 3. Record current HEAD
    ```bash
-   BEFORE_HEAD=$(git rev-parse HEAD)
+   BEFORE_HEAD=$(ace-test-e2e-sh "$TEST_DIR" git rev-parse HEAD)
    ```
 
 4. Run dry-run
    ```bash
-   ace-git-commit -n -m "Add debug helper method"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit -n -m "Add debug helper method"
    ```
 
 5. Verify HEAD unchanged
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    AFTER_HEAD=$(git rev-parse HEAD)
    [ "$BEFORE_HEAD" = "$AFTER_HEAD" ] && echo "PASS: HEAD unchanged" || echo "FAIL: HEAD changed"
+SANDBOX
    ```
 
 6. Verify changes still staged
    ```bash
-   git diff --cached --name-only
+   ace-test-e2e-sh "$TEST_DIR" git diff --cached --name-only
    ```
 
 **Expected:**
@@ -232,7 +275,8 @@ EOF
 **Steps:**
 1. Create files to move and delete
    ```bash
-   cat > "$TEST_DIR/to_move.rb" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat > to_move.rb << 'EOF'
 # frozen_string_literal: true
 
 class ToMove
@@ -242,7 +286,7 @@ class ToMove
 end
 EOF
 
-   cat > "$TEST_DIR/to_delete.rb" << 'EOF'
+   cat > to_delete.rb << 'EOF'
 # frozen_string_literal: true
 
 class ToDelete
@@ -253,44 +297,55 @@ end
 EOF
    git add .
    git commit -m "Add files for move/delete test"
+SANDBOX
    ```
 
 2. Move one file and delete another
    ```bash
-   mkdir -p "$TEST_DIR/lib"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p lib
    git mv to_move.rb lib/moved.rb
    git rm to_delete.rb
+SANDBOX
    ```
 
 3. Verify git shows both changes
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    git status --porcelain
    git diff --cached --name-only --no-renames
    # Should show: lib/moved.rb, to_delete.rb, to_move.rb
+SANDBOX
    ```
 
 4. Commit with ace-git-commit
    ```bash
-   ace-git-commit -m "Refactor: move file to lib and remove unused file"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit -m "Refactor: move file to lib and remove unused file"
    ```
 
 5. Verify all changes were committed
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    git log --oneline -1
    git show --stat HEAD
+SANDBOX
    ```
 
 6. Verify files are in expected state
    ```bash
-   [ ! -f "$TEST_DIR/to_move.rb" ] && echo "PASS: Source file removed" || echo "FAIL: Source still exists"
-   [ ! -f "$TEST_DIR/to_delete.rb" ] && echo "PASS: Deleted file removed" || echo "FAIL: Deleted file still exists"
-   [ -f "$TEST_DIR/lib/moved.rb" ] && echo "PASS: File moved to lib/" || echo "FAIL: Moved file missing"
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   [ ! -f to_move.rb ] && echo "PASS: Source file removed" || echo "FAIL: Source still exists"
+   [ ! -f to_delete.rb ] && echo "PASS: Deleted file removed" || echo "FAIL: Deleted file still exists"
+   [ -f lib/moved.rb ] && echo "PASS: File moved to lib/" || echo "FAIL: Moved file missing"
+SANDBOX
    ```
 
 7. Verify working directory is clean
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    UNCOMMITTED=$(git status --porcelain)
    [ -z "$UNCOMMITTED" ] && echo "PASS: All changes committed" || echo "FAIL: Uncommitted: $UNCOMMITTED"
+SANDBOX
    ```
 
 **Expected:**
