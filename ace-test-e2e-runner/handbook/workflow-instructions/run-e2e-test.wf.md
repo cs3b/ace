@@ -2,7 +2,7 @@
 workflow-id: wfi-run-e2e-test
 name: Run E2E Test
 description: Execute an E2E test scenario with full agent guidance
-version: "1.2"
+version: "1.3"
 source: ace-test-e2e-runner
 ---
 
@@ -15,6 +15,16 @@ This workflow guides an agent through executing an E2E test scenario.
 - `PACKAGE` (optional) - The package containing the test (e.g., `ace-lint`). If omitted, looks for `test/e2e/` in project root.
 - `TEST_ID` (optional) - The test identifier (e.g., `MT-LINT-001`). If omitted, runs all tests.
 - `RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths. Passed via `--run-id ID`. When provided, use this instead of generating a new timestamp.
+- `TEST_CASES` (optional) - Comma-separated list of test case IDs to execute (e.g., `TC-001,tc-003,002`). When provided, only the specified test cases are executed; all others are skipped. IDs are normalized to `TC-NNN` format automatically.
+
+  **Accepted formats:**
+  - `TC-001` - already normalized
+  - `tc-001` - uppercased to `TC-001`
+  - `001` - prefix added: `TC-001`
+  - `1` - zero-padded and prefixed: `TC-001`
+  - `TC-1` - zero-padded: `TC-001`
+
+  When omitted, all test cases in the scenario are executed (default behavior).
 
 ## Subagent Mode
 
@@ -87,6 +97,88 @@ If no tests found, report error and exit.
 - `requires` - Required tools and versions
 
 **When running multiple tests:** Execute steps 2-7 for each scenario sequentially, then generate a combined summary report.
+
+### 2.5. Parse and Filter Test Cases
+
+If the `TEST_CASES` argument was provided, parse and validate it before proceeding.
+
+**Step 1: Parse TEST_CASES argument**
+
+Split the comma-separated list into individual IDs:
+
+```bash
+# Parse comma-separated test case IDs
+IFS=',' read -ra RAW_CASES <<< "$TEST_CASES"
+```
+
+**Step 2: Normalize test case IDs**
+
+Each ID must be normalized to the canonical `TC-NNN` format (uppercase, zero-padded to 3 digits):
+
+```bash
+normalize_tc_id() {
+  local id="$1"
+  # Remove leading/trailing whitespace
+  id="$(echo "$id" | xargs)"
+  # Uppercase
+  id="$(echo "$id" | tr '[:lower:]' '[:upper:]')"
+  # Extract numeric portion
+  local num
+  if [[ "$id" =~ ^TC-([0-9]+)$ ]]; then
+    num="${BASH_REMATCH[1]}"
+  elif [[ "$id" =~ ^([0-9]+)$ ]]; then
+    num="${BASH_REMATCH[1]}"
+  else
+    echo "ERROR: Invalid test case ID format: '$1' (expected TC-NNN, NNN, or N)" >&2
+    return 1
+  fi
+  # Zero-pad to 3 digits
+  printf "TC-%03d" "$((10#$num))"
+}
+
+# Normalize all IDs and deduplicate
+declare -A SEEN_CASES
+FILTERED_CASES=()
+for raw_id in "${RAW_CASES[@]}"; do
+  normalized="$(normalize_tc_id "$raw_id")" || exit 1
+  if [[ -z "${SEEN_CASES[$normalized]+x}" ]]; then
+    SEEN_CASES[$normalized]=1
+    FILTERED_CASES+=("$normalized")
+  fi
+done
+
+echo "Test cases to execute: ${FILTERED_CASES[*]}"
+```
+
+**Step 3: Validate test cases exist in the test file**
+
+Verify that each requested test case has a matching `### TC-NNN:` header in the test scenario file:
+
+```bash
+# Extract available test cases from the test file
+AVAILABLE_CASES=($(grep -oE '^### TC-[0-9]+:' "$TEST_FILE" | grep -oE 'TC-[0-9]+'))
+
+# Validate each requested case exists
+INVALID_CASES=()
+for tc in "${FILTERED_CASES[@]}"; do
+  if ! printf '%s\n' "${AVAILABLE_CASES[@]}" | grep -qx "$tc"; then
+    INVALID_CASES+=("$tc")
+  fi
+done
+
+if [[ ${#INVALID_CASES[@]} -gt 0 ]]; then
+  echo "ERROR: Test case(s) not found: ${INVALID_CASES[*]}"
+  echo "Available test cases in $TEST_FILE:"
+  for available in "${AVAILABLE_CASES[@]}"; do
+    echo "  - $available"
+  done
+  exit 1
+fi
+
+echo "Validated ${#FILTERED_CASES[@]} test case(s): ${FILTERED_CASES[*]}"
+```
+
+**When TEST_CASES is empty or not provided:** Skip this section entirely and execute all test cases (default behavior). The `FILTERED_CASES` array will not be set, which signals "run all" in step 6.
 
 ### 3. Verify Prerequisites
 
@@ -257,16 +349,22 @@ Execute the commands in the "Test Data" section to create necessary test files:
 > Each bash block runs in a fresh shell. Use `ace-test-e2e-sh "$TEST_DIR"` to ensure
 > every command executes inside the sandbox. See Section 5 for syntax examples.
 
+**Determine execution scope:**
+
+- If `FILTERED_CASES` is set (from step 2.5), execute **only** test cases whose IDs are in the `FILTERED_CASES` array. Skip all other test cases.
+- If `FILTERED_CASES` is not set, execute **all** test cases in the scenario (default behavior).
+
 For each test case (TC-NNN):
 
-1. **Read the objective** - Understand what this test verifies
-2. **Execute the steps** - Run each command in sequence
-3. **Capture results** - Record:
+1. **Check filter** - If `FILTERED_CASES` is set and this test case ID is not in the array, **skip** this test case entirely (do not execute any of its steps). Log: `Skipping TC-NNN (not in filter)`.
+2. **Read the objective** - Understand what this test verifies
+3. **Execute the steps** - Run each command in sequence
+4. **Capture results** - Record:
    - Actual exit code
    - Command output
    - Any error messages
-4. **Compare to expected** - Check against expected results
-5. **Record status** - Pass or Fail
+5. **Compare to expected** - Check against expected results
+6. **Record status** - Pass or Fail
 
 Report each test case result immediately after execution.
 
@@ -298,6 +396,8 @@ mkdir -p "$REPORT_DIR"
 
 #### 7.1 Write summary report (summary.r.md)
 
+**Note:** When test case filtering is active (`FILTERED_CASES` is set), include **only** the executed test cases in the Results Summary table. Do not include skipped test cases. Add a "Filtered" note in the Test Information section indicating which test cases were selected.
+
 ```bash
 cat > "${REPORT_DIR}/summary.r.md" << 'EOF'
 ---
@@ -309,6 +409,7 @@ status: {status}  # One of: pass, fail, partial, incomplete
 passed: {count}
 failed: {count}
 total: {count}
+filtered: {true|false}  # Whether test case filtering was applied
 ---
 
 # E2E Test Report: {test-id}
@@ -323,6 +424,7 @@ total: {count}
 | Agent | {agent-name} |
 | Executed | {timestamp} |
 | Duration | {duration} |
+| Filtered | {Yes: TC-001, TC-003 / No} |
 
 ## Results Summary
 
@@ -398,6 +500,9 @@ results:
   passed: {count}
   failed: {count}
   total: {count}
+test_cases:
+  filtered: {true|false}           # Whether filtering was applied
+  executed: [{list of TC IDs}]     # e.g., [TC-001, TC-003] or [all]
 git:
   branch: "$(git symbolic-ref --short HEAD 2>/dev/null || echo 'detached-HEAD')"
   commit: "$(git rev-parse --short HEAD)"
@@ -566,6 +671,29 @@ This would:
 1. Find `ace-lint/test/e2e/MT-LINT-001-*.mt.md`
 2. Execute the test scenario
 3. Report results
+
+**Run a single test case within a test scenario:**
+```
+/ace:run-e2e-test ace-lint MT-LINT-003 TC-002
+```
+
+This would:
+1. Find `ace-lint/test/e2e/MT-LINT-003-*.mt.md`
+2. Parse and normalize `TC-002`
+3. Execute only TC-002, skipping all other test cases
+4. Report results for TC-002 only
+
+**Run multiple specific test cases:**
+```
+/ace:run-e2e-test ace-lint MT-LINT-001 TC-001,tc-003,002
+```
+
+This would:
+1. Find `ace-lint/test/e2e/MT-LINT-001-*.mt.md`
+2. Normalize IDs: `TC-001`, `tc-003` -> `TC-003`, `002` -> `TC-002`
+3. Validate all three exist in the test file
+4. Execute only TC-001, TC-002, TC-003 (skipping others)
+5. Report filtered results
 
 **Run all tests in a package:**
 ```
