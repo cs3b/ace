@@ -62,6 +62,14 @@ module Ace
             test_cases.size
           end
 
+          # IDs of failed test cases
+          # @return [Array<String>] List of test case IDs with "fail" status
+          def failed_test_case_ids
+            test_cases
+              .select { |tc| tc[:status] == "fail" }
+              .map { |tc| tc[:id] }
+          end
+
           # Duration in seconds
           # @return [Float]
           def duration

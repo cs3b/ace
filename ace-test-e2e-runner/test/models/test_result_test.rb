@@ -82,6 +82,28 @@ class TestResultTest < Minitest::Test
     assert_equal 0, result.total_count
   end
 
+  def test_failed_test_case_ids_with_failures
+    result = create_result(test_cases: [
+      { id: "TC-001", status: "pass" },
+      { id: "TC-002", status: "fail" },
+      { id: "TC-003", status: "fail" }
+    ])
+    assert_equal ["TC-002", "TC-003"], result.failed_test_case_ids
+  end
+
+  def test_failed_test_case_ids_all_passing
+    result = create_result(test_cases: [
+      { id: "TC-001", status: "pass" },
+      { id: "TC-002", status: "pass" }
+    ])
+    assert_equal [], result.failed_test_case_ids
+  end
+
+  def test_failed_test_case_ids_empty_test_cases
+    result = create_result(test_cases: [])
+    assert_equal [], result.failed_test_case_ids
+  end
+
   def test_with_report_dir_returns_new_result
     result = create_result(status: "pass", summary: "All good")
     new_result = result.with_report_dir("/tmp/reports")
