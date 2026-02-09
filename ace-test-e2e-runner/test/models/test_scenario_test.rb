@@ -45,6 +45,20 @@ class TestScenarioTest < Minitest::Test
     assert_equal "mt003", create_scenario(test_id: "MT-GIT-003").short_id
   end
 
+  def test_short_id_with_alphabetic_suffix
+    assert_equal "mt001a", create_scenario(test_id: "MT-BUNDLE-001a").short_id
+    assert_equal "mt001b", create_scenario(test_id: "MT-BUNDLE-001b").short_id
+    assert_equal "mt001c", create_scenario(test_id: "MT-BUNDLE-001c").short_id
+    assert_equal "mt003a", create_scenario(test_id: "MT-COWORKER-003a").short_id
+    assert_equal "mt003b", create_scenario(test_id: "MT-COWORKER-003b").short_id
+    assert_equal "mt003c", create_scenario(test_id: "MT-COWORKER-003c").short_id
+    assert_equal "mt003d", create_scenario(test_id: "MT-COWORKER-003d").short_id
+    assert_equal "mt004a", create_scenario(test_id: "MT-COMMIT-004a").short_id
+    assert_equal "mt004b", create_scenario(test_id: "MT-COMMIT-004b").short_id
+    assert_equal "mt004c", create_scenario(test_id: "MT-COMMIT-004c").short_id
+    assert_equal "mt004d", create_scenario(test_id: "MT-COMMIT-004d").short_id
+  end
+
   def test_dir_name
     scenario = create_scenario(test_id: "MT-LINT-001", package: "ace-lint")
     assert_equal "8xyz12-lint-mt001", scenario.dir_name("8xyz12")

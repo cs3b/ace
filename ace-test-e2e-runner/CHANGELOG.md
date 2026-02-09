@@ -7,6 +7,173 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-02-08
+
+### Added
+
+- `ace-test-e2e-sh` sandbox wrapper script — enforces working directory and `PROJECT_ROOT_PATH` isolation for every bash command in E2E tests, preventing test artifacts from escaping the sandbox across separate shell invocations
+- Wrapper validates sandbox path (must contain `.cache/ace-test-e2e/`), supports both args mode and stdin heredoc mode, and uses `exec` for transparent exit-code passthrough
+
+### Changed
+
+- Updated all 43 E2E test files across 10 packages to use `ace-test-e2e-sh` wrapper for Test Data and Test Cases bash blocks
+- Updated `run-e2e-test.wf.md` sections 5 and 6 with wrapper usage instructions
+- Updated `setup-e2e-sandbox.wf.md` with wrapper documentation and usage examples
+
+## [0.10.10] - 2026-02-08
+
+### Added
+
+- Batch timestamp generation for `ace-test-suite-e2e` — `SuiteOrchestrator` pre-generates unique 50ms-offset run IDs and passes them to subprocesses via `--run-id`, giving coordinated sandbox/report paths across suite runs
+- `--run-id` CLI option on `ace-test-e2e` for deterministic report paths when invoked by suite orchestrator
+- `TestOrchestrator#run` accepts external `run_id:` keyword, using it instead of generating a timestamp when provided
+
+### Technical
+
+- 263 tests, 797 assertions, 0 failures
+
+## [0.10.9] - 2026-02-08
+
+### Fixed
+
+- Surface silent failures in `SuiteOrchestrator#generate_suite_report` — replace blanket `rescue => _e; nil` with `warn` that prints error class and message; backtrace available via `DEBUG=1`
+- Add DEBUG-gated warning when suite report is skipped due to no results matching test files
+- Strip whitespace from `report_dir` regex captures in `parse_subprocess_result` and `run_single_test` to prevent path mismatches
+
+### Technical
+
+- 257 tests, 783 assertions, 0 failures
+
+## [0.10.8] - 2026-02-08
+
+### Added
+
+- Package filtering for `ace-test-suite-e2e` — optional comma-separated `packages` positional argument filters suite execution to specific packages (e.g., `ace-test-suite-e2e ace-bundle,ace-lint`)
+- Package filter composes with `--affected` via intersection — both filters narrow the package set independently
+
+### Technical
+
+- 256 tests, 769 assertions, 0 failures
+
+## [0.10.7] - 2026-02-08
+
+### Added
+
+- Suite-level final report generation in `SuiteOrchestrator` — wires `SuiteReportWriter` into multi-package runs to produce LLM-synthesized reports after all tests complete
+- `finalize_run` helper extracts duplicated summary + return pattern from `run_sequential` and `run_parallel`
+- `generate_suite_report` coordinates data conversion (result hashes → `TestResult` models, test files → `TestScenario` models) and report writing
+- `build_test_result` converts raw subprocess result hashes into `Models::TestResult` with synthesized test case arrays
+- `parse_scenario` parses `.mt.md` files via `ScenarioParser` with fallback to stub `TestScenario`
+- Report path printed to output and included in return hash as `:report_path`
+- Constructor accepts injectable `suite_report_writer`, `scenario_parser`, `timestamp_generator` for testability
+
+### Technical
+
+- 251 tests, 743 assertions, 0 failures
+
+## [0.10.6] - 2026-02-08
+
+### Fixed
+
+- Unify timestamp precision to 7-char (`:"50ms"`) across all E2E paths — `default_timestamp` now uses `Timestamp.encode(Time.now.utc, format: :"50ms")` instead of `Timestamp.now`
+- Remove `count <= 1` early return in `generate_timestamps` that fell back to 6-char path, causing mixed-length timestamps within the same method
+
+### Technical
+
+- 247 tests, 723 assertions, 0 failures
+
+## [0.10.5] - 2026-02-08
+
+### Changed
+
+- Extract `REFRESH_INTERVAL = 0.25` constant for 4Hz refresh rate — replaces magic number across both orchestrators and both progress display managers
+
+### Technical
+
+- 247 tests, 723 assertions, 0 failures
+
+## [0.10.4] - 2026-02-08
+
+### Added
+
+- Live timer refresh for single-package `--progress` display — dedicated 4Hz refresh thread in `TestOrchestrator` updates running timers while tests execute
+- `ProgressDisplayManager` test coverage (header rendering, state transitions, throttle behavior)
+
+### Changed
+
+- Throttle `ProgressDisplayManager#refresh` to ~4Hz (250ms) — matches `SuiteProgressDisplayManager` pattern
+
+### Technical
+
+- 247 tests, 723 assertions, 0 failures
+
+## [0.10.3] - 2026-02-08
+
+### Changed
+
+- Throttle `SuiteProgressDisplayManager#refresh` to ~4Hz (250ms) — reduces terminal I/O while maintaining responsive process completion detection
+
+### Technical
+
+- 242 tests, 693 assertions, 0 failures
+
+## [0.10.2] - 2026-02-08
+
+### Added
+
+- `--progress` CLI option for live animated display in `ace-test-suite-e2e`
+- `SuiteProgressDisplayManager` molecule — animated ANSI table with in-place row updates, running timers, and live footer (Active/Completed/Waiting)
+- `SuiteSimpleDisplayManager` molecule — extracted default line-by-line display from SuiteOrchestrator
+
+### Changed
+
+- SuiteOrchestrator delegates display to pluggable display managers (same pattern as TestOrchestrator)
+- SuiteOrchestrator accepts `progress:` parameter for display mode selection
+
+### Technical
+
+- 241 tests, 689 assertions, 0 failures
+
+## [0.10.1] - 2026-02-08
+
+### Changed
+
+- Polished suite output with columnar alignment, double-line separators, and structured summary
+- Suite header shows test and package counts with `═` separator borders
+- Per-test progress lines now display icon, duration, package, test name, and case counts in aligned columns
+- Suite summary shows failed test details, duration, pass/fail stats, and colored status message
+- Added `use_color:` parameter to SuiteOrchestrator for ANSI color control (auto-detects TTY)
+
+### Added
+
+- `DisplayHelpers.double_separator` — 65-char `═` double-line separator for suite display
+- `DisplayHelpers.format_suite_duration` — minute-range formatting (`4m 25s`)
+- `DisplayHelpers.format_suite_elapsed` — right-aligned 7-char column for suite times
+- `DisplayHelpers.format_suite_test_line` — columnar test result line builder
+- `DisplayHelpers.format_suite_summary` — complete summary block formatter
+- `SuiteOrchestrator.extract_test_name` — human-readable test name from file path
+- Test case count extraction from subprocess output in `parse_subprocess_result`
+
+### Technical
+
+- 224 tests, 607 assertions, 0 failures
+
+## [0.10.0] - 2026-02-08
+
+### Added
+
+- `ace-test-suite-e2e` command for running E2E tests across all packages
+- `SuiteOrchestrator` organism for managing multi-package test execution
+- `AffectedDetector` molecule for detecting packages affected by recent changes
+- Parallel execution support with `--parallel N` option
+- `--affected` filter to test only changed packages
+
+### Fixed
+
+- Prevent FrozenError in parallel execution output buffering
+- Prevent shell injection vulnerability by using array-based command execution (`Open3.popen3`)
+- Fix `--affected` edge case handling
+
 ## [0.9.0] - 2026-02-07
 
 ### Changed

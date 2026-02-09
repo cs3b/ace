@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
     Rakefile
   ]).select { |f| File.file?(f) }
   spec.bindir = "exe"
-  spec.executables = ["ace-test-e2e"]
+  spec.executables = ["ace-test-e2e", "ace-test-suite-e2e", "ace-test-e2e-sh"]
   spec.require_paths = ["lib"]
 
   spec.metadata["homepage_uri"] = spec.homepage

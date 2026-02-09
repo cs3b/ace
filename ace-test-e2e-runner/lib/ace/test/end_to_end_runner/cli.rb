@@ -13,7 +13,7 @@ module Ace
         extend Dry::CLI::Registry
 
         # Application commands registered in this CLI
-        REGISTERED_COMMANDS = %w[run].freeze
+        REGISTERED_COMMANDS = %w[run suite].freeze
 
         # dry-cli built-in commands
         BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
@@ -81,6 +81,9 @@ module Ace
 
         # Register the run command
         register "run", Commands::RunTest
+
+        # Register the suite command
+        register "suite", Commands::RunSuite
 
         # Register version command
         version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

@@ -58,6 +58,9 @@ module Ace
           # @param parsed [Hash] Parsed markdown fields
           # @return [Hash] Normalized result matching ResultParser output format
           def self.to_normalized(parsed)
+            # Defensive: handle multi-line status values (e.g., "pass\npartial")
+            parsed[:status] = parsed[:status].to_s.strip.split(/\s+/).first if parsed[:status]
+
             passed = parsed[:passed].to_i
             failed = parsed[:failed].to_i
             total = parsed[:total].to_i

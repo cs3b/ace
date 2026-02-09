@@ -17,6 +17,7 @@ module Ace
             @parallel = parallel
             @use_color = output.respond_to?(:tty?) && output.tty?
             @start_time = Time.now
+            @last_refresh = Time.at(0)
             @lines = {}           # scenario.test_id => line number
             @states = {}          # scenario.test_id => :waiting | :running | :completed
             @results = {}         # scenario.test_id => Models::TestResult
@@ -72,7 +73,13 @@ module Ace
           end
 
           # Refresh running test rows to update elapsed timers
+          # Throttled to ~4Hz — redraws are expensive with ANSI cursor movement
           def refresh
+            now = Time.now
+            return if now - @last_refresh < REFRESH_INTERVAL
+
+            @last_refresh = now
+
             @states.each do |test_id, state|
               next unless state == :running
 

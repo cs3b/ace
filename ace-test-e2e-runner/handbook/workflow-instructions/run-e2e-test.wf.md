@@ -172,13 +172,17 @@ else
 fi
 
 # Check 2: Git remote must be empty (fresh isolated repo)
-REMOTES=$(git remote -v 2>/dev/null)
-if [ -z "$REMOTES" ]; then
-  echo "PASS: No git remotes (isolated repo)"
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT an isolated repo!"
+    echo "  Remotes: $REMOTES"
+    echo "  ACTION: STOP - You are in the main repository."
+  fi
 else
-  echo "FAIL: Git remotes found - NOT an isolated repo!"
-  echo "  Remotes: $REMOTES"
-  echo "  ACTION: STOP - You are in the main repository."
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
 fi
 
 # Check 3: Project root markers should NOT exist
@@ -203,6 +207,23 @@ echo "=== END ISOLATION CHECK ==="
 ### 5. Create Test Data
 
 > **Prerequisite**: Section 4.1 (Sandbox Isolation Checkpoint) must PASS before proceeding.
+
+> **CRITICAL: Use `ace-test-e2e-sh` for ALL commands after Environment Setup**
+>
+> Every bash command from "Test Data" and "Test Cases" sections MUST be executed
+> through the sandbox wrapper. This ensures proper working directory and isolation
+> regardless of shell state between invocations.
+>
+> **Single command:** `ace-test-e2e-sh "$TEST_DIR" git add README.md`
+> **Multi-command block:** Pass via stdin:
+> ```
+> ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+> cat > file.txt << 'EOF'
+> content
+> EOF
+> git add file.txt
+> SANDBOX
+> ```
 
 **Pre-Creation Sandbox Verification (MANDATORY):**
 
@@ -231,7 +252,10 @@ Execute the commands in the "Test Data" section to create necessary test files:
 
 ### 6. Execute Test Cases
 
-> **Reminder**: All test commands execute inside `$TEST_DIR`. If unsure, run `pwd` and verify `.cache/ace-test-e2e/` in path.
+> **CRITICAL: Use `ace-test-e2e-sh` for ALL test case commands**
+>
+> Each bash block runs in a fresh shell. Use `ace-test-e2e-sh "$TEST_DIR"` to ensure
+> every command executes inside the sandbox. See Section 5 for syntax examples.
 
 For each test case (TC-NNN):
 
@@ -281,7 +305,7 @@ test-id: {test-id}
 package: {package}
 agent: {agent-name}
 executed: {timestamp}
-status: pass|fail|partial|incomplete
+status: {status}  # One of: pass, fail, partial, incomplete
 passed: {count}
 failed: {count}
 total: {count}
@@ -369,7 +393,7 @@ agent: "{agent-name}"
 started: "{start-timestamp}"
 completed: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 duration: "{duration-seconds}s"
-status: "{pass|fail|partial}"
+status: "{status}"  # One of: pass, fail, partial, incomplete
 results:
   passed: {count}
   failed: {count}
