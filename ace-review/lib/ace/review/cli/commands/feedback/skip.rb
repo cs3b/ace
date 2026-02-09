@@ -17,21 +17,33 @@ module Ace
             include SessionDiscovery
 
             desc <<~DESC.strip
-              Skip a feedback item (not applicable)
+              Skip a feedback item (DEPRECATED - use verify --skip)
+
+              [DEPRECATED] This command is deprecated. Use: verify --skip --research "..."
 
               Marks a draft or pending feedback item as skipped and archives it.
-              Use when a finding is not applicable to the current context.
+              Use when the finding is correct but you are not fixing it in this context.
+
+              Examples of when to skip:
+                - Design decision: Intentionally choosing this approach
+                - Deferred: Correct issue, but tracking in a separate task
+                - Duplicate: Already covered by another feedback item
+
+              For false positives (incorrect findings), use: verify --invalid
             DESC
 
             example [
-              'abc123                           # Skip without reason (latest session)',
-              'abc123 --reason "Out of scope"   # Skip with reason',
-              'abc123 --reason "Technical debt, tracking separately"',
+              '[DEPRECATED] Use: verify --skip instead',
+              'abc123                                                   # Skip without reason',
+              'abc123 --reason "Design: using polling for simplicity"  # Design decision',
+              'abc123 --reason "Tracked in task 253"                    # Deferred to separate task',
+              'abc123 --reason "Duplicate of abc120"                    # Already covered',
               'abc123 --session .cache/ace-review/sessions/review-xyz'
             ]
 
             argument :id, required: true, desc: "Feedback ID"
-            option :reason, type: :string, desc: "Reason for skipping"
+            option :reason, type: :string, desc: "Reason for skipping (aliased to research)"
+            option :research, type: :string, desc: "Research notes (preferred over --reason)"
             option :session, type: :string, desc: "Session directory containing feedback"
 
             # Standard options
@@ -40,6 +52,14 @@ module Ace
             option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
 
             def call(id:, **options)
+              # Show deprecation warning (unless quiet)
+              unless quiet?(options)
+                puts "[DEPRECATED] 'skip' command is deprecated. Use: verify --skip --research \"...\""
+              end
+
+              # Map --reason to --research for consistency
+              research = options[:research] || options[:reason]
+
               # Resolve feedback path from session context
               base_path = resolve_feedback_path(options)
 
@@ -56,17 +76,18 @@ module Ace
                 raise Ace::Core::CLI::Error.new("Feedback item not found: #{id}")
               end
 
-              # Skip the item
+              # Skip the item using the new verify method with skip: true
               manager = Organisms::FeedbackManager.new
-              result = manager.skip(
+              result = manager.verify(
                 base_path,
                 resolved_id,
-                reason: options[:reason]
+                skip: true,
+                research: research
               )
 
               if result[:success]
                 puts "Feedback #{resolved_id} skipped and archived."
-                puts "Reason: #{options[:reason]}" if options[:reason] && !quiet?(options)
+                puts "Research: #{research}" if research && !quiet?(options)
               else
                 raise Ace::Core::CLI::Error.new(result[:error])
               end
