@@ -4,6 +4,8 @@ gem: ace-llm-providers-cli
 models:
   # ZAI (default provider)
   - zai/glm-4.7
+  - zai/glm-4.6
+  - zai/glm-4.5
   # Anthropic
   - anthropic/claude-opus-4-6
   - anthropic/claude-opus-4-5
@@ -25,6 +27,8 @@ aliases:
     pi: pi:zai/glm-4.7
   model:
     glm: zai/glm-4.7
+    glm46: zai/glm-4.6
+    glm45: zai/glm-4.5
     opus: anthropic/claude-opus-4-6
     sonnet: anthropic/claude-sonnet-4-5
     haiku: anthropic/claude-haiku-4-5
