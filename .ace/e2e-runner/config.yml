@@ -1,0 +1,79 @@
+# Default configuration for e2e test runner
+# This file provides defaults for the ace-test-e2e-runner gem
+
+paths:
+  # Where test scenarios are stored in packages
+  scenarios: "test/e2e"
+  # File extension for test scenarios
+  extension: ".mt.md"
+  # Directory for test execution artifacts (gitignored)
+  cache_dir: ".cache/ace-test-e2e"
+
+patterns:
+  # Glob pattern for finding test scenarios
+  discovery: "test/e2e/**/*.mt.md"
+
+# Test scenario frontmatter requirements
+required_fields:
+  - test-id
+  - title
+  - area
+
+# Optional fields with defaults
+optional_fields:
+  priority: medium
+  duration: "~5min"
+  automation-candidate: false
+
+# Cleanup behavior
+cleanup:
+  # Whether to delete test artifacts after test completion
+  # Set to false to keep artifacts for debugging
+  enabled: false
+
+# Reporting defaults (suite final report LLM synthesis)
+reporting:
+  # LLM model alias for suite report generation
+  model: "glite"
+  # Timeout in seconds for report generation
+  timeout: 60
+
+# Execution defaults
+execution:
+  # Default LLM provider:model for test execution
+  provider: "pi:glm45"
+  # Timeout per test in seconds
+  timeout: 420
+  # Number of tests to run in parallel (1 = sequential)
+  parallel: 10
+
+# Provider configuration
+providers:
+  # CLI providers can execute commands (skill/workflow mode)
+  cli:
+    - claude
+    - gemini
+    - codex
+    - codexoss
+    - opencode
+    - pi
+  # Skill-aware CLI providers (use /ace:run-e2e-test invocation)
+  skill_aware:
+    - claude
+  # Required CLI args per provider (merged with user-provided --cli-args)
+  cli_args:
+    claude: "dangerously-skip-permissions"
+    codex: "full-auto"
+
+# Test ID format validation
+test_id:
+  # Pattern: MT-{AREA}-{NNN}
+  pattern: "^MT-[A-Z]+-\\d{3}$"
+  # Known area codes
+  areas:
+    - LINT
+    - REVIEW
+    - BUILD
+    - GIT
+    - SEARCH
+    - BUNDLE
