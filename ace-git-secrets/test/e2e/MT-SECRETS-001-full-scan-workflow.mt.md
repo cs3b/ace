@@ -32,12 +32,12 @@ Verify the complete ace-git-secrets scan workflow including clean repo scanning,
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="secrets"
 SHORT_ID="mt001"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 # Create isolated git repository
 git init --quiet .
@@ -51,13 +51,42 @@ echo "=== Tool Verification ==="
 which ace-git-secrets && ace-git-secrets --version
 which gitleaks && gitleaks version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create initial clean commit
-cat > "$TEST_DIR/README.md" << 'EOF'
+cat > README.md << 'EOF'
 # Test Project
 
 This is a clean project for testing.
@@ -65,6 +94,7 @@ EOF
 
 git add README.md
 git commit -q -m "Initial commit"
+SANDBOX
 ```
 
 ## Test Cases
@@ -76,20 +106,26 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Run scan on clean repository
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify exit code is 0
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
+   SANDBOX
    ```
 
 3. Verify output indicates clean
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qi "no tokens\|clean" && echo "PASS: Clean message found" || echo "FAIL: No clean message"
+   SANDBOX
    ```
 
 **Expected:**
@@ -109,32 +145,40 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Plant a secret in the repository
    ```bash
-   cat > "$TEST_DIR/config.env" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat > config.env << 'EOF'
    # Configuration
    DATABASE_URL=postgres://localhost:5432/mydb
-   GITHUB_TOKEN=ghp_test_token_for_full_scan_workflow_1234567890AB
+   GITHUB_TOKEN=ghp_ABCDEFghijklmnop1234567890abcdefABCD
    EOF
 
    git add config.env
    git commit -q -m "Add config with secret"
+   SANDBOX
    ```
 
 2. Run scan
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify exit code is 1 (secrets found)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -eq 1 ] && echo "PASS: Exit code is 1" || echo "FAIL: Expected 1, got $EXIT_CODE"
+   SANDBOX
    ```
 
 4. Verify output indicates tokens found
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qiE "token|secret|found|alert" && echo "PASS: Token detection message" || echo "FAIL: No token message"
+   SANDBOX
    ```
 
 **Expected:**
@@ -154,20 +198,25 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Run scan with JSON report format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan --format json 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify report file is saved
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qE "Report saved:.*\.json" && echo "PASS: Report saved message" || echo "FAIL: No report saved message"
+   SANDBOX
    ```
 
 3. Find and verify JSON report structure
    ```bash
-   REPORT_FILE=$(find "$TEST_DIR/.cache/ace-git-secrets/sessions" -name "*-report.json" 2>/dev/null | head -1)
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   REPORT_FILE=$(find .cache/ace-git-secrets/sessions -name "*-report.json" 2>/dev/null | head -1)
    if [ -n "$REPORT_FILE" ] && [ -f "$REPORT_FILE" ]; then
      echo "PASS: Report file exists: $REPORT_FILE"
      cat "$REPORT_FILE" | jq . > /dev/null 2>&1 && echo "PASS: Valid JSON" || echo "FAIL: Invalid JSON"
@@ -176,6 +225,7 @@ git commit -q -m "Initial commit"
    else
      echo "FAIL: Report file not found"
    fi
+   SANDBOX
    ```
 
 **Expected:**
@@ -195,15 +245,19 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Run scan with verbose mode and JSON format
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan --format json --verbose 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Verify JSON structure in stdout
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -q '"scan_metadata"' && echo "PASS: scan_metadata in stdout" || echo "FAIL: No scan_metadata"
    echo "$OUTPUT" | grep -q '"tokens"' && echo "PASS: tokens in stdout" || echo "FAIL: No tokens"
+   SANDBOX
    ```
 
 **Expected:**
@@ -223,28 +277,36 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Run scan with high confidence filter
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan --confidence high 2>&1)
    EXIT_CODE=$?
    echo "Exit code (high): $EXIT_CODE"
+   SANDBOX
    ```
 
 2. Run scan with medium confidence filter
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan --confidence medium 2>&1)
    EXIT_CODE=$?
    echo "Exit code (medium): $EXIT_CODE"
+   SANDBOX
    ```
 
 3. Run scan with low confidence filter
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan --confidence low 2>&1)
    EXIT_CODE=$?
    echo "Exit code (low): $EXIT_CODE"
+   SANDBOX
    ```
 
 4. Verify command completes without error
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ge 0 ] && echo "PASS: Confidence filtering works" || echo "FAIL: Command error"
+   SANDBOX
    ```
 
 **Expected:**
@@ -264,15 +326,19 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Run scan with since option
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan --since "2020-01-01" 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 2. Verify command completes
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    [ "$EXIT_CODE" -ge 0 ] && echo "PASS: Since option accepted" || echo "FAIL: Command error"
+   SANDBOX
    ```
 
 **Expected:**
@@ -292,36 +358,44 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Create test fixture with secret
    ```bash
-   mkdir -p "$TEST_DIR/test"
-   cat > "$TEST_DIR/test/mock_tokens.json" << 'EOF'
-   {"token": "ghp_test_whitelist_filter_1234567890AB"}
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p test
+   cat > test/mock_tokens.json << 'EOF'
+   {"token": "ghp_WhitelistFilter1234567890123456789AB"}
    EOF
 
    git add test/mock_tokens.json
    git commit -q -m "Test fixture"
+   SANDBOX
    ```
 
 2. Create whitelist config
    ```bash
-   mkdir -p "$TEST_DIR/.ace/git-secrets"
-   cat > "$TEST_DIR/.ace/git-secrets/config.yml" << 'EOF'
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   mkdir -p .ace/git-secrets
+   cat > .ace/git-secrets/config.yml << 'EOF'
    whitelist:
      - file: "test/*"
        reason: "Test fixtures"
    EOF
+   SANDBOX
    ```
 
 3. Run scan
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 4. Verify whitelist was applied (check output for whitelist mention)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qi "whitelist\|excluded" && echo "PASS: Whitelist mentioned" || echo "INFO: Whitelist not explicitly mentioned"
+   SANDBOX
    ```
 
 **Expected:**
@@ -341,25 +415,31 @@ git commit -q -m "Initial commit"
 **Steps:**
 1. Create non-whitelisted secret
    ```bash
-   cat > "$TEST_DIR/real_config.env" << 'EOF'
-   API_KEY=ghp_test_real_secret_display_1234567890AB
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
+   cat > real_config.env << 'EOF'
+   API_KEY=ghp_RealSecretDisplay12345678901234567AB
    EOF
 
    git add real_config.env
    git commit -q -m "Add real config"
+   SANDBOX
    ```
 
 2. Run scan (whitelist config from TC-007 should still be active)
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    OUTPUT=$(ace-git-secrets scan 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
+   SANDBOX
    ```
 
 3. Verify output mentions both detection and whitelist
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    echo "$OUTPUT" | grep -qiE "token|found" && echo "PASS: Token detected" || echo "FAIL: No token found"
+   SANDBOX
    ```
 
 **Expected:**
@@ -371,6 +451,10 @@ git commit -q -m "Initial commit"
 **Status:** [ ] Pass / [ ] Fail
 
 ---
+
+## Known Issues
+
+- None currently known. Test tokens use format-valid patterns (ghp_ + 36 alphanumeric chars) matching gitleaks detection rules.
 
 ## Cleanup
 
