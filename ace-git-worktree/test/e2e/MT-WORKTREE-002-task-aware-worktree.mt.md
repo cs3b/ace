@@ -33,7 +33,7 @@ Verify task-integrated worktree creation works correctly with ace-taskflow integ
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="git-worktree"
 SHORT_ID="mt002"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
@@ -43,7 +43,7 @@ mkdir -p "$TEST_DIR" "$WORKTREES_ROOT"
 # Create an isolated git repository with taskflow structure
 REPO_DIR="$TEST_DIR/test-repo"
 mkdir -p "$REPO_DIR"
-cd "$REPO_DIR"
+cd "$REPO_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
 git init --quiet .
 git config user.email "test@example.com"
@@ -62,13 +62,40 @@ echo "Test directory: $TEST_DIR"
 echo "Repository: $REPO_DIR"
 echo "Worktrees root: $WORKTREES_ROOT"
 echo "=================================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
-cd "$REPO_DIR"
-
+ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
 # Create .ace-taskflow directory structure with release directory
 mkdir -p .ace-taskflow/v.test/tasks/999-test-feature
 mkdir -p .ace-taskflow/v.test/tasks/888-second-task
@@ -128,6 +155,7 @@ export PROJECT_ROOT_PATH="$REPO_DIR"
 echo "=== Test Tasks Created ==="
 find .ace-taskflow -name "*.s.md" -type f
 echo "=========================="
+SANDBOX
 ```
 
 ## Test Cases
@@ -139,8 +167,7 @@ echo "=========================="
 **Steps:**
 1. Run task worktree creation with dry-run
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree create --task 999 --dry-run --no-push --no-pr --no-commit
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree create --task 999 --dry-run --no-push --no-pr --no-commit
    ```
 
 **Expected:**
@@ -162,18 +189,19 @@ echo "=========================="
 **Steps:**
 1. Create worktree for task 999
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree create --task 999 --no-push --no-pr --no-commit --no-auto-navigate
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree create --task 999 --no-push --no-pr --no-commit --no-auto-navigate
    ```
 
 2. Verify worktree was created
    ```bash
-   ace-git-worktree list --show-tasks
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --show-tasks
    ```
 
 3. Check branch name contains task ID
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    ace-git-worktree list --format json | grep -o '"branch":"[^"]*999[^"]*"'
+   SANDBOX
    ```
 
 **Expected:**
@@ -195,18 +223,17 @@ echo "=========================="
 **Steps:**
 1. List worktrees with task info
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree list --show-tasks
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --show-tasks
    ```
 
 2. Verify task-associated filter works
    ```bash
-   ace-git-worktree list --task-associated
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --task-associated
    ```
 
 3. Verify non-task filter works
    ```bash
-   ace-git-worktree list --no-task-associated
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --no-task-associated
    ```
 
 **Expected:**
@@ -227,15 +254,18 @@ echo "=========================="
 **Steps:**
 1. Get worktree path by task ID
    ```bash
-   cd "$REPO_DIR"
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    TASK_PATH=$(ace-git-worktree switch 999)
    echo "Task worktree path: $TASK_PATH"
+   SANDBOX
    ```
 
 2. Verify path exists and contains task files
    ```bash
+   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    test -d "$TASK_PATH" && echo "Path exists - PASS"
    test -d "$TASK_PATH/.ace-taskflow" && echo "Taskflow dir exists - PASS"
+   SANDBOX
    ```
 
 **Expected:**
@@ -256,18 +286,19 @@ echo "=========================="
 **Steps:**
 1. Create worktree for task 888
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree create --task 888 --no-push --no-pr --no-commit --no-auto-navigate
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree create --task 888 --no-push --no-pr --no-commit --no-auto-navigate
    ```
 
 2. List all task-associated worktrees
    ```bash
-   ace-git-worktree list --task-associated --format table
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --task-associated --format table
    ```
 
 3. Verify both tasks have worktrees
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    ace-git-worktree list --task-associated --format json | grep -c '"task":'
+   SANDBOX
    ```
 
 **Expected:**
@@ -288,13 +319,12 @@ echo "=========================="
 **Steps:**
 1. Search for worktrees containing "999"
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree list --search 999
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --search 999
    ```
 
 2. Search for worktrees containing "test"
    ```bash
-   ace-git-worktree list --search test
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --search test
    ```
 
 **Expected:**
@@ -314,18 +344,21 @@ echo "=========================="
 **Steps:**
 1. Remove task 888's worktree
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree remove --task 888
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree remove --task 888
    ```
 
 2. Verify removal
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    ace-git-worktree list --task-associated | grep -v 888 && echo "Task 888 removed - PASS"
+   SANDBOX
    ```
 
 3. Verify task 999 still exists
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    ace-git-worktree list --task-associated | grep 999 && echo "Task 999 still exists - PASS"
+   SANDBOX
    ```
 
 **Expected:**
@@ -346,12 +379,12 @@ echo "=========================="
 **Steps:**
 1. Get JSON output with task info
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree list --show-tasks --format json
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list --show-tasks --format json
    ```
 
 2. Parse for task fields
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    ace-git-worktree list --show-tasks --format json | python3 -c "
 import sys, json
 data = json.load(sys.stdin)
@@ -359,6 +392,7 @@ for wt in data:
     if wt.get('task'):
         print(f\"Task: {wt['task']}, Branch: {wt['branch']}\")
 "
+   SANDBOX
    ```
 
 **Expected:**
@@ -379,18 +413,21 @@ for wt in data:
 **Steps:**
 1. Check branch exists before removal
    ```bash
-   cd "$REPO_DIR"
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    git branch -a | grep 999 && echo "Branch exists - SETUP OK"
+   SANDBOX
    ```
 
 2. Remove worktree with branch deletion
    ```bash
-   ace-git-worktree remove --task 999 --delete-branch
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree remove --task 999 --delete-branch
    ```
 
 3. Verify branch was also deleted
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    git branch -a | grep -v 999 && echo "Branch deleted - PASS"
+   SANDBOX
    ```
 
 **Expected:**
@@ -411,19 +448,22 @@ for wt in data:
 **Steps:**
 1. List all worktrees
    ```bash
-   cd "$REPO_DIR"
-   ace-git-worktree list
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree list
    ```
 
 2. Verify no task-associated worktrees remain
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    COUNT=$(ace-git-worktree list --task-associated --format simple | wc -l)
    test "$COUNT" -eq 0 && echo "No task worktrees remain - PASS"
+   SANDBOX
    ```
 
 3. Verify main worktree still exists
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    ace-git-worktree list | grep main && echo "Main worktree exists - PASS"
+   SANDBOX
    ```
 
 **Expected:**
@@ -443,7 +483,7 @@ for wt in data:
 **Steps:**
 1. Create a parent task without worktree metadata
    ```bash
-   cd "$REPO_DIR"
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    mkdir -p .ace-taskflow/v.test/tasks/777-parent-no-worktree
 
    # Create parent task 777 (orchestrator) with no worktree metadata
@@ -475,19 +515,22 @@ EOF
 
    git add .ace-taskflow/
    git commit -m "Add parent task without worktree and subtask" --quiet
+   SANDBOX
    ```
 
 2. Create a feature branch to simulate current working branch
    ```bash
+   ace-test-e2e-sh "$REPO_DIR" bash << 'SANDBOX'
    git checkout -b 777-feature-branch
    echo "Feature work" >> README.md
    git add README.md
    git commit -m "Feature work on 777" --quiet
+   SANDBOX
    ```
 
 3. Create worktree for subtask from the feature branch
    ```bash
-   ace-git-worktree create --task 777.01 --no-push --no-pr --no-commit --no-auto-navigate --dry-run 2>&1
+   ace-test-e2e-sh "$REPO_DIR" ace-git-worktree create --task 777.01 --no-push --no-pr --no-commit --no-auto-navigate --dry-run 2>&1
    ```
 
 **Expected:**

@@ -61,9 +61,9 @@ module Ace
             def call(branch: nil, **options)
               display_config_summary("create", options)
 
-              # Convert --from to --branch for legacy command compatibility
+              # Convert --from to --source for the underlying command
               if options[:from]
-                options[:branch] = options.delete(:from)
+                options[:source] = options.delete(:from)
               end
 
               # Convert dry-cli options hash to args array format
