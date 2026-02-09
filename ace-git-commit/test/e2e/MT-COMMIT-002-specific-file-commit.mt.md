@@ -9,8 +9,8 @@ automation-candidate: true
 requires:
   tools: [git, ace-git-commit]
   ruby: ">= 3.0"
-last-verified: null
-verified-by: null
+last-verified: 2026-02-08
+verified-by: claude-opus-4-6
 ---
 
 # Specific File/Path Commit
@@ -29,12 +29,15 @@ Verify that ace-git-commit correctly handles selective staging with path argumen
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
 SHORT_PKG="git-commit"
 SHORT_ID="mt002"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+# Set PROJECT_ROOT_PATH for sandbox isolation
+export PROJECT_ROOT_PATH="$TEST_DIR"
 
 # Initialize test git repo
 git init
@@ -46,24 +49,53 @@ echo "=== Tool Verification ==="
 which git && git --version
 which ace-git-commit && ace-git-commit --version
 echo "========================="
+
+# === SANDBOX ISOLATION CHECKPOINT ===
+echo "=== SANDBOX ISOLATION CHECK ==="
+CURRENT_DIR="$(pwd)"
+if [[ "$CURRENT_DIR" == *".cache/ace-test-e2e/"* ]]; then
+  echo "PASS: Working directory is inside sandbox"
+else
+  echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"
+  exit 1
+fi
+if git rev-parse --git-dir >/dev/null 2>&1; then
+  REMOTES=$(git remote -v 2>/dev/null)
+  if [ -z "$REMOTES" ]; then
+    echo "PASS: No git remotes (isolated repo)"
+  else
+    echo "FAIL: Git remotes found - NOT isolated!"
+    exit 1
+  fi
+else
+  echo "PASS: No git repo in sandbox (tools use PROJECT_ROOT_PATH)"
+fi
+if [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ]; then
+  echo "FAIL: Main project markers found!"
+  exit 1
+else
+  echo "PASS: No main project markers"
+fi
+echo "=== ISOLATION VERIFIED ==="
 ```
 
 ## Test Data
 
 ```bash
+ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
 # Create initial commit
-cat > "$TEST_DIR/README.md" << 'EOF'
+cat > README.md << 'EOF'
 # Test Repository
 EOF
 git add README.md
 git commit -m "Initial commit"
 
 # Create directory structure
-mkdir -p "$TEST_DIR/lib"
-mkdir -p "$TEST_DIR/spec"
+mkdir -p lib
+mkdir -p spec
 
 # Create multiple files for selective commit tests
-cat > "$TEST_DIR/main.rb" << 'EOF'
+cat > main.rb << 'EOF'
 # frozen_string_literal: true
 
 require_relative "lib/core"
@@ -71,7 +103,7 @@ require_relative "lib/core"
 Core.new.run
 EOF
 
-cat > "$TEST_DIR/config.rb" << 'EOF'
+cat > config.rb << 'EOF'
 # frozen_string_literal: true
 
 module Config
@@ -79,7 +111,7 @@ module Config
 end
 EOF
 
-cat > "$TEST_DIR/lib/core.rb" << 'EOF'
+cat > lib/core.rb << 'EOF'
 # frozen_string_literal: true
 
 class Core
@@ -89,7 +121,7 @@ class Core
 end
 EOF
 
-cat > "$TEST_DIR/lib/utils.rb" << 'EOF'
+cat > lib/utils.rb << 'EOF'
 # frozen_string_literal: true
 
 module Utils
@@ -99,7 +131,7 @@ module Utils
 end
 EOF
 
-cat > "$TEST_DIR/spec/core_spec.rb" << 'EOF'
+cat > spec/core_spec.rb << 'EOF'
 # frozen_string_literal: true
 
 describe Core do
@@ -108,6 +140,7 @@ describe Core do
   end
 end
 EOF
+SANDBOX
 ```
 
 ## Test Cases
@@ -119,22 +152,22 @@ EOF
 **Steps:**
 1. Verify initial state - all files untracked
    ```bash
-   git status --porcelain
+   ace-test-e2e-sh "$TEST_DIR" git status --porcelain
    ```
 
 2. Commit only main.rb
    ```bash
-   ace-git-commit main.rb -m "Add main entry point"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit main.rb -m "Add main entry point"
    ```
 
 3. Verify only main.rb was committed
    ```bash
-   git show --stat HEAD
+   ace-test-e2e-sh "$TEST_DIR" git show --stat HEAD
    ```
 
 4. Verify other files remain untracked
    ```bash
-   git status --porcelain
+   ace-test-e2e-sh "$TEST_DIR" git status --porcelain
    ```
 
 **Expected:**
@@ -156,17 +189,17 @@ EOF
 **Steps:**
 1. Commit the lib/ directory
    ```bash
-   ace-git-commit lib/ -m "Add core library modules"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit lib/ -m "Add core library modules"
    ```
 
 2. Verify both lib files were committed
    ```bash
-   git show --stat HEAD
+   ace-test-e2e-sh "$TEST_DIR" git show --stat HEAD
    ```
 
 3. Verify files outside lib/ remain untracked
    ```bash
-   git status --porcelain
+   ace-test-e2e-sh "$TEST_DIR" git status --porcelain
    ```
 
 **Expected:**
@@ -190,17 +223,17 @@ EOF
 **Steps:**
 1. Commit all remaining .rb files in root using glob
    ```bash
-   ace-git-commit "*.rb" -m "Add remaining root-level Ruby files"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit "*.rb" -m "Add remaining root-level Ruby files"
    ```
 
 2. Verify correct files were committed
    ```bash
-   git show --stat HEAD
+   ace-test-e2e-sh "$TEST_DIR" git show --stat HEAD
    ```
 
 3. Verify spec directory still untracked
    ```bash
-   git status --porcelain
+   ace-test-e2e-sh "$TEST_DIR" git status --porcelain
    ```
 
 **Expected:**
@@ -223,17 +256,17 @@ EOF
 **Steps:**
 1. Commit the remaining spec file
    ```bash
-   ace-git-commit spec/core_spec.rb -m "Add core specifications"
+   ace-test-e2e-sh "$TEST_DIR" ace-git-commit spec/core_spec.rb -m "Add core specifications"
    ```
 
 2. Verify commit
    ```bash
-   git show --stat HEAD
+   ace-test-e2e-sh "$TEST_DIR" git show --stat HEAD
    ```
 
 3. Verify working directory is now clean
    ```bash
-   git status --porcelain
+   ace-test-e2e-sh "$TEST_DIR" git status --porcelain
    ```
 
 **Expected:**
