@@ -118,4 +118,70 @@ class ResultParserTest < Minitest::Test
   def test_extract_json_returns_nil_for_no_json
     assert_nil ResultParser.extract_json("No JSON here")
   end
+
+  # --- TC-Level Parsing ---
+
+  def test_parse_tc_valid_json
+    response = <<~JSON
+      ```json
+      {
+        "test_id": "TS-LINT-001",
+        "tc_id": "TC-001",
+        "status": "pass",
+        "actual": "Exit code 0, StandardRB used",
+        "notes": "No issues",
+        "summary": "TC-001 passed"
+      }
+      ```
+    JSON
+
+    result = ResultParser.parse_tc(response)
+    assert_equal "TS-LINT-001", result[:test_id]
+    assert_equal "pass", result[:status]
+    assert_equal 1, result[:test_cases].size
+    assert_equal "TC-001", result[:test_cases].first[:id]
+    assert_equal "pass", result[:test_cases].first[:status]
+  end
+
+  def test_parse_tc_normalizes_to_test_cases_array
+    response = '{"test_id": "TS-LINT-001", "tc_id": "TC-002", "status": "fail", "actual": "Wrong exit code"}'
+
+    result = ResultParser.parse_tc(response)
+    assert_equal 1, result[:test_cases].size
+    assert_equal "TC-002", result[:test_cases].first[:id]
+    assert_equal "fail", result[:test_cases].first[:status]
+    assert_equal "Wrong exit code", result[:test_cases].first[:actual]
+  end
+
+  def test_parse_tc_no_json_raises
+    assert_raises(ResultParser::ParseError) do
+      ResultParser.parse_tc("No JSON here, just plain text")
+    end
+  end
+
+  def test_parse_tc_empty_raises
+    assert_raises(ResultParser::ParseError) do
+      ResultParser.parse_tc("")
+    end
+  end
+
+  def test_parse_tc_falls_back_to_multi_tc_format
+    response = <<~JSON
+      ```json
+      {
+        "test_id": "TS-LINT-001",
+        "status": "pass",
+        "test_cases": [
+          {"id": "TC-001", "status": "pass"},
+          {"id": "TC-002", "status": "pass"}
+        ],
+        "summary": "All passed"
+      }
+      ```
+    JSON
+
+    result = ResultParser.parse_tc(response)
+    assert_equal 2, result[:test_cases].size
+    assert_equal "TC-001", result[:test_cases].first[:id]
+  end
 end

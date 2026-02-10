@@ -131,6 +131,107 @@ class ReportWriterTest < Minitest::Test
     end
   end
 
+  # --- Per-TC Reports ---
+
+  def test_write_with_test_case_includes_tc_id_in_summary
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario(test_id: "TS-LINT-001")
+      tc = create_test_case(tc_id: "TC-001", title: "StandardRB Check")
+      result = create_result(test_id: "TS-LINT-001")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir, test_case: tc)
+      content = File.read(paths[:summary])
+
+      assert content.include?("tc-id: TC-001"), "Summary should contain tc-id in frontmatter"
+    end
+  end
+
+  def test_write_with_test_case_includes_scenario_id_in_summary
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario(test_id: "TS-LINT-001")
+      tc = create_test_case
+      result = create_result(test_id: "TS-LINT-001")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir, test_case: tc)
+      content = File.read(paths[:summary])
+
+      assert content.include?("scenario-id: TS-LINT-001"), "Summary should contain scenario-id in frontmatter"
+    end
+  end
+
+  def test_write_with_test_case_includes_tc_title_in_summary
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario(test_id: "TS-LINT-001")
+      tc = create_test_case(tc_id: "TC-001", title: "StandardRB Present")
+      result = create_result(test_id: "TS-LINT-001")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir, test_case: tc)
+      content = File.read(paths[:summary])
+
+      assert content.include?("StandardRB Present"), "Summary should contain TC title"
+    end
+  end
+
+  def test_write_with_test_case_metadata_includes_tc_id
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario(test_id: "TS-LINT-001")
+      tc = create_test_case(tc_id: "TC-002")
+      result = create_result(test_id: "TS-LINT-001")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir, test_case: tc)
+      metadata = YAML.safe_load_file(paths[:metadata])
+
+      assert_equal "TC-002", metadata["tc-id"]
+    end
+  end
+
+  def test_write_with_test_case_metadata_includes_scenario_id
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario(test_id: "TS-LINT-001")
+      tc = create_test_case
+      result = create_result(test_id: "TS-LINT-001")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir, test_case: tc)
+      metadata = YAML.safe_load_file(paths[:metadata])
+
+      assert_equal "TS-LINT-001", metadata["scenario-id"]
+    end
+  end
+
+  def test_write_without_test_case_unchanged
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      metadata = YAML.safe_load_file(paths[:metadata])
+
+      assert_nil metadata["tc-id"]
+      assert_nil metadata["scenario-id"]
+    end
+  end
+
+  def test_write_creates_all_files_with_test_case
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario(test_id: "TS-LINT-001")
+      tc = create_test_case
+      result = create_result(test_id: "TS-LINT-001")
+
+      paths = @writer.write(result, scenario, report_dir: report_dir, test_case: tc)
+
+      assert File.exist?(paths[:summary])
+      assert File.exist?(paths[:experience])
+      assert File.exist?(paths[:metadata])
+    end
+  end
+
   private
 
   def create_scenario(overrides = {})
@@ -158,5 +259,15 @@ class ReportWriterTest < Minitest::Test
       completed_at: Time.utc(2026, 2, 6, 12, 1, 30)
     }
     TestResult.new(**defaults.merge(overrides))
+  end
+
+  def create_test_case(overrides = {})
+    defaults = {
+      tc_id: "TC-001",
+      title: "Test Case Title",
+      content: "## Objective\n\nVerify something.",
+      file_path: "/tmp/test/TC-001-test-case.tc.md"
+    }
+    Ace::Test::EndToEndRunner::Models::TestCase.new(**defaults.merge(overrides))
   end
 end
