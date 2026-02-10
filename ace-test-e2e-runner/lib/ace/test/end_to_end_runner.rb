@@ -3,6 +3,7 @@
 require_relative "end_to_end_runner/version"
 
 # Models
+require_relative "end_to_end_runner/models/test_case"
 require_relative "end_to_end_runner/models/test_scenario"
 require_relative "end_to_end_runner/models/test_result"
 
