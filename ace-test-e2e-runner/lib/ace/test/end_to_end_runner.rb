@@ -27,6 +27,7 @@ require_relative "end_to_end_runner/molecules/progress_display_manager"
 require_relative "end_to_end_runner/molecules/suite_simple_display_manager"
 require_relative "end_to_end_runner/molecules/suite_progress_display_manager"
 require_relative "end_to_end_runner/molecules/affected_detector"
+require_relative "end_to_end_runner/molecules/failure_finder"
 
 # Organisms
 require_relative "end_to_end_runner/organisms/test_orchestrator"
