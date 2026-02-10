@@ -48,6 +48,8 @@ module Ace
             puts "  ace-test-e2e ace-lint --provider claude:sonnet"
             puts "  ace-test-e2e ace-lint MT-LINT-003 --test-cases tc-001,002"
             puts "  ace-test-e2e ace-lint MT-LINT-003 --test-cases TC-001 --dry-run"
+            puts "  ace-test-e2e ace-lint --only-failures"
+            puts "  ace-test-e2e ace-lint --only-failures --dry-run"
             puts ""
             puts "Options:"
             puts "  --provider       LLM provider:model (default: #{Molecules::ConfigLoader.default_provider})"
