@@ -91,8 +91,7 @@ module Ace
 
           # Execute a shell command in the sandbox
           def handle_run(command, sandbox_dir, env)
-            merged_env = ENV.to_h.merge(env.transform_keys(&:to_s))
-            stdout, stderr, status = Open3.capture3(merged_env, command, chdir: sandbox_dir)
+            stdout, stderr, status = Open3.capture3(merged_environment(env), command, chdir: sandbox_dir)
 
             unless status.success?
               raise "Setup step 'run' failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
@@ -113,10 +112,17 @@ module Ace
             vars.each { |k, v| env[k.to_s] = v.to_s }
           end
 
+          # Merge custom env vars with the process environment
+          #
+          # @param env [Hash] Custom environment variables
+          # @return [Hash] Merged environment
+          def merged_environment(env)
+            ENV.to_h.merge(env.transform_keys(&:to_s))
+          end
+
           # Run a command and raise on failure
           def run_command(*args, chdir:, env: {})
-            merged_env = ENV.to_h.merge(env.transform_keys(&:to_s))
-            _stdout, stderr, status = Open3.capture3(merged_env, *args, chdir: chdir)
+            _stdout, stderr, status = Open3.capture3(merged_environment(env), *args, chdir: chdir)
 
             unless status.success?
               raise "Command failed (exit #{status.exitstatus}): #{args.join(' ')}\n#{stderr}"

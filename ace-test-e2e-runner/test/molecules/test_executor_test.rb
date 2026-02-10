@@ -40,6 +40,44 @@ class TestExecutorTest < Minitest::Test
 
   # --- TC-Level Execution ---
 
+  def test_execute_tc_via_prompt_happy_path
+    executor = TestExecutor.new(provider: "google:gemini-pro", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    tc = create_test_case
+
+    valid_response = {
+      text: '{"test_id":"TS-LINT-001","tc_id":"TC-001","status":"pass","test_cases":[{"id":"TC-001","description":"Test","status":"pass"}],"summary":"TC-001 passed"}'
+    }
+
+    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { valid_response }) do
+      result = executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario)
+
+      assert_equal "TS-LINT-001", result.test_id
+      assert_equal "pass", result.status
+      assert_equal 1, result.test_cases.size
+      assert_equal "TC-001", result.test_cases.first[:id]
+    end
+  end
+
+  def test_execute_tc_via_skill_happy_path
+    executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    tc = create_test_case
+
+    valid_response = {
+      text: "- **Test ID**: TS-LINT-001\n- **TC ID**: TC-001\n- **Status**: pass\n- **Issues**: None"
+    }
+
+    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { valid_response }) do
+      result = executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario)
+
+      assert_equal "TS-LINT-001", result.test_id
+      assert_equal "pass", result.status
+      assert_equal 1, result.test_cases.size
+      assert_equal "TC-001", result.test_cases.first[:id]
+    end
+  end
+
   def test_execute_tc_via_skill_catches_unexpected_error
     executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
     scenario = create_scenario(test_id: "TS-LINT-001")
