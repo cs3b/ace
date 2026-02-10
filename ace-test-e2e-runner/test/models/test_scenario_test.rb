@@ -64,6 +64,79 @@ class TestScenarioTest < Minitest::Test
     assert_equal "8xyz12-lint-mt001", scenario.dir_name("8xyz12")
   end
 
+  # TS- format support
+
+  def test_short_id_ts_format
+    assert_equal "ts001", create_scenario(test_id: "TS-LINT-001").short_id
+    assert_equal "ts015", create_scenario(test_id: "TS-REVIEW-015").short_id
+    assert_equal "ts003", create_scenario(test_id: "TS-GIT-003").short_id
+  end
+
+  def test_short_id_ts_with_alpha_suffix
+    assert_equal "ts001a", create_scenario(test_id: "TS-BUNDLE-001a").short_id
+    assert_equal "ts002b", create_scenario(test_id: "TS-LINT-002b").short_id
+  end
+
+  def test_dir_name_ts_format
+    scenario = create_scenario(test_id: "TS-LINT-001", package: "ace-lint")
+    assert_equal "8xyz12-lint-ts001", scenario.dir_name("8xyz12")
+  end
+
+  # New optional fields
+
+  def test_new_fields_defaults
+    scenario = create_scenario
+    assert_equal [], scenario.setup_steps
+    assert_nil scenario.dir_path
+    assert_nil scenario.fixture_path
+    assert_equal [], scenario.test_cases
+  end
+
+  def test_new_fields_set
+    tc = Ace::Test::EndToEndRunner::Models::TestCase.new(
+      tc_id: "TC-001", title: "Test", content: "body", file_path: "/tmp/tc.md"
+    )
+    scenario = create_scenario(
+      setup_steps: ["git-init", "copy-fixtures"],
+      dir_path: "/tmp/scenario",
+      fixture_path: "/tmp/scenario/fixtures",
+      test_cases: [tc]
+    )
+    assert_equal ["git-init", "copy-fixtures"], scenario.setup_steps
+    assert_equal "/tmp/scenario", scenario.dir_path
+    assert_equal "/tmp/scenario/fixtures", scenario.fixture_path
+    assert_equal [tc], scenario.test_cases
+  end
+
+  # scenario_format
+
+  def test_scenario_format_ts
+    assert_equal :ts, create_scenario(test_id: "TS-LINT-001").scenario_format
+  end
+
+  def test_scenario_format_mt
+    assert_equal :mt, create_scenario(test_id: "MT-LINT-001").scenario_format
+  end
+
+  # test_case_ids from test_cases array
+
+  def test_test_case_ids_from_test_cases
+    tc1 = Ace::Test::EndToEndRunner::Models::TestCase.new(
+      tc_id: "TC-001", title: "First", content: "body", file_path: "/tmp/tc1.md"
+    )
+    tc2 = Ace::Test::EndToEndRunner::Models::TestCase.new(
+      tc_id: "TC-002", title: "Second", content: "body", file_path: "/tmp/tc2.md"
+    )
+    scenario = create_scenario(test_cases: [tc1, tc2])
+    assert_equal ["TC-001", "TC-002"], scenario.test_case_ids
+  end
+
+  def test_test_case_ids_falls_back_to_content
+    content = "## Test Cases\n\n### TC-001: First Test\nCheck it.\n\n### TC-002: Second Test\nVerify it."
+    scenario = create_scenario(content: content, test_cases: [])
+    assert_equal ["TC-001", "TC-002"], scenario.test_case_ids
+  end
+
   private
 
   def create_scenario(overrides = {})
