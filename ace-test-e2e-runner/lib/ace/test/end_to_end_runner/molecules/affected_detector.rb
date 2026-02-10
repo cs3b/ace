@@ -62,7 +62,12 @@ module Ace
           def extract_package(file_path, base_dir)
             # Make path relative to base directory
             relative_path = if file_path.start_with?("/")
-                              Pathname.new(file_path).relative_path_from(Pathname.new(base_dir)).to_s
+                              begin
+                                Pathname.new(file_path).relative_path_from(Pathname.new(base_dir)).to_s
+                              rescue ArgumentError
+                                # file_path is not under base_dir, use original path
+                                file_path
+                              end
                             else
                               file_path
                             end
