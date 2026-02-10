@@ -131,9 +131,13 @@ module Ace
           end
 
           def compute_status(results)
-            if results.all?(&:success?)
+            # Filter out skipped tests for status computation
+            executed = results.reject(&:skipped?)
+            return "skip" if executed.empty?
+
+            if executed.all?(&:success?)
               "pass"
-            elsif results.any?(&:success?)
+            elsif executed.any?(&:success?)
               "partial"
             else
               "fail"
@@ -143,12 +147,14 @@ module Ace
           # Static fallback report (original template-based approach)
           def build_static_report(results, scenarios, package:, timestamp:, overall_status:,
                                   executed_at:, executed_date:, total_passed:, total_failed:, total_tc:)
+            total_skipped = results.count(&:skipped?)
+
             parts = []
             parts << build_frontmatter(
               timestamp: timestamp, package: package, overall_status: overall_status,
-              tests_run: results.size, executed_at: executed_at
+              tests_run: results.size, executed_at: executed_at, skipped: total_skipped
             )
-            parts << build_header(package: package, tests_run: results.size, executed_date: executed_date)
+            parts << build_header(package: package, tests_run: results.size, executed_date: executed_date, skipped: total_skipped)
             parts << build_summary_table(results, scenarios)
             parts << build_overall_line(total_passed: total_passed, total_tc: total_tc)
             parts << build_failed_section(results, scenarios) if results.any?(&:failed?)
@@ -156,24 +162,26 @@ module Ace
             parts.join("\n")
           end
 
-          def build_frontmatter(timestamp:, package:, overall_status:, tests_run:, executed_at:)
+          def build_frontmatter(timestamp:, package:, overall_status:, tests_run:, executed_at:, skipped: 0)
+            skipped_line = skipped > 0 ? "\nskipped: #{skipped}" : ""
             <<~FRONTMATTER
               ---
               suite-id: #{timestamp}
               package: #{package}
               status: #{overall_status}
-              tests-run: #{tests_run}
+              tests-run: #{tests_run}#{skipped_line}
               executed: #{executed_at}
               ---
             FRONTMATTER
           end
 
-          def build_header(package:, tests_run:, executed_date:)
+          def build_header(package:, tests_run:, executed_date:, skipped: 0)
+            skipped_info = skipped > 0 ? " (#{skipped} skipped)" : ""
             <<~HEADER
               # E2E Test Suite Report
 
               **Package:** #{package}
-              **Tests:** #{tests_run}
+              **Tests:** #{tests_run}#{skipped_info}
               **Executed:** #{executed_date}
             HEADER
           end
@@ -182,7 +190,10 @@ module Ace
             rows = results.each_with_index.map do |result, i|
               scenario = scenarios[i]
               status_label = result.status.capitalize
-              "| #{result.test_id} | #{scenario.title} | #{status_label} | #{result.passed_count} | #{result.failed_count} | #{result.total_count} |"
+              passed = result.skipped? ? "-" : result.passed_count.to_s
+              failed = result.skipped? ? "-" : result.failed_count.to_s
+              total = result.skipped? ? "-" : result.total_count.to_s
+              "| #{result.test_id} | #{scenario.title} | #{status_label} | #{passed} | #{failed} | #{total} |"
             end
 
             <<~TABLE
@@ -203,7 +214,7 @@ module Ace
             parts = ["\n## Failed Tests\n"]
 
             results.each_with_index do |result, i|
-              next if result.success?
+              next if result.success? || result.skipped?
 
               scenario = scenarios[i]
               parts << "### #{result.test_id}: #{scenario.title} (#{result.passed_count}/#{result.total_count})\n"

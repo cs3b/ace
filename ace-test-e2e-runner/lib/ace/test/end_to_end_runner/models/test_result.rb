@@ -38,10 +38,16 @@ module Ace
             status == "pass"
           end
 
-          # Check if the test failed (any non-pass status)
+          # Check if the test failed (non-pass, non-skip status)
           # @return [Boolean]
           def failed?
-            !success?
+            !success? && !skipped?
+          end
+
+          # Check if the test was skipped
+          # @return [Boolean]
+          def skipped?
+            status == "skip"
           end
 
           # Count of passed test cases
