@@ -40,6 +40,7 @@ require_relative "end_to_end_runner/organisms/suite_orchestrator"
 # CLI
 require_relative "end_to_end_runner/cli/commands/run_test"
 require_relative "end_to_end_runner/cli/commands/run_suite"
+require_relative "end_to_end_runner/cli/commands/setup"
 require_relative "end_to_end_runner/cli"
 
 module Ace

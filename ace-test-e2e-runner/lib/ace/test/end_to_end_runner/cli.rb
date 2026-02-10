@@ -13,7 +13,7 @@ module Ace
         extend Dry::CLI::Registry
 
         # Application commands registered in this CLI
-        REGISTERED_COMMANDS = %w[run suite].freeze
+        REGISTERED_COMMANDS = %w[run suite setup].freeze
 
         # dry-cli built-in commands
         BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
@@ -50,6 +50,7 @@ module Ace
             puts "  ace-test-e2e ace-lint MT-LINT-003 --test-cases TC-001 --dry-run"
             puts "  ace-test-e2e ace-lint --only-failures"
             puts "  ace-test-e2e ace-lint --only-failures --dry-run"
+            puts "  ace-test-e2e setup ace-lint TS-LINT-001"
             puts ""
             puts "Options:"
             puts "  --provider       LLM provider:model (default: #{Molecules::ConfigLoader.default_provider})"
@@ -91,6 +92,9 @@ module Ace
 
         # Register the suite command
         register "suite", Commands::RunSuite
+
+        # Register the setup command
+        register "setup", Commands::Setup
 
         # Register version command
         version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
