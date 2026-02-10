@@ -114,15 +114,15 @@ module Ace
             exp_frontmatter_lines << "tc-id: #{test_case.tc_id}" if test_case
             exp_frontmatter_lines.concat([
               "test-title: #{scenario.title}",
-              "package: #{scenario.package}"
+              "package: #{scenario.package}",
+              "agent: ace-test-e2e",
+              "executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}",
+              "status: #{result.status == 'error' ? 'incomplete' : 'complete'}"
             ])
 
             content = <<~REPORT
               ---
               #{exp_frontmatter_lines.join("\n")}
-              agent: ace-test-e2e
-              executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}
-              status: #{result.status == "error" ? "incomplete" : "complete"}
               ---
 
               # Agent Experience Report: #{result.test_id}#{tc_title_suffix}

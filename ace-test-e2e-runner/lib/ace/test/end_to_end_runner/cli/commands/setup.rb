@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 require "dry/cli"
+require "stringio"
 require "ace/core/cli/dry_cli/base"
+require "ace/support/timestamp"
 
 module Ace
   module Test
@@ -89,8 +91,11 @@ module Ace
                 )
               end
 
-              # Find matching TS-* directory
-              pattern = File.join(e2e_dir, "#{scenario_id}*")
+              # Find matching TS-* directory (exact match first, then prefix-slug match)
+              exact = File.join(e2e_dir, scenario_id)
+              return exact if Dir.exist?(exact)
+
+              pattern = File.join(e2e_dir, "#{scenario_id}-*")
               matches = Dir.glob(pattern).select { |p| File.directory?(p) }
 
               if matches.empty?

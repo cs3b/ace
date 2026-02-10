@@ -58,8 +58,7 @@ module Ace
           # @param parsed [Hash] Parsed markdown fields
           # @return [Hash] Normalized result matching ResultParser output format
           def self.to_normalized(parsed)
-            # Defensive: handle multi-line status values (e.g., "pass\npartial")
-            parsed[:status] = parsed[:status].to_s.strip.split(/\s+/).first || "unknown"
+            parsed[:status] = normalize_status(parsed[:status])
 
             passed = parsed[:passed].to_i
             failed = parsed[:failed].to_i
@@ -132,7 +131,7 @@ module Ace
 
           # Convert parsed TC markdown to normalized result format
           def self.to_tc_normalized(parsed)
-            parsed[:status] = parsed[:status].to_s.strip.split(/\s+/).first || "unknown"
+            parsed[:status] = normalize_status(parsed[:status])
 
             issues = parsed[:issues]
             observations = (issues && issues.downcase != "none") ? issues : ""
@@ -152,8 +151,13 @@ module Ace
             }
           end
 
+          # Normalize a status value: take first word, default to "unknown"
+          def self.normalize_status(value)
+            value.to_s.strip.split(/\s+/).first || "unknown"
+          end
+
           private_class_method :parse_markdown, :to_normalized, :extract_field,
-                              :parse_tc_markdown, :to_tc_normalized
+                              :parse_tc_markdown, :to_tc_normalized, :normalize_status
         end
       end
     end
