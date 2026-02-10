@@ -44,28 +44,32 @@ module Ace
               "| #{tc[:id]} | #{tc[:description]} | #{tc[:status].capitalize} |"
             end.join("\n")
 
-            tc_frontmatter = if test_case
-              "tc-id: #{test_case.tc_id}\n  scenario-id: #{scenario.test_id}\n  "
-            else
-              ""
+            frontmatter_lines = [
+              "test-id: #{result.test_id}"
+            ]
+            if test_case
+              frontmatter_lines << "tc-id: #{test_case.tc_id}"
+              frontmatter_lines << "scenario-id: #{scenario.test_id}"
             end
+            frontmatter_lines.concat([
+              "package: #{scenario.package}",
+              "agent: ace-test-e2e",
+              "executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}",
+              "status: #{result.status}",
+              "passed: #{result.passed_count}",
+              "failed: #{result.failed_count}",
+              "total: #{result.total_count}"
+            ])
 
             tc_info_rows = if test_case
-              "| TC ID | #{test_case.tc_id} |\n              | TC Title | #{test_case.title} |\n              "
+              "| TC ID | #{test_case.tc_id} |\n| TC Title | #{test_case.title} |\n"
             else
               ""
             end
 
             content = <<~REPORT
               ---
-              test-id: #{result.test_id}
-              #{tc_frontmatter}package: #{scenario.package}
-              agent: ace-test-e2e
-              executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}
-              status: #{result.status}
-              passed: #{result.passed_count}
-              failed: #{result.failed_count}
-              total: #{result.total_count}
+              #{frontmatter_lines.join("\n")}
               ---
 
               # E2E Test Report: #{result.test_id}
@@ -102,14 +106,20 @@ module Ace
           def write_experience(result, scenario, report_dir, test_case = nil)
             path = File.join(report_dir, "experience.r.md")
 
-            tc_experience_frontmatter = test_case ? "tc-id: #{test_case.tc_id}\n  " : ""
             tc_title_suffix = test_case ? " / #{test_case.tc_id}" : ""
+
+            exp_frontmatter_lines = [
+              "test-id: #{result.test_id}"
+            ]
+            exp_frontmatter_lines << "tc-id: #{test_case.tc_id}" if test_case
+            exp_frontmatter_lines.concat([
+              "test-title: #{scenario.title}",
+              "package: #{scenario.package}"
+            ])
 
             content = <<~REPORT
               ---
-              test-id: #{result.test_id}
-              #{tc_experience_frontmatter}test-title: #{scenario.title}
-              package: #{scenario.package}
+              #{exp_frontmatter_lines.join("\n")}
               agent: ace-test-e2e
               executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}
               status: #{result.status == "error" ? "incomplete" : "complete"}

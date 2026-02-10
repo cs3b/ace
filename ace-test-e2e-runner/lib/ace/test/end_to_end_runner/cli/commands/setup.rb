@@ -81,8 +81,8 @@ module Ace
             # @param scenario_id [String] Scenario ID (e.g., "TS-LINT-001")
             # @return [String] Path to the scenario directory
             # @raise [Ace::Core::CLI::Error] If scenario not found
-            def find_scenario_dir(package, scenario_id)
-              e2e_dir = File.join(Dir.pwd, package, "test", "e2e")
+            def find_scenario_dir(package, scenario_id, base_dir: Dir.pwd)
+              e2e_dir = File.join(base_dir, package, "test", "e2e")
               unless Dir.exist?(e2e_dir)
                 raise Ace::Core::CLI::Error.new(
                   "E2E test directory not found: #{e2e_dir}"
