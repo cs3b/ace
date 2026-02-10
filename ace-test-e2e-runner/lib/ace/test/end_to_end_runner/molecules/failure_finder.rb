@@ -53,6 +53,29 @@ module Ace
             extract_all_failed_ids(most_recent)
           end
 
+          # Find failed test cases grouped by package
+          #
+          # Scans cache directory for the most recent metadata.yml per test-id
+          # within each package, returning a hash mapping package names to their
+          # failed test case IDs.
+          #
+          # @param packages [Array<String>] Package names to scan
+          # @param base_dir [String] Base directory to search from (default: current dir)
+          # @return [Hash{String => Array<String>}] Package name to failed test case IDs
+          def find_failures_by_package(packages:, base_dir: Dir.pwd)
+            metadata_files = discover_metadata_files(base_dir)
+            return {} if metadata_files.empty?
+
+            result = {}
+            packages.each do |package|
+              package_metadata = filter_by_package(metadata_files, package)
+              most_recent = most_recent_per_test(package_metadata)
+              failed_ids = extract_all_failed_ids(most_recent)
+              result[package] = failed_ids unless failed_ids.empty?
+            end
+            result
+          end
+
           private
 
           # Discover all metadata.yml files in the cache directory

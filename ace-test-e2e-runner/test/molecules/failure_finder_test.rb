@@ -235,6 +235,123 @@ class FailureFinderTest < Minitest::Test
     end
   end
 
+  # --- find_failures_by_package tests ---
+
+  def test_find_failures_by_package_returns_grouped_failures
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
+        "test-id" => "MT-LINT-001",
+        "package" => "ace-lint",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001"]
+      })
+      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-002", "TC-003"]
+      })
+
+      result = @finder.find_failures_by_package(
+        packages: ["ace-lint", "ace-git-secrets"],
+        base_dir: tmpdir
+      )
+
+      assert_equal 2, result.size
+      assert_equal ["TC-001"], result["ace-lint"]
+      assert_equal ["TC-002", "TC-003"], result["ace-git-secrets"]
+    end
+  end
+
+  def test_find_failures_by_package_omits_packages_with_no_failures
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
+        "test-id" => "MT-LINT-001",
+        "package" => "ace-lint",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001"]
+      })
+      create_metadata(tmpdir, "8p0002-review-mt001-reports", {
+        "test-id" => "MT-REVIEW-001",
+        "package" => "ace-review",
+        "status" => "pass",
+        "failed_test_cases" => []
+      })
+
+      result = @finder.find_failures_by_package(
+        packages: ["ace-lint", "ace-review"],
+        base_dir: tmpdir
+      )
+
+      assert_equal 1, result.size
+      assert_includes result.keys, "ace-lint"
+      refute_includes result.keys, "ace-review"
+    end
+  end
+
+  def test_find_failures_by_package_with_no_cache
+    Dir.mktmpdir do |tmpdir|
+      result = @finder.find_failures_by_package(
+        packages: ["ace-lint"],
+        base_dir: tmpdir
+      )
+      assert_empty result
+    end
+  end
+
+  def test_find_failures_by_package_only_scans_requested_packages
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
+        "test-id" => "MT-LINT-001",
+        "package" => "ace-lint",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001"]
+      })
+      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-002"]
+      })
+
+      # Only request ace-lint, ace-git-secrets should not appear
+      result = @finder.find_failures_by_package(
+        packages: ["ace-lint"],
+        base_dir: tmpdir
+      )
+
+      assert_equal 1, result.size
+      assert_includes result.keys, "ace-lint"
+      refute_includes result.keys, "ace-git-secrets"
+    end
+  end
+
+  def test_find_failures_by_package_uses_most_recent_per_test
+    Dir.mktmpdir do |tmpdir|
+      # Older run with failures
+      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
+        "test-id" => "MT-LINT-001",
+        "package" => "ace-lint",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001", "TC-002"]
+      })
+      # Newer run where TC-001 was fixed
+      create_metadata(tmpdir, "8p0099-lint-mt001-reports", {
+        "test-id" => "MT-LINT-001",
+        "package" => "ace-lint",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-002"]
+      })
+
+      result = @finder.find_failures_by_package(
+        packages: ["ace-lint"],
+        base_dir: tmpdir
+      )
+
+      assert_equal ["TC-002"], result["ace-lint"]
+    end
+  end
+
   private
 
   # Helper to create a metadata.yml file in a report directory

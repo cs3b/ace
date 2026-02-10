@@ -22,6 +22,7 @@ module Ace
               Discovers and executes *.mt.md test scenarios from all packages
               in the monorepo. Tests run sequentially by default or in parallel
               with --parallel flag. Use --affected to only test changed packages.
+              Use --only-failures to re-run only previously failed test cases.
               Optionally filter to specific packages with a comma-separated list.
 
               Output:
@@ -37,12 +38,16 @@ module Ace
               "--parallel 4                  # Run with 4 parallel workers",
               "--affected                    # Only test changed packages",
               "--affected --parallel 8       # Parallel affected tests only",
+              "--only-failures               # Re-run only failed tests",
+              "--affected --only-failures    # Re-run failures in affected packages",
               "--cli-args dangerously-skip-permissions  # Pass args to provider"
             ]
 
             option :parallel, type: :string, default: "0",
                    desc: "Number of parallel workers (0 = sequential)"
             option :affected, type: :boolean, desc: "Only test affected packages"
+            option :only_failures, type: :boolean,
+                   desc: "Re-run only previously failed test cases"
             option :cli_args, type: :string,
                    desc: "Extra args for CLI-based LLM providers"
             option :provider, type: :string, default: Molecules::ConfigLoader.default_provider,
@@ -59,6 +64,7 @@ module Ace
 
               parallel = options[:parallel]
               affected = options[:affected]
+              only_failures = options[:only_failures]
 
               output = quiet?(options) ? StringIO.new : $stdout
               progress = options[:progress] && !quiet?(options)
@@ -72,6 +78,7 @@ module Ace
               results = orchestrator.run(
                 parallel: parallel > 0,
                 affected: affected,
+                only_failures: only_failures,
                 packages: packages,
                 cli_args: options[:cli_args],
                 provider: options[:provider],
@@ -79,7 +86,13 @@ module Ace
               )
 
               if results[:total].zero?
-                raise Ace::Core::CLI::Error.new("No tests found to run")
+                if only_failures
+                  raise Ace::Core::CLI::Error.new(
+                    "No failed test cases found in cache"
+                  )
+                else
+                  raise Ace::Core::CLI::Error.new("No tests found to run")
+                end
               end
 
               # Exit with error if any test failed
