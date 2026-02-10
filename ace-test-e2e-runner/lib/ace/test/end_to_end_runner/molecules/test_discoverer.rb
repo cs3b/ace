@@ -71,11 +71,13 @@ module Ace
             mt_pattern = File.join(base_dir, "*/#{TEST_DIR}/*#{EXTENSION}")
             ts_pattern = File.join(base_dir, "*/#{TEST_DIR}/#{SCENARIO_DIR_PATTERN}/#{SCENARIO_FILE}")
 
+            base = Pathname.new(base_dir)
+
             mt_packages = Dir.glob(mt_pattern)
-              .map { |f| Pathname.new(f).relative_path_from(base_dir).each_filename.first }
+              .map { |f| Pathname.new(f).relative_path_from(base).each_filename.first }
 
             ts_packages = Dir.glob(ts_pattern)
-              .map { |f| Pathname.new(f).relative_path_from(base_dir).each_filename.first }
+              .map { |f| Pathname.new(f).relative_path_from(base).each_filename.first }
 
             (mt_packages + ts_packages).uniq.sort
           end
