@@ -193,101 +193,88 @@ module Ace
 
           # Execute TC via skill/workflow for CLI providers
           def execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: nil, run_id: nil)
-            started_at = Time.now
+            with_tc_error_handling(scenario) do |started_at|
+              if Atoms::SkillPromptBuilder.skill_aware?(@provider)
+                prompt = @skill_prompt_builder.build_tc_skill_prompt(
+                  test_case: test_case, scenario: scenario,
+                  sandbox_path: sandbox_path, run_id: run_id
+                )
+                system = nil
+              else
+                workflow_content = load_workflow_content
+                prompt = @skill_prompt_builder.build_tc_workflow_prompt(
+                  test_case: test_case, scenario: scenario,
+                  sandbox_path: sandbox_path, workflow_content: workflow_content, run_id: run_id
+                )
+                system = @skill_prompt_builder.system_prompt_for(@provider)
+              end
 
-            if Atoms::SkillPromptBuilder.skill_aware?(@provider)
-              prompt = @skill_prompt_builder.build_tc_skill_prompt(
-                test_case: test_case, scenario: scenario,
-                sandbox_path: sandbox_path, run_id: run_id
+              merged_args = merge_cli_args(
+                Atoms::SkillPromptBuilder.required_cli_args(@provider),
+                cli_args
               )
-              system = nil
-            else
-              workflow_content = load_workflow_content
-              prompt = @skill_prompt_builder.build_tc_workflow_prompt(
-                test_case: test_case, scenario: scenario,
-                sandbox_path: sandbox_path, workflow_content: workflow_content, run_id: run_id
+
+              response = Ace::LLM::QueryInterface.query(
+                @provider, prompt,
+                system: system, cli_args: merged_args,
+                timeout: @timeout, fallback: false
               )
-              system = @skill_prompt_builder.system_prompt_for(@provider)
+
+              parsed = Atoms::SkillResultParser.parse_tc(response[:text])
+              completed_at = Time.now
+
+              Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: parsed[:status],
+                test_cases: parsed[:test_cases],
+                summary: parsed[:summary],
+                started_at: started_at,
+                completed_at: completed_at
+              )
             end
-
-            merged_args = merge_cli_args(
-              Atoms::SkillPromptBuilder.required_cli_args(@provider),
-              cli_args
-            )
-
-            response = Ace::LLM::QueryInterface.query(
-              @provider, prompt,
-              system: system, cli_args: merged_args,
-              timeout: @timeout, fallback: false
-            )
-
-            parsed = Atoms::SkillResultParser.parse_tc(response[:text])
-            completed_at = Time.now
-
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: parsed[:status],
-              test_cases: parsed[:test_cases],
-              summary: parsed[:summary],
-              started_at: started_at,
-              completed_at: completed_at
-            )
-          rescue Atoms::ResultParser::ParseError => e
-            Models::TestResult.new(
-              test_id: scenario.test_id, status: "error",
-              summary: "Failed to parse CLI provider TC response",
-              error: e.message, started_at: started_at, completed_at: Time.now
-            )
-          rescue Ace::LLM::Error => e
-            Models::TestResult.new(
-              test_id: scenario.test_id, status: "error",
-              summary: "CLI provider TC execution failed",
-              error: e.message, started_at: started_at || Time.now, completed_at: Time.now
-            )
-          rescue StandardError => e
-            Models::TestResult.new(
-              test_id: scenario.test_id, status: "error",
-              summary: "Unexpected TC execution error",
-              error: "#{e.class}: #{e.message}",
-              started_at: started_at || Time.now, completed_at: Time.now
-            )
           end
 
           # Execute TC via prompt for API providers
           def execute_tc_via_prompt(test_case, sandbox_path, scenario, cli_args: nil)
+            with_tc_error_handling(scenario) do |started_at|
+              prompt = @prompt_builder.build_tc(
+                test_case: test_case, scenario: scenario, sandbox_path: sandbox_path
+              )
+
+              response = Ace::LLM::QueryInterface.query(
+                @provider, prompt,
+                system: Atoms::PromptBuilder::TC_SYSTEM_PROMPT,
+                cli_args: cli_args, timeout: @timeout, fallback: false
+              )
+
+              parsed = Atoms::ResultParser.parse_tc(response[:text])
+              completed_at = Time.now
+
+              Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: parsed[:status],
+                test_cases: parsed[:test_cases],
+                summary: parsed[:summary],
+                started_at: started_at,
+                completed_at: completed_at
+              )
+            end
+          end
+
+          # Shared error handling for TC execution methods
+          def with_tc_error_handling(scenario)
             started_at = Time.now
-
-            prompt = @prompt_builder.build_tc(
-              test_case: test_case, scenario: scenario, sandbox_path: sandbox_path
-            )
-
-            response = Ace::LLM::QueryInterface.query(
-              @provider, prompt,
-              system: Atoms::PromptBuilder::TC_SYSTEM_PROMPT,
-              cli_args: cli_args, timeout: @timeout, fallback: false
-            )
-
-            parsed = Atoms::ResultParser.parse_tc(response[:text])
-            completed_at = Time.now
-
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: parsed[:status],
-              test_cases: parsed[:test_cases],
-              summary: parsed[:summary],
-              started_at: started_at,
-              completed_at: completed_at
-            )
+            yield started_at
           rescue Atoms::ResultParser::ParseError => e
             Models::TestResult.new(
               test_id: scenario.test_id, status: "error",
-              summary: "Failed to parse LLM TC response",
+              summary: "Failed to parse TC response",
               error: e.message, started_at: started_at, completed_at: Time.now
             )
           rescue Ace::LLM::Error => e
             Models::TestResult.new(
               test_id: scenario.test_id, status: "error",
-              summary: "LLM TC execution failed",
+              summary: "TC execution failed",
               error: e.message, started_at: started_at || Time.now, completed_at: Time.now
             )
           rescue StandardError => e
