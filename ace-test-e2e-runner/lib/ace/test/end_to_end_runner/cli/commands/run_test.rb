@@ -108,7 +108,13 @@ module Ace
                 )
               end
 
-              # Exit with error if any test failed
+              # Warn if test cases were specified but resulted in all skips (no matches)
+              if test_cases && results.all? { |r| r.status == "skip" }
+                output.puts "Warning: No matching test cases found for '#{test_cases.join(', ')}'. " \
+                            "Available test cases may differ. Use --dry-run to preview available cases."
+              end
+
+              # Exit with error if any test failed (excluding skips)
               if results.any?(&:failed?)
                 failed = results.select(&:failed?)
                 failed_ids = failed.map(&:test_id).join(", ")

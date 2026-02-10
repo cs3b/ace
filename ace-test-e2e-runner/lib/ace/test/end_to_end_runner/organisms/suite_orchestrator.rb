@@ -545,6 +545,10 @@ module Ace
           # metadata.yml is written to cache. This method backfills stubs so that
           # FailureFinder can pick them up on subsequent --only-failures runs.
           #
+          # Contract: extract_test_name strips the .mt.md extension (see line 200).
+          # The result[:test_name] values from parse_test_output (line 506-507) must
+          # match this format (basename without .mt.md) for file_by_name lookups.
+          #
           # @param results [Hash] Accumulated results with :packages hash
           # @param package_tests [Hash] Package to test files mapping
           def write_failure_stubs(results, package_tests)
