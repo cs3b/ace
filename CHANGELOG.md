@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.467] - 2026-02-10
+
+### Fixed
+
+- **ace-test-e2e-runner v0.11.2**: `--only-failures` no longer re-runs passing scenarios in multi-scenario packages — uses per-scenario failure data instead of flat per-package aggregation; correctly matches test files with descriptive filename suffixes against metadata test-ids; per-scenario `--test-cases` filtering passes each scenario only its own failed TC IDs; `SuiteProgressDisplayManager` nil guard for empty test queues
+
+## [0.9.466] - 2026-02-10
+
+### Fixed
+
+- **ace-test-e2e-runner v0.11.1**: `--only-failures` now detects tests that errored without writing metadata — `write_failure_stubs` backfills stub `metadata.yml` for failed/errored tests with no cache entry (e.g., provider 503, timeout); FailureFinder wildcard fallback recognizes `status: "error"` and `"incomplete"` in addition to `fail` and `partial`
+
+### Added
+
+- **ace-test-e2e-runner v0.11.1**: `--test-cases` and `--dry-run` CLI flags for test case filtering; `--only-failures` flag for single-package and suite-level re-runs; `failed_test_cases` array in E2E `metadata.yml` for granular failure tracking
+
 ## [0.9.465] - 2026-02-08
 
 ### Added
