@@ -91,7 +91,7 @@ module Ace
           # @raise [ArgumentError] If frontmatter is missing or invalid
           def parse_test_case(file_path)
             content = File.read(file_path)
-            match = content.match(/\A---\s*\n(.*?)\n---\s*\n(.*)\z/m)
+            match = content.match(/\A---\s*\r?\n(.*?)\r?\n---\s*\r?\n(.*)\z/m)
             raise ArgumentError, "No frontmatter found in: #{file_path}" unless match
 
             frontmatter = YAML.safe_load(match[1], permitted_classes: [Date])
@@ -125,10 +125,13 @@ module Ace
           def infer_package(scenario_dir)
             # Expected path: {package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
             parts = File.expand_path(scenario_dir).split("/")
-            test_idx = parts.index("test")
-            return "unknown" unless test_idx && test_idx > 0
+            parts.each_with_index do |part, idx|
+              next unless part == "test" && idx > 0 && parts[idx + 1] == "e2e"
 
-            parts[test_idx - 1]
+              return parts[idx - 1]
+            end
+
+            "unknown"
           end
         end
       end

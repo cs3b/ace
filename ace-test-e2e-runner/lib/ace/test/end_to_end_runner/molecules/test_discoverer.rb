@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "pathname"
+
 module Ace
   module Test
     module EndToEndRunner
@@ -70,10 +72,10 @@ module Ace
             ts_pattern = File.join(base_dir, "*/#{TEST_DIR}/#{SCENARIO_DIR_PATTERN}/#{SCENARIO_FILE}")
 
             mt_packages = Dir.glob(mt_pattern)
-              .map { |f| File.basename(File.dirname(File.dirname(File.dirname(f)))) }
+              .map { |f| Pathname.new(f).relative_path_from(base_dir).each_filename.first }
 
             ts_packages = Dir.glob(ts_pattern)
-              .map { |f| File.basename(File.dirname(File.dirname(File.dirname(File.dirname(f))))) }
+              .map { |f| Pathname.new(f).relative_path_from(base_dir).each_filename.first }
 
             (mt_packages + ts_packages).uniq.sort
           end
