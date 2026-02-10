@@ -106,7 +106,7 @@ module Ace
           # @param results [Hash] with :total, :passed, :failed, :errors, :packages
           # @param duration [Numeric] total elapsed seconds
           def show_summary(results, duration)
-            move_to_line(@footer_line + 1)
+            move_to_line((@footer_line || 6) + 1)
             @output.puts
 
             failed_details = collect_failed_details(results)
@@ -181,6 +181,8 @@ module Ace
           end
 
           def update_footer
+            return unless @footer_line
+
             move_to_line(@footer_line)
             @output.print "\033[K"
 

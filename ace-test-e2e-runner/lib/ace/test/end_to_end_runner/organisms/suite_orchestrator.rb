@@ -21,7 +21,7 @@ module Ace
           # @param base_dir [String] Base directory for test discovery
           # @param discoverer [#find_tests, #list_packages] Test discoverer (injectable)
           # @param affected_detector [#detect] Affected package detector (injectable)
-          # @param failure_finder [#find_failures_by_package] Failure finder (injectable)
+          # @param failure_finder [#find_failures_by_scenario] Failure finder (injectable)
           # @param output [IO] Output stream for progress messages
           # @param use_color [Boolean] Enable ANSI color output (default: auto-detect TTY)
           # @param progress [Boolean] Enable animated progress display
@@ -88,28 +88,34 @@ module Ace
               @output.puts "Affected packages: #{packages.join(", ")}"
             end
 
-            # Collect failures by package if --only-failures requested
-            package_failures = nil
+            # Collect failures by scenario if --only-failures requested
+            scenario_failures = nil
             if options[:only_failures]
-              package_failures = @failure_finder.find_failures_by_package(
+              scenario_failures = @failure_finder.find_failures_by_scenario(
                 packages: packages, base_dir: @base_dir
               )
 
-              if package_failures.empty?
+              if scenario_failures.empty?
                 @output.puts "No failed test cases found in cache"
                 return { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
               end
 
               # Filter packages to only those with failures
-              packages = packages & package_failures.keys
+              packages = packages & scenario_failures.keys
               @output.puts "Packages with failures: #{packages.join(", ")}"
               packages.each do |pkg|
-                @output.puts "  #{pkg}: #{package_failures[pkg].join(", ")}"
+                scenario_failures[pkg].each do |test_id, tc_ids|
+                  if tc_ids.include?("*")
+                    @output.puts "  #{pkg}/#{test_id}: all test cases (no granular failure data)"
+                  else
+                    @output.puts "  #{pkg}/#{test_id}: #{tc_ids.join(", ")}"
+                  end
+                end
               end
             end
 
-            # Store package failures for use in test command building
-            @package_failures = package_failures
+            # Store scenario failures for use in test discovery and command building
+            @scenario_failures = scenario_failures
 
             # Discover tests in each package
             package_tests = discover_package_tests(packages)
@@ -157,12 +163,22 @@ module Ace
 
           # Discover all tests in each package
           #
+          # When @scenario_failures is set (--only-failures mode), filters to only
+          # test files whose test-id appears in the failures hash for that package.
+          #
           # @param packages [Array<String>] List of package names
           # @return [Hash] Package name to list of test files
           def discover_package_tests(packages)
             package_tests = {}
             packages.each do |package|
               tests = @discoverer.find_tests(package: package, base_dir: @base_dir)
+
+              # Filter to only failing scenarios when in --only-failures mode
+              if @scenario_failures && @scenario_failures[package]
+                failing_test_ids = @scenario_failures[package].keys
+                tests = tests.select { |f| failing_test_ids.any? { |tid| file_matches_test_id?(f, tid) } }
+              end
+
               package_tests[package] = tests unless tests.empty?
             end
             package_tests
@@ -343,9 +359,13 @@ module Ace
               cmd_parts.concat(["--run-id", run_id])
             end
 
-            # Add --test-cases for only-failures mode (package-level filtering)
-            if @package_failures && @package_failures[package]
-              cmd_parts.concat(["--test-cases", @package_failures[package].join(",")])
+            # Add --test-cases for only-failures mode (per-scenario filtering)
+            # Skip when failures include "*" (wildcard = re-run entire test, no granular data)
+            if @scenario_failures && @scenario_failures[package]
+              failures = find_scenario_tc_ids(package, test_file)
+              if failures && !failures.include?("*")
+                cmd_parts.concat(["--test-cases", failures.join(",")])
+              end
             end
 
             # Add parallel=1 for subprocess isolation
@@ -366,6 +386,34 @@ module Ace
             else
               basename
             end
+          end
+
+          # Check if a test file matches a metadata test-id
+          #
+          # Filenames may include a descriptive suffix (e.g. MT-COMMIT-002-specific-file.mt.md)
+          # while metadata stores only the short test-id (MT-COMMIT-002). This method handles
+          # both exact matches and prefix matches where the suffix starts with "-".
+          #
+          # @param test_file [String] Path to test file
+          # @param test_id [String] Metadata test-id to match against
+          # @return [Boolean]
+          def file_matches_test_id?(test_file, test_id)
+            basename = File.basename(test_file, ".mt.md")
+            basename == test_id || basename.start_with?("#{test_id}-")
+          end
+
+          # Find the failed TC IDs for a test file from @scenario_failures
+          #
+          # @param package [String] Package name
+          # @param test_file [String] Path to test file
+          # @return [Array<String>, nil] Failed TC IDs or nil if no match
+          def find_scenario_tc_ids(package, test_file)
+            return nil unless @scenario_failures&.dig(package)
+
+            @scenario_failures[package].each do |tid, tc_ids|
+              return tc_ids if file_matches_test_id?(test_file, tid)
+            end
+            nil
           end
 
           # Check running processes for completion
@@ -478,6 +526,8 @@ module Ace
           # @param start_time [Time] When the run started
           # @return [Hash] Results with optional :report_path
           def finalize_run(results, package_tests, start_time)
+            write_failure_stubs(results, package_tests)
+
             @display.show_summary(results, Time.now - start_time)
 
             report_path = generate_suite_report(results, package_tests)
@@ -487,6 +537,54 @@ module Ace
             end
 
             results
+          end
+
+          # Write stub metadata.yml for failed/errored tests that have no metadata on disk
+          #
+          # When a test subprocess errors (provider unavailable, timeout, etc.), no
+          # metadata.yml is written to cache. This method backfills stubs so that
+          # FailureFinder can pick them up on subsequent --only-failures runs.
+          #
+          # @param results [Hash] Accumulated results with :packages hash
+          # @param package_tests [Hash] Package to test files mapping
+          def write_failure_stubs(results, package_tests)
+            cache_dir = File.join(@base_dir, ".cache", "ace-test-e2e")
+
+            results[:packages].each do |package, pkg_results|
+              test_files = package_tests[package] || []
+              file_by_name = test_files.each_with_object({}) { |f, h| h[extract_test_name(f)] = f }
+
+              pkg_results.each do |result|
+                next if result[:status] == "pass"
+                next if metadata_exists?(result[:report_dir])
+
+                test_file = file_by_name[result[:test_name]]
+                next unless test_file
+
+                scenario = parse_scenario(package, test_file)
+                timestamp = @timestamp_generator.call
+                stub_dir = File.join(cache_dir, "#{scenario.dir_name(timestamp)}-reports")
+                FileUtils.mkdir_p(stub_dir)
+
+                stub_data = {
+                  "test-id" => scenario.test_id,
+                  "package" => package,
+                  "status" => result[:status]
+                }
+                File.write(File.join(stub_dir, "metadata.yml"), YAML.dump(stub_data))
+              end
+            end
+          rescue => e
+            warn "Warning: Failed to write failure stubs (#{e.class}: #{e.message})"
+            warn e.backtrace.first(3).join("\n") if ENV["DEBUG"]
+          end
+
+          # Check if a metadata.yml file exists in the given report directory
+          #
+          # @param report_dir [String, nil] Path to the report directory
+          # @return [Boolean] true if metadata.yml exists
+          def metadata_exists?(report_dir)
+            report_dir && File.exist?(File.join(report_dir, "metadata.yml"))
           end
 
           # Generate a suite-level final report from results

@@ -81,7 +81,8 @@ module Ace
 
               # Handle dry-run mode
               if options[:dry_run]
-                return handle_dry_run(package, test_id, test_cases, output)
+                return handle_dry_run(package, test_id, test_cases, output,
+                                      only_failures_wildcard: options[:only_failures] && test_cases.nil?)
               end
 
               orchestrator = Organisms::TestOrchestrator.new(
@@ -136,7 +137,7 @@ module Ace
             #
             # @param package [String] Package name
             # @param output [IO] Output stream
-            # @return [Array<String>] Failed test case IDs
+            # @return [Array<String>, nil] Failed test case IDs, or nil for wildcard (run all)
             # @raise [Ace::Core::CLI::Error] If no failures found
             def resolve_only_failures(package, output)
               finder = Molecules::FailureFinder.new
@@ -147,6 +148,12 @@ module Ace
                   "No failed test cases found for package '#{package}'. " \
                   "Run tests first, then use --only-failures to re-run failures."
                 )
+              end
+
+              # Wildcard means "re-run entire test" (legacy metadata without specific IDs)
+              if failed_ids.include?("*")
+                output.puts "Found previously failed test(s) (no granular test case data — will re-run all test cases)"
+                return nil
               end
 
               output.puts "Found #{failed_ids.size} previously failed test case(s): #{failed_ids.join(', ')}"
@@ -171,7 +178,8 @@ module Ace
             # @param test_id [String, nil] Test ID
             # @param test_cases [Array<String>, nil] Normalized test case IDs
             # @param output [IO] Output stream
-            def handle_dry_run(package, test_id, test_cases, output)
+            # @param only_failures_wildcard [Boolean] True when --only-failures resolved to wildcard
+            def handle_dry_run(package, test_id, test_cases, output, only_failures_wildcard: false)
               discoverer = Molecules::TestDiscoverer.new
               parser = Molecules::ScenarioParser.new
 
@@ -192,15 +200,17 @@ module Ace
                 output.puts "#{scenario.test_id}: #{scenario.title}"
 
                 if test_cases
-                  # Validate and show filtered test cases
-                  begin
-                    Atoms::TestCaseParser.validate_against_available(test_cases, available_ids)
-                    test_cases.each { |tc| output.puts "  [run] #{tc}" }
-                    skipped = available_ids - test_cases
-                    skipped.each { |tc| output.puts "  [skip] #{tc}" }
-                  rescue ArgumentError => e
-                    output.puts "  Error: #{e.message}"
+                  # Intersect with available IDs (test cases may span multiple scenarios)
+                  matching = test_cases & available_ids
+                  matching.each { |tc| output.puts "  [run] #{tc}" }
+                  skipped = available_ids - test_cases
+                  skipped.each { |tc| output.puts "  [skip] #{tc}" }
+                  if matching.empty?
+                    output.puts "  (no matching test cases)"
                   end
+                elsif only_failures_wildcard
+                  # Wildcard: no granular failure data, run all test cases in failed scenario
+                  output.puts "  [run] all test cases (no granular failure data available)"
                 else
                   # Show all test cases
                   available_ids.each { |tc| output.puts "  [run] #{tc}" }

@@ -164,7 +164,25 @@ module Ace
                     display.test_started(scenario)
                   end
 
-                  result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases)
+                  # Intersect test_cases with scenario's available IDs to avoid
+                  # workflow validation errors when filtering across multiple scenarios
+                  scenario_test_cases = if test_cases
+                    available = scenario.test_case_ids
+                    filtered = test_cases & available
+                    filtered.empty? ? nil : filtered
+                  end
+
+                  # Skip scenario entirely when filtering is active but no test cases match
+                  if test_cases && scenario_test_cases.nil?
+                    result = Models::TestResult.new(
+                      test_id: scenario.test_id,
+                      status: "skip",
+                      test_cases: [],
+                      summary: "Skipped: no matching test cases"
+                    )
+                  else
+                    result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: scenario_test_cases)
+                  end
 
                   report_dir = report_dir_for(scenario, run_id || timestamp)
 

@@ -537,6 +537,8 @@ results:
   passed: {count}
   failed: {count}
   total: {count}
+failed_test_cases:       # List of TC IDs that failed (empty array if all passed)
+  - TC-NNN               # e.g., - TC-002
 test_cases:
   filtered: {true|false}           # Whether filtering was applied
   executed: [{list of TC IDs}]     # e.g., [TC-001, TC-003] or [all]

@@ -695,6 +695,85 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_package_run_with_test_cases_skips_non_matching_scenarios
+    Dir.mktmpdir do |tmpdir|
+      # Create two scenarios with different test cases
+      test_dir = File.join(tmpdir, "my-pkg", "test", "e2e")
+      FileUtils.mkdir_p(test_dir)
+
+      File.write(File.join(test_dir, "MT-TEST-001-first.mt.md"), <<~CONTENT)
+        ---
+        test-id: MT-TEST-001
+        title: First test
+        area: test
+        package: my-pkg
+        ---
+
+        # First test
+
+        ## Test Cases
+
+        ### TC-001: Check A
+        Verify A.
+
+        ### TC-002: Check B
+        Verify B.
+      CONTENT
+
+      File.write(File.join(test_dir, "MT-TEST-002-second.mt.md"), <<~CONTENT)
+        ---
+        test-id: MT-TEST-002
+        title: Second test
+        area: test
+        package: my-pkg
+        ---
+
+        # Second test
+
+        ## Test Cases
+
+        ### TC-003: Check C
+        Verify C.
+
+        ### TC-004: Check D
+        Verify D.
+      CONTENT
+
+      executed_scenarios = []
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+        executed_scenarios << { test_id: scenario.test_id, test_cases: test_cases }
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "Passed",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
+
+      # Filter to TC-001 which only exists in MT-TEST-001
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_cases: %w[TC-001],
+        output: @output
+      )
+
+      assert_equal 2, results.size
+
+      # Only MT-TEST-001 should have been executed via the executor
+      assert_equal 1, executed_scenarios.size
+      assert_equal "MT-TEST-001", executed_scenarios.first[:test_id]
+      assert_equal %w[TC-001], executed_scenarios.first[:test_cases]
+
+      # MT-TEST-002 should be skipped (no matching test cases)
+      skipped_result = results.find { |r| r.test_id == "MT-TEST-002" }
+      assert_equal "skip", skipped_result&.status
+    end
+  end
+
   private
 
   def create_orchestrator(base_dir: nil, timestamp_generator: nil, executor: nil, provider: nil, parallel: nil)
