@@ -21,6 +21,7 @@ module Ace
           # @param base_dir [String] Base directory for test discovery
           # @param discoverer [#find_tests, #list_packages] Test discoverer (injectable)
           # @param affected_detector [#detect] Affected package detector (injectable)
+          # @param failure_finder [#find_failures_by_package] Failure finder (injectable)
           # @param output [IO] Output stream for progress messages
           # @param use_color [Boolean] Enable ANSI color output (default: auto-detect TTY)
           # @param progress [Boolean] Enable animated progress display
@@ -28,12 +29,13 @@ module Ace
           # @param scenario_parser Scenario parser (injectable)
           # @param timestamp_generator Timestamp generator (injectable)
           def initialize(max_parallel: 4, base_dir: nil, discoverer: nil, affected_detector: nil,
-                         output: $stdout, use_color: nil, progress: false,
+                         failure_finder: nil, output: $stdout, use_color: nil, progress: false,
                          suite_report_writer: nil, scenario_parser: nil, timestamp_generator: nil)
             @max_parallel = max_parallel
             @base_dir = base_dir || Dir.pwd
             @discoverer = discoverer || Molecules::TestDiscoverer.new
             @affected_detector = affected_detector || Molecules::AffectedDetector.new
+            @failure_finder = failure_finder || Molecules::FailureFinder.new
             @output = output
             @use_color = use_color.nil? ? output.respond_to?(:tty?) && output.tty? : use_color
             @progress = progress
@@ -48,6 +50,7 @@ module Ace
           # @param options [Hash] Execution options
           # @option options [Boolean] :parallel Enable parallel execution
           # @option options [Boolean] :affected Only test affected packages
+          # @option options [Boolean] :only_failures Re-run only failed test cases
           # @option options [String] :packages Comma-separated package names to filter
           # @option options [String] :cli_args Extra args for CLI providers
           # @option options [String] :provider LLM provider:model
@@ -84,6 +87,29 @@ module Ace
 
               @output.puts "Affected packages: #{packages.join(", ")}"
             end
+
+            # Collect failures by package if --only-failures requested
+            package_failures = nil
+            if options[:only_failures]
+              package_failures = @failure_finder.find_failures_by_package(
+                packages: packages, base_dir: @base_dir
+              )
+
+              if package_failures.empty?
+                @output.puts "No failed test cases found in cache"
+                return { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
+              end
+
+              # Filter packages to only those with failures
+              packages = packages & package_failures.keys
+              @output.puts "Packages with failures: #{packages.join(", ")}"
+              packages.each do |pkg|
+                @output.puts "  #{pkg}: #{package_failures[pkg].join(", ")}"
+              end
+            end
+
+            # Store package failures for use in test command building
+            @package_failures = package_failures
 
             # Discover tests in each package
             package_tests = discover_package_tests(packages)
@@ -315,6 +341,11 @@ module Ace
             # Add pre-generated run ID for deterministic report paths
             if run_id
               cmd_parts.concat(["--run-id", run_id])
+            end
+
+            # Add --test-cases for only-failures mode (package-level filtering)
+            if @package_failures && @package_failures[package]
+              cmd_parts.concat(["--test-cases", @package_failures[package].join(",")])
             end
 
             # Add parallel=1 for subprocess isolation

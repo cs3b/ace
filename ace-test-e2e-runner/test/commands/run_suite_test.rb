@@ -72,4 +72,14 @@ class RunSuiteTest < Minitest::Test
     # Check that 'suite' command is registered
     assert Ace::Test::EndToEndRunner::CLI::REGISTERED_COMMANDS.include?("suite")
   end
+
+  def test_call_accepts_only_failures_option
+    command = RunSuite.new
+
+    # Verify the call method signature accepts only_failures via **options
+    method = command.method(:call)
+    # **options captures only_failures
+    param_types = method.parameters.map(&:first)
+    assert_includes param_types, :keyrest, "call should accept **options for only_failures"
+  end
 end
