@@ -35,7 +35,9 @@ module Ace
               "ace-lint --provider gemini:flash  # Use specific provider",
               "ace-lint --provider glite     # Use API provider (predict mode)",
               "ace-lint MT-LINT-003 --test-cases tc-001,002  # Run specific test cases",
-              "ace-lint MT-LINT-003 --test-cases TC-001 --dry-run  # Preview test cases"
+              "ace-lint MT-LINT-003 --test-cases TC-001 --dry-run  # Preview test cases",
+              "ace-lint --only-failures      # Re-run only previously failed test cases",
+              "ace-lint --only-failures --dry-run  # Preview which failures would re-run"
             ]
 
             argument :package, required: true, desc: "Package name (e.g., ace-lint)"
@@ -69,8 +71,13 @@ module Ace
               # Validate mutually exclusive flags
               validate_exclusive_flags!(options)
 
-              # Parse and normalize test case IDs if provided
-              test_cases = parse_test_cases(options[:test_cases])
+              # Resolve --only-failures to test case IDs
+              if options[:only_failures]
+                test_cases = resolve_only_failures(package, output)
+              else
+                # Parse and normalize test case IDs if provided
+                test_cases = parse_test_cases(options[:test_cases])
+              end
 
               # Handle dry-run mode
               if options[:dry_run]
@@ -123,6 +130,27 @@ module Ace
                   "Use one or the other."
                 )
               end
+            end
+
+            # Resolve --only-failures flag by scanning cache for failed test cases
+            #
+            # @param package [String] Package name
+            # @param output [IO] Output stream
+            # @return [Array<String>] Failed test case IDs
+            # @raise [Ace::Core::CLI::Error] If no failures found
+            def resolve_only_failures(package, output)
+              finder = Molecules::FailureFinder.new
+              failed_ids = finder.find_failures(package: package, base_dir: Dir.pwd)
+
+              if failed_ids.empty?
+                raise Ace::Core::CLI::Error.new(
+                  "No failed test cases found for package '#{package}'. " \
+                  "Run tests first, then use --only-failures to re-run failures."
+                )
+              end
+
+              output.puts "Found #{failed_ids.size} previously failed test case(s): #{failed_ids.join(', ')}"
+              failed_ids
             end
 
             # Parse comma-separated test case IDs into normalized format
