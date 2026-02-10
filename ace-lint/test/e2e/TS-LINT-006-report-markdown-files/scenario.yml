@@ -1,0 +1,14 @@
+test-id: TS-LINT-006
+title: Report Markdown Files
+area: lint
+package: ace-lint
+priority: high
+requires:
+  tools: [ace-lint]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - copy-fixtures
+  - env:
+      PROJECT_ROOT_PATH: "."

@@ -1,0 +1,15 @@
+test-id: TS-LINT-005
+title: Doctor Command Functionality
+area: lint
+package: ace-lint
+priority: high
+requires:
+  tools: [ace-lint]
+  ruby: ">= 3.0"
+
+setup:
+  - copy-fixtures
+  - run: git -C invalid-config init --quiet .
+  - run: git -C syntax-error init --quiet .
+  - env:
+      PROJECT_ROOT_PATH: "."
