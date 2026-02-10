@@ -17,6 +17,9 @@ require_relative "end_to_end_runner/atoms/test_case_parser"
 require_relative "end_to_end_runner/atoms/display_helpers"
 
 # Molecules
+require_relative "end_to_end_runner/molecules/fixture_copier"
+require_relative "end_to_end_runner/molecules/scenario_loader"
+require_relative "end_to_end_runner/molecules/setup_executor"
 require_relative "end_to_end_runner/molecules/config_loader"
 require_relative "end_to_end_runner/molecules/test_discoverer"
 require_relative "end_to_end_runner/molecules/scenario_parser"
