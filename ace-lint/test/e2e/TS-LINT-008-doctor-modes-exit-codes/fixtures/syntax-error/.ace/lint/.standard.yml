@@ -1,0 +1,4 @@
+kramdown:
+  auto_ids: true
+  entity_output: numeric
+    bad_indent: yes
