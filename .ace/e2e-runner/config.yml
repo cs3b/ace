@@ -41,7 +41,7 @@ reporting:
 # Execution defaults
 execution:
   # Default LLM provider:model for test execution
-  provider: "pi:glm45"
+  provider: "claude:haiku"
   # Timeout per test in seconds
   timeout: 420
   # Number of tests to run in parallel (1 = sequential)
