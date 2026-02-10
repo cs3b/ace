@@ -1,0 +1,3 @@
+kramdown:
+  auto_ids: true
+  entity_output: numeric
