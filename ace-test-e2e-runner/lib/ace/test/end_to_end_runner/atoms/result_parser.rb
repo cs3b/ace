@@ -89,7 +89,57 @@ module Ace
             end
           end
 
-          private_class_method :validate_result, :normalize_result, :normalize_test_cases
+          # Parse TC-level LLM response into a structured result hash
+          #
+          # Handles single-TC JSON format with tc_id field. Falls back to
+          # parse() if the response contains multi-TC format.
+          #
+          # @param text [String] Raw LLM response text
+          # @return [Hash] Parsed result with single-entry :test_cases array
+          # @raise [ParseError] If no valid JSON found in response
+          def self.parse_tc(text)
+            json_str = extract_json(text)
+            raise ParseError, "No JSON found in LLM response" if json_str.nil?
+
+            parsed = JSON.parse(json_str, symbolize_names: true)
+
+            # If response has test_cases array, delegate to standard parse
+            return parse(text) if parsed.key?(:test_cases)
+
+            validate_tc_result(parsed)
+            normalize_tc_result(parsed)
+          rescue JSON::ParserError => e
+            raise ParseError, "Invalid JSON in LLM response: #{e.message}"
+          end
+
+          # Validate TC-level result fields
+          def self.validate_tc_result(result)
+            required = %i[test_id tc_id status]
+            missing = required.reject { |field| result.key?(field) }
+            unless missing.empty?
+              raise ParseError, "Missing required fields in TC result: #{missing.join(', ')}"
+            end
+          end
+
+          # Normalize TC-level result to standard format with single-entry test_cases
+          def self.normalize_tc_result(result)
+            {
+              test_id: result[:test_id],
+              status: result[:status],
+              test_cases: [{
+                id: result[:tc_id],
+                description: result[:summary] || "",
+                status: result[:status],
+                actual: result[:actual] || "",
+                notes: result[:notes] || ""
+              }],
+              summary: result[:summary] || "",
+              observations: result[:notes] || ""
+            }
+          end
+
+          private_class_method :validate_result, :normalize_result, :normalize_test_cases,
+                              :validate_tc_result, :normalize_tc_result
 
           # Error raised when parsing LLM response fails
           class ParseError < StandardError; end

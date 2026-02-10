@@ -17,13 +17,14 @@ module Ace
           # @param result [Models::TestResult] The test result
           # @param scenario [Models::TestScenario] The test scenario
           # @param report_dir [String] Directory to write reports to
+          # @param test_case [Models::TestCase, nil] Optional single test case for TC-level reports
           # @return [Hash] Paths to written report files
-          def write(result, scenario, report_dir:)
+          def write(result, scenario, report_dir:, test_case: nil)
             FileUtils.mkdir_p(report_dir)
 
-            summary_path = write_summary(result, scenario, report_dir)
-            experience_path = write_experience(result, scenario, report_dir)
-            metadata_path = write_metadata(result, scenario, report_dir)
+            summary_path = write_summary(result, scenario, report_dir, test_case)
+            experience_path = write_experience(result, scenario, report_dir, test_case)
+            metadata_path = write_metadata(result, scenario, report_dir, test_case)
 
             {
               summary: summary_path,
@@ -36,17 +37,29 @@ module Ace
 
           # Write summary report
           # @return [String] Path to written file
-          def write_summary(result, scenario, report_dir)
+          def write_summary(result, scenario, report_dir, test_case = nil)
             path = File.join(report_dir, "summary.r.md")
 
             tc_rows = result.test_cases.map do |tc|
               "| #{tc[:id]} | #{tc[:description]} | #{tc[:status].capitalize} |"
             end.join("\n")
 
+            tc_frontmatter = if test_case
+              "tc-id: #{test_case.tc_id}\n  scenario-id: #{scenario.test_id}\n  "
+            else
+              ""
+            end
+
+            tc_info_rows = if test_case
+              "| TC ID | #{test_case.tc_id} |\n              | TC Title | #{test_case.title} |\n              "
+            else
+              ""
+            end
+
             content = <<~REPORT
               ---
               test-id: #{result.test_id}
-              package: #{scenario.package}
+              #{tc_frontmatter}package: #{scenario.package}
               agent: ace-test-e2e
               executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}
               status: #{result.status}
@@ -62,7 +75,7 @@ module Ace
               | Field | Value |
               |-------|-------|
               | Test ID | #{result.test_id} |
-              | Title | #{scenario.title} |
+              #{tc_info_rows}| Title | #{scenario.title} |
               | Package | #{scenario.package} |
               | Agent | ace-test-e2e |
               | Executed | #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')} |
@@ -86,20 +99,23 @@ module Ace
 
           # Write experience report
           # @return [String] Path to written file
-          def write_experience(result, scenario, report_dir)
+          def write_experience(result, scenario, report_dir, test_case = nil)
             path = File.join(report_dir, "experience.r.md")
+
+            tc_experience_frontmatter = test_case ? "tc-id: #{test_case.tc_id}\n  " : ""
+            tc_title_suffix = test_case ? " / #{test_case.tc_id}" : ""
 
             content = <<~REPORT
               ---
               test-id: #{result.test_id}
-              test-title: #{scenario.title}
+              #{tc_experience_frontmatter}test-title: #{scenario.title}
               package: #{scenario.package}
               agent: ace-test-e2e
               executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}
               status: #{result.status == "error" ? "incomplete" : "complete"}
               ---
 
-              # Agent Experience Report: #{result.test_id}
+              # Agent Experience Report: #{result.test_id}#{tc_title_suffix}
 
               ## Summary
 
@@ -127,7 +143,7 @@ module Ace
 
           # Write metadata file
           # @return [String] Path to written file
-          def write_metadata(result, scenario, report_dir)
+          def write_metadata(result, scenario, report_dir, test_case = nil)
             path = File.join(report_dir, "metadata.yml")
 
             metadata = {
@@ -146,6 +162,11 @@ module Ace
               },
               "failed_test_cases" => result.failed_test_case_ids
             }
+
+            if test_case
+              metadata["scenario-id"] = scenario.test_id
+              metadata["tc-id"] = test_case.tc_id
+            end
 
             File.write(path, YAML.dump(metadata))
             path

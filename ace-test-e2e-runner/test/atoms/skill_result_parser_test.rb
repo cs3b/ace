@@ -188,4 +188,105 @@ class SkillResultParserTest < Minitest::Test
     result = SkillResultParser.parse(text)
     assert_equal "Permission denied on lint command", result[:observations]
   end
+
+  # --- TC-Level Parsing ---
+
+  def test_parse_tc_markdown_contract
+    text = <<~MD
+      - **Test ID**: TS-LINT-001
+      - **TC ID**: TC-001
+      - **Status**: pass
+      - **Report Paths**: 8xyz12-lint-ts001-tc001-reports/*
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_tc(text)
+
+    assert_equal "TS-LINT-001", result[:test_id]
+    assert_equal "pass", result[:status]
+    assert_equal 1, result[:test_cases].size
+    assert_equal "TC-001", result[:test_cases].first[:id]
+    assert_equal "pass", result[:test_cases].first[:status]
+  end
+
+  def test_parse_tc_status_fail
+    text = <<~MD
+      - **Test ID**: TS-LINT-001
+      - **TC ID**: TC-002
+      - **Status**: fail
+      - **Report Paths**: 8xyz12-lint-ts001-tc002-reports/*
+      - **Issues**: Wrong exit code
+    MD
+
+    result = SkillResultParser.parse_tc(text)
+    assert_equal "fail", result[:status]
+    assert_equal "TC-002", result[:test_cases].first[:id]
+  end
+
+  def test_parse_tc_issues_none_becomes_empty
+    text = <<~MD
+      - **Test ID**: TS-LINT-001
+      - **TC ID**: TC-001
+      - **Status**: pass
+      - **Report Paths**: reports/*
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_tc(text)
+    assert_equal "", result[:observations]
+  end
+
+  def test_parse_tc_issues_preserved
+    text = <<~MD
+      - **Test ID**: TS-LINT-001
+      - **TC ID**: TC-001
+      - **Status**: fail
+      - **Report Paths**: reports/*
+      - **Issues**: StandardRB not found in PATH
+    MD
+
+    result = SkillResultParser.parse_tc(text)
+    assert_equal "StandardRB not found in PATH", result[:observations]
+  end
+
+  def test_parse_tc_falls_back_to_multi_tc_parse
+    text = <<~MD
+      - **Test ID**: MT-LINT-001
+      - **Status**: pass
+      - **Passed**: 2
+      - **Failed**: 0
+      - **Total**: 2
+      - **Report Paths**: abc-reports/*
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_tc(text)
+    assert_equal "MT-LINT-001", result[:test_id]
+    assert_equal 2, result[:test_cases].size
+  end
+
+  def test_parse_tc_empty_raises
+    assert_raises(ResultParser::ParseError) do
+      SkillResultParser.parse_tc("")
+    end
+  end
+
+  def test_parse_tc_nil_raises
+    assert_raises(ResultParser::ParseError) do
+      SkillResultParser.parse_tc(nil)
+    end
+  end
+
+  def test_parse_tc_result_has_single_test_case
+    text = <<~MD
+      - **Test ID**: TS-LINT-001
+      - **TC ID**: TC-003
+      - **Status**: pass
+      - **Report Paths**: reports/*
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_tc(text)
+    assert_equal 1, result[:test_cases].size
+  end
 end

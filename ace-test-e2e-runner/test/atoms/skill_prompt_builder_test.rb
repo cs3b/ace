@@ -220,6 +220,83 @@ class SkillPromptBuilderTest < Minitest::Test
     refute_nil prompt
   end
 
+  # --- TC-Level Skill Prompt ---
+
+  def test_build_tc_skill_prompt_format
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
+    tc = create_test_case(tc_id: "TC-001")
+    prompt = @builder.build_tc_skill_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sandbox")
+
+    assert prompt.include?("/ace:run-e2e-test ace-lint TS-LINT-001 TC-001")
+  end
+
+  def test_build_tc_skill_prompt_includes_tc_mode_flag
+    scenario = create_scenario
+    tc = create_test_case
+    prompt = @builder.build_tc_skill_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sandbox")
+
+    assert prompt.include?("--tc-mode")
+  end
+
+  def test_build_tc_skill_prompt_includes_sandbox_path
+    scenario = create_scenario
+    tc = create_test_case
+    prompt = @builder.build_tc_skill_prompt(test_case: tc, scenario: scenario, sandbox_path: "/my/sandbox/path")
+
+    assert prompt.include?("--sandbox /my/sandbox/path")
+  end
+
+  def test_build_tc_skill_prompt_with_run_id
+    scenario = create_scenario
+    tc = create_test_case
+    prompt = @builder.build_tc_skill_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb", run_id: "abc123")
+
+    assert prompt.include?("--run-id abc123")
+  end
+
+  def test_build_tc_skill_prompt_without_run_id
+    scenario = create_scenario
+    tc = create_test_case
+    prompt = @builder.build_tc_skill_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb")
+
+    refute prompt.include?("--run-id")
+  end
+
+  # --- TC-Level Workflow Prompt ---
+
+  def test_build_tc_workflow_prompt_includes_tc_id
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    tc = create_test_case(tc_id: "TC-002")
+    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb", workflow_content: "# WF")
+
+    assert prompt.include?("TC-002")
+  end
+
+  def test_build_tc_workflow_prompt_includes_sandbox_path
+    scenario = create_scenario
+    tc = create_test_case
+    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/my/sandbox", workflow_content: "# WF")
+
+    assert prompt.include?("/my/sandbox")
+  end
+
+  def test_build_tc_workflow_prompt_includes_tc_content
+    scenario = create_scenario
+    tc = create_test_case(content: "## Steps\n\n1. Run ace-lint")
+    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb", workflow_content: "# WF")
+
+    assert prompt.include?("Run ace-lint")
+  end
+
+  def test_build_tc_workflow_prompt_includes_return_contract
+    scenario = create_scenario
+    tc = create_test_case
+    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb", workflow_content: "# WF")
+
+    assert prompt.include?("**TC ID**")
+    assert prompt.include?("**Status**")
+  end
+
   private
 
   def create_scenario(overrides = {})
@@ -232,5 +309,15 @@ class SkillPromptBuilderTest < Minitest::Test
       content: "# Test content"
     }
     Ace::Test::EndToEndRunner::Models::TestScenario.new(**defaults.merge(overrides))
+  end
+
+  def create_test_case(overrides = {})
+    defaults = {
+      tc_id: "TC-001",
+      title: "Test Case Title",
+      content: "## Objective\n\nVerify something.\n\n## Steps\n\n1. Do something",
+      file_path: "/tmp/test/TC-001-test-case.tc.md"
+    }
+    Ace::Test::EndToEndRunner::Models::TestCase.new(**defaults.merge(overrides))
   end
 end
