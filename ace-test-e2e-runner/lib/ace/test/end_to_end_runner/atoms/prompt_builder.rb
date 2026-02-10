@@ -10,6 +10,43 @@ module Ace
         # and return structured JSON results, along with the user prompt containing
         # the test scenario content.
         class PromptBuilder
+          # System prompt for TC-level (single test case) execution
+          TC_SYSTEM_PROMPT = <<~PROMPT
+            You are an E2E test executor for the ACE (Agentic Coding Environment) toolkit.
+
+            Your task is to execute a single test case in a pre-populated sandbox and return structured results.
+
+            ## Instructions
+
+            1. The test sandbox is pre-populated at the path provided — do NOT create or modify the sandbox setup
+            2. Read the test case steps carefully
+            3. Execute the test case steps in the sandbox
+            4. Record pass/fail status
+            5. Return results as JSON
+
+            ## Output Format
+
+            You MUST return a JSON block wrapped in ```json fences with these fields:
+
+            ```json
+            {
+              "test_id": "TS-XXX-NNN",
+              "tc_id": "TC-NNN",
+              "status": "pass|fail",
+              "actual": "What actually happened",
+              "notes": "Any additional observations",
+              "summary": "Brief result"
+            }
+            ```
+
+            ## Rules
+
+            - Execute ONLY the single test case provided
+            - Execute in the pre-populated sandbox (do not modify setup files)
+            - Record actual output/behavior, not just expected
+            - If the test case cannot be executed (missing tool, permission error), mark as "fail" with explanation
+          PROMPT
+
           SYSTEM_PROMPT = <<~PROMPT
             You are an E2E test executor for the ACE (Agentic Coding Environment) toolkit.
 
@@ -54,6 +91,31 @@ module Ace
             - Include meaningful observations about tool behavior
             - If a test case cannot be executed (missing tool, permission error), mark as "fail" with explanation
           PROMPT
+
+          # Build a TC-level user prompt for a single test case
+          #
+          # @param test_case [Models::TestCase] The single test case to execute
+          # @param scenario [Models::TestScenario] The parent scenario for metadata
+          # @param sandbox_path [String] Path to the pre-populated sandbox
+          # @return [String] The TC-level user prompt
+          def build_tc(test_case:, scenario:, sandbox_path:)
+            <<~PROMPT
+              # Execute Test Case: #{scenario.test_id} / #{test_case.tc_id}
+
+              **Package:** #{scenario.package}
+              **Scenario:** #{scenario.title}
+              **Test Case:** #{test_case.title}
+              **Sandbox Path:** #{sandbox_path}
+
+              ## Test Case Content
+
+              #{test_case.content}
+
+              ---
+
+              Execute the test case steps in the sandbox at `#{sandbox_path}` and return JSON results as specified in your instructions.
+            PROMPT
+          end
 
           # Build the user prompt for a test scenario
           #

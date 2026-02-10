@@ -136,6 +136,61 @@ module Ace
             PROMPT
           end
 
+          # Build a TC-level skill invocation prompt for skill-aware providers
+          #
+          # @param test_case [Models::TestCase] The single test case
+          # @param scenario [Models::TestScenario] The parent scenario
+          # @param sandbox_path [String] Path to the pre-populated sandbox
+          # @param run_id [String, nil] Pre-generated run ID
+          # @return [String] Skill invocation prompt
+          def build_tc_skill_prompt(test_case:, scenario:, sandbox_path:, run_id: nil)
+            cmd = "/ace:run-e2e-test #{scenario.package} #{scenario.test_id} #{test_case.tc_id} --tc-mode --sandbox #{sandbox_path}"
+            cmd += " --run-id #{run_id}" if run_id
+            cmd
+          end
+
+          # Build a TC-level workflow-embedded prompt for non-skill-aware CLI providers
+          #
+          # @param test_case [Models::TestCase] The single test case
+          # @param scenario [Models::TestScenario] The parent scenario
+          # @param sandbox_path [String] Path to the pre-populated sandbox
+          # @param workflow_content [String] Content of run-e2e-test workflow
+          # @param run_id [String, nil] Pre-generated run ID
+          # @return [String] Prompt with embedded workflow and TC content
+          def build_tc_workflow_prompt(test_case:, scenario:, sandbox_path:, workflow_content:, run_id: nil)
+            <<~PROMPT
+              # Execute Test Case: #{scenario.test_id} / #{test_case.tc_id}
+
+              **Package:** #{scenario.package}
+              **Scenario:** #{scenario.title}
+              **Test Case:** #{test_case.title}
+              **Sandbox Path:** #{sandbox_path}
+              #{"**Run ID:** #{run_id}" if run_id}
+
+              ## Workflow Instructions
+
+              Follow these instructions to execute the test case:
+
+              #{workflow_content}
+
+              ## Test Case Content
+
+              #{test_case.content}
+
+              ---
+
+              Execute this test case in the pre-populated sandbox at `#{sandbox_path}`.
+              Do NOT create or modify the sandbox setup — it is already prepared.
+              After completion, return a structured summary in this exact format:
+
+              - **Test ID**: #{scenario.test_id}
+              - **TC ID**: #{test_case.tc_id}
+              - **Status**: pass | fail
+              - **Report Paths**: {timestamp}-{short-pkg}-{short-id}-{tc-short-id}-reports/*
+              - **Issues**: Brief description or "None"
+            PROMPT
+          end
+
           private
 
           # Build test cases filtering instruction for prompts

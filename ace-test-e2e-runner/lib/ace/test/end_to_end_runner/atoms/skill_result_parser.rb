@@ -96,7 +96,64 @@ module Ace
             value.empty? ? nil : value
           end
 
-          private_class_method :parse_markdown, :to_normalized, :extract_field
+          # Parse TC-level response text from a CLI provider
+          #
+          # Handles TC-level markdown with **TC ID** field. Falls back to
+          # parse() if the response has the multi-TC format.
+          #
+          # @param text [String] Raw response text
+          # @return [Hash] Parsed result with single-entry :test_cases array
+          # @raise [ResultParser::ParseError] If neither format can be parsed
+          def self.parse_tc(text)
+            raise ResultParser::ParseError, "Empty response from CLI provider" if text.nil? || text.strip.empty?
+
+            parsed = parse_tc_markdown(text)
+            return to_tc_normalized(parsed) if parsed
+
+            # Fall back to standard parse (handles both markdown and JSON)
+            parse(text)
+          end
+
+          # Parse TC-level markdown return contract
+          def self.parse_tc_markdown(text)
+            fields = {}
+
+            fields[:test_id] = extract_field(text, "Test ID")
+            fields[:tc_id] = extract_field(text, "TC ID")
+            fields[:status] = extract_field(text, "Status")
+            fields[:report_paths] = extract_field(text, "Report Paths")
+            fields[:issues] = extract_field(text, "Issues")
+
+            # Need test_id, tc_id, and status for a valid TC parse
+            return nil unless fields[:test_id] && fields[:tc_id] && fields[:status]
+
+            fields
+          end
+
+          # Convert parsed TC markdown to normalized result format
+          def self.to_tc_normalized(parsed)
+            parsed[:status] = parsed[:status].to_s.strip.split(/\s+/).first if parsed[:status]
+
+            issues = parsed[:issues]
+            observations = (issues && issues.downcase != "none") ? issues : ""
+
+            {
+              test_id: parsed[:test_id],
+              status: parsed[:status],
+              test_cases: [{
+                id: parsed[:tc_id],
+                description: "",
+                status: parsed[:status],
+                actual: "",
+                notes: observations
+              }],
+              summary: "#{parsed[:tc_id]} #{parsed[:status]}",
+              observations: observations
+            }
+          end
+
+          private_class_method :parse_markdown, :to_normalized, :extract_field,
+                              :parse_tc_markdown, :to_tc_normalized
         end
       end
     end
