@@ -40,6 +40,65 @@ class PromptBuilderTest < Minitest::Test
     assert prompt.include?("TC-001"), "Prompt should include test content"
   end
 
+  # --- TC-Level Prompts ---
+
+  def test_tc_system_prompt_is_defined
+    tc_prompt = Ace::Test::EndToEndRunner::Atoms::PromptBuilder::TC_SYSTEM_PROMPT
+    refute_nil tc_prompt
+    refute_empty tc_prompt
+    assert tc_prompt.include?("tc_id"), "TC system prompt should define tc_id field"
+    assert tc_prompt.include?("single test case"), "TC system prompt should mention single test case"
+  end
+
+  def test_tc_system_prompt_mentions_sandbox
+    tc_prompt = Ace::Test::EndToEndRunner::Atoms::PromptBuilder::TC_SYSTEM_PROMPT
+    assert tc_prompt.include?("pre-populated"), "TC system prompt should mention pre-populated sandbox"
+  end
+
+  def test_tc_system_prompt_no_execute_all_instruction
+    tc_prompt = Ace::Test::EndToEndRunner::Atoms::PromptBuilder::TC_SYSTEM_PROMPT
+    refute tc_prompt.include?("Execute ALL test cases"), "TC system prompt should not mention executing all TCs"
+  end
+
+  def test_build_tc_includes_test_id
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    tc = create_test_case
+    prompt = @builder.build_tc(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sandbox")
+    assert prompt.include?("TS-LINT-001"), "TC prompt should include scenario test ID"
+  end
+
+  def test_build_tc_includes_tc_id
+    tc = create_test_case(tc_id: "TC-003")
+    prompt = @builder.build_tc(test_case: tc, scenario: create_scenario, sandbox_path: "/tmp/sandbox")
+    assert prompt.include?("TC-003"), "TC prompt should include TC ID"
+  end
+
+  def test_build_tc_includes_package
+    scenario = create_scenario(package: "ace-lint")
+    tc = create_test_case
+    prompt = @builder.build_tc(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sandbox")
+    assert prompt.include?("ace-lint"), "TC prompt should include package"
+  end
+
+  def test_build_tc_includes_sandbox_path
+    tc = create_test_case
+    prompt = @builder.build_tc(test_case: tc, scenario: create_scenario, sandbox_path: "/tmp/my-sandbox")
+    assert prompt.include?("/tmp/my-sandbox"), "TC prompt should include sandbox path"
+  end
+
+  def test_build_tc_includes_tc_content
+    tc = create_test_case(content: "## Steps\n\n1. Run ace-lint valid.rb")
+    prompt = @builder.build_tc(test_case: tc, scenario: create_scenario, sandbox_path: "/tmp/sandbox")
+    assert prompt.include?("Run ace-lint valid.rb"), "TC prompt should include TC content"
+  end
+
+  def test_build_tc_does_not_include_full_scenario_content
+    scenario = create_scenario(content: "FULL SCENARIO CONTENT MARKER")
+    tc = create_test_case(content: "## TC steps only")
+    prompt = @builder.build_tc(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sandbox")
+    refute prompt.include?("FULL SCENARIO CONTENT MARKER"), "TC prompt should not include full scenario content"
+  end
+
   private
 
   def create_scenario(overrides = {})
@@ -52,5 +111,15 @@ class PromptBuilderTest < Minitest::Test
       content: "# Test content"
     }
     Ace::Test::EndToEndRunner::Models::TestScenario.new(**defaults.merge(overrides))
+  end
+
+  def create_test_case(overrides = {})
+    defaults = {
+      tc_id: "TC-001",
+      title: "Test Case Title",
+      content: "## Objective\n\nVerify something.\n\n## Steps\n\n1. Do something\n\n## Expected\n\n- Result",
+      file_path: "/tmp/test/TC-001-test-case.tc.md"
+    }
+    Ace::Test::EndToEndRunner::Models::TestCase.new(**defaults.merge(overrides))
   end
 end
