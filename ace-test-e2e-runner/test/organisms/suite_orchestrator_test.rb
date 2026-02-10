@@ -33,6 +33,17 @@ class SuiteOrchestratorTest < Minitest::Test
     end
   end
 
+  # Stub failure finder that returns controlled failures
+  class StubFailureFinder
+    def initialize(failures_by_package: {})
+      @failures_by_package = failures_by_package
+    end
+
+    def find_failures_by_package(packages:, base_dir:)
+      @failures_by_package.select { |k, _| packages.include?(k) }
+    end
+  end
+
   def setup
     @output = StringIO.new
   end
@@ -722,5 +733,228 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_includes results[:packages].keys, "ace-lint"
     refute_includes results[:packages].keys, "ace-review"
     refute_includes results[:packages].keys, "ace-bundle"
+  end
+
+  # --- Only-failures filtering tests ---
+
+  def test_run_with_only_failures_filters_to_packages_with_failures
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint", "ace-review"],
+      tests: {
+        "ace-lint" => ["/path/to/MT-LINT-001.mt.md"],
+        "ace-review" => ["/path/to/MT-REVIEW-001.mt.md"]
+      }
+    )
+    failure_finder = StubFailureFinder.new(
+      failures_by_package: { "ace-lint" => ["TC-001", "TC-003"] }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+        test_name: File.basename(test_file, ".mt.md") }
+    end
+
+    results = orchestrator.run(only_failures: true, parallel: false)
+
+    # Only ace-lint should run (it has failures)
+    assert_equal 1, results[:total]
+    assert_includes results[:packages].keys, "ace-lint"
+    refute_includes results[:packages].keys, "ace-review"
+
+    # Progress messages
+    assert_match(/Packages with failures: ace-lint/, @output.string)
+    assert_match(/ace-lint: TC-001, TC-003/, @output.string)
+  end
+
+  def test_run_with_only_failures_returns_empty_when_no_failures
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint"],
+      tests: { "ace-lint" => ["/path/to/MT-LINT-001.mt.md"] }
+    )
+    failure_finder = StubFailureFinder.new(failures_by_package: {})
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    results = orchestrator.run(only_failures: true, parallel: false)
+
+    assert_equal 0, results[:total]
+    assert_match(/No failed test cases found in cache/, @output.string)
+  end
+
+  def test_run_with_only_failures_passes_test_cases_to_command
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint"],
+      tests: { "ace-lint" => ["/path/to/MT-LINT-001.mt.md"] }
+    )
+    failure_finder = StubFailureFinder.new(
+      failures_by_package: { "ace-lint" => ["TC-001", "TC-003"] }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    # First trigger run to set up @package_failures
+    # We need to call run() which sets @package_failures, then verify build_test_command
+    # Instead, directly test after running with only_failures
+    orchestrator.instance_variable_set(:@package_failures, { "ace-lint" => ["TC-001", "TC-003"] })
+
+    cmd = orchestrator.send(:build_test_command,
+      "ace-lint",
+      "/path/to/ace-lint/test/e2e/MT-LINT-001.mt.md",
+      {}
+    )
+
+    test_cases_idx = cmd.index("--test-cases")
+    refute_nil test_cases_idx, "Command should include --test-cases flag"
+    assert_equal "TC-001,TC-003", cmd[test_cases_idx + 1]
+  end
+
+  def test_run_with_only_failures_no_test_cases_without_failures
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output
+    )
+
+    # Without @package_failures set (nil), no --test-cases should appear
+    cmd = orchestrator.send(:build_test_command,
+      "ace-lint",
+      "/path/to/ace-lint/test/e2e/MT-LINT-001.mt.md",
+      {}
+    )
+
+    refute_includes cmd, "--test-cases",
+      "Command should not include --test-cases when not in only-failures mode"
+  end
+
+  def test_run_with_only_failures_combined_with_affected
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint", "ace-review", "ace-bundle"],
+      tests: {
+        "ace-lint" => ["/path/to/MT-LINT-001.mt.md"],
+        "ace-review" => ["/path/to/MT-REVIEW-001.mt.md"],
+        "ace-bundle" => ["/path/to/MT-BUNDLE-001.mt.md"]
+      }
+    )
+    # ace-lint and ace-review are affected
+    affected_detector = StubAffectedDetector.new(affected: ["ace-lint", "ace-review"])
+    # ace-lint and ace-bundle have failures (but ace-bundle is not affected)
+    failure_finder = StubFailureFinder.new(
+      failures_by_package: {
+        "ace-lint" => ["TC-001"],
+        "ace-bundle" => ["TC-002"]
+      }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      affected_detector: affected_detector,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+        test_name: File.basename(test_file, ".mt.md") }
+    end
+
+    results = orchestrator.run(affected: true, only_failures: true, parallel: false)
+
+    # Only ace-lint: affected AND has failures
+    # ace-review: affected but no failures
+    # ace-bundle: has failures but not affected
+    assert_equal 1, results[:total]
+    assert_includes results[:packages].keys, "ace-lint"
+    refute_includes results[:packages].keys, "ace-review"
+    refute_includes results[:packages].keys, "ace-bundle"
+  end
+
+  def test_run_with_only_failures_combined_with_packages_filter
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint", "ace-review", "ace-bundle"],
+      tests: {
+        "ace-lint" => ["/path/to/MT-LINT-001.mt.md"],
+        "ace-review" => ["/path/to/MT-REVIEW-001.mt.md"],
+        "ace-bundle" => ["/path/to/MT-BUNDLE-001.mt.md"]
+      }
+    )
+    # ace-lint and ace-bundle have failures
+    failure_finder = StubFailureFinder.new(
+      failures_by_package: {
+        "ace-lint" => ["TC-001"],
+        "ace-bundle" => ["TC-002"]
+      }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+        test_name: File.basename(test_file, ".mt.md") }
+    end
+
+    # Request only ace-lint,ace-review with only-failures
+    results = orchestrator.run(packages: "ace-lint,ace-review", only_failures: true, parallel: false)
+
+    # Only ace-lint: requested AND has failures
+    # ace-review: requested but no failures
+    # ace-bundle: has failures but not requested
+    assert_equal 1, results[:total]
+    assert_includes results[:packages].keys, "ace-lint"
+    refute_includes results[:packages].keys, "ace-review"
+    refute_includes results[:packages].keys, "ace-bundle"
+  end
+
+  def test_run_with_only_failures_multiple_packages_with_failures
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint", "ace-review"],
+      tests: {
+        "ace-lint" => ["/path/to/MT-LINT-001.mt.md"],
+        "ace-review" => ["/path/to/MT-REVIEW-001.mt.md"]
+      }
+    )
+    failure_finder = StubFailureFinder.new(
+      failures_by_package: {
+        "ace-lint" => ["TC-001"],
+        "ace-review" => ["TC-002", "TC-003"]
+      }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+        test_name: File.basename(test_file, ".mt.md") }
+    end
+
+    results = orchestrator.run(only_failures: true, parallel: false)
+
+    assert_equal 2, results[:total]
+    assert_includes results[:packages].keys, "ace-lint"
+    assert_includes results[:packages].keys, "ace-review"
+
+    assert_match(/Packages with failures: ace-lint, ace-review/, @output.string)
+    assert_match(/ace-review: TC-002, TC-003/, @output.string)
   end
 end
