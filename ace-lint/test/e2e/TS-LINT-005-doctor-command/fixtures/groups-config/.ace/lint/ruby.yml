@@ -1,0 +1,6 @@
+groups:
+  default:
+    patterns:
+      - "**/*.rb"
+    validators:
+      - standardrb
