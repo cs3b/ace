@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "pathname"
 
 module Ace
   module Test
@@ -60,7 +61,11 @@ module Ace
           # @return [String, nil] Package name or nil if not in a package
           def extract_package(file_path, base_dir)
             # Make path relative to base directory
-            relative_path = file_path.start_with?("/") ? file_path[(base_dir.length + 1)..-1] : file_path
+            relative_path = if file_path.start_with?("/")
+                              Pathname.new(file_path).relative_path_from(Pathname.new(base_dir)).to_s
+                            else
+                              file_path
+                            end
 
             # Split path and check first component
             parts = relative_path.split("/")

@@ -16,7 +16,9 @@ unless test_dir
   exit 1
 end
 
-unless test_dir.include?(".cache/ace-test-e2e/")
+test_dir = File.expand_path(test_dir)
+
+unless test_dir.include?("/.cache/ace-test-e2e/")
   warn "FATAL: Not a sandbox path: #{test_dir}"
   exit 1
 end

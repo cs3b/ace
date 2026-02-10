@@ -76,6 +76,37 @@ module Ace
             result
           end
 
+          # Find failed test cases grouped by package and scenario (test-id)
+          #
+          # Like find_failures_by_package but preserves per-scenario granularity.
+          # This allows callers to filter and pass --test-cases per scenario
+          # instead of applying the same flat list to every scenario in a package.
+          #
+          # @param packages [Array<String>] Package names to scan
+          # @param base_dir [String] Base directory to search from (default: current dir)
+          # @return [Hash{String => Hash{String => Array<String>}}]
+          #   Package name => { test-id => failed TC IDs }
+          def find_failures_by_scenario(packages:, base_dir: Dir.pwd)
+            metadata_files = discover_metadata_files(base_dir)
+            return {} if metadata_files.empty?
+
+            result = {}
+            packages.each do |package|
+              package_metadata = filter_by_package(metadata_files, package)
+              most_recent = most_recent_per_test(package_metadata)
+
+              scenario_failures = {}
+              most_recent.each do |entry|
+                test_id = entry[:data]["test-id"]
+                failed_ids = extract_failed_test_cases(entry[:data])
+                scenario_failures[test_id] = failed_ids unless failed_ids.empty?
+              end
+
+              result[package] = scenario_failures unless scenario_failures.empty?
+            end
+            result
+          end
+
           private
 
           # Discover all metadata.yml files in the cache directory
@@ -141,14 +172,22 @@ module Ace
 
           # Extract failed test case IDs from a single metadata hash
           #
+          # Returns specific TC IDs when available, or ["*"] as a wildcard
+          # when metadata indicates failure but lacks granular test case data
+          # (common in legacy/CLI-agent-written metadata).
+          #
           # @param data [Hash] Parsed metadata.yml data
-          # @return [Array<String>] Failed test case IDs from this entry
+          # @return [Array<String>] Failed test case IDs, ["*"] for wildcard, or []
           def extract_failed_test_cases(data)
-            # Primary: use failed_test_cases array (written by ReportWriter in 259.03)
+            # Primary: use failed_test_cases array (written by ReportWriter or workflow template)
             failed_ids = data["failed_test_cases"]
             return Array(failed_ids) if failed_ids.is_a?(Array) && !failed_ids.empty?
 
-            # No specific failed test case IDs available
+            # Fallback: metadata has failures but no specific test case IDs.
+            # Return wildcard to signal "re-run entire test scenario".
+            status = data["status"]
+            return ["*"] if %w[fail partial error incomplete].include?(status)
+
             []
           end
         end

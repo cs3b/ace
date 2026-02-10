@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-02-10
+
+### Fixed
+
+- `--only-failures` no longer re-runs passing scenarios in multi-scenario packages — SuiteOrchestrator now uses per-scenario failure data (`find_failures_by_scenario`) instead of flat per-package aggregation, so only scenarios with actual failures are launched
+- `--only-failures` now correctly matches test files with descriptive filename suffixes (e.g. `MT-COMMIT-002-specific-file-commit.mt.md`) against metadata test-ids (`MT-COMMIT-002`) via prefix matching
+- Per-scenario `--test-cases` filtering — each scenario now receives only its own failed TC IDs instead of the same flat list applied to every scenario in the package
+- `SuiteProgressDisplayManager` no longer crashes with `NoMethodError` on nil `@footer_line` when the test queue is empty (defensive guard)
+
+### Technical
+
+- 74 tests across changed files, 262 assertions, 0 failures
+
+## [0.11.1] - 2026-02-10
+
+### Fixed
+
+- `--only-failures` now detects tests that errored without writing metadata — `write_failure_stubs` in SuiteOrchestrator backfills stub `metadata.yml` for any test that failed/errored but has no metadata on disk (e.g., provider 503, timeout before report generation)
+- FailureFinder wildcard fallback now recognizes `status: "error"` and `status: "incomplete"` in addition to `fail` and `partial`, ensuring error stubs trigger full test re-runs
+
+### Technical
+
+- 63 tests across changed files, 226 assertions, 0 failures
+
 ## [0.11.0] - 2026-02-08
 
 ### Added

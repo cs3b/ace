@@ -35,12 +35,17 @@ class SuiteOrchestratorTest < Minitest::Test
 
   # Stub failure finder that returns controlled failures
   class StubFailureFinder
-    def initialize(failures_by_package: {})
+    def initialize(failures_by_package: {}, failures_by_scenario: {})
       @failures_by_package = failures_by_package
+      @failures_by_scenario = failures_by_scenario
     end
 
     def find_failures_by_package(packages:, base_dir:)
       @failures_by_package.select { |k, _| packages.include?(k) }
+    end
+
+    def find_failures_by_scenario(packages:, base_dir:)
+      @failures_by_scenario.select { |k, _| packages.include?(k) }
     end
   end
 
@@ -746,7 +751,7 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
     failure_finder = StubFailureFinder.new(
-      failures_by_package: { "ace-lint" => ["TC-001", "TC-003"] }
+      failures_by_scenario: { "ace-lint" => { "MT-LINT-001" => ["TC-001", "TC-003"] } }
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -769,7 +774,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
     # Progress messages
     assert_match(/Packages with failures: ace-lint/, @output.string)
-    assert_match(/ace-lint: TC-001, TC-003/, @output.string)
+    assert_match(%r{ace-lint/MT-LINT-001: TC-001, TC-003}, @output.string)
   end
 
   def test_run_with_only_failures_returns_empty_when_no_failures
@@ -777,7 +782,7 @@ class SuiteOrchestratorTest < Minitest::Test
       packages: ["ace-lint"],
       tests: { "ace-lint" => ["/path/to/MT-LINT-001.mt.md"] }
     )
-    failure_finder = StubFailureFinder.new(failures_by_package: {})
+    failure_finder = StubFailureFinder.new(failures_by_scenario: {})
 
     orchestrator = SuiteOrchestrator.new(
       discoverer: discoverer,
@@ -797,7 +802,7 @@ class SuiteOrchestratorTest < Minitest::Test
       tests: { "ace-lint" => ["/path/to/MT-LINT-001.mt.md"] }
     )
     failure_finder = StubFailureFinder.new(
-      failures_by_package: { "ace-lint" => ["TC-001", "TC-003"] }
+      failures_by_scenario: { "ace-lint" => { "MT-LINT-001" => ["TC-001", "TC-003"] } }
     )
 
     orchestrator = SuiteOrchestrator.new(
@@ -806,10 +811,9 @@ class SuiteOrchestratorTest < Minitest::Test
       output: @output
     )
 
-    # First trigger run to set up @package_failures
-    # We need to call run() which sets @package_failures, then verify build_test_command
-    # Instead, directly test after running with only_failures
-    orchestrator.instance_variable_set(:@package_failures, { "ace-lint" => ["TC-001", "TC-003"] })
+    # Set up @scenario_failures directly to test build_test_command
+    orchestrator.instance_variable_set(:@scenario_failures,
+      { "ace-lint" => { "MT-LINT-001" => ["TC-001", "TC-003"] } })
 
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
@@ -853,9 +857,9 @@ class SuiteOrchestratorTest < Minitest::Test
     affected_detector = StubAffectedDetector.new(affected: ["ace-lint", "ace-review"])
     # ace-lint and ace-bundle have failures (but ace-bundle is not affected)
     failure_finder = StubFailureFinder.new(
-      failures_by_package: {
-        "ace-lint" => ["TC-001"],
-        "ace-bundle" => ["TC-002"]
+      failures_by_scenario: {
+        "ace-lint" => { "MT-LINT-001" => ["TC-001"] },
+        "ace-bundle" => { "MT-BUNDLE-001" => ["TC-002"] }
       }
     )
 
@@ -893,9 +897,9 @@ class SuiteOrchestratorTest < Minitest::Test
     )
     # ace-lint and ace-bundle have failures
     failure_finder = StubFailureFinder.new(
-      failures_by_package: {
-        "ace-lint" => ["TC-001"],
-        "ace-bundle" => ["TC-002"]
+      failures_by_scenario: {
+        "ace-lint" => { "MT-LINT-001" => ["TC-001"] },
+        "ace-bundle" => { "MT-BUNDLE-001" => ["TC-002"] }
       }
     )
 
@@ -931,9 +935,9 @@ class SuiteOrchestratorTest < Minitest::Test
       }
     )
     failure_finder = StubFailureFinder.new(
-      failures_by_package: {
-        "ace-lint" => ["TC-001"],
-        "ace-review" => ["TC-002", "TC-003"]
+      failures_by_scenario: {
+        "ace-lint" => { "MT-LINT-001" => ["TC-001"] },
+        "ace-review" => { "MT-REVIEW-001" => ["TC-002", "TC-003"] }
       }
     )
 
@@ -955,6 +959,336 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_includes results[:packages].keys, "ace-review"
 
     assert_match(/Packages with failures: ace-lint, ace-review/, @output.string)
-    assert_match(/ace-review: TC-002, TC-003/, @output.string)
+    assert_match(%r{ace-review/MT-REVIEW-001: TC-002, TC-003}, @output.string)
+  end
+
+  def test_build_test_command_omits_test_cases_for_wildcard_failures
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output
+    )
+
+    # Wildcard failures = re-run entire test, no --test-cases filter
+    orchestrator.instance_variable_set(:@scenario_failures,
+      { "ace-lint" => { "MT-LINT-001" => ["*"] } })
+
+    cmd = orchestrator.send(:build_test_command,
+      "ace-lint",
+      "/path/to/ace-lint/test/e2e/MT-LINT-001.mt.md",
+      {}
+    )
+
+    refute_includes cmd, "--test-cases",
+      "Command should not include --test-cases when failures contain wildcard"
+  end
+
+  def test_run_with_only_failures_launches_only_failing_scenarios
+    # Package has 3 scenarios, but only 1 is failing
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-git-secrets"],
+      tests: {
+        "ace-git-secrets" => [
+          "/path/to/MT-SECRETS-001.mt.md",
+          "/path/to/MT-SECRETS-002.mt.md",
+          "/path/to/MT-SECRETS-003.mt.md"
+        ]
+      }
+    )
+    failure_finder = StubFailureFinder.new(
+      failures_by_scenario: {
+        "ace-git-secrets" => { "MT-SECRETS-001" => ["TC-001"] }
+      }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    executed_tests = []
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      (@executed_tests ||= []) << File.basename(test_file, ".mt.md")
+      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+        test_name: File.basename(test_file, ".mt.md") }
+    end
+    def orchestrator.executed_tests
+      @executed_tests || []
+    end
+
+    results = orchestrator.run(only_failures: true, parallel: false)
+
+    # Only 1 scenario should be executed, not all 3
+    assert_equal 1, results[:total]
+    assert_equal ["MT-SECRETS-001"], orchestrator.executed_tests
+  end
+
+  def test_run_with_only_failures_per_scenario_test_cases
+    # Two scenarios in same package with different failing TCs
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-git-secrets"],
+      tests: {
+        "ace-git-secrets" => [
+          "/path/to/MT-SECRETS-001.mt.md",
+          "/path/to/MT-SECRETS-002.mt.md"
+        ]
+      }
+    )
+    failure_finder = StubFailureFinder.new(
+      failures_by_scenario: {
+        "ace-git-secrets" => {
+          "MT-SECRETS-001" => ["TC-001"],
+          "MT-SECRETS-002" => ["TC-002", "TC-003"]
+        }
+      }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    # Set up @scenario_failures to test build_test_command per-scenario
+    orchestrator.instance_variable_set(:@scenario_failures, {
+      "ace-git-secrets" => {
+        "MT-SECRETS-001" => ["TC-001"],
+        "MT-SECRETS-002" => ["TC-002", "TC-003"]
+      }
+    })
+
+    cmd1 = orchestrator.send(:build_test_command,
+      "ace-git-secrets",
+      "/path/to/MT-SECRETS-001.mt.md",
+      {}
+    )
+    cmd2 = orchestrator.send(:build_test_command,
+      "ace-git-secrets",
+      "/path/to/MT-SECRETS-002.mt.md",
+      {}
+    )
+
+    # MT-SECRETS-001 should get TC-001
+    tc_idx1 = cmd1.index("--test-cases")
+    refute_nil tc_idx1
+    assert_equal "TC-001", cmd1[tc_idx1 + 1]
+
+    # MT-SECRETS-002 should get TC-002,TC-003
+    tc_idx2 = cmd2.index("--test-cases")
+    refute_nil tc_idx2
+    assert_equal "TC-002,TC-003", cmd2[tc_idx2 + 1]
+  end
+
+  def test_file_matches_test_id_with_descriptive_suffix
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+    # Exact match
+    assert orchestrator.send(:file_matches_test_id?,
+      "/path/to/MT-SECRETS-001.mt.md", "MT-SECRETS-001")
+
+    # Descriptive suffix match
+    assert orchestrator.send(:file_matches_test_id?,
+      "/path/to/MT-COMMIT-002-specific-file-commit.mt.md", "MT-COMMIT-002")
+
+    # Non-match: different test-id
+    refute orchestrator.send(:file_matches_test_id?,
+      "/path/to/MT-SECRETS-002.mt.md", "MT-SECRETS-001")
+
+    # Non-match: test-id is prefix but no "-" separator (e.g. 001 vs 001a)
+    refute orchestrator.send(:file_matches_test_id?,
+      "/path/to/MT-BUNDLE-001a-error-sections.mt.md", "MT-BUNDLE-001")
+  end
+
+  def test_only_failures_matches_files_with_descriptive_suffixes
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-git-secrets"],
+      tests: {
+        "ace-git-secrets" => [
+          "/path/to/MT-SECRETS-001-secret-detection.mt.md",
+          "/path/to/MT-SECRETS-002-allowlist.mt.md",
+          "/path/to/MT-SECRETS-003-custom-patterns.mt.md"
+        ]
+      }
+    )
+    failure_finder = StubFailureFinder.new(
+      failures_by_scenario: {
+        "ace-git-secrets" => { "MT-SECRETS-001" => ["TC-001"] }
+      }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      failure_finder: failure_finder,
+      output: @output
+    )
+
+    executed_tests = []
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      (@executed_tests ||= []) << File.basename(test_file, ".mt.md")
+      { status: "pass", summary: "Test passed", passed_cases: 1, total_cases: 1,
+        test_name: File.basename(test_file, ".mt.md") }
+    end
+    def orchestrator.executed_tests
+      @executed_tests || []
+    end
+
+    results = orchestrator.run(only_failures: true, parallel: false)
+
+    assert_equal 1, results[:total]
+    assert_equal ["MT-SECRETS-001-secret-detection"], orchestrator.executed_tests
+  end
+
+  def test_build_test_command_matches_suffix_filenames_to_scenario_failures
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+    orchestrator.instance_variable_set(:@scenario_failures, {
+      "ace-git-commit" => { "MT-COMMIT-002" => ["TC-001", "TC-003"] }
+    })
+
+    cmd = orchestrator.send(:build_test_command,
+      "ace-git-commit",
+      "/path/to/MT-COMMIT-002-specific-file-commit.mt.md",
+      {}
+    )
+
+    tc_idx = cmd.index("--test-cases")
+    refute_nil tc_idx, "Should match test-id despite filename suffix"
+    assert_equal "TC-001,TC-003", cmd[tc_idx + 1]
+  end
+
+  # --- Failure stub writing tests ---
+
+  def test_write_failure_stubs_creates_metadata_for_errored_tests
+    Dir.mktmpdir do |tmpdir|
+      discoverer = StubDiscoverer.new(
+        packages: ["ace-lint"],
+        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/MT-LINT-001.mt.md"] }
+      )
+
+      ts_counter = 0
+      timestamp_gen = -> { ts_counter += 1; "stub#{format("%03d", ts_counter)}" }
+
+      orchestrator = SuiteOrchestrator.new(
+        discoverer: discoverer,
+        output: @output,
+        base_dir: tmpdir,
+        scenario_parser: StubScenarioParser.new,
+        timestamp_generator: timestamp_gen,
+        suite_report_writer: StubSuiteReportWriter.new
+      )
+
+      # Simulate an errored test result with no report_dir (subprocess crashed)
+      results = {
+        packages: {
+          "ace-lint" => [
+            { status: "error", error: "Provider 503", test_name: "MT-LINT-001",
+              report_dir: nil, passed_cases: nil, total_cases: nil }
+          ]
+        }
+      }
+      package_tests = {
+        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/MT-LINT-001.mt.md"]
+      }
+
+      orchestrator.send(:write_failure_stubs, results, package_tests)
+
+      # Verify a stub metadata.yml was written
+      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      metadata_files = Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml"))
+      assert_equal 1, metadata_files.size, "Should write one stub metadata file"
+
+      data = YAML.safe_load_file(metadata_files.first)
+      assert_equal "ace-lint", data["package"]
+      assert_equal "error", data["status"]
+      assert_equal "MT-LINT-001", data["test-id"]
+    end
+  end
+
+  def test_write_failure_stubs_skips_passing_tests
+    Dir.mktmpdir do |tmpdir|
+      discoverer = StubDiscoverer.new(
+        packages: ["ace-lint"],
+        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/MT-LINT-001.mt.md"] }
+      )
+
+      orchestrator = SuiteOrchestrator.new(
+        discoverer: discoverer,
+        output: @output,
+        base_dir: tmpdir,
+        scenario_parser: StubScenarioParser.new,
+        timestamp_generator: -> { "stub001" },
+        suite_report_writer: StubSuiteReportWriter.new
+      )
+
+      results = {
+        packages: {
+          "ace-lint" => [
+            { status: "pass", summary: "Test passed", test_name: "MT-LINT-001",
+              report_dir: nil, passed_cases: 3, total_cases: 3 }
+          ]
+        }
+      }
+      package_tests = {
+        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/MT-LINT-001.mt.md"]
+      }
+
+      orchestrator.send(:write_failure_stubs, results, package_tests)
+
+      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      metadata_files = Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml"))
+      assert_empty metadata_files, "Should not write stubs for passing tests"
+    end
+  end
+
+  def test_write_failure_stubs_skips_when_metadata_already_exists
+    Dir.mktmpdir do |tmpdir|
+      # Create existing metadata on disk
+      existing_report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "existing-reports")
+      FileUtils.mkdir_p(existing_report_dir)
+      File.write(File.join(existing_report_dir, "metadata.yml"), YAML.dump({
+        "test-id" => "MT-LINT-001",
+        "package" => "ace-lint",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001"]
+      }))
+
+      discoverer = StubDiscoverer.new(
+        packages: ["ace-lint"],
+        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/MT-LINT-001.mt.md"] }
+      )
+
+      orchestrator = SuiteOrchestrator.new(
+        discoverer: discoverer,
+        output: @output,
+        base_dir: tmpdir,
+        scenario_parser: StubScenarioParser.new,
+        timestamp_generator: -> { "stub001" },
+        suite_report_writer: StubSuiteReportWriter.new
+      )
+
+      # Result has report_dir pointing to existing metadata
+      results = {
+        packages: {
+          "ace-lint" => [
+            { status: "fail", summary: "Test failed", test_name: "MT-LINT-001",
+              report_dir: existing_report_dir, passed_cases: 2, total_cases: 3 }
+          ]
+        }
+      }
+      package_tests = {
+        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/MT-LINT-001.mt.md"]
+      }
+
+      orchestrator.send(:write_failure_stubs, results, package_tests)
+
+      # Only the original metadata file should exist, no new stub
+      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      metadata_files = Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml"))
+      assert_equal 1, metadata_files.size, "Should not write additional stub when metadata exists"
+      assert_equal existing_report_dir, File.dirname(metadata_files.first)
+    end
   end
 end

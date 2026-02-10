@@ -158,9 +158,9 @@ class FailureFinderTest < Minitest::Test
     end
   end
 
-  def test_find_failures_ignores_metadata_without_failed_test_cases
+  def test_find_failures_returns_wildcard_for_legacy_metadata_without_failed_test_cases
     Dir.mktmpdir do |tmpdir|
-      # Older metadata format without failed_test_cases key
+      # Legacy metadata format without failed_test_cases key but with fail status
       create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
         "test-id" => "MT-SECRETS-002",
         "package" => "ace-git-secrets",
@@ -169,7 +169,78 @@ class FailureFinderTest < Minitest::Test
       })
 
       result = @finder.find_failures(package: "ace-git-secrets", base_dir: tmpdir)
-      assert_empty result, "Should return empty when no failed_test_cases key present"
+      assert_equal ["*"], result, "Should return wildcard when status is fail but no failed_test_cases"
+    end
+  end
+
+  def test_find_failures_returns_wildcard_for_partial_status_without_failed_test_cases
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
+        "test-id" => "MT-SECRETS-002",
+        "package" => "ace-git-secrets",
+        "status" => "partial",
+        "results" => {"passed" => 5, "failed" => 6, "total" => 11}
+      })
+
+      result = @finder.find_failures(package: "ace-git-secrets", base_dir: tmpdir)
+      assert_equal ["*"], result, "Should return wildcard when status is partial but no failed_test_cases"
+    end
+  end
+
+  def test_find_failures_returns_wildcard_for_error_status_without_failed_test_cases
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
+        "test-id" => "MT-SECRETS-002",
+        "package" => "ace-git-secrets",
+        "status" => "error",
+        "results" => {"passed" => 0, "failed" => 0, "total" => 0}
+      })
+
+      result = @finder.find_failures(package: "ace-git-secrets", base_dir: tmpdir)
+      assert_equal ["*"], result, "Should return wildcard when status is error but no failed_test_cases"
+    end
+  end
+
+  def test_find_failures_returns_wildcard_for_incomplete_status_without_failed_test_cases
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
+        "test-id" => "MT-SECRETS-002",
+        "package" => "ace-git-secrets",
+        "status" => "incomplete",
+        "results" => {"passed" => 0, "failed" => 0, "total" => 0}
+      })
+
+      result = @finder.find_failures(package: "ace-git-secrets", base_dir: tmpdir)
+      assert_equal ["*"], result, "Should return wildcard when status is incomplete but no failed_test_cases"
+    end
+  end
+
+  def test_find_failures_returns_empty_for_pass_status_without_failed_test_cases
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
+        "test-id" => "MT-SECRETS-002",
+        "package" => "ace-git-secrets",
+        "status" => "pass",
+        "results" => {"passed" => 11, "failed" => 0, "total" => 11}
+      })
+
+      result = @finder.find_failures(package: "ace-git-secrets", base_dir: tmpdir)
+      assert_empty result, "Should return empty when status is pass and no failed_test_cases"
+    end
+  end
+
+  def test_find_failures_returns_wildcard_for_empty_failed_test_cases_with_fail_status
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
+        "test-id" => "MT-SECRETS-002",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => [],
+        "results" => {"passed" => 5, "failed" => 6, "total" => 11}
+      })
+
+      result = @finder.find_failures(package: "ace-git-secrets", base_dir: tmpdir)
+      assert_equal ["*"], result, "Should return wildcard when failed_test_cases is empty but status is fail"
     end
   end
 
@@ -349,6 +420,160 @@ class FailureFinderTest < Minitest::Test
       )
 
       assert_equal ["TC-002"], result["ace-lint"]
+    end
+  end
+
+  # --- find_failures_by_scenario tests ---
+
+  def test_find_failures_by_scenario_returns_per_scenario_data
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001"]
+      })
+      create_metadata(tmpdir, "8p0002-secrets-mt002-reports", {
+        "test-id" => "MT-SECRETS-002",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-002", "TC-003"]
+      })
+
+      result = @finder.find_failures_by_scenario(
+        packages: ["ace-git-secrets"],
+        base_dir: tmpdir
+      )
+
+      assert_equal 1, result.size
+      assert_includes result.keys, "ace-git-secrets"
+      scenarios = result["ace-git-secrets"]
+      assert_equal 2, scenarios.size
+      assert_equal ["TC-001"], scenarios["MT-SECRETS-001"]
+      assert_equal ["TC-002", "TC-003"], scenarios["MT-SECRETS-002"]
+    end
+  end
+
+  def test_find_failures_by_scenario_omits_passing_scenarios
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001"]
+      })
+      create_metadata(tmpdir, "8p0002-secrets-mt002-reports", {
+        "test-id" => "MT-SECRETS-002",
+        "package" => "ace-git-secrets",
+        "status" => "pass",
+        "failed_test_cases" => []
+      })
+      create_metadata(tmpdir, "8p0003-secrets-mt003-reports", {
+        "test-id" => "MT-SECRETS-003",
+        "package" => "ace-git-secrets",
+        "status" => "pass",
+        "failed_test_cases" => []
+      })
+
+      result = @finder.find_failures_by_scenario(
+        packages: ["ace-git-secrets"],
+        base_dir: tmpdir
+      )
+
+      scenarios = result["ace-git-secrets"]
+      assert_equal 1, scenarios.size
+      assert_includes scenarios.keys, "MT-SECRETS-001"
+      refute_includes scenarios.keys, "MT-SECRETS-002"
+      refute_includes scenarios.keys, "MT-SECRETS-003"
+    end
+  end
+
+  def test_find_failures_by_scenario_wildcard_handling
+    Dir.mktmpdir do |tmpdir|
+      # Legacy metadata with fail status but no failed_test_cases
+      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail"
+      })
+
+      result = @finder.find_failures_by_scenario(
+        packages: ["ace-git-secrets"],
+        base_dir: tmpdir
+      )
+
+      scenarios = result["ace-git-secrets"]
+      assert_equal ["*"], scenarios["MT-SECRETS-001"]
+    end
+  end
+
+  def test_find_failures_by_scenario_uses_most_recent_per_test
+    Dir.mktmpdir do |tmpdir|
+      # Older run: MT-SECRETS-001 fails TC-001, TC-002
+      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001", "TC-002"]
+      })
+      # Newer run: MT-SECRETS-001 now only fails TC-002
+      create_metadata(tmpdir, "8p0099-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-002"]
+      })
+
+      result = @finder.find_failures_by_scenario(
+        packages: ["ace-git-secrets"],
+        base_dir: tmpdir
+      )
+
+      assert_equal ["TC-002"], result["ace-git-secrets"]["MT-SECRETS-001"]
+    end
+  end
+
+  def test_find_failures_by_scenario_with_no_cache
+    Dir.mktmpdir do |tmpdir|
+      result = @finder.find_failures_by_scenario(
+        packages: ["ace-git-secrets"],
+        base_dir: tmpdir
+      )
+      assert_empty result
+    end
+  end
+
+  def test_find_failures_by_scenario_multiple_packages
+    Dir.mktmpdir do |tmpdir|
+      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
+        "test-id" => "MT-LINT-001",
+        "package" => "ace-lint",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-001"]
+      })
+      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
+        "test-id" => "MT-SECRETS-001",
+        "package" => "ace-git-secrets",
+        "status" => "fail",
+        "failed_test_cases" => ["TC-002"]
+      })
+      # ace-review passes, should not appear
+      create_metadata(tmpdir, "8p0003-review-mt001-reports", {
+        "test-id" => "MT-REVIEW-001",
+        "package" => "ace-review",
+        "status" => "pass",
+        "failed_test_cases" => []
+      })
+
+      result = @finder.find_failures_by_scenario(
+        packages: ["ace-lint", "ace-git-secrets", "ace-review"],
+        base_dir: tmpdir
+      )
+
+      assert_equal 2, result.size
+      assert_equal({"MT-LINT-001" => ["TC-001"]}, result["ace-lint"])
+      assert_equal({"MT-SECRETS-001" => ["TC-002"]}, result["ace-git-secrets"])
+      refute_includes result.keys, "ace-review"
     end
   end
 
