@@ -1,7 +1,7 @@
 ---
-test-id: MT-COWORKER-001
+test-id: MT-ASSIGN-001
 title: Workflow Lifecycle
-area: coworker
+area: assign
 package: ace-assign
 priority: high
 duration: ~15min
@@ -29,7 +29,7 @@ Verify that ace-assign correctly manages the full workflow lifecycle including a
 ```bash
 PROJECT_ROOT="$(pwd)"
 TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
-SHORT_PKG="coworker"
+SHORT_PKG="assign"
 SHORT_ID="mt001"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
