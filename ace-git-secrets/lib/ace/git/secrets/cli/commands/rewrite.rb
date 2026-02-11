@@ -30,11 +30,13 @@ module Ace
             def call(**options)
               debug_log("Starting rewrite-history with options: #{format_pairs(options)}", options)
 
-              # Delegate to existing RewriteCommand logic and return exit code directly
-              Ace::Git::Secrets::Commands::RewriteCommand.execute(options)
+              exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(options)
+              raise Ace::Core::CLI::Error.new("Rewrite failed", exit_code: exit_code) if exit_code != 0
+            rescue Ace::Core::CLI::Error
+              raise
             rescue StandardError => e
               debug_log(e.full_message, options) if debug?(options)
-              raise Ace::Core::CLI::Error.new(e.message)
+              raise Ace::Core::CLI::Error.new(e.message, exit_code: 2)
             end
           end
         end

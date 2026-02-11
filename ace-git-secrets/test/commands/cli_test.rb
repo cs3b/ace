@@ -55,6 +55,8 @@ class CLITest < GitSecretsTestCase
           Ace::Git::Secrets::CLI.start(["scan"])
         rescue SystemExit
           # dry-cli may call exit
+        rescue Ace::Core::CLI::Error
+          # CLI raises Error with exit_code when tokens found
         end
       end
 
@@ -185,6 +187,8 @@ class CLITest < GitSecretsTestCase
           Ace::Git::Secrets::CLI.start(["check-release"])
         rescue SystemExit
           # dry-cli may call exit
+        rescue Ace::Core::CLI::Error
+          # CLI raises Error with exit_code when tokens found
         end
       end
 
