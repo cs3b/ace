@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-02-11
+
+### Added
+- Exception-based CLI error reporting for consistent error handling
+
+### Technical
+- Migrate E2E tests to per-TC directory format
+- Enhance E2E tests for commit splitting and path handling
+- Standardize E2E test cache directory naming
+
 ## [0.17.1] - 2026-01-27
 
 ### Added
