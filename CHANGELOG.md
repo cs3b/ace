@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.483] - 2026-02-11
+
+### Fixed
+
+- **ace-assign v0.7.1**: E2E test scenario.yml files use correct `test-id` field (was `test-suite-id`); E2E test case .tc.md files use correct `tc-id` field (was `test-id`)
+
 ## [0.9.482] - 2026-02-11
 
 ### Fixed
