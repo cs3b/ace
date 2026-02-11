@@ -1,23 +1,14 @@
 ---
-test-id: MT-ASSIGN-003a
-title: Hierarchical Jobs - Error Handling
-area: assign
-package: ace-assign
-priority: high
-duration: ~3min
-automation-candidate: true
-requires:
-  tools: [ace-assign]
-  ruby: ">= 3.0"
-last-verified: 2026-02-08
-verified-by: claude-opus-4-6
+test-id: MT-ASSIGN-003a-TC001
+title: Advance Parent with Incomplete Children
+suite: TS-ASSIGN-003a
 ---
 
-# Hierarchical Jobs - Error Handling
+# Advance Parent with Incomplete Children
 
 ## Objective
 
-Verify that ace-assign reports clear errors when attempting invalid hierarchical operations: completing a parent with incomplete children, and referencing a non-existent job with --after.
+Verify that attempting to complete a parent phase while children are incomplete fails with a clear error listing the incomplete children.
 
 ## Prerequisites
 
@@ -27,16 +18,23 @@ Verify that ace-assign reports clear errors when attempting invalid hierarchical
 ## Environment Setup
 
 ```bash
-```
+PROJECT_ROOT="$(pwd)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
+SHORT_PKG="assign"
+SHORT_ID="003a"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+mkdir -p "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
-## Test Data
+export PROJECT_ROOT_PATH="$TEST_DIR"
+CACHE_BASE="$TEST_DIR/.cache/ace-assign"
+mkdir -p "$CACHE_BASE"
+ACE_ASSIGN="bundle exec $PROJECT_ROOT/ace-assign/exe/ace-assign"
 
-```bash
-ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-# Create job.yaml with flat phases (hierarchy will be created dynamically)
+# Create job.yaml and assignment
 cat > "job.yaml" << 'EOF'
 name: hierarchical-test
-description: Test nested jobs and completion
+description: Test nested phases and completion
 
 steps:
   - name: implement-feature
@@ -46,23 +44,16 @@ steps:
     instructions: Write documentation
 EOF
 
-# Create assignment and find assignment directory
 CREATE_OUTPUT=$($ACE_ASSIGN create "job.yaml" 2>&1)
 CREATE_EXIT=$?
 echo "Exit code: $CREATE_EXIT"
 [ "$CREATE_EXIT" -eq 0 ] && echo "PASS: Assignment created" || echo "FAIL: Assignment creation failed"
 ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort | tail -1)
 echo "Assignment directory: $ASSIGNMENT_DIR"
-SANDBOX
 ```
 
-## Test Cases
+## Test Steps
 
-### TC-001: Error - Advance Parent with Incomplete Children
-
-**Objective:** Verify that attempting to complete a parent job while children are incomplete fails with a clear error listing the incomplete children.
-
-**Steps:**
 1. Verify initial structure and add children under 010
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
@@ -121,53 +112,15 @@ EOF
    SANDBOX
    ```
 
-**Expected:**
+## Expected Results
+
 - Exit code: non-zero (error)
 - Error message contains "incomplete children"
-- Error message lists incomplete child job numbers (010.01, 010.02)
+- Error message lists incomplete child phase numbers (010.01, 010.02)
 
-**Actual:** [Record during execution]
+## Status
 
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-002: Error - Invalid --after Reference
-
-**Objective:** Verify that `add --after` with an invalid job number fails with a clear error showing available jobs.
-
-**Steps:**
-1. Attempt to add job with invalid --after reference
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   ADD_OUTPUT=$($ACE_ASSIGN add test-phase --after 999 -i "Test instructions" 2>&1)
-   ADD_EXIT=$?
-   echo "Exit code: $ADD_EXIT"
-   echo "Output:"
-   echo "$ADD_OUTPUT"
-   SANDBOX
-   ```
-
-2. Verify error exit code and available jobs listed
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   [ "$ADD_EXIT" -ne 0 ] && echo "PASS: Non-zero exit code" || echo "FAIL: Expected non-zero exit code"
-   echo "$ADD_OUTPUT" | grep -qi "not found" && echo "PASS: Error mentions 'not found'" || echo "FAIL: Error should mention 'not found'"
-   echo "$ADD_OUTPUT" | grep -qi "available" && echo "PASS: Error mentions available jobs" || echo "FAIL: Error should mention available jobs"
-   echo "$ADD_OUTPUT" | grep -q "010" && echo "PASS: Available jobs include 010" || echo "FAIL: Available jobs should include 010"
-   SANDBOX
-   ```
-
-**Expected:**
-- Exit code: non-zero (error)
-- Error message contains "not found"
-- Error message shows "Available jobs:" with existing job numbers
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
+[ ] Pass / [ ] Fail
 
 ## Cleanup
 
@@ -177,8 +130,3 @@ rm -rf "$TEST_DIR"
 find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d -exec rm -rf {} + 2>/dev/null || true
 echo "Cleanup complete"
 ```
-
-## Success Criteria
-
-- [ ] TC-001: Advance parent with incomplete children fails with clear error listing children
-- [ ] TC-002: Invalid --after reference fails with error showing available jobs

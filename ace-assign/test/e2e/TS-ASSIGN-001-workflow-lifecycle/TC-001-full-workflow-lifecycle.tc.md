@@ -1,19 +1,10 @@
 ---
 test-id: MT-ASSIGN-001
-title: Workflow Lifecycle
-area: assign
-package: ace-assign
-priority: high
-duration: ~15min
-automation-candidate: true
-requires:
-  tools: [ace-assign]
-  ruby: ">= 3.0"
-last-verified:
-verified-by:
+title: Full Workflow Lifecycle
+suite: TS-ASSIGN-001
 ---
 
-# Workflow Lifecycle
+# Full Workflow Lifecycle
 
 ## Objective
 
@@ -80,31 +71,6 @@ fi
 echo "=== ISOLATION VERIFIED ==="
 ```
 
-## Test Data
-
-```bash
-ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-# Create job.yaml with 3 phases for testing (includes skill field on analyze phase)
-cat > job.yaml << 'EOF'
-name: test-workflow
-description: Test workflow for E2E testing
-steps:
-  - name: analyze
-    skill: "ace:research"
-    instructions:
-      - Analyze the codebase structure
-      - Identify key components and dependencies
-  - name: implement
-    instructions: Implement the required changes
-  - name: verify
-    instructions: Verify the changes work correctly
-EOF
-
-echo "Test data created:"
-cat job.yaml
-SANDBOX
-```
-
 ## Test Cases
 
 ### TC-001: Error — Nonexistent Config File
@@ -133,8 +99,6 @@ SANDBOX
 **Expected:**
 - Exit code: 3
 - Output contains: "Config file not found"
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -166,8 +130,6 @@ SANDBOX
 **Expected:**
 - Exit code: 2
 - Output contains: "No active assignment"
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -205,8 +167,6 @@ SANDBOX
 **Expected:**
 - Exit code: 2
 - Output contains: "No active assignment"
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -263,8 +223,6 @@ SANDBOX
 - Assignment IS created (migration works)
 - Output matches `create` command output
 
-**Actual:** [Record during execution]
-
 **Status:** [ ] Pass / [ ] Fail
 
 ---
@@ -302,8 +260,6 @@ SANDBOX
 **Expected:**
 - Cache directory created automatically
 - Assignment creation succeeds
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -360,8 +316,6 @@ SANDBOX
 - Exit code: 0
 - Output contains assignment ID
 - Output shows first phase "analyze" with status in_progress
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -470,8 +424,6 @@ SANDBOX
 - Plain string instructions (implement phase) preserved as-is
 - NO `.assign/` directory, NO `queue.yaml`, NO `.md` files (only `.ph.md` and `.r.md`)
 
-**Actual:** [Record during execution]
-
 **Status:** [ ] Pass / [ ] Fail
 
 ---
@@ -528,8 +480,6 @@ SANDBOX
 - All three phases (analyze, implement, verify) displayed
 - Current phase is analyze with in_progress status
 - Skill field "ace:research" shown for analyze phase
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -622,8 +572,6 @@ EOF
 - Report NOT in job file
 - Phase 020 (implement) now in_progress
 
-**Actual:** [Record during execution]
-
 **Status:** [ ] Pass / [ ] Fail
 
 ---
@@ -708,8 +656,6 @@ EOF
 - Phase 030 remains `pending` (failure does not auto-advance)
 - Status shows no "Current Phase:" line (queue is stalled)
 - Report command rejected with exit code 1 and "No phase currently in progress" message
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -837,8 +783,6 @@ EOF
 - Retry does NOT change current phase (030-verify remains current)
 - All operations exit code 0
 
-**Actual:** [Record during execution]
-
 **Status:** [ ] Pass / [ ] Fail
 
 ---
@@ -959,8 +903,6 @@ EOF
 - No phases remain as pending or in_progress
 - All 5 phase files have terminal status (4 done + 1 failed)
 
-**Actual:** [Record during execution]
-
 **Status:** [ ] Pass / [ ] Fail
 
 ---
@@ -987,42 +929,3 @@ echo "Cleanup complete"
 - [ ] TC-009: Failed phase stops progression, stalls queue, report rejected on stalled queue
 - [ ] TC-010: Add auto-activates on stalled queue, auto-advance targets correct phase, retry stays pending
 - [ ] TC-011: Reports complete the correct phases in order, assignment shows "Assignment completed!"
-
-## Observations
-
-{Record any observations, edge cases, or issues discovered during test execution}
-
-## Notes
-
-### 0.1.2 Fixes Reflected in This Test
-
-- **`start` renamed to `create`** — the old `start` positional arg is now a migration alias to `create` with deprecation warning; TC-004 verifies the migration behavior
-- **Array instructions supported** — `normalize_instructions` joins arrays into phase body; TC-006 verifies both array (analyze) and string (implement/verify) formats
-- **`wfi://coworker-prepare-job` protocol registered** — no longer missing
-
-### Cache Directory Auto-Creation (added in v0.1.8)
-
-- **Cache base directory initialization** — TC-004b verifies that `.cache/ace-assign/` is automatically created on first use
-- Previously, the base cache directory had to be created manually or the first assignment creation would fail with `Errno::ENOENT`
-- The fix ensures `FileUtils.mkdir_p(@cache_base)` is called before `generate_assignment_id` in `AssignmentManager.create()`
-
-### State Machine Assertions (added in review)
-
-TC-009 through TC-011 verify the actual state machine transitions, not just command exit codes:
-
-- **TC-009**: After `fail`, the queue is stalled (no `Current Phase:` in status), and `report` is rejected with "No phase currently in progress"
-- **TC-010**: `add` auto-activates when the queue is stalled (fix-issue becomes `in_progress`); completing fix-issue auto-advances to 030-verify (not the retry phase); `retry` creates a `pending` phase without changing the current phase
-- **TC-011**: Documents the exact queue state entering the test case; verifies each `report` completes the expected phase by checking phase file frontmatter; confirms auto-advance from 030-verify to 031-implement (the retry phase)
-
-### Implementation Details
-
-- Status value is `done` (not `completed`) — verify actual YAML frontmatter values
-- Reports are stored in separate `reports/*.r.md` files, not inline in job files
-- Job files use `.ph.md` extension (e.g., `010-analyze.ph.md`)
-- Report files use `.r.md` extension (e.g., `010-analyze.r.md`)
-- Assignment data lives under `.cache/ace-assign/<id>/`, not `.assign/sessions/`
-- Queue state is individual `phases/*.ph.md` files, not a single `queue.yaml`
-- Error TCs (001-004) run first from clean state to catch crashes before assignment creation
-- The `skill` field in job.yaml is preserved through to phase files and status output
-- `add` auto-activates (sets `in_progress`) when no phase is currently in progress; `retry` always creates as `pending`
-- `report` always completes `state.current` — it does not match on report filename

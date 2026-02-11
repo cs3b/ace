@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-02-11
+
+### Fixed
+
+- Array instruction substitution in foreach expansion now properly handles {{item}} placeholders
+- Removed deprecated work-on-task preset (use `/ace:work-on-task` skill directly)
+
+### Changed
+
+- work-on-tasks preset simplified with onboard step and direct skill delegation
+
 ## [0.6.0] - 2026-02-11
 
 ### Changed
