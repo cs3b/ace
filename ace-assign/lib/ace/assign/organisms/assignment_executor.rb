@@ -32,8 +32,10 @@ module Ace
           raise ConfigNotFoundError, "Config file not found: #{config_path}" unless File.exist?(config_path)
 
           config = YAML.safe_load_file(config_path, permitted_classes: [Time, Date])
-          assignment_config = config["session"] || {}
-          phases_config = config["steps"] || []
+
+          # Support both new terminology (assignment/phases) and legacy (session/steps)
+          assignment_config = config["assignment"] || config["session"] || {}
+          phases_config = config["phases"] || config["steps"] || []
 
           raise Error, "No phases defined in config" if phases_config.empty?
 
