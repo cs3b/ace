@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.468] - 2026-02-11
+
+### Added
+
+- **ace-test-e2e-runner v0.12.0**: TS-format test infrastructure — TestCase model, ScenarioLoader, FixtureCopier, SetupExecutor molecules, TestCaseParser atom, dual-mode test discovery (`.mt.md` + `scenario.yml`), TC-level execution pipeline with per-test-case independence, `setup` CLI subcommand; ace-lint E2E tests migrated to per-TC directory format; review feedback addressed
+
 ## [0.9.467] - 2026-02-10
 
 ### Fixed
