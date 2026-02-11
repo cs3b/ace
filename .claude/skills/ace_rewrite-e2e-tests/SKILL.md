@@ -1,6 +1,6 @@
 ---
-name: ace:manage-e2e-tests
-description: Orchestrate the 3-stage E2E test lifecycle pipeline (review → plan → rewrite)
+name: ace:rewrite-e2e-tests
+description: Execute a change plan — delete, create, modify, and consolidate E2E tests
 user-invocable: true
 allowed-tools:
   - Bash(ace-*:*)
@@ -13,11 +13,11 @@ allowed-tools:
   - Glob
   - Grep
   - Skill
-argument-hint: "<package> [--dry-run] [--run-tests]"
+argument-hint: "<package> [--plan <path>] [--dry-run]"
 last_modified: 2026-02-11
 source: ace-test-e2e-runner
 ---
 
-read and run `ace-bundle wfi://manage-e2e-tests`
+read and run `ace-bundle wfi://rewrite-e2e-tests`
 
 ARGUMENTS: $ARGUMENTS
