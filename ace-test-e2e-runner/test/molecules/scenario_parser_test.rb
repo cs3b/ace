@@ -116,6 +116,95 @@ class ScenarioParserTest < Minitest::Test
     end
   end
 
+  def test_parse_ts_format_scenario_yml
+    Dir.mktmpdir do |tmpdir|
+      ts_dir = File.join(tmpdir, "ace-pkg", "test", "e2e", "TS-TEST-001-example")
+      FileUtils.mkdir_p(ts_dir)
+
+      File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+        test-id: TS-TEST-001
+        title: Example TS Test
+        area: test
+        package: ace-pkg
+        priority: high
+        requires:
+          tools: [ruby]
+        setup:
+          - copy-fixtures
+      YAML
+
+      File.write(File.join(ts_dir, "TC-001-basic-check.tc.md"), <<~CONTENT)
+        ---
+        tc-id: TC-001
+        title: Basic Check
+        ---
+
+        ## Objective
+        Verify basic functionality.
+
+        ## Steps
+        1. Run something
+           ```bash
+           echo "hello"
+           ```
+
+        ## Expected
+        - Output contains hello
+      CONTENT
+
+      scenario = @parser.parse(File.join(ts_dir, "scenario.yml"))
+
+      assert_equal "TS-TEST-001", scenario.test_id
+      assert_equal "Example TS Test", scenario.title
+      assert_equal "test", scenario.area
+      assert_equal "ace-pkg", scenario.package
+      assert_equal "high", scenario.priority
+      refute_nil scenario.test_cases
+      assert_equal 1, scenario.test_cases.size
+      assert_equal "TC-001", scenario.test_cases.first.tc_id
+    end
+  end
+
+  def test_parse_ts_format_missing_required_fields_raises
+    Dir.mktmpdir do |tmpdir|
+      ts_dir = File.join(tmpdir, "TS-BAD-001-incomplete")
+      FileUtils.mkdir_p(ts_dir)
+
+      File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+        test-id: TS-BAD-001
+      YAML
+
+      error = assert_raises(ArgumentError) { @parser.parse(File.join(ts_dir, "scenario.yml")) }
+      assert_match(/title|area|required/i, error.message)
+    end
+  end
+
+  def test_parse_mt_format_still_works_after_ts_support
+    Dir.mktmpdir do |tmpdir|
+      file = create_test_file(tmpdir, "MT-TEST-010-regression.mt.md", <<~CONTENT)
+        ---
+        test-id: MT-TEST-010
+        title: MT Format Regression
+        area: test
+        package: ace-test
+        ---
+
+        # MT Format Regression
+
+        ## Test Cases
+
+        ### TC-001: Still works
+        Verify MT format is unaffected.
+      CONTENT
+
+      scenario = @parser.parse(file)
+      assert_equal "MT-TEST-010", scenario.test_id
+      assert_equal "MT Format Regression", scenario.title
+      assert_equal "test", scenario.area
+      assert scenario.content.include?("Still works")
+    end
+  end
+
   def test_parse_real_e2e_file
     base_dir = File.expand_path("../../..", __dir__)
     lint_test = File.join(base_dir, "ace-lint", "test", "e2e", "MT-LINT-001-ruby-validator-fallback.mt.md")

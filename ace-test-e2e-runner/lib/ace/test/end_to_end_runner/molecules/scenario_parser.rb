@@ -22,6 +22,11 @@ module Ace
           def parse(file_path)
             raise ArgumentError, "File not found: #{file_path}" unless File.exist?(file_path)
 
+            # TS-format: scenario.yml files delegate to ScenarioLoader
+            if File.basename(file_path) == "scenario.yml"
+              return ScenarioLoader.new.load(File.dirname(file_path))
+            end
+
             content = File.read(file_path)
             frontmatter, body = extract_frontmatter(content)
 
