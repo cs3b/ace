@@ -1,0 +1,3 @@
+presets:
+  - nonexistent_base
+description: "Broken composition"
