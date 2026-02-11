@@ -193,6 +193,45 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_parses_pending_from_tc_frontmatter
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-TEST-001-pending",
+        tc_files: {
+          "TC-001-active.tc.md" => <<~MD,
+            ---
+            tc-id: TC-001
+            title: Active Test
+            ---
+
+            ## Steps
+            1. Do something
+          MD
+          "TC-002-pending.tc.md" => <<~MD
+            ---
+            tc-id: TC-002
+            title: Pending Test
+            pending: "Requires sandbox environment"
+            ---
+
+            ## Steps
+            1. This can't run yet
+          MD
+        })
+
+      scenario = @loader.load(scenario_dir)
+      assert_equal 2, scenario.test_cases.length
+
+      active_tc = scenario.test_cases.find { |tc| tc.tc_id == "TC-001" }
+      pending_tc = scenario.test_cases.find { |tc| tc.tc_id == "TC-002" }
+
+      refute active_tc.pending?
+      assert_nil active_tc.pending
+
+      assert pending_tc.pending?
+      assert_equal "Requires sandbox environment", pending_tc.pending
+    end
+  end
+
   def test_infer_package_from_path
     Dir.mktmpdir do |tmpdir|
       pkg_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-test")
