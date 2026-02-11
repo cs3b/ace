@@ -1,0 +1,14 @@
+# ace-assign default configuration
+# Override in ~/.ace/assign/config.yml or .ace/assign/config.yml
+
+# Directory where assignments are stored
+cache_dir: ".cache/ace-assign"
+
+# Main phase numbering step (gaps for injection)
+step_increment: 10
+
+# Sub-phase numbering format
+subtask_format: "%02d"
+
+# Maximum sub-phase depth (e.g., 010.01.01 = 3 levels)
+max_subtask_depth: 3

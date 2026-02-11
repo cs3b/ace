@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+<<<<<<< HEAD
 ## [0.9.482] - 2026-02-11
 
 ### Fixed
@@ -144,6 +145,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **ace-test-e2e-runner v0.12.0**: TS-format test infrastructure — TestCase model, ScenarioLoader, FixtureCopier, SetupExecutor molecules, TestCaseParser atom, dual-mode test discovery (`.mt.md` + `scenario.yml`), TC-level execution pipeline with per-test-case independence, `setup` CLI subcommand; ScenarioParser fix for `scenario.yml` delegation; ace-lint E2E tests migrated to per-TC directory format; review feedback addressed
+
+### Changed
+
+- **ace-assign v0.6.0**: Package renamed from ace-coworker to ace-assign; internal "session" concept renamed to "assignment"; internal "step" concept renamed to "phase"; phase file extension changed from .j.md to .ph.md; cache directory changed from .cache/ace-coworker/ to .cache/ace-assign/; skills renamed from /ace:coworker-* to /ace:assign-*; new combined /ace:assign-start skill (prepare + create in one step)
 
 ## [0.9.467] - 2026-02-10
 

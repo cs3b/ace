@@ -1,0 +1,232 @@
+# frozen_string_literal: true
+
+module Ace
+  module Assign
+    module Atoms
+      # Pure functions for hierarchical phase numbering operations.
+      #
+      # Supports nested phase structure where phases can have sub-phases:
+      # - Main phases: 010, 020, 030
+      # - Nested phases: 010.01, 010.02, 010.03
+      # - Deeply nested: 010.01.01 (if needed)
+      #
+      # This enables verification-as-phase patterns where parent phases
+      # wait for all children to complete before advancing.
+      #
+      # @example
+      #   PhaseNumbering.parse("010.02")
+      #   # => { parent: "010", index: 2, depth: 1, full: "010.02" }
+      #
+      #   PhaseNumbering.next_sibling("010.02")
+      #   # => "010.03"
+      #
+      #   PhaseNumbering.first_child("010")
+      #   # => "010.01"
+      #
+      #   PhaseNumbering.child_of?("010.02", "010")
+      #   # => true
+      module PhaseNumbering
+        # Maximum allowed nesting depth for phase numbers.
+        # Prevents unbounded hierarchy (e.g., 010.01.01.01.01...).
+        # Depth 0 = top-level (010), 1 = first nest (010.01), 2 = second nest (010.01.01).
+        # Maximum is 010.01.01 (3 levels total).
+        MAX_DEPTH = 2
+
+        # Maximum siblings per level.
+        # Child indexes use %02d format (01-99). Top-level uses %03d (001-999).
+        # Exceeding these limits will cause lexicographical sorting issues.
+        MAX_SIBLINGS_TOP_LEVEL = 999
+        MAX_SIBLINGS_NESTED = 99
+
+        # Parse a phase number into its components.
+        #
+        # @param number [String] Phase number (e.g., "010", "010.02", "010.02.03")
+        # @return [Hash] Parsed components with keys:
+        #   - :parent [String, nil] Parent phase number (nil for top-level phases)
+        #   - :index [Integer] The final sequence number
+        #   - :depth [Integer] Nesting depth (0 for top-level, 1 for first nest, etc.)
+        #   - :full [String] Original full number
+        def self.parse(number)
+          parts = number.to_s.split(".")
+
+          {
+            parent: parts.length > 1 ? parts[0..-2].join(".") : nil,
+            index: parts.last.to_i,
+            depth: parts.length - 1,
+            full: number.to_s
+          }
+        end
+
+        # Generate the next sibling phase number.
+        #
+        # @param number [String] Current phase number
+        # @return [String] Next sibling number with same parent
+        def self.next_sibling(number)
+          parsed = parse(number)
+          new_index = parsed[:index] + 1
+          limit = parsed[:parent] ? MAX_SIBLINGS_NESTED : MAX_SIBLINGS_TOP_LEVEL
+
+          if new_index > limit
+            raise ArgumentError, "Cannot create sibling: would exceed maximum siblings " \
+                                 "(#{limit}) at this level (current index: #{parsed[:index]})"
+          end
+
+          if parsed[:parent]
+            "#{parsed[:parent]}.#{format('%02d', new_index)}"
+          else
+            # Top-level numbers use 3-digit padding
+            format("%03d", new_index)
+          end
+        end
+
+        # Generate the first child phase number.
+        #
+        # @param number [String] Parent phase number
+        # @return [String] First child number (e.g., "010" -> "010.01")
+        # @raise [ArgumentError] If adding a child would exceed MAX_DEPTH
+        def self.first_child(number)
+          parent_depth = parse(number)[:depth]
+          child_depth = parent_depth + 1
+          if child_depth > MAX_DEPTH
+            raise ArgumentError, "Cannot create child: would exceed maximum nesting depth of #{MAX_DEPTH} " \
+                                 "(parent '#{number}' is at depth #{parent_depth})"
+          end
+          "#{number}.01"
+        end
+
+        # Generate the next child phase number based on existing children.
+        #
+        # @param parent [String] Parent phase number
+        # @param existing_children [Array<String>] Existing child numbers
+        # @return [String] Next child number
+        # @raise [ArgumentError] If adding a child would exceed MAX_DEPTH
+        def self.next_child(parent, existing_children = [])
+          parent_depth = parse(parent)[:depth]
+          child_depth = parent_depth + 1
+          if child_depth > MAX_DEPTH
+            raise ArgumentError, "Cannot create child: would exceed maximum nesting depth of #{MAX_DEPTH} " \
+                                 "(parent '#{parent}' is at depth #{parent_depth})"
+          end
+
+          return first_child(parent) if existing_children.empty?
+
+          # Find highest existing child index
+          max_index = existing_children
+                      .select { |n| child_of?(n, parent) && direct_child_of?(n, parent) }
+                      .map { |n| parse(n)[:index] }
+                      .max || 0
+
+          "#{parent}.#{format('%02d', max_index + 1)}"
+        end
+
+        # Check if a phase number is a child (direct or nested) of another.
+        #
+        # @param child [String] Potential child number
+        # @param parent [String] Potential parent number
+        # @return [Boolean] True if child is descended from parent
+        def self.child_of?(child, parent)
+          child.to_s.start_with?("#{parent}.")
+        end
+
+        # Check if a phase number is a direct (immediate) child of another.
+        #
+        # @param child [String] Potential child number
+        # @param parent [String] Potential parent number
+        # @return [Boolean] True if child is immediate child of parent
+        def self.direct_child_of?(child, parent)
+          return false unless child_of?(child, parent)
+
+          # Direct child has exactly one more level
+          child_parsed = parse(child)
+          parent_parsed = parse(parent)
+
+          child_parsed[:depth] == parent_parsed[:depth] + 1
+        end
+
+        # Get all direct children of a parent from a list of numbers.
+        #
+        # @param parent [String] Parent phase number
+        # @param all_numbers [Array<String>] All phase numbers to filter
+        # @return [Array<String>] Direct children of parent
+        def self.direct_children(parent, all_numbers)
+          all_numbers.select { |n| direct_child_of?(n, parent) }
+        end
+
+        # Get the parent number of a phase, if it has one.
+        #
+        # @param number [String] Phase number
+        # @return [String, nil] Parent number or nil for top-level phases
+        def self.parent_of(number)
+          parse(number)[:parent]
+        end
+
+        # Check if a number is a top-level (root) phase.
+        #
+        # @param number [String] Phase number
+        # @return [Boolean] True if top-level
+        def self.top_level?(number)
+          parse(number)[:depth] == 0
+        end
+
+        # Generate a phase number to insert after another phase.
+        # This creates a sibling at the same nesting level.
+        #
+        # Note: This method does not check for collisions. Use phases_to_renumber
+        # to determine which existing phases need to be shifted when inserting.
+        #
+        # @param after [String] Phase number to insert after
+        # @return [String] New phase number (next sibling)
+        def self.insert_after(after)
+          next_sibling(after)
+        end
+
+        # Find phase numbers that need to be renumbered when inserting at a position.
+        # Returns phases that have numbers >= the insertion point.
+        #
+        # @param at_number [String] Number where new phase will be inserted
+        # @param existing [Array<String>] All existing phase numbers
+        # @return [Array<String>] Numbers that need to be shifted (in ascending order)
+        def self.phases_to_renumber(at_number, existing)
+          parsed_at = parse(at_number)
+          parent = parsed_at[:parent]
+
+          existing
+            .select { |n|
+              parsed = parse(n)
+              # Same parent (or both top-level) and index >= insertion point
+              parsed[:parent] == parent && parsed[:index] >= parsed_at[:index]
+            }
+            .sort_by { |n| parse(n)[:index] }
+        end
+
+        # Backward-compatible alias
+        class << self
+          alias_method :jobs_to_renumber, :phases_to_renumber
+        end
+
+        # Generate the shifted number for a phase being renumbered.
+        #
+        # @param number [String] Original phase number
+        # @param shift [Integer] Amount to shift by (default: 1)
+        # @return [String] New shifted number
+        # @raise [ArgumentError] If shifting would exceed sibling limits
+        def self.shift_number(number, shift = 1)
+          parsed = parse(number)
+          new_index = parsed[:index] + shift
+          limit = parsed[:parent] ? MAX_SIBLINGS_NESTED : MAX_SIBLINGS_TOP_LEVEL
+
+          if new_index > limit
+            raise ArgumentError, "Cannot shift phase number: would exceed maximum siblings " \
+                                 "(#{limit}) at this level (new index would be: #{new_index})"
+          end
+
+          if parsed[:parent]
+            "#{parsed[:parent]}.#{format('%02d', new_index)}"
+          else
+            format("%03d", new_index)
+          end
+        end
+      end
+    end
+  end
+end
