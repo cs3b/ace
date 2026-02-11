@@ -1,0 +1,15 @@
+test-id: TS-LINT-003
+title: Doctor Diagnostics
+area: lint
+package: ace-lint
+priority: high
+requires:
+  tools: [ace-lint]
+  ruby: ">= 3.0"
+
+setup:
+  - copy-fixtures
+  - run: git -C valid-config init --quiet
+  - run: git -C syntax-error init --quiet
+  - env:
+      PROJECT_ROOT_PATH: "."
