@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.5] - 2026-02-11
+
+### Changed
+- Simplified path resolution in `ProtocolSource` to consistently use project root
+- Extracted `find_project_root` private method for cleaner code structure
+
+### Technical
+- Migrate E2E tests to per-TC directory format
+- Add E2E tests for ace-nav and ace-timestamp
+
 ## [0.17.4] - 2026-02-02
 
 ### Fixed

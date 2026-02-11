@@ -1,0 +1,11 @@
+test-id: TS-NAV-002
+title: Inference Priority and Errors
+area: NAV
+package: ace-support-nav
+priority: high
+requires:
+  tools: [ace-nav]
+  ruby: ">= 3.0"
+
+setup:
+  - copy-fixtures
