@@ -44,12 +44,6 @@ module Ace
             config.dig("providers", "cli") || %w[claude gemini codex codexoss opencode pi]
           end
 
-          # @return [Array<String>] Skill-aware provider names
-          def self.skill_aware_providers
-            config = load
-            config.dig("providers", "skill_aware") || %w[claude]
-          end
-
           # @param provider_name [String] Provider name (e.g., "claude")
           # @return [String, nil] Required CLI args for provider
           def self.cli_args_for(provider_name)

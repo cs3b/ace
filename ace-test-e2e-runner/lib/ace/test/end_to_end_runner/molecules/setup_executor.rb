@@ -32,9 +32,9 @@ module Ace
               steps_completed += 1
             end
 
-            { success: true, steps_completed: steps_completed, error: nil }
+            { success: true, steps_completed: steps_completed, error: nil, env: env }
           rescue StandardError => e
-            { success: false, steps_completed: steps_completed, error: e.message }
+            { success: false, steps_completed: steps_completed, error: e.message, env: env }
           end
 
           private
@@ -90,8 +90,11 @@ module Ace
           end
 
           # Execute a shell command in the sandbox
+          # NOTE: Uses shell invocation (bash -lc) intentionally to support
+          # shell operators (&&, |, >) in scenario.yml setup steps. Commands originate from
+          # committed scenario.yml files, not user input, so shell injection risk is mitigated.
           def handle_run(command, sandbox_dir, env)
-            stdout, stderr, status = Open3.capture3(merged_environment(env), command, chdir: sandbox_dir)
+            stdout, stderr, status = Open3.capture3(merged_environment(env), "bash", "-lc", command, chdir: sandbox_dir)
 
             unless status.success?
               raise "Setup step 'run' failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
@@ -117,6 +120,7 @@ module Ace
           # @param env [Hash] Custom environment variables
           # @return [Hash] Merged environment
           def merged_environment(env)
+            return ENV.to_h if env.empty?
             ENV.to_h.merge(env.transform_keys(&:to_s))
           end
 

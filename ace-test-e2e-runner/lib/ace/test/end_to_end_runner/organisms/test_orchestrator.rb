@@ -84,6 +84,41 @@ module Ace
             Atoms::SkillPromptBuilder.cli_provider?(@provider)
           end
 
+          # Run deterministic setup in Ruby before handing off to LLM
+          #
+          # For TS-format scenarios with setup steps and CLI providers, creates
+          # a sandbox and runs SetupExecutor so the LLM only does TC execution.
+          #
+          # @param scenario [Models::TestScenario] The test scenario
+          # @param timestamp [String] Timestamp for sandbox directory naming
+          # @param output [IO] Output stream for progress messages
+          # @return [Array(String, Hash), Array(nil, nil)] [sandbox_path, env_vars] or [nil, nil]
+          def setup_sandbox_if_ts(scenario, timestamp, output)
+            return [nil, nil] unless cli_provider? &&
+                                     scenario.scenario_format == :ts &&
+                                     scenario.setup_steps.any?
+
+            sandbox_dir = File.join(@base_dir, ".cache", "ace-test-e2e", scenario.dir_name(timestamp))
+            setup_executor = Molecules::SetupExecutor.new
+            result = setup_executor.execute(
+              setup_steps: scenario.setup_steps,
+              sandbox_dir: sandbox_dir,
+              fixture_source: scenario.fixture_path
+            )
+
+            unless result[:success]
+              output.puts "Warning: sandbox setup failed: #{result[:error]}"
+              return [nil, nil]
+            end
+
+            env = result[:env]
+            if env["PROJECT_ROOT_PATH"] && !env["PROJECT_ROOT_PATH"].start_with?("/")
+              env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], sandbox_dir)
+            end
+
+            [File.expand_path(sandbox_dir), env]
+          end
+
           # Run a single test
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Array<Models::TestResult>] Single-element result array
@@ -98,7 +133,9 @@ module Ace
             output.puts "Executing via #{@provider}#{cli_provider? ? " (skill mode)" : ""}..."
 
             run_id = cli_provider? ? timestamp : nil
-            result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases)
+            sandbox_path, env_vars = setup_sandbox_if_ts(scenario, timestamp, output)
+            result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
+                                       sandbox_path: sandbox_path, env_vars: env_vars)
 
             report_dir = report_dir_for(scenario, timestamp)
 
@@ -181,7 +218,9 @@ module Ace
                       summary: "Skipped: no matching test cases"
                     )
                   else
-                    result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: scenario_test_cases)
+                    sandbox_path, env_vars = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
+                    result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: scenario_test_cases,
+                                               sandbox_path: sandbox_path, env_vars: env_vars)
                   end
 
                   report_dir = report_dir_for(scenario, run_id || timestamp)

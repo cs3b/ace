@@ -10,12 +10,19 @@ allowed-tools:
   - Write
   - Glob
   - Grep
-argument-hint: "[package] [test-id] [--run-id ID]"
-last_modified: 2026-01-29
+argument-hint: "[package] [test-id] [--run-id ID] [--sandbox PATH] [--env K=V]"
+last_modified: 2026-02-11
 source: ace-test-e2e-runner
 ---
 
-read and run `ace-bundle wfi://run-e2e-test`
+<!-- Route to the appropriate workflow based on arguments -->
+<!-- --sandbox present → focused execution workflow (pre-populated sandbox) -->
+<!-- --sandbox absent  → full workflow (locate, setup, execute) -->
+
+If `$ARGUMENTS` contains `--sandbox`:
+  read and run `ace-bundle wfi://execute-e2e-test`
+Otherwise:
+  read and run `ace-bundle wfi://run-e2e-test`
 
 ARGUMENTS: $ARGUMENTS
 

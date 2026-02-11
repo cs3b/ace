@@ -74,7 +74,9 @@ module Ace
               temperature: 0.3
             )
 
-            response[:text]
+            total_passed = results.sum(&:passed_count)
+            total_tc = results.sum(&:total_count)
+            validate_overall_line(response[:text], total_passed, total_tc)
           rescue StandardError => e
             # LLM failed — fall back to static report
             warn "Warning: LLM synthesis failed (#{e.class}: #{e.message}), using static report" if ENV["DEBUG"]
@@ -128,6 +130,23 @@ module Ace
             return nil unless File.exist?(path)
 
             File.read(path)
+          end
+
+          # Validate the LLM-generated Overall line against deterministic totals.
+          # If the LLM hallucinated wrong numbers, replace the line with correct values.
+          def validate_overall_line(report_text, expected_passed, expected_total)
+            expected_pct = expected_total > 0 ? (expected_passed * 100.0 / expected_total).round(0) : 0
+            correct_line = "**Overall:** #{expected_passed}/#{expected_total} test cases passed (#{expected_pct}%)"
+
+            # Match patterns like "**Overall:** X/Y test cases passed (Z%)"
+            overall_pattern = /\*\*Overall:\*\*\s*\d+\/\d+\s+test cases passed\s*\(\d+%\)/
+
+            if report_text.match?(overall_pattern)
+              report_text.gsub(overall_pattern, correct_line)
+            else
+              # No Overall line found — append the correct one after the summary table
+              "#{report_text.rstrip}\n\n#{correct_line}\n"
+            end
           end
 
           def compute_status(results)

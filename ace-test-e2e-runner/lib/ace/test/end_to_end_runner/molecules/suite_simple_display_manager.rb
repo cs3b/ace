@@ -85,7 +85,11 @@ module Ace
           private
 
           def extract_test_name(test_file)
-            File.basename(test_file, ".mt.md")
+            if test_file.end_with?("scenario.yml")
+              File.basename(File.dirname(test_file))
+            else
+              File.basename(test_file, ".mt.md")
+            end
           end
 
           def collect_failed_details(results)

@@ -2,7 +2,7 @@
 workflow-id: wfi-run-e2e-tests
 name: Run E2E Tests (Parallel)
 description: Execute multiple E2E tests in parallel using Task tool subagents
-version: "1.0"
+version: "1.1"
 source: ace-test-e2e-runner
 ---
 
@@ -23,7 +23,8 @@ This workflow executes multiple E2E tests in parallel using Task tool subagents.
          │
          ├──► Task[Subagent 1] → /ace:run-e2e-test ace-lint MT-LINT-001
          ├──► Task[Subagent 2] → /ace:run-e2e-test ace-lint MT-LINT-002
-         └──► Task[Subagent 3] → /ace:run-e2e-test ace-lint MT-LINT-003
+         ├──► Task[Subagent 3] → /ace:run-e2e-test ace-lint TS-LINT-001
+         └──► Task[Subagent 4] → /ace:run-e2e-test ace-lint TS-LINT-002
                     │
                     ▼
          Reports in .cache/ace-test-e2e/ (parallel-safe via unique timestamps)
@@ -51,21 +52,30 @@ Find all E2E test scenarios based on arguments:
 
 **Single package:**
 ```bash
+# MT-format scenarios (single-file)
 find {PACKAGE}/test/e2e -name "*.mt.md" 2>/dev/null | sort
+# TS-format scenarios (directory-based)
+find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **All packages (--all):**
 ```bash
+# MT-format scenarios
 find */test/e2e -name "*.mt.md" 2>/dev/null | sort
+# TS-format scenarios
+find */test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **Project root (no args, no --all):**
 ```bash
+# MT-format scenarios
 find test/e2e -name "*.mt.md" 2>/dev/null | sort
+# TS-format scenarios
+find test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 Parse each test file's frontmatter to extract:
-- `test-id` - The test identifier (e.g., MT-LINT-001)
+- `test-id` - The test identifier (e.g., `MT-LINT-001` or `TS-LINT-001`)
 - `title` - Test title
 - `priority` - Test priority level
 
@@ -75,7 +85,8 @@ Build a test manifest:
 | Test ID | Package | Title | Priority |
 |---------|---------|-------|----------|
 | MT-LINT-001 | ace-lint | Ruby Validator Fallback | P1 |
-| MT-LINT-002 | ace-lint | Output Format Validation | P1 |
+| TS-LINT-002 | ace-lint | JSON Report Generation | P1 |
+| TS-LINT-003 | ace-lint | Skill Validation | P2 |
 ```
 
 ### 3. Launch Parallel Subagents
@@ -119,7 +130,7 @@ As each subagent completes, capture its return summary:
 | Test ID | Status | Passed | Failed | Report Path |
 |---------|--------|--------|--------|-------------|
 | MT-LINT-001 | pass | 8 | 0 | 8oig0h-lint-mt001 |
-| MT-LINT-002 | fail | 3 | 2 | 8oig1k-lint-mt002 |
+| TS-LINT-002 | fail | 3 | 2 | 8oig1k-lint-ts002 |
 ```
 
 ### 5. Read Metadata Files (Optional Detail)
@@ -172,19 +183,19 @@ agent: {agent-name}
 | Test ID | Title | Status | Passed | Failed | Total |
 |---------|-------|--------|--------|--------|-------|
 | MT-LINT-001 | Ruby Validator Fallback | Pass | 8 | 0 | 8 |
-| MT-LINT-002 | Output Format Validation | Fail | 3 | 2 | 5 |
+| TS-LINT-002 | JSON Report Generation | Fail | 3 | 2 | 5 |
 
 **Overall:** {total-passed}/{total-cases} test cases passed ({percentage}%)
 
 ## Failed Tests
 
-### MT-LINT-002: Output Format Validation
+### TS-LINT-002: JSON Report Generation
 
 **Failed Test Cases:**
 - TC-003: Expected JSON output to include "errors" key
 - TC-005: Exit code should be 1 for validation failures
 
-**Report:** `.cache/ace-test-e2e/{timestamp}-lint-mt002-reports/summary.r.md`
+**Report:** `.cache/ace-test-e2e/{timestamp}-lint-ts002-reports/summary.r.md`
 
 ## Reports
 
@@ -193,7 +204,7 @@ All reports persisted to `.cache/ace-test-e2e/`:
 | Test ID | Sandbox | Reports Folder |
 |---------|---------|----------------|
 | MT-LINT-001 | {ts}-lint-mt001/ | {ts}-lint-mt001-reports/ |
-| MT-LINT-002 | {ts}-lint-mt002/ | {ts}-lint-mt002-reports/ |
+| TS-LINT-002 | {ts}-lint-ts002/ | {ts}-lint-ts002-reports/ |
 
 Each reports folder contains: `summary.r.md`, `experience.r.md`, `metadata.yml`
 
@@ -249,7 +260,7 @@ Present the execution summary to the user:
 | Test ID | Status | Passed/Total |
 |---------|--------|--------------|
 | MT-LINT-001 | Pass | 8/8 |
-| MT-LINT-002 | Fail | 3/5 |
+| TS-LINT-002 | Fail | 3/5 |
 
 ### Overall: {total-passed}/{total-cases} passed ({percentage}%)
 
@@ -259,7 +270,7 @@ Suite report: `.cache/ace-test-e2e/{FINAL_TS}-final-report.md`
 
 Individual test reports in `.cache/ace-test-e2e/`:
 - {timestamp}-lint-mt001-reports/
-- {timestamp}-lint-mt002-reports/
+- {timestamp}-lint-ts002-reports/
 ```
 
 ## Example Invocations

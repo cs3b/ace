@@ -129,6 +129,33 @@ class TestExecutorTest < Minitest::Test
     end
   end
 
+  def test_execute_passes_sandbox_and_env_to_prompt_builder
+    executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    env_vars = { "PROJECT_ROOT" => "/code" }
+
+    captured_prompt = nil
+    Ace::LLM::QueryInterface.stub(:query, ->(*args, **_kw) { captured_prompt = args[1]; { text: "- **Test ID**: TS-LINT-001\n- **Status**: pass\n- **Passed**: 1\n- **Failed**: 0\n- **Total**: 1\n- **Report Paths**: x\n- **Issues**: None" } }) do
+      executor.execute(scenario, sandbox_path: "/tmp/sb", env_vars: env_vars)
+    end
+
+    assert captured_prompt.include?("--sandbox /tmp/sb"), "Prompt should contain --sandbox flag"
+    assert captured_prompt.include?("--env PROJECT_ROOT=/code"), "Prompt should contain --env flag"
+  end
+
+  def test_non_claude_cli_uses_skill_invocation
+    executor = TestExecutor.new(provider: "gemini:flash", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+
+    captured_prompt = nil
+    Ace::LLM::QueryInterface.stub(:query, ->(*args, **_kw) { captured_prompt = args[1]; { text: "- **Test ID**: TS-LINT-001\n- **Status**: pass\n- **Passed**: 1\n- **Failed**: 0\n- **Total**: 1\n- **Report Paths**: x\n- **Issues**: None" } }) do
+      executor.execute(scenario, sandbox_path: "/tmp/sb")
+    end
+
+    assert captured_prompt.include?("/ace:run-e2e-test"), "Non-claude CLI provider should use skill invocation"
+    assert captured_prompt.include?("--sandbox /tmp/sb"), "Non-claude CLI should pass --sandbox"
+  end
+
   private
 
   def create_scenario(overrides = {})

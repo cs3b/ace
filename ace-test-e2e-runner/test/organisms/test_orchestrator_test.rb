@@ -16,7 +16,7 @@ class TestOrchestratorTest < Minitest::Test
       @summary = summary
     end
 
-    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil)
+    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil)
       TestResult.new(
         test_id: scenario.test_id,
         status: @status,
@@ -277,7 +277,7 @@ class TestOrchestratorTest < Minitest::Test
       call_count = 0
       # Executor that alternates pass/fail
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
         call_count += 1
         TestResult.new(
           test_id: scenario.test_id,
@@ -447,7 +447,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received_run_id = nil
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
         received_run_id = run_id
         TestResult.new(
           test_id: scenario.test_id,
@@ -481,7 +481,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received_run_id = :not_called
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
         received_run_id = run_id
         TestResult.new(
           test_id: scenario.test_id,
@@ -516,7 +516,7 @@ class TestOrchestratorTest < Minitest::Test
       received_run_ids = []
       mutex = Mutex.new
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
         mutex.synchronize { received_run_ids << run_id }
         TestResult.new(
           test_id: scenario.test_id,
@@ -594,7 +594,7 @@ class TestOrchestratorTest < Minitest::Test
       mutex = Mutex.new
 
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
         mutex.synchronize { execution_order << scenario.test_id }
         TestResult.new(
           test_id: scenario.test_id,
@@ -672,7 +672,7 @@ class TestOrchestratorTest < Minitest::Test
       # Executor where test 1 is slow, test 2/3 are fast
       # With parallel > 1, test 2 may finish before test 1
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
         sleep(0.05) if scenario.test_id == "MT-TEST-001"
         TestResult.new(
           test_id: scenario.test_id,
@@ -711,6 +711,116 @@ class TestOrchestratorTest < Minitest::Test
       assert_equal "pass", results.first.status
       assert results.first.success?
       assert_match(/Running E2E test/, @output.string)
+    end
+  end
+
+  def test_ts_format_cli_provider_runs_setup_before_execution
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      received = {}
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+        received[:sandbox_path] = sandbox_path
+        received[:env_vars] = env_vars
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "OK",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        executor: executor
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      refute_nil received[:sandbox_path], "sandbox_path should be set for TS-format CLI provider"
+      assert received[:sandbox_path].include?(".cache/ace-test-e2e/"),
+        "sandbox_path should be under .cache/ace-test-e2e/"
+      assert_instance_of Hash, received[:env_vars]
+      # PROJECT_ROOT_PATH should be expanded to absolute sandbox path
+      assert received[:env_vars]["PROJECT_ROOT_PATH"].end_with?(".cache/ace-test-e2e/test00-my-pkg-ts001"),
+        "PROJECT_ROOT_PATH should be expanded to absolute sandbox path"
+    end
+  end
+
+  def test_mt_format_does_not_run_setup
+    Dir.mktmpdir do |tmpdir|
+      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+
+      received = {}
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+        received[:sandbox_path] = sandbox_path
+        received[:env_vars] = env_vars
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "OK",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        executor: executor
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "MT-TEST-001",
+        output: @output
+      )
+
+      assert_nil received[:sandbox_path], "sandbox_path should be nil for MT-format"
+      assert_nil received[:env_vars], "env_vars should be nil for MT-format"
+    end
+  end
+
+  def test_api_provider_does_not_run_setup_for_ts
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      received = {}
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+        received[:sandbox_path] = sandbox_path
+        received[:env_vars] = env_vars
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "OK",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "google:gemini-2.5-flash",
+        executor: executor
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_nil received[:sandbox_path], "sandbox_path should be nil for API providers"
+      assert_nil received[:env_vars], "env_vars should be nil for API providers"
     end
   end
 
@@ -760,7 +870,7 @@ class TestOrchestratorTest < Minitest::Test
 
       executed_scenarios = []
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
         executed_scenarios << { test_id: scenario.test_id, test_cases: test_cases }
         TestResult.new(
           test_id: scenario.test_id,
@@ -817,6 +927,46 @@ class TestOrchestratorTest < Minitest::Test
       area: test
       package: #{package}
       priority: medium
+    YAML
+
+    tc_ids.each do |tc_id|
+      File.write(File.join(ts_dir, "#{tc_id}-check.tc.md"), <<~CONTENT)
+        ---
+        tc-id: #{tc_id}
+        title: Check #{tc_id}
+        ---
+
+        ## Objective
+        Verify #{tc_id}.
+
+        ## Steps
+        1. Run test
+           ```bash
+           echo "#{tc_id}"
+           ```
+
+        ## Expected
+        - Output contains #{tc_id}
+      CONTENT
+    end
+  end
+
+  def create_ts_test_package_with_setup(tmpdir, package, scenario_id, tc_ids)
+    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-test")
+    fixtures_dir = File.join(ts_dir, "fixtures")
+    FileUtils.mkdir_p(fixtures_dir)
+    File.write(File.join(fixtures_dir, "sample.txt"), "fixture content")
+
+    File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+      test-id: #{scenario_id}
+      title: Test #{scenario_id}
+      area: test
+      package: #{package}
+      priority: medium
+      setup:
+        - copy-fixtures
+        - env:
+            PROJECT_ROOT_PATH: "."
     YAML
 
     tc_ids.each do |tc_id|

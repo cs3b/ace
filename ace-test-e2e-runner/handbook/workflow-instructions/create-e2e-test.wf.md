@@ -2,7 +2,7 @@
 workflow-id: wfi-create-e2e-test
 name: Create E2E Test
 description: Create a new E2E test scenario from template
-version: "1.0"
+version: "1.2"
 source: ace-test-e2e-runner
 ---
 
@@ -14,6 +14,7 @@ This workflow guides an agent through creating a new E2E test scenario.
 
 - `PACKAGE` (required) - The package for the test (e.g., `ace-lint`)
 - `AREA` (required) - The test area code (e.g., `LINT`, `REVIEW`, `GIT`)
+- `--format mt|ts` (optional) - Test format to create. `mt` creates a single `.mt.md` file (MT-format). `ts` creates a directory with `scenario.yml` and `.tc.md` files (TS-format). Default: `mt`.
 - `--context <description>` (optional) - Description of what the test should verify
 
 ## Workflow Steps
@@ -36,20 +37,27 @@ ls -d */ | grep -E "^ace-" | sed 's/\/$//'
 
 ### 2. Generate Test ID
 
-Find the next available test ID:
+Determine the prefix based on `--format`:
+- `mt` format → prefix is `MT`
+- `ts` format → prefix is `TS`
+
+Find the next available test ID by searching both formats (IDs share a namespace per area):
 
 ```bash
+# Search MT-format files
 find {PACKAGE}/test/e2e -name "MT-{AREA}-*.mt.md" 2>/dev/null | \
-  sed 's/.*MT-{AREA}-\([0-9]*\).*/\1/' | \
-  sort -n | \
-  tail -1
+  sed 's/.*MT-{AREA}-\([0-9]*\).*/\1/'
+# Search TS-format directories
+find {PACKAGE}/test/e2e -maxdepth 1 -type d -name "TS-{AREA}-*" 2>/dev/null | \
+  sed 's/.*TS-{AREA}-\([0-9]*\).*/\1/'
 ```
 
+Combine results, sort, and take the highest number:
 - If no existing tests: use `001`
 - Otherwise: increment the highest number by 1
 - Format as three digits (e.g., `001`, `002`, `015`)
 
-Result: `MT-{AREA}-{NNN}` (e.g., `MT-LINT-003`)
+Result: `{PREFIX}-{AREA}-{NNN}` (e.g., `MT-LINT-003` or `TS-LINT-009`)
 
 ### 3. Create Directory
 
@@ -61,7 +69,7 @@ mkdir -p {PACKAGE}/test/e2e
 
 ### 4. Generate Test Slug
 
-Create a kebab-case slug for the filename:
+Create a kebab-case slug:
 
 **If --context provided:**
 - Extract key words from the context description
@@ -73,6 +81,10 @@ Create a kebab-case slug for the filename:
 - Use a placeholder: `new-test-scenario`
 
 Example: "Test config file validation" -> `config-file-validation`
+
+**Usage by format:**
+- MT-format: slug is the filename suffix → `MT-LINT-003-config-file-validation.mt.md`
+- TS-format: slug is the directory name suffix → `TS-LINT-009-config-file-validation/`
 
 ### 5. Load Template
 
@@ -106,7 +118,37 @@ Initial values for optional fields:
 - `last-verified:` (leave empty)
 - `verified-by:` (leave empty)
 
-### 7. Context-Based Generation (if --context)
+### 7. E2E Value Gate Check
+
+Before generating test cases, verify the proposed test has genuine E2E value.
+
+**Check unit test coverage:**
+```bash
+# Search for existing unit tests covering this area
+find {PACKAGE}/test/atoms {PACKAGE}/test/molecules {PACKAGE}/test/organisms \
+  -name "*_test.rb" 2>/dev/null | head -20
+```
+
+Read the relevant test files and count assertions covering the behavior described in `--context`.
+
+**Apply the gate per TC:**
+For each proposed TC, answer: **"Does this require the full CLI binary + real external tools + real filesystem I/O?"**
+
+- If **YES**: proceed to TC generation
+- If **NO**: note that unit tests cover this behavior and skip the TC
+- If **PARTIAL**: create the TC but scope it to only the E2E-exclusive aspects
+
+**Example decisions:**
+- "Test that invalid YAML config produces error" — check if `atoms/config_parser_test.rb` already asserts this. If so, **skip** (unit test covers it). If unit test checks parsing but not the full CLI exit code path, **create** a TC scoped to just the exit code.
+- "Test that StandardRB subprocess executes and returns results" — unit tests stub the subprocess. **Create** this as E2E because it requires the real tool.
+
+If all proposed TCs fail the gate, report to the user:
+```
+All proposed behaviors are already covered by unit tests in {PACKAGE}/test/.
+No E2E test needed. Consider adding unit tests instead if coverage gaps exist.
+```
+
+### 8. Context-Based Generation (if --context)
 
 If a context description was provided, enhance the test with:
 
@@ -141,6 +183,11 @@ If a context description was provided, enhance the test with:
 - Include negative assertions (files/directories that should NOT exist)
 - Capture and check CLI output content, not just exit codes
 - Verify that status values match actual implementation (e.g., `done` vs `completed`)
+
+**COST-AWARE (reduce LLM invocations):**
+- Consolidate assertions that share the same CLI invocation into a single TC. For example, after running `ace-lint lint file.rb`, check exit code, report.json structure, and ok.md existence in ONE TC — not three.
+- Target 2-5 TCs per scenario. More than 5 suggests the scenario is too broad; split into focused scenarios. Fewer than 2 suggests merging with a related scenario.
+- Never create a TC for a single assertion when that assertion could be appended to an existing TC that runs the same command.
 
 #### Recommended TC Ordering
 
@@ -208,23 +255,52 @@ bundle exec ruby -e '
 **Objective:** Check actual file paths created, with negative assertions for wrong paths
 ```
 
-### 8. Write Test File
+### 9. Write Test File(s)
 
-Write the populated template to:
+**MT-format** (`--format mt`, default):
+
+Write the populated template to a single file:
 ```
 {PACKAGE}/test/e2e/MT-{AREA}-{NNN}-{slug}.mt.md
 ```
 
 Example: `ace-lint/test/e2e/MT-LINT-003-config-file-validation.mt.md`
 
-### 9. Report Result
+**TS-format** (`--format ts`):
+
+Create a scenario directory with separate files:
+```bash
+mkdir -p {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}
+```
+
+Write `scenario.yml` (metadata and setup):
+```
+{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/scenario.yml
+```
+
+Write individual TC files for each test case:
+```
+{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.tc.md
+{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-002-{tc-slug}.tc.md
+```
+
+Optionally create a fixtures directory if test data is needed:
+```bash
+mkdir -p {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/fixtures
+```
+
+Example: `ace-lint/test/e2e/TS-LINT-009-config-file-validation/scenario.yml`
+
+### 10. Report Result
 
 Output a summary:
 
+**MT-format:**
 ```markdown
 ## E2E Test Created
 
 **Test ID:** MT-{AREA}-{NNN}
+**Format:** MT (single-file)
 **Package:** {package}
 **File:** {PACKAGE}/test/e2e/MT-{AREA}-{NNN}-{slug}.mt.md
 
@@ -236,21 +312,56 @@ Output a summary:
 4. Update `last-verified` after successful execution
 ```
 
+**TS-format:**
+```markdown
+## E2E Test Created
+
+**Test ID:** TS-{AREA}-{NNN}
+**Format:** TS (directory-based)
+**Package:** {package}
+**Directory:** {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/
+**Files:**
+- scenario.yml
+- TC-001-{tc-slug}.tc.md
+- TC-002-{tc-slug}.tc.md
+
+### Next Steps
+
+1. Review and customize `scenario.yml` and TC files
+2. Add fixtures to the `fixtures/` directory if needed
+3. Run the test with: `/ace:run-e2e-test {package} TS-{AREA}-{NNN}`
+4. Update `last-verified` after successful execution
+```
+
 ## Example Invocations
 
-**Create a basic test:**
+**Create an MT-format test (default):**
 ```
 /ace:create-e2e-test ace-lint LINT
 ```
 
 Creates: `ace-lint/test/e2e/MT-LINT-003-new-test-scenario.mt.md`
 
-**Create a contextual test:**
+**Create a TS-format test:**
+```
+/ace:create-e2e-test ace-lint LINT --format ts
+```
+
+Creates: `ace-lint/test/e2e/TS-LINT-009-new-test-scenario/` with `scenario.yml` and TC files.
+
+**Create a contextual MT-format test:**
 ```
 /ace:create-e2e-test ace-lint LINT --context "Test config file validation"
 ```
 
 Creates: `ace-lint/test/e2e/MT-LINT-003-config-file-validation.mt.md` with pre-populated test cases for config validation.
+
+**Create a contextual TS-format test:**
+```
+/ace:create-e2e-test ace-lint LINT --format ts --context "Test config file validation"
+```
+
+Creates: `ace-lint/test/e2e/TS-LINT-009-config-file-validation/` with `scenario.yml` and TC files for config validation.
 
 **Create test for new area:**
 ```

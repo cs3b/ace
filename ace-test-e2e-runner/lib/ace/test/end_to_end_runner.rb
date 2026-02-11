@@ -14,6 +14,7 @@ require_relative "end_to_end_runner/atoms/skill_prompt_builder"
 require_relative "end_to_end_runner/atoms/skill_result_parser"
 require_relative "end_to_end_runner/atoms/suite_report_prompt_builder"
 require_relative "end_to_end_runner/atoms/test_case_parser"
+require_relative "end_to_end_runner/atoms/tc_fidelity_validator"
 require_relative "end_to_end_runner/atoms/display_helpers"
 
 # Molecules

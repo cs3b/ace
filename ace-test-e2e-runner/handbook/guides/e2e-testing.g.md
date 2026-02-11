@@ -2,7 +2,7 @@
 guide-id: g-e2e-testing
 title: E2E Testing Guide
 description: Conventions and best practices for agent-executed end-to-end tests
-version: "1.3"
+version: "1.5"
 source: ace-test-e2e-runner
 ---
 
@@ -19,34 +19,79 @@ E2E (end-to-end) tests are tests that are executed by an AI agent rather than an
 
 ## When to Use E2E Tests
 
-Use E2E tests when:
+### The E2E Value Gate
 
-1. **Integration with external tools** - Tests that require real tool installations (StandardRB, RuboCop, etc.)
-2. **Complex environment setup** - Tests needing specific file structures or configurations
-3. **End-to-end validation** - Full workflow testing from CLI to output
-4. **Edge cases** - Scenarios that are hard to automate
-5. **Slow operations** - Tests taking minutes to run
+Before creating any E2E test case, answer this question:
 
-Do NOT use E2E tests when:
+> **Does this behavior require the full CLI binary, real external tools (StandardRB, gitleaks, etc.), AND real filesystem I/O to test meaningfully?**
 
-- Unit tests would suffice
-- The test can be automated with mocks
-- Speed is critical for feedback
+If the answer is **no**, the behavior belongs in unit tests (atoms/molecules) or integration tests (organisms), not E2E.
+
+### Behaviors That Require E2E
+
+1. **Real subprocess execution** — Behaviors that depend on actually running external tools (StandardRB, RuboCop, gitleaks) as subprocesses, not stubbed
+2. **CLI binary pipeline** — The full path from `bin/ace-{tool}` → argument parsing → execution → stdout/stderr → exit code
+3. **Real filesystem discovery** — Config file discovery, project root detection, file globbing that depends on actual directory traversal
+4. **Multi-tool orchestration** — Workflows that chain multiple CLI tools or require real tool installation detection
+5. **Environment-specific behavior** — Tool version detection, PATH resolution, shim behavior with version managers (mise, rbenv)
+
+### Behaviors That Do NOT Require E2E
+
+Do NOT create E2E test cases for:
+
+- **Output formatting** (verbose/quiet modes, colors, column alignment) — test via unit tests on the formatter
+- **Config parsing** (YAML structure, validation, defaults) — test via unit tests on the parser
+- **Error message content** (wording, exit code mapping) — test via unit tests on the error handler
+- **Data transformations** (report structure, JSON schema) — test via unit tests on the serializer
+- **Flag permutations** (--fix, --report, --group combinations) — test 1-2 key flags in E2E, exhaustive permutations in unit tests
+
+**Lesson learned:** In ace-lint, ~60% of E2E TCs (19/31) duplicated coverage already provided by 265 unit tests. After applying this gate, the suite dropped to 9 TCs with no loss of unique coverage.
+
+### Cost and Scope
+
+**Cost per TC:** Each E2E test case requires 1 LLM agent invocation (~$0.05-0.15 in API cost, 30-120 seconds of execution time). A suite of 30 TCs costs $1.50-$4.50 per run; a suite of 9 TCs costs $0.45-$1.35.
+
+**Healthy scenario scope:**
+- **2-5 TCs per scenario** — TCs within a scenario share setup (fixtures, git init, env vars). Fewer than 2 suggests the scenario could merge with another; more than 5 suggests splitting.
+- **Consolidation rule:** Multiple assertions that share the same CLI invocation and setup belong in ONE TC, not separate TCs. For example, checking `report.json` structure, exit code, and `ok.md` existence after a single `ace-lint lint` call is one TC with multiple verification steps, not three TCs.
+
+**Reference:** ace-lint consolidated from 8 scenarios / 31 TCs to 3 scenarios (5, 2, 2 TCs) — each scenario is a coherent pipeline with shared fixtures.
 
 ## Convention
 
 ### Location
 
-Test scenarios are stored in individual packages:
+Test scenarios are stored in individual packages in two formats:
+
+#### MT-Format (Single File)
 
 ```
-{package}/test/e2e/*.mt.md
+{package}/test/e2e/MT-{AREA}-{NNN}-{slug}.mt.md
 ```
 
-This convention:
-- Keeps tests alongside the code they test
-- Separates from automated tests (`test/atoms/`, `test/molecules/`, etc.)
-- Uses `.mt.md` extension to distinguish from other markdown
+A single markdown file containing all test cases, setup, and test data inline.
+
+#### TS-Format (Per-TC Directory)
+
+```
+{package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
+    scenario.yml                    # Scenario metadata + setup config
+    TC-001-{slug}.tc.md             # Individual test case files
+    TC-002-{slug}.tc.md
+    fixtures/                       # Shared fixtures (copied to sandbox)
+```
+
+Each test case is a separate `.tc.md` file, with shared fixtures and setup configuration in `scenario.yml`.
+
+#### When to Use Which
+
+- **MT-format**: Simpler scenarios, single file, inline test data, fewer test cases
+- **TS-format**: Complex scenarios, per-TC isolation, fixture directories, Ruby-driven sandbox setup
+
+Both conventions:
+- Keep tests alongside the code they test
+- Separate from automated tests (`test/atoms/`, `test/molecules/`, etc.)
+- Are automatically excluded from `ace-test`
 
 ### Test Execution Directory {#directory-structure}
 
@@ -66,7 +111,7 @@ Test artifacts and reports are created in project-local cache:
 
 **Naming convention (SHORT format):**
 - `{short-pkg}` = package name without `ace-` prefix (e.g., `lint`, `git-commit`)
-- `{short-id}` = lowercase test number (e.g., `mt001`, `mt002`)
+- `{short-id}` = lowercase test number (e.g., `mt001`, `ts001`)
 
 Examples:
 - `.cache/ace-test-e2e/8oig0h-lint-mt001/` - Package-specific test sandbox
@@ -100,27 +145,37 @@ cd "$TEST_DIR"
 
 ### Test ID Format
 
+Two formats are supported:
+
 ```
-MT-{AREA}-{NNN}
+MT-{AREA}-{NNN}     # Single-file format
+TS-{AREA}-{NNN}     # Per-TC directory format
 ```
 
-- `MT` - Test prefix (legacy: "Manual Test")
+- `MT` / `TS` - Format prefix (MT = single file, TS = per-TC directory)
 - `{AREA}` - Area code (uppercase, e.g., LINT, REVIEW, BUILD)
 - `{NNN}` - Three-digit sequential number
 
 Examples:
-- `MT-LINT-001` - First lint E2E test
+- `MT-LINT-001` - Single-file lint test
+- `TS-LINT-001` - Per-TC directory lint test
 - `MT-REVIEW-015` - Fifteenth review E2E test
-- `MT-GIT-003` - Third git E2E test
 
-### Filename Convention
+### Naming Convention
 
+**MT-format** (single file):
 ```
 MT-{AREA}-{NNN}-{slug}.mt.md
 ```
 
+**TS-format** (directory):
+```
+TS-{AREA}-{NNN}-{slug}/
+```
+
 The slug should be kebab-case and descriptive:
 - `MT-LINT-001-ruby-validator-fallback.mt.md`
+- `TS-LINT-002-json-report-generation/`
 - `MT-REVIEW-002-pr-comment-parsing.mt.md`
 
 ## Writing Test Scenarios
@@ -201,18 +256,100 @@ Example:
 **Status:** [ ] Pass / [ ] Fail
 ```
 
+## TS-Format Scenarios
+
+TS-format scenarios split test definitions across multiple files in a directory structure, enabling per-TC isolation and Ruby-driven sandbox setup.
+
+### scenario.yml
+
+The `scenario.yml` file defines metadata and setup directives:
+
+```yaml
+test-id: TS-LINT-001
+title: Ruby Validator Fallback Behavior
+area: lint
+package: ace-lint
+priority: high
+requires:
+  tools: [standardrb, rubocop]
+  ruby: ">= 3.0"
+
+setup:
+  - copy-fixtures
+  - env:
+      PROJECT_ROOT_PATH: "."
+```
+
+**Setup directives:**
+- `copy-fixtures` — Copies the `fixtures/` directory contents into the sandbox
+- `git-init` — Initializes a git repository in the sandbox
+- `env:` — Sets environment variables for test execution (key-value mappings)
+
+### Test Case Files (.tc.md)
+
+Each test case is a separate file named `TC-NNN-{slug}.tc.md`:
+
+```yaml
+---
+tc-id: TC-001
+title: StandardRB Available - Valid File
+---
+```
+
+The body follows the same structure as MT-format test cases:
+- **Objective** — What this specific test case verifies
+- **Steps** — Commands to execute
+- **Expected** — Expected outcomes
+
+### fixtures/ Directory
+
+Shared test data files placed in `fixtures/` are copied into the sandbox via the `copy-fixtures` setup directive. This avoids inline heredocs for complex test data.
+
 ## Executing Tests
 
 ### Invocation
 
-Use the skill:
+Use the skill to run a single test:
 ```
 /ace:run-e2e-test <package> <test-id>
 ```
 
-Or use the workflow directly:
+The skill routes to the appropriate workflow:
+- Without `--sandbox` → `run-e2e-test.wf.md` (full workflow: locate, setup, execute)
+- With `--sandbox` → `execute-e2e-test.wf.md` (focused execution in pre-populated sandbox)
+
+### Test Case Filtering
+
+Run specific test cases within a scenario:
 ```
-ace-bundle wfi://run-e2e-test
+/ace:run-e2e-test <package> <test-id> TC-001,TC-003
+```
+
+### Running Multiple Tests (Parallel)
+
+Use the multi-test skill to run all tests in a package:
+```
+/ace:run-e2e-tests <package>
+/ace:run-e2e-tests <package> --sequential
+/ace:run-e2e-tests --all
+```
+
+This uses subagents (Task tool) to execute tests in parallel, with results aggregated into a suite report.
+
+### Sandbox Pre-Setup Flow
+
+For TS-format scenarios, the Ruby `SetupExecutor` can pre-populate the sandbox before the agent executes test cases:
+
+1. CLI invokes `SetupExecutor` with the scenario's setup directives
+2. `SetupExecutor` creates the sandbox, copies fixtures, initializes git, sets env vars
+3. The skill is invoked with `--sandbox <path>` pointing to the pre-populated directory
+4. The agent runs `execute-e2e-test.wf.md` which skips setup and goes straight to execution
+
+### Setup Only (No Execution)
+
+To prepare a sandbox without running tests:
+```bash
+ace-test-e2e setup <package> <test-id>
 ```
 
 ### Agent Responsibilities
@@ -246,19 +383,23 @@ Fill in actual results during execution:
 ### Find All E2E Tests
 
 ```bash
+# MT-format tests
 find . -name "*.mt.md" -path "*/test/e2e/*"
+
+# TS-format tests
+find . -name "scenario.yml" -path "*/test/e2e/*"
 ```
 
 ### Find Tests by Area
 
 ```bash
-find . -name "MT-LINT-*.mt.md" -path "*/test/e2e/*"
+find . -path "*/test/e2e/*LINT*" \( -name "*.mt.md" -o -name "scenario.yml" \)
 ```
 
 ### Find Tests in Package
 
 ```bash
-find {package}/test/e2e -name "*.mt.md"
+find {package}/test/e2e -name "*.mt.md" -o -name "scenario.yml"
 ```
 
 ## Maintenance
@@ -278,6 +419,21 @@ Consider a test outdated if:
 - Package had significant changes since verification
 - Prerequisites changed
 
+### Coverage Overlap Review
+
+Periodically review E2E suites for overlap with unit test coverage, especially after:
+- Unit test coverage grows significantly (new test files, new assertion batches)
+- Package undergoes refactoring that adds mocking-friendly abstractions
+- E2E suite execution time or cost exceeds targets
+
+**Review process:**
+1. List all E2E TCs and the specific behavior each verifies
+2. Search unit tests (atoms/molecules/organisms) for assertions covering the same behavior
+3. For each overlapping TC, ask: "Does this TC test something the unit test CAN'T — real binary, real subprocess, real filesystem?"
+4. Archive TCs that fail the E2E Value Gate
+
+See also: `/ace:review-e2e-tests` workflow, which includes overlap analysis.
+
 ### Archiving Tests
 
 Move obsolete tests to:
@@ -288,8 +444,9 @@ Move obsolete tests to:
 ## Integration with ace-test
 
 E2E tests are automatically excluded from `ace-test` because:
-- They use `.mt.md` extension (not `*_test.rb`)
-- They're in `test/e2e/` directory
+- MT-format uses `.mt.md` extension (not `*_test.rb`)
+- TS-format uses `.tc.md` / `scenario.yml` (not `*_test.rb`)
+- Both are in `test/e2e/` directory
 
 The `ace-test` tool only runs files matching `*_test.rb`.
 
