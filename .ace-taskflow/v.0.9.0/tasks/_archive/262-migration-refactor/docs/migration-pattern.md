@@ -31,6 +31,25 @@ Single monolithic markdown file containing:
 └── TC-NNN-{slug}.tc.md
 ```
 
+## Phase 0: Pre-Migration Pipeline
+
+Before applying the migration algorithm, run the 3-stage E2E pipeline to determine which TCs have genuine E2E value:
+
+1. **Review:** `/ace:review-e2e-tests {PACKAGE}` — produces coverage matrix (functionality × unit tests × E2E)
+2. **Plan:** `/ace:plan-e2e-changes {PACKAGE}` — classifies each existing MT TC as REMOVE / KEEP / MODIFY / CONSOLIDATE / ADD
+3. **Approve plan** before proceeding to migration
+
+The ace-lint migration (262.01) demonstrated that ~60% of TCs duplicate unit test coverage. A faithful 1:1 migration of 31 TCs was immediately followed by restructuring down to 9 TCs (~71% reduction). The pipeline avoids this wasted intermediate step.
+
+### Migration scope is determined by the plan:
+- **KEEP TCs** → migrate to TS format as-is (Steps 1–6 below)
+- **MODIFY TCs** → migrate to TS format with changes applied
+- **CONSOLIDATE TCs** → merge during migration (single TS TC from multiple MT TCs)
+- **REMOVE TCs** → skip (don't create TS files, delete MT files)
+- **ADD TCs** → create new TS TCs for uncovered features (if any)
+
+The 6-step migration algorithm below applies only to TCs approved through the Value Gate.
+
 ## Migration Algorithm (Per File)
 
 ### Step 1: Create Directory Structure
