@@ -1,0 +1,4 @@
+taskflow:
+  root: ".ace-taskflow"
+  directories:
+    tasks: "tasks"

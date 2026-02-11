@@ -1,0 +1,15 @@
+protocol: wfi
+description: Workflow documents
+extensions:
+  - ".wf.md"
+  - ".wfi.md"
+  - ".workflow.md"
+  - ".md"
+inferred_extensions:
+  - ".wf"
+  - ".wfi"
+  - ".workflow"
+  - ".wf.md"
+  - ".wfi.md"
+  - ".workflow.md"
+  - ".md"

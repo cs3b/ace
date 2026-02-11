@@ -1,0 +1,4 @@
+description: "Level 1"
+model: "google:gemini-2.5-flash"
+instructions:
+  description: "Level 1 instructions"
