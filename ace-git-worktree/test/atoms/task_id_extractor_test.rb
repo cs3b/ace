@@ -132,4 +132,16 @@ class TaskIDExtractorTest < Minitest::Test
     # Falls back to simple pattern since .1 doesn't match .XX
     assert_equal "121", @extractor.extract(task_data)
   end
+
+  # Path extraction tests (handles ace-task.NNN in directory names)
+
+  def test_normalize_from_path_with_multiple_task_patterns
+    # Should match task.999 at end, not ace-task.261 in middle
+    assert_equal "999", @extractor.normalize("/Users/mc/Ps/ace-task.261/.cache/test/task.999")
+  end
+
+  def test_normalize_from_path_with_ace_task_prefix
+    # Should match task.081, not 261 from ace-task.261
+    assert_equal "081", @extractor.normalize("/Users/mc/Ps/ace-task.261/worktrees/task.081")
+  end
 end

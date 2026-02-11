@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.7] - 2026-02-11
+
+### Fixed
+- TaskIDExtractor regex now correctly matches `task.NNN` in paths containing `ace-task.NNN` directory prefixes
+
+### Technical
+- Add path extraction test cases for TaskIDExtractor
+
 ## [0.12.6] - 2026-02-01
 
 ### Fixed
