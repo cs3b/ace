@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `ScenarioParser#parse` now handles TS-format `scenario.yml` files — delegates to `ScenarioLoader` instead of crashing with `ArgumentError: No frontmatter found`
 - Review cycle 1 feedback items (medium+ severity)
 - Review cycle 2 feedback items (critical + high severity)
 
