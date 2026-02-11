@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-02-11
+
+### Added
+
+- **TestCase model** — `Models::TestCase` with title, steps, expected results, and setup/teardown support; `TestScenario` extended with `test_cases` collection for TS-format scenarios
+- **ScenarioLoader** molecule — loads TS-format `scenario.yml` files with test case directory discovery, fixture path resolution, and setup script detection
+- **FixtureCopier** molecule — copies fixture directories into sandbox with collision detection and path mapping
+- **SetupExecutor** molecule — runs `setup.sh` scripts in sandbox context with timeout, output capture, and error reporting
+- **TestCaseParser** atom — parses individual test case directories into `TestCase` models
+- **Dual-mode test discovery** — `TestDiscoverer` supports both legacy `.mt.md` files and new TS-format `scenario.yml` directory structures
+- **TC-level execution pipeline** — per-test-case independence with individual setup, execution, and reporting
+- **`setup` CLI subcommand** — `ace-test-e2e setup PACKAGE [TEST_ID]` prepares sandbox without running tests
+
+### Fixed
+
+- Review cycle 1 feedback items (medium+ severity)
+- Review cycle 2 feedback items (critical + high severity)
+
+### Changed
+
+- ace-lint E2E tests migrated from `.mt.md` to per-TC directory format
+- E2E test configurations added for linting
+
 ## [0.11.2] - 2026-02-10
 
 ### Fixed
