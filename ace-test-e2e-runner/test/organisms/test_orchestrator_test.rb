@@ -695,6 +695,25 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_run_single_ts_format_test
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
+      orchestrator = create_orchestrator(base_dir: tmpdir)
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_equal 1, results.size
+      assert_equal "TS-TEST-001", results.first.test_id
+      assert_equal "pass", results.first.status
+      assert results.first.success?
+      assert_match(/Running E2E test/, @output.string)
+    end
+  end
+
   def test_package_run_with_test_cases_skips_non_matching_scenarios
     Dir.mktmpdir do |tmpdir|
       # Create two scenarios with different test cases
@@ -786,6 +805,40 @@ class TestOrchestratorTest < Minitest::Test
       timestamp_generator: timestamp_generator || -> { "test00" },
       executor: executor || StubExecutor.new
     )
+  end
+
+  def create_ts_test_package(tmpdir, package, scenario_id, tc_ids)
+    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-test")
+    FileUtils.mkdir_p(ts_dir)
+
+    File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+      test-id: #{scenario_id}
+      title: Test #{scenario_id}
+      area: test
+      package: #{package}
+      priority: medium
+    YAML
+
+    tc_ids.each do |tc_id|
+      File.write(File.join(ts_dir, "#{tc_id}-check.tc.md"), <<~CONTENT)
+        ---
+        tc-id: #{tc_id}
+        title: Check #{tc_id}
+        ---
+
+        ## Objective
+        Verify #{tc_id}.
+
+        ## Steps
+        1. Run test
+           ```bash
+           echo "#{tc_id}"
+           ```
+
+        ## Expected
+        - Output contains #{tc_id}
+      CONTENT
+    end
   end
 
   def create_test_package(tmpdir, package, test_ids)
