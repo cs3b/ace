@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.264
-status: pending
+status: in-progress
 priority: medium
 estimate: 6h
 dependencies: []
+worktree:
+  branch: 264-rename-ace-coworker-to-ace-job-runner
+  path: "../ace-task.264"
+  created_at: '2026-02-11 22:48:18'
+  updated_at: '2026-02-11 22:48:18'
+  target_branch: main
 ---
 
 # Rename ace-coworker to ace-job-runner
