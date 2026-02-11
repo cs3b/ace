@@ -104,6 +104,10 @@ module Ace
                 )
               end
 
+              if matches.size > 1
+                warn "Warning: Multiple directories match #{scenario_id}: #{matches.map { |m| File.basename(m) }.join(', ')}. Using #{File.basename(matches.first)}."
+              end
+
               matches.first
             end
 

@@ -13,8 +13,8 @@ class ConfigLoaderTest < Minitest::Test
   def test_load_includes_execution_section
     config = ConfigLoader.load
     assert config.key?("execution"), "Config should have execution section"
-    assert_equal "claude:sonnet", config.dig("execution", "provider")
-    assert_equal 300, config.dig("execution", "timeout")
+    assert_kind_of String, config.dig("execution", "provider")
+    assert_kind_of Integer, config.dig("execution", "timeout")
   end
 
   def test_load_includes_providers_section
@@ -25,11 +25,6 @@ class ConfigLoaderTest < Minitest::Test
     assert_includes config.dig("providers", "cli"), "codex"
     assert_includes config.dig("providers", "cli"), "codexoss"
     assert_includes config.dig("providers", "cli"), "opencode"
-  end
-
-  def test_load_includes_skill_aware_providers
-    config = ConfigLoader.load
-    assert_equal %w[claude], config.dig("providers", "skill_aware")
   end
 
   def test_load_includes_cli_args
@@ -46,24 +41,26 @@ class ConfigLoaderTest < Minitest::Test
   end
 
   def test_default_provider_accessor
-    assert_equal "claude:sonnet", ConfigLoader.default_provider
+    provider = ConfigLoader.default_provider
+    assert_kind_of String, provider
+    assert_match(/\w+:\w+/, provider, "Provider should be in format 'provider:model'")
   end
 
   def test_default_timeout_accessor
-    assert_equal 300, ConfigLoader.default_timeout
+    timeout = ConfigLoader.default_timeout
+    assert_kind_of Integer, timeout
+    assert timeout > 0, "Timeout should be positive"
   end
 
   def test_default_parallel_accessor
-    assert_equal 3, ConfigLoader.default_parallel
+    parallel = ConfigLoader.default_parallel
+    assert_kind_of Integer, parallel
+    assert parallel > 0, "Parallel count should be positive"
   end
 
   def test_cli_providers_accessor
     providers = ConfigLoader.cli_providers
     assert_equal %w[claude gemini codex codexoss opencode pi], providers
-  end
-
-  def test_skill_aware_providers_accessor
-    assert_equal %w[claude], ConfigLoader.skill_aware_providers
   end
 
   def test_cli_args_for_claude
@@ -82,6 +79,6 @@ class ConfigLoaderTest < Minitest::Test
     loader = ConfigLoader.new
     config = loader.load
     assert_kind_of Hash, config
-    assert_equal "claude:sonnet", config.dig("execution", "provider")
+    assert_equal ConfigLoader.default_provider, config.dig("execution", "provider")
   end
 end

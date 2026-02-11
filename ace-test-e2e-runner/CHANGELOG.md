@@ -7,6 +7,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-02-11
+
+### Fixed
+
+- Expand relative PROJECT_ROOT_PATH to absolute sandbox path in test orchestrator,
+  ensuring agents running from monorepo root can find sandbox resources correctly
+
+## [0.15.0] - 2026-02-11
+
+### Added
+
+- **fix-e2e-tests workflow** (v1.0) — new workflow for systematically diagnosing and fixing failing E2E tests with three-way root cause classification: application code issue, test definition issue, or runner/infrastructure issue
+- **fix-e2e-tests skill** — `/ace:fix-e2e-tests` skill wrapping the new workflow, with cost-conscious re-run strategy and iterative fix loop
+
+### Fixed
+
+- Apply code review feedback from PR #197
+
+## [0.14.0] - 2026-02-11
+
+### Added
+
+- **3-stage E2E pipeline** — redesigned E2E test lifecycle as explicit review → plan → rewrite pipeline, replacing the monolithic manage workflow
+- **plan-e2e-changes workflow** (v1.0) — new Stage 2 workflow that analyzes coverage matrix and produces concrete change plans with REMOVE/KEEP/MODIFY/CONSOLIDATE/ADD classifications
+- **rewrite-e2e-tests workflow** (v1.0) — new Stage 3 workflow that executes change plans: deletes, creates, modifies, and consolidates E2E test scenarios
+- **TS-format display support** — `SuiteProgressDisplayManager` and `SuiteSimpleDisplayManager` now extract test names from TS-format `scenario.yml` paths (directory name) in addition to MT-format `.mt.md` paths
+- **Metadata-based result override** — `SuiteOrchestrator` reads agent-written `metadata.yml` to correct subprocess exit code mismatches, matching `TestOrchestrator#read_agent_result` behavior
+
+### Changed
+
+- **review-e2e-tests workflow** (v1.2 → v2.0) — rewritten from health report generator to deep exploration producing a coverage matrix (functionality × unit tests × E2E), with overlap analysis, gap analysis, and consolidation opportunities
+- **manage-e2e-tests workflow** (v1.2 → v2.0) — rewritten from 370-line monolithic flow to ~170-line lightweight orchestrator chaining the 3 pipeline stages with user confirmation gate
+- **TC classifications** — replaced old ARCHIVE/CREATE/UPDATE/KEEP categories with REMOVE/KEEP/MODIFY/CONSOLIDATE/ADD for clearer intent
+
+## [0.13.0] - 2026-02-11
+
+### Added
+
+- **E2E Value Gate** — embedded decision framework across all E2E testing documentation: guide, template, and workflows now require justification that each TC tests behavior needing real binary + real tools + real filesystem (not coverable by unit tests)
+- **Coverage overlap analysis** — `review-e2e-tests.wf.md` (v1.2) includes new Step 5 to compare E2E TC coverage against unit test assertions, classifying overlap as none/partial/full with archival recommendations
+- **CONSOLIDATE management action** — `manage-e2e-tests.wf.md` (v1.2) adds a new category for merging TCs that share CLI invocations, alongside archive/create/update/keep
+
+### Changed
+
+- **E2E testing guide** (v1.5) — replaced vague "When to Use" criteria with concrete Value Gate question, added Cost and Scope section (cost per TC, healthy 2-5 TCs/scenario, consolidation rule), added Coverage Overlap Review to Maintenance
+- **Create workflow** (v1.2) — inserted E2E Value Gate Check as Step 7 (unit test overlap check before TC generation), added COST-AWARE rules to TC generation guidelines
+- **Review workflow** (v1.2) — added overlap metrics to health report summary table and new Coverage Overlap section in report template
+- **Manage workflow** (v1.2) — expanded ARCHIVE criteria to include unit test overlap and presentation-only TCs
+- **E2E test template** — added E2E Justification section with unit test coverage checklist, TC consolidation guidance comment, and cost/value reminders
+
+## [0.12.4] - 2026-02-11
+
+### Added
+
+- **TC fidelity validator** — new `TcFidelityValidator` atom detects when agents invent test cases instead of executing defined `.tc.md` files, flagging results as error when reported TC count doesn't match expected
+- **Suite report post-validation** — `SuiteReportWriter` now validates LLM-generated "Overall" line against deterministic totals and replaces hallucinated aggregates with correct values
+
+### Changed
+
+- **Workflow TC discovery guardrails** — `execute-e2e-test.wf.md` now requires explicit TC listing before execution, includes a TC fidelity rule forbidding invented test cases, and adds a self-check step to verify result count matches discovery
+
+## [0.12.3] - 2026-02-11
+
+### Changed
+
+- **Handbook TS-format support** — updated `run-e2e-test.wf.md` (v1.6), `run-e2e-tests.wf.md` (v1.1), `review-e2e-tests.wf.md` (v1.1), `create-e2e-test.wf.md` (v1.1), and `manage-e2e-tests.wf.md` (v1.1) to discover and reference both MT-format (`.mt.md`) and TS-format (`scenario.yml` / `.tc.md`) test scenarios
+- **`create-e2e-test.wf.md`** — added `--format mt|ts` argument for creating TS-format scenario directories with `scenario.yml` and individual TC files
+- **README and e2e-testing guide** — updated documentation to cover dual-format architecture, TS-format directory structure, and per-TC execution
+
+## [0.12.2] - 2026-02-11
+
+### Added
+
+- **`execute-e2e-test.wf.md` workflow** — focused execution-only workflow for pre-populated sandboxes, handling test case discovery, execution, and reporting without setup steps
+
+### Changed
+
+- **SKILL.md conditional routing** — skill now routes to `wfi://execute-e2e-test` when `--sandbox` is present, `wfi://run-e2e-test` otherwise
+- **Unified skill invocation for all CLI providers** — removed `skill_aware?` distinction; all CLI providers (claude, gemini, codex, etc.) now use `/ace:run-e2e-test` skill invocation instead of embedded workflow prompts
+- **Simplified `SkillPromptBuilder`** (273 → 113 lines) — removed `build_workflow_prompt`, `build_tc_workflow_prompt`, `system_prompt_for`, and `skill_aware?` methods
+- **Simplified `TestExecutor`** (347 → 296 lines) — removed `skill_aware?` branching, `load_workflow_content`, and `find_project_root` dead methods
+- **Cleaned `run-e2e-test.wf.md`** (v1.5) — removed sandbox mode section and skip guards (now handled by `execute-e2e-test.wf.md`)
+
+### Removed
+
+- `skill_aware` config key from `config.yml` and `ConfigLoader#skill_aware_providers`
+
+## [0.12.1] - 2026-02-11
+
+### Added
+
+- **Scenario-level sandbox pre-setup** — `TestOrchestrator` runs `SetupExecutor` in Ruby before LLM invocation for TS-format scenarios, passing `sandbox_path` and `env_vars` to skip deterministic setup steps in the LLM
+- **Sandbox/env params in prompt builders** — `SkillPromptBuilder#build_skill_prompt` and `#build_workflow_prompt` accept `sandbox_path:` and `env_vars:` kwargs, appending `--sandbox` and `--env` flags
+- **Workflow sandbox mode documentation** — `run-e2e-test.wf.md` documents scenario-level sandbox mode with `--sandbox` and `--env` arguments, skip guards on steps 4-5
+
+### Changed
+
+- `SetupExecutor#execute` now returns `env:` key in result hash containing accumulated environment variables
+- `TestExecutor#execute` and `#execute_via_skill` accept and forward `sandbox_path:` and `env_vars:` kwargs
+
 ## [0.12.0] - 2026-02-11
 
 ### Added

@@ -194,10 +194,16 @@ module Ace
 
           # Extract human-readable test name from file path
           #
+          # Handles both MT-format (.mt.md files) and TS-format (scenario.yml directories)
+          #
           # @param test_file [String] Path to test file
-          # @return [String] e.g. "MT-BUNDLE-001-section-workflow"
+          # @return [String] e.g. "MT-BUNDLE-001-section-workflow" or "TS-LINT-001-ruby-validator-fallback"
           def extract_test_name(test_file)
-            File.basename(test_file, ".mt.md")
+            if test_file.end_with?("scenario.yml")
+              File.basename(File.dirname(test_file))
+            else
+              File.basename(test_file, ".mt.md")
+            end
           end
 
           # Run tests sequentially
@@ -376,15 +382,21 @@ module Ace
 
           # Extract test ID from file path
           #
+          # Handles both MT-format (.mt.md files) and TS-format (scenario.yml directories)
+          #
           # @param test_file [String] Path to test file
-          # @return [String] Test ID
+          # @return [String] Test ID (e.g., "MT-LINT-001" or "TS-LINT-001")
           def extract_test_id(test_file)
-            basename = File.basename(test_file, ".mt.md")
-            # Handle various filename patterns
-            if basename =~ /MT-[\w-]+/
-              basename.match(/MT-[\w-]+/)[0]
+            if test_file.end_with?("scenario.yml")
+              dir_name = File.basename(File.dirname(test_file))
+              dir_name.match(/(TS-[A-Z]+-\d+)/)&.[](1) || dir_name
             else
-              basename
+              basename = File.basename(test_file, ".mt.md")
+              if basename =~ /MT-[\w-]+/
+                basename.match(/MT-[\w-]+/)[0]
+              else
+                basename
+              end
             end
           end
 
@@ -394,12 +406,19 @@ module Ace
           # while metadata stores only the short test-id (MT-COMMIT-002). This method handles
           # both exact matches and prefix matches where the suffix starts with "-".
           #
+          # Supports both MT-format (.mt.md files) and TS-format (scenario.yml directories).
+          #
           # @param test_file [String] Path to test file
           # @param test_id [String] Metadata test-id to match against
           # @return [Boolean]
           def file_matches_test_id?(test_file, test_id)
-            basename = File.basename(test_file, ".mt.md")
-            basename == test_id || basename.start_with?("#{test_id}-")
+            if test_file.end_with?("scenario.yml")
+              dir_name = File.basename(File.dirname(test_file))
+              dir_name == test_id || dir_name.start_with?("#{test_id}-")
+            else
+              basename = File.basename(test_file, ".mt.md")
+              basename == test_id || basename.start_with?("#{test_id}-")
+            end
           end
 
           # Find the failed TC IDs for a test file from @scenario_failures
@@ -483,9 +502,43 @@ module Ace
           # @param process [Hash] Process info with output
           # @return [Hash] Parsed result with :passed_cases and :total_cases
           def parse_subprocess_result(process)
-            parse_test_output(process[:output], process[:thread].value.exitstatus, extract_test_name(process[:test_file]))
+            result = parse_test_output(process[:output], process[:thread].value.exitstatus, extract_test_name(process[:test_file]))
+
+            # For non-pass results, check agent-written metadata as authoritative source
+            # (mirrors TestOrchestrator#read_agent_result behavior)
+            if result[:status] != "pass" && result[:report_dir]
+              result = override_from_metadata(result)
+            end
+
+            result
           rescue => e
             { status: "error", error: "Failed to parse result: #{e.message}" }
+          end
+
+          # Override result from agent-written metadata.yml when subprocess exit code is misleading
+          #
+          # @param result [Hash] Parsed result with :report_dir
+          # @return [Hash] Result with status/counts from metadata.yml, or original on failure
+          def override_from_metadata(result)
+            metadata_path = File.join(result[:report_dir], "metadata.yml")
+            return result unless File.exist?(metadata_path)
+
+            metadata = YAML.safe_load_file(metadata_path, permitted_classes: [Date])
+            status = metadata["status"]
+            return result unless status
+
+            passed = metadata.dig("results", "passed") || result[:passed_cases] || 0
+            total = metadata.dig("results", "total") || result[:total_cases] || 0
+
+            result.merge(
+              status: status,
+              passed_cases: passed,
+              total_cases: total,
+              summary: "#{passed}/#{total} passed"
+            )
+          rescue => e
+            warn "Warning: Failed to override from metadata: #{e.message}" if ENV["DEBUG"]
+            result
           end
 
           # Shared helper to parse test output from combined stdout/stderr
@@ -678,11 +731,14 @@ module Ace
           # Uses Ace::Support::Timestamp library to encode unique IDs with 50ms precision,
           # ensuring distinct timestamps for coordinated sandbox/report paths.
           #
+          # Offset uses 0.1 (100ms) instead of 0.05 to avoid collisions with 50ms
+          # encoding granularity, ensuring unique timestamps even at high throughput.
+          #
           # @param count [Integer] Number of unique run IDs needed
           # @return [Array<String>] Array of unique run ID strings
           def generate_run_ids(count)
             count.times.map do |i|
-              time = Time.now.utc + (i * 0.05)
+              time = Time.now.utc + (i * 0.1)
               Ace::Support::Timestamp.encode(time, format: :"50ms")
             end
           end
@@ -705,7 +761,14 @@ module Ace
 
             # Combine stdout and stderr for parsing
             combined_output = output + stderr
-            parse_test_output(combined_output, status.exitstatus, extract_test_name(test_file))
+            result = parse_test_output(combined_output, status.exitstatus, extract_test_name(test_file))
+
+            # Override from metadata for non-pass results
+            if result[:status] != "pass" && result[:report_dir]
+              result = override_from_metadata(result)
+            end
+
+            result
           rescue => e
             { status: "error", error: e.message }
           end

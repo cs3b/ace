@@ -10,7 +10,7 @@ module Ace
         # Executes a single E2E test scenario via LLM
         #
         # Routes execution through two paths based on provider type:
-        # - CLI providers (claude, gemini, codex): Skill/workflow-based execution
+        # - CLI providers (claude, gemini, codex): Skill-based execution
         #   with actual command execution and sandbox creation
         # - API providers (google, anthropic): Prompt-based prediction (original behavior)
         class TestExecutor
@@ -31,10 +31,13 @@ module Ace
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param run_id [String, nil] Pre-generated run ID for deterministic report paths
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
+          # @param sandbox_path [String, nil] Path to pre-populated sandbox (skips LLM setup)
+          # @param env_vars [Hash, nil] Environment variables from setup execution
           # @return [Models::TestResult] Test execution result
-          def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil)
+          def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil)
             if Atoms::SkillPromptBuilder.cli_provider?(@provider)
-              execute_via_skill(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases)
+              execute_via_skill(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
+                                sandbox_path: sandbox_path, env_vars: env_vars)
             else
               execute_via_prompt(scenario, cli_args: cli_args, test_cases: test_cases)
             end
@@ -47,10 +50,11 @@ module Ace
           # @param scenario [Models::TestScenario] The parent scenario for metadata
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param run_id [String, nil] Pre-generated run ID
+          # @param env_vars [Hash, nil] Environment variables from setup execution
           # @return [Models::TestResult] Test execution result
-          def execute_tc(test_case:, sandbox_path:, scenario:, cli_args: nil, run_id: nil)
+          def execute_tc(test_case:, sandbox_path:, scenario:, cli_args: nil, run_id: nil, env_vars: nil)
             if Atoms::SkillPromptBuilder.cli_provider?(@provider)
-              execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: cli_args, run_id: run_id)
+              execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: cli_args, run_id: run_id, env_vars: env_vars)
             else
               execute_tc_via_prompt(test_case, sandbox_path, scenario, cli_args: cli_args)
             end
@@ -58,24 +62,22 @@ module Ace
 
           private
 
-          # Execute via skill/workflow for CLI providers
+          # Execute via skill invocation for CLI providers
           #
           # @param scenario [Models::TestScenario] The test scenario
           # @param cli_args [String, nil] User-provided CLI args
           # @param run_id [String, nil] Pre-generated run ID for deterministic report paths
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
+          # @param sandbox_path [String, nil] Path to pre-populated sandbox
+          # @param env_vars [Hash, nil] Environment variables from setup execution
           # @return [Models::TestResult]
-          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil)
+          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil)
             started_at = Time.now
 
-            if Atoms::SkillPromptBuilder.skill_aware?(@provider)
-              prompt = @skill_prompt_builder.build_skill_prompt(scenario, run_id: run_id, test_cases: test_cases)
-              system = nil
-            else
-              workflow_content = load_workflow_content
-              prompt = @skill_prompt_builder.build_workflow_prompt(scenario, workflow_content: workflow_content, run_id: run_id, test_cases: test_cases)
-              system = @skill_prompt_builder.system_prompt_for(@provider)
-            end
+            prompt = @skill_prompt_builder.build_skill_prompt(
+              scenario, run_id: run_id, test_cases: test_cases,
+              sandbox_path: sandbox_path, env_vars: env_vars
+            )
 
             merged_args = merge_cli_args(
               Atoms::SkillPromptBuilder.required_cli_args(@provider),
@@ -85,7 +87,7 @@ module Ace
             response = Ace::LLM::QueryInterface.query(
               @provider,
               prompt,
-              system: system,
+              system: nil,
               cli_args: merged_args,
               timeout: @timeout,
               fallback: false
@@ -93,6 +95,22 @@ module Ace
 
             parsed = Atoms::SkillResultParser.parse(response[:text])
             completed_at = Time.now
+
+            # Validate TC fidelity: ensure agent executed the expected test cases
+            fidelity = Atoms::TcFidelityValidator.validate(
+              parsed, scenario, filtered_tc_ids: test_cases
+            )
+            if fidelity
+              return Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: "error",
+                test_cases: parsed[:test_cases],
+                summary: fidelity[:error],
+                error: fidelity[:error],
+                started_at: started_at,
+                completed_at: completed_at
+              )
+            end
 
             Models::TestResult.new(
               test_id: scenario.test_id,
@@ -154,6 +172,22 @@ module Ace
             parsed = Atoms::ResultParser.parse(response[:text])
             completed_at = Time.now
 
+            # Validate TC fidelity: ensure agent executed the expected test cases
+            fidelity = Atoms::TcFidelityValidator.validate(
+              parsed, scenario, filtered_tc_ids: test_cases
+            )
+            if fidelity
+              return Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: "error",
+                test_cases: parsed[:test_cases],
+                summary: fidelity[:error],
+                error: fidelity[:error],
+                started_at: started_at,
+                completed_at: completed_at
+              )
+            end
+
             Models::TestResult.new(
               test_id: scenario.test_id,
               status: parsed[:status],
@@ -191,23 +225,13 @@ module Ace
             )
           end
 
-          # Execute TC via skill/workflow for CLI providers
-          def execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: nil, run_id: nil)
+          # Execute TC via skill invocation for CLI providers
+          def execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: nil, run_id: nil, env_vars: nil)
             with_tc_error_handling(scenario) do |started_at|
-              if Atoms::SkillPromptBuilder.skill_aware?(@provider)
-                prompt = @skill_prompt_builder.build_tc_skill_prompt(
-                  test_case: test_case, scenario: scenario,
-                  sandbox_path: sandbox_path, run_id: run_id
-                )
-                system = nil
-              else
-                workflow_content = load_workflow_content
-                prompt = @skill_prompt_builder.build_tc_workflow_prompt(
-                  test_case: test_case, scenario: scenario,
-                  sandbox_path: sandbox_path, workflow_content: workflow_content, run_id: run_id
-                )
-                system = @skill_prompt_builder.system_prompt_for(@provider)
-              end
+              prompt = @skill_prompt_builder.build_tc_skill_prompt(
+                test_case: test_case, scenario: scenario,
+                sandbox_path: sandbox_path, run_id: run_id, env_vars: env_vars
+              )
 
               merged_args = merge_cli_args(
                 Atoms::SkillPromptBuilder.required_cli_args(@provider),
@@ -216,7 +240,7 @@ module Ace
 
               response = Ace::LLM::QueryInterface.query(
                 @provider, prompt,
-                system: system, cli_args: merged_args,
+                system: nil, cli_args: merged_args,
                 timeout: @timeout, fallback: false
               )
 
@@ -275,14 +299,14 @@ module Ace
             Models::TestResult.new(
               test_id: scenario.test_id, status: "error",
               summary: "TC execution failed",
-              error: e.message, started_at: started_at || Time.now, completed_at: Time.now
+              error: e.message, started_at: started_at, completed_at: Time.now
             )
           rescue StandardError => e
             Models::TestResult.new(
               test_id: scenario.test_id, status: "error",
               summary: "Unexpected TC execution error",
               error: "#{e.class}: #{e.message}",
-              started_at: started_at || Time.now, completed_at: Time.now
+              started_at: started_at, completed_at: Time.now
             )
           end
 
@@ -296,37 +320,6 @@ module Ace
             return nil if parts.empty?
 
             parts.join(" ")
-          end
-
-          # Load the run-e2e-test workflow content
-          #
-          # @return [String] Workflow markdown content
-          def load_workflow_content
-            project_root = find_project_root
-            workflow_path = File.join(
-              project_root,
-              "ace-test-e2e-runner", "handbook", "workflow-instructions", "run-e2e-test.wf.md"
-            )
-
-            return File.read(workflow_path) if File.exist?(workflow_path)
-
-            # Fallback: try relative to the gem itself
-            gem_root = File.expand_path("../../../../..", __dir__)
-            alt_path = File.join(gem_root, "handbook", "workflow-instructions", "run-e2e-test.wf.md")
-            return File.read(alt_path) if File.exist?(alt_path)
-
-            "(Workflow file not found - execute the test scenario directly)"
-          end
-
-          # Find the project root directory
-          #
-          # @return [String] Project root path
-          def find_project_root
-            if defined?(Ace::Support::Fs::Molecules::ProjectRootFinder)
-              Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-            else
-              Dir.pwd
-            end
           end
         end
       end

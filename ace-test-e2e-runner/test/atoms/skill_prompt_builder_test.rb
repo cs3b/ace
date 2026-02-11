@@ -46,19 +46,6 @@ class SkillPromptBuilderTest < Minitest::Test
     refute SkillPromptBuilder.cli_provider?("")
   end
 
-  # --- Skill Awareness ---
-
-  def test_skill_aware_for_claude
-    assert SkillPromptBuilder.skill_aware?("claude:sonnet")
-    assert SkillPromptBuilder.skill_aware?("claude:opus")
-  end
-
-  def test_skill_aware_false_for_other_cli_providers
-    refute SkillPromptBuilder.skill_aware?("gemini:flash")
-    refute SkillPromptBuilder.skill_aware?("codex:latest")
-    refute SkillPromptBuilder.skill_aware?("opencode:model")
-  end
-
   # --- Provider Name Extraction ---
 
   def test_provider_name_extracts_before_colon
@@ -95,7 +82,6 @@ class SkillPromptBuilderTest < Minitest::Test
     config = {
       "providers" => {
         "cli" => %w[custom-cli],
-        "skill_aware" => %w[custom-cli],
         "cli_args" => {"custom-cli" => "auto-mode"}
       }
     }
@@ -103,7 +89,6 @@ class SkillPromptBuilderTest < Minitest::Test
 
     assert builder.cli_provider?("custom-cli:model")
     refute builder.cli_provider?("claude:sonnet")
-    assert builder.skill_aware?("custom-cli:model")
     assert_equal "auto-mode", builder.required_cli_args("custom-cli:model")
   end
 
@@ -111,7 +96,6 @@ class SkillPromptBuilderTest < Minitest::Test
     builder = SkillPromptBuilder.new({})
 
     assert builder.cli_provider?("claude:sonnet")
-    assert builder.skill_aware?("claude:sonnet")
     assert_equal "dangerously-skip-permissions", builder.required_cli_args("claude:sonnet")
   end
 
@@ -145,79 +129,36 @@ class SkillPromptBuilderTest < Minitest::Test
     refute prompt.include?("--run-id")
   end
 
-  # --- Workflow Prompt Building ---
+  def test_build_skill_prompt_with_sandbox_path
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
+    prompt = @builder.build_skill_prompt(scenario, sandbox_path: "/tmp/sandbox/ts001")
 
-  def test_build_workflow_prompt_includes_test_id
-    scenario = create_scenario(test_id: "MT-LINT-001")
-    prompt = @builder.build_workflow_prompt(scenario, workflow_content: "# Workflow")
-
-    assert prompt.include?("MT-LINT-001")
+    assert prompt.include?("--sandbox /tmp/sandbox/ts001")
   end
 
-  def test_build_workflow_prompt_includes_package
-    scenario = create_scenario(package: "ace-lint")
-    prompt = @builder.build_workflow_prompt(scenario, workflow_content: "# Workflow")
+  def test_build_skill_prompt_with_env_vars
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
+    prompt = @builder.build_skill_prompt(scenario, env_vars: { "PROJECT_ROOT" => "/code", "MODE" => "test" })
 
-    assert prompt.include?("ace-lint")
+    assert prompt.include?("--env PROJECT_ROOT=/code,MODE=test")
   end
 
-  def test_build_workflow_prompt_includes_workflow_content
-    scenario = create_scenario
-    workflow = "## Step 1\n\nDo the thing\n\n## Step 2\n\nDo another thing"
-    prompt = @builder.build_workflow_prompt(scenario, workflow_content: workflow)
+  def test_build_skill_prompt_without_sandbox_no_flag
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
+    prompt = @builder.build_skill_prompt(scenario)
 
-    assert prompt.include?("Do the thing")
-    assert prompt.include?("Do another thing")
+    refute prompt.include?("--sandbox")
+    refute prompt.include?("--env")
   end
 
-  def test_build_workflow_prompt_includes_scenario_content
-    scenario = create_scenario(content: "### TC-001: Verify lint output")
-    prompt = @builder.build_workflow_prompt(scenario, workflow_content: "# Workflow")
+  # --- Non-Claude CLI Provider Uses Skill Prompt ---
 
-    assert prompt.include?("TC-001: Verify lint output")
-  end
+  def test_non_claude_cli_provider_builds_skill_prompt
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
+    prompt = @builder.build_skill_prompt(scenario, sandbox_path: "/tmp/sandbox")
 
-  def test_build_workflow_prompt_includes_return_contract
-    scenario = create_scenario
-    prompt = @builder.build_workflow_prompt(scenario, workflow_content: "# Workflow")
-
-    assert prompt.include?("**Test ID**")
-    assert prompt.include?("**Status**")
-    assert prompt.include?("**Report Paths**")
-  end
-
-  def test_build_workflow_prompt_with_run_id
-    scenario = create_scenario
-    prompt = @builder.build_workflow_prompt(scenario, workflow_content: "# Workflow", run_id: "xyz789")
-
-    assert prompt.include?("**Run ID:** xyz789")
-  end
-
-  def test_build_workflow_prompt_without_run_id_has_no_run_id_line
-    scenario = create_scenario
-    prompt = @builder.build_workflow_prompt(scenario, workflow_content: "# Workflow")
-
-    refute prompt.include?("**Run ID:**")
-  end
-
-  # --- System Prompt ---
-
-  def test_system_prompt_nil_for_skill_aware_provider
-    assert_nil @builder.system_prompt_for("claude:sonnet")
-  end
-
-  def test_system_prompt_for_non_skill_aware_cli_provider
-    prompt = @builder.system_prompt_for("gemini:flash")
-
-    refute_nil prompt
-    assert prompt.include?("E2E test executor")
-    assert prompt.include?("execute")
-  end
-
-  def test_system_prompt_for_api_provider
-    prompt = @builder.system_prompt_for("google:gemini-2.5-flash")
-
-    refute_nil prompt
+    assert prompt.include?("/ace:run-e2e-test")
+    assert prompt.include?("--sandbox /tmp/sandbox")
   end
 
   # --- TC-Level Skill Prompt ---
@@ -260,41 +201,6 @@ class SkillPromptBuilderTest < Minitest::Test
     prompt = @builder.build_tc_skill_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb")
 
     refute prompt.include?("--run-id")
-  end
-
-  # --- TC-Level Workflow Prompt ---
-
-  def test_build_tc_workflow_prompt_includes_tc_id
-    scenario = create_scenario(test_id: "TS-LINT-001")
-    tc = create_test_case(tc_id: "TC-002")
-    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb", workflow_content: "# WF")
-
-    assert prompt.include?("TC-002")
-  end
-
-  def test_build_tc_workflow_prompt_includes_sandbox_path
-    scenario = create_scenario
-    tc = create_test_case
-    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/my/sandbox", workflow_content: "# WF")
-
-    assert prompt.include?("/my/sandbox")
-  end
-
-  def test_build_tc_workflow_prompt_includes_tc_content
-    scenario = create_scenario
-    tc = create_test_case(content: "## Steps\n\n1. Run ace-lint")
-    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb", workflow_content: "# WF")
-
-    assert prompt.include?("Run ace-lint")
-  end
-
-  def test_build_tc_workflow_prompt_includes_return_contract
-    scenario = create_scenario
-    tc = create_test_case
-    prompt = @builder.build_tc_workflow_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sb", workflow_content: "# WF")
-
-    assert prompt.include?("**TC ID**")
-    assert prompt.include?("**Status**")
   end
 
   private

@@ -27,13 +27,16 @@ class SuiteReportWriterTest < Minitest::Test
   def test_llm_response_is_written_to_file
     Dir.mktmpdir do |tmpdir|
       results, scenarios = build_results_and_scenarios(tmpdir)
-      stub_llm_query("# Synthesized Report\n\nRich analysis content here.")
+      stub_llm_query("# Synthesized Report\n\n**Overall:** 3/4 test cases passed (75%)\n\nRich analysis.")
 
       path = @writer.write(results, scenarios,
                            package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
 
       content = File.read(path)
-      assert_equal "# Synthesized Report\n\nRich analysis content here.", content
+      assert_match(/Synthesized Report/, content)
+      assert_match(/Rich analysis/, content)
+      # Overall line is validated/replaced with deterministic values
+      assert_match(/\*\*Overall:\*\* 3\/4 test cases passed \(75%\)/, content)
     end
   end
 
@@ -254,6 +257,51 @@ class SuiteReportWriterTest < Minitest::Test
       assert_equal 120, captured_timeout
     ensure
       restore_llm_query
+    end
+  end
+
+  def test_llm_hallucinated_overall_line_is_corrected
+    Dir.mktmpdir do |tmpdir|
+      results, scenarios = build_results_and_scenarios(tmpdir)
+      # LLM returns wrong aggregate: "6/27 (22%)" instead of correct "3/4 (75%)"
+      stub_llm_query("# Report\n\n**Overall:** 6/27 test cases passed (22%)\n\nAnalysis.")
+
+      path = @writer.write(results, scenarios,
+                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+
+      content = File.read(path)
+      # Wrong numbers must be replaced with correct deterministic values
+      refute_match(/6\/27/, content)
+      refute_match(/22%/, content)
+      assert_match(/\*\*Overall:\*\* 3\/4 test cases passed \(75%\)/, content)
+    end
+  end
+
+  def test_llm_missing_overall_line_gets_appended
+    Dir.mktmpdir do |tmpdir|
+      results, scenarios = build_results_and_scenarios(tmpdir)
+      # LLM omits the Overall line entirely
+      stub_llm_query("# Report\n\nSome analysis without overall line.")
+
+      path = @writer.write(results, scenarios,
+                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+
+      content = File.read(path)
+      assert_match(/\*\*Overall:\*\* 3\/4 test cases passed \(75%\)/, content)
+    end
+  end
+
+  def test_llm_correct_overall_line_is_preserved
+    Dir.mktmpdir do |tmpdir|
+      results, scenarios = build_results_and_scenarios(tmpdir)
+      stub_llm_query("# Report\n\n**Overall:** 3/4 test cases passed (75%)\n\nCorrect analysis.")
+
+      path = @writer.write(results, scenarios,
+                           package: "ace-lint", timestamp: "ts1234", base_dir: tmpdir)
+
+      content = File.read(path)
+      assert_match(/\*\*Overall:\*\* 3\/4 test cases passed \(75%\)/, content)
+      assert_match(/Correct analysis/, content)
     end
   end
 
