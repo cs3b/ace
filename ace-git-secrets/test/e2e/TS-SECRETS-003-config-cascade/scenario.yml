@@ -1,0 +1,18 @@
+test-id: TS-SECRETS-003
+title: Configuration Cascade
+area: git-secrets
+package: ace-git-secrets
+priority: high
+requires:
+  tools: [ace-git-secrets, git]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: |
+      cat > README.md << 'EOF'
+      # Test Project
+      EOF
+      git add README.md && git commit -m "initial" --quiet
+  - env:
+      PROJECT_ROOT_PATH: .

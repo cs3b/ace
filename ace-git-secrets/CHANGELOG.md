@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.6] - 2026-02-11
+
+### Technical
+- Remove legacy MT-SECRETS-002 E2E test file (functionality covered by TS-SECRETS-002)
+
+## [0.7.5] - 2026-02-11
+
+### Added
+- E2E tests for scan, rewrite, and configuration workflows
+- Full workflow and config cascade E2E tests
+
+### Fixed
+- Ensure proper exit codes for scan, revoke, rewrite commands (CLI wrappers now
+  raise Error with correct exit_code instead of returning 0)
+- Move broken-report fixture out of .cache to avoid gitignore
+- Resolve non-zero exit code for --help flag
+
+### Changed
+- Migrate E2E tests to per-TC directory format
+
 ## [0.7.4] - 2026-01-31
 
 ### Fixed
