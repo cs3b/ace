@@ -4,7 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-<<<<<<< HEAD
 ## [0.9.482] - 2026-02-11
 
 ### Fixed
@@ -139,6 +138,14 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **ace-test-e2e-runner v0.12.1**: Scenario-level sandbox pre-setup — `TestOrchestrator` runs `SetupExecutor` in Ruby before LLM invocation for TS-format scenarios, passing `sandbox_path` and `env_vars` to skip deterministic setup in the LLM; `SkillPromptBuilder` accepts `--sandbox` and `--env` params; workflow documents scenario-level sandbox mode
+
+### Fixed
+
+- **ace-assign v0.7.0**: Array instruction substitution in foreach expansion now properly handles `{{item}}` placeholders for both string and array instruction formats
+
+### Changed
+
+- **ace-assign v0.7.0**: work-on-tasks preset simplified with onboard step and direct skill delegation; E2E tests migrated from monolithic `.mt.md` format to per-TC directory structure with scenario.yml, test case files, and fixtures; Removed deprecated work-on-task preset (use `/ace:work-on-task` skill directly)
 
 ## [0.9.468] - 2026-02-11
 
