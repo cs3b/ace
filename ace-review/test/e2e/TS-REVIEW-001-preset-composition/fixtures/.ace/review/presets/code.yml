@@ -1,0 +1,16 @@
+description: "Base code review configuration"
+instructions:
+  description: "Code review instructions"
+  bundle:
+    base: "prompt://base/system"
+    sections:
+      review_focus:
+        title: "Files Under Review"
+        files:
+          - "prompt://focus/scope/tests"
+          - "prompt://focus/languages/ruby"
+      format_guidelines:
+        title: "Format Guidelines"
+        files:
+          - "prompt://format/detailed"
+model: gpro
