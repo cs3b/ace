@@ -1,5 +1,5 @@
 ---
-test-suite-id: TS-ASSIGN-002
+test-id: TS-ASSIGN-002
 title: Fork Context Feature
 area: assign
 package: ace-assign

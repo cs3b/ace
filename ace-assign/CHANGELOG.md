@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-02-11
+
+### Fixed
+
+- E2E test scenario.yml files now use correct `test-id` field (was `test-suite-id`)
+- E2E test case .tc.md files now use correct `tc-id` field (was `test-id`)
+
 ## [0.7.0] - 2026-02-11
 
 ### Fixed

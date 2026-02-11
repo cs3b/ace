@@ -1,5 +1,5 @@
 ---
-test-suite-id: TS-ASSIGN-003d
+test-id: TS-ASSIGN-003d
 title: Hierarchical Phases - Display and Audit Trail
 area: assign
 package: ace-assign

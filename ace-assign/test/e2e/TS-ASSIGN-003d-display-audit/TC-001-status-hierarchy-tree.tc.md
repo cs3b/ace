@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003d-TC001
+tc-id: MT-ASSIGN-003d-TC001
 title: Status Shows Hierarchy Tree
 suite: TS-ASSIGN-003d
 ---
