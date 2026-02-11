@@ -1,0 +1,10 @@
+test-id: TS-TIMESTAMP-002
+title: CLI Configuration and Defaults
+area: timestamp
+package: ace-support-timestamp
+priority: medium
+requires:
+  tools: [ace-timestamp]
+  ruby: ">= 3.0"
+
+setup: []

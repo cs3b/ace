@@ -1,0 +1,10 @@
+test-id: TS-TIMESTAMP-004
+title: CLI Integration
+area: timestamp
+package: ace-support-timestamp
+priority: high
+requires:
+  tools: [ace-timestamp]
+  ruby: ">= 3.0"
+
+setup: []
