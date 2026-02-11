@@ -30,6 +30,18 @@ class TestCaseTest < Minitest::Test
     assert_equal "customid", tc.short_id
   end
 
+  def test_not_pending_by_default
+    tc = create_test_case
+    assert_nil tc.pending
+    refute tc.pending?
+  end
+
+  def test_pending_with_reason
+    tc = create_test_case(pending: "Requires sandbox")
+    assert_equal "Requires sandbox", tc.pending
+    assert tc.pending?
+  end
+
   private
 
   def create_test_case(overrides = {})

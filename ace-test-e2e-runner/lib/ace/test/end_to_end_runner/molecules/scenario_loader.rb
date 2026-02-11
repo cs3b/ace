@@ -105,7 +105,8 @@ module Ace
               tc_id: frontmatter["tc-id"],
               title: frontmatter["title"],
               content: body,
-              file_path: File.expand_path(file_path)
+              file_path: File.expand_path(file_path),
+              pending: frontmatter["pending"]
             )
           end
 
