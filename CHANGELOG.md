@@ -4,6 +4,141 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.482] - 2026-02-11
+
+### Fixed
+
+- **ace-git-worktree v0.12.7**: TaskIDExtractor regex now correctly matches `task.NNN` in paths containing `ace-task.NNN` directory prefixes
+
+### Technical
+
+- **ace-git-secrets v0.7.6**: Remove legacy MT-SECRETS-002 E2E test file (functionality covered by TS-SECRETS-002)
+- **ace-git-worktree v0.12.7**: Add path extraction test cases for TaskIDExtractor
+
+## [0.9.481] - 2026-02-11
+
+### Added
+
+- **ace-git-commit v0.17.2**: Exception-based CLI error reporting for consistent error handling
+
+### Technical
+
+- **ace-git-commit v0.17.2**: Migrate E2E tests to per-TC directory format; Enhance E2E tests for commit splitting and path handling; Standardize E2E test cache directory naming
+
+## [0.9.480] - 2026-02-11
+
+### Changed
+
+- **ace-support-nav v0.17.5**: Simplified path resolution in `ProtocolSource` to consistently use project root; extracted `find_project_root` private method
+
+### Technical
+
+- **ace-support-nav v0.17.5**: Migrate E2E tests to per-TC directory format; Add E2E tests for ace-nav and ace-timestamp
+
+## [0.9.479] - 2026-02-11
+
+### Fixed
+
+- **ace-coworker v0.6.1**: E2E test suite reliability — split monolithic TC for isolation, fix Phase 2 setup for cascade test, use unique CACHE_BASE to prevent parallel test collisions
+
+## [0.9.478] - 2026-02-11
+
+### Fixed
+
+- **ace-test-e2e-runner v0.15.1**: Expand relative PROJECT_ROOT_PATH to absolute sandbox path, ensuring agents running from monorepo root can find sandbox resources correctly
+
+## [0.9.477] - 2026-02-11
+
+### Added
+
+- **ace-git-secrets v0.7.5**: E2E tests for scan, rewrite, and configuration workflows; full workflow and config cascade E2E tests
+
+### Fixed
+
+- **ace-git-secrets v0.7.5**: Ensure proper exit codes for scan, revoke, rewrite commands (CLI wrappers now raise Error with correct exit_code instead of returning 0); Move broken-report fixture out of .cache to avoid gitignore; Resolve non-zero exit code for --help flag
+
+### Changed
+
+- **ace-git-secrets v0.7.5**: Migrate E2E tests to per-TC directory format
+
+## [0.9.476] - 2026-02-11
+
+### Added
+
+- **ace-test-e2e-runner v0.15.0**: `fix-e2e-tests` workflow and `/ace:fix-e2e-tests` skill — three-way diagnosis (code issue / test issue / runner issue) with cost-conscious iterative fix loop
+
+### Fixed
+
+- **ace-test-e2e-runner v0.15.0**: Code review feedback from PR #197
+
+## [0.9.475] - 2026-02-11
+
+### Added
+- **ace-coworker v0.6.0**: `work-on-tasks` preset for multi-task batch execution with consolidated validation
+
+### Fixed
+- **ace-coworker v0.6.0**: Array instruction substitution in foreach expansion now properly handles {{item}} placeholders
+
+### Technical
+- **ace-coworker v0.6.0**: Removed deprecated work-on-task presets
+
+## [0.9.474] - 2026-02-11
+
+### Added
+
+- **ace-test-e2e-runner v0.14.0**: 3-stage E2E pipeline — new `plan-e2e-changes` (Stage 2: decide) and `rewrite-e2e-tests` (Stage 3: execute) workflows with corresponding skills
+- **ace-test-e2e-runner v0.14.0**: TS-format display support in suite display managers; metadata-based result override in suite orchestrator
+
+### Changed
+
+- **ace-test-e2e-runner v0.14.0**: `review-e2e-tests` (v2.0) rewritten from health report to coverage matrix (functionality × unit tests × E2E) with overlap/gap analysis
+- **ace-test-e2e-runner v0.14.0**: `manage-e2e-tests` (v2.0) rewritten from 370-line monolithic flow to lightweight orchestrator chaining review → plan → rewrite
+- **ace-test-e2e-runner v0.14.0**: TC classifications changed from ARCHIVE/CREATE/UPDATE/KEEP to REMOVE/KEEP/MODIFY/CONSOLIDATE/ADD
+
+## [0.9.473] - 2026-02-11
+
+### Added
+
+- **ace-test-e2e-runner v0.13.0**: E2E Value Gate — decision framework embedded across guide (v1.5), template, and all 3 management workflows requiring justification that each TC needs real binary + real tools + real filesystem
+- **ace-test-e2e-runner v0.13.0**: Coverage overlap analysis in `review-e2e-tests.wf.md` (v1.2) — new step comparing E2E TC coverage against unit test assertions with archival recommendations
+- **ace-test-e2e-runner v0.13.0**: CONSOLIDATE management action in `manage-e2e-tests.wf.md` (v1.2) for merging TCs that share CLI invocations
+
+### Changed
+
+- **ace-lint E2E**: Restructured test suite from 8 scenarios / 31 TCs to 3 scenarios / 9 TCs — TS-LINT-001 (core lint pipeline, 5 TCs), TS-LINT-002 (config and routing, 2 TCs), TS-LINT-003 (doctor diagnostics, 2 TCs) — cutting LLM cost ~70% while preserving all unique integration value
+
+## [0.9.472] - 2026-02-11
+
+### Added
+
+- **ace-test-e2e-runner v0.12.4**: TC fidelity validator — new `TcFidelityValidator` atom detects when agents invent test cases instead of executing defined `.tc.md` files; suite report post-validation replaces LLM-hallucinated aggregate numbers with deterministic totals
+
+### Changed
+
+- **ace-test-e2e-runner v0.12.4**: Workflow TC discovery guardrails — `execute-e2e-test.wf.md` requires explicit TC listing, forbids invented test cases, adds self-check step
+
+### Fixed
+
+- **ace-lint E2E**: TS-LINT-004 TC-004 replaced impossible validator name assertion with file-processing verification; TS-LINT-006 TC-002 replaced unreliably fixable fixture with code that has unambiguous standardrb violations
+
+## [0.9.471] - 2026-02-11
+
+### Changed
+
+- **ace-test-e2e-runner v0.12.3**: Handbook TS-format support — updated 5 workflow files (`run-e2e-test`, `run-e2e-tests`, `review-e2e-tests`, `create-e2e-test`, `manage-e2e-tests`) to discover and reference both MT-format and TS-format scenarios; added `--format mt|ts` argument to `create-e2e-test` workflow; updated README and e2e-testing guide for dual-format architecture
+
+## [0.9.470] - 2026-02-11
+
+### Changed
+
+- **ace-test-e2e-runner v0.12.2**: Decomposed E2E workflow — new `execute-e2e-test.wf.md` for pre-populated sandbox execution; skill routes conditionally based on `--sandbox` flag; removed `skill_aware?` distinction so all CLI providers use unified skill invocation; simplified `SkillPromptBuilder` and `TestExecutor` by removing embedded workflow prompt paths
+
+## [0.9.469] - 2026-02-11
+
+### Added
+
+- **ace-test-e2e-runner v0.12.1**: Scenario-level sandbox pre-setup — `TestOrchestrator` runs `SetupExecutor` in Ruby before LLM invocation for TS-format scenarios, passing `sandbox_path` and `env_vars` to skip deterministic setup in the LLM; `SkillPromptBuilder` accepts `--sandbox` and `--env` params; workflow documents scenario-level sandbox mode
+
 ## [0.9.468] - 2026-02-11
 
 ### Added
