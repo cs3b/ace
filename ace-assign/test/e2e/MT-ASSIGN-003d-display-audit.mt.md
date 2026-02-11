@@ -1,7 +1,7 @@
 ---
-test-id: MT-COWORKER-003d
+test-id: MT-ASSIGN-003d
 title: Hierarchical Jobs - Display and Audit Trail
-area: coworker
+area: assign
 package: ace-assign
 priority: high
 duration: ~3min

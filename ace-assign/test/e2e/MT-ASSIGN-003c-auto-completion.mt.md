@@ -1,7 +1,7 @@
 ---
-test-id: MT-COWORKER-003c
+test-id: MT-ASSIGN-003c
 title: Hierarchical Jobs - Auto-Completion
-area: coworker
+area: assign
 package: ace-assign
 priority: high
 duration: ~3min
