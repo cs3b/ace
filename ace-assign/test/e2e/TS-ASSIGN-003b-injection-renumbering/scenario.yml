@@ -1,0 +1,15 @@
+---
+test-suite-id: TS-ASSIGN-003b
+title: Hierarchical Phases - Injection and Renumbering
+area: assign
+package: ace-assign
+priority: high
+duration: ~3min
+automation-candidate: true
+requires:
+  tools: [ace-assign]
+  ruby: ">= 3.0"
+description: |
+  Verify that ace-assign correctly handles child injection via `add --after X --child`,
+  sibling injection with renumbering, and cascade renumbering of descendants when
+  parent phases are shifted.

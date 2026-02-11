@@ -1,19 +1,10 @@
 ---
 test-id: MT-ASSIGN-002
-title: Fork Context Feature
-area: assign
-package: ace-assign
-priority: high
-duration: ~10min
-automation-candidate: true
-requires:
-  tools: [ace-assign]
-  ruby: ">= 3.0"
-last-verified:
-verified-by:
+title: Full Fork Context Workflow
+suite: TS-ASSIGN-002
 ---
 
-# Fork Context Feature
+# Full Fork Context Workflow
 
 ## Objective
 
@@ -27,62 +18,22 @@ Verify that ace-assign correctly handles the `context: fork` frontmatter option,
 ## Environment Setup
 
 ```bash
-```
+PROJECT_ROOT="$(pwd)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
+SHORT_PKG="assign"
+SHORT_ID="mt002"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+mkdir -p "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
 
-## Test Data
+export PROJECT_ROOT_PATH="$TEST_DIR"
+CACHE_BASE="$TEST_DIR/.cache/ace-assign"
+mkdir -p "$CACHE_BASE"
+ACE_ASSIGN="bundle exec $PROJECT_ROOT/ace-assign/exe/ace-assign"
 
-```bash
-ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-# Create job.yaml with mixed regular and fork context phases
-cat > "job.yaml" << 'EOF'
-name: test-fork-context
-description: Test workflow for fork context feature
-
-steps:
-  - name: prepare
-    instructions:
-      - Load project context
-      - Review requirements
-
-  - name: implement
-    context: fork
-    instructions: |
-      ## Onboard
-
-      Load context before starting:
-      - ace-bundle project
-      - ace-taskflow task 123
-
-      ## Work
-
-      Implement the feature following project conventions.
-      Run tests after each change.
-
-      ## Report
-
-      Return structured summary:
-      - Status: completed | partial | blocked
-      - Changes: files modified
-      - Commits: hashes created
-
-  - name: verify
-    instructions: Run ace-test and verify implementation
-
-  - name: document
-    context: fork
-    instructions: |
-      ## Work
-
-      Update documentation for the new feature.
-
-      ## Report
-
-      Return list of docs updated.
-EOF
-
-echo "Test data created:"
-cat "job.yaml"
-SANDBOX
+echo "=== Tool Verification ==="
+$ACE_ASSIGN --version
+echo "========================="
 ```
 
 ## Test Cases
@@ -141,8 +92,6 @@ SANDBOX
 - `010-prepare.ph.md` does NOT contain `context:` field
 - `030-verify.ph.md` does NOT contain `context:` field
 
-**Actual:** [Record during execution]
-
 **Status:** [ ] Pass / [ ] Fail
 
 ---
@@ -195,8 +144,6 @@ SANDBOX
 - Output contains "Instructions:" header
 - Output contains raw instruction text
 - Output does NOT contain "Task tool" or "forked context"
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -269,86 +216,13 @@ EOF
 - Output contains "Prompt for forked agent" section
 - Prompt includes "## Onboard", "## Work", "## Report" sections
 
-**Actual:** [Record during execution]
-
 **Status:** [ ] Pass / [ ] Fail
 
 ---
 
-### TC-004: Fork Prompt Includes Working Directory
+### TC-004: Complete Fork Workflow
 
-**Objective:** Verify that fork instructions include the working directory for the forked agent.
-
-**Steps:**
-1. Check status output for working directory
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   STATUS_OUTPUT=$($ACE_ASSIGN status 2>&1)
-   echo "$STATUS_OUTPUT"
-   SANDBOX
-   ```
-
-2. Verify working directory shown
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" echo "$STATUS_OUTPUT" | grep -q "Working directory:" && echo "PASS: Working directory line present" || echo "FAIL: Working directory line missing"
-   ```
-
-3. Verify directory path is absolute (starts with /)
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   WORK_DIR=$(echo "$STATUS_OUTPUT" | grep "Working directory:" | sed 's/.*Working directory: //')
-   echo "Working directory: $WORK_DIR"
-   [ "${WORK_DIR:0:1}" = "/" ] && echo "PASS: Path is absolute" || echo "FAIL: Path is not absolute"
-   SANDBOX
-   ```
-
-**Expected:**
-- Output contains "Working directory:" line
-- Directory path is absolute (starts with /)
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-005: Fork Prompt Includes Assignment ID
-
-**Objective:** Verify that fork instructions include the assignment ID for context.
-
-**Steps:**
-1. Check status output for assignment ID
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" STATUS_OUTPUT=$($ACE_ASSIGN status 2>&1)
-   ```
-
-2. Verify assignment ID in fork instructions
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" echo "$STATUS_OUTPUT" | grep -q "Assignment:" && echo "PASS: Assignment line present" || echo "FAIL: Assignment line missing"
-   ```
-
-3. Verify assignment ID format (should be non-empty)
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   ASSIGNMENT_LINE=$(echo "$STATUS_OUTPUT" | grep "Assignment:" | tail -1)
-   echo "Assignment line: $ASSIGNMENT_LINE"
-   [ -n "$ASSIGNMENT_LINE" ] && echo "PASS: Assignment ID present" || echo "FAIL: Assignment ID empty"
-   SANDBOX
-   ```
-
-**Expected:**
-- Output contains "Assignment:" line with assignment ID
-- Assignment ID is non-empty
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-006: Mixed Workflow Transitions (Regular -> Fork -> Regular)
-
-**Objective:** Verify that a workflow with mixed regular and fork phases transitions correctly.
+**Objective:** Verify that the workflow completes successfully after all fork and regular phases.
 
 **Steps:**
 1. Complete the implement phase (fork)
@@ -365,50 +239,7 @@ EOF
    SANDBOX
    ```
 
-2. Check status for verify phase (regular, should show raw instructions)
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   STATUS_OUTPUT=$($ACE_ASSIGN status 2>&1)
-   echo "Output:"
-   echo "$STATUS_OUTPUT"
-   SANDBOX
-   ```
-
-3. Verify current phase is verify (regular phase)
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" echo "$STATUS_OUTPUT" | grep -q "Current Phase:.*verify" && echo "PASS: Current phase is verify" || echo "FAIL: Current phase is not verify"
-   ```
-
-4. Verify raw instructions shown (not fork format)
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   echo "$STATUS_OUTPUT" | grep -q "Instructions:" && echo "PASS: Instructions header shown" || echo "FAIL: Instructions header missing"
-   echo "$STATUS_OUTPUT" | grep -q "Task tool" && echo "FAIL: Task tool shown for regular phase" || echo "PASS: No Task tool for regular phase"
-   SANDBOX
-   ```
-
-5. Verify no Context field for regular phase
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" echo "$STATUS_OUTPUT" | grep -q "Context:" && echo "FAIL: Context shown for regular phase" || echo "PASS: No Context field for regular phase"
-   ```
-
-**Expected:**
-- Current phase is "verify" (regular)
-- Output shows "Instructions:" header with raw content
-- Output does NOT show "Task tool" or "Context:"
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-007: Second Fork Phase Works Correctly
-
-**Objective:** Verify that multiple fork phases in the same workflow work correctly.
-
-**Steps:**
-1. Complete the verify phase
+2. Complete the verify phase
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    cat > "verify-report.md" << 'EOF'
@@ -420,56 +251,7 @@ EOF
    SANDBOX
    ```
 
-2. Check status for document phase (second fork)
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   STATUS_OUTPUT=$($ACE_ASSIGN status 2>&1)
-   echo "Output:"
-   echo "$STATUS_OUTPUT"
-   SANDBOX
-   ```
-
-3. Verify current phase is document
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" echo "$STATUS_OUTPUT" | grep -q "Current Phase:.*document" && echo "PASS: Current phase is document" || echo "FAIL: Current phase is not document"
-   ```
-
-4. Verify fork context displayed
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" echo "$STATUS_OUTPUT" | grep -q "Context: fork" && echo "PASS: Context: fork displayed" || echo "FAIL: Context: fork not displayed"
-   ```
-
-5. Verify Task tool instructions shown
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   echo "$STATUS_OUTPUT" | grep -q "forked context" && echo "PASS: Fork instructions shown" || echo "FAIL: Fork instructions missing"
-   echo "$STATUS_OUTPUT" | grep -q "Task tool" && echo "PASS: Task tool mentioned" || echo "FAIL: Task tool not mentioned"
-   SANDBOX
-   ```
-
-6. Verify document phase content in prompt
-   ```bash
-   ace-test-e2e-sh "$TEST_DIR" echo "$STATUS_OUTPUT" | grep -q "Update documentation" && echo "PASS: Document instructions in prompt" || echo "FAIL: Document instructions missing"
-   ```
-
-**Expected:**
-- Current phase is "document"
-- Output shows "Context: fork"
-- Output contains fork execution instructions
-- Prompt includes document phase content
-
-**Actual:** [Record during execution]
-
-**Status:** [ ] Pass / [ ] Fail
-
----
-
-### TC-008: Complete Fork Workflow
-
-**Objective:** Verify that the workflow completes successfully after all fork and regular phases.
-
-**Steps:**
-1. Complete the document phase (second fork)
+3. Complete the document phase (second fork)
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    cat > "document-report.md" << 'EOF'
@@ -483,7 +265,7 @@ EOF
    SANDBOX
    ```
 
-2. Check final status
+4. Check final status
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    FINAL_STATUS=$($ACE_ASSIGN status 2>&1)
@@ -494,12 +276,12 @@ EOF
    SANDBOX
    ```
 
-3. Verify assignment completed
+5. Verify assignment completed
    ```bash
    ace-test-e2e-sh "$TEST_DIR" echo "$FINAL_STATUS" | grep -q "Assignment completed!" && echo "PASS: Assignment completed" || echo "FAIL: Assignment not completed"
    ```
 
-4. Find assignment directory and verify all phases done
+6. Find assignment directory and verify all phases done
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    ASSIGNMENT_DIR=$(find ".cache/ace-assign" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
@@ -512,8 +294,6 @@ EOF
 - Exit code: 0
 - Output contains "Assignment completed!"
 - All 4 phases marked as done
-
-**Actual:** [Record during execution]
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -532,30 +312,4 @@ echo "Cleanup complete"
 - [ ] TC-001: Fork context parsed from job frontmatter into phase files
 - [ ] TC-002: Regular phase shows raw instructions directly
 - [ ] TC-003: Fork phase shows Task tool invocation instructions
-- [ ] TC-004: Fork prompt includes working directory
-- [ ] TC-005: Fork prompt includes assignment ID
-- [ ] TC-006: Mixed workflow transitions correctly (regular -> fork -> regular)
-- [ ] TC-007: Second fork phase in same workflow works correctly
-- [ ] TC-008: Complete workflow with fork phases succeeds
-
-## Observations
-
-{Record any observations, edge cases, or issues discovered during test execution}
-
-## Notes
-
-### Fork Context Feature (task 237.02)
-
-The fork context feature enables job files to run in isolated agent contexts:
-
-- **Frontmatter**: `context: fork` triggers Task tool output format
-- **Output format**: Instead of raw instructions, status shows Task tool parameters
-- **Assignment context**: Working directory and assignment ID are included for the forked agent
-- **Mixed workflows**: Regular and fork phases can be intermixed in the same workflow
-
-### Key Implementation Details
-
-- Fork detection uses `Phase#fork?` method checking `context == "fork"`
-- Task tool instructions printed by `Status#print_fork_instructions`
-- Working directory derived from assignment cache directory
-- Regular phases continue to show raw instructions via "Instructions:" header
+- [ ] TC-004: Complete workflow with fork phases succeeds

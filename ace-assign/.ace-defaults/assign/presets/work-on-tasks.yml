@@ -1,23 +1,54 @@
-# Work on multiple tasks with consolidated validation
-# Usage: /ace:coworker-prepare work-on-tasks --taskrefs "262.02,262.03,262.04"
+# Multi-task implementation workflow with expansion
+# Usage: /ace:assign-prepare work-on-tasks --taskrefs 148,149,150
+#        /ace:assign-prepare work-on-tasks --taskrefs 148-152
+#        /ace:assign-prepare work-on-tasks --taskrefs "240.*"
+#
+# This preset uses expansion directives to generate:
+# - An onboard step (000) to load context
+# - A batch parent step (010) that auto-completes when children done
+# - Child steps (010.01, 010.02, ...) for each task, with fork context
+# - A validate-batch step (020) after all tasks complete
+# - A finalize step (030) for any remaining work
 
 name: work-on-tasks
-description: Execute multiple tasks in parallel with final validation
+description: Work on multiple tasks with batch validation
 
 parameters:
   taskrefs:
     required: true
     type: array
-    description: Task references (e.g., "262.02,262.03,262.04" or "262.02-262.10")
+    description: Task references (comma-separated, range, or pattern)
+
+steps:
+  - name: onboard
+    number: "000"
+    skill: onboard
+    instructions:
+      - Load project context
+      - Review task queue and priorities
+
+  - name: validate-batch
+    number: "020"
+    instructions:
+      - Run ace-test to verify all implementations
+      - Check cross-task consistency
+      - Report any integration issues
+
+  - name: finalize
+    number: "030"
+    instructions:
+      - Summarize completed tasks
+      - Note any deferred work
 
 expansion:
   batch-parent:
     name: batch-tasks
     number: "010"
     instructions: |
-      Batch container for parallel task execution.
-      Auto-completes when all child tasks finish successfully.
-      Working on: {{taskrefs}}
+      Batch container for multiple task implementations.
+      This step auto-completes when all child tasks are done.
+
+      Tasks to implement: {{taskrefs}}
 
   foreach: taskrefs
   child-template:
@@ -25,28 +56,4 @@ expansion:
     parent: "010"
     context: fork
     skill: ace:work-on-task
-    instructions:
-      - run skill /onboard to get familiar with the project 
-      - "Work on task {{item}} following its specification and skill instructions"
-
-steps:
-  - name: onboard
-    number: "000"
-    skill: onboard
-    instructions:
-      - Onboard yourself to the codebase.
-      - Load context and understand the project structure.
-
-  - name: validate-batch
-    number: "020"
-    instructions:
-      - Verify all tasks completed successfully.
-      - Run ace-test-suite to ensure no regressions.
-      - Confirm all tasks marked done via ace-taskflow.
-
-  - name: finalize
-    number: "030"
-    instructions:
-      - Summarize completed work across all tasks.
-      - Report any issues or manual steps required.
-      - Ensure branch is clean and ready for review.
+    instructions: "Implement task {{item}}"
