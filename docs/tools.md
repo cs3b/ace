@@ -22,12 +22,12 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 | `ace-taskflow task done 047` | Mark task complete |
 | `ace-taskflow doctor` | Run health checks and auto-fix |
 
-## Workforce Management
+## Assignment Management
 
 | Tool | Purpose |
 |------|---------|
-| `ace-coworker status` | Show coworker session status |
-| `ace-coworker create CONFIG` | Create workflow session from YAML |
+| `ace-assign status` | Show assignment status |
+| `ace-assign create CONFIG` | Create assignment from YAML |
 
 ## Git Operations
 

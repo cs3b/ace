@@ -1,9 +1,0 @@
-name: tree-display-test
-description: Test hierarchical status display
-
-steps:
-  - name: feature-a
-    instructions: First feature
-
-  - name: feature-b
-    instructions: Second feature
