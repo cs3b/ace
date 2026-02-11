@@ -99,6 +99,31 @@ module Ace
           # @param sandbox_path [String] Path to the pre-populated sandbox
           # @return [String] The TC-level user prompt
           def build_tc(test_case:, scenario:, sandbox_path:)
+            if test_case.pending?
+              return <<~PROMPT
+                # SKIP Test Case: #{scenario.test_id} / #{test_case.tc_id}
+
+                **Package:** #{scenario.package}
+                **Scenario:** #{scenario.title}
+                **Test Case:** #{test_case.title}
+                **Status:** PENDING — #{test_case.pending}
+
+                This test case is marked as pending and should NOT be executed.
+                Return the following JSON result:
+
+                ```json
+                {
+                  "test_id": "#{scenario.test_id}",
+                  "tc_id": "#{test_case.tc_id}",
+                  "status": "skip",
+                  "actual": "Skipped — pending",
+                  "notes": "#{test_case.pending}",
+                  "summary": "Pending: #{test_case.pending}"
+                }
+                ```
+              PROMPT
+            end
+
             <<~PROMPT
               # Execute Test Case: #{scenario.test_id} / #{test_case.tc_id}
 
@@ -129,6 +154,8 @@ module Ace
               ""
             end
 
+            pending_instruction = build_pending_instruction(scenario)
+
             execute_instruction = if test_cases&.any?
               "Execute only the specified test cases (#{test_cases.join(', ')}) and return the JSON results as specified in your instructions."
             else
@@ -141,7 +168,7 @@ module Ace
               **Package:** #{scenario.package}
               **Title:** #{scenario.title}
               **Priority:** #{scenario.priority}
-              #{filter_instruction}
+              #{filter_instruction}#{pending_instruction}
               ## Test Scenario
 
               #{scenario.content}
@@ -150,6 +177,20 @@ module Ace
 
               #{execute_instruction}
             PROMPT
+          end
+
+          private
+
+          # Build instruction for pending test cases if any exist
+          #
+          # @param scenario [Models::TestScenario] The test scenario
+          # @return [String] Pending instruction text or empty string
+          def build_pending_instruction(scenario)
+            pending_tcs = scenario.test_cases.select(&:pending?)
+            return "" unless pending_tcs.any?
+
+            lines = pending_tcs.map { |tc| "- #{tc.tc_id}: #{tc.pending}" }
+            "\n**SKIP these test cases (pending):**\n#{lines.join("\n")}\nFor skipped test cases, report status as \"skip\" in your results.\n"
           end
         end
       end

@@ -9,17 +9,25 @@ module Ace
         # Contains parsed frontmatter metadata and the full markdown body
         # from an independent test case file within a scenario directory.
         class TestCase
-          attr_reader :tc_id, :title, :content, :file_path
+          attr_reader :tc_id, :title, :content, :file_path, :pending
 
           # @param tc_id [String] Test case identifier (e.g., "TC-001")
           # @param title [String] Test case title from frontmatter
           # @param content [String] Full markdown body (below frontmatter)
           # @param file_path [String] Absolute path to the .tc.md file
-          def initialize(tc_id:, title:, content:, file_path:)
+          # @param pending [String, nil] Pending reason (presence = pending, value = reason)
+          def initialize(tc_id:, title:, content:, file_path:, pending: nil)
             @tc_id = tc_id
             @title = title
             @content = content
             @file_path = file_path
+            @pending = pending
+          end
+
+          # Whether this test case is pending (should be skipped)
+          # @return [Boolean]
+          def pending?
+            !pending.nil?
           end
 
           # Generate short test case ID for directory naming
