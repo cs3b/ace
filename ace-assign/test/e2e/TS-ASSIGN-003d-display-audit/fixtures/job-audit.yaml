@@ -1,0 +1,9 @@
+name: audit-trail-test
+description: Test audit trail metadata
+
+steps:
+  - name: initial-phase
+    instructions: Starting phase
+
+  - name: second-phase
+    instructions: Second phase
