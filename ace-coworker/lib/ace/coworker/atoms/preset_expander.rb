@@ -213,11 +213,19 @@ module Ace
             # Create merged parameters with {{item}} available
             item_params = parameters.merge("item" => item)
 
+            # Handle instructions substitution for both string and array formats
+            template_instructions = template["instructions"] || ""
+            instructions = if template_instructions.is_a?(Array)
+              template_instructions.map { |i| substitute_string(i, item_params) }
+            else
+              substitute_string(template_instructions, item_params)
+            end
+
             step = {
               "number" => child_number,
               "name" => substitute_string(template["name"] || "item-#{item}", item_params),
               "parent" => parent_number,
-              "instructions" => substitute_string(template["instructions"] || "", item_params)
+              "instructions" => instructions
             }
 
             step["skill"] = template["skill"] if template["skill"]
