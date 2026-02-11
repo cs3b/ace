@@ -1,0 +1,13 @@
+test-id: TS-PREP-001
+title: Basic Prompt Processing Workflow
+area: prep
+package: ace-prompt-prep
+priority: high
+requires:
+  tools: [ace-prompt-prep, ace-timestamp]
+  ruby: ">= 3.0"
+
+setup:
+  - copy-fixtures
+  - env:
+      PROJECT_ROOT_PATH: .
