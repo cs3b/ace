@@ -32,7 +32,7 @@ module Ace
           # @param text [String] Text potentially containing JSON
           # @return [String, nil] Extracted JSON string or nil
           def self.extract_json(text)
-            return nil if text.nil? || text.strip.empty?
+            return nil if text.nil? || text.to_s.strip.empty?
 
             # Try to find JSON in code fences first
             match = text.match(/```(?:json)?\s*\n(.*?)\n\s*```/m)

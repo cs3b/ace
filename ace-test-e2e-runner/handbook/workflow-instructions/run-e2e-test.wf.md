@@ -2,7 +2,7 @@
 workflow-id: wfi-run-e2e-test
 name: Run E2E Test
 description: Execute an E2E test scenario with full agent guidance
-version: "1.3"
+version: "1.6"
 source: ace-test-e2e-runner
 ---
 
@@ -63,6 +63,47 @@ The orchestrator aggregates these summaries and reads report files as needed.
 2. Return only paths and summary counts
 3. Orchestrator reads files for detailed aggregation
 
+## TC-Level Execution Mode
+
+When invoked with `--tc-mode`, this workflow operates in TC-level mode where the sandbox is pre-populated by `SetupExecutor` and only a single test case is executed. Steps 1-5 of the standard workflow are skipped entirely.
+
+### TC-Level Arguments
+
+- `PACKAGE` (required) - Package name (e.g., `ace-lint`)
+- `TEST_ID` (required) - Parent scenario ID (e.g., `TS-LINT-001`)
+- `TC_ID` (required) - Test case ID (e.g., `TC-001`)
+- `--tc-mode` (required) - Activates TC-level execution mode
+- `--sandbox SANDBOX_PATH` (required) - Path to pre-populated sandbox directory
+- `--run-id RUN_ID` (optional) - Pre-generated timestamp ID for report paths
+- `--env KEY=VALUE,...` (optional) - Environment variables to export (comma-separated)
+
+### TC-Level Execution Steps
+
+1. **Verify sandbox** — Confirm `SANDBOX_PATH` exists and contains the expected test environment
+2. **Enter sandbox** — `cd SANDBOX_PATH`
+3. **Export environment variables** — If `--env` was provided, export each key-value pair: `export KEY=VALUE`
+4. **Execute TC steps** — Follow the test case instructions (objective, steps, expected results)
+5. **Write per-TC reports** — Generate `summary.r.md`, `experience.r.md`, `metadata.yml` in `{RUN_ID}-{pkg}-{scenario}-{tc}-reports/`
+5. **Return TC-level contract:**
+
+```markdown
+- **Test ID**: {TEST_ID}
+- **TC ID**: {TC_ID}
+- **Status**: pass | fail
+- **Report Paths**: {run-id}-{pkg}-{scenario}-{tc}-reports/*
+- **Issues**: Brief description or "None"
+```
+
+### TC-Level Rules
+
+- Do NOT create or modify sandbox setup — it is already prepared by `SetupExecutor`
+- Do NOT run setup scripts or environment initialization
+- **Always export environment variables from `--env` before executing test steps**
+- Execute only the steps described in the test case content
+- Report actual results even if they differ from expected
+
+---
+
 ## Workflow Steps
 
 ### 1. Locate Test Scenario(s)
@@ -71,17 +112,26 @@ Determine the test directory based on arguments:
 
 **No arguments** - Look in project root:
 ```bash
+# MT-format scenarios (single-file)
 find test/e2e -name "*.mt.md" 2>/dev/null | sort
+# TS-format scenarios (directory-based)
+find test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **PACKAGE only** - Find all tests in package:
 ```bash
+# MT-format scenarios
 find {PACKAGE}/test/e2e -name "*.mt.md" 2>/dev/null | sort
+# TS-format scenarios
+find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **PACKAGE and TEST_ID** - Find specific test:
 ```bash
+# MT-format (TEST_ID starts with MT-)
 find {PACKAGE}/test/e2e -name "*{TEST_ID}*.mt.md" 2>/dev/null | head -1
+# TS-format (TEST_ID starts with TS-)
+find {PACKAGE}/test/e2e -path "*{TEST_ID}*/scenario.yml" 2>/dev/null | head -1
 ```
 
 If no tests found, report error and exit.
@@ -219,7 +269,7 @@ Report any missing prerequisites before proceeding.
 Folder names use a shortened format for readability:
 - `{timestamp}` - 6-char base36 timestamp (unchanged)
 - `{short-pkg}` - package name with `ace-` prefix removed (e.g., `ace-lint` → `lint`)
-- `{short-id}` - lowercase prefix + number only (e.g., `MT-LINT-001` → `mt001`)
+- `{short-id}` - lowercase prefix + number only (e.g., `MT-LINT-001` → `mt001`, `TS-LINT-001` → `ts001`)
 
 ```
 .cache/ace-test-e2e/
@@ -708,7 +758,7 @@ If you realize you executed test cases that should have been filtered:
 
 ## Example Invocations
 
-**Run a specific test in a package:**
+**Run a specific MT-format test in a package:**
 ```
 /ace:run-e2e-test ace-lint MT-LINT-001
 ```
@@ -716,6 +766,16 @@ If you realize you executed test cases that should have been filtered:
 This would:
 1. Find `ace-lint/test/e2e/MT-LINT-001-*.mt.md`
 2. Execute the test scenario
+3. Report results
+
+**Run a specific TS-format test in a package:**
+```
+/ace:run-e2e-test ace-lint TS-LINT-001
+```
+
+This would:
+1. Find `ace-lint/test/e2e/TS-LINT-001-*/scenario.yml`
+2. Execute the test scenario (reads TC files from the scenario directory)
 3. Report results
 
 **Run a single test case within a test scenario:**
@@ -747,7 +807,7 @@ This would:
 ```
 
 This would:
-1. Find all `ace-lint/test/e2e/*.mt.md` files
+1. Find all `ace-lint/test/e2e/*.mt.md` files AND `ace-lint/test/e2e/TS-*/scenario.yml` directories
 2. Execute each test scenario sequentially
 3. Report combined results
 
@@ -757,6 +817,6 @@ This would:
 ```
 
 This would:
-1. Find all `test/e2e/*.mt.md` files in project root
+1. Find all `test/e2e/*.mt.md` files AND `test/e2e/TS-*/scenario.yml` directories in project root
 2. Execute each test scenario sequentially
 3. Report combined results
