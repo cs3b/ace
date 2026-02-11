@@ -1,0 +1,33 @@
+test-id: TS-LINT-002
+title: Configuration and Routing
+area: lint
+package: ace-lint
+priority: high
+requires:
+  tools: [standardrb, rubocop]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - copy-fixtures
+  - write-file:
+      path: .ace/lint/ruby.yml
+      content: |
+        groups:
+          legacy:
+            patterns:
+              - "**/legacy/**/*.rb"
+            validators:
+              - rubocop
+          modern:
+            patterns:
+              - "**/modern/**/*.rb"
+            validators:
+              - standardrb
+          default:
+            patterns:
+              - "**/*.rb"
+            validators:
+              - standardrb
+  - env:
+      PROJECT_ROOT_PATH: "."
