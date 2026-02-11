@@ -1,0 +1,473 @@
+---
+name: prepare-assignment
+allowed-tools: Bash, Read, Write
+description: Prepare job.yaml from preset or informal instructions
+argument-hint: "[preset-name] [--taskref value] [--taskrefs values] [--output path]"
+doc-type: workflow
+purpose: workflow instruction for preparing ace-assign job configurations
+
+update:
+  frequency: on-change
+  last-updated: '2026-01-31'
+---
+
+# Prepare Assignment Workflow
+
+## Purpose
+
+Transform informal instructions OR preset names into a structured job.yaml file that can be used with `ace-assign create job.yaml`. This workflow bridges the gap between high-level intent and the structured work queue format.
+
+## Input Formats
+
+The workflow accepts three input types:
+
+### 1. Preset Name Only
+
+```
+/ace:assign-prepare work-on-task-with-pr --taskref 123
+```
+
+Loads the preset and injects parameter values.
+
+### 2. Informal Instructions Only
+
+```
+/ace:assign-prepare "Work on task 123, create a PR, do 2 review cycles"
+```
+
+Transforms prose into structured phases.
+
+### 3. Preset + Customization
+
+```
+/ace:assign-prepare work-on-task-with-pr --taskref 123 "skip onboarding, add security review"
+```
+
+Loads preset then applies modifications.
+
+## Available Presets
+
+Presets are stored in `ace-assign/.ace-defaults/assign/presets/`:
+
+| Preset | Description |
+|--------|-------------|
+| `work-on-task` | Simple task implementation with commit |
+| `work-on-task-with-pr` | Full workflow with PR and 3 review cycles |
+| `work-on-tasks` | Multi-task batch with consolidated review |
+
+List available presets:
+```bash
+ls ace-assign/.ace-defaults/assign/presets/
+```
+
+## Preset File Format
+
+### Basic Preset
+
+```yaml
+name: preset-name
+description: What this preset does
+
+parameters:
+  taskref:
+    required: true
+    description: Task reference (e.g., task-123 or 123)
+  pr_number:
+    required: false
+    description: Optional PR number for review phases
+
+steps:
+  - name: phase-name
+    skill: ace:skill-name  # Optional skill reference
+    instructions:
+      - Phase instruction line one.
+      - "Phase instruction with {{parameter}} placeholder."
+```
+
+### Preset with Expansion Directives
+
+For multi-task presets, use the `expansion` section to generate hierarchical phases:
+
+```yaml
+name: work-on-tasks
+description: Work on multiple tasks with consolidated review
+
+parameters:
+  taskrefs:
+    required: true
+    type: array  # Accepts comma-separated, range, or pattern
+    description: Task references (e.g., "148,149,150" or "148-152")
+
+expansion:
+  batch-parent:
+    name: batch-tasks
+    number: "010"
+    instructions: |
+      Batch container - auto-completes when children done.
+      Tasks: {{taskrefs}}
+
+  foreach: taskrefs  # Parameter name to iterate over
+  child-template:
+    name: "work-on-{{item}}"  # {{item}} is current iteration value
+    parent: "010"
+    context: fork  # Each child runs in isolated context
+    instructions: |
+      Implement task {{item}} per specification.
+
+steps:
+  # Phases after expansion are appended with their own numbers
+  - name: consolidated-review
+    number: "020"
+    instructions: Review all batch changes.
+```
+
+#### Array Parameter Syntax
+
+The `--taskrefs` parameter accepts multiple formats:
+
+| Format | Example | Result |
+|--------|---------|--------|
+| Comma-separated | `148,149,150` | Tasks 148, 149, 150 |
+| Range | `148-152` | Tasks 148, 149, 150, 151, 152 |
+| Pattern | `240.*` | All subtasks of 240 |
+
+#### Generated Job Structure
+
+For `--taskrefs 148,149,150`, expansion generates:
+
+```
+010 batch-tasks (parent, auto-completes)
+├── 010.01 work-on-148 (fork context)
+├── 010.02 work-on-149 (fork context)
+└── 010.03 work-on-150 (fork context)
+020 consolidated-review
+030 finalize
+```
+
+The hierarchical numbering enables:
+- Parent auto-completion when all children are done
+- Fork context for isolated task execution
+- Progress tracking per-task
+
+## Parameter Placeholders
+
+Use `{{parameter}}` syntax in preset instructions:
+- `{{taskref}}` - Task reference
+- `{{pr_number}}` - PR number (when available)
+
+Parameters are injected when preparing the job.yaml.
+
+## Transformation Rules
+
+### From Informal Instructions
+
+When parsing informal instructions, identify:
+
+1. **Task References**: "task 123", "task-123", "#123"
+2. **Skill Keywords**: Map to known skills
+   - "work on task" → `ace:work-on-task`
+   - "create pr", "make pr" → `ace:create-pr`
+   - "review", "review pr" → `ace:review-pr`
+   - "commit" → `ace:commit`
+   - "onboard" → `onboard`
+3. **Loop Indicators**: "2 cycles", "3 iterations", "twice"
+4. **Sequence Markers**: "then", "after that", "finally"
+
+### Loop Expansion
+
+Loops must be fully expanded into separate phases:
+
+```yaml
+# "do 3 review cycles" becomes:
+- name: review-cycle-1
+  skill: ace:review-pr
+  instructions:
+    - "Review the code (iteration 1 of 3)."
+    - Focus on correctness and architecture.
+
+- name: apply-feedback-1
+  instructions:
+    - Apply feedback from review cycle 1.
+    - Commit changes after applying fixes.
+
+- name: review-cycle-2
+  skill: ace:review-pr
+  instructions:
+    - "Review the code (iteration 2 of 3)."
+    - Focus on edge cases and test coverage.
+
+- name: apply-feedback-2
+  instructions:
+    - Apply feedback from review cycle 2.
+    - Commit changes after applying fixes.
+
+- name: review-cycle-3
+  skill: ace:review-pr
+  instructions:
+    - "Review the code (iteration 3 of 3)."
+    - Final review for polish and completeness.
+
+- name: apply-feedback-3
+  instructions:
+    - Apply final feedback from review cycle 3.
+    - Commit changes after applying fixes.
+```
+
+## Process Steps
+
+### 1. Parse Input
+
+Determine input type:
+- If starts with known preset name → load preset
+- If contains `--taskref` or similar flags → extract parameters
+- If quoted string or prose → parse as informal instructions
+
+### 2. Load Preset (if applicable)
+
+```bash
+# Read preset file
+cat ace-assign/.ace-defaults/assign/presets/<preset-name>.yml
+```
+
+### 3. Extract Parameters
+
+From command-line flags:
+- `--taskref 123` → `taskref: "123"` (single task)
+- `--taskrefs 148,149,150` → `taskrefs: ["148", "149", "150"]` (multi-task)
+- `--taskrefs 148-152` → `taskrefs: ["148", "149", "150", "151", "152"]` (range)
+- `--output custom-job.yaml` → output path
+
+From informal instructions:
+- "task 123" → `taskref: "123"`
+- "tasks 148, 149, 150" → `taskrefs: ["148", "149", "150"]`
+- "PR 45" → `pr_number: "45"`
+
+### 4. Apply Customizations (if prose provided)
+
+Parse modifications:
+- "skip onboarding" → remove onboard phase
+- "add security review" → insert security review phase
+- "only 2 cycles" → adjust loop count
+
+### 5. Expand and Inject Parameters
+
+For presets with `expansion` section, use `Ace::Assign::Atoms::PresetExpander.expand()`:
+
+```ruby
+require "ace/assign"
+
+preset = YAML.load_file("work-on-tasks.yml")
+params = { "taskrefs" => ["148", "149", "150"], "review_preset" => "batch" }
+phases = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
+```
+
+This generates hierarchical phases with:
+- Pre-assigned numbers (010, 010.01, 010.02, etc.)
+- Parent-child relationships
+- All `{{placeholder}}` tokens resolved
+
+For standard presets (no expansion), replace `{{parameter}}` placeholders:
+
+```yaml
+# Before
+instructions:
+  - "Work on task {{taskref}}."
+
+# After (with taskref=123)
+instructions:
+  - Work on task 123.
+```
+
+### 6. Validate Job Configuration
+
+Check:
+- [ ] Session name is set
+- [ ] All required parameters have values
+- [ ] No unresolved `{{placeholder}}` tokens remain
+- [ ] Phases have names and instructions
+- [ ] Skill references are valid (if present)
+
+### 7. Generate job.yaml
+
+Write the final configuration:
+
+```yaml
+session:
+  name: <preset-name>-<taskref>
+  description: <preset description with context>
+
+steps:
+  - name: <phase-name>
+    skill: <skill-reference>  # If present in preset
+    instructions:
+      - <resolved instruction line>
+  # ... more phases
+```
+
+### 8. Output Result
+
+Default output: `<task>/jobs/<timestamp>-job.yml` (e.g., `.ace-taskflow/v.0.9.0/tasks/229-xxx/jobs/k5abc123-job.yml`)
+
+Custom output: Use `--output path/to/custom.yaml`
+
+Report:
+```
+Job configuration created: job.yaml
+
+Session: work-on-task-with-pr-123
+Phases: 10 total
+  - onboard
+  - work-on-task
+  - create-pr
+  - review-cycle-1
+  - apply-feedback-1
+  - review-cycle-2
+  - apply-feedback-2
+  - review-cycle-3
+  - apply-feedback-3
+  - finalize
+
+Start assignment with: ace-assign create job.yaml
+```
+
+## Output Format
+
+### job.yaml Structure
+
+```yaml
+session:
+  name: work-on-task-with-pr-123
+  description: Work on task 123 with PR and review cycles
+
+steps:
+  - name: onboard
+    skill: onboard
+    instructions:
+      - Onboard yourself to the codebase.
+      - Load context and understand the project structure.
+
+  - name: work-on-task
+    skill: ace:work-on-task
+    instructions:
+      - Work on task 123.
+      - Implement the required changes following project conventions.
+
+  - name: create-pr
+    skill: ace:create-pr
+    instructions:
+      - Create a pull request for the changes.
+      - Capture the PR number for subsequent review phases.
+      - Update the next phases with the PR number.
+
+  # ... more phases
+```
+
+## Error Handling
+
+| Scenario | Action |
+|----------|--------|
+| Unknown preset | List available presets, ask for selection |
+| Missing required parameter | Prompt for value |
+| Invalid task reference | Show expected formats |
+| Unresolved placeholders | Report which parameters need values |
+
+## Examples
+
+### Example 1: Preset with Parameter
+
+```
+/ace:assign-prepare work-on-task --taskref 148
+```
+
+Creates simple job with 3 phases: onboard, work-on-task, finalize.
+
+### Example 2: Full Workflow Preset
+
+```
+/ace:assign-prepare work-on-task-with-pr --taskref 148
+```
+
+Creates job with 10 phases including PR and 3 review cycles.
+
+### Example 3: Informal Instructions
+
+```
+/ace:assign-prepare "implement task 148, create pr, review twice"
+```
+
+Parses instructions and creates job with:
+- onboard
+- work-on-task (148)
+- create-pr
+- review-cycle-1, apply-feedback-1
+- review-cycle-2, apply-feedback-2
+- finalize
+
+### Example 4: Custom Output Path
+
+```
+/ace:assign-prepare work-on-task-with-pr --taskref 148 --output .cache/my-job.yaml
+```
+
+Writes configuration to specified path.
+
+### Example 5: Multi-Task Batch (Comma-Separated)
+
+```
+/ace:assign-prepare work-on-tasks --taskrefs 148,149,150
+```
+
+Creates job with hierarchical structure:
+- batch-tasks (010) - parent container
+  - work-on-148 (010.01) - fork context
+  - work-on-149 (010.02) - fork context
+  - work-on-150 (010.03) - fork context
+- consolidated-review (020)
+- finalize (030)
+
+### Example 6: Multi-Task Batch (Range)
+
+```
+/ace:assign-prepare work-on-tasks --taskrefs 148-152
+```
+
+Expands range to tasks 148, 149, 150, 151, 152.
+
+### Example 7: Multi-Task Batch (Pattern)
+
+```
+/ace:assign-prepare work-on-tasks --taskrefs "240.*"
+```
+
+Expands pattern to match subtasks (requires resolution at prepare time).
+
+## Success Criteria
+
+- [ ] Input correctly parsed (preset, parameters, or prose)
+- [ ] Preset loaded and parameters injected
+- [ ] Expansion directives processed (if present)
+- [ ] Hierarchical phases numbered correctly
+- [ ] Loops expanded into separate phases
+- [ ] All placeholders resolved
+- [ ] Valid job.yaml generated
+- [ ] Clear summary provided to user
+
+## Next Steps
+
+After job.yaml is created:
+
+```bash
+# Start the assignment
+/ace:assign-create job.yaml
+
+# Or directly:
+ace-assign create job.yaml
+
+# Check status
+ace-assign status
+
+# Drive execution through the workflow
+/ace:assign-drive
+```
+
+**Note:** Job files created in `<task>/jobs/` stay in place when `ace-assign create` runs. Files created elsewhere are moved to `<task>/jobs/<session_id>-job.yml` for provenance. Always use `ace-assign status` to query the current assignment state.

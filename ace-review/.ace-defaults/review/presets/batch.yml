@@ -1,7 +1,7 @@
 # Batch task review - consolidated review of multiple task implementations
 #
 # Use this preset when reviewing changes from multiple tasks worked on
-# in a batch workflow (ace-coworker work-on-tasks).
+# in a batch workflow (ace-assign work-on-tasks).
 #
 # Focus areas:
 # - Cross-task consistency
