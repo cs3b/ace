@@ -1,0 +1,15 @@
+test-id: TS-COWORKER-002
+title: Fork Context Feature
+area: coworker
+package: ace-coworker
+priority: high
+requires:
+  tools: [ace-coworker]
+  ruby: ">= 3.0"
+
+setup:
+  - env:
+      PROJECT_ROOT_PATH: .
+      CACHE_BASE: .cache/ace-coworker
+  - run: mkdir -p .cache/ace-coworker
+  - copy-fixtures
