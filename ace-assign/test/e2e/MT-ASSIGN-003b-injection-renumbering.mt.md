@@ -1,7 +1,7 @@
 ---
-test-id: MT-COWORKER-003b
+test-id: MT-ASSIGN-003b
 title: Hierarchical Jobs - Injection and Renumbering
-area: coworker
+area: assign
 package: ace-assign
 priority: high
 duration: ~3min

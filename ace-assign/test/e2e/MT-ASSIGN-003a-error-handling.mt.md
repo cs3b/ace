@@ -1,7 +1,7 @@
 ---
-test-id: MT-COWORKER-003a
+test-id: MT-ASSIGN-003a
 title: Hierarchical Jobs - Error Handling
-area: coworker
+area: assign
 package: ace-assign
 priority: high
 duration: ~3min
