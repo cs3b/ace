@@ -37,7 +37,7 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.17.1)
+    ace-git-commit (0.17.2)
       ace-git (~> 0.3)
       ace-llm (~> 0.16)
       ace-support-config (~> 0.6)
@@ -47,7 +47,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.7.4)
+    ace-git-secrets (0.7.6)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       ace-support-timestamp (~> 0.2)
@@ -58,7 +58,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.12.6)
+    ace-git-worktree (0.12.7)
       ace-git (~> 0.4)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
@@ -194,7 +194,7 @@ PATH
 PATH
   remote: ace-support-nav
   specs:
-    ace-support-nav (0.17.4)
+    ace-support-nav (0.17.5)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
       ace-support-fs (~> 0.1)
@@ -231,7 +231,7 @@ PATH
 PATH
   remote: ace-test-e2e-runner
   specs:
-    ace-test-e2e-runner (0.11.2)
+    ace-test-e2e-runner (0.15.1)
       ace-llm (>= 0.1)
       ace-support-config (>= 0.6)
       ace-support-core (>= 0.10)
