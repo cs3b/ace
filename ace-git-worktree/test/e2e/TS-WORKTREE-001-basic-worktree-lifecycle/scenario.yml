@@ -1,0 +1,23 @@
+test-id: TS-WORKTREE-001
+title: Basic Worktree Lifecycle
+area: git-worktree
+package: ace-git-worktree
+priority: high
+requires:
+  tools: [git, ace-git-worktree]
+
+setup:
+  - git-init
+  - run: |
+      echo "# Test Repository" > README.md
+      git add README.md && git commit -m "Initial commit" --quiet
+      git checkout -b feature/test-worktree --quiet
+      echo "Feature content" > feature.txt
+      git add feature.txt && git commit -m "Add feature" --quiet
+      git checkout main --quiet
+      git checkout -b bugfix/test-fix --quiet
+      echo "Bugfix content" > bugfix.txt
+      git add bugfix.txt && git commit -m "Add bugfix" --quiet
+      git checkout main --quiet
+  - env:
+      PROJECT_ROOT_PATH: .
