@@ -44,26 +44,14 @@ module Ace
               # Original path resolution logic for directory/path types
               return path if path&.start_with?('/')
 
-              if config_dir && path&.start_with?('.ace/')
-                # For .ace/ relative paths, resolve from the parent of the .ace where config was found
-                # config_dir is like /path/to/project/.ace/protocols/wfi-sources/local.yml
-                # We want to go up to /path/to/project/ and then add the path
-                ace_dir = config_dir
-                while ace_dir && !ace_dir.end_with?('/.ace')
-                  parent = File.dirname(ace_dir)
-                  break if parent == ace_dir  # Reached root
-                  ace_dir = parent
-                end
-
-                if ace_dir && ace_dir.end_with?('/.ace')
-                  project_dir = File.dirname(ace_dir)  # Get parent of .ace
+              if config_dir && path
+                # Resolve relative paths from project root (parent of .ace directory)
+                project_dir = find_project_root(config_dir)
+                if project_dir
                   File.expand_path(File.join(project_dir, path))
                 else
                   File.expand_path(path)
                 end
-              elsif config_dir && path
-                # Other relative paths, resolve relative to config file directory
-                File.expand_path(File.join(File.dirname(config_dir), path))
               elsif path
                 # Fallback to expand from current directory
                 File.expand_path(path)
@@ -93,6 +81,21 @@ module Ace
 
           def to_s
             "#{name} (#{type}): #{full_path}"
+          end
+
+          private
+
+          # Walk up from config_dir to find the .ace directory, return its parent (project root)
+          # config_dir is like /path/to/project/.ace/protocols/wfi-sources/local.yml
+          def find_project_root(dir)
+            ace_dir = dir
+            while ace_dir && !ace_dir.end_with?('/.ace')
+              parent = File.dirname(ace_dir)
+              break if parent == ace_dir # Reached filesystem root
+              ace_dir = parent
+            end
+
+            File.dirname(ace_dir) if ace_dir&.end_with?('/.ace')
           end
         end
       end

@@ -1,0 +1,11 @@
+test-id: TS-NAV-003
+title: Cross-Protocol and Configuration
+area: NAV
+package: ace-support-nav
+priority: medium
+requires:
+  tools: [ace-nav]
+  ruby: ">= 3.0"
+
+setup:
+  - copy-fixtures
