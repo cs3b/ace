@@ -1,0 +1,15 @@
+test-id: TS-COMMIT-004a
+title: Split Commit - Auto-Split Basics
+area: git-commit
+package: ace-git-commit
+priority: high
+requires:
+  tools: [git, ace-git-commit]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - copy-fixtures
+  - run: git add -A && git commit -m "initial" --quiet
+  - env:
+      PROJECT_ROOT_PATH: .
