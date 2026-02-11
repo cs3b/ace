@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003b-TC002
+tc-id: MT-ASSIGN-003b-TC002
 title: Sibling Injection with Renumbering
 suite: TS-ASSIGN-003b
 ---

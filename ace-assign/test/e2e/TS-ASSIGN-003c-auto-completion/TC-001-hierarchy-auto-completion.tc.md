@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003c-TC001
+tc-id: MT-ASSIGN-003c-TC001
 title: Hierarchy Auto-Completion
 suite: TS-ASSIGN-003c
 ---

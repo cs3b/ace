@@ -1,5 +1,5 @@
 ---
-test-suite-id: TS-ASSIGN-003c
+test-id: TS-ASSIGN-003c
 title: Hierarchical Phases - Auto-Completion
 area: assign
 package: ace-assign

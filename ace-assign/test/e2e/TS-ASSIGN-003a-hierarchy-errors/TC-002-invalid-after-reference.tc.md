@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003a-TC002
+tc-id: MT-ASSIGN-003a-TC002
 title: Invalid --after Reference
 suite: TS-ASSIGN-003a
 ---

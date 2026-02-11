@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003a-TC001
+tc-id: MT-ASSIGN-003a-TC001
 title: Advance Parent with Incomplete Children
 suite: TS-ASSIGN-003a
 ---
