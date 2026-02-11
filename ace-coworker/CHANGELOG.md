@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-02-11
+
+### Fixed
+
+- E2E test suite reliability improvements:
+  - Split TS-COWORKER-003b monolithic TC into 3 separate TCs for better isolation
+  - Fix TS-COWORKER-003c Phase 2 setup to set parent status to pending before cascade test
+  - Use unique CACHE_BASE for 003b, 003c, 003d scenarios to prevent parallel test collisions
+
+## [0.6.0] - 2026-02-11
+
+### Added
+- **work-on-tasks preset**: Multi-task batch execution with consolidated validation
+- **E2E tests**: Workflow lifecycle and hierarchical job management coverage
+
+### Fixed
+- Array instruction substitution in foreach expansion now properly handles {{item}} placeholders
+
+### Technical
+- Removed deprecated work-on-task presets
+
 ## [0.5.3] - 2026-02-01
 
 ### Changed
