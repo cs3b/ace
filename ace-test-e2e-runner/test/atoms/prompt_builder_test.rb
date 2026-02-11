@@ -99,6 +99,47 @@ class PromptBuilderTest < Minitest::Test
     refute prompt.include?("FULL SCENARIO CONTENT MARKER"), "TC prompt should not include full scenario content"
   end
 
+  # --- Pending TC Support ---
+
+  def test_build_tc_pending_returns_skip_prompt
+    tc = create_test_case(tc_id: "TC-003", pending: "Requires sandbox environment")
+    prompt = @builder.build_tc(test_case: tc, scenario: create_scenario, sandbox_path: "/tmp/sandbox")
+    assert prompt.include?("SKIP"), "Pending TC prompt should say SKIP"
+    assert prompt.include?("TC-003"), "Pending TC prompt should include TC ID"
+    assert prompt.include?("pending"), "Pending TC prompt should mention pending"
+    assert prompt.include?("Requires sandbox environment"), "Pending TC prompt should include reason"
+    assert prompt.include?('"skip"'), "Pending TC prompt should instruct skip status"
+    refute prompt.include?("Execute the test case"), "Pending TC prompt should not ask for execution"
+  end
+
+  def test_build_tc_active_not_affected_by_pending
+    tc = create_test_case(tc_id: "TC-001")
+    prompt = @builder.build_tc(test_case: tc, scenario: create_scenario, sandbox_path: "/tmp/sandbox")
+    refute prompt.include?("SKIP"), "Active TC prompt should not say SKIP"
+    assert prompt.include?("Execute the test case"), "Active TC prompt should ask for execution"
+  end
+
+  def test_build_includes_pending_instruction_for_scenario_with_pending_tcs
+    pending_tc = Ace::Test::EndToEndRunner::Models::TestCase.new(
+      tc_id: "TC-003", title: "Pending TC", content: "# steps",
+      file_path: "/tmp/TC-003.tc.md", pending: "Requires sandbox"
+    )
+    scenario = create_scenario(test_cases: [
+      create_test_case(tc_id: "TC-001"),
+      pending_tc
+    ])
+    prompt = @builder.build(scenario)
+    assert prompt.include?("SKIP these test cases"), "Build prompt should mention pending TCs"
+    assert prompt.include?("TC-003"), "Build prompt should list pending TC ID"
+    assert prompt.include?("Requires sandbox"), "Build prompt should include pending reason"
+  end
+
+  def test_build_no_pending_instruction_when_no_pending_tcs
+    scenario = create_scenario(test_cases: [create_test_case(tc_id: "TC-001")])
+    prompt = @builder.build(scenario)
+    refute prompt.include?("SKIP these test cases"), "Build prompt should not mention pending when none exist"
+  end
+
   private
 
   def create_scenario(overrides = {})
@@ -108,7 +149,8 @@ class PromptBuilderTest < Minitest::Test
       area: "test",
       package: "ace-test",
       file_path: "/tmp/test.mt.md",
-      content: "# Test content"
+      content: "# Test content",
+      test_cases: []
     }
     Ace::Test::EndToEndRunner::Models::TestScenario.new(**defaults.merge(overrides))
   end
