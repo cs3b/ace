@@ -1,0 +1,14 @@
+test-id: TS-BUNDLE-001
+title: Section Workflow and Presets
+area: bundle
+package: ace-bundle
+priority: high
+requires:
+  tools: [ace-bundle]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - copy-fixtures
+  - env:
+      PROJECT_ROOT_PATH: .
