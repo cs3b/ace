@@ -1,23 +1,14 @@
 ---
-test-id: MT-ASSIGN-003c
-title: Hierarchical Jobs - Auto-Completion
-area: assign
-package: ace-assign
-priority: high
-duration: ~3min
-automation-candidate: true
-requires:
-  tools: [ace-assign]
-  ruby: ">= 3.0"
-last-verified: 2026-02-08
-verified-by: claude-opus-4-6
+test-id: MT-ASSIGN-003c-TC001
+title: Hierarchy Auto-Completion
+suite: TS-ASSIGN-003c
 ---
 
-# Hierarchical Jobs - Auto-Completion
+# Hierarchy Auto-Completion
 
 ## Objective
 
-Verify that ace-assign correctly auto-completes parent jobs when all children finish, including multi-level cascade auto-completion (grandchild -> parent -> grandparent).
+Verify that a parent phase auto-completes when all its children are done, and that multi-level auto-completion cascades (grandchild -> parent -> grandparent).
 
 ## Prerequisites
 
@@ -27,31 +18,41 @@ Verify that ace-assign correctly auto-completes parent jobs when all children fi
 ## Environment Setup
 
 ```bash
+PROJECT_ROOT="$(pwd)"
+TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
+SHORT_PKG="assign"
+SHORT_ID="003c"
+TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+mkdir -p "$TEST_DIR"
+cd "$TEST_DIR" || { echo "FATAL: Cannot cd to sandbox"; exit 1; }
+
+export PROJECT_ROOT_PATH="$TEST_DIR"
+CACHE_BASE="$TEST_DIR/.cache/ace-assign"
+mkdir -p "$CACHE_BASE"
+ACE_ASSIGN="bundle exec $PROJECT_ROOT/ace-assign/exe/ace-assign"
 ```
 
 ## Test Cases
 
-### TC-006: Complete All Children - Parent Auto-Completes
-
-**Objective:** Verify that a parent job auto-completes when all its children are done.
+### TC-001: Parent Auto-Completes When All Children Finish
 
 **Steps:**
 1. Create assignment with two top-level phases and add children
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   cat > "job2.yaml" << 'EOF'
-name: auto-complete-test
-description: Test auto-completion of parent jobs
+   cat > "job.yaml" << 'EOF'
+   name: auto-complete-test
+   description: Test auto-completion of parent phases
 
-steps:
-  - name: parent-job
-    instructions: This parent should auto-complete when children finish
+   steps:
+     - name: parent-job
+       instructions: This parent should auto-complete when children finish
 
-  - name: final-phase
-    instructions: Final phase after parent completes
-EOF
+     - name: final-phase
+       instructions: Final phase after parent completes
+   EOF
 
-   CREATE_OUTPUT=$($ACE_ASSIGN create "job2.yaml" 2>&1)
+   CREATE_OUTPUT=$($ACE_ASSIGN create "job.yaml" 2>&1)
    CREATE_EXIT=$?
    [ "$CREATE_EXIT" -eq 0 ] && echo "PASS: Assignment created" || echo "FAIL: Assignment creation failed"
    ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort | tail -1)
@@ -82,10 +83,10 @@ EOF
    sed -i.bak 's/status: pending/status: in_progress/' "$ASSIGNMENT_DIR/phases/010.01-child-one.ph.md"
 
    cat > "child1-report.md" << 'EOF'
-# Child One Report
+   # Child One Report
 
-First child completed successfully.
-EOF
+   First child completed successfully.
+   EOF
    CHILD1_OUTPUT=$($ACE_ASSIGN report "child1-report.md" 2>&1)
    CHILD1_EXIT=$?
    echo "Exit code: $CHILD1_EXIT"
@@ -107,10 +108,10 @@ EOF
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    cat > "child2-report.md" << 'EOF'
-# Child Two Report
+   # Child Two Report
 
-Second child completed successfully.
-EOF
+   Second child completed successfully.
+   EOF
    CHILD2_OUTPUT=$($ACE_ASSIGN report "child2-report.md" 2>&1)
    CHILD2_EXIT=$?
    [ "$CHILD2_EXIT" -eq 0 ] && echo "PASS: Child two completed" || echo "FAIL: Child two completion failed"
@@ -135,42 +136,38 @@ EOF
 - Parent 010 cannot complete while children incomplete
 - After completing all children, parent auto-completes
 - Auto-completion creates report with "Auto-completed" message
-- Workflow advances to next top-level job (020)
-
-**Actual:** [Record during execution]
+- Workflow advances to next top-level phase (020)
 
 **Status:** [ ] Pass / [ ] Fail
 
 ---
 
-### TC-007: Multi-Level Auto-Completion (Grandparent Chain)
-
-**Objective:** Verify that auto-completion cascades up multiple levels (grandchild -> parent -> grandparent).
+### TC-002: Multi-Level Auto-Completion (Grandparent Chain)
 
 **Steps:**
 1. Create assignment and build 3-level hierarchy
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
-   cat > "job3.yaml" << 'EOF'
-name: multi-level-test
-description: Test multi-level auto-completion
+   cat > "job2.yaml" << 'EOF'
+   name: multi-level-test
+   description: Test multi-level auto-completion
 
-steps:
-  - name: grandparent
-    instructions: Top level job
+   steps:
+     - name: grandparent
+       instructions: Top level phase
 
-  - name: next-task
-    instructions: Should become current after auto-completion chain
-EOF
+     - name: next-task
+       instructions: Should become current after auto-completion chain
+   EOF
 
-   CREATE_OUTPUT=$($ACE_ASSIGN create "job3.yaml" 2>&1)
+   CREATE_OUTPUT=$($ACE_ASSIGN create "job2.yaml" 2>&1)
    [ "$?" -eq 0 ] && echo "PASS: Assignment created" || echo "FAIL: Assignment creation failed"
    ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort | tail -1)
 
-   $ACE_ASSIGN add parent --after 010 --child -i "Middle level job" > /dev/null 2>&1
+   $ACE_ASSIGN add parent --after 010 --child -i "Middle level phase" > /dev/null 2>&1
    [ -f "$ASSIGNMENT_DIR/phases/010.01-parent.ph.md" ] && echo "PASS: Parent 010.01 created" || echo "FAIL: Parent creation failed"
 
-   $ACE_ASSIGN add child --after 010.01 --child -i "Bottom level job (grandchild)" > /dev/null 2>&1
+   $ACE_ASSIGN add child --after 010.01 --child -i "Bottom level phase (grandchild)" > /dev/null 2>&1
    [ -f "$ASSIGNMENT_DIR/phases/010.01.01-child.ph.md" ] && echo "PASS: Grandchild 010.01.01 created" || echo "FAIL: Grandchild creation failed"
    SANDBOX
    ```
@@ -191,10 +188,10 @@ EOF
    ```bash
    ace-test-e2e-sh "$TEST_DIR" bash << 'SANDBOX'
    cat > "grandchild-report.md" << 'EOF'
-# Grandchild Report
+   # Grandchild Report
 
-Grandchild completed - should trigger chain auto-completion.
-EOF
+   Grandchild completed - should trigger chain auto-completion.
+   EOF
    COMPLETE_OUTPUT=$($ACE_ASSIGN report "grandchild-report.md" 2>&1)
    COMPLETE_EXIT=$?
    echo "Exit code: $COMPLETE_EXIT"
@@ -224,9 +221,7 @@ EOF
 - Completing grandchild (010.01.01) triggers cascade:
   - Parent (010.01) auto-completes (all children done)
   - Grandparent (010) auto-completes (all children done)
-- Next top-level job (020) becomes in_progress
-
-**Actual:** [Record during execution]
+- Next top-level phase (020) becomes in_progress
 
 **Status:** [ ] Pass / [ ] Fail
 
@@ -243,5 +238,5 @@ echo "Cleanup complete"
 
 ## Success Criteria
 
-- [ ] TC-006: Parent auto-completes when all children finish
-- [ ] TC-007: Multi-level auto-completion cascades (grandchild -> parent -> grandparent)
+- [ ] TC-001: Parent auto-completes when all children finish
+- [ ] TC-002: Multi-level auto-completion cascades (grandchild -> parent -> grandparent)

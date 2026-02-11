@@ -1,0 +1,14 @@
+---
+test-suite-id: TS-ASSIGN-003c
+title: Hierarchical Phases - Auto-Completion
+area: assign
+package: ace-assign
+priority: high
+duration: ~3min
+automation-candidate: true
+requires:
+  tools: [ace-assign]
+  ruby: ">= 3.0"
+description: |
+  Verify that ace-assign correctly auto-completes parent phases when all children
+  finish, including multi-level cascade auto-completion (grandchild -> parent -> grandparent).
