@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-001
+tc-id: MT-ASSIGN-001
 title: Full Workflow Lifecycle
 suite: TS-ASSIGN-001
 ---

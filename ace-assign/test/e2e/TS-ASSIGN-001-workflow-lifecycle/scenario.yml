@@ -1,5 +1,5 @@
 ---
-test-suite-id: TS-ASSIGN-001
+test-id: TS-ASSIGN-001
 title: Workflow Lifecycle
 area: assign
 package: ace-assign

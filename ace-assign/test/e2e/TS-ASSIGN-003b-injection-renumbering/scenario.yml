@@ -1,5 +1,5 @@
 ---
-test-suite-id: TS-ASSIGN-003b
+test-id: TS-ASSIGN-003b
 title: Hierarchical Phases - Injection and Renumbering
 area: assign
 package: ace-assign

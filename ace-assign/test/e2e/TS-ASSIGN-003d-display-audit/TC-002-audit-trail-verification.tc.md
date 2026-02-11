@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003d-TC002
+tc-id: MT-ASSIGN-003d-TC002
 title: Audit Trail Verification
 suite: TS-ASSIGN-003d
 ---
