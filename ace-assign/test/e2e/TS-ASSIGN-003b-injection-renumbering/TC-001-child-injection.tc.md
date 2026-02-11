@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003b-TC001
+tc-id: MT-ASSIGN-003b-TC001
 title: Child Injection with --after --child
 suite: TS-ASSIGN-003b
 ---

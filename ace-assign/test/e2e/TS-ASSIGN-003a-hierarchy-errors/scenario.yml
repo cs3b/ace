@@ -1,5 +1,5 @@
 ---
-test-suite-id: TS-ASSIGN-003a
+test-id: TS-ASSIGN-003a
 title: Hierarchical Phases - Error Handling
 area: assign
 package: ace-assign

@@ -1,5 +1,5 @@
 ---
-test-id: MT-ASSIGN-003b-TC003
+tc-id: MT-ASSIGN-003b-TC003
 title: Cascade Renumbering
 suite: TS-ASSIGN-003b
 ---
