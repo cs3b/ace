@@ -83,7 +83,8 @@ module Ace
             if match = ref.match(/(\d{3})\.(\d{2})(?:\b|$)/)
               "#{match[1]}.#{match[2]}"
             # Try task. prefix pattern (e.g., "task.121")
-            elsif match = ref.match(/(?:^|task\.)(\d{3})(?:\b|$)/)
+            # Use negative lookbehind to avoid matching "ace-task.NNN" in directory names
+            elsif match = ref.match(/(?<!ace-)task\.(\d{3})(?:\b|$)/)
               match[1]
             # Try bare 3-digit task ID (e.g., "121", "081")
             elsif match = ref.match(/\b(\d{3})\b/)
