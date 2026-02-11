@@ -57,9 +57,6 @@ providers:
     - codexoss
     - opencode
     - pi
-  # Skill-aware CLI providers (use /ace:run-e2e-test invocation)
-  skill_aware:
-    - claude
   # Required CLI args per provider (merged with user-provided --cli-args)
   cli_args:
     claude: "dangerously-skip-permissions"

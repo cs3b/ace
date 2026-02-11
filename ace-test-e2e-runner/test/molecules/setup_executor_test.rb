@@ -193,4 +193,31 @@ class SetupExecutorTest < Minitest::Test
       assert_nil result[:error]
     end
   end
+
+  def test_env_returned_in_result
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [
+          { "env" => { "FOO" => "bar", "BAZ" => "qux" } },
+          { "run" => "echo ok" }
+        ],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_equal({ "FOO" => "bar", "BAZ" => "qux" }, result[:env])
+    end
+  end
+
+  def test_env_empty_when_no_env_steps
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [{ "run" => "echo ok" }],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_equal({}, result[:env])
+    end
+  end
 end

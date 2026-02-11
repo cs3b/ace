@@ -19,6 +19,21 @@ verified-by: {agent-name}
 
 {What this test verifies - 1-2 sentences describing the purpose and scope}
 
+## E2E Justification
+
+<!-- Required: Explain why this scenario needs E2E testing rather than unit tests.
+     Each TC should test behavior that requires the FULL CLI pipeline:
+     real binary execution, real subprocess calls, or real filesystem discovery.
+
+     Delete behaviors that can be tested with mocks/stubs and move them to unit tests. -->
+
+**Why E2E?** {Explain what makes this untestable with mocks — e.g., "Requires real StandardRB subprocess execution to validate linting results"}
+
+**Unit test coverage check:**
+- [ ] Searched `{package}/test/atoms/` for overlapping assertions
+- [ ] Searched `{package}/test/molecules/` for overlapping assertions
+- [ ] Confirmed each TC below tests behavior NOT covered by unit tests
+
 ## Prerequisites
 
 - {Requirement 1 - e.g., Ruby >= 3.0 installed}
@@ -82,6 +97,19 @@ See: e2e-testing.g.md § "Environment Isolation for Taskflow-Aware Tests"
 -->
 
 ## Test Cases
+
+<!-- TC CONSOLIDATION GUIDANCE
+
+     Target: 2-5 TCs per scenario. Each TC costs 1 LLM agent invocation (~$0.05-0.15 + 30-120s).
+
+     Consolidation rule: If multiple assertions share the same CLI invocation and setup,
+     they should be ONE TC with multiple verification steps, not separate TCs.
+
+     Example: After running `ace-lint lint file.rb`, checking exit code, report.json
+     structure, and ok.md existence should be ONE TC (TC-001), not three separate TCs.
+
+     Before adding a new TC, check: could this assertion be appended to an existing TC
+     that runs the same command? -->
 
 ### TC-001: {Test Case Name}
 
@@ -197,4 +225,6 @@ Artifacts in `.cache/ace-test-e2e/` are gitignored, so keeping them doesn't affe
 - Structure TCs as a real user workflow — each TC should build on the state left by previous TCs
 - Discover file paths at runtime from CLI output or directory scanning, not from assumptions
 - Include negative assertions: verify that wrong/old paths do NOT exist
+- **Cost awareness:** Each TC = 1 LLM invocation. Target 2-5 TCs per scenario. Consolidate related assertions.
+- **E2E Value Gate:** Every TC must require real binary + real tools + real filesystem. If testable with mocks, move to unit tests.
 - See: e2e-testing.g.md § "Avoiding False Positive Tests" for anti-patterns and reviewer checklist

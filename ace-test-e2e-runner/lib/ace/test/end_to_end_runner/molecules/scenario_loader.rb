@@ -54,10 +54,12 @@ module Ace
           #
           # @param path [String] Path to scenario.yml
           # @return [Hash] Parsed YAML frontmatter
-          # @raise [ArgumentError] If YAML is invalid
+          # @raise [ArgumentError] If YAML is invalid or empty
           def parse_scenario_yml(path)
             content = File.read(path)
-            YAML.safe_load(content, permitted_classes: [Date])
+            result = YAML.safe_load(content, permitted_classes: [Date])
+            raise ArgumentError, "Empty or invalid YAML in #{path}" if result.nil?
+            result
           rescue Psych::SyntaxError => e
             raise ArgumentError, "Invalid YAML in #{path}: #{e.message}"
           end

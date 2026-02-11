@@ -11,7 +11,8 @@ class TestDiscovererTest < Minitest::Test
   def test_find_tests_for_existing_package
     files = @discoverer.find_tests(package: "ace-lint", base_dir: @base_dir)
     refute_empty files, "Should find E2E tests in ace-lint"
-    assert files.all? { |f| f.end_with?(".mt.md") }, "All files should be .mt.md"
+    assert files.all? { |f| f.end_with?(".mt.md") || f.end_with?("scenario.yml") },
+           "All files should be .mt.md or scenario.yml"
   end
 
   def test_find_tests_for_nonexistent_package
@@ -22,11 +23,11 @@ class TestDiscovererTest < Minitest::Test
   def test_find_specific_test_by_id
     files = @discoverer.find_tests(
       package: "ace-lint",
-      test_id: "MT-LINT-001",
+      test_id: "TS-LINT-001",
       base_dir: @base_dir
     )
-    assert_equal 1, files.size, "Should find exactly one test for MT-LINT-001"
-    assert files.first.include?("MT-LINT-001"), "File should contain test ID"
+    assert_equal 1, files.size, "Should find exactly one test for TS-LINT-001"
+    assert files.first.include?("TS-LINT-001"), "File should contain test ID"
   end
 
   def test_find_specific_test_nonexistent_id

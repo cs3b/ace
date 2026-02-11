@@ -154,7 +154,7 @@ module Ace
               ""
             end
 
-            pending_instruction = build_pending_instruction(scenario)
+            pending_instruction = build_pending_tc_skip_instruction(scenario)
 
             execute_instruction = if test_cases&.any?
               "Execute only the specified test cases (#{test_cases.join(', ')}) and return the JSON results as specified in your instructions."
@@ -185,7 +185,7 @@ module Ace
           #
           # @param scenario [Models::TestScenario] The test scenario
           # @return [String] Pending instruction text or empty string
-          def build_pending_instruction(scenario)
+          def build_pending_tc_skip_instruction(scenario)
             pending_tcs = scenario.test_cases.select(&:pending?)
             return "" unless pending_tcs.any?
 
