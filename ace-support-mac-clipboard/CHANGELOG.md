@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-12
+
+### Fixed
+- Guard `require "ace/support/mac_clipboard"` behind platform check to prevent load errors on non-macOS
+- Skip all tests gracefully on non-macOS platforms instead of failing
+
 ## [0.2.0] - 2026-01-03
 
 ### Changed
