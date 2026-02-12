@@ -6,6 +6,19 @@
         "save_individual_files": false,
         "file_pattern": "/tmp/hook-debug-{timestamp}.json"
     },
+    "system_path_protection": {
+        "enabled": true,
+        "description": "Block destructive commands targeting system paths (added after /opt/homebrew incident 2026-02-12)",
+        "blocked_patterns": [
+            "\\brm\\s+(-[a-zA-Z]*\\s+)*(/opt/|/usr/local/|/Library/)",
+            "\\bmv\\s+.*(/opt/|/usr/local/|/Library/)",
+            "\\bchmod\\s+.*(/opt/|/usr/local/|/Library/)",
+            "\\bchown\\s+.*(/opt/|/usr/local/|/Library/)",
+            "\\bbrew\\s+(uninstall|remove|cleanup|autoremove)",
+            "\\bsudo\\b"
+        ],
+        "log_file": "/tmp/system-path-protection.log"
+    },
     "commit_workflow": {
         "enabled": true,
         "description": "Suggest semantic commits with git-commit instead of separate add/commit",
