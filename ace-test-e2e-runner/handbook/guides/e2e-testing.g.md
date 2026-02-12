@@ -461,14 +461,8 @@ The `ace-test` tool only runs files matching `*_test.rb`.
 3. **Be explicit** - Don't assume environment state
 
 ### Tool Version Managers (mise, asdf, rbenv)
-4. **Avoid PATH manipulation for tool hiding** - Shims bypass PATH changes
-5. **Use binary renaming instead** - For testing fallback behavior:
-   ```bash
-   TOOL_PATH="$(mise which standardrb)"
-   mv "$TOOL_PATH" "${TOOL_PATH}.disabled"
-   # ... run test ...
-   mv "${TOOL_PATH}.disabled" "$TOOL_PATH"
-   ```
+4. **Never rename or move system binaries** - This affects the entire system and other parallel tests. Binary renaming caused a production incident (2026-02-12) where `/opt/homebrew` was destroyed during parallel E2E test execution.
+5. **For testing fallback behavior** - Use environment variable overrides or mock the tool path in test setup. Do not manipulate binaries installed by mise, brew, or system package managers.
 
 ### Test Data & Cleanup
 6. **Use heredocs for test files** - Ensures reproducibility
