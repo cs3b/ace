@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-02-12
+
+### Fixed
+- Anchor ignore patterns to project root in `DocumentRegistry` to prevent matching system paths (e.g., `/tmp/` no longer matches project ignore rule `**/tmp/**`)
+- `glob_to_regex` now anchors converted patterns to `@project_root`, distinguishing `**/` (anywhere under project) from bare patterns (at project root)
+
 ## [0.19.1] - 2026-01-31
 
 ### Technical
