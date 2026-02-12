@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "socket"
+
 module Ace
   module TestRunner
     module Models
@@ -134,7 +136,7 @@ module Ace
             ace_test_runner_version: VERSION,
             working_directory: Dir.pwd,
             user: ENV["USER"],
-            hostname: ENV["HOSTNAME"] || `hostname`.strip
+            hostname: ENV["HOSTNAME"] || Socket.gethostname
           }
         end
       end
