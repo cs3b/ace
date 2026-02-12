@@ -1,15 +1,15 @@
----
 test-id: TS-ASSIGN-003a
 title: Hierarchical Phases - Error Handling
 area: assign
 package: ace-assign
 priority: high
-duration: ~3min
-automation-candidate: true
 requires:
   tools: [ace-assign]
   ruby: ">= 3.0"
-description: |
-  Verify that ace-assign reports clear errors when attempting invalid hierarchical
-  operations: completing a parent with incomplete children, and referencing a
-  non-existent phase with --after.
+
+setup:
+  - env:
+      PROJECT_ROOT_PATH: .
+      CACHE_BASE: .cache/ace-assign
+  - run: mkdir -p .cache/ace-assign
+  - copy-fixtures
