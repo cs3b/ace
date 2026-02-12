@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-02-12
+
+### Fixed
+- Replace shell-out to `hostname` with `Socket.gethostname` in test report environment capture
+  - Backtick `hostname` fails on systems without `inetutils` (e.g., minimal Arch installs)
+  - `Socket.gethostname` is Ruby stdlib — works everywhere with no external dependency
+  - Fixes `ace-test-suite` reporting 1 error per package despite all tests passing
+
 ## [0.15.2] - 2026-01-31
 
 ### Fixed
