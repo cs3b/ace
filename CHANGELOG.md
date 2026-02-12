@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.490] - 2026-02-12
+
+### Fixed
+
+- **ace-taskflow v0.34.7**: Case-insensitive `.md` file discovery in `CodenameExtractor` and cross-platform clipboard error handling in tests
+
 ## [0.9.489] - 2026-02-12
 
 ### Fixed
