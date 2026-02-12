@@ -6,6 +6,12 @@ run-id: "{run-id}"
 test-id: "{test-id}"
 package: "{package}"
 
+# Per-TC identification (TS-format)
+scenario_id: "{scenario-id}"      # TS-{AREA}-{NNN} for TS-format, null for MT-format
+tc_id: "{tc-id}"                  # TC-{NNN} for per-TC execution, null for full scenario
+tc_independent: false             # true if TC can run in isolation without prior state
+setup_method: "agent"             # "agent" (agent-driven) or "deterministic" (Ruby SetupExecutor)
+
 # Execution details
 agent: "{agent-name}"
 started: "{start-timestamp}"  # ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
