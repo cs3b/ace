@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.484] - 2026-02-12
+
+### Changed
+
+- **ace-assign v0.7.2**: E2E tests renamed from COWORKER to ASSIGN terminology (coworker → assign, session → assignment, step → phase, jobs → phases)
+
 ## [0.9.483] - 2026-02-11
 
 ### Fixed
