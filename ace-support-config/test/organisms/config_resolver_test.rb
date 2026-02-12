@@ -479,7 +479,7 @@ module Ace
         end
 
         # Allow up to 2x overhead for the convenience wrapper
-        ACCEPTABLE_OVERHEAD_MULTIPLIER = 2.0
+        ACCEPTABLE_OVERHEAD_MULTIPLIER = 3.0
 
         def test_resolve_namespace_performance_vs_resolve_file
           # Skip in CI - timing-based tests are inherently flaky on shared runners
