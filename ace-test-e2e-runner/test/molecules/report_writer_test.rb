@@ -33,7 +33,7 @@ class ReportWriterTest < Minitest::Test
       paths = @writer.write(result, scenario, report_dir: report_dir)
       content = File.read(paths[:summary])
 
-      assert content.include?("MT-LINT-001"), "Should contain test ID"
+      assert content.include?("TS-LINT-001"), "Should contain test ID"
       assert content.include?("ace-lint"), "Should contain package name"
       assert content.include?("pass"), "Should contain status"
     end
@@ -66,7 +66,7 @@ class ReportWriterTest < Minitest::Test
       paths = @writer.write(result, scenario, report_dir: report_dir)
       metadata = YAML.safe_load_file(paths[:metadata])
 
-      assert_equal "MT-LINT-001", metadata["test-id"]
+      assert_equal "TS-LINT-001", metadata["test-id"]
       assert_equal "ace-lint", metadata["package"]
       assert_equal "pass", metadata["status"]
       assert_equal 2, metadata["results"]["passed"]
@@ -236,11 +236,11 @@ class ReportWriterTest < Minitest::Test
 
   def create_scenario(overrides = {})
     defaults = {
-      test_id: "MT-LINT-001",
+      test_id: "TS-LINT-001",
       title: "Test Title",
       area: "lint",
       package: "ace-lint",
-      file_path: "/tmp/test.mt.md",
+      file_path: "/tmp/test/scenario.yml",
       content: "# Test"
     }
     TestScenario.new(**defaults.merge(overrides))
@@ -248,7 +248,7 @@ class ReportWriterTest < Minitest::Test
 
   def create_result(overrides = {})
     defaults = {
-      test_id: "MT-LINT-001",
+      test_id: "TS-LINT-001",
       status: "pass",
       test_cases: [
         { id: "TC-001", description: "First", status: "pass" },

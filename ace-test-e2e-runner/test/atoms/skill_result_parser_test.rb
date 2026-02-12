@@ -10,18 +10,18 @@ class SkillResultParserTest < Minitest::Test
 
   def test_parse_full_markdown_contract
     text = <<~MD
-      - **Test ID**: MT-LINT-001
+      - **Test ID**: TS-LINT-001
       - **Status**: pass
       - **Passed**: 8
       - **Failed**: 0
       - **Total**: 8
-      - **Report Paths**: 8p5jo2-lint-mt001-reports/*
+      - **Report Paths**: 8p5jo2-lint-ts001-reports/*
       - **Issues**: None
     MD
 
     result = SkillResultParser.parse(text)
 
-    assert_equal "MT-LINT-001", result[:test_id]
+    assert_equal "TS-LINT-001", result[:test_id]
     assert_equal "pass", result[:status]
     assert_equal 8, result[:test_cases].size
     assert(result[:test_cases].all? { |tc| tc[:status] == "pass" })
@@ -31,7 +31,7 @@ class SkillResultParserTest < Minitest::Test
 
   def test_parse_markdown_with_failures
     text = <<~MD
-      - **Test ID**: MT-REVIEW-002
+      - **Test ID**: TS-REVIEW-002
       - **Status**: partial
       - **Passed**: 3
       - **Failed**: 2
@@ -42,7 +42,7 @@ class SkillResultParserTest < Minitest::Test
 
     result = SkillResultParser.parse(text)
 
-    assert_equal "MT-REVIEW-002", result[:test_id]
+    assert_equal "TS-REVIEW-002", result[:test_id]
     assert_equal "partial", result[:status]
     assert_equal 5, result[:test_cases].size
     assert_equal 3, result[:test_cases].count { |tc| tc[:status] == "pass" }
@@ -53,12 +53,12 @@ class SkillResultParserTest < Minitest::Test
 
   def test_parse_markdown_with_all_failures
     text = <<~MD
-      - **Test ID**: MT-TEST-001
+      - **Test ID**: TS-TEST-001
       - **Status**: fail
       - **Passed**: 0
       - **Failed**: 3
       - **Total**: 3
-      - **Report Paths**: xyz789-test-mt001-reports/*
+      - **Report Paths**: xyz789-test-ts001-reports/*
       - **Issues**: All test cases failed due to missing dependency
     MD
 
@@ -74,12 +74,12 @@ class SkillResultParserTest < Minitest::Test
     text = <<~MD
       I've completed the E2E test execution. Here are the results:
 
-      - **Test ID**: MT-LINT-001
+      - **Test ID**: TS-LINT-001
       - **Status**: pass
       - **Passed**: 4
       - **Failed**: 0
       - **Total**: 4
-      - **Report Paths**: ts1234-lint-mt001-reports/*
+      - **Report Paths**: ts1234-lint-ts001-reports/*
       - **Issues**: None
 
       The test ran successfully in the sandbox environment.
@@ -87,7 +87,7 @@ class SkillResultParserTest < Minitest::Test
 
     result = SkillResultParser.parse(text)
 
-    assert_equal "MT-LINT-001", result[:test_id]
+    assert_equal "TS-LINT-001", result[:test_id]
     assert_equal "pass", result[:status]
     assert_equal 4, result[:test_cases].size
   end
@@ -98,7 +98,7 @@ class SkillResultParserTest < Minitest::Test
     json_response = <<~JSON
       ```json
       {
-        "test_id": "MT-LINT-001",
+        "test_id": "TS-LINT-001",
         "status": "pass",
         "test_cases": [
           {"id": "TC-001", "description": "Valid file", "status": "pass", "actual": "Exit 0", "notes": ""}
@@ -110,7 +110,7 @@ class SkillResultParserTest < Minitest::Test
 
     result = SkillResultParser.parse(json_response)
 
-    assert_equal "MT-LINT-001", result[:test_id]
+    assert_equal "TS-LINT-001", result[:test_id]
     assert_equal "pass", result[:status]
     assert_equal 1, result[:test_cases].size
     assert_equal "TC-001", result[:test_cases].first[:id]
@@ -140,12 +140,12 @@ class SkillResultParserTest < Minitest::Test
 
   def test_normalized_test_cases_have_sequential_ids
     text = <<~MD
-      - **Test ID**: MT-TEST-001
+      - **Test ID**: TS-TEST-001
       - **Status**: partial
       - **Passed**: 2
       - **Failed**: 1
       - **Total**: 3
-      - **Report Paths**: abc-test-mt001-reports/*
+      - **Report Paths**: abc-test-ts001-reports/*
       - **Issues**: One failure
     MD
 
@@ -161,7 +161,7 @@ class SkillResultParserTest < Minitest::Test
 
   def test_normalized_issues_none_becomes_empty
     text = <<~MD
-      - **Test ID**: MT-TEST-001
+      - **Test ID**: TS-TEST-001
       - **Status**: pass
       - **Passed**: 1
       - **Failed**: 0
@@ -176,7 +176,7 @@ class SkillResultParserTest < Minitest::Test
 
   def test_normalized_issues_preserved_when_not_none
     text = <<~MD
-      - **Test ID**: MT-TEST-001
+      - **Test ID**: TS-TEST-001
       - **Status**: fail
       - **Passed**: 0
       - **Failed**: 1
@@ -251,7 +251,7 @@ class SkillResultParserTest < Minitest::Test
 
   def test_parse_tc_falls_back_to_multi_tc_parse
     text = <<~MD
-      - **Test ID**: MT-LINT-001
+      - **Test ID**: TS-LINT-001
       - **Status**: pass
       - **Passed**: 2
       - **Failed**: 0
@@ -261,7 +261,7 @@ class SkillResultParserTest < Minitest::Test
     MD
 
     result = SkillResultParser.parse_tc(text)
-    assert_equal "MT-LINT-001", result[:test_id]
+    assert_equal "TS-LINT-001", result[:test_id]
     assert_equal 2, result[:test_cases].size
   end
 

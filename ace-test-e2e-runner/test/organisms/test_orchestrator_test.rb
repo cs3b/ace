@@ -49,28 +49,28 @@ class TestOrchestratorTest < Minitest::Test
 
     results = orchestrator.run(
       package: "ace-lint",
-      test_id: "MT-LINT-999",
+      test_id: "TS-LINT-999",
       output: @output
     )
 
     assert_empty results
     assert_match(/No E2E tests found/, @output.string)
-    assert_match(/MT-LINT-999/, @output.string)
+    assert_match(/TS-LINT-999/, @output.string)
   end
 
   def test_run_single_test_returns_passing_result
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       orchestrator = create_orchestrator(base_dir: tmpdir)
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
       assert_equal 1, results.size
-      assert_equal "MT-TEST-001", results.first.test_id
+      assert_equal "TS-TEST-001", results.first.test_id
       assert_equal "pass", results.first.status
       assert results.first.success?
       assert_match(/Running E2E test/, @output.string)
@@ -80,7 +80,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_single_test_shows_tc_counts
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
       executor = StubExecutor.new(
         status: "pass",
         test_cases: [
@@ -92,7 +92,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -102,13 +102,13 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_single_test_omits_tc_counts_when_zero
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       executor = StubExecutor.new(status: "error", test_cases: [])
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -120,7 +120,8 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_package_returns_all_results
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       orchestrator = create_orchestrator(base_dir: tmpdir)
 
       results = orchestrator.run(
@@ -137,19 +138,21 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_package_shows_started_messages
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       orchestrator = create_orchestrator(base_dir: tmpdir)
 
       orchestrator.run(package: "my-pkg", output: @output)
 
-      assert_match(/\[started\] MT-TEST-001: Test MT-TEST-001/, @output.string)
-      assert_match(/\[started\] MT-TEST-002: Test MT-TEST-002/, @output.string)
+      assert_match(/\[started\] TS-TEST-001/, @output.string)
+      assert_match(/\[started\] TS-TEST-002/, @output.string)
     end
   end
 
   def test_run_package_shows_tc_counts_in_done_lines
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001 TC-002])
       executor = StubExecutor.new(
         status: "pass",
         test_cases: [
@@ -161,13 +164,14 @@ class TestOrchestratorTest < Minitest::Test
 
       orchestrator.run(package: "my-pkg", output: @output)
 
-      assert_match(/\[1\/2\] .* MT-TEST-001\s+PASS\s+2\/2 cases/, @output.string)
+      assert_match(/\[1\/2\] .* TS-TEST-001\s+PASS\s+2\/2 cases/, @output.string)
     end
   end
 
   def test_run_package_summary_includes_tc_stats
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001 TC-002])
       executor = StubExecutor.new(
         status: "pass",
         test_cases: [
@@ -187,7 +191,8 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_package_summary_omits_tc_stats_when_zero
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       orchestrator = create_orchestrator(base_dir: tmpdir)
 
       orchestrator.run(package: "my-pkg", output: @output)
@@ -200,7 +205,8 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_package_writes_suite_report
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         timestamp_generator: -> { "rpt123" }
@@ -216,7 +222,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_uses_injected_timestamp
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         timestamp_generator: -> { "abc123" }
@@ -224,7 +230,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -234,7 +240,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_report_directory_created
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         timestamp_generator: -> { "ts1234" }
@@ -242,7 +248,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -254,13 +260,13 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_failed_test_result_propagated
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       executor = StubExecutor.new(status: "fail", summary: "Test failed")
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -273,7 +279,8 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_package_run_with_mixed_results
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       call_count = 0
       # Executor that alternates pass/fail
       executor = Object.new
@@ -304,7 +311,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_cli_provider_skips_report_writing
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         provider: "claude:sonnet",
@@ -313,13 +320,13 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
       assert_equal 1, results.size
       # CLI providers should NOT have orchestrator-written reports
-      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "cli123-pkg-mt001-reports")
+      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "cli123-my-pkg-ts001-reports")
       refute Dir.exist?(report_dir), "CLI provider should not create report dir via ReportWriter"
       assert_match(/skill mode/, @output.string)
     end
@@ -327,7 +334,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_api_provider_writes_reports
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
         provider: "google:gemini-2.5-flash",
@@ -336,7 +343,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -349,12 +356,10 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_cli_provider_finds_agent_written_reports
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       # Simulate agent-written report dir at the expected path (matching timestamp)
-      # short_package for "my-pkg" is "my-pkg" (no ace- prefix to strip)
-      # short_id for "MT-TEST-001" is "mt001"
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "bbb222-my-pkg-mt001-reports")
+      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "bbb222-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "summary.r.md"), "# Report")
 
@@ -366,7 +371,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -376,10 +381,10 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_cli_provider_reads_metadata_yml_for_status
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       # Simulate agent-written report dir with metadata.yml showing pass
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "meta01-my-pkg-mt001-reports")
+      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "meta01-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "metadata.yml"), <<~YAML)
         status: "pass"
@@ -400,7 +405,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -414,10 +419,10 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_cli_provider_falls_back_without_metadata_yml
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       # Simulate agent-written report dir WITHOUT metadata.yml
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "nomta1-my-pkg-mt001-reports")
+      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "nomta1-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "summary.r.md"), "# Report")
 
@@ -431,7 +436,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -443,7 +448,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_cli_provider_passes_run_id_to_executor
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       received_run_id = nil
       executor = Object.new
@@ -467,7 +472,7 @@ class TestOrchestratorTest < Minitest::Test
 
       orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -477,7 +482,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_api_provider_does_not_pass_run_id_to_executor
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       received_run_id = :not_called
       executor = Object.new
@@ -501,7 +506,7 @@ class TestOrchestratorTest < Minitest::Test
 
       orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -511,7 +516,9 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_batch_run_generates_unique_run_ids_for_cli_provider
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002 MT-TEST-003])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-003", %w[TC-001])
 
       received_run_ids = []
       mutex = Mutex.new
@@ -547,7 +554,9 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_parallel_execution_runs_all_tests
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002 MT-TEST-003])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-003", %w[TC-001])
       orchestrator = create_orchestrator(base_dir: tmpdir, parallel: 2)
 
       results = orchestrator.run(
@@ -559,15 +568,16 @@ class TestOrchestratorTest < Minitest::Test
       assert(results.all?(&:success?), "All results should pass")
       assert_match(/Tests:\s+3 passed, 0 failed/, @output.string)
       # All test IDs should appear in output
-      assert_match(/MT-TEST-001/, @output.string)
-      assert_match(/MT-TEST-002/, @output.string)
-      assert_match(/MT-TEST-003/, @output.string)
+      assert_match(/TS-TEST-001/, @output.string)
+      assert_match(/TS-TEST-002/, @output.string)
+      assert_match(/TS-TEST-003/, @output.string)
     end
   end
 
   def test_parallel_default_from_config
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       # Don't pass parallel: — let it pick up from config (default 3)
       orchestrator = TestOrchestrator.new(
         provider: "test:stub",
@@ -589,7 +599,8 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_parallel_one_behaves_sequentially
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
       execution_order = []
       mutex = Mutex.new
 
@@ -613,7 +624,7 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       assert_equal 2, results.size
-      assert_equal %w[MT-TEST-001 MT-TEST-002], execution_order
+      assert_equal %w[TS-TEST-001 TS-TEST-002], execution_order
       assert_match(/Tests:\s+2 passed, 0 failed/, @output.string)
       # Should NOT show parallelism message
       refute_match(/parallelism/, @output.string)
@@ -622,7 +633,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_uses_externally_provided_run_id
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
@@ -631,7 +642,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         run_id: "ext123",
         output: @output
       )
@@ -646,7 +657,7 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_run_generates_timestamp_when_no_run_id
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       orchestrator = create_orchestrator(
         base_dir: tmpdir,
@@ -655,7 +666,7 @@ class TestOrchestratorTest < Minitest::Test
 
       results = orchestrator.run(
         package: "my-pkg",
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         output: @output
       )
 
@@ -667,13 +678,15 @@ class TestOrchestratorTest < Minitest::Test
 
   def test_parallel_results_preserve_order
     Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", %w[MT-TEST-001 MT-TEST-002 MT-TEST-003])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-001])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-003", %w[TC-001])
 
       # Executor where test 1 is slow, test 2/3 are fast
       # With parallel > 1, test 2 may finish before test 1
       executor = Object.new
       executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
-        sleep(0.05) if scenario.test_id == "MT-TEST-001"
+        sleep(0.05) if scenario.test_id == "TS-TEST-001"
         TestResult.new(
           test_id: scenario.test_id,
           status: "pass",
@@ -691,30 +704,11 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       # Results array should be in original file order regardless of completion order
-      assert_equal %w[MT-TEST-001 MT-TEST-002 MT-TEST-003], results.map(&:test_id)
+      assert_equal %w[TS-TEST-001 TS-TEST-002 TS-TEST-003], results.map(&:test_id)
     end
   end
 
-  def test_run_single_ts_format_test
-    Dir.mktmpdir do |tmpdir|
-      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
-      orchestrator = create_orchestrator(base_dir: tmpdir)
-
-      results = orchestrator.run(
-        package: "my-pkg",
-        test_id: "TS-TEST-001",
-        output: @output
-      )
-
-      assert_equal 1, results.size
-      assert_equal "TS-TEST-001", results.first.test_id
-      assert_equal "pass", results.first.status
-      assert results.first.success?
-      assert_match(/Running E2E test/, @output.string)
-    end
-  end
-
-  def test_ts_format_cli_provider_runs_setup_before_execution
+  def test_cli_provider_runs_setup_before_execution
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
@@ -744,7 +738,7 @@ class TestOrchestratorTest < Minitest::Test
         output: @output
       )
 
-      refute_nil received[:sandbox_path], "sandbox_path should be set for TS-format CLI provider"
+      refute_nil received[:sandbox_path], "sandbox_path should be set for CLI provider"
       assert received[:sandbox_path].include?(".cache/ace-test-e2e/"),
         "sandbox_path should be under .cache/ace-test-e2e/"
       assert_instance_of Hash, received[:env_vars]
@@ -754,42 +748,7 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
-  def test_mt_format_does_not_run_setup
-    Dir.mktmpdir do |tmpdir|
-      create_test_package(tmpdir, "my-pkg", ["MT-TEST-001"])
-
-      received = {}
-      executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
-        received[:sandbox_path] = sandbox_path
-        received[:env_vars] = env_vars
-        TestResult.new(
-          test_id: scenario.test_id,
-          status: "pass",
-          summary: "OK",
-          started_at: Time.now,
-          completed_at: Time.now + 1
-        )
-      end
-
-      orchestrator = create_orchestrator(
-        base_dir: tmpdir,
-        provider: "claude:sonnet",
-        executor: executor
-      )
-
-      orchestrator.run(
-        package: "my-pkg",
-        test_id: "MT-TEST-001",
-        output: @output
-      )
-
-      assert_nil received[:sandbox_path], "sandbox_path should be nil for MT-format"
-      assert_nil received[:env_vars], "env_vars should be nil for MT-format"
-    end
-  end
-
-  def test_api_provider_does_not_run_setup_for_ts
+  def test_api_provider_does_not_run_setup
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
@@ -827,46 +786,8 @@ class TestOrchestratorTest < Minitest::Test
   def test_package_run_with_test_cases_skips_non_matching_scenarios
     Dir.mktmpdir do |tmpdir|
       # Create two scenarios with different test cases
-      test_dir = File.join(tmpdir, "my-pkg", "test", "e2e")
-      FileUtils.mkdir_p(test_dir)
-
-      File.write(File.join(test_dir, "MT-TEST-001-first.mt.md"), <<~CONTENT)
-        ---
-        test-id: MT-TEST-001
-        title: First test
-        area: test
-        package: my-pkg
-        ---
-
-        # First test
-
-        ## Test Cases
-
-        ### TC-001: Check A
-        Verify A.
-
-        ### TC-002: Check B
-        Verify B.
-      CONTENT
-
-      File.write(File.join(test_dir, "MT-TEST-002-second.mt.md"), <<~CONTENT)
-        ---
-        test-id: MT-TEST-002
-        title: Second test
-        area: test
-        package: my-pkg
-        ---
-
-        # Second test
-
-        ## Test Cases
-
-        ### TC-003: Check C
-        Verify C.
-
-        ### TC-004: Check D
-        Verify D.
-      CONTENT
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-002", %w[TC-003 TC-004])
 
       executed_scenarios = []
       executor = Object.new
@@ -883,7 +804,7 @@ class TestOrchestratorTest < Minitest::Test
 
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor)
 
-      # Filter to TC-001 which only exists in MT-TEST-001
+      # Filter to TC-001 which only exists in TS-TEST-001
       results = orchestrator.run(
         package: "my-pkg",
         test_cases: %w[TC-001],
@@ -892,13 +813,13 @@ class TestOrchestratorTest < Minitest::Test
 
       assert_equal 2, results.size
 
-      # Only MT-TEST-001 should have been executed via the executor
+      # Only TS-TEST-001 should have been executed via the executor
       assert_equal 1, executed_scenarios.size
-      assert_equal "MT-TEST-001", executed_scenarios.first[:test_id]
+      assert_equal "TS-TEST-001", executed_scenarios.first[:test_id]
       assert_equal %w[TC-001], executed_scenarios.first[:test_cases]
 
-      # MT-TEST-002 should be skipped (no matching test cases)
-      skipped_result = results.find { |r| r.test_id == "MT-TEST-002" }
+      # TS-TEST-002 should be skipped (no matching test cases)
+      skipped_result = results.find { |r| r.test_id == "TS-TEST-002" }
       assert_equal "skip", skipped_result&.status
     end
   end
@@ -987,29 +908,6 @@ class TestOrchestratorTest < Minitest::Test
 
         ## Expected
         - Output contains #{tc_id}
-      CONTENT
-    end
-  end
-
-  def create_test_package(tmpdir, package, test_ids)
-    test_dir = File.join(tmpdir, package, "test", "e2e")
-    FileUtils.mkdir_p(test_dir)
-
-    test_ids.each do |test_id|
-      File.write(File.join(test_dir, "#{test_id}-test.mt.md"), <<~CONTENT)
-        ---
-        test-id: #{test_id}
-        title: Test #{test_id}
-        area: test
-        package: #{package}
-        ---
-
-        # Test #{test_id}
-
-        ## Test Cases
-
-        ### TC-001: Basic check
-        Verify basic functionality.
       CONTENT
     end
   end

@@ -38,7 +38,7 @@ module Ace
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
             @progress = progress
             @discoverer = Molecules::TestDiscoverer.new
-            @parser = Molecules::ScenarioParser.new
+            @loader = Molecules::ScenarioLoader.new
             @executor = executor || Molecules::TestExecutor.new(provider: @provider, timeout: @timeout, config: config)
             @report_writer = Molecules::ReportWriter.new
             @suite_report_writer = Molecules::SuiteReportWriter.new(config: config)
@@ -86,7 +86,7 @@ module Ace
 
           # Run deterministic setup in Ruby before handing off to LLM
           #
-          # For TS-format scenarios with setup steps and CLI providers, creates
+          # For scenarios with setup steps and CLI providers, creates
           # a sandbox and runs SetupExecutor so the LLM only does TC execution.
           #
           # @param scenario [Models::TestScenario] The test scenario
@@ -94,9 +94,7 @@ module Ace
           # @param output [IO] Output stream for progress messages
           # @return [Array(String, Hash), Array(nil, nil)] [sandbox_path, env_vars] or [nil, nil]
           def setup_sandbox_if_ts(scenario, timestamp, output)
-            return [nil, nil] unless cli_provider? &&
-                                     scenario.scenario_format == :ts &&
-                                     scenario.setup_steps.any?
+            return [nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
             sandbox_dir = File.join(@base_dir, ".cache", "ace-test-e2e", scenario.dir_name(timestamp))
             setup_executor = Molecules::SetupExecutor.new
@@ -123,7 +121,7 @@ module Ace
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Array<Models::TestResult>] Single-element result array
           def run_single_test(file, timestamp, cli_args, output, test_cases: nil)
-            scenario = @parser.parse(file)
+            scenario = @loader.load(File.dirname(file))
             display = build_display_manager([scenario], output)
 
             output.puts "Running E2E test: #{scenario.test_id} (#{scenario.package})"
@@ -164,8 +162,8 @@ module Ace
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Array<Models::TestResult>] Results for all tests
           def run_package_tests(files, package, timestamp, cli_args, output, test_cases: nil)
-            # Parse scenarios upfront for titles and report generation
-            scenarios = files.map { |f| @parser.parse(f) }
+            # Load scenarios upfront for titles and report generation
+            scenarios = files.map { |f| @loader.load(File.dirname(f)) }
 
             display = build_display_manager(scenarios, output)
             display.initialize_display

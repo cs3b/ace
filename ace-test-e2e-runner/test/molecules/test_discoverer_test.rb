@@ -11,8 +11,8 @@ class TestDiscovererTest < Minitest::Test
   def test_find_tests_for_existing_package
     files = @discoverer.find_tests(package: "ace-lint", base_dir: @base_dir)
     refute_empty files, "Should find E2E tests in ace-lint"
-    assert files.all? { |f| f.end_with?(".mt.md") || f.end_with?("scenario.yml") },
-           "All files should be .mt.md or scenario.yml"
+    assert files.all? { |f| f.end_with?("scenario.yml") },
+           "All files should be scenario.yml"
   end
 
   def test_find_tests_for_nonexistent_package
@@ -33,7 +33,7 @@ class TestDiscovererTest < Minitest::Test
   def test_find_specific_test_nonexistent_id
     files = @discoverer.find_tests(
       package: "ace-lint",
-      test_id: "MT-LINT-999",
+      test_id: "TS-LINT-999",
       base_dir: @base_dir
     )
     assert_empty files, "Should find no tests for nonexistent ID"
@@ -52,43 +52,36 @@ class TestDiscovererTest < Minitest::Test
 
   def test_find_tests_in_temp_directory
     Dir.mktmpdir do |tmpdir|
-      # Create test structure
-      test_dir = File.join(tmpdir, "my-package", "test", "e2e")
-      FileUtils.mkdir_p(test_dir)
-      File.write(File.join(test_dir, "MT-TEST-001-example.mt.md"), "---\ntest-id: MT-TEST-001\n---\n")
-      File.write(File.join(test_dir, "MT-TEST-002-other.mt.md"), "---\ntest-id: MT-TEST-002\n---\n")
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-example", ["TC-001", "TC-002"])
 
       files = @discoverer.find_tests(package: "my-package", base_dir: tmpdir)
-      assert_equal 2, files.size, "Should find both test files"
+      assert_equal 1, files.size, "Should find the scenario file"
+      assert files.first.end_with?("scenario.yml")
     end
   end
 
   def test_find_tests_by_comma_separated_ids
     Dir.mktmpdir do |tmpdir|
-      test_dir = File.join(tmpdir, "my-package", "test", "e2e")
-      FileUtils.mkdir_p(test_dir)
-      File.write(File.join(test_dir, "MT-TEST-001-first.mt.md"), "")
-      File.write(File.join(test_dir, "MT-TEST-002-second.mt.md"), "")
-      File.write(File.join(test_dir, "MT-TEST-003-third.mt.md"), "")
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-first", ["TC-001"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-second", ["TC-001"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-003-third", ["TC-001"])
 
       files = @discoverer.find_tests(
         package: "my-package",
-        test_id: "MT-TEST-001,MT-TEST-002",
+        test_id: "TS-TEST-001,TS-TEST-002",
         base_dir: tmpdir
       )
       assert_equal 2, files.size, "Should find exactly two tests"
-      assert files.any? { |f| f.include?("MT-TEST-001") }
-      assert files.any? { |f| f.include?("MT-TEST-002") }
+      assert files.any? { |f| f.include?("TS-TEST-001") }
+      assert files.any? { |f| f.include?("TS-TEST-002") }
     end
   end
 
   def test_find_tests_by_partial_comma_separated_ids
     Dir.mktmpdir do |tmpdir|
-      test_dir = File.join(tmpdir, "my-package", "test", "e2e")
-      FileUtils.mkdir_p(test_dir)
-      File.write(File.join(test_dir, "MT-TEST-001-first.mt.md"), "")
-      File.write(File.join(test_dir, "MT-TEST-002-second.mt.md"), "")
-      File.write(File.join(test_dir, "MT-TEST-003-third.mt.md"), "")
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-first", ["TC-001"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-second", ["TC-001"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-003-third", ["TC-001"])
 
       files = @discoverer.find_tests(
         package: "my-package",
@@ -103,10 +96,8 @@ class TestDiscovererTest < Minitest::Test
 
   def test_find_tests_comma_separated_with_spaces
     Dir.mktmpdir do |tmpdir|
-      test_dir = File.join(tmpdir, "my-package", "test", "e2e")
-      FileUtils.mkdir_p(test_dir)
-      File.write(File.join(test_dir, "MT-TEST-001-first.mt.md"), "")
-      File.write(File.join(test_dir, "MT-TEST-002-second.mt.md"), "")
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-first", ["TC-001"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-second", ["TC-001"])
 
       files = @discoverer.find_tests(
         package: "my-package",
@@ -119,13 +110,11 @@ class TestDiscovererTest < Minitest::Test
 
   def test_find_tests_comma_separated_deduplicates
     Dir.mktmpdir do |tmpdir|
-      test_dir = File.join(tmpdir, "my-package", "test", "e2e")
-      FileUtils.mkdir_p(test_dir)
-      File.write(File.join(test_dir, "MT-TEST-001-first.mt.md"), "")
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-first", ["TC-001"])
 
       files = @discoverer.find_tests(
         package: "my-package",
-        test_id: "001,MT-TEST-001",
+        test_id: "001,TS-TEST-001",
         base_dir: tmpdir
       )
       assert_equal 1, files.size, "Should deduplicate overlapping ID matches"
@@ -187,20 +176,6 @@ class TestDiscovererTest < Minitest::Test
     end
   end
 
-  def test_find_tests_includes_scenario_yml_paths
-    Dir.mktmpdir do |tmpdir|
-      test_dir = File.join(tmpdir, "my-package", "test", "e2e")
-      FileUtils.mkdir_p(test_dir)
-      File.write(File.join(test_dir, "MT-TEST-001-legacy.mt.md"), "")
-      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-new", ["TC-001"])
-
-      files = @discoverer.find_tests(package: "my-package", base_dir: tmpdir)
-
-      assert files.any? { |f| f.end_with?(".mt.md") }, "Should include MT files"
-      assert files.any? { |f| f.end_with?("scenario.yml") }, "Should include scenario.yml"
-    end
-  end
-
   def test_list_packages_includes_ts_format_packages
     Dir.mktmpdir do |tmpdir|
       create_ts_scenario(tmpdir, "ace-lint", "TS-LINT-001-test", ["TC-001"])
@@ -208,21 +183,6 @@ class TestDiscovererTest < Minitest::Test
       packages = @discoverer.list_packages(base_dir: tmpdir)
 
       assert_includes packages, "ace-lint"
-    end
-  end
-
-  def test_list_packages_deduplicates_mixed_format
-    Dir.mktmpdir do |tmpdir|
-      # MT format
-      mt_dir = File.join(tmpdir, "ace-lint", "test", "e2e")
-      FileUtils.mkdir_p(mt_dir)
-      File.write(File.join(mt_dir, "MT-LINT-001-legacy.mt.md"), "")
-      # TS format
-      create_ts_scenario(tmpdir, "ace-lint", "TS-LINT-001-new", ["TC-001"])
-
-      packages = @discoverer.list_packages(base_dir: tmpdir)
-
-      assert_equal 1, packages.count("ace-lint"), "Package should appear only once"
     end
   end
 

@@ -20,7 +20,7 @@ module Ace
             desc <<~DESC.strip
               Run E2E tests via LLM execution
 
-              Discovers and executes *.mt.md test scenarios in a package's test/e2e/ directory.
+              Discovers and executes TS-* test scenarios in a package's test/e2e/ directory.
               Tests are sent to an LLM provider which executes the test steps and returns
               structured results.
 
@@ -30,18 +30,18 @@ module Ace
             DESC
 
             example [
-              "ace-lint MT-LINT-001          # Run specific test",
+              "ace-lint TS-LINT-001          # Run specific test",
               "ace-lint                      # Run all tests in package",
               "ace-lint --provider gemini:flash  # Use specific provider",
               "ace-lint --provider glite     # Use API provider (predict mode)",
-              "ace-lint MT-LINT-003 --test-cases tc-001,002  # Run specific test cases",
-              "ace-lint MT-LINT-003 --test-cases TC-001 --dry-run  # Preview test cases",
+              "ace-lint TS-LINT-003 --test-cases tc-001,002  # Run specific test cases",
+              "ace-lint TS-LINT-003 --test-cases TC-001 --dry-run  # Preview test cases",
               "ace-lint --only-failures      # Re-run only previously failed test cases",
               "ace-lint --only-failures --dry-run  # Preview which failures would re-run"
             ]
 
             argument :package, required: true, desc: "Package name (e.g., ace-lint)"
-            argument :test_id, required: false, desc: "Test ID (e.g., MT-LINT-001)"
+            argument :test_id, required: false, desc: "Test ID (e.g., TS-LINT-001)"
 
             option :provider, type: :string, default: Molecules::ConfigLoader.default_provider,
                    desc: "LLM provider:model (e.g., claude:sonnet, gemini:flash)"
@@ -187,7 +187,7 @@ module Ace
             # @param only_failures_wildcard [Boolean] True when --only-failures resolved to wildcard
             def handle_dry_run(package, test_id, test_cases, output, only_failures_wildcard: false)
               discoverer = Molecules::TestDiscoverer.new
-              parser = Molecules::ScenarioParser.new
+              loader = Molecules::ScenarioLoader.new
 
               files = discoverer.find_tests(package: package, test_id: test_id, base_dir: Dir.pwd)
               if files.empty?
@@ -201,7 +201,7 @@ module Ace
               output.puts ""
 
               files.each do |file|
-                scenario = parser.parse(file)
+                scenario = loader.load(File.dirname(file))
                 available_ids = scenario.test_case_ids
                 output.puts "#{scenario.test_id}: #{scenario.title}"
 

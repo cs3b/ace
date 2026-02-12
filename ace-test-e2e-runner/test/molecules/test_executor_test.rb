@@ -14,7 +14,7 @@ class TestExecutorTest < Minitest::Test
     Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { raise IOError, "stream closed in another thread" }) do
       result = executor.execute(scenario)
 
-      assert_equal "MT-LINT-001", result.test_id
+      assert_equal "TS-LINT-001", result.test_id
       assert_equal "error", result.status
       assert_equal "Unexpected execution error", result.summary
       assert_includes result.error, "IOError"
@@ -30,7 +30,7 @@ class TestExecutorTest < Minitest::Test
     Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { raise Errno::EPIPE, "Broken pipe" }) do
       result = executor.execute(scenario)
 
-      assert_equal "MT-LINT-001", result.test_id
+      assert_equal "TS-LINT-001", result.test_id
       assert_equal "error", result.status
       assert_equal "Unexpected execution error", result.summary
       assert_includes result.error, "Errno::EPIPE"
@@ -160,13 +160,13 @@ class TestExecutorTest < Minitest::Test
 
   def create_scenario(overrides = {})
     defaults = {
-      test_id: "MT-LINT-001",
+      test_id: "TS-LINT-001",
       title: "Test Title",
       area: "lint",
       package: "ace-lint",
       priority: "high",
       duration: "~15min",
-      file_path: "/tmp/test.mt.md",
+      file_path: "/tmp/test/scenario.yml",
       content: "# Test content"
     }
     TestScenario.new(**defaults.merge(overrides))

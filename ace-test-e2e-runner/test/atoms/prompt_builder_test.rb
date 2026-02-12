@@ -17,9 +17,9 @@ class PromptBuilderTest < Minitest::Test
   end
 
   def test_build_prompt_includes_test_id
-    scenario = create_scenario(test_id: "MT-LINT-001")
+    scenario = create_scenario(test_id: "TS-LINT-001")
     prompt = @builder.build(scenario)
-    assert prompt.include?("MT-LINT-001"), "Prompt should include test ID"
+    assert prompt.include?("TS-LINT-001"), "Prompt should include test ID"
   end
 
   def test_build_prompt_includes_package
@@ -144,11 +144,11 @@ class PromptBuilderTest < Minitest::Test
 
   def create_scenario(overrides = {})
     defaults = {
-      test_id: "MT-TEST-001",
+      test_id: "TS-TEST-001",
       title: "Test Title",
       area: "test",
       package: "ace-test",
-      file_path: "/tmp/test.mt.md",
+      file_path: "/tmp/test/scenario.yml",
       content: "# Test content",
       test_cases: []
     }

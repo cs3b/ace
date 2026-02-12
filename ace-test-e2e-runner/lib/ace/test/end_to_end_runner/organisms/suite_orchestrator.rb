@@ -26,11 +26,11 @@ module Ace
           # @param use_color [Boolean] Enable ANSI color output (default: auto-detect TTY)
           # @param progress [Boolean] Enable animated progress display
           # @param suite_report_writer Suite report writer (injectable)
-          # @param scenario_parser Scenario parser (injectable)
+          # @param scenario_loader Scenario loader (injectable)
           # @param timestamp_generator Timestamp generator (injectable)
           def initialize(max_parallel: 4, base_dir: nil, discoverer: nil, affected_detector: nil,
                          failure_finder: nil, output: $stdout, use_color: nil, progress: false,
-                         suite_report_writer: nil, scenario_parser: nil, timestamp_generator: nil)
+                         suite_report_writer: nil, scenario_loader: nil, timestamp_generator: nil)
             @max_parallel = max_parallel
             @base_dir = base_dir || Dir.pwd
             @discoverer = discoverer || Molecules::TestDiscoverer.new
@@ -41,7 +41,7 @@ module Ace
             @progress = progress
             config = Molecules::ConfigLoader.load
             @suite_report_writer = suite_report_writer || Molecules::SuiteReportWriter.new(config: config)
-            @parser = scenario_parser || Molecules::ScenarioParser.new
+            @loader = scenario_loader || Molecules::ScenarioLoader.new
             @timestamp_generator = timestamp_generator || method(:default_timestamp)
           end
 
@@ -194,16 +194,10 @@ module Ace
 
           # Extract human-readable test name from file path
           #
-          # Handles both MT-format (.mt.md files) and TS-format (scenario.yml directories)
-          #
-          # @param test_file [String] Path to test file
-          # @return [String] e.g. "MT-BUNDLE-001-section-workflow" or "TS-LINT-001-ruby-validator-fallback"
+          # @param test_file [String] Path to scenario.yml file
+          # @return [String] e.g. "TS-LINT-001-ruby-validator-fallback"
           def extract_test_name(test_file)
-            if test_file.end_with?("scenario.yml")
-              File.basename(File.dirname(test_file))
-            else
-              File.basename(test_file, ".mt.md")
-            end
+            File.basename(File.dirname(test_file))
           end
 
           # Run tests sequentially
@@ -382,43 +376,25 @@ module Ace
 
           # Extract test ID from file path
           #
-          # Handles both MT-format (.mt.md files) and TS-format (scenario.yml directories)
-          #
-          # @param test_file [String] Path to test file
-          # @return [String] Test ID (e.g., "MT-LINT-001" or "TS-LINT-001")
+          # @param test_file [String] Path to scenario.yml file
+          # @return [String] Test ID (e.g., "TS-LINT-001")
           def extract_test_id(test_file)
-            if test_file.end_with?("scenario.yml")
-              dir_name = File.basename(File.dirname(test_file))
-              dir_name.match(/(TS-[A-Z]+-\d+)/)&.[](1) || dir_name
-            else
-              basename = File.basename(test_file, ".mt.md")
-              if basename =~ /MT-[\w-]+/
-                basename.match(/MT-[\w-]+/)[0]
-              else
-                basename
-              end
-            end
+            dir_name = File.basename(File.dirname(test_file))
+            dir_name.match(/(TS-[A-Z]+-\d+)/)&.[](1) || dir_name
           end
 
           # Check if a test file matches a metadata test-id
           #
-          # Filenames may include a descriptive suffix (e.g. MT-COMMIT-002-specific-file.mt.md)
-          # while metadata stores only the short test-id (MT-COMMIT-002). This method handles
+          # Directory names may include a descriptive suffix (e.g. TS-COMMIT-002-specific-file)
+          # while metadata stores only the short test-id (TS-COMMIT-002). This method handles
           # both exact matches and prefix matches where the suffix starts with "-".
           #
-          # Supports both MT-format (.mt.md files) and TS-format (scenario.yml directories).
-          #
-          # @param test_file [String] Path to test file
+          # @param test_file [String] Path to scenario.yml file
           # @param test_id [String] Metadata test-id to match against
           # @return [Boolean]
           def file_matches_test_id?(test_file, test_id)
-            if test_file.end_with?("scenario.yml")
-              dir_name = File.basename(File.dirname(test_file))
-              dir_name == test_id || dir_name.start_with?("#{test_id}-")
-            else
-              basename = File.basename(test_file, ".mt.md")
-              basename == test_id || basename.start_with?("#{test_id}-")
-            end
+            dir_name = File.basename(File.dirname(test_file))
+            dir_name == test_id || dir_name.start_with?("#{test_id}-")
           end
 
           # Find the failed TC IDs for a test file from @scenario_failures
@@ -598,9 +574,9 @@ module Ace
           # metadata.yml is written to cache. This method backfills stubs so that
           # FailureFinder can pick them up on subsequent --only-failures runs.
           #
-          # Contract: extract_test_name strips the .mt.md extension (see line 200).
-          # The result[:test_name] values from parse_test_output (line 506-507) must
-          # match this format (basename without .mt.md) for file_by_name lookups.
+          # Contract: extract_test_name returns the scenario directory name (see line 195).
+          # The result[:test_name] values from parse_test_output must match this format
+          # for file_by_name lookups.
           #
           # @param results [Hash] Accumulated results with :packages hash
           # @param package_tests [Hash] Package to test files mapping
@@ -708,13 +684,13 @@ module Ace
             )
           end
 
-          # Parse a .mt.md file into a Models::TestScenario, with fallback
+          # Load a scenario from file into a Models::TestScenario, with fallback
           #
           # @param package [String] Package name
-          # @param test_file [String] Path to the test file
+          # @param test_file [String] Path to the scenario.yml file
           # @return [Models::TestScenario]
           def parse_scenario(package, test_file)
-            @parser.parse(test_file)
+            @loader.load(File.dirname(test_file))
           rescue => _e
             Models::TestScenario.new(
               test_id: extract_test_id(test_file),

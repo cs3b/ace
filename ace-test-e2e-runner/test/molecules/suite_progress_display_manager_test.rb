@@ -9,8 +9,8 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
   def setup
     @output = StringIO.new
     @queue = [
-      { package: "ace-lint", test_file: "/path/to/MT-LINT-001-basic.mt.md" },
-      { package: "ace-review", test_file: "/path/to/MT-REVIEW-001-pr.mt.md" }
+      { package: "ace-lint", test_file: "/path/to/TS-LINT-001-basic/scenario.yml" },
+      { package: "ace-review", test_file: "/path/to/TS-REVIEW-001-pr/scenario.yml" }
     ]
     @display = SuiteProgressDisplayManager.new(
       @queue, output: @output, use_color: false, pkg_width: 12, name_width: 25
@@ -40,7 +40,7 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
     @output.truncate(0)
     @output.rewind
 
-    @display.test_started("ace-lint", "/path/to/MT-LINT-001-basic.mt.md")
+    @display.test_started("ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml")
     out = @output.string
 
     assert_match(/running/, out, "should show running state")
@@ -50,12 +50,12 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
 
   def test_test_completed_changes_row_to_completed
     @display.show_header(2, 2)
-    @display.test_started("ace-lint", "/path/to/MT-LINT-001-basic.mt.md")
+    @display.test_started("ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml")
     @output.truncate(0)
     @output.rewind
 
-    result = { status: "pass", passed_cases: 5, total_cases: 5, test_name: "MT-LINT-001-basic" }
-    @display.test_completed(result, "ace-lint", "/path/to/MT-LINT-001-basic.mt.md", 10.2)
+    result = { status: "pass", passed_cases: 5, total_cases: 5, test_name: "TS-LINT-001-basic" }
+    @display.test_completed(result, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 10.2)
     out = @output.string
 
     assert_match(/\u2713/, out, "should show check icon for pass")
@@ -65,12 +65,12 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
 
   def test_test_completed_shows_fail_icon
     @display.show_header(2, 2)
-    @display.test_started("ace-lint", "/path/to/MT-LINT-001-basic.mt.md")
+    @display.test_started("ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml")
     @output.truncate(0)
     @output.rewind
 
-    result = { status: "fail", passed_cases: 2, total_cases: 5, test_name: "MT-LINT-001-basic" }
-    @display.test_completed(result, "ace-lint", "/path/to/MT-LINT-001-basic.mt.md", 8.0)
+    result = { status: "fail", passed_cases: 2, total_cases: 5, test_name: "TS-LINT-001-basic" }
+    @display.test_completed(result, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 8.0)
     out = @output.string
 
     assert_match(/\u2717/, out, "should show X icon for fail")
@@ -78,7 +78,7 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
 
   def test_refresh_is_callable_without_error
     @display.show_header(2, 2)
-    @display.test_started("ace-lint", "/path/to/MT-LINT-001-basic.mt.md")
+    @display.test_started("ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml")
 
     # Should not raise
     @display.refresh
@@ -86,18 +86,18 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
 
   def test_show_summary_outputs_after_table
     @display.show_header(2, 2)
-    result1 = { status: "pass", passed_cases: 5, total_cases: 5, test_name: "MT-LINT-001-basic" }
-    result2 = { status: "fail", passed_cases: 2, total_cases: 4, test_name: "MT-REVIEW-001-pr" }
-    @display.test_completed(result1, "ace-lint", "/path/to/MT-LINT-001-basic.mt.md", 10.0)
-    @display.test_completed(result2, "ace-review", "/path/to/MT-REVIEW-001-pr.mt.md", 15.0)
+    result1 = { status: "pass", passed_cases: 5, total_cases: 5, test_name: "TS-LINT-001-basic" }
+    result2 = { status: "fail", passed_cases: 2, total_cases: 4, test_name: "TS-REVIEW-001-pr" }
+    @display.test_completed(result1, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 10.0)
+    @display.test_completed(result2, "ace-review", "/path/to/TS-REVIEW-001-pr/scenario.yml", 15.0)
     @output.truncate(0)
     @output.rewind
 
     results = {
       total: 2, passed: 1, failed: 1, errors: 0,
       packages: {
-        "ace-lint" => [{ status: "pass", test_name: "MT-LINT-001-basic", passed_cases: 5, total_cases: 5 }],
-        "ace-review" => [{ status: "fail", test_name: "MT-REVIEW-001-pr", passed_cases: 2, total_cases: 4 }]
+        "ace-lint" => [{ status: "pass", test_name: "TS-LINT-001-basic", passed_cases: 5, total_cases: 5 }],
+        "ace-review" => [{ status: "fail", test_name: "TS-REVIEW-001-pr", passed_cases: 2, total_cases: 4 }]
       }
     }
     @display.show_summary(results, 25.0)
@@ -110,7 +110,7 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
 
   def test_refresh_throttles_to_4hz
     @display.show_header(2, 2)
-    @display.test_started("ace-lint", "/path/to/MT-LINT-001-basic.mt.md")
+    @display.test_started("ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml")
     @output.truncate(0)
     @output.rewind
 
@@ -128,12 +128,12 @@ class SuiteProgressDisplayManagerTest < Minitest::Test
 
   def test_completed_without_cases
     @display.show_header(2, 2)
-    @display.test_started("ace-lint", "/path/to/MT-LINT-001-basic.mt.md")
+    @display.test_started("ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml")
     @output.truncate(0)
     @output.rewind
 
-    result = { status: "pass", passed_cases: nil, total_cases: nil, test_name: "MT-LINT-001-basic" }
-    @display.test_completed(result, "ace-lint", "/path/to/MT-LINT-001-basic.mt.md", 5.0)
+    result = { status: "pass", passed_cases: nil, total_cases: nil, test_name: "TS-LINT-001-basic" }
+    @display.test_completed(result, "ace-lint", "/path/to/TS-LINT-001-basic/scenario.yml", 5.0)
     out = @output.string
 
     refute_match(/cases/, out, "should not include cases when nil")

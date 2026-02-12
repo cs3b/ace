@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-02-12
+
+### Added
+
+- **TS-format E2E test structure** — complete infrastructure for per-TC test scenarios in `TS-*/scenario.yml` directories with separate test case files
+- **TC-level execution pipeline** — independent test case execution enabling targeted re-runs of failed TCs only
+- **Setup CLI subcommand** — `ace-test-e2e setup <package> <test-id>` for deterministic Ruby-based sandbox setup before LLM handoff
+- **ScenarioLoader molecule** — loads TS-format scenario directories with scenario.yml, test cases, and fixtures
+- **TestCase model** — data model for individual test cases with tc_id, content, and file metadata
+
+### Changed
+
+- **Remove legacy .mt.md support** — deleted ScenarioParser molecule; all test discovery and execution now uses TS-format directory structure only
+- **Dual-mode → Single-mode discovery** — TestDiscoverer simplified to find only `TS-*/scenario.yml` patterns (no more `.mt.md` files)
+- **Simplified extract methods** — `extract_test_name`, `extract_test_id`, `file_matches_test_id?` now work with directory names only
+- **Config updated** — `discovery` pattern changed from `**/*.mt.md` to `TS-*/scenario.yml`, `test_id.pattern` from `MT-*` to `TS-*`
+
+### Fixed
+
+- **ScenarioParser TS-format fallback** — fixed delegation to ScenarioLoader for scenario.yml files
+- **Display managers** — suite progress/simple display managers correctly extract test names from directory paths
+
 ## [0.15.1] - 2026-02-11
 
 ### Fixed
