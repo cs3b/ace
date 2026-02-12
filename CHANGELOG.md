@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.491] - 2026-02-12
+
+### Fixed
+
+- **ace-test-runner v0.15.3**: Replace shell-out to `hostname` with `Socket.gethostname` in test report environment capture — fixes `ace-test-suite` reporting errors on systems without `inetutils`
+
 ## [0.9.490] - 2026-02-12
 
 ### Fixed
