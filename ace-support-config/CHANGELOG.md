@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-02-12
+
+### Fixed
+- Stabilize performance test threshold for `resolve_namespace` overhead (2.0x → 3.0x) to reduce CI flakiness
+
 ## [0.7.0] - 2026-01-27
 
 ### Added
