@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.489] - 2026-02-12
+
+### Fixed
+
+- **ace-support-mac-clipboard v0.2.1**: Guard module require and tests behind macOS platform check to prevent failures on non-macOS environments
+
 ## [0.9.488] - 2026-02-12
 
 ### Added
