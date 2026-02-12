@@ -7,5 +7,6 @@ priority: 10
 
 config:
   relative_path: handbook/templates
-  pattern: "*.template.md"
+  # Pattern matches both .template.md and .template.yml files
+  pattern: "*.template.*"
   enabled: true
