@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.487] - 2026-02-12
+
+### Fixed
+
+- **ace-docs v0.19.2**: Anchor ignore patterns to project root in `DocumentRegistry` — prevents system paths like `/tmp/` from being incorrectly ignored by project-level glob rules
+
 ## [0.9.486] - 2026-02-12
 
 ### Fixed
