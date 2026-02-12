@@ -217,11 +217,13 @@ module Ace
 
         def ignored_path?(path)
           # Start with default ignored patterns
+          # For tmp/, build a specific pattern matching <project_root>/tmp/
+          tmp_dir = File.join(@project_root, "tmp")
           ignored_patterns = [
             %r{/\.git/},
             %r{/node_modules/},
             %r{/vendor/},
-            %r{/tmp/},
+            %r{^#{Regexp.escape(tmp_dir)}/},  # Only ignore <project_root>/tmp/
             %r{/coverage/},
             %r{/_legacy/},
             %r{/\.ace-taskflow/done/}
@@ -245,7 +247,9 @@ module Ace
         end
 
         def glob_to_regex(glob_pattern)
-          # Convert glob pattern to regex
+          # Convert glob pattern to regex, anchored to project root
+          # This ensures patterns like "tmp/**" match <project_root>/tmp/**, not system /tmp/
+
           # First replace the glob wildcards with placeholders
           regex_str = glob_pattern
             .gsub("**", "\x00DOUBLESTAR\x00")
@@ -258,6 +262,15 @@ module Ace
           regex_str = regex_str
             .gsub("\x00DOUBLESTAR\x00", ".*")     # ** matches any characters including /
             .gsub("\x00STAR\x00", "[^/]*")        # * matches within a single directory
+
+          # Anchor to project root unless pattern starts with ** (which means "anywhere under project")
+          if glob_pattern.start_with?("**/")
+            # Pattern like "**/tmp/**" means "anywhere under project root"
+            regex_str = "#{Regexp.escape(@project_root)}/#{regex_str}"
+          else
+            # Pattern like "tmp/**" means "at project root"
+            regex_str = "^#{Regexp.escape(@project_root)}/#{regex_str}"
+          end
 
           Regexp.new(regex_str)
         end
