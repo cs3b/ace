@@ -90,11 +90,14 @@ llm:
 
 # Ignored paths
 # These paths will never be considered for management
+# NOTE: Patterns are relative to project root
+# - Patterns starting with **/ match anywhere under project root
+# - Other patterns match from project root
 ignore:
   - "**/node_modules/**"
   - "**/vendor/**"
   - "**/.git/**"
-  - "**/tmp/**"
+  - "**/tmp/**"  # Project-relative tmp/ directories (not system /tmp/)
   - "**/coverage/**"
   - "**/_legacy/**"
   - "**/.ace-taskflow/done/**"
