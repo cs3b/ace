@@ -146,7 +146,8 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
         refute_match(/unknown command/i, output)
       rescue Ace::Taskflow::Organisms::IdeaWriterError => e
         # Expected error when clipboard is empty - flag was recognized
-        assert_match(/No content provided/, e.message)
+        # Error message varies by platform (macOS vs Linux)
+        assert_match(/No content provided|Clipboard is empty/, e.message)
       end
     end
   end
