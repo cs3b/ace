@@ -55,6 +55,34 @@ def save_debug_info(config, input)
   end
 end
 
+def check_system_path_protection(config, command)
+  protection = config['system_path_protection']
+  return nil unless protection && protection['enabled']
+
+  blocked_patterns = protection['blocked_patterns'] || []
+  blocked_patterns.each do |pattern|
+    if command =~ /#{pattern}/m
+      # Log the blocked attempt
+      if log_file = protection['log_file']
+        File.open(log_file, 'a') do |f|
+          f.puts "=" * 60
+          f.puts "BLOCKED: #{Time.now.iso8601}"
+          f.puts "Pattern: #{pattern}"
+          f.puts "Command: #{command[0, 500]}"
+        end
+      end
+
+      return {
+        blocked: true,
+        pattern: pattern,
+        matched: $&
+      }
+    end
+  end
+
+  nil
+end
+
 def check_commit_workflow(config, command)
   # Check if commit workflow suggestions are enabled
   return nil unless config.dig('commit_workflow', 'enabled')
@@ -226,7 +254,18 @@ begin
   # Get the command being executed
   command = input.dig('tool_input', 'command') || ''
   
-  # First check for commit workflow suggestions (non-blocking)
+  # FIRST: Check system path protection (blocking - highest priority)
+  if protection_result = check_system_path_protection(config, command)
+    $stderr.puts "BLOCKED: Command targets protected system path."
+    $stderr.puts "Matched pattern: #{protection_result[:matched]}"
+    $stderr.puts ""
+    $stderr.puts "Protected paths: /opt/, /usr/local/, /Library/"
+    $stderr.puts "This command was blocked to prevent system damage."
+    $stderr.puts "If this is intentional, disable system_path_protection in wrapper-tools-config.json"
+    exit 2
+  end
+
+  # Check for commit workflow suggestions (non-blocking)
   if commit_result = check_commit_workflow(config, command)
     suggestion = generate_commit_workflow_suggestion(commit_result)
     $stderr.puts suggestion
