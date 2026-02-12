@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.486] - 2026-02-12
+
+### Fixed
+
+- **ace-support-config v0.7.1**: Stabilize performance test threshold for `resolve_namespace` overhead (2.0x → 3.0x) to reduce CI flakiness
+
 ## [0.9.485] - 2026-02-12
 
 ### Changed
