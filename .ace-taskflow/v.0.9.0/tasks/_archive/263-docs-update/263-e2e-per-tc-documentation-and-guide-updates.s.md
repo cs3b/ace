@@ -1,10 +1,10 @@
 ---
 id: v.0.9.0+task.263
-status: pending
+status: done
 priority: medium
 estimate: 4h
 dependencies:
-  - v.0.9.0+task.261
+- v.0.9.0+task.261
 ---
 
 # E2E Per-TC Documentation and Guide Updates
