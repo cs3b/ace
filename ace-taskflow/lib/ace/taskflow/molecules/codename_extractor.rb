@@ -44,10 +44,11 @@ module Ace
         # @param release_path [String] Path to release directory
         # @return [String, nil] Path to main .md file or nil if not found
         def find_main_file(release_path)
-          md_files = Dir.glob(File.join(release_path, "*.md"))
+          # Use case-insensitive glob to match both .md and .MD extensions
+          md_files = Dir.glob(File.join(release_path, "*.[mM][dD]"))
           return nil if md_files.empty?
 
-          # Prefer README.md, fall back to first .md file (matches StatsFormatter behavior)
+          # Prefer README.md (case-insensitive), fall back to first .md file
           md_files.find { |f| File.basename(f).downcase == "readme.md" } || md_files.first
         end
 
