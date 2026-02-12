@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.485] - 2026-02-12
+
+### Changed
+
+- **ace-test-e2e-runner v0.16.0**: Remove legacy .mt.md support — deleted ScenarioParser molecule; all test discovery and execution now uses TS-format directory structure only; dual-mode discovery simplified to single-mode
+
+### Added
+
+- **ace-test-e2e-runner v0.16.0**: TS-format E2E test structure — complete infrastructure for per-TC test scenarios in `TS-*/scenario.yml` directories; TC-level execution pipeline; Setup CLI subcommand; ScenarioLoader and TestCase molecules
+
+### Fixed
+
+- **ace-test-e2e-runner v0.16.0**: ScenarioParser TS-format fallback; display managers correctly extract test names from directory paths
+
 ## [0.9.484] - 2026-02-12
 
 ### Changed
