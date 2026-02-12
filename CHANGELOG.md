@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.488] - 2026-02-12
+
+### Added
+
+- **ace-prompt-prep v0.16.3**: Support `bundle.enabled: false` frontmatter flag to skip ace-bundle processing per prompt file
+
 ## [0.9.487] - 2026-02-12
 
 ### Fixed
