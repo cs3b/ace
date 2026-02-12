@@ -20,7 +20,7 @@ Verify that --path-only produces a single-line path suitable for shell scripts a
 
    mkdir -p "$PATH_ONLY"
    [ -d "$PATH_ONLY" ] && echo "PASS: Valid directory path" || echo "FAIL: Invalid path"
-   rm -rf "$(echo "$PATH_ONLY" | cut -d/ -f1)"
+   rm -rf "$PATH_ONLY"
    ```
 
 2. Verify JSON output structure
