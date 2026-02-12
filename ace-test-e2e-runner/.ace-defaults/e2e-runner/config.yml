@@ -4,14 +4,12 @@
 paths:
   # Where test scenarios are stored in packages
   scenarios: "test/e2e"
-  # File extension for test scenarios
-  extension: ".mt.md"
   # Directory for test execution artifacts (gitignored)
   cache_dir: ".cache/ace-test-e2e"
 
 patterns:
-  # Glob pattern for finding test scenarios
-  discovery: "test/e2e/**/*.mt.md"
+  # Glob pattern for finding test scenarios (TS-format directories)
+  discovery: "test/e2e/TS-*/scenario.yml"
 
 # Test scenario frontmatter requirements
 required_fields:
@@ -64,8 +62,8 @@ providers:
 
 # Test ID format validation
 test_id:
-  # Pattern: MT-{AREA}-{NNN}
-  pattern: "^MT-[A-Z]+-\\d{3}$"
+  # Pattern: TS-{AREA}-{NNN}
+  pattern: "^TS-[A-Z]+-\\d{3}$"
   # Known area codes
   areas:
     - LINT

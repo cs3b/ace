@@ -106,11 +106,11 @@ class TcFidelityValidatorTest < Minitest::Test
 
   def make_scenario_without_tcs
     TestScenario.new(
-      test_id: "MT-LINT-001",
+      test_id: "TS-LINT-001",
       title: "MT Test",
       area: "lint",
       package: "ace-lint",
-      file_path: "/tmp/MT-LINT-001.mt.md",
+      file_path: "/tmp/TS-LINT-001/scenario.yml",
       content: "# Test without TC headers"
     )
   end

@@ -119,7 +119,7 @@ class TestResultTest < Minitest::Test
 
   def create_result(overrides = {})
     defaults = {
-      test_id: "MT-TEST-001",
+      test_id: "TS-TEST-001",
       status: "pass",
       test_cases: [],
       summary: "Test summary"

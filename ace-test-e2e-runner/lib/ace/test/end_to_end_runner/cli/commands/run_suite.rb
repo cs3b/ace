@@ -19,7 +19,7 @@ module Ace
             desc <<~DESC.strip
               Run E2E test suite across all packages
 
-              Discovers and executes *.mt.md test scenarios from all packages
+              Discovers and executes TS-* test scenarios from all packages
               in the monorepo. Tests run sequentially by default or in parallel
               with --parallel flag. Use --affected to only test changed packages.
               Use --only-failures to re-run only previously failed test cases.

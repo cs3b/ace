@@ -54,8 +54,8 @@ class SuiteReportWriterTest < Minitest::Test
       assert_match(/^package: ace-lint$/, content)
       assert_match(/^status: (pass|partial|fail)$/, content)
       assert_match(/## Summary/, content)
-      assert_match(/MT-TEST-001/, content)
-      assert_match(/MT-TEST-002/, content)
+      assert_match(/TS-TEST-001/, content)
+      assert_match(/TS-TEST-002/, content)
       assert_match(/\*\*Overall:\*\*/, content)
     end
   end
@@ -87,8 +87,8 @@ class SuiteReportWriterTest < Minitest::Test
 
       content = File.read(path)
       assert_match(/## Summary/, content)
-      assert_match(/MT-TEST-001/, content)
-      assert_match(/MT-TEST-002/, content)
+      assert_match(/TS-TEST-001/, content)
+      assert_match(/TS-TEST-002/, content)
       assert_match(/\| Test ID \| Title \| Status \| Passed \| Failed \| Total \|/, content)
     end
   end
@@ -116,7 +116,7 @@ class SuiteReportWriterTest < Minitest::Test
 
       content = File.read(path)
       assert_match(/## Failed Tests/, content)
-      assert_match(/MT-TEST-002/, content)
+      assert_match(/TS-TEST-002/, content)
       assert_match(/TC-002/, content)
       assert_match(/Second check/, content)
     end
@@ -151,11 +151,11 @@ class SuiteReportWriterTest < Minitest::Test
   def test_static_fallback_status_is_fail_when_all_fail
     Dir.mktmpdir do |tmpdir|
       results = [
-        TestResult.new(test_id: "MT-TEST-001", status: "fail",
+        TestResult.new(test_id: "TS-TEST-001", status: "fail",
                        test_cases: [{ id: "TC-001", description: "Check", status: "fail" }],
                        summary: "Failed")
       ]
-      scenarios = [make_scenario("MT-TEST-001", "Test One")]
+      scenarios = [make_scenario("TS-TEST-001", "Test One")]
       stub_llm_query_failure(RuntimeError.new("error"))
 
       path = @writer.write(results, scenarios,
@@ -169,20 +169,20 @@ class SuiteReportWriterTest < Minitest::Test
   def test_reads_summary_and_experience_from_report_dirs
     Dir.mktmpdir do |tmpdir|
       # Create report dirs with summary and experience files
-      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-mt001-reports")
+      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "summary.r.md"), "## Summary\nTest passed cleanly.")
       File.write(File.join(report_dir, "experience.r.md"), "## Experience\nSmooth run.")
 
       results = [
         TestResult.new(
-          test_id: "MT-TEST-001", status: "pass",
+          test_id: "TS-TEST-001", status: "pass",
           test_cases: [{ id: "TC-001", description: "Check", status: "pass" }],
           summary: "Passed",
           report_dir: report_dir
         )
       ]
-      scenarios = [make_scenario("MT-TEST-001", "Test One")]
+      scenarios = [make_scenario("TS-TEST-001", "Test One")]
 
       # Capture the prompt passed to LLM to verify report content was included
       captured_prompt = nil
@@ -204,18 +204,18 @@ class SuiteReportWriterTest < Minitest::Test
   def test_handles_missing_report_files_gracefully
     Dir.mktmpdir do |tmpdir|
       # Report dir exists but no files inside
-      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-mt001-reports")
+      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
       FileUtils.mkdir_p(report_dir)
 
       results = [
         TestResult.new(
-          test_id: "MT-TEST-001", status: "pass",
+          test_id: "TS-TEST-001", status: "pass",
           test_cases: [{ id: "TC-001", description: "Check", status: "pass" }],
           summary: "Passed",
           report_dir: report_dir
         )
       ]
-      scenarios = [make_scenario("MT-TEST-001", "Test One")]
+      scenarios = [make_scenario("TS-TEST-001", "Test One")]
 
       captured_prompt = nil
       Ace::LLM::QueryInterface.define_singleton_method(:query) do |_model, prompt, **_opts|
@@ -348,30 +348,30 @@ class SuiteReportWriterTest < Minitest::Test
       title: title,
       area: "test",
       package: "ace-lint",
-      file_path: "/tmp/#{test_id}.mt.md",
+      file_path: "/tmp/#{test_id}scenario.yml",
       content: "# #{test_id}"
     )
   end
 
   def build_results_and_scenarios(tmpdir)
     scenarios = [
-      make_scenario("MT-TEST-001", "Test One"),
-      make_scenario("MT-TEST-002", "Test Two")
+      make_scenario("TS-TEST-001", "Test One"),
+      make_scenario("TS-TEST-002", "Test Two")
     ]
 
     results = [
       TestResult.new(
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         status: "pass",
         test_cases: [
           { id: "TC-001", description: "First check", status: "pass" },
           { id: "TC-002", description: "Second check", status: "pass" }
         ],
         summary: "All passed",
-        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-mt001-reports")
+        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
       ),
       TestResult.new(
-        test_id: "MT-TEST-002",
+        test_id: "TS-TEST-002",
         status: "fail",
         test_cases: [
           { id: "TC-001", description: "First check", status: "pass" },
@@ -387,22 +387,22 @@ class SuiteReportWriterTest < Minitest::Test
 
   def build_all_passing(tmpdir)
     scenarios = [
-      make_scenario("MT-TEST-001", "Test One"),
-      make_scenario("MT-TEST-002", "Test Two")
+      make_scenario("TS-TEST-001", "Test One"),
+      make_scenario("TS-TEST-002", "Test Two")
     ]
 
     results = [
       TestResult.new(
-        test_id: "MT-TEST-001",
+        test_id: "TS-TEST-001",
         status: "pass",
         test_cases: [
           { id: "TC-001", description: "First check", status: "pass" }
         ],
         summary: "Passed",
-        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-mt001-reports")
+        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
       ),
       TestResult.new(
-        test_id: "MT-TEST-002",
+        test_id: "TS-TEST-002",
         status: "pass",
         test_cases: [
           { id: "TC-001", description: "First check", status: "pass" }

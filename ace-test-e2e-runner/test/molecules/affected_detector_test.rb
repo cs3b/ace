@@ -49,7 +49,7 @@ class AffectedDetectorTest < Minitest::Test
 
   def test_extract_package_from_nested_path
     package = @detector.send(:extract_package,
-      "ace-review/test/e2e/MT-REVIEW-001.mt.md",
+      "ace-review/test/e2e/TS-REVIEW-001/scenario.yml",
       @base_dir
     )
 

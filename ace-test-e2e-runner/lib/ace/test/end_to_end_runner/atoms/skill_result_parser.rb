@@ -7,12 +7,12 @@ module Ace
         # Parses structured markdown results from CLI-provider skill/workflow execution
         #
         # CLI providers return results in the subagent return contract format:
-        #   - **Test ID**: MT-LINT-001
+        #   - **Test ID**: TS-LINT-001
         #   - **Status**: pass
         #   - **Passed**: 8
         #   - **Failed**: 0
         #   - **Total**: 8
-        #   - **Report Paths**: 8p5jo2-lint-mt001-reports/*
+        #   - **Report Paths**: 8p5jo2-lint-ts001-reports/*
         #   - **Issues**: None
         #
         # Falls back to ResultParser.parse() for JSON responses.
