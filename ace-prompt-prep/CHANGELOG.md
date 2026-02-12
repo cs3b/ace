@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.3] - 2026-02-12
+
+### Added
+- Support `bundle.enabled: false` in prompt frontmatter to skip ace-bundle processing
+
+### Changed
+- Deduplicate `FrontmatterExtractor.extract` call — extract once and reuse for both bundle check and body fallback
+
 ## [0.16.2] - 2026-01-19
 
 ### Fixed
