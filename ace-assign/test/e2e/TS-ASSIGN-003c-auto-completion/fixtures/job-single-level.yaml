@@ -5,5 +5,5 @@ steps:
   - name: parent-job
     instructions: This parent should auto-complete when children finish
 
-  - name: final-phase
-    instructions: Final phase after parent completes
+  - name: final-step
+    instructions: Final step after parent completes
