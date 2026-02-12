@@ -67,7 +67,7 @@ module Ace
 
             ```json
             {
-              "test_id": "MT-XXX-NNN",
+              "test_id": "TS-XXX-NNN",
               "status": "pass|fail|partial",
               "test_cases": [
                 {

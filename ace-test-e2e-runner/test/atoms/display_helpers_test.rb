@@ -40,7 +40,7 @@ class DisplayHelpersTest < Minitest::Test
 
   def test_tc_count_display_with_cases
     result = TestResult.new(
-      test_id: "MT-TEST-001",
+      test_id: "TS-TEST-001",
       status: "fail",
       test_cases: [
         { id: "TC-001", status: "pass" },
@@ -52,7 +52,7 @@ class DisplayHelpersTest < Minitest::Test
   end
 
   def test_tc_count_display_no_cases
-    result = TestResult.new(test_id: "MT-TEST-001", status: "error")
+    result = TestResult.new(test_id: "TS-TEST-001", status: "error")
 
     assert_equal "", DisplayHelpers.tc_count_display(result)
   end
@@ -109,13 +109,13 @@ class DisplayHelpersTest < Minitest::Test
 
   def test_format_suite_test_line
     line = DisplayHelpers.format_suite_test_line(
-      "\u2713", 265, "ace-bundle", "MT-BUNDLE-001-section-workflow", "5/5 cases",
+      "\u2713", 265, "ace-bundle", "TS-BUNDLE-001-section-workflow", "5/5 cases",
       pkg_width: 12, name_width: 35
     )
     assert_includes line, "\u2713"
     assert_includes line, "4m 25s"
     assert_includes line, "ace-bundle"
-    assert_includes line, "MT-BUNDLE-001-section-workflow"
+    assert_includes line, "TS-BUNDLE-001-section-workflow"
     assert_includes line, "5/5 cases"
   end
 
@@ -137,14 +137,14 @@ class DisplayHelpersTest < Minitest::Test
       {
         total: 5, passed: 3, failed: 2, errors: 0, duration: 120,
         failed_details: [
-          { package: "ace-lint", test_name: "MT-LINT-002", cases: "3/5 cases" }
+          { package: "ace-lint", test_name: "TS-LINT-002", cases: "3/5 cases" }
         ]
       },
       use_color: false
     )
     text = lines.join("\n")
     assert_includes text, "Failed tests:"
-    assert_includes text, "ace-lint/MT-LINT-002: 3/5 cases"
+    assert_includes text, "ace-lint/TS-LINT-002: 3/5 cases"
     assert_includes text, "3 passed, 2 failed"
     assert_includes text, "\u2717 SOME TESTS FAILED"
   end

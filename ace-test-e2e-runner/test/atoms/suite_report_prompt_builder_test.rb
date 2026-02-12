@@ -24,7 +24,7 @@ class SuiteReportPromptBuilderTest < Minitest::Test
   end
 
   def test_prompt_includes_package_and_timestamp
-    results_data = [make_result_data("MT-TEST-001", "Test One", "pass")]
+    results_data = [make_result_data("TS-TEST-001", "Test One", "pass")]
 
     prompt = @builder.build(results_data,
                             package: "ace-lint",
@@ -39,8 +39,8 @@ class SuiteReportPromptBuilderTest < Minitest::Test
 
   def test_prompt_includes_test_data
     results_data = [
-      make_result_data("MT-TEST-001", "First Test", "pass", passed: 3, total: 3),
-      make_result_data("MT-TEST-002", "Second Test", "fail", passed: 1, failed: 1, total: 2)
+      make_result_data("TS-TEST-001", "First Test", "pass", passed: 3, total: 3),
+      make_result_data("TS-TEST-002", "Second Test", "fail", passed: 1, failed: 1, total: 2)
     ]
 
     prompt = @builder.build(results_data,
@@ -49,16 +49,16 @@ class SuiteReportPromptBuilderTest < Minitest::Test
                             overall_status: "partial",
                             executed_at: "2025-01-01T00:00:00Z")
 
-    assert_match(/MT-TEST-001/, prompt)
+    assert_match(/TS-TEST-001/, prompt)
     assert_match(/First Test/, prompt)
-    assert_match(/MT-TEST-002/, prompt)
+    assert_match(/TS-TEST-002/, prompt)
     assert_match(/Second Test/, prompt)
     assert_match(/4\/5 test cases passed/, prompt)
   end
 
   def test_prompt_includes_summary_content_when_present
     results_data = [
-      make_result_data("MT-TEST-001", "Test One", "pass",
+      make_result_data("TS-TEST-001", "Test One", "pass",
                        summary_content: "## Summary\nAll tests passed successfully.")
     ]
 
@@ -74,7 +74,7 @@ class SuiteReportPromptBuilderTest < Minitest::Test
 
   def test_prompt_includes_experience_content_when_present
     results_data = [
-      make_result_data("MT-TEST-001", "Test One", "pass",
+      make_result_data("TS-TEST-001", "Test One", "pass",
                        experience_content: "## Experience\nSmooth execution, no friction.")
     ]
 
@@ -90,7 +90,7 @@ class SuiteReportPromptBuilderTest < Minitest::Test
 
   def test_prompt_omits_nil_content_fields
     results_data = [
-      make_result_data("MT-TEST-001", "Test One", "pass",
+      make_result_data("TS-TEST-001", "Test One", "pass",
                        summary_content: nil, experience_content: nil)
     ]
 
@@ -110,7 +110,7 @@ class SuiteReportPromptBuilderTest < Minitest::Test
       { id: "TC-002", description: "Verify format", status: "fail" }
     ]
     results_data = [
-      make_result_data("MT-TEST-001", "Test One", "fail",
+      make_result_data("TS-TEST-001", "Test One", "fail",
                        passed: 1, failed: 1, total: 2, test_cases: test_cases)
     ]
 
@@ -126,8 +126,8 @@ class SuiteReportPromptBuilderTest < Minitest::Test
 
   def test_prompt_includes_report_dir_name
     results_data = [
-      make_result_data("MT-TEST-001", "Test One", "pass",
-                       report_dir_name: "ts1234-lint-mt001-reports")
+      make_result_data("TS-TEST-001", "Test One", "pass",
+                       report_dir_name: "ts1234-lint-ts001-reports")
     ]
 
     prompt = @builder.build(results_data,
@@ -136,7 +136,7 @@ class SuiteReportPromptBuilderTest < Minitest::Test
                             overall_status: "pass",
                             executed_at: "2025-01-01T00:00:00Z")
 
-    assert_match(/ts1234-lint-mt001-reports/, prompt)
+    assert_match(/ts1234-lint-ts001-reports/, prompt)
   end
 
   private

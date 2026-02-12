@@ -9,7 +9,7 @@ class ResultParserTest < Minitest::Test
     response = <<~JSON
       ```json
       {
-        "test_id": "MT-LINT-001",
+        "test_id": "TS-LINT-001",
         "status": "pass",
         "test_cases": [
           {"id": "TC-001", "description": "Valid file", "status": "pass", "actual": "Exit 0", "notes": ""}
@@ -20,7 +20,7 @@ class ResultParserTest < Minitest::Test
     JSON
 
     result = ResultParser.parse(response)
-    assert_equal "MT-LINT-001", result[:test_id]
+    assert_equal "TS-LINT-001", result[:test_id]
     assert_equal "pass", result[:status]
     assert_equal 1, result[:test_cases].size
     assert_equal "TC-001", result[:test_cases].first[:id]
@@ -29,10 +29,10 @@ class ResultParserTest < Minitest::Test
   end
 
   def test_parse_json_without_fences
-    response = '{"test_id": "MT-TEST-001", "status": "fail", "test_cases": [], "summary": "Failed"}'
+    response = '{"test_id": "TS-TEST-001", "status": "fail", "test_cases": [], "summary": "Failed"}'
 
     result = ResultParser.parse(response)
-    assert_equal "MT-TEST-001", result[:test_id]
+    assert_equal "TS-TEST-001", result[:test_id]
     assert_equal "fail", result[:status]
   end
 
@@ -42,7 +42,7 @@ class ResultParserTest < Minitest::Test
 
       ```json
       {
-        "test_id": "MT-TEST-001",
+        "test_id": "TS-TEST-001",
         "status": "partial",
         "test_cases": [
           {"id": "TC-001", "status": "pass"},
@@ -92,7 +92,7 @@ class ResultParserTest < Minitest::Test
   end
 
   def test_normalize_test_cases_adds_defaults
-    response = '{"test_id": "MT-TEST-001", "status": "pass", "test_cases": [{"id": "TC-001"}]}'
+    response = '{"test_id": "TS-TEST-001", "status": "pass", "test_cases": [{"id": "TC-001"}]}'
     result = ResultParser.parse(response)
 
     tc = result[:test_cases].first

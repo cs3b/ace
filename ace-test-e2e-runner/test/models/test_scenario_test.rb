@@ -7,7 +7,7 @@ class TestScenarioTest < Minitest::Test
 
   def test_basic_attributes
     scenario = create_scenario
-    assert_equal "MT-LINT-001", scenario.test_id
+    assert_equal "TS-LINT-001", scenario.test_id
     assert_equal "Test Title", scenario.title
     assert_equal "lint", scenario.area
     assert_equal "ace-lint", scenario.package
@@ -17,11 +17,11 @@ class TestScenarioTest < Minitest::Test
 
   def test_default_values
     scenario = TestScenario.new(
-      test_id: "MT-TEST-001",
+      test_id: "TS-TEST-001",
       title: "Test",
       area: "test",
       package: "ace-test",
-      file_path: "/tmp/test.mt.md",
+      file_path: "/tmp/test/scenario.yml",
       content: "content"
     )
     assert_equal "medium", scenario.priority
@@ -40,44 +40,26 @@ class TestScenarioTest < Minitest::Test
   end
 
   def test_short_id
-    assert_equal "mt001", create_scenario(test_id: "MT-LINT-001").short_id
-    assert_equal "mt015", create_scenario(test_id: "MT-REVIEW-015").short_id
-    assert_equal "mt003", create_scenario(test_id: "MT-GIT-003").short_id
-  end
-
-  def test_short_id_with_alphabetic_suffix
-    assert_equal "mt001a", create_scenario(test_id: "MT-BUNDLE-001a").short_id
-    assert_equal "mt001b", create_scenario(test_id: "MT-BUNDLE-001b").short_id
-    assert_equal "mt001c", create_scenario(test_id: "MT-BUNDLE-001c").short_id
-    assert_equal "mt003a", create_scenario(test_id: "MT-COWORKER-003a").short_id
-    assert_equal "mt003b", create_scenario(test_id: "MT-COWORKER-003b").short_id
-    assert_equal "mt003c", create_scenario(test_id: "MT-COWORKER-003c").short_id
-    assert_equal "mt003d", create_scenario(test_id: "MT-COWORKER-003d").short_id
-    assert_equal "mt004a", create_scenario(test_id: "MT-COMMIT-004a").short_id
-    assert_equal "mt004b", create_scenario(test_id: "MT-COMMIT-004b").short_id
-    assert_equal "mt004c", create_scenario(test_id: "MT-COMMIT-004c").short_id
-    assert_equal "mt004d", create_scenario(test_id: "MT-COMMIT-004d").short_id
-  end
-
-  def test_dir_name
-    scenario = create_scenario(test_id: "MT-LINT-001", package: "ace-lint")
-    assert_equal "8xyz12-lint-mt001", scenario.dir_name("8xyz12")
-  end
-
-  # TS- format support
-
-  def test_short_id_ts_format
     assert_equal "ts001", create_scenario(test_id: "TS-LINT-001").short_id
     assert_equal "ts015", create_scenario(test_id: "TS-REVIEW-015").short_id
     assert_equal "ts003", create_scenario(test_id: "TS-GIT-003").short_id
   end
 
-  def test_short_id_ts_with_alpha_suffix
+  def test_short_id_with_alphabetic_suffix
     assert_equal "ts001a", create_scenario(test_id: "TS-BUNDLE-001a").short_id
-    assert_equal "ts002b", create_scenario(test_id: "TS-LINT-002b").short_id
+    assert_equal "ts001b", create_scenario(test_id: "TS-BUNDLE-001b").short_id
+    assert_equal "ts001c", create_scenario(test_id: "TS-BUNDLE-001c").short_id
+    assert_equal "ts003a", create_scenario(test_id: "TS-COWORKER-003a").short_id
+    assert_equal "ts003b", create_scenario(test_id: "TS-COWORKER-003b").short_id
+    assert_equal "ts003c", create_scenario(test_id: "TS-COWORKER-003c").short_id
+    assert_equal "ts003d", create_scenario(test_id: "TS-COWORKER-003d").short_id
+    assert_equal "ts004a", create_scenario(test_id: "TS-COMMIT-004a").short_id
+    assert_equal "ts004b", create_scenario(test_id: "TS-COMMIT-004b").short_id
+    assert_equal "ts004c", create_scenario(test_id: "TS-COMMIT-004c").short_id
+    assert_equal "ts004d", create_scenario(test_id: "TS-COMMIT-004d").short_id
   end
 
-  def test_dir_name_ts_format
+  def test_dir_name
     scenario = create_scenario(test_id: "TS-LINT-001", package: "ace-lint")
     assert_equal "8xyz12-lint-ts001", scenario.dir_name("8xyz12")
   end
@@ -108,16 +90,6 @@ class TestScenarioTest < Minitest::Test
     assert_equal [tc], scenario.test_cases
   end
 
-  # scenario_format
-
-  def test_scenario_format_ts
-    assert_equal :ts, create_scenario(test_id: "TS-LINT-001").scenario_format
-  end
-
-  def test_scenario_format_mt
-    assert_equal :mt, create_scenario(test_id: "MT-LINT-001").scenario_format
-  end
-
   # test_case_ids from test_cases array
 
   def test_test_case_ids_from_test_cases
@@ -131,23 +103,22 @@ class TestScenarioTest < Minitest::Test
     assert_equal ["TC-001", "TC-002"], scenario.test_case_ids
   end
 
-  def test_test_case_ids_falls_back_to_content
-    content = "## Test Cases\n\n### TC-001: First Test\nCheck it.\n\n### TC-002: Second Test\nVerify it."
-    scenario = create_scenario(content: content, test_cases: [])
-    assert_equal ["TC-001", "TC-002"], scenario.test_case_ids
+  def test_test_case_ids_empty_when_no_test_cases
+    scenario = create_scenario(test_cases: [])
+    assert_equal [], scenario.test_case_ids
   end
 
   private
 
   def create_scenario(overrides = {})
     defaults = {
-      test_id: "MT-LINT-001",
+      test_id: "TS-LINT-001",
       title: "Test Title",
       area: "lint",
       package: "ace-lint",
       priority: "high",
       duration: "~15min",
-      file_path: "/tmp/test.mt.md",
+      file_path: "/tmp/test/scenario.yml",
       content: "# Test content"
     }
     TestScenario.new(**defaults.merge(overrides))

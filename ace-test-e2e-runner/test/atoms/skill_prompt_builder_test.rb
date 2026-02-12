@@ -102,28 +102,28 @@ class SkillPromptBuilderTest < Minitest::Test
   # --- Skill Prompt Building ---
 
   def test_build_skill_prompt_format
-    scenario = create_scenario(package: "ace-lint", test_id: "MT-LINT-001")
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
     prompt = @builder.build_skill_prompt(scenario)
 
-    assert_equal "/ace:run-e2e-test ace-lint MT-LINT-001", prompt
+    assert_equal "/ace:run-e2e-test ace-lint TS-LINT-001", prompt
   end
 
   def test_build_skill_prompt_with_different_package
-    scenario = create_scenario(package: "ace-review", test_id: "MT-REVIEW-002")
+    scenario = create_scenario(package: "ace-review", test_id: "TS-REVIEW-002")
     prompt = @builder.build_skill_prompt(scenario)
 
-    assert_equal "/ace:run-e2e-test ace-review MT-REVIEW-002", prompt
+    assert_equal "/ace:run-e2e-test ace-review TS-REVIEW-002", prompt
   end
 
   def test_build_skill_prompt_with_run_id
-    scenario = create_scenario(package: "ace-lint", test_id: "MT-LINT-001")
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
     prompt = @builder.build_skill_prompt(scenario, run_id: "abc123")
 
-    assert_equal "/ace:run-e2e-test ace-lint MT-LINT-001 --run-id abc123", prompt
+    assert_equal "/ace:run-e2e-test ace-lint TS-LINT-001 --run-id abc123", prompt
   end
 
   def test_build_skill_prompt_without_run_id_has_no_flag
-    scenario = create_scenario(package: "ace-lint", test_id: "MT-LINT-001")
+    scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
     prompt = @builder.build_skill_prompt(scenario)
 
     refute prompt.include?("--run-id")
@@ -207,11 +207,11 @@ class SkillPromptBuilderTest < Minitest::Test
 
   def create_scenario(overrides = {})
     defaults = {
-      test_id: "MT-TEST-001",
+      test_id: "TS-TEST-001",
       title: "Test Title",
       area: "test",
       package: "ace-test",
-      file_path: "/tmp/test.mt.md",
+      file_path: "/tmp/test/scenario.yml",
       content: "# Test content"
     }
     Ace::Test::EndToEndRunner::Models::TestScenario.new(**defaults.merge(overrides))

@@ -11,8 +11,8 @@ class ProgressDisplayManagerTest < Minitest::Test
   def setup
     @output = StringIO.new
     @scenarios = [
-      create_scenario(test_id: "MT-LINT-001", title: "Basic lint check", package: "ace-lint"),
-      create_scenario(test_id: "MT-LINT-002", title: "Advanced lint check", package: "ace-lint")
+      create_scenario(test_id: "TS-LINT-001", title: "Basic lint check", package: "ace-lint"),
+      create_scenario(test_id: "TS-LINT-002", title: "Advanced lint check", package: "ace-lint")
     ]
     @display = ProgressDisplayManager.new(@scenarios, output: @output, parallel: 2)
   end
@@ -53,7 +53,7 @@ class ProgressDisplayManagerTest < Minitest::Test
     @output.truncate(0)
     @output.rewind
 
-    result = create_result(test_id: "MT-LINT-001", status: "pass", cases: 5)
+    result = create_result(test_id: "TS-LINT-001", status: "pass", cases: 5)
     @display.test_completed(@scenarios[0], result, 1, 2)
     out = @output.string
 
@@ -67,7 +67,7 @@ class ProgressDisplayManagerTest < Minitest::Test
     @output.truncate(0)
     @output.rewind
 
-    result = create_result(test_id: "MT-LINT-001", status: "fail", cases: 3, failed: 1)
+    result = create_result(test_id: "TS-LINT-001", status: "fail", cases: 3, failed: 1)
     @display.test_completed(@scenarios[0], result, 1, 2)
     out = @output.string
 
@@ -100,7 +100,7 @@ class ProgressDisplayManagerTest < Minitest::Test
       title: title,
       area: "lint",
       package: package,
-      file_path: "/tmp/#{test_id}.mt.md",
+      file_path: "/tmp/#{test_id}scenario.yml",
       content: "# Test content"
     )
   end

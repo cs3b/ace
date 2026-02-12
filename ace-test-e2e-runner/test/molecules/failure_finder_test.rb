@@ -25,8 +25,8 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_with_passing_tests_only
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "pass",
         "results" => {"passed" => 3, "failed" => 0, "total" => 3},
@@ -40,8 +40,8 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_with_failed_test_cases
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "results" => {"passed" => 2, "failed" => 1, "total" => 3},
@@ -55,8 +55,8 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_with_multiple_failed_test_cases
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "results" => {"passed" => 1, "failed" => 2, "total" => 3},
@@ -70,14 +70,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_filters_by_package
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
-      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0002-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-002"]
@@ -94,15 +94,15 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_uses_most_recent_per_test_id
     Dir.mktmpdir do |tmpdir|
       # Older run with failures
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001", "TC-002"]
       })
       # More recent run where TC-001 was fixed
-      create_metadata(tmpdir, "8p0099-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0099-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-002"]
@@ -115,14 +115,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_aggregates_across_test_ids
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
       create_metadata(tmpdir, "8p0002-lint-mt002-reports", {
-        "test-id" => "MT-LINT-002",
+        "test-id" => "TS-LINT-002",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-003"]
@@ -137,14 +137,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_deduplicates_ids
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001", "TC-002"]
       })
       create_metadata(tmpdir, "8p0002-lint-mt002-reports", {
-        "test-id" => "MT-LINT-002",
+        "test-id" => "TS-LINT-002",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001", "TC-003"]
@@ -162,7 +162,7 @@ class FailureFinderTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       # Legacy metadata format without failed_test_cases key but with fail status
       create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "results" => {"passed" => 5, "failed" => 6, "total" => 11}
@@ -176,7 +176,7 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_returns_wildcard_for_partial_status_without_failed_test_cases
     Dir.mktmpdir do |tmpdir|
       create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "partial",
         "results" => {"passed" => 5, "failed" => 6, "total" => 11}
@@ -190,7 +190,7 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_returns_wildcard_for_error_status_without_failed_test_cases
     Dir.mktmpdir do |tmpdir|
       create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "error",
         "results" => {"passed" => 0, "failed" => 0, "total" => 0}
@@ -204,7 +204,7 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_returns_wildcard_for_incomplete_status_without_failed_test_cases
     Dir.mktmpdir do |tmpdir|
       create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "incomplete",
         "results" => {"passed" => 0, "failed" => 0, "total" => 0}
@@ -218,7 +218,7 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_returns_empty_for_pass_status_without_failed_test_cases
     Dir.mktmpdir do |tmpdir|
       create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "pass",
         "results" => {"passed" => 11, "failed" => 0, "total" => 11}
@@ -232,7 +232,7 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_returns_wildcard_for_empty_failed_test_cases_with_fail_status
     Dir.mktmpdir do |tmpdir|
       create_metadata(tmpdir, "8p0001-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => [],
@@ -246,7 +246,7 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_skips_malformed_yaml
     Dir.mktmpdir do |tmpdir|
-      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "8p0001-lint-mt001-reports")
+      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "8p0001-lint-ts001-reports")
       FileUtils.mkdir_p(cache_dir)
       File.write(File.join(cache_dir, "metadata.yml"), "not: valid: yaml: [}")
 
@@ -258,15 +258,15 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_most_recent_pass_clears_failures
     Dir.mktmpdir do |tmpdir|
       # Earlier run failed
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
       # Later run passed (no failures)
-      create_metadata(tmpdir, "8p0099-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0099-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "pass",
         "failed_test_cases" => []
@@ -279,14 +279,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_all_failures
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
-      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0002-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-002"]
@@ -310,14 +310,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_by_package_returns_grouped_failures
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
-      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0002-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-002", "TC-003"]
@@ -336,14 +336,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_by_package_omits_packages_with_no_failures
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
-      create_metadata(tmpdir, "8p0002-review-mt001-reports", {
-        "test-id" => "MT-REVIEW-001",
+      create_metadata(tmpdir, "8p0002-review-ts001-reports", {
+        "test-id" => "TS-REVIEW-001",
         "package" => "ace-review",
         "status" => "pass",
         "failed_test_cases" => []
@@ -372,14 +372,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_by_package_only_scans_requested_packages
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
-      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0002-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-002"]
@@ -400,15 +400,15 @@ class FailureFinderTest < Minitest::Test
   def test_find_failures_by_package_uses_most_recent_per_test
     Dir.mktmpdir do |tmpdir|
       # Older run with failures
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001", "TC-002"]
       })
       # Newer run where TC-001 was fixed
-      create_metadata(tmpdir, "8p0099-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0099-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-002"]
@@ -427,14 +427,14 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_by_scenario_returns_per_scenario_data
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0001-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
       create_metadata(tmpdir, "8p0002-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-002", "TC-003"]
@@ -449,27 +449,27 @@ class FailureFinderTest < Minitest::Test
       assert_includes result.keys, "ace-git-secrets"
       scenarios = result["ace-git-secrets"]
       assert_equal 2, scenarios.size
-      assert_equal ["TC-001"], scenarios["MT-SECRETS-001"]
-      assert_equal ["TC-002", "TC-003"], scenarios["MT-SECRETS-002"]
+      assert_equal ["TC-001"], scenarios["TS-SECRETS-001"]
+      assert_equal ["TC-002", "TC-003"], scenarios["TS-SECRETS-002"]
     end
   end
 
   def test_find_failures_by_scenario_omits_passing_scenarios
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0001-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
       create_metadata(tmpdir, "8p0002-secrets-mt002-reports", {
-        "test-id" => "MT-SECRETS-002",
+        "test-id" => "TS-SECRETS-002",
         "package" => "ace-git-secrets",
         "status" => "pass",
         "failed_test_cases" => []
       })
       create_metadata(tmpdir, "8p0003-secrets-mt003-reports", {
-        "test-id" => "MT-SECRETS-003",
+        "test-id" => "TS-SECRETS-003",
         "package" => "ace-git-secrets",
         "status" => "pass",
         "failed_test_cases" => []
@@ -482,17 +482,17 @@ class FailureFinderTest < Minitest::Test
 
       scenarios = result["ace-git-secrets"]
       assert_equal 1, scenarios.size
-      assert_includes scenarios.keys, "MT-SECRETS-001"
-      refute_includes scenarios.keys, "MT-SECRETS-002"
-      refute_includes scenarios.keys, "MT-SECRETS-003"
+      assert_includes scenarios.keys, "TS-SECRETS-001"
+      refute_includes scenarios.keys, "TS-SECRETS-002"
+      refute_includes scenarios.keys, "TS-SECRETS-003"
     end
   end
 
   def test_find_failures_by_scenario_wildcard_handling
     Dir.mktmpdir do |tmpdir|
       # Legacy metadata with fail status but no failed_test_cases
-      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0001-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail"
       })
@@ -503,22 +503,22 @@ class FailureFinderTest < Minitest::Test
       )
 
       scenarios = result["ace-git-secrets"]
-      assert_equal ["*"], scenarios["MT-SECRETS-001"]
+      assert_equal ["*"], scenarios["TS-SECRETS-001"]
     end
   end
 
   def test_find_failures_by_scenario_uses_most_recent_per_test
     Dir.mktmpdir do |tmpdir|
-      # Older run: MT-SECRETS-001 fails TC-001, TC-002
-      create_metadata(tmpdir, "8p0001-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      # Older run: TS-SECRETS-001 fails TC-001, TC-002
+      create_metadata(tmpdir, "8p0001-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-001", "TC-002"]
       })
-      # Newer run: MT-SECRETS-001 now only fails TC-002
-      create_metadata(tmpdir, "8p0099-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      # Newer run: TS-SECRETS-001 now only fails TC-002
+      create_metadata(tmpdir, "8p0099-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-002"]
@@ -529,7 +529,7 @@ class FailureFinderTest < Minitest::Test
         base_dir: tmpdir
       )
 
-      assert_equal ["TC-002"], result["ace-git-secrets"]["MT-SECRETS-001"]
+      assert_equal ["TC-002"], result["ace-git-secrets"]["TS-SECRETS-001"]
     end
   end
 
@@ -545,21 +545,21 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_by_scenario_multiple_packages
     Dir.mktmpdir do |tmpdir|
-      create_metadata(tmpdir, "8p0001-lint-mt001-reports", {
-        "test-id" => "MT-LINT-001",
+      create_metadata(tmpdir, "8p0001-lint-ts001-reports", {
+        "test-id" => "TS-LINT-001",
         "package" => "ace-lint",
         "status" => "fail",
         "failed_test_cases" => ["TC-001"]
       })
-      create_metadata(tmpdir, "8p0002-secrets-mt001-reports", {
-        "test-id" => "MT-SECRETS-001",
+      create_metadata(tmpdir, "8p0002-secrets-ts001-reports", {
+        "test-id" => "TS-SECRETS-001",
         "package" => "ace-git-secrets",
         "status" => "fail",
         "failed_test_cases" => ["TC-002"]
       })
       # ace-review passes, should not appear
-      create_metadata(tmpdir, "8p0003-review-mt001-reports", {
-        "test-id" => "MT-REVIEW-001",
+      create_metadata(tmpdir, "8p0003-review-ts001-reports", {
+        "test-id" => "TS-REVIEW-001",
         "package" => "ace-review",
         "status" => "pass",
         "failed_test_cases" => []
@@ -571,8 +571,8 @@ class FailureFinderTest < Minitest::Test
       )
 
       assert_equal 2, result.size
-      assert_equal({"MT-LINT-001" => ["TC-001"]}, result["ace-lint"])
-      assert_equal({"MT-SECRETS-001" => ["TC-002"]}, result["ace-git-secrets"])
+      assert_equal({"TS-LINT-001" => ["TC-001"]}, result["ace-lint"])
+      assert_equal({"TS-SECRETS-001" => ["TC-002"]}, result["ace-git-secrets"])
       refute_includes result.keys, "ace-review"
     end
   end
