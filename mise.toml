@@ -17,4 +17,4 @@ ZAI_API_KEY = { value = "{{vars.ZAI_API_KEY}}", redact = true }
 OPENROUTER_API_KEY = { value = "{{vars.OPENROUTER_API_KEY}}", redact = true }
 
 [tools]
-ruby = "3.4.7"
+ruby = "3.4.8"
