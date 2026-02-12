@@ -1,15 +1,15 @@
----
 test-id: TS-ASSIGN-001
 title: Workflow Lifecycle
 area: assign
 package: ace-assign
 priority: high
-duration: ~15min
-automation-candidate: true
 requires:
   tools: [ace-assign]
   ruby: ">= 3.0"
-description: |
-  Verify that ace-assign correctly manages the full workflow lifecycle
-  including assignment creation, phase progression, failure handling,
-  dynamic phase addition, and retry functionality.
+
+setup:
+  - env:
+      PROJECT_ROOT_PATH: .
+      CACHE_BASE: .cache/ace-assign
+  - run: mkdir -p .cache/ace-assign
+  - copy-fixtures
