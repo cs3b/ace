@@ -61,22 +61,28 @@ module Ace
             }
           end
 
-          # Determine output content based on bundle flag
-          output_content = if bundle
+          # Check if bundle is explicitly disabled in frontmatter
+          extracted = Atoms::FrontmatterExtractor.extract(original_content)
+          bundle_enabled = if extracted[:has_frontmatter] && extracted[:frontmatter]["bundle"]
+                             extracted[:frontmatter]["bundle"]["enabled"] != false
+                           else
+                             true # Default to enabled if not specified
+                           end
+
+          # Determine output content based on bundle flag and frontmatter
+          output_content = if bundle && bundle_enabled
                              # ace-bundle handles entire file processing (including frontmatter)
                              bundle_content = Molecules::BundleLoader.call(read_result[:path])
                              if bundle_content.empty?
                                # Fallback: extract body ONLY if ace-bundle fails
                                warn "Warning: ace-bundle failed, extracting prompt body only"
-                               extracted = Atoms::FrontmatterExtractor.extract(original_content)
                                extracted[:body]
                              else
                                # Use ace-bundle processed content (includes frontmatter handling)
                                bundle_content
                              end
                            else
-                             # No bundle - just strip frontmatter for clean output
-                             extracted = Atoms::FrontmatterExtractor.extract(original_content)
+                             # No bundle or bundle disabled - just strip frontmatter for clean output
                              extracted[:body]
                            end
 
