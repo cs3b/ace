@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.500] - 2026-02-13
+
+### Fixed
+
+- **ace-assign v0.8.2**: `list` command now shows filtered count context (e.g., `1/2 assignment(s) shown`) when completed assignments are hidden
+
 ## [0.9.499] - 2026-02-13
 
 ### Added
