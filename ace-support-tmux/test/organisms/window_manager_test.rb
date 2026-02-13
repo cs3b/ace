@@ -29,7 +29,8 @@ class WindowManagerTest < Minitest::Test
 
     @executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
-        "tmux display-message -p #S" => mock_result(stdout: "my-session")
+        "tmux display-message -p #S" => mock_result(stdout: "my-session"),
+        :default => mock_result(stdout: "@1")
       }
     )
 
@@ -46,7 +47,7 @@ class WindowManagerTest < Minitest::Test
   def test_add_window_creates_window_in_specified_session
     @manager.add_window("code-editor", session: "dev")
 
-    new_window_cmd = @executor.run_commands.find { |cmd| cmd.include?("new-window") }
+    new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
     assert new_window_cmd
     assert_includes new_window_cmd, "dev"
     assert_includes new_window_cmd, "code-editor"
@@ -58,7 +59,7 @@ class WindowManagerTest < Minitest::Test
 
     @manager.add_window("code-editor")
 
-    new_window_cmd = @executor.run_commands.find { |cmd| cmd.include?("new-window") }
+    new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
     assert new_window_cmd
     assert_includes new_window_cmd, "my-session"
   ensure
@@ -129,6 +130,53 @@ class WindowManagerTest < Minitest::Test
     end
   end
 
+  # --- Window naming tests ---
+
+  def test_add_window_name_from_root
+    result = @manager.add_window("code-editor", session: "dev", root: "/home/mc/ace-task.240.02")
+
+    new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
+    assert_includes new_window_cmd, "ace-task.240.02"
+    assert_equal "ace-task.240.02", result
+  end
+
+  def test_add_window_name_from_explicit_flag
+    result = @manager.add_window("code-editor", session: "dev", name: "custom-name")
+
+    new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
+    assert_includes new_window_cmd, "custom-name"
+    assert_equal "custom-name", result
+  end
+
+  def test_add_window_name_explicit_overrides_root
+    result = @manager.add_window("code-editor", session: "dev", root: "/home/mc/project", name: "my-win")
+
+    new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
+    assert_includes new_window_cmd, "my-win"
+    refute new_window_cmd.include?("project"), "Should use explicit name, not root basename"
+    assert_equal "my-win", result
+  end
+
+  def test_add_window_name_falls_back_to_preset
+    result = @manager.add_window("code-editor", session: "dev")
+
+    new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
+    assert_includes new_window_cmd, "code-editor"
+    assert_equal "code-editor", result
+  end
+
+  def test_add_window_uses_window_id_for_targeting
+    @manager.add_window("code-editor", session: "dev")
+
+    # Pane commands should target the window ID, not a name-based target
+    send_keys_cmds = @executor.run_commands.select { |cmd| cmd.include?("send-keys") }
+    send_keys_cmds.each do |cmd|
+      target_idx = cmd.index("-t")
+      target = cmd[target_idx + 1]
+      assert_match(/\A@\d+/, target, "Expected window ID target, got: #{target}")
+    end
+  end
+
   # --- Nested layout tests ---
 
   def test_add_window_nested_layout
@@ -154,8 +202,9 @@ class WindowManagerTest < Minitest::Test
     executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
         "tmux display-message -p #S" => mock_result(stdout: "my-session"),
-        "tmux list-panes -t dev:nested-editor -F \#{pane_index}" => mock_result(stdout: "0\n1\n2\n3"),
-        "tmux display-message -t dev:nested-editor.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50")
+        :default => mock_result(stdout: "@1"),
+        "tmux list-panes -t @1 -F \#{pane_index}" => mock_result(stdout: "0\n1\n2\n3"),
+        "tmux display-message -t @1.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50")
       }
     )
 
@@ -166,8 +215,8 @@ class WindowManagerTest < Minitest::Test
 
     manager.add_window("nested-editor", session: "dev")
 
-    # Should create window
-    new_window_cmds = executor.run_commands.select { |cmd| cmd.include?("new-window") }
+    # Should create window via capture (not run)
+    new_window_cmds = executor.captured_commands.select { |cmd| cmd.include?("new-window") }
     assert_equal 1, new_window_cmds.length
 
     # Should create 3 flat splits (4 leaves - 1)
@@ -223,8 +272,9 @@ class WindowManagerTest < Minitest::Test
     executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
         "tmux display-message -p #S" => mock_result(stdout: "my-session"),
-        "tmux list-panes -t dev:nested-roots -F \#{pane_index}" => mock_result(stdout: "0\n1\n2"),
-        "tmux display-message -t dev:nested-roots.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50")
+        :default => mock_result(stdout: "@1"),
+        "tmux list-panes -t @1 -F \#{pane_index}" => mock_result(stdout: "0\n1\n2"),
+        "tmux display-message -t @1.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50")
       }
     )
 
