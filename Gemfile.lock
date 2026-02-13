@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.7.2)
+    ace-assign (0.7.5)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.18)
       ace-support-markdown (~> 0.2)
@@ -21,7 +21,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.19.2)
+    ace-docs (0.20.0)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-config (~> 0.6)

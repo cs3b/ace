@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.496] - 2026-02-13
+
+### Fixed
+
+- **ace-assign v0.7.3**: `apply-feedback.phase.yml` now correctly references `ace:apply-feedback` skill
+- **ace-assign v0.7.4**: Missing `skill: ace:apply-feedback` in work-on-tasks preset; ordering rules now match suffixed phase names via prefix matching; "and" conditional rules now correctly require all conditions
+- **ace-assign v0.7.5**: Misplaced doc block for `check_pair_completeness` moved to correct method in `CompositionRules`
+- **ace-assign v0.7.5**: Duplicate examples in `prepare-assignment.wf.md` now accurately reflect renamed `work-on-task` preset
+- **ace-assign v0.7.5**: `CatalogLoader.parse_phase_file` now warns on stderr when a phase YAML file fails to parse
+- **ace-assign v0.7.5**: `compose-assignment.wf.md` uses Read/Glob tool references instead of `cat`/`ls`
+
+### Added
+
+- **ace-assign v0.7.3**: Flexible assignment composition system — phase catalog (14 phase types with prerequisites/produces/context metadata), composition rules (ordering constraints, phase pairs, conditional suggestions), recipe system (4 example patterns replacing rigid presets), and compose-assignment workflow for LLM-driven assignment building
+- **ace-assign v0.7.3**: `CatalogLoader` and `CompositionRules` atoms for catalog querying and rule validation
+- **ace-assign v0.7.3**: Conditional composition rule logic for context-dependent phase suggestions (e.g., suggest verify-test-suite when work-on-task is included)
+- **ace-assign v0.7.4**: New phase catalog entries for push-to-remote, release, and reorganize-commits
+- **ace-docs v0.20.0**: Squash-changelog workflow instruction for consolidating multiple CHANGELOG.md entries on feature branches before merge
+
+### Changed
+
+- **ace-assign v0.7.3**: Drive-assignment workflow now includes phase decision points for skip assessment and runtime adaptation
+- **ace-assign v0.7.4**: Renamed `work-on-task-with-pr` preset to `work-on-task` as the default/primary workflow
+- **ace-assign v0.7.5**: Added documentation for prefix matching constraints and mixed conjunction limitations in `CompositionRules`
+
 ## [0.9.495] - 2026-02-13
 
 ### Fixed
