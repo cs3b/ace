@@ -1,0 +1,19 @@
+name: research
+skill: ace:research
+description: Research a topic, codebase pattern, or external documentation
+
+prerequisites: []
+
+produces: [research-findings]
+consumes: []
+
+context:
+  default: fork
+  reason: "Research benefits from focused exploration without side effects"
+
+when_to_skip:
+  - "Topic is already well understood"
+  - "Research was completed in a previous assignment"
+
+effort: medium
+tags: [analysis, exploration]

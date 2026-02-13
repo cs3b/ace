@@ -1,0 +1,86 @@
+# Composition rules for ace-assign phase ordering and pairing.
+# Used by the compose-assignment workflow to validate and suggest phase sequences.
+
+ordering:
+  - rule: onboard-first
+    phase: onboard
+    position: first
+
+  - rule: pr-before-review
+    before: create-pr
+    after: review-pr
+
+  - rule: review-before-apply
+    before: review-pr
+    after: apply-feedback
+
+  - rule: implementation-before-pr
+    before: work-on-task
+    after: create-pr
+
+  - rule: release-after-implementation
+    before: work-on-task
+    after: release
+    note: "Release should follow implementation"
+
+  - rule: reorganize-before-push
+    before: reorganize-commits
+    after: push-to-remote
+    note: "Reorganize rewrites history, so must come before push"
+
+  - rule: push-before-update-pr
+    before: push-to-remote
+    after: update-pr-desc
+    note: "PR description should reflect pushed state"
+
+  - rule: release-before-pr
+    before: release
+    after: create-pr
+    note: "Initial release should happen before PR creation"
+
+pairs:
+  - name: review-apply-cycle
+    phases: [review-pr, apply-feedback]
+    pattern: sequential
+    note: "Reviews should be followed by feedback application"
+
+  - name: test-fix-cycle
+    phases: [verify-test-suite, fix-tests]
+    pattern: conditional
+    trigger: "test failures detected"
+
+  - name: reorganize-push-sequence
+    phases: [reorganize-commits, push-to-remote]
+    pattern: sequential
+    note: "Reorganize then push for clean remote history"
+
+  - name: apply-release-cycle
+    phases: [apply-feedback, release]
+    pattern: sequential
+    note: "Patch release after applying review feedback"
+
+conditional:
+  - when: "assignment includes work-on-task or fix-bug"
+    suggest: [verify-test-suite]
+    strength: recommended
+
+  - when: "task involves auth, security, or data handling"
+    suggest: [security-audit]
+    strength: optional
+
+  - when: "assignment includes review-pr and apply-feedback"
+    suggest: [release]
+    strength: recommended
+    note: "Patch release after each review cycle captures fixes"
+
+fork_context:
+  onboard_required: true
+  note: "Phases with fork context should include onboard instruction as first step"
+
+review_cycles:
+  default_count: 2
+  max_count: 5
+  focus_progression:
+    1: "Correctness, architecture, and major design issues"
+    2: "Edge cases, error handling, and test coverage"
+    3: "Polish, documentation, and minor improvements"

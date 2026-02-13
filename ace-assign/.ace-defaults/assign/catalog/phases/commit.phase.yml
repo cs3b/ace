@@ -1,0 +1,22 @@
+name: commit
+skill: ace:commit
+description: Generate and create a commit with a descriptive message
+
+prerequisites:
+  - name: work-on-task
+    strength: recommended
+    reason: "Should have code changes to commit"
+
+produces: [commits]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "Commit needs access to git state in main context"
+
+when_to_skip:
+  - "No uncommitted changes"
+  - "Changes were already committed by a previous phase"
+
+effort: trivial
+tags: [git, versioning]

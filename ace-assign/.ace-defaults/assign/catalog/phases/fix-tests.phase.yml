@@ -1,0 +1,22 @@
+name: fix-tests
+skill: null
+description: Fix failing tests identified during verification
+
+prerequisites:
+  - name: verify-test-suite
+    strength: recommended
+    reason: "Should know which tests are failing"
+
+produces: [code-changes, commits]
+consumes: [test-results]
+
+context:
+  default: null
+  reason: "Test fixing needs access to working tree and test runner"
+
+when_to_skip:
+  - "All tests are passing"
+  - "Failures are in unrelated tests"
+
+effort: medium
+tags: [testing, bug-fix]

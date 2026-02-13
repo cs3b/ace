@@ -1,0 +1,22 @@
+name: push-to-remote
+skill: null
+description: Push all changes to the remote repository
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Must have commits to push"
+
+produces: [remote-sync]
+consumes: [commits]
+
+context:
+  default: null
+  reason: "Push needs access to git state in main context"
+
+when_to_skip:
+  - "Remote is already up to date"
+  - "Working in local-only mode"
+
+effort: trivial
+tags: [git, publishing, remote]
