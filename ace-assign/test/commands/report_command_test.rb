@@ -61,4 +61,42 @@ class ReportCommandTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
+
+  def test_report_with_assignment_flag
+    with_temp_cache do |cache_dir|
+      report_path = create_report(cache_dir, "Phase done!")
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+
+      config1 = create_test_config(cache_dir, name: "first-task")
+      result1 = executor.start(config1)
+
+      config2 = create_test_config(cache_dir, name: "second-task")
+      result2 = executor.start(config2)
+      target_id = result2[:assignment].id
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Report.new.call(
+          file: report_path,
+          assignment: target_id
+        )
+      end
+
+      assert_includes output.first, "Phase 010 (init) completed"
+      assert_includes output.first, "Advancing to phase 020"
+
+      # Verify the targeted assignment advanced
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      target_state = scanner.scan(result2[:assignment].phases_dir, assignment: result2[:assignment])
+      assert_equal "020", target_state.current.number
+
+      # Verify the first assignment was not affected (still on 010)
+      first_state = scanner.scan(result1[:assignment].phases_dir, assignment: result1[:assignment])
+      assert_equal "010", first_state.current.number
+
+      Ace::Assign.reset_config!
+    end
+  end
 end
