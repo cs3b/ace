@@ -17,7 +17,7 @@ class AceAssignTestCase < AceTestCase
   end
 
   # Create a test assignment config
-  def create_test_config(dir, steps: nil)
+  def create_test_config(dir, steps: nil, name: "test-session")
     steps ||= [
       { "name" => "init", "instructions" => "Initialize project" },
       { "name" => "build", "instructions" => "Build the project" },
@@ -26,13 +26,13 @@ class AceAssignTestCase < AceTestCase
 
     config = {
       "session" => {
-        "name" => "test-session",
+        "name" => name,
         "description" => "Test workflow"
       },
       "steps" => steps
     }
 
-    config_path = File.join(dir, "job.yaml")
+    config_path = File.join(dir, "job-#{name}.yaml")
     File.write(config_path, config.to_yaml)
     config_path
   end

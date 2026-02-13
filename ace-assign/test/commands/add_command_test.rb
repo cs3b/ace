@@ -92,4 +92,42 @@ class AddCommandTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
+
+  def test_add_with_assignment_flag
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+
+      config1 = create_test_config(cache_dir, name: "first-task")
+      result1 = executor.start(config1)
+
+      config2 = create_test_config(cache_dir, name: "second-task")
+      result2 = executor.start(config2)
+      target_id = result2[:assignment].id
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Add.new.call(
+          name: "hotfix",
+          instructions: "Apply hotfix",
+          assignment: target_id
+        )
+      end
+
+      assert_includes output.first, "Created: phases/"
+      assert_includes output.first, "hotfix"
+
+      # Verify the phase was added to the targeted assignment, not the first one
+      target_phases_dir = result2[:assignment].phases_dir
+      added_files = Dir.glob(File.join(target_phases_dir, "*hotfix*"))
+      refute_empty added_files, "Phase should be added to the targeted assignment"
+
+      # Verify the first assignment was not modified
+      first_phases_dir = result1[:assignment].phases_dir
+      first_hotfix = Dir.glob(File.join(first_phases_dir, "*hotfix*"))
+      assert_empty first_hotfix, "First assignment should not have the new phase"
+
+      Ace::Assign.reset_config!
+    end
+  end
 end

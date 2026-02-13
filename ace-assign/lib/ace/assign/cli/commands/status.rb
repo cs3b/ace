@@ -14,6 +14,12 @@ module Ace
         #
         # @example Flat output (no hierarchy)
         #   ace-assign status --flat
+        #
+        # @example Status for specific assignment
+        #   ace-assign status --assignment abc123
+        #
+        # @example Show all assignments including completed
+        #   ace-assign status --all
         class Status < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
 
@@ -23,6 +29,15 @@ module Ace
             in_progress: "▶ Active",
             pending: "○ Pending",
             failed: "✗ Failed"
+          }.freeze
+
+          # State labels for other assignments section
+          STATE_LABELS = {
+            running: "running",
+            paused: "paused",
+            completed: "completed",
+            failed: "failed",
+            empty: "empty"
           }.freeze
 
           # Column widths for hierarchical display
@@ -35,9 +50,12 @@ module Ace
           option :flat, aliases: ["-f"], type: :boolean, default: false, desc: "Show flat list (no hierarchy)"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress detailed output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
+          option :assignment, desc: "Show status for specific assignment ID"
+          option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments in other assignments section"
 
           def call(**options)
-            executor = Organisms::AssignmentExecutor.new
+            assignment_id = resolve_assignment_id(options)
+            executor = build_executor(assignment_id)
             result = executor.status
 
             unless options[:quiet]
@@ -65,10 +83,44 @@ module Ace
                 puts
                 puts "Assignment completed!"
               end
+
+              # Show other assignments section (unless targeting a specific assignment)
+              unless assignment_id
+                print_other_assignments(result[:assignment].id, include_completed: options[:all])
+              end
             end
           end
 
           private
+
+          # Resolve which assignment to show status for
+          #
+          # Resolution order:
+          # 1. --assignment flag
+          # 2. ACE_ASSIGN_ID env var
+          # 3. nil (use default find_active behavior)
+          def resolve_assignment_id(options)
+            options[:assignment] || ENV["ACE_ASSIGN_ID"]
+          end
+
+          # Build executor, optionally targeting a specific assignment
+          def build_executor(assignment_id)
+            if assignment_id
+              # Load specific assignment and create executor pointing to it
+              manager = Molecules::AssignmentManager.new
+              assignment = manager.load(assignment_id)
+              raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
+
+              # Create executor that will find this specific assignment
+              # Set .current temporarily is not ideal; instead override find_active
+              executor = Organisms::AssignmentExecutor.new
+              # Override the manager's find_active to return the specific assignment
+              executor.assignment_manager.define_singleton_method(:find_active) { assignment }
+              executor
+            else
+              Organisms::AssignmentExecutor.new
+            end
+          end
 
           def print_queue_status(assignment, state, flat: false)
             puts "QUEUE - Assignment: #{assignment.name} (#{assignment.id})"
@@ -196,6 +248,51 @@ module Ace
             puts
             puts "After completing, create a report file and run:"
             puts "  ace-assign report <report-file.md>"
+          end
+
+          # Print other assignments section
+          def print_other_assignments(current_assignment_id, include_completed:)
+            discoverer = Molecules::AssignmentDiscoverer.new
+            all_assignments = discoverer.find_all(include_completed: include_completed)
+
+            # Exclude the current assignment
+            others = all_assignments.reject { |ai| ai.id == current_assignment_id }
+            return if others.empty?
+
+            puts
+            suffix = include_completed ? "" : " (use --all to show completed)"
+            puts "OTHER ASSIGNMENTS:#{suffix}"
+
+            col_id = 10
+            col_status = 12
+            col_progress = 10
+            col_phase = 20
+            puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_phase}s %s",
+                        "ASSIGNMENT", "STATUS", "PROGRESS", "CURRENT PHASE", "UPDATED")
+
+            others.each do |info|
+              state_label = STATE_LABELS[info.state] || info.state.to_s
+              updated = format_relative_time(info.updated_at)
+              phase = info.current_phase.length > col_phase ? info.current_phase[0..col_phase - 4] + "..." : info.current_phase
+
+              puts format("%-#{col_id}s %-#{col_status}s %-#{col_progress}s %-#{col_phase}s %s",
+                          info.id, state_label, info.progress, phase, updated)
+            end
+          end
+
+          def format_relative_time(time)
+            return "-" unless time
+
+            diff = Time.now - time
+            if diff < 60
+              "#{diff.to_i}s ago"
+            elsif diff < 3600
+              "#{(diff / 60).to_i}m ago"
+            elsif diff < 86_400
+              "#{(diff / 3600).to_i}h ago"
+            else
+              "#{(diff / 86_400).to_i}d ago"
+            end
           end
         end
       end

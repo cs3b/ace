@@ -22,6 +22,55 @@ Drive agent execution through an active assignment by continuously checking stat
 - An active assignment exists (created via `ace-assign create` or `/ace:assign-create`)
 - Assignment has at least one pending or in_progress phase
 
+## Assignment Context Propagation
+
+When working with multiple concurrent assignments, the active assignment is resolved in this order:
+
+1. `--assignment <id>` flag on any command (highest priority)
+2. `ACE_ASSIGN_ID` environment variable
+3. `.current` symlink (set via `ace-assign select <id>`)
+4. `.latest` symlink (auto-updated on any activity)
+5. Scan all assignments (fallback)
+
+### Using ACE_ASSIGN_ID
+
+Set `ACE_ASSIGN_ID` to propagate assignment context across subprocesses:
+
+```bash
+# Set for current shell session
+export ACE_ASSIGN_ID=abc123
+
+# All commands now target this assignment
+ace-assign status          # Shows abc123
+ace-assign report done.md  # Reports to abc123
+ace-assign fail -m "err"   # Fails phase in abc123
+```
+
+This is particularly useful for:
+- Forked agent contexts (Task tool) where the parent sets the env var
+- CI/CD pipelines running assignment-driven workflows
+- Scripts operating on a specific assignment
+
+### Multi-Assignment Management
+
+```bash
+# List all active assignments
+ace-assign list
+
+# List including completed
+ace-assign list --all
+
+# Switch active assignment
+ace-assign select <id>
+
+# Clear explicit selection (revert to most recent)
+ace-assign select --clear
+
+# Target specific assignment without switching
+ace-assign status --assignment <id>
+ace-assign report done.md --assignment <id>
+```
+
 ## Execution Loop
 
 Repeat the following cycle until all phases are done or failed:
@@ -248,15 +297,22 @@ When executing a phase with a `skill:` field:
 ### Assignment Directory Structure
 
 ```
-.cache/ace-assign/<session-id>/
-├── assignment.yaml               # Assignment metadata
-├── phases/                       # Phase files (.ph.md extension)
-│   ├── 010-init.ph.md           # done
-│   ├── 020-implement.ph.md      # in_progress
-│   └── 030-test.ph.md           # pending
-└── reports/                      # Report files (.r.md extension)
-    ├── 010-init.r.md            # completed report
-    └── 020-implement.r.md       # in-progress report
+.cache/ace-assign/
+├── .latest → abc123/             # Auto-updated on any activity
+├── .current → def456/            # Explicit user selection (optional)
+├── abc123/
+│   ├── assignment.yaml           # Assignment metadata
+│   ├── phases/                   # Phase files (.ph.md extension)
+│   │   ├── 010-init.ph.md       # done
+│   │   ├── 020-implement.ph.md  # in_progress
+│   │   └── 030-test.ph.md       # pending
+│   └── reports/                  # Report files (.r.md extension)
+│       ├── 010-init.r.md        # completed report
+│       └── 020-implement.r.md   # in-progress report
+└── def456/
+    ├── assignment.yaml
+    ├── phases/
+    └── reports/
 ```
 
 Each phase has:

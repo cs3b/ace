@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-02-13
+
+### Added
+
+- Tests for `--assignment` flag targeting on `add`, `fail`, `report`, and `retry` commands
+- Performance documentation note on `AssignmentDiscoverer#find_all`
+
+### Fixed
+
+- Null safety for `info.name` in `list` command table output
+
+## [0.8.0] - 2026-02-13
+
+### Added
+
+- Multi-assignment support with `.current` symlink for explicit assignment selection
+- `ace-assign list` command with table/JSON output, `--task` filter, and `--all` flag
+- `ace-assign select <id>` command for switching active assignment
+- `AssignmentInfo` model wrapping assignment with computed state and progress
+- `AssignmentDiscoverer` molecule for finding and filtering assignments
+- `--assignment` flag on `status`, `report`, `fail`, `add`, and `retry` commands
+- `ACE_ASSIGN_ID` environment variable for workflow context propagation
+- Assignment state computation: running, paused, completed, failed
+- Other assignments section in `status` output
+- Context propagation and multi-assignment management documentation in drive-assignment workflow
+
 ## [0.7.5] - 2026-02-13
 
 ### Fixed

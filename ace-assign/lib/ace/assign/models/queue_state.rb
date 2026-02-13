@@ -98,6 +98,25 @@ module Ace
           phases.size
         end
 
+        # Computed assignment state based on phase statuses
+        #
+        # States:
+        # - :empty     - No phases in queue
+        # - :failed    - Has failed phase(s)
+        # - :completed - All phases done
+        # - :running   - Has in_progress phase
+        # - :paused    - Has pending but no in_progress (interrupted)
+        #
+        # @return [Symbol] Assignment state
+        def assignment_state
+          return :empty if empty?
+          return :failed if failed.any?
+          return :completed if complete?
+          return :running if current
+
+          :paused
+        end
+
         # Summary for display
         # @return [Hash] Summary statistics
         def summary
