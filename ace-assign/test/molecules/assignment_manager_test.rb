@@ -105,4 +105,86 @@ class AssignmentManagerTest < AceAssignTestCase
       assert updated.updated_at > original_updated
     end
   end
+
+  # === .current symlink tests ===
+
+  def test_set_current_creates_symlink
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      first = manager.create(name: "first", source_config: "job.yaml")
+      second = manager.create(name: "second", source_config: "job.yaml")
+
+      result = manager.set_current(first.id)
+
+      assert_equal first.id, result.id
+      assert File.symlink?(File.join(cache_dir, ".current"))
+      assert_equal first.id, manager.current_id
+    end
+  end
+
+  def test_set_current_raises_for_nonexistent
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      error = assert_raises(Ace::Assign::AssignmentNotFoundError) do
+        manager.set_current("nonexistent")
+      end
+
+      assert_includes error.message, "nonexistent"
+    end
+  end
+
+  def test_find_active_prefers_current_over_latest
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      first = manager.create(name: "first", source_config: "job.yaml")
+      second = manager.create(name: "second", source_config: "job.yaml")
+
+      # .latest points to second (most recent), but set .current to first
+      manager.set_current(first.id)
+
+      active = manager.find_active
+      assert_equal first.id, active.id
+    end
+  end
+
+  def test_clear_current_removes_symlink
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      first = manager.create(name: "first", source_config: "job.yaml")
+      manager.set_current(first.id)
+
+      manager.clear_current
+
+      assert_nil manager.current_id
+      refute File.symlink?(File.join(cache_dir, ".current"))
+    end
+  end
+
+  def test_clear_current_falls_back_to_latest
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      first = manager.create(name: "first", source_config: "job.yaml")
+      second = manager.create(name: "second", source_config: "job.yaml")
+
+      manager.set_current(first.id)
+      manager.clear_current
+
+      active = manager.find_active
+      assert_equal second.id, active.id
+    end
+  end
+
+  def test_current_id_nil_when_no_current
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+      manager.create(name: "first", source_config: "job.yaml")
+
+      assert_nil manager.current_id
+    end
+  end
 end

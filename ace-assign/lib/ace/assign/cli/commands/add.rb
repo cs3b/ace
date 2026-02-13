@@ -30,6 +30,7 @@ module Ace
           option :instructions, aliases: ["-i"], desc: "Phase instructions"
           option :after, aliases: ["-a"], desc: "Insert after this phase number (e.g., 010)"
           option :child, aliases: ["-c"], type: :boolean, default: false, desc: "Insert as child of --after phase"
+          option :assignment, desc: "Target specific assignment ID"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
 
@@ -52,7 +53,7 @@ module Ace
 
             instructions = options[:instructions] || "Complete this phase and report: ace-assign report report.md"
 
-            executor = Organisms::AssignmentExecutor.new
+            executor = build_executor_for(options)
             result = executor.add(
               name,
               instructions,
@@ -89,6 +90,21 @@ module Ace
                 puts added.instructions
               end
             end
+          end
+
+          private
+
+          def build_executor_for(options)
+            assignment_id = options[:assignment] || ENV["ACE_ASSIGN_ID"]
+            return Organisms::AssignmentExecutor.new unless assignment_id
+
+            manager = Molecules::AssignmentManager.new
+            assignment = manager.load(assignment_id)
+            raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
+
+            executor = Organisms::AssignmentExecutor.new
+            executor.assignment_manager.define_singleton_method(:find_active) { assignment }
+            executor
           end
         end
       end
