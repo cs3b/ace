@@ -1,0 +1,15 @@
+# Claude Code workspace: claude (left) | nvim + git status (center) | taskflow (right)
+name: cc
+direction: horizontal
+panes:
+  - preset: claude
+    size: "35%"
+  - direction: vertical
+    size: "30%"
+    panes:
+      - preset: nvim
+      - commands:
+          - ace-git status
+  - commands:
+      - ace-taskflow status
+    size: "35%"
