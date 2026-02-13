@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.494] - 2026-02-13
+
+### Fixed
+
+- **ace-support-tmux v0.3.1**: Per-leaf pane `root` overrides now apply in nested layouts; `LayoutStringBuilder` pane ID fallback for short/empty arrays
+
+## [0.9.493] - 2026-02-12
+
+### Added
+
+- **ace-support-tmux v0.3.0**: Nested pane layouts with arbitrary tree structure via `direction` key — `LayoutNode` model, `LayoutStringBuilder` atom for tmux custom layout strings, recursive preset resolution, and nested pane setup in `SessionManager`/`WindowManager`
+
+## [0.9.492] - 2026-02-12
+
+### Added
+
+- **ace-support-tmux v0.2.0**: Generic `options` pass-through for window/pane tmux options, `--root`/`-r` flag on `window` command, improved default presets (3-pane layouts with claude/shell/nvim)
+
+## [0.9.491] - 2026-02-12
+
+### Added
+
+- **ace-support-tmux v0.1.0**: New package — composable tmux session management via YAML presets with deep-merge composition at session, window, and pane levels, integrated with ACE config cascade
+
 ## [0.9.491] - 2026-02-12
 
 ### Fixed

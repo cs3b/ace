@@ -22,6 +22,7 @@ gem 'ace-support-fs', path: 'ace-support-fs'
 gem 'ace-support-mac-clipboard', path: 'ace-support-mac-clipboard'
 gem 'ace-support-markdown', path: 'ace-support-markdown'
 gem 'ace-support-timestamp', path: 'ace-support-timestamp'
+gem 'ace-support-tmux', path: 'ace-support-tmux'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
