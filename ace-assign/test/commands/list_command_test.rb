@@ -76,7 +76,9 @@ class ListCommandTest < AceAssignTestCase
         Ace::Assign::CLI::Commands::List.new.call
       end
 
-      assert_includes output.first, "No assignments found"
+      assert_includes output.first, "No active assignments"
+      assert_includes output.first, "1 completed"
+      assert_includes output.first, "--all"
 
       Ace::Assign.reset_config!
     end

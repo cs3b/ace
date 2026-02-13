@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-02-13
+
+### Fixed
+
+- `list` command now shows filtered count context (e.g., `1/2 assignment(s) shown`) when completed assignments are hidden
+
 ## [0.8.1] - 2026-02-13
 
 ### Added
