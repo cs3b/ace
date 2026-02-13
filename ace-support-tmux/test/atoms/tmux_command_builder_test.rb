@@ -49,6 +49,17 @@ class TmuxCommandBuilderTest < Minitest::Test
     assert_includes cmd, File.expand_path("~/logs")
   end
 
+  def test_new_window_with_print_format
+    cmd = Builder.new_window("dev", name: "logs", print_format: '#{window_id}')
+    assert_equal ["tmux", "new-window", "-t", "dev", "-n", "logs", "-P", "-F", '#{window_id}'], cmd
+  end
+
+  def test_new_window_without_print_format
+    cmd = Builder.new_window("dev", name: "logs")
+    refute_includes cmd, "-P"
+    refute_includes cmd, "-F"
+  end
+
   def test_split_window_vertical
     cmd = Builder.split_window("dev:editor")
     assert_equal ["tmux", "split-window", "-t", "dev:editor"], cmd
