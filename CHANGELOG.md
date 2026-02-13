@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.501] - 2026-02-13
+
+### Fixed
+
+- **ace-support-tmux v0.3.4**: Session creation failing with `base-index 1` tmux config — uses window IDs (`@42` format) instead of index-based targeting
+
 ## [0.9.500] - 2026-02-13
 
 ### Fixed
