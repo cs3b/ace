@@ -1,0 +1,22 @@
+name: reorganize-commits
+skill: ace:reorganize-commits
+description: Reorganize commits into logical groups for clean history
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Must have commits to reorganize"
+
+produces: [clean-history]
+consumes: [commits]
+
+context:
+  default: null
+  reason: "Reorganizing rewrites git history in main context"
+
+when_to_skip:
+  - "Only one commit on branch"
+  - "History is already clean and logical"
+
+effort: light
+tags: [git, history, cleanup]

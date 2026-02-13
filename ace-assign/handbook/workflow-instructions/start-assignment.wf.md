@@ -8,48 +8,79 @@ purpose: Combined workflow that prepares and creates an assignment in one step
 
 update:
   frequency: on-change
-  last-updated: '2026-02-11'
+  last-updated: '2026-02-13'
 ---
 
 # Start Assignment Workflow
 
 ## Purpose
 
-Combined workflow that runs prepare-assignment followed by create-assignment. This is the fastest way to start working on a task with ace-assign.
+Combined workflow that composes (or prepares) and creates an assignment in one step. This is the fastest way to start working on a task with ace-assign.
+
+## Path Selection
+
+This workflow supports two paths for generating job.yaml:
+
+### Compose Path (Default)
+
+Uses the compose-assignment workflow for intelligent, catalog-driven phase selection. Best for:
+- Natural language descriptions of what you need
+- Custom combinations of phases
+- Assignments that don't match existing presets exactly
+
+### Prepare Path (Legacy)
+
+Uses the prepare-assignment workflow for mechanical preset expansion. Best for:
+- Exact preset names with known parameters
+- Backward compatibility with existing automation
+
+**Auto-detection**: If the first argument is an exact preset name (e.g., `work-on-task`), use the prepare path. Otherwise, use the compose path.
 
 ## Input Formats
 
-The workflow accepts the same inputs as prepare-assignment:
-
-### 1. Preset Name Only
-
-```
-/ace:assign-start work-on-task-with-pr --taskref 123
-```
-
-### 2. Preset with Multiple Tasks
-
-```
-/ace:assign-start work-on-tasks --taskrefs 148,149,150
-```
-
-### 3. Informal Instructions
+### 1. Natural Description (→ Compose Path)
 
 ```
 /ace:assign-start "implement task 148, create pr, review twice"
 ```
 
+### 2. Recipe or Preset Name (→ Auto-detected)
+
+```
+/ace:assign-start work-on-task --taskref 123
+/ace:assign-start implement-with-pr --taskref 123
+```
+
+### 3. Multiple Tasks
+
+```
+/ace:assign-start work-on-tasks --taskrefs 148,149,150
+/ace:assign-start "work on tasks 148,149,150" --taskrefs 148,149,150
+```
+
 ## Process
 
-### 1. Prepare Assignment
+### 1. Generate Job Configuration
 
-Run the prepare workflow:
+Determine the path based on input:
+
+#### If input matches an existing preset name:
+
+Run the prepare workflow (legacy path):
 
 ```bash
 ace-bundle wfi://prepare-assignment
 ```
 
-This creates a `job.yaml` file from the preset or instructions.
+#### Otherwise (default):
+
+Run the compose workflow:
+
+```bash
+ace-bundle wfi://compose-assignment
+```
+
+Both paths produce a `job.yaml` file.
 
 ### 2. Create Assignment
 

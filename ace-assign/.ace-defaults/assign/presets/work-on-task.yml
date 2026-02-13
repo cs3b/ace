@@ -1,27 +1,30 @@
-# Multi-task workflow: batch implement → release → PR → review cycles → reorganize → push
-# Usage: /ace:assign-prepare work-on-tasks --taskrefs 148,149,150
-#        /ace:assign-prepare work-on-tasks --taskrefs 148-152
-#        /ace:assign-prepare work-on-tasks --taskrefs "240.*"
+# Full task workflow: implement → release → PR → review cycles → reorganize → push
+# Usage: /ace:assign-prepare work-on-task --taskref 123
 
-name: work-on-tasks
-description: Work on multiple tasks with PR, review cycles, release, and clean history
+name: work-on-task
+description: Work on a task with PR, review cycles, release, and clean history
 
 parameters:
-  taskrefs:
+  taskref:
     required: true
-    type: array
-    description: Task references (comma-separated, range, or pattern)
+    description: Task reference (e.g., 123 or 256.01)
 
 steps:
   - name: onboard
-    number: "000"
     skill: onboard
     instructions:
-      - Load project context.
-      - Review task queue and priorities.
+      - Onboard yourself to the codebase.
+      - Load context and understand the project structure.
+
+  - name: work-on-task
+    context: fork
+    skill: ace:work-on-task
+    instructions:
+      - "First: onboard yourself using /onboard skill to load project context."
+      - "Work on task {{taskref}}."
+      - Implement the required changes following project conventions.
 
   - name: release-minor
-    number: "020"
     skill: ace-release
     instructions:
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
@@ -29,15 +32,12 @@ steps:
       - Follow semantic versioning conventions.
 
   - name: create-pr
-    number: "030"
     skill: ace:create-pr
     instructions:
       - Create a pull request for the changes.
-      - Include summary of all implemented tasks.
       - Capture the PR number for subsequent review steps.
 
   - name: review-cycle-1
-    number: "040"
     skill: ace:review-pr
     context: fork
     instructions:
@@ -47,21 +47,18 @@ steps:
       - "Focus: correctness, architecture, and major design issues."
 
   - name: apply-feedback-1
-    number: "050"
     skill: ace:apply-feedback
     instructions:
       - Apply feedback from review cycle 1 (medium+ priority).
       - Commit changes with descriptive messages.
 
   - name: release-patch-1
-    number: "060"
     skill: ace-release
     instructions:
       - Bump patch version and update CHANGELOGs.
       - This captures review cycle 1 fixes.
 
   - name: review-cycle-2
-    number: "070"
     skill: ace:review-pr
     context: fork
     instructions:
@@ -71,57 +68,32 @@ steps:
       - "Focus: edge cases, error handling, and test coverage."
 
   - name: apply-feedback-2
-    number: "080"
     skill: ace:apply-feedback
     instructions:
       - Apply final feedback from review cycle 2.
       - Commit changes with descriptive messages.
 
   - name: release-patch-2
-    number: "090"
     skill: ace-release
     instructions:
       - Bump patch version and update CHANGELOGs.
       - This captures review cycle 2 fixes.
 
   - name: reorganize-commits
-    number: "100"
     skill: ace:reorganize-commits
     instructions:
       - Reorganize commits into logical groups.
       - Group by concern (structure, implementation, tests, release).
 
   - name: push-to-remote
-    number: "110"
     instructions:
       - Push all changes to the remote repository.
       - "Run: git push --force-with-lease origin HEAD"
       - Force-with-lease needed because reorganize-commits rewrites history.
 
   - name: update-pr-desc
-    number: "120"
     skill: ace:update-pr-desc
     instructions:
       - Update PR description with final implementation summary.
       - Include released version numbers and key components.
       - Ensure PR is ready for human review.
-
-expansion:
-  batch-parent:
-    name: batch-tasks
-    number: "010"
-    instructions: |
-      Batch container for multiple task implementations.
-      This step auto-completes when all child tasks are done.
-
-      Tasks to implement: {{taskrefs}}
-
-  foreach: taskrefs
-  child-template:
-    name: "work-on-{{item}}"
-    parent: "010"
-    context: fork
-    skill: ace:work-on-task
-    instructions: |
-      First: onboard yourself using /onboard skill to load project context.
-      Implement task {{item}}.

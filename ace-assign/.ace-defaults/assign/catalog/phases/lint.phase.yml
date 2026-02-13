@@ -1,0 +1,22 @@
+name: lint
+skill: null
+description: Run linters and fix style issues in changed files
+
+prerequisites:
+  - name: work-on-task
+    strength: recommended
+    reason: "Should have code changes to lint"
+
+produces: [code-changes]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "Linting needs access to working tree"
+
+when_to_skip:
+  - "No code changes to lint"
+  - "Linting is handled by pre-commit hooks"
+
+effort: trivial
+tags: [quality, style]

@@ -1,0 +1,22 @@
+name: release
+skill: ace-release
+description: Bump package version and update CHANGELOGs following semver
+
+prerequisites:
+  - name: work-on-task
+    strength: recommended
+    reason: "Should have code changes before releasing"
+
+produces: [version-bump, changelog-entries, commits]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "Version bump needs access to git state and version.rb in main context"
+
+when_to_skip:
+  - "No version-worthy changes since last release"
+  - "Release is handled externally"
+
+effort: light
+tags: [git, versioning, release]

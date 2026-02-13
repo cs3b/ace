@@ -1,0 +1,22 @@
+name: apply-feedback
+skill: ace:apply-feedback
+description: Apply review feedback and commit improvements
+
+prerequisites:
+  - name: review-pr
+    strength: required
+    reason: "Must have review feedback to apply"
+
+produces: [code-changes, commits]
+consumes: [review-feedback]
+
+context:
+  default: null
+  reason: "Applying feedback needs access to working tree"
+
+when_to_skip:
+  - "Review found no actionable issues"
+  - "All feedback items are deferred"
+
+effort: light
+tags: [implementation, review-response]
