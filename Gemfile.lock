@@ -216,6 +216,15 @@ PATH
       dry-cli (~> 1.1)
 
 PATH
+  remote: ace-support-tmux
+  specs:
+    ace-support-tmux (0.3.1)
+      ace-support-config (~> 0.7)
+      ace-support-core (~> 0.22)
+      ace-support-fs (~> 0.2)
+      dry-cli (~> 1.0)
+
+PATH
   remote: ace-taskflow
   specs:
     ace-taskflow (0.34.7)
@@ -407,6 +416,7 @@ DEPENDENCIES
   ace-support-nav!
   ace-support-test-helpers!
   ace-support-timestamp!
+  ace-support-tmux!
   ace-taskflow!
   ace-test!
   ace-test-e2e-runner!
