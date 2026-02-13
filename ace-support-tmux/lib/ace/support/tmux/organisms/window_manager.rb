@@ -24,30 +24,44 @@ module Ace
 
           # Add a window from a preset to a session
           #
-          # @param preset_name [String] Window preset name
+          # @param preset_name [String] Window preset name (used as fallback window name)
           # @param session [String, nil] Target session name (nil = detect current)
-          # @return [void]
-          def add_window(preset_name, session: nil, root: nil)
+          # @param root [String, nil] Working directory override
+          # @param name [String, nil] Explicit window name override
+          # @return [String] The effective window name
+          def add_window(preset_name, session: nil, root: nil, name: nil)
             target_session = session || detect_current_session
             raise NotInTmuxError, "Not inside a tmux session. Use --session to specify one." unless target_session
 
             window = @session_builder.build_window(preset_name)
             effective_root = root || window.root
+            effective_name = resolve_window_name(name, root, preset_name)
 
-            # Create the window
+            # Create the window and capture its unique ID
             cmd = Atoms::TmuxCommandBuilder.new_window(
               target_session,
-              name: window.name || preset_name,
+              name: effective_name,
               root: effective_root,
+              print_format: '#{window_id}',
               tmux: @tmux
             )
-            @executor.run(cmd)
+            result = @executor.capture(cmd)
+            raise "Failed to create window" unless result.success?
 
-            window_target = "#{target_session}:#{window.name || preset_name}"
+            window_target = result.stdout.strip
             setup_panes(window, window_target, effective_root)
+
+            effective_name
           end
 
           private
+
+          def resolve_window_name(explicit_name, root, preset_name)
+            return explicit_name if explicit_name
+            return File.basename(root) if root
+
+            preset_name
+          end
 
           def detect_current_session
             return nil unless ENV["TMUX"]

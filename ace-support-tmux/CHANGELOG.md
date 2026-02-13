@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-02-13
+
+### Fixed
+
+- Window targeting uses unique window ID (`@42` format) instead of name-based resolution, eliminating "can't find window" errors when duplicate names exist
+- Window name derived from `--root` basename instead of preset's `name` field — `ace-tmux window cc --root /path/to/project` names the window `project`
+
+### Added
+
+- `--name`/`-n` flag on `ace-tmux window` for explicit window name override (priority: `--name` > `--root` basename > preset argument)
+
+### Changed
+
+- Removed `name: cc` from cc.yml window preset — presets define layout, not window names
+
 ## [0.3.2] - 2026-02-13
 
 ### Fixed
