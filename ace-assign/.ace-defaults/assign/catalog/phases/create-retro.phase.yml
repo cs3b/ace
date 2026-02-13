@@ -1,0 +1,19 @@
+name: create-retro
+skill: null
+description: Create a retrospective summarizing what was accomplished and lessons learned
+
+prerequisites: []
+
+produces: [retrospective]
+consumes: []
+
+context:
+  default: null
+  reason: "Retro needs access to full assignment history"
+
+when_to_skip:
+  - "Assignment was trivial"
+  - "No significant learnings to capture"
+
+effort: trivial
+tags: [documentation, reflection]

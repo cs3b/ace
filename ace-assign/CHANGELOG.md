@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-02-13
+
+### Fixed
+
+- Misplaced doc block: `check_pair_completeness` documentation was above `check_conditional_rule`
+- Duplicate examples in `prepare-assignment.wf.md` now accurately reflect renamed `work-on-task` preset
+- `CatalogLoader.parse_phase_file` now warns on stderr when a phase YAML file fails to parse (was silently returning nil)
+- `compose-assignment.wf.md` uses Read/Glob tool references instead of `cat`/`ls` per project conventions
+
+### Changed
+
+- Added inline documentation for prefix matching constraints in `find_phase_index`
+- Added comment clarifying that mixed "and"/"or" conjunctions are not supported in conditional rules
+
+## [0.7.4] - 2026-02-13
+
+### Added
+
+- New phase catalog entries: `push-to-remote`, `release`, `reorganize-commits`
+
+### Fixed
+
+- Missing `skill: ace:apply-feedback` in work-on-tasks preset apply-feedback phases
+- Ordering rules now match suffixed phase names via prefix matching (e.g., `release` matches `release-minor`, `release-patch-1`)
+- Conditional composition rules with "and" conjunction now correctly require all conditions (was using `any?` instead of `all?`)
+
+### Changed
+
+- Renamed `work-on-task-with-pr` preset to `work-on-task` (now the default/primary workflow)
+- Updated workflow documentation to reflect preset rename
+
+## [0.7.3] - 2026-02-13
+
+### Added
+
+- **Phase catalog system**: Registry of available phase types with prerequisites, produces/consumes, context defaults, and skip conditions (14 phase definitions)
+- **Composition rules**: Declarative ordering constraints, phase pairs, and conditional suggestions for intelligent assignment composition
+- **Recipe system**: Flexible example patterns replacing rigid presets (4 recipes: implement-with-pr, implement-simple, batch-tasks, fix-and-review)
+- **Compose-assignment workflow**: LLM-driven assignment composition from phase catalog and user intent
+- `CatalogLoader` atom for loading and querying phase catalog YAML files
+- `CompositionRules` atom for loading, validating ordering, and suggesting phase additions
+- Conditional composition rule logic in `suggest_additions` for context-dependent phase suggestions
+
+### Changed
+
+- Drive-assignment workflow now includes phase decision points for skip assessment and adaptation
+- Start-assignment workflow updated to offer compose as alternative path
+
+### Fixed
+
+- `apply-feedback.phase.yml` now correctly references `ace:apply-feedback` skill (was null)
+
 ## [0.7.2] - 2026-02-12
 
 ### Changed

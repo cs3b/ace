@@ -8,7 +8,7 @@ purpose: workflow instruction for driving ace-assign assignment execution
 
 update:
   frequency: on-change
-  last-updated: '2026-01-28'
+  last-updated: '2026-02-13'
 ---
 
 # Drive Assignment Workflow
@@ -25,6 +25,50 @@ Drive agent execution through an active assignment by continuously checking stat
 ## Execution Loop
 
 Repeat the following cycle until all phases are done or failed:
+
+### Phase Decision Point
+
+Before executing each phase, perform two assessments:
+
+#### Skip Assessment
+
+Evaluate whether the current phase should be skipped:
+
+- **Already accomplished**: A previous phase already completed this work (e.g., tests were already run during implementation)
+- **Not applicable**: Conditions changed and this phase is no longer relevant (e.g., no code changes were made, so lint is unnecessary)
+- **Redundant**: An injected phase already covered this (e.g., a fix-tests phase already verified the test suite)
+- **Metadata hint**: Phase file contains `skip_if` in its extra fields — evaluate the condition
+
+If skipping is appropriate:
+```bash
+# Write a skip report explaining why
+ace-assign report /tmp/skip-report.md
+```
+
+The report should clearly state the skip reason, e.g., "Skipped: tests already verified in phase 020."
+
+#### Adaptation Assessment (After Each Phase)
+
+After completing each phase, evaluate whether the assignment needs adaptation:
+
+- **Test failures detected** → Consider adding a fix-tests phase:
+  ```bash
+  ace-assign add "fix-tests" --instructions "Fix failing tests identified in phase NNN"
+  ```
+
+- **Review found critical issues** → Consider adding an apply-critical-fixes phase:
+  ```bash
+  ace-assign add "apply-critical-fixes" --instructions "Address critical review findings before proceeding"
+  ```
+
+- **Missing prerequisite discovered** → Consider adding the prerequisite phase:
+  ```bash
+  ace-assign add "missing-prereq" --instructions "Complete prerequisite work discovered during phase NNN"
+  ```
+
+- **Metadata hint**: Phase file contains `trigger_on_failure` — if the phase failed, inject the referenced phase type
+
+Use `decision_notes` from phase metadata (if present) as additional guidance for these assessments.
 
 ### 1. Check Status
 

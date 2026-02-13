@@ -1,0 +1,22 @@
+name: security-audit
+skill: null
+description: Review changes for security vulnerabilities and sensitive data exposure
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Must have code changes to audit"
+
+produces: [security-report]
+consumes: [code-changes]
+
+context:
+  default: fork
+  reason: "Security review benefits from isolated, focused analysis"
+
+when_to_skip:
+  - "Changes don't touch security-sensitive code"
+  - "Changes are purely cosmetic (docs, comments)"
+
+effort: medium
+tags: [security, review, quality]
