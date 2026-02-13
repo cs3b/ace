@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.499] - 2026-02-13
+
+### Added
+
+- **ace-assign v0.8.1**: Tests for `--assignment` flag targeting on mutating commands (add, fail, report, retry)
+
+### Fixed
+
+- **ace-assign v0.8.1**: Null safety for assignment name in `list` command table output
+
+## [0.9.498] - 2026-02-13
+
+### Added
+
+- **ace-assign v0.8.0**: Multi-assignment support with `.current` symlink for explicit assignment selection
+- **ace-assign v0.8.0**: `ace-assign list` command with table/JSON output, `--task` filter, and `--all` flag
+- **ace-assign v0.8.0**: `ace-assign select <id>` command for switching active assignment
+- **ace-assign v0.8.0**: `AssignmentInfo` model and `AssignmentDiscoverer` molecule for assignment state computation
+- **ace-assign v0.8.0**: `--assignment` flag and `ACE_ASSIGN_ID` env var on all assignment commands
+- **ace-assign v0.8.0**: Other assignments section in `status` output
+
 ## [0.9.497] - 2026-02-13
 
 ### Fixed
