@@ -1,0 +1,4 @@
+# Vim editor pane preset
+commands:
+  - vim
+focus: true

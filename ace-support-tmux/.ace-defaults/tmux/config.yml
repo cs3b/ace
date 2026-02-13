@@ -1,0 +1,5 @@
+# ace-support-tmux default configuration
+# Override in ~/.ace/tmux/config.yml or .ace/tmux/config.yml
+
+# Path to tmux binary (default: tmux from PATH)
+tmux_binary: tmux
