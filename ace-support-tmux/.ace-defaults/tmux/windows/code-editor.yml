@@ -1,9 +1,0 @@
-# Code editor window preset
-# 3 equal vertical panes: claude | shell | nvim
-name: code-editor
-layout: even-horizontal
-panes:
-  - commands:
-      - claude
-  - commands: []
-  - preset: vim-editor
