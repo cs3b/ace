@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.497] - 2026-02-13
+
+### Fixed
+
+- **ace-support-tmux v0.3.3**: Window targeting uses unique window ID instead of name-based resolution, eliminating "can't find window" errors
+
+### Added
+
+- **ace-support-tmux v0.3.3**: `--name`/`-n` flag on `ace-tmux window` for explicit window name override
+
+### Changed
+
+- **ace-support-tmux v0.3.3**: Window name derived from `--root` basename instead of preset's `name` field
+
 ## [0.9.496] - 2026-02-13
 
 ### Fixed
