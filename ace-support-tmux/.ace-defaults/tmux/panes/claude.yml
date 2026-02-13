@@ -1,3 +1,4 @@
 # Claude Code pane preset
 commands:
-  - claude
+  - cc
+focus: true

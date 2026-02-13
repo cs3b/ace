@@ -1,6 +1,0 @@
-# Rails server window preset
-# Runs the Rails development server
-name: rails-server
-panes:
-  - commands:
-      - bundle exec rails server
