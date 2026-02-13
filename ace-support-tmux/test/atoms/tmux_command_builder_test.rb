@@ -38,6 +38,17 @@ class TmuxCommandBuilderTest < Minitest::Test
     assert_equal ["tmux", "-f", "~/.tmux.conf", "new-session", "-d", "-s", "dev"], cmd
   end
 
+  def test_new_session_with_print_format
+    cmd = Builder.new_session("dev", print_format: '#{window_id}')
+    assert_equal ["tmux", "new-session", "-d", "-s", "dev", "-P", "-F", '#{window_id}'], cmd
+  end
+
+  def test_new_session_without_print_format
+    cmd = Builder.new_session("dev")
+    refute_includes cmd, "-P"
+    refute_includes cmd, "-F"
+  end
+
   def test_new_window
     cmd = Builder.new_window("dev", name: "logs")
     assert_equal ["tmux", "new-window", "-t", "dev", "-n", "logs"], cmd
