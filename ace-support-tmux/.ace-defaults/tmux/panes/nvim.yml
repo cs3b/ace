@@ -1,0 +1,4 @@
+# Neovim editor pane preset
+commands:
+  - nvim .
+focus: true
