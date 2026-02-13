@@ -52,24 +52,34 @@ module Ace
             manager = Molecules::AssignmentManager.new
             current_id = manager.current_id
 
+            all_assignments = discoverer.find_all(include_completed: true)
             assignments = if options[:task]
-                            discoverer.find_by_task(task_ref: options[:task], active_only: !options[:all])
+                            all_assignments.select { |ai| ai.assignment.name == options[:task] }
+                              .then { |filtered| options[:all] ? filtered : filtered.reject(&:completed?) }
+                          elsif options[:all]
+                            all_assignments
                           else
-                            discoverer.find_all(include_completed: options[:all])
+                            all_assignments.reject(&:completed?)
                           end
+
+            hidden_completed = options[:all] ? 0 : all_assignments.count(&:completed?)
 
             if options[:format] == "json"
               print_json(assignments, current_id: current_id)
             else
-              print_table(assignments, current_id: current_id)
+              print_table(assignments, current_id: current_id, hidden_completed: hidden_completed)
             end
           end
 
           private
 
-          def print_table(assignments, current_id:)
+          def print_table(assignments, current_id:, hidden_completed:)
             if assignments.empty?
-              puts "No assignments found."
+              if hidden_completed > 0
+                puts "No active assignments (#{hidden_completed} completed, use --all to show)"
+              else
+                puts "No assignments found."
+              end
               return
             end
 
@@ -97,7 +107,12 @@ module Ace
             end
 
             puts
-            puts "#{assignments.size} assignment(s) found"
+            total = assignments.size + hidden_completed
+            if hidden_completed > 0
+              puts "#{assignments.size}/#{total} assignment(s) shown (use --all to include completed)"
+            else
+              puts "#{assignments.size} assignment(s) found"
+            end
             puts "* = current selection" if current_id
           end
 
