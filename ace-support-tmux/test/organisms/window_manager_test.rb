@@ -114,6 +114,21 @@ class WindowManagerTest < Minitest::Test
     assert nvm_cmd, "Expected pre_window command"
   end
 
+  def test_flat_panes_send_keys_after_select_layout
+    @manager.add_window("code-editor", session: "dev")
+
+    commands = @executor.run_commands
+    layout_idx = commands.index { |cmd| cmd.include?("select-layout") }
+    assert layout_idx, "Expected select-layout command"
+
+    send_keys_indices = commands.each_with_index.filter_map { |cmd, i| i if cmd.include?("send-keys") }
+    assert send_keys_indices.any?, "Expected send-keys commands"
+
+    send_keys_indices.each do |idx|
+      assert idx > layout_idx, "send-keys at index #{idx} should come after select-layout at index #{layout_idx}"
+    end
+  end
+
   # --- Nested layout tests ---
 
   def test_add_window_nested_layout

@@ -105,12 +105,8 @@ module Ace
           end
 
           def setup_flat_panes(session, window, window_target)
-            # First pane already exists (created with window), send its commands
-            first_pane = window.panes.first
-            send_pane_commands(session, window, first_pane, "#{window_target}.0")
-
-            # Create additional panes via split
-            window.panes.drop(1).each_with_index do |pane, idx|
+            # Create additional panes via split (first pane already exists)
+            window.panes.drop(1).each do |pane|
               pane_root = pane.root || window.root || session.root
               cmd = Atoms::TmuxCommandBuilder.split_window(
                 window_target,
@@ -118,9 +114,6 @@ module Ace
                 tmux: @tmux
               )
               @executor.run(cmd)
-
-              pane_target = "#{window_target}.#{idx + 1}"
-              send_pane_commands(session, window, pane, pane_target)
             end
 
             # Apply window options before layout (e.g., main-pane-width)
@@ -130,6 +123,11 @@ module Ace
             if window.layout
               cmd = Atoms::TmuxCommandBuilder.select_layout(window_target, window.layout, tmux: @tmux)
               @executor.run(cmd)
+            end
+
+            # Send commands to all panes (after layout is stable)
+            window.panes.each_with_index do |pane, idx|
+              send_pane_commands(session, window, pane, "#{window_target}.#{idx}")
             end
 
             # Focus the appropriate pane

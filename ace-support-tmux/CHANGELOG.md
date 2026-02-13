@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-02-13
+
+### Fixed
+
+- Pane startup race condition — `send-keys` commands now execute after `select-layout`, preventing resize artifacts in apps like nvim/LazyVim
+
+### Changed
+
+- Restored per-pane `sleep 0.15` in claude and nvim pane presets — shell-side sleep absorbs async resize signals that Ruby-side delay cannot
+
 ## [0.3.1] - 2026-02-13
 
 ### Fixed

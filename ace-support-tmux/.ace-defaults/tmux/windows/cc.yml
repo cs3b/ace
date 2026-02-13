@@ -3,13 +3,13 @@ name: cc
 direction: horizontal
 panes:
   - preset: claude
-    size: "35%"
+    size: "34%"
   - direction: vertical
-    size: "30%"
+    size: "32%"
     panes:
       - preset: nvim
       - commands:
           - ace-git status
   - commands:
       - ace-taskflow status
-    size: "35%"
+    size: "34%"
