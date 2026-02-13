@@ -1,0 +1,30 @@
+name: fix-and-review
+description: Fix an issue, verify tests, and create a reviewed PR
+
+matches:
+  - "fix * and review"
+  - "bug fix with PR"
+  - "fix issue *"
+
+parameters:
+  taskref: { required: true }
+  review_cycles: { required: false, default: 1 }
+
+phases:
+  - name: onboard
+    required: true
+  - name: work-on-task
+    required: true
+    instructions_template: "Fix the issue described in task {{taskref}}."
+  - name: verify-test-suite
+    required: true
+  - name: create-pr
+    required: true
+  - name: review-cycle
+    repeat: "{{review_cycles}}"
+    sub_phases: [review-pr, apply-feedback]
+
+customization_hints:
+  - "Add fix-tests after verify-test-suite if failures found"
+  - "Add security-audit for security-related fixes"
+  - "Increase review cycles for critical fixes"

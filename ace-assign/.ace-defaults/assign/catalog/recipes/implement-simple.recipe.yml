@@ -1,0 +1,24 @@
+name: implement-simple
+description: Implement a task with commit, no PR or review
+
+matches:
+  - "work on task *"
+  - "implement * simple"
+  - "quick task"
+
+parameters:
+  taskref: { required: true }
+
+phases:
+  - name: onboard
+    required: true
+  - name: work-on-task
+    required: true
+    instructions_template: "Work on task {{taskref}}."
+  - name: commit
+    required: true
+
+customization_hints:
+  - "Skip onboard if already onboarded"
+  - "Add verify-test-suite before commit for complex changes"
+  - "Add lint after work-on-task for style enforcement"

@@ -1,0 +1,42 @@
+name: batch-tasks
+description: Work on multiple tasks with PR, review cycles, and releases
+
+matches:
+  - "work on tasks *"
+  - "batch implement *"
+  - "multiple tasks"
+
+parameters:
+  taskrefs: { required: true, type: array }
+  review_cycles: { required: false, default: 2 }
+
+phases:
+  - name: onboard
+    required: true
+  - name: batch-parent
+    required: true
+    expansion:
+      foreach: taskrefs
+      child_phase: work-on-task
+      child_context: fork
+  - name: release
+    required: true
+    note: "Initial version bump (usually minor)"
+  - name: create-pr
+    required: true
+  - name: review-cycle
+    repeat: "{{review_cycles}}"
+    sub_phases: [review-pr, apply-feedback, release]
+    note: "Each cycle includes patch release after applying feedback"
+  - name: reorganize-commits
+    required: false
+  - name: push-to-remote
+    required: true
+  - name: update-pr-desc
+    required: false
+
+customization_hints:
+  - "Add create-pr after batch for consolidated review"
+  - "Add review cycles if changes need review"
+  - "Reduce batch size for complex tasks"
+  - "Skip reorganize-commits if history is already clean"

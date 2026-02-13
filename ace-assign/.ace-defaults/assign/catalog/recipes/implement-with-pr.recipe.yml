@@ -1,0 +1,39 @@
+name: implement-with-pr
+description: Implement a task, create PR, and iterate through review cycles with releases
+
+matches:
+  - "work on task * and create PR"
+  - "implement * with review"
+  - "full task workflow"
+
+parameters:
+  taskref: { required: true }
+  review_cycles: { required: false, default: 2 }
+
+phases:
+  - name: onboard
+    required: true
+  - name: work-on-task
+    required: true
+    instructions_template: "Work on task {{taskref}}."
+  - name: release
+    required: true
+    note: "Initial version bump (usually minor)"
+  - name: create-pr
+    required: true
+  - name: review-cycle
+    repeat: "{{review_cycles}}"
+    sub_phases: [review-pr, apply-feedback, release]
+    note: "Each cycle includes patch release after applying feedback"
+  - name: reorganize-commits
+    required: false
+  - name: push-to-remote
+    required: true
+  - name: update-pr-desc
+    required: false
+
+customization_hints:
+  - "Skip onboard if already onboarded in a previous assignment"
+  - "Add security-audit for security-sensitive changes"
+  - "Reduce review cycles to 1 for simple changes"
+  - "Skip reorganize-commits if commit history is already clean"

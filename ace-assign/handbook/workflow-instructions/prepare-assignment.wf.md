@@ -24,7 +24,7 @@ The workflow accepts three input types:
 ### 1. Preset Name Only
 
 ```
-/ace:assign-prepare work-on-task-with-pr --taskref 123
+/ace:assign-prepare work-on-task --taskref 123
 ```
 
 Loads the preset and injects parameter values.
@@ -40,7 +40,7 @@ Transforms prose into structured phases.
 ### 3. Preset + Customization
 
 ```
-/ace:assign-prepare work-on-task-with-pr --taskref 123 "skip onboarding, add security review"
+/ace:assign-prepare work-on-task --taskref 123 "skip onboarding, add security review"
 ```
 
 Loads preset then applies modifications.
@@ -51,8 +51,7 @@ Presets are stored in `ace-assign/.ace-defaults/assign/presets/`:
 
 | Preset | Description |
 |--------|-------------|
-| `work-on-task` | Simple task implementation with commit |
-| `work-on-task-with-pr` | Full workflow with PR and 3 review cycles |
+| `work-on-task` | Full workflow with PR, review cycles, release, and clean history |
 | `work-on-tasks` | Multi-task batch with consolidated review |
 
 List available presets:
@@ -314,7 +313,7 @@ Report:
 ```
 Job configuration created: job.yaml
 
-Session: work-on-task-with-pr-123
+Session: work-on-task-123
 Phases: 10 total
   - onboard
   - work-on-task
@@ -336,7 +335,7 @@ Start assignment with: ace-assign create job.yaml
 
 ```yaml
 session:
-  name: work-on-task-with-pr-123
+  name: work-on-task-123
   description: Work on task 123 with PR and review cycles
 
 steps:
@@ -373,23 +372,15 @@ steps:
 
 ## Examples
 
-### Example 1: Preset with Parameter
+### Example 1: Full Workflow Preset
 
 ```
 /ace:assign-prepare work-on-task --taskref 148
 ```
 
-Creates simple job with 3 phases: onboard, work-on-task, finalize.
+Creates job with 13 phases: onboard, work-on-task, release, create-pr, 2 review cycles (review + apply-feedback + release each), reorganize-commits, push-to-remote, update-pr-desc.
 
-### Example 2: Full Workflow Preset
-
-```
-/ace:assign-prepare work-on-task-with-pr --taskref 148
-```
-
-Creates job with 10 phases including PR and 3 review cycles.
-
-### Example 3: Informal Instructions
+### Example 2: Informal Instructions
 
 ```
 /ace:assign-prepare "implement task 148, create pr, review twice"
@@ -403,15 +394,15 @@ Parses instructions and creates job with:
 - review-cycle-2, apply-feedback-2
 - finalize
 
-### Example 4: Custom Output Path
+### Example 3: Custom Output Path
 
 ```
-/ace:assign-prepare work-on-task-with-pr --taskref 148 --output .cache/my-job.yaml
+/ace:assign-prepare work-on-task --taskref 148 --output .cache/my-job.yaml
 ```
 
 Writes configuration to specified path.
 
-### Example 5: Multi-Task Batch (Comma-Separated)
+### Example 4: Multi-Task Batch (Comma-Separated)
 
 ```
 /ace:assign-prepare work-on-tasks --taskrefs 148,149,150
@@ -425,7 +416,7 @@ Creates job with hierarchical structure:
 - consolidated-review (020)
 - finalize (030)
 
-### Example 6: Multi-Task Batch (Range)
+### Example 5: Multi-Task Batch (Range)
 
 ```
 /ace:assign-prepare work-on-tasks --taskrefs 148-152
@@ -433,7 +424,7 @@ Creates job with hierarchical structure:
 
 Expands range to tasks 148, 149, 150, 151, 152.
 
-### Example 7: Multi-Task Batch (Pattern)
+### Example 6: Multi-Task Batch (Pattern)
 
 ```
 /ace:assign-prepare work-on-tasks --taskrefs "240.*"

@@ -1,0 +1,22 @@
+name: work-on-task
+skill: ace:work-on-task
+description: Implement task changes following project conventions
+
+prerequisites:
+  - name: onboard
+    strength: recommended
+    reason: "Needs project context loaded first"
+
+produces: [code-changes, commits]
+consumes: [project-context, task-spec]
+
+context:
+  default: fork
+  reason: "Substantial implementation benefits from focused agent"
+
+when_to_skip:
+  - "Task is documentation-only"
+  - "Changes are already implemented"
+
+effort: medium
+tags: [implementation, core-workflow]

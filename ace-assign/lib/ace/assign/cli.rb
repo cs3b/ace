@@ -16,6 +16,8 @@ require_relative "atoms/number_generator"
 require_relative "atoms/preset_expander"
 require_relative "atoms/phase_file_parser"
 require_relative "atoms/phase_sorter"
+require_relative "atoms/catalog_loader"
+require_relative "atoms/composition_rules"
 
 # Molecules
 require_relative "molecules/assignment_manager"

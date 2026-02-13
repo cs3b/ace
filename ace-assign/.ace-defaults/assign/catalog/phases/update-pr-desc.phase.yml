@@ -1,0 +1,22 @@
+name: update-pr-desc
+skill: ace:update-pr-desc
+description: Update PR description with implementation summary and final state
+
+prerequisites:
+  - name: create-pr
+    strength: required
+    reason: "Must have an existing PR to update"
+
+produces: [pr-description]
+consumes: [pull-request, code-changes]
+
+context:
+  default: null
+  reason: "Needs access to PR state and git history"
+
+when_to_skip:
+  - "PR description is already up to date"
+  - "No changes since PR was created"
+
+effort: trivial
+tags: [git, pr, documentation]
