@@ -129,6 +129,11 @@ test_suite:
       group: foundation
       priority: 2
 
+    - name: ace-support-tmux
+      path: ace-support-tmux
+      group: foundation
+      priority: 2
+
   # Test command options
   test_options:
     format: compact
