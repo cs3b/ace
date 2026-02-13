@@ -9,6 +9,7 @@ require_relative "../assign"
 require_relative "models/assignment"
 require_relative "models/phase"
 require_relative "models/queue_state"
+require_relative "models/assignment_info"
 
 # Atoms
 require_relative "atoms/phase_numbering"
@@ -21,6 +22,7 @@ require_relative "atoms/composition_rules"
 
 # Molecules
 require_relative "molecules/assignment_manager"
+require_relative "molecules/assignment_discoverer"
 require_relative "molecules/queue_scanner"
 require_relative "molecules/phase_writer"
 require_relative "molecules/phase_renumberer"
@@ -35,6 +37,8 @@ require_relative "cli/commands/report"
 require_relative "cli/commands/fail"
 require_relative "cli/commands/add"
 require_relative "cli/commands/retry_cmd"
+require_relative "cli/commands/list"
+require_relative "cli/commands/select"
 
 module Ace
   module Assign
@@ -43,7 +47,7 @@ module Ace
       extend Dry::CLI::Registry
 
       # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[create status report fail add retry].freeze
+      REGISTERED_COMMANDS = %w[create status report fail add retry list select].freeze
 
       # Deprecated commands and their replacements
       DEPRECATED_COMMANDS = {
@@ -130,6 +134,8 @@ module Ace
       register "fail", wrap_command(Commands::Fail)
       register "add", wrap_command(Commands::Add)
       register "retry", wrap_command(Commands::RetryCmd)
+      register "list", wrap_command(Commands::List)
+      register "select", wrap_command(Commands::Select)
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

@@ -38,4 +38,40 @@ class FailCommandTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
+
+  def test_fail_with_assignment_flag
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+
+      config1 = create_test_config(cache_dir, name: "first-task")
+      result1 = executor.start(config1)
+
+      config2 = create_test_config(cache_dir, name: "second-task")
+      result2 = executor.start(config2)
+      target_id = result2[:assignment].id
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Fail.new.call(
+          message: "Build broke",
+          assignment: target_id
+        )
+      end
+
+      assert_includes output.first, "marked as failed"
+      assert_includes output.first, "Build broke"
+
+      # Verify the targeted assignment's current phase was failed
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      target_state = scanner.scan(result2[:assignment].phases_dir, assignment: result2[:assignment])
+      assert_equal :failed, target_state.assignment_state
+
+      # Verify the first assignment was not affected
+      first_state = scanner.scan(result1[:assignment].phases_dir, assignment: result1[:assignment])
+      assert_equal :running, first_state.assignment_state
+
+      Ace::Assign.reset_config!
+    end
+  end
 end

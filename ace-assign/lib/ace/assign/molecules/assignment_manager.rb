@@ -72,11 +72,24 @@ module Ace
 
         # Find the most recent active assignment
         #
+        # Uses resolution order:
+        # 1. .current symlink (explicit user selection)
+        # 2. .latest symlink (auto, most recent)
+        # 3. Scan all assignments (fallback)
+        #
         # @return [Models::Assignment, nil] Most recent assignment or nil
         def find_active
           return nil unless File.directory?(@cache_base)
 
-          # Fast path: use .latest symlink if it exists
+          # Priority 1: use .current symlink if it exists (explicit selection)
+          current_symlink = File.join(@cache_base, ".current")
+          if File.symlink?(current_symlink)
+            assignment_id = File.basename(File.readlink(current_symlink))
+            assignment = load(assignment_id)
+            return assignment if assignment
+          end
+
+          # Priority 2: use .latest symlink if it exists
           latest_symlink = File.join(@cache_base, ".latest")
           if File.symlink?(latest_symlink)
             assignment_id = File.basename(File.readlink(latest_symlink))
@@ -92,6 +105,44 @@ module Ace
                            .reverse
 
           assignments.first
+        end
+
+        # Set current assignment via .current symlink
+        #
+        # @param assignment_id [String] Assignment ID to set as current
+        # @raise [AssignmentNotFoundError] if assignment doesn't exist
+        def set_current(assignment_id)
+          assignment = load(assignment_id)
+          raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
+
+          current_symlink = File.join(@cache_base, ".current")
+
+          # Remove old symlink if it exists
+          File.delete(current_symlink) if File.symlink?(current_symlink)
+
+          # Create new symlink
+          target_dir = File.join(@cache_base, assignment_id)
+          File.symlink(target_dir, current_symlink)
+
+          assignment
+        end
+
+        # Clear current assignment selection
+        #
+        # Removes the .current symlink, falling back to .latest resolution
+        def clear_current
+          current_symlink = File.join(@cache_base, ".current")
+          File.delete(current_symlink) if File.symlink?(current_symlink)
+        end
+
+        # Get the currently selected assignment ID (from .current symlink)
+        #
+        # @return [String, nil] Current assignment ID or nil
+        def current_id
+          current_symlink = File.join(@cache_base, ".current")
+          return nil unless File.symlink?(current_symlink)
+
+          File.basename(File.readlink(current_symlink))
         end
 
         # Update assignment metadata

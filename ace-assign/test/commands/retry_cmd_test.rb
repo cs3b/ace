@@ -60,4 +60,46 @@ class RetryCmdTest < AceAssignTestCase
       Ace::Assign.reset_config!
     end
   end
+
+  def test_retry_with_assignment_flag
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+
+      config1 = create_test_config(cache_dir, name: "first-task")
+      result1 = executor.start(config1)
+      first_phase_count = Dir.glob(File.join(result1[:assignment].phases_dir, "*.ph.md")).size
+
+      config2 = create_test_config(cache_dir, name: "second-task")
+      result2 = executor.start(config2)
+      target_id = result2[:assignment].id
+
+      # Advance and fail the second assignment so we can retry
+      report_path = create_report(cache_dir, "Done")
+      target_executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      target_executor.assignment_manager.define_singleton_method(:find_active) { result2[:assignment] }
+      target_executor.advance(report_path) # Complete phase 010
+      target_executor.fail("Failed")       # Fail phase 020
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::RetryCmd.new.call(
+          phase_ref: "020",
+          assignment: target_id
+        )
+      end
+
+      assert_includes output.first, "retry of 020"
+
+      # Verify the retry phase was added to the targeted assignment (4 phases: 3 original + 1 retry)
+      target_phases = Dir.glob(File.join(result2[:assignment].phases_dir, "*.ph.md"))
+      assert_equal 4, target_phases.size, "Targeted assignment should have 4 phases (3 original + 1 retry)"
+
+      # Verify the first assignment was not affected (still has original 3 phases)
+      first_phases = Dir.glob(File.join(result1[:assignment].phases_dir, "*.ph.md"))
+      assert_equal first_phase_count, first_phases.size, "First assignment should not have extra phases"
+
+      Ace::Assign.reset_config!
+    end
+  end
 end

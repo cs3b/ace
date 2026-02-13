@@ -287,4 +287,70 @@ class QueueStateTest < AceAssignTestCase
     # Could be either 010.01 or 020, depending on order
     assert_includes ["010.01", "020"], workable.number
   end
+
+  # === Assignment State Tests ===
+
+  def test_assignment_state_empty
+    state = Ace::Assign::Models::QueueState.new(phases: [], assignment: @assignment)
+
+    assert_equal :empty, state.assignment_state
+  end
+
+  def test_assignment_state_running
+    phases = [
+      make_phase(number: "010", name: "first", status: :done),
+      make_phase(number: "020", name: "second", status: :in_progress),
+      make_phase(number: "030", name: "third", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :running, state.assignment_state
+  end
+
+  def test_assignment_state_paused
+    phases = [
+      make_phase(number: "010", name: "first", status: :done),
+      make_phase(number: "020", name: "second", status: :pending),
+      make_phase(number: "030", name: "third", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :paused, state.assignment_state
+  end
+
+  def test_assignment_state_completed
+    phases = [
+      make_phase(number: "010", name: "first", status: :done),
+      make_phase(number: "020", name: "second", status: :done)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :completed, state.assignment_state
+  end
+
+  def test_assignment_state_failed
+    phases = [
+      make_phase(number: "010", name: "first", status: :done),
+      make_phase(number: "020", name: "second", status: :failed),
+      make_phase(number: "030", name: "third", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :failed, state.assignment_state
+  end
+
+  def test_assignment_state_failed_takes_priority_over_running
+    phases = [
+      make_phase(number: "010", name: "first", status: :failed),
+      make_phase(number: "020", name: "second", status: :in_progress)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :failed, state.assignment_state
+  end
 end
