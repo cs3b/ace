@@ -30,14 +30,16 @@ module Ace
           # @param root [String, nil] Working directory
           # @param window_name [String, nil] Name for the first window
           # @param tmux_options [String, nil] Additional tmux options
+          # @param print_format [String, nil] Format string for -P -F (captures window info)
           # @param tmux [String] tmux binary path
           # @return [Array<String>]
-          def new_session(name, root: nil, window_name: nil, tmux_options: nil, tmux: "tmux")
+          def new_session(name, root: nil, window_name: nil, tmux_options: nil, print_format: nil, tmux: "tmux")
             cmd = [tmux]
             cmd.concat(tmux_options.split) if tmux_options
             cmd.concat(["new-session", "-d", "-s", name])
             cmd.concat(["-n", window_name]) if window_name
             cmd.concat(["-c", File.expand_path(root)]) if root
+            cmd.concat(["-P", "-F", print_format]) if print_format
             cmd
           end
 

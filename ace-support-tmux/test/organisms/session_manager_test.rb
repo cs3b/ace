@@ -46,12 +46,14 @@ class SessionManagerTest < Minitest::Test
     )
     builder = Ace::Support::Tmux::Molecules::SessionBuilder.new(preset_loader: loader)
 
-    # Mock executor: has-session fails (session doesn't exist)
+    # Mock executor: has-session fails (session doesn't exist),
+    # new-session/new-window return window IDs via capture
     @executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
         "tmux has-session -t dev" => mock_result(success: false, exit_code: 1),
         "tmux has-session -t opts" => mock_result(success: false, exit_code: 1),
-        "tmux has-session -t hooked" => mock_result(success: false, exit_code: 1)
+        "tmux has-session -t hooked" => mock_result(success: false, exit_code: 1),
+        :default => mock_result(stdout: "@0")
       }
     )
 
@@ -68,8 +70,8 @@ class SessionManagerTest < Minitest::Test
   def test_start_creates_session_detached
     @manager.start("dev", detach: true)
 
-    # Should create session
-    new_session_cmd = @executor.run_commands.find { |cmd| cmd.include?("new-session") }
+    # Should create session (via capture to get window ID)
+    new_session_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-session") }
     assert new_session_cmd, "Expected new-session command"
     assert_includes new_session_cmd, "-s"
     assert_includes new_session_cmd, "dev"
@@ -79,7 +81,8 @@ class SessionManagerTest < Minitest::Test
   def test_start_creates_additional_windows
     @manager.start("dev", detach: true)
 
-    new_window_cmds = @executor.run_commands.select { |cmd| cmd.include?("new-window") }
+    # new-window now uses capture to get window ID
+    new_window_cmds = @executor.captured_commands.select { |cmd| cmd.include?("new-window") }
     assert_equal 1, new_window_cmds.length
     assert_includes new_window_cmds[0], "server"
   end
@@ -172,7 +175,8 @@ class SessionManagerTest < Minitest::Test
   def test_start_force_kills_and_recreates
     executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
-        "tmux has-session -t dev" => mock_result(success: true)
+        "tmux has-session -t dev" => mock_result(success: true),
+        :default => mock_result(stdout: "@0")
       }
     )
 
@@ -191,7 +195,8 @@ class SessionManagerTest < Minitest::Test
     kill_cmds = executor.run_commands.select { |cmd| cmd.include?("kill-session") }
     assert_equal 1, kill_cmds.length
 
-    new_session_cmds = executor.run_commands.select { |cmd| cmd.include?("new-session") }
+    # new-session now uses capture
+    new_session_cmds = executor.captured_commands.select { |cmd| cmd.include?("new-session") }
     assert_equal 1, new_session_cmds.length
   end
 
@@ -241,9 +246,10 @@ class SessionManagerTest < Minitest::Test
       capture_responses: {
         "tmux has-session -t nested" => mock_result(success: false, exit_code: 1),
         # list-panes returns 4 pane indices
-        "tmux list-panes -t nested:main -F \#{pane_index}" => mock_result(stdout: "0\n1\n2\n3"),
+        "tmux list-panes -t @0 -F \#{pane_index}" => mock_result(stdout: "0\n1\n2\n3"),
         # display-message returns window dimensions
-        "tmux display-message -t nested:main.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50")
+        "tmux display-message -t @0.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50"),
+        :default => mock_result(stdout: "@0")
       }
     )
 
@@ -300,8 +306,9 @@ class SessionManagerTest < Minitest::Test
     executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
         "tmux has-session -t single-nested" => mock_result(success: false, exit_code: 1),
-        "tmux list-panes -t single-nested:main -F \#{pane_index}" => mock_result(stdout: "0"),
-        "tmux display-message -t single-nested:main.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50")
+        "tmux list-panes -t @0 -F \#{pane_index}" => mock_result(stdout: "0"),
+        "tmux display-message -t @0.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50"),
+        :default => mock_result(stdout: "@0")
       }
     )
 
@@ -347,8 +354,9 @@ class SessionManagerTest < Minitest::Test
     executor = TmuxTestHelper::MockExecutor.new(
       capture_responses: {
         "tmux has-session -t nested-roots" => mock_result(success: false, exit_code: 1),
-        "tmux list-panes -t nested-roots:main -F \#{pane_index}" => mock_result(stdout: "0\n1\n2"),
-        "tmux display-message -t nested-roots:main.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50")
+        "tmux list-panes -t @0 -F \#{pane_index}" => mock_result(stdout: "0\n1\n2"),
+        "tmux display-message -t @0.0 -p \#{window_width}x\#{window_height}" => mock_result(stdout: "200x50"),
+        :default => mock_result(stdout: "@0")
       }
     )
 
