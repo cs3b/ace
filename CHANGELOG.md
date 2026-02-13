@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.495] - 2026-02-13
+
+### Fixed
+
+- **ace-support-tmux v0.3.2**: Fix pane startup race condition — `send-keys` now executes after `select-layout`, preventing resize artifacts; added `startup_delay` window attribute as proper replacement for per-pane sleep hacks
+
 ## [0.9.494] - 2026-02-13
 
 ### Fixed
