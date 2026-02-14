@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module PromptPrep
     module Atoms
       # Generates Base36 compact IDs for prompt archiving
       #
-      # Uses ace-timestamp to generate 6-character compact IDs (e.g., "i50jj3")
+      # Uses ace-b36ts to generate 6-character compact IDs (e.g., "i50jj3")
       # These IDs serve as session identifiers for archived prompts
       module SessionIdGenerator
         # Generate Base36 ID for current time
@@ -18,7 +18,7 @@ module Ace
         def self.call(time: nil)
           time ||= Time.now.utc
           {
-            timestamp: Ace::Support::Timestamp.encode(time)
+            timestamp: Ace::B36ts.encode(time)
           }
         end
 
@@ -29,7 +29,7 @@ module Ace
         def self.valid?(value)
           return false unless value.is_a?(String)
 
-          Ace::Support::Timestamp.valid?(value)
+          Ace::B36ts.valid?(value)
         end
       end
     end
