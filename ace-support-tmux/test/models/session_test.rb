@@ -78,4 +78,20 @@ class SessionModelTest < Minitest::Test
     refute hash.key?("on_project_start")
     refute hash.key?("on_project_exit")
   end
+
+  def test_root_writer_overrides_initial_root
+    session = Ace::Support::Tmux::Models::Session.new(name: "dev", root: "~/original")
+    assert_equal "~/original", session.root
+
+    session.root = "~/override"
+    assert_equal "~/override", session.root
+  end
+
+  def test_root_writer_sets_nil_root
+    session = Ace::Support::Tmux::Models::Session.new(name: "dev")
+    assert_nil session.root
+
+    session.root = "~/new-root"
+    assert_equal "~/new-root", session.root
+  end
 end

@@ -328,6 +328,23 @@ class SessionManagerTest < Minitest::Test
     assert send_keys_cmds.any? { |cmd| cmd.include?("bash") }
   end
 
+  def test_start_with_root_override
+    @manager.start("dev", detach: true, root: "/tmp/override")
+
+    new_session_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-session") }
+    assert new_session_cmd, "Expected new-session command"
+    # The root override should be passed through to the session creation
+    assert_includes new_session_cmd.join(" "), "/tmp/override"
+  end
+
+  def test_start_without_root_uses_preset_root
+    @manager.start("dev", detach: true)
+
+    new_session_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-session") }
+    assert new_session_cmd, "Expected new-session command"
+    assert_includes new_session_cmd.join(" "), File.expand_path("~/projects/app")
+  end
+
   def test_start_nested_layout_respects_per_leaf_root
     write_preset(@temp_dir, "sessions", "nested-roots", {
       "name" => "nested-roots",
