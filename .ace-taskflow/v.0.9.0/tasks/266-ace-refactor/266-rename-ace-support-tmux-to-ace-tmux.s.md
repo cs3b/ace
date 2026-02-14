@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.266
-status: pending
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 266-rename-ace-support-tmux-to-ace-tmux
+  path: "../ace-task.266"
+  created_at: '2026-02-14 16:25:28'
+  updated_at: '2026-02-14 16:25:28'
+  target_branch: main
 ---
 
 # Rename ace-support-tmux to ace-tmux
