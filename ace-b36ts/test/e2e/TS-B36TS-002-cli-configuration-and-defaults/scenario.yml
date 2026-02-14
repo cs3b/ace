@@ -1,0 +1,10 @@
+test-id: TS-TIMESTAMP-002
+title: CLI Configuration and Defaults
+area: timestamp
+package: ace-b36ts
+priority: medium
+requires:
+  tools: [ace-b36ts]
+  ruby: ">= 3.0"
+
+setup: []

@@ -1,0 +1,13 @@
+# ace-b36ts configuration
+# Place in .ace/b36ts/config.yml to override defaults
+
+b36ts:
+  # Base year for compact ID encoding (year 0 = 108-year coverage)
+  year_zero: 2000
+
+  # Base36 alphabet for encoding (0-9, a-z)
+  alphabet: "0123456789abcdefghijklmnopqrstuvwxyz"
+
+  # Default output format for encode command
+  # Options: 2sec (default), month, week, day, 40min, 50ms, ms
+  default_format: "2sec"
