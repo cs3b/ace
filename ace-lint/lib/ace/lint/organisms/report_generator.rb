@@ -31,7 +31,7 @@ module Ace
         # @param options [Hash] Scan options used
         # @return [Hash] Result hash with :success, :dir, and :files keys
         def self.generate(results, project_root:, options: {})
-          compact_id = Ace::Support::Timestamp.encode(Time.now.utc)
+          compact_id = Ace::B36ts.encode(Time.now.utc)
           report_dir = File.join(project_root, ".cache", "ace-lint", compact_id)
 
           # Validate report_dir is within expected cache location
