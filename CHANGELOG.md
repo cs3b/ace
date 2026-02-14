@@ -8,6 +8,12 @@ All notable changes to this project will be documented in this file.
 
 - **ace-test-runner-e2e**: Renamed package from `ace-test-e2e-runner` to `ace-test-runner-e2e` and binary from `ace-test-suite-e2e` to `ace-test-e2e-suite` for naming consistency
 
+## [0.9.505] - 2026-02-14
+
+### Fixed
+
+- **ace-tmux v0.5.1**: Bundler/Ruby environment variables (`BUNDLE_GEMFILE`, `BUNDLE_BIN_PATH`, `RUBYOPT`, `RUBYLIB`) no longer leak into tmux sessions and spawned processes
+
 ## [0.9.504] - 2026-02-14
 
 ### Added
