@@ -217,7 +217,7 @@ Validate <what this tests> with real dependencies.
 ## Environment Setup
 
 ```bash
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="$(ace-b36ts encode)"
 TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-<short-pkg>-mt00n"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
