@@ -2,11 +2,19 @@ PATH
   remote: ace-assign
   specs:
     ace-assign (0.8.3)
+      ace-b36ts (~> 0.4)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.18)
       ace-support-markdown (~> 0.2)
-      ace-support-timestamp (~> 0.4)
       dry-cli (~> 1.0)
+
+PATH
+  remote: ace-b36ts
+  specs:
+    ace-b36ts (0.6.0)
+      ace-support-config (~> 0.6)
+      ace-support-core (~> 0.1)
+      dry-cli (~> 1.1)
 
 PATH
   remote: ace-bundle
@@ -22,12 +30,12 @@ PATH
   remote: ace-docs
   specs:
     ace-docs (0.20.0)
+      ace-b36ts (~> 0.2)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
       ace-support-markdown (~> 0.1)
-      ace-support-timestamp (~> 0.2)
       colorize (~> 1.1)
       dry-cli (~> 1.0)
       fileutils (~> 1.7)
@@ -48,9 +56,9 @@ PATH
   remote: ace-git-secrets
   specs:
     ace-git-secrets (0.7.6)
+      ace-b36ts (~> 0.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
-      ace-support-timestamp (~> 0.2)
       dry-cli (~> 1.0)
       faraday (~> 2.7, >= 2.7.4)
       faraday-retry (~> 2.2)
@@ -87,9 +95,9 @@ PATH
   remote: ace-lint
   specs:
     ace-lint (0.15.11)
+      ace-b36ts (~> 0.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
-      ace-support-timestamp (~> 0.2)
       colorize (~> 1.1)
       dry-cli (~> 1.0)
       kramdown (~> 2.4)
@@ -117,13 +125,13 @@ PATH
   remote: ace-prompt-prep
   specs:
     ace-prompt-prep (0.16.3)
+      ace-b36ts (~> 0.2)
       ace-bundle (~> 0.30)
       ace-git (~> 0.3)
       ace-llm (~> 0.8)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       ace-support-nav (~> 0.17)
-      ace-support-timestamp (~> 0.2)
       ace-taskflow (~> 0.9)
       dry-cli (~> 1.0)
 
@@ -131,13 +139,13 @@ PATH
   remote: ace-review
   specs:
     ace-review (0.38.0)
+      ace-b36ts (~> 0.2)
       ace-bundle (~> 0.30)
       ace-git (~> 0.3)
       ace-llm (~> 0.1)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       ace-support-nav (~> 0.17)
-      ace-support-timestamp (~> 0.2)
       ace-taskflow (~> 0.19)
       dry-cli (~> 1.0)
 
@@ -208,32 +216,15 @@ PATH
       minitest-reporters (~> 1.6)
 
 PATH
-  remote: ace-support-timestamp
-  specs:
-    ace-support-timestamp (0.5.0)
-      ace-support-config (~> 0.6)
-      ace-support-core (~> 0.1)
-      dry-cli (~> 1.1)
-
-PATH
-  remote: ace-support-tmux
-  specs:
-    ace-support-tmux (0.4.1)
-      ace-support-config (~> 0.7)
-      ace-support-core (~> 0.22)
-      ace-support-fs (~> 0.2)
-      dry-cli (~> 1.0)
-
-PATH
   remote: ace-taskflow
   specs:
     ace-taskflow (0.34.7)
+      ace-b36ts (~> 0.2)
       ace-git (~> 0.3)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
       ace-support-mac-clipboard (~> 0.2.0)
       ace-support-markdown (~> 0.1)
-      ace-support-timestamp (~> 0.2)
       clipboard (~> 1.3)
       dry-cli (~> 1.0)
 
@@ -241,20 +232,20 @@ PATH
   remote: ace-test-runner-e2e
   specs:
     ace-test-runner-e2e (0.16.0)
+      ace-b36ts (>= 0.3)
       ace-llm (>= 0.1)
       ace-support-config (>= 0.6)
       ace-support-core (>= 0.10)
-      ace-support-timestamp (>= 0.3)
       dry-cli (~> 1.0)
 
 PATH
   remote: ace-test-runner
   specs:
     ace-test-runner (0.15.3)
+      ace-b36ts (~> 0.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.1)
       ace-support-test-helpers (~> 0.1)
-      ace-support-timestamp (~> 0.2)
       dry-cli (~> 1.0)
       minitest (~> 5.0)
       minitest-reporters (~> 1.6)
@@ -264,6 +255,15 @@ PATH
   remote: ace-test
   specs:
     ace-test (0.1.1)
+
+PATH
+  remote: ace-tmux
+  specs:
+    ace-tmux (0.5.0)
+      ace-support-config (~> 0.7)
+      ace-support-core (~> 0.22)
+      ace-support-fs (~> 0.2)
+      dry-cli (~> 1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -281,7 +281,7 @@ GEM
       rexml
     docile (1.4.1)
     dry-cli (1.4.1)
-    faraday (2.14.0)
+    faraday (2.14.1)
       faraday-net_http (>= 2.0, < 3.5)
       json
       logger
@@ -313,14 +313,14 @@ GEM
     parser (3.3.10.1)
       ast (~> 2.4.1)
       racc
-    prism (1.8.0)
+    prism (1.9.0)
     public_suffix (7.0.2)
     racc (1.8.1)
     rainbow (3.1.1)
     rake (13.3.1)
     regexp_parser (2.11.3)
     rexml (3.4.4)
-    rubocop (1.82.1)
+    rubocop (1.84.2)
       json (~> 2.3)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.1.0)
@@ -328,7 +328,7 @@ GEM
       parser (>= 3.3.0.2)
       rainbow (>= 2.2.2, < 4.0)
       regexp_parser (>= 2.9.3, < 3.0)
-      rubocop-ast (>= 1.48.0, < 2.0)
+      rubocop-ast (>= 1.49.0, < 2.0)
       ruby-progressbar (~> 1.7)
       unicode-display_width (>= 2.4.0, < 4.0)
     rubocop-ast (1.49.0)
@@ -345,10 +345,10 @@ GEM
       simplecov_json_formatter (~> 0.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
-    standard (1.53.0)
+    standard (1.54.0)
       language_server-protocol (~> 3.17.0.2)
       lint_roller (~> 1.0)
-      rubocop (~> 1.82.0)
+      rubocop (~> 1.84.0)
       standard-custom (~> 1.0.0)
       standard-performance (~> 1.8)
     standard-custom (1.0.2)
@@ -374,6 +374,7 @@ PLATFORMS
 
 DEPENDENCIES
   ace-assign!
+  ace-b36ts!
   ace-bundle!
   ace-docs!
   ace-git!
@@ -396,12 +397,11 @@ DEPENDENCIES
   ace-support-models!
   ace-support-nav!
   ace-support-test-helpers!
-  ace-support-timestamp!
-  ace-support-tmux!
   ace-taskflow!
   ace-test!
   ace-test-runner!
   ace-test-runner-e2e!
+  ace-tmux!
   bundler (~> 2.4)
   minitest (~> 5.20)
   minitest-reporters (~> 1.6)

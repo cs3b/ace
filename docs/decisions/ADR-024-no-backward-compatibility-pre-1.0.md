@@ -8,7 +8,7 @@ Accepted - January 2026
 ACE is in pre-1.0.0 development with a single user (internal development). During this phase:
 
 1. **Rapid Experimentation**: Gems are being restructured, renamed, and refactored frequently
-2. **Naming Convention Changes**: Recent work (Task 202) involves renaming gems like `ace-config` to `ace-support-config`, `ace-timestamp` to `ace-support-timestamp`
+2. **Naming Convention Changes**: Recent work (Task 202) involves renaming gems like `ace-config` to `ace-support-config`, `ace-timestamp` to `ace-b36ts`
 3. **Single User**: The only consumer of these gems is the internal mono-repo
 4. **Maintenance Overhead**: Backward compatibility shims (require path redirects, namespace aliases, deprecation warnings) add complexity without benefit
 
@@ -31,7 +31,7 @@ This means:
 ### What This Applies To
 
 - All `ace-*` gems (ace-lint, ace-docs, ace-review, etc.)
-- All `ace-support-*` gems (ace-support-core, ace-support-config, ace-support-timestamp, etc.)
+- All `ace-support-*` gems (ace-support-core, ace-support-config, ace-b36ts, etc.)
 - All `ace-llm-*` gems (ace-llm, ace-llm-providers-cli, etc.)
 
 ### When This Changes
