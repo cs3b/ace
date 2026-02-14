@@ -345,6 +345,28 @@ class SessionManagerTest < Minitest::Test
     assert_includes new_session_cmd.join(" "), File.expand_path("~/projects/app")
   end
 
+  def test_start_cleans_bundler_env_vars_from_session
+    @manager.start("dev", detach: true)
+
+    set_env_cmds = @executor.run_commands.select { |cmd| cmd.include?("set-environment") }
+    assert_equal 4, set_env_cmds.length
+
+    expected_vars = %w[BUNDLE_GEMFILE BUNDLE_BIN_PATH RUBYOPT RUBYLIB]
+    expected_vars.each do |var|
+      cmd = set_env_cmds.find { |c| c.include?(var) }
+      assert cmd, "Expected set-environment -u for #{var}"
+      assert_includes cmd, "-u"
+    end
+
+    # Verify clean_environment runs before setup_windows
+    # The second window's send-keys ("rails s") comes from setup_windows
+    all_cmds = @executor.run_commands
+    last_set_env_idx = all_cmds.rindex { |cmd| cmd.include?("set-environment") }
+    rails_send_keys_idx = all_cmds.index { |cmd| cmd.include?("send-keys") && cmd.include?("rails s") }
+    assert last_set_env_idx < rails_send_keys_idx,
+      "set-environment should run before setup_windows (rails s send-keys)"
+  end
+
   def test_start_nested_layout_respects_per_leaf_root
     write_preset(@temp_dir, "sessions", "nested-roots", {
       "name" => "nested-roots",
