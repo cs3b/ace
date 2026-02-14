@@ -160,4 +160,24 @@ class TmuxCommandBuilderTest < Minitest::Test
     cmd = Builder.list_panes("dev:main", format: '#{pane_index}')
     assert_equal ["tmux", "list-panes", "-t", "dev:main", "-F", '#{pane_index}'], cmd
   end
+
+  def test_set_environment_with_value
+    cmd = Builder.set_environment("dev", "FOO", value: "bar")
+    assert_equal ["tmux", "set-environment", "-t", "dev", "FOO", "bar"], cmd
+  end
+
+  def test_set_environment_unset
+    cmd = Builder.set_environment("dev", "FOO", unset: true)
+    assert_equal ["tmux", "set-environment", "-t", "dev", "-u", "FOO"], cmd
+  end
+
+  def test_set_environment_inherit
+    cmd = Builder.set_environment("dev", "FOO")
+    assert_equal ["tmux", "set-environment", "-t", "dev", "FOO"], cmd
+  end
+
+  def test_set_environment_custom_binary
+    cmd = Builder.set_environment("dev", "FOO", unset: true, tmux: "/usr/local/bin/tmux")
+    assert_equal ["/usr/local/bin/tmux", "set-environment", "-t", "dev", "-u", "FOO"], cmd
+  end
 end
