@@ -3,7 +3,7 @@
 require "json"
 require "yaml"
 require "fileutils"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Git
@@ -198,7 +198,7 @@ module Ace
             sessions_dir = File.join(cache_dir, "sessions")
             FileUtils.mkdir_p(sessions_dir)
 
-            session_id = Ace::Support::Timestamp.encode(scanned_at)
+            session_id = Ace::B36ts.encode(scanned_at)
             ext = format == :markdown ? "md" : "json"
             path = File.join(sessions_dir, "#{session_id}-report.#{ext}")
 
