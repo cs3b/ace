@@ -115,11 +115,11 @@ module Ace
           assert_equal id1, id2, "Same time should produce same ID"
         end
 
-        # Integration with ace-support-timestamp
+        # Integration with ace-b36ts
 
-        def test_uses_ace_support_timestamp_ms_format
+        def test_uses_ace_b36ts_ms_format
           time = Time.utc(2025, 1, 15, 12, 30, 0, 500_000)  # 500ms
-          expected_id = Ace::Support::Timestamp.encode(time, format: :ms)
+          expected_id = Ace::B36ts.encode(time, format: :ms)
           actual_id = @generator.generate_for(time)
 
           assert_equal expected_id, actual_id,
@@ -130,7 +130,7 @@ module Ace
           time = Time.utc(2025, 1, 15, 12, 30, 0, 500_000)
           id = @generator.generate_for(time)
 
-          decoded_time = Ace::Support::Timestamp.decode(id, format: :ms)
+          decoded_time = Ace::B36ts.decode(id, format: :ms)
 
           # Times should be exact (ms precision)
           assert_equal time.to_i, decoded_time.to_i
@@ -140,7 +140,7 @@ module Ace
           id = @generator.generate
 
           # 8-char IDs are valid ms format
-          assert Ace::Support::Timestamp.valid_any_format?(id),
+          assert Ace::B36ts.valid_any_format?(id),
             "Generated ID '#{id}' should be valid ms format"
         end
 
@@ -213,7 +213,7 @@ module Ace
           ids = @generator.generate_sequence(5)
 
           ids.each do |id|
-            assert Ace::Support::Timestamp.valid_any_format?(id),
+            assert Ace::B36ts.valid_any_format?(id),
               "Generated ID '#{id}' should be valid ms format"
           end
         end
