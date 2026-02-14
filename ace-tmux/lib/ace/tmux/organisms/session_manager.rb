@@ -14,6 +14,8 @@ module Ace
       #   6. Select startup window
       #   7. Attach (unless --detach)
       class SessionManager
+        POLLUTING_ENV_VARS = %w[BUNDLE_GEMFILE BUNDLE_BIN_PATH RUBYOPT RUBYLIB].freeze
+
         # @param executor [Molecules::TmuxExecutor] Command executor
         # @param session_builder [Molecules::SessionBuilder] Preset resolver/builder
         # @param tmux [String] tmux binary path
@@ -45,6 +47,7 @@ module Ace
 
           run_hooks(session.on_project_start)
           first_window_target = create_session(session)
+          clean_environment(session)
           setup_windows(session)
           select_startup_window(session, first_window_target: first_window_target)
           attach_session(session) unless detach
@@ -262,6 +265,13 @@ module Ace
         def attach_session(session)
           cmd = Atoms::TmuxCommandBuilder.attach_session(session.name, tmux: @tmux)
           @executor.exec(cmd)
+        end
+
+        def clean_environment(session)
+          POLLUTING_ENV_VARS.each do |var|
+            cmd = Atoms::TmuxCommandBuilder.set_environment(session.name, var, unset: true, tmux: @tmux)
+            @executor.run(cmd)
+          end
         end
 
         def run_hooks(commands)

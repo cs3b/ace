@@ -151,6 +151,25 @@ module Ace
           [tmux, "set-option", "-p", "-t", target, option, value.to_s]
         end
 
+        # Set or unset a session environment variable
+        # @param session [String] Session name
+        # @param name [String] Environment variable name
+        # @param value [String, nil] Value to set (ignored when unset: true)
+        # @param unset [Boolean] Unset the variable instead of setting it
+        # @param tmux [String] tmux binary path
+        # @return [Array<String>]
+        def set_environment(session, name, value: nil, unset: false, tmux: "tmux")
+          cmd = [tmux, "set-environment", "-t", session]
+          if unset
+            cmd.concat(["-u", name])
+          elsif value
+            cmd.concat([name, value])
+          else
+            cmd << name
+          end
+          cmd
+        end
+
         # Display a message (useful for getting current session name)
         # @param format [String] Format string (e.g., "#S" for session name)
         # @param tmux [String] tmux binary path

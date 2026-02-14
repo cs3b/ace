@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-02-14
+
+### Fixed
+
+- Bundler/Ruby environment variables (`BUNDLE_GEMFILE`, `BUNDLE_BIN_PATH`, `RUBYOPT`, `RUBYLIB`) no longer leak into tmux sessions and spawned processes
+  - `bin/ace-tmux` cleans env vars from its own process after Bundler setup
+  - `SessionManager` unsets env vars from the tmux session environment via `set-environment -u`
+  - New `TmuxCommandBuilder.set_environment` atom for `tmux set-environment` commands
+
 ## [0.5.0] - 2026-02-14
 
 ### Changed
