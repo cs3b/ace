@@ -46,7 +46,7 @@ module Ace
           end
 
           run_hooks(session.on_project_start)
-          first_window_target = create_session(session)
+          first_window_target = create_session(session, root_override: root)
           clean_environment(session)
           setup_windows(session)
           select_startup_window(session, first_window_target: first_window_target)
@@ -54,6 +54,14 @@ module Ace
         end
 
         private
+
+        # Derive the first window name from root directory when a root override is provided.
+        # Mirrors WindowManager#resolve_window_name: root basename wins over preset name.
+        def resolve_first_window_name(preset_window_name, root_override)
+          return File.basename(root_override) if root_override
+
+          preset_window_name
+        end
 
         def session_exists?(name)
           cmd = Atoms::TmuxCommandBuilder.has_session(name, tmux: @tmux)
@@ -66,12 +74,13 @@ module Ace
           @executor.run(cmd)
         end
 
-        def create_session(session)
+        def create_session(session, root_override: nil)
           first_window = session.windows.first
+          first_window_name = resolve_first_window_name(first_window&.name, root_override)
           cmd = Atoms::TmuxCommandBuilder.new_session(
             session.name,
             root: session.root,
-            window_name: first_window&.name,
+            window_name: first_window_name,
             tmux_options: session.tmux_options,
             print_format: '#{window_id}',
             tmux: @tmux
