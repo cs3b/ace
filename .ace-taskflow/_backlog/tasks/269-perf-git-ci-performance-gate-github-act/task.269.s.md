@@ -1,10 +1,9 @@
 ---
-id: v.0.9.0+task.253.06
+id: v.0.9.0+task.268
 status: pending
 priority: medium
 estimate: 1h
 dependencies: []
-parent: v.0.9.0+task.253
 ---
 
 # Add CI Performance Gate to GitHub Actions
