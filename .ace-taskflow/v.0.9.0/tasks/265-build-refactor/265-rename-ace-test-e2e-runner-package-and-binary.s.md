@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.265
-status: pending
+status: in-progress
 priority: medium
 estimate: 3h
 dependencies: []
+worktree:
+  branch: 265-rename-ace-test-e2e-runner-package-and-binary-for-naming-consistency
+  path: "../ace-task.265"
+  created_at: '2026-02-14 16:11:20'
+  updated_at: '2026-02-14 16:11:20'
+  target_branch: main
 ---
 
 # Rename ace-test-e2e-runner Package and Binary for Naming Consistency
