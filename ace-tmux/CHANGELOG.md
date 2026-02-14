@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- First window name when starting a session with `--root` now uses the directory basename (e.g., `--root /home/mc/my-project` → window name `my-project`), matching the existing behavior of `ace-tmux window --root`
+- First window name now always derives from the effective working directory (`--root` override > preset `root:` > CWD), matching the existing behavior of `ace-tmux window --root`
 
 ## [0.5.1] - 2026-02-14
 
