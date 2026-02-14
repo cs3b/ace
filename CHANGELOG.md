@@ -8,6 +8,14 @@ All notable changes to this project will be documented in this file.
 
 - **ace-test-runner-e2e**: Renamed package from `ace-test-e2e-runner` to `ace-test-runner-e2e` and binary from `ace-test-suite-e2e` to `ace-test-e2e-suite` for naming consistency
 
+## [0.9.504] - 2026-02-14
+
+### Added
+
+- **ace-assign v0.8.3**: New `mark-task-done` phase for marking tasks as done in ace-taskflow after implementation
+- **ace-assign v0.8.3**: Composition rules and conditional suggestions for `mark-task-done` phase
+- **ace-assign v0.8.3**: `mark-task-done` step in `work-on-task`, `work-on-tasks` presets, and all task recipes
+
 ## [0.9.503] - 2026-02-14
 
 ### Fixed
