@@ -1,4 +1,0 @@
-# Neovim editor pane preset
-commands:
-  - sleep 0.15
-  - nvim
