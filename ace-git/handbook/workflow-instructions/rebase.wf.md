@@ -19,7 +19,7 @@ Rebase feature branches against a target branch with automatic state capture for
 ## Requirements
 
 - **Bash 4+**: Required for array syntax (macOS: install via Homebrew)
-- **ace-timestamp**: For generating compact session IDs
+- **ace-b36ts**: For generating compact session IDs
 
 ## Strategies
 
@@ -103,7 +103,7 @@ recover_session() {
 target_branch="${target_branch:-$(get_target_branch)}"
 
 # Generate session ID and cache directory
-session_id=$(ace-timestamp encode now)
+session_id=$(ace-b36ts encode now)
 cache_dir=".cache/ace-git/${session_id}-rebase"
 mkdir -p "$cache_dir"
 export cache_dir session_id target_branch
