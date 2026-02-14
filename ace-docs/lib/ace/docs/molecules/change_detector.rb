@@ -6,7 +6,7 @@ require "fileutils"
 require "yaml"
 require "ace/git"
 require "ace/support/fs"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Docs
@@ -142,7 +142,7 @@ module Ace
         # @return [String] Path to saved analysis file
         def self.save_diff_to_cache(diff_result)
           cache_dir = ".cache/ace-docs"
-          compact_id = Ace::Support::Timestamp.encode(Time.now)
+          compact_id = Ace::B36ts.encode(Time.now)
           session_dir = File.join(cache_dir, "diff-#{compact_id}")
 
           FileUtils.mkdir_p(session_dir)

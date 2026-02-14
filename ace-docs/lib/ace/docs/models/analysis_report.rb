@@ -2,7 +2,7 @@
 
 require "yaml"
 require "fileutils"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Docs
@@ -41,7 +41,7 @@ module Ace
           cache_dir ||= Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
           FileUtils.mkdir_p(cache_dir)
 
-          compact_id = Ace::Support::Timestamp.encode(Time.now)
+          compact_id = Ace::B36ts.encode(Time.now)
           filename = "analysis-#{compact_id}.md"
           filepath = File.join(cache_dir, filename)
 
