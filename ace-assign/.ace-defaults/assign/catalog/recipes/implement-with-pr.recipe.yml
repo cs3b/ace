@@ -16,6 +16,8 @@ phases:
   - name: work-on-task
     required: true
     instructions_template: "Work on task {{taskref}}."
+  - name: mark-task-done
+    required: false
   - name: release
     required: true
     note: "Initial version bump (usually minor)"

@@ -18,6 +18,11 @@ ordering:
     before: work-on-task
     after: create-pr
 
+  - rule: mark-done-after-implementation
+    before: work-on-task
+    after: mark-task-done
+    note: "Mark task done after successful implementation"
+
   - rule: release-after-implementation
     before: work-on-task
     after: release
@@ -60,6 +65,11 @@ pairs:
     note: "Patch release after applying review feedback"
 
 conditional:
+  - when: "assignment includes work-on-task"
+    suggest: [mark-task-done]
+    strength: recommended
+    note: "Tasks should be marked done after implementation"
+
   - when: "assignment includes work-on-task or fix-bug"
     suggest: [verify-test-suite]
     strength: recommended

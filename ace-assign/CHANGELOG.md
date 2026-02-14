@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-02-14
+
+### Added
+
+- New `mark-task-done` phase for marking tasks as done in ace-taskflow after implementation
+- Composition rule to order `mark-task-done` after `work-on-task`
+- Conditional rule suggesting `mark-task-done` when assignment includes `work-on-task`
+- `mark-task-done` step in `work-on-task` preset (runs `ace-taskflow task done`)
+- Mark-done instruction in `work-on-tasks` child template for per-task completion
+- `mark-task-done` phase in `implement-with-pr`, `implement-simple`, and `fix-and-review` recipes
+
 ## [0.8.2] - 2026-02-13
 
 ### Fixed
