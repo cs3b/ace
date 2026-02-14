@@ -118,7 +118,7 @@ Parse arguments and prepare for execution:
 
 1. **Set environment variables** — Parse `--env` and export each `KEY=VALUE`
 2. **Enter sandbox** — `cd SANDBOX_PATH`
-3. **Set TIMESTAMP_ID** — Use `--run-id` value if provided, otherwise generate with `ace-timestamp encode`
+3. **Set TIMESTAMP_ID** — Use `--run-id` value if provided, otherwise generate with `ace-b36ts encode`
 
 **Expected Variables After Setup:**
 - `SANDBOX_PATH` - The pre-populated sandbox directory (current working directory)

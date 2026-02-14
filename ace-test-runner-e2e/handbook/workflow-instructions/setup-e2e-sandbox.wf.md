@@ -37,7 +37,7 @@ Set up a safe, isolated environment for E2E tests that:
 
 ## Prerequisites
 
-- `ace-timestamp` available for unique IDs
+- `ace-b36ts` available for unique IDs
 - Required tools installed for the specific test
 - Test tokens available (if external APIs needed)
 
@@ -47,7 +47,7 @@ Set up a safe, isolated environment for E2E tests that:
 
 ```bash
 # Generate unique timestamp ID
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="$(ace-b36ts encode)"
 
 # Extract short names from test metadata
 # Note: params are lowercase (package, test_id) - use them directly
@@ -351,7 +351,7 @@ This is the **authoritative copy-executable script** for sandbox setup. Other wo
 PROJECT_ROOT="$(pwd)"
 
 # Generate unique timestamp ID
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="$(ace-b36ts encode)"
 
 # Derive short names (adjust PACKAGE and TEST_ID as needed)
 SHORT_PKG="${PACKAGE#ace-}"
