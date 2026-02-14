@@ -1,10 +1,10 @@
 ---
 id: v.0.9.0+task.267
-status: pending
+status: done
 priority: medium
 estimate: 8h
 dependencies:
-  - v.0.9.0+task.266
+- v.0.9.0+task.266
 ---
 
 # Rename ace-support-timestamp to ace-b36ts
