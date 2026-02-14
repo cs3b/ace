@@ -11,7 +11,7 @@ allowed-tools:
   - Task
 argument-hint: "[package] [--sequential] [--all]"
 last_modified: 2026-01-29
-source: ace-test-e2e-runner
+source: ace-test-runner-e2e
 ---
 
 read and run `ace-bundle wfi://run-e2e-tests`

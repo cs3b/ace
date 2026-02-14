@@ -15,7 +15,7 @@ allowed-tools:
   - Glob
 argument-hint: [test-id | scenario]
 last_modified: 2026-02-01
-source: ace-test-e2e-runner
+source: ace-test-runner-e2e
 ---
 
 read and run `ace-bundle wfi://setup-e2e-sandbox`
