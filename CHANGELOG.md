@@ -4,9 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+
+- **ace-taskflow v0.35.0**: `ace:manage-task-status` skill for task lifecycle operations (start, done, undone)
+- **ace-taskflow v0.35.0**: `ace:reorganize-task` skill for task hierarchy operations (promote, demote, convert)
+- **ace-taskflow v0.35.0**: `manage-task-status` workflow for status management guidance
+
 ### Changed
 
 - **ace-test-runner-e2e**: Renamed package from `ace-test-e2e-runner` to `ace-test-runner-e2e` and binary from `ace-test-suite-e2e` to `ace-test-e2e-suite` for naming consistency
+- **ace-taskflow v0.35.0**: Update timestamp dependency to ace-b36ts
 
 ### Fixed
 
