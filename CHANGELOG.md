@@ -16,6 +16,11 @@ All notable changes to this project will be documented in this file.
 - **ace-assign v0.8.3**: Composition rules and conditional suggestions for `mark-task-done` phase
 - **ace-assign v0.8.3**: `mark-task-done` step in `work-on-task`, `work-on-tasks` presets, and all task recipes
 
+### Changed
+
+- **ace-tmux v0.5.0**: Renamed gem from `ace-support-tmux` to `ace-tmux` — module namespace `Ace::Support::Tmux` to `Ace::Tmux`; binary and config paths unchanged (task 266)
+- **ace-b36ts v0.6.0**: Renamed gem from `ace-support-timestamp` to `ace-b36ts` — module namespace `Ace::Support::Timestamp` to `Ace::B36ts`; binary `ace-timestamp` to `ace-b36ts`; config paths `timestamp` to `b36ts` (task 267)
+
 ## [0.9.503] - 2026-02-14
 
 ### Fixed
