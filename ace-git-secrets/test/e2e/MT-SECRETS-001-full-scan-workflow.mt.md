@@ -32,7 +32,7 @@ Verify the complete ace-git-secrets scan workflow including clean repo scanning,
 # Capture project root before changing directories
 PROJECT_ROOT="$(pwd)"
 
-TIMESTAMP_ID="${RUN_ID:-$(ace-timestamp encode)}"
+TIMESTAMP_ID="${RUN_ID:-$(ace-b36ts encode)}"
 SHORT_PKG="secrets"
 SHORT_ID="mt001"
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
