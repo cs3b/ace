@@ -1,0 +1,11 @@
+---
+# Guide Sources Protocol Configuration for ace-test-runner-e2e gem
+name: ace-test-runner-e2e
+type: gem
+description: E2E testing guides from ace-test-runner-e2e gem
+priority: 10
+
+config:
+  relative_path: handbook/guides
+  pattern: "*.g.md"
+  enabled: true
