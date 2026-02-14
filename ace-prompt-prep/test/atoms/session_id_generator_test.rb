@@ -19,7 +19,7 @@ class SessionIdGeneratorTest < Minitest::Test
 
     assert_equal 6, result[:timestamp].length
     # Verify it's valid base36
-    assert Ace::Support::Timestamp.valid?(result[:timestamp])
+    assert Ace::B36ts.valid?(result[:timestamp])
   end
 
   def test_generates_consistent_id_for_same_time
