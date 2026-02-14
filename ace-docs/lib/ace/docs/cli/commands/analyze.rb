@@ -4,7 +4,7 @@ require "dry/cli"
 require "fileutils"
 require "ace/core"
 require "colorize"
-require "ace/support/timestamp"
+require "ace/b36ts"
 require_relative "../../organisms/document_registry"
 require_relative "../../molecules/change_detector"
 require_relative "../../prompts/document_analysis_prompt"
@@ -159,7 +159,7 @@ module Ace
 
             # Create session directory for analysis
             cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
-            compact_id = Ace::Support::Timestamp.encode(Time.now)
+            compact_id = Ace::B36ts.encode(Time.now)
             session_dir = File.join(cache_dir, "analyze-#{compact_id}")
             FileUtils.mkdir_p(session_dir)
 
