@@ -1,0 +1,11 @@
+# ace-tmux default configuration
+# Override in ~/.ace/tmux/config.yml or .ace/tmux/config.yml
+
+# Path to tmux binary (default: tmux from PATH)
+tmux_binary: tmux
+
+# Default presets when no arguments are provided
+# ace-tmux (no args) uses session default outside tmux, window default inside tmux
+defaults:
+  session: default
+  window: cc
