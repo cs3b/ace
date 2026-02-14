@@ -84,8 +84,8 @@ git:
     ace-test:
       glob: "ace-test/**"
 
-    ace-test-e2e-runner:
-      glob: "ace-test-e2e-runner/**"
+    ace-test-runner-e2e:
+      glob: "ace-test-runner-e2e/**"
 
     ace-test-runner:
       glob: "ace-test-runner/**"
