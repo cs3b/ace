@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.502] - 2026-02-14
+
+### Added
+
+- **ace-support-tmux v0.4.0**: Context-aware default presets — `ace-tmux` with no arguments starts default session (outside tmux) or adds default window (inside tmux)
+- **ace-support-tmux v0.4.0**: `--root`/`-r` option on `start` command for working directory override
+
+### Changed
+
+- **ace-support-tmux v0.4.0**: `preset` argument now optional on `start` and `window` commands — falls back to configured defaults
+
 ## [0.9.501] - 2026-02-13
 
 ### Fixed
