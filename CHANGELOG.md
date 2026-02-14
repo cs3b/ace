@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+
+- **ace-test-runner-e2e**: Renamed package from `ace-test-e2e-runner` to `ace-test-runner-e2e` and binary from `ace-test-suite-e2e` to `ace-test-e2e-suite` for naming consistency
+
 ## [0.9.503] - 2026-02-14
 
 ### Fixed
