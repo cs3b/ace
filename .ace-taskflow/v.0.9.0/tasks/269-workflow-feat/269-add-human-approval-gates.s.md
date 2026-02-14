@@ -1,11 +1,10 @@
 ---
-id: v.0.9.0+task.240.01
+id: v.0.9.0+task.269
 status: pending
 priority: medium
 estimate: 3h
 dependencies:
-  - v.0.9.0+task.237
-parent: v.0.9.0+task.240
+- v.0.9.0+task.237
 ---
 
 # Human Approval Gates
