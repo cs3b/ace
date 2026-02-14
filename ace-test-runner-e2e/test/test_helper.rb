@@ -3,7 +3,7 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 
 # Add dependencies to load path for monorepo development
-%w[ace-support-core ace-support-config ace-llm ace-support-timestamp].each do |dep|
+%w[ace-support-core ace-support-config ace-llm ace-b36ts].each do |dep|
   dep_path = File.expand_path("../../#{dep}/lib", __dir__)
   $LOAD_PATH.unshift(dep_path) if Dir.exist?(dep_path)
 end
