@@ -262,7 +262,7 @@ Report any missing prerequisites before proceeding.
 - `REPORTS_DIR` - Reports directory for test outputs
 - `TIMESTAMP_ID` - Unique identifier for this test run
 
-**Pre-generated Run ID:** If `RUN_ID` was provided as an argument (via `--run-id`), set `TIMESTAMP_ID=$RUN_ID` instead of calling `ace-timestamp encode`. This ensures the orchestrator knows the exact report path.
+**Pre-generated Run ID:** If `RUN_ID` was provided as an argument (via `--run-id`), set `TIMESTAMP_ID=$RUN_ID` instead of calling `ace-b36ts encode`. This ensures the orchestrator knows the exact report path.
 
 **Directory Structure & Naming Convention:**
 

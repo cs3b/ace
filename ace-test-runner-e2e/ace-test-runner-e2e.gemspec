@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-core", ">= 0.10"
   spec.add_dependency "ace-support-config", ">= 0.6"
   spec.add_dependency "ace-llm", ">= 0.1"
-  spec.add_dependency "ace-support-timestamp", ">= 0.3"
+  spec.add_dependency "ace-b36ts", ">= 0.3"
 
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"

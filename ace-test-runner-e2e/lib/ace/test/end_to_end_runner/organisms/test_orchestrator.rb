@@ -4,7 +4,7 @@ require "fileutils"
 require "thread"
 require "date"
 require "yaml"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Test
@@ -304,7 +304,7 @@ module Ace
 
           # Generate N unique timestamps for batch test runs
           #
-          # Uses Ace::Support::Timestamp library to encode unique IDs with 50ms precision,
+          # Uses Ace::B36ts library to encode unique IDs with 50ms precision,
           # ensuring distinct timestamps for parallel test runs.
           #
           # @param count [Integer] Number of unique timestamps needed
@@ -312,7 +312,7 @@ module Ace
           def generate_timestamps(count)
             count.times.map do |i|
               time = Time.now.utc + (i * 0.05) # 50ms offset per ID
-              Ace::Support::Timestamp.encode(time, format: :"50ms")
+              Ace::B36ts.encode(time, format: :"50ms")
             end
           end
 
@@ -354,10 +354,10 @@ module Ace
             fallback_result.with_report_dir(agent_dir)
           end
 
-          # Default timestamp generator using Ace::Support::Timestamp library
+          # Default timestamp generator using Ace::B36ts library
           # @return [String] 7-char timestamp ID
           def default_timestamp
-            Ace::Support::Timestamp.encode(Time.now.utc, format: :"50ms")
+            Ace::B36ts.encode(Time.now.utc, format: :"50ms")
           end
         end
       end

@@ -3,7 +3,7 @@
 require "dry/cli"
 require "stringio"
 require "ace/core/cli/dry_cli/base"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Test
@@ -114,7 +114,7 @@ module Ace
             # Generate a timestamp for the sandbox directory name
             # @return [String] Base36 timestamp ID
             def generate_timestamp
-              Ace::Support::Timestamp.encode(Time.now.utc, format: :"50ms")
+              Ace::B36ts.encode(Time.now.utc, format: :"50ms")
             end
           end
         end

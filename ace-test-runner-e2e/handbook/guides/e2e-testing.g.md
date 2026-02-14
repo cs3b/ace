@@ -121,7 +121,7 @@ Examples:
 **Benefits:**
 - **Project-local** - Artifacts stay with the codebase
 - **Already gitignored** - `.cache` is in `.gitignore`
-- **Consistent naming** - Uses ace-timestamp for unique IDs
+- **Consistent naming** - Uses ace-b36ts for unique IDs
 - **Easy debugging** - Inspect artifacts without hunting in `/tmp`
 - **Package-scoped** - Directory name includes package for clarity
 - **Test ID in name** - Each folder includes the test ID (e.g., MT-LINT-001) for easy identification
@@ -130,7 +130,7 @@ Examples:
 
 **Setup in test scenarios:**
 ```bash
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="{short-pkg}"    # e.g., git-commit (package name without ace- prefix)
 SHORT_ID="{short-id}"      # e.g., mt001 (lowercase test number)
 TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"

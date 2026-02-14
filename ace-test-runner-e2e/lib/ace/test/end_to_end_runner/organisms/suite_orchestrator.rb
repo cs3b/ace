@@ -3,7 +3,7 @@
 require "open3"
 require "fileutils"
 require "yaml"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Test
@@ -704,7 +704,7 @@ module Ace
 
           # Generate N unique run IDs for batch test runs
           #
-          # Uses Ace::Support::Timestamp library to encode unique IDs with 50ms precision,
+          # Uses Ace::B36ts library to encode unique IDs with 50ms precision,
           # ensuring distinct timestamps for coordinated sandbox/report paths.
           #
           # Offset uses 0.1 (100ms) instead of 0.05 to avoid collisions with 50ms
@@ -715,14 +715,14 @@ module Ace
           def generate_run_ids(count)
             count.times.map do |i|
               time = Time.now.utc + (i * 0.1)
-              Ace::Support::Timestamp.encode(time, format: :"50ms")
+              Ace::B36ts.encode(time, format: :"50ms")
             end
           end
 
           # Generate a timestamp for report naming
           # @return [String] Compact Base36 timestamp ID
           def default_timestamp
-            Ace::Support::Timestamp.encode(Time.now.utc, format: :"50ms")
+            Ace::B36ts.encode(Time.now.utc, format: :"50ms")
           end
 
           # Run a single test (sequential mode)

@@ -40,7 +40,7 @@ This workflow executes multiple E2E tests in parallel using Task tool subagents.
 Generate a unique suite identifier for this run:
 
 ```bash
-SUITE_ID="$(ace-timestamp encode)"
+SUITE_ID="$(ace-b36ts encode)"
 echo "Suite ID: $SUITE_ID"
 ```
 
@@ -152,7 +152,7 @@ Write the suite summary report:
 
 ```bash
 PROJECT_ROOT="$(pwd)"
-FINAL_TS="$(ace-timestamp encode)"
+FINAL_TS="$(ace-b36ts encode)"
 SUITE_REPORT="$PROJECT_ROOT/.cache/ace-test-e2e/${FINAL_TS}-final-report.md"
 ```
 
