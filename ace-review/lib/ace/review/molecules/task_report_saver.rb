@@ -2,7 +2,7 @@
 
 require "fileutils"
 require "time"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Review
@@ -83,7 +83,7 @@ module Ace
         # @param review_data [Hash] Review metadata (preset, model, etc.)
         # @return [String] Filename with format: {compact_id}-model-preset-review.md
         def self.generate_filename(review_data)
-          compact_id = Ace::Support::Timestamp.encode(Time.now)
+          compact_id = Ace::B36ts.encode(Time.now)
 
           # Use full model slug for uniqueness (e.g., "google:gemini-2.5-flash" -> "google-gemini-2-5-flash")
           model = review_data[:model] || "unknown"
