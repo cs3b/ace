@@ -2,7 +2,7 @@
 
 require "yaml"
 require "fileutils"
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Assign
@@ -10,7 +10,7 @@ module Ace
       # Manages assignment YAML file operations.
       #
       # Handles creation, loading, and updating of assignment.yaml files.
-      # Uses ace-support-timestamp for assignment ID generation.
+      # Uses ace-b36ts for assignment ID generation.
       class AssignmentManager
         # @param cache_base [String] Base cache directory
         def initialize(cache_base: nil)
@@ -185,7 +185,7 @@ module Ace
         private
 
         def generate_assignment_id
-          base_id = Ace::Support::Timestamp.now
+          base_id = Ace::B36ts.now
           candidate = base_id
           max_attempts = 100
 
