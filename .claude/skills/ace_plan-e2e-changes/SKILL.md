@@ -12,7 +12,7 @@ allowed-tools:
   - Skill
 argument-hint: "<package> [--review-report <path>] [--scope <scenario-id>]"
 last_modified: 2026-02-11
-source: ace-test-e2e-runner
+source: ace-test-runner-e2e
 ---
 
 read and run `ace-bundle wfi://plan-e2e-changes`
