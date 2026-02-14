@@ -238,9 +238,9 @@ PATH
       dry-cli (~> 1.0)
 
 PATH
-  remote: ace-test-e2e-runner
+  remote: ace-test-runner-e2e
   specs:
-    ace-test-e2e-runner (0.16.0)
+    ace-test-runner-e2e (0.16.0)
       ace-llm (>= 0.1)
       ace-support-config (>= 0.6)
       ace-support-core (>= 0.10)
@@ -289,17 +289,7 @@ GEM
       net-http (~> 0.5)
     faraday-retry (2.4.0)
       faraday (~> 2.0)
-    ffi (1.17.3)
     ffi (1.17.3-aarch64-linux-gnu)
-    ffi (1.17.3-aarch64-linux-musl)
-    ffi (1.17.3-arm-linux-gnu)
-    ffi (1.17.3-arm-linux-musl)
-    ffi (1.17.3-arm64-darwin)
-    ffi (1.17.3-x86-linux-gnu)
-    ffi (1.17.3-x86-linux-musl)
-    ffi (1.17.3-x86_64-darwin)
-    ffi (1.17.3-x86_64-linux-gnu)
-    ffi (1.17.3-x86_64-linux-musl)
     fileutils (1.8.0)
     hashdiff (1.2.1)
     json (2.18.1)
@@ -381,15 +371,6 @@ GEM
 
 PLATFORMS
   aarch64-linux-gnu
-  aarch64-linux-musl
-  arm-linux-gnu
-  arm-linux-musl
-  arm64-darwin
-  x86-linux-gnu
-  x86-linux-musl
-  x86_64-darwin
-  x86_64-linux-gnu
-  x86_64-linux-musl
 
 DEPENDENCIES
   ace-assign!
@@ -419,8 +400,8 @@ DEPENDENCIES
   ace-support-tmux!
   ace-taskflow!
   ace-test!
-  ace-test-e2e-runner!
   ace-test-runner!
+  ace-test-runner-e2e!
   bundler (~> 2.4)
   minitest (~> 5.20)
   minitest-reporters (~> 1.6)

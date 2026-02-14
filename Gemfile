@@ -32,7 +32,7 @@ group :development, :test do
   gem 'ace-integration-claude', path: 'ace-integration-claude'
   gem 'ace-test', path: 'ace-test'
   gem 'ace-support-test-helpers', path: 'ace-support-test-helpers'
-  gem 'ace-test-e2e-runner', path: 'ace-test-e2e-runner'
+  gem 'ace-test-runner-e2e', path: 'ace-test-runner-e2e'
   gem 'bundler', '~> 2.4'
   gem 'minitest', '~> 5.20'
   gem 'minitest-reporters', '~> 1.6'
