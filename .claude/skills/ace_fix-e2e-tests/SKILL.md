@@ -18,7 +18,7 @@ allowed-tools:
   - Glob
 argument-hint: "[package] [test-id]"
 last_modified: 2026-02-11
-source: ace-test-e2e-runner
+source: ace-test-runner-e2e
 ---
 
 read and run `ace-bundle wfi://fix-e2e-tests`
