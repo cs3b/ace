@@ -232,7 +232,7 @@ class GemTestCase < AceTestCase; end
 For end-to-end tests (agent-executed), use the `.mt.md` format:
 
 - **Location**: `{package}/test/e2e/*.mt.md`
-- **Format**: See [E2E Testing Guide](../ace-test-e2e-runner/handbook/guides/e2e-testing.g.md)
+- **Format**: See [E2E Testing Guide](../ace-test-runner-e2e/handbook/guides/e2e-testing.g.md)
 - **Examples**: `ace-git-commit/test/e2e/`, `ace-lint/test/e2e/`
 
 E2E tests are for scenarios too slow/complex for unit tests, requiring real tool installations or full workflow validation.
