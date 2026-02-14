@@ -1,0 +1,5 @@
+# Default session preset
+# 3-pane layout: claude (left 40%), shell (right-top), nvim (right-bottom)
+name: default
+windows:
+  - preset: cc
