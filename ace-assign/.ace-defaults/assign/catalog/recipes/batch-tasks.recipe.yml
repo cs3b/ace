@@ -19,6 +19,7 @@ phases:
       foreach: taskrefs
       child_phase: work-on-task
       child_context: fork
+    note: "Each child marks its task done after implementation"
   - name: release
     required: true
     note: "Initial version bump (usually minor)"
