@@ -1,0 +1,10 @@
+test-id: TS-TIMESTAMP-003
+title: Hierarchical Split Format
+area: timestamp
+package: ace-b36ts
+priority: medium
+requires:
+  tools: [ace-b36ts, jq]
+  ruby: ">= 3.0"
+
+setup: []
