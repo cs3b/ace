@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.503] - 2026-02-14
+
+### Fixed
+
+- **ace-support-tmux v0.4.1**: `ace-tmux --root /path` inside tmux now adds a window instead of erroring with "sessions should be nested" — unknown-arg routing is now context-aware
+
 ## [0.9.502] - 2026-02-14
 
 ### Added
