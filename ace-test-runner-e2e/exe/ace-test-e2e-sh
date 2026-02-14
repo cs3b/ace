@@ -1,0 +1,38 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# ace-test-e2e-sh - Execute commands within E2E test sandbox
+#
+# Usage:
+#   ace-test-e2e-sh <test-dir> <command...>
+#   ace-test-e2e-sh <test-dir> bash <<'SANDBOX'
+#     git add . && git commit -m "test"
+#   SANDBOX
+
+test_dir = ARGV.shift
+
+unless test_dir
+  warn "Usage: ace-test-e2e-sh <test-dir> [command...]"
+  exit 1
+end
+
+test_dir = File.expand_path(test_dir)
+
+unless test_dir.include?("/.cache/ace-test-e2e/")
+  warn "FATAL: Not a sandbox path: #{test_dir}"
+  exit 1
+end
+
+unless Dir.exist?(test_dir)
+  warn "FATAL: Sandbox directory not found: #{test_dir}"
+  exit 1
+end
+
+Dir.chdir(test_dir)
+ENV["PROJECT_ROOT_PATH"] = test_dir
+
+if ARGV.empty?
+  exec "bash"
+else
+  exec(*ARGV)
+end
