@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Git
@@ -166,7 +166,7 @@ module Ace
 
           # Generate default backup path
           def generate_backup_path
-            session_id = Ace::Support::Timestamp.encode(Time.now)
+            session_id = Ace::B36ts.encode(Time.now)
             repo_name = File.basename(repository_path)
             File.join(File.dirname(repository_path), "#{repo_name}-backup-#{session_id}.git")
           end
