@@ -1,5 +1,5 @@
 # Default configuration for e2e test runner
-# This file provides defaults for the ace-test-e2e-runner gem
+# This file provides defaults for the ace-test-runner-e2e gem
 
 paths:
   # Where test scenarios are stored in packages
