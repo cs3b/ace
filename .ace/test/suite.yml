@@ -39,8 +39,8 @@ test_suite:
       group: tools
       priority: 1
 
-    - name: ace-support-timestamp
-      path: ace-support-timestamp
+    - name: ace-b36ts
+      path: ace-b36ts
       group: foundation
       priority: 2
 
@@ -129,8 +129,8 @@ test_suite:
       group: foundation
       priority: 2
 
-    - name: ace-support-tmux
-      path: ace-support-tmux
+    - name: ace-tmux
+      path: ace-tmux
       group: foundation
       priority: 2
 
