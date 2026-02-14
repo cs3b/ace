@@ -13,5 +13,9 @@ ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
 # Load bundler
 require "bundler/setup"
 
+# Bundler already loaded gems into $LOAD_PATH. Clean up bundler/Ruby env vars
+# to prevent pollution of tmux server and session environments.
+%w[BUNDLE_GEMFILE BUNDLE_BIN_PATH RUBYOPT RUBYLIB].each { |v| ENV.delete(v) }
+
 # Now require and run the actual ace-tmux executable
 load ace_meta_root.join("ace-tmux/exe/ace-tmux").to_s
