@@ -15,7 +15,7 @@ allowed-tools:
   - Skill
 argument-hint: "<package> [--dry-run] [--run-tests]"
 last_modified: 2026-02-11
-source: ace-test-e2e-runner
+source: ace-test-runner-e2e
 ---
 
 read and run `ace-bundle wfi://manage-e2e-tests`

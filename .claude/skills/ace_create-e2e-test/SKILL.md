@@ -12,7 +12,7 @@ allowed-tools:
   - Grep
 argument-hint: <package> <area> [--context <description>]
 last_modified: 2026-01-19
-source: ace-test-e2e-runner
+source: ace-test-runner-e2e
 ---
 
 read and run `ace-bundle wfi://create-e2e-test`
