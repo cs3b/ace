@@ -46,8 +46,9 @@ module Ace
             args = inside_tmux? ? ["window"] : ["start"]
           elsif !known_command?(args.first)
             # If first argument isn't a known command,
-            # prepend the default command (so `ace-tmux dev` = `ace-tmux start dev`)
-            args = [DEFAULT_COMMAND] + args
+            # prepend the default command based on tmux context
+            default = inside_tmux? ? "window" : DEFAULT_COMMAND
+            args = [default] + args
           end
 
           Dry::CLI.new(self).call(arguments: args)
