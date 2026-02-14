@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Tmux
-      VERSION = "0.4.0"
+      VERSION = "0.4.1"
     end
   end
 end
