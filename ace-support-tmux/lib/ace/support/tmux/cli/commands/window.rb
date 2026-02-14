@@ -32,7 +32,7 @@ module Ace
               "code-editor -s dev        # Add to specific session"
             ]
 
-            argument :preset, required: true, desc: "Window preset name"
+            argument :preset, required: false, desc: "Window preset name (default: from config)"
 
             option :name, type: :string, aliases: %w[-n], desc: "Window name (default: basename of --root)"
             option :root, type: :string, aliases: %w[-r], desc: "Working directory for the window"
@@ -40,9 +40,12 @@ module Ace
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show detailed output"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
 
-            def call(preset:, **options)
+            def call(preset: nil, **options)
               config = Tmux.config
               tmux_bin = config.dig("tmux_binary") || "tmux"
+
+              preset ||= config.dig("defaults", "window")
+              raise Ace::Core::CLI::Error.new("No preset specified and no default window configured") unless preset
 
               preset_loader = Molecules::PresetLoader.new(
                 gem_root: Tmux.gem_root

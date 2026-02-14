@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-14
+
+### Added
+
+- Context-aware default presets — `ace-tmux` with no arguments starts default session (outside tmux) or adds default window (inside tmux)
+- `defaults` config section in `config.yml` with `session` and `window` default preset names
+- `--root`/`-r` option on `start` command for working directory override (parity with `window` command)
+- `inside_tmux?` detection method on CLI for context-aware routing
+
+### Changed
+
+- `preset` argument is now optional on both `start` and `window` commands — falls back to configured defaults
+
 ## [0.3.4] - 2026-02-13
 
 ### Fixed

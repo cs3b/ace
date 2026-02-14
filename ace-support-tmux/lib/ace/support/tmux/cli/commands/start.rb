@@ -37,16 +37,20 @@ module Ace
               "dev --force                # Kill existing and recreate"
             ]
 
-            argument :preset, required: true, desc: "Session preset name"
+            argument :preset, required: false, desc: "Session preset name (default: from config)"
 
             option :detach, type: :boolean, aliases: %w[-D], desc: "Don't attach after creating session"
             option :force, type: :boolean, desc: "Kill existing session and recreate"
+            option :root, type: :string, aliases: %w[-r], desc: "Working directory for the session"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show detailed output"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
 
-            def call(preset:, **options)
+            def call(preset: nil, **options)
               config = Tmux.config
               tmux_bin = config.dig("tmux_binary") || "tmux"
+
+              preset ||= config.dig("defaults", "session")
+              raise Ace::Core::CLI::Error.new("No preset specified and no default session configured") unless preset
 
               preset_loader = Molecules::PresetLoader.new(
                 gem_root: Tmux.gem_root
@@ -65,7 +69,8 @@ module Ace
               manager.start(
                 preset,
                 detach: options[:detach] || false,
-                force: options[:force] || false
+                force: options[:force] || false,
+                root: options[:root]
               )
               puts "Session '#{preset}' created." if options[:detach] && !options[:quiet]
             rescue Molecules::PresetNotFoundError => e
