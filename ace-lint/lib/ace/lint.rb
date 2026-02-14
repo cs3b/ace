@@ -5,8 +5,8 @@ require_relative "lint/version"
 # Load ace-config for configuration cascade management
 require "ace/support/config"
 
-# Load ace-support-timestamp for compact ID generation
-require "ace/support/timestamp"
+# Load ace-b36ts for compact ID generation
+require "ace/b36ts"
 
 # Models
 require_relative "lint/models/validation_error"
