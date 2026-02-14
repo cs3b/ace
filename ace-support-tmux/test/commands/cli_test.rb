@@ -98,6 +98,36 @@ class CliTest < Minitest::Test
     ENV["TMUX"] = original
   end
 
+  def test_unknown_args_outside_tmux_routes_to_start
+    original = ENV["TMUX"]
+    ENV.delete("TMUX")
+    args = ["--root", "/tmp"]
+    routed = if args.empty?
+               CLI.inside_tmux? ? ["window"] : ["start"]
+             elsif !CLI.known_command?(args.first)
+               default = CLI.inside_tmux? ? "window" : CLI::DEFAULT_COMMAND
+               [default] + args
+             end
+    assert_equal ["start", "--root", "/tmp"], routed
+  ensure
+    ENV["TMUX"] = original
+  end
+
+  def test_unknown_args_inside_tmux_routes_to_window
+    original = ENV["TMUX"]
+    ENV["TMUX"] = "/tmp/tmux-1000/default,12345,0"
+    args = ["--root", "/tmp"]
+    routed = if args.empty?
+               CLI.inside_tmux? ? ["window"] : ["start"]
+             elsif !CLI.known_command?(args.first)
+               default = CLI.inside_tmux? ? "window" : CLI::DEFAULT_COMMAND
+               [default] + args
+             end
+    assert_equal ["window", "--root", "/tmp"], routed
+  ensure
+    ENV["TMUX"] = original
+  end
+
   def test_list_command_runs
     Ace::Support::Tmux.reset_config!
     output = capture_io { CLI.start(["list"]) }[0]
