@@ -44,7 +44,7 @@ The Base36 format has approximately **1.85 seconds of precision**:
 - The system appends a counter (e.g., `i50jj3-1`, `i50jj3-2`) to handle collisions
 - This precision is intentional for compactness and is sufficient for task/idea use cases
 
-For more details on the encoding scheme, see the [ace-timestamp README](https://github.com/cs3b/ace-meta/tree/main/ace-timestamp).
+For more details on the encoding scheme, see the [ace-b36ts README](https://github.com/cs3b/ace-meta/tree/main/ace-b36ts).
 
 ## Filename Formats
 

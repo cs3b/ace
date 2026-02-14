@@ -2,7 +2,7 @@
 
 require "pathname"
 require "set"
-require "ace/support/timestamp"
+require "ace/b36ts"
 require_relative "../models/idea"
 require_relative "release_resolver"
 require_relative "config_loader"
@@ -95,7 +95,7 @@ module Ace
           # Parse reference format - supports:
           # - Compact Base36 format: "abc123"
           # - Partial name search for anything else
-          format = Ace::Support::Timestamp.detect_format(reference)
+          format = Ace::B36ts.detect_format(reference)
 
           if format == :"2sec"
             # Full ID reference (compact Base36)
@@ -365,10 +365,10 @@ module Ace
 
           return Time.now unless id
 
-          format = Ace::Support::Timestamp.detect_format(id)
+          format = Ace::B36ts.detect_format(id)
           if format == :"2sec"
             # Compact Base36 format - decode to Time
-            Ace::Support::Timestamp.decode(id)
+            Ace::B36ts.decode(id)
           else
             # Fallback for unrecognized format
             Time.now
