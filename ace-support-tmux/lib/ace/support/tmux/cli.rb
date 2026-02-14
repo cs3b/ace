@@ -40,9 +40,13 @@ module Ace
             return 0
           end
 
-          # If first argument isn't a known command and args aren't empty,
-          # prepend the default command (so `ace-tmux dev` = `ace-tmux start dev`)
-          if args.any? && !known_command?(args.first)
+          # When args are empty, route based on tmux context:
+          # inside tmux → add default window, outside → start default session
+          if args.empty?
+            args = inside_tmux? ? ["window"] : ["start"]
+          elsif !known_command?(args.first)
+            # If first argument isn't a known command,
+            # prepend the default command (so `ace-tmux dev` = `ace-tmux start dev`)
             args = [DEFAULT_COMMAND] + args
           end
 
@@ -57,6 +61,13 @@ module Ace
           return false if arg.nil?
 
           KNOWN_COMMANDS.include?(arg)
+        end
+
+        # Check if currently running inside a tmux session
+        #
+        # @return [Boolean]
+        def self.inside_tmux?
+          ENV.key?("TMUX") && !ENV["TMUX"].to_s.empty?
         end
 
         # Register commands

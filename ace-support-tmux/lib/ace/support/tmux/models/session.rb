@@ -8,6 +8,7 @@ module Ace
         class Session
           attr_reader :name, :root, :windows, :pre_window, :startup_window,
                       :on_project_start, :on_project_exit, :attach, :tmux_options
+          attr_writer :root
 
           # @param name [String] Session name
           # @param root [String, nil] Base working directory
