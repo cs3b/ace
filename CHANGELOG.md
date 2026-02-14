@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - **ace-test-runner-e2e**: Renamed package from `ace-test-e2e-runner` to `ace-test-runner-e2e` and binary from `ace-test-suite-e2e` to `ace-test-e2e-suite` for naming consistency
 
+### Fixed
+
+- **ace-tmux v0.5.2**: First window name when starting a session with `--root` now derives from directory basename, matching `ace-tmux window` behavior
+
 ## [0.9.505] - 2026-02-14
 
 ### Fixed
