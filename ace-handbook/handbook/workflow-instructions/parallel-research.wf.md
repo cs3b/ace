@@ -90,7 +90,7 @@ Set up and execute parallel research across multiple AI agents, producing consis
    ```
 
 2. **Generate Timestamps**
-   - Use `ace-support-timestamp` or similar for unique IDs
+   - Use `ace-b36ts` or similar for unique IDs
    - Format: `{6-char-timestamp}-{agent-name}`
    - Example: `8ous1t-claude`, `8ous2a-gemini`
 
