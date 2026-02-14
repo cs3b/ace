@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module Review
     module Atoms
       # Generates unique 8-character Base36 IDs for feedback items.
       #
-      # Uses ace-support-timestamp to generate timestamp-based IDs with
+      # Uses ace-b36ts to generate timestamp-based IDs with
       # millisecond precision that sort chronologically. This enables
       # natural ordering of feedback items by creation time.
       #
@@ -27,7 +27,7 @@ module Ace
         #
         # @return [String] 8-character Base36 ID (e.g., "i50jj3ab")
         def self.generate
-          Ace::Support::Timestamp.encode(Time.now.utc, format: :ms)
+          Ace::B36ts.encode(Time.now.utc, format: :ms)
         end
 
         # Generate a new ID for a specific time (useful for testing)
@@ -35,12 +35,12 @@ module Ace
         # @param time [Time] The time to encode
         # @return [String] 8-character Base36 ID
         def self.generate_for(time)
-          Ace::Support::Timestamp.encode(time.utc, format: :ms)
+          Ace::B36ts.encode(time.utc, format: :ms)
         end
 
         # Generate a sequence of unique, sequential IDs
         #
-        # Uses ace-support-timestamp's encode_sequence to generate IDs that are
+        # Uses ace-b36ts's encode_sequence to generate IDs that are
         # guaranteed unique even when created in rapid succession. Each ID is
         # strictly greater than the previous (lexicographically).
         #
@@ -54,7 +54,7 @@ module Ace
         #   ids.uniq.length #=> 5  # All unique
         #   ids == ids.sort #=> true  # Already sorted
         def self.generate_sequence(count)
-          Ace::Support::Timestamp::Atoms::CompactIdEncoder.encode_sequence(
+          Ace::B36ts::Atoms::CompactIdEncoder.encode_sequence(
             Time.now.utc,
             count: count,
             format: :ms
