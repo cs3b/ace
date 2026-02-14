@@ -24,6 +24,11 @@ steps:
       - "Work on task {{taskref}}."
       - Implement the required changes following project conventions.
 
+  - name: mark-task-done
+    instructions:
+      - "Mark task {{taskref}} as done."
+      - "Run: ace-taskflow task done {{taskref}}"
+
   - name: release-minor
     skill: ace-release
     instructions:

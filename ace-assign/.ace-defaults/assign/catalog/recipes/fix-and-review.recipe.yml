@@ -16,6 +16,8 @@ phases:
   - name: work-on-task
     required: true
     instructions_template: "Fix the issue described in task {{taskref}}."
+  - name: mark-task-done
+    required: false
   - name: verify-test-suite
     required: true
   - name: create-pr

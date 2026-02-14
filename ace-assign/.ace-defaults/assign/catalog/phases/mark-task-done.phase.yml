@@ -1,0 +1,22 @@
+name: mark-task-done
+skill: null
+description: Mark task as done in ace-taskflow after successful implementation
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Task must be implemented before marking done"
+
+produces: [task-status-update]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "Needs access to ace-taskflow CLI in main context"
+
+when_to_skip:
+  - "Task was already marked done"
+  - "Implementation was not completed"
+
+effort: trivial
+tags: [task-management, post-implementation]
