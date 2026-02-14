@@ -90,6 +90,12 @@ git:
     ace-test-runner:
       glob: "ace-test-runner/**"
 
+    ace-tmux:
+      glob: "ace-tmux/**"
+
+    ace-b36ts:
+      glob: "ace-b36ts/**"
+
   # Project-specific conventions
   conventions:
     format: conventional
