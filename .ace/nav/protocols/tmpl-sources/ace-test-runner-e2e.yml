@@ -1,0 +1,11 @@
+---
+# Template Sources Protocol Configuration for ace-test-runner-e2e gem
+name: ace-test-runner-e2e
+type: gem
+description: E2E test templates from ace-test-runner-e2e gem
+priority: 10
+
+config:
+  relative_path: handbook/templates
+  pattern: "*.template.md"
+  enabled: true
