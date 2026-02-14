@@ -55,12 +55,11 @@ module Ace
 
         private
 
-        # Derive the first window name from root directory when a root override is provided.
+        # Derive the first window name from the effective working directory.
         # Mirrors WindowManager#resolve_window_name: root basename wins over preset name.
-        def resolve_first_window_name(preset_window_name, root_override)
-          return File.basename(root_override) if root_override
-
-          preset_window_name
+        def resolve_first_window_name(preset_window_name, root_override, session_root)
+          effective_root = root_override || session_root || Dir.pwd
+          File.basename(effective_root)
         end
 
         def session_exists?(name)
@@ -76,7 +75,7 @@ module Ace
 
         def create_session(session, root_override: nil)
           first_window = session.windows.first
-          first_window_name = resolve_first_window_name(first_window&.name, root_override)
+          first_window_name = resolve_first_window_name(first_window&.name, root_override, session.root)
           cmd = Atoms::TmuxCommandBuilder.new_session(
             session.name,
             root: session.root,

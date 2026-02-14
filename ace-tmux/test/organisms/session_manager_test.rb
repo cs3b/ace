@@ -348,13 +348,52 @@ class SessionManagerTest < Minitest::Test
     refute_includes cmd_str, "-n editor", "Should not use preset window name when root override provided"
   end
 
-  def test_start_without_root_keeps_preset_window_name
+  def test_start_without_root_names_first_window_from_preset_root
     @manager.start("dev", detach: true)
 
     new_session_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-session") }
     assert new_session_cmd, "Expected new-session command"
-    # Without root override, should use preset window name
-    assert_includes new_session_cmd.join(" "), "editor"
+    # Without root override, should use basename of preset's root (~/projects/app → "app")
+    cmd_str = new_session_cmd.join(" ")
+    assert_includes cmd_str, "app"
+    refute_includes cmd_str, "-n editor", "Should not use preset window name"
+  end
+
+  def test_start_without_root_or_preset_root_uses_cwd
+    write_preset(@temp_dir, "sessions", "no-root", {
+      "name" => "no-root",
+      "windows" => [
+        { "name" => "shell", "panes" => [{ "commands" => ["bash"] }] }
+      ]
+    })
+
+    loader = Ace::Tmux::Molecules::PresetLoader.new(
+      gem_root: @temp_dir,
+      start_path: @temp_dir
+    )
+    builder = Ace::Tmux::Molecules::SessionBuilder.new(preset_loader: loader)
+
+    executor = TmuxTestHelper::MockExecutor.new(
+      capture_responses: {
+        "tmux has-session -t no-root" => mock_result(success: false, exit_code: 1),
+        :default => mock_result(stdout: "@0")
+      }
+    )
+
+    manager = Ace::Tmux::Organisms::SessionManager.new(
+      executor: executor,
+      session_builder: builder
+    )
+
+    manager.start("no-root", detach: true)
+
+    new_session_cmd = executor.captured_commands.find { |cmd| cmd.include?("new-session") }
+    assert new_session_cmd, "Expected new-session command"
+    # Without root override or preset root, should use CWD basename
+    cmd_str = new_session_cmd.join(" ")
+    expected_name = File.basename(Dir.pwd)
+    assert_includes cmd_str, expected_name,
+      "First window should be named '#{expected_name}' (CWD basename), got: #{cmd_str}"
   end
 
   def test_start_without_root_uses_preset_root
