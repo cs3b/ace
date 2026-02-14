@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-02-14
+
+### Added
+- Add `ace:manage-task-status` skill for task lifecycle operations (start, done, undone)
+- Add `ace:reorganize-task` skill for task hierarchy operations (promote, demote, convert)
+- Add `manage-task-status` workflow for status management guidance
+
+### Changed
+- Update timestamp dependency to ace-b36ts
+
 ## [0.34.7] - 2026-02-12
 
 ### Fixed
