@@ -337,6 +337,26 @@ class SessionManagerTest < Minitest::Test
     assert_includes new_session_cmd.join(" "), "/tmp/override"
   end
 
+  def test_start_with_root_override_names_first_window_from_basename
+    @manager.start("dev", detach: true, root: "/home/mc/my-project")
+
+    new_session_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-session") }
+    assert new_session_cmd, "Expected new-session command"
+    # First window should be named after the root directory basename, not the preset window name
+    cmd_str = new_session_cmd.join(" ")
+    assert_includes cmd_str, "my-project"
+    refute_includes cmd_str, "-n editor", "Should not use preset window name when root override provided"
+  end
+
+  def test_start_without_root_keeps_preset_window_name
+    @manager.start("dev", detach: true)
+
+    new_session_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-session") }
+    assert new_session_cmd, "Expected new-session command"
+    # Without root override, should use preset window name
+    assert_includes new_session_cmd.join(" "), "editor"
+  end
+
   def test_start_without_root_uses_preset_root
     @manager.start("dev", detach: true)
 
