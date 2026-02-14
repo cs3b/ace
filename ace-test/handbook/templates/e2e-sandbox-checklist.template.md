@@ -41,7 +41,7 @@ update:
 ### 1. Create Isolated Directory
 
 ```bash
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="{{short-pkg}}"  # Package name without ace- prefix
 SHORT_ID="mt{{nnn}}"       # Lowercase test number
 TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
@@ -268,7 +268,7 @@ After running test:
 
 set -e
 
-TIMESTAMP_ID="$(ace-timestamp encode)"
+TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="${1:-unknown}"
 SHORT_ID="${2:-mt000}"
 
