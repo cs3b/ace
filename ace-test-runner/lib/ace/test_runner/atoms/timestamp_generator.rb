@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "ace/support/timestamp"
+require "ace/b36ts"
 
 module Ace
   module TestRunner
     module Atoms
       # Generates Base36 compact IDs for test reports
       #
-      # Uses ace-timestamp to generate 6-character compact IDs (e.g., "i50jj3")
+      # Uses ace-b36ts to generate 6-character compact IDs (e.g., "i50jj3")
       # for test report directories and files. Reports are temporary, so no
       # backward compatibility with legacy timestamp format is needed.
       #
@@ -27,7 +27,7 @@ module Ace
         # @param time [Time] The time to encode (default: Time.now)
         # @return [String] 6-character Base36 compact ID
         def generate(time = Time.now)
-          Ace::Support::Timestamp.encode(time)
+          Ace::B36ts.encode(time)
         end
 
         # Generate an ISO timestamp for human-readable output
@@ -61,7 +61,7 @@ module Ace
         # @param id_str [String] The Base36 ID string to parse
         # @return [Time, nil] Parsed time or nil if invalid
         def parse(id_str)
-          Ace::Support::Timestamp.decode(id_str)
+          Ace::B36ts.decode(id_str)
         rescue ArgumentError
           nil
         end
@@ -81,7 +81,7 @@ module Ace
         # @param value [String] The ID string to analyze
         # @return [Symbol, nil] :"2sec" for valid Base36 IDs, :timestamp for legacy format, or nil
         def self.detect_format(value)
-          Ace::Support::Timestamp.detect_format(value)
+          Ace::B36ts.detect_format(value)
         end
 
         private
