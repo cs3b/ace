@@ -27,8 +27,9 @@ module Ace
         # Start a new workflow assignment from config file
         #
         # @param config_path [String] Path to job.yaml config
+        # @param parent_id [String, nil] Parent assignment ID for hierarchy linking
         # @return [Hash] Result with assignment and first phase
-        def start(config_path)
+        def start(config_path, parent_id: nil)
           raise ConfigNotFoundError, "Config file not found: #{config_path}" unless File.exist?(config_path)
 
           config = YAML.safe_load_file(config_path, permitted_classes: [Time, Date])
@@ -39,11 +40,15 @@ module Ace
 
           raise Error, "No phases defined in config" if phases_config.empty?
 
+          # Expand sub-phase declarations into batch parent + child phases
+          phases_config = expand_sub_phases(phases_config)
+
           # Create assignment
           assignment = assignment_manager.create(
             name: assignment_config["name"] || File.basename(config_path, ".yaml"),
             description: assignment_config["description"],
-            source_config: config_path
+            source_config: config_path,
+            parent: parent_id
           )
 
           # Create initial phase files
@@ -75,7 +80,8 @@ module Ace
             created_at: assignment.created_at,
             updated_at: assignment.updated_at,
             source_config: archived_path,
-            cache_dir: assignment.cache_dir
+            cache_dir: assignment.cache_dir,
+            parent: assignment.parent
           )
           assignment_manager.update(assignment)
 
@@ -318,6 +324,61 @@ module Ace
         end
 
         private
+
+        # Expand phases with sub_phases into batch parent + child structure.
+        #
+        # When a phase declares `sub_phases` (from workflow frontmatter), it becomes
+        # a batch parent with fork context, and each sub-phase becomes a child phase.
+        # This reuses the existing batch-parent pattern from compose.
+        #
+        # Numbers are pre-assigned based on the original index position so that
+        # subsequent phases keep their expected numbering (e.g., 010, 020, 030)
+        # regardless of how many children are expanded.
+        #
+        # @param phases_config [Array<Hash>] Original phases from config
+        # @return [Array<Hash>] Expanded phases with parent-child numbers
+        def expand_sub_phases(phases_config)
+          # Check if any phase has sub_phases; return early if none
+          has_sub_phases = phases_config.any? do |phase|
+            subs = phase["sub_phases"] || phase["sub-phases"]
+            subs.is_a?(Array) && subs.any?
+          end
+          return phases_config unless has_sub_phases
+
+          expanded = []
+
+          phases_config.each_with_index do |phase, index|
+            sub_phases = phase["sub_phases"] || phase["sub-phases"]
+            parent_number = phase["number"] || Atoms::NumberGenerator.from_index(index)
+
+            if sub_phases.is_a?(Array) && sub_phases.any?
+              # Create batch parent with fork context
+              parent_phase = phase.merge(
+                "number" => parent_number,
+                "context" => phase["context"] || "fork"
+              )
+              parent_phase.delete("sub_phases")
+              parent_phase.delete("sub-phases")
+              expanded << parent_phase
+
+              # Create child phases under the parent
+              sub_phases.each_with_index do |sub_name, sub_idx|
+                child_number = "#{parent_number}.#{format('%02d', sub_idx + 1)}"
+                expanded << {
+                  "number" => child_number,
+                  "name" => sub_name,
+                  "instructions" => "Execute #{sub_name} sub-phase.",
+                  "parent" => parent_number
+                }
+              end
+            else
+              # Pre-assign number to non-sub-phase entries to maintain position
+              expanded << phase.merge("number" => parent_number)
+            end
+          end
+
+          expanded
+        end
 
         # Archive source config into the task's phases/ directory.
         # If config is already in a phases/ directory, keeps it in place.

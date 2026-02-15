@@ -133,6 +133,42 @@ class ListCommandTest < AceAssignTestCase
     end
   end
 
+  def test_list_tree_format
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      config_path = create_test_config(cache_dir)
+      executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::List.new.call(tree: true)
+      end
+
+      # Tree output should contain the assignment name
+      assert_includes output.first, "test-session"
+      # Should not have table header
+      refute_includes output.first, "ID"
+      refute_includes output.first, "STATUS"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_list_tree_no_assignments
+    with_temp_cache do |cache_dir|
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::List.new.call(tree: true)
+      end
+
+      assert_includes output.first, "No assignments found"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_list_marks_current_assignment
     with_temp_cache do |cache_dir|
       Ace::Assign.config["cache_dir"] = cache_dir
