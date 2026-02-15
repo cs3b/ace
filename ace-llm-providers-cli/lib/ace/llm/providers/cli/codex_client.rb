@@ -143,6 +143,11 @@ module Ace
             # Use codex exec for non-interactive execution
             cmd = ["codex", "exec"]
 
+            # Add sandbox mode if specified by caller
+            if options[:sandbox]
+              cmd << "--sandbox" << options[:sandbox].to_s
+            end
+
             # Add model selection if not default
             if @model && @model != DEFAULT_MODEL
               cmd << "--model" << @model
