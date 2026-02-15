@@ -1,0 +1,34 @@
+name: release-only
+description: Version bump and changelog update without code changes
+
+matches:
+  - "release *"
+  - "bump version"
+  - "changelog update"
+  - "version bump"
+
+parameters:
+  version_type:
+    required: false
+    default: "patch"
+    description: "Version bump type (major, minor, or patch)"
+  push:
+    required: false
+    default: false
+    description: "Whether to push changes to remote"
+
+phases:
+  - name: onboard
+    required: false
+  - name: release
+    required: true
+    instructions_template: "Bump {{version_type}} version and update CHANGELOGs."
+  - name: commit
+    required: true
+
+customization_hints:
+  - "Skip onboard if already in context"
+  - "Add push-to-remote for immediate push after commit"
+  - "Use minor version for new features"
+  - "Use patch version for bug fixes"
+  - "Use major version for breaking changes"
