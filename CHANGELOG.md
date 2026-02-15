@@ -25,6 +25,51 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - **ace-tmux v0.5.2**: First window name when starting a session with `--root` now derives from directory basename, matching `ace-tmux window` behavior
+- **ace-llm-providers-cli v0.16.3**: Clear `CLAUDECODE` env var for subprocess spawning to fix nested session guard (Claude Code v2.1.41+); add `--sandbox read-only` to Codex to prevent agentic command execution during reviews
+
+## [0.9.510] - 2026-02-15
+
+### Fixed
+- **ace-bundle v0.30.5**: Fix typo `orde2` → `order` and indentation alignment in `SectionProcessor`
+- **ace-llm-providers-cli v0.16.5**: Optimize subprocess environment — pass minimal env override instead of copying entire `ENV.to_h`
+
+## [0.9.509] - 2026-02-15
+
+### Fixed
+- **ace-llm-providers-cli v0.16.4**: Pass Claude prompt via stdin to avoid Linux `MAX_ARG_STRLEN` (128KB) limit; remove redundant `--system-prompt` CLI arg
+- **ace-bundle v0.30.4**: Fix typo in `format_sections_json_full` method name
+- **ace-assign v0.9.3**: Validate that frontmatter hint `include`/`skip` values are strings
+
+### Added
+- **ace-llm v0.22.1**: `sandbox:` parameter on `QueryInterface.query()` for controlling CLI provider sandbox mode
+
+### Changed
+- **ace-llm-providers-cli v0.16.4**: Codex `--sandbox` mode is now caller-controlled instead of hardcoded `read-only`
+- **ace-review v0.38.1**: LlmExecutor passes `sandbox: "read-only"` to enforce non-agentic mode for CLI providers
+
+## [0.9.508] - 2026-02-14
+
+### Fixed
+
+- **ace-assign v0.9.2**: Frontmatter parser now rejects hints with both `include` and `skip` (mutual exclusivity validation)
+
+## [0.9.507] - 2026-02-14
+
+### Fixed
+
+- **ace-assign v0.9.1**: Tree formatter now correctly handles child-before-parent input ordering (two-pass index build)
+
+## [0.9.506] - 2026-02-14
+
+### Added
+
+- **ace-assign v0.9.0**: Declarative assignment frontmatter — `assign:` block in `.s.md` and `.wf.md` files declares assignment intent (goal, variables, hints, sub-phases, context, parent)
+- **ace-assign v0.9.0**: `AssignFrontmatterParser` atom for extracting and validating `assign:` frontmatter blocks
+- **ace-assign v0.9.0**: `TreeFormatter` atom for rendering assignment hierarchy as indented tree with Unicode connectors
+- **ace-assign v0.9.0**: Parent-child assignment linking via `parent` field in Assignment model
+- **ace-assign v0.9.0**: `ace-assign list --tree` option for hierarchical assignment view
+- **ace-assign v0.9.0**: Sub-phase fork enforcement in executor for phases with sub-phases
+- **ace-assign v0.9.0**: Compose workflow integration — step 0 reads `assign:` frontmatter as structured input
 
 ## [0.9.505] - 2026-02-14
 
