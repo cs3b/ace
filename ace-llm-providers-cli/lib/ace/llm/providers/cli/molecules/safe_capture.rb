@@ -20,14 +20,17 @@ module Ace
             # @param timeout [Integer] Timeout in seconds
             # @param stdin_data [String, nil] Data to write to stdin
             # @param chdir [String, nil] Working directory
+            # @param env [Hash, nil] Environment variables (merged with current env)
             # @param provider_name [String] Provider name for error messages
             # @return [Array(String, String, Process::Status)] [stdout, stderr, status]
             # @raise [Ace::LLM::ProviderError] on timeout
-            def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, provider_name: "CLI")
+            def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, env: nil, provider_name: "CLI")
               opts = {}
               opts[:chdir] = chdir if chdir
 
-              Open3.popen3(*cmd, **opts) do |stdin, stdout, stderr, wait_thr|
+              args = env ? [env, *cmd] : cmd
+
+              Open3.popen3(*args, **opts) do |stdin, stdout, stderr, wait_thr|
                 if stdin_data
                   stdin.write(stdin_data)
                 end

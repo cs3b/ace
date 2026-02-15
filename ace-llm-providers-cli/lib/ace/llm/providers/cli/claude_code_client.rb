@@ -48,8 +48,8 @@ module Ace
             # Convert messages to prompt format
             prompt = format_messages_as_prompt(messages)
 
-            cmd = build_claude_command(prompt, options)
-            stdout, stderr, status = execute_claude_command(cmd)
+            cmd = build_claude_command(options)
+            stdout, stderr, status = execute_claude_command(cmd, prompt)
 
             parse_claude_response(stdout, stderr, status, prompt, options)
           rescue => e
@@ -119,16 +119,9 @@ module Ace
             false
           end
 
-          def build_claude_command(prompt, options)
+          def build_claude_command(options)
             cmd = ["claude"]
             cmd << "-p"
-
-            # Add prompt (from string or file)
-            if prompt.is_a?(String) && File.exist?(prompt)
-              cmd << File.read(prompt)
-            else
-              cmd << prompt.to_s
-            end
 
             # Always use JSON output for consistent parsing
             cmd << "--output-format" << "json"
@@ -138,22 +131,9 @@ module Ace
               cmd << "--model" << @model
             end
 
-            # Add system prompt if provided (look for it in various places)
-            system_content = options[:system_instruction] ||
-                           options[:system] ||
-                           options[:system_prompt] ||
-                           @generation_config[:system_prompt]
-
-            if system_content
-              cmd << "--system-prompt" << system_content.to_s
-            end
-
-            # Add append system prompt if provided
-            # Note: append_system_prompt is deprecated, use system_append instead
-            append_content = options[:system_append] || options[:append_system_prompt]
-            if append_content
-              cmd << "--append-system-prompt" << append_content.to_s
-            end
+            # Prompt is passed via stdin to avoid exceeding Linux MAX_ARG_STRLEN
+            # (128KB per-argument limit). System content is already embedded in the
+            # formatted prompt via format_messages_as_prompt.
 
             # Add temperature if provided
             temp = options[:temperature] || @generation_config[:temperature]
@@ -174,9 +154,14 @@ module Ace
           end
 
 
-          def execute_claude_command(cmd)
+          def execute_claude_command(cmd, prompt)
             timeout_val = @options[:timeout] || 120
-            Molecules::SafeCapture.call(cmd, timeout: timeout_val, provider_name: "Claude")
+            # Clear CLAUDECODE env var so `claude -p` (non-interactive, one-shot mode)
+            # can run as a subprocess from within a Claude Code session.
+            # The guard was added in Claude Code v2.1.41 to prevent nested interactive
+            # sessions, but -p mode doesn't share session state.
+            env = {"CLAUDECODE" => nil}
+            Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: prompt.to_s, env: env, provider_name: "Claude")
           end
 
           def parse_claude_response(stdout, stderr, status, prompt, options)
