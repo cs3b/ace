@@ -9,11 +9,18 @@ All notable changes to this project will be documented in this file.
 - **ace-taskflow v0.35.0**: `ace:manage-task-status` skill for task lifecycle operations (start, done, undone)
 - **ace-taskflow v0.35.0**: `ace:reorganize-task` skill for task hierarchy operations (promote, demote, convert)
 - **ace-taskflow v0.35.0**: `manage-task-status` workflow for status management guidance
+- **ace-assign v0.9.0**: `documentation.recipe.yml` for documentation workflows with research phase
+- **ace-assign v0.9.0**: `release-only.recipe.yml` for version bump workflows without code changes
+- **ace-assign v0.9.0**: `work-on-docs.yml` preset for documentation workflow
+- **ace-assign v0.9.0**: `release-only.yml` preset for release-only workflow
+- **ace-assign v0.9.0**: `quick-implement.yml` preset for simple task implementation
+- **ace-assign v0.9.0**: `fix-bug.yml` preset for bug fix with review workflow
 
 ### Changed
 
 - **ace-test-runner-e2e**: Renamed package from `ace-test-e2e-runner` to `ace-test-runner-e2e` and binary from `ace-test-suite-e2e` to `ace-test-e2e-suite` for naming consistency
 - **ace-taskflow v0.35.0**: Update timestamp dependency to ace-b36ts
+- **ace-assign v0.9.0**: Update timestamp dependency from `ace-support-timestamp` to `ace-b36ts`
 
 ### Fixed
 
