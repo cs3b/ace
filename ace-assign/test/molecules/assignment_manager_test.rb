@@ -187,4 +187,57 @@ class AssignmentManagerTest < AceAssignTestCase
       assert_nil manager.current_id
     end
   end
+
+  # === Parent metadata tests ===
+
+  def test_create_with_parent
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      parent = manager.create(name: "parent", source_config: "job.yaml")
+      child = manager.create(name: "child", source_config: "job.yaml", parent: parent.id)
+
+      assert_equal parent.id, child.parent
+    end
+  end
+
+  def test_parent_survives_reload
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      parent = manager.create(name: "parent", source_config: "job.yaml")
+      child = manager.create(name: "child", source_config: "job.yaml", parent: parent.id)
+
+      reloaded = manager.load(child.id)
+
+      assert_equal parent.id, reloaded.parent
+    end
+  end
+
+  def test_parent_nil_when_absent
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      assignment = manager.create(name: "root", source_config: "job.yaml")
+      reloaded = manager.load(assignment.id)
+
+      assert_nil reloaded.parent
+    end
+  end
+
+  def test_parent_preserved_through_update
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      parent = manager.create(name: "parent", source_config: "job.yaml")
+      child = manager.create(name: "child", source_config: "job.yaml", parent: parent.id)
+
+      updated = manager.update(child)
+
+      assert_equal parent.id, updated.parent
+
+      reloaded = manager.load(child.id)
+      assert_equal parent.id, reloaded.parent
+    end
+  end
 end

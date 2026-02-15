@@ -43,6 +43,7 @@ module Ace
 
           option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments"
           option :task, aliases: ["-t"], desc: "Filter by task reference"
+          option :tree, type: :boolean, default: false, desc: "Show assignment hierarchy as tree"
           option :format, aliases: ["-f"], desc: "Output format (table, json)", default: "table"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
@@ -64,7 +65,9 @@ module Ace
 
             hidden_completed = options[:all] ? 0 : all_assignments.count(&:completed?)
 
-            if options[:format] == "json"
+            if options[:tree]
+              print_tree(assignments)
+            elsif options[:format] == "json"
               print_json(assignments, current_id: current_id)
             else
               print_table(assignments, current_id: current_id, hidden_completed: hidden_completed)
@@ -72,6 +75,10 @@ module Ace
           end
 
           private
+
+          def print_tree(assignments)
+            puts Atoms::TreeFormatter.format(assignments)
+          end
 
           def print_table(assignments, current_id:, hidden_completed:)
             if assignments.empty?

@@ -431,6 +431,76 @@ class AssignmentExecutorTest < AceAssignTestCase
     end
   end
 
+  # === Sub-phase fork enforcement tests ===
+
+  def test_start_with_sub_phases_creates_batch_parent_and_children
+    with_temp_cache do |cache_dir|
+      phases = [
+        { "name" => "onboard", "instructions" => "Load context" },
+        {
+          "name" => "work-on-task",
+          "instructions" => "Container for sub-phases",
+          "sub_phases" => %w[onboard implement verify-tests]
+        },
+        { "name" => "review", "instructions" => "Review changes" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      state = result[:state]
+      numbers = state.all_numbers
+
+      # Should have: 010 (onboard), 020 (batch parent), 020.01, 020.02, 020.03, 030 (review)
+      assert_includes numbers, "010"
+      assert_includes numbers, "020"
+      assert_includes numbers, "020.01"
+      assert_includes numbers, "020.02"
+      assert_includes numbers, "020.03"
+      assert_includes numbers, "030"
+
+      # Batch parent should have fork context
+      parent_phase = state.find_by_number("020")
+      assert_equal "fork", parent_phase.context
+
+      # Children should have correct names
+      child1 = state.find_by_number("020.01")
+      assert_equal "onboard", child1.name
+
+      child2 = state.find_by_number("020.02")
+      assert_equal "implement", child2.name
+
+      child3 = state.find_by_number("020.03")
+      assert_equal "verify-tests", child3.name
+    end
+  end
+
+  def test_start_with_parent_id_sets_parent_on_assignment
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path, parent_id: "parent123")
+
+      assert_equal "parent123", result[:assignment].parent
+    end
+  end
+
+  def test_start_without_sub_phases_unchanged
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      # Standard 3-phase setup, no sub-phases
+      assert_equal 3, result[:state].size
+      numbers = result[:state].all_numbers
+      assert_equal %w[010 020 030], numbers.sort
+    end
+  end
+
   def test_descendants_of_returns_all_nested
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
