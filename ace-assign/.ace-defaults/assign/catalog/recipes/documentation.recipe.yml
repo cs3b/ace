@@ -1,0 +1,35 @@
+name: documentation
+description: Create or update documentation with research and commit
+
+matches:
+  - "document *"
+  - "write docs for *"
+  - "update documentation"
+  - "documentation for *"
+
+parameters:
+  scope:
+    required: true
+    description: "Package, directory, or topic to document"
+  create_pr:
+    required: false
+    default: false
+    description: "Whether to create a PR for the documentation changes"
+
+phases:
+  - name: onboard
+    required: true
+  - name: research
+    required: true
+    instructions_template: "Research documentation gaps for {{scope}}. Identify outdated, missing, or incorrect documentation."
+  - name: work-on-task
+    required: true
+    instructions_template: "Create or update documentation for {{scope}}. Focus on clarity, accuracy, and completeness."
+  - name: commit
+    required: true
+
+customization_hints:
+  - "Add create-pr phase if create_pr=true for documentation PRs"
+  - "Add lint phase for markdown linting"
+  - "Add review-cycle for critical documentation"
+  - "Skip onboard if already in context"

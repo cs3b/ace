@@ -1,0 +1,35 @@
+# Release-only workflow: onboard → release → commit
+# Usage: /ace:assign-prepare release-only --version_type patch
+
+name: release-only
+description: Version bump and changelog update without code changes
+
+parameters:
+  version_type:
+    required: false
+    default: "patch"
+    description: "Version bump type (major, minor, or patch)"
+
+steps:
+  - name: onboard
+    skill: onboard
+    instructions:
+      - Onboard yourself to the codebase.
+      - This step is optional if already in context.
+
+  - name: release
+    skill: ace-release
+    instructions:
+      - "Bump {{version_type}} version and update CHANGELOGs."
+      - Follow semantic versioning conventions.
+      - Update both gem version files and CHANGELOGs.
+
+  - name: commit
+    skill: ace:commit
+    instructions:
+      - Commit the version bump and changelog changes.
+      - Use conventional commit format.
+
+customization_hints:
+  - "Add push-to-remote step for immediate push"
+  - "Skip onboard if already onboarded"

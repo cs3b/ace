@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-02-15
+
+### Added
+
+- `documentation.recipe.yml` for documentation workflows with research phase
+- `release-only.recipe.yml` for version bump workflows without code changes
+- `work-on-docs.yml` preset exposing documentation workflow
+- `release-only.yml` preset exposing release-only workflow
+- `quick-implement.yml` preset for simple task implementation
+- `fix-bug.yml` preset for bug fix with review workflow
+
+### Changed
+
+- Update timestamp dependency from `ace-support-timestamp` to `ace-b36ts`
+
 ## [0.8.3] - 2026-02-14
 
 ### Added
