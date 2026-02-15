@@ -7,10 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-02-15
+
+### Fixed
+- **AssignFrontmatterParser**: Validate that hint `include`/`skip` values are strings (rejects non-string types with descriptive error)
+
+## [0.9.2] - 2026-02-14
+
+### Fixed
+
+- Frontmatter parser now rejects hints with both `include` and `skip` (mutual exclusivity validation)
+
+## [0.9.1] - 2026-02-14
+
+### Fixed
+
+- Tree formatter now correctly handles child-before-parent input ordering (two-pass index build)
+- Added regression test for unordered tree formatter input
+
 ## [0.9.0] - 2026-02-15
 
 ### Added
 
+- Declarative assignment frontmatter: `assign:` block in `.s.md` and `.wf.md` files declares assignment intent (goal, variables, hints, sub-phases, context, parent)
+- `AssignFrontmatterParser` atom for extracting and validating `assign:` frontmatter blocks
+- `TreeFormatter` atom for rendering assignment hierarchy as indented tree with Unicode connectors
+- Parent-child assignment linking via `parent` field in Assignment model
+- `ace-assign list --tree` option for hierarchical assignment view
+- Sub-phase fork enforcement in executor: phases with sub-phases create batch parent in fork context
+- Compose workflow integration: step 0 reads `assign:` frontmatter as structured input
 - `documentation.recipe.yml` for documentation workflows with research phase
 - `release-only.recipe.yml` for version bump workflows without code changes
 - `work-on-docs.yml` preset exposing documentation workflow

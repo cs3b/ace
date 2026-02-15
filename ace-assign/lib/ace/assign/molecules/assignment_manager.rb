@@ -22,8 +22,9 @@ module Ace
         # @param name [String] Assignment name
         # @param description [String, nil] Assignment description
         # @param source_config [String] Path to source config file
+        # @param parent [String, nil] Parent assignment ID for hierarchy linking
         # @return [Models::Assignment] Created assignment
-        def create(name:, description: nil, source_config:)
+        def create(name:, description: nil, source_config:, parent: nil)
           # Ensure cache base directory exists before generate_assignment_id
           FileUtils.mkdir_p(@cache_base)
 
@@ -44,7 +45,8 @@ module Ace
             created_at: now,
             updated_at: now,
             source_config: source_config,
-            cache_dir: cache_dir
+            cache_dir: cache_dir,
+            parent: parent
           )
 
           # Write assignment.yaml
@@ -158,7 +160,8 @@ module Ace
             created_at: assignment.created_at,
             updated_at: Time.now.utc,
             source_config: assignment.source_config,
-            cache_dir: assignment.cache_dir
+            cache_dir: assignment.cache_dir,
+            parent: assignment.parent
           )
 
           write_assignment_file(updated)

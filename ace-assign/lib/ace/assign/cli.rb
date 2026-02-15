@@ -19,6 +19,8 @@ require_relative "atoms/phase_file_parser"
 require_relative "atoms/phase_sorter"
 require_relative "atoms/catalog_loader"
 require_relative "atoms/composition_rules"
+require_relative "atoms/assign_frontmatter_parser"
+require_relative "atoms/tree_formatter"
 
 # Molecules
 require_relative "molecules/assignment_manager"
