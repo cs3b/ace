@@ -82,4 +82,72 @@ class AssignmentTest < AceAssignTestCase
     assert_equal "test-session", assignment.name
     assert_equal "/tmp/test", assignment.cache_dir
   end
+
+  def test_parent_nil_by_default
+    assignment = Ace::Assign::Models::Assignment.new(
+      id: "abc123",
+      name: "test",
+      created_at: Time.now,
+      source_config: "job.yaml"
+    )
+
+    assert_nil assignment.parent
+  end
+
+  def test_parent_persisted_in_to_h
+    now = Time.utc(2026, 1, 28, 12, 0, 0)
+    assignment = Ace::Assign::Models::Assignment.new(
+      id: "abc123",
+      name: "child-session",
+      created_at: now,
+      source_config: "job.yaml",
+      parent: "parent1"
+    )
+
+    hash = assignment.to_h
+
+    assert_equal "parent1", hash["parent"]
+  end
+
+  def test_parent_absent_from_to_h_when_nil
+    now = Time.utc(2026, 1, 28, 12, 0, 0)
+    assignment = Ace::Assign::Models::Assignment.new(
+      id: "abc123",
+      name: "root-session",
+      created_at: now,
+      source_config: "job.yaml"
+    )
+
+    hash = assignment.to_h
+
+    refute hash.key?("parent")
+  end
+
+  def test_parent_survives_from_h_roundtrip
+    now = Time.utc(2026, 1, 28, 12, 0, 0)
+    original = Ace::Assign::Models::Assignment.new(
+      id: "abc123",
+      name: "child",
+      created_at: now,
+      source_config: "job.yaml",
+      parent: "parent_id"
+    )
+
+    restored = Ace::Assign::Models::Assignment.from_h(original.to_h, cache_dir: "/tmp/test")
+
+    assert_equal "parent_id", restored.parent
+  end
+
+  def test_parent_nil_survives_from_h_roundtrip
+    data = {
+      "session_id" => "abc123",
+      "name" => "root",
+      "created_at" => "2026-01-28T12:00:00Z",
+      "source_config" => "job.yaml"
+    }
+
+    assignment = Ace::Assign::Models::Assignment.from_h(data)
+
+    assert_nil assignment.parent
+  end
 end

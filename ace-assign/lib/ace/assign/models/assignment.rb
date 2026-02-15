@@ -19,7 +19,7 @@ module Ace
       # NOTE: Could be refactored to use Data.define in Ruby 3.2+ for reduced boilerplate,
       # but tests would need to be updated to provide all required fields.
       class Assignment
-        attr_reader :id, :name, :description, :created_at, :updated_at, :source_config, :cache_dir
+        attr_reader :id, :name, :description, :created_at, :updated_at, :source_config, :cache_dir, :parent
 
         # @param id [String] Unique assignment ID (6-char compact timestamp)
         # @param name [String] Human-readable assignment name
@@ -28,7 +28,8 @@ module Ace
         # @param updated_at [Time, nil] When assignment was last updated
         # @param source_config [String] Path to source configuration file
         # @param cache_dir [String, nil] Assignment cache directory
-        def initialize(id:, name:, description: nil, created_at:, updated_at: nil, source_config:, cache_dir: nil)
+        # @param parent [String, nil] Parent assignment ID for hierarchy linking
+        def initialize(id:, name:, description: nil, created_at:, updated_at: nil, source_config:, cache_dir: nil, parent: nil)
           @id = id.freeze
           @name = name.freeze
           @description = description&.freeze
@@ -36,6 +37,7 @@ module Ace
           @updated_at = updated_at || created_at
           @source_config = source_config.freeze
           @cache_dir = cache_dir&.freeze
+          @parent = parent&.freeze
         end
 
         # Convert to hash for YAML serialization
@@ -47,7 +49,8 @@ module Ace
             "description" => description,
             "created_at" => created_at.iso8601,
             "updated_at" => updated_at.iso8601,
-            "source_config" => source_config
+            "source_config" => source_config,
+            "parent" => parent
           }.compact
         end
 
@@ -63,7 +66,8 @@ module Ace
             created_at: parse_time(data["created_at"]),
             updated_at: parse_time(data["updated_at"]),
             source_config: data["source_config"],
-            cache_dir: cache_dir
+            cache_dir: cache_dir,
+            parent: data["parent"]
           )
         end
 

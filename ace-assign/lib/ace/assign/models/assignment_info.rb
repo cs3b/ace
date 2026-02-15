@@ -59,6 +59,7 @@ module Ace
         def task_ref = assignment.name
         def updated_at = assignment.updated_at
         def created_at = assignment.created_at
+        def parent = assignment.parent
       end
     end
   end
