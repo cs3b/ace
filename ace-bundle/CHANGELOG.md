@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.5] - 2026-02-15
+
+### Fixed
+- **SectionProcessor**: Fix typo `orde2` → `order` in comment (line 100)
+- **SectionProcessor**: Fix indentation alignment in `merge_contents` method (line 240)
+
+## [0.30.4] - 2026-02-15
+
+### Fixed
+- **SectionFormatter**: Fix typo in `format_sections_json_full` method name (`foRmat` → `format`)
+
 ## [0.30.3] - 2026-01-31
 
 ### Performance
