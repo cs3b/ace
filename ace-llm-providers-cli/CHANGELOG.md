@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-02-15
+
+### Changed
+- **ClaudeCodeClient**: Optimize subprocess environment — pass minimal env override `{"CLAUDECODE" => nil}` instead of copying entire `ENV.to_h`
+
+## [0.16.4] - 2026-02-15
+
+### Fixed
+- **ClaudeCodeClient**: Pass prompt via stdin instead of CLI argument to avoid Linux `MAX_ARG_STRLEN` (128KB) limit on large prompts
+- **ClaudeCodeClient**: Remove `--system-prompt` and `--append-system-prompt` CLI args (system content already embedded in formatted prompt)
+
+### Changed
+- **CodexClient**: `--sandbox` mode is now caller-controlled via `options[:sandbox]` instead of hardcoded `read-only`
+
+## [0.16.3] - 2026-02-15
+
+### Fixed
+- **ClaudeCodeClient**: Clear `CLAUDECODE` env var before spawning subprocess to allow `claude -p` (one-shot mode) to run from within a Claude Code session — works around nested session guard added in Claude Code v2.1.41
+- **CodexClient**: Add `--sandbox read-only` to prevent agent from executing commands instead of reviewing the prompt content
+- **SafeCapture**: Added optional `env:` parameter for subprocess environment control
+
 ## [0.16.2] - 2026-02-07
 
 ### Fixed
