@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-02-15
+
+### Added
+- `sandbox:` parameter on `QueryInterface.query()` for controlling CLI provider sandbox mode (forwarded via `generation_opts`)
+
 ## [0.22.0] - 2026-02-05
 
 ### Added

@@ -49,7 +49,8 @@ module Ace
                     fallback_providers: nil,
                     system_file: nil,
                     prompt_file: nil,
-                    cli_args: nil)
+                    cli_args: nil,
+                    sandbox: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -87,6 +88,7 @@ module Ace
         generation_opts[:system_file] = system_file if system_file
         generation_opts[:prompt_file] = prompt_file if prompt_file
         generation_opts[:cli_args] = cli_args if cli_args && !(cli_args.respond_to?(:empty?) && cli_args.empty?)
+        generation_opts[:sandbox] = sandbox if sandbox
 
         # Debug output if requested
         if debug
