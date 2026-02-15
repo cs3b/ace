@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.1] - 2026-02-15
+
+### Changed
+- **LlmExecutor**: Pass `sandbox: "read-only"` to `QueryInterface.query()` to enforce non-agentic mode for CLI providers during reviews
+
 ## [0.38.0] - 2026-02-08
 
 ### Added
