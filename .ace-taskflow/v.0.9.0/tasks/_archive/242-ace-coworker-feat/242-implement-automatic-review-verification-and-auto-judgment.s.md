@@ -1,15 +1,17 @@
 ---
 id: v.0.9.0+task.242
-status: draft
+status: done
 priority: high
 estimate: 12h
-dependencies: [v.0.9.0+task.227, v.0.9.0+task.233]
+dependencies:
+- v.0.9.0+task.227
+- v.0.9.0+task.233
 type: orchestrator
 subtasks:
-  - 242.01
-  - 242.02
-  - 242.03
-  - 242.04
+- 242.01
+- 242.02
+- 242.03
+- 242.04
 ---
 
 # Automatic Review Verification & Auto-Judgment for ace-coworker
