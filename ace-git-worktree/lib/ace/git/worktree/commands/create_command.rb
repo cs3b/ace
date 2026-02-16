@@ -803,13 +803,10 @@ module Ace
             begin
               require_relative "../molecules/config_loader"
               config_loader = Ace::Git::Worktree::Molecules::ConfigLoader.new
-              config_hash = config_loader.load
-              return false unless config_hash
+              config = config_loader.load
+              return false unless config
 
-              # Create WorktreeConfig from the loaded config
-              require_relative "../models/worktree_config"
-              worktree_config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_hash)
-              worktree_config.auto_navigate?
+              config.auto_navigate?
             rescue StandardError
               # If configuration loading fails, default to no auto-navigation
               false
@@ -845,12 +842,10 @@ module Ace
           def tmux_enabled?
             require_relative "../molecules/config_loader"
             config_loader = Ace::Git::Worktree::Molecules::ConfigLoader.new
-            config_hash = config_loader.load
-            return false unless config_hash
+            config = config_loader.load
+            return false unless config
 
-            require_relative "../models/worktree_config"
-            worktree_config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_hash)
-            worktree_config.tmux?
+            config.tmux?
           rescue StandardError
             false
           end

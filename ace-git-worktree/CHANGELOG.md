@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-02-16
+
+### Fixed
+- Fix `tmux_enabled?` and `should_auto_navigate?` config loading: `ConfigLoader#load` returns a `WorktreeConfig` object, not a raw hash — remove redundant `WorktreeConfig.new()` wrapping that caused tmux config to be silently ignored
+
 ## [0.13.0] - 2026-02-16
 
 ### Added
