@@ -48,8 +48,8 @@ steps:
     instructions:
       - "First: onboard yourself using /onboard skill to load project context."
       - "Review the code (iteration 1 of 2)."
-      - Use preset code-deep for thorough analysis.
-      - "Focus: correctness, architecture, and major design issues."
+      - Use preset code-valid.
+      - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
 
   - name: apply-feedback-1
     skill: ace:apply-feedback
@@ -69,8 +69,8 @@ steps:
     instructions:
       - "First: onboard yourself using /onboard skill to load project context."
       - "Review the code (iteration 2 of 2)."
-      - Use preset code-deep for thorough analysis.
-      - "Focus: edge cases, error handling, and test coverage."
+      - Use preset code-fit.
+      - "Focus: quality — performance, architecture, standards, test coverage."
 
   - name: apply-feedback-2
     skill: ace:apply-feedback

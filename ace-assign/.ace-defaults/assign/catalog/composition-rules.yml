@@ -90,7 +90,11 @@ fork_context:
 review_cycles:
   default_count: 2
   max_count: 5
+  preset_progression:
+    1: code-valid
+    2: code-fit
+    3: code-shine
   focus_progression:
-    1: "Correctness, architecture, and major design issues"
-    2: "Edge cases, error handling, and test coverage"
-    3: "Polish, documentation, and minor improvements"
+    1: "Correctness: bugs, logic errors, missing functionality, broken contracts"
+    2: "Quality: performance, architecture, standards, test coverage"
+    3: "Polish: simplification, naming, documentation (non-blocking suggestions)"
