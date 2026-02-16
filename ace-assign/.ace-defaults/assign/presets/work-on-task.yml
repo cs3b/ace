@@ -42,47 +42,68 @@ steps:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review steps.
 
-  - name: review-cycle-1
+  - name: review-valid-1
     skill: ace:review-pr
     context: fork
     instructions:
       - "First: onboard yourself using /onboard skill to load project context."
-      - "Review the code (iteration 1 of 2)."
+      - Review the code for correctness.
       - Use preset code-valid.
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
 
-  - name: apply-feedback-1
+  - name: apply-valid-1
     skill: ace:apply-feedback
     instructions:
-      - Apply feedback from review cycle 1 (medium+ priority).
+      - Apply feedback from valid review (medium+ priority).
       - Commit changes with descriptive messages.
 
-  - name: release-patch-1
+  - name: release-valid-1
     skill: ace-release
     instructions:
       - Bump patch version and update CHANGELOGs.
-      - This captures review cycle 1 fixes.
+      - This captures valid review fixes.
 
-  - name: review-cycle-2
+  - name: review-fit-1
     skill: ace:review-pr
     context: fork
     instructions:
       - "First: onboard yourself using /onboard skill to load project context."
-      - "Review the code (iteration 2 of 2)."
+      - Review the code for quality.
       - Use preset code-fit.
       - "Focus: quality — performance, architecture, standards, test coverage."
 
-  - name: apply-feedback-2
+  - name: apply-fit-1
     skill: ace:apply-feedback
     instructions:
-      - Apply final feedback from review cycle 2.
+      - Apply feedback from fit review.
       - Commit changes with descriptive messages.
 
-  - name: release-patch-2
+  - name: release-fit-1
     skill: ace-release
     instructions:
       - Bump patch version and update CHANGELOGs.
-      - This captures review cycle 2 fixes.
+      - This captures fit review fixes.
+
+  - name: review-shine-1
+    skill: ace:review-pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /onboard skill to load project context."
+      - Review the code for polish.
+      - Use preset code-shine.
+      - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
+
+  - name: apply-shine-1
+    skill: ace:apply-feedback
+    instructions:
+      - Apply feedback from shine review (worthwhile improvements only).
+      - Commit changes with descriptive messages.
+
+  - name: release-shine-1
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs.
+      - This captures shine review fixes.
 
   - name: reorganize-commits
     skill: ace:reorganize-commits

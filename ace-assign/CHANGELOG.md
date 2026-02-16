@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-02-16
+
+### Changed
+- Rename review cycle steps by type: `review-cycle-1` → `review-valid-1`, `review-cycle-2` → `review-fit-1` (with matching apply/release steps)
+- Add shine review cycle (`review-shine-1`, `apply-shine-1`, `release-shine-1`) to `work-on-task` and `work-on-tasks` presets
+- Update `default_count` from 2 to 3 in composition rules to reflect three review types (valid, fit, shine)
+- Renumber post-review steps: reorganize-commits → 130, push-to-remote → 140, update-pr-desc → 150
+
 ## [0.10.1] - 2026-02-16
 
 ### Added
