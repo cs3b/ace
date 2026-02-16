@@ -11,7 +11,7 @@ module Ace
       #
       # @example Creating a reviewer from config
       #   reviewer = Reviewer.new(
-      #     name: "code-quality",
+      #     name: "code-fit",
       #     model: "google:gemini-2.5-pro",
       #     focus: "code_quality",
       #     system_prompt_additions: "Focus on SOLID principles...",
