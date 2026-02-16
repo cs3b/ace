@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.2] - 2026-02-16
+
+### Added
+- **Phased review presets**: `code-valid` (correctness), `code-fit` (quality), `code-shine` (polish) for laser-focused review cycles
+- **Backward-compatible** `code-deep` preset as composition of `code` with detailed format
+- **Focus prompts**: `phase/correctness.md`, `phase/quality.md`, `phase/polish.md` with explicit scope and DO NOT Review sections
+- Project-level preset configuration files for monorepo discovery
+
+### Changed
+- **Multi-model reviewers**: All 3 phased presets use `claude:opus`, `codex:max`, `gemini:pro-latest`
+- **Focus distribution**: All 6 focus modules from `code` preset distributed across the 3 phased presets (security→code-fit, tests+ruby→code-fit, docs→code-shine)
+
 ## [0.38.1] - 2026-02-15
 
 ### Changed
