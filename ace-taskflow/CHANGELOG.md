@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.1] - 2026-02-16
+
+### Fixed
+- Deduplicate subtask IDs when orchestrator frontmatter mixes short IDs (e.g., "243.02") with canonical IDs (e.g., "v.0.9.0+task.243.02")
+
 ## [0.35.0] - 2026-02-14
 
 ### Added
