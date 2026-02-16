@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.507] - 2026-02-16
+
+### Fixed
+
+- **ace-taskflow v0.35.1**: Deduplicate subtask IDs when orchestrator frontmatter mixes short IDs (e.g., "243.02") with canonical IDs (e.g., "v.0.9.0+task.243.02")
+- **ace-tmux v0.5.2**: First window name when starting a session with `--root` now derives from directory basename, matching `ace-tmux window` behavior
+- **ace-llm-providers-cli v0.16.3**: Clear `CLAUDECODE` env var for subprocess spawning to fix nested session guard (Claude Code v2.1.41+); add `--sandbox read-only` to Codex to prevent agentic command execution during reviews
+
 ### Added
 
 - **ace-taskflow v0.35.0**: `ace:manage-task-status` skill for task lifecycle operations (start, done, undone)
@@ -21,11 +29,6 @@ All notable changes to this project will be documented in this file.
 - **ace-test-runner-e2e**: Renamed package from `ace-test-e2e-runner` to `ace-test-runner-e2e` and binary from `ace-test-suite-e2e` to `ace-test-e2e-suite` for naming consistency
 - **ace-taskflow v0.35.0**: Update timestamp dependency to ace-b36ts
 - **ace-assign v0.9.0**: Update timestamp dependency from `ace-support-timestamp` to `ace-b36ts`
-
-### Fixed
-
-- **ace-tmux v0.5.2**: First window name when starting a session with `--root` now derives from directory basename, matching `ace-tmux window` behavior
-- **ace-llm-providers-cli v0.16.3**: Clear `CLAUDECODE` env var for subprocess spawning to fix nested session guard (Claude Code v2.1.41+); add `--sandbox read-only` to Codex to prevent agentic command execution during reviews
 
 ## [0.9.506] - 2026-02-14
 
