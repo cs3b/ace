@@ -290,6 +290,7 @@ GEM
     faraday-retry (2.4.0)
       faraday (~> 2.0)
     ffi (1.17.3-aarch64-linux-gnu)
+    ffi (1.17.3-arm64-darwin)
     fileutils (1.8.0)
     hashdiff (1.2.1)
     json (2.18.1)
@@ -371,6 +372,7 @@ GEM
 
 PLATFORMS
   aarch64-linux-gnu
+  arm64-darwin-25
 
 DEPENDENCIES
   ace-assign!
