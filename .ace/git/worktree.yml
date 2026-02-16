@@ -18,6 +18,8 @@ git:
     # If true, changes directory to the created worktree
     auto_navigate: true
 
+    tmux: true
+
     # Task-based naming and behavior configuration
     task:
       # Directory naming format for task worktrees
