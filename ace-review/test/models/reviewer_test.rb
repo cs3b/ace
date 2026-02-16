@@ -9,7 +9,7 @@ module Ace
         def setup
           super
           @valid_config = {
-            name: "code-quality",
+            name: "code-fit",
             model: "google:gemini-2.5-pro",
             focus: "code_quality",
             system_prompt_additions: "Focus on SOLID principles.",
@@ -27,7 +27,7 @@ module Ace
         def test_initialization_with_all_attributes
           reviewer = Reviewer.new(@valid_config)
 
-          assert_equal "code-quality", reviewer.name
+          assert_equal "code-fit", reviewer.name
           assert_equal "google:gemini-2.5-pro", reviewer.model
           assert_equal "code_quality", reviewer.focus
           assert_equal "Focus on SOLID principles.", reviewer.system_prompt_additions
@@ -320,7 +320,7 @@ module Ace
           reviewer = Reviewer.new(@valid_config)
           hash = reviewer.to_h
 
-          assert_equal "code-quality", hash["name"]
+          assert_equal "code-fit", hash["name"]
           assert_equal "google:gemini-2.5-pro", hash["model"]
           assert_equal "code_quality", hash["focus"]
           assert_equal 1.0, hash["weight"]
