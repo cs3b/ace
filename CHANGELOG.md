@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.510] - 2026-02-16
+
+### Fixed
+
+- **ace-git-worktree v0.13.2**: Fix ace-tmux invocation in CreateCommand — remove hardcoded `start` subcommand so ace-tmux auto-detects context (add window inside existing tmux session vs start new session)
+
 ## [0.9.509] - 2026-02-16
 
 ### Fixed
