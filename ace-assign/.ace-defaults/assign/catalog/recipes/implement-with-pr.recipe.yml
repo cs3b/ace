@@ -26,7 +26,7 @@ phases:
   - name: review-cycle
     repeat: "{{review_cycles}}"
     sub_phases: [review-pr, apply-feedback, release]
-    note: "Each cycle includes patch release after applying feedback"
+    note: "Each cycle uses preset_progression from composition rules (1: code-valid, 2: code-fit, 3: code-shine)"
   - name: reorganize-commits
     required: false
   - name: push-to-remote
