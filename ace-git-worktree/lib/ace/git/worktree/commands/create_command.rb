@@ -661,10 +661,10 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Display cd command for user to execute
+            # Display cd command or launch tmux
             unless dry_run
               puts ""
-              puts "cd #{result[:worktree_path]}"
+              launch_tmux_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -705,9 +705,9 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Display cd command for user to execute
+            # Display cd command or launch tmux
             unless dry_run
-              puts "cd #{result[:worktree_path]}"
+              launch_tmux_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -753,9 +753,9 @@ module Ace
 
             display_warnings(result[:warnings]) if result[:warnings]
 
-            # Display cd command for user to execute
+            # Display cd command or launch tmux
             unless dry_run
-              puts "cd #{result[:worktree_path]}"
+              launch_tmux_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -777,7 +777,8 @@ module Ace
               puts "Git root: #{result[:git_root]}"
 
               display_warnings(result[:warnings]) if result[:warnings]
-              display_navigation_hint(result[:worktree_path])
+              puts ""
+              launch_tmux_or_display_cd(result[:worktree_path])
             end
           end
 
@@ -815,14 +816,50 @@ module Ace
             end
           end
 
-          # Display navigation hint
+          # Launch tmux session or display cd hint for navigation
+          #
+          # When tmux config is enabled and ace-tmux is available, launches a tmux
+          # session rooted at the worktree path (replaces current process).
+          # Otherwise falls back to displaying the cd command.
           #
           # @param worktree_path [String] Path to the worktree
-          def display_navigation_hint(worktree_path)
+          def launch_tmux_or_display_cd(worktree_path)
             return unless worktree_path
 
-            puts ""
-            puts "cd #{worktree_path}"
+            if tmux_enabled?
+              if ace_tmux_available?
+                Kernel.exec("ace-tmux", "start", "--root", worktree_path)
+              else
+                puts "Warning: tmux is enabled in config but ace-tmux is not installed."
+                puts "Install ace-tmux or disable tmux in .ace/git/worktree.yml"
+                puts "cd #{worktree_path}"
+              end
+            else
+              puts "cd #{worktree_path}"
+            end
+          end
+
+          # Check if tmux integration is enabled in config
+          #
+          # @return [Boolean] true if tmux is enabled
+          def tmux_enabled?
+            require_relative "../molecules/config_loader"
+            config_loader = Ace::Git::Worktree::Molecules::ConfigLoader.new
+            config_hash = config_loader.load
+            return false unless config_hash
+
+            require_relative "../models/worktree_config"
+            worktree_config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_hash)
+            worktree_config.tmux?
+          rescue StandardError
+            false
+          end
+
+          # Check if ace-tmux binary is available on PATH
+          #
+          # @return [Boolean] true if ace-tmux is installed
+          def ace_tmux_available?
+            system("which ace-tmux > /dev/null 2>&1")
           end
 
           # Convert PR metadata from gh CLI to internal pr_data format
