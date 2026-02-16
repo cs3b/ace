@@ -220,7 +220,13 @@ module Ace
             if orchestrator
               frontmatter_ids = orchestrator[:subtask_ids] || []
               discovered_ids = subtasks.map { |s| s[:id] }.compact.sort
-              orchestrator[:subtask_ids] = (frontmatter_ids + discovered_ids).uniq
+              # Normalize short IDs (e.g., "243.02") to canonical form (e.g., "v.0.9.0+task.243.02")
+              # so .uniq deduplicates correctly when frontmatter mixes short and full IDs
+              resolver = ContextResolver.new(@root_path)
+              normalized_frontmatter_ids = frontmatter_ids.map do |id|
+                Atoms::TaskReferenceParser.normalize_to_canonical_id(id, resolver) || id
+              end
+              orchestrator[:subtask_ids] = (normalized_frontmatter_ids + discovered_ids).uniq
               orchestrator[:is_orchestrator] = true
             end
           end
