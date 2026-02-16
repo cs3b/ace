@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.514] - 2026-02-16
+
+### Changed
+
+- **ace-assign v0.10.1**: Update preset progression references to new names (`code-valid`, `code-fit`, `code-shine`)
+
+## [0.9.513] - 2026-02-16
+
+### Changed
+
+- **ace-review v0.39.2**: Rename phased presets — `code-correctness` → `code-valid`, `code-quality` → `code-fit`, `code-polish` → `code-shine`
+
+## [0.9.512] - 2026-02-16
+
+### Changed
+
+- **ace-review v0.39.1**: Redistribute focus modules across phased presets — security/tests/ruby to code-quality, docs to code-polish; switch all 3 to multi-model reviewers (claude:opus, codex:max, gemini:pro-latest)
+
+## [0.9.511] - 2026-02-16
+
+### Added
+
+- **ace-review v0.39.0**: Laser-focused phased review presets (`code-correctness`, `code-quality`, `code-polish`) with dedicated focus prompts and explicit scope boundaries
+- **ace-review v0.39.0**: Backward-compatible `code-deep` preset as composition of `code` with detailed format
+- **ace-assign v0.10.0**: Preset progression mapping in composition rules — review cycles now use phase-specific presets (correctness → quality → polish)
+
+### Changed
+
+- **ace-assign v0.10.0**: Review cycle presets in `work-on-task.yml` and `work-on-tasks.yml` updated from `code-deep` to phase-specific presets
+
 ## [0.9.510] - 2026-02-16
 
 ### Fixed
