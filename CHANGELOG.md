@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.508] - 2026-02-16
+
+### Added
+
+- **ace-git-worktree v0.13.0**: Tmux integration for worktree creation — optional `tmux: true` config launches `ace-tmux` session rooted at new worktree after creation, with runtime binary detection and graceful fallback
+
 ## [0.9.507] - 2026-02-16
 
 ### Fixed
