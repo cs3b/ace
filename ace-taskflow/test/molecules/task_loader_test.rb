@@ -463,6 +463,81 @@ parent: v.0.9.0+task.999
     end
   end
 
+  def test_subtask_ids_deduplicates_mixed_short_and_full_ids
+    # When frontmatter uses short IDs (e.g., "999.02") alongside full IDs,
+    # they should be normalized and deduplicated against discovered file IDs
+    Dir.mktmpdir do |dir|
+      TestFactory.with_stubbed_project_root(dir) do
+        taskflow_root = File.join(dir, ".ace-taskflow")
+        config_dir = File.join(dir, ".ace", "taskflow")
+        FileUtils.mkdir_p(config_dir)
+        File.write(File.join(config_dir, "config.yml"), <<~YAML)
+          taskflow:
+            root: .ace-taskflow
+            task_dir: t
+        YAML
+
+        release_dir = File.join(taskflow_root, "v.0.9.0")
+        FileUtils.mkdir_p(release_dir)
+        File.write(File.join(release_dir, ".active"), "")
+
+        orchestrator_dir = File.join(release_dir, "t", "999-test-dedup")
+        FileUtils.mkdir_p(orchestrator_dir)
+
+        # Frontmatter mixes short ID (999.02) with full ID (v.0.9.0+task.999.01)
+        orchestrator_content = <<~CONTENT
+---
+id: v.0.9.0+task.999
+status: in-progress
+priority: medium
+subtasks:
+  - v.0.9.0+task.999.01
+  - 999.02
+---
+
+# 999 - Test Dedup Orchestrator
+        CONTENT
+        File.write(File.join(orchestrator_dir, "999.00-orchestrator.s.md"), orchestrator_content)
+
+        subtask01_content = <<~CONTENT
+---
+id: v.0.9.0+task.999.01
+status: pending
+parent: v.0.9.0+task.999
+---
+
+# 999.01 - First Subtask
+        CONTENT
+        File.write(File.join(orchestrator_dir, "999.01-first-subtask.s.md"), subtask01_content)
+
+        subtask02_content = <<~CONTENT
+---
+id: v.0.9.0+task.999.02
+status: pending
+parent: v.0.9.0+task.999
+---
+
+# 999.02 - Second Subtask
+        CONTENT
+        File.write(File.join(orchestrator_dir, "999.02-second-subtask.s.md"), subtask02_content)
+
+        Dir.chdir(dir) do
+          loader = Ace::Taskflow::Molecules::TaskLoader.new(File.join(dir, ".ace-taskflow"))
+          release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
+          tasks = loader.load_tasks_from_release(release_path)
+
+          orchestrator = tasks.find { |t| t[:id] == "v.0.9.0+task.999" }
+          assert orchestrator, "Should find orchestrator"
+
+          # Each subtask should appear exactly once despite mixed ID formats in frontmatter
+          expected_ids = ["v.0.9.0+task.999.01", "v.0.9.0+task.999.02"]
+          assert_equal expected_ids, orchestrator[:subtask_ids].sort,
+            "Short and full IDs should be deduplicated to canonical form"
+        end
+      end
+    end
+  end
+
   def test_find_task_by_reference_with_qualified_ref
     with_hierarchical_project do |dir|
       Dir.chdir(dir) do
