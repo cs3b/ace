@@ -26,7 +26,7 @@ class CompositionRulesTest < AceAssignTestCase
 
   def test_load_has_review_cycles
     assert @rules["review_cycles"]
-    assert_equal 2, @rules["review_cycles"]["default_count"]
+    assert_equal 3, @rules["review_cycles"]["default_count"]
     assert_equal 5, @rules["review_cycles"]["max_count"]
   end
 
