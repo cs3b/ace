@@ -173,7 +173,7 @@ The `reviewers` format provides fine-grained control over individual reviewers i
 ```yaml
 # .ace/review/presets/my-preset.yml
 reviewers:
-  - name: "code-quality"
+  - name: "code-fit"
     model: "google:gemini-2.5-pro"
     focus: "code_quality"
     system_prompt_additions: "Focus on SOLID principles..."
