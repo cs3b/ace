@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.9.3)
+    ace-assign (0.10.1)
       ace-b36ts (~> 0.4)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.18)
@@ -138,7 +138,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.38.1)
+    ace-review (0.39.2)
       ace-b36ts (~> 0.2)
       ace-bundle (~> 0.30)
       ace-git (~> 0.3)
