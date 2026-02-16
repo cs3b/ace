@@ -28,6 +28,12 @@ git:
     # If true, provides enhanced navigation experience after worktree creation
     auto_navigate: true
 
+    # Launch tmux session after worktree creation
+    # Requires ace-tmux to be installed. When enabled, replaces "cd ..." hint
+    # with automatic tmux session launch rooted at the new worktree.
+    # Values: true | false
+    tmux: false
+
     # Task-based naming and behavior configuration
     task:
       # Directory naming format for task worktrees

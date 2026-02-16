@@ -505,6 +505,23 @@ class WorktreeConfigTest < Minitest::Test
     assert_equal "125 - upstream-setup-and-pr-creation", formatted
   end
 
+  def test_tmux_default_false
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new({}, @project_root)
+    assert_equal false, config.tmux?
+  end
+
+  def test_tmux_can_be_enabled
+    config_data = {
+      "git" => {
+        "worktree" => {
+          "tmux" => true
+        }
+      }
+    }
+    config = Ace::Git::Worktree::Models::WorktreeConfig.new(config_data, @project_root)
+    assert_equal true, config.tmux?
+  end
+
   def test_format_pr_title_with_custom_template
     task_data = {
       id: "v.0.9.0+task.125",
