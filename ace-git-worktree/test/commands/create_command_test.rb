@@ -612,7 +612,7 @@ class CreateCommandTest < Minitest::Test
       end
     end
 
-    assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
+    assert_equal ["ace-tmux", "--root", "/path/to/worktree"], exec_called_with
     mock_worktree_manager.verify
   end
 
