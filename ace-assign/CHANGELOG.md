@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-02-16
+
+### Added
+- **Preset progression**: `preset_progression` mapping in composition rules (cycle 1→`code-valid`, 2→`code-fit`, 3→`code-shine`)
+
+### Changed
+- Review cycle presets in `work-on-task.yml` and `work-on-tasks.yml` now use phase-specific presets instead of `code-deep`
+- Updated `implement-with-pr.recipe.yml` to reference `preset_progression` from composition rules
+- Updated `compose-assignment.wf.md` with preset progression documentation and examples
+
 ## [0.9.3] - 2026-02-15
 
 ### Fixed

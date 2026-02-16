@@ -178,10 +178,17 @@ This ensures forked agents have project context loaded before executing their pr
 When review cycles are needed, expand them inline:
 - Default: 2 cycles (from composition rules `review_cycles.default_count`)
 - Each cycle = review-pr + apply-feedback
+- Use `preset_progression` from composition rules for review preset per cycle:
+  - Cycle 1: preset `code-valid`
+  - Cycle 2: preset `code-fit`
+  - Cycle 3: preset `code-shine`
 - Use `focus_progression` from composition rules for review focus per cycle:
-  - Cycle 1: "Correctness, architecture, and major design issues"
-  - Cycle 2: "Edge cases, error handling, and test coverage"
-  - Cycle 3: "Polish, documentation, and minor improvements"
+  - Cycle 1: "Correctness: bugs, logic errors, missing functionality, broken contracts"
+  - Cycle 2: "Quality: performance, architecture, standards, test coverage"
+  - Cycle 3: "Polish: simplification, naming, documentation (non-blocking suggestions)"
+- Each review step instruction should include both the preset and focus, e.g.:
+  - "Use preset code-valid."
+  - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
 
 #### Prerequisite Checking
 
@@ -228,10 +235,10 @@ Phases:
   020: work-on-task — Implement task 148 (fork)
   030: release — Initial version bump (minor)
   040: create-pr — Create pull request
-  050: review-pr — Review cycle 1/2: Correctness and architecture (fork)
+  050: review-pr — Review cycle 1/2: code-valid preset (fork)
   060: apply-feedback — Apply cycle 1 feedback
   070: release — Patch release for cycle 1 fixes
-  080: review-pr — Review cycle 2/2: Edge cases and test coverage (fork)
+  080: review-pr — Review cycle 2/2: code-fit preset (fork)
   090: apply-feedback — Apply cycle 2 feedback
   100: release — Patch release for cycle 2 fixes
   110: reorganize-commits — Clean up commit history
