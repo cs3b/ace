@@ -88,7 +88,7 @@ fork_context:
   note: "Phases with fork context should include onboard instruction as first step"
 
 review_cycles:
-  default_count: 2
+  default_count: 3
   max_count: 5
   preset_progression:
     1: code-valid
