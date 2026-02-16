@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-02-16
+
+### Added
+- Tmux integration for worktree creation: optional `tmux: true` config under `git.worktree` launches an `ace-tmux` session rooted at the new worktree after creation
+- `tmux?` config accessor in WorktreeConfig model
+- Runtime detection of `ace-tmux` binary with graceful fallback to `cd` hint when unavailable
+
+### Technical
+- Migrate E2E tests to TS-format and enhance task-awareness
+- Consolidate E2E test configuration fixtures
+
 ## [0.12.7] - 2026-02-11
 
 ### Fixed

@@ -29,6 +29,7 @@ module Ace
           DEFAULT_CONFIG = {
             "root_path" => ".ace-wt",
             "auto_navigate" => true,
+            "tmux" => false,
             "mise_trust_auto" => true,
             "task" => {
               "directory_format" => "task.{task_id}",
@@ -68,7 +69,7 @@ module Ace
           # Configuration namespace paths
           CONFIG_NAMESPACE = ["git", "worktree"].freeze
 
-          attr_reader :root_path, :auto_navigate, :mise_trust_auto, :task_config, :pr_config, :branch_config, :cleanup_config, :hooks_config
+          attr_reader :root_path, :auto_navigate, :tmux, :mise_trust_auto, :task_config, :pr_config, :branch_config, :cleanup_config, :hooks_config
 
           # Initialize a new WorktreeConfig
           #
@@ -101,6 +102,13 @@ module Ace
           # @return [Boolean] true if auto-navigation should be performed
           def auto_navigate?
             @auto_navigate
+          end
+
+          # Check if tmux session should be launched after worktree creation
+          #
+          # @return [Boolean] true if tmux launch is enabled
+          def tmux?
+            @tmux
           end
 
           # Check if mise should automatically trust worktree directories
@@ -421,6 +429,7 @@ module Ace
           def initialize_attributes
             @root_path = @merged_config["root_path"]
             @auto_navigate = @merged_config["auto_navigate"]
+            @tmux = @merged_config["tmux"]
             @mise_trust_auto = @merged_config["mise_trust_auto"]
             @task_config = @merged_config["task"] || {}
             @pr_config = @merged_config["pr"] || {}

@@ -553,6 +553,99 @@ class CreateCommandTest < Minitest::Test
     assert_equal 1, result
   end
 
+  # Tmux integration tests
+
+  def test_tmux_disabled_shows_cd_hint
+    mock_worktree_manager = Minitest::Mock.new
+    mock_result = {
+      success: true,
+      task_id: "081",
+      task_title: "Test task",
+      worktree_path: "/path/to/worktree",
+      branch: "task-081",
+      steps_completed: ["create_worktree"]
+    }
+    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      command.stub(:tmux_enabled?, false) do
+        output = capture_io do
+          result = command.run(["--task", "081"])
+          assert_equal 0, result
+        end.first
+
+        assert_match(/cd \/path\/to\/worktree/, output)
+        mock_worktree_manager.verify
+      end
+    end
+  end
+
+  def test_tmux_enabled_with_ace_tmux_available_calls_exec
+    mock_worktree_manager = Minitest::Mock.new
+    mock_result = {
+      success: true,
+      task_id: "081",
+      task_title: "Test task",
+      worktree_path: "/path/to/worktree",
+      branch: "task-081",
+      steps_completed: ["create_worktree"]
+    }
+    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    exec_called_with = nil
+    mock_exec = ->(* args) { exec_called_with = args }
+
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      command.stub(:tmux_enabled?, true) do
+        command.stub(:ace_tmux_available?, true) do
+          Kernel.stub(:exec, mock_exec) do
+            capture_io do
+              result = command.run(["--task", "081"])
+              assert_equal 0, result
+            end
+          end
+        end
+      end
+    end
+
+    assert_equal ["ace-tmux", "start", "--root", "/path/to/worktree"], exec_called_with
+    mock_worktree_manager.verify
+  end
+
+  def test_tmux_enabled_without_ace_tmux_shows_warning_and_cd
+    mock_worktree_manager = Minitest::Mock.new
+    mock_result = {
+      success: true,
+      task_id: "081",
+      task_title: "Test task",
+      worktree_path: "/path/to/worktree",
+      branch: "task-081",
+      steps_completed: ["create_worktree"]
+    }
+    mock_worktree_manager.expect(:create_task, mock_result, [String, Hash])
+
+    command = Ace::Git::Worktree::Commands::CreateCommand.new(manager: mock_worktree_manager)
+
+    command.stub(:check_task_dependency_availability, { available: true, message: "mocked" }) do
+      command.stub(:tmux_enabled?, true) do
+        command.stub(:ace_tmux_available?, false) do
+          output = capture_io do
+            result = command.run(["--task", "081"])
+            assert_equal 0, result
+          end.first
+
+          assert_match(/Warning.*tmux.*enabled.*ace-tmux.*not installed/, output)
+          assert_match(/cd \/path\/to\/worktree/, output)
+          mock_worktree_manager.verify
+        end
+      end
+    end
+  end
+
   def test_debug_output_on_error
     # Test that DEBUG mode provides additional error info without crashing
     # Note: TimeoutError has specific handling, so we use GitError to test the generic debug path
