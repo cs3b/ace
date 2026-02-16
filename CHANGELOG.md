@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.509] - 2026-02-16
+
+### Fixed
+
+- **ace-git-worktree v0.13.1**: Fix `tmux_enabled?` and `should_auto_navigate?` config loading — remove redundant `WorktreeConfig.new()` wrapping that caused tmux config to be silently ignored
+
 ## [0.9.508] - 2026-02-16
 
 ### Added
