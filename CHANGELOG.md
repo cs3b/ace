@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.515] - 2026-02-16
+
+### Changed
+
+- **ace-assign v0.10.2**: Rename review cycle steps by type (`review-valid-1`, `review-fit-1`) and add shine cycle (`review-shine-1`, `apply-shine-1`, `release-shine-1`)
+- **ace-assign v0.10.2**: Update `default_count` to 3 in composition rules for three review types (valid, fit, shine)
+
 ## [0.9.514] - 2026-02-16
 
 ### Changed
