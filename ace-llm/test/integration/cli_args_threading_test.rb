@@ -49,6 +49,17 @@ module Ace
         assert_equal "dangerously-skip-permissions", client.received_options[:cli_args]
       end
 
+      def test_query_interface_threads_sandbox
+        client = FakeClient.new
+        registry = FakeRegistry.new(client)
+
+        Ace::LLM::Molecules::ClientRegistry.stub(:new, registry) do
+          QueryInterface.query("claude:sonnet", "hi", sandbox: "read-only")
+        end
+
+        assert_equal "read-only", client.received_options[:sandbox]
+      end
+
       def test_cli_command_threads_cli_args
         client = FakeClient.new
         registry = FakeRegistry.new(client)
