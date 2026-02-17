@@ -69,6 +69,13 @@ All notable changes to this project will be documented in this file.
 
 - **ace-assign v0.11.11**: `drive-assignment` workflow now auto-delegates detected fork-enabled subtrees with `ace-assign fork-run --assignment <id>@<root>` before inline phase execution
 
+### Fixed
+
+- **ace-support-nav v0.17.6**: Add `--tree` option to Resolve command to fix test suite crash
+  - dry-cli called `exit(1)` on unrecognized `--tree` option, killing the process mid-test
+  - This caused `ace-test-suite` to report 0 tests for ace-support-nav
+  - Remove dead `navigation_integration_test.rb` (permanently skipped, testing non-existent class)
+
 ## [0.9.516] - 2026-02-16
 
 ### Fixed
