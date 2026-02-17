@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.3] - 2026-02-17
+
+### Changed
+- Clarify review workflow execution guards to prevent premature follow-up actions:
+  - `review-pr.wf.md`: explicitly require process exit before feedback commands
+  - `review.wf.md`: explicitly require process exit before feedback commands
+- Standardize timeout handling guidance for review workflows (10-minute timeout with stop-on-timeout behavior)
+- Add explicit precondition + session-targeted feedback examples to reduce session ambiguity in feedback listing
+
 ## [0.39.2] - 2026-02-16
 
 ### Added
