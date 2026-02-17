@@ -68,6 +68,17 @@ module Ace
               assert_match(/Gemini CLI execution timed out/, error.message)
             end
 
+            def test_env_option_passed_to_subprocess
+              stdout, _stderr, status = SafeCapture.call(
+                ["ruby", "-e", "print ENV['ACE_SAFE_CAPTURE_TEST']"],
+                timeout: 5,
+                env: { "ACE_SAFE_CAPTURE_TEST" => "env-ok" }
+              )
+
+              assert_equal "env-ok", stdout
+              assert status.success?
+            end
+
             def test_default_provider_name
               error = assert_raises(Ace::LLM::ProviderError) do
                 SafeCapture.call(["sleep", "60"], timeout: 1)
