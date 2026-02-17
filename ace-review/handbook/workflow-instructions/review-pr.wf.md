@@ -47,7 +47,14 @@ ace-review --pr $(gh pr view --json number -q '.number') [additional-flags]
 
 **Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
-Wait for the review to complete. Note the session directory path from the output.
+#### Execution Guard (Mandatory)
+
+- Completion is defined by **process exit** (success or failure), not by partial output.
+- Do **not** treat temporary silence/no new output as completion.
+- Do **not** run any Step 3+ commands until Step 2 process exit is confirmed.
+- If 10-minute timeout (600000ms) is reached, report timeout and last observed output, then stop dependent steps.
+
+Wait for the review process to exit. Note the session directory path from the output.
 
 The review includes:
 - LLM model reviews (e.g., `review-gemini.md`, `review-gpt4.md`)
@@ -62,6 +69,14 @@ List the feedback items extracted from the review:
 ace-review feedback list --status draft
 ```
 
+**Precondition**: Run this step only after Step 2 process exit is confirmed.
+
+When session ambiguity is possible, use explicit session path from Step 2:
+
+```bash
+ace-review feedback list --status draft --session <session-dir-from-step-2>
+```
+
 This shows all draft feedback items with their IDs, severity, summaries, and sources (LLM or Developer).
 
 #### Understanding Feedback Context
@@ -70,7 +85,8 @@ Feedback items are **session-scoped**. The `feedback list` command discovers ite
 1. Explicit `--session <path>` flag (if provided)
 2. `.ace-review-session` cache file in current directory (auto-created after reviews)
 
-If `feedback list` returns empty after a review, the session may not be linked to current context.
+If `feedback list` returns empty after a review, first verify Step 2 process completion.
+The session may not be linked to current context.
 Use `ace-review feedback list --session <session-dir>` to list from a specific session:
 
 ```bash
