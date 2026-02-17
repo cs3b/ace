@@ -198,7 +198,7 @@ module Ace
               precision: full_compact[4..5]
             }
 
-            week_value = calculate_week_in_month(time)
+            week_value = simple_week_in_month(time)
             week_token = encode_value(week_value, 1, alphabet)
 
             output = {}
@@ -376,10 +376,8 @@ module Ace
           # @return [String] 3-character week ID
           def encode_week(time, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
             # Note: UTC conversion handled by encode_with_format caller
-            months_offset = calculate_months_offset(time, year_zero)
-
-            # Calculate week in month (1-5), then offset to 31-35 range
-            week_in_month = calculate_week_in_month(time)
+            iso_year, iso_month, week_in_month = iso_week_month_and_number(time)
+            months_offset = calculate_months_offset_ym(iso_year, iso_month, year_zero)
             week_value = week_in_month + 30  # Offset to 31-35 range
 
             result = String.new(capacity: 3)
@@ -390,14 +388,14 @@ module Ace
 
           # Decode week format (3 chars)
           #
-          # Note: For week 5 in months with fewer than 35 days (e.g., February),
-          # the result is clamped to the last day of the month. This is a lossy
-          # approximation - the encoded time may have been in the next month.
+          # Returns the Thursday of the Nth ISO week in the encoded month.
+          # For week 5 in months with fewer than 5 Thursdays, the result is
+          # clamped to the last Thursday of the month (lossy).
           #
           # @param encoded_id [String] The 3-character week ID
           # @param year_zero [Integer] Base year for decoding
           # @param alphabet [String] Base36 alphabet
-          # @return [Time] The decoded time (UTC, approximate first day of week at midnight)
+          # @return [Time] The decoded time (UTC, Thursday of the week at midnight)
           def decode_week(encoded_id, year_zero: DEFAULT_YEAR_ZERO, alphabet: DEFAULT_ALPHABET)
             validate_length!(encoded_id, 3)
             validate_alphabet!(encoded_id, alphabet)
@@ -418,15 +416,19 @@ module Ace
             month = (months_offset % 12) + 1
             week_in_month = week_value - 30  # Convert back to 1-5 range
 
-            # Calculate approximate day from week (week * 7 - 6 to get first day of week)
-            day = (week_in_month * 7) - 6
+            # Find the Nth Thursday in the month
+            first_of_month = Date.new(year, month, 1)
+            days_until_thu = (4 - first_of_month.wday) % 7
+            first_thursday = first_of_month + days_until_thu
+            target_thursday = first_thursday + ((week_in_month - 1) * 7)
 
-            # Clamp day to valid range for the month (prevents February crash)
-            # Use Date to get the last day of the month reliably
-            last_day_of_month = Date.new(year, month, -1).day
-            day = [[day, 1].max, last_day_of_month].min
+            # Clamp if week 5 doesn't exist in this month
+            if target_thursday.month != month
+              last_day = Date.new(year, month, -1)
+              target_thursday = last_day - ((last_day.wday - 4) % 7)
+            end
 
-            Time.utc(year, month, day, 0, 0, 0)
+            Time.utc(target_thursday.year, target_thursday.month, target_thursday.day, 0, 0, 0)
           end
 
           # ===================
@@ -855,13 +857,50 @@ module Ace
             months_offset
           end
 
-          # Calculate week number within month (1-5)
-          # Simple day-based calculation: days 1-7 = week 1, 8-14 = week 2, etc.
+          # Simple day-based week number within month (1-5)
+          # days 1-7 = week 1, 8-14 = week 2, etc.
+          # Used by encode_split for organizational path buckets only.
           #
           # @param time [Time] The time to calculate week for
           # @return [Integer] Week number in month (1-5)
-          def calculate_week_in_month(time)
+          def simple_week_in_month(time)
             ((time.day - 1) / 7) + 1
+          end
+
+          # ISO Thursday-based week-in-month calculation.
+          # A week belongs to the month containing its Thursday.
+          #
+          # @param time [Time] The time to calculate week for
+          # @return [Array<Integer>] [year, month, week_in_month]
+          def iso_week_month_and_number(time)
+            date = Date.new(time.year, time.month, time.day)
+            days_since_monday = (date.wday - 1) % 7  # Mon=0..Sun=6
+            thursday = date + (3 - days_since_monday)
+
+            # Week belongs to Thursday's month
+            first_of_month = Date.new(thursday.year, thursday.month, 1)
+            days_until_thu = (4 - first_of_month.wday) % 7
+            first_thursday = first_of_month + days_until_thu
+
+            week_in_month = ((thursday - first_thursday).to_i / 7) + 1
+            [thursday.year, thursday.month, week_in_month]
+          end
+
+          # Calculate months offset from year_zero using explicit year/month
+          #
+          # @param year [Integer] The year
+          # @param month [Integer] The month (1-12)
+          # @param year_zero [Integer] Base year for encoding
+          # @return [Integer] Months since year_zero (0-1295)
+          # @raise [ArgumentError] If outside supported range
+          def calculate_months_offset_ym(year, month, year_zero)
+            months_offset = ((year - year_zero) * 12) + (month - 1)
+
+            if months_offset.negative? || months_offset > MAX_MONTHS_OFFSET
+              raise ArgumentError, "Time #{year}-#{month} is outside supported range (#{year_zero} to #{year_zero + 107})"
+            end
+
+            months_offset
           end
 
           # Normalize split levels into symbol list

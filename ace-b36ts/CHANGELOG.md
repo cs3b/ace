@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-02-17
+
+### Changed
+- Week format (`encode_week`/`decode_week`) now uses ISO Thursday rule instead of simple day-based calculation
+  - A week belongs to the month containing its Thursday (ISO 8601 convention)
+  - Boundary dates (e.g., Feb 1 on a Saturday) encode as the previous month's week
+  - Year-crossing dates (e.g., Dec 31 on a Wednesday) encode as the next year's January
+  - `decode_week` now returns the Thursday of the week (the defining day)
+  - Week values remain 1-5 (encoded as 31-35); format is unchanged
+- Split encoder (`encode_split`) retains simple day-based week calculation for path buckets
+
+### Technical
+- Added `iso_week_month_and_number` private helper for ISO Thursday-based week-in-month calculation
+- Renamed `calculate_week_in_month` to `simple_week_in_month` (used by split encoder only)
+- Added `calculate_months_offset_ym` helper for explicit year/month offset calculation
+- Expanded week format test coverage with ISO boundary, year-crossing, and leap year cases
+
 ## [0.6.0] - 2026-02-14
 
 ### Changed
