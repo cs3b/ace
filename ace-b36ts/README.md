@@ -219,9 +219,9 @@ The 6-character compact ID format has approximately **1.85 seconds** of precisio
 
 The precision is intentionally designed for task management, file naming, and other use cases where exact microsecond timing is not critical.
 
-### Week Format Approximation
+### Week Format (ISO Thursday Rule)
 
-The week format (3 chars) uses a simple week-in-month calculation. When decoding week 5 in short months (like February with 28 days), the result is clamped to the last day of the month. This is a lossy operation - the original time may have technically been in the following month.
+The week format (3 chars) uses the ISO Thursday rule: a week belongs to the month containing its Thursday. This means boundary dates may encode to a different month than their calendar date (e.g., Feb 1 on a Saturday encodes as January week 5, because that week's Thursday is Jan 30). Decoding returns the Thursday of the week. For week 5 in months with fewer than 5 Thursdays, the result is clamped to the last Thursday of the month (lossy).
 
 ## License
 
