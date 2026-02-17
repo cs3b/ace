@@ -22,6 +22,7 @@ module Ace
         #   ace-assign status --all
         class Status < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include AssignmentTarget
 
           # Status icons for consistent display
           STATUS_ICONS = {
@@ -54,38 +55,49 @@ module Ace
           option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments in other assignments section"
 
           def call(**options)
-            assignment_id = resolve_assignment_id(options)
-            executor = build_executor(assignment_id)
+            target = resolve_assignment_target(options)
+            executor = build_executor_for_target(target)
             result = executor.status
+            state = result[:state]
+            assignment = result[:assignment]
+            scoped = scoped_status_view(state, target.scope)
+            scoped_state = scoped[:state]
+            current_for_display = scoped[:current]
+            scope_root = scoped[:root]
 
             unless options[:quiet]
-              print_queue_status(result[:assignment], result[:state], flat: options[:flat])
+              print_queue_status(assignment, scoped_state, flat: options[:flat], root_number: scope_root)
 
-              if result[:current]
+              if current_for_display
+                fork_root = fork_scope_root(state, current_for_display)
+                in_fork_scope = ENV["ACE_ASSIGN_FORK_ROOT"] == fork_root&.number
+
                 puts
-                puts "Current Phase: #{result[:current].number} - #{result[:current].name}"
-                if result[:current].skill
-                  puts "Skill: #{result[:current].skill}"
+                puts "Current Phase: #{current_for_display.number} - #{current_for_display.name}"
+                puts "Current Status: #{current_for_display.status}"
+                if current_for_display.skill
+                  puts "Skill: #{current_for_display.skill}"
                 end
-                if result[:current].context
-                  puts "Context: #{result[:current].context}"
+                if current_for_display.context
+                  puts "Context: #{current_for_display.context}"
                 end
                 puts
 
-                if result[:current].fork?
+                if current_for_display.fork?
                   # Fork context: output Task tool instructions
-                  print_fork_instructions(result[:current], result[:assignment])
+                  print_fork_instructions(current_for_display, assignment)
                 else
                   puts "Instructions:"
-                  puts result[:current].instructions
+                  puts current_for_display.instructions
                 end
-              elsif result[:state].complete?
+                print_fork_scope_guidance(fork_root: fork_root, in_fork_scope: in_fork_scope, assignment: assignment)
+              elsif scoped_state.complete?
                 puts
                 puts "Assignment completed!"
               end
 
               # Show other assignments section (unless targeting a specific assignment)
-              unless assignment_id
+              unless target.assignment_id
                 print_other_assignments(result[:assignment].id, include_completed: options[:all])
               end
             end
@@ -93,43 +105,27 @@ module Ace
 
           private
 
-          # Resolve which assignment to show status for
-          #
-          # Resolution order:
-          # 1. --assignment flag
-          # 2. ACE_ASSIGN_ID env var
-          # 3. nil (use default find_active behavior)
-          def resolve_assignment_id(options)
-            options[:assignment] || ENV["ACE_ASSIGN_ID"]
+          def scoped_status_view(state, scope)
+            return { state: state, current: state.current, root: nil } if scope.nil? || scope.strip.empty?
+
+            root = state.find_by_number(scope.strip)
+            raise PhaseNotFoundError, "Phase #{scope} not found in queue" unless root
+
+            scoped_phases = state.subtree_phases(root.number)
+            scoped_state = Models::QueueState.new(phases: scoped_phases, assignment: state.assignment)
+            current = scoped_state.current || scoped_state.next_workable || root
+
+            { state: scoped_state, current: current, root: root.number }
           end
 
-          # Build executor, optionally targeting a specific assignment
-          def build_executor(assignment_id)
-            if assignment_id
-              # Load specific assignment and create executor pointing to it
-              manager = Molecules::AssignmentManager.new
-              assignment = manager.load(assignment_id)
-              raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
-
-              # Create executor that will find this specific assignment
-              # Set .current temporarily is not ideal; instead override find_active
-              executor = Organisms::AssignmentExecutor.new
-              # Override the manager's find_active to return the specific assignment
-              executor.assignment_manager.define_singleton_method(:find_active) { assignment }
-              executor
-            else
-              Organisms::AssignmentExecutor.new
-            end
-          end
-
-          def print_queue_status(assignment, state, flat: false)
+          def print_queue_status(assignment, state, flat: false, root_number: nil)
             puts "QUEUE - Assignment: #{assignment.name} (#{assignment.id})"
             puts
 
             if flat || !has_nested_phases?(state)
               print_flat_status(state)
             else
-              print_hierarchical_status(state)
+              print_hierarchical_status(state, root_number: root_number)
             end
           end
 
@@ -163,13 +159,31 @@ module Ace
             end
           end
 
-          def print_hierarchical_status(state)
+          def print_hierarchical_status(state, root_number: nil)
             # Header
             puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %s", "NUMBER", "STATUS", "NAME", "CHILDREN")
             puts "-" * 70
 
             # Print hierarchy with tree structure
-            print_hierarchy_level(state.hierarchical, state, depth: 0)
+            nodes = root_hierarchy_nodes(state, root_number)
+            print_hierarchy_level(nodes, state, depth: 0)
+          end
+
+          def root_hierarchy_nodes(state, root_number)
+            return state.hierarchical if root_number.nil? || root_number.strip.empty?
+
+            root = state.find_by_number(root_number)
+            return [] unless root
+
+            [build_hierarchy_node(state, root)]
+          end
+
+          def build_hierarchy_node(state, phase)
+            children = state.children_of(phase.number).map do |child|
+              build_hierarchy_node(state, child)
+            end
+
+            { step: phase, children: children }
           end
 
           def print_hierarchy_level(nodes, state, depth:)
@@ -248,6 +262,26 @@ module Ace
             puts
             puts "After completing, create a report file and run:"
             puts "  ace-assign report <report-file.md>"
+          end
+
+          def print_fork_scope_guidance(fork_root:, in_fork_scope:, assignment:)
+            return unless fork_root
+
+            puts
+            if in_fork_scope
+              puts "Fork scope: #{fork_root.number} (ACE_ASSIGN_FORK_ROOT=#{fork_root.number})"
+            else
+              puts "Fork subtree detected (root: #{fork_root.number} - #{fork_root.name})."
+              puts "Run in forked process:"
+              puts "  ace-assign fork-run --assignment #{assignment.id}@#{fork_root.number}"
+            end
+          end
+
+          def fork_scope_root(state, current_phase)
+            return nil unless current_phase
+            return current_phase if current_phase.fork?
+
+            state.nearest_fork_ancestor(current_phase.number)
           end
 
           # Print other assignments section

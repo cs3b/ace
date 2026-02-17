@@ -324,6 +324,36 @@ class PresetExpanderTest < AceAssignTestCase
     assert_equal "ace:work-on-task", result[0]["skill"]
   end
 
+  def test_expand_substitutes_placeholders_in_non_instruction_fields
+    preset = {
+      "expansion" => {
+        "foreach" => "taskrefs",
+        "child-template" => {
+          "name" => "work-on-{{item}}",
+          "parent" => "010",
+          "skill" => "ace:work-on-task",
+          "taskref" => "{{item}}",
+          "metadata" => {
+            "label" => "task-{{item}}"
+          },
+          "instructions" => [
+            "Implement task {{item}}",
+            "Report taskref {{item}}"
+          ]
+        }
+      },
+      "steps" => []
+    }
+    params = { "taskrefs" => ["235.01"] }
+
+    result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
+
+    assert_equal 1, result.length
+    assert_equal "235.01", result[0]["taskref"]
+    assert_equal "task-235.01", result[0].dig("metadata", "label")
+    assert_equal ["Implement task 235.01", "Report taskref 235.01"], result[0]["instructions"]
+  end
+
   def test_expand_array_instructions
     preset = {
       "steps" => [

@@ -102,6 +102,35 @@ class CompositionRulesTest < AceAssignTestCase
     assert_empty violations
   end
 
+  def test_validate_ordering_plan_before_onboard
+    # plan-task before onboard violates onboard-before-plan
+    phase_names = ["plan-task", "onboard", "work-on-task"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+
+    onboard_plan_violation = violations.find { |v| v[:rule] == "onboard-before-plan" }
+    refute_nil onboard_plan_violation
+    assert_match(/onboard.*must come before.*plan-task/, onboard_plan_violation[:message])
+  end
+
+  def test_validate_ordering_work_before_plan
+    # work-on-task before plan-task violates plan-before-implementation
+    phase_names = ["onboard", "work-on-task", "plan-task"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+
+    plan_impl_violation = violations.find { |v| v[:rule] == "plan-before-implementation" }
+    refute_nil plan_impl_violation
+    assert_match(/plan-task.*must come before.*work-on-task/, plan_impl_violation[:message])
+  end
+
+  def test_validate_ordering_plan_task_correct_sequence
+    # Correct ordering: onboard, plan-task, work-on-task
+    phase_names = ["onboard", "plan-task", "work-on-task", "create-pr"]
+    violations = Ace::Assign::Atoms::CompositionRules.validate_ordering(phase_names, @rules)
+
+    plan_violations = violations.select { |v| v[:rule].include?("plan") }
+    assert_empty plan_violations
+  end
+
   # suggest_additions tests
 
   def test_suggest_additions_missing_pair_member
@@ -180,6 +209,29 @@ class CompositionRulesTest < AceAssignTestCase
 
     test_suggestion = suggestions.find { |s| s[:phase] == "verify-test-suite" }
     assert_nil test_suggestion
+  end
+
+  def test_suggest_additions_conditional_plan_task_with_work
+    # "assignment includes work-on-task" should suggest plan-task and mark-task-done
+    phase_names = ["onboard", "work-on-task", "create-pr"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+
+    plan_suggestion = suggestions.find { |s| s[:phase] == "plan-task" }
+    refute_nil plan_suggestion
+    assert_equal "recommended", plan_suggestion[:strength]
+
+    done_suggestion = suggestions.find { |s| s[:phase] == "mark-task-done" }
+    refute_nil done_suggestion
+    assert_equal "recommended", done_suggestion[:strength]
+  end
+
+  def test_suggest_additions_conditional_plan_task_already_included
+    # plan-task already present — should not be suggested
+    phase_names = ["onboard", "plan-task", "work-on-task"]
+    suggestions = Ace::Assign::Atoms::CompositionRules.suggest_additions(phase_names, @rules)
+
+    plan_suggestion = suggestions.find { |s| s[:phase] == "plan-task" }
+    assert_nil plan_suggestion
   end
 
   # prefix matching tests

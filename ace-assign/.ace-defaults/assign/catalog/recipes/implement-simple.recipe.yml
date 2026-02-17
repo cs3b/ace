@@ -12,6 +12,9 @@ parameters:
 phases:
   - name: onboard
     required: true
+  - name: plan-task
+    required: false
+    note: "JIT planning — can be skipped for trivial tasks"
   - name: work-on-task
     required: true
     instructions_template: "Work on task {{taskref}}."

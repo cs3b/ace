@@ -23,6 +23,7 @@ module Ace
         #   # Creates 010.01-verify.ph.md
         class Add < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include AssignmentTarget
 
           desc "Add a new phase to the queue dynamically"
 
@@ -53,7 +54,8 @@ module Ace
 
             instructions = options[:instructions] || "Complete this phase and report: ace-assign report report.md"
 
-            executor = build_executor_for(options)
+            target = resolve_assignment_target(options)
+            executor = build_executor_for_target(target)
             result = executor.add(
               name,
               instructions,
@@ -93,19 +95,6 @@ module Ace
           end
 
           private
-
-          def build_executor_for(options)
-            assignment_id = options[:assignment] || ENV["ACE_ASSIGN_ID"]
-            return Organisms::AssignmentExecutor.new unless assignment_id
-
-            manager = Molecules::AssignmentManager.new
-            assignment = manager.load(assignment_id)
-            raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
-
-            executor = Organisms::AssignmentExecutor.new
-            executor.assignment_manager.define_singleton_method(:find_active) { assignment }
-            executor
-          end
         end
       end
     end

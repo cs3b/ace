@@ -12,12 +12,14 @@ module Ace
       # Implements the state machine for queue operations:
       # start → advance → complete (with fail/add/retry branches)
       class AssignmentExecutor
-        attr_reader :assignment_manager, :queue_scanner, :phase_writer, :phase_renumberer
+        attr_reader :assignment_manager, :queue_scanner, :phase_writer, :phase_renumberer, :skill_source_resolver
 
         def initialize(cache_base: nil)
           @assignment_manager = Molecules::AssignmentManager.new(cache_base: cache_base)
           @queue_scanner = Molecules::QueueScanner.new
           @phase_writer = Molecules::PhaseWriter.new
+          @skill_source_resolver = Molecules::SkillAssignSourceResolver.new
+          @phase_catalog = nil
           @phase_renumberer = Molecules::PhaseRenumberer.new(
             phase_writer: @phase_writer,
             queue_scanner: @queue_scanner
@@ -39,6 +41,9 @@ module Ace
           phases_config = config["phases"] || config["steps"] || []
 
           raise Error, "No phases defined in config" if phases_config.empty?
+
+          # Enrich phases using skill-declared assign.source metadata.
+          phases_config = enrich_skill_declared_sub_phases(phases_config)
 
           # Expand sub-phase declarations into batch parent + child phases
           phases_config = expand_sub_phases(phases_config)
@@ -67,9 +72,11 @@ module Ace
             )
           end
 
-          # Mark first phase as in_progress
-          first_phase_file = Dir.glob(File.join(assignment.phases_dir, "*.ph.md")).min
-          phase_writer.mark_in_progress(first_phase_file) if first_phase_file
+          # Mark first workable phase as in_progress.
+          # This skips batch parent containers that have incomplete children.
+          initial_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          first_workable = initial_state.next_workable
+          phase_writer.mark_in_progress(first_workable.file_path) if first_workable
 
           # Archive source config into task's phases directory and update assignment metadata
           archived_path = archive_source_config(config_path, assignment.id)
@@ -126,6 +133,12 @@ module Ace
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
           current = state.current
+          fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
+          if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+            if current.nil? || !state.in_subtree?(fork_root, current.number)
+              current = state.next_workable_in_subtree(fork_root)
+            end
+          end
           raise Error, "No phase currently in progress. Try 'ace-assign add' to add a new phase or 'ace-assign retry' to retry a failed phase." unless current
 
           # Enforce hierarchy: cannot mark parent as done with incomplete children
@@ -151,9 +164,14 @@ module Ace
           # (auto_complete_parents modifies files, so state is stale)
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
 
-          # Find next phase to work on using hierarchical rules
-          # Uses next_workable to respect hierarchy (skip parents with incomplete children)
-          next_phase = find_next_phase(state, current.number)
+          # Find next phase to work on using hierarchical rules.
+          # When ACE_ASSIGN_FORK_ROOT is set, keep advancement inside that subtree.
+          next_phase = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+                         find_next_phase_in_subtree(state, current.number, fork_root)
+                       else
+                         # Uses next_workable to respect hierarchy (skip parents with incomplete children)
+                         find_next_phase(state, current.number)
+                       end
           if next_phase
             phase_writer.mark_in_progress(next_phase.file_path)
           end
@@ -325,6 +343,36 @@ module Ace
 
         private
 
+        # Enrich phases by resolving skill-level assign source metadata.
+        #
+        # If a phase has `skill: ...` and no explicit sub_phases, this looks up
+        # SKILL.md frontmatter `assign.source`, resolves the workflow, then applies
+        # workflow `assign.sub-phases` as phase sub_phases for deterministic runtime expansion.
+        #
+        # @param phases_config [Array<Hash>] Original phases from config
+        # @return [Array<Hash>] Enriched phases
+        def enrich_skill_declared_sub_phases(phases_config)
+          phases_config.map do |phase|
+            next phase unless phase.is_a?(Hash)
+
+            sub_phases = phase["sub_phases"] || phase["sub-phases"]
+            next phase if sub_phases.is_a?(Array) && sub_phases.any?
+
+            skill_name = phase["skill"]&.to_s
+            next phase if skill_name.nil? || skill_name.empty?
+
+            assign_config = skill_source_resolver.resolve_assign_config(skill_name)
+            next phase unless assign_config
+
+            resolved_sub_phases = assign_config[:sub_phases]
+            next phase unless resolved_sub_phases.is_a?(Array) && resolved_sub_phases.any?
+
+            enriched = phase.merge("sub_phases" => resolved_sub_phases)
+            enriched["context"] ||= assign_config[:context] if assign_config[:context]
+            enriched
+          end
+        end
+
         # Expand phases with sub_phases into batch parent + child structure.
         #
         # When a phase declares `sub_phases` (from workflow frontmatter), it becomes
@@ -352,24 +400,28 @@ module Ace
             parent_number = phase["number"] || Atoms::NumberGenerator.from_index(index)
 
             if sub_phases.is_a?(Array) && sub_phases.any?
-              # Create batch parent with fork context
-              parent_phase = phase.merge(
-                "number" => parent_number,
-                "context" => phase["context"] || "fork"
+              # Create split parent orchestration node
+              parent_context = phase["context"] || "fork"
+              parent_instructions = phase["instructions"]
+              parent_phase = build_split_parent_phase(
+                phase: phase,
+                parent_number: parent_number,
+                parent_context: parent_context,
+                sub_phases: sub_phases
               )
-              parent_phase.delete("sub_phases")
-              parent_phase.delete("sub-phases")
               expanded << parent_phase
 
               # Create child phases under the parent
               sub_phases.each_with_index do |sub_name, sub_idx|
-                child_number = "#{parent_number}.#{format('%02d', sub_idx + 1)}"
-                expanded << {
-                  "number" => child_number,
-                  "name" => sub_name,
-                  "instructions" => "Execute #{sub_name} sub-phase.",
-                  "parent" => parent_number
-                }
+                child_number = Atoms::NumberGenerator.subtask(parent_number, sub_idx + 1)
+                expanded << build_child_sub_phase(
+                  sub_name: sub_name,
+                  child_number: child_number,
+                  parent_number: parent_number,
+                  parent_phase: phase,
+                  parent_instructions: parent_instructions,
+                  parent_context: parent_context
+                )
               end
             else
               # Pre-assign number to non-sub-phase entries to maintain position
@@ -378,6 +430,311 @@ module Ace
           end
 
           expanded
+        end
+
+        # Build a split parent orchestration phase.
+        #
+        # Parent nodes with sub_phases are subtree delegation roots and should not
+        # execute the original skill directly. The parent instructions explain
+        # how to drive the subtree; the original goals are preserved for context.
+        #
+        # @param phase [Hash] Original parent phase config
+        # @param parent_number [String] Parent phase number
+        # @param parent_context [String] Parent execution context
+        # @param sub_phases [Array<String>] Declared sub-phase names
+        # @return [Hash] Parent phase config for runtime queue
+        def build_split_parent_phase(phase:, parent_number:, parent_context:, sub_phases:)
+          source_skill = phase["skill"]
+          original_text = normalize_instructions(phase["instructions"]).strip
+          definition = find_phase_definition("split-subtree-root") || {}
+
+          lines = split_parent_instruction_lines(
+            definition: definition,
+            parent_number: parent_number,
+            parent_context: parent_context,
+            source_skill: source_skill,
+            sub_phases: sub_phases
+          )
+
+          unless original_text.empty?
+            lines << ""
+            lines << (definition["goal_header"] || "Goal to satisfy through child phases:")
+            original_text.lines.map(&:strip).reject(&:empty?).each do |line|
+              lines << "- #{line}"
+            end
+          end
+
+          parent_phase = phase.merge(
+            "number" => parent_number,
+            "context" => parent_context,
+            "instructions" => lines.join("\n")
+          )
+          parent_phase.delete("sub_phases")
+          parent_phase.delete("sub-phases")
+          parent_phase.delete("skill")
+          parent_phase["source_skill"] = source_skill if source_skill
+          parent_phase["split_phase_type"] = definition["name"] || "split-subtree-root"
+          parent_phase
+        end
+
+        # Render split parent instructions from catalog with fallback defaults.
+        #
+        # @param definition [Hash] Catalog definition for split parent phase
+        # @param parent_number [String] Parent phase number
+        # @param parent_context [String] Parent execution context
+        # @param source_skill [String, nil] Source skill of original parent phase
+        # @param sub_phases [Array<String>] Child phase names
+        # @return [Array<String>] Rendered instruction lines
+        def split_parent_instruction_lines(definition:, parent_number:, parent_context:, source_skill:, sub_phases:)
+          instructions = definition["instructions"].is_a?(Hash) ? definition["instructions"] : {}
+          context_key = parent_context == "fork" ? "fork" : "inline"
+          template_lines = Array(instructions["common"]) + Array(instructions[context_key])
+          template_lines = default_split_parent_instruction_lines(parent_context) if template_lines.empty?
+
+          template_lines = template_lines.map(&:to_s)
+          template_lines.reject! { |line| line.include?("{{source_skill}}") && source_skill.to_s.strip.empty? }
+
+          variables = {
+            "parent_number" => parent_number,
+            "parent_context" => parent_context,
+            "source_skill" => source_skill.to_s,
+            "sub_phases" => sub_phases.join(", ")
+          }
+
+          template_lines
+            .map { |line| interpolate_template_line(line, variables) }
+            .map(&:strip)
+            .reject(&:empty?)
+        end
+
+        # Default split parent instruction lines used when catalog entry is missing.
+        #
+        # @param parent_context [String]
+        # @return [Array<String>]
+        def default_split_parent_instruction_lines(parent_context)
+          lines = [
+            "Subtree root orchestrator phase.",
+            "This phase is orchestration-only.",
+            "Do not execute {{source_skill}} directly in this parent phase.",
+            "Child phases: {{sub_phases}}."
+          ]
+
+          if parent_context == "fork"
+            lines.concat(
+              [
+                "Delegate this subtree into forked context:",
+                "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}",
+                "Inside the forked agent, run /ace:assign-drive for this subtree scope."
+              ]
+            )
+          else
+            lines << "Run /ace:assign-drive and execute only child phases under this node."
+          end
+
+          lines
+        end
+
+        # Apply simple {{token}} template substitution.
+        #
+        # @param line [String]
+        # @param variables [Hash]
+        # @return [String]
+        def interpolate_template_line(line, variables)
+          rendered = line.dup
+          variables.each do |key, value|
+            rendered = rendered.gsub("{{#{key}}}", value.to_s)
+          end
+          rendered
+        end
+
+        # Build a concrete child phase from a sub-phase name.
+        #
+        # Child phases inherit parent task context in instructions so skills can
+        # extract concrete parameters (e.g., task refs) during execution.
+        # Skill and context defaults are sourced from the phase catalog when available.
+        #
+        # @param sub_name [String] Child sub-phase name
+        # @param child_number [String] Generated child phase number
+        # @param parent_number [String] Parent phase number
+        # @param parent_phase [Hash] Parent phase config
+        # @param parent_instructions [String, Array<String>, nil] Parent instructions
+        # @param parent_context [String, nil] Parent execution context
+        # @return [Hash] Child phase config
+        def build_child_sub_phase(sub_name:, child_number:, parent_number:, parent_phase:, parent_instructions:, parent_context:)
+          phase_def = find_phase_definition(sub_name)
+          parent_task_ref = extract_parent_taskref(parent_phase, parent_instructions)
+          child = {
+            "number" => child_number,
+            "name" => sub_name,
+            "instructions" => build_child_instructions(sub_name, parent_instructions, phase_def, task_ref: parent_task_ref),
+            "parent" => parent_number
+          }
+          child["taskref"] = parent_task_ref if parent_task_ref
+
+          if phase_def
+            child["skill"] = phase_def["skill"] if phase_def["skill"]
+
+            context_default = phase_def.dig("context", "default")
+            child["context"] = context_default if context_default && parent_context != "fork"
+          end
+
+          child
+        end
+
+        # Build child instructions with parent context and phase focus.
+        #
+        # @param sub_name [String] Child sub-phase name
+        # @param parent_instructions [String, Array<String>, nil] Parent instructions
+        # @param phase_def [Hash, nil] Catalog definition for this sub-phase
+        # @param task_ref [String, nil] Explicit task reference from parent metadata
+        # @return [String] Rendered instructions
+        def build_child_instructions(sub_name, parent_instructions, phase_def, task_ref: nil)
+          parent_text = normalize_instructions(parent_instructions).strip
+          focus = phase_def && phase_def["description"] ? phase_def["description"] : "Execute #{sub_name} sub-phase."
+          context = compact_task_context(parent_text, task_ref: task_ref)
+          action = child_action_instructions(sub_name, parent_text, task_ref: task_ref)
+          verification = verification_checklist(parent_text)
+
+          sections = []
+          sections << "Task context:\n#{context}" unless context.empty?
+          sections << "Sub-phase focus:\n#{focus}"
+          sections << "Action:\n#{action}"
+          sections << "Verification checklist (from parent phase goals):\n#{verification}" unless verification.empty?
+          sections.join("\n\n")
+        end
+
+        # Build compact task context for child sub-phases.
+        # Avoid copying parent orchestration boilerplate into every child phase.
+        #
+        # @param parent_text [String]
+        # @param task_ref [String, nil]
+        # @return [String]
+        def compact_task_context(parent_text, task_ref: nil)
+          unless task_ref.nil? || task_ref.to_s.strip.empty?
+            return "Task reference: #{task_ref}"
+          end
+
+          return "" if parent_text.nil? || parent_text.empty?
+
+          task_refs = parent_text.scan(/\b\d+\.\d+\b/).uniq
+          return "Task reference: #{task_refs.join(', ')}" if task_refs.any?
+
+          first_line = parent_text.lines.map(&:strip).find { |line| !line.empty? }
+          return "" unless first_line
+
+          "Task request: #{first_line}"
+        end
+
+        # Build explicit, step-specific action instructions.
+        #
+        # @param sub_name [String]
+        # @param parent_text [String]
+        # @param task_ref [String, nil]
+        # @return [String]
+        def child_action_instructions(sub_name, parent_text, task_ref: nil)
+          task_refs = if task_ref && !task_ref.to_s.strip.empty?
+                        [task_ref.to_s]
+                      else
+                        parent_text.to_s.scan(/\b\d+\.\d+\b/).uniq
+                      end
+          task_hint = task_refs.any? ? " for task #{task_refs.join(', ')}" : ""
+
+          case sub_name
+          when "onboard"
+            "- Run /onboard to load project context#{task_hint}.\n- Confirm required files and workflow context are available."
+          when "plan-task"
+            "- Analyze requirements#{task_hint}.\n- Produce a concrete implementation plan with acceptance checks."
+          when "work-on-task"
+            "- Implement the required changes#{task_hint}.\n- Verify behavior with relevant checks/tests before reporting completion."
+          else
+            "- Execute the #{sub_name} step."
+          end
+        end
+
+        # Render parent instructions as a verification checklist.
+        #
+        # @param parent_text [String]
+        # @return [String]
+        def verification_checklist(parent_text)
+          return "" if parent_text.nil? || parent_text.empty?
+
+          lines = parent_text.lines.map(&:strip).reject(&:empty?)
+          lines.map { |line| "- #{line}" }.join("\n")
+        end
+
+        # Resolve task reference from explicit metadata first, then parent instruction text.
+        #
+        # @param parent_phase [Hash]
+        # @param parent_instructions [String, Array<String>, nil]
+        # @return [String, nil]
+        def extract_parent_taskref(parent_phase, parent_instructions)
+          explicit = parent_phase["taskref"] || parent_phase["task_ref"]
+          explicit_value = explicit.to_s.strip
+          return explicit_value unless explicit_value.empty?
+
+          parent_text = normalize_instructions(parent_instructions)
+          inferred = parent_text.scan(/\b\d+\.\d+\b/).uniq
+          return nil if inferred.empty?
+
+          inferred.join(", ")
+        end
+
+        # Lookup phase definition from catalog by phase name.
+        #
+        # @param phase_name [String] Name of phase
+        # @return [Hash, nil] Catalog definition
+        def find_phase_definition(phase_name)
+          Atoms::CatalogLoader.find_by_name(phase_catalog, phase_name)
+        end
+
+        # Load phase catalog from project override or gem defaults.
+        #
+        # @return [Array<Hash>] Loaded phase definitions
+        def phase_catalog
+          @phase_catalog ||= begin
+            project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+            gem_root = Gem.loaded_specs["ace-assign"]&.gem_dir || File.expand_path("../../../..", __dir__)
+
+            project_catalog = File.join(project_root, ".ace", "assign", "catalog", "phases")
+            default_catalog = File.join(gem_root, ".ace-defaults", "assign", "catalog", "phases")
+
+            default_phases = Atoms::CatalogLoader.load_all(default_catalog)
+            if File.directory?(project_catalog)
+              project_phases = Atoms::CatalogLoader.load_all(project_catalog)
+              merge_phase_catalog(default_phases, project_phases)
+            else
+              default_phases
+            end
+          end
+        end
+
+        # Merge default and project phase catalogs by phase name.
+        # Project definitions override defaults with matching names.
+        #
+        # @param default_phases [Array<Hash>]
+        # @param project_phases [Array<Hash>]
+        # @return [Array<Hash>]
+        def merge_phase_catalog(default_phases, project_phases)
+          index = {}
+          order = []
+
+          default_phases.each do |phase|
+            name = phase["name"]
+            next if name.nil? || name.empty?
+
+            index[name] = phase
+            order << name
+          end
+
+          project_phases.each do |phase|
+            name = phase["name"]
+            next if name.nil? || name.empty?
+
+            order << name unless index.key?(name)
+            index[name] = phase
+          end
+
+          order.map { |name| index[name] }.compact
         end
 
         # Archive source config into the task's phases/ directory.
@@ -484,6 +841,22 @@ module Ace
           # Second priority: next workable phase (respects hierarchy)
           # Uses next_workable to skip parents that have incomplete children
           state.next_workable
+        end
+
+        # Find next phase within a constrained subtree.
+        #
+        # @param state [Models::QueueState] Current queue state
+        # @param completed_number [String] Number of just-completed phase
+        # @param root_number [String] Root of fork-scoped subtree
+        # @return [Models::Phase, nil] Next phase in subtree, or nil when subtree done
+        def find_next_phase_in_subtree(state, completed_number, root_number)
+          # First priority: pending direct children of completed phase within subtree
+          children = state.children_of(completed_number)
+          pending_child = children.find { |c| c.status == :pending && state.in_subtree?(root_number, c.number) }
+          return pending_child if pending_child
+
+          # Second priority: next workable phase within subtree
+          state.next_workable_in_subtree(root_number)
         end
 
         # Calculate insertion point for a new phase.

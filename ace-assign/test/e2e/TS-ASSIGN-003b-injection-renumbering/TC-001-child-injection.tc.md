@@ -27,7 +27,7 @@ Verify that ace-assign correctly handles child injection via `add --after X --ch
    echo "$ADD_OUTPUT" | grep -q "010.03" && echo "PASS: New phase is 010.03" || echo "FAIL: Expected phase number 010.03"
    echo "$ADD_OUTPUT" | grep -q "child of 010" && echo "PASS: Relationship shows 'child of 010'" || echo "FAIL: Relationship should show 'child of 010'"
    [ -f "$ASSIGNMENT_DIR/phases/010.03-setup-fixtures.ph.md" ] && echo "PASS: Phase file created" || echo "FAIL: Phase file not created"
-   grep -q 'parent:.*"010"' "$ASSIGNMENT_DIR/phases/010.03-setup-fixtures.ph.md" && echo "PASS: Has parent: 010" || echo "FAIL: Missing parent field"
+   grep -qE "parent:.*['\"]010['\"]" "$ASSIGNMENT_DIR/phases/010.03-setup-fixtures.ph.md" && echo "PASS: Has parent: 010" || echo "FAIL: Missing parent field"
    grep -q 'added_by:.*child_of:010' "$ASSIGNMENT_DIR/phases/010.03-setup-fixtures.ph.md" && echo "PASS: added_by shows child_of:010" || echo "FAIL: added_by missing"
    ```
 

@@ -19,7 +19,7 @@ Verify that all audit trail metadata fields are present and correctly populated 
 2. Verify child_of audit trail
    ```bash
    grep -q 'added_by:.*child_of:010' "$ASSIGNMENT_DIR/phases/010.01-child-task.ph.md" && echo "PASS: added_by: child_of:010 present" || echo "FAIL: Missing"
-   grep -q 'parent:.*"010"' "$ASSIGNMENT_DIR/phases/010.01-child-task.ph.md" && echo "PASS: parent: 010 present" || echo "FAIL: Missing"
+   grep -qE "parent:.*['\"]010['\"]" "$ASSIGNMENT_DIR/phases/010.01-child-task.ph.md" && echo "PASS: parent: 010 present" || echo "FAIL: Missing"
    ```
 
 3. Add another child and inject sibling to trigger renumbering

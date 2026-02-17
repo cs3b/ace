@@ -1,0 +1,53 @@
+# frozen_string_literal: true
+
+module Ace
+  module Assign
+    module CLI
+      module Commands
+        # Shared parsing/helpers for --assignment target.
+        #
+        # Supported syntax:
+        # - <assignment-id>
+        # - <assignment-id>@<phase-number>
+        module AssignmentTarget
+          Target = Struct.new(:assignment_id, :scope, keyword_init: true)
+
+          private
+
+          def resolve_assignment_target(options)
+            raw = options[:assignment] || ENV["ACE_ASSIGN_ID"]
+            return Target.new(assignment_id: nil, scope: nil) if raw.nil?
+
+            parse_assignment_target(raw)
+          end
+
+          def parse_assignment_target(raw)
+            value = raw.to_s.strip
+            raise Ace::Core::CLI::Error, "Assignment target cannot be empty" if value.empty?
+
+            assignment_id, scope = value.split("@", 2)
+            assignment_id = assignment_id&.strip
+            scope = scope&.strip
+
+            raise Ace::Core::CLI::Error, "Assignment target requires assignment ID before '@'" if assignment_id.nil? || assignment_id.empty?
+            raise Ace::Core::CLI::Error, "Assignment target scope after '@' cannot be empty" if value.include?("@") && (scope.nil? || scope.empty?)
+
+            Target.new(assignment_id: assignment_id, scope: scope)
+          end
+
+          def build_executor_for_target(target)
+            return Organisms::AssignmentExecutor.new unless target.assignment_id
+
+            manager = Molecules::AssignmentManager.new
+            assignment = manager.load(target.assignment_id)
+            raise AssignmentNotFoundError, "Assignment '#{target.assignment_id}' not found" unless assignment
+
+            executor = Organisms::AssignmentExecutor.new
+            executor.assignment_manager.define_singleton_method(:find_active) { assignment }
+            executor
+          end
+        end
+      end
+    end
+  end
+end

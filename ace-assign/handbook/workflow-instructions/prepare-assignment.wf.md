@@ -109,7 +109,7 @@ expansion:
   child-template:
     name: "work-on-{{item}}"  # {{item}} is current iteration value
     parent: "010"
-    context: fork  # Each child runs in isolated context
+    context: fork  # Parent split phase can be forked (children stay non-fork)
     instructions: |
       Implement task {{item}} per specification.
 
@@ -136,16 +136,19 @@ For `--taskrefs 148,149,150`, expansion generates:
 
 ```
 010 batch-tasks (parent, auto-completes)
-├── 010.01 work-on-148 (fork context)
-├── 010.02 work-on-149 (fork context)
-└── 010.03 work-on-150 (fork context)
+├── 010.01 work-on-148 (fork context on split parent)
+│   ├── 010.01.01 onboard (no fork marker)
+│   ├── 010.01.02 plan-task (no fork marker)
+│   └── 010.01.03 work-on-task (no fork marker)
+├── 010.02 work-on-149 (fork context on split parent)
+└── 010.03 work-on-150 (fork context on split parent)
 020 consolidated-review
 030 finalize
 ```
 
 The hierarchical numbering enables:
 - Parent auto-completion when all children are done
-- Fork context for isolated task execution
+- Parent-only fork markers for subtree delegation
 - Progress tracking per-task
 
 ## Parameter Placeholders
@@ -259,6 +262,25 @@ preset = YAML.load_file("work-on-tasks.yml")
 params = { "taskrefs" => ["148", "149", "150"], "review_preset" => "batch" }
 phases = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 ```
+
+### 5.1 Resolve Skill `assign.source` Metadata (Deterministic Runtime Expansion)
+
+After preset expansion, each phase with a `skill:` field may declare assignment source metadata via the skill frontmatter:
+
+```yaml
+assign:
+  source: wfi://work-on-task
+```
+
+Resolution flow:
+1. Find `SKILL.md` by phase `skill` name (e.g., `ace:work-on-task`)
+2. Read `assign.source` from skill frontmatter
+3. Resolve `wfi://...` to workflow file
+4. Parse workflow frontmatter `assign.sub-phases`
+5. Materialize those sub-phases into the concrete job phases
+
+This keeps lifecycle ownership in workflow files while prepare/create remain deterministic.
+Compose intentionally does not perform this metadata scan.
 
 This generates hierarchical phases with:
 - Pre-assigned numbers (010, 010.01, 010.02, etc.)

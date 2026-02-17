@@ -288,6 +288,59 @@ class QueueStateTest < AceAssignTestCase
     assert_includes ["010.01", "020"], workable.number
   end
 
+  def test_in_subtree_matches_root_and_descendants
+    phases = [
+      make_phase(number: "010", name: "root", status: :pending),
+      make_phase(number: "010.01", name: "child", status: :pending),
+      make_phase(number: "020", name: "other", status: :pending)
+    ]
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert state.in_subtree?("010", "010")
+    assert state.in_subtree?("010", "010.01")
+    refute state.in_subtree?("010", "020")
+  end
+
+  def test_subtree_helpers
+    phases = [
+      make_phase(number: "010", name: "root", status: :done),
+      make_phase(number: "010.01", name: "child1", status: :pending),
+      make_phase(number: "010.02", name: "child2", status: :failed),
+      make_phase(number: "020", name: "other", status: :pending)
+    ]
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    subtree = state.subtree_phases("010")
+    assert_equal ["010", "010.01", "010.02"], subtree.map(&:number)
+    assert state.subtree_failed?("010")
+    refute state.subtree_complete?("010")
+  end
+
+  def test_next_workable_in_subtree
+    phases = [
+      make_phase(number: "010", name: "root", status: :pending),
+      make_phase(number: "010.01", name: "child", status: :pending),
+      make_phase(number: "020", name: "other", status: :pending)
+    ]
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    # root has incomplete children, so first workable in subtree should be child
+    workable = state.next_workable_in_subtree("010")
+    assert_equal "010.01", workable.number
+  end
+
+  def test_nearest_fork_ancestor
+    phases = [
+      Ace::Assign::Models::Phase.new(number: "010", name: "root", status: :pending, instructions: "x", context: "fork"),
+      make_phase(number: "010.01", name: "child", status: :pending),
+      make_phase(number: "010.01.01", name: "leaf", status: :pending)
+    ]
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    nearest = state.nearest_fork_ancestor("010.01.01")
+    assert_equal "010", nearest.number
+  end
+
   # === Assignment State Tests ===
 
   def test_assignment_state_empty

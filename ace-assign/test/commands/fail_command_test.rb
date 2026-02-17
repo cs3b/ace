@@ -55,7 +55,7 @@ class FailCommandTest < AceAssignTestCase
       output = capture_io do
         Ace::Assign::CLI::Commands::Fail.new.call(
           message: "Build broke",
-          assignment: target_id
+          assignment: "#{target_id}@010"
         )
       end
 

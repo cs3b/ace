@@ -28,12 +28,15 @@ require_relative "molecules/assignment_discoverer"
 require_relative "molecules/queue_scanner"
 require_relative "molecules/phase_writer"
 require_relative "molecules/phase_renumberer"
+require_relative "molecules/skill_assign_source_resolver"
+require_relative "molecules/fork_session_launcher"
 
 # Organisms
 require_relative "organisms/assignment_executor"
 
 # Commands
 require_relative "cli/commands/create"
+require_relative "cli/commands/assignment_target"
 require_relative "cli/commands/status"
 require_relative "cli/commands/report"
 require_relative "cli/commands/fail"
@@ -41,6 +44,7 @@ require_relative "cli/commands/add"
 require_relative "cli/commands/retry_cmd"
 require_relative "cli/commands/list"
 require_relative "cli/commands/select"
+require_relative "cli/commands/fork_run"
 
 module Ace
   module Assign
@@ -49,7 +53,7 @@ module Ace
       extend Dry::CLI::Registry
 
       # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[create status report fail add retry list select].freeze
+      REGISTERED_COMMANDS = %w[create status report fail add retry list select fork-run].freeze
 
       # Deprecated commands and their replacements
       DEPRECATED_COMMANDS = {
@@ -138,6 +142,7 @@ module Ace
       register "retry", wrap_command(Commands::RetryCmd)
       register "list", wrap_command(Commands::List)
       register "select", wrap_command(Commands::Select)
+      register "fork-run", wrap_command(Commands::ForkRun)
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

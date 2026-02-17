@@ -1,0 +1,8 @@
+test-id: TS-ASSIGN-005
+title: No-Skip Drive Policy Guardrails
+area: assign
+package: ace-assign
+priority: high
+requires:
+  tools: [rg]
+  ruby: ">= 3.0"
