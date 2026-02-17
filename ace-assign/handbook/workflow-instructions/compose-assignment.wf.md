@@ -17,41 +17,12 @@ update:
 
 Compose a tailored assignment by selecting phases from the catalog, applying composition rules, and optionally using recipes as starting points. Replaces mechanical preset expansion with intelligent, context-aware composition.
 
+Boundary:
+- Compose uses only ace-assign catalog data (phases, rules, recipes) and user intent.
+- Compose does not read `assign:` frontmatter from external files.
+- Metadata-driven sub-phase materialization is handled by prepare/create runtime.
+
 ## Input Formats
-
-### 0. Frontmatter Declaration (from `.s.md` or `.wf.md` files)
-
-When a source file path is provided, check for an `assign:` frontmatter block first:
-
-```
-/ace:assign-compose --source path/to/task.s.md
-```
-
-The `assign:` block provides structured input that replaces or supplements the natural-language description:
-
-```yaml
----
-id: v.0.9.0+task.148
-status: in-progress
-assign:
-  goal: implement-with-pr        # maps to recipe or intent keyword
-  variables:
-    taskref: "148"
-    review_cycles: 2
-  hints:                          # soft guidance for compose, not hard phase list
-    - include: security-audit
-    - skip: lint
----
-```
-
-When frontmatter is present:
-1. Extract the `assign:` block using `AssignFrontmatterParser.parse(frontmatter)`
-2. Use `goal` as recipe/intent (replaces natural-language description)
-3. Apply `variables` as compose parameters (taskref, review_cycles, etc.)
-4. Apply `hints` as phase selection guidance (include/skip)
-5. Continue with normal compose flow (catalog, rules, validation)
-
-This is an **additive input** -- compose still works with pure descriptions. Frontmatter just provides structured data instead of parsing natural language.
 
 ### 1. Natural Description
 
@@ -72,31 +43,6 @@ This is an **additive input** -- compose still works with pure descriptions. Fro
 ```
 
 ## Process
-
-### 0. Check Source File for `assign:` Frontmatter
-
-If a `--source` file path was provided:
-
-```ruby
-# Extract frontmatter from the source file
-content = File.read(source_path)
-parsed = Ace::Assign::Atoms::PhaseFileParser.parse(content)
-result = Ace::Assign::Atoms::AssignFrontmatterParser.parse(parsed[:frontmatter])
-
-if result[:valid] && result[:config]
-  # Use structured data from frontmatter
-  goal = result[:config][:goal]          # recipe/intent keyword
-  variables = result[:config][:variables] # taskref, review_cycles, etc.
-  hints = result[:config][:hints]         # include/skip guidance
-  sub_phases = result[:config][:sub_phases] # workflow sub-phase expansion
-  context = result[:config][:context]     # fork context for sub-tree
-  parent = result[:config][:parent]       # parent assignment ID
-end
-```
-
-If the source file has no `assign:` block, or if no `--source` was provided, continue with the standard input formats (description, recipe reference, etc.).
-
-For workflow files (`.wf.md`) with `sub-phases`, the compose step creates child phases under a batch parent with the specified context.
 
 ### 1. Load Catalog
 

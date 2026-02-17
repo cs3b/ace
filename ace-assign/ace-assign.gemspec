@@ -38,6 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "ace-support-config", "~> 0.6"
   spec.add_dependency "ace-b36ts", "~> 0.4"
   spec.add_dependency "ace-support-markdown", "~> 0.2"
+  spec.add_dependency "ace-llm", "~> 0.14"
 
   # Development dependencies
   spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"

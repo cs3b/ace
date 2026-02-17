@@ -14,6 +14,16 @@ ordering:
     before: review-pr
     after: apply-feedback
 
+  - rule: onboard-before-plan
+    before: onboard
+    after: plan-task
+    note: "Planning requires project context from onboarding"
+
+  - rule: plan-before-implementation
+    before: plan-task
+    after: work-on-task
+    note: "JIT planning should precede implementation"
+
   - rule: implementation-before-pr
     before: work-on-task
     after: create-pr
@@ -66,9 +76,9 @@ pairs:
 
 conditional:
   - when: "assignment includes work-on-task"
-    suggest: [mark-task-done]
+    suggest: [plan-task, mark-task-done]
     strength: recommended
-    note: "Tasks should be marked done after implementation"
+    note: "JIT planning before and task completion after implementation"
 
   - when: "assignment includes work-on-task or fix-bug"
     suggest: [verify-test-suite]

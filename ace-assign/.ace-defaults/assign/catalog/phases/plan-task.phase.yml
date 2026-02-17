@@ -7,8 +7,8 @@ prerequisites:
     strength: recommended
     reason: "Needs project context for informed planning"
 
-produces: [implementation-plan, task-spec]
-consumes: [project-context]
+produces: [implementation-plan]
+consumes: [project-context, task-spec]
 
 context:
   default: fork

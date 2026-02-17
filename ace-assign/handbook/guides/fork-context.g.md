@@ -4,6 +4,11 @@
 
 Fork context enables phase files to run in isolated agent contexts using the Task tool. When a phase has `context: fork` in its frontmatter, ace-assign outputs instructions for the orchestrating agent to execute the phase via a subagent.
 
+For hierarchical split workflows, use **parent-only** fork markers:
+- Split parent phase: `context: fork`
+- Child phases (`onboard`, `plan-task`, `work-on-task`): no `context: fork`
+- Runtime execution scope is controlled by `ACE_ASSIGN_FORK_ROOT`
+
 ## When to Use Fork Context
 
 Use fork context when:
@@ -61,23 +66,24 @@ Return structured summary:
 
 ## Execution Flow
 
-When `ace-assign status` encounters a fork context phase:
+When `ace:assign-drive` (or manual orchestration) encounters a fork-enabled subtree:
 
-1. Displays the phase file as a Task tool prompt
-2. Includes assignment context (working directory, assignment ID)
-3. Instructs the orchestrator to use Task tool for execution
-4. After completion, the orchestrator submits a report via `ace-assign report`
+1. Runs `ace-assign status`
+2. Detects `Fork subtree detected (root: ...)` in output (outside fork scope)
+3. Delegates with `ace-assign fork-run --assignment <id>@<root>`
+4. Fork launcher executes `/ace:assign-drive` in a scoped process (`ACE_ASSIGN_FORK_ROOT=<root>`)
+5. Scoped process advances only inside subtree
+6. Parent process resumes after subtree completion
 
 ```
-ace-assign status
+ace:assign-drive loop
   |
-  +-- Detects context: fork
-  +-- Outputs Task tool instructions
-  +-- Orchestrator invokes Task tool
-  +-- Subagent executes phase content
-  +-- Subagent returns structured report
-  +-- Orchestrator calls: ace-assign report <report.md>
-  +-- Advances to next phase
+  +-- ace-assign status
+  +-- Detects "Fork subtree detected (root: ...)"
+  +-- ace-assign fork-run --assignment <id>@<root>
+  +-- Forked /ace:assign-drive (ACE_ASSIGN_FORK_ROOT=<root>)
+  +-- Subtree completes
+  +-- Parent loop continues
 ```
 
 ## Context Isolation Model
@@ -193,3 +199,4 @@ ACE_DEBUG=1 ace-assign status
 
 - [ace-assign README](../../README.md) - Main documentation
 - [Work Queue Model](../workflow-instructions/drive-assignment.wf.md) - Assignment management
+- `ace-assign fork-run --assignment <id>@<phase>` - Prepare subtree-scoped fork session
