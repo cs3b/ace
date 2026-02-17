@@ -110,7 +110,7 @@ class AddCommandTest < AceAssignTestCase
         Ace::Assign::CLI::Commands::Add.new.call(
           name: "hotfix",
           instructions: "Apply hotfix",
-          assignment: target_id
+          assignment: "#{target_id}@010"
         )
       end
 

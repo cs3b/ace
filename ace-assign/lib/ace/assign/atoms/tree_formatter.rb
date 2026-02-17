@@ -20,6 +20,8 @@ module Ace
       module TreeFormatter
         # State display labels matching list command
         STATE_LABELS = {
+          pending: "pending",
+          in_progress: "in_progress",
           running: "running",
           paused: "paused",
           completed: "completed",

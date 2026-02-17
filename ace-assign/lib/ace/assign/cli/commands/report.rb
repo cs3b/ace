@@ -7,6 +7,7 @@ module Ace
         # Complete current phase with a report file
         class Report < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include AssignmentTarget
 
           desc "Complete current phase with report content"
 
@@ -16,7 +17,8 @@ module Ace
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
 
           def call(file:, **options)
-            executor = build_executor_for(options)
+            target = resolve_assignment_target(options)
+            executor = build_executor_for_target(target)
             result = executor.advance(file)
 
             unless options[:quiet]
@@ -35,25 +37,19 @@ module Ace
                 puts result[:current].instructions
               else
                 puts
-                puts "Assignment completed! All phases done."
+                fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
+                if fork_root && result[:state].subtree_complete?(fork_root)
+                  puts "Fork subtree #{fork_root} completed."
+                elsif result[:state].complete?
+                  puts "Assignment completed! All phases done."
+                else
+                  puts "No active phase selected."
+                end
               end
             end
           end
 
           private
-
-          def build_executor_for(options)
-            assignment_id = options[:assignment] || ENV["ACE_ASSIGN_ID"]
-            return Organisms::AssignmentExecutor.new unless assignment_id
-
-            manager = Molecules::AssignmentManager.new
-            assignment = manager.load(assignment_id)
-            raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
-
-            executor = Organisms::AssignmentExecutor.new
-            executor.assignment_manager.define_singleton_method(:find_active) { assignment }
-            executor
-          end
         end
       end
     end

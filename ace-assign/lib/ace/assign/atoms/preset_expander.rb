@@ -195,24 +195,12 @@ module Ace
 
             # Create merged parameters with {{item}} available
             item_params = parameters.merge("item" => item)
-
-            # Handle instructions substitution for both string and array formats
-            template_instructions = template["instructions"] || ""
-            instructions = if template_instructions.is_a?(Array)
-              template_instructions.map { |i| substitute_string(i, item_params) }
-            else
-              substitute_string(template_instructions, item_params)
-            end
-
-            step = {
-              "number" => child_number,
-              "name" => substitute_string(template["name"] || "item-#{item}", item_params),
-              "parent" => parent_number,
-              "instructions" => instructions
-            }
-
-            step["skill"] = template["skill"] if template["skill"]
-            step["context"] = template["context"] if template["context"]
+            raw_step = template.dup
+            raw_step["number"] = child_number
+            raw_step["parent"] = parent_number
+            raw_step["name"] ||= "item-#{item}"
+            raw_step["instructions"] ||= ""
+            step = substitute_parameters(raw_step, item_params)
 
             steps << step
           end
@@ -227,19 +215,25 @@ module Ace
         # @param parameters [Hash] Parameter values
         # @return [Hash] Phase with substituted values
         def self.substitute_parameters(step, parameters)
-          result = step.dup
-
-          result["name"] = substitute_string(result["name"], parameters) if result["name"]
-          result["instructions"] = substitute_string(result["instructions"], parameters) if result["instructions"]
-
-          # Handle array instructions
-          if result["instructions"].is_a?(Array)
-            result["instructions"] = result["instructions"].map { |i| substitute_string(i, parameters) }
-          end
-
-          result
+          substitute_value(step, parameters)
         end
         private_class_method :substitute_parameters
+
+        def self.substitute_value(value, parameters)
+          case value
+          when Hash
+            value.each_with_object({}) do |(key, nested), result|
+              result[key] = substitute_value(nested, parameters)
+            end
+          when Array
+            value.map { |item| substitute_value(item, parameters) }
+          when String
+            substitute_string(value, parameters)
+          else
+            value
+          end
+        end
+        private_class_method :substitute_value
 
         # Substitute {{placeholder}} tokens in a string.
         #

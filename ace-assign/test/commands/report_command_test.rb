@@ -80,7 +80,7 @@ class ReportCommandTest < AceAssignTestCase
       output = capture_io do
         Ace::Assign::CLI::Commands::Report.new.call(
           file: report_path,
-          assignment: target_id
+          assignment: "#{target_id}@010"
         )
       end
 

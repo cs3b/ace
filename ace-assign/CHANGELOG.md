@@ -7,6 +7,182 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.16] - 2026-02-17
+
+### Changed
+- `ace-assign status` now emits a single canonical fork delegation hint (`ace-assign fork-run --assignment <id>@<root>`) for fork subtrees, including when the current phase itself is the fork root (`context: fork`)
+- Fork workflow documentation now consistently uses scoped fork syntax (`--assignment <id>@<phase>`) and explicitly guards against recursive re-delegation when already inside `ACE_ASSIGN_FORK_ROOT`
+
+### Fixed
+- Parent/orchestrator drive sessions now get deterministic fork-subtree detection for direct fork-root phases, enabling automatic subtree delegation instead of inline duplicate execution paths
+
+### Technical
+- Added status command coverage for fork-root detection messaging and in-scope fork behavior (`Fork scope` vs external delegation marker)
+
+## [0.11.15] - 2026-02-17
+
+### Added
+- New catalog phase definition `split-subtree-root` for split parent/fork-root orchestration instructions (default template in `.ace-defaults/assign/catalog/phases/`)
+
+### Changed
+- Split parent phases with `sub_phases` now materialize as orchestration-only subtree roots:
+  - parent `skill` is removed to avoid duplicate execution semantics
+  - parent keeps `source_skill` metadata for traceability
+  - parent instructions are rendered from catalog template (project-overridable)
+- Phase catalog resolution now merges project overrides with default catalog by phase name, so projects can override a single phase definition without replacing the entire catalog
+
+### Fixed
+- Fork root parent phases no longer instruct direct `work-on-task` execution and now clearly drive subtree delegation/execution (`fork-run` + `assign-drive`) through child phases
+
+## [0.11.14] - 2026-02-17
+
+### Fixed
+- Scoped status rendering for nested roots (for example `--assignment <id>@010.01`) now prints the subtree hierarchy correctly instead of collapsing to an empty queue section
+- Runtime-expanded child phases now use explicit `taskref` metadata (when present) for deterministic task context, and preserve it in child phase frontmatter
+- Fork session launcher now loads `ace/llm` so `fork-run` handles provider errors without crashing on uninitialized LLM error constants
+
+### Changed
+- Preset expansion now substitutes placeholders across all step fields (including nested metadata), not only `name` and `instructions`
+
+## [0.11.13] - 2026-02-17
+
+### Fixed
+- Scoped status (`--assignment <id>@<phase>`) now selects the actionable phase within the subtree instead of always reporting the scope root as current
+- Runtime sub-phase expansion now generates step-specific action instructions per child phase and keeps parent goals as a verification checklist (instead of copy-pasting orchestration text into every child)
+
+## [0.11.12] - 2026-02-17
+
+### Added
+- E2E regression scenario `TS-ASSIGN-005-no-skip-policy` to enforce hard no-skip drive policy and keep `ace:assign-drive` skill thin
+
+### Changed
+- `drive-assignment` workflow now enforces hard no-skip execution for planned phases and removes skip-assessment behavior
+- Added required attempt-first failure evidence (command + exact error) and post-report/fail status transition verification in drive workflow
+
+## [0.11.11] - 2026-02-17
+
+### Changed
+- `drive-assignment` workflow now auto-delegates detected fork-enabled subtrees via `ace-assign fork-run --assignment <id>@<root>` before inline phase execution
+- Fork context guide now documents the runtime delegation path where parent drive sessions detect subtree roots and delegate scoped execution with `fork-run`
+
+## [0.11.10] - 2026-02-17
+
+### Changed
+- Use `Atoms::NumberGenerator.subtask` for sub-phase numbering in runtime expansion to keep numbering logic centralized
+- Tree formatter state labels now explicitly include `pending` and `in_progress`
+
+### Fixed
+- Added coverage for fork-scoped advancement when global current phase is outside scoped subtree
+- Added stable tests for CLI provider env propagation and query-interface sandbox propagation
+
+## [0.11.9] - 2026-02-17
+
+### Added
+- Regression coverage for fork-scoped advancement when global current phase is outside the scoped subtree
+
+### Changed
+- `ace-assign status` now prints explicit `Current Status: <status>` for easier machine parsing and E2E assertions
+
+### Fixed
+- Fork-scoped report advancement now selects and completes the next in-subtree phase instead of completing an out-of-scope global current phase
+- E2E assertions for `parent` frontmatter now accept both single-quoted and double-quoted YAML scalars to avoid formatting-only false negatives
+
+## [0.11.8] - 2026-02-17
+
+### Added
+- Shared assignment target parser for CLI commands with scoped syntax support: `--assignment <id>@<phase>`
+- New command tests covering assignment target parsing and scoped subtree execution behavior
+- New E2E scenario scaffold for fork subtree scope isolation verification (`TS-ASSIGN-004`)
+
+### Changed
+- Assignment-targeting commands (`status`, `report`, `fail`, `add`, `retry`, `fork-run`) now use a shared target resolver
+- `ace-assign fork-run` accepts subtree root from scoped assignment target (`<id>@<phase>`) and validates conflicts with `--root`
+- Scoped status output (`--assignment <id>@<phase>`) now renders only the selected node subtree and uses the scope root as displayed current phase
+
+### Fixed
+- Removed global current-phase coupling in `fork-run` so subtree execution can start from any explicitly scoped root node
+
+## [0.11.7] - 2026-02-17
+
+### Added
+- `ForkSessionLauncher` molecule to execute forked subtree sessions synchronously via `ace-llm` (`/ace:assign-drive`)
+- Fork execution config defaults under assign namespace:
+  - `execution.provider`, `execution.timeout`
+  - `providers.cli`, `providers.cli_args`
+
+### Changed
+- `ace-assign fork-run` now launches provider sessions directly (blocking) instead of printing shell instructions
+- `fork-run` supports `--provider`, `--cli-args`, and `--timeout` overrides
+- Post-launch validation enforces subtree outcome: complete (success), failed/incomplete (error)
+
+### Technical
+- Add `ace-llm` runtime dependency for provider-driven fork execution
+- Add command and molecule tests for launcher integration and fork-run completion/error paths
+
+## [0.11.6] - 2026-02-17
+
+### Added
+- `ace-assign fork-run` command to initialize subtree-scoped fork execution using `ACE_ASSIGN_ID` and `ACE_ASSIGN_FORK_ROOT`
+- Subtree scope helpers in queue state (`in_subtree?`, `subtree_phases`, `subtree_complete?`, `next_workable_in_subtree`, `nearest_fork_ancestor`)
+
+### Changed
+- Status output now detects forked ancestor scope and guides operators to run `fork-run` for whole-subtree delegation
+- Report output now distinguishes subtree completion from full assignment completion when fork scope is active
+- Fork context guide and workflow docs updated for explicit parent-only fork semantics and subtree execution model
+
+### Fixed
+- Split-subphase expansion no longer writes `context: fork` on child phases (`onboard`, `plan-task`, `work-on-task`) when parent is forked
+- Queue advancement in fork scope now stays inside `ACE_ASSIGN_FORK_ROOT` subtree and does not leak into sibling phases
+
+## [0.11.5] - 2026-02-17
+
+### Fixed
+- Ensure runtime-expanded sub-phases are concrete and executable by materializing catalog metadata (skill, phase focus) instead of generic placeholder instructions
+- Preserve task context during sub-phase expansion so child phases receive parent task instructions for deterministic parameter extraction
+- Start assignments on the first workable leaf phase (not parent container phases), preventing blocked progression in parent-child trees
+- Use a single fork entrypoint for forked sub-phase subtrees (first child), avoiding nested fork-per-child behavior
+
+## [0.11.4] - 2026-02-17
+
+### Changed
+- Clarify assignment responsibility boundaries in workflow docs:
+  - `compose-assignment` is catalog-only and no longer models source/frontmatter ingestion
+  - `start-assignment` explicitly distinguishes catalog composition vs deterministic prepare/runtime expansion
+  - `prepare-assignment` explicitly documents runtime metadata expansion as the canonical path
+- Update assignment skills metadata to reflect compose/prepare boundary semantics
+
+## [0.11.3] - 2026-02-17
+
+### Added
+- `SkillAssignSourceResolver` molecule to resolve skill frontmatter `assign.source` URIs (currently `wfi://...`) into workflow assignment metadata
+- Default config paths for skill/workflow discovery:
+  - `skill_source_paths`: `.agents/skills`, `.claude/skills`
+  - `workflow_source_paths`: `ace-taskflow/handbook/workflow-instructions`, `ace-assign/handbook/workflow-instructions`
+
+### Changed
+- `AssignmentExecutor.start` now enriches phases with skill-declared workflow `assign.sub-phases` before expansion, enabling deterministic runtime sub-phase materialization without compose-specific wiring
+- `compose-assignment` workflow is now catalog-only and no longer documents source/frontmatter-driven phase composition
+
+## [0.11.2] - 2026-02-16
+
+### Technical
+- Add test cases for new composition ordering rules (`onboard-before-plan`, `plan-before-implementation`) and conditional `plan-task` suggestion
+
+## [0.11.1] - 2026-02-16
+
+### Fixed
+- Consolidate duplicate conditional trigger for work-on-task in composition-rules
+
+## [0.11.0] - 2026-02-16
+
+### Added
+- JIT plan-task phase in implement-with-pr and implement-simple recipes (optional, between onboard and work-on-task)
+- Composition rules: `onboard-before-plan` and `plan-before-implementation` ordering
+- Conditional suggestion: recommend plan-task when work-on-task is included
+
+### Changed
+- plan-task phase catalog entry: produces `[implementation-plan]` only (removed `task-spec`), consumes `[project-context, task-spec]`
+
 ## [0.10.2] - 2026-02-16
 
 ### Changed

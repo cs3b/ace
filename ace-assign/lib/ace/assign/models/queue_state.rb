@@ -143,6 +143,85 @@ module Ace
           phases.select { |s| Atoms::PhaseNumbering.child_of?(s.number, parent_number) }
         end
 
+        # Check whether a phase number belongs to a subtree rooted at root_number.
+        #
+        # @param root_number [String] Subtree root phase number
+        # @param phase_number [String] Candidate phase number
+        # @return [Boolean] True when candidate is root or descendant of root
+        def in_subtree?(root_number, phase_number)
+          phase_number == root_number || Atoms::PhaseNumbering.child_of?(phase_number, root_number)
+        end
+
+        # Get all phases in a subtree (root + descendants), preserving queue order.
+        #
+        # @param root_number [String] Subtree root phase number
+        # @return [Array<Phase>] Subtree phases in queue order
+        def subtree_phases(root_number)
+          phases.select { |s| in_subtree?(root_number, s.number) }
+        end
+
+        # Check whether all phases in a subtree are complete.
+        #
+        # @param root_number [String] Subtree root phase number
+        # @return [Boolean] True when every subtree phase is complete
+        def subtree_complete?(root_number)
+          scoped = subtree_phases(root_number)
+          return false if scoped.empty?
+
+          scoped.all?(&:complete?)
+        end
+
+        # Check whether a subtree has at least one failed phase.
+        #
+        # @param root_number [String] Subtree root phase number
+        # @return [Boolean] True when any subtree phase failed
+        def subtree_failed?(root_number)
+          subtree_phases(root_number).any? { |s| s.status == :failed }
+        end
+
+        # Get next workable phase constrained to a subtree.
+        #
+        # @param root_number [String] Subtree root phase number
+        # @return [Phase, nil] Next pending workable phase inside subtree
+        def next_workable_in_subtree(root_number)
+          subtree_phases(root_number)
+            .select { |s| s.status == :pending }
+            .reject { |s| has_incomplete_children?(s.number) }
+            .first
+        end
+
+        # Build ancestor chain from closest parent to root.
+        #
+        # @param number [String] Phase number
+        # @return [Array<String>] Ancestor numbers, nearest first
+        def ancestor_chain(number)
+          chain = []
+          parent = Atoms::PhaseNumbering.parent_of(number)
+          while parent
+            chain << parent
+            parent = Atoms::PhaseNumbering.parent_of(parent)
+          end
+          chain
+        end
+
+        # Find nearest ancestor (or self) that has context: fork.
+        #
+        # @param number [String] Phase number
+        # @return [Phase, nil] Nearest fork-scoped phase
+        def nearest_fork_ancestor(number)
+          phase = find_by_number(number)
+          return nil unless phase
+
+          return phase if phase.fork?
+
+          ancestor_chain(number).each do |ancestor_number|
+            ancestor = find_by_number(ancestor_number)
+            return ancestor if ancestor&.fork?
+          end
+
+          nil
+        end
+
         # Check if a phase has any incomplete children
         # @param parent_number [String] Parent phase number
         # @return [Boolean] True if any child is not done

@@ -28,11 +28,14 @@ Uses the compose-assignment workflow for intelligent, catalog-driven phase selec
 - Custom combinations of phases
 - Assignments that don't match existing presets exactly
 
+Compose is intentionally catalog-only. It does not read external `assign:` frontmatter.
+
 ### Prepare Path (Legacy)
 
 Uses the prepare-assignment workflow for mechanical preset expansion. Best for:
 - Exact preset names with known parameters
 - Backward compatibility with existing automation
+- Deterministic metadata-driven expansion from runtime sources (skill/workflow `assign:`)
 
 **Auto-detection**: If the first argument is an exact preset name (e.g., `work-on-task`), use the prepare path. Otherwise, use the compose path.
 

@@ -146,6 +146,7 @@ expansion:
     parent: "010"
     context: fork
     skill: ace:work-on-task
+    taskref: "{{item}}"
     instructions: |
       First: onboard yourself using /onboard skill to load project context.
       Implement task {{item}}.

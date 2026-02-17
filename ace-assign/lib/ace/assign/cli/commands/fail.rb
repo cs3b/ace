@@ -7,6 +7,7 @@ module Ace
         # Mark current phase as failed
         class Fail < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
+          include AssignmentTarget
 
           desc "Mark current phase as failed"
 
@@ -18,7 +19,8 @@ module Ace
           def call(**options)
             message = options[:message]
 
-            executor = build_executor_for(options)
+            target = resolve_assignment_target(options)
+            executor = build_executor_for_target(target)
             result = executor.fail(message)
 
             unless options[:quiet]
@@ -34,19 +36,6 @@ module Ace
           end
 
           private
-
-          def build_executor_for(options)
-            assignment_id = options[:assignment] || ENV["ACE_ASSIGN_ID"]
-            return Organisms::AssignmentExecutor.new unless assignment_id
-
-            manager = Molecules::AssignmentManager.new
-            assignment = manager.load(assignment_id)
-            raise AssignmentNotFoundError, "Assignment '#{assignment_id}' not found" unless assignment
-
-            executor = Organisms::AssignmentExecutor.new
-            executor.assignment_manager.define_singleton_method(:find_active) { assignment }
-            executor
-          end
         end
       end
     end

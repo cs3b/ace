@@ -8,7 +8,7 @@ purpose: workflow instruction for driving ace-assign assignment execution
 
 update:
   frequency: on-change
-  last-updated: '2026-02-13'
+  last-updated: '2026-02-17'
 ---
 
 # Drive Assignment Workflow
@@ -51,6 +51,24 @@ This is particularly useful for:
 - CI/CD pipelines running assignment-driven workflows
 - Scripts operating on a specific assignment
 
+### Subtree Fork Scope (`ACE_ASSIGN_FORK_ROOT`)
+
+For split-task delegation, run the entire subtree in one forked process:
+
+```bash
+export ACE_ASSIGN_ID=abc123
+export ACE_ASSIGN_FORK_ROOT=010.01
+ace-assign status --assignment abc123
+```
+
+When `ACE_ASSIGN_FORK_ROOT` is set, `ace-assign report` advances only within that subtree and stops when the subtree is complete.
+
+Helper command:
+
+```bash
+ace-assign fork-run --assignment abc123@010.01
+```
+
 ### Multi-Assignment Management
 
 ```bash
@@ -75,30 +93,17 @@ ace-assign report done.md --assignment <id>
 
 Repeat the following cycle until all phases are done or failed:
 
-### Phase Decision Point
+### Phase Execution Policy
 
-Before executing each phase, perform two assessments:
+- Planned phases are mandatory work items. Do not skip them by judgment.
+- For each active phase, do exactly one of:
+  1. Execute the phase and report completion with `ace-assign report`
+  2. Attempt execution, capture blocker evidence, and mark failed with `ace-assign fail`
+- Never use report text to "skip" or synthesize completion for planned phases.
 
-#### Skip Assessment
+### Adaptation Assessment (After Each Phase)
 
-Evaluate whether the current phase should be skipped:
-
-- **Already accomplished**: A previous phase already completed this work (e.g., tests were already run during implementation)
-- **Not applicable**: Conditions changed and this phase is no longer relevant (e.g., no code changes were made, so lint is unnecessary)
-- **Redundant**: An injected phase already covered this (e.g., a fix-tests phase already verified the test suite)
-- **Metadata hint**: Phase file contains `skip_if` in its extra fields — evaluate the condition
-
-If skipping is appropriate:
-```bash
-# Write a skip report explaining why
-ace-assign report /tmp/skip-report.md
-```
-
-The report should clearly state the skip reason, e.g., "Skipped: tests already verified in phase 020."
-
-#### Adaptation Assessment (After Each Phase)
-
-After completing each phase, evaluate whether the assignment needs adaptation:
+After completing or failing each phase, evaluate whether the assignment needs adaptation:
 
 - **Test failures detected** → Consider adding a fix-tests phase:
   ```bash
@@ -122,7 +127,8 @@ Use `decision_notes` from phase metadata (if present) as additional guidance for
 ### 1. Check Status
 
 ```bash
-ace-assign status
+STATUS_OUTPUT=$(ace-assign status 2>&1)
+echo "$STATUS_OUTPUT"
 ```
 
 Read the output to identify:
@@ -133,7 +139,35 @@ Read the output to identify:
 
 **Note:** `ace-assign status` is the source of truth for assignment state. The phase files in the `phases/` directory are the backing store, but always query status via the command for accurate information.
 
-### 2. Execute Current Phase
+### 2. Auto-Delegate Fork Subtrees (When Applicable)
+
+Before executing the current phase inline, check whether the active phase is inside a fork-enabled subtree.
+
+#### Delegation Rule
+
+- If `ACE_ASSIGN_FORK_ROOT` is already set: you are already inside fork scope, so continue inline and do not call `fork-run` again from this process.
+- If `ACE_ASSIGN_FORK_ROOT` is not set and status output contains:
+  - `Fork subtree detected (root: <phase-number> - <phase-name>).`
+  then delegate the subtree via `fork-run` and restart the loop.
+
+#### Example
+
+```bash
+# Only delegate from orchestrator context (not from an already forked subtree)
+if [ -z "${ACE_ASSIGN_FORK_ROOT:-}" ]; then
+  FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/.*Fork subtree detected (root: \([0-9.]*\) -.*/\1/p' | head -1)
+  if [ -n "$FORK_ROOT" ]; then
+    ASSIGNMENT_ID=${ACE_ASSIGN_ID:-$(basename "$(readlink .cache/ace-assign/.current 2>/dev/null || readlink .cache/ace-assign/.latest)")}
+    ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
+    # Re-check status after subtree delegation completes
+    continue
+  fi
+fi
+```
+
+`fork-run` executes the entire subtree in one dedicated process and returns when the subtree is complete or failed.
+
+### 3. Execute Current Phase
 
 Based on the phase configuration:
 
@@ -165,7 +199,22 @@ Follow the instructions directly, performing the described work:
 
 **Agent Action:** Execute each instruction line as a task.
 
-### 3. Write Report
+### 4. External Action Rule (Attempt-First)
+
+For external-facing phases (for example PR/review/release/push/update lifecycle steps):
+
+- Attempt the phase command(s) first.
+- If blocked, capture concrete evidence:
+  - command attempted
+  - exact error output
+  - why the phase cannot proceed
+- Mark phase failed with evidence (do not report synthetic completion).
+
+```bash
+ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>"
+```
+
+### 5. Write Report (Only After Real Execution)
 
 After completing the phase work, write a brief report summarizing what was accomplished:
 
@@ -187,9 +236,21 @@ EOF
 ace-assign report /tmp/phase-report.md
 ```
 
-Report content is appended to the phase file, and the queue advances to the next phase.
+### 6. Verify State Transition (Required)
 
-### 4. Handle Failures
+After each `ace-assign report` or `ace-assign fail`, verify queue state:
+
+```bash
+POST_STATUS=$(ace-assign status 2>&1)
+echo "$POST_STATUS"
+```
+
+Required checks:
+- If report succeeded: active phase advanced consistently with work performed
+- If fail succeeded: assignment is stalled or moved according to retry/add logic
+- If output mismatches expected transition: stop and ask user before continuing
+
+### 7. Handle Failures
 
 If a phase cannot be completed:
 
@@ -220,7 +281,7 @@ New phase is inserted after the current in-progress phase.
 
 If uncertain, ask the user whether to retry, add a fix phase, or abort.
 
-### 5. Repeat
+### 8. Repeat
 
 Check status again:
 - If there is a next phase, continue the loop from step 1
@@ -279,7 +340,7 @@ When executing a phase with a `skill:` field:
 |----------|--------|
 | No active assignment | Create an assignment first via `/ace:assign-create` |
 | All phases done | Report completion to user |
-| Phase fails | Use `fail` then decide: retry, add fix, or ask user |
+| Phase fails | Attempt first, then use `fail` with command/error evidence; decide retry/add/ask |
 | Skill not found | Execute instructions directly without skill |
 | Unclear instructions | Ask user for clarification |
 
@@ -342,6 +403,7 @@ Each phase has:
 - All phases processed (done or failed)
 - Reports written for all completed phases
 - Failed phases have clear failure reasons
+- No planned phase is auto-completed via skip-by-assumption behavior
 - User informed of assignment completion state
 - Artifacts and next steps clearly communicated
 

@@ -85,7 +85,7 @@ class RetryCmdTest < AceAssignTestCase
       output = capture_io do
         Ace::Assign::CLI::Commands::RetryCmd.new.call(
           phase_ref: "020",
-          assignment: target_id
+          assignment: "#{target_id}@020"
         )
       end
 
