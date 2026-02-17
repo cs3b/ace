@@ -380,7 +380,7 @@ module Ace
           # @return [String] Test ID (e.g., "TS-LINT-001")
           def extract_test_id(test_file)
             dir_name = File.basename(File.dirname(test_file))
-            dir_name.match(/(TS-[A-Z]+-\d+)/)&.[](1) || dir_name
+            dir_name.match(/(TS-[A-Z]+-\d+[a-z]?)/)&.[](1) || dir_name
           end
 
           # Check if a test file matches a metadata test-id
