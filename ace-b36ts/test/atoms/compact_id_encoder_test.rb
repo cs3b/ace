@@ -365,9 +365,9 @@ module Ace
           assert_match(/\A[0-9a-z]{3}\z/, result)
         end
 
-        def test_encode_week_uses_week_in_month
-          # Week 1 (value 31 = 'v')
-          time = Time.utc(2025, 1, 1, 12, 0, 0)
+        def test_encode_week_uses_iso_thursday_rule
+          # Jan 6, 2025 is Monday → Thursday = Jan 9 → January week 2
+          time = Time.utc(2025, 1, 6, 12, 0, 0)
           result = @encoder.encode_week(time)
 
           # Third char should be in 'v'-'z' range (31-35)
@@ -376,12 +376,15 @@ module Ace
           assert_operator third_char_value, :<=, 35
         end
 
-        def test_decode_week_returns_approximate_day
-          result = @encoder.decode_week("00v")  # month 00, week 1
+        def test_decode_week_returns_thursday
+          # "00v" = Jan 2000 week 1. Jan 1, 2000 is Saturday.
+          # First Thursday of Jan 2000 is Jan 6.
+          result = @encoder.decode_week("00v")
 
           assert_equal 2000, result.year
           assert_equal 1, result.month
-          assert_equal 1, result.day  # First day of week
+          assert_equal 6, result.day  # Thursday Jan 6, 2000
+          assert_equal 4, Date.new(result.year, result.month, result.day).wday  # Thursday
         end
 
         def test_week_format_third_char_in_range_31_to_35
@@ -394,48 +397,147 @@ module Ace
         end
 
         def test_whole_month_week_numbers_monotonic
-          # Test that week numbers only increase/stay same
-          # With day-based formula: days 1-7 = week 1, 8-14 = week 2, etc.
-          # Week transitions occur on days 8, 15, 22, 29
-
-          previous_week = nil
+          # Test that week numbers only increase or stay same across January 2025
+          previous_encoded = nil
           (1..31).each do |day|
             test_time = Time.utc(2025, 1, day, 12, 0, 0)
             encoded = @encoder.encode_week(test_time)
 
-            # Decode to get the components via public API
-            decoded = @encoder.decode_week(encoded)
-
-            # Calculate week number from decoded day
-            week = (decoded.day.to_f / 7).ceil
-
-            # Week should not decrease
-            if previous_week
-              assert_operator week, :>=, previous_week, "Week decreased on January #{day}"
+            # Encoded week IDs should be monotonically non-decreasing
+            if previous_encoded
+              assert_operator encoded, :>=, previous_encoded,
+                "Week encoding decreased on January #{day}"
             end
 
-            # Week should transition on fixed day boundaries (8, 15, 22, 29)
-            if previous_week && week > previous_week
-              assert_includes [8, 15, 22, 29], day, "Week increased on unexpected day #{day}"
-            end
+            # Third char (week value) should always be in 31-35 range
+            third_char_value = CompactIdEncoder::DEFAULT_ALPHABET.index(encoded[2].downcase)
+            assert_operator third_char_value, :>=, 31
+            assert_operator third_char_value, :<=, 35
 
-            previous_week = week
+            previous_encoded = encoded
           end
         end
 
-        def test_february_week_5_does_not_crash
-          # February 2025 has 28 days and starts on Saturday
-          # Week 5 should decode without "day out of range" error
-          # Encode February 28 (should be week 5)
-          time = Time.utc(2025, 2, 28, 12, 0, 0)
-          encoded = @encoder.encode_week(time)
+        def test_decode_week_clamps_week_5_for_4_thursday_month
+          # February 2025 has 4 Thursdays (6, 13, 20, 27).
+          # Construct a week-5 ID for Feb 2025 manually.
+          # months_offset for Feb 2025 = (2025-2000)*12 + 1 = 301
+          feb_month_encoded = @encoder.encode_month(Time.utc(2025, 2, 1))
+          week_5_id = feb_month_encoded + "z"  # 'z' = 35 = week 5
 
-          # Should decode without error
-          decoded = @encoder.decode_week(encoded)
+          # Should decode without error, clamped to last Thursday (Feb 27)
+          decoded = @encoder.decode_week(week_5_id)
           assert_equal 2025, decoded.year
           assert_equal 2, decoded.month
-          # Day should be clamped to 28 (last day of February)
-          assert_operator decoded.day, :<=, 28
+          assert_equal 27, decoded.day  # Last Thursday of Feb 2025
+        end
+
+        def test_boundary_date_uses_iso_month
+          # Feb 1, 2025 is Saturday → Thursday = Jan 30, 2025
+          # Should encode as January week 5
+          time = Time.utc(2025, 2, 1, 12, 0, 0)
+          encoded = @encoder.encode_week(time)
+
+          # Decode should return a Thursday in January
+          decoded = @encoder.decode_week(encoded)
+          assert_equal 2025, decoded.year
+          assert_equal 1, decoded.month  # January, not February
+          assert_equal 30, decoded.day   # Thursday Jan 30
+        end
+
+        def test_year_boundary_crossing
+          # Dec 31, 2025 is Wednesday → Thursday = Jan 1, 2026
+          # Should encode as January 2026 week 1
+          time = Time.utc(2025, 12, 31, 12, 0, 0)
+          encoded = @encoder.encode_week(time)
+
+          decoded = @encoder.decode_week(encoded)
+          assert_equal 2026, decoded.year
+          assert_equal 1, decoded.month
+          assert_equal 1, decoded.day  # Thursday Jan 1, 2026
+        end
+
+        def test_decoded_week_is_always_thursday
+          # Check several dates across different months
+          dates = [
+            Time.utc(2025, 1, 1),
+            Time.utc(2025, 3, 15),
+            Time.utc(2025, 6, 30),
+            Time.utc(2025, 12, 25),
+            Time.utc(2028, 2, 29),  # Leap year
+          ]
+
+          dates.each do |time|
+            encoded = @encoder.encode_week(time)
+            decoded = @encoder.decode_week(encoded)
+            wday = Date.new(decoded.year, decoded.month, decoded.day).wday
+            assert_equal 4, wday, "Decoded #{decoded} from #{time} should be Thursday (wday=4), got #{wday}"
+          end
+        end
+
+        def test_roundtrip_boundary_encode_decode
+          # Feb 1, 2025 (Sat) → encodes as Jan week 5 → decodes to Thu Jan 30
+          time = Time.utc(2025, 2, 1)
+          encoded = @encoder.encode_week(time)
+          decoded = @encoder.decode_week(encoded)
+
+          # Verify the decoded Thursday is in the same ISO week as the input
+          input_date = Date.new(time.year, time.month, time.day)
+          decoded_date = Date.new(decoded.year, decoded.month, decoded.day)
+          input_days_since_monday = (input_date.wday - 1) % 7
+          decoded_days_since_monday = (decoded_date.wday - 1) % 7
+          input_monday = input_date - input_days_since_monday
+          decoded_monday = decoded_date - decoded_days_since_monday
+          assert_equal input_monday, decoded_monday, "Input and decoded should be in the same ISO week"
+        end
+
+        def test_month_with_5_iso_weeks
+          # January 2025 has 5 Thursdays: Jan 2, 9, 16, 23, 30
+          time_week5 = Time.utc(2025, 1, 30, 12, 0, 0)  # Thursday Jan 30
+          encoded = @encoder.encode_week(time_week5)
+          third_char_value = CompactIdEncoder::DEFAULT_ALPHABET.index(encoded[2].downcase)
+          assert_equal 35, third_char_value, "Jan 30 2025 should be week 5 (value 35)"
+        end
+
+        def test_month_with_4_iso_weeks
+          # February 2025 has 4 Thursdays: Feb 6, 13, 20, 27
+          time_week4 = Time.utc(2025, 2, 27, 12, 0, 0)  # Thursday Feb 27
+          encoded = @encoder.encode_week(time_week4)
+          third_char_value = CompactIdEncoder::DEFAULT_ALPHABET.index(encoded[2].downcase)
+          assert_equal 34, third_char_value, "Feb 27 2025 should be week 4 (value 34)"
+        end
+
+        def test_split_encoder_uses_simple_weeks
+          # Split encoder should still use simple day-based weeks (not ISO)
+          time = Time.utc(2025, 2, 1, 12, 0, 0)  # Feb 1 is Sat
+          result = @encoder.encode_split(time, levels: [:month, :week])
+
+          # Simple formula: (1-1)/7 + 1 = 1 → week value 1
+          week_token = result[:week]
+          week_value = CompactIdEncoder::DEFAULT_ALPHABET.index(week_token.downcase)
+          assert_equal 1, week_value, "Split should use simple week (day 1 = week 1)"
+        end
+
+        def test_year_zero_boundary_with_iso_thursday_before_year_zero
+          # Jan 1, 2000 is Saturday → Thursday = Dec 30, 1999
+          # With default year_zero=2000, December 1999 is before range → ArgumentError
+          time = Time.utc(2000, 1, 1, 12, 0, 0)
+
+          assert_raises(ArgumentError) do
+            @encoder.encode_week(time)
+          end
+        end
+
+        def test_leap_year_feb_29_iso_week
+          # Feb 29, 2028 is Tuesday → Thursday = Mar 2, 2028
+          # Should encode as March 2028 week 1
+          time = Time.utc(2028, 2, 29, 12, 0, 0)
+          encoded = @encoder.encode_week(time)
+          decoded = @encoder.decode_week(encoded)
+
+          assert_equal 2028, decoded.year
+          assert_equal 3, decoded.month  # March
+          assert_equal 2, decoded.day    # Thursday Mar 2
         end
 
         # ===================
@@ -736,10 +838,11 @@ module Ace
 
         def test_week_ids_are_sortable
           # Test week format sortability across different weeks
+          # Use dates that all have Thursdays in the same month (January 2025)
           times = [
-            Time.utc(2025, 1, 1),   # Week 1
-            Time.utc(2025, 1, 15),  # Week 3
-            Time.utc(2025, 1, 28)   # Week 5
+            Time.utc(2025, 1, 2),   # Thu → Jan 2 → Week 1
+            Time.utc(2025, 1, 9),   # Thu → Jan 9 → Week 2
+            Time.utc(2025, 1, 23)   # Thu → Jan 23 → Week 4
           ]
 
           ids = times.map { |t| @encoder.encode_with_format(t, format: :week) }
