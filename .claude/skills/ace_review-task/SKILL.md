@@ -1,6 +1,6 @@
 ---
 name: ace:review-task
-description: Review task specification for completeness and implementation readiness
+description: Reviews draft behavioral specs, promotes to pending when ready
 # context: no-fork
 # agent: Plan
 user-invocable: true
@@ -11,7 +11,7 @@ allowed-tools:
   - Write
   - TodoWrite
 argument-hint: [task-id like 123]
-last_modified: 2026-01-10
+last_modified: 2026-02-16
 source: ace-taskflow
 ---
 

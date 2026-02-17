@@ -1,6 +1,6 @@
 ---
 name: ace:assign-start
-description: Create and start an assignment from preset or instructions (prepare + create)
+description: Create and start an assignment from preset or instructions (compose/prepare + create)
 # bundle: wfi://start-assignment
 # agent: general-purpose
 user-invocable: true
