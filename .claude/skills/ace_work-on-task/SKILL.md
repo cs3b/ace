@@ -14,8 +14,10 @@ allowed-tools:
   - TodoWrite
   - Task
 argument-hint: [task-id like 123]
-last_modified: 2026-01-28
+last_modified: 2026-02-17
 source: ace-taskflow
+assign:
+  source: wfi://work-on-task
 ---
 
 ## Load Project Info
