@@ -87,6 +87,13 @@ All notable changes to this project will be documented in this file.
 - **ace-taskflow v0.36.1**: Review cycle 1 fixes — arrow notation, needs_review clearing, behavioral-spec validation
 - **ace-assign v0.11.1**: Consolidate duplicate composition rule trigger
 
+### Changed
+
+- **ace-b36ts v0.7.0**: Week format now uses ISO Thursday rule for week-in-month calculation
+  - Boundary dates encode to the month containing the week's Thursday
+  - `decode_week` returns the Thursday of the week (the defining day)
+  - Split encoder retains simple day-based weeks for path buckets
+
 ### Added
 
 - **ace-assign v0.11.9**: Add regression test coverage for fork-scoped advancement when global current phase is outside the scoped subtree
@@ -110,7 +117,6 @@ All notable changes to this project will be documented in this file.
 ### Technical
 
 - **ace-assign v0.11.7**: Add `ace-llm` dependency and test coverage for launcher + fork-run integration
-
 ## [0.9.515] - 2026-02-16
 
 ### Changed
