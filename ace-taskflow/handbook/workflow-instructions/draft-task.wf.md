@@ -4,7 +4,7 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-10-02'
+  last-updated: '2026-02-16'
 ---
 
 # Draft Task - Behavior-First Specification
@@ -145,7 +145,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * User experience summaries
      * Interface contracts
      * Status (draft - needs planning)
-   * Suggest next step: implementation planning phase
+   * Suggest next step: review-task workflow to validate and promote to pending
 
 ## Key Guidelines
 
@@ -159,8 +159,8 @@ Create high-level behavioral specifications that define WHAT the system should d
 ### Draft Status Integration
 
 * All tasks created have `status: draft`
-* Draft indicates behavioral specification complete, implementation planning needed
-* Clear handoff to replan/implementation phase
+* Draft indicates behavioral specification complete, readiness validation needed
+* Clear handoff to review-task for readiness validation
 * No mixing of behavioral and implementation concerns
 
 ### Capture-It Integration
@@ -196,7 +196,7 @@ All code implementation happens during `/ace:work-on-task` (status: in-progress)
 * Measurable success criteria defined
 * All tasks have status: draft
 * No implementation details mixed with behavioral requirements
-* Clear handoff to implementation planning phase
+* Clear handoff to review-task for readiness validation and promotion to pending
 * **REQUIRED when drafting from ideas:**
   * All source idea files marked as done and moved to ideas/done/ directory
   * Task references updated to new idea file locations

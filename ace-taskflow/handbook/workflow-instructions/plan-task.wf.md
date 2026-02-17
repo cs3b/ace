@@ -4,34 +4,34 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-10-08'
+  last-updated: '2026-02-16'
 ---
 
 # Plan Task Workflow Instruction
 
 ## Goal
 
-Create a detailed implementation plan for a task that already has a validated behavioral specification. Focus exclusively on the HOW (technical implementation approach) rather than the WHAT (behavioral requirements). Transform a draft task into a pending task with complete technical implementation details.
+Create a JIT (just-in-time) implementation plan for a pending task. This workflow produces ephemeral planning output to stdout or ace-assign phase reports. It does NOT modify task spec files or change task status. Focus exclusively on the HOW (technical implementation approach) rather than the WHAT (behavioral requirements).
 
-## ⚠️ Implementation Prohibition
+## Planning Phase Context
 
-**This workflow produces specification files ONLY.**
+**This workflow produces ephemeral planning output ONLY.**
 
-DO NOT during this phase:
-- ❌ Write or modify code files (.rb, .ts, .js, etc.)
-- ❌ Create implementation directories or structures
-- ❌ Run tests or builds
-- ❌ Make commits to project source code
+- Output goes to stdout or ace-assign phase reports
+- Does NOT modify task specification files
+- Does NOT change task status
+- No files are written to the task directory
+- All output is consumed by the next phase (work-on-task) or by the developer
 
-All code implementation happens during `/ace:work-on-task` (status: in-progress).
+This workflow can be invoked standalone for ad-hoc planning or as a phase within ace-assign.
 
 ## Prerequisites
 
-- Task file exists with **draft** status and validated behavioral specification
+- Task file exists with **pending** status (validated by review-task)
 - Task must have clear behavioral requirements from draft-task workflow
 - Understanding of project context and architecture
 - Access to recent git history and project status
-- load project context
+- Load project context
 
 ## Project Context Loading
 
@@ -62,14 +62,14 @@ All code implementation happens during `/ace:work-on-task` (status: in-progress)
 
 ## Process Steps
 
-1. **Load and Validate Draft Task:**
+1. **Load and Analyze Pending Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `ace-taskflow tasks --status draft` to get draft tasks
+     - If no task specified: Run `ace-taskflow tasks --status pending` to get pending tasks
      - Document the selected task path for reference
    - **Load Task Content:**
      - Read the task file from the identified path
-     - Verify task has `status: draft`
+     - Verify task has `status: pending`
      - Parse the structure and extract:
        - Behavioral specification (User Experience, Interface Contract, Success Criteria)
        - Existing scope and deliverables
@@ -107,16 +107,9 @@ All code implementation happens during `/ace:work-on-task` (status: in-progress)
 
 3. **Tool Selection:**
 
-   **Evaluation Criteria:**
-   - Performance requirements alignment
-   - Integration with existing stack
-   - Maintenance and support considerations
-   - Learning curve and team expertise
+   Evaluate tools/libraries against: performance requirements, integration with existing stack, maintenance considerations, and team expertise.
 
-   **Selection Matrix:**
-   - Create comparison matrix for major decisions
-   - Document selection rationale
-   - Note any trade-offs or compromises
+   **Tool Decision:** Selected tool/library, rationale, and key trade-offs.
 
    **Dependency Analysis:**
    - List all new dependencies required
@@ -143,22 +136,13 @@ All code implementation happens during `/ace:work-on-task` (status: in-progress)
    **Naming Consistency Analysis:**
    - When renaming commands, tools, or components, identify ALL related items:
      - Executable/command files
-     - Library directory structures (e.g., `lib/.../old_name/` → `lib/.../new_name/`)
-     - Test file patterns (e.g., `old_name_spec.rb` → `new_name_spec.rb`)
+     - Library directory structures (e.g., `lib/.../old_name/` to `lib/.../new_name/`)
+     - Test file patterns (e.g., `old_name_spec.rb` to `new_name_spec.rb`)
      - Test fixture/cassette directories
      - Module and class names in code
      - Import/require statements throughout codebase
      - Documentation references in markdown files
      - Configuration file references
-   - Use systematic search commands:
-     ```bash
-     # Find all directories and files with the old name
-     ace-search "*old_name*" --file | grep -v ".git"
-
-     # Find all code references
-     ace-search "old_name" --content --glob "**/*.{rb,py,js,md}"
-     ```
-   - Document the complete renaming scope to avoid partial migrations
 
 5. **Test Case Planning:** *(For code implementation tasks only)*
 
@@ -175,70 +159,16 @@ All code implementation happens during `/ace:work-on-task` (status: in-progress)
    **Happy Path Scenarios:**
    - Standard expected usage patterns
    - Primary user workflows and interactions
-   - Common configuration and data combinations
-   - Successful operation outcomes
 
    **Edge Case Scenarios:**
    - Boundary values (minimum/maximum limits)
    - Empty, null, or missing inputs
    - Special characters and unusual data formats
-   - Large datasets or high-volume operations
-   - Concurrent or simultaneous operations
 
    **Error Condition Scenarios:**
    - Invalid input validation failures
    - Missing required data or parameters
    - External service failures or unavailability
-   - Network timeouts and connectivity issues
-   - Permission denials and authorization failures
-
-   **Integration Point Scenarios:**
-   - External API interactions and responses
-   - Database operations and transactions
-   - File system access and manipulation
-   - Message queue and event handling
-   - Third-party service integrations
-
-   **Test Type Categorization:**
-
-   **Unit Tests** (High Priority):
-   - Individual functions and methods in isolation
-   - Pure business logic validation
-   - Input/output transformation correctness
-   - Mock external dependencies
-
-   **Integration Tests** (Medium Priority):
-   - Component interaction and communication
-   - API endpoint request/response cycles
-   - Database integration and data persistence
-   - Service layer coordination
-
-   **End-to-End Tests** (Context Dependent):
-   - Complete user journey validation
-   - Multi-step process workflows
-   - Cross-system integration flows
-   - UI interaction testing (if applicable)
-
-   **Performance Tests** (If Applicable):
-   - Response time benchmarks and limits
-   - Throughput capacity and scalability
-   - Resource usage monitoring
-   - Concurrent user load handling
-
-   **Security Tests** (If Applicable):
-   - Authentication and authorization validation
-   - Input sanitization and injection prevention
-   - Data exposure and privacy protection
-   - Access control verification
-
-   **Test Planning Documentation:**
-   - Create high-level test case matrix for edge cases
-   - Document test data requirements and prerequisites
-   - Plan test environment setup and configuration needs
-   - Identify test framework and tooling requirements
-   - Define test coverage expectations and success criteria
-
-   **Note:** For complex features requiring comprehensive test coverage, consider creating detailed test cases using the `create-test-cases.wf.md` workflow and `test-case.template.md` template.
 
    **Test Prioritization:**
    - **High Priority:** Core business logic, security-critical features, user-facing functionality
@@ -253,135 +183,37 @@ All code implementation happens during `/ace:work-on-task` (status: in-progress)
    - Include validation and testing at each step
    - Integrate test implementation alongside code implementation
 
-   **Test Implementation Integration:**
-   - Plan test implementation concurrent with code development
-   - Include test creation steps in execution plan
-   - Design test validation for each major implementation milestone
-   - Plan test data setup and teardown procedures
-
    **Embedded Test Planning:**
    - Design test blocks for critical operations using planned test scenarios
    - Plan verification commands for each step based on test case analysis
    - Include test execution validation at key implementation points
    - Include rollback verification where needed
-   - Reference high-level test scenarios from Test Case Planning step
 
-7. **Risk Analysis and Rollback Planning:**
+7. **Risk Assessment:**
 
-   **Technical Risks:**
-   - Identify potential failure points
-   - Plan mitigation strategies
-   - Document fallback approaches
+   **Primary Risk:** Description of the most significant risk
+   - **Mitigation:** Strategy to reduce or avoid the risk
+   - **Rollback:** Steps to undo if the risk materializes
 
-   **Rollback Strategy:**
-   - Define rollback steps for each implementation phase
-   - Plan data preservation and recovery
-   - Document emergency procedures
-
-   **Performance Impact:**
-   - Analyze potential performance implications
-   - Plan performance monitoring and validation
-   - Define acceptable performance thresholds
+   Include additional risks only if they are significant and distinct from the primary risk.
 
 8. **Implementation Plan Assembly:**
 
-   **Planning Steps Section:**
-   - Research and analysis activities (use `* [ ]`)
-   - Technical investigation tasks
-   - Design and architecture decisions
+   Assemble the complete plan output covering:
+   - Technical approach and architecture decisions
+   - File modification plan
+   - Implementation steps with embedded tests
+   - Risk assessment with mitigation
+   - Test strategy (for code tasks)
 
-   **Execution Steps Section:**
-   - Concrete implementation actions (use `- [ ]`)
-   - File creation and modification tasks
-   - Testing and validation steps
+   This output is delivered to stdout or the ace-assign phase report.
 
-   **Embedded Tests:**
-   - Add test blocks for critical operations:
-     ```markdown
-     - [ ] Implementation step
-       > TEST: Action Validation
-       > Type: Action Validation
-       > Assert: Expected outcome
-       > Command: # Run project-specific test command --verify-result
-     ```
-
-9. **UX/Usage Documentation Creation:**
-
-   **Purpose:** Create practical usage documentation to validate the implementation approach and provide clear examples for users. This helps ensure the plan is heading in the right direction before finalizing.
-
-   **When to Create:**
-   - **User-facing features**: Commands, CLI tools, APIs, workflows
-   - **Developer tools**: Build systems, test frameworks, development utilities
-   - **Skip for**: Internal refactoring, technical debt, infrastructure tasks
-
-   **Create ux/usage.md in task directory:**
-   - Path: `<task-directory>/ux/usage.md`
-   - Example: `.ace-taskflow/v.0.9.0/t/046-batch-operations/ux/usage.md`
-
-   **Document Structure:**
-
-   **Overview Section:**
-   - Brief description of what the feature does
-   - List of available commands/features
-   - Key benefits or use cases
-
-   **Command Types** (if applicable):
-   - Distinguish between command execution contexts
-   - Example: Claude Code commands vs bash CLI commands
-   - Show syntax differences clearly
-
-   **Command Structure:**
-   - Basic invocation patterns
-   - Argument formats
-   - Option/flag usage
-   - Default behaviors
-
-   **Usage Scenarios** (3-6 real-world examples):
-   - **Scenario 1**: Common/typical use case
-     - Goal statement
-     - Step-by-step commands
-     - Expected output
-   - **Scenario 2**: Alternative workflow
-   - **Scenario 3**: Edge case handling
-   - **Scenario 4**: Complex/advanced usage
-   - Include both successful and error cases
-
-   **Command Reference:**
-   - Detailed syntax for each command
-   - Parameter descriptions
-   - Input/output formats
-   - Internal implementation notes (what tools/commands it uses)
-
-   **Tips and Best Practices:**
-   - Common pitfalls to avoid
-   - Recommended workflows
-   - Performance considerations
-   - Troubleshooting guidance
-
-   **Migration Notes** (if replacing existing feature):
-   - Legacy vs new command comparison
-   - Key differences
-   - Transition guidance
-
-   **Review Criteria:**
-   - [ ] Examples use actual command syntax (verified against implementation)
-   - [ ] Scenarios cover common and edge cases
-   - [ ] Command types clearly distinguished
-   - [ ] Output examples realistic and helpful
-   - [ ] Troubleshooting addresses likely issues
-   - [ ] Migration path clear if applicable
-
-10. **Task Status Promotion:**
-   - Update task metadata:
-     - Change `status: draft` to `status: pending`
-     - Verify priority and estimate are appropriate
-     - Update dependencies if needed
-   - Add implementation plan sections
-   - Ensure acceptance criteria align with implementation approach
+   **Optional: UX/Usage Documentation Note**
+   For user-facing features (commands, CLI tools, APIs, workflows), note that usage documentation should be created during implementation (work-on-task phase), not during planning.
 
 ## Implementation Planning Templates
 
-The following templates should be used when creating implementation plans:
+The following templates may be used when structuring planning output:
 
 ### Technical Approach Template
 
@@ -398,20 +230,6 @@ The following templates should be used when creating implementation plans:
 - [ ] Version compatibility checks
 - [ ] Performance implications
 - [ ] Security considerations
-```
-
-### Tool Selection Matrix
-
-```markdown
-## Tool Selection
-
-| Criteria | Option A | Option B | Option C | Selected |
-|----------|----------|----------|----------|----------|
-| Performance | Good | Excellent | Fair | Option B |
-| Integration | Excellent | Good | Poor | Option B |
-| Maintenance | Good | Excellent | Fair | Option B |
-
-**Selection Rationale:** [Explain why Option B was chosen]
 ```
 
 ### File Modification Template
@@ -448,60 +266,35 @@ The following templates should be used when creating implementation plans:
   - Documentation updates: [number of markdown files with references]
 ```
 
-### Risk Assessment Template
-
-```markdown
-## Risk Assessment
-
-### Technical Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Rollback:** [Procedure]
-
-### Integration Risks
-- **Risk:** [Description]
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [How to detect]
-```
-
 ## Content Transformation Guidelines
 
-When transforming from review-task to plan-task focus:
+When planning from a behavioral spec:
 
-**Remove (WHAT concerns):**
-- Behavioral specification validation
-- User experience requirements analysis
-- Interface contract definition
-- Success criteria validation
-- Requirements clarification
+**Input (WHAT concerns from behavioral spec):**
+- User experience requirements
+- Interface contracts
+- Success criteria
+- Validation questions and answers
 
-**Keep and Enhance (HOW concerns):**
+**Output (HOW concerns for implementation):**
 - Technical approach analysis
-- Implementation strategy
+- Implementation strategy with steps
 - Tool and library selection
 - File modification planning
 - Risk assessment and mitigation
-
-**Add (Implementation Planning):**
-- Detailed technical research
-- Architecture integration analysis
-- Step-by-step implementation plan
-- Embedded test validation
-- Rollback and recovery procedures
+- Test strategy
 
 ## Output / Success Criteria
 
-- Task status changed from `draft` to `pending`
+- Ephemeral planning output delivered to stdout or ace-assign phase report
+- NO task file modifications
+- NO status changes
 - Complete technical implementation plan with specific steps
 - All tools and libraries selected with rationale
 - File modification plan with detailed impact analysis
 - Risk assessment with mitigation strategies
 - Embedded tests for critical operations
 - Clear integration with existing architecture
-- Rollback procedures documented
-- UX/usage documentation created for user-facing features (when applicable)
 
 ## Common Patterns
 
@@ -523,124 +316,20 @@ When transforming from review-task to plan-task focus:
 - Emphasize error handling and recovery
 - Document external dependencies
 
-### User-Facing Features
-- Create comprehensive usage scenarios early
-- Validate command syntax before finalizing
-- Include both success and error examples
-- Document migration path from legacy features
-
 ## Usage Example
 
-**Input:** Draft task with behavioral specification
-> "Plan implementation for task .ace-taskflow/$(ace-taskflow release --path)/v.0.5.0/tasks/v.0.5.0+task.1-realtime-collaboration.md (status: draft)"
+**Input:** Pending task with validated behavioral specification
+> "Plan implementation for task .ace-taskflow/v.0.9.0/tasks/task-dir/task.s.md (status: pending)"
 
 **Process:** Technical research, tool selection, implementation planning
 
-**Output:** Task with complete implementation plan and status: pending
+**Output:** Ephemeral implementation plan to stdout (no task file changes)
 
 ---
 
-This workflow transforms draft tasks with validated behavioral specifications into fully planned, implementation-ready tasks with detailed technical approaches.
+This workflow creates JIT implementation plans that guide the work-on-task phase, producing ephemeral output without modifying task specifications or changing task status.
 
 <documents>
-    <template path="tmpl://task-management/task.pending">---
-id: <generated automatically by ace-taskflow>
-status: pending
-priority: <high/medium/low>
-estimate: <n>h
-dependencies: [<ticket-ids>]
----
-
-# <Verb + Object>
-
-## 0. Directory Audit ✅
-
-_Command run:_
-
-```bash
-ace-nav guide://
-```
-
-_Result excerpt:_
-
-```
-<insert tree here>
-```
-
-## Objective
-
-Why are we doing this?
-
-## Scope of Work
-
-- Bullet 1 …
-- Bullet 2 …
-
-### Deliverables
-
-#### Create
-
-- path/to/file.ext
-
-#### Modify
-
-- path/to/other.ext
-
-#### Delete
-
-- path/to/obsolete.ext
-
-## Phases
-
-1. Audit
-2. Extract …
-3. Refactor …
-
-## Implementation Plan
-
-*This section details the specific steps required to complete the task. It is divided into two subsections to distinguish between planning/analysis activities and actual implementation work._
-
-### Planning Steps
-
-*Optional but recommended for complex tasks. Use asterisk markers (`* [ ]`) for research, analysis, and design activities that help clarify the approach before implementation begins._
-
-- [ ] Analyze current system/codebase to understand existing patterns
-  > TEST: Understanding Check
-  > Type: Pre-condition Check
-  > Assert: Key components and their relationships are identified
-  > Command: # Run project-specific test command --check-analysis-complete
-- [ ] Research best practices and design approach
-- [ ] Plan detailed implementation strategy
-
-### Execution Steps
-
-*Required section. Use hyphen markers (`- [ ]`) for concrete implementation actions that modify code, create files, or change the system state._
-
-- [ ] Step 1: Describe the first implementation action.
-- [ ] Step 2: Describe the second action, which produces a verifiable outcome.
-  > TEST: Verify Action 2 Outcome
-  > Type: Action Validation
-  > Assert: The outcome of Step 2 (e.g., file created, content updated) is as expected.
-  > Command: # Run project-specific test command --check-something path/to/relevant_artifact_from_step_2
-- [ ] ... Add more implementation steps as needed.
-
-## Acceptance Criteria
-
-*Define the conditions that signify the task is complete. These can be manual checks or high-level statements whose details are verified by embedded tests in the Implementation Plan._
-
-- [ ] AC 1: All specified deliverables created/modified.
-- [ ] AC 2: Key functionalities (if applicable) are working as described.
-- [ ] AC 3: All automated checks in the Implementation Plan pass.
-
-## Out of Scope
-
-- ❌ …
-
-## References
-
-```
-</template>
-
     <template path="tmpl://task-management/task.technical-approach">## Technical Approach
 
 ### Architecture Pattern
@@ -659,24 +348,6 @@ Why are we doing this?
 - [ ] Rollback considerations
 - [ ] Testing strategy
 - [ ] Performance monitoring
-</template>
-
-    <template path="tmpl://task-management/task.tool-selection-matrix">## Tool Selection
-
-| Criteria | Option A | Option B | Option C | Selected |
-|----------|----------|----------|----------|----------|
-| Performance | | | | |
-| Integration | | | | |
-| Maintenance | | | | |
-| Security | | | | |
-| Learning Curve | | | | |
-
-**Selection Rationale:** [Explain selection reasoning]
-
-### Dependencies
-- [ ] New dependency 1: version and reason
-- [ ] New dependency 2: version and reason
-- [ ] Compatibility verification completed
 </template>
 
     <template path="tmpl://task-management/task.file-modification-checklist">## File Modifications
@@ -708,29 +379,6 @@ Why are we doing this?
     - Module/class names: `OldName` → `NewName`
   - Import updates: [number of files with require/import statements]
   - Documentation updates: [number of markdown files with references]
-</template>
-
-    <template path="tmpl://task-management/task.risk-assessment">## Risk Assessment
-
-### Technical Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Rollback:** [Procedure]
-
-### Integration Risks
-- **Risk:** [Description]
-  - **Probability:** High/Medium/Low
-  - **Impact:** High/Medium/Low
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [How to detect]
-
-### Performance Risks
-- **Risk:** [Description]
-  - **Mitigation:** [Strategy]
-  - **Monitoring:** [Metrics to track]
-  - **Thresholds:** [Acceptable limits]
 </template>
 
 </documents>
