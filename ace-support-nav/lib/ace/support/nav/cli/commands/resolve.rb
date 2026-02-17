@@ -72,6 +72,7 @@ module Ace
 
             option :path, type: :boolean, desc: "Display resource path"
             option :content, type: :boolean, desc: "Display resource content"
+            option :tree, type: :boolean, desc: "Display resources in tree format (passed through to cmd protocols)"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show detailed information"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
