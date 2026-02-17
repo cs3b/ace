@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.2] - 2026-02-17
+
+### Fixed
+- Added integration coverage to verify `QueryInterface.query(..., sandbox: ...)` forwards sandbox mode into generation options
+
 ## [0.22.1] - 2026-02-15
 
 ### Added
