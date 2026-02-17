@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.6] - 2026-02-17
+
+### Fixed
+- Added `SafeCapture` molecule test coverage to verify `env:` parameter propagation into subprocess execution (`test_env_option_passed_to_subprocess`)
+
 ## [0.16.5] - 2026-02-15
 
 ### Changed
