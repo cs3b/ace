@@ -4,10 +4,119 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.522] - 2026-02-17
+
+### Changed
+
+- **ace-assign v0.11.16**: `ace-assign status` now prints one canonical fork delegation command (`ace-assign fork-run --assignment <id>@<root>`) across fork subtree states, including direct fork-root phases
+- **ace-assign v0.11.16**: Fork workflow/guides now consistently document scoped fork syntax and explicit no-redelegation behavior when `ACE_ASSIGN_FORK_ROOT` is set
+
+### Fixed
+
+- **ace-assign v0.11.16**: Parent/orchestrator drive paths now get deterministic fork-subtree detection for current fork-root phases, enabling automatic runtime delegation
+
+### Technical
+
+- **ace-assign v0.11.16**: Add status command tests for fork-root delegation marker and in-scope `Fork scope` rendering
+
+## [0.9.521] - 2026-02-17
+
+### Added
+
+- **ace-assign v0.11.15**: Add catalog phase template `split-subtree-root` for split parent orchestration (project-overridable)
+
+### Changed
+
+- **ace-assign v0.11.15**: Split parent nodes with `sub_phases` now materialize as orchestration-only subtree roots (parent `skill` removed, `source_skill` metadata retained) and drive delegation/execution via fork root workflow
+- **ace-assign v0.11.15**: Phase catalog loading now merges project overrides with defaults by phase name, enabling single-phase overrides without replacing full catalog
+
+### Fixed
+
+- **ace-assign v0.11.15**: Fork root parent instructions no longer duplicate `work-on-task` execution semantics and now correctly direct subtree drive flow
+
+## [0.9.520] - 2026-02-17
+
+### Fixed
+
+- **ace-assign v0.11.14**: Scoped status now renders nested subtree roots correctly (for example `--assignment <id>@010.01`) with visible hierarchy and actionable current phase
+- **ace-assign v0.11.14**: Runtime-expanded sub-phases now propagate and use explicit `taskref` metadata for deterministic task context and child phase frontmatter
+- **ace-assign v0.11.14**: `fork-run` launcher now requires full `ace/llm`, preventing uninitialized LLM error constant crashes during provider failures
+
+### Changed
+
+- **ace-assign v0.11.14**: Preset expansion now applies placeholder substitution across all step fields (including nested metadata), not only `name`/`instructions`
+
+## [0.9.519] - 2026-02-17
+
+### Fixed
+
+- **ace-assign v0.11.13**: Scoped assignment status now reports the actionable in-subtree phase (not always the scope root), enabling correct fork drive targeting with `--assignment <id>@<phase>`
+- **ace-assign v0.11.13**: Runtime-expanded sub-phases now include step-specific action instructions and treat parent orchestration text as verification checklist rather than duplicated execution instructions
+
+## [0.9.518] - 2026-02-17
+
+### Changed
+
+- **ace-assign v0.11.12**: `drive-assignment` now enforces hard no-skip phase execution with attempt-first failure evidence and required post-action state verification
+
+### Added
+
+- **ace-assign v0.11.12**: Add E2E policy scenario `TS-ASSIGN-005-no-skip-policy` to lock workflow-only no-skip guardrails
+
+## [0.9.517] - 2026-02-17
+
+### Changed
+
+- **ace-assign v0.11.11**: `drive-assignment` workflow now auto-delegates detected fork-enabled subtrees with `ace-assign fork-run --assignment <id>@<root>` before inline phase execution
+
+## [0.9.516] - 2026-02-16
+
+### Fixed
+
+- **ace-llm-providers-cli v0.16.6**: Add `SafeCapture` env-forwarding test coverage to validate subprocess environment propagation
+- **ace-llm v0.22.2**: Add integration test to ensure `sandbox` parameter is threaded through `QueryInterface.query` generation options
+- **ace-assign v0.11.10**: Add regression coverage for fork-scoped advancement when global current phase is outside subtree
+- **ace-assign v0.11.10**: Add tests for CLI env propagation and query sandbox propagation in related runtime paths
+- **ace-assign v0.11.9**: Fork-scoped report advancement now executes the scoped subtree phase instead of completing an out-of-scope global current phase
+- **ace-assign v0.11.9**: E2E assertions for `parent` metadata now accept both single-quoted and double-quoted YAML values
+- **ace-assign v0.11.8**: `fork-run` no longer depends on global current phase when explicit subtree scope is provided; scoped subtree execution can start from any node
+- **ace-assign v0.11.6**: Remove child-level `context: fork` in split sub-phases and constrain advancement to fork subtree during scoped execution
+- **ace-assign v0.11.5**: Runtime-expanded sub-phases now materialize concrete catalog metadata (skills + focused instructions), propagate parent task context to child phases, start from first workable leaf, and use single-entry fork delegation for forked subtrees
+- **ace-taskflow v0.36.2**: Review cycle 2 fixes — CLI syntax for task promotion, plan-task standalone dead path
+- **ace-assign v0.11.2**: Add test coverage for new composition ordering rules
+- **ace-taskflow v0.36.1**: Review cycle 1 fixes — arrow notation, needs_review clearing, behavioral-spec validation
+- **ace-assign v0.11.1**: Consolidate duplicate composition rule trigger
+
+### Added
+
+- **ace-assign v0.11.9**: Add regression test coverage for fork-scoped advancement when global current phase is outside the scoped subtree
+- **ace-assign v0.11.8**: Add shared assignment target parsing with scoped syntax (`--assignment <id>@<phase>`) and coverage for scoped command behavior
+- **ace-assign v0.11.7**: Add synchronous fork-session launcher (`ForkSessionLauncher`) using `ace-llm` and assign-level execution/provider defaults
+- **ace-assign v0.11.6**: Add `ace-assign fork-run` command and subtree queue helpers for explicit fork-scope delegation
+- **ace-assign v0.11.3**: `SkillAssignSourceResolver` molecule to resolve skill frontmatter `assign.source` URIs into workflow assignment metadata; default config paths for skill/workflow discovery
+- **ace-taskflow v0.36.3**: `assign` frontmatter declaration to `work-on-task.wf.md` with canonical runtime sub-phases (`onboard`, `plan-task`, `work-on-task`) and `context: fork`
+
+### Changed
+
+- **ace-assign v0.11.10**: Centralize sub-phase numbering via `NumberGenerator.subtask` and complete tree state labels for pending/in-progress visibility
+- **ace-assign v0.11.9**: Status output now includes explicit `Current Status` line for deterministic parsing
+- **ace-review v0.39.3**: Harden review workflow instructions with explicit process-exit gating before feedback commands, standardized 10-minute timeout behavior, and session-targeted feedback examples
+- **ace-assign v0.11.8**: Assignment-targeting commands now use a unified resolver; scoped status renders only the selected node subtree and shows scope root as current phase
+- **ace-assign v0.11.7**: `ace-assign fork-run` now executes subtree sessions directly (blocking) with provider/cli-args/timeout overrides and explicit subtree outcome checks
+- **ace-assign v0.11.6**: Status/report and fork-context docs now model parent-only fork markers with runtime subtree execution via `ACE_ASSIGN_FORK_ROOT`
+- **ace-assign v0.11.4**: Clarify composition boundary — `compose-assignment` is catalog-only, while deterministic metadata-driven expansion is documented under prepare/runtime paths
+- **ace-assign v0.11.3**: `AssignmentExecutor.start` now enriches phases with skill-declared workflow `assign.sub-phases` before expansion, enabling deterministic runtime sub-phase materialization without compose-specific wiring
+
+### Technical
+
+- **ace-assign v0.11.7**: Add `ace-llm` dependency and test coverage for launcher + fork-run integration
+
 ## [0.9.515] - 2026-02-16
 
 ### Changed
 
+- **ace-taskflow v0.36.0**: Streamline task lifecycle — review-task becomes readiness gate, plan-task becomes JIT ephemeral, work-on-task accepts behavioral specs without plans
+- **ace-assign v0.11.0**: Integrate JIT plan-task phase into recipes and composition rules
 - **ace-assign v0.10.2**: Rename review cycle steps by type (`review-valid-1`, `review-fit-1`) and add shine cycle (`review-shine-1`, `apply-shine-1`, `release-shine-1`)
 - **ace-assign v0.10.2**: Update `default_count` to 3 in composition rules for three review types (valid, fit, shine)
 
