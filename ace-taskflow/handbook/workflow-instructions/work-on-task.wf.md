@@ -4,16 +4,22 @@ update:
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2025-10-14'
+  last-updated: '2026-02-16'
+assign:
+  sub-phases:
+    - onboard
+    - plan-task
+    - work-on-task
+  context: fork
 ---
 
 # Work on Task Workflow Instruction
 
-**Goal:** Initiate and guide the step-by-step implementation of a specific task, using the detailed plan embedded directly within the task's definition file.
+**Goal:** Initiate and guide the step-by-step implementation of a specific task using its behavioral specification. JIT planning may have occurred as a prior phase via ace-assign — use that output as additional context alongside the behavioral spec.
 
 ## Prerequisites
 
-* Task file selected with embedded implementation plan
+* Task file selected with behavioral specification
 * Understanding of the task format and structure
 * Access to project files and tools
 
@@ -82,15 +88,19 @@ For experienced users, here's the condensed workflow:
 
      # Task Title
 
-     ## Implementation Plan
-     ### Planning Steps
-     * [ ] Research/analysis steps (asterisk markers)
-     ### Execution Steps
-     - [ ] Implementation actions (hyphen markers)
+     ## Behavioral Specification
+     ### Success Criteria
+     ### Interface Contract
      ```
 
    * If structure is invalid, STOP and report the issue
    * Review the task's Objective to ensure understanding
+
+   **Use Behavioral Spec to Guide Implementation:**
+
+   * Use the behavioral spec's Success Criteria and Interface Contract to guide implementation decisions
+   * If invoked via ace-assign: JIT planning happened as a prior phase; use that planning output as context alongside the behavioral spec
+   * If invoked standalone: For complex tasks, ensure the task has been promoted to pending via `/ace:review-task` first, then run `/ace:plan-task` for JIT planning. For straightforward tasks, proceed directly with the behavioral spec
 
    **Task Type Detection:**
    After loading the task, determine if it's an orchestrator or regular task:
@@ -119,41 +129,13 @@ For experienced users, here's the condensed workflow:
 
    * Save the updated task file
 
-4. **Execute Task Plan Step-by-Step:**
-   * Process each checklist item in order
-   * **Work autonomously** - Continue implementing until user feedback is needed
+4. **Implement Based on Behavioral Spec:**
+   * Use Success Criteria as acceptance tests — each criterion is a deliverable
+   * Use Interface Contract to understand inputs, outputs, and boundaries
+   * **Work autonomously** — continue implementing until user feedback is needed
    * If user input is required, ask and continue with the feedback
-
-   **For Planning Steps (`* [ ]`):**
-   * Execute research, analysis, or design work
-   * Document findings inline or in separate files
-   * Check for embedded tests:
-
-     ```markdown
-     * [ ] Research step
-       > TEST: Pre-condition Check
-       > Type: Pre-condition Check
-       > Assert: What needs to be verified
-       > Command: # Run project-specific test command --check-something
-     ```
-
-   **For Execution Steps (`- [ ]`):**
-   * Implement the concrete action
    * Follow coding standards (see embedded guidelines below)
-   * Check for embedded tests:
-
-     ```markdown
-     - [ ] Implementation step
-       > TEST: Action Validation
-       > Type: Action Validation
-       > Assert: Expected outcome
-       > Command: # Run project-specific test command --verify-result
-     ```
-
-   **Test Execution:**
-   * Run any embedded test commands
-   * If tests fail: STOP, report failure, await instructions
-   * Only mark item complete (`[x]`) after tests pass
+   * Run tests frequently to validate progress
 
 5. **Follow Coding Standards:**
    When implementing code changes, follow these principles:
@@ -246,7 +228,7 @@ When creating task-related documentation and deliverables:
 * **Task-specific documentation**: Create in `{release-path}/docs/` (use `ace-taskflow release` to find current release path)
 * **Task-specific naming**: Prefix documents with task number (e.g., `25-validation-criteria-checklist.md`)
 * **Analysis documents**: Research findings, compliance reports, validation results
-* **Planning documents**: Implementation plans, action plans, design specifications
+* **Planning documents**: Action plans, design specifications
 * **Process documentation**: Procedures, guidelines, validation criteria
 
 ### Examples
@@ -409,8 +391,7 @@ When working with temporary files:
 **Symptoms:**
 
 * Task file missing required metadata (id, status, priority)
-* Implementation plan structure is malformed
-* Checklist items use wrong markers
+* Behavioral specification is missing or incomplete
 
 **Recovery Steps:**
 
@@ -426,9 +407,10 @@ When working with temporary files:
    ---
    ```
 
-2. Check Implementation Plan structure:
-   * Planning steps use asterisk markers (`* [ ]`)
-   * Execution steps use hyphen markers (`- [ ]`)
+2. Check Behavioral Specification structure:
+   * Must have Success Criteria section
+   * Must have Interface Contract section
+   * If spec is incomplete, run `/ace:review-task` to identify gaps
 3. For malformed tasks:
    * Report structure issues to user
    * Ask for task file correction
@@ -598,8 +580,8 @@ When errors occur during task execution:
 
 ## Input
 
-* Full path to the selected task file containing embedded implementation plan
-* Task must have valid structure and implementation plan
+* Full path to the selected task file containing behavioral specification
+* Task must have valid structure and behavioral spec
 
 ## Output / Success Criteria
 

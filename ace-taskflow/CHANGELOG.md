@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.3] - 2026-02-17
+
+### Added
+- `assign` frontmatter declaration to `work-on-task.wf.md` with canonical runtime sub-phases (`onboard`, `plan-task`, `work-on-task`) and `context: fork`
+
+## [0.36.2] - 2026-02-16
+
+### Fixed
+- Fix review-task CLI syntax: split multi-field update into separate commands to avoid dry-cli repeat option issue
+- Fix plan-task standalone dead path: clarify that review-task must promote draft to pending before plan-task
+
+## [0.36.1] - 2026-02-16
+
+### Fixed
+- Standardize arrow notation in plan-task file modification checklist template
+- Clear `needs_review` flag when promoting tasks from draft to pending in review-task
+- Clarify that behavioral-spec-only tasks are valid in work-on-task validation
+
+## [0.36.0] - 2026-02-16
+
+### Changed
+- Streamline task lifecycle: review-task becomes draft-to-pending readiness gate with checklist validation and status promotion
+- Transform plan-task to JIT ephemeral planning (no task file modifications, no status changes)
+- Update work-on-task to accept tasks with behavioral specs only (implementation plan optional)
+- Update draft-task to reference review-task as next step instead of plan-task
+- Update create-task workflow to decouple plan-task from task creation pipeline
+- Update draft-tasks workflow to recommend review-task for draft validation
+
 ## [0.35.1] - 2026-02-16
 
 ### Fixed

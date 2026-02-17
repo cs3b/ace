@@ -145,7 +145,7 @@ Provide comprehensive summary including:
 - Context: [details]
 
 **Recommendations:**
-- Next steps (e.g., run /ace:plan-tasks)
+- Next steps (e.g., run /ace:review-task to validate and promote drafts)
 - Any follow-up actions needed
 
 ## Error Handling Strategies
