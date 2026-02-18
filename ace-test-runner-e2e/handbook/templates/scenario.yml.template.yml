@@ -14,6 +14,16 @@ priority: high
 # Optional: Estimated duration
 duration: ~{X}min
 
+# Optional: Cost profile for manual runs (smoke|standard|deep)
+cost-tier: standard
+
+# Optional: Why this scenario must be E2E (not unit-only)
+e2e-justification: "{Requires real CLI/tools/filesystem behavior}"
+
+# Optional: Unit test files reviewed during Value Gate analysis
+unit-coverage-reviewed:
+  - test/{layer}/{file}_test.rb
+
 # Optional: Prerequisites
 requires:
   tools: [{tool1}, {tool2}]

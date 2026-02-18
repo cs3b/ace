@@ -2,7 +2,7 @@
 guide-id: g-e2e-testing
 title: E2E Testing Guide
 description: Conventions and best practices for agent-executed end-to-end tests
-version: "1.5"
+version: "1.6"
 source: ace-test-runner-e2e
 ---
 
@@ -56,6 +56,28 @@ Do NOT create E2E test cases for:
 - **Consolidation rule:** Multiple assertions that share the same CLI invocation and setup belong in ONE TC, not separate TCs. For example, checking `report.json` structure, exit code, and `ok.md` existence after a single `ace-lint lint` call is one TC with multiple verification steps, not three TCs.
 
 **Reference:** ace-lint consolidated from 8 scenarios / 31 TCs to 3 scenarios (5, 2, 2 TCs) — each scenario is a coherent pipeline with shared fixtures.
+
+### Manual Run Strategy (Cost-Aware)
+
+These scenarios are intentionally manual-run (not automatic in CI), so keep a predictable cost/coverage profile:
+
+- Tag scenarios with `cost-tier` in `scenario.yml` (`smoke`, `standard`, `deep`)
+- Run order for intentional validation:
+  1. `smoke` first (fast, high-signal sanity checks)
+  2. `standard` second (default regression confidence)
+  3. `deep` last (expensive edge cases, full journey validation)
+- Keep `deep` scenarios narrowly scoped to E2E-only risk (real subprocess/tooling/filesystem orchestration)
+- Reassess any scenario that stays in `deep` for multiple cycles without finding unique defects
+
+### Decision Evidence in scenario.yml
+
+Every scenario should preserve why it exists at E2E level:
+
+- `e2e-justification`: one sentence explaining the E2E-only value
+- `unit-coverage-reviewed`: unit/integration test files checked for overlap
+- `cost-tier`: expected run profile for manual execution planning
+
+This evidence keeps review/planning workflows grounded and prevents duplicate assertions across layers.
 
 ## Convention
 
@@ -172,6 +194,10 @@ Optional fields:
 ```yaml
 duration: ~15min
 automation-candidate: false
+cost-tier: standard
+e2e-justification: "Requires real CLI + tool subprocess + filesystem effects"
+unit-coverage-reviewed:
+  - test/molecules/example_test.rb
 requires:
   tools: [standardrb, rubocop]
   ruby: ">= 3.0"
@@ -454,7 +480,7 @@ E2E tests are only valuable if they catch real bugs. A false positive test — o
 
 **Problem:** When every test case uses the exact correct command syntax and only tests success paths, the test can't catch argument parsing bugs, missing subcommands, or crash-on-bad-input issues.
 
-**Fix:** Always include error/negative test cases that exercise wrong arguments, missing files, and invalid state. Run error TCs first, before any session or state is created.
+**Fix:** Include error/negative test cases when they validate E2E-exclusive behavior (CLI parser/runtime wiring, external tool failures, filesystem state transitions) or when unit coverage has a documented gap. Run high-value error TCs first, before any session or state is created.
 
 ```markdown
 <!-- BAD: Only happy path -->
@@ -529,12 +555,13 @@ echo "$OUTPUT" | grep -qi "no active session" && echo "PASS" || echo "FAIL: Wron
 
 Before approving a new or updated E2E test, verify:
 
-- [ ] At least one error/negative TC is present (wrong args, missing files, invalid state)
+- [ ] Error/negative TCs are included when they add E2E-only value or close a documented unit coverage gap
 - [ ] File paths are discovered at runtime, not hardcoded from assumptions
 - [ ] Every verification step produces explicit PASS/FAIL output
 - [ ] TCs follow a real user workflow sequence (not isolated commands)
 - [ ] Exit codes are checked for error commands (specific codes, not just non-zero)
 - [ ] Negative assertions exist (files/directories that should NOT exist are verified absent)
+- [ ] `scenario.yml` includes `e2e-justification`, `unit-coverage-reviewed`, and `cost-tier`
 
 ## Environment Isolation for Taskflow-Aware Tests
 
