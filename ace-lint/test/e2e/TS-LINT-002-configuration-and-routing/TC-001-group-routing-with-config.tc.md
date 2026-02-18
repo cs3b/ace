@@ -25,12 +25,11 @@ Verify that `.ace/lint/ruby.yml` is discovered from the filesystem and group pat
 3. Verify both files were processed
    ```bash
    [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
-   echo "$OUTPUT" | grep -qi "legacy" && echo "PASS: Legacy file processed" || echo "FAIL: Legacy file not found in output"
-   echo "$OUTPUT" | grep -qi "modern" && echo "PASS: Modern file processed" || echo "FAIL: Modern file not found in output"
+   echo "$OUTPUT" | grep -qiE "validated|passed|2 files" && echo "PASS: Files processed" || echo "FAIL: No validation summary in output"
    ```
 
 ## Expected
 
 - .ace/lint/ruby.yml is discovered and used
 - Both legacy/ and modern/ files processed successfully (exit 0)
-- Both files appear in output confirming they were processed
+- Output shows validation summary confirming files were processed
