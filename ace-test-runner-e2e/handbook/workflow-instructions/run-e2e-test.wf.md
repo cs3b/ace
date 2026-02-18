@@ -13,7 +13,7 @@ This workflow guides an agent through executing an E2E test scenario.
 ## Arguments
 
 - `PACKAGE` (optional) - The package containing the test (e.g., `ace-lint`). If omitted, looks for `test/e2e/` in project root.
-- `TEST_ID` (optional) - The test identifier (e.g., `MT-LINT-001`). If omitted, runs all tests.
+- `TEST_ID` (optional) - The test identifier (e.g., `TS-LINT-001`). If omitted, runs all tests.
 - `RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths. Passed via `--run-id ID`. When provided, use this instead of generating a new timestamp.
 - `TEST_CASES` (optional) - Comma-separated list of test case IDs to execute (e.g., `TC-001,tc-003,002`). When provided, only the specified test cases are executed; all others are skipped. IDs are normalized to `TC-NNN` format automatically.
 
@@ -112,25 +112,16 @@ Determine the test directory based on arguments:
 
 **No arguments** - Look in project root:
 ```bash
-# MT-format scenarios (single-file)
-find test/e2e -name "*.mt.md" 2>/dev/null | sort
-# TS-format scenarios (directory-based)
 find test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **PACKAGE only** - Find all tests in package:
 ```bash
-# MT-format scenarios
-find {PACKAGE}/test/e2e -name "*.mt.md" 2>/dev/null | sort
-# TS-format scenarios
 find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **PACKAGE and TEST_ID** - Find specific test:
 ```bash
-# MT-format (TEST_ID starts with MT-)
-find {PACKAGE}/test/e2e -name "*{TEST_ID}*.mt.md" 2>/dev/null | head -1
-# TS-format (TEST_ID starts with TS-)
 find {PACKAGE}/test/e2e -path "*{TEST_ID}*/scenario.yml" 2>/dev/null | head -1
 ```
 
@@ -269,14 +260,14 @@ Report any missing prerequisites before proceeding.
 Folder names use a shortened format for readability:
 - `{timestamp}` - 6-char base36 timestamp (unchanged)
 - `{short-pkg}` - package name with `ace-` prefix removed (e.g., `ace-lint` → `lint`)
-- `{short-id}` - lowercase prefix + number only (e.g., `MT-LINT-001` → `mt001`, `TS-LINT-001` → `ts001`)
+- `{short-id}` - lowercase prefix + number only (e.g., `TS-LINT-001` → `ts001`)
 
 ```
 .cache/ace-test-e2e/
-├── 8osvnh-lint-mt001/                      # Sandbox folder
+├── 8osvnh-lint-ts001/                      # Sandbox folder
 │   ├── (test artifacts)
 │   └── ...
-├── 8osvnh-lint-mt001-reports/              # Reports subfolder
+├── 8osvnh-lint-ts001-reports/              # Reports subfolder
 │   ├── summary.r.md
 │   ├── experience.r.md
 │   └── metadata.yml
@@ -287,7 +278,7 @@ Folder names use a shortened format for readability:
 - Package test: `.cache/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}/`
 - Project test: `.cache/ace-test-e2e/{timestamp}-{short-id}/`
 
-Example: `.cache/ace-test-e2e/8oig0h-lint-mt001/`
+Example: `.cache/ace-test-e2e/8oig0h-lint-ts001/`
 
 ### 4.1 Sandbox Isolation Checkpoint (MANDATORY)
 
@@ -471,7 +462,7 @@ After test execution completes (pass or fail), write three report files to a rep
 **Set up report paths (reports subfolder):**
 ```bash
 # Reports go in a subfolder alongside the sandbox folder
-REPORT_DIR="${TEST_DIR}-reports"  # e.g., .cache/ace-test-e2e/8osvnh-lint-mt001-reports
+REPORT_DIR="${TEST_DIR}-reports"  # e.g., .cache/ace-test-e2e/8osvnh-lint-ts001-reports
 mkdir -p "$REPORT_DIR"
 # Report files: ${REPORT_DIR}/summary.r.md, ${REPORT_DIR}/experience.r.md, ${REPORT_DIR}/metadata.yml
 ```
@@ -679,8 +670,8 @@ Reports persisted to `.cache/ace-test-e2e/`:
 
 | Test ID | Title | Status |
 |---------|-------|--------|
-| MT-LINT-001 | Ruby Validator Fallback | Pass |
-| MT-LINT-002 | ... | Fail |
+| TS-LINT-001 | Ruby Validator Fallback | Pass |
+| TS-LINT-002 | ... | Fail |
 
 ### Overall: {passed}/{total} passed
 
@@ -692,8 +683,8 @@ Reports persisted to `.cache/ace-test-e2e/`:
 
 Reports persisted to `.cache/ace-test-e2e/`:
 - `{suite-timestamp}-final-report.md` - Suite summary report (only final at top level)
-- `{timestamp}-{short-pkg}-mtxxx001/` - Sandbox
-- `{timestamp}-{short-pkg}-mtxxx001-reports/` - Reports folder
+- `{timestamp}-{short-pkg}-ts001/` - Sandbox
+- `{timestamp}-{short-pkg}-ts001-reports/` - Reports folder
   - `summary.r.md`
   - `experience.r.md`
   - `metadata.yml`
@@ -758,17 +749,7 @@ If you realize you executed test cases that should have been filtered:
 
 ## Example Invocations
 
-**Run a specific MT-format test in a package:**
-```
-/ace:run-e2e-test ace-lint MT-LINT-001
-```
-
-This would:
-1. Find `ace-lint/test/e2e/MT-LINT-001-*.mt.md`
-2. Execute the test scenario
-3. Report results
-
-**Run a specific TS-format test in a package:**
+**Run a specific test in a package:**
 ```
 /ace:run-e2e-test ace-lint TS-LINT-001
 ```
@@ -780,22 +761,22 @@ This would:
 
 **Run a single test case within a test scenario:**
 ```
-/ace:run-e2e-test ace-lint MT-LINT-003 TC-002
+/ace:run-e2e-test ace-lint TS-LINT-003 TC-002
 ```
 
 This would:
-1. Find `ace-lint/test/e2e/MT-LINT-003-*.mt.md`
+1. Find `ace-lint/test/e2e/TS-LINT-003-*/scenario.yml`
 2. Parse and normalize `TC-002`
 3. Execute only TC-002, skipping all other test cases
 4. Report results for TC-002 only
 
 **Run multiple specific test cases:**
 ```
-/ace:run-e2e-test ace-lint MT-LINT-001 TC-001,tc-003,002
+/ace:run-e2e-test ace-lint TS-LINT-001 TC-001,tc-003,002
 ```
 
 This would:
-1. Find `ace-lint/test/e2e/MT-LINT-001-*.mt.md`
+1. Find `ace-lint/test/e2e/TS-LINT-001-*/scenario.yml`
 2. Normalize IDs: `TC-001`, `tc-003` -> `TC-003`, `002` -> `TC-002`
 3. Validate all three exist in the test file
 4. Execute only TC-001, TC-002, TC-003 (skipping others)
@@ -807,7 +788,7 @@ This would:
 ```
 
 This would:
-1. Find all `ace-lint/test/e2e/*.mt.md` files AND `ace-lint/test/e2e/TS-*/scenario.yml` directories
+1. Find all `ace-lint/test/e2e/TS-*/scenario.yml` directories
 2. Execute each test scenario sequentially
 3. Report combined results
 
@@ -817,6 +798,6 @@ This would:
 ```
 
 This would:
-1. Find all `test/e2e/*.mt.md` files AND `test/e2e/TS-*/scenario.yml` directories in project root
+1. Find all `test/e2e/TS-*/scenario.yml` directories in project root
 2. Execute each test scenario sequentially
 3. Report combined results

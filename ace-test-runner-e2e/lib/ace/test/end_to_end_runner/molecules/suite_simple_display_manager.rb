@@ -73,6 +73,8 @@ module Ace
                 passed: results[:passed],
                 failed: results[:failed],
                 errors: results[:errors],
+                total_cases: results[:total_cases] || 0,
+                passed_cases: results[:passed_cases] || 0,
                 duration: duration,
                 failed_details: failed_details
               },

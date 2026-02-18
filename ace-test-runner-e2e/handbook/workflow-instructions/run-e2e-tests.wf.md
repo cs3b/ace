@@ -21,10 +21,10 @@ This workflow executes multiple E2E tests in parallel using Task tool subagents.
 ```
 /ace:run-e2e-tests ace-lint          (Orchestrator)
          │
-         ├──► Task[Subagent 1] → /ace:run-e2e-test ace-lint MT-LINT-001
-         ├──► Task[Subagent 2] → /ace:run-e2e-test ace-lint MT-LINT-002
-         ├──► Task[Subagent 3] → /ace:run-e2e-test ace-lint TS-LINT-001
-         └──► Task[Subagent 4] → /ace:run-e2e-test ace-lint TS-LINT-002
+         ├──► Task[Subagent 1] → /ace:run-e2e-test ace-lint TS-LINT-001
+         ├──► Task[Subagent 2] → /ace:run-e2e-test ace-lint TS-LINT-002
+         ├──► Task[Subagent 3] → /ace:run-e2e-test ace-lint TS-LINT-003
+         └──► Task[Subagent 4] → /ace:run-e2e-test ace-lint TS-LINT-004
                     │
                     ▼
          Reports in .cache/ace-test-e2e/ (parallel-safe via unique timestamps)
@@ -52,30 +52,21 @@ Find all E2E test scenarios based on arguments:
 
 **Single package:**
 ```bash
-# MT-format scenarios (single-file)
-find {PACKAGE}/test/e2e -name "*.mt.md" 2>/dev/null | sort
-# TS-format scenarios (directory-based)
 find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **All packages (--all):**
 ```bash
-# MT-format scenarios
-find */test/e2e -name "*.mt.md" 2>/dev/null | sort
-# TS-format scenarios
 find */test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 **Project root (no args, no --all):**
 ```bash
-# MT-format scenarios
-find test/e2e -name "*.mt.md" 2>/dev/null | sort
-# TS-format scenarios
 find test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 ```
 
 Parse each test file's frontmatter to extract:
-- `test-id` - The test identifier (e.g., `MT-LINT-001` or `TS-LINT-001`)
+- `test-id` - The test identifier (e.g., `TS-LINT-001`)
 - `title` - Test title
 - `priority` - Test priority level
 
@@ -84,7 +75,7 @@ Build a test manifest:
 ```markdown
 | Test ID | Package | Title | Priority |
 |---------|---------|-------|----------|
-| MT-LINT-001 | ace-lint | Ruby Validator Fallback | P1 |
+| TS-LINT-001 | ace-lint | Ruby Validator Fallback | P1 |
 | TS-LINT-002 | ace-lint | JSON Report Generation | P1 |
 | TS-LINT-003 | ace-lint | Skill Validation | P2 |
 ```
@@ -129,7 +120,7 @@ As each subagent completes, capture its return summary:
 
 | Test ID | Status | Passed | Failed | Report Path |
 |---------|--------|--------|--------|-------------|
-| MT-LINT-001 | pass | 8 | 0 | 8oig0h-lint-mt001 |
+| TS-LINT-001 | pass | 8 | 0 | 8oig0h-lint-ts001 |
 | TS-LINT-002 | fail | 3 | 2 | 8oig1k-lint-ts002 |
 ```
 
@@ -182,7 +173,7 @@ agent: {agent-name}
 
 | Test ID | Title | Status | Passed | Failed | Total |
 |---------|-------|--------|--------|--------|-------|
-| MT-LINT-001 | Ruby Validator Fallback | Pass | 8 | 0 | 8 |
+| TS-LINT-001 | Ruby Validator Fallback | Pass | 8 | 0 | 8 |
 | TS-LINT-002 | JSON Report Generation | Fail | 3 | 2 | 5 |
 
 **Overall:** {total-passed}/{total-cases} test cases passed ({percentage}%)
@@ -203,7 +194,7 @@ All reports persisted to `.cache/ace-test-e2e/`:
 
 | Test ID | Sandbox | Reports Folder |
 |---------|---------|----------------|
-| MT-LINT-001 | {ts}-lint-mt001/ | {ts}-lint-mt001-reports/ |
+| TS-LINT-001 | {ts}-lint-ts001/ | {ts}-lint-ts001-reports/ |
 | TS-LINT-002 | {ts}-lint-ts002/ | {ts}-lint-ts002-reports/ |
 
 Each reports folder contains: `summary.r.md`, `experience.r.md`, `metadata.yml`
@@ -259,7 +250,7 @@ Present the execution summary to the user:
 
 | Test ID | Status | Passed/Total |
 |---------|--------|--------------|
-| MT-LINT-001 | Pass | 8/8 |
+| TS-LINT-001 | Pass | 8/8 |
 | TS-LINT-002 | Fail | 3/5 |
 
 ### Overall: {total-passed}/{total-cases} passed ({percentage}%)
@@ -269,7 +260,7 @@ Present the execution summary to the user:
 Suite report: `.cache/ace-test-e2e/{FINAL_TS}-final-report.md`
 
 Individual test reports in `.cache/ace-test-e2e/`:
-- {timestamp}-lint-mt001-reports/
+- {timestamp}-lint-ts001-reports/
 - {timestamp}-lint-ts002-reports/
 ```
 

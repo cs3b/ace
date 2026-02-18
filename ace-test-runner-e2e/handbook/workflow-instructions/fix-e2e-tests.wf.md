@@ -142,7 +142,7 @@ For each failing TC, classify into one of three categories:
 3. Verify expected output matches current tool behavior by running manually
 4. For TS-format: check `scenario.yml` setup directives and `fixtures/` contents
 
-**Action:** Update the test definition (`.mt.md` or `TC-*.tc.md` + `scenario.yml`).
+**Action:** Update the test definition (`TC-*.tc.md` and/or `scenario.yml`).
 
 ### Category C: Runner/Infrastructure Issue (Test Execution Machinery Is Broken)
 
@@ -201,9 +201,8 @@ Start with the highest-priority category. Within a category, pick the TC most li
 **Category B (test fix):**
 
 1. Update the test definition to match current behavior
-2. For MT-format: edit the `.mt.md` file
-3. For TS-format: edit the relevant `TC-*.tc.md` and/or `scenario.yml`
-4. Update fixtures if needed
+2. Edit the relevant `TC-*.tc.md` and/or `scenario.yml`
+3. Update fixtures if needed
 
 **Category C (runner fix):**
 

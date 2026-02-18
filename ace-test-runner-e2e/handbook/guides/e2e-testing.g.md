@@ -61,17 +61,7 @@ Do NOT create E2E test cases for:
 
 ### Location
 
-Test scenarios are stored in individual packages in two formats:
-
-#### MT-Format (Single File)
-
-```
-{package}/test/e2e/MT-{AREA}-{NNN}-{slug}.mt.md
-```
-
-A single markdown file containing all test cases, setup, and test data inline.
-
-#### TS-Format (Per-TC Directory)
+Test scenarios are stored in individual packages using TS-format (directory-based):
 
 ```
 {package}/test/e2e/TS-{AREA}-{NNN}-{slug}/
@@ -83,15 +73,10 @@ A single markdown file containing all test cases, setup, and test data inline.
 
 Each test case is a separate `.tc.md` file, with shared fixtures and setup configuration in `scenario.yml`.
 
-#### When to Use Which
-
-- **MT-format**: Simpler scenarios, single file, inline test data, fewer test cases
-- **TS-format**: Complex scenarios, per-TC isolation, fixture directories, Ruby-driven sandbox setup
-
-Both conventions:
-- Keep tests alongside the code they test
-- Separate from automated tests (`test/atoms/`, `test/molecules/`, etc.)
-- Are automatically excluded from `ace-test`
+This convention:
+- Keeps tests alongside the code they test
+- Separates from automated tests (`test/atoms/`, `test/molecules/`, etc.)
+- Is automatically excluded from `ace-test`
 
 ### Test Execution Directory {#directory-structure}
 
@@ -111,11 +96,11 @@ Test artifacts and reports are created in project-local cache:
 
 **Naming convention (SHORT format):**
 - `{short-pkg}` = package name without `ace-` prefix (e.g., `lint`, `git-commit`)
-- `{short-id}` = lowercase test number (e.g., `mt001`, `ts001`)
+- `{short-id}` = lowercase test number (e.g., `ts001`)
 
 Examples:
-- `.cache/ace-test-e2e/8oig0h-lint-mt001/` - Package-specific test sandbox
-- `.cache/ace-test-e2e/8oig0h-lint-mt001-reports/summary.r.md` - Test results report
+- `.cache/ace-test-e2e/8oig0h-lint-ts001/` - Package-specific test sandbox
+- `.cache/ace-test-e2e/8oig0h-lint-ts001-reports/summary.r.md` - Test results report
 - `.cache/ace-test-e2e/8osuw3-final-report.md` - Suite report (all tests in package)
 
 **Benefits:**
@@ -124,7 +109,7 @@ Examples:
 - **Consistent naming** - Uses ace-b36ts for unique IDs
 - **Easy debugging** - Inspect artifacts without hunting in `/tmp`
 - **Package-scoped** - Directory name includes package for clarity
-- **Test ID in name** - Each folder includes the test ID (e.g., MT-LINT-001) for easy identification
+- **Test ID in name** - Each folder includes the test ID (e.g., TS-LINT-001) for easy identification
 - **Reports in subfolder** - Report files go in a `-reports/` subfolder for organization
 - **Suite reports** - Multi-test runs generate aggregate summary
 
@@ -132,7 +117,7 @@ Examples:
 ```bash
 TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="{short-pkg}"    # e.g., git-commit (package name without ace- prefix)
-SHORT_ID="{short-id}"      # e.g., mt001 (lowercase test number)
+SHORT_ID="{short-id}"      # e.g., ts001 (lowercase test number)
 TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 mkdir -p "$TEST_DIR"
 cd "$TEST_DIR"
@@ -145,38 +130,28 @@ cd "$TEST_DIR"
 
 ### Test ID Format
 
-Two formats are supported:
-
 ```
-MT-{AREA}-{NNN}     # Single-file format
 TS-{AREA}-{NNN}     # Per-TC directory format
 ```
 
-- `MT` / `TS` - Format prefix (MT = single file, TS = per-TC directory)
+- `TS` - Format prefix (TS = per-TC directory)
 - `{AREA}` - Area code (uppercase, e.g., LINT, REVIEW, BUILD)
 - `{NNN}` - Three-digit sequential number
 
 Examples:
-- `MT-LINT-001` - Single-file lint test
-- `TS-LINT-001` - Per-TC directory lint test
-- `MT-REVIEW-015` - Fifteenth review E2E test
+- `TS-LINT-001` - First lint E2E test
+- `TS-REVIEW-015` - Fifteenth review E2E test
 
 ### Naming Convention
 
-**MT-format** (single file):
-```
-MT-{AREA}-{NNN}-{slug}.mt.md
-```
-
-**TS-format** (directory):
 ```
 TS-{AREA}-{NNN}-{slug}/
 ```
 
 The slug should be kebab-case and descriptive:
-- `MT-LINT-001-ruby-validator-fallback.mt.md`
+- `TS-LINT-001-ruby-validator-fallback/`
 - `TS-LINT-002-json-report-generation/`
-- `MT-REVIEW-002-pr-comment-parsing.mt.md`
+- `TS-REVIEW-002-pr-comment-parsing/`
 
 ## Writing Test Scenarios
 
@@ -185,7 +160,7 @@ The slug should be kebab-case and descriptive:
 Required fields:
 ```yaml
 ---
-test-id: MT-LINT-001
+test-id: TS-LINT-001
 title: Ruby Validator Fallback Behavior
 area: lint
 package: ace-lint
@@ -296,7 +271,7 @@ title: StandardRB Available - Valid File
 ---
 ```
 
-The body follows the same structure as MT-format test cases:
+The body follows the standard test case structure:
 - **Objective** — What this specific test case verifies
 - **Steps** — Commands to execute
 - **Expected** — Expected outcomes
@@ -383,23 +358,19 @@ Fill in actual results during execution:
 ### Find All E2E Tests
 
 ```bash
-# MT-format tests
-find . -name "*.mt.md" -path "*/test/e2e/*"
-
-# TS-format tests
-find . -name "scenario.yml" -path "*/test/e2e/*"
+find . -name "scenario.yml" -path "*/test/e2e/TS-*"
 ```
 
 ### Find Tests by Area
 
 ```bash
-find . -path "*/test/e2e/*LINT*" \( -name "*.mt.md" -o -name "scenario.yml" \)
+find . -path "*/test/e2e/TS-*LINT*" -name "scenario.yml"
 ```
 
 ### Find Tests in Package
 
 ```bash
-find {package}/test/e2e -name "*.mt.md" -o -name "scenario.yml"
+find {package}/test/e2e -name "scenario.yml" -path "*/TS-*"
 ```
 
 ## Maintenance
@@ -444,9 +415,8 @@ Move obsolete tests to:
 ## Integration with ace-test
 
 E2E tests are automatically excluded from `ace-test` because:
-- MT-format uses `.mt.md` extension (not `*_test.rb`)
-- TS-format uses `.tc.md` / `scenario.yml` (not `*_test.rb`)
-- Both are in `test/e2e/` directory
+- TS-format uses `.tc.md` / `scenario.yml` extensions (not `*_test.rb`)
+- Tests are in `test/e2e/` directory
 
 The `ace-test` tool only runs files matching `*_test.rb`.
 

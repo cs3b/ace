@@ -132,6 +132,33 @@ class DisplayHelpersTest < Minitest::Test
     refute_includes text, "Failed tests:"
   end
 
+  def test_format_suite_summary_with_case_counts
+    lines = DisplayHelpers.format_suite_summary(
+      {
+        total: 3, passed: 2, failed: 1, errors: 0, duration: 90,
+        total_cases: 13, passed_cases: 8,
+        failed_details: []
+      },
+      use_color: false
+    )
+    text = lines.join("\n")
+    assert_includes text, "Test cases:  8 passed, 5 failed (62%)"
+    assert_includes text, "2 passed, 1 failed"
+  end
+
+  def test_format_suite_summary_omits_case_line_when_zero
+    lines = DisplayHelpers.format_suite_summary(
+      {
+        total: 1, passed: 1, failed: 0, errors: 0, duration: 10,
+        total_cases: 0, passed_cases: 0,
+        failed_details: []
+      },
+      use_color: false
+    )
+    text = lines.join("\n")
+    refute_includes text, "Test cases:"
+  end
+
   def test_format_suite_summary_with_failures
     lines = DisplayHelpers.format_suite_summary(
       {
