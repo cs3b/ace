@@ -313,6 +313,34 @@ class RepoStatusLoaderTest < AceGitTestCase
     end
   end
 
+  def test_load_finds_merged_pr_for_current_branch
+    merged_pr = { "number" => 90, "title" => "Merged PR", "headRefName" => "feature-branch", "mergedAt" => "2025-06-01" }
+    mock_prs = { success: true, prs: [merged_pr.merge("state" => "MERGED")] }
+
+    with_mock_repo_load(prs: mock_prs) do
+      context = Ace::Git::Organisms::RepoStatusLoader.load
+
+      assert context.has_pr?
+      assert_equal 90, context.pr_metadata["number"]
+    end
+  end
+
+  def test_load_prefers_open_pr_over_merged_for_current_branch
+    open_pr = { "number" => 91, "title" => "Open PR", "headRefName" => "feature-branch" }
+    merged_pr = { "number" => 90, "title" => "Merged PR", "headRefName" => "feature-branch", "mergedAt" => "2025-06-01" }
+    mock_prs = { success: true, prs: [
+      merged_pr.merge("state" => "MERGED"),
+      open_pr.merge("state" => "OPEN")
+    ] }
+
+    with_mock_repo_load(prs: mock_prs) do
+      context = Ace::Git::Organisms::RepoStatusLoader.load
+
+      assert context.has_pr?
+      assert_equal 91, context.pr_metadata["number"]
+    end
+  end
+
   # Git status and recent commits tests
 
   def test_load_fetches_git_status

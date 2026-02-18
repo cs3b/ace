@@ -221,8 +221,16 @@ module Ace
 
             prs = result[:prs]
 
-            # Find current PR (matching branch and open state)
-            current_pr = prs.find { |pr| pr["headRefName"] == current_branch && pr["state"] == "OPEN" }
+            # Find current PR (matching branch, prefer OPEN > MERGED > CLOSED)
+            branch_prs = prs.select { |pr| pr["headRefName"] == current_branch }
+            current_pr = branch_prs.min_by { |pr|
+              case pr["state"]
+              when "OPEN" then 0
+              when "MERGED" then 1
+              when "CLOSED" then 2
+              else 3
+              end
+            }
 
             # Get merged PRs (sorted by mergedAt descending, limited)
             merged_prs = prs

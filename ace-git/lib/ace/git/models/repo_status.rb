@@ -105,6 +105,14 @@ module Ace
           repository_state == :clean
         end
 
+        # Count dirty files from git status output
+        # @return [Integer] Number of dirty files (non-branch lines in git status -sb)
+        def dirty_file_count
+          return 0 unless has_git_status?
+
+          git_status_sb.lines.count { |l| !l.start_with?("##") }
+        end
+
         # Get tracking status description
         # @return [String] Human-readable status
         def tracking_status
@@ -143,7 +151,8 @@ module Ace
             has_recent_commits: has_recent_commits?,
             has_git_status: has_git_status?,
             has_task_pattern: has_task_pattern?,
-            clean: clean?
+            clean: clean?,
+            dirty_files: dirty_file_count
           }
         end
 
