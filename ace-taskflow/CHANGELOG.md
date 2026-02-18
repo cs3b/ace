@@ -7,11 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.36.3] - 2026-02-17
-
-### Added
-- `assign` frontmatter declaration to `work-on-task.wf.md` with canonical runtime sub-phases (`onboard`, `plan-task`, `work-on-task`) and `context: fork`
-
 ## [0.36.2] - 2026-02-16
 
 ### Fixed
