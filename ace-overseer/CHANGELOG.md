@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.10] - 2026-02-18
+
+### Changed
+- Right-size `ace-overseer` E2E coverage from 11 to 6 focused test cases by removing command error-path duplicates already covered in package tests.
+- Consolidate prune workflow assertions so retained E2E cases validate dry-run no-side-effects and tmux cleanup in fewer scenarios.
+
+### Fixed
+- Reuse existing tmux windows in `work-on` to avoid duplicate task windows on idempotent reruns.
+- Treat repositories with only untracked files as prune-safe when tracked changes are clean, preventing false `git not clean` outcomes.
+- Return a user-friendly CLI error when `ace-overseer work-on` is invoked without `--task`.
+
+### Added
+- Add command tests for `work-on` missing `--task` and task-not-found error behavior.
+
 ## [0.2.9] - 2026-02-18
 
 ### Fixed

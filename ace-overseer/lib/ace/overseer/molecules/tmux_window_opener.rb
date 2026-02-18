@@ -30,6 +30,10 @@ module Ace
         def open(worktree_path:, window_name:, session_name:, preset:)
           ensure_session_exists(session_name, root: worktree_path)
 
+          if window_exists?(session_name, window_name)
+            return { window_name: window_name, reused: true }
+          end
+
           effective_name = @window_manager.add_window(
             preset,
             session: session_name,
@@ -37,7 +41,7 @@ module Ace
             name: window_name
           )
 
-          { window_name: effective_name || window_name }
+          { window_name: effective_name || window_name, reused: false }
         end
 
         private
@@ -57,6 +61,15 @@ module Ace
         def session_exists?(session_name)
           result = @executor.capture([@tmux, "has-session", "-t", session_name])
           result.success?
+        rescue Errno::ENOENT
+          false
+        end
+
+        def window_exists?(session_name, window_name)
+          result = @executor.capture([@tmux, "list-windows", "-t", session_name, "-F", %q(#{window_name})])
+          return false unless result.success?
+
+          result.stdout.to_s.split("\n").map(&:strip).include?(window_name)
         rescue Errno::ENOENT
           false
         end
