@@ -2,7 +2,7 @@
 workflow-id: wfi-plan-e2e-changes
 name: Plan E2E Changes
 description: Analyze coverage matrix and produce a concrete E2E test change plan
-version: "1.0"
+version: "1.1"
 source: ace-test-runner-e2e
 ---
 
@@ -64,6 +64,10 @@ For each TC listed in the coverage matrix, assign exactly one classification:
 - The TC tests behavior that has been removed from the package
 - The TC is a duplicate of another TC (same CLI invocation + same assertions)
 
+For REMOVE due to overlap, replacement evidence is mandatory:
+- Reference existing unit test file(s) and assertions that cover the removed behavior, OR
+- Add a follow-up unit test action to the plan (file + behavior) before removal is considered complete.
+
 **KEEP** — The TC has genuine E2E value and needs no changes. Criteria (all must be true):
 - TC passes the E2E Value Gate (tests real CLI binary + external tools + filesystem I/O)
 - Related source code has no changes since `last-verified`
@@ -83,6 +87,7 @@ For each TC listed in the coverage matrix, assign exactly one classification:
 For each classification, document:
 - The TC identifier
 - The classification reason (specific, not generic)
+- For REMOVE (overlap): replacement evidence (`existing unit tests` or `planned unit backfill`)
 - For MODIFY: what specifically needs to change
 - For CONSOLIDATE: the target TC and which assertions merge
 
@@ -103,7 +108,7 @@ Review the coverage matrix for gaps that warrant new E2E tests:
 
 **Filter through Value Gate:**
 For each candidate, answer: "Does this require the full CLI binary + real external tools + real filesystem I/O?"
-- If NO: skip — unit tests cover this
+- If NO: skip — unit tests cover this (or add explicit unit test action if coverage is missing)
 - If YES: include in the plan
 
 ### 5. Propose Scenario Structure
@@ -146,10 +151,16 @@ Format the complete change plan:
 
 ### REMOVE ({n} TCs)
 
-| TC | Reason |
-|----|--------|
-| {tc-id} | Unit tests in {file} cover this fully |
-| {tc-id} | Duplicate of {other-tc-id} |
+| TC | Reason | Replacement Evidence |
+|----|--------|----------------------|
+| {tc-id} | Unit tests in {file} cover this fully | Existing: {test-file}:{test-name} |
+| {tc-id} | Duplicate of {other-tc-id} | Existing: {test-file}:{test-name} |
+
+### Unit Coverage Backfill ({n} actions)
+
+| Action | File | Behavior |
+|--------|------|----------|
+| Add unit test | {test-file} | {behavior replacing removed E2E assertion} |
 
 ### KEEP ({n} TCs)
 
