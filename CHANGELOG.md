@@ -4,20 +4,104 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.522] - 2026-02-17
-
-### Changed
-
-- **ace-assign v0.11.16**: `ace-assign status` now prints one canonical fork delegation command (`ace-assign fork-run --assignment <id>@<root>`) across fork subtree states, including direct fork-root phases
-- **ace-assign v0.11.16**: Fork workflow/guides now consistently document scoped fork syntax and explicit no-redelegation behavior when `ACE_ASSIGN_FORK_ROOT` is set
+## [0.9.532] - 2026-02-18
 
 ### Fixed
 
-- **ace-assign v0.11.16**: Parent/orchestrator drive paths now get deterministic fork-subtree detection for current fork-root phases, enabling automatic runtime delegation
+- **ace-overseer v0.2.9**: Manage PROJECT_ROOT_PATH environment variable and clear ProjectRootFinder cache when switching worktree contexts to ensure ace-assign and other tools find correct configuration
 
-### Technical
+## [0.9.531] - 2026-02-18
 
-- **ace-assign v0.11.16**: Add status command tests for fork-root delegation marker and in-scope `Fork scope` rendering
+### Fixed
+
+- **ace-git-worktree v0.13.3**: Ensure parent directory exists before worktree path validation to prevent PathExpander rejection when `.ace-wt/` directory doesn't exist yet
+
+## [0.9.530] - 2026-02-18
+
+### Fixed
+
+- **ace-test-runner-e2e v0.16.3**: Fix suite runner false positives — "partial" status now correctly counted, case-level counts shown in summary
+
+## [0.9.529] - 2026-02-18
+
+### Changed
+
+- **ace-test-runner-e2e v0.16.2**: Remove all MT-format references from E2E testing guide and workflow instructions — TS-format is now the only documented convention
+- **ace-test v0.1.2**: Remove all MT-format references from testing guides, workflows, and templates — TS-format is now the only documented E2E test format
+
+## [0.9.528] - 2026-02-18
+
+### Fixed
+
+- **ace-test-runner-e2e v0.16.1**: `ace-test-e2e-suite` now reads `execution.parallel` from config instead of hardcoding sequential execution
+
+## [0.9.527] - 2026-02-17
+
+### Changed
+
+- **ace-overseer v0.2.8**: Parallelize worktree context collection using fork/exec for 3-4x speedup (5-7s → 1.5s for 6 worktrees)
+
+## [0.9.526] - 2026-02-17
+
+### Added
+
+- **ace-git v0.10.13**: `dirty_file_count` method and `dirty_files` key in RepoStatus for counting uncommitted files
+- **ace-overseer v0.2.7**: Assign column showing compact assignment ID; Git dirty file count display (e.g., `✗ 3`)
+
+### Changed
+
+- **ace-overseer v0.2.7**: Reorder columns (Assign first, Progress last); fix column alignment; remove redundant title
+
+## [0.9.525] - 2026-02-17
+
+### Fixed
+
+- **ace-assign v0.11.17**: `assignment_state` now checks `completed` before `failed` — assignments where all phases are done/failed correctly report `:completed` instead of `:failed`
+
+### Added
+
+- **ace-assign v0.11.17**: `recently_active?` method on `QueueState` to detect stale in-progress phases (threshold: 1 hour)
+- **ace-assign v0.11.17**: New `:stalled` assignment state for in-progress phases with no recent activity
+
+### Changed
+
+- **ace-overseer v0.2.6**: Replace text status labels with Unicode icons and ANSI colors for compact, scannable dashboard output
+- **ace-overseer v0.2.6**: Sort dashboard rows by PR number descending; rows without PR appear first (sorted by task desc)
+- **ace-overseer v0.2.6**: Remove Path column (redundant with Task ID) to save horizontal space
+- **ace-overseer v0.2.6**: Colorize PR state and Git state with ANSI colors; support new `:stalled` state icon
+
+## [0.9.524] - 2026-02-17
+
+### Fixed
+
+- **ace-overseer v0.2.5**: Set `PROJECT_ROOT_PATH` per worktree so each worktree resolves its own assignment cache instead of sharing the invoking worktree's data
+- **ace-git v0.10.12**: PR matching now returns MERGED/CLOSED PRs for current branch when no OPEN PR exists, fixing empty PR metadata in overseer status
+- **ace-assign v0.11.16**: Fork root executor checks for existing in-progress phase in subtree before advancing to next workable phase
+
+### Added
+
+- **ace-assign v0.11.16**: `current_in_subtree` method on `QueueState` to find in-progress phase within a subtree
+
+## [0.9.523] - 2026-02-17
+
+### Changed
+
+- **ace-overseer v0.2.4**: Replace release-centric status view with assignment-focused dashboard showing path, progress, and PR columns
+- **ace-overseer v0.2.4**: Remove release resolver dependency from status collector, simplifying data flow
+- **ace-overseer v0.2.4**: Add phase summary (total/done/failed) to worktree context and PR metadata display (OPN/MRG/CLS/DFT) to status output
+
+## [0.9.522] - 2026-02-17
+
+### Fixed
+
+- **ace-overseer v0.2.2**: Ensure `prune --quiet` still executes prune operations, add missing runtime dependencies, and handle `SIGINT` with exit code `130`
+
+### Changed
+
+- **ace-overseer v0.2.0**: Promote the initial `work-on`/`status`/`prune` control-plane implementation to the first minor release
+- **ace-overseer v0.2.1**: Release patch after valid review cycle (no additional corrective changes required)
+- **ace-overseer v0.2.2**: Expand assignment preset path coverage, improve `work-on` output timing phrasing, and harden prune task status checks for stale worktrees
+- **ace-overseer v0.2.3**: Add thread-safe `gem_root` memoization, atomic assignment job writes, and more robust task ID extraction for worktree context collection
 
 ## [0.9.521] - 2026-02-17
 
