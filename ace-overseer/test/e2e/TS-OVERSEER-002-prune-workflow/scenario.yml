@@ -1,0 +1,38 @@
+test-id: TS-OVERSEER-002
+title: Prune Workflow
+area: overseer
+package: ace-overseer
+priority: high
+requires:
+  tools: [ace-overseer, ace-git-worktree, ace-tmux, ace-assign, ace-taskflow, git, tmux]
+
+setup:
+  - git-init
+  - run: |
+      echo "# Test Project" > README.md
+      git add README.md && git commit -m "Initial commit" --quiet
+  - copy-fixtures
+  - run: |
+      git add .ace-taskflow/ .ace/ && git commit -m "Add taskflow and config" --quiet
+  - env:
+      PROJECT_ROOT_PATH: .
+  # Create worktrees for both tasks
+  - run: |
+      tmux kill-session -t "ace-e2e-test" 2>/dev/null || true
+      ace-overseer work-on --task 001
+      ace-overseer work-on --task 002
+  # Make task 001 safe to prune: mark done, complete assignment, ensure git clean
+  - run: |
+      TASK_SPEC=".ace-taskflow/v.0.1.0/t/001-prune-safe/001-prune-safe.s.md"
+      sed -i 's/status: in-progress/status: done/' "$TASK_SPEC"
+      git add "$TASK_SPEC" && git commit -q -m "Mark task 001 as done"
+
+      WORKTREE_001=$(git worktree list | grep "001" | awk '{print $1}')
+      if [ -n "$WORKTREE_001" ]; then
+        cd "$WORKTREE_001"
+        export PROJECT_ROOT_PATH="$WORKTREE_001"
+        echo "Phase complete." > /tmp/e2e-report.md
+        ace-assign report /tmp/e2e-report.md 2>&1 || true
+        cd -
+        unset PROJECT_ROOT_PATH
+      fi
