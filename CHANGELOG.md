@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.533] - 2026-02-18
+
+### Added
+
+- **ace-overseer v0.2.10**: Add command tests for `work-on` missing `--task` and task-not-found behavior
+
+### Changed
+
+- **ace-overseer v0.2.10**: Right-size E2E coverage from 11 to 6 focused test cases and consolidate prune workflow assertions
+
+### Fixed
+
+- **ace-overseer v0.2.10**: Reuse existing tmux windows on rerun, treat untracked-only worktrees as prune-safe, and return user-friendly missing `--task` errors
+
 ## [0.9.532] - 2026-02-18
 
 ### Fixed
