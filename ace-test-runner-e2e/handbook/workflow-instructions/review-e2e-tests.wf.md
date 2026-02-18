@@ -2,7 +2,7 @@
 workflow-id: wfi-review-e2e-tests
 name: Review E2E Tests
 description: Deep exploration producing a coverage matrix of functionality, unit tests, and E2E tests
-version: "2.0"
+version: "2.1"
 source: ace-test-runner-e2e
 ---
 
@@ -108,19 +108,23 @@ find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 **For each scenario/TC:**
 - Read the file and extract frontmatter metadata:
   - `test-id`, `title`, `area`, `priority`
+  - `cost-tier`, `e2e-justification`, `unit-coverage-reviewed`
   - `last-verified`, `verified-by`
 - Extract the objective (what the TC verifies)
 - Identify which CLI commands the TC runs
 - Count verification steps (PASS/FAIL checks)
 - Map to the feature it tests
+- Mark TC evidence status:
+  - `complete` when `e2e-justification` is present and `unit-coverage-reviewed` has at least one path
+  - `missing` otherwise
 
 If `--scope` was provided, filter to only the specified scenario.
 
 Build an E2E test map:
 
-| TC ID | Title | CLI Command | Feature Tested | Verifications | Last Verified |
-|-------|-------|-------------|----------------|---------------|---------------|
-| {id} | {title} | {command} | {feature} | {n} | {date} |
+| TC ID | Title | CLI Command | Feature Tested | Verifications | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence |
+|-------|-------|-------------|----------------|---------------|-----------|-------------------|------------------------|----------|
+| {id} | {title} | {command} | {feature} | {n} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing} |
 
 ### 5. Build Coverage Matrix
 
@@ -159,7 +163,7 @@ Produce the full review report with actionable findings:
 
 **Reviewed:** {timestamp}
 **Scope:** {package-wide or scenario-id}
-**Workflow version:** 2.0
+**Workflow version:** 2.1
 
 ### Summary
 
@@ -170,6 +174,7 @@ Produce the full review report with actionable findings:
 | Unit assertions | {n} |
 | E2E scenarios | {n} |
 | E2E test cases | {n} |
+| TCs with decision evidence | {n}/{total} |
 
 ### Coverage Matrix
 
@@ -185,6 +190,15 @@ TCs that may fail the E2E Value Gate (unit tests cover the same behavior):
 | {id} | {feature} | {test files} | Keep — TC tests CLI pipeline, units test logic |
 
 **Candidates for removal:** {n} TCs have full overlap with unit tests
+
+### E2E Decision Record Coverage
+
+| TC ID | Evidence Status | Missing Fields |
+|-------|------------------|----------------|
+| {id} | complete | none |
+| {id} | missing | e2e-justification, unit-coverage-reviewed |
+
+**Action:** Any TC with missing evidence should be updated in `scenario.yml` during the next rewrite cycle.
 
 ### Gap Analysis
 

@@ -2,7 +2,7 @@
 guide-id: g-scenario-yml-reference
 title: scenario.yml Reference
 description: Complete schema reference for TS-format scenario configuration files
-version: "1.0"
+version: "1.1"
 source: ace-test-runner-e2e
 ---
 
@@ -38,6 +38,9 @@ Example: `ace-lint/test/e2e/TS-LINT-001-core-lint-pipeline/scenario.yml`
 | `priority` | string | `medium` | Test priority: `high`, `medium`, or `low` |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
 | `automation-candidate` | boolean | `false` | Whether this test could be automated |
+| `cost-tier` | string | `standard` | Expected run cost profile: `smoke`, `standard`, or `deep` |
+| `e2e-justification` | string | — | Why this scenario requires E2E instead of unit-only coverage |
+| `unit-coverage-reviewed` | array | `[]` | Unit test files reviewed during Value Gate analysis |
 | `requires` | object | — | Prerequisites for the test |
 | `setup` | array | `[]` | Setup directives to execute before tests |
 | `last-verified` | string | — | Date of last successful verification (YYYY-MM-DD) |
@@ -57,6 +60,24 @@ requires:
 |-------|------|-------------|
 | `tools` | array | List of CLI tools that must be in PATH |
 | `ruby` | string | Ruby version constraint |
+
+### Balance Metadata
+
+Use these fields to preserve E2E vs unit-test decision evidence:
+
+```yaml
+cost-tier: standard
+e2e-justification: "Requires real tmux + git worktree side effects across CLI commands"
+unit-coverage-reviewed:
+  - test/commands/work_on_command_test.rb
+  - test/organisms/work_on_orchestrator_test.rb
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `cost-tier` | string | Run profile: `smoke` (cheap), `standard` (default), `deep` (expensive) |
+| `e2e-justification` | string | One-sentence reason this scenario needs real CLI/tools/filesystem |
+| `unit-coverage-reviewed` | array | Repo-relative unit/integration test files checked for overlap |
 
 ### `setup` Directives
 
@@ -122,6 +143,11 @@ area: lint
 package: ace-lint
 priority: high
 duration: ~10min
+cost-tier: standard
+e2e-justification: "Validates real StandardRB subprocess behavior and report file generation"
+unit-coverage-reviewed:
+  - test/molecules/lint_runner_test.rb
+  - test/organisms/lint_orchestrator_test.rb
 requires:
   tools: [ace-lint, standardrb, jq]
   ruby: ">= 3.0"

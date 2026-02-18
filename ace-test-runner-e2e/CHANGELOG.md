@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.4] - 2026-02-18
+
+### Changed
+
+- **Balanced E2E decision evidence across handbook/workflows** — `create-e2e-test.wf.md` (v1.3), `review-e2e-tests.wf.md` (v2.1), and `plan-e2e-changes.wf.md` (v1.1) now require explicit E2E-vs-unit justification with unit coverage references and replacement evidence for overlap-based removals
+- **Scenario metadata expanded for manual, cost-aware runs** — `scenario.yml` reference/template and authoring guidance now include `cost-tier`, `e2e-justification`, and `unit-coverage-reviewed` fields
+- **E2E guide refined to avoid duplicate layer testing** — `e2e-testing.g.md` (v1.6) now documents manual run order (`smoke` → `standard` → `deep`) and clarifies that negative/error TCs are required when they add E2E-only value or close a documented unit gap
+- **TC authoring guidance updated** — `tc-authoring.g.md` (v1.1) now ties each TC back to scenario-level Value Gate evidence instead of requiring blanket error-TC duplication
+
 ## [0.16.3] - 2026-02-18
 
 ### Fixed

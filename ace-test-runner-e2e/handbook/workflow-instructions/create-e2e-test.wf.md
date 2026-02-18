@@ -2,7 +2,7 @@
 workflow-id: wfi-create-e2e-test
 name: Create E2E Test
 description: Create a new E2E test scenario from template
-version: "1.2"
+version: "1.3"
 source: ace-test-runner-e2e
 ---
 
@@ -106,6 +106,9 @@ Initial values for optional fields:
 - `priority: medium`
 - `duration: ~10min`
 - `automation-candidate: false`
+- `cost-tier: standard`
+- `e2e-justification:` (brief statement of why this cannot be unit-only)
+- `unit-coverage-reviewed:` (list of unit test files checked during Value Gate)
 - `last-verified:` (leave empty)
 - `verified-by:` (leave empty)
 
@@ -139,6 +142,20 @@ All proposed behaviors are already covered by unit tests in {PACKAGE}/test/.
 No E2E test needed. Consider adding unit tests instead if coverage gaps exist.
 ```
 
+### 7a. E2E Decision Record (Required)
+
+Before writing files, produce a decision record table for every candidate TC:
+
+| TC ID | Decision (KEEP/ADD/SKIP) | E2E-only reason | Unit tests reviewed |
+|-------|---------------------------|-----------------|---------------------|
+| {tc-id} | {decision} | {why this needs real CLI/tools/fs} | {path1,path2} |
+
+Rules:
+- No TC may be created without a row in this table.
+- If decision is `SKIP`, include the unit-test evidence that replaces it.
+- At least one `unit tests reviewed` path is required for each row.
+- The scenario-level `unit-coverage-reviewed` field must include the union of all referenced unit test files.
+
 ### 8. Context-Based Generation (if --context)
 
 If a context description was provided, enhance the test with:
@@ -163,7 +180,7 @@ If a context description was provided, enhance the test with:
 **MUST (required for all E2E tests):**
 - **Verify the feature is implemented** before writing the test — read the actual implementation code, not just task specs or design documents
 - **Verify config/input formats** by reading the parsing code — never assume formats from BDD specs, task descriptions, or documentation
-- Include at least one error/negative TC (wrong args, missing files, invalid state)
+- Include an error/negative TC only when it validates E2E-exclusive behavior (real CLI parser/runtime/tooling/filesystem) or when unit coverage has a documented gap
 - Verify actual file paths by running the tool first — never hardcode paths from documentation or assumptions
 - Use explicit `&& echo "PASS" || echo "FAIL"` patterns for every verification step
 - Check specific exit codes for error commands (not just "non-zero")
@@ -229,6 +246,11 @@ bundle exec ruby -e '
 - Example: Assuming hierarchy is defined in config when it's actually built dynamically via commands
 - **Fix:** Trace the actual code path for the feature being tested
 
+**Splitting one command into many redundant TCs:**
+- Multiple TCs each validate one assertion after the same CLI invocation, creating overlap with unit tests and increasing run cost
+- Example: TC-A checks exit code, TC-B checks report file, TC-C checks summary text for the same command run
+- **Fix:** Consolidate those assertions into one TC and move formatter/parser details to unit tests
+
 **Example for "Test config file validation":**
 ```markdown
 ## Test Cases
@@ -291,8 +313,9 @@ Output a summary:
 
 1. Review and customize `scenario.yml` and TC files
 2. Add fixtures to the `fixtures/` directory if needed
-3. Run the test with: `/ace:run-e2e-test {package} TS-{AREA}-{NNN}`
-4. Update `last-verified` after successful execution
+3. Review the E2E Decision Record and ensure `unit-coverage-reviewed` is populated
+4. Run the test with: `/ace:run-e2e-test {package} TS-{AREA}-{NNN}`
+5. Update `last-verified` after successful execution
 ```
 
 ## Example Invocations
