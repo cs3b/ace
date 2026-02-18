@@ -2,7 +2,11 @@
 title: "Refactor Test Suites: Isolate Minitest Units and Migrate Integration to E2E"
 filename_suggestion: refactor-test-minitest-e2e-split
 enhanced_at: 2026-01-19 22:59:41
-location: active
+location: backlog
+blocked_by: v.0.9.0+task.272
+notes: |
+  Deferred until after specflow rename (271+272) lands. Those tasks touch test files across the repo.
+  Better as a policy/guide than a sweeping refactor — enforce boundary going forward, migrate packages opportunistically.
 llm_model: gflash
 ---
 
