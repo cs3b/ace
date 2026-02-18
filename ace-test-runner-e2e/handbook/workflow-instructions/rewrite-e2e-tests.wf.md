@@ -143,7 +143,7 @@ After all changes are applied (or in `--dry-run` mode, report what would happen)
 
 **List all remaining E2E test files:**
 ```bash
-find {PACKAGE}/test/e2e -name "scenario.yml" -o -name "*.tc.md" -o -name "*.mt.md" 2>/dev/null | sort
+find {PACKAGE}/test/e2e -name "scenario.yml" -o -name "*.tc.md" 2>/dev/null | sort
 ```
 
 **Verify counts match the plan:**

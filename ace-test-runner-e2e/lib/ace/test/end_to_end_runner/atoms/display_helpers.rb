@@ -164,6 +164,14 @@ module Ace
             lines << "Duration:    #{format_suite_duration(results_data[:duration])}"
             lines << "Tests:       #{results_data[:passed]} passed, #{results_data[:failed] + results_data[:errors]} failed"
 
+            total_tc = results_data[:total_cases] || 0
+            passed_tc = results_data[:passed_cases] || 0
+            if total_tc > 0
+              failed_tc = total_tc - passed_tc
+              pct = (passed_tc * 100.0 / total_tc).round(0)
+              lines << "Test cases:  #{passed_tc} passed, #{failed_tc} failed (#{pct}%)"
+            end
+
             lines << ""
             if results_data[:failed] + results_data[:errors] == 0
               lines << color("\u2713 ALL TESTS PASSED", :green, use_color: use_color)
