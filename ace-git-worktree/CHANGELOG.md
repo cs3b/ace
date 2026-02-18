@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-02-18
+
+### Fixed
+- Ensure parent directory exists before worktree path validation to prevent PathExpander rejection when `.ace-wt/` directory doesn't exist yet
+
 ## [0.13.2] - 2026-02-16
 
 ### Fixed
