@@ -20,8 +20,8 @@ Verify JSON format includes task-related fields.
    import sys, json
    data = json.load(sys.stdin)
    for wt in data:
-       if wt.get('task'):
-           print(f\"Task: {wt['task']}, Branch: {wt['branch']}\")
+       if wt.get('task_id'):
+           print(f\"Task: {wt['task_id']}, Branch: {wt['branch']}\")
    "
    ```
 
