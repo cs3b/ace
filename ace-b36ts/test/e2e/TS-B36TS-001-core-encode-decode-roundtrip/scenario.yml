@@ -1,4 +1,4 @@
-test-id: TS-TIMESTAMP-001
+test-id: TS-B36TS-001
 title: Core Encode/Decode Roundtrip
 area: timestamp
 package: ace-b36ts
