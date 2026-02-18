@@ -34,7 +34,7 @@ Is each test at the correct layer?
 **Checklist**:
 - [ ] Unit tests have NO real I/O (subprocess, network, filesystem)
 - [ ] Integration tests stub external dependencies
-- [ ] E2E tests are in `test/e2e/*.mt.md` format
+- [ ] E2E tests are in `test/e2e/TS-*/` format (scenario.yml + TC-*.tc.md)
 - [ ] No flag permutation tests in E2E (should be unit)
 - [ ] ONE CLI parity test per integration file max
 
@@ -107,7 +107,7 @@ Do tests actually catch bugs?
 
 ## 6. E2E Specific (if applicable)
 
-For E2E tests in `.mt.md` format:
+For E2E tests in TS-format (`TC-*.tc.md`):
 
 **Checklist**:
 - [ ] PASS/FAIL assertions are explicit

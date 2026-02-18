@@ -10,7 +10,7 @@ update:
 
 # E2E Sandbox Setup Checklist
 
-**Test ID**: MT-{{AREA}}-{{NNN}}
+**Test ID**: TS-{{AREA}}-{{NNN}}
 **Package**: {{package}}
 **Date**: {{date}}
 
@@ -43,7 +43,7 @@ update:
 ```bash
 TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="{{short-pkg}}"  # Package name without ace- prefix
-SHORT_ID="mt{{nnn}}"       # Lowercase test number
+SHORT_ID="ts{{nnn}}"       # Lowercase test number
 TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 REPORTS_DIR="${TEST_DIR}-reports"
 
@@ -270,7 +270,7 @@ set -e
 
 TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="${1:-unknown}"
-SHORT_ID="${2:-mt000}"
+SHORT_ID="${2:-ts000}"
 
 TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 REPORTS_DIR="${TEST_DIR}-reports"
