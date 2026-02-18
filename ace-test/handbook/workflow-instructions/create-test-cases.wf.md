@@ -52,7 +52,7 @@ All ACE packages use Minitest with layer-specific conventions:
 | Atoms | `test/atoms/` | **No IO** | <10ms (max 50ms) |
 | Molecules | `test/molecules/` | **No IO** | <50ms (max 100ms) |
 | Organisms | `test/organisms/` | **Mocked IO** | <100ms (max 200ms) |
-| E2E | `test/e2e/*.mt.md` | **Real IO** | <2s (max 5s) |
+| E2E | `test/e2e/TS-*/` | **Real IO** | <2s (max 5s) |
 
 **All tests MUST inherit from the package test base class:**
 
@@ -125,7 +125,7 @@ end
    | Atoms | `test/atoms/` | **No IO** | <10ms (max 50ms) |
    | Molecules | `test/molecules/` | **No IO** | <50ms (max 100ms) |
    | Organisms | `test/organisms/` | **Mocked IO** | <100ms (max 200ms) |
-   | E2E | `test/e2e/*.mt.md` | **Real IO** | <2s (max 5s) |
+   | E2E | `test/e2e/TS-*/` | **Real IO** | <2s (max 5s) |
 
    **Layer Decision Matrix:**
 
@@ -629,47 +629,49 @@ end
 
 ### E2E Test Example
 
+```
+<!-- test/e2e/TS-REVIEW-001-basic-workflow/ -->
+scenario.yml          # Metadata + setup (git-init, copy-fixtures, env)
+TC-001-basic-review.tc.md
+TC-002-missing-git-repo.tc.md
+fixtures/
+  app.rb              # def foo; end
+```
+
+**TC-001-basic-review.tc.md:**
 ```markdown
-<!-- test/e2e/review-workflow.mt.md -->
-# E2E: Review Workflow
+---
+tc-id: TC-001
+title: Basic Review Workflow
+---
 
-## Setup
+## Objective
 
-```bash
-TEMP_DIR=$(mktemp -d)
-cd $TEMP_DIR
-git init
-echo "def foo; end" > app.rb
-git add app.rb
-```
+Verify that ace-review runs successfully and creates feedback output.
 
-## Test: Basic Review Workflow
+## Steps
 
-```bash
-ace-review
+1. Run review
+   ```bash
+   OUTPUT=$(ace-review 2>&1)
+   EXIT_CODE=$?
+   echo "Exit code: $EXIT_CODE"
+   ```
 
-# Verify exit code
-[ $? -eq 0 ] && echo PASS || echo FAIL
+2. Verify exit code
+   ```bash
+   [ "$EXIT_CODE" -eq 0 ] && echo "PASS: Exit code 0" || echo "FAIL: Expected 0, got $EXIT_CODE"
+   ```
 
-# Verify feedback file created
-[ -f .ace/review/feedback.json ] && echo PASS || echo FAIL
+3. Verify feedback file created
+   ```bash
+   [ -f .ace/review/feedback.json ] && echo "PASS: Feedback file exists" || echo "FAIL: No feedback file"
+   ```
 
-# Verify feedback content
-jq -e '.items | length > 0' .ace/review/feedback.json && echo PASS || echo FAIL
-```
+## Expected
 
-## Error Case: Missing Git Repo
-
-```bash
-cd /tmp
-ace-review 2>&1 | grep -q "not a git repository"
-[ $? -eq 0 ] && echo PASS || echo FAIL
-```
-
-## Cleanup
-
-```bash
-rm -rf $TEMP_DIR
+- Exit code: 0
+- Feedback file created at .ace/review/feedback.json
 ```
 
 </template>

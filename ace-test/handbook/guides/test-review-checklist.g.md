@@ -43,7 +43,7 @@ If any fail → detailed review needed.
 |-------|------|------|
 | Unit tests have NO real I/O | ✓ | Subprocess, network, or filesystem calls |
 | Integration tests stub external deps | ✓ | Real API or subprocess calls |
-| E2E tests are in `test/e2e/*.mt.md` | ✓ | E2E behavior in unit test file |
+| E2E tests are in `test/e2e/TS-*/` | ✓ | E2E behavior in unit test file |
 | No flag permutations in E2E | ✓ | Multiple E2E tests for CLI flags |
 | Max ONE CLI parity test per integration file | ✓ | Multiple subprocess tests |
 
@@ -147,7 +147,7 @@ end
 
 ### 7. E2E Specific
 
-For tests in `test/e2e/*.mt.md`:
+For tests in `test/e2e/TS-*/`:
 
 | Check | Pass | Fail |
 |-------|------|------|

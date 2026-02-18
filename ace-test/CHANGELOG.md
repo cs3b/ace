@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-02-18
+
+### Changed
+
+- Remove all MT-format references from guides, workflows, and templates — TS-format is now the only documented E2E test format
+- Update E2E test location references from `test/e2e/*.mt.md` to `test/e2e/TS-*/` across testing-philosophy, testing-strategy, test-layer-decision, test-review-checklist, and test-responsibility-map guides
+- Update create-test-cases, optimize-tests, and plan-tests workflows to use TS-format examples and directory creation instead of MT single-file patterns
+- Update e2e-sandbox-checklist, test-responsibility-map, and test-review-checklist templates to use `TS-` prefix and TS-format paths
+
 ## [0.1.1] - 2026-02-03
 
 ### Added

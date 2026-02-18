@@ -233,7 +233,7 @@ Output the Test Responsibility Map document:
 |----------|------|-------|-----------|-----------------|
 | Parse valid YAML | Medium | Unit | config_parser_test.rb | YAML schema |
 | Malformed YAML error | High | Unit | config_parser_test.rb | Error messages |
-| CLI exit codes | High | E2E | MT-CONFIG-001 | CLI spec |
+| CLI exit codes | High | E2E | TS-CONFIG-001 | CLI spec |
 
 ## Unit Tests (atoms/molecules)
 
@@ -272,7 +272,7 @@ Output the Test Responsibility Map document:
 
 ## E2E Tests
 
-### File: test/e2e/MT-FEATURE-001-workflow-execution.mt.md
+### Directory: test/e2e/TS-FEATURE-001-workflow-execution/
 
 #### TC-001: Complete workflow success
 - Steps: Create config, run CLI, verify output
