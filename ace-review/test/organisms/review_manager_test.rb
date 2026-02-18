@@ -1130,8 +1130,157 @@ class ReviewManagerTest < AceReviewTest
       end
     end
 
-    assert_match(/Warning: Feedback extraction failed/, output[1])
+    assert_match(/Feedback extraction error/, output[1])
     error_manager.verify
+  end
+
+  def test_extract_feedback_tries_fallback_model_on_failure
+    session_dir = File.join(@temp_dir, "fallback_test")
+    FileUtils.mkdir_p(session_dir)
+
+    report_path = File.join(session_dir, "report1.md")
+    File.write(report_path, "# Report 1\nFinding 1")
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: report_path }
+      }
+    }
+
+    review_data = { preset: "pr", model: "test-model" }
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    call_count = 0
+    mock_feedback_manager = Minitest::Mock.new
+
+    # First call fails (primary model)
+    mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Primary model failed" }) do |**kwargs|
+      call_count += 1
+      kwargs[:model] == "google:gemini-2.5-flash"
+    end
+
+    # Second call succeeds (fallback model)
+    mock_feedback_manager.expect(:extract_and_save, {
+      success: true,
+      items_count: 2,
+      paths: ["/path/fb1.s.md", "/path/fb2.s.md"]
+    }) do |**kwargs|
+      call_count += 1
+      kwargs[:model] == "claude:glm"
+    end
+
+    output = capture_io do
+      Ace::Review.stub :get, ->(section, key) {
+        return "google:gemini-2.5-flash" if section == "feedback" && key == "synthesis_model"
+        return ["claude:glm"] if section == "feedback" && key == "fallback_models"
+        nil
+      } do
+        Ace::Review::Organisms::FeedbackManager.stub :new, mock_feedback_manager do
+          feedback_result = @manager.send(:extract_feedback, result, session_dir, review_data, options)
+
+          assert feedback_result[:success], "Should succeed with fallback model"
+          assert_equal 2, feedback_result[:items_count]
+          assert_equal "claude:glm", feedback_result[:synthesis_model]
+        end
+      end
+    end
+
+    assert_equal 2, call_count, "Should have tried both models"
+    assert_match(/Feedback synthesis failed with google:gemini-2.5-flash/, output[1])
+    mock_feedback_manager.verify
+  end
+
+  def test_extract_feedback_returns_error_when_all_models_fail
+    session_dir = File.join(@temp_dir, "all_fail_test")
+    FileUtils.mkdir_p(session_dir)
+
+    report_path = File.join(session_dir, "report1.md")
+    File.write(report_path, "# Report 1")
+
+    result = {
+      results: {
+        "model1" => { success: true, output_file: report_path }
+      }
+    }
+
+    review_data = { preset: "pr", model: "test-model" }
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    mock_feedback_manager = Minitest::Mock.new
+
+    # Both models fail
+    mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Primary failed" }) do |**kwargs|
+      kwargs[:model] == "google:gemini-2.5-flash"
+    end
+    mock_feedback_manager.expect(:extract_and_save, { success: false, error: "Fallback failed" }) do |**kwargs|
+      kwargs[:model] == "claude:glm"
+    end
+
+    capture_io do
+      Ace::Review.stub :get, ->(section, key) {
+        return "google:gemini-2.5-flash" if section == "feedback" && key == "synthesis_model"
+        return ["claude:glm"] if section == "feedback" && key == "fallback_models"
+        nil
+      } do
+        Ace::Review::Organisms::FeedbackManager.stub :new, mock_feedback_manager do
+          feedback_result = @manager.send(:extract_feedback, result, session_dir, review_data, options)
+
+          refute feedback_result[:success]
+          assert_equal "Fallback failed", feedback_result[:error]
+          assert_equal ["google:gemini-2.5-flash", "claude:glm"], feedback_result[:models_tried]
+        end
+      end
+    end
+
+    mock_feedback_manager.verify
+  end
+
+  def test_build_synthesis_model_list_with_config
+    review_data = { model: "review-model" }
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return "primary-model" if section == "feedback" && key == "synthesis_model"
+      return ["fallback-1", "fallback-2"] if section == "feedback" && key == "fallback_models"
+      nil
+    } do
+      models = @manager.send(:build_synthesis_model_list, options, review_data)
+
+      assert_equal ["primary-model", "fallback-1", "fallback-2"], models
+    end
+  end
+
+  def test_build_synthesis_model_list_with_option_override
+    review_data = { model: "review-model" }
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      feedback_model: "override-model"
+    )
+
+    Ace::Review.stub :get, ->(section, key) {
+      return "config-model" if section == "feedback" && key == "synthesis_model"
+      return ["fallback-1"] if section == "feedback" && key == "fallback_models"
+      nil
+    } do
+      models = @manager.send(:build_synthesis_model_list, options, review_data)
+
+      assert_equal ["override-model", "fallback-1"], models
+    end
+  end
+
+  def test_build_synthesis_model_list_deduplicates
+    review_data = { model: "same-model" }
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
+
+    Ace::Review.stub :get, ->(section, key) {
+      return "same-model" if section == "feedback" && key == "synthesis_model"
+      return ["same-model", "other-model"] if section == "feedback" && key == "fallback_models"
+      nil
+    } do
+      models = @manager.send(:build_synthesis_model_list, options, review_data)
+
+      assert_equal ["same-model", "other-model"], models
+    end
   end
 
   def test_build_multi_model_response_includes_feedback_info
@@ -1159,6 +1308,31 @@ class ReviewManagerTest < AceReviewTest
     assert response[:success]
     assert_equal 5, response[:feedback_count]
     assert_equal ["/path/feedback1.s.md", "/path/feedback2.s.md"], response[:feedback_paths]
+  end
+
+  def test_build_multi_model_response_includes_feedback_error
+    result = {
+      results: {
+        "model1" => { success: true, output_file: "/path/report1.md" }
+      },
+      summary: { total_models: 1, success_count: 1 }
+    }
+
+    session_dir = "/path/to/session"
+    feedback_result = {
+      success: false,
+      error: "All synthesis models failed",
+      models_tried: ["google:gemini-2.5-flash", "claude:glm"]
+    }
+
+    response = @manager.send(
+      :build_multi_model_response,
+      result, session_dir, nil, feedback_result
+    )
+
+    assert response[:success]
+    refute response.key?(:feedback_count)
+    assert_equal "All synthesis models failed", response[:feedback_error]
   end
 
   def test_build_multi_model_response_without_feedback

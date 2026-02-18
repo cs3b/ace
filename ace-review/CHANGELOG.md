@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Feedback extraction failures no longer silently swallowed**: When synthesis LLM call fails, error is now propagated to CLI output and response hash instead of being silently dropped
+- **CLI reports feedback status**: Multi-model review output now shows feedback item count on success or error message on failure
+
+### Added
+- **Fallback model support for feedback synthesis**: Configure `feedback.fallback_models` in config.yml to try alternative models when primary synthesis model fails
+- Default fallback model `claude:glm` added to config
+
 ## [0.39.3] - 2026-02-17
 
 ### Changed
