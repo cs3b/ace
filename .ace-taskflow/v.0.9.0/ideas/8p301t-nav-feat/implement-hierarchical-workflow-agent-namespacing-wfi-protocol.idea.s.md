@@ -31,6 +31,43 @@ Introduce mandatory hierarchical namespacing for all workflows and agents, refle
 - **CLI Output:** Ensure `ace-nav list` provides a clear, parseable, namespaced output format.
 - **Refactoring:** This change requires refactoring the resource discovery molecules in `ace-bundle` to handle nested file structures.
 
+---
+
+## Research Findings (2026-02-18)
+
+### Current State
+
+- **15 wfi:// sources** (14 gems + @local)
+- **99 total workflows** across all sources
+- **86 skills** in `.claude/skills/` (flat namespace)
+- **ace-nav already supports `@gem-name` scoping** in ResourceUri — infrastructure exists, just undocumented
+
+### Actual Collisions Today
+
+Only **1 collision** found:
+- `research.wf.md` exists in both `ace-handbook` and `ace-search`
+- Resolution: first match wins (source ordering), no warning
+
+### Naming Sprawl Analysis
+
+**E2E skills (9):** Inconsistent singular/plural (`run-e2e-test` vs `run-e2e-tests`), no `e2e:` prefix
+**Taskflow workflows (26):** `create-task`/`create-tasks`, `plan-task`/`plan-tasks`, `review-task`/`review-tasks` — all duplicated
+**Flat skill namespace:** 86 skills with no grouping — hard to discover context
+
+### Refined Solution: Quick Win First
+
+1. **Document `@gem-name` scoping** — `wfi://@ace-search/research` already works
+2. **Fix the one collision** — rename or consolidate `research.wf.md`
+3. **Update skill files** — use explicit `wfi://@gem-name/workflow` in SKILL.md context loading
+4. **Optional:** Rename skills with package prefix (e.g., `e2e:run-test`, `task:create`)
+
+### Decision
+
+Full hierarchical namespacing (subfolders + protocol rewrite) is overkill for 1 collision.
+Quick win: document existing `@gem-name` support + fix collision + update skills to use explicit paths.
+
+---
+
 ## Benefits
 - Eliminates naming conflicts across the growing number of `ace-*` packages.
 - Improves agent and developer discoverability of specific workflows (e.g., knowing all testing workflows are under `wfi://test/`).
