@@ -14,8 +14,10 @@ class HistoryCleanerTest < GitSecretsTestCase
   end
 
   def test_clean_requires_git_filter_repo
+    tokens = [create_mock_token("ghp_test123456789012345678901234567890AB")]
+
     @cleaner.rewriter.stub :available?, false do
-      result = @cleaner.clean(tokens: []) # Pass empty tokens to skip scan
+      result = @cleaner.clean(tokens: tokens)
 
       refute result[:success]
       assert_match(/git-filter-repo is required/, result[:message])
@@ -27,11 +29,12 @@ class HistoryCleanerTest < GitSecretsTestCase
     @mock_repo.add_file("file.txt", "content")
     # Add uncommitted file
     @mock_repo.add_file("dirty.txt", "uncommitted")
+    tokens = [create_mock_token("ghp_test123456789012345678901234567890AB")]
 
     @cleaner.rewriter.stub :available?, true do
       # Stub to simulate dirty working directory
       @cleaner.rewriter.stub :clean_working_directory?, false do
-        result = @cleaner.clean(tokens: []) # Pass empty tokens to skip scan
+        result = @cleaner.clean(tokens: tokens)
 
         refute result[:success]
         assert_match(/uncommitted changes/, result[:message])
@@ -84,6 +87,18 @@ class HistoryCleanerTest < GitSecretsTestCase
         assert_match(/Would remove 1 token/, result[:message])
         assert_equal 1, result[:tokens].size
       end
+    end
+  end
+
+  def test_dry_run_works_without_git_filter_repo
+    tokens = [create_mock_token("ghp_test123456789012345678901234567890AB")]
+
+    @cleaner.rewriter.stub :available?, false do
+      result = @cleaner.clean(tokens: tokens, dry_run: true)
+
+      assert result[:success]
+      assert result[:dry_run]
+      assert_match(/Would remove 1 token/, result[:message])
     end
   end
 
