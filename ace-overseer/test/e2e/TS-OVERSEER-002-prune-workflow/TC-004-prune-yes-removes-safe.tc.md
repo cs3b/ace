@@ -5,7 +5,7 @@ title: Prune --yes Removes Safe Worktree
 
 ## Objective
 
-Verify that `ace-overseer prune --yes` removes the safe worktree (task 001) and reports success. This is destructive — TCs 005 and 006 verify post-prune state.
+Verify that `ace-overseer prune --yes` removes the safe worktree (task 001), closes its tmux window, and reports success.
 
 ## Steps
 
@@ -40,9 +40,19 @@ Verify that `ace-overseer prune --yes` removes the safe worktree (task 001) and 
    echo "$WORKTREE_LIST" | grep -q "001" && echo "FAIL: Task 001 worktree still exists after prune!" || echo "PASS: Task 001 worktree removed"
    ```
 
+6. Verify tmux cleanup for pruned task
+   ```bash
+   WINDOWS=$(tmux list-windows -t "ace-e2e-test" 2>&1)
+   echo "Tmux windows after prune:"
+   echo "$WINDOWS"
+   echo "$WINDOWS" | grep -q "t001" && echo "FAIL: Tmux window t001 still exists after prune!" || echo "PASS: Tmux window t001 closed by prune"
+   echo "$WINDOWS" | grep -q "t002" && echo "PASS: Tmux window t002 still exists (task not pruned)" || echo "INFO: Tmux window t002 not found (may have been closed separately)"
+   ```
+
 ## Expected
 
 - Exit code: 0
 - Output shows "Removed worktree task.001"
 - Output shows "N worktree(s) pruned."
 - Task 001 worktree no longer in `git worktree list`
+- Tmux window `t001` is closed after prune

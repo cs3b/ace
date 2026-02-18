@@ -19,7 +19,11 @@ module Ace
             @orchestrator = orchestrator || Organisms::WorkOnOrchestrator.new
           end
 
-          def call(task:, preset: nil, **options)
+          def call(task: nil, preset: nil, **options)
+            if task.to_s.strip.empty?
+              raise Ace::Core::CLI::Error.new("--task is required. Usage: ace-overseer work-on --task <ref>")
+            end
+
             result = @orchestrator.call(task_ref: task, cli_preset: preset)
 
             return if options[:quiet]
@@ -35,6 +39,8 @@ module Ace
             end
             puts
             puts "Next step: switch to tmux window '#{result[:window_name]}' and run /ace:assign-drive"
+          rescue Ace::Core::CLI::Error
+            raise
           rescue StandardError => e
             raise Ace::Core::CLI::Error.new(e.message)
           end

@@ -5,7 +5,7 @@ title: Dry-Run Lists Safe and Unsafe Candidates
 
 ## Objective
 
-Verify that `ace-overseer prune --dry-run` correctly identifies task 001 as safe to prune and does NOT list task 002 as safe.
+Verify that `ace-overseer prune --dry-run` correctly identifies task 001 as safe to prune, does NOT list task 002 as safe, and makes no destructive changes.
 
 ## Steps
 
@@ -37,9 +37,19 @@ Verify that `ace-overseer prune --dry-run` correctly identifies task 001 as safe
    echo "$OUTPUT" | grep -qE "worktree\(s\) can be safely pruned" && echo "PASS: Count message present" || echo "FAIL: Missing count message"
    ```
 
+6. Verify dry-run has no side effects
+   ```bash
+   WORKTREE_LIST=$(git worktree list 2>&1)
+   echo "Worktree list after dry-run:"
+   echo "$WORKTREE_LIST"
+   echo "$WORKTREE_LIST" | grep -q "001" && echo "PASS: Task 001 worktree still exists" || echo "FAIL: Task 001 worktree was removed by dry-run"
+   echo "$WORKTREE_LIST" | grep -q "002" && echo "PASS: Task 002 worktree still exists" || echo "FAIL: Task 002 worktree was removed by dry-run"
+   ```
+
 ## Expected
 
 - Exit code: 0
 - Output shows "Candidates for cleanup:" with task.001 listed
 - Output shows count of worktrees that can be safely pruned
 - Task 002 should NOT appear as a safe candidate (pending task, active assignment)
+- Both worktrees still exist after dry-run
