@@ -45,7 +45,7 @@ execution:
   # Timeout per test in seconds
   timeout: 420
   # Number of tests to run in parallel (1 = sequential)
-  parallel: 10
+  parallel: 6
 
 # Provider configuration
 providers:

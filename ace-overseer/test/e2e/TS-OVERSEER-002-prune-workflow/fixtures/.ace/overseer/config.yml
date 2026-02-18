@@ -1,0 +1,4 @@
+tmux_session_name: "ace-e2e-test"
+window_preset: "cc"
+default_assign_preset: "work-on-task"
+window_name_format: "t{task_id}"

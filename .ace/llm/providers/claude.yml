@@ -6,9 +6,8 @@ models_dev_id: anthropic
 context_limit: 200000
 models:
   - claude-haiku-4-5
-  - claude-opus-4-5
   - claude-opus-4-6
-  - claude-sonnet-4-5
+  - claude-sonnet-4-6
 aliases:
   global:
     cc: claude:sonnet
@@ -17,7 +16,7 @@ aliases:
     cc-haiku: claude:haiku
   model:
     opus: claude-opus-4-6
-    sonnet: claude-sonnet-4-5
+    sonnet: claude-sonnet-4-6
     haiku: claude-haiku-4-5
 capabilities:
   - text_generation
