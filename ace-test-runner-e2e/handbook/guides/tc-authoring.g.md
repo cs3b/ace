@@ -2,7 +2,7 @@
 guide-id: g-tc-authoring
 title: Test Case Authoring Guide
 description: Guide for writing TC-*.tc.md test case files for TS-format E2E scenarios
-version: "1.0"
+version: "1.1"
 source: ace-test-runner-e2e
 ---
 
@@ -160,6 +160,14 @@ report.json, and produces ok.md with correct format.
 
 ## Best Practices
 
+### Record Why This TC Is E2E
+
+For each TC, keep a short trace back to the scenario's Value Gate evidence:
+- What this TC validates that unit tests cannot
+- Which unit test files were reviewed before keeping/adding this TC
+
+This evidence is tracked at scenario level via `unit-coverage-reviewed` and `e2e-justification` in `scenario.yml`.
+
 ### Use Explicit PASS/FAIL Patterns
 
 Every verification step should produce explicit output:
@@ -200,9 +208,9 @@ Verify what should NOT exist as well as what should:
 test ! -f "$CACHE_DIR/old-format.yaml" && echo "PASS: Old format not present" || echo "FAIL: Old format should not exist"
 ```
 
-### Test Error Cases
+### Test Error Cases (When They Add E2E Value)
 
-Every scenario should have at least one error/negative test case:
+Include an error/negative test case when it validates behavior that unit tests cannot fully prove (real CLI parsing, real external tool failures, real filesystem state transitions). If unit tests already cover the error behavior comprehensively, do not duplicate it in E2E.
 
 ```yaml
 ---
