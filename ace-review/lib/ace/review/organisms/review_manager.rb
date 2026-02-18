@@ -1064,22 +1064,47 @@ module Ace
           # Determine feedback base path
           base_path = determine_feedback_path(review_data, session_dir)
 
-          # Determine synthesis model
-          synthesis_model = options&.feedback_model ||
-                           Ace::Review.get("feedback", "synthesis_model") ||
-                           review_data[:model]
+          # Build ordered list of models to try: primary + fallbacks
+          models_to_try = build_synthesis_model_list(options, review_data)
 
-          # Synthesize and save feedback
           feedback_manager = FeedbackManager.new
-          feedback_manager.extract_and_save(
-            report_paths: report_paths,
-            base_path: base_path,
-            model: synthesis_model
-          )
+          last_error = nil
+
+          models_to_try.each do |model|
+            feedback_result = feedback_manager.extract_and_save(
+              report_paths: report_paths,
+              base_path: base_path,
+              model: model
+            )
+
+            if feedback_result[:success]
+              feedback_result[:synthesis_model] = model
+              return feedback_result
+            end
+
+            last_error = feedback_result[:error]
+            warn "Feedback synthesis failed with #{model}: #{last_error}"
+          end
+
+          # All models failed
+          { success: false, error: last_error, models_tried: models_to_try }
         rescue => e
-          # Log error but don't fail the review
-          warn "Warning: Feedback extraction failed: #{e.message}"
+          warn "Feedback extraction error: #{e.message}"
           { success: false, error: e.message }
+        end
+
+        # Build ordered list of synthesis models: primary + fallbacks
+        # @param options [ReviewOptions, nil] review options
+        # @param review_data [Hash] review metadata
+        # @return [Array<String>] ordered list of models to try
+        def build_synthesis_model_list(options, review_data)
+          primary = options&.feedback_model ||
+                    Ace::Review.get("feedback", "synthesis_model") ||
+                    review_data[:model]
+
+          fallbacks = Ace::Review.get("feedback", "fallback_models") || []
+
+          [primary, *fallbacks].compact.uniq
         end
 
         # Collect report paths for feedback synthesis
@@ -1173,10 +1198,12 @@ module Ace
           output_files = successful_models.values.map { |r| r[:output_file] }.compact
           response[:output_files] = output_files
 
-          # Add feedback info if extraction succeeded
+          # Add feedback info
           if feedback_result && feedback_result[:success]
             response[:feedback_count] = feedback_result[:items_count]
             response[:feedback_paths] = feedback_result[:paths]
+          elsif feedback_result && !feedback_result[:success]
+            response[:feedback_error] = feedback_result[:error]
           end
 
           response
