@@ -100,21 +100,32 @@ module Ace
 
         # Computed assignment state based on phase statuses
         #
-        # States:
+        # States (checked in priority order):
         # - :empty     - No phases in queue
-        # - :failed    - Has failed phase(s)
-        # - :completed - All phases done
-        # - :running   - Has in_progress phase
+        # - :completed - All phases complete (done or failed)
+        # - :failed    - Has failed phase(s) but NOT all complete (stuck)
+        # - :running   - Has in_progress phase with recent activity (< 1 hour)
+        # - :stalled   - Has in_progress phase but stale (> 1 hour)
         # - :paused    - Has pending but no in_progress (interrupted)
         #
         # @return [Symbol] Assignment state
         def assignment_state
           return :empty if empty?
-          return :failed if failed.any?
           return :completed if complete?
-          return :running if current
+          return :failed if failed.any?
+          return :running if current && recently_active?
+          return :stalled if current
 
           :paused
+        end
+
+        # Check if the current in_progress phase has recent activity
+        # @param threshold [Integer] Seconds since started_at to consider active (default: 1 hour)
+        # @return [Boolean]
+        def recently_active?(threshold: 3600)
+          return false unless current&.started_at
+
+          (Time.now - current.started_at) < threshold
         end
 
         # Summary for display
@@ -177,6 +188,15 @@ module Ace
         # @return [Boolean] True when any subtree phase failed
         def subtree_failed?(root_number)
           subtree_phases(root_number).any? { |s| s.status == :failed }
+        end
+
+        # Get the current in-progress phase within a subtree.
+        #
+        # @param root_number [String] Subtree root phase number
+        # @return [Phase, nil] In-progress phase inside subtree, if any
+        def current_in_subtree(root_number)
+          subtree_phases(root_number)
+            .find { |s| s.status == :in_progress }
         end
 
         # Get next workable phase constrained to a subtree.

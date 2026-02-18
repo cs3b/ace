@@ -21,6 +21,16 @@ class QueueStateTest < AceAssignTestCase
     )
   end
 
+  def make_phase_with_started_at(number:, name:, status:, started_at:)
+    Ace::Assign::Models::Phase.new(
+      number: number,
+      name: name,
+      status: status,
+      instructions: "Test",
+      started_at: started_at
+    )
+  end
+
   def test_current_finds_in_progress
     phases = [
       make_phase(number: "010", name: "first", status: :done),
@@ -349,10 +359,10 @@ class QueueStateTest < AceAssignTestCase
     assert_equal :empty, state.assignment_state
   end
 
-  def test_assignment_state_running
+  def test_assignment_state_running_with_recent_activity
     phases = [
       make_phase(number: "010", name: "first", status: :done),
-      make_phase(number: "020", name: "second", status: :in_progress),
+      make_phase_with_started_at(number: "020", name: "second", status: :in_progress, started_at: Time.now - 60),
       make_phase(number: "030", name: "third", status: :pending)
     ]
 
@@ -384,7 +394,7 @@ class QueueStateTest < AceAssignTestCase
     assert_equal :completed, state.assignment_state
   end
 
-  def test_assignment_state_failed
+  def test_assignment_state_failed_when_not_all_complete
     phases = [
       make_phase(number: "010", name: "first", status: :done),
       make_phase(number: "020", name: "second", status: :failed),
@@ -396,10 +406,47 @@ class QueueStateTest < AceAssignTestCase
     assert_equal :failed, state.assignment_state
   end
 
+  def test_assignment_state_completed_with_failures
+    phases = [
+      make_phase(number: "010", name: "first", status: :done),
+      make_phase(number: "020", name: "second", status: :failed),
+      make_phase(number: "030", name: "third", status: :done)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :completed, state.assignment_state
+  end
+
+  def test_assignment_state_stalled
+    phases = [
+      make_phase(number: "010", name: "first", status: :done),
+      make_phase_with_started_at(number: "020", name: "second", status: :in_progress, started_at: Time.now - 7200),
+      make_phase(number: "030", name: "third", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :stalled, state.assignment_state
+  end
+
+  def test_assignment_state_stalled_when_no_started_at
+    phases = [
+      make_phase(number: "010", name: "first", status: :done),
+      make_phase(number: "020", name: "second", status: :in_progress),
+      make_phase(number: "030", name: "third", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal :stalled, state.assignment_state
+  end
+
   def test_assignment_state_failed_takes_priority_over_running
+    # Failed + in_progress but NOT all complete → :failed (not :running)
     phases = [
       make_phase(number: "010", name: "first", status: :failed),
-      make_phase(number: "020", name: "second", status: :in_progress)
+      make_phase_with_started_at(number: "020", name: "second", status: :in_progress, started_at: Time.now - 60)
     ]
 
     state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)

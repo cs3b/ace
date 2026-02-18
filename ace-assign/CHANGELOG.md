@@ -7,17 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.11.16] - 2026-02-17
-
-### Changed
-- `ace-assign status` now emits a single canonical fork delegation hint (`ace-assign fork-run --assignment <id>@<root>`) for fork subtrees, including when the current phase itself is the fork root (`context: fork`)
-- Fork workflow documentation now consistently uses scoped fork syntax (`--assignment <id>@<phase>`) and explicitly guards against recursive re-delegation when already inside `ACE_ASSIGN_FORK_ROOT`
+## [0.11.17] - 2026-02-17
 
 ### Fixed
-- Parent/orchestrator drive sessions now get deterministic fork-subtree detection for direct fork-root phases, enabling automatic subtree delegation instead of inline duplicate execution paths
 
-### Technical
-- Added status command coverage for fork-root detection messaging and in-scope fork behavior (`Fork scope` vs external delegation marker)
+- `assignment_state` now checks `completed` before `failed` — assignments where all phases are done/failed correctly report `:completed` instead of `:failed`
+
+### Added
+
+- `recently_active?` method on `QueueState` to detect stale in-progress phases (threshold: 1 hour)
+- New `:stalled` assignment state for in-progress phases with no recent activity
+
+## [0.11.16] - 2026-02-17
+
+### Added
+
+- `current_in_subtree` method on `QueueState` to find in-progress phase within a subtree
+
+### Fixed
+
+- Fork root executor now checks for existing in-progress phase in subtree before advancing to next workable phase
 
 ## [0.11.15] - 2026-02-17
 
