@@ -1,2 +1,4 @@
 description: "Test preset for multi-subject testing"
+instructions:
+  base: "prompt://base/system"
 model: "test-model"
