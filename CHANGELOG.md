@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.534] - 2026-02-18
+
+### Changed
+
+- **ace-test-runner-e2e v0.16.4**: Improve handbook guidance for balanced E2E vs unit coverage with required decision evidence and cost-tiered manual run strategy
+
 ## [0.9.533] - 2026-02-18
 
 ### Added
