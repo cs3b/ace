@@ -27,12 +27,12 @@ setup:
       sed -i 's/status: in-progress/status: done/' "$TASK_SPEC"
       git add "$TASK_SPEC" && git commit -q -m "Mark task 001 as done"
 
-      WORKTREE_001=$(git worktree list | grep "001" | awk '{print $1}')
+      WORKTREE_001=$(git worktree list | grep "task\.001" | awk '{print $1}')
       if [ -n "$WORKTREE_001" ]; then
         cd "$WORKTREE_001"
         export PROJECT_ROOT_PATH="$WORKTREE_001"
         echo "Phase complete." > /tmp/e2e-report.md
-        ace-assign report /tmp/e2e-report.md 2>&1 || true
+        ace-assign report /tmp/e2e-report.md
         cd -
         unset PROJECT_ROOT_PATH
       fi
