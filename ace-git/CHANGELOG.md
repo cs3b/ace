@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.13] - 2026-02-17
+
+### Added
+
+- `dirty_file_count` method to RepoStatus for counting uncommitted files from git status output
+- `dirty_files` key in RepoStatus#to_h for downstream consumers
+
+## [0.10.12] - 2026-02-17
+
+### Fixed
+
+- `fetch_pr_data_parallel` now matches PRs in any state (OPEN, MERGED, CLOSED) for the current branch, preferring OPEN over MERGED over CLOSED, so branches with merged PRs show PR metadata in status views
+
 ## [0.10.11] - 2026-02-04
 
 ### Changed
