@@ -156,7 +156,7 @@ end
 - Real subprocess calls
 - Real external tools (StandardRB, gitleaks, etc.)
 
-**Example** (`.mt.md` format):
+**Example** (TS-format `TC-*.tc.md`):
 ```markdown
 ### TC-001: Full Lint Workflow
 

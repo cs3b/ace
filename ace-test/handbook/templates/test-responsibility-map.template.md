@@ -62,8 +62,8 @@ Critical workflows requiring E2E validation:
 
 | Workflow | E2E Test ID | Status |
 |----------|-------------|--------|
-| {{workflow_1}} | MT-{{AREA}}-{{NNN}} | Planned/Exists |
-| {{workflow_2}} | MT-{{AREA}}-{{NNN}} | Planned/Exists |
+| {{workflow_1}} | TS-{{AREA}}-{{NNN}} | Planned/Exists |
+| {{workflow_2}} | TS-{{AREA}}-{{NNN}} | Planned/Exists |
 
 ## Fixtures and Contracts Needed
 
@@ -75,7 +75,7 @@ Critical workflows requiring E2E validation:
 
 - [ ] Create unit tests for: {{list}}
 - [ ] Create integration tests for: {{list}}
-- [ ] Create E2E test: MT-{{AREA}}-{{NNN}}
+- [ ] Create E2E test: TS-{{AREA}}-{{NNN}}
 - [ ] Remove redundant tests: {{list}}
 - [ ] Update fixtures: {{list}}
 

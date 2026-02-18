@@ -184,57 +184,56 @@ Tests that should move to E2E:
 - Full workflow with real dependencies
 - Tests that are still slow after stubbing
 
-#### 5b: Create E2E Test File
+#### 5b: Create E2E Test Directory
 
 ```bash
-# Create E2E test
-touch <package>/test/e2e/MT-<AREA>-00N-<slug>.mt.md
+# Create E2E test scenario directory
+mkdir -p <package>/test/e2e/TS-<AREA>-00N-<slug>
 ```
 
-Template:
-```markdown
----
-test-id: MT-<AREA>-00N
+**scenario.yml:**
+```yaml
+test-id: TS-<AREA>-00N
 title: <Descriptive Title>
 area: <area>
 package: <package>
 priority: medium
-duration: ~10min
-automation-candidate: true
 requires:
   tools: [<required-tools>]
+
+setup:
+  - git-init
+  - copy-fixtures
+  - env:
+      PROJECT_ROOT_PATH: "."
+```
+
+**TC-001-<scenario>.tc.md:**
+```markdown
+---
+tc-id: TC-001
+title: <Scenario>
 ---
 
 ## Objective
 
 Validate <what this tests> with real dependencies.
 
-## Prerequisites
+## Steps
 
-- [ ] <tool> installed
-- [ ] Clean test environment
-
-## Environment Setup
-
-```bash
-TIMESTAMP_ID="$(ace-b36ts encode)"
-TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-<short-pkg>-mt00n"
-mkdir -p "$TEST_DIR"
-cd "$TEST_DIR"
-```
-
-## Test Cases
-
-### TC-001: <Scenario>
-
-**Steps:**
 1. <step>
-2. <step>
+   ```bash
+   <command>
+   ```
 
-**Expected:**
+2. Verify result
+   ```bash
+   [ <assertion> ] && echo "PASS: <description>" || echo "FAIL: <description>"
+   ```
+
+## Expected
+
 - <assertion>
-
-**Status:** [ ] Pass / [ ] Fail
 ```
 
 #### 5c: Delete or Convert Original Test
