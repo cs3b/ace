@@ -116,14 +116,14 @@ Mocks simulate reality, but reality changes.
 -   **Sandboxing**: Run in a temporary directory. Clean up after yourself.
 -   **Critical Paths**: Focus on happy paths and critical error cases. Don't test every edge case (leave that to unit tests).
 
-### E2E Test Structure (`.mt.md`)
-We use Markdown-based executable tests for E2E to ensure they double as documentation.
+### E2E Test Structure (TS-format)
+We use directory-based test scenarios with `scenario.yml` and `TC-*.tc.md` files for E2E to ensure they double as documentation.
 
-```markdown
-# Scenario: Create a Task
-1. Setup sandbox
-2. Run `ace-taskflow task create`
-3. Verify file created
+```
+TS-FEATURE-001-task-creation/
+    scenario.yml          # Metadata + setup
+    TC-001-create.tc.md   # Test case with steps + assertions
+    fixtures/             # Shared test data
 ```
 
 ---

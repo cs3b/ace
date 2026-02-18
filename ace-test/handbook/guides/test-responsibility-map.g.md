@@ -70,7 +70,7 @@ For each behavior, ask:
 | Return defaults | Medium | Unit | config_parser_test.rb | defaults.yml |
 | Malformed YAML error | High | Unit | config_parser_test.rb | Exception spec |
 | Config cascade merge | Medium | Integration | config_resolver_test.rb | Merge rules |
-| CLI exit code 1 | High | E2E | MT-CONFIG-001 | CLI spec |
+| CLI exit code 1 | High | E2E | TS-CONFIG-001 | CLI spec |
 
 ## Layer Decision Rules
 
