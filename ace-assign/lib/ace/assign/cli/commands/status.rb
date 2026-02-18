@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "json"
+
 module Ace
   module Assign
     module CLI
@@ -49,6 +51,7 @@ module Ace
           desc "Display current workflow queue status"
 
           option :flat, aliases: ["-f"], type: :boolean, default: false, desc: "Show flat list (no hierarchy)"
+          option :format, desc: "Output format (table, json)", default: "table"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress detailed output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
           option :assignment, desc: "Show status for specific assignment ID"
@@ -66,6 +69,11 @@ module Ace
             scope_root = scoped[:root]
 
             unless options[:quiet]
+              if options[:format] == "json"
+                puts JSON.pretty_generate(status_to_h(assignment, scoped_state, current_for_display))
+                return
+              end
+
               print_queue_status(assignment, scoped_state, flat: options[:flat], root_number: scope_root)
 
               if current_for_display
@@ -89,8 +97,17 @@ module Ace
                 else
                   puts "Instructions:"
                   puts current_for_display.instructions
+
+                  if fork_root && !in_fork_scope
+                    puts
+                    puts "Fork subtree detected (root: #{fork_root.number} - #{fork_root.name})."
+                    puts "Run in forked process:"
+                    puts "  ace-assign fork-run --root #{fork_root.number} --assignment #{assignment.id}"
+                  elsif fork_root && in_fork_scope
+                    puts
+                    puts "Fork scope: #{fork_root.number} (ACE_ASSIGN_FORK_ROOT=#{fork_root.number})"
+                  end
                 end
-                print_fork_scope_guidance(fork_root: fork_root, in_fork_scope: in_fork_scope, assignment: assignment)
               elsif scoped_state.complete?
                 puts
                 puts "Assignment completed!"
@@ -104,6 +121,32 @@ module Ace
           end
 
           private
+
+          def status_to_h(assignment, state, current_phase)
+            {
+              assignment: {
+                id: assignment.id,
+                name: assignment.name,
+                state: state.assignment_state.to_s
+              },
+              phases: state.phases.map { |phase| phase_to_h(phase) },
+              current_phase: phase_to_h(current_phase),
+              progress: "#{state.done.size}/#{state.size} done"
+            }
+          end
+
+          def phase_to_h(phase)
+            return nil unless phase
+
+            {
+              number: phase.number,
+              name: phase.name,
+              status: phase.status.to_s,
+              skill: phase.skill,
+              context: phase.context,
+              parent: phase.parent
+            }.compact
+          end
 
           def scoped_status_view(state, scope)
             return { state: state, current: state.current, root: nil } if scope.nil? || scope.strip.empty?
@@ -262,6 +305,13 @@ module Ace
             puts
             puts "After completing, create a report file and run:"
             puts "  ace-assign report <report-file.md>"
+            puts
+            puts "To execute entire subtree in one forked process:"
+            puts "  ace-assign fork-run --root #{phase.number} --assignment #{assignment.id}"
+          end
+
+          def fork_scope_root(state, current_phase)
+            state.nearest_fork_ancestor(current_phase.number)
           end
 
           def print_fork_scope_guidance(fork_root:, in_fork_scope:, assignment:)

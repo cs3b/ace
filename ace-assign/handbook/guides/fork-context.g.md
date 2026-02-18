@@ -199,4 +199,4 @@ ACE_DEBUG=1 ace-assign status
 
 - [ace-assign README](../../README.md) - Main documentation
 - [Work Queue Model](../workflow-instructions/drive-assignment.wf.md) - Assignment management
-- `ace-assign fork-run --assignment <id>@<phase>` - Prepare subtree-scoped fork session
+- `ace-assign fork-run --root <phase> --assignment <id>` - Prepare subtree-scoped fork session

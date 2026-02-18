@@ -14,7 +14,7 @@ Verify fork execution can target a subtree using scoped assignment syntax (`<ass
    CREATE_OUTPUT=$(ace-assign create job.yaml 2>&1)
    CREATE_EXIT=$?
    [ "$CREATE_EXIT" -eq 0 ] && echo "PASS: Assignment created" || echo "FAIL: Expected exit code 0, got $CREATE_EXIT"
-   ASSIGNMENT_ID=$(echo "$CREATE_OUTPUT" | sed -n 's/.*Assignment created: .* (\([^)]*\)).*/\1/p' | head -1)
+   ASSIGNMENT_ID=$(echo "$CREATE_OUTPUT" | sed -n 's/.*Assignment: .* (\([^)]*\)).*/\1/p' | head -1)
    [ -n "$ASSIGNMENT_ID" ] && echo "PASS: Assignment ID resolved ($ASSIGNMENT_ID)" || echo "FAIL: Could not parse assignment ID"
    ```
 
