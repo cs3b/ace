@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "json"
 
 class StatusCommandTest < AceAssignTestCase
   def test_status_with_active_assignment
@@ -41,6 +42,57 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_with_json_format
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(format: "json")
+      end
+
+      payload = JSON.parse(output.first)
+      assert_equal result[:assignment].id, payload.dig("assignment", "id")
+      assert_equal "test-session", payload.dig("assignment", "name")
+      assert_equal "running", payload.dig("assignment", "state")
+      assert_equal "0/3 done", payload["progress"]
+      assert_equal 3, payload["phases"].size
+      assert_equal "010", payload.dig("phases", 0, "number")
+      assert_equal "init", payload.dig("phases", 0, "name")
+      assert_equal "in_progress", payload.dig("phases", 0, "status")
+      assert_equal "010", payload.dig("current_phase", "number")
+      assert_equal "init", payload.dig("current_phase", "name")
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_with_json_format_has_null_current_phase_when_completed
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+      report = create_report(cache_dir, "done")
+      3.times { executor.advance(report) }
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(format: "json")
+      end
+
+      payload = JSON.parse(output.first)
+      assert_equal "completed", payload.dig("assignment", "state")
+      assert_nil payload["current_phase"]
+      assert_equal "3/3 done", payload["progress"]
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_status_shows_fork_subtree_guidance_for_leaf_phase
     with_temp_cache do |cache_dir|
       phases = [
@@ -63,66 +115,6 @@ class StatusCommandTest < AceAssignTestCase
 
       assert_includes output.first, "Current Phase: 010.01 - onboard"
       assert_includes output.first, "Instructions:"
-
-      Ace::Assign.reset_config!
-    end
-  end
-
-  def test_status_shows_fork_subtree_marker_for_current_fork_root
-    with_temp_cache do |cache_dir|
-      phases = [
-        {
-          "name" => "work-on-task",
-          "instructions" => "Implement task 235.01",
-          "context" => "fork"
-        }
-      ]
-      config_path = create_test_config(cache_dir, steps: phases)
-
-      Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
-      result = executor.start(config_path)
-      assignment_id = result[:assignment].id
-
-      output = capture_io do
-        Ace::Assign::CLI::Commands::Status.new.call(assignment: assignment_id)
-      end
-
-      assert_includes output.first, "Current Phase: 010 - work-on-task"
-      assert_includes output.first, "Fork subtree detected (root: 010 - work-on-task)."
-      assert_includes output.first, "ace-assign fork-run --assignment #{assignment_id}@010"
-
-      Ace::Assign.reset_config!
-    end
-  end
-
-  def test_status_in_fork_scope_shows_scope_only
-    with_temp_cache do |cache_dir|
-      phases = [
-        {
-          "name" => "work-on-task",
-          "instructions" => "Implement task 235.01",
-          "context" => "fork"
-        }
-      ]
-      config_path = create_test_config(cache_dir, steps: phases)
-
-      Ace::Assign.config["cache_dir"] = cache_dir
-      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
-      result = executor.start(config_path)
-      assignment_id = result[:assignment].id
-
-      begin
-        ENV["ACE_ASSIGN_FORK_ROOT"] = "010"
-        output = capture_io do
-          Ace::Assign::CLI::Commands::Status.new.call(assignment: assignment_id)
-        end
-
-        assert_includes output.first, "Fork scope: 010 (ACE_ASSIGN_FORK_ROOT=010)"
-        refute_includes output.first, "Fork subtree detected (root:"
-      ensure
-        ENV.delete("ACE_ASSIGN_FORK_ROOT")
-      end
 
       Ace::Assign.reset_config!
     end

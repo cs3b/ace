@@ -136,7 +136,7 @@ module Ace
           fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
           if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
             if current.nil? || !state.in_subtree?(fork_root, current.number)
-              current = state.next_workable_in_subtree(fork_root)
+              current = state.current_in_subtree(fork_root) || state.next_workable_in_subtree(fork_root)
             end
           end
           raise Error, "No phase currently in progress. Try 'ace-assign add' to add a new phase or 'ace-assign retry' to retry a failed phase." unless current

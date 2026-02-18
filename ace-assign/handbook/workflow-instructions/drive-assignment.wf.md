@@ -66,7 +66,7 @@ When `ACE_ASSIGN_FORK_ROOT` is set, `ace-assign report` advances only within tha
 Helper command:
 
 ```bash
-ace-assign fork-run --assignment abc123@010.01
+ace-assign fork-run --root 010.01 --assignment abc123
 ```
 
 ### Multi-Assignment Management
@@ -145,7 +145,7 @@ Before executing the current phase inline, check whether the active phase is ins
 
 #### Delegation Rule
 
-- If `ACE_ASSIGN_FORK_ROOT` is already set: you are already inside fork scope, so continue inline and do not call `fork-run` again from this process.
+- If `ACE_ASSIGN_FORK_ROOT` is already set: you are already inside fork scope, so continue inline.
 - If `ACE_ASSIGN_FORK_ROOT` is not set and status output contains:
   - `Fork subtree detected (root: <phase-number> - <phase-name>).`
   then delegate the subtree via `fork-run` and restart the loop.
