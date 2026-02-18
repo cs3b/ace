@@ -6,3 +6,5 @@ priority: high
 requires:
   tools: [rg]
   ruby: ">= 3.0"
+last-verified: 2026-02-17
+verified-by: claude-sonnet-4-6

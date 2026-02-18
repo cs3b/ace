@@ -24,7 +24,7 @@ class AssignmentInfoTest < AceAssignTestCase
   def test_state_running
     phases = [
       make_phase(number: "010", name: "first", status: :done),
-      make_phase(number: "020", name: "second", status: :in_progress),
+      Ace::Assign::Models::Phase.new(number: "020", name: "second", status: :in_progress, instructions: "Test", started_at: Time.now - 60),
       make_phase(number: "030", name: "third", status: :pending)
     ]
     state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
@@ -59,13 +59,27 @@ class AssignmentInfoTest < AceAssignTestCase
   end
 
   def test_state_failed
+    # Failed but NOT all complete (has pending) → :failed
+    phases = [
+      make_phase(number: "010", name: "first", status: :failed),
+      make_phase(number: "020", name: "second", status: :pending)
+    ]
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+    info = Ace::Assign::Models::AssignmentInfo.new(assignment: @assignment, queue_state: state)
+
+    assert_equal :failed, info.state
+  end
+
+  def test_state_completed_with_failures
+    # All phases complete (done or failed) → :completed
     phases = [
       make_phase(number: "010", name: "first", status: :failed)
     ]
     state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
     info = Ace::Assign::Models::AssignmentInfo.new(assignment: @assignment, queue_state: state)
 
-    assert_equal :failed, info.state
+    assert_equal :completed, info.state
+    assert info.completed?
   end
 
   def test_state_empty
