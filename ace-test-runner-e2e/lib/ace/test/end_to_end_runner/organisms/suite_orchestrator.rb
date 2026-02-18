@@ -206,7 +206,7 @@ module Ace
           # @param options [Hash] Execution options
           # @return [Hash] Summary of results
           def run_sequential(package_tests, options)
-            results = { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
+            results = { total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {} }
             start_time = Time.now
 
             # Pre-generate unique run IDs for all tests
@@ -239,10 +239,12 @@ module Ace
 
                 # Update totals
                 results[:total] += 1
+                results[:total_cases] += (result[:total_cases] || 0)
+                results[:passed_cases] += (result[:passed_cases] || 0)
                 case result[:status]
                 when "pass"
                   results[:passed] += 1
-                when "fail"
+                when "fail", "partial"
                   results[:failed] += 1
                 when "error"
                   results[:errors] += 1
@@ -267,7 +269,7 @@ module Ace
           # @param options [Hash] Execution options
           # @return [Hash] Summary of results
           def run_parallel(package_tests, options)
-            results = { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
+            results = { total: 0, passed: 0, failed: 0, errors: 0, total_cases: 0, passed_cases: 0, packages: {} }
             queue = build_test_queue(package_tests)
             run_ids = generate_run_ids(queue.size)
             queue.each_with_index { |item, i| item[:run_id] = run_ids[i] }
@@ -451,13 +453,15 @@ module Ace
 
                 # Update results
                 results[:total] += 1
+                results[:total_cases] += (result[:total_cases] || 0)
+                results[:passed_cases] += (result[:passed_cases] || 0)
                 results[:packages][process[:package]] ||= []
                 results[:packages][process[:package]] << result
 
                 case result[:status]
                 when "pass"
                   results[:passed] += 1
-                when "fail"
+                when "fail", "partial"
                   results[:failed] += 1
                 when "error"
                   results[:errors] += 1
@@ -536,7 +540,11 @@ module Ace
                      test_name: test_name }
 
             if exit_status == 0
-              base.merge(status: "pass", summary: "Test passed")
+              if passed_cases && total_cases && passed_cases < total_cases
+                base.merge(status: "fail", summary: "#{passed_cases}/#{total_cases} passed")
+              else
+                base.merge(status: "pass", summary: "Test passed")
+              end
             elsif output.include?("ERROR") || output.include?("Error:")
               error_msg = output.match(/Error: (.+?)$/m)&.captures&.first || "Unknown error"
               base.merge(status: "error", error: error_msg)

@@ -7,10 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.3] - 2026-02-18
+
+### Fixed
+
+- Suite runner now correctly detects partial test failures when subprocess exits with code 0 but has fewer passed cases than total cases
+- "partial" status now counted as failed in both sequential and parallel suite execution paths
+- Suite summary now displays test-case-level counts (passed/failed/percentage) alongside test-level counts
+
+## [0.16.2] - 2026-02-18
+
 ### Changed
 
-- **Package renamed** from `ace-test-e2e-runner` to `ace-test-runner-e2e` for naming consistency with `ace-test-runner` base package
-- **Binary renamed** from `ace-test-suite-e2e` to `ace-test-e2e-suite` to place `-e2e` qualifier as infix after `test`
+- Remove all MT-format references from e2e-testing guide — TS-format is now the only documented convention
+- Remove `--format mt` parameter from create-e2e-test workflow — TS-format is the only option
+- Remove MT-format discovery commands (`find ... -name "*.mt.md"`) from run-e2e-test, run-e2e-tests, review-e2e-tests, and rewrite-e2e-tests workflows
+- Update setup-e2e-sandbox workflow to use `TS-` prefix in examples and sed patterns
+- Update fix-e2e-tests workflow to remove MT-format file references
+- Update all example test IDs and cache paths from `MT-LINT-001`/`mt001` to `TS-LINT-001`/`ts001`
+
+## [0.16.1] - 2026-02-18
+
+### Fixed
+
+- `ace-test-e2e-suite` now reads `execution.parallel` from config instead of hardcoding `0` (sequential), matching `ace-test-e2e` behavior
+
+### Changed
+
+- Package renamed from `ace-test-e2e-runner` to `ace-test-runner-e2e` for naming consistency with `ace-test-runner` base package
+- Binary renamed from `ace-test-suite-e2e` to `ace-test-e2e-suite` to place `-e2e` qualifier as infix after `test`
 
 ## [0.16.0] - 2026-02-12
 

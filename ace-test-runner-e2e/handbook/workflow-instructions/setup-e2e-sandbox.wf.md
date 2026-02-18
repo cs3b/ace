@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: E2E test environment setup workflow
 params:
   package: Package being tested
-  test_id: E2E test ID (e.g., MT-LINT-001)
+  test_id: E2E test ID (e.g., TS-LINT-001)
 tools:
   - Bash
   - Read
@@ -52,7 +52,7 @@ TIMESTAMP_ID="$(ace-b36ts encode)"
 # Extract short names from test metadata
 # Note: params are lowercase (package, test_id) - use them directly
 SHORT_PKG="${package#ace-}"  # Remove ace- prefix
-SHORT_ID="$(echo "$test_id" | tr '[:upper:]' '[:lower:]' | tr '-' '')"  # mt001
+SHORT_ID="$(echo "$test_id" | tr '[:upper:]' '[:lower:]' | tr '-' '')"  # ts001
 
 # Create sandbox and reports directories
 TEST_DIR=".cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
@@ -322,16 +322,15 @@ After running:
 
 ### With E2E Test Files
 
-Add setup section to `.mt.md` test:
+Add setup directives to `scenario.yml`:
 
-```markdown
-## Environment Setup
-
-Follow `wfi://setup-e2e-sandbox` with:
-- package: ace-lint
-- test_id: MT-LINT-001
-- needs_git: true
-- external_api: false
+```yaml
+# scenario.yml
+setup:
+  - git-init
+  - copy-fixtures
+  - env:
+      PROJECT_ROOT_PATH: "."
 ```
 
 ### With /ace:run-e2e-test
@@ -355,7 +354,7 @@ TIMESTAMP_ID="$(ace-b36ts encode)"
 
 # Derive short names (adjust PACKAGE and TEST_ID as needed)
 SHORT_PKG="${PACKAGE#ace-}"
-SHORT_ID=$(echo "$TEST_ID" | sed 's/MT-[A-Z]*-/mt/' | tr '[:upper:]' '[:lower:]')
+SHORT_ID=$(echo "$TEST_ID" | sed 's/TS-[A-Z]*-/ts/' | tr '[:upper:]' '[:lower:]')
 
 # Create sandbox and reports directories
 TEST_DIR="$PROJECT_ROOT/.cache/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"

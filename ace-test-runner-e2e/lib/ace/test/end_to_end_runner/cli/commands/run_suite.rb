@@ -43,7 +43,7 @@ module Ace
               "--cli-args dangerously-skip-permissions  # Pass args to provider"
             ]
 
-            option :parallel, type: :string, default: "0",
+            option :parallel, type: :string, default: Molecules::ConfigLoader.default_parallel.to_s,
                    desc: "Number of parallel workers (0 = sequential)"
             option :affected, type: :boolean, desc: "Only test affected packages"
             option :only_failures, type: :boolean,

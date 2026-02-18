@@ -298,14 +298,14 @@ class SuiteOrchestratorTest < Minitest::Test
     discoverer = StubDiscoverer.new(packages: [], tests: {})
     orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
 
-    # Simulate a process hash with output containing case counts
+    # Simulate a process hash with output where all cases pass
     thread = Minitest::Mock.new
     exit_status = Minitest::Mock.new
     exit_status.expect(:exitstatus, 0)
     thread.expect(:value, exit_status)
 
     process = {
-      output: "Result: \u2713 PASS  5/8 cases\nReport: /tmp/report",
+      output: "Result: \u2713 PASS  8/8 cases\nReport: /tmp/report",
       thread: thread,
       test_file: "/path/to/TS-TEST-001-test/scenario.yml"
     }
@@ -313,9 +313,32 @@ class SuiteOrchestratorTest < Minitest::Test
     result = orchestrator.send(:parse_subprocess_result, process)
 
     assert_equal "pass", result[:status]
-    assert_equal 5, result[:passed_cases]
+    assert_equal 8, result[:passed_cases]
     assert_equal 8, result[:total_cases]
     assert_equal "TS-TEST-001-test", result[:test_name]
+  end
+
+  def test_parse_subprocess_result_detects_partial_as_fail_on_exit_zero
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+    thread = Minitest::Mock.new
+    exit_status = Minitest::Mock.new
+    exit_status.expect(:exitstatus, 0)
+    thread.expect(:value, exit_status)
+
+    process = {
+      output: "Result: ✓ PARTIAL  3/5 cases\nReport: /tmp/report",
+      thread: thread,
+      test_file: "/path/to/TS-TEST-001-test/scenario.yml"
+    }
+
+    result = orchestrator.send(:parse_subprocess_result, process)
+
+    assert_equal "fail", result[:status]
+    assert_equal 3, result[:passed_cases]
+    assert_equal 5, result[:total_cases]
+    assert_equal "3/5 passed", result[:summary]
   end
 
   def test_parse_subprocess_result_handles_no_case_counts
@@ -338,6 +361,70 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal "pass", result[:status]
     assert_nil result[:passed_cases]
     assert_nil result[:total_cases]
+  end
+
+  def test_partial_status_counted_as_failed_in_sequential
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint"],
+      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output,
+      suite_report_writer: StubSuiteReportWriter.new,
+      scenario_loader: StubScenarioLoader.new,
+      timestamp_generator: -> { "abc1234" }
+    )
+
+    def orchestrator.run_single_test(package, test_file, options, run_id: nil)
+      { status: "partial", summary: "3/5 passed", passed_cases: 3, total_cases: 5,
+        test_name: "TS-LINT-001-test" }
+    end
+
+    results = orchestrator.run(parallel: false)
+
+    assert_equal 1, results[:total]
+    assert_equal 0, results[:passed]
+    assert_equal 1, results[:failed]
+    assert_equal 5, results[:total_cases]
+    assert_equal 3, results[:passed_cases]
+  end
+
+  def test_case_counts_accumulated_across_tests
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint"],
+      tests: { "ace-lint" => [
+        "/path/to/TS-LINT-001-test/scenario.yml",
+        "/path/to/TS-LINT-002-test/scenario.yml"
+      ] }
+    )
+
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output,
+      suite_report_writer: StubSuiteReportWriter.new,
+      scenario_loader: StubScenarioLoader.new,
+      timestamp_generator: -> { "abc1234" }
+    )
+
+    call_count = 0
+    orchestrator.define_singleton_method(:run_single_test) do |package, test_file, options, run_id: nil|
+      call_count += 1
+      if call_count == 1
+        { status: "pass", summary: "Test passed", passed_cases: 5, total_cases: 5,
+          test_name: "TS-LINT-001-test" }
+      else
+        { status: "fail", summary: "3/8 passed", passed_cases: 3, total_cases: 8,
+          test_name: "TS-LINT-002-test" }
+      end
+    end
+
+    results = orchestrator.run(parallel: false)
+
+    assert_equal 2, results[:total]
+    assert_equal 13, results[:total_cases]
+    assert_equal 8, results[:passed_cases]
   end
 
   # --- Suite report generation tests ---
