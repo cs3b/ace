@@ -36,22 +36,7 @@ module Ace
           # @param backup_path [String, nil] Custom backup path
           # @return [Hash] Result with :success, :message, :report keys
           def clean(tokens: nil, dry_run: false, force: false, create_backup: true, backup_path: nil)
-            # Check prerequisites
-            unless rewriter.available?
-              return {
-                success: false,
-                message: Molecules::GitRewriter::FILTER_REPO_INSTALL_INSTRUCTIONS
-              }
-            end
-
-            unless rewriter.clean_working_directory?
-              return {
-                success: false,
-                message: "Working directory has uncommitted changes. Commit or stash first."
-              }
-            end
-
-            # Scan if tokens not provided
+            # Scan if tokens not provided (needed for both dry-run and actual run)
             if tokens.nil?
               report = scanner.scan
               tokens = report.tokens
@@ -65,9 +50,24 @@ module Ace
               }
             end
 
-            # Dry run - just show what would be removed
+            # Dry run - just show what would be removed (no rewriter needed)
             if dry_run
               return dry_run_result(tokens)
+            end
+
+            # Check prerequisites (only needed for actual rewrite)
+            unless rewriter.available?
+              return {
+                success: false,
+                message: Molecules::GitRewriter::FILTER_REPO_INSTALL_INSTRUCTIONS
+              }
+            end
+
+            unless rewriter.clean_working_directory?
+              return {
+                success: false,
+                message: "Working directory has uncommitted changes. Commit or stash first."
+              }
             end
 
             # Require confirmation unless forced
