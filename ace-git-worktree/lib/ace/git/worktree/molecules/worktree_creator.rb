@@ -73,6 +73,11 @@ module Ace
               # Build full path
               worktree_path = File.join(config.absolute_root_path, directory_name)
 
+              # Ensure parent directory exists before validation
+              # (PathExpander rejects paths whose parent doesn't exist yet)
+              parent_dir = File.dirname(worktree_path)
+              FileUtils.mkdir_p(parent_dir) unless File.exist?(parent_dir)
+
               # Validate worktree path
               validation = validate_worktree_path(worktree_path, git_root)
               return error_result(validation[:error]) unless validation[:valid]
