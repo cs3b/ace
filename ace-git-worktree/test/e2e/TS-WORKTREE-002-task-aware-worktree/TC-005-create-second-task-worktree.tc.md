@@ -21,7 +21,7 @@ Verify multiple task worktrees can coexist.
 
 3. Verify both tasks have worktrees
    ```bash
-   ace-git-worktree list --task-associated --format json | grep -c '"task":'
+   ace-git-worktree list --task-associated --format json | grep -c '"task_id":'
    ```
 
 ## Expected
