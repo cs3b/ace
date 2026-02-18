@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.11.16)
+    ace-assign (0.11.17)
       ace-b36ts (~> 0.4)
       ace-llm (~> 0.14)
       ace-support-config (~> 0.6)
@@ -67,7 +67,7 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.13.2)
+    ace-git-worktree (0.13.3)
       ace-git (~> 0.4)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
@@ -77,7 +77,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.10.11)
+    ace-git (0.10.13)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.9)
       dry-cli (~> 1.0)
@@ -121,6 +121,19 @@ PATH
       faraday (~> 2.0)
       kramdown (~> 2.0)
       kramdown-parser-gfm (~> 1.0)
+
+PATH
+  remote: ace-overseer
+  specs:
+    ace-overseer (0.2.9)
+      ace-assign (~> 0.11)
+      ace-git (~> 0.10)
+      ace-git-worktree (~> 0.13)
+      ace-support-config (~> 0.7)
+      ace-support-core (~> 0.22)
+      ace-taskflow (~> 0.36)
+      ace-tmux (~> 0.5)
+      dry-cli (~> 1.0)
 
 PATH
   remote: ace-prompt-prep
@@ -219,7 +232,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.36.3)
+    ace-taskflow (0.36.2)
       ace-b36ts (~> 0.2)
       ace-git (~> 0.3)
       ace-support-config (~> 0.6)
@@ -232,7 +245,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.16.0)
+    ace-test-runner-e2e (0.16.3)
       ace-b36ts (>= 0.3)
       ace-llm (>= 0.1)
       ace-support-config (>= 0.6)
@@ -255,7 +268,7 @@ PATH
 PATH
   remote: ace-test
   specs:
-    ace-test (0.1.1)
+    ace-test (0.1.2)
 
 PATH
   remote: ace-tmux
@@ -389,6 +402,7 @@ DEPENDENCIES
   ace-lint!
   ace-llm!
   ace-llm-providers-cli!
+  ace-overseer!
   ace-prompt-prep!
   ace-review!
   ace-search!

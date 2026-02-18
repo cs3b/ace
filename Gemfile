@@ -24,6 +24,7 @@ gem 'ace-support-markdown', path: 'ace-support-markdown'
 gem 'ace-b36ts', path: 'ace-b36ts'
 gem 'ace-tmux', path: 'ace-tmux'
 gem 'ace-taskflow', path: 'ace-taskflow'
+gem 'ace-overseer', path: 'ace-overseer'
 gem 'ace-test-runner', path: 'ace-test-runner'
 
 # Shared dev/test tools for all gems
