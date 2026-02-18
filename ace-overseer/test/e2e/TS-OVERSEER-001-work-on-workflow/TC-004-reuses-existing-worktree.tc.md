@@ -24,7 +24,7 @@ Verify that running `ace-overseer work-on --task 001` a second time reuses the e
 
 3. Verify only one worktree for task 001 (no duplicate)
    ```bash
-   WORKTREE_COUNT=$(git worktree list | grep -c "001")
+   WORKTREE_COUNT=$(git worktree list | grep -c "task\.001")
    [ "$WORKTREE_COUNT" -eq 1 ] && echo "PASS: Exactly 1 worktree for task 001" || echo "FAIL: Expected 1 worktree, found $WORKTREE_COUNT"
    ```
 
