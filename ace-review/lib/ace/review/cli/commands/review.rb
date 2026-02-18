@@ -252,6 +252,14 @@ module Ace
 
           puts
           puts "Total duration: #{result[:summary][:total_duration]}s"
+
+          if result[:feedback_count]
+            puts
+            puts "Feedback: #{result[:feedback_count]} items extracted"
+          elsif result[:feedback_error]
+            puts
+            puts "Feedback extraction failed: #{result[:feedback_error]}"
+          end
         end
 
         def handle_error(result)
