@@ -367,6 +367,7 @@ module Ace
           #
           # @option options [Boolean] :force Force removal even with changes
           # @option options [Boolean] :remove_directory Also remove the directory
+          # @option options [Boolean] :ignore_untracked Ignore untracked files when checking changes
           def remove(identifier, options = {})
             begin
               return error_result("Worktree identifier is required") if identifier.nil? || identifier.empty?
@@ -389,7 +390,8 @@ module Ace
                 worktree.path,
                 force: options[:force],
                 remove_directory: options[:remove_directory] != false,
-                delete_branch: options[:delete_branch] == true
+                delete_branch: options[:delete_branch] == true,
+                ignore_untracked: options[:ignore_untracked] == true
               )
 
               if result[:success]

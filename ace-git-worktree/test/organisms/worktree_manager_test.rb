@@ -62,6 +62,26 @@ class WorktreeManagerTest < Minitest::Test
     refute result[:success]
   end
 
+  def test_remove_forwards_ignore_untracked_option
+    worktree = Struct.new(:path, :description).new("/tmp/.ace-wt/task.001", "task.001")
+    captured = nil
+    fake_remover = Object.new
+    fake_remover.define_singleton_method(:remove) do |path, **options|
+      captured = { path: path, options: options }
+      { success: true }
+    end
+    @manager.instance_variable_set(:@worktree_remover, fake_remover)
+
+    @manager.stub(:find_worktree_by_identifier, worktree) do
+      result = @manager.remove("001", ignore_untracked: true)
+      assert result[:success]
+    end
+
+    assert_equal "/tmp/.ace-wt/task.001", captured[:path]
+    assert_equal true, captured[:options][:ignore_untracked]
+    assert_nil captured[:options][:force]
+  end
+
   def test_remove_task_api_exists
     result = @manager.remove_task(nil)
     assert result.is_a?(Hash)
