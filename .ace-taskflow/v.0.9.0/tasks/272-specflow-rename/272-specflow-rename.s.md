@@ -1,10 +1,16 @@
 ---
 id: v.0.9.0+task.272
-status: draft
+status: in-progress
 priority: medium
 estimate: 22h
 dependencies:
-  - v.0.9.0+task.271
+- v.0.9.0+task.271
+worktree:
+  branch: 272-rename-ace-taskflow-to-ace-specflow
+  path: "../ace-task.272"
+  created_at: '2026-02-19 09:02:12'
+  updated_at: '2026-02-19 09:02:12'
+  target_branch: main
 ---
 
 # Rename ace-taskflow to ace-specflow
