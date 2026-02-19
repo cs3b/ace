@@ -1,5 +1,5 @@
 ---
-name: work-on-subtasks
+name: task/work-subtasks
 allowed-tools: Bash, Read, Task, AskUserQuestion, TodoWrite
 description: Execute orchestrator task by delegating subtasks to worktrees
 argument-hint: "[orchestrator-task-id]"

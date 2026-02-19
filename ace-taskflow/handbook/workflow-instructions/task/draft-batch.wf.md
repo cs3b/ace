@@ -1,5 +1,5 @@
 ---
-name: draft-tasks
+name: task/draft-batch
 allowed-tools: Bash, Read, Task
 description: Create multiple draft tasks from idea files in sequence
 argument-hint: "[idea-pattern]"
@@ -19,7 +19,7 @@ Process multiple idea files and create draft tasks for each one in sequence, wit
 ## Prerequisites
 
 - Idea files exist in backlog (discoverable via `ace-taskflow ideas --backlog`)
-- Access to `draft-task` singular workflow via `ace-bundle wfi://draft-task`
+- Access to `draft-task` singular workflow via `ace-bundle wfi://task/draft`
 - Understanding of ace-taskflow commands
 
 ## Variables
@@ -63,7 +63,7 @@ Execute draft-task workflow for idea: [idea-file-path]
 ARGUMENTS: [idea-file-path]
 
 Follow the complete draft-task workflow:
-1. Read and execute: ace-bundle wfi://draft-task
+1. Read and execute: ace-bundle wfi://task/draft
 2. Create draft task with status: draft
 3. Follow all workflow steps exactly
 4. Report task ID and path when complete
