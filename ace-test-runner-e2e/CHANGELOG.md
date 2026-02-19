@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.6] - 2026-02-19
+
+### Technical
+- Namespace workflow instructions into e2e/ subdirectory with updated wfi:// URIs
+- Update skill name references to use namespaced ace:e2e-action format
+
 ## [0.16.5] - 2026-02-19
 
 ### Fixed
