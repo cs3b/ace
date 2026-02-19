@@ -231,7 +231,7 @@ steps:
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: ace:work-on-task
+    skill: ace:task-work
     context: fork
     instructions:
       - "Work on task 148."
@@ -268,7 +268,7 @@ expansion:
     name: "work-on-{{item}}"
     parent: "010"
     context: fork
-    skill: ace:work-on-task
+    skill: ace:task-work
     instructions: "Implement task {{item}}"
 ```
 

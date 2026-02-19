@@ -177,13 +177,13 @@ Invoke the referenced skill as the primary action, extracting parameters from th
 
 ```yaml
 - name: work-on-task
-  skill: ace:work-on-task
+  skill: ace:task-work
   instructions: |
     Work on task 148.
     Follow project conventions.
 ```
 
-**Agent Action:** Run `/ace:work-on-task 148` then follow the skill workflow.
+**Agent Action:** Run `/ace:task-work 148` then follow the skill workflow.
 
 #### If Phase Has No Skill
 
@@ -328,10 +328,10 @@ When executing a phase with a `skill:` field:
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
 | `onboard` | `/onboard` | Load project context |
-| `ace:work-on-task` | `/ace:work-on-task <taskref>` | Implement task changes |
+| `ace:task-work` | `/ace:task-work <taskref>` | Implement task changes |
 | `ace:create-pr` | `/ace:create-pr` | Create pull request |
 | `ace:review-pr` | `/ace:review-pr [pr#]` | Review code changes |
-| `ace:commit` | `/ace:commit` | Generate commit message |
+| `ace:git-commit` | `/ace:git-commit` | Generate commit message |
 | `ace:update-pr-desc` | `/ace:update-pr-desc` | Update PR description |
 
 ## Error Handling
@@ -426,8 +426,8 @@ Phase 010 marked done, advancing to 020
 $ ace-assign status
 Phase 020: work-on-task [in_progress]
 
-# 5. Execute next phase (has skill: ace:work-on-task)
-$ /ace:work-on-task 148
+# 5. Execute next phase (has skill: ace:task-work)
+$ /ace:task-work 148
 [Task workflow runs...]
 
 # 6. Report and continue...
