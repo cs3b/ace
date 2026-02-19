@@ -238,7 +238,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ```
 > "Bump version for ace-taskflow"
-> or: /ace-bump-version ace-taskflow
+> or: /ace:release-bump-version ace-taskflow
 
 Package: ace-taskflow
 Current: 0.11.3
@@ -252,7 +252,7 @@ New Version: 0.11.4
 ### Example 2: Explicit Minor Bump
 
 ```
-> "/ace-bump-version ace-core minor"
+> "/ace:release-bump-version ace-core minor"
 
 Package: ace-core
 Current: 0.9.3
@@ -266,7 +266,7 @@ New Version: 0.10.0
 ### Example 3: Explicit Major Bump
 
 ```
-> "/ace-bump-version ace-lint major"
+> "/ace:release-bump-version ace-lint major"
 
 Package: ace-lint
 Current: 0.2.0

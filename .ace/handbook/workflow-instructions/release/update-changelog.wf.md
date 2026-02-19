@@ -223,7 +223,7 @@ grep -A 5 "## \[$NEW_VERSION\]" CHANGELOG.md
 ### Example 1: Interactive Update
 
 ```
-> "/ace-update-changelog"
+> "/ace:release-update-changelog"
 
 Current release: v.0.9.0
 Last version: 0.12.0
@@ -247,7 +247,7 @@ Technical changes?
 ### Example 2: Direct Description
 
 ```
-> "/ace-update-changelog Added ace-lint integration for markdown linting"
+> "/ace:release-update-changelog Added ace-lint integration for markdown linting"
 
 Current release: v.0.9.0
 Last version: 0.9.1
@@ -262,7 +262,7 @@ Category: Added
 ### Example 3: Multiple Categories
 
 ```
-> "/ace-update-changelog"
+> "/ace:release-update-changelog"
 
 [Provide multiple items across categories]
 
@@ -285,7 +285,7 @@ Result:
 ## Notes
 
 * This workflow updates **main project CHANGELOG** only (not package CHANGELOGs)
-* For package-specific changelogs, use `/ace-bump-version [package]`
+* For package-specific changelogs, use `/ace:release-bump-version [package]`
 * Version always follows current release: v.0.9.0 → 0.9.X
 * When release changes (e.g., v.0.10.0), version resets to 0.10.1
 * Patch level increments for **any** change (no semantic versioning rules)
