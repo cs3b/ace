@@ -289,9 +289,35 @@ module Ace
         end
 
         def archive_idea(args)
-          puts "Archiving idea..."
-          puts "Note: This functionality is not yet implemented"
-          exit 0
+          reference = args.first
+
+          unless reference
+            puts "Usage: ace-taskflow idea archive <reference>"
+            puts "Example: ace-taskflow idea archive implement-caching"
+            return 1
+          end
+
+          # Find the idea
+          release = parse_release(args[1..-1] || [])
+          idea = @idea_loader.find_by_partial_name(reference, release: release)
+
+          unless idea
+            puts "No idea found matching '#{reference}' in #{release_name(release)}."
+            return 1
+          end
+
+          # Move idea to archive
+          require_relative "../molecules/idea_directory_mover"
+          mover = Molecules::IdeaDirectoryMover.new
+          result = mover.move_to_archive(idea[:path])
+
+          if result[:success]
+            puts "Idea '#{reference}' archived and moved to _archive/"
+            puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
+          else
+            puts "Error: #{result[:message]}"
+            return 1
+          end
         end
 
         # Validates idea file structure and reports any misplaced ideas.
