@@ -35,19 +35,8 @@ module Ace
             progress.call("Worktree exists at #{worktree[:worktree_path]}")
           end
 
-          window_name = Atoms::WindowNameFormatter.format(
-            task_ref,
-            format: @config["window_name_format"] || "t{task_id}"
-          )
-          session_name = @config["tmux_session_name"] || "ace"
-
-          progress.call("Opening tmux window '#{window_name}' in session '#{session_name}'...")
-          @tmux_window_opener.open(
-            worktree_path: worktree[:worktree_path],
-            window_name: window_name,
-            session_name: session_name,
-            preset: @config["window_preset"] || "cc"
-          )
+          progress.call("Opening tmux window...")
+          @tmux_window_opener.open(worktree_path: worktree[:worktree_path])
 
           progress.call("Checking assignment status...")
           existing = if @assignment_detector
@@ -78,7 +67,6 @@ module Ace
             worktree_path: worktree[:worktree_path],
             branch: worktree[:branch],
             worktree_created: worktree[:created],
-            window_name: window_name,
             assignment_id: assignment_result[:assignment_id],
             first_phase: assignment_result[:first_phase],
             assignment_created: assignment_result[:created]
