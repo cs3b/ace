@@ -1,5 +1,5 @@
 ---
-name: start-assignment
+name: assign/start
 allowed-tools: Bash, Read, Write, AskUserQuestion
 description: Create and start an assignment from preset or instructions (prepare + create)
 argument-hint: "[preset-name] [--taskref value] [--taskrefs values]"
@@ -72,7 +72,7 @@ Determine the path based on input:
 Run the prepare workflow (legacy path):
 
 ```bash
-ace-bundle wfi://prepare-assignment
+ace-bundle wfi://assign/prepare
 ```
 
 #### Otherwise (default):
@@ -80,7 +80,7 @@ ace-bundle wfi://prepare-assignment
 Run the compose workflow:
 
 ```bash
-ace-bundle wfi://compose-assignment
+ace-bundle wfi://assign/compose
 ```
 
 Both paths produce a `job.yaml` file.
@@ -90,7 +90,7 @@ Both paths produce a `job.yaml` file.
 Run the create workflow:
 
 ```bash
-ace-bundle wfi://create-assignment
+ace-bundle wfi://assign/create
 ```
 
 This creates the assignment directory structure and initializes the work queue.
