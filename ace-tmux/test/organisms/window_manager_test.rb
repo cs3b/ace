@@ -241,6 +241,31 @@ class WindowManagerTest < Minitest::Test
     assert_equal 1, focus_cmds.length
   end
 
+  def test_add_window_failure_includes_stderr_in_error
+    executor = TmuxTestHelper::MockExecutor.new(
+      capture_responses: {
+        :default => mock_result(stdout: "", stderr: "session not found: bad-session\n", success: false, exit_code: 1)
+      }
+    )
+
+    loader = Ace::Tmux::Molecules::PresetLoader.new(
+      gem_root: @temp_dir,
+      start_path: @temp_dir
+    )
+    builder = Ace::Tmux::Molecules::SessionBuilder.new(preset_loader: loader)
+    manager = Ace::Tmux::Organisms::WindowManager.new(
+      executor: executor,
+      session_builder: builder
+    )
+
+    error = assert_raises(RuntimeError) do
+      manager.add_window("code-editor", session: "bad-session")
+    end
+
+    assert_includes error.message, "Failed to create window"
+    assert_includes error.message, "session not found"
+  end
+
   def test_add_window_flat_layout_unchanged
     # Existing flat presets should work identically
     @manager.add_window("code-editor", session: "dev")

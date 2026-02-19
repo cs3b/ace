@@ -45,7 +45,10 @@ module Ace
             tmux: @tmux
           )
           result = @executor.capture(cmd)
-          raise "Failed to create window" unless result.success?
+          unless result.success?
+            detail = result.respond_to?(:stderr) && !result.stderr.to_s.empty? ? ": #{result.stderr.strip}" : ""
+            raise "Failed to create window#{detail}"
+          end
 
           window_target = result.stdout.strip
           setup_panes(window, window_target, effective_root)
