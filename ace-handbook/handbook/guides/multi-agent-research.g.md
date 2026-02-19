@@ -130,7 +130,7 @@ You have completed initial research on [topic]. Below are reports from peer agen
 
 ## Synthesis Process Overview
 
-Synthesis combines multiple agent outputs into a unified result. See [Synthesize Research Workflow](wfi://synthesize-research) for detailed execution steps.
+Synthesis combines multiple agent outputs into a unified result. See [Synthesize Research Workflow](wfi://handbook/synthesize-research) for detailed execution steps.
 
 ### Key Phases
 
@@ -226,8 +226,8 @@ The synthesis should be performed by a dedicated aggregator (human or agent) who
 ## Related Resources
 
 - [Research Comparison Template](tmpl://research-comparison) - Structured comparison matrix
-- [Synthesize Research Workflow](wfi://synthesize-research) - Detailed synthesis process
-- [Parallel Research Workflow](wfi://parallel-research) - Setting up parallel execution
+- [Synthesize Research Workflow](wfi://handbook/synthesize-research) - Detailed synthesis process
+- [Parallel Research Workflow](wfi://handbook/parallel-research) - Setting up parallel execution
 
 ## References
 

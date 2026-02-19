@@ -614,7 +614,7 @@ project-root/
 
 ## References
 
-- wfi://initialize-project-structure
+- wfi://handbook/init-project
 - tmpl://project-docs/ (various templates)
 - tmpl://task-management/task-next-steps
 - guide://project-management
