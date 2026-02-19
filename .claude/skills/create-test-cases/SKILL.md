@@ -19,4 +19,4 @@ source: generated
 
 read and run `ace-bundle wfi://test/create-cases`
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-bundle wfi://git/commit`

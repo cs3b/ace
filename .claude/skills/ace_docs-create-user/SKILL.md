@@ -20,4 +20,4 @@ source: generated
 
 read and run `ace-bundle wfi://docs/create-user`
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-bundle wfi://git/commit`
