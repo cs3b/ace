@@ -224,6 +224,13 @@ module Ace
         end
         private_class_method :separator_line
 
+        def self.format_watch_footer(next_full_refresh_secs)
+          now = Time.now.strftime("%H:%M:%S")
+          mins, secs = next_full_refresh_secs.divmod(60)
+          remaining = mins > 0 ? "#{mins}m #{secs}s" : "#{secs}s"
+          colorize("Updated: #{now} \u00B7 full refresh in #{remaining}", :dim)
+        end
+
         def self.colorize(text, color)
           "#{COLOR[color]}#{text}#{COLOR[:reset]}"
         end

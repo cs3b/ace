@@ -324,6 +324,28 @@ class StatusFormatterTest < AceOverseerTestCase
     assert_includes row, "5/5"
   end
 
+  def test_format_watch_footer_with_minutes_and_seconds
+    footer = Ace::Overseer::Atoms::StatusFormatter.format_watch_footer(222)
+
+    assert_includes footer, "Updated:"
+    assert_includes footer, "3m 42s"
+    assert_includes footer, "full refresh in"
+    assert_match(/\e\[2m/, footer) # dim color
+  end
+
+  def test_format_watch_footer_seconds_only
+    footer = Ace::Overseer::Atoms::StatusFormatter.format_watch_footer(45)
+
+    assert_includes footer, "45s"
+    refute_includes footer, "m "
+  end
+
+  def test_format_watch_footer_zero_seconds
+    footer = Ace::Overseer::Atoms::StatusFormatter.format_watch_footer(0)
+
+    assert_includes footer, "0s"
+  end
+
   def test_assignment_row_with_missing_id
     assignment = {
       "assignment" => { "state" => "running", "name" => "work-on-task" },
