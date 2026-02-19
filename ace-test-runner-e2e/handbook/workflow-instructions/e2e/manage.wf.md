@@ -120,7 +120,7 @@ Produce a combined summary of the full pipeline run:
 
 1. {If tests not run: Run `/ace:run-e2e-tests {PACKAGE}` to verify}
 2. {If tests failed: Investigate failures}
-3. Commit changes with `/ace:commit`
+3. Commit changes with `/ace:git-commit`
 ```
 
 ## Example Invocations
