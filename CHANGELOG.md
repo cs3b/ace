@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.538] - 2026-02-19
+
+### Fixed
+
+- **ace-test-runner-e2e v0.16.5**: Detect slash-command mis-invocation failures early and enforce deterministic report-dir matching to prevent stale E2E report fallback
+
+### Changed
+
+- **ace-test-runner-e2e v0.16.5**: Clarify run-e2e skill/workflow guidance so `/ace:run-e2e-test` is explicitly executed in chat context, not bash
+
 ## [0.9.537] - 2026-02-19
 
 ### Fixed
