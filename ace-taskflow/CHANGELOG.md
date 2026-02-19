@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.4] - 2026-02-19
+
+### Technical
+- Namespace workflow instructions into domain subdirectories: task/, bug/, idea/, retro/, release/
+- Update wfi:// protocol URIs throughout
+
 ## [0.39.3] - 2026-02-19
 
 ### Fixed
