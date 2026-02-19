@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.527] - 2026-02-19
+
+### Fixed
+
+- **ace-tmux v0.5.4**: Fix "index N in use" error when creating tmux windows in sessions with `base-index` set
+
+### Changed
+
+- **ace-overseer v0.2.16**: `TmuxWindowOpener` no longer manages tmux sessions — delegates entirely to ace-tmux `WindowManager` for window creation, session detection, and dedup
+
 ## [0.9.526] - 2026-02-19
 
 ### Fixed
