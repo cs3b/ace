@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.523] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.36.3**: Fix duplicate display of parent tasks in task listings — promote single-named parent tasks to orchestrators when subtasks reference them, and add relationship building to glob-loaded tasks
+
 ## [0.9.522] - 2026-02-17
 
 ### Fixed
