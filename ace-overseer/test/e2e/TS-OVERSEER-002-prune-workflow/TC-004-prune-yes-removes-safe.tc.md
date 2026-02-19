@@ -37,7 +37,7 @@ Verify that `ace-overseer prune --yes` removes the safe worktree (task 001), clo
    WORKTREE_LIST=$(git worktree list 2>&1)
    echo "Worktree list after prune:"
    echo "$WORKTREE_LIST"
-   echo "$WORKTREE_LIST" | grep -q "001" && echo "FAIL: Task 001 worktree still exists after prune!" || echo "PASS: Task 001 worktree removed"
+   echo "$WORKTREE_LIST" | grep -q "task\.001" && echo "FAIL: Task 001 worktree still exists after prune!" || echo "PASS: Task 001 worktree removed"
    ```
 
 6. Verify tmux cleanup for pruned task
