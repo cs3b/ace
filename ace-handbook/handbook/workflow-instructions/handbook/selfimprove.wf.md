@@ -209,6 +209,6 @@ After user approval:
 
 ## Related Resources
 
-- [Manage Workflow Instructions](wfi://manage-workflow-instructions) - Creating and updating workflows
-- [Manage Guides](wfi://manage-guides) - Creating and updating guides
+- [Manage Workflow Instructions](wfi://handbook/manage-workflows) - Creating and updating workflows
+- [Manage Guides](wfi://handbook/manage-guides) - Creating and updating guides
 - [Create Retro](skill://ace_create-retro) - Documenting learnings from incidents

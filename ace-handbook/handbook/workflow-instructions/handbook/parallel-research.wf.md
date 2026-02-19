@@ -174,7 +174,7 @@ Set up and execute parallel research across multiple AI agents, producing consis
 
 3. **Invoke Synthesis**
    - Run `/ace:synthesize-research {research_folder}`
-   - Or follow `wfi://synthesize-research` manually
+   - Or follow `wfi://handbook/synthesize-research` manually
 
 ## Embedded Templates
 
@@ -317,5 +317,5 @@ Below are reports from peer agents. Review them to:
 ## Related Resources
 
 - [Multi-Agent Research Guide](guide://multi-agent-research) - When and why to use multi-agent research
-- [Synthesize Research Workflow](wfi://synthesize-research) - Next phase after parallel research
+- [Synthesize Research Workflow](wfi://handbook/synthesize-research) - Next phase after parallel research
 - [Research Comparison Template](tmpl://research-comparison) - Template for synthesis phase
