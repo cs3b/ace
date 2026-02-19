@@ -58,7 +58,8 @@ module Ace
         end
 
         def extract_task_id(worktree_path, branch)
-          from_path = worktree_path.to_s[/(?:^|\/)task\.(\d+(?:\.\d+)?)(?:\/|$)/, 1]
+          # Match "task.NNN" or "ace-task.NNN" in path (directory naming convention)
+          from_path = worktree_path.to_s[/(?:^|\/)(?:ace-)?task\.(\d+(?:\.\d+)?)(?:\/|$)/, 1]
           return from_path if from_path
 
           branch.to_s[/^(\d+(?:\.\d+)?)/, 1] || "unknown"
