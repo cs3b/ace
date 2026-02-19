@@ -45,13 +45,20 @@ module Ace
           # @param force [Boolean] Force removal even if there are uncommitted changes
           # @param remove_directory [Boolean] Also remove the worktree directory
           # @param delete_branch [Boolean] Also delete the associated branch
+          # @param ignore_untracked [Boolean] Treat untracked files as clean for removal checks
           # @return [Hash] Result with :success, :message, :error
           #
           # @example
           #   remover = WorktreeRemover.new
           #   result = remover.remove("/project/.ace-wt/task.081")
           #   # => { success: true, message: "Worktree removed successfully", error: nil }
-          def remove(worktree_path, force: false, remove_directory: true, delete_branch: false)
+          def remove(
+            worktree_path,
+            force: false,
+            remove_directory: true,
+            delete_branch: false,
+            ignore_untracked: false
+          )
             return error_result("Worktree path is required") if worktree_path.nil? || worktree_path.empty?
 
             begin
@@ -62,7 +69,7 @@ module Ace
               return error_result("Worktree not found at #{expanded_path}") unless worktree_info
 
               # Check for uncommitted changes
-              if !force && has_uncommitted_changes?(expanded_path)
+              if !force && has_uncommitted_changes?(expanded_path, ignore_untracked: ignore_untracked)
                 return error_result("Worktree has uncommitted changes. Use --force to remove anyway.")
               end
 
@@ -305,15 +312,19 @@ module Ace
           # Check if worktree has uncommitted changes
           #
           # @param worktree_path [String] Worktree path
+          # @param ignore_untracked [Boolean] Ignore untracked files when checking cleanliness
           # @return [Boolean] true if there are uncommitted changes
-          def has_uncommitted_changes?(worktree_path)
+          def has_uncommitted_changes?(worktree_path, ignore_untracked: false)
             return false unless File.exist?(worktree_path)
 
             # Change to worktree directory and check git status
             original_dir = Dir.pwd
             begin
               Dir.chdir(worktree_path)
-              result = execute_git_command("status", "--porcelain")
+              status_args = ["status", "--porcelain"]
+              status_args << "--untracked-files=no" if ignore_untracked
+
+              result = execute_git_command(*status_args)
               result[:success] && !result[:output].strip.empty?
             ensure
               Dir.chdir(original_dir)
