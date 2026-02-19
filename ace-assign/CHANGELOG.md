@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.18] - 2026-02-19
+
+### Changed
+- Remove dead `print_fork_scope_guidance` method and duplicate `fork_scope_root` definition from status command
+
 ## [0.11.17] - 2026-02-17
 
 ### Fixed
