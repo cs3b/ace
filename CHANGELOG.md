@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.535] - 2026-02-19
+
+### Fixed
+
+- **ace-overseer v0.2.11**: Add `exit!(1)` safety net after `exec` in forked status worker and filter nil contexts from failed parallel workers to prevent `NoMethodError`
+
+### Changed
+
+- **ace-assign v0.11.18**: Remove dead `print_fork_scope_guidance` method and duplicate `fork_scope_root` definition from status command
+
 ## [0.9.534] - 2026-02-18
 
 ### Changed

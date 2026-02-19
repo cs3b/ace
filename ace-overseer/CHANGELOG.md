@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-02-19
+
+### Fixed
+- Add `exit!(1)` safety net after `exec` in forked status worker to prevent child process leaking parent state if exec fails
+- Filter nil contexts from failed parallel workers with `.compact` to prevent `NoMethodError` in dashboard formatting
+
 ## [0.2.10] - 2026-02-18
 
 ### Changed
