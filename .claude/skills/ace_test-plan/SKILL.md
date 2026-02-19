@@ -1,6 +1,6 @@
 ---
-name: ace:verify-test-suite
-description: Verify test suite health and enforce performance budgets
+name: ace:test-plan
+description: Create a test responsibility map and coverage plan before writing code
 # context: no-fork
 # agent: general-purpose
 user-invocable: true
@@ -13,9 +13,9 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-argument-hint: [package | path | mode:quick|standard|deep]
+argument-hint: [feature | package | task]
 last_modified: 2026-01-31
 source: ace-test
 ---
 
-read and run `ace-bundle wfi://verify-test-suite`
+read and run `ace-bundle wfi://test/plan`

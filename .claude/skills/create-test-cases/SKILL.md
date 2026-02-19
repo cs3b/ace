@@ -17,6 +17,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://create-test-cases`
+read and run `ace-bundle wfi://test/create-cases`
 
 read and run `ace-bundle wfi://commit`

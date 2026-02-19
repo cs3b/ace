@@ -1,6 +1,6 @@
 ---
-name: ace:plan-tests
-description: Create a test responsibility map and coverage plan before writing code
+name: ace:test-optimize
+description: Profile and refactor slow tests to restore fast-loop performance
 # context: no-fork
 # agent: general-purpose
 user-invocable: true
@@ -13,9 +13,9 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-argument-hint: [feature | package | task]
+argument-hint: [package | path]
 last_modified: 2026-01-31
 source: ace-test
 ---
 
-read and run `ace-bundle wfi://plan-tests`
+read and run `ace-bundle wfi://test/optimize`
