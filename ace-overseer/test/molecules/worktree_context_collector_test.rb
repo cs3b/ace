@@ -112,6 +112,63 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
+  FakeAssignmentInfo = Struct.new(:assignment) do
+    def completed?
+      false
+    end
+  end
+
+  class FakeDiscoverer
+    def initialize(count)
+      @items = Array.new(count) { FakeAssignmentInfo.new(nil) }
+    end
+
+    def find_all(include_completed: false)
+      @items
+    end
+  end
+
+  def test_collect_includes_assignment_count
+    Dir.mktmpdir("task.234") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        assignment_executor_factory: -> { ActiveExecutor.new },
+        repo_status_loader: -> { FakeRepoStatus.new("234-feature", { "clean" => true }) },
+        assignment_discoverer_factory: -> { FakeDiscoverer.new(3) }
+      )
+
+      context = collector.collect(worktree)
+
+      assert_equal 3, context.assignment_count
+    end
+  end
+
+  def test_collect_defaults_assignment_count_to_zero_on_error
+    Dir.mktmpdir("task.235") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        assignment_executor_factory: -> { NoAssignmentExecutor.new },
+        repo_status_loader: -> { FakeRepoStatus.new("235-feature", { "clean" => true }) },
+        assignment_discoverer_factory: -> { raise "boom" }
+      )
+
+      context = collector.collect(worktree)
+
+      assert_equal 0, context.assignment_count
+    end
+  end
+
+  def test_collect_passes_location_type
+    Dir.mktmpdir("main-branch") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        assignment_executor_factory: -> { NoAssignmentExecutor.new },
+        repo_status_loader: -> { FakeRepoStatus.new("main", { "clean" => true }) }
+      )
+
+      context = collector.collect(worktree, location_type: :main)
+
+      assert_equal :main, context.location_type
+    end
+  end
+
   def test_collect_extracts_four_digit_task_ids_from_worktree_path
     Dir.mktmpdir("collector-root") do |root|
       worktree = File.join(root, "task.1234")

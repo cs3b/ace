@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-19
+
+### Added
+- Assignment-aware status display — main branch appears in `status` when it has active assignments
+- Assignment count shown in Assign column when location has multiple assignments (e.g., `abc12 (3)`)
+- `--assignment` / `-a` option for `prune` command to remove a specific assignment's cache directory
+- `AssignmentPruneCandidate` model for assignment-level prune safety checking
+- `AssignmentPruneSafetyChecker` molecule to evaluate assignment prune safety
+- `AssignmentManager#delete` method in ace-assign for removing assignment cache and cleaning up symlinks
+- `assignment_count` and `location_type` fields on `WorkContext` model
+
+### Changed
+- `StatusCollector` now collects main branch context alongside worktree contexts
+- `StatusFormatter` sorts main branch row last, displays `main` in Task column with dim styling
+- `WorktreeContextCollector` counts assignments per location via `AssignmentDiscoverer`
+- `PruneOrchestrator` supports assignment-level pruning path with safety checks and force override
+- Widened Assign column from 6 to 10 characters to accommodate count display
+- IPC serialization includes `assignment_count` for parallel subprocess collection
+
 ## [0.2.17] - 2026-02-19
 
 ### Changed

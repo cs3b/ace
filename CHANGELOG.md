@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.529] - 2026-02-19
+
+### Added
+
+- **ace-overseer v0.3.0**: Assignment-aware status display — main branch appears in `status` when it has active assignments, assignment count shown per location
+- **ace-overseer v0.3.0**: `--assignment` / `-a` option for `prune` command to remove a specific assignment's cache directory
+- **ace-overseer v0.3.0**: `AssignmentPruneCandidate` model and `AssignmentPruneSafetyChecker` molecule for assignment-level prune safety
+- **ace-assign**: `AssignmentManager#delete` method for removing assignment cache directories with symlink cleanup
+
+### Changed
+
+- **ace-overseer v0.3.0**: `StatusCollector` collects main branch context alongside worktree contexts; `StatusFormatter` sorts main branch last with dim `main` label
+- **ace-overseer v0.3.0**: `WorktreeContextCollector` counts assignments per location; `WorkContext` model extended with `assignment_count` and `location_type` fields
+- **ace-overseer v0.3.0**: `PruneOrchestrator` supports assignment-level pruning path with safety checks and force override
+
 ## [0.9.528] - 2026-02-19
 
 ### Changed

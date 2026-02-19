@@ -238,6 +238,95 @@ class StatusFormatterTest < AceOverseerTestCase
     assert_includes row, "8or5kx"
   end
 
+  def test_assignment_count_displayed_when_greater_than_one
+    context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "235",
+      worktree_path: "/tmp/ace-task.235",
+      branch: "235-feature",
+      assignment_status: {
+        "assignment" => { "state" => "running", "id" => "8or5kx" },
+        "phase_summary" => { "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 }
+      },
+      git_status: { "clean" => true },
+      assignment_count: 3
+    )
+
+    row = Ace::Overseer::Atoms::StatusFormatter.format_row(context)
+
+    assert_includes row, "8or5kx (3)"
+  end
+
+  def test_assignment_count_hidden_when_one
+    context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "235",
+      worktree_path: "/tmp/ace-task.235",
+      branch: "235-feature",
+      assignment_status: {
+        "assignment" => { "state" => "running", "id" => "8or5kx" },
+        "phase_summary" => { "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 }
+      },
+      git_status: { "clean" => true },
+      assignment_count: 1
+    )
+
+    row = Ace::Overseer::Atoms::StatusFormatter.format_row(context)
+
+    assert_includes row, "8or5kx"
+    refute_includes row, "(1)"
+  end
+
+  def test_main_location_shows_main_in_task_column
+    context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "main",
+      worktree_path: "/project",
+      branch: "main",
+      assignment_status: {
+        "assignment" => { "state" => "completed", "id" => "xyz99" },
+        "phase_summary" => { "total" => 3, "done" => 3, "failed" => 0, "in_progress" => 0, "pending" => 0 }
+      },
+      git_status: { "clean" => true },
+      location_type: :main,
+      assignment_count: 2
+    )
+
+    row = Ace::Overseer::Atoms::StatusFormatter.format_row(context)
+
+    assert_includes row, "main"
+    assert_includes row, "xyz99 (2)"
+  end
+
+  def test_main_branch_sorts_last
+    main_ctx = Ace::Overseer::Models::WorkContext.new(
+      task_id: "main",
+      worktree_path: "/project",
+      branch: "main",
+      assignment_status: {
+        "assignment" => { "state" => "completed", "id" => "xyz99" },
+        "phase_summary" => { "total" => 3, "done" => 3, "failed" => 0, "in_progress" => 0, "pending" => 0 }
+      },
+      git_status: { "clean" => true },
+      location_type: :main
+    )
+
+    worktree_ctx = Ace::Overseer::Models::WorkContext.new(
+      task_id: "230",
+      worktree_path: "/tmp/ace-task.230",
+      branch: "230-feature",
+      assignment_status: {
+        "assignment" => { "state" => "running" },
+        "phase_summary" => { "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 }
+      },
+      git_status: { "clean" => true }
+    )
+
+    dashboard = Ace::Overseer::Atoms::StatusFormatter.format_dashboard([main_ctx, worktree_ctx])
+    lines = dashboard.split("\n")
+    data_lines = lines[2..] # skip header and separator
+
+    assert_includes data_lines[0], "230"
+    assert_includes data_lines[1], "main"
+  end
+
   def test_assignment_id_missing
     context = Ace::Overseer::Models::WorkContext.new(
       task_id: "100",

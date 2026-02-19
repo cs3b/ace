@@ -7,9 +7,10 @@ module Ace
   module Overseer
     module Organisms
       class StatusCollector
-        def initialize(worktree_manager: nil, context_collector: nil)
+        def initialize(worktree_manager: nil, context_collector: nil, project_root: nil)
           @worktree_manager = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @context_collector = context_collector || Molecules::WorktreeContextCollector.new
+          @project_root = project_root
         end
 
         def collect
@@ -18,6 +19,9 @@ module Ace
 
           worktrees = Array(result[:worktrees]).select(&:task_associated?)
           contexts = collect_contexts_parallel(worktrees)
+
+          main_context = collect_main_context
+          contexts.unshift(main_context) if main_context&.assignment_status
 
           {
             contexts: contexts
@@ -35,6 +39,29 @@ module Ace
         end
 
         private
+
+        def collect_main_context
+          root = @project_root || resolve_project_root
+          return nil unless root
+
+          @context_collector.collect(root, location_type: :main)
+        rescue StandardError
+          nil
+        end
+
+        def resolve_project_root
+          stdout, status = Open3.capture2(
+            "git", "rev-parse", "--path-format=absolute", "--git-common-dir"
+          )
+          return nil unless status.success?
+
+          common_dir = stdout.to_s.strip
+          return nil if common_dir.empty?
+
+          File.dirname(common_dir)
+        rescue StandardError
+          nil
+        end
 
         # Collect worktree contexts in parallel for ~Nx speedup
         # Each worktree involves GitHub API calls (~1s each), so parallelizing
@@ -65,7 +92,8 @@ module Ace
               worktree_path: context.worktree_path,
               branch: context.branch,
               assignment_status: context.assignment_status,
-              git_status: context.git_status
+              git_status: context.git_status,
+              assignment_count: context.assignment_count
             })
           RUBY
 
@@ -97,7 +125,8 @@ module Ace
                 worktree_path: data["worktree_path"],
                 branch: data["branch"],
                 assignment_status: data["assignment_status"],
-                git_status: data["git_status"]
+                git_status: data["git_status"],
+                assignment_count: data["assignment_count"] || 0
               )
             end
           end

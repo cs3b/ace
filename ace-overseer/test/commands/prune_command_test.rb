@@ -98,6 +98,59 @@ class PruneCommandTest < AceOverseerTestCase
     assert_includes out, "2 worktree(s) can be pruned."
   end
 
+  def test_assignment_option_forwarded_to_orchestrator
+    orchestrator = FakePruneOrchestrator.new(
+      result: {
+        dry_run: true,
+        assignment_candidate: Ace::Overseer::Models::AssignmentPruneCandidate.new(
+          assignment_id: "abc12", assignment_name: "work-on-task-230",
+          assignment_state: "completed", location_path: "/cache/abc12"
+        ),
+        pruned_assignments: []
+      }
+    )
+    command = Ace::Overseer::CLI::Commands::Prune.new(
+      orchestrator: orchestrator,
+      input: StringIO.new,
+      output: StringIO.new
+    )
+
+    out, = capture_io do
+      command.call(quiet: false, dry_run: true, yes: false, debug: false, assignment: "abc12")
+    end
+
+    assert_equal "abc12", orchestrator.calls.first[:assignment_id]
+    assert_includes out, "abc12"
+    assert_includes out, "completed"
+  end
+
+  def test_assignment_prune_shows_removed
+    orchestrator = FakePruneOrchestrator.new(
+      result: {
+        dry_run: false,
+        assignment_candidate: Ace::Overseer::Models::AssignmentPruneCandidate.new(
+          assignment_id: "abc12", assignment_name: "work-on-task-230",
+          assignment_state: "completed", location_path: "/cache/abc12"
+        ),
+        pruned_assignments: [Ace::Overseer::Models::AssignmentPruneCandidate.new(
+          assignment_id: "abc12", assignment_name: "work-on-task-230",
+          assignment_state: "completed", location_path: "/cache/abc12"
+        )]
+      }
+    )
+    command = Ace::Overseer::CLI::Commands::Prune.new(
+      orchestrator: orchestrator,
+      input: StringIO.new,
+      output: StringIO.new
+    )
+
+    out, = capture_io do
+      command.call(quiet: false, dry_run: false, yes: true, debug: false, assignment: "abc12")
+    end
+
+    assert_includes out, "Removed assignment abc12"
+  end
+
   def test_no_progress_output_in_quiet_mode
     orchestrator = FakePruneOrchestrator.new(
       result: { dry_run: false, safe: [], unsafe: [], pruned: [], failed: [], aborted: false }

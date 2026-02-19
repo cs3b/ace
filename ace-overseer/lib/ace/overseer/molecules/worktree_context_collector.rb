@@ -4,23 +4,27 @@ module Ace
   module Overseer
     module Molecules
       class WorktreeContextCollector
-        def initialize(assignment_executor_factory: nil, repo_status_loader: nil)
+        def initialize(assignment_executor_factory: nil, repo_status_loader: nil, assignment_discoverer_factory: nil)
           @assignment_executor_factory = assignment_executor_factory || -> { Ace::Assign::Organisms::AssignmentExecutor.new }
           @repo_status_loader = repo_status_loader || -> { Ace::Git::Organisms::RepoStatusLoader.load }
+          @assignment_discoverer_factory = assignment_discoverer_factory || -> { Ace::Assign::Molecules::AssignmentDiscoverer.new }
         end
 
-        def collect(worktree_path)
+        def collect(worktree_path, location_type: :worktree)
           with_worktree_context(worktree_path) do
             repo_status = @repo_status_loader.call
             assignment_status = load_assignment_status
             task_id = extract_task_id(worktree_path, repo_status.branch)
+            assignment_count = count_assignments
 
             Models::WorkContext.new(
               task_id: task_id,
               worktree_path: worktree_path,
               branch: repo_status.branch.to_s,
               assignment_status: assignment_status,
-              git_status: repo_status.to_h
+              git_status: repo_status.to_h,
+              assignment_count: assignment_count,
+              location_type: location_type
             )
           end
         end
@@ -55,6 +59,12 @@ module Ace
           }
         rescue Ace::Assign::NoActiveAssignmentError
           nil
+        end
+
+        def count_assignments
+          @assignment_discoverer_factory.call.find_all(include_completed: true).size
+        rescue StandardError
+          0
         end
 
         def extract_task_id(worktree_path, branch)
