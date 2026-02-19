@@ -9,14 +9,14 @@ This project has two distinct types of commands. Understanding the difference is
 ### Claude Commands (Slash Commands)
 
 **Run from:** Claude Code conversation (type directly in chat)
-**Prefix:** `/ace:` or `/meta-`
+**Prefix:** `/ace:`
 **Purpose:** Invoke AI-assisted workflows with full agent context
 
 Examples:
-- `/ace:work-on-task 148` - Work on a specific task with full context
-- `/ace:commit` - Generate intelligent commit with LLM assistance
+- `/ace:task-work 148` - Work on a specific task with full context
+- `/ace:git-commit` - Generate intelligent commit with LLM assistance
 - `/ace:review-pr 90` - Review a pull request with AI analysis
-- `/ace:draft-task` - Draft a new task specification
+- `/ace:task-draft` - Draft a new task specification
 
 ### CLI Tools (Terminal Commands)
 
@@ -36,7 +36,7 @@ ace-test atoms              # Run atom tests
 
 | Type | Environment | Prefix | Example |
 |------|-------------|--------|---------|
-| Claude Command | Chat | `/ace:` | `/ace:work-on-task 121` |
+| Claude Command | Chat | `/ace:` | `/ace:task-work 121` |
 | CLI Tool | Terminal | `ace-` | `ace-taskflow task 121` |
 
 ## Command Recognition
@@ -55,7 +55,7 @@ Agents should:
 2. Use this context instead of running redundant commands
 3. Reference embedded sections explicitly in responses
 
-**Example**: When `/ace:commit` is invoked, the workflow includes `<current_repository_status>` with git state. No need to run `git status` separately.
+**Example**: When `/ace:git-commit` is invoked, the workflow includes `<current_repository_status>` with git state. No need to run `git status` separately.
 
 For full patterns and guidance, run `ace-bundle guide://workflow-context-embedding`.
 
