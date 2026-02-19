@@ -4,14 +4,24 @@ module Ace
   module Overseer
     module Organisms
       class PruneOrchestrator
-        def initialize(worktree_manager: nil, prune_checker: nil, tmux_executor: nil, config: nil)
+        def initialize(worktree_manager: nil, prune_checker: nil, tmux_executor: nil, config: nil,
+                       assignment_prune_checker: nil, assignment_manager: nil)
           @worktree_manager = worktree_manager || Ace::Git::Worktree::Organisms::WorktreeManager.new
           @prune_checker = prune_checker || Molecules::PruneSafetyChecker.new
           @tmux_executor = tmux_executor || Ace::Tmux::Molecules::TmuxExecutor.new
           @config = config || Ace::Overseer.config
+          @assignment_prune_checker = assignment_prune_checker || Molecules::AssignmentPruneSafetyChecker.new
+          @assignment_manager = assignment_manager || Ace::Assign::Molecules::AssignmentManager.new
         end
 
-        def call(dry_run:, yes:, force: false, targets: [], input: $stdin, output: $stdout, on_progress: nil)
+        def call(dry_run:, yes:, force: false, targets: [], assignment_id: nil,
+                 input: $stdin, output: $stdout, on_progress: nil)
+          if assignment_id
+            return prune_assignment(assignment_id: assignment_id, dry_run: dry_run,
+                                    yes: yes, force: force, input: input, output: output,
+                                    on_progress: on_progress)
+          end
+
           progress = on_progress || ->(_msg) {}
 
           progress.call("Scanning task worktrees...")
@@ -74,6 +84,44 @@ module Ace
         end
 
         private
+
+        def prune_assignment(assignment_id:, dry_run:, yes:, force:, input:, output:, on_progress:)
+          progress = on_progress || ->(_msg) {}
+
+          progress.call("Checking assignment #{assignment_id}...")
+          candidate = @assignment_prune_checker.check(assignment_id: assignment_id)
+
+          if dry_run
+            return { dry_run: true, assignment_candidate: candidate, pruned_assignments: [] }
+          end
+
+          unless candidate.safe_to_prune? || force
+            output.puts("Cannot prune assignment #{assignment_id}: #{candidate.reasons.join(", ")}")
+            return { dry_run: false, assignment_candidate: candidate, pruned_assignments: [], blocked: true }
+          end
+
+          print_assignment_candidate(candidate, force, output)
+
+          unless yes
+            output.print("Continue? [y/N] ")
+            answer = input.gets.to_s.strip.downcase
+            unless %w[y yes].include?(answer)
+              return { dry_run: false, assignment_candidate: candidate, pruned_assignments: [], aborted: true }
+            end
+          end
+
+          deleted = @assignment_manager.delete(assignment_id)
+          pruned = deleted ? [candidate] : []
+
+          { dry_run: false, assignment_candidate: candidate, pruned_assignments: pruned }
+        end
+
+        def print_assignment_candidate(candidate, force, output)
+          label = candidate.safe_to_prune? ? "Safe to prune" : (force ? "Force removing" : "Blocked")
+          output.puts("#{label}: assignment #{candidate.assignment_id} (#{candidate.assignment_name})")
+          output.puts("  State: #{candidate.assignment_state}")
+          output.puts("  Reasons: #{candidate.reasons.join(", ")}") if candidate.reasons.any?
+        end
 
         def filter_by_targets(worktrees, targets)
           worktrees.select do |wt|

@@ -11,6 +11,7 @@ module Ace
 
           argument :targets, required: false, type: :array, desc: "Task refs or folder names to prune"
 
+          option :assignment, aliases: ["-a"], type: :string, desc: "Prune a specific assignment by ID"
           option :force, aliases: ["-f"], type: :boolean, default: false, desc: "Force-remove unsafe worktrees"
           option :yes, aliases: ["-y"], type: :boolean, default: false, desc: "Skip confirmation"
           option :dry_run, type: :boolean, default: false, desc: "Show candidates only"
@@ -32,12 +33,18 @@ module Ace
               yes: options[:yes],
               force: options[:force],
               targets: targets,
+              assignment_id: options[:assignment],
               input: @input,
               output: @output,
               on_progress: progress
             )
 
             return if options[:quiet]
+
+            if options[:assignment]
+              print_assignment_result(result)
+              return
+            end
 
             if result[:dry_run]
               print_dry_run(result)
@@ -55,6 +62,33 @@ module Ace
           end
 
           private
+
+          def print_assignment_result(result)
+            candidate = result[:assignment_candidate]
+            if result[:dry_run]
+              puts "Assignment: #{candidate.assignment_id} (#{candidate.assignment_name})"
+              puts "  State: #{candidate.assignment_state}"
+              puts "  Safe to prune: #{candidate.safe_to_prune? ? "yes" : "no"}"
+              puts "  Reasons: #{candidate.reasons.join(", ")}" if candidate.reasons.any?
+              return
+            end
+
+            if result[:aborted]
+              puts "Prune aborted."
+              return
+            end
+
+            if result[:blocked]
+              return
+            end
+
+            pruned = result[:pruned_assignments]
+            if pruned.any?
+              puts "Removed assignment #{candidate.assignment_id}."
+            else
+              puts "Failed to remove assignment #{candidate.assignment_id}."
+            end
+          end
 
           def print_dry_run(result)
             forced = Array(result[:forced])

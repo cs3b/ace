@@ -9,7 +9,7 @@ module Ace
         COL_PROGRESS = 17
         COL_PR = 10
         COL_GIT = 6
-        COL_ASSIGN = 6
+        COL_ASSIGN = 10
 
         # ANSI color helpers
         COLOR = {
@@ -53,12 +53,15 @@ module Ace
         end
 
         def self.format_row(context)
+          location_type = context.respond_to?(:location_type) ? context.location_type : :worktree
+          task_display = location_type == :main ? colorize("main".ljust(COL_TASK), :dim) : context.task_id.ljust(COL_TASK)
+
           # State, PR, Git, Assign are pre-padded to avoid ANSI code length issues
           # Order: Assign, Task, State, PR, Git, Progress
           format(
-            "%s %-#{COL_TASK}s %s %s %s %-#{COL_PROGRESS}s",
+            "%s %s %s %s %s %-#{COL_PROGRESS}s",
             colorized_assign(context),
-            context.task_id,
+            task_display,
             colorized_state(context),
             colorized_pr(context),
             colorized_git(context),
@@ -76,8 +79,11 @@ module Ace
 
         def self.sort_contexts(contexts)
           contexts.sort_by do |ctx|
+            location_type = ctx.respond_to?(:location_type) ? ctx.location_type : :worktree
+            main_sort = location_type == :main ? 1 : 0
             pr_num = extract_pr_number(ctx)
-            pr_num ? [1, -pr_num] : [0, -(ctx.task_id.to_f)]
+            pr_sort = pr_num ? [1, -pr_num] : [0, -(ctx.task_id.to_f)]
+            [main_sort] + pr_sort
           end
         end
         private_class_method :sort_contexts
@@ -208,8 +214,10 @@ module Ace
 
         def self.colorized_assign(context)
           id = assignment_id(context)
-          text = (id || "-").ljust(COL_ASSIGN)
-          colorize(text, :dim)
+          base = id || "-"
+          count = context.respond_to?(:assignment_count) ? context.assignment_count : 0
+          text = count > 1 ? "#{base} (#{count})" : base
+          colorize(text.ljust(COL_ASSIGN), :dim)
         end
         private_class_method :colorized_assign
 
