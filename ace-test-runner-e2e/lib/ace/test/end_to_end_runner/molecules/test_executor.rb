@@ -93,6 +93,19 @@ module Ace
               fallback: false
             )
 
+            invocation_error = detect_skill_invocation_error(response[:text])
+            if invocation_error
+              return Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: "error",
+                test_cases: [],
+                summary: "Skill invocation failed before test execution",
+                error: invocation_error,
+                started_at: started_at,
+                completed_at: Time.now
+              )
+            end
+
             parsed = Atoms::SkillResultParser.parse(response[:text])
             completed_at = Time.now
 
@@ -244,6 +257,19 @@ module Ace
                 timeout: @timeout, fallback: false
               )
 
+              invocation_error = detect_skill_invocation_error(response[:text])
+              if invocation_error
+                return Models::TestResult.new(
+                  test_id: scenario.test_id,
+                  status: "error",
+                  test_cases: [],
+                  summary: "TC skill invocation failed before test execution",
+                  error: invocation_error,
+                  started_at: started_at,
+                  completed_at: Time.now
+                )
+              end
+
               parsed = Atoms::SkillResultParser.parse_tc(response[:text])
               completed_at = Time.now
 
@@ -320,6 +346,39 @@ module Ace
             return nil if parts.empty?
 
             parts.join(" ")
+          end
+
+          # Detect common failure modes where the agent did not execute the
+          # /ace:run-e2e-test skill correctly.
+          #
+          # @param text [String] Raw LLM response text
+          # @return [String, nil] Error message when a known failure is detected
+          def detect_skill_invocation_error(text)
+            return nil if text.nil? || text.strip.empty?
+
+            checks = [
+              [/\/ace:run-e2e-test.*command not found/i, "The slash command was executed in a shell instead of chat."],
+              [/exit code 127.*\/ace:run-e2e-test|\/ace:run-e2e-test.*exit code 127/im, "The slash command failed with shell exit code 127."],
+              [/No tests found for package/i, "The test command ran in the wrong context or with invalid arguments."],
+              [/\bace-test\s+e2e\b/i, "An invalid command (`ace-test e2e`) was attempted instead of `ace-test-e2e`."],
+              [/slash commands are unavailable/i, "The agent reported slash commands are unavailable in this environment."]
+            ]
+
+            checks.each do |pattern, message|
+              next unless text.match?(pattern)
+
+              detail = extract_matching_line(text, pattern)
+              return "#{message} Detected output: #{detail}"
+            end
+
+            nil
+          end
+
+          def extract_matching_line(text, pattern)
+            line = text.to_s.lines.find { |candidate| candidate.match?(pattern) }
+            return line.strip if line && !line.strip.empty?
+
+            text.to_s.strip.split(/\s+/).first(30).join(" ")
           end
         end
       end

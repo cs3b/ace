@@ -22,6 +22,25 @@ class TestExecutorTest < Minitest::Test
     end
   end
 
+  def test_execute_via_skill_detects_shell_misinvocation
+    executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
+    scenario = create_scenario
+
+    bad_response = {
+      text: "bash: line 1: /ace:run-e2e-test: command not found"
+    }
+
+    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { bad_response }) do
+      result = executor.execute(scenario)
+
+      assert_equal "TS-LINT-001", result.test_id
+      assert_equal "error", result.status
+      assert_equal "Skill invocation failed before test execution", result.summary
+      assert_includes result.error, "slash command was executed in a shell"
+      assert_includes result.error, "/ace:run-e2e-test"
+    end
+  end
+
   def test_execute_via_prompt_catches_unexpected_error
     executor = TestExecutor.new(provider: "google:gemini-pro", timeout: 10)
     scenario = create_scenario
@@ -90,6 +109,25 @@ class TestExecutorTest < Minitest::Test
       assert_equal "error", result.status
       assert_includes result.error, "IOError"
       assert_includes result.error, "stream closed"
+    end
+  end
+
+  def test_execute_tc_via_skill_detects_no_tests_found_error
+    executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    tc = create_test_case
+
+    bad_response = {
+      text: "No tests found for package 'ace-overseer' with ID 'TS-OVERSEER-002'"
+    }
+
+    Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { bad_response }) do
+      result = executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario)
+
+      assert_equal "TS-LINT-001", result.test_id
+      assert_equal "error", result.status
+      assert_equal "TC skill invocation failed before test execution", result.summary
+      assert_includes result.error, "No tests found for package"
     end
   end
 
