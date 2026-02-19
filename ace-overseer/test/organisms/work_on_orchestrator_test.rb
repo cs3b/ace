@@ -146,6 +146,63 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     end
   end
 
+  def test_passes_subtask_refs_for_orchestrator_task
+    Dir.mktmpdir("task.272") do |worktree|
+      task = {
+        metadata: { "assign" => { "preset" => "work-on-tasks" } },
+        is_orchestrator: true,
+        subtask_ids: [
+          "v0.14+task.272.01",
+          "v0.14+task.272.02",
+          "v0.14+task.272.03"
+        ]
+      }
+      launcher = FakeAssignmentLauncher.new
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskLoader.new(task),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          { worktree_path: worktree, branch: "272-orchestrator", created: true }
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        assignment_launcher: launcher,
+        config: {
+          "default_assign_preset" => "work-on-task"
+        },
+        assignment_detector: ->(_path) { nil }
+      )
+
+      orchestrator.call(task_ref: "272")
+
+      assert_equal 1, launcher.calls.length
+      call = launcher.calls.first
+      assert_equal %w[272.01 272.02 272.03], call[:subtask_refs]
+    end
+  end
+
+  def test_does_not_pass_subtask_refs_for_non_orchestrator_task
+    Dir.mktmpdir("task.150") do |worktree|
+      task = { metadata: {}, is_orchestrator: false }
+      launcher = FakeAssignmentLauncher.new
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskLoader.new(task),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          { worktree_path: worktree, branch: "150-feature", created: true }
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        assignment_launcher: launcher,
+        config: {
+          "default_assign_preset" => "work-on-task"
+        },
+        assignment_detector: ->(_path) { nil }
+      )
+
+      orchestrator.call(task_ref: "150")
+
+      assert_equal 1, launcher.calls.length
+      assert_nil launcher.calls.first[:subtask_refs]
+    end
+  end
+
   def test_falls_back_to_cli_preset
     Dir.mktmpdir("task.231") do |worktree|
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(

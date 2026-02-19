@@ -12,10 +12,10 @@ module Ace
           @assignment_executor = assignment_executor
         end
 
-        def launch(worktree_path:, preset_name:, task_ref:)
+        def launch(worktree_path:, preset_name:, task_ref:, subtask_refs: nil)
           with_worktree_context(worktree_path) do
             preset = load_preset!(preset_name)
-            params = build_parameters(preset, task_ref)
+            params = build_parameters(preset, task_ref, subtask_refs)
             validate_parameters!(preset, params)
 
             steps = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
@@ -36,11 +36,13 @@ module Ace
 
         private
 
-        def build_parameters(preset, task_ref)
+        def build_parameters(preset, task_ref, subtask_refs)
           param_defs = preset["parameters"] || {}
           params = {}
           params["taskref"] = task_ref if param_defs.key?("taskref")
-          params["taskrefs"] = [task_ref] if param_defs.key?("taskrefs")
+          if param_defs.key?("taskrefs")
+            params["taskrefs"] = subtask_refs&.any? ? subtask_refs : [task_ref]
+          end
           params
         end
 
