@@ -55,6 +55,10 @@ module Ace
             fix_missing_field(issue[:location], $1)
           when /Missing default (\w+)/
             fix_missing_default(issue[:location], $1)
+          when /Stale backup file/
+            fix_stale_backup_file(issue[:location])
+          when /invalid nesting, should be in ideas/
+            fix_idea_invalid_nesting(issue[:location])
           else
             @skipped_count += 1
             false
@@ -75,7 +79,9 @@ module Ace
             /marked as done but not in #{done_dir}\/ directory/,
             /in #{done_dir}\/ directory but status is/,
             /Missing recommended field:/,
-            /Missing default/
+            /Missing default/,
+            /Stale backup file/,
+            /invalid nesting, should be in ideas/
           ]
 
           fixable_patterns.any? { |pattern| issue[:message].match?(pattern) }
@@ -240,6 +246,57 @@ module Ace
           fix_missing_field(file_path, item_name)
         end
 
+
+        def fix_stale_backup_file(file_path)
+          return false unless file_path && File.exist?(file_path)
+
+          if @dry_run
+            log_fix(file_path, "Would delete stale backup file")
+          else
+            File.delete(file_path)
+            log_fix(file_path, "Deleted stale backup file")
+          end
+
+          @fixed_count += 1
+          true
+        end
+
+        def fix_idea_invalid_nesting(file_path)
+          return false unless file_path && File.exist?(file_path)
+
+          # Move idea from maybe/_archive/ to ideas/_archive/
+          # Normalize: work with the idea's parent folder
+          idea_folder = File.dirname(file_path)
+          idea_name = File.basename(idea_folder)
+
+          # Navigate up from maybe/_archive/idea-folder to ideas/
+          # Path structure: .../ideas/maybe/_archive/idea-folder/file.md
+          archive_in_maybe = File.dirname(idea_folder)  # maybe/_archive/
+          maybe_in_ideas = File.dirname(archive_in_maybe) # maybe/
+          ideas_dir = File.dirname(maybe_in_ideas)        # ideas/
+
+          # Target: ideas/_archive/idea-folder
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+          target_archive = File.join(ideas_dir, archive_dir_name)
+          target_path = File.join(target_archive, idea_name)
+
+          if @dry_run
+            log_fix(idea_folder, "Would move from #{maybe_in_ideas}/#{archive_dir_name}/ to #{target_archive}/")
+          else
+            FileUtils.mkdir_p(target_archive) unless File.directory?(target_archive)
+
+            if File.exist?(target_path) || Dir.exist?(target_path)
+              @skipped_count += 1
+              return false
+            end
+
+            FileUtils.mv(idea_folder, target_path)
+            log_fix(idea_folder, "Moved from invalid nesting to #{archive_dir_name}/")
+          end
+
+          @fixed_count += 1
+          true
+        end
 
         def get_default_value(field_name)
           # Default values for common fields

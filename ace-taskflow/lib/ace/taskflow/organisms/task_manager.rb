@@ -321,6 +321,9 @@ module Ace
         # @param reference [String] Task reference
         # @return [Hash] Result with :success and :message
         def handle_subtask_completion(task, reference)
+          # Clean up backup files in the subtask's parent directory
+          cleanup_subtask_backup_files(task[:path])
+
           orchestrator_message = check_and_complete_orchestrator(task[:parent_id])
           message = "Subtask #{reference} marked as done"
           message += "\n#{orchestrator_message}" if orchestrator_message
@@ -1461,6 +1464,20 @@ module Ace
           yaml_content = yaml_output.sub(/\A---\n?/, "")
 
           "---\n#{yaml_content}---\n#{body}"
+        end
+
+        # Clean up backup files for a subtask's directory
+        # Reuses TaskDirectoryMover's cleanup logic
+        # @param subtask_path [String] Path to the subtask file
+        def cleanup_subtask_backup_files(subtask_path)
+          return unless subtask_path
+
+          task_dir = File.dirname(subtask_path)
+          return unless File.directory?(task_dir)
+
+          Dir.glob(File.join(task_dir, "**", "*.backup.*")).each do |backup_file|
+            File.delete(backup_file) if File.file?(backup_file)
+          end
         end
 
         # Generate subtask template content

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-02-19
+
+### Added
+- Doctor check for stale backup files in active task directories (warning with auto-fix)
+- Doctor check for idea scope/status consistency (detects `maybe/_archive/` nesting, mismatched status/location)
+- Doctor integration with `IdeaStructureValidator` for misplaced idea file detection
+- Auto-fix handler for stale backup files (delete) and invalid idea nesting (move to correct `_archive/`)
+- Implement `idea archive` command (was stub-only) using `IdeaDirectoryMover.move_to_archive`
+- Clean up backup files when subtasks are marked as done (previously only cleaned on full task archive)
+
 ## [0.37.3] - 2026-02-19
 
 ### Fixed
