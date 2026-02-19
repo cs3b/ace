@@ -30,18 +30,18 @@ All workflows are accessible through ace-nav:
 
 ```bash
 # Guide Management
-ace-nav wfi://manage-guides          # Create and update development guides
-ace-nav wfi://review-guides          # Review guides for quality and consistency
+ace-nav wfi://handbook/manage-guides          # Create and update development guides
+ace-nav wfi://handbook/review-guides          # Review guides for quality and consistency
 
 # Workflow Management
-ace-nav wfi://manage-workflow-instructions  # Create and validate workflow files
-ace-nav wfi://review-workflows       # Review workflow instructions
+ace-nav wfi://handbook/manage-workflows  # Create and validate workflow files
+ace-nav wfi://handbook/review-workflows       # Review workflow instructions
 
 # Agent Management
-ace-nav wfi://manage-agents          # Create and update agent definitions
+ace-nav wfi://handbook/manage-agents          # Create and update agent definitions
 
 # Documentation Sync
-ace-nav wfi://update-handbook-docs  # Update handbook README and structure
+ace-nav wfi://handbook/update-docs  # Update handbook README and structure
 # Claude Code integration workflows are now in ace-integration-claude gem
 ```
 

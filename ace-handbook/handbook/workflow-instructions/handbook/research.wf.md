@@ -109,7 +109,7 @@ If multi-agent approach selected:
    ```
    /ace:parallel-research [topic]
    ```
-   Or follow: `ace-bundle wfi://parallel-research`
+   Or follow: `ace-bundle wfi://handbook/parallel-research`
 
 2. **Complete Parallel Research Phases**
    - Setup: Define question, select agents
@@ -122,7 +122,7 @@ If multi-agent approach selected:
    ```
    /ace:synthesize-research [research_folder]
    ```
-   Or follow: `ace-bundle wfi://synthesize-research`
+   Or follow: `ace-bundle wfi://handbook/synthesize-research`
 
 4. **Complete Synthesis Phases**
    - Inventory: Catalog all outputs
@@ -235,6 +235,6 @@ Evaluate these factors:
 ## Related Resources
 
 - [Multi-Agent Research Guide](guide://multi-agent-research) - Detailed guidance on multi-agent approach
-- [Parallel Research Workflow](wfi://parallel-research) - Setting up parallel agent research
-- [Synthesize Research Workflow](wfi://synthesize-research) - Combining agent outputs
+- [Parallel Research Workflow](wfi://handbook/parallel-research) - Setting up parallel agent research
+- [Synthesize Research Workflow](wfi://handbook/synthesize-research) - Combining agent outputs
 - [Research Comparison Template](tmpl://research-comparison) - Template for synthesis
