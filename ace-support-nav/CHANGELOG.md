@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.7] - 2026-02-19
+
+### Technical
+- Add test coverage for subdirectory protocol resolution patterns
+
 ## [0.17.6] - 2026-02-17
 
 ### Fixed
