@@ -1,5 +1,5 @@
 ---
-name: ace:update-docs
+name: ace:docs-update
 description: Update documentation with ace-docs workflow
 # context: no-fork
 # agent: general-purpose
@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-docs
 ---
 
-read and run `ace-bundle wfi://update-docs`
+read and run `ace-bundle wfi://docs/update`

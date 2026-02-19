@@ -1,5 +1,5 @@
 ---
-name: ace-squash-changelog
+name: ace:docs-squash-changelog
 description: Squash multiple CHANGELOG.md entries into one before merge
 user-invocable: true
 allowed-tools:
@@ -12,4 +12,4 @@ allowed-tools:
 argument-hint: "[target-branch]"
 ---
 
-read and run `ace-bundle wfi://squash-changelog`
+read and run `ace-bundle wfi://docs/squash-changelog`

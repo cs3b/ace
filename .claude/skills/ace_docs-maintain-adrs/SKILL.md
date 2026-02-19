@@ -1,5 +1,5 @@
 ---
-name: ace:maintain-adrs
+name: ace:docs-maintain-adrs
 description: Maintain ADR lifecycle (evolve, archive, sync)
 # context: no-fork
 # agent: general-purpose
@@ -18,6 +18,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://maintain-adrs`
+read and run `ace-bundle wfi://docs/maintain-adrs`
 
 read and run `ace-bundle wfi://commit`
