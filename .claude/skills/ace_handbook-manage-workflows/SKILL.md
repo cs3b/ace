@@ -1,5 +1,5 @@
 ---
-name: meta-manage-workflow-instructions
+name: ace:handbook-manage-workflows
 title: "Meta: Manage Workflow Instructions"
 command: meta-manage-workflow-instructions
 description: Create, update, and maintain workflow instruction files
@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://manage-workflow-instructions
+For detailed instructions, see: ace-bundle wfi://handbook/manage-workflows

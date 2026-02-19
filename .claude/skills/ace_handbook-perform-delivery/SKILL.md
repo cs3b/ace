@@ -1,5 +1,5 @@
 ---
-name: ace:perform-delivery
+name: ace:handbook-perform-delivery
 description: Execute complete delivery workflow with automatic step tracking
 user-invocable: true
 allowed-tools:
@@ -18,4 +18,4 @@ last_modified: 2026-01-18
 source: ace-handbook
 ---
 
-read and run `ace-bundle wfi://perform-delivery`
+read and run `ace-bundle wfi://handbook/perform-delivery`
