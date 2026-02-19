@@ -1,5 +1,5 @@
 ---
-name: worktree
+name: git/worktree
 allowed-tools: Bash, Read
 description: Manage git worktrees with task-aware automation
 argument-hint: "[create|list|switch|remove|prune|config] [options]"
