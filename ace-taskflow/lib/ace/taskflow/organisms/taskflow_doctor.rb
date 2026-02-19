@@ -659,7 +659,8 @@ module Ace
               # A directory is "empty" if it contains no files (recursively)
               files = Dir.glob(File.join(path, "**", "*")).select { |f| File.file?(f) }
               if files.empty?
-                add_issue(:warning, "Empty directory (safe to delete)", path)
+                severity = path.include?("/_archive/") ? :info : :warning
+                add_issue(severity, "Empty directory (safe to delete)", path)
               end
             end
           end
@@ -694,9 +695,6 @@ module Ace
 
           # Deduct for warnings (moderate penalty)
           score -= @stats[:warnings] * 3
-
-          # Deduct for info issues (light penalty)
-          score -= @stats[:info] * 1
 
           # Ensure score is between 0 and 100
           [[score, 0].max, 100].min

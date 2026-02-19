@@ -37,6 +37,12 @@ module Ace
             return results[:valid] ? 0 : 1
           end
 
+          # Imply --auto-fix when --auto-fix-with-agent is used
+          options[:fix] = true if options[:fix_with_agent]
+
+          # --verbose-info implies --verbose
+          options[:verbose] = true if options[:verbose_info]
+
           # Run diagnosis
           results = run_diagnosis(options)
 
@@ -45,6 +51,7 @@ module Ace
             results,
             format: options[:format],
             verbose: options[:verbose],
+            verbose_info: options[:verbose_info],
             colors: !options[:no_color]
           )
           puts output
@@ -52,6 +59,11 @@ module Ace
           # Handle auto-fix if requested
           if options[:fix] && results[:issues] && results[:issues].any?
             handle_auto_fix(results, options)
+          end
+
+          # Handle agent-assisted fix for remaining issues
+          if options[:fix_with_agent]
+            handle_agent_fix(options)
           end
 
           # Return appropriate exit code
@@ -72,8 +84,11 @@ module Ace
             opts.on("--component TYPE", "-c TYPE", "Check specific component") { |v| parsed[:component] = v }
             opts.on("--check TYPE", "Run specific check") { |v| parsed[:check] = v }
             opts.on("--subtasks", "Shorthand for --check subtasks") { parsed[:check] = "subtasks" }
-            opts.on("--fix", "-f", "Attempt to auto-fix issues") { parsed[:fix] = true }
+            opts.on("--auto-fix", "-f", "Auto-fix safe issues") { parsed[:fix] = true }
+            opts.on("--auto-fix-with-agent", "Auto-fix then launch agent for remaining issues") { parsed[:fix_with_agent] = true }
+            opts.on("--model MODEL", "Provider:model for agent session (default from config)") { |v| parsed[:model] = v }
             opts.on("--quiet", "-q", "Quiet mode - just exit code") { parsed[:quiet] = true }
+            opts.on("--verbose-info", "Show all output including info-level items") { parsed[:verbose_info] = true }
             opts.on("--errors-only", "Show only errors, not warnings") { parsed[:errors_only] = true }
             opts.on("--no-color", "Disable colored output") { parsed[:no_color] = true }
             opts.on("--json", "Output in JSON format") do
@@ -141,6 +156,77 @@ module Ace
           end
         end
 
+        def handle_agent_fix(options)
+          require "ace/llm"
+          require "ace/llm/query_interface"
+
+          # Re-diagnose after auto-fix to count remaining issues
+          results = run_diagnosis(options)
+          remaining = results[:issues]&.reject { |i| i[:type] == :info }
+
+          if remaining.nil? || remaining.empty?
+            puts "\nNo remaining issues for agent to fix."
+            return
+          end
+
+          # Format remaining issues as plain-text list for the agent
+          issue_list = remaining.map { |i|
+            prefix = i[:type] == :error ? "ERROR" : "WARNING"
+            "- [#{prefix}] #{i[:message]}#{i[:location] ? " (#{i[:location]})" : ""}"
+          }.join("\n")
+
+          # Resolve provider:model
+          provider_model = options[:model] || resolve_agent_model
+
+          # Build prompt with embedded issue list
+          prompt = build_agent_prompt(remaining.size, issue_list)
+
+          puts "\nLaunching agent to fix #{remaining.size} remaining issues..."
+
+          # Invoke via QueryInterface (same pattern as E2E runner)
+          response = Ace::LLM::QueryInterface.query(
+            provider_model,
+            prompt,
+            system: nil,
+            cli_args: "dangerously-skip-permissions",
+            timeout: 600,
+            fallback: false
+          )
+
+          puts response[:text]
+        end
+
+        def resolve_agent_model
+          Ace::Taskflow.configuration.doctor_agent_model
+        end
+
+        def build_agent_prompt(issue_count, issue_list)
+          <<~PROMPT
+            /onboard
+
+            ---
+
+            The following #{issue_count} issues could NOT be auto-fixed and need manual intervention:
+
+            #{issue_list}
+
+            ---
+
+            Fix each issue listed above.
+
+            IMPORTANT RULES:
+            - SKIP all issues in archived releases (_archive/v.0.0.0 through _archive/v.0.8.0) — these are historical
+            - Only fix issues in active releases (v.0.9.0+) and backlog
+            - "Orphaned file" means a file doesn't match expected naming/location patterns for its directory
+            - "Partial YAML recovery" means frontmatter has YAML syntax errors — fix the YAML
+            - Do NOT delete content files — prefer moving/renaming to match conventions
+
+            ---
+
+            Run `ace-taskflow doctor --verbose` to verify all issues are fixed.
+          PROMPT
+        end
+
         def find_taskflow_root
           current = Dir.pwd
           while current != "/"
@@ -163,10 +249,13 @@ module Ace
               -r, --release VERSION     Check specific release (e.g., v.0.9.0)
               --check TYPE              Run specific check (frontmatter, structure, integrity, dependencies, subtasks)
               --subtasks                Shorthand for --check subtasks
-              -f, --fix                 Auto-fix safe issues
+              -f, --auto-fix            Auto-fix safe issues
+              --auto-fix-with-agent     Auto-fix then launch agent for remaining issues
+              --model MODEL             Provider:model for agent session (default from config)
               --dry-run                 Preview fixes without applying them
               --format FORMAT           Output format (terminal, json, summary)
-              -v, --verbose             Show detailed diagnostics
+              -v, --verbose             Show detailed diagnostics (all warnings)
+              --verbose-info            Show all output including info-level items
               -q, --quiet               Exit code only (0=healthy, 1=issues)
               --errors-only             Show only critical errors
               --no-color                Disable colored output
@@ -177,10 +266,16 @@ module Ace
               ace-taskflow doctor
 
               # Auto-fix common issues
-              ace-taskflow doctor --fix
+              ace-taskflow doctor --auto-fix
 
               # Preview what would be fixed
-              ace-taskflow doctor --fix --dry-run
+              ace-taskflow doctor --auto-fix --dry-run
+
+              # Auto-fix then launch agent for remaining issues
+              ace-taskflow doctor --auto-fix-with-agent
+
+              # Use specific model for agent
+              ace-taskflow doctor --auto-fix-with-agent --model claude:opus
 
               # Check specific component
               ace-taskflow doctor --component tasks

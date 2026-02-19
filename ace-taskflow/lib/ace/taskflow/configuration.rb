@@ -178,6 +178,11 @@ module Ace
         config.dig("status", "activity", "include_drafts") || false
       end
 
+      # Get provider:model for doctor agent sessions
+      def doctor_agent_model
+        config.dig("doctor", "agent_model") || "claude:sonnet"
+      end
+
       # Get idea-specific configuration
       # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def idea_config

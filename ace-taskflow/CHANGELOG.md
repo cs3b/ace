@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.3] - 2026-02-19
+
+### Fixed
+- Fix `handle_auto_fix` in CLI doctor always finding zero fixable issues due to using an undiagnosed doctor instance; now uses `results[:issues]` from the already-run diagnosis
+- Fix agent prompt issue list showing no file paths by using correct `:location` key instead of `:file`
+- Downgrade empty directory warnings to info severity when the directory is under `/_archive/`
+
+## [0.39.2] - 2026-02-19
+
+### Fixed
+- Embed formatted list of non-auto-fixable issues directly in agent prompt so the agent knows exactly what to work on without re-running `--auto-fix`
+
+## [0.39.1] - 2026-02-19
+
+### Fixed
+- Wire up `--auto-fix`, `--auto-fix-with-agent`, and `--model` options in dry-cli layer (`cli/commands/doctor.rb`) — previously only the unused standalone `DoctorCommand` had these options
+- Drop `--fix` backward-compatible alias per ADR-024
+
+## [0.39.0] - 2026-02-19
+
+### Added
+- `--auto-fix-with-agent` option for doctor command — runs deterministic auto-fix first, then launches LLM agent via `Ace::LLM::QueryInterface` to handle remaining issues
+- `--model MODEL` option to override provider:model for agent sessions
+- `doctor_agent_model` configuration setting (default: `claude:sonnet`)
+- `ace-llm` runtime dependency for agent-assisted fixing
+
+### Fixed
+- Pattern mismatch bug in `DoctorFixer` where `fix_issue`/`can_fix?` couldn't match task location messages from the doctor (regex expected "marked as done" but doctor generates "not in _archive/ directory")
+
+### Changed
+- Renamed `--fix` to `--auto-fix` (keeping `--fix` as backward-compatible alias)
+
 ## [0.38.2] - 2026-02-19
 
 ### Fixed

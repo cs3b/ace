@@ -34,14 +34,14 @@ module Ace
           blocked: "🔴"
         }.freeze
 
-        def self.format_results(results, format: :terminal, verbose: false, colors: true)
+        def self.format_results(results, format: :terminal, verbose: false, verbose_info: false, colors: true)
           case format.to_sym
           when :json
             format_json(results)
           when :summary
             format_summary(results, colors: colors)
           else
-            format_terminal(results, verbose: verbose, colors: colors)
+            format_terminal(results, verbose: verbose, verbose_info: verbose_info, colors: colors)
           end
         end
 
@@ -75,7 +75,7 @@ module Ace
 
         private
 
-        def self.format_terminal(results, verbose: false, colors: true)
+        def self.format_terminal(results, verbose: false, verbose_info: false, colors: true)
           output = []
 
           # Header
@@ -99,7 +99,7 @@ module Ace
           if results[:issues] && results[:issues].any?
             output << "\n#{colorize("Issues Found:", :yellow, colors)}"
             output << "-" * 20
-            output.concat(format_issues(results[:issues], verbose, colors))
+            output.concat(format_issues(results[:issues], verbose, verbose_info, colors))
           else
             output << "\n#{colorize("#{ICONS[:success]} All components healthy", :green, colors)}"
           end
@@ -231,7 +231,7 @@ module Ace
           output
         end
 
-        def self.format_issues(issues, verbose, colors)
+        def self.format_issues(issues, verbose, verbose_info, colors)
           output = []
 
           # Group issues by type
@@ -261,8 +261,8 @@ module Ace
             end
           end
 
-          # Show info (only in verbose mode)
-          if verbose && grouped[:info]
+          # Show info (only with --verbose-info)
+          if verbose_info && grouped[:info]
             output << "\n#{colorize("#{ICONS[:info]} Information (#{grouped[:info].size})", :blue, colors)}"
             grouped[:info].each_with_index do |issue, i|
               output << format_issue(issue, i + 1, colors)

@@ -38,6 +38,10 @@ taskflow:
     - superseded  # Task replaced by another task
     - skipped     # Task intentionally skipped (not needed)
 
+  # Doctor command settings
+  doctor:
+    agent_model: "claude:sonnet"   # Provider:model for --auto-fix-with-agent
+
   # Reference resolution settings
   references:
     allow_qualified: true        # Allow v.X.Y.Z+task.NNN format (default: true)

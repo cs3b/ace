@@ -47,7 +47,7 @@ module Ace
           case issue[:message]
           when /Missing closing '---' delimiter/
             fix_missing_delimiter(issue[:location])
-          when /marked as done but not in #{done_dir}\/ directory/
+          when /not in #{done_dir}\/ directory/
             fix_task_location(issue[:location], :move_to_done)
           when /in #{done_dir}\/ directory but status is/
             fix_task_status(issue[:location], "done")
@@ -78,7 +78,7 @@ module Ace
           # List of auto-fixable patterns
           fixable_patterns = [
             /Missing closing '---' delimiter/,
-            /marked as done but not in #{done_dir}\/ directory/,
+            /not in #{done_dir}\/ directory/,
             /in #{done_dir}\/ directory but status is/,
             /Missing recommended field:/,
             /Missing default/,
