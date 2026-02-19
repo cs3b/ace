@@ -8,8 +8,8 @@ dependencies:
 worktree:
   branch: 272-rename-ace-taskflow-to-ace-specflow
   path: "../ace-task.272"
-  created_at: '2026-02-19 09:02:12'
-  updated_at: '2026-02-19 09:02:12'
+  created_at: '2026-02-19 09:14:20'
+  updated_at: '2026-02-19 09:14:20'
   target_branch: main
 ---
 
