@@ -1,5 +1,5 @@
 ---
-name: meta-manage-agents
+name: ace:handbook-manage-agents
 title: "Meta: Manage Agents"
 command: meta-manage-agents
 description: Create, update, and maintain agent definitions following standardized guide
@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://manage-agents
+For detailed instructions, see: ace-bundle wfi://handbook/manage-agents

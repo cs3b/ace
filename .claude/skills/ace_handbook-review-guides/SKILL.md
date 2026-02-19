@@ -1,5 +1,5 @@
 ---
-name: meta-review-guides
+name: ace:handbook-review-guides
 title: "Meta: Review Guides"
 command: meta-review-guides
 description: Review and validate development guides for quality and consistency
@@ -58,4 +58,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://review-guides
+For detailed instructions, see: ace-bundle wfi://handbook/review-guides

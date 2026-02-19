@@ -1,5 +1,5 @@
 ---
-name: meta-update-handbook-docs
+name: ace:handbook-update-docs
 title: "Meta: Update Handbook Documentation"
 command: meta-update-handbook-docs
 description: Update and maintain handbook documentation and README files
@@ -61,4 +61,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://update-handbook-docs
+For detailed instructions, see: ace-bundle wfi://handbook/update-docs
