@@ -19,4 +19,4 @@ source: generated
 
 read and run `ace-bundle wfi://lint/run`
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-bundle wfi://git/commit`

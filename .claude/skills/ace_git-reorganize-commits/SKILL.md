@@ -1,5 +1,5 @@
 ---
-name: ace:reorganize-commits
+name: ace:git-reorganize-commits
 description: Reorganize commits into logical groups
 # context: no-fork
 # agent: general-purpose
@@ -13,4 +13,4 @@ last_modified: 2026-01-19
 source: ace-git
 ---
 
-read and run `ace-bundle wfi://reorganize-commits`
+read and run `ace-bundle wfi://git/reorganize-commits`
