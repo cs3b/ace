@@ -236,10 +236,12 @@ class TaskLoaderTest < AceTaskflowTestCase
 
   # ========== Hierarchical Task Tests (Subtask Support) ==========
 
-  def test_classify_task_file_orchestrator
+  def test_classify_task_file_orchestrator_is_now_single
+    # After removing .00 suffix, orchestrator files use NNN-orchestrator.s.md pattern
+    # which classifies as :single. Promotion to orchestrator happens via build_task_relationships.
     loader = Ace::Taskflow::Molecules::TaskLoader.new
-    assert_equal :orchestrator, loader.send(:classify_task_file, "121.00-orchestrator.s.md")
-    assert_equal :orchestrator, loader.send(:classify_task_file, "001.00-main.s.md")
+    assert_equal :single, loader.send(:classify_task_file, "121-orchestrator.s.md")
+    assert_equal :single, loader.send(:classify_task_file, "001-main.s.md")
   end
 
   def test_classify_task_file_subtask
@@ -264,14 +266,16 @@ class TaskLoaderTest < AceTaskflowTestCase
   def test_extract_parent_number
     loader = Ace::Taskflow::Molecules::TaskLoader.new
     assert_equal "121", loader.send(:extract_parent_number, "121.01-archive.s.md")
-    assert_equal "121", loader.send(:extract_parent_number, "121.00-orchestrator.s.md")
+    # Orchestrator files (NNN-orchestrator.s.md) no longer match subtask pattern
+    assert_nil loader.send(:extract_parent_number, "121-orchestrator.s.md")
     assert_nil loader.send(:extract_parent_number, "119-feature.s.md")
   end
 
   def test_extract_subtask_number
     loader = Ace::Taskflow::Molecules::TaskLoader.new
     assert_equal "01", loader.send(:extract_subtask_number, "121.01-archive.s.md")
-    assert_equal "00", loader.send(:extract_subtask_number, "121.00-orchestrator.s.md")
+    # Orchestrator files no longer use .00 pattern
+    assert_nil loader.send(:extract_subtask_number, "121-orchestrator.s.md")
     assert_nil loader.send(:extract_subtask_number, "119-feature.s.md")
   end
 
@@ -298,11 +302,12 @@ class TaskLoaderTest < AceTaskflowTestCase
         release_path = File.join(dir, ".ace-taskflow", "v.0.9.0")
         tasks = loader.load_tasks_from_release(release_path)
 
-        # Find orchestrator
-        orchestrator = tasks.find { |t| t[:file_type] == :orchestrator }
+        # Find orchestrator (now classified as :single, promoted by build_task_relationships)
+        orchestrator = tasks.find { |t| t[:is_orchestrator] }
         assert orchestrator, "Should find orchestrator"
         assert orchestrator[:is_orchestrator], "Orchestrator should be marked as orchestrator"
-        assert_equal :orchestrator, orchestrator[:file_type]
+        # Orchestrator files use NNN-orchestrator.s.md which classifies as :single
+        assert_equal :single, orchestrator[:file_type]
 
         # Orchestrator should have subtask_ids populated
         refute_empty orchestrator[:subtask_ids], "Orchestrator should have subtask_ids"
@@ -404,7 +409,7 @@ subtasks:
 
 # 999 - Test Orchestrator
         CONTENT
-        File.write(File.join(orchestrator_dir, "999.00-orchestrator.s.md"), orchestrator_content)
+        File.write(File.join(orchestrator_dir, "999-orchestrator.s.md"), orchestrator_content)
 
         # Add subtask files (including one not in frontmatter)
         subtask01_content = <<~CONTENT
@@ -497,7 +502,7 @@ subtasks:
 
 # 999 - Test Dedup Orchestrator
         CONTENT
-        File.write(File.join(orchestrator_dir, "999.00-orchestrator.s.md"), orchestrator_content)
+        File.write(File.join(orchestrator_dir, "999-orchestrator.s.md"), orchestrator_content)
 
         subtask01_content = <<~CONTENT
 ---
@@ -617,7 +622,7 @@ subtasks:
 
 This is the orchestrator task.
       CONTENT
-      File.write(File.join(task_dir, "121.00-orchestrator.s.md"), orchestrator_content)
+      File.write(File.join(task_dir, "121-orchestrator.s.md"), orchestrator_content)
 
       # Create subtask 01
       subtask01_content = <<~CONTENT
