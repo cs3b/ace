@@ -1,5 +1,5 @@
 ---
-name: create-api-docs
+name: ace:docs-create-api
 description: Create API Docs
 # context: no-fork
 # agent: general-purpose
@@ -18,6 +18,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://create-api-docs`
+read and run `ace-bundle wfi://docs/create-api`
 
 read and run `ace-bundle wfi://commit`
