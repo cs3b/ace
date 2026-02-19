@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-02-19
+
+### Added
+- "This commit will..." test in subject-crafting step to improve intent capture
+- "Describe the action, not the content" guidance with concrete examples
+- Specific handling for deletion-only commits (use "remove", "delete", "drop" verbs)
+
 ## [0.17.2] - 2026-02-11
 
 ### Added
