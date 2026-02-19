@@ -1,5 +1,5 @@
 ---
-name: drive-assignment
+name: assign/drive
 allowed-tools: Bash, Read, Write, AskUserQuestion, Skill
 description: Drive agent execution through an active assignment
 argument-hint: ""

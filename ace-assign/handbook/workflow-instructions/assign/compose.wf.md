@@ -1,5 +1,5 @@
 ---
-name: compose-assignment
+name: assign/compose
 allowed-tools: Bash, Read, Write, AskUserQuestion
 description: Compose a tailored assignment from phase catalog and composition rules
 argument-hint: '"description of what you need" [--taskref value] [--taskrefs values]'
