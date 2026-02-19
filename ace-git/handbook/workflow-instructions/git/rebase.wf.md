@@ -1,5 +1,5 @@
 ---
-name: rebase
+name: git/rebase
 allowed-tools: Bash, Read
 description: Rebase feature branch with state capture, automatic fallback to cherry-pick, and post-rebase verification
 argument-hint: "[target-branch] [--no-verify]"

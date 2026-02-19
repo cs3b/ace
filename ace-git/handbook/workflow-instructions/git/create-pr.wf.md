@@ -1,5 +1,5 @@
 ---
-name: create-pr
+name: git/create-pr
 allowed-tools: Bash, Read
 description: Create pull requests with structured templates and best practices
 argument-hint: "[pr-type]"
