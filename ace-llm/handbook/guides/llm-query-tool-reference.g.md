@@ -610,7 +610,7 @@ llm-query google:gemini-2.5-flash "validation test"
 
 The `llm-query` tool is used extensively in the review-code workflow:
 
-**File:** `wfi://review`
+**File:** `wfi://review/run`
 
 **Usage Pattern:**
 
