@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.541] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.38.2**: Add `assign:` sub-phases declaration to `work-on-task.wf.md` so batch children expand into onboard/plan-task/work-on-task sub-steps during enrichment
+
 ## [0.9.540] - 2026-02-19
 
 ### Fixed
