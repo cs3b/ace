@@ -14,7 +14,7 @@ Introduce subdirectory-based namespace prefixes to all ~88 workflow files across
 After this change:
 - Workflows live in namespace subdirectories: `handbook/workflow-instructions/task/create.wf.md`
 - URIs use slash: `wfi://task/create`, slash commands use hyphen: `ace:task-create`
-- 14 namespaces: task, bug, idea, retro, release, git, review, test, e2e, docs, search, handbook, assign, lint
+- 15 namespaces: task, bug, idea, retro, release, git, review, test, e2e, docs, search, handbook, assign, lint, integration
 - Multi-item variants use `-batch` suffix
 - Namespace browsing: `wfi://task/*` lists all task workflows
 
@@ -28,9 +28,9 @@ After this change:
 - **06**: Namespace ace-review workflows (4 → `review/`)
 - **07**: Namespace ace-test workflows (5 → `test/`)
 - **08**: Namespace ace-test-runner-e2e workflows (10 → `e2e/`)
-- **09**: Namespace ace-docs workflows (10 → `docs/`)
+- **09**: Namespace ace-docs workflows (12 → `docs/`, includes update-usage and update-roadmap)
 - **10**: Namespace ace-git packages workflows (10 → `git/`)
-- **11**: Namespace ace-handbook workflows (11 → `handbook/`)
+- **11**: Namespace ace-handbook workflows (12 → `handbook/`)
 - **12**: Namespace ace-taskflow workflows (23 → `task/`, `bug/`, `idea/`, `retro/`, `release/`)
 - **13**: Namespace root and integration workflows (3 → `release/`, `integration/`)
 - **14**: Update CLAUDE.md, tools.md, and documentation
