@@ -1,5 +1,5 @@
 ---
-name: feature-research
+name: search/feature-research
 allowed-tools: Bash, Read
 description: RESEARCH codebases to identify feature gaps and implementation patterns
 argument-hint: "[feature_description] [--scope=path] [--depth=shallow|normal|deep]"
