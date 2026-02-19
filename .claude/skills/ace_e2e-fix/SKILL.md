@@ -1,5 +1,5 @@
 ---
-name: ace:fix-e2e-tests
+name: ace:e2e-fix
 description: Diagnose and fix failing E2E tests systematically
 # bundle:
 # context: no-fork
@@ -21,6 +21,6 @@ last_modified: 2026-02-11
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle wfi://fix-e2e-tests`
+read and run `ace-bundle wfi://e2e/fix`
 
 ARGUMENTS: $ARGUMENTS

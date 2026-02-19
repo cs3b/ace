@@ -1,5 +1,5 @@
 ---
-name: ace:create-e2e-test
+name: ace:e2e-create
 description: Create a new E2E test scenario from template
 user-invocable: true
 allowed-tools:
@@ -15,6 +15,6 @@ last_modified: 2026-01-19
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle wfi://create-e2e-test`
+read and run `ace-bundle wfi://e2e/create`
 
 ARGUMENTS: $ARGUMENTS
