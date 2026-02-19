@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.15] - 2026-02-19
+
+### Fixed
+- Task ID extraction now recognizes `ace-task.NNN` worktree paths, fixing mismatch where overseer status showed branch-derived task ID instead of the path-derived one
+
 ## [0.2.14] - 2026-02-19
 
 ### Added
