@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.15.12] - 2026-02-19
+
+### Technical
+- Namespace workflow instructions into lint/ subdirectory with updated wfi:// URIs
+
 ## [0.15.11] - 2026-02-07
 
 ### Changed
