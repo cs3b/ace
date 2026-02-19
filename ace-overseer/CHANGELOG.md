@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.17] - 2026-02-19
+
+### Changed
+
+- `TmuxWindowOpener` delegates entirely to `ace-tmux window` CLI — no longer manages session names, window names, or presets
+- Remove `tmux_session_name`, `window_name_format`, and `window_preset` config options
+- Remove `WindowNameFormatter` atom — window naming is ace-tmux's responsibility
+- `PruneOrchestrator` uses worktree path basename for window cleanup instead of formatted names
+
 ## [0.2.16] - 2026-02-19
 
 ### Changed

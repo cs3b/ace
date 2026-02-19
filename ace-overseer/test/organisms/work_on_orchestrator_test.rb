@@ -33,7 +33,6 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
     def open(**kwargs)
       @calls << kwargs
-      { window_name: kwargs[:window_name] }
     end
   end
 
@@ -60,10 +59,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         tmux_window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
-          "default_assign_preset" => "work-on-task",
-          "window_name_format" => "t{task_id}",
-          "tmux_session_name" => "ace",
-          "window_preset" => "cc"
+          "default_assign_preset" => "work-on-task"
         },
         assignment_detector: ->(_path) { nil }
       )
@@ -72,7 +68,6 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
       assert_equal "fix-bug", result[:preset]
       assert_equal "8or5kx", result[:assignment_id]
-      assert_equal "t230", result[:window_name]
     end
   end
 
@@ -87,10 +82,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         tmux_window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
-          "default_assign_preset" => "work-on-task",
-          "window_name_format" => "t{task_id}",
-          "tmux_session_name" => "ace",
-          "window_preset" => "cc"
+          "default_assign_preset" => "work-on-task"
         },
         assignment_detector: ->(_path) { nil }
       )
@@ -117,10 +109,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         tmux_window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
-          "default_assign_preset" => "work-on-task",
-          "window_name_format" => "t{task_id}",
-          "tmux_session_name" => "ace",
-          "window_preset" => "cc"
+          "default_assign_preset" => "work-on-task"
         },
         assignment_detector: ->(_path) { nil }
       )
@@ -146,10 +135,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         tmux_window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
-          "default_assign_preset" => "work-on-task",
-          "window_name_format" => "t{task_id}",
-          "tmux_session_name" => "ace",
-          "window_preset" => "cc"
+          "default_assign_preset" => "work-on-task"
         },
         assignment_detector: ->(_path) { existing }
       )
@@ -170,10 +156,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         tmux_window_opener: FakeWindowOpener.new,
         assignment_launcher: FakeAssignmentLauncher.new,
         config: {
-          "default_assign_preset" => "work-on-task",
-          "window_name_format" => "t{task_id}",
-          "tmux_session_name" => "ace",
-          "window_preset" => "cc"
+          "default_assign_preset" => "work-on-task"
         },
         assignment_detector: ->(_path) { nil }
       )

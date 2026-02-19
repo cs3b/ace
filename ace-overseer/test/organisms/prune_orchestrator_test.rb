@@ -44,13 +44,14 @@ class PruneOrchestratorTest < AceOverseerTestCase
   class FakeTmuxExecutor
     attr_reader :run_calls
 
-    def initialize
+    def initialize(session_name: "test-session")
+      @session_name = session_name
       @run_calls = []
     end
 
     def run(cmd)
       @run_calls << cmd
-      true
+      cmd.include?("display-message") ? @session_name : true
     end
   end
 
@@ -73,7 +74,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(dry_run: true, yes: false, input: StringIO.new(""), output: StringIO.new)
@@ -98,7 +99,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: tmux,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(dry_run: false, yes: true, input: StringIO.new(""), output: StringIO.new)
@@ -109,7 +110,8 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal "/wt/task.230", manager.remove_calls.first[:path]
     assert_equal true, manager.remove_calls.first[:options][:ignore_untracked]
     assert_equal false, manager.remove_calls.first[:options][:force]
-    assert_equal 1, tmux.run_calls.length
+    kill_calls = tmux.run_calls.select { |c| c.include?("kill-window") }
+    assert_equal 1, kill_calls.length
   end
 
   def test_on_progress_receives_scanning_messages
@@ -121,7 +123,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     orchestrator.call(
@@ -149,7 +151,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     orchestrator.call(
@@ -187,7 +189,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: tmux,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(dry_run: false, yes: true, force: true, input: StringIO.new(""), output: StringIO.new)
@@ -196,7 +198,8 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal 2, manager.remove_calls.length
     assert_equal true, manager.remove_calls.first[:options][:force]
     assert_equal true, manager.remove_calls.last[:options][:force]
-    assert_equal 2, tmux.run_calls.length
+    kill_calls = tmux.run_calls.select { |c| c.include?("kill-window") }
+    assert_equal 2, kill_calls.length
   end
 
   def test_force_passes_force_to_worktree_manager
@@ -207,7 +210,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     orchestrator.call(dry_run: false, yes: true, force: true, input: StringIO.new(""), output: StringIO.new)
@@ -230,7 +233,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(
@@ -258,7 +261,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(
@@ -283,7 +286,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(
@@ -310,7 +313,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(dry_run: true, yes: false, force: true, input: StringIO.new(""), output: StringIO.new)
@@ -335,7 +338,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     orchestrator.call(dry_run: false, yes: true, force: true, input: StringIO.new(""), output: output)
@@ -353,7 +356,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
       worktree_manager: manager,
       prune_checker: checker,
       tmux_executor: FakeTmuxExecutor.new,
-      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+      config: {}
     )
 
     result = orchestrator.call(

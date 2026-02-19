@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.528] - 2026-02-19
+
+### Changed
+
+- **ace-overseer v0.2.17**: Fully delegate tmux management to ace-tmux — remove `WindowNameFormatter`, `tmux_session_name`/`window_name_format`/`window_preset` config options; `TmuxWindowOpener` now calls `ace-tmux window` CLI directly
+
 ## [0.9.527] - 2026-02-19
 
 ### Fixed
