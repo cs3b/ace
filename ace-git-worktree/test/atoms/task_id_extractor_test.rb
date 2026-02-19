@@ -23,8 +23,8 @@ class TaskIDExtractorTest < Minitest::Test
   end
 
   def test_extract_from_orchestrator_id
-    task_data = { id: "v.0.9.0+task.121.00" }
-    assert_equal "121.00", @extractor.extract(task_data)
+    task_data = { id: "v.0.9.0+task.121" }
+    assert_equal "121", @extractor.extract(task_data)
   end
 
   def test_extract_from_backlog_task
@@ -72,7 +72,7 @@ class TaskIDExtractorTest < Minitest::Test
   end
 
   def test_normalize_orchestrator_number
-    assert_equal "121.00", @extractor.normalize("121.00")
+    assert_equal "121", @extractor.normalize("121")
   end
 
   def test_normalize_with_task_prefix
