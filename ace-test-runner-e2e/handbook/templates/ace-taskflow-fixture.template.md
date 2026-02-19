@@ -87,7 +87,7 @@ For tests involving task hierarchies:
 mkdir -p "$REPO_DIR/.ace-taskflow/v.test/tasks/100-parent-feature"
 
 # Create orchestrator task
-cat > "$REPO_DIR/.ace-taskflow/v.test/tasks/100-parent-feature/100.00-orchestrator.s.md" << 'EOF'
+cat > "$REPO_DIR/.ace-taskflow/v.test/tasks/100-parent-feature/100-orchestrator.s.md" << 'EOF'
 ---
 id: v.test+task.100
 status: pending
