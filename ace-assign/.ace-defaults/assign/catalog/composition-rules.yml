@@ -53,6 +53,26 @@ ordering:
     after: create-pr
     note: "Initial release should happen before PR creation"
 
+  - rule: reflect-after-verify
+    before: verify-test-suite
+    after: reflect-and-refactor
+    note: "Reflection requires passing tests as baseline. The reflect-verify-cycle pair adds a second verify instance after refactoring — these are distinct phase instances, not a cycle."
+
+  - rule: reflect-before-mark-done
+    before: reflect-and-refactor
+    after: mark-task-done
+    note: "Refactoring should complete before marking task done"
+
+  - rule: reflect-before-release
+    before: reflect-and-refactor
+    after: release
+    note: "Refactoring should complete before version release"
+
+  - rule: reflect-before-retro
+    before: reflect-and-refactor
+    after: create-retro
+    note: "Findings report feeds into retrospective as structured input"
+
 pairs:
   - name: review-apply-cycle
     phases: [review-pr, apply-feedback]
@@ -74,11 +94,31 @@ pairs:
     pattern: sequential
     note: "Patch release after applying review feedback"
 
+  - name: reflect-verify-cycle
+    phases: [reflect-and-refactor, verify-test-suite]
+    pattern: conditional
+    trigger: "reflect-and-refactor produced refactoring commits"
+    note: "Re-verify after refactoring to catch regressions"
+
+  - name: reflect-fix-cycle
+    phases: [reflect-and-refactor, fix-tests]
+    pattern: conditional
+    trigger: "re-verification after refactoring finds failures"
+
+  - name: reflect-replan-cycle
+    phases: [reflect-and-refactor, work-on-task]
+    pattern: conditional
+    trigger: "demo validation failure or fundamental architectural misalignment"
+    cap: 1
+    note: "Re-plan produces 1-2 sub-tasks, then reflect runs once more (no further re-plan)"
+
 conditional:
   - when: "assignment includes work-on-task"
-    suggest: [plan-task, mark-task-done]
+    suggest: [plan-task, mark-task-done, reflect-and-refactor]
     strength: recommended
-    note: "JIT planning before and task completion after implementation"
+    overrides:
+      reflect-and-refactor: { strength: optional }
+    note: "JIT planning before, task completion after, and optional architecture reflection before shipping"
 
   - when: "assignment includes work-on-task or fix-bug"
     suggest: [verify-test-suite]
