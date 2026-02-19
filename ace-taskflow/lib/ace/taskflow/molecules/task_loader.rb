@@ -183,6 +183,7 @@ module Ace
           # Orchestrators and subtasks share the same parent number
           orchestrators = {}  # parent_number -> orchestrator task
           subtasks_by_parent = {}  # parent_number -> [subtask tasks]
+          singles_by_number = {}  # task_number -> single task
 
           tasks.each do |task|
             filename = File.basename(task[:path] || "")
@@ -196,6 +197,19 @@ module Ace
                 subtasks_by_parent[parent_num] ||= []
                 subtasks_by_parent[parent_num] << task
               end
+            when :single
+              # Index single tasks by number for potential promotion to orchestrator
+              if match = filename.match(SINGLE_TASK_PATTERN)
+                singles_by_number[match[1]] = task
+              end
+            end
+          end
+
+          # Promote single tasks to orchestrators when subtasks reference them
+          subtasks_by_parent.each_key do |parent_num|
+            next if orchestrators[parent_num]
+            if singles_by_number[parent_num]
+              orchestrators[parent_num] = singles_by_number[parent_num]
             end
           end
 
@@ -314,6 +328,9 @@ module Ace
               end
             end
           end
+
+          # Build parent-child relationships (same as release-based loading)
+          build_task_relationships(tasks)
 
           tasks
         end
