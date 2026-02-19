@@ -1,5 +1,5 @@
 ---
-name: update-pr-description
+name: git/update-pr-desc
 allowed-tools: Bash, Read, Grep
 description: Update PR title and description based on current work
 argument-hint: "[pr-number]"
