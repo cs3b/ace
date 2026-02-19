@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.6] - 2026-02-19
+
+### Technical
+- Update protocol reference documentation to reflect namespaced wfi:// URIs
+
 ## [0.30.5] - 2026-02-15
 
 ### Fixed
