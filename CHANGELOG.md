@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.535] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.37.3**: Clarify codemod location convention — task-level codemods go in `{task-folder}/codemods/`, never in `bin/`; add codemod deliverable hint to task template
+
+## [0.9.534] - 2026-02-19
+
+### Technical
+
+- **ace-taskflow v0.37.2**: Remove dead orchestrator classification branch and fix stale `.00` comments
+
+## [0.9.533] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.37.1**: Harden `.00` reference rejection — `valid?` and `qualified?` return `false` instead of propagating exceptions; `format` rejects subtask `00`
+
 ## [0.9.532] - 2026-02-19
 
 ### Added
@@ -53,6 +71,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 - **ace-overseer v0.2.17**: Fully delegate tmux management to ace-tmux — remove `WindowNameFormatter`, `tmux_session_name`/`window_name_format`/`window_preset` config options; `TmuxWindowOpener` now calls `ace-tmux window` CLI directly
+- **ace-taskflow v0.37.0**: Remove `.00` suffix from orchestrator task filenames — orchestrators now named `NNN-orchestrator.s.md` instead of `NNN.00-orchestrator.s.md`, with detection based on subtask presence rather than filename pattern
+- **ace-taskflow v0.37.0**: Remove `is_orchestrator?` from TaskReferenceParser; reject `.00` references with clear error
+- **ace-test-runner-e2e**: Update taskflow fixture template to use new orchestrator naming
 
 ## [0.9.527] - 2026-02-19
 
