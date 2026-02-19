@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.530] - 2026-02-19
+
+### Changed
+
+- **ace-overseer v0.3.1**: Hierarchical status display — location header rows (basename + PR + Git) with indented assignment sub-rows (ID + name + state + progress) replace flat single-row format
+- **ace-overseer v0.3.1**: `WorkContext` model uses `assignments` array with derived `assignment_status` and `assignment_count` methods
+- **ace-overseer v0.3.1**: `WorktreeContextCollector` loads all assignments via `AssignmentDiscoverer` instead of only active via `AssignmentExecutor`
+
 ## [0.9.529] - 2026-02-19
 
 ### Added

@@ -29,7 +29,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
       task_id: "230",
       worktree_path: "/tmp/task.230",
       branch: "230-feature",
-      assignment_status: { "assignment" => { "state" => "completed" } },
+      assignments: [{ "assignment" => { "state" => "completed" } }],
       git_status: { "clean" => true }
     )
 
@@ -51,7 +51,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
       task_id: "231",
       worktree_path: "/tmp/task.231",
       branch: "231-feature",
-      assignment_status: { "assignment" => { "state" => "running" } },
+      assignments: [{ "assignment" => { "state" => "running" } }],
       git_status: { "clean" => false }
     )
 
@@ -75,7 +75,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
       task_id: "232",
       worktree_path: "/tmp/task.232",
       branch: "232-feature",
-      assignment_status: { "assignment" => { "state" => "completed" } },
+      assignments: [{ "assignment" => { "state" => "completed" } }],
       git_status: { "clean" => false }
     )
 

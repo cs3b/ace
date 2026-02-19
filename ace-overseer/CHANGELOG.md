@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-02-19
+
+### Changed
+- Hierarchical status display — location header rows with assignment sub-rows replace flat single-row format
+- `WorkContext` model uses `assignments` array instead of singular `assignment_status` + `assignment_count`
+- `WorktreeContextCollector` loads all assignments via `AssignmentDiscoverer` instead of only active via `AssignmentExecutor`
+- `StatusFormatter` emits two row types: location header (basename + PR + Git) and indented assignment sub-rows (ID + name + state + progress)
+- IPC serialization in `StatusCollector` uses `assignments` array
+- Main branch inclusion check uses `assignments.any?` instead of `assignment_status`
+
+### Removed
+- `assignment_executor_factory` dependency from `WorktreeContextCollector`
+- Flat single-row dashboard format with header/separator lines
+
 ## [0.3.0] - 2026-02-19
 
 ### Added

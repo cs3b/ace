@@ -21,7 +21,7 @@ module Ace
           contexts = collect_contexts_parallel(worktrees)
 
           main_context = collect_main_context
-          contexts.unshift(main_context) if main_context&.assignment_status
+          contexts.unshift(main_context) if main_context && main_context.assignments.any?
 
           {
             contexts: contexts
@@ -91,9 +91,8 @@ module Ace
               task_id: context.task_id,
               worktree_path: context.worktree_path,
               branch: context.branch,
-              assignment_status: context.assignment_status,
-              git_status: context.git_status,
-              assignment_count: context.assignment_count
+              assignments: context.assignments,
+              git_status: context.git_status
             })
           RUBY
 
@@ -124,9 +123,8 @@ module Ace
                 task_id: data["task_id"],
                 worktree_path: data["worktree_path"],
                 branch: data["branch"],
-                assignment_status: data["assignment_status"],
-                git_status: data["git_status"],
-                assignment_count: data["assignment_count"] || 0
+                assignments: data["assignments"] || [],
+                git_status: data["git_status"]
               )
             end
           end
@@ -135,17 +133,11 @@ module Ace
         end
 
         def context_to_h(context)
-          assignment = context.assignment_status && context.assignment_status["assignment"]
-          current = context.assignment_status && context.assignment_status["current_phase"]
-          phase_summary = context.assignment_status && context.assignment_status["phase_summary"]
-
           {
             task_id: context.task_id,
             worktree_path: context.worktree_path,
             branch: context.branch,
-            assignment: assignment,
-            current_phase: current,
-            phase_summary: phase_summary,
+            assignments: context.assignments,
             git: context.git_status
           }
         end
