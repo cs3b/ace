@@ -1,5 +1,5 @@
 ---
-name: ace:feature-research
+name: ace:search-feature-research
 description: RESEARCH codebases to identify feature gaps and implementation patterns
 # context: no-fork
 # agent: Explore
@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-search
 ---
 
-read and run `ace-bundle wfi://feature-research`
+read and run `ace-bundle wfi://search/feature-research`

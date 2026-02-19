@@ -1,5 +1,5 @@
 ---
-name: ace:research
+name: ace:search-research
 description: RESEARCH codebases through planned multi-search analysis
 # context: no-fork
 # agent: Explore
@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-search
 ---
 
-read and run `ace-bundle wfi://research`
+read and run `ace-bundle wfi://search/research`
