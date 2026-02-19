@@ -1,6 +1,6 @@
 ---
 name: research
-description: [DEPRECATED] Use `/ace:research` instead - RESEARCH codebases through planned multi-search analysis
+description: [DEPRECATED] Use `/ace:search-research` instead - RESEARCH codebases through planned multi-search analysis
 expected_params:
   required:
   - goal: Research objective (e.g., "How is authentication implemented?")
@@ -14,7 +14,7 @@ source: ace-search
 ---
 
 > **DEPRECATED**: This agent definition has been converted to a skill command.
-> **Use instead**: `/ace:research` which delegates to `ace-bundle wfi://research`
+> **Use instead**: `/ace:search-research` which delegates to `ace-bundle wfi://search/research`
 > **Migration**: The workflow instruction is at `ace-search/handbook/workflow-instructions/research.wf.md`
 > **Reason**: Skills are the preferred pattern for Claude Code integration
 

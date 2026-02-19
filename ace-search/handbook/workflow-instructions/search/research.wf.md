@@ -1,5 +1,5 @@
 ---
-name: research
+name: search/research
 allowed-tools: Bash, Read
 description: RESEARCH codebases through planned multi-search analysis
 argument-hint: "[goal] [--scope=path] [--depth=shallow|normal|deep]"
