@@ -72,7 +72,7 @@ module Ace
             cmd += " --run-id #{run_id}" if run_id
             cmd += " --sandbox #{sandbox_path}" if sandbox_path
             cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(',')}" if env_vars&.any?
-            cmd
+            build_execution_prompt(command: cmd, tc_mode: false)
           end
 
           # Build a TC-level skill invocation prompt
@@ -87,7 +87,7 @@ module Ace
             cmd = "/ace:run-e2e-test #{scenario.package} #{scenario.test_id} #{test_case.tc_id} --tc-mode --sandbox #{sandbox_path}"
             cmd += " --run-id #{run_id}" if run_id
             cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(',')}" if env_vars&.any?
-            cmd
+            build_execution_prompt(command: cmd, tc_mode: true)
           end
 
           # Lazily-loaded default instance backed by ConfigLoader
@@ -106,6 +106,28 @@ module Ace
           # Reset the default instance (for testing)
           def self.reset_default_instance!
             @default_instance = nil
+          end
+
+          private
+
+          def build_execution_prompt(command:, tc_mode:)
+            return_contract = if tc_mode
+              "- **Test ID**: ...\n- **TC ID**: ...\n- **Status**: pass | fail\n- **Report Paths**: ...\n- **Issues**: ..."
+            else
+              "- **Test ID**: ...\n- **Status**: pass | fail | partial\n- **Passed**: ...\n- **Failed**: ...\n- **Total**: ...\n- **Report Paths**: ...\n- **Issues**: ..."
+            end
+
+            <<~PROMPT.strip
+              Run this as a slash command in the agent chat interface (not in bash):
+              #{command}
+
+              Execution requirements:
+              - Do not run `/ace:...` inside a shell command.
+              - If slash commands are unavailable, stop and report that limitation in `Issues`.
+              - Write reports under `.cache/ace-test-e2e/*-reports/`.
+              - Return only this structured summary:
+              #{return_contract}
+            PROMPT
           end
         end
       end
