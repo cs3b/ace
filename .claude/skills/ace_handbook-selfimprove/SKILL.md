@@ -1,5 +1,5 @@
 ---
-name: ace:selfimprove
+name: ace:handbook-selfimprove
 description: Analyze mistakes to improve processes, then fix the immediate issue
 user-invocable: true
 allowed-tools:
@@ -13,4 +13,4 @@ argument-hint: [description of what went wrong]
 source: ace-handbook
 ---
 
-read and run `ace-bundle wfi://selfimprove`
+read and run `ace-bundle wfi://handbook/selfimprove`

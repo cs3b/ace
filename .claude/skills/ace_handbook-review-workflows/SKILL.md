@@ -1,5 +1,5 @@
 ---
-name: meta-review-workflows
+name: ace:handbook-review-workflows
 title: "Meta: Review Workflows"
 command: meta-review-workflows
 description: Review and validate workflow instructions for quality and consistency
@@ -58,4 +58,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://review-workflows
+For detailed instructions, see: ace-bundle wfi://handbook/review-workflows
