@@ -147,6 +147,20 @@ module Ace
           File.basename(File.readlink(current_symlink))
         end
 
+        # Delete an assignment's cache directory and clean up symlinks
+        #
+        # @param assignment_id [String] Assignment ID to delete
+        # @return [Boolean] true if deleted, false if not found
+        def delete(assignment_id)
+          dir = File.join(@cache_base, assignment_id)
+          return false unless File.directory?(dir)
+
+          cleanup_symlink(".current", assignment_id)
+          cleanup_symlink(".latest", assignment_id)
+          FileUtils.rm_rf(dir)
+          true
+        end
+
         # Update assignment metadata
         #
         # @param assignment [Models::Assignment] Assignment to update
@@ -223,6 +237,20 @@ module Ace
         rescue StandardError => e
           warn "Failed to load assignment from #{assignment_file}: #{e.message}" if Ace::Assign.debug?
           nil
+        end
+
+        # Remove a symlink if it points to the specified assignment
+        #
+        # @param symlink_name [String] Symlink name (e.g., ".current", ".latest")
+        # @param assignment_id [String] Assignment ID to match
+        def cleanup_symlink(symlink_name, assignment_id)
+          symlink_path = File.join(@cache_base, symlink_name)
+          return unless File.symlink?(symlink_path)
+
+          target = File.basename(File.readlink(symlink_path))
+          File.delete(symlink_path) if target == assignment_id
+        rescue StandardError
+          # Non-fatal: continue without cleanup
         end
 
         # Update .latest symlink to point to the specified assignment
