@@ -5,7 +5,9 @@ module Ace
     module Molecules
       class WorktreeContextCollector
         def initialize(repo_status_loader: nil, assignment_discoverer_factory: nil)
-          @repo_status_loader = repo_status_loader || -> { Ace::Git::Organisms::RepoStatusLoader.load }
+          @repo_status_loader = repo_status_loader || -> {
+            Ace::Git::Organisms::RepoStatusLoader.load(include_pr_activity: false, include_commits: false)
+          }
           @assignment_discoverer_factory = assignment_discoverer_factory || -> { Ace::Assign::Molecules::AssignmentDiscoverer.new }
         end
 
