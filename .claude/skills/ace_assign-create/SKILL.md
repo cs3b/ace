@@ -1,7 +1,7 @@
 ---
 name: ace:assign-create
 description: Create a new assignment from job.yaml
-# bundle: wfi://create-assignment
+# bundle: wfi://assign/create
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -15,4 +15,4 @@ last_modified: 2026-02-11
 source: ace-assign
 ---
 
-read and run `ace-bundle wfi://create-assignment`
+read and run `ace-bundle wfi://assign/create`

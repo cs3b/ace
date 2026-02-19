@@ -1,7 +1,7 @@
 ---
 name: ace:assign-start
 description: Create and start an assignment from preset or instructions (compose/prepare + create)
-# bundle: wfi://start-assignment
+# bundle: wfi://assign/start
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -17,4 +17,4 @@ last_modified: 2026-02-11
 source: ace-assign
 ---
 
-read and run `ace-bundle wfi://start-assignment`
+read and run `ace-bundle wfi://assign/start`
