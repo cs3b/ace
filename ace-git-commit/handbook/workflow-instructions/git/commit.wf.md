@@ -1,5 +1,5 @@
 ---
-name: commit
+name: git/commit
 allowed-tools: Bash, Read
 description: Create well-structured Git commits using ace-git-commit's LLM-powered
   message generation
