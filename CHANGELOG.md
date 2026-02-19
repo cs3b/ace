@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.539] - 2026-02-19
+
+### Added
+
+- **ace-taskflow v0.38.0**: Doctor & cleanup improvements — detect stale backup files and idea scope/status anomalies, auto-fix backup deletion and invalid `maybe/_archive/` nesting, implement `idea archive` command, clean up backups on subtask completion
+
 ## [0.9.538] - 2026-02-19
 
 ### Added
