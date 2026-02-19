@@ -112,7 +112,7 @@ end
 - PR #76 synthesis report (item #8)
 - Current implementation: `ace-review/lib/ace/review/molecules/subject_extractor.rb:86-107`
 - Existing tests: `ace-review/test/molecules/subject_extractor_test.rb` (deep_merge_arrays tests)
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md
 
 ---
 

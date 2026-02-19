@@ -36,7 +36,7 @@ subtask[:subtask_ids] # [] (subtasks don't have children)
 
 | Pattern | Type | Example |
 |---------|------|---------|
-| `{N}.00-*.s.md` | Orchestrator | `121.00-orchestrator.s.md` |
+| `{N}.00-*.s.md` | Orchestrator | `121-orchestrator.s.md` |
 | `{N}.NN-*.s.md` (NN > 00) | Subtask | `121.01-archive-output.s.md` |
 | `{N}-*.s.md` | Single task | `119-feature-name.s.md` |
 

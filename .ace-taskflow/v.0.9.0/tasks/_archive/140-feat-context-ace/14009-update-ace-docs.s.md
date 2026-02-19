@@ -129,7 +129,7 @@ This is the ideal pattern - just needs namespace update.
 
 ## References
 
-- Parent orchestrator: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.00-orchestrator.s.md`
+- Parent orchestrator: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140-orchestrator.s.md`
 - ace-git package: `/Users/mc/Ps/ace-meta/ace-git/`
 - Source file: `ace-docs/lib/ace/docs/molecules/change_detector.rb`
 - Dependency tasks:

@@ -197,4 +197,4 @@ Pause workflow execution for explicit human approval at critical phases, persist
 ## References
 
 - Original spec: 234.06-implement-human-approval-gates.s.md (archived)
-- Parent: 240.00-orchestrator.s.md
+- Parent: 240-orchestrator.s.md

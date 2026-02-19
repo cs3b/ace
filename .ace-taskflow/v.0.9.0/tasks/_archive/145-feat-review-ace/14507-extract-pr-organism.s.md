@@ -461,4 +461,4 @@ The existing tests (`test_pr_config_processes_with_mocked_executor`, `test_pr_co
 - PR #76 synthesis report (item #12)
 - Current file: `ace-context/lib/ace/context/organisms/context_loader.rb` (1349 lines)
 - Related molecule: `ace-context/lib/ace/context/molecules/gh_pr_executor.rb`
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md

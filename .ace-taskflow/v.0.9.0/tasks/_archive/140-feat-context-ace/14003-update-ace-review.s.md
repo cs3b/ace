@@ -411,6 +411,6 @@ Replace duplicated Git/GitHub code in ace-review with ace-git dependency. This e
 
 ## References
 
-- Parent orchestrator: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.00-orchestrator.s.md`
+- Parent orchestrator: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140-orchestrator.s.md`
 - ace-git package: `/Users/mc/Ps/ace-meta/ace-git/`
 - Dependency task: `v.0.9.0+task.140.01` (Create ace-git package)

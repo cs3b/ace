@@ -57,6 +57,6 @@ The ace-coworker gem is complete when:
 
 ## References
 
-- Core features: 237.00-orchestrator.s.md
-- Advanced features: 240.00-orchestrator.s.md
+- Core features: 237-orchestrator.s.md
+- Advanced features: 240-orchestrator.s.md
 - Idea summary: `.ace-taskflow/v.0.9.0/ideas/8oqvog-ace-enhance/ace-coworker.idea.s.md`
