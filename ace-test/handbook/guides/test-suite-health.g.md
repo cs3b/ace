@@ -291,7 +291,7 @@ echo "All tests passed!"
 
 ## Health Report Template
 
-Generate monthly with `/ace:verify-test-suite`:
+Generate monthly with `/ace:test-verify-suite`:
 
 ```markdown
 # Test Suite Health Report
