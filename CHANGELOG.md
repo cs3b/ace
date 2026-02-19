@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.525] - 2026-02-19
+
+### Added
+
+- **ace-overseer v0.2.14**: `--force` flag and positional target filtering for `prune` command — force-remove unsafe worktrees and target specific task refs or folder names
+
+### Fixed
+
+- **ace-git-worktree v0.13.5**: Pass `--force` flag to `git worktree remove` when force removal is requested, fixing "contains modified or untracked files" errors
+
 ## [0.9.524] - 2026-02-19
 
 ### Fixed

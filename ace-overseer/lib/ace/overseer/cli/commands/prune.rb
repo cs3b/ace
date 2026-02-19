@@ -9,6 +9,9 @@ module Ace
 
           desc "Clean up completed task worktrees"
 
+          argument :targets, required: false, type: :array, desc: "Task refs or folder names to prune"
+
+          option :force, aliases: ["-f"], type: :boolean, default: false, desc: "Force-remove unsafe worktrees"
           option :yes, aliases: ["-y"], type: :boolean, default: false, desc: "Skip confirmation"
           option :dry_run, type: :boolean, default: false, desc: "Show candidates only"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress output"
@@ -22,10 +25,13 @@ module Ace
           end
 
           def call(**options)
+            targets = Array(options[:targets] || [])
             progress = options[:quiet] ? nil : ->(msg) { puts msg }
             result = @orchestrator.call(
               dry_run: options[:dry_run],
               yes: options[:yes],
+              force: options[:force],
+              targets: targets,
               input: @input,
               output: @output,
               on_progress: progress
@@ -51,16 +57,21 @@ module Ace
           private
 
           def print_dry_run(result)
+            forced = Array(result[:forced])
             puts "Candidates for cleanup:"
-            if result[:safe].empty?
+            if result[:safe].empty? && forced.empty?
               puts "  (none)"
             else
               result[:safe].each do |candidate|
                 puts "  task.#{candidate.task_id} - #{candidate.worktree_path}"
               end
+              forced.each do |candidate|
+                puts "  task.#{candidate.task_id} - #{candidate.worktree_path} [FORCE]"
+              end
             end
             puts
-            puts "#{result[:safe].length} worktree(s) can be safely pruned."
+            total = result[:safe].length + forced.length
+            puts "#{total} worktree(s) can be pruned."
           end
 
           def print_apply(result)
