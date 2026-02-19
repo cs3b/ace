@@ -28,6 +28,24 @@ module Ace
           }
         end
 
+        def collect_quick(previous_snapshot)
+          previous_contexts = previous_snapshot[:contexts]
+          return collect if previous_contexts.nil? || previous_contexts.empty?
+
+          contexts = previous_contexts.map do |prev_ctx|
+            @context_collector.collect_assignments_only(
+              prev_ctx.worktree_path,
+              cached_branch: prev_ctx.branch,
+              cached_git_status: prev_ctx.git_status,
+              location_type: prev_ctx.location_type
+            )
+          rescue StandardError
+            nil
+          end.compact
+
+          { contexts: contexts }
+        end
+
         def to_table(snapshot)
           Atoms::StatusFormatter.format_dashboard(snapshot[:contexts])
         end

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-02-19
+
+### Added
+- `--watch` / `-w` option for `status` command — auto-refreshing dashboard with ANSI screen clear
+- Two-tier refresh: fast interval (15s default) refreshes assignment data only, slow interval (5min default) does full git/PR refresh
+- `collect_assignments_only` method on `WorktreeContextCollector` for lightweight assignment-only collection with cached git data
+- `collect_quick` method on `StatusCollector` to reuse previous snapshot's git data while refreshing assignments
+- `format_watch_footer` on `StatusFormatter` showing dim timestamp and countdown to next full refresh
+- Configurable watch intervals via `watch.refresh_interval` and `watch.git_refresh_interval` in overseer config
+
 ## [0.4.0] - 2026-02-19
 
 ### Added

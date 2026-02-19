@@ -1,1 +1,4 @@
 default_assign_preset: "work-on-task"
+watch:
+  refresh_interval: 15
+  git_refresh_interval: 300
