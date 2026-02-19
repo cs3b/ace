@@ -35,7 +35,7 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://bundle`
 
 ## Task Type Considerations
 

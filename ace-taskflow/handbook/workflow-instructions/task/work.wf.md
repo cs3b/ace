@@ -25,7 +25,7 @@ assign:
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://bundle`
 
 ## Quick Start
 
