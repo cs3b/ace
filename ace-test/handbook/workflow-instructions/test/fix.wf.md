@@ -1,5 +1,5 @@
 ---
-name: fix-tests
+name: test/fix
 description: Systematically diagnose and fix failing automated tests
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob
 argument-hint: ''

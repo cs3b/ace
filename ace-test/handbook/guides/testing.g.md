@@ -178,4 +178,4 @@ See: [Test Performance Guide](guide://test-performance)
 
 * [Troubleshooting Workflow](guide://debug-troubleshooting.g)
 * Relevant Workflow Instructions: [`work-on-task.wf.md`](wfi://work-on-task) (includes testing
-  guidance), [`fix-tests.wf.md`](wfi://fix-tests) (for diagnosing and fixing failing tests)
+  guidance), [`fix-tests.wf.md`](wfi://test/fix) (for diagnosing and fixing failing tests)
