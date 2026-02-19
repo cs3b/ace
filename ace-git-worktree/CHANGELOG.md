@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.7] - 2026-02-19
+
+### Technical
+- Namespace worktree workflow instructions into git/ subdirectory
+
 ## [0.13.6] - 2026-02-19
 
 ### Fixed
