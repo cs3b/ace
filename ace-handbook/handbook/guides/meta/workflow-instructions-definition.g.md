@@ -191,7 +191,7 @@ Review these refactored workflow instructions that demonstrate self-containment 
 - Clear context gathering steps
 
 ### Embedded Templates Example
-`wfi://initialize-project-structure`:
+`wfi://handbook/init-project`:
 - Contains complete PRD, README, and architecture templates
 - Embeds all binstub scripts
 - Includes full v.0.0.0 release structure

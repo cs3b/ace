@@ -7,7 +7,7 @@ Combine parallel agent research outputs into a unified, high-quality result thro
 ## Prerequisites
 
 - Research folder containing outputs from multiple agents
-- Completed parallel research phase (see `wfi://parallel-research`)
+- Completed parallel research phase (see `wfi://handbook/parallel-research`)
 - Understanding of multi-agent research principles (see `guide://multi-agent-research`)
 
 ## Project Context Loading
@@ -416,5 +416,5 @@ See `sources.md` for detailed contribution breakdown.
 ## Related Resources
 
 - [Multi-Agent Research Guide](guide://multi-agent-research) - Principles and best practices
-- [Parallel Research Workflow](wfi://parallel-research) - Previous phase in the process
+- [Parallel Research Workflow](wfi://handbook/parallel-research) - Previous phase in the process
 - [Research Comparison Template](tmpl://research-comparison) - Template for comparison matrix
