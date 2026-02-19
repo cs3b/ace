@@ -1,5 +1,5 @@
 ---
-name: analyze-bug
+name: bug/analyze
 description: Systematically analyze bugs to identify root cause, reproduction status, and fix plan
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob
 argument-hint: ''

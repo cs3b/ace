@@ -1,5 +1,5 @@
 ---
-name: fix-bug
+name: bug/fix
 description: Execute bug fix plan, apply changes, create tests, and verify resolution
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob
 argument-hint: ''

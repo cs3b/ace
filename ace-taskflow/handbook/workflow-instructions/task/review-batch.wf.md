@@ -1,5 +1,5 @@
 ---
-name: review-tasks
+name: task/review-batch
 allowed-tools: Bash, Read, Task
 description: Review multiple tasks in sequence and aggregate findings
 argument-hint: "[task-id-pattern]"
@@ -19,7 +19,7 @@ Process multiple tasks through review workflow and aggregate findings, questions
 ## Prerequisites
 
 - Tasks exist for review (discoverable via `ace-taskflow tasks` with various filters)
-- Access to `review-task` singular workflow via `ace-bundle wfi://review-task`
+- Access to `review-task` singular workflow via `ace-bundle wfi://task/review`
 - Understanding of ace-taskflow commands
 
 ## Variables
@@ -65,7 +65,7 @@ Execute review-task workflow for task: [task-id]
 ARGUMENTS: [task-id]
 
 Follow the complete review-task workflow:
-1. Read and execute: ace-bundle wfi://review-task
+1. Read and execute: ace-bundle wfi://task/review
 2. Generate questions by priority (HIGH/MEDIUM/LOW)
 3. Conduct research and update content
 4. Set needs_review flag appropriately
