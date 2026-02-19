@@ -30,16 +30,19 @@ class StatusCollectorTest < AceOverseerTestCase
     end
   end
 
+  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2)
+    {
+      "assignment" => { "state" => state, "id" => id, "name" => name },
+      "phase_summary" => { "total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending }
+    }
+  end
+
   def test_collect_and_format
     context = Ace::Overseer::Models::WorkContext.new(
       task_id: "230",
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
-      assignment_status: {
-        "assignment" => { "state" => "running" },
-        "current_phase" => { "number" => "020", "name" => "work-on-task" },
-        "phase_summary" => { "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 }
-      },
+      assignments: [make_assignment(id: "8or5kx", state: "running")],
       git_status: { "clean" => true }
     )
 
@@ -55,22 +58,18 @@ class StatusCollectorTest < AceOverseerTestCase
 
     assert_equal 1, payload[:worktrees].length
     assert_equal "230", payload[:worktrees][0][:task_id]
-    assert_equal({ "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 },
-                 payload[:worktrees][0][:phase_summary])
-    assert_includes table, "Assign"
-    assert_includes table, "230"
+    assert_equal 1, payload[:worktrees][0][:assignments].length
+    assert_includes table, "ace-task.230"
+    assert_includes table, "8or5kx"
     assert_includes table, "2/5"
   end
 
-  def test_collect_includes_main_branch_when_it_has_assignment
+  def test_collect_includes_main_branch_when_it_has_assignments
     worktree_context = Ace::Overseer::Models::WorkContext.new(
       task_id: "230",
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
-      assignment_status: {
-        "assignment" => { "state" => "running" },
-        "phase_summary" => { "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 }
-      },
+      assignments: [make_assignment(id: "8or5kx", state: "running")],
       git_status: { "clean" => true }
     )
 
@@ -78,13 +77,12 @@ class StatusCollectorTest < AceOverseerTestCase
       task_id: "main",
       worktree_path: "/project",
       branch: "main",
-      assignment_status: {
-        "assignment" => { "state" => "completed", "id" => "xyz99" },
-        "phase_summary" => { "total" => 3, "done" => 3, "failed" => 0, "in_progress" => 0, "pending" => 0 }
-      },
+      assignments: [
+        make_assignment(id: "xyz99", state: "completed", total: 3, done: 3, failed: 0, in_progress: 0, pending: 0),
+        make_assignment(id: "abc12", state: "running", total: 5, done: 1, failed: 0, in_progress: 1, pending: 3)
+      ],
       git_status: { "clean" => true },
-      location_type: :main,
-      assignment_count: 2
+      location_type: :main
     )
 
     collector = Ace::Overseer::Organisms::StatusCollector.new(
@@ -99,15 +97,12 @@ class StatusCollectorTest < AceOverseerTestCase
     assert_equal :main, snapshot[:contexts].first.location_type
   end
 
-  def test_collect_excludes_main_branch_when_no_assignment
+  def test_collect_excludes_main_branch_when_no_assignments
     worktree_context = Ace::Overseer::Models::WorkContext.new(
       task_id: "230",
       worktree_path: "/wt/ace-task.230",
       branch: "230-feature",
-      assignment_status: {
-        "assignment" => { "state" => "running" },
-        "phase_summary" => { "total" => 5, "done" => 2, "failed" => 0, "in_progress" => 1, "pending" => 2 }
-      },
+      assignments: [make_assignment(id: "8or5kx", state: "running")],
       git_status: { "clean" => true }
     )
 
@@ -115,7 +110,7 @@ class StatusCollectorTest < AceOverseerTestCase
       task_id: "main",
       worktree_path: "/project",
       branch: "main",
-      assignment_status: nil,
+      assignments: [],
       git_status: { "clean" => true },
       location_type: :main
     )
