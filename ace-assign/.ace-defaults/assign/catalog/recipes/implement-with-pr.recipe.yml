@@ -19,6 +19,9 @@ phases:
   - name: work-on-task
     required: true
     instructions_template: "Work on task {{taskref}}."
+  - name: reflect-and-refactor
+    required: false
+    note: "Architecture reflection — skip for trivial tasks"
   - name: mark-task-done
     required: false
   - name: release

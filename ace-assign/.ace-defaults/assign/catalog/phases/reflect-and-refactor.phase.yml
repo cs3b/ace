@@ -1,0 +1,57 @@
+name: reflect-and-refactor
+skill: null  # No dedicated skill — the driving agent follows the steps directly, using ace-review and ace-git-commit as tools
+description: Analyze implementation against ATOM principles and execute targeted refactoring before PR creation
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Must have implementation to reflect on"
+  - name: verify-test-suite
+    strength: required
+    reason: "Tests must pass before reflection — refactoring a broken build wastes effort"
+
+produces: [refactoring-commits, findings-report]
+consumes: [code-changes, test-results]
+
+context:
+  default: null  # Inherits from assignment-level context (typically inline, not forked)
+  reason: "Reflection needs access to full diff and project context"
+
+when_to_skip:
+  - "Assignment was trivial (e.g., docs-only, config change)"
+  - "No substantive code changes to analyze"
+  - "Explicitly skipped in assignment configuration"
+
+effort: light
+tags: [quality, architecture, reflection]
+
+steps:
+  - name: demo-validate
+    optional: true
+    description: "Run functional demo proving the feature works end-to-end"
+    skip_when: "verify-test-suite already covers functional validation (E2E tests exist and passed)"
+    on_failure: "Trigger re-plan mechanism instead of proceeding to analysis"
+
+  - name: analyze
+    description: "Review diff using architecture-reflection ace-review preset"
+    tool: "ace-review --preset architecture-reflection"
+
+  - name: decide
+    description: "Produce findings report categorizing items as refactor/accept/skip"
+
+  - name: refactor
+    description: "Execute bounded refactoring based on findings (single iteration, capped scope)"
+    constraints:
+      max_iterations: 1
+      scope: "Only items categorized as 'refactor' in findings report"
+
+  - name: commit
+    description: "Commit refactoring changes separately from implementation commits"
+    tool: "ace-git-commit"
+
+replan:
+  trigger: "Demo validation failure OR architecture analysis finds structural misalignment"
+  distinguished_from: "fix-tests handles test failures; re-plan handles architectural rework"
+  max_reruns: 1
+  max_subtasks: 2
+  after_replan: "Follow-up sub-tasks execute, then reflect-and-refactor runs once more (no further re-plan)"
