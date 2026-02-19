@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.531] - 2026-02-19
+
+### Added
+
+- **ace-overseer v0.4.0**: Progress bar visualization in assignment sub-rows with filled/empty bar segments alongside numeric counts
+- **ace-overseer v0.4.0**: Current phase name display for running assignments shown dimmed after progress counts
+- **ace-overseer v0.4.0**: Header row with column labels and separator line above hierarchical dashboard
+- **ace-overseer v0.4.0**: Blank line separators between location groups for visual structure
+- **ace-overseer v0.4.0**: `current_phase` field propagated from `QueueState` through `WorktreeContextCollector`
+
 ## [0.9.530] - 2026-02-19
 
 ### Changed
