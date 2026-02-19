@@ -1,5 +1,5 @@
 ---
-name: maintain-adrs
+name: docs/maintain-adrs
 purpose: Maintain ADR lifecycle including evolution, archival, and synchronization
 bundle: adr-management
 parameters:
