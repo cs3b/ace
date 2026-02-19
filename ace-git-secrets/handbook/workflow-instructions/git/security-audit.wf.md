@@ -1,5 +1,5 @@
 ---
-name: security-audit
+name: git/security-audit
 allowed-tools: Bash, Read, Write
 description: Perform security audits to detect leaked authentication tokens in Git repositories
 argument-hint: "[scan|check-release] [--since=SINCE] [--confidence=LEVEL] [options]"
@@ -236,7 +236,7 @@ ace-git-secrets scan --branch feature-branch --since "$(git merge-base main feat
 - **Token Safety**: Never log or display full token values
 - **Gitleaks Priority**: Uses gitleaks when available for comprehensive detection
 - **False Positives**: Always verify medium/low confidence findings
-- **Remediation Workflow**: For cleanup, use `ace-bundle wfi://token-remediation`
+- **Remediation Workflow**: For cleanup, use `ace-bundle wfi://git/token-remediation`
 
 ## Command Reference
 
