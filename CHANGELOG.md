@@ -59,10 +59,19 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - **ace-tmux v0.5.4**: Fix "index N in use" error when creating tmux windows in sessions with `base-index` set
+- **ace-assign v0.12.1**: `reflect-verify-cycle` pair changed to conditional pattern; renamed `max_recursion` to `max_reruns` for clarity
+- **ace-review v0.40.1**: Architecture-reflection preset diff range corrected to cover all implementation commits
+
+### Added
+
+- **ace-assign v0.12.0**: New `reflect-and-refactor` phase in catalog — analyzes implementation against ATOM principles and executes targeted refactoring before PR creation, with composition rules, recipe integration, and retro phase linkage
+- **ace-review v0.40.0**: New `architecture-reflection` review preset and `reflection` focus prompt for pre-PR self-assessment with refactor/accept/skip categorization
 
 ### Changed
 
 - **ace-overseer v0.2.16**: `TmuxWindowOpener` no longer manages tmux sessions — delegates entirely to ace-tmux `WindowManager` for window creation, session detection, and dedup
+- **ace-assign v0.12.2**: Clarified ordering notes and consolidated duplicate conditional suggestions for composition rules
+- **ace-assign v0.12.3**: Clarified `skill: null` and `context.default: null` semantics in reflect-and-refactor phase documentation
 
 ## [0.9.526] - 2026-02-19
 
