@@ -172,6 +172,179 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_includes text, "task not done"
   end
 
+  def test_force_prunes_unsafe_candidates
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      FakeWorktree.new("/wt/task.231", "231")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "230", safe: true),
+      build_candidate(task_id: "231", safe: false, reasons: ["git not clean"])
+    ])
+    tmux = FakeTmuxExecutor.new
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: tmux,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    result = orchestrator.call(dry_run: false, yes: true, force: true, input: StringIO.new(""), output: StringIO.new)
+
+    assert_equal 2, result[:pruned].length
+    assert_equal 2, manager.remove_calls.length
+    assert_equal true, manager.remove_calls.first[:options][:force]
+    assert_equal true, manager.remove_calls.last[:options][:force]
+    assert_equal 2, tmux.run_calls.length
+  end
+
+  def test_force_passes_force_to_worktree_manager
+    manager = FakeManager.new([FakeWorktree.new("/wt/task.230", "230")])
+    checker = FakeChecker.new([build_candidate(task_id: "230", safe: true)])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    orchestrator.call(dry_run: false, yes: true, force: true, input: StringIO.new(""), output: StringIO.new)
+
+    assert_equal true, manager.remove_calls.first[:options][:force]
+  end
+
+  def test_targets_filter_by_task_id
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      FakeWorktree.new("/wt/task.231", "231"),
+      FakeWorktree.new("/wt/task.232", "232")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "230", safe: true),
+      build_candidate(task_id: "232", safe: true)
+    ])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: true, targets: ["230", "232"],
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal 2, result[:pruned].length
+    paths = manager.remove_calls.map { |c| c[:path] }
+    assert_includes paths, "/wt/task.230"
+    assert_includes paths, "/wt/task.232"
+    refute_includes paths, "/wt/task.231"
+  end
+
+  def test_targets_filter_by_path_substring
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      FakeWorktree.new("/wt/task.231", "231")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "231", safe: true)
+    ])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: true, targets: ["task.231"],
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal 1, result[:pruned].length
+    assert_equal "/wt/task.231", manager.remove_calls.first[:path]
+  end
+
+  def test_force_with_targets
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      FakeWorktree.new("/wt/task.231", "231")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "230", safe: false, reasons: ["task not done"])
+    ])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: true, force: true, targets: ["230"],
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal 1, result[:pruned].length
+    assert_equal "/wt/task.230", manager.remove_calls.first[:path]
+    assert_equal true, manager.remove_calls.first[:options][:force]
+  end
+
+  def test_force_dry_run_shows_forced_candidates
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      FakeWorktree.new("/wt/task.231", "231")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "230", safe: true),
+      build_candidate(task_id: "231", safe: false, reasons: ["git not clean"])
+    ])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    result = orchestrator.call(dry_run: true, yes: false, force: true, input: StringIO.new(""), output: StringIO.new)
+
+    assert_equal 1, result[:safe].length
+    assert_equal 1, result[:forced].length
+    assert_equal "231", result[:forced].first.task_id
+  end
+
+  def test_force_display_shows_force_removing
+    output = StringIO.new
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      FakeWorktree.new("/wt/task.231", "231")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "230", safe: true),
+      build_candidate(task_id: "231", safe: false, reasons: ["task not done"])
+    ])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    orchestrator.call(dry_run: false, yes: true, force: true, input: StringIO.new(""), output: output)
+
+    text = output.string
+    assert_includes text, "Force removing"
+    refute_includes text, "Skipping"
+  end
+
   def test_prompt_can_abort
     manager = FakeManager.new([FakeWorktree.new("/wt/task.230", "230")])
     checker = FakeChecker.new([build_candidate(task_id: "230", safe: true)])

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.14] - 2026-02-19
+
+### Added
+- `--force` (`-f`) flag for `prune` command to bypass safety checks and force-remove unsafe worktrees
+- Positional target arguments for `prune` to filter by task ref or folder name (e.g., `ace-overseer prune 230 265`)
+- Dry-run output shows `[FORCE]` tag on forced candidates
+
 ## [0.2.13] - 2026-02-19
 
 ### Added
