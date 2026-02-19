@@ -1,7 +1,7 @@
 ---
 name: ace:assign-prepare
 description: Prepare job.yaml from preset or informal instructions
-# bundle: wfi://prepare-assignment
+# bundle: wfi://assign/prepare
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -16,4 +16,4 @@ last_modified: 2026-02-11
 source: ace-assign
 ---
 
-read and run `ace-bundle wfi://prepare-assignment`
+read and run `ace-bundle wfi://assign/prepare`
