@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.536] - 2026-02-19
+
+### Fixed
+
+- **ace-git-worktree v0.13.4**: Add `ignore_untracked` support to worktree removal dirty checks so untracked-only worktrees can be safely pruned while tracked changes remain protected
+
 ## [0.9.535] - 2026-02-19
 
 ### Fixed
