@@ -158,7 +158,7 @@ Complete the project initialization started by `coding-agent-tools integrate cla
 
 ## Project Context Loading
 
-- Read and follow: `wfi://load-project-context`
+- Read and follow: `wfi://bundle`
 
 ## High-Level Execution Plan
 
