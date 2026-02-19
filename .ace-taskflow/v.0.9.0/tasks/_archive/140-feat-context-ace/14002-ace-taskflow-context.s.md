@@ -343,7 +343,7 @@ ace-git will provide (after task 140.01):
 | ID | v.0.9.0+task.140 |
 | Title | Enhance ace-context with Dynamic Git Branch and PR Information |
 | Status | in-progress |
-| Path | .ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.00-orchestrator.s.md |
+| Path | .ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140-orchestrator.s.md |
 
 ## Release
 

@@ -223,7 +223,7 @@ Error: Not authenticated with GitHub. Run: gh auth login
 
 ## References
 
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md
 - ace-context GitExtractor: `ace-context/lib/ace/context/atoms/git_extractor.rb`
 - ace-review GhPrFetcher (reference): `ace-review/lib/ace/review/molecules/gh_pr_fetcher.rb`
 

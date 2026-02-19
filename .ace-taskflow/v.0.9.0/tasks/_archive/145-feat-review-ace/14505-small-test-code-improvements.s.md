@@ -70,7 +70,7 @@ template_config = unwrap_context_config(config)
 ## References
 
 - PR #76 synthesis report (items #9, #10, #11)
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md
 
 ---
 

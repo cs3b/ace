@@ -209,7 +209,7 @@ end
 
 ## References
 
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md
 - Related: 145.01 (pr: support), 145.02 (unified subject), 145.03 (multiple subjects)
 - Bug discovered during 145.02 validation
 - Reference implementation: `section_formatter.rb:567-571` (correct `has_diffs_content?`)
