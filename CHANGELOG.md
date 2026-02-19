@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.538] - 2026-02-19
+
+### Added
+
+- **ace-git-commit v0.18.0**: Improve intent capture in commit message generation — add "This commit will..." test, "action not content" guidance, and deletion-specific handling to prevent LLM from describing file content instead of commit action
+
 ## [0.9.537] - 2026-02-19
 
 ### Added
