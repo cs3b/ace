@@ -167,10 +167,10 @@ When parsing informal instructions, identify:
 
 1. **Task References**: "task 123", "task-123", "#123"
 2. **Skill Keywords**: Map to known skills
-   - "work on task" → `ace:work-on-task`
+   - "work on task" → `ace:task-work`
    - "create pr", "make pr" → `ace:create-pr`
    - "review", "review pr" → `ace:review-pr`
-   - "commit" → `ace:commit`
+   - "commit" → `ace:git-commit`
    - "onboard" → `onboard`
 3. **Loop Indicators**: "2 cycles", "3 iterations", "twice"
 4. **Sequence Markers**: "then", "after that", "finally"
@@ -273,7 +273,7 @@ assign:
 ```
 
 Resolution flow:
-1. Find `SKILL.md` by phase `skill` name (e.g., `ace:work-on-task`)
+1. Find `SKILL.md` by phase `skill` name (e.g., `ace:task-work`)
 2. Read `assign.source` from skill frontmatter
 3. Resolve `wfi://...` to workflow file
 4. Parse workflow frontmatter `assign.sub-phases`
@@ -368,7 +368,7 @@ steps:
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: ace:work-on-task
+    skill: ace:task-work
     instructions:
       - Work on task 123.
       - Implement the required changes following project conventions.

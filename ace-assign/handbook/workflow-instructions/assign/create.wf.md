@@ -112,7 +112,7 @@ steps:
       Report when done: ace-assign report init.md
 
   - name: implement
-    skill: ace:work-on-task      # Optional skill reference
+    skill: ace:task-work      # Optional skill reference
     instructions: |
       Implement the feature.
       Report when done: ace-assign report impl.md
@@ -129,23 +129,23 @@ Phases can include a `skill:` field that references a Claude Code skill to invok
 
 ```yaml
 - name: work-on-task
-  skill: ace:work-on-task
+  skill: ace:task-work
   instructions: |
     Work on task 123.
     Follow project conventions.
 ```
 
-When executing this phase, invoke `/ace:work-on-task 123` then follow the skill workflow.
+When executing this phase, invoke `/ace:task-work 123` then follow the skill workflow.
 
 ### Common Skill References
 
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
 | `onboard` | `/onboard` | Load project context |
-| `ace:work-on-task` | `/ace:work-on-task <taskref>` | Implement task changes |
+| `ace:task-work` | `/ace:task-work <taskref>` | Implement task changes |
 | `ace:create-pr` | `/ace:create-pr` | Create pull request |
 | `ace:review-pr` | `/ace:review-pr [pr#]` | Review code changes |
-| `ace:commit` | `/ace:commit` | Generate commit message |
+| `ace:git-commit` | `/ace:git-commit` | Generate commit message |
 | `ace:update-pr-desc` | `/ace:update-pr-desc` | Update PR description |
 
 ### Parameter Passing
@@ -154,13 +154,13 @@ Extract parameters from instructions for skill invocation:
 
 ```yaml
 - name: work-on-task
-  skill: ace:work-on-task
+  skill: ace:task-work
   instructions: |
     Work on task 148.          # Extract "148" as taskref
     Implement required changes.
 ```
 
-Agent Action: Run `/ace:work-on-task 148`
+Agent Action: Run `/ace:task-work 148`
 
 ### Dynamic Parameter Updates
 
