@@ -109,6 +109,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal 1, manager.remove_calls.length
     assert_equal "/wt/task.230", manager.remove_calls.first[:path]
     assert_equal true, manager.remove_calls.first[:options][:ignore_untracked]
+    assert_equal true, manager.remove_calls.first[:options][:delete_branch]
     assert_equal false, manager.remove_calls.first[:options][:force]
     kill_calls = tmux.run_calls.select { |c| c.include?("kill-window") }
     assert_equal 1, kill_calls.length
@@ -197,7 +198,9 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal 2, result[:pruned].length
     assert_equal 2, manager.remove_calls.length
     assert_equal true, manager.remove_calls.first[:options][:force]
+    assert_equal true, manager.remove_calls.first[:options][:delete_branch]
     assert_equal true, manager.remove_calls.last[:options][:force]
+    assert_equal true, manager.remove_calls.last[:options][:delete_branch]
     kill_calls = tmux.run_calls.select { |c| c.include?("kill-window") }
     assert_equal 2, kill_calls.length
   end
@@ -216,6 +219,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     orchestrator.call(dry_run: false, yes: true, force: true, input: StringIO.new(""), output: StringIO.new)
 
     assert_equal true, manager.remove_calls.first[:options][:force]
+    assert_equal true, manager.remove_calls.first[:options][:delete_branch]
   end
 
   def test_targets_filter_by_task_id
@@ -297,6 +301,7 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal 1, result[:pruned].length
     assert_equal "/wt/task.230", manager.remove_calls.first[:path]
     assert_equal true, manager.remove_calls.first[:options][:force]
+    assert_equal true, manager.remove_calls.first[:options][:delete_branch]
   end
 
   def test_force_dry_run_shows_forced_candidates

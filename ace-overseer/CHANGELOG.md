@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-02-19
+
+### Fixed
+- Prune orchestrator now passes `delete_branch: true` to worktree manager's `remove` call, ensuring git branches are cleaned up when worktrees are pruned
+
 ## [0.4.2] - 2026-02-19
 
 ### Added

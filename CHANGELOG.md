@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.546] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.39.3**: Fix `--auto-fix` always finding zero fixable issues (undiagnosed doctor instance); fix agent prompt issue list missing file paths (`:location` key); downgrade empty-directory warnings to info for `/_archive/` paths
+
+## [0.9.545] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.39.2**: Embed formatted list of non-auto-fixable issues directly in agent prompt so the agent knows exactly what to work on without re-running `--auto-fix`
+
+## [0.9.544] - 2026-02-19
+
+### Fixed
+
+- **ace-overseer v0.4.3**: Prune orchestrator now deletes git branches when removing worktrees — previously left orphaned branches that blocked `work-on` from creating new worktrees for the same task
+
+## [0.9.543] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.39.1**: Wire up `--auto-fix`, `--auto-fix-with-agent`, and `--model` options in dry-cli layer — previously only the unused standalone `DoctorCommand` had these options; drop `--fix` alias per ADR-024
+
+## [0.9.542] - 2026-02-19
+
+### Added
+
+- **ace-taskflow v0.39.0**: Doctor `--auto-fix-with-agent` option — runs deterministic auto-fix first, then launches LLM agent via `QueryInterface` to handle remaining issues; configurable via `--model` flag and `doctor.agent_model` config
+
+### Fixed
+
+- **ace-taskflow v0.39.0**: Fix pattern mismatch bug in `DoctorFixer` where regex couldn't match task location messages from doctor diagnosis
+
+### Changed
+
+- **ace-taskflow v0.39.0**: Rename `--fix` to `--auto-fix` (keeping `--fix` as backward-compatible alias)
+
 ## [0.9.541] - 2026-02-19
 
 ### Fixed
