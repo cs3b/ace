@@ -1,5 +1,5 @@
 ---
-name: search
+name: search/run
 allowed-tools: Bash, Read
 description: SEARCH code patterns and files - intelligent discovery across codebases
 argument-hint: "[pattern] [--file|--content] [options]"
