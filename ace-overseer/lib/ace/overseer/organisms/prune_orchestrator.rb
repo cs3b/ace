@@ -62,7 +62,8 @@ module Ace
             remove_result = @worktree_manager.remove(
               candidate.worktree_path,
               force: force,
-              ignore_untracked: true
+              ignore_untracked: true,
+              delete_branch: true
             )
             if remove_result[:success]
               close_tmux_window(candidate.worktree_path)
