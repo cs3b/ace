@@ -1,5 +1,5 @@
 ---
-name: squash-changelog
+name: docs/squash-changelog
 allowed-tools: Bash, Read, Edit, Grep
 description: Squash multiple CHANGELOG.md entries from feature branch into one before merge
 argument-hint: "[target-branch]"

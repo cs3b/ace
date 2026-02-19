@@ -4,7 +4,7 @@
 free of duplication.
 
 > **Note:** This workflow can now be enhanced with the `ace-docs` tool for automated document management. See
-> `wfi://update-docs` for the tooling-based approach. Use `/update-docs` command
+> `wfi://docs/update` for the tooling-based approach. Use `/update-docs` command
 > for the automated workflow.
 
 ## Prerequisites
