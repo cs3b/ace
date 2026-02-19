@@ -101,14 +101,12 @@ class TaskReferenceParserTest < Minitest::Test
   def test_convert_preserves_subtask_to_qualified
     # Simple subtask -> qualified should preserve subtask
     assert_equal "v.0.9.0+task.121.01", @parser.convert("121.01", :qualified, release: "v.0.9.0")
-    assert_equal "v.0.9.0+task.121.00", @parser.convert("121.00", :qualified, release: "v.0.9.0")
     assert_equal "backlog+task.025.03", @parser.convert("025.03", :qualified, release: "backlog")
   end
 
   def test_convert_preserves_subtask_to_simple
     # Qualified subtask -> simple should preserve subtask
     assert_equal "121.01", @parser.convert("v.0.9.0+task.121.01", :simple)
-    assert_equal "121.00", @parser.convert("v.0.9.0+task.121.00", :simple)
     assert_equal "025.03", @parser.convert("backlog+task.025.03", :simple)
   end
 
@@ -138,11 +136,11 @@ class TaskReferenceParserTest < Minitest::Test
   end
 
   def test_extract_references_finds_hierarchical_simple
-    text = "See task.121.01 and also task.122.00"
+    text = "See task.121.01 and also task.122.03"
     references = @parser.extract_references(text)
 
     assert_includes references, "task.121.01"
-    assert_includes references, "task.122.00"
+    assert_includes references, "task.122.03"
   end
 
   def test_extract_references_mixed_hierarchical_and_simple
@@ -167,13 +165,35 @@ class TaskReferenceParserTest < Minitest::Test
 
   # ========== Hierarchical Task ID Tests (Subtask Support) ==========
 
-  def test_parse_hierarchical_simple_orchestrator
-    result = @parser.parse("121.00")
+  def test_parse_hierarchical_simple_00_raises_error
+    error = assert_raises(ArgumentError) { @parser.parse("121.00") }
+    assert_match(/\.00 orchestrator references are no longer supported/, error.message)
+    assert_match(/Use the parent task ID instead/, error.message)
+    assert_match(/'121'/, error.message)
+  end
 
-    assert_equal "current", result[:release]
-    assert_equal "121", result[:number]
-    assert_equal "00", result[:subtask]
-    refute result[:qualified]
+  def test_parse_hierarchical_qualified_00_raises_error
+    error = assert_raises(ArgumentError) { @parser.parse("v.0.9.0+task.121.00") }
+    assert_match(/\.00 orchestrator references are no longer supported/, error.message)
+    assert_match(/'121'/, error.message)
+  end
+
+  def test_valid_returns_false_for_00_references
+    refute @parser.valid?("121.00")
+    refute @parser.valid?("v.0.9.0+task.121.00")
+  end
+
+  def test_qualified_returns_false_for_00_references
+    refute @parser.qualified?("121.00")
+    refute @parser.qualified?("v.0.9.0+task.121.00")
+  end
+
+  def test_format_raises_for_subtask_00
+    error = assert_raises(ArgumentError) { @parser.format("v.0.9.0", "121", subtask: "00") }
+    assert_match(/\.00 orchestrator references are no longer supported/, error.message)
+
+    error = assert_raises(ArgumentError) { @parser.format("v.0.9.0", "121", subtask: 0) }
+    assert_match(/\.00 orchestrator references are no longer supported/, error.message)
   end
 
   def test_parse_hierarchical_simple_subtask
@@ -261,25 +281,6 @@ class TaskReferenceParserTest < Minitest::Test
 
   # ========== Helper Method Tests ==========
 
-  def test_is_orchestrator_true_for_00
-    parsed = @parser.parse("121.00")
-    assert @parser.is_orchestrator?(parsed)
-  end
-
-  def test_is_orchestrator_false_for_subtask
-    parsed = @parser.parse("121.01")
-    refute @parser.is_orchestrator?(parsed)
-  end
-
-  def test_is_orchestrator_false_for_simple
-    parsed = @parser.parse("121")
-    refute @parser.is_orchestrator?(parsed)
-  end
-
-  def test_is_orchestrator_false_for_nil
-    refute @parser.is_orchestrator?(nil)
-  end
-
   def test_is_subtask_true_for_01
     parsed = @parser.parse("121.01")
     assert @parser.is_subtask?(parsed)
@@ -290,19 +291,13 @@ class TaskReferenceParserTest < Minitest::Test
     assert @parser.is_subtask?(parsed)
   end
 
-  def test_is_subtask_false_for_00
-    parsed = @parser.parse("121.00")
-    refute @parser.is_subtask?(parsed)
-  end
-
   def test_is_subtask_false_for_simple
     parsed = @parser.parse("121")
     refute @parser.is_subtask?(parsed)
   end
 
-  def test_is_hierarchical_true_for_orchestrator
-    parsed = @parser.parse("121.00")
-    assert @parser.is_hierarchical?(parsed)
+  def test_is_subtask_false_for_nil
+    refute @parser.is_subtask?(nil)
   end
 
   def test_is_hierarchical_true_for_subtask
@@ -320,11 +315,6 @@ class TaskReferenceParserTest < Minitest::Test
     assert_equal "121", @parser.parent_number(parsed)
   end
 
-  def test_parent_number_for_orchestrator
-    parsed = @parser.parse("121.00")
-    assert_equal "121", @parser.parent_number(parsed)
-  end
-
   def test_parent_number_for_simple
     parsed = @parser.parse("121")
     assert_equal "121", @parser.parent_number(parsed)
@@ -334,7 +324,6 @@ class TaskReferenceParserTest < Minitest::Test
 
   def test_format_with_subtask_qualified
     assert_equal "v.0.9.0+task.121.01", @parser.format("v.0.9.0", "121", subtask: "01", qualified: true)
-    assert_equal "v.0.9.0+task.121.00", @parser.format("v.0.9.0", "121", subtask: "00", qualified: true)
   end
 
   def test_format_with_subtask_integer

@@ -268,7 +268,7 @@ dependencies: []
         assert_match(/Converted task.*125.*orchestrator.*subtask/, result[:message])
         assert result[:orchestrator_path], "Should return orchestrator path"
         assert result[:subtask_path], "Should return subtask path"
-        assert_match(/125\.00-orchestrator\.s\.md/, result[:orchestrator_path])
+        assert_match(/125-orchestrator\.s\.md/, result[:orchestrator_path])
         assert_match(/125\.01-.*\.s\.md/, result[:subtask_path])
 
         # Verify both files created
@@ -461,7 +461,7 @@ subtasks:
 
 # 121 - Orchestrator Task
     CONTENT
-    File.write(File.join(task_dir, "121.00-orchestrator.s.md"), orchestrator_content)
+    File.write(File.join(task_dir, "121-orchestrator.s.md"), orchestrator_content)
 
     # Subtask 01
     subtask01_content = <<~CONTENT

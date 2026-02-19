@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.3] - 2026-02-19
+
+### Fixed
+- Clarify codemod location convention: task-level codemods go in `{task-folder}/codemods/`, never in `bin/`
+- Add codemod deliverable hint to task template
+
+## [0.37.2] - 2026-02-19
+
+### Technical
+- Remove dead `:orchestrator` branch in `build_task_relationships` (no longer emitted by `classify_task_file`)
+- Fix stale `.00` references in code comments
+
+## [0.37.1] - 2026-02-19
+
+### Fixed
+- Harden `.00` rejection: `valid?` and `qualified?` now return `false` for legacy `.00` references instead of propagating `ArgumentError`
+- `format` now rejects subtask `00` with clear error, preventing generation of legacy references
+
+## [0.37.0] - 2026-02-19
+
+### Changed
+- Remove `.00` suffix from orchestrator task filenames (`NNN.00-orchestrator.s.md` → `NNN-orchestrator.s.md`)
+- Orchestrator detection now based on presence of subtask files rather than filename pattern
+- Remove `is_orchestrator?` from TaskReferenceParser (filesystem concern, not reference concern)
+- Reject `.00` references (e.g., `121.00`) with clear error message
+
 ## [0.36.3] - 2026-02-19
 
 ### Fixed

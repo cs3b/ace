@@ -101,7 +101,7 @@ For experienced users, here's the condensed workflow:
 
    1. **Orchestrator Task** - if any of these apply:
       - Task file has `subtasks:` array in frontmatter
-      - Filename matches pattern `*.00-*.s.md` (e.g., `122.00-orchestrator.s.md`)
+      - Directory contains subtask files (e.g., `122.01-*.s.md`, `122.02-*.s.md`)
 
       **Note:** The system discovers subtasks from filenames (`.XX-*.s.md` pattern) and merges them with any `subtasks:` list in frontmatter. Actual files on disk are authoritative for determining the complete subtask set.
 
@@ -243,12 +243,14 @@ When creating task-related documentation and deliverables:
 
 When creating scripts to manipulate text or files (codemods):
 
-* **Location**: Create all codemods in the current release directory: `{release-path}/codemods/` (use `ace-taskflow release` to find path)
+* **Location**: Create task-specific codemods in the task folder: `{task-folder}/codemods/`
+  * For release-wide codemods (spanning multiple tasks): `{release-path}/codemods/`
+  * **Never** place codemods in `bin/` — they are task artifacts, not project tools
 * **Purpose**: Scripts that automate text transformations, file modifications, or batch operations
 * **Naming**: Use descriptive names reflecting the transformation (e.g., `convert-templates.sh`, `migrate-yaml-format.rb`)
 * **Documentation**: Include comments explaining the transformation logic
 * **Testing**: Test on small samples before applying to entire codebase
-* **Cleanup**: Keep codemods for release documentation and future reference
+* **Retention**: Keep codemods in the task folder for traceability and future reference
 
 ## Temporary File Management
 

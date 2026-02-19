@@ -4,14 +4,15 @@ module Ace
   module Taskflow
     module Atoms
       # Pure function to parse qualified task references (v.0.9.0+018, backlog+025)
-      # Supports hierarchical task IDs for subtasks (121, 121.00, 121.01, v.0.9.0+task.121.01)
+      # Supports hierarchical task IDs for subtasks (121, 121.01, v.0.9.0+task.121.01)
+      # Note: .00 references (e.g., 121.00) are invalid — orchestrators use the parent ID (121)
       class TaskReferenceParser
         # Regular expression for qualified task references with subtasks
         # Supports: v.0.9.0+task.121.01, backlog+task.025.03
         HIERARCHICAL_QUALIFIED_PATTERN = /^([\w\.-]+)\+(?:task\.)?(\d+)\.(\d{2})$/
 
         # Regular expression for simple hierarchical task references
-        # Supports: 121.01, task.121.00
+        # Supports: 121.01, task.121.01 (note: .00 is rejected at parse time)
         HIERARCHICAL_SIMPLE_PATTERN = /^(?:task\.)?(\d+)\.(\d{2})$/
 
         # Regular expression for qualified task references
@@ -40,6 +41,13 @@ module Ace
             number = match[2]
             subtask = match[3]
 
+            # Reject .00 references — orchestrators use the parent ID (e.g., use "121" not "121.00")
+            if subtask == "00"
+              raise ArgumentError,
+                "Invalid reference '#{reference}': .00 orchestrator references are no longer supported. " \
+                "Use the parent task ID instead (e.g., '#{number}' or '#{release_str}+task.#{number}')"
+            end
+
             return {
               release: normalize_release(release_str),
               number: number,
@@ -49,8 +57,15 @@ module Ace
             }
           end
 
-          # Check for hierarchical simple reference (e.g., 121.01, task.121.00)
+          # Check for hierarchical simple reference (e.g., 121.01, task.121.01)
           if match = reference.match(HIERARCHICAL_SIMPLE_PATTERN)
+            # Reject .00 references — orchestrators use the parent ID (e.g., use "121" not "121.00")
+            if match[2] == "00"
+              raise ArgumentError,
+                "Invalid reference '#{reference}': .00 orchestrator references are no longer supported. " \
+                "Use the parent task ID instead (e.g., '#{match[1]}')"
+            end
+
             return {
               release: "current",
               number: match[1],
@@ -94,6 +109,8 @@ module Ace
         # @return [Boolean] True if valid, false otherwise
         def self.valid?(reference)
           !parse(reference).nil?
+        rescue ArgumentError
+          false
         end
 
         # Check if a reference is qualified
@@ -102,24 +119,19 @@ module Ace
         def self.qualified?(reference)
           result = parse(reference)
           result && result[:qualified]
+        rescue ArgumentError
+          false
         end
 
-        # Check if a parsed result represents an orchestrator task (subtask .00)
-        # @param parsed [Hash] The parsed result from parse()
-        # @return [Boolean] True if orchestrator, false otherwise
-        def self.is_orchestrator?(parsed)
-          return false unless parsed.is_a?(Hash)
-
-          parsed[:subtask] == "00"
-        end
-
-        # Check if a parsed result represents a subtask (subtask .01-.99)
+        # Check if a parsed result represents a subtask (.01-.99)
+        # Note: is_orchestrator? was removed — orchestrators are detected by filesystem
+        # (presence of subtask files), not by reference format. Use TaskLoader for that.
         # @param parsed [Hash] The parsed result from parse()
         # @return [Boolean] True if subtask, false otherwise
         def self.is_subtask?(parsed)
           return false unless parsed.is_a?(Hash)
 
-          !parsed[:subtask].nil? && parsed[:subtask] != "00"
+          !parsed[:subtask].nil?
         end
 
         # Check if a parsed result has any subtask notation (.00 or .01-.99)
@@ -138,7 +150,7 @@ module Ace
         def self.parent_number(parsed)
           return nil unless parsed.is_a?(Hash)
 
-          # For both orchestrators (.00) and subtasks (.01-.99), the parent is the main number
+          # For subtasks (.01-.99), the parent is the main number
           parsed[:number]
         end
 
@@ -172,6 +184,11 @@ module Ace
         # @return [String] The formatted reference
         def self.format(release, number, subtask: nil, qualified: true)
           number_str = number.to_s.rjust(3, '0')
+          if subtask && subtask.to_s.rjust(2, '0') == "00"
+            raise ArgumentError,
+              "Invalid subtask '00': .00 orchestrator references are no longer supported. " \
+              "Use the parent task ID instead (e.g., '#{number_str}')"
+          end
           subtask_suffix = subtask.nil? ? "" : ".#{subtask.to_s.rjust(2, '0')}"
 
           if qualified

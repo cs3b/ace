@@ -307,7 +307,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert orchestrator_in_done, "Orchestrator should be moved to t/_archive/ when all subtasks complete"
 
         # Verify orchestrator status is done
-        orchestrator_file = Dir.glob(File.join(done_dir, "*121*", "121.00-*.s.md")).first
+        orchestrator_file = Dir.glob(File.join(done_dir, "*121*", "121-orchestrator.s.md")).first
         assert orchestrator_file, "Orchestrator file should exist in _archive/"
         content = File.read(orchestrator_file)
         assert_match(/status: done/, content)
@@ -329,7 +329,7 @@ class TaskManagerTest < AceTaskflowTestCase
         assert_match(/1 subtask/, result[:message])
 
         # Verify orchestrator marked as done
-        orchestrator_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "121-hierarchical-test", "121.00-orchestrator.s.md")
+        orchestrator_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "121-hierarchical-test", "121-orchestrator.s.md")
         content = File.read(orchestrator_file)
         assert_match(/status: done/, content)
 
@@ -463,7 +463,7 @@ subtasks:
 
 # 121 - Hierarchical Test Task (Orchestrator)
         CONTENT
-        File.write(File.join(task_dir, "121.00-orchestrator.s.md"), orchestrator_content)
+        File.write(File.join(task_dir, "121-orchestrator.s.md"), orchestrator_content)
 
         # Create subtask 01
         subtask01_content = <<~CONTENT
@@ -536,7 +536,7 @@ subtasks:
 
 # 121 - Hierarchical Test Task (Orchestrator)
         CONTENT
-        File.write(File.join(task_dir, "121.00-orchestrator.s.md"), orchestrator_content)
+        File.write(File.join(task_dir, "121-orchestrator.s.md"), orchestrator_content)
 
         # Create subtask 01 - PENDING (not done)
         subtask01_content = <<~CONTENT
@@ -604,7 +604,7 @@ dependencies: []
 
 # 121 - Orchestrator Only Task
         CONTENT
-        File.write(File.join(task_dir, "121.00-orchestrator.s.md"), orchestrator_content)
+        File.write(File.join(task_dir, "121-orchestrator.s.md"), orchestrator_content)
 
         yield dir
       end
@@ -630,7 +630,7 @@ dependencies: []
         task_dir = File.join(release_dir, "t", "123-regular-task")
         FileUtils.mkdir_p(task_dir)
 
-        # Regular task file (123-something.s.md, not 123.00-*.s.md)
+        # Regular task file (123-something.s.md, no subtask files in directory)
         task_content = <<~CONTENT
 ---
 id: v.0.9.0+task.123

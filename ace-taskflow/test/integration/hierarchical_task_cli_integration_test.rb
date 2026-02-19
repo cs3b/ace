@@ -51,9 +51,9 @@ class HierarchicalTaskCliIntegrationTest < AceTaskflowTestCase
         assert result[:success]
         orchestrator_id = result[:task_id]
 
-        # Mark it as orchestrator by adding .00 file
+        # Mark it as orchestrator by adding orchestrator file
         orchestrator_task = Dir.glob(File.join(@project_root, ".ace-taskflow/v.0.9.0/t", "#{result[:task_number]}-*")).first
-        orchestrator_file = File.join(orchestrator_task, "#{result[:task_number]}.00-orchestrator.s.md")
+        orchestrator_file = File.join(orchestrator_task, "#{result[:task_number]}-orchestrator.s.md")
         FileUtils.cp(Dir.glob(File.join(orchestrator_task, "*.s.md")).first, orchestrator_file)
 
         # Update orchestrator file to have subtasks frontmatter
@@ -118,7 +118,7 @@ class HierarchicalTaskCliIntegrationTest < AceTaskflowTestCase
 
         # Mark as orchestrator
         orchestrator_task = Dir.glob(File.join(@project_root, ".ace-taskflow/v.0.9.0/t", "#{orchestrator_result[:task_number]}-*")).first
-        orchestrator_file = File.join(orchestrator_task, "#{orchestrator_result[:task_number]}.00-orchestrator.s.md")
+        orchestrator_file = File.join(orchestrator_task, "#{orchestrator_result[:task_number]}-orchestrator.s.md")
         FileUtils.cp(Dir.glob(File.join(orchestrator_task, "*.s.md")).first, orchestrator_file)
 
         # Create subtask with qualified parent reference

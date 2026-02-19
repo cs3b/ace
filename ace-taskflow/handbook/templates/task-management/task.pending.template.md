@@ -33,6 +33,7 @@ Why are we implementing this? Focus on technical objectives that support the def
 #### Create
 
 - path/to/file.ext
+- {task-folder}/codemods/migration-name (if task includes data migration or batch transformations)
 
 #### Modify
 
