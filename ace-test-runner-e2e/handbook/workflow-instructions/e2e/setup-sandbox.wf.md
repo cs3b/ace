@@ -1,5 +1,5 @@
 ---
-name: setup-e2e-sandbox
+name: e2e/setup-sandbox
 description: Set up safe, isolated E2E test environment with external API handling
 allowed-tools: Read, Write, Bash
 argument-hint: 'package and test-id'

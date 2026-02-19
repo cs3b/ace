@@ -1,6 +1,6 @@
 ---
 workflow-id: wfi-create-e2e-test
-name: Create E2E Test
+name: e2e/create
 description: Create a new E2E test scenario from template
 version: "1.3"
 source: ace-test-runner-e2e

@@ -1,6 +1,6 @@
 ---
 workflow-id: wfi-run-e2e-tests
-name: Run E2E Tests (Parallel)
+name: e2e/run-batch
 description: Execute multiple E2E tests in parallel using Task tool subagents
 version: "1.1"
 source: ace-test-runner-e2e

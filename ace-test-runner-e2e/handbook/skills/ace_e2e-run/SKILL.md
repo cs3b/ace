@@ -1,5 +1,5 @@
 ---
-name: ace:run-e2e-test
+name: ace:e2e-run
 description: Execute an E2E test scenario
 user-invocable: true
 allowed-tools:
@@ -20,9 +20,9 @@ source: ace-test-runner-e2e
 <!-- --sandbox absent  → full workflow (locate, setup, execute) -->
 
 If `$ARGUMENTS` contains `--sandbox`:
-  read and run `ace-bundle wfi://execute-e2e-test`
+  read and run `ace-bundle wfi://e2e/execute`
 Otherwise:
-  read and run `ace-bundle wfi://run-e2e-test`
+  read and run `ace-bundle wfi://e2e/run`
 
 ARGUMENTS: $ARGUMENTS
 
