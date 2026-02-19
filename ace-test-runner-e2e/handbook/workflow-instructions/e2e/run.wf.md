@@ -1,6 +1,6 @@
 ---
 workflow-id: wfi-run-e2e-test
-name: Run E2E Test
+name: e2e/run
 description: Execute an E2E test scenario with full agent guidance
 version: "1.6"
 source: ace-test-runner-e2e
@@ -245,11 +245,11 @@ Report any missing prerequisites before proceeding.
 > NEVER execute test commands in the main repository. The test file's "Environment Setup"
 > section creates this sandbox - you MUST execute it and verify isolation BEFORE proceeding.
 
-**Authoritative Reference:** Read `wfi://setup-e2e-sandbox` for the complete sandbox setup pattern including the Standard Setup Script section.
+**Authoritative Reference:** Read `wfi://e2e/setup-sandbox` for the complete sandbox setup pattern including the Standard Setup Script section.
 
 **Execution Order:**
 1. Read the test file's "Environment Setup" section
-2. Execute the test file's commands (they follow the `wfi://setup-e2e-sandbox` pattern)
+2. Execute the test file's commands (they follow the `wfi://e2e/setup-sandbox` pattern)
 3. Proceed to Section 4.1 to verify sandbox isolation
 4. Only continue to Section 5 after verification passes
 

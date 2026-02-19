@@ -1,5 +1,5 @@
 ---
-name: fix-e2e-tests
+name: e2e/fix
 description: Diagnose and fix failing E2E tests systematically
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob
 argument-hint: '[package] [test-id]'

@@ -1,6 +1,6 @@
 ---
 workflow-id: wfi-rewrite-e2e-tests
-name: Rewrite E2E Tests
+name: e2e/rewrite
 description: Execute a change plan — delete, create, modify, and consolidate E2E test scenarios
 version: "1.0"
 source: ace-test-runner-e2e
