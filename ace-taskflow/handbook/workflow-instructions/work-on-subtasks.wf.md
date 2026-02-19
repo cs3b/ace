@@ -16,7 +16,7 @@ update:
 
 ## Prerequisites
 
-- Orchestrator task selected (has `subtasks:` in frontmatter or `*.00-*.s.md` filename)
+- Orchestrator task selected (has `subtasks:` in frontmatter or subtask files `NNN.NN-*.s.md` in same directory)
 - Access to ace-git-worktree for worktree management (see `ace-git-worktree/docs/usage.md`)
 - Understanding of the parent-subtask relationship
 

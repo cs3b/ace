@@ -158,7 +158,7 @@ module Ace
           end
 
           # 2. Check if trying to create subtask of subtask (not supported)
-          if parsed[:subtask] && parsed[:subtask] != "00"
+          if parsed[:subtask]
             return {
               success: false,
               message: "Cannot create subtask of subtask (#{parent_ref}). Subtasks can only be one level deep."
@@ -194,7 +194,7 @@ module Ace
           unless is_orchestrator_directory?(parent_dir, parent_number)
             return {
               success: false,
-              message: "Task #{parent_number} is not an orchestrator. Create `#{parent_number}.00-orchestrator.s.md` first or convert it to an orchestrator."
+              message: "Task #{parent_number} is not an orchestrator. Convert it to an orchestrator first with `ace-taskflow task move #{parent_number} --child-of self`."
             }
           end
 
@@ -996,7 +996,7 @@ module Ace
 
           # Build paths
           task_dir = File.dirname(task[:path])
-          orchestrator_filename = "#{task_number}.00-orchestrator.s.md"
+          orchestrator_filename = "#{task_number}-orchestrator.s.md"
           orchestrator_path = File.join(task_dir, orchestrator_filename)
 
           # Generate slug for subtask file
@@ -1302,13 +1302,15 @@ module Ace
         end
 
         # Check if directory contains orchestrator file or subtasks
+        # Orchestrators are detected by having an NNN-orchestrator.s.md file
+        # OR by having subtask files (NNN.NN-*.s.md)
         # @param parent_dir [String] Path to task directory
         # @param parent_number [String] Parent task number
         # @return [Boolean] true if orchestrator or has subtasks
         def is_orchestrator_directory?(parent_dir, parent_number)
-          # Has .00 file (orchestrator)
-          orchestrator = Dir.glob(File.join(parent_dir, "#{parent_number}.00-*.s.md")).any?
-          # Has any subtask files (NN > 00)
+          # Has orchestrator file (new naming: NNN-orchestrator.s.md)
+          orchestrator = Dir.glob(File.join(parent_dir, "#{parent_number}-orchestrator.s.md")).any?
+          # Has any subtask files (NNN.NN-*.s.md)
           subtasks = Dir.glob(File.join(parent_dir, "#{parent_number}.[0-9][0-9]-*.s.md")).any?
           orchestrator || subtasks
         end
@@ -1326,9 +1328,8 @@ module Ace
             match ? match[1].to_i : nil
           end.compact
 
-          # Return next number (max + 1), skipping 00 (orchestrator)
-          existing_without_zero = existing.reject { |n| n == 0 }
-          existing_without_zero.empty? ? 1 : existing_without_zero.max + 1
+          # Return next number (max + 1), starting from 1
+          existing.empty? ? 1 : existing.max + 1
         end
 
         # Resolve release name from path

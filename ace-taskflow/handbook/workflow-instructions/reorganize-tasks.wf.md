@@ -72,7 +72,7 @@ Convert a standalone task to a subtask under a parent orchestrator.
 
 **When to use**: When a task should be part of a larger orchestrated effort.
 
-**Prerequisites**: The target parent must be an orchestrator (have `.00-orchestrator.s.md` file).
+**Prerequisites**: The target parent must be an orchestrator (have `NNN-orchestrator.s.md` file or subtask files).
 
 **Command**:
 ```bash
@@ -124,7 +124,7 @@ ace-taskflow task move 019 --child-of self --dry-run
 ```
 
 **What happens**:
-1. New orchestrator file created (`.00-orchestrator.s.md`) with overview template
+1. New orchestrator file created (`NNN-orchestrator.s.md`) with overview template
 2. Original task becomes subtask `.01` with same content
 3. Subtask ID updated (e.g., `v.0.9.0+task.019` → `v.0.9.0+task.019.01`)
 4. Parent field added to subtask frontmatter
@@ -135,7 +135,7 @@ ace-taskflow task move 019 --child-of self --dry-run
 ```
 Converted task 019 to orchestrator with subtask .01
 Subtask: v.0.9.0+task.019.01
-Orchestrator: .ace-taskflow/v.0.9.0/tasks/019-task-slug/019.00-orchestrator.s.md
+Orchestrator: .ace-taskflow/v.0.9.0/tasks/019-task-slug/019-orchestrator.s.md
 Subtask file: .ace-taskflow/v.0.9.0/tasks/019-task-slug/019.01-task-slug.s.md
 ```
 
@@ -209,7 +209,7 @@ After demoting a task:
 
 After converting to orchestrator:
 1. Create subtasks: `ace-taskflow task create --child-of <ref> "Subtask title"`
-2. Original task becomes the `.00` orchestrator file
+2. Original task becomes the orchestrator file (`NNN-orchestrator.s.md`)
 3. Consider adding orchestrator scope/description
 
 ## Success Criteria

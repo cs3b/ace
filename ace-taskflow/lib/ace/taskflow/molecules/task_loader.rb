@@ -16,11 +16,10 @@ module Ace
         attr_reader :root_path
 
         # File pattern recognition for hierarchical tasks
-        # Orchestrator: 121.00-orchestrator.s.md
-        ORCHESTRATOR_PATTERN = /^(\d+)\.00-.*\.s\.md$/
-        # Subtask: 121.01-archive.s.md (NN > 00)
+        # Subtask: 121.01-archive.s.md (NN >= 01)
         SUBTASK_PATTERN = /^(\d+)\.(\d{2})-.*\.s\.md$/
-        # Single task: 119-feature.s.md (no dot before hyphen)
+        # Single task (or orchestrator): 119-feature.s.md, 121-orchestrator.s.md
+        # Orchestrators are distinguished from singles by presence of subtask files in the directory
         SINGLE_TASK_PATTERN = /^(\d+)-[^.][^\/]*\.s\.md$/
 
         # Class-level cache for per-command memoization
@@ -96,7 +95,7 @@ module Ace
             # Hierarchical fields
             parent_id: parent_id,
             subtask_ids: frontmatter["subtasks"] || [],
-            is_orchestrator: file_type == :orchestrator || (frontmatter["subtasks"] && !frontmatter["subtasks"].empty?),
+            is_orchestrator: (frontmatter["subtasks"] && !frontmatter["subtasks"].empty?),
             file_type: file_type
           }
         rescue StandardError => e
@@ -141,7 +140,7 @@ module Ace
           archive_dir = @config.done_dir
           Dir.glob(File.join(task_dir, "*")).select { |d| File.directory?(d) && File.basename(d) != archive_dir }.each do |task_folder|
             # Find ALL .s.md files in the task folder (not in subfolders)
-            # This includes orchestrators (121.00-*.s.md) and subtasks (121.01-*.s.md)
+            # This includes orchestrators (121-orchestrator.s.md) and subtasks (121.01-*.s.md)
             md_files = Dir.glob(File.join(task_folder, "*.s.md"))
 
             # Load task files - single read per file (load_task returns nil on parse errors)
@@ -190,8 +189,6 @@ module Ace
             parent_num = extract_parent_number(filename)
 
             case task[:file_type]
-            when :orchestrator
-              orchestrators[parent_num] = task if parent_num
             when :subtask
               if parent_num
                 subtasks_by_parent[parent_num] ||= []
@@ -350,7 +347,7 @@ module Ace
         # the orchestrator task rather than a specific subtask, as orchestrators represent
         # the primary work item. Subtasks should be referenced explicitly (121.01, etc.).
         #
-        # Supports hierarchical references: 121, 121.00, 121.01, v.0.9.0+task.121.01
+        # Supports hierarchical references: 121, 121.01, v.0.9.0+task.121.01
         # @param reference [String] Qualified reference (e.g., v.0.9.0+018, 121.01)
         # @param tasks [Array<Hash>, nil] Optional pre-loaded tasks for testing
         # @return [Hash, nil] Task data or nil if not found
@@ -607,20 +604,15 @@ module Ace
         end
 
         # Classify a task file based on filename pattern
+        # Note: Orchestrators are no longer detected by filename pattern.
+        # A file classified as :single may be promoted to orchestrator by
+        # build_task_relationships when subtask files are found in the same directory.
         # @param filename [String] The filename (basename) to classify
-        # @return [Symbol] :orchestrator, :subtask, :single, or :unknown
+        # @return [Symbol] :subtask, :single, or :unknown
         def classify_task_file(filename)
           case filename
-          when ORCHESTRATOR_PATTERN
-            :orchestrator
           when SUBTASK_PATTERN
-            # Subtask pattern matches both orchestrators and subtasks
-            # Check if it's actually .00 (orchestrator) or .01-.99 (subtask)
-            if filename.match(/^(\d+)\.00-/)
-              :orchestrator
-            else
-              :subtask
-            end
+            :subtask
           when SINGLE_TASK_PATTERN
             :single
           else
@@ -638,12 +630,11 @@ module Ace
         end
 
         # Extract parent task number from filename (e.g., "121.01-foo.s.md" -> "121")
+        # Only works for subtask files (NNN.NN-*.s.md pattern)
         # @param filename [String] The filename
         # @return [String, nil] The parent task number or nil
         def extract_parent_number(filename)
           if match = filename.match(SUBTASK_PATTERN)
-            match[1]
-          elsif match = filename.match(ORCHESTRATOR_PATTERN)
             match[1]
           end
         end
