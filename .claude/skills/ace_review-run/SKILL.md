@@ -1,5 +1,5 @@
 ---
-name: ace:review
+name: ace:review-run
 description: Review code changes with preset-based analysis and LLM feedback
 # context: no-fork
 # agent: general-purpose
@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-review
 ---
 
-read and run `ace-bundle wfi://review`
+read and run `ace-bundle wfi://review/run`

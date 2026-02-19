@@ -1,5 +1,5 @@
 ---
-name: ace:verify-feedback
+name: ace:review-verify-feedback
 description: Verify feedback items through multi-dimensional claim analysis
 # context: no-fork
 # agent: general-purpose
@@ -15,4 +15,4 @@ last_modified: 2026-02-04
 source: ace-review
 ---
 
-read and run `ace-bundle wfi://verify-feedback`
+read and run `ace-bundle wfi://review/verify-feedback`
