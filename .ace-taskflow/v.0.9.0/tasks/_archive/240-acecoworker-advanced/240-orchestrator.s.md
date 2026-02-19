@@ -95,6 +95,6 @@ Workflow and UX layer for composition (PR #200):
 
 ## References
 
-- Core features: 237.00-orchestrator.s.md
+- Core features: 237-orchestrator.s.md
 - Original specs (reference): 234.06-234.08 (archived)
 - PR #200: feat(assign): Add flexible assignment composition system (240.04-240.06)

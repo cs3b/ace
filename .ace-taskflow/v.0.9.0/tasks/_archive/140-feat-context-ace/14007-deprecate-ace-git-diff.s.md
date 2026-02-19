@@ -297,7 +297,7 @@ Note: Files kept but not loaded to preserve git history and allow rollback if ne
 
 ## References
 
-- Parent task: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.00-orchestrator.s.md`
+- Parent task: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140-orchestrator.s.md`
 - ace-git package task: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.01-ace-git-package.s.md`
 - ace-context update task: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.05-update-ace-context.s.md`
 - ace-git-diff package: `/Users/mc/Ps/ace-meta/ace-git-diff/`

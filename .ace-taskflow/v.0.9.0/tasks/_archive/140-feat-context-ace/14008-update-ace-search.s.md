@@ -134,7 +134,7 @@ Replace duplicated git_scope_filter in ace-search with ace-git dependency. This 
 
 ## References
 
-- Parent orchestrator: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.00-orchestrator.s.md`
+- Parent orchestrator: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140-orchestrator.s.md`
 - ace-git package: `/Users/mc/Ps/ace-meta/ace-git/`
 - Source file: `ace-search/lib/ace/search/molecules/git_scope_filter.rb`
 - Dependency task: `v.0.9.0+task.140.01` (Create ace-git package)

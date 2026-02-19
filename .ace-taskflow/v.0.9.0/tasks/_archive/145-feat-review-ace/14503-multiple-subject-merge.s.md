@@ -156,7 +156,7 @@ end
 
 ## References
 
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md
 - Depends on: 145.02 (unified subject resolution)
 - ace-context merge behavior: similar pattern in preset composition
 

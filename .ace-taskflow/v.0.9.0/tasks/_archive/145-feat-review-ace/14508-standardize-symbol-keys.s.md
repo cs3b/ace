@@ -339,4 +339,4 @@ processed[section_name].delete(:presets)
 - PR #76 synthesis report (item #13)
 - File: `ace-context/lib/ace/context/molecules/section_processor.rb`
 - File: `ace-context/lib/ace/context/organisms/context_loader.rb`
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md
