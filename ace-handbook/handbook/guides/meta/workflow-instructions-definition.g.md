@@ -197,13 +197,13 @@ Review these refactored workflow instructions that demonstrate self-containment 
 - Includes full v.0.0.0 release structure
 
 ### Simplified Process Example
-`wfi://draft-task`:
+`wfi://task/draft`:
 - Unified approach for all input types
 - Embedded task template
 - No sub-workflow dependencies
 
 ### Command Reference Example
-`wfi://publish-release`:
+`wfi://release/publish`:
 - Embeds package registry commands for all major platforms
 - Includes changelog format specification
 - Contains complete release process without external references
