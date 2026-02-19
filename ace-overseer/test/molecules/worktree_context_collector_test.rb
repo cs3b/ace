@@ -97,6 +97,21 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
+  def test_collect_extracts_task_id_from_ace_task_path
+    Dir.mktmpdir("collector-root") do |root|
+      worktree = File.join(root, "ace-task.266")
+      Dir.mkdir(worktree)
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        assignment_executor_factory: -> { NoAssignmentExecutor.new },
+        repo_status_loader: -> { FakeRepoStatus.new("267-rename-something", { "clean" => true }) }
+      )
+
+      context = collector.collect(worktree)
+
+      assert_equal "266", context.task_id
+    end
+  end
+
   def test_collect_extracts_four_digit_task_ids_from_worktree_path
     Dir.mktmpdir("collector-root") do |root|
       worktree = File.join(root, "task.1234")

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.526] - 2026-02-19
+
+### Fixed
+
+- **ace-overseer v0.2.15**: Task ID extraction now recognizes `ace-task.NNN` worktree paths, fixing status mismatch with `ace-git-worktree list`
+
 ## [0.9.525] - 2026-02-19
 
 ### Added
