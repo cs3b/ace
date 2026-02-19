@@ -49,4 +49,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: @ace-integration-claude/handbook/workflow-instructions/update-integration-claude.wf.md
+For detailed instructions, see: @ace-integration-claude/handbook/workflow-instructions/integration/update-claude.wf.md
