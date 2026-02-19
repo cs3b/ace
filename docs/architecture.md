@@ -90,10 +90,11 @@ development guide.
 
 Self-contained instruction documents for complete processes:
 
-* **Location**: `gem/handbook/workflow-instructions/*.wf.md`
+* **Location**: `gem/handbook/workflow-instructions/<namespace>/<action>.wf.md`
 * **Structure**: Frontmatter (purpose, params, tools) + complete instructions + embedded templates
 * **Principle**: ADR-001 self-containment - include all context inline
-* **Discovery**: `ace-bundle wfi://workflow-name`
+* **Namespaces**: `task/`, `bug/`, `git/`, `docs/`, `test/`, `e2e/`, `review/`, `handbook/`, `release/`, `assign/`, `lint/`, `search/`, `idea/`, `retro/`, `integration/`
+* **Discovery**: `ace-bundle wfi://namespace/action` or browse with `ace-nav wfi://namespace/*`
 * **Use when**: Multi-step process, decision points, context management
 
 ### Agents (.ag.md)
