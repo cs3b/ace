@@ -177,5 +177,5 @@ See: [Test Performance Guide](guide://test-performance)
 * [Performance Tuning Guide](guide://performance.g) (Performance Testing)
 
 * [Troubleshooting Workflow](guide://debug-troubleshooting.g)
-* Relevant Workflow Instructions: [`work-on-task.wf.md`](wfi://work-on-task) (includes testing
+* Relevant Workflow Instructions: [`work-on-task.wf.md`](wfi://task/work) (includes testing
   guidance), [`fix-tests.wf.md`](wfi://test/fix) (for diagnosing and fixing failing tests)
