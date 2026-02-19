@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.271
-status: draft
+status: in-progress
 priority: medium
 estimate: 6h
 dependencies: []
+worktree:
+  branch: 271-remove-00-orchestrator-suffix-from-task-filenames
+  path: "../ace-task.271"
+  created_at: '2026-02-19 07:05:59'
+  updated_at: '2026-02-19 07:05:59'
+  target_branch: main
 ---
 
 # Remove .00 orchestrator suffix from task filenames
