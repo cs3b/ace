@@ -27,7 +27,7 @@ E2E tests are fundamentally different from unit tests: they are agent-executed v
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://bundle`
 - Read E2E testing guide: `ace-bundle guide://e2e-testing`
 
 **Before starting:**
