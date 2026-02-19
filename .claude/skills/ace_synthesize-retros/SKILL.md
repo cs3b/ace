@@ -18,4 +18,4 @@ source: ace-taskflow
 
 read and run `ace-bundle wfi://synthesize-retros`
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-bundle wfi://git/commit`

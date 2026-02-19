@@ -19,4 +19,4 @@ source: ace-taskflow
 
 read and run `ace-bundle wfi://document-unplanned-work`
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-bundle wfi://git/commit`
