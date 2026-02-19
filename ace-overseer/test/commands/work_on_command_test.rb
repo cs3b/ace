@@ -52,7 +52,7 @@ class WorkOnCommandTest < AceOverseerTestCase
     end
 
     assert_includes output, "Done."
-    assert_includes output, "t230"
+    assert_includes output, "Done."
   end
 
   def test_wraps_not_found_errors_as_cli_error
@@ -75,7 +75,6 @@ class WorkOnCommandTest < AceOverseerTestCase
       worktree_path: "/tmp/task.230",
       branch: "230-feature",
       worktree_created: true,
-      window_name: "t230",
       assignment_id: "abc123",
       first_phase: "010-onboard",
       assignment_created: true

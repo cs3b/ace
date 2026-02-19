@@ -55,7 +55,7 @@ module Ace
               ignore_untracked: true
             )
             if remove_result[:success]
-              close_tmux_window(candidate.task_id)
+              close_tmux_window(candidate.worktree_path)
               pruned << candidate
             else
               failed << { candidate: candidate, error: remove_result[:error] }
@@ -99,13 +99,12 @@ module Ace
           end
         end
 
-        def close_tmux_window(task_id)
-          window_name = Atoms::WindowNameFormatter.format(
-            task_id,
-            format: @config["window_name_format"] || "t{task_id}"
-          )
-          session_name = @config["tmux_session_name"] || "ace"
+        def close_tmux_window(worktree_path)
+          window_name = File.basename(worktree_path)
           tmux_bin = @config["tmux_binary"] || "tmux"
+          session_name = @tmux_executor.run([tmux_bin, "display-message", "-p", "#S"]).to_s.strip
+          return false if session_name.empty?
+
           @tmux_executor.run([tmux_bin, "kill-window", "-t", "#{session_name}:#{window_name}"])
         rescue StandardError
           false
