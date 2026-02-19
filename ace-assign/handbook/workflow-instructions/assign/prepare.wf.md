@@ -269,7 +269,7 @@ After preset expansion, each phase with a `skill:` field may declare assignment 
 
 ```yaml
 assign:
-  source: wfi://work-on-task
+  source: wfi://task/work
 ```
 
 Resolution flow:
