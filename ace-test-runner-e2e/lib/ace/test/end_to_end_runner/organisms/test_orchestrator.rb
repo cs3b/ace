@@ -138,13 +138,13 @@ module Ace
             report_dir = report_dir_for(scenario, timestamp)
 
             if cli_provider?
-              # CLI providers write reports via workflow — use expected path, fallback to glob
+              # CLI providers write reports via workflow at a deterministic path.
+              # Do not fall back to older report directories from other runs.
               expected_dir = report_dir_for(scenario, timestamp)
-              agent_dir = Dir.exist?(expected_dir) ? expected_dir : find_agent_report_dir(scenario)
-              if agent_dir
-                result = read_agent_result(scenario, agent_dir, result)
+              if Dir.exist?(expected_dir)
+                result = read_agent_result(scenario, expected_dir, result)
               else
-                result = result.with_report_dir(expected_dir)
+                result = missing_agent_report_result(scenario, expected_dir, result)
               end
             else
               # API providers: write reports via ReportWriter
@@ -224,12 +224,11 @@ module Ace
                   report_dir = report_dir_for(scenario, run_id || timestamp)
 
                   if cli_provider?
-                    expected_dir = report_dir_for(scenario, run_id)
-                    agent_dir = Dir.exist?(expected_dir) ? expected_dir : find_agent_report_dir(scenario)
-                    if agent_dir
-                      result = read_agent_result(scenario, agent_dir, result)
+                    expected_dir = report_dir_for(scenario, run_id || timestamp)
+                    if Dir.exist?(expected_dir)
+                      result = read_agent_result(scenario, expected_dir, result)
                     else
-                      result = result.with_report_dir(expected_dir)
+                      result = missing_agent_report_result(scenario, expected_dir, result)
                     end
                   else
                     @report_writer.write(result, scenario, report_dir: report_dir)
@@ -277,23 +276,6 @@ module Ace
           def report_dir_for(scenario, timestamp)
             cache_dir = File.join(@base_dir, ".cache", "ace-test-e2e")
             File.join(cache_dir, "#{scenario.dir_name(timestamp)}-reports")
-          end
-
-          # Find an agent-written report directory on disk
-          #
-          # Agents create report dirs matching the pattern:
-          #   .cache/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/
-          # Look for the most recent one matching this scenario.
-          #
-          # @param scenario [Models::TestScenario] The test scenario
-          # @return [String, nil] Path to found report dir, or nil
-          def find_agent_report_dir(scenario)
-            cache_dir = File.join(@base_dir, ".cache", "ace-test-e2e")
-            return nil unless Dir.exist?(cache_dir)
-
-            pattern = "*-#{scenario.short_package}-#{scenario.short_id}-reports"
-            matches = Dir.glob(File.join(cache_dir, pattern)).sort
-            matches.last # Most recent by timestamp
           end
 
           # Generate a timestamp ID via injected generator
@@ -352,6 +334,28 @@ module Ace
             )
           rescue => e
             fallback_result.with_report_dir(agent_dir)
+          end
+
+          # Build a deterministic infrastructure error when the expected report
+          # directory for a CLI-provider run is missing.
+          #
+          # @param scenario [Models::TestScenario]
+          # @param expected_dir [String] Deterministic report directory path
+          # @param fallback_result [Models::TestResult]
+          # @return [Models::TestResult]
+          def missing_agent_report_result(scenario, expected_dir, fallback_result)
+            return fallback_result.with_report_dir(expected_dir) if fallback_result.status == "skip"
+
+            Models::TestResult.new(
+              test_id: scenario.test_id,
+              status: "error",
+              test_cases: fallback_result.test_cases,
+              summary: "Missing CLI report directory",
+              error: "Expected report directory was not created: #{expected_dir}",
+              started_at: fallback_result.started_at,
+              completed_at: fallback_result.completed_at,
+              report_dir: expected_dir
+            )
           end
 
           # Default timestamp generator using Ace::B36ts library

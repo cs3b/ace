@@ -26,6 +26,12 @@ Otherwise:
 
 ARGUMENTS: $ARGUMENTS
 
+## Execution Context
+
+- `/ace:run-e2e-test ...` is a chat slash command, not a shell command.
+- Do **not** run `/ace:...` in bash (this causes `command not found` and no reports).
+- If slash commands are unavailable in the current environment, report that limitation explicitly in `Issues`.
+
 ## Subagent Return Contract
 
 When invoked as a subagent (via Task tool from `/ace:run-e2e-tests`), return a structured summary instead of verbose output:

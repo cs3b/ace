@@ -26,6 +26,12 @@ This workflow guides an agent through executing an E2E test scenario.
 
   When omitted, all test cases in the scenario are executed (default behavior).
 
+## Command Context (Important)
+
+- `/ace:run-e2e-test ...` is a chat slash command and must be invoked in agent chat, not in bash.
+- Never run `/ace:...` as a shell command.
+- If slash commands are unavailable in the environment, stop and report that limitation in the final `Issues` field.
+
 ## Subagent Mode
 
 When invoked as a subagent (via Task tool from `/ace:run-e2e-tests` orchestrator), this workflow operates with special considerations:
