@@ -22,8 +22,8 @@ class PruneOrchestratorTest < AceOverseerTestCase
       { success: true, worktrees: @worktrees }
     end
 
-    def remove(path, **_options)
-      @remove_calls << path
+    def remove(path, **options)
+      @remove_calls << { path: path, options: options }
       { success: true }
     end
   end
@@ -105,7 +105,10 @@ class PruneOrchestratorTest < AceOverseerTestCase
 
     assert_equal false, result[:aborted]
     assert_equal 1, result[:pruned].length
-    assert_equal ["/wt/task.230"], manager.remove_calls
+    assert_equal 1, manager.remove_calls.length
+    assert_equal "/wt/task.230", manager.remove_calls.first[:path]
+    assert_equal true, manager.remove_calls.first[:options][:ignore_untracked]
+    assert_equal false, manager.remove_calls.first[:options][:force]
     assert_equal 1, tmux.run_calls.length
   end
 

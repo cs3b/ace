@@ -21,7 +21,7 @@ setup:
       tmux kill-session -t "ace-e2e-test" 2>/dev/null || true
       ace-overseer work-on --task 001
       ace-overseer work-on --task 002
-  # Make task 001 safe to prune: mark done, complete assignment, ensure git clean
+  # Make task 001 safe to prune: mark done, complete assignment, ensure tracked changes are committed
   - run: |
       TASK_SPEC=".ace-taskflow/v.0.1.0/t/001-prune-safe/001-prune-safe.s.md"
       sed -i 's/status: in-progress/status: done/' "$TASK_SPEC"

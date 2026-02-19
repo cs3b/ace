@@ -14,7 +14,7 @@ Verify that after prune, the unsafe worktree (task 002) is still present — the
    WORKTREE_LIST=$(git worktree list 2>&1)
    echo "Worktree list:"
    echo "$WORKTREE_LIST"
-   echo "$WORKTREE_LIST" | grep -q "002" && echo "PASS: Task 002 worktree preserved (unsafe)" || echo "FAIL: Task 002 worktree was removed!"
+   echo "$WORKTREE_LIST" | grep -q "task\.002" && echo "PASS: Task 002 worktree preserved (unsafe)" || echo "FAIL: Task 002 worktree was removed!"
    ```
 
 2. Verify no safe candidates remain after prune

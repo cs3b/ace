@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.537] - 2026-02-19
+
+### Fixed
+
+- **ace-overseer v0.2.12**: Prune now uses `ignore_untracked: true` for safe removals and tightens TS-OVERSEER-002 E2E assertions/config alignment to avoid path-matching false positives
+
 ## [0.9.536] - 2026-02-19
 
 ### Fixed
