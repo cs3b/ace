@@ -1,5 +1,5 @@
 ---
-name: review
+name: review/run
 description: Review code with preset and plan feedback application
 argument-hint: "[preset] [subjects...]"
 allowed-tools: Read, Bash, TodoWrite
