@@ -1,5 +1,5 @@
 ---
-name: prepare-assignment
+name: assign/prepare
 allowed-tools: Bash, Read, Write
 description: Prepare job.yaml from preset or informal instructions
 argument-hint: "[preset-name] [--taskref value] [--taskrefs values] [--output path]"

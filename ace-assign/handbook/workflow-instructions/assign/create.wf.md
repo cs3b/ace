@@ -1,5 +1,5 @@
 ---
-name: create-assignment
+name: assign/create
 allowed-tools: Bash, Read, Write, AskUserQuestion
 description: Create a new assignment workflow from job.yaml
 argument-hint: "[path/to/job.yaml]"
