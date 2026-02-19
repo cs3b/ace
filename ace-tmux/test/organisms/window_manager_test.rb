@@ -49,7 +49,7 @@ class WindowManagerTest < Minitest::Test
 
     new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
     assert new_window_cmd
-    assert_includes new_window_cmd, "dev"
+    assert_includes new_window_cmd, "dev:"
     assert_includes new_window_cmd, "code-editor"
   end
 
@@ -61,7 +61,7 @@ class WindowManagerTest < Minitest::Test
 
     new_window_cmd = @executor.captured_commands.find { |cmd| cmd.include?("new-window") }
     assert new_window_cmd
-    assert_includes new_window_cmd, "my-session"
+    assert_includes new_window_cmd, "my-session:"
   ensure
     ENV.delete("TMUX")
   end

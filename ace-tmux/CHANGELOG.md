@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-02-19
+
+### Fixed
+
+- Fix "index N in use" error when creating tmux windows in sessions with `base-index` set
+
 ## [0.5.3] - 2026-02-19
 
 ### Fixed
