@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.2] - 2026-02-19
+
+### Fixed
+- Add `assign:` block to `work-on-task.wf.md` frontmatter declaring sub-phases (onboard, plan-task, work-on-task) so batch children expand into sub-steps during enrichment
+
 ## [0.38.1] - 2026-02-19
 
 ### Fixed
