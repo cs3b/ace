@@ -311,23 +311,6 @@ module Ace
           end
 
           def fork_scope_root(state, current_phase)
-            state.nearest_fork_ancestor(current_phase.number)
-          end
-
-          def print_fork_scope_guidance(fork_root:, in_fork_scope:, assignment:)
-            return unless fork_root
-
-            puts
-            if in_fork_scope
-              puts "Fork scope: #{fork_root.number} (ACE_ASSIGN_FORK_ROOT=#{fork_root.number})"
-            else
-              puts "Fork subtree detected (root: #{fork_root.number} - #{fork_root.name})."
-              puts "Run in forked process:"
-              puts "  ace-assign fork-run --assignment #{assignment.id}@#{fork_root.number}"
-            end
-          end
-
-          def fork_scope_root(state, current_phase)
             return nil unless current_phase
             return current_phase if current_phase.fork?
 
