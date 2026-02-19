@@ -25,7 +25,7 @@ Generate a structured list of test cases following the ACE testing approach (ato
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://bundle`
 
 ## High-Level Execution Plan
 
