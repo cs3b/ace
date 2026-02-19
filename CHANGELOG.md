@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.537] - 2026-02-19
+
+### Added
+
+- **ace-overseer v0.4.2**: Orchestrator subtask expansion — when working on an orchestrator task with `work-on-tasks` preset, subtasks are expanded into individual assignment phases
+
 ## [0.9.536] - 2026-02-19
 
 ### Fixed

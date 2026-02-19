@@ -54,6 +54,91 @@ class AssignmentLauncherTest < AceOverseerTestCase
     end
   end
 
+  def test_launch_expands_subtask_refs_into_taskrefs_parameter
+    Dir.mktmpdir("overseer-worktree") do |worktree|
+      preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
+      FileUtils.mkdir_p(preset_dir)
+      File.write(
+        File.join(preset_dir, "work-on-tasks.yml"),
+        {
+          "name" => "work-on-tasks",
+          "description" => "Multi-task preset",
+          "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
+          "expansion" => {
+            "batch-parent" => {
+              "name" => "batch-tasks",
+              "number" => "010",
+              "instructions" => "Batch container"
+            },
+            "foreach" => "taskrefs",
+            "child-template" => {
+              "name" => "work-on-{{item}}",
+              "parent" => "010",
+              "context" => "fork",
+              "instructions" => "Work on task {{item}}."
+            }
+          }
+        }.to_yaml
+      )
+
+      fake_executor = FakeExecutor.new
+      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
+      result = launcher.launch(
+        worktree_path: worktree,
+        preset_name: "work-on-tasks",
+        task_ref: "272",
+        subtask_refs: %w[272.01 272.02 272.03]
+      )
+
+      assert_equal "abc123", result[:assignment_id]
+      job_content = File.read(result[:job_path])
+      assert_includes job_content, "work-on-272.01"
+      assert_includes job_content, "work-on-272.02"
+      assert_includes job_content, "work-on-272.03"
+    end
+  end
+
+  def test_launch_falls_back_to_task_ref_when_no_subtask_refs
+    Dir.mktmpdir("overseer-worktree") do |worktree|
+      preset_dir = File.join(worktree, "ace-assign", ".ace-defaults", "assign", "presets")
+      FileUtils.mkdir_p(preset_dir)
+      File.write(
+        File.join(preset_dir, "work-on-tasks.yml"),
+        {
+          "name" => "work-on-tasks",
+          "description" => "Multi-task preset",
+          "parameters" => { "taskrefs" => { "required" => true, "type" => "array" } },
+          "expansion" => {
+            "batch-parent" => {
+              "name" => "batch-tasks",
+              "number" => "010",
+              "instructions" => "Batch container"
+            },
+            "foreach" => "taskrefs",
+            "child-template" => {
+              "name" => "work-on-{{item}}",
+              "parent" => "010",
+              "context" => "fork",
+              "instructions" => "Work on task {{item}}."
+            }
+          }
+        }.to_yaml
+      )
+
+      fake_executor = FakeExecutor.new
+      launcher = Ace::Overseer::Molecules::AssignmentLauncher.new(assignment_executor: fake_executor)
+      result = launcher.launch(
+        worktree_path: worktree,
+        preset_name: "work-on-tasks",
+        task_ref: "150"
+      )
+
+      assert_equal "abc123", result[:assignment_id]
+      job_content = File.read(result[:job_path])
+      assert_includes job_content, "work-on-150"
+    end
+  end
+
   def test_launch_uses_project_preset_path_when_available
     Dir.mktmpdir("overseer-worktree") do |worktree|
       preset_dir = File.join(worktree, ".ace", "assign", "presets")
