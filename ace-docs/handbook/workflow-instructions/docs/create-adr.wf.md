@@ -1,5 +1,5 @@
 ---
-name: create-adr
+name: docs/create-adr
 purpose: Create structured Architecture Decision Records for significant decisions
 bundle: adr-management
 parameters:
@@ -223,7 +223,7 @@ ADRs may need maintenance over time as patterns evolve or become obsolete:
 * **Archival**: Patterns no longer used in current codebase → move to archive
 * **Scope Updates**: Implementation details change → update scope notes
 
-See `wfi://maintain-adrs` for complete lifecycle management.
+See `wfi://docs/maintain-adrs` for complete lifecycle management.
 
 ## Input
 

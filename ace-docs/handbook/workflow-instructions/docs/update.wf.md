@@ -1,5 +1,5 @@
 ---
-name: update-docs
+name: docs/update
 purpose: Update documentation with ace-docs tool orchestration
 bundle: documentation-management
 parameters:
@@ -235,10 +235,10 @@ ace-docs -h             # Help text, not practical usage
 For ADR lifecycle management (creation, evolution, archival, scope updates):
 
 **Creating new ADRs:**
-`wfi://create-adr`
+`wfi://docs/create-adr`
 
 **Maintaining existing ADRs:**
-`wfi://maintain-adrs`
+`wfi://docs/maintain-adrs`
 
 ADR maintenance includes:
 - Evolution documentation when patterns change
@@ -250,7 +250,7 @@ ADR maintenance includes:
 
 For core context documents with specific requirements (line limits, update order, duplication prevention), see the specialized workflow:
 
-`wfi://update-context-docs`
+`wfi://docs/update-context`
 
 This workflow provides:
 - Specific update order to prevent duplication
