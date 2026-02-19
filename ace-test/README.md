@@ -213,12 +213,12 @@ The gem is available as open source under the terms of the MIT License.
 
 | Skill | Purpose |
 |-------|---------|
-| `/ace:plan-tests` | Plan test coverage before coding |
-| `/ace:verify-test-suite` | Audit test suite health (quick/standard/deep) |
-| `/ace:optimize-tests` | Profile and fix slow tests |
+| `/ace:test-plan` | Plan test coverage before coding |
+| `/ace:test-verify-suite` | Audit test suite health (quick/standard/deep) |
+| `/ace:test-optimize` | Profile and fix slow tests |
 | `/ace:test-performance-audit` | Profile tests and document slow cases with actionable fixes |
 | `/ace:test-review` | Review test PR for quality |
-| `/ace:setup-e2e-sandbox` | Set up safe E2E environment |
+| `/ace:e2e-setup-sandbox` | Set up safe E2E environment |
 
 Load guides via: `ace-bundle guide://test-layer-decision`
 

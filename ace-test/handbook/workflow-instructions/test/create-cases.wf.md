@@ -340,7 +340,7 @@ end
    ace-test <package> --profile 10
 
    # Full suite health check
-   /ace:verify-test-suite <package>
+   /ace:test-verify-suite <package>
    ```
 
    Expected:
