@@ -1135,7 +1135,7 @@ This gem replaces the previous `code-review` commands:
 | Old Command | New Command |
 |-------------|-------------|
 | `code-review` | `ace-review` |
-| `code-review-synthesize` | Use workflow: `wfi://synthesize-reviews` |
+| `code-review-synthesize` | Use workflow: `wfi://review/run` |
 
 ### Migration Steps
 
