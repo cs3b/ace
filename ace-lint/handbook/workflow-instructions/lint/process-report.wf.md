@@ -1,5 +1,5 @@
 ---
-name: process-lint-report
+name: lint/process-report
 allowed-tools: Bash, Read
 description: Process lint report and create tasks for manual fixes
 argument-hint: "[report-path]"
@@ -19,7 +19,7 @@ Parse a lint report file and create structured tasks for issues requiring manual
 
 ## Prerequisites
 
-- Lint report file exists (from `wfi://run-lint --report`)
+- Lint report file exists (from `wfi://lint/run --report`)
 - **ace-taskflow is installed and available** - required for task creation commands
 - Understanding of project lint rules
 
