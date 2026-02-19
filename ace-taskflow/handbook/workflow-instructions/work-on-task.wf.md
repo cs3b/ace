@@ -5,6 +5,12 @@ update:
   - template-refs: from-embedded
   frequency: on-change
   last-updated: '2026-02-16'
+assign:
+  sub-phases:
+    - onboard
+    - plan-task
+    - work-on-task
+  context: fork
 ---
 
 # Work on Task Workflow Instruction
