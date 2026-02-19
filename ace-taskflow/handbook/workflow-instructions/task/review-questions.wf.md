@@ -23,7 +23,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://bundle`
 - Load existing review workflow: `ace-bundle wfi://task/review`
 
 ## Process Steps

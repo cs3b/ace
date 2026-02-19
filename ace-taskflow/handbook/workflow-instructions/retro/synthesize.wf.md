@@ -21,7 +21,7 @@ Systematically analyze and compact multiple reflection notes to extract actionab
 
 ## Project Context Loading
 
-- Read and follow: `wfi://load-project-context`
+- Read and follow: `wfi://bundle`
 
 ## High-Level Execution Plan
 
