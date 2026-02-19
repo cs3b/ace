@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.1] - 2026-02-19
+
+### Fixed
+- Architecture-reflection preset diff range changed from `HEAD~1..HEAD` to `origin/main..HEAD` to capture all implementation commits
+
+## [0.40.0] - 2026-02-19
+
+### Added
+- New `architecture-reflection` review preset for pre-PR self-assessment — combines ATOM compliance, over-engineering detection, and missing abstraction analysis
+- New `reflection` focus prompt (`focus/architecture/reflection.md`) with refactor/accept/skip categorization output format
+
 ### Fixed
 - **Feedback extraction failures no longer silently swallowed**: When synthesis LLM call fails, error is now propagated to CLI output and response hash instead of being silently dropped
 - **CLI reports feedback status**: Multi-model review output now shows feedback item count on success or error message on failure
