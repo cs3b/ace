@@ -99,7 +99,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * **Critically review any AI-generated code before committing.**
   * Write a commit message following the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
     standard.
-* **Workflow:** See [`commit.wf.md`](wfi://commit)
+* **Workflow:** See [`commit.wf.md`](wfi://git/commit)
 * **Reference:** [Version Control Git Guide](guide://version-control-system-git)
 
 ### Step 7: Self-Reflection
@@ -147,7 +147,7 @@ sub-guide for details:
 
 * **Workflow Instructions:**
   * [`work-on-task.wf.md`](wfi://work-on-task) (includes testing guidance)
-  * [`commit.wf.md`](wfi://commit)
+  * [`commit.wf.md`](wfi://git/commit)
   * [`save-session-context.wf.md`](wfi://save-session-context) (for saving session context)
 * **Core Guides:**
   * [Testing Guide](./testing.g.md)
