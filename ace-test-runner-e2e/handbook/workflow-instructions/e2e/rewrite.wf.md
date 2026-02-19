@@ -211,7 +211,7 @@ Present the execution summary:
 
 1. Review the created/modified TC files
 2. Run `/ace:run-e2e-tests {PACKAGE}` to verify all tests pass
-3. Commit changes with `/ace:commit`
+3. Commit changes with `/ace:git-commit`
 ```
 
 ## Example Invocations
