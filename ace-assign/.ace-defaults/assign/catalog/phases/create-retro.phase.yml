@@ -2,10 +2,13 @@ name: create-retro
 skill: null
 description: Create a retrospective summarizing what was accomplished and lessons learned
 
-prerequisites: []
+prerequisites:
+  - name: reflect-and-refactor
+    strength: recommended
+    reason: "Findings report enriches retrospective with architectural observations"
 
 produces: [retrospective]
-consumes: []
+consumes: [findings-report]
 
 context:
   default: null

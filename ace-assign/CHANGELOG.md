@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-02-19
+
+### Changed
+- Added clarifying comments for `skill: null` and `context.default: null` in reflect-and-refactor phase
+
+## [0.12.2] - 2026-02-19
+
+### Changed
+- Clarified `reflect-after-verify` ordering note to distinguish baseline verify from post-refactor re-verify
+- Consolidated duplicate conditional suggestions for `work-on-task` into single entry with per-phase strength overrides
+
+## [0.12.1] - 2026-02-19
+
+### Fixed
+- `reflect-verify-cycle` pair changed from `sequential` to `conditional` — prevents overriding optional strength of reflect-and-refactor
+- Renamed `max_recursion` to `max_reruns` in replan config for clarity
+
+## [0.12.0] - 2026-02-19
+
+### Added
+- New `reflect-and-refactor` phase in catalog — analyzes implementation against ATOM principles and executes targeted refactoring before PR creation
+- Composition rules for reflect-and-refactor: ordering (after verify, before mark-done/release/retro), pairs (verify cycle, fix cycle, replan cycle), and conditional suggestion
+- `create-retro` phase now consumes `findings-report` from reflect-and-refactor as recommended prerequisite
+- `implement-with-pr` recipe updated to include optional reflect-and-refactor phase after work-on-task
+
 ## [0.11.18] - 2026-02-19
 
 ### Changed
