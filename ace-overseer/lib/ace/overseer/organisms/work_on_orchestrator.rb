@@ -53,10 +53,12 @@ module Ace
                                 }
                               else
                                 progress.call("Launching assignment (preset: #{preset_name})...")
+                                subtask_refs = extract_subtask_refs(task)
                                 launched = @assignment_launcher.launch(
                                   worktree_path: worktree[:worktree_path],
                                   preset_name: preset_name,
-                                  task_ref: task_ref.to_s
+                                  task_ref: task_ref.to_s,
+                                  subtask_refs: subtask_refs
                                 )
                                 launched.merge(created: true)
                               end
@@ -74,6 +76,12 @@ module Ace
         end
 
         private
+
+        def extract_subtask_refs(task)
+          return nil unless task[:is_orchestrator] && task[:subtask_ids]&.any?
+
+          task[:subtask_ids].filter_map { |id| Ace::Taskflow::Atoms::TaskReferenceParser.extract_number(id) }
+        end
 
         def existing_assignment(worktree_path)
           original_project_root = ENV["PROJECT_ROOT_PATH"]

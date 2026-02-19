@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-02-19
+
+### Added
+- Orchestrator subtask expansion for `work-on-tasks` preset — when a task is an orchestrator with subtasks, `AssignmentLauncher` expands subtask refs into individual foreach phases (e.g., `work-on-272.01`, `work-on-272.02`) instead of a single `work-on-272` phase
+- `extract_subtask_refs` helper in `WorkOnOrchestrator` to extract subtask numbers from orchestrator task data
+- `subtask_refs:` keyword argument on `AssignmentLauncher#launch` for passing expanded subtask references
+
 ## [0.4.1] - 2026-02-19
 
 ### Added
