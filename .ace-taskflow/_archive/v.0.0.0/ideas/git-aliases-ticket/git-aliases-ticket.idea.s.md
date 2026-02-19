@@ -1,6 +1,6 @@
 ---
 id: v.0.3.0+task.17
-status: pending
+status: done
 priority: high
 estimate: 12h
 dependencies: ["v.0.3.0+task.13"]
