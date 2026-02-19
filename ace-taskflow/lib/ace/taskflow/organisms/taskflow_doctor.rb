@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "yaml"
 require_relative "../molecules/frontmatter_validator"
 require_relative "../molecules/structure_validator"
 require_relative "../molecules/integrity_validator"
@@ -91,14 +92,22 @@ module Ace
 
           # Check releases
           run_release_check if should_check?(:releases)
+
+          # Check for stale backup files
+          check_backup_files
+
+          # Check idea scope/status consistency
+          check_idea_scope_consistency
         end
 
         def run_component_check(component)
           case component.to_sym
           when :tasks
             check_tasks
+            check_backup_files
           when :ideas
             check_ideas
+            check_idea_scope_consistency
           when :releases
             check_releases
           when :retros
@@ -280,6 +289,9 @@ module Ace
 
           # Check for legacy format files (migration validation)
           check_legacy_idea_formats(idea_files)
+
+          # Check idea structure (misplaced files)
+          check_idea_structure
         end
 
         def check_retros
@@ -502,6 +514,78 @@ module Ace
           end
         end
 
+        # Check for stale backup files in active task directories
+        def check_backup_files
+          config = Ace::Taskflow.configuration
+          done_dir = config.done_dir
+
+          # Glob for backup files in all task directories, excluding archive
+          backup_files = Dir.glob(File.join(@root_path, "**", "*.backup.*"))
+            .reject { |f| f.include?("/#{done_dir}/") }
+            .reject { |f| f.include?("/.git/") }
+
+          backup_files.each do |file|
+            add_issue(:warning, "Stale backup file (safe to delete)", file)
+          end
+        end
+
+        # Check idea scope/status consistency
+        def check_idea_scope_consistency
+          config = Ace::Taskflow.configuration
+          done_dir = config.done_dir
+          maybe_dir = config.maybe_dir
+
+          idea_files = Dir.glob(File.join(@root_path, "**/ideas/**/*.md"))
+            .reject { |f| f.include?("/.git/") }
+
+          idea_files.each do |file|
+            # Read frontmatter to get status
+            begin
+              content = File.read(file)
+              next unless content =~ /\A---\s*\n(.*?)\n---/m
+              frontmatter = YAML.safe_load($1) || {}
+            rescue StandardError
+              next
+            end
+
+            status = frontmatter["status"]
+            in_archive = file.include?("/#{done_dir}/")
+            in_maybe = file.include?("/#{maybe_dir}/")
+
+            # Error: Ideas in maybe/_archive/ — invalid nesting
+            if in_maybe && in_archive
+              add_issue(:error, "Idea in #{maybe_dir}/#{done_dir}/ (invalid nesting, should be in ideas/#{done_dir}/)", file)
+              next
+            end
+
+            # Error: Ideas in _archive/ with non-terminal status
+            if in_archive && status && !%w[done obsolete cancelled].include?(status)
+              add_issue(:error, "Idea in #{done_dir}/ but status is '#{status}' (expected terminal status)", file)
+            end
+
+            # Warning: Ideas with status: done not in _archive/
+            if status == "done" && !in_archive
+              add_issue(:warning, "Idea with status 'done' not in #{done_dir}/ directory", file)
+            end
+
+            # Warning: Ideas with status: parked not in maybe/
+            if status == "parked" && !in_maybe
+              add_issue(:warning, "Idea with status 'parked' not in #{maybe_dir}/ directory", file)
+            end
+          end
+        end
+
+        # Check idea file structure using IdeaStructureValidator
+        def check_idea_structure
+          require_relative "../molecules/idea_structure_validator"
+          validator = Molecules::IdeaStructureValidator.new(@root_path)
+          result = validator.validate_all
+
+          result[:misplaced].each do |misplaced|
+            add_issue(:warning, "Misplaced idea file: #{misplaced[:reason]}", misplaced[:path])
+          end
+        end
+
         def add_issue(type, message, location = nil)
           issue = {
             type: type,
@@ -553,7 +637,9 @@ module Ace
             /not in #{done_dir}\/ directory/,
             /in #{done_dir}\/ directory but status is/,
             /Missing recommended field:/,
-            /Missing default/
+            /Missing default/,
+            /Stale backup file/,
+            /invalid nesting, should be in ideas/
           ]
 
           fixable_patterns.any? { |pattern| issue[:message].match?(pattern) }
