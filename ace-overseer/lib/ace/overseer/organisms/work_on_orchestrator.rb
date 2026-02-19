@@ -14,7 +14,10 @@ module Ace
           @assignment_detector = assignment_detector
         end
 
-        def call(task_ref:, cli_preset: nil)
+        def call(task_ref:, cli_preset: nil, on_progress: nil)
+          progress = on_progress || ->(_msg) {}
+
+          progress.call("Loading task #{task_ref}...")
           task = @task_loader.find_task_by_reference(task_ref.to_s)
           raise Error, "Task not found: #{task_ref}" unless task
 
@@ -24,31 +27,43 @@ module Ace
             default: @config["default_assign_preset"] || "work-on-task"
           )
 
+          progress.call("Provisioning worktree...")
           worktree = @worktree_provisioner.provision(task_ref)
+          if worktree[:created]
+            progress.call("Worktree created at #{worktree[:worktree_path]}")
+          else
+            progress.call("Worktree exists at #{worktree[:worktree_path]}")
+          end
+
           window_name = Atoms::WindowNameFormatter.format(
             task_ref,
             format: @config["window_name_format"] || "t{task_id}"
           )
+          session_name = @config["tmux_session_name"] || "ace"
 
+          progress.call("Opening tmux window '#{window_name}' in session '#{session_name}'...")
           @tmux_window_opener.open(
             worktree_path: worktree[:worktree_path],
             window_name: window_name,
-            session_name: @config["tmux_session_name"] || "ace",
+            session_name: session_name,
             preset: @config["window_preset"] || "cc"
           )
 
+          progress.call("Checking assignment status...")
           existing = if @assignment_detector
                        @assignment_detector.call(worktree[:worktree_path])
                      else
                        existing_assignment(worktree[:worktree_path])
                      end
           assignment_result = if existing
+                                progress.call("Assignment already active: #{existing.dig("assignment", "id")}")
                                 {
                                   assignment_id: existing.dig("assignment", "id"),
                                   first_phase: existing.dig("current_phase", "number"),
                                   created: false
                                 }
                               else
+                                progress.call("Launching assignment (preset: #{preset_name})...")
                                 launched = @assignment_launcher.launch(
                                   worktree_path: worktree[:worktree_path],
                                   preset_name: preset_name,

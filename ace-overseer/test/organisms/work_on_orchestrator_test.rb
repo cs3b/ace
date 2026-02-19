@@ -76,6 +76,90 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     end
   end
 
+  def test_on_progress_receives_step_messages
+    Dir.mktmpdir("task.232") do |worktree|
+      messages = []
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskLoader.new({ metadata: {} }),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          { worktree_path: worktree, branch: "232-feature", created: true }
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {
+          "default_assign_preset" => "work-on-task",
+          "window_name_format" => "t{task_id}",
+          "tmux_session_name" => "ace",
+          "window_preset" => "cc"
+        },
+        assignment_detector: ->(_path) { nil }
+      )
+
+      orchestrator.call(task_ref: "232", on_progress: ->(msg) { messages << msg })
+
+      assert messages.any? { |m| m.include?("Loading task 232") }
+      assert messages.any? { |m| m.include?("Provisioning worktree") }
+      assert messages.any? { |m| m.include?("Worktree created at") }
+      assert messages.any? { |m| m.include?("Opening tmux window") }
+      assert messages.any? { |m| m.include?("Checking assignment status") }
+      assert messages.any? { |m| m.include?("Launching assignment") }
+    end
+  end
+
+  def test_on_progress_reports_existing_worktree
+    Dir.mktmpdir("task.233") do |worktree|
+      messages = []
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskLoader.new({ metadata: {} }),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          { worktree_path: worktree, branch: "233-feature", created: false }
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {
+          "default_assign_preset" => "work-on-task",
+          "window_name_format" => "t{task_id}",
+          "tmux_session_name" => "ace",
+          "window_preset" => "cc"
+        },
+        assignment_detector: ->(_path) { nil }
+      )
+
+      orchestrator.call(task_ref: "233", on_progress: ->(msg) { messages << msg })
+
+      assert messages.any? { |m| m.include?("Worktree exists at") }
+    end
+  end
+
+  def test_on_progress_reports_existing_assignment
+    Dir.mktmpdir("task.234") do |worktree|
+      messages = []
+      existing = {
+        "assignment" => { "id" => "existing-id" },
+        "current_phase" => { "number" => "020-implement" }
+      }
+      orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
+        task_loader: FakeTaskLoader.new({ metadata: {} }),
+        worktree_provisioner: FakeWorktreeProvisioner.new(
+          { worktree_path: worktree, branch: "234-feature", created: true }
+        ),
+        tmux_window_opener: FakeWindowOpener.new,
+        assignment_launcher: FakeAssignmentLauncher.new,
+        config: {
+          "default_assign_preset" => "work-on-task",
+          "window_name_format" => "t{task_id}",
+          "tmux_session_name" => "ace",
+          "window_preset" => "cc"
+        },
+        assignment_detector: ->(_path) { existing }
+      )
+
+      orchestrator.call(task_ref: "234", on_progress: ->(msg) { messages << msg })
+
+      assert messages.any? { |m| m.include?("Assignment already active: existing-id") }
+    end
+  end
+
   def test_falls_back_to_cli_preset
     Dir.mktmpdir("task.231") do |worktree|
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(

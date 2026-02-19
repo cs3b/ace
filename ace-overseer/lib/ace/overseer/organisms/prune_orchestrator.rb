@@ -11,11 +11,15 @@ module Ace
           @config = config || Ace::Overseer.config
         end
 
-        def call(dry_run:, yes:, input: $stdin, output: $stdout)
+        def call(dry_run:, yes:, input: $stdin, output: $stdout, on_progress: nil)
+          progress = on_progress || ->(_msg) {}
+
+          progress.call("Scanning task worktrees...")
           result = @worktree_manager.list_all(show_tasks: true, task_associated: true)
           raise Error, result[:error] || "Failed to list task worktrees" unless result[:success]
 
           worktrees = Array(result[:worktrees]).select(&:task_associated?)
+          progress.call("Checking #{worktrees.length} worktree(s)...")
           checked = worktrees.map do |worktree|
             @prune_checker.check(worktree_path: worktree.path, task_ref: worktree.task_id)
           end
@@ -24,6 +28,8 @@ module Ace
           unsafe = checked.reject(&:safe_to_prune?)
 
           return { dry_run: true, safe: safe, unsafe: unsafe, pruned: [], failed: [] } if dry_run
+
+          print_candidates(safe, unsafe, output)
 
           unless yes
             output.print("Continue? [y/N] ")
@@ -61,6 +67,19 @@ module Ace
         end
 
         private
+
+        def print_candidates(safe, unsafe, output)
+          if safe.any?
+            output.puts("Safe to prune (#{safe.length}):")
+            safe.each { |c| output.puts("  task.#{c.task_id} — #{c.worktree_path}") }
+          else
+            output.puts("No worktrees safe to prune.")
+          end
+          if unsafe.any?
+            output.puts("Skipping (#{unsafe.length}):")
+            unsafe.each { |c| output.puts("  task.#{c.task_id} — #{c.reasons.join(", ")}") }
+          end
+        end
 
         def close_tmux_window(task_id)
           window_name = Atoms::WindowNameFormatter.format(
