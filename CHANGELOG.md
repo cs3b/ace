@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.540] - 2026-02-19
+
+### Fixed
+
+- **ace-taskflow v0.38.1**: Fix `doctor --fix` never applying fixes (fresh doctor had empty issues list), add empty directory detection and auto-fix for stale task/idea directories
+
 ## [0.9.539] - 2026-02-19
 
 ### Added
