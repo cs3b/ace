@@ -1,21 +1,18 @@
 ---
-name: ace:fix-tests
-description: Fix failing automated tests systematically
+name: ace:test-create-cases
+description: Generate structured test cases for features and code changes
 # context: no-fork
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
   - Bash(ace-bundle:*)
-  - Bash(ace-test:*)
   - Read
   - Write
   - Edit
-  - Grep
-  - Glob
-argument-hint: [test-file-pattern]
+argument-hint:
 last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://fix-tests`
+read and run `ace-bundle wfi://test/create-cases`
