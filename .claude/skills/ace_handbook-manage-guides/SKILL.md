@@ -1,5 +1,5 @@
 ---
-name: meta-manage-guides
+name: ace:handbook-manage-guides
 title: "Meta: Manage Guides"
 command: meta-manage-guides
 description: Create, update, and maintain development guides
@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-read and run ace-bundle wfi://manage-guides
+read and run ace-bundle wfi://handbook/manage-guides

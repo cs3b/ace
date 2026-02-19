@@ -1,5 +1,5 @@
 ---
-name: ace:parallel-research
+name: ace:handbook-parallel-research
 description: Set up and run parallel agent research
 user-invocable: true
 allowed-tools:
@@ -12,4 +12,4 @@ last_modified: 2026-01-31
 source: ace-handbook
 ---
 
-read and run `ace-bundle wfi://parallel-research`
+read and run `ace-bundle wfi://handbook/parallel-research`
