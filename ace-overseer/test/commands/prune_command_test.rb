@@ -36,6 +36,68 @@ class PruneCommandTest < AceOverseerTestCase
     refute_nil orchestrator.calls.first[:on_progress]
   end
 
+  def test_force_option_passed_to_orchestrator
+    orchestrator = FakePruneOrchestrator.new(
+      result: { dry_run: false, safe: [], unsafe: [], forced: [], pruned: [], failed: [], aborted: false }
+    )
+    command = Ace::Overseer::CLI::Commands::Prune.new(
+      orchestrator: orchestrator,
+      input: StringIO.new,
+      output: StringIO.new
+    )
+
+    capture_io do
+      command.call(quiet: false, dry_run: false, yes: true, debug: false, force: true)
+    end
+
+    assert_equal true, orchestrator.calls.first[:force]
+  end
+
+  def test_targets_passed_to_orchestrator
+    orchestrator = FakePruneOrchestrator.new(
+      result: { dry_run: false, safe: [], unsafe: [], forced: [], pruned: [], failed: [], aborted: false }
+    )
+    command = Ace::Overseer::CLI::Commands::Prune.new(
+      orchestrator: orchestrator,
+      input: StringIO.new,
+      output: StringIO.new
+    )
+
+    capture_io do
+      command.call(quiet: false, dry_run: false, yes: true, debug: false, force: false, targets: ["230", "265"])
+    end
+
+    assert_equal ["230", "265"], orchestrator.calls.first[:targets]
+  end
+
+  def test_dry_run_shows_force_tag
+    safe_candidate = Ace::Overseer::Models::PruneCandidate.new(
+      task_id: "230", worktree_path: "/wt/task.230",
+      assignment_complete: true, task_done: true, git_clean: true, reasons: []
+    )
+    forced_candidate = Ace::Overseer::Models::PruneCandidate.new(
+      task_id: "231", worktree_path: "/wt/task.231",
+      assignment_complete: false, task_done: false, git_clean: false, reasons: ["git not clean"]
+    )
+    orchestrator = FakePruneOrchestrator.new(
+      result: { dry_run: true, safe: [safe_candidate], unsafe: [forced_candidate], forced: [forced_candidate], pruned: [], failed: [] }
+    )
+    command = Ace::Overseer::CLI::Commands::Prune.new(
+      orchestrator: orchestrator,
+      input: StringIO.new,
+      output: StringIO.new
+    )
+
+    out, = capture_io do
+      command.call(quiet: false, dry_run: true, yes: false, debug: false, force: true)
+    end
+
+    assert_includes out, "task.230"
+    assert_includes out, "task.231"
+    assert_includes out, "[FORCE]"
+    assert_includes out, "2 worktree(s) can be pruned."
+  end
+
   def test_no_progress_output_in_quiet_mode
     orchestrator = FakePruneOrchestrator.new(
       result: { dry_run: false, safe: [], unsafe: [], pruned: [], failed: [], aborted: false }
