@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-02-19
+
+### Fixed
+- Add `ignore_untracked` support to worktree removal dirty checks so callers can treat untracked-only trees as safe while still blocking tracked changes
+
 ## [0.13.3] - 2026-02-18
 
 ### Fixed
