@@ -5,7 +5,7 @@ bundle:
     output: cache
   embed_document_source: true
   files:
-  - wfi://draft-task
+  - wfi://task/draft
   - wfi://git/commit
 variables:
   plan_description: Plan text, behavioral requirements, or Claude Code plan results
@@ -47,7 +47,7 @@ All code implementation happens during `/ace:work-on-task` (status: in-progress)
 ## Context Workflows
 
 This workflow automatically loads the following workflows via frontmatter `context.files`:
-- **draft-task** (`wfi://draft-task`): Creates behavior-first task specification
+- **draft-task** (`wfi://task/draft`): Creates behavior-first task specification
 - **commit** (`wfi://git/commit`): Commits the completed task to git
 
 All workflow content is embedded automatically by ace-bundle protocol resolution.

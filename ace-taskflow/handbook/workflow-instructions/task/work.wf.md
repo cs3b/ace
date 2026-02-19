@@ -113,7 +113,7 @@ For experienced users, here's the condensed workflow:
 
       **→ Redirect to work-on-subtasks workflow:**
       ```
-      Read and execute: ace-bundle wfi://work-on-subtasks
+      Read and execute: ace-bundle wfi://task/work-subtasks
       Pass context: orchestrator task path and pending subtasks
       ```
 
