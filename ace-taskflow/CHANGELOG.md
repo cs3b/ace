@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.1] - 2026-02-19
+
+### Fixed
+- Fix `doctor --fix` never finding fixable issues (was creating fresh doctor without running diagnosis)
+- Make `auto_fixable?` public on `TaskflowDoctor` so command layer can filter diagnosed results
+
+### Added
+- Doctor check for empty directories under `tasks/` and `ideas/` (warning with auto-fix)
+- Auto-fix handler for empty directories (recursive removal when no files present)
+
 ## [0.38.0] - 2026-02-19
 
 ### Added

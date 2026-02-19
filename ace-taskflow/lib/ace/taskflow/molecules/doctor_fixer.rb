@@ -57,6 +57,8 @@ module Ace
             fix_missing_default(issue[:location], $1)
           when /Stale backup file/
             fix_stale_backup_file(issue[:location])
+          when /Empty directory/
+            fix_empty_directory(issue[:location])
           when /invalid nesting, should be in ideas/
             fix_idea_invalid_nesting(issue[:location])
           else
@@ -81,6 +83,7 @@ module Ace
             /Missing recommended field:/,
             /Missing default/,
             /Stale backup file/,
+            /Empty directory/,
             /invalid nesting, should be in ideas/
           ]
 
@@ -261,19 +264,39 @@ module Ace
           true
         end
 
+        def fix_empty_directory(dir_path)
+          return false unless dir_path && Dir.exist?(dir_path)
+
+          # Safety: only remove if truly empty (no files recursively)
+          files = Dir.glob(File.join(dir_path, "**", "*")).select { |f| File.file?(f) }
+          unless files.empty?
+            @skipped_count += 1
+            return false
+          end
+
+          if @dry_run
+            log_fix(dir_path, "Would delete empty directory")
+          else
+            FileUtils.rm_rf(dir_path)
+            log_fix(dir_path, "Deleted empty directory")
+          end
+
+          @fixed_count += 1
+          true
+        end
+
         def fix_idea_invalid_nesting(file_path)
           return false unless file_path && File.exist?(file_path)
 
-          # Move idea from maybe/_archive/ to ideas/_archive/
+          # Move idea from scope/_archive/ to ideas/_archive/
           # Normalize: work with the idea's parent folder
           idea_folder = File.dirname(file_path)
           idea_name = File.basename(idea_folder)
 
-          # Navigate up from maybe/_archive/idea-folder to ideas/
-          # Path structure: .../ideas/maybe/_archive/idea-folder/file.md
-          archive_in_maybe = File.dirname(idea_folder)  # maybe/_archive/
-          maybe_in_ideas = File.dirname(archive_in_maybe) # maybe/
-          ideas_dir = File.dirname(maybe_in_ideas)        # ideas/
+          # Find the ideas/ ancestor directory dynamically
+          # Path structure: .../ideas/{scope}/{archive}/idea-folder/file.md
+          ideas_dir = find_ideas_ancestor(idea_folder)
+          return false unless ideas_dir
 
           # Target: ideas/_archive/idea-folder
           archive_dir_name = Ace::Taskflow.configuration.done_dir
@@ -281,7 +304,7 @@ module Ace
           target_path = File.join(target_archive, idea_name)
 
           if @dry_run
-            log_fix(idea_folder, "Would move from #{maybe_in_ideas}/#{archive_dir_name}/ to #{target_archive}/")
+            log_fix(idea_folder, "Would move from invalid nesting to #{target_archive}/")
           else
             FileUtils.mkdir_p(target_archive) unless File.directory?(target_archive)
 
@@ -296,6 +319,21 @@ module Ace
 
           @fixed_count += 1
           true
+        end
+
+        # Walk up from path to find the nearest ideas/ directory ancestor
+        def find_ideas_ancestor(path)
+          current = File.expand_path(path)
+
+          while current != "/" && current != File.expand_path("~")
+            return current if File.basename(current) == "ideas"
+
+            parent = File.dirname(current)
+            break if parent == current
+            current = parent
+          end
+
+          nil
         end
 
         def get_default_value(field_name)

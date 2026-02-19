@@ -99,9 +99,9 @@ module Ace
         def handle_auto_fix(results, options)
           fixer = Molecules::DoctorFixer.new(dry_run: options[:dry_run])
 
-          # Get fixable issues
+          # Filter fixable issues from already-diagnosed results
           doctor = Organisms::TaskflowDoctor.new(@root_path, options)
-          fixable_issues = doctor.get_fixable_issues
+          fixable_issues = results[:issues].select { |issue| doctor.auto_fixable?(issue) }
 
           if fixable_issues.empty?
             puts "\nNo auto-fixable issues found"
