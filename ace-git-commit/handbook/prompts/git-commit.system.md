@@ -73,6 +73,7 @@ The scope should be the name of the component, module, or area affected. Example
    - Clearly describes what was done
    - Is concise and specific
    - Uses imperative mood
+   - Passes the "This commit will..." test — the subject must describe the action performed on the codebase, not the content of the changed files
 
 5. **Add body if needed** when:
    - The change is complex
@@ -133,5 +134,15 @@ When multiple files are changed:
 - Look for the common theme or purpose
 - If changes span multiple components, use a broader scope or omit it
 - Consider if the changes should be in separate commits (mention if so)
+
+Describe the action, not the content:
+- The subject must describe what this commit DOES to the codebase
+- Do NOT summarize the content of changed files as if that content is the change itself
+- Example: deleting a task spec about "rename X to Y" → `spec(task-272): remove specflow-rename task` NOT `spec(taskflow-rename): rename ace-taskflow to ace-specflow`
+- Example: deleting a deprecated module → `refactor(auth): remove legacy OAuth handler` NOT `refactor(auth): OAuth 1.0 authentication flow`
+
+When all changes are deletions:
+- Use action verbs like "remove", "delete", "drop" in the subject
+- Explain WHY the files were removed in the body if not obvious
 
 Generate only the commit message, without any additional commentary, explanation, or markdown formatting.
