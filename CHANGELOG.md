@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.547] - 2026-02-19
+
+### Changed
+
+- **Namespace wfi:// Workflows (task 273)**: Reorganize all workflow instructions into domain-specific subdirectories across 16 packages
+  - ace-assign 0.12.4: assign/ namespace
+  - ace-bundle 0.30.6: updated protocol docs
+  - ace-docs 0.20.1: docs/ namespace (+ migrated update-usage/update-roadmap from ace-taskflow)
+  - ace-git 0.10.14, ace-git-commit 0.18.1, ace-git-secrets 0.7.7, ace-git-worktree 0.13.7: git/ namespace
+  - ace-handbook 0.9.2: handbook/ namespace
+  - ace-integration-claude 0.3.3: integration/ namespace
+  - ace-lint 0.15.12: lint/ namespace
+  - ace-review 0.40.2: review/ namespace
+  - ace-search 0.19.3: search/ namespace
+  - ace-support-nav 0.17.7: subdirectory protocol resolution test coverage
+  - ace-taskflow 0.39.4: task/, bug/, idea/, retro/, release/ namespaces
+  - ace-test 0.1.3: test/ namespace
+  - ace-test-runner-e2e 0.16.6: e2e/ namespace
+
 ## [0.9.546] - 2026-02-19
 
 ### Fixed
