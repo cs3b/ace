@@ -147,6 +147,44 @@ module Ace
             end
           end
 
+          def test_find_resources_with_exact_subdirectory_path
+            # Test exact resource lookup: "namespace/name" resolves to namespace/name.ext
+            resource_dir = File.join(@test_dir, "test-resources", "test")
+            subdir = File.join(resource_dir, "lint")
+            FileUtils.mkdir_p(subdir)
+
+            File.write(File.join(subdir, "run.test.md"), "# Lint Run Workflow")
+            File.write(File.join(subdir, "process-report.test.md"), "# Process Report Workflow")
+
+            Dir.chdir(@test_dir) do
+              # Exact match: "lint/run" should resolve to lint/run.test.md
+              resources = @scanner.find_resources("test", "lint/run")
+
+              assert_equal 1, resources.length
+              assert_includes resources.first[:relative_path], "lint/run"
+              refute_includes resources.first[:relative_path], "process-report"
+            end
+          end
+
+          def test_find_resources_with_subdirectory_glob
+            # Test glob: "lint/*" resolves all files in lint/ namespace
+            resource_dir = File.join(@test_dir, "test-resources", "test")
+            subdir = File.join(resource_dir, "lint")
+            FileUtils.mkdir_p(subdir)
+
+            File.write(File.join(subdir, "run.test.md"), "# Lint Run")
+            File.write(File.join(subdir, "process-report.test.md"), "# Process Report")
+
+            Dir.chdir(@test_dir) do
+              resources = @scanner.find_resources("test", "lint/*")
+
+              assert_equal 2, resources.length
+              paths = resources.map { |r| r[:relative_path] }
+              assert paths.any? { |p| p.include?("lint/run") }
+              assert paths.any? { |p| p.include?("lint/process-report") }
+            end
+          end
+
           def test_find_resources_filters_by_extensions
             # Create resources with different extensions
             resource_dir = File.join(@test_dir, "test-resources", "test")
