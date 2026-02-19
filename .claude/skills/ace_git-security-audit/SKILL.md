@@ -1,5 +1,5 @@
 ---
-name: ace:security-audit
+name: ace:git-security-audit
 description: Perform security audits to detect leaked authentication tokens
 # context: no-fork
 # agent: Bash
@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-git-secrets
 ---
 
-read and run `ace-bundle wfi://security-audit`
+read and run `ace-bundle wfi://git/security-audit`

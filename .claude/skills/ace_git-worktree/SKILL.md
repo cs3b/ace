@@ -1,5 +1,5 @@
 ---
-name: ace:worktree
+name: ace:git-worktree
 description: Manage git worktrees with task-aware automation
 # context: no-fork
 # agent: Bash
@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-git-worktree
 ---
 
-read and run `ace-bundle wfi://worktree`
+read and run `ace-bundle wfi://git/worktree`

@@ -1,5 +1,5 @@
 ---
-name: ace:commit
+name: ace:git-commit
 description: Generate intelligent git commit message from staged or all changes
 # context: no-fork
 # agent: Bash
@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-git-commit
 ---
 
-read and run `ace-bundle wfi://commit`
+read and run `ace-bundle wfi://git/commit`

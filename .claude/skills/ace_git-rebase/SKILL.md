@@ -1,5 +1,5 @@
 ---
-name: ace:rebase
+name: ace:git-rebase
 description: Rebase with CHANGELOG preservation
 # context: no-fork
 # agent: Bash
@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-git
 ---
 
-read and run `ace-bundle wfi://rebase`
+read and run `ace-bundle wfi://git/rebase`
