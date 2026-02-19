@@ -196,7 +196,7 @@ class TaskPathNotFoundError < StandardError; end
 
 ## References
 
-- Parent task: 145.00-orchestrator.s.md
+- Parent task: 145-orchestrator.s.md
 - UX Specification: `ux/145.02-unified-subject-usage.md`
 - Current SubjectExtractor: `ace-review/lib/ace/review/molecules/subject_extractor.rb`
 - Depends on: 145.01 (ace-context pr: support)

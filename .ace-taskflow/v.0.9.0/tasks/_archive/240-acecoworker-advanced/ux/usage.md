@@ -105,7 +105,7 @@ assign:
 ### Prepare From File
 
 ```
-ace-assign prepare --file .ace-taskflow/v.0.9.0/tasks/148-foo/148.00-orchestrator.s.md
+ace-assign prepare --file .ace-taskflow/v.0.9.0/tasks/148-foo/148-orchestrator.s.md
 ```
 
 ### Parent/Child Assignments

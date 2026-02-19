@@ -39,7 +39,7 @@ Fix display formatting and lifecycle issues for hierarchical tasks (orchestrator
 
 ❯ ace-taskflow task 121
 Task: v.0.9.0+task.121 ⚪ ace-prompt: Prompt Workspace (Orchestrator)
-  Path: .ace-taskflow/v.0.9.0/tasks/121-ace-prompt/121.00-orchestrator.s.md
+  Path: .ace-taskflow/v.0.9.0/tasks/121-ace-prompt/121-orchestrator.s.md
   Estimate: 24-32h (total across subtasks)
   Subtasks:
     ├─ v.0.9.0+task.121.01 ⚪ Basic: Archive + Output to stdout

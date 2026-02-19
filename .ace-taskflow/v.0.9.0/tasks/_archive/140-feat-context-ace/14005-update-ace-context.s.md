@@ -355,6 +355,6 @@ Replace duplicated Git/GitHub code in ace-context with ace-git dependency. This 
 
 ## References
 
-- Parent task: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.00-orchestrator.s.md`
+- Parent task: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140-orchestrator.s.md`
 - ace-git package task: `.ace-taskflow/v.0.9.0/tasks/140-feat-context-ace/140.01-ace-git-package.s.md`
 - ace-context package: `/Users/mc/Ps/ace-meta/ace-context/`
