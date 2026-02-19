@@ -37,7 +37,11 @@ module Ace
           failed = []
 
           safe.each do |candidate|
-            remove_result = @worktree_manager.remove(candidate.worktree_path, force: false)
+            remove_result = @worktree_manager.remove(
+              candidate.worktree_path,
+              force: false,
+              ignore_untracked: true
+            )
             if remove_result[:success]
               close_tmux_window(candidate.task_id)
               pruned << candidate
