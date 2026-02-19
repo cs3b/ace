@@ -1,5 +1,5 @@
 ---
-name: reorganize-commits
+name: git/reorganize-commits
 allowed-tools: Bash, Read
 description: Reorganize commits into clean, logical groups using ace-git-commit
 argument-hint: "[base-commit]"
