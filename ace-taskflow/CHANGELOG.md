@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.3] - 2026-02-19
+
+### Fixed
+- Promote single-named parent tasks to orchestrators when subtasks reference them, preventing duplicate display in task listings
+- Add `build_task_relationships` call to `load_tasks_with_glob` so glob-loaded tasks get proper parent-child linking
+
 ## [0.36.2] - 2026-02-16
 
 ### Fixed
