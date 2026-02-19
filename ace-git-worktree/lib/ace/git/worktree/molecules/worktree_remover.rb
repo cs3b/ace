@@ -77,7 +77,7 @@ module Ace
               branch_name = worktree_info.branch
 
               # Remove the worktree using git
-              result = remove_git_worktree(expanded_path)
+              result = remove_git_worktree(expanded_path, force: force)
               return result unless result[:success]
 
               # Optionally remove the directory
@@ -287,9 +287,12 @@ module Ace
           #
           # @param worktree_path [String] Worktree path
           # @return [Hash] Command result
-          def remove_git_worktree(worktree_path)
+          def remove_git_worktree(worktree_path, force: false)
             require_relative "../atoms/git_command"
-            result = Atoms::GitCommand.worktree("remove", worktree_path, timeout: @timeout)
+            args = ["remove"]
+            args << "--force" if force
+            args << worktree_path
+            result = Atoms::GitCommand.worktree(*args, timeout: @timeout)
 
             if result[:success]
               { success: true, message: "Git worktree removed successfully" }
