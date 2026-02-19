@@ -89,8 +89,8 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 | Tool | Purpose |
 |------|---------|
 | `ace-bundle project` | Load project context |
-| `ace-bundle wfi://workflow` | Load workflow via protocol |
-| `ace-nav wfi://resource` | Get path of resource |
+| `ace-bundle wfi://namespace/action` | Load workflow via protocol |
+| `ace-nav wfi://namespace/action` | Get path of resource |
 | `ace-nav wfi://*` | List all workflows |
 | `ace-search "pattern"` | Search content (regex) |
 | `ace-search "*.rb" --files` | Search files (glob) |
