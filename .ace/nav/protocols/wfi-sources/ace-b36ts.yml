@@ -1,0 +1,10 @@
+---
+name: ace-b36ts
+type: gem
+description: Workflow instructions from ace-b36ts gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true

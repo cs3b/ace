@@ -1,0 +1,10 @@
+---
+name: ace-bundle
+type: gem
+description: Workflow instructions from ace-bundle gem
+priority: 10
+
+config:
+  relative_path: handbook/workflow-instructions
+  pattern: "*.wf.md"
+  enabled: true
