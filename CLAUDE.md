@@ -70,7 +70,8 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Examples**:
 
 - `ace-bundle project` (default context)
-- `ace-bundle wfi://bundle` (protocol)
+- `ace-bundle wfi://bundle` (flat protocol)
+- `ace-bundle wfi://task/work` (namespaced protocol)
 
 ### ace-nav (CLI Tool)
 
@@ -99,7 +100,7 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Correct patterns**:
 ✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
 ✅ `ace-bundle project` → output is already concise; read referenced files as needed
-✅ `ace-bundle wfi://workflow` → returns workflow content (may include embedded context)
+✅ `ace-bundle wfi://namespace/action` → returns workflow content (may include embedded context)
 
 Never reset or discard changes you didn't make - use `ace-git-commit $paths` to commit only your changes.
 
