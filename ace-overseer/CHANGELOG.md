@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.12] - 2026-02-19
+
+### Fixed
+- Prune workflow now removes safe worktrees with `ignore_untracked: true`, allowing untracked-only trees to be pruned while still protecting tracked changes
+- Tighten prune E2E assertions with task-specific grep patterns and aligned fixture/config expectations for TS-OVERSEER-002
+
 ## [0.2.11] - 2026-02-19
 
 ### Fixed
