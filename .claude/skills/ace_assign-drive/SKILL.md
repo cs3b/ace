@@ -1,7 +1,7 @@
 ---
 name: ace:assign-drive
 description: Drive agent execution through an active assignment
-# bundle: wfi://drive-assignment
+# bundle: wfi://assign/drive
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -16,4 +16,4 @@ last_modified: 2026-02-11
 source: ace-assign
 ---
 
-read and run `ace-bundle wfi://drive-assignment`
+read and run `ace-bundle wfi://assign/drive`

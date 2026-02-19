@@ -1,7 +1,7 @@
 ---
 name: ace:assign-compose
 description: Compose a tailored assignment from ace-assign catalog phases and composition rules (catalog-only)
-# bundle: wfi://compose-assignment
+# bundle: wfi://assign/compose
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
@@ -17,4 +17,4 @@ last_modified: 2026-02-13
 source: ace-assign
 ---
 
-read and run `ace-bundle wfi://compose-assignment`
+read and run `ace-bundle wfi://assign/compose`
