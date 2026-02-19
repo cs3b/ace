@@ -1,5 +1,5 @@
 ---
-name: ace:manage-e2e-tests
+name: ace:e2e-manage
 description: Orchestrate the 3-stage E2E test lifecycle pipeline (review → plan → rewrite)
 user-invocable: true
 allowed-tools:
@@ -18,6 +18,6 @@ last_modified: 2026-02-11
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle wfi://manage-e2e-tests`
+read and run `ace-bundle wfi://e2e/manage`
 
 ARGUMENTS: $ARGUMENTS
