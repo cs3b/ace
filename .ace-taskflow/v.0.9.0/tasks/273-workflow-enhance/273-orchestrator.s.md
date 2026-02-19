@@ -1,8 +1,14 @@
 ---
 id: v.0.9.0+task.273
-status: draft
+status: in-progress
 priority: medium
 estimate: 16h
+worktree:
+  branch: 273-namespace-workflows-with-domain-prefixes
+  path: "../ace-task.273"
+  created_at: '2026-02-19 17:11:49'
+  updated_at: '2026-02-19 17:11:49'
+  target_branch: main
 ---
 
 # Namespace Workflows with Domain Prefixes
