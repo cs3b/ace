@@ -28,7 +28,7 @@ The ace-integration-claude gem provides Claude Code integration workflows access
 
 ```bash
 # Update Claude Code integration files and command templates
-ace-nav wfi://update-integration-claude
+ace-nav wfi://integration/update-claude
 ```
 
 ### Workflow Description
@@ -74,7 +74,8 @@ ace-integration-claude/
 ├── lib/ace/integration/claude.rb     # Gem entry point
 ├── lib/ace/integration/claude/version.rb  # Version constant
 ├── handbook/workflow-instructions/    # Workflow files
-│   └── update-integration-claude.wf.md
+│   └── integration/
+│       └── update-claude.wf.md
 ├── integrations/claude/               # Integration assets
 │   ├── templates/                    # Command and agent templates
 │   ├── commands/_custom/             # Custom command definitions
@@ -109,7 +110,7 @@ bundle exec rake install
 For full Claude Code integration:
 
 1. **Install the gem**: Add to your Gemfile and run `bundle install`
-2. **Run integration workflow**: `ace-nav wfi://update-integration-claude`
+2. **Run integration workflow**: `ace-nav wfi://integration/update-claude`
 3. **Configure Claude Code**: Set up prompts and commands as directed
 4. **Validate integration**: Test workflows and commands work correctly
 
