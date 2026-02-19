@@ -157,14 +157,14 @@ ace-gem/
 - Integration: `.claude/agents/{agent-name}.ag.md` (symlink)
 
 **For Discovery:**
-- Protocol: `wfi://{gem-name}/{workflow-name}` via ace-nav
-- Command: `ace-nav wfi://ace-docs/update-docs`
+- Protocol: `wfi://{namespace}/{action}` via ace-nav
+- Command: `ace-nav wfi://docs/update`
 
 **Path Validation:**
 ```ruby
 # Current validation (per gem)
 def validate_workflow_path(path)
-  unless path.match?(%r{^[\w-]+/handbook/workflow-instructions/[\w-]+\.wf\.md$})
+  unless path.match?(%r{^[\w-]+/handbook/workflow-instructions/[\w-]+/[\w-]+\.wf\.md$})
     raise "Invalid workflow path: #{path}"
   end
 end
