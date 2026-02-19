@@ -3,11 +3,13 @@
 require_relative "../test_helper"
 
 class StatusFormatterTest < AceOverseerTestCase
-  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2)
-    {
+  def make_assignment(id:, state:, name: "work-on-task", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_phase: nil)
+    h = {
       "assignment" => { "state" => state, "id" => id, "name" => name },
       "phase_summary" => { "total" => total, "done" => done, "failed" => failed, "in_progress" => in_progress, "pending" => pending }
     }
+    h["current_phase"] = current_phase if current_phase
+    h
   end
 
   def test_formats_location_row_with_pr_and_git
@@ -53,12 +55,17 @@ class StatusFormatterTest < AceOverseerTestCase
     dashboard = Ace::Overseer::Atoms::StatusFormatter.format_dashboard([context])
     lines = dashboard.split("\n")
 
-    # First line is location header
-    assert_includes lines[0], "ace-task.230"
+    # First two lines are header + separator
+    assert_includes lines[0], "ID"
+    assert_includes lines[0], "Name"
+    assert_includes lines[0], "Progress"
+    assert_match(/\u2500+/, lines[1])
+    # Location header follows
+    assert_includes lines[2], "ace-task.230"
     # Next lines are assignment sub-rows
-    assert_includes lines[1], "8or5kx"
-    assert_includes lines[1], "work-on-task"
-    assert_includes lines[2], "8or5ky"
+    assert_includes lines[3], "8or5kx"
+    assert_includes lines[3], "work-on-task"
+    assert_includes lines[4], "8or5ky"
   end
 
   def test_formats_empty_dashboard
@@ -88,8 +95,8 @@ class StatusFormatterTest < AceOverseerTestCase
     dashboard = Ace::Overseer::Atoms::StatusFormatter.format_dashboard([context])
     lines = dashboard.split("\n")
 
-    assert_equal 1, lines.size
-    assert_includes lines[0], "ace-task.100"
+    assert_equal 3, lines.size  # header + separator + location
+    assert_includes lines[2], "ace-task.100"
   end
 
   def test_pr_draft
@@ -148,8 +155,8 @@ class StatusFormatterTest < AceOverseerTestCase
     dashboard = Ace::Overseer::Atoms::StatusFormatter.format_dashboard([ctx_pr_low, ctx_no_pr, ctx_pr_high])
 
     lines = dashboard.split("\n")
-    # Location rows are at indices 0, 2, 4 (each followed by 1 assignment sub-row)
-    location_lines = lines.select { |l| !l.start_with?("  ") }
+    # Skip header, separator, and blank lines; select only location rows
+    location_lines = lines.reject { |l| l.start_with?("  ") || l.strip.empty? || l.match?(/\A\u2500+\z/) }
 
     # No-PR row first (by task_id desc), then PR 207, then PR 200
     assert_includes location_lines[0], "ace-task.270"
@@ -225,9 +232,9 @@ class StatusFormatterTest < AceOverseerTestCase
     dashboard = Ace::Overseer::Atoms::StatusFormatter.format_dashboard([context])
     lines = dashboard.split("\n")
 
-    assert_includes lines[0], "main"
-    assert_includes lines[1], "xyz99"
-    assert_includes lines[2], "abc12"
+    assert_includes lines[2], "main"
+    assert_includes lines[3], "xyz99"
+    assert_includes lines[4], "abc12"
   end
 
   def test_main_branch_sorts_last
@@ -250,10 +257,71 @@ class StatusFormatterTest < AceOverseerTestCase
 
     dashboard = Ace::Overseer::Atoms::StatusFormatter.format_dashboard([main_ctx, worktree_ctx])
     lines = dashboard.split("\n")
-    location_lines = lines.select { |l| !l.start_with?("  ") }
+    location_lines = lines.reject { |l| l.start_with?("  ") || l.strip.empty? || l.match?(/\A\u2500+\z/) }
 
     assert_includes location_lines[0], "ace-task.230"
     assert_includes location_lines[1], "main"
+  end
+
+  def test_blank_line_between_groups
+    ctx1 = Ace::Overseer::Models::WorkContext.new(
+      task_id: "271",
+      worktree_path: "/tmp/ace-task.271",
+      branch: "271-feature",
+      assignments: [make_assignment(id: "a1", state: "running")],
+      git_status: { "clean" => true }
+    )
+    ctx2 = Ace::Overseer::Models::WorkContext.new(
+      task_id: "266",
+      worktree_path: "/tmp/ace-task.266",
+      branch: "266-feature",
+      assignments: [make_assignment(id: "a2", state: "completed", total: 4, done: 4, failed: 0, in_progress: 0, pending: 0)],
+      git_status: { "clean" => true }
+    )
+
+    dashboard = Ace::Overseer::Atoms::StatusFormatter.format_dashboard([ctx1, ctx2])
+    lines = dashboard.split("\n")
+
+    # header(0), separator(1), group1-location(2), group1-assignment(3),
+    # blank(4), group2-location(5), group2-assignment(6)
+    assert_equal "", lines[4], "Expected blank line between groups"
+  end
+
+  def test_progress_bar_in_assignment_row
+    assignment = make_assignment(id: "8op2ab", state: "completed", total: 10, done: 10, failed: 0, in_progress: 0, pending: 0)
+
+    row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
+
+    assert_includes row, "\u2588"  # filled bar segment
+    assert_includes row, "10/10"
+  end
+
+  def test_progress_bar_partial_fill
+    assignment = make_assignment(id: "8half1", state: "running", total: 10, done: 5, failed: 0, in_progress: 1, pending: 4)
+
+    row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
+
+    assert_includes row, "\u2588"  # filled segments
+    assert_includes row, "\u2500"  # empty segments
+    assert_includes row, "5/10"
+  end
+
+  def test_current_phase_shown_when_present
+    assignment = make_assignment(id: "8run1", state: "running", total: 5, done: 2, failed: 0, in_progress: 1, pending: 2, current_phase: "implement")
+
+    row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
+
+    assert_includes row, "implement"
+    assert_includes row, "2/5"
+  end
+
+  def test_current_phase_absent_when_nil
+    assignment = make_assignment(id: "8done1", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)
+
+    row = Ace::Overseer::Atoms::StatusFormatter.format_assignment_row(assignment)
+
+    refute_includes row, "implement"
+    assert_includes row, "5/5"
   end
 
   def test_assignment_row_with_missing_id

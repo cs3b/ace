@@ -36,6 +36,7 @@ module Ace
         end
 
         def assignment_info_to_h(info)
+          current = info.queue_state.current
           {
             "assignment" => {
               "id" => info.id,
@@ -48,7 +49,8 @@ module Ace
               "failed" => info.queue_state.summary[:failed],
               "in_progress" => info.queue_state.summary[:in_progress],
               "pending" => info.queue_state.summary[:pending]
-            }
+            },
+            "current_phase" => current ? current.name : nil
           }
         end
 
