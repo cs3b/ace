@@ -1,5 +1,5 @@
 ---
-name: reorganize-tasks
+name: task/reorganize
 allowed-tools: Bash, Read
 description: Reorganize task hierarchy using promote, demote, and convert operations
 argument-hint: "[operation] [task-ref] [parent-ref]"

@@ -1,5 +1,5 @@
 ---
-name: manage-task-status
+name: task/manage-status
 allowed-tools: Bash, Read
 description: Manage task lifecycle status (start, done, undone)
 argument-hint: "[action] [task-ref]"

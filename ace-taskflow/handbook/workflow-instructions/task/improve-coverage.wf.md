@@ -1,5 +1,5 @@
 ---
-name: improve-code-coverage
+name: task/improve-coverage
 description: Analyze coverage and create targeted test tasks to improve coverage
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 argument-hint: ''
