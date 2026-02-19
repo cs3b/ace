@@ -4,8 +4,7 @@ module Ace
   module Overseer
     module Molecules
       class WorktreeContextCollector
-        def initialize(assignment_executor_factory: nil, repo_status_loader: nil, assignment_discoverer_factory: nil)
-          @assignment_executor_factory = assignment_executor_factory || -> { Ace::Assign::Organisms::AssignmentExecutor.new }
+        def initialize(repo_status_loader: nil, assignment_discoverer_factory: nil)
           @repo_status_loader = repo_status_loader || -> { Ace::Git::Organisms::RepoStatusLoader.load }
           @assignment_discoverer_factory = assignment_discoverer_factory || -> { Ace::Assign::Molecules::AssignmentDiscoverer.new }
         end
@@ -13,17 +12,15 @@ module Ace
         def collect(worktree_path, location_type: :worktree)
           with_worktree_context(worktree_path) do
             repo_status = @repo_status_loader.call
-            assignment_status = load_assignment_status
+            assignments = load_all_assignments
             task_id = extract_task_id(worktree_path, repo_status.branch)
-            assignment_count = count_assignments
 
             Models::WorkContext.new(
               task_id: task_id,
               worktree_path: worktree_path,
               branch: repo_status.branch.to_s,
-              assignment_status: assignment_status,
+              assignments: assignments,
               git_status: repo_status.to_h,
-              assignment_count: assignment_count,
               location_type: location_type
             )
           end
@@ -31,40 +28,28 @@ module Ace
 
         private
 
-        def load_assignment_status
-          executor = @assignment_executor_factory.call
-          result = executor.status
-          state = result[:state]
-          current = result[:current]
-
-          {
-            "assignment" => {
-              "id" => result[:assignment].id,
-              "name" => result[:assignment].name,
-              "state" => state.assignment_state.to_s
-            },
-            "current_phase" => current && {
-              "number" => current.number,
-              "name" => current.name,
-              "status" => current.status.to_s,
-              "skill" => current.skill
-            },
-            "phase_summary" => {
-              "total" => state.summary[:total],
-              "done" => state.summary[:done],
-              "failed" => state.summary[:failed],
-              "in_progress" => state.summary[:in_progress],
-              "pending" => state.summary[:pending]
-            }
-          }
-        rescue Ace::Assign::NoActiveAssignmentError
-          nil
+        def load_all_assignments
+          infos = @assignment_discoverer_factory.call.find_all(include_completed: true)
+          infos.map { |info| assignment_info_to_h(info) }
+        rescue StandardError
+          []
         end
 
-        def count_assignments
-          @assignment_discoverer_factory.call.find_all(include_completed: true).size
-        rescue StandardError
-          0
+        def assignment_info_to_h(info)
+          {
+            "assignment" => {
+              "id" => info.id,
+              "name" => info.name,
+              "state" => info.state.to_s
+            },
+            "phase_summary" => {
+              "total" => info.queue_state.summary[:total],
+              "done" => info.queue_state.summary[:done],
+              "failed" => info.queue_state.summary[:failed],
+              "in_progress" => info.queue_state.summary[:in_progress],
+              "pending" => info.queue_state.summary[:pending]
+            }
+          }
         end
 
         def extract_task_id(worktree_path, branch)

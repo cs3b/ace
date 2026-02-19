@@ -4,12 +4,16 @@ module Ace
   module Overseer
     module Atoms
       module StatusFormatter
-        COL_TASK = 8
-        COL_STATE = 3
-        COL_PROGRESS = 17
+        # Location header columns
+        COL_LOCATION = 15
         COL_PR = 10
         COL_GIT = 6
-        COL_ASSIGN = 10
+
+        # Assignment sub-row columns
+        COL_ASSIGN_ID = 8
+        COL_ASSIGN_NAME = 25
+        COL_STATE = 3
+        COL_PROGRESS = 17
 
         # ANSI color helpers
         COLOR = {
@@ -40,42 +44,51 @@ module Ace
         }.freeze
 
         def self.format_dashboard(contexts)
-          if contexts.empty?
-            return "No active assignments."
-          end
+          return "No active assignments." if contexts.empty?
 
           rows = []
-          rows << format_header
-          rows << "\u2500" * (COL_TASK + COL_STATE + COL_PROGRESS + COL_PR + COL_GIT + COL_ASSIGN + 5) # 6 cols, 5 spaces
           sorted = sort_contexts(contexts)
-          sorted.each { |context| rows << format_row(context) }
+          sorted.each do |context|
+            rows << format_location_row(context)
+            context.assignments.each do |assignment|
+              rows << format_assignment_row(assignment)
+            end
+          end
           rows.join("\n")
         end
 
-        def self.format_row(context)
-          location_type = context.respond_to?(:location_type) ? context.location_type : :worktree
-          task_display = location_type == :main ? colorize("main".ljust(COL_TASK), :dim) : context.task_id.ljust(COL_TASK)
+        def self.format_location_row(context)
+          location = if context.location_type == :main
+                       colorize("main".ljust(COL_LOCATION), :dim)
+                     else
+                       File.basename(context.worktree_path).ljust(COL_LOCATION)
+                     end
 
-          # State, PR, Git, Assign are pre-padded to avoid ANSI code length issues
-          # Order: Assign, Task, State, PR, Git, Progress
           format(
-            "%s %s %s %s %s %-#{COL_PROGRESS}s",
-            colorized_assign(context),
-            task_display,
-            colorized_state(context),
+            "%s %s %s",
+            location,
             colorized_pr(context),
-            colorized_git(context),
-            truncate(progress(context), COL_PROGRESS)
+            colorized_git(context)
           )
         end
 
-        def self.format_header
+        def self.format_assignment_row(assignment)
+          id = assignment.dig("assignment", "id") || "-"
+          name = assignment.dig("assignment", "name") || "-"
+          state_str = assignment.dig("assignment", "state") || "none"
+          display = STATE_DISPLAY[state_str] || STATE_DISPLAY["none"]
+
+          state_icon = colorize(display[:icon].to_s.ljust(COL_STATE), display[:color])
+          progress_str = format_progress(assignment)
+
           format(
-            "%-#{COL_ASSIGN}s %-#{COL_TASK}s %-#{COL_STATE}s %-#{COL_PR}s %-#{COL_GIT}s %-#{COL_PROGRESS}s",
-            "Assign", "Task", "\u2B24", "PR", "Git", "Progress"
+            "  %-#{COL_ASSIGN_ID}s %-#{COL_ASSIGN_NAME}s %s %-#{COL_PROGRESS}s",
+            id,
+            truncate(name, COL_ASSIGN_NAME),
+            state_icon,
+            progress_str
           )
         end
-        private_class_method :format_header
 
         def self.sort_contexts(contexts)
           contexts.sort_by do |ctx|
@@ -99,29 +112,8 @@ module Ace
         end
         private_class_method :extract_pr_number
 
-        def self.assignment_state(context)
-          data = context.assignment_status
-          return "none" unless data.is_a?(Hash)
-
-          data.dig("assignment", "state") || data.dig(:assignment, :state) ||
-            data["state"] || data[:state] || "unknown"
-        end
-        private_class_method :assignment_state
-
-        def self.colorized_state(context)
-          state = assignment_state(context)
-          display = STATE_DISPLAY[state] || STATE_DISPLAY["none"]
-          # Pad visible text before colorizing so format width works correctly
-          padded = display[:icon].to_s.ljust(COL_STATE)
-          colorize(padded, display[:color])
-        end
-        private_class_method :colorized_state
-
-        def self.progress(context)
-          data = context.assignment_status
-          return "-" unless data.is_a?(Hash)
-
-          summary = data["phase_summary"] || data[:phase_summary]
+        def self.format_progress(assignment)
+          summary = assignment["phase_summary"] || assignment[:phase_summary]
           return "-" unless summary.is_a?(Hash)
 
           total = summary["total"] || summary[:total]
@@ -132,7 +124,7 @@ module Ace
           base = "#{done}/#{total}"
           failed.positive? ? "#{base} (#{failed} failed)" : base
         end
-        private_class_method :progress
+        private_class_method :format_progress
 
         def self.pr_info_parts(context)
           data = context.git_status
@@ -198,28 +190,10 @@ module Ace
                  else
                    "?"
                  end
-          # Pad visible text before colorizing so format width works correctly
           padded = text.ljust(COL_GIT)
           colorize(padded, color)
         end
         private_class_method :colorized_git
-
-        def self.assignment_id(context)
-          data = context.assignment_status
-          return nil unless data.is_a?(Hash)
-
-          data.dig("assignment", "id") || data.dig(:assignment, :id)
-        end
-        private_class_method :assignment_id
-
-        def self.colorized_assign(context)
-          id = assignment_id(context)
-          base = id || "-"
-          count = context.respond_to?(:assignment_count) ? context.assignment_count : 0
-          text = count > 1 ? "#{base} (#{count})" : base
-          colorize(text.ljust(COL_ASSIGN), :dim)
-        end
-        private_class_method :colorized_assign
 
         def self.colorize(text, color)
           "#{COLOR[color]}#{text}#{COLOR[:reset]}"
