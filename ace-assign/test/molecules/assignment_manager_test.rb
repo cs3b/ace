@@ -188,6 +188,75 @@ class AssignmentManagerTest < AceAssignTestCase
     end
   end
 
+  # === Delete tests ===
+
+  def test_delete_removes_directory
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      assignment = manager.create(name: "to-delete", source_config: "job.yaml")
+      assert File.directory?(assignment.cache_dir)
+
+      result = manager.delete(assignment.id)
+
+      assert_equal true, result
+      refute File.directory?(assignment.cache_dir)
+    end
+  end
+
+  def test_delete_returns_false_for_missing_id
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      result = manager.delete("nonexistent")
+
+      assert_equal false, result
+    end
+  end
+
+  def test_delete_cleans_up_current_symlink
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      assignment = manager.create(name: "to-delete", source_config: "job.yaml")
+      manager.set_current(assignment.id)
+      assert File.symlink?(File.join(cache_dir, ".current"))
+
+      manager.delete(assignment.id)
+
+      refute File.symlink?(File.join(cache_dir, ".current"))
+    end
+  end
+
+  def test_delete_cleans_up_latest_symlink
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      assignment = manager.create(name: "to-delete", source_config: "job.yaml")
+      assert File.symlink?(File.join(cache_dir, ".latest"))
+
+      manager.delete(assignment.id)
+
+      refute File.symlink?(File.join(cache_dir, ".latest"))
+    end
+  end
+
+  def test_delete_preserves_symlinks_pointing_to_other_assignments
+    with_temp_cache do |cache_dir|
+      manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: cache_dir)
+
+      first = manager.create(name: "keep", source_config: "job.yaml")
+      second = manager.create(name: "delete", source_config: "job.yaml")
+      manager.set_current(first.id)
+
+      manager.delete(second.id)
+
+      # .current still points to first
+      assert File.symlink?(File.join(cache_dir, ".current"))
+      assert_equal first.id, manager.current_id
+    end
+  end
+
   # === Parent metadata tests ===
 
   def test_create_with_parent
