@@ -1,5 +1,5 @@
 ---
-name: run-lint
+name: lint/run
 allowed-tools: Bash, Read
 description: Run ace-lint on project files with optional autofix and report generation
 argument-hint: "[file-pattern] [--fix] [--report]"
