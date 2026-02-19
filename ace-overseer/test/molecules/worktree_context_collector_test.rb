@@ -10,7 +10,9 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
-  FakeQueueState = Struct.new(:summary_data) do
+  FakePhase = Struct.new(:name)
+
+  FakeQueueState = Struct.new(:summary_data, :current) do
     def summary
       summary_data
     end
@@ -170,6 +172,40 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
       context = collector.collect(worktree, location_type: :main)
 
       assert_equal :main, context.location_type
+    end
+  end
+
+  def test_collect_includes_current_phase_when_running
+    queue_state = FakeQueueState.new(
+      { total: 5, done: 2, failed: 0, in_progress: 1, pending: 2 },
+      FakePhase.new("implement")
+    )
+    info = FakeAssignmentInfo.new("8run1", "work-on-task-280", :running, queue_state)
+
+    Dir.mktmpdir("task.280") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        repo_status_loader: -> { FakeRepoStatus.new("280-feature", { "clean" => true }) },
+        assignment_discoverer_factory: -> { FakeDiscoverer.new([info]) }
+      )
+
+      context = collector.collect(worktree)
+
+      assert_equal "implement", context.assignments[0]["current_phase"]
+    end
+  end
+
+  def test_collect_current_phase_nil_when_not_running
+    info = make_info(id: "8done1", name: "work-on-task-281", state: :completed, total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)
+
+    Dir.mktmpdir("task.281") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        repo_status_loader: -> { FakeRepoStatus.new("281-feature", { "clean" => true }) },
+        assignment_discoverer_factory: -> { FakeDiscoverer.new([info]) }
+      )
+
+      context = collector.collect(worktree)
+
+      assert_nil context.assignments[0]["current_phase"]
     end
   end
 

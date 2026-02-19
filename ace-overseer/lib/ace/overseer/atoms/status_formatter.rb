@@ -13,7 +13,8 @@ module Ace
         COL_ASSIGN_ID = 8
         COL_ASSIGN_NAME = 25
         COL_STATE = 3
-        COL_PROGRESS = 17
+        COL_PROGRESS = 30
+        PROGRESS_BAR_WIDTH = 10
 
         # ANSI color helpers
         COLOR = {
@@ -47,8 +48,11 @@ module Ace
           return "No active assignments." if contexts.empty?
 
           rows = []
+          rows << format_header
+          rows << separator_line
           sorted = sort_contexts(contexts)
-          sorted.each do |context|
+          sorted.each_with_index do |context, idx|
+            rows << "" if idx > 0
             rows << format_location_row(context)
             context.assignments.each do |assignment|
               rows << format_assignment_row(assignment)
@@ -121,10 +125,24 @@ module Ace
           return "-" unless total && done
 
           failed = (summary["failed"] || summary[:failed]).to_i
-          base = "#{done}/#{total}"
-          failed.positive? ? "#{base} (#{failed} failed)" : base
+          bar = progress_bar(done.to_i, total.to_i)
+          counts = "#{done}/#{total}"
+          counts = "#{counts} (#{failed} failed)" if failed.positive?
+          current = assignment["current_phase"] || assignment[:current_phase]
+          parts = "#{bar} #{counts}"
+          parts = "#{parts} #{colorize(current, :dim)}" if current
+          parts
         end
         private_class_method :format_progress
+
+        def self.progress_bar(done, total)
+          return "[\u2500" * PROGRESS_BAR_WIDTH + "]" if total.zero?
+
+          filled = (done.to_f / total * PROGRESS_BAR_WIDTH).round
+          empty = PROGRESS_BAR_WIDTH - filled
+          colorize("\u2588" * filled, :green) + colorize("\u2500" * empty, :dim) + ""
+        end
+        private_class_method :progress_bar
 
         def self.pr_info_parts(context)
           data = context.git_status
@@ -194,6 +212,17 @@ module Ace
           colorize(padded, color)
         end
         private_class_method :colorized_git
+
+        def self.format_header
+          format("  %-#{COL_ASSIGN_ID}s %-#{COL_ASSIGN_NAME}s %-#{COL_STATE}s %-#{COL_PROGRESS}s",
+                 "ID", "Name", "\u2B24", "Progress")
+        end
+        private_class_method :format_header
+
+        def self.separator_line
+          "\u2500" * (2 + COL_ASSIGN_ID + 1 + COL_ASSIGN_NAME + 1 + COL_STATE + 1 + COL_PROGRESS)
+        end
+        private_class_method :separator_line
 
         def self.colorize(text, color)
           "#{COLOR[color]}#{text}#{COLOR[:reset]}"
