@@ -1,5 +1,5 @@
 ---
-name: plan-tests
+name: test/plan
 description: Plan test coverage before writing code - decide what to test at each layer
 allowed-tools: Read, Bash, Grep, Glob, Bash(ace-search:*), Bash(ace-bundle:*)
 argument-hint: 'feature description or task specification'
@@ -329,5 +329,5 @@ Use this workflow first to plan, then `/ace:create-test-cases` to generate test 
 - [Test Responsibility Map Guide](guide://test-responsibility-map)
 - [Test Mocking Patterns Guide](guide://test-mocking-patterns)
 - [Test Review Checklist](guide://test-review-checklist)
-- [Create Test Cases Workflow](wfi://create-test-cases)
-- [Verify Test Suite Workflow](wfi://verify-test-suite)
+- [Create Test Cases Workflow](wfi://test/create-cases)
+- [Verify Test Suite Workflow](wfi://test/verify-suite)

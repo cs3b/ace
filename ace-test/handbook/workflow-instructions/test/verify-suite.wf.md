@@ -1,5 +1,5 @@
 ---
-name: verify-test-suite
+name: test/verify-suite
 description: Audit test suite health - identify slow tests, zombie mocks, layer issues
 allowed-tools: Read, Bash, Grep, Glob, Bash(ace-test:*), Bash(ace-test-suite:*), Bash(ace-search:*)
 argument-hint: 'package name (optional)'
@@ -351,4 +351,4 @@ jobs:
 
 - [Test Suite Health Guide](guide://test-suite-health)
 - [Test Performance Guide](guide://test-performance)
-- [Optimize Tests Workflow](wfi://optimize-tests)
+- [Optimize Tests Workflow](wfi://test/optimize)
