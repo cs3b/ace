@@ -1,5 +1,5 @@
 ---
-name: review-pr
+name: review/pr
 description: Review PR and plan feedback application with comment resolution
 argument-hint: "[pr-number] [--preset <name>] [flags]"
 allowed-tools: Read, Bash, TodoWrite
