@@ -1,5 +1,5 @@
 ---
-name: ace:lint
+name: ace:lint-run
 description: Run ace-lint on project files with optional autofix and report
 # context: no-fork
 # agent: general-purpose
@@ -12,4 +12,4 @@ argument-hint: "[file-pattern] [--fix] [--report]"
 source: ace-lint
 ---
 
-read and run `ace-bundle wfi://run-lint`
+read and run `ace-bundle wfi://lint/run`

@@ -1,5 +1,5 @@
 ---
-name: ace:lint-process
+name: ace:lint-process-report
 description: Process lint report and create tasks for manual fixes
 # context: no-fork
 # agent: general-purpose
@@ -12,4 +12,4 @@ argument-hint: [report-path]
 source: ace-lint
 ---
 
-read and run `ace-bundle wfi://process-lint-report`
+read and run `ace-bundle wfi://lint/process-report`
