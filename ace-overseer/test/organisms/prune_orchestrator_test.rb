@@ -348,6 +348,160 @@ class PruneOrchestratorTest < AceOverseerTestCase
     refute_includes text, "Skipping"
   end
 
+  # === Assignment pruning tests ===
+
+  class FakeAssignmentPruneChecker
+    def initialize(candidate)
+      @candidate = candidate
+    end
+
+    def check(assignment_id:)
+      @candidate
+    end
+  end
+
+  class FakeAssignmentManager
+    attr_reader :delete_calls
+
+    def initialize(success: true)
+      @success = success
+      @delete_calls = []
+    end
+
+    def delete(assignment_id)
+      @delete_calls << assignment_id
+      @success
+    end
+  end
+
+  def build_assignment_candidate(id:, state:, safe:, reasons: [])
+    Ace::Overseer::Models::AssignmentPruneCandidate.new(
+      assignment_id: id,
+      assignment_name: "work-on-task-230",
+      assignment_state: state,
+      location_path: "/cache/#{id}",
+      reasons: reasons
+    )
+  end
+
+  def test_assignment_dry_run_returns_candidate
+    candidate = build_assignment_candidate(id: "abc12", state: "completed", safe: true)
+    checker = FakeAssignmentPruneChecker.new(candidate)
+    mgr = FakeAssignmentManager.new
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: FakeManager.new([]),
+      prune_checker: FakeChecker.new([]),
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {},
+      assignment_prune_checker: checker,
+      assignment_manager: mgr
+    )
+
+    result = orchestrator.call(
+      dry_run: true, yes: false, assignment_id: "abc12",
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal true, result[:dry_run]
+    assert_equal "abc12", result[:assignment_candidate].assignment_id
+    assert_empty result[:pruned_assignments]
+    assert_empty mgr.delete_calls
+  end
+
+  def test_assignment_prune_with_yes
+    candidate = build_assignment_candidate(id: "abc12", state: "completed", safe: true)
+    checker = FakeAssignmentPruneChecker.new(candidate)
+    mgr = FakeAssignmentManager.new
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: FakeManager.new([]),
+      prune_checker: FakeChecker.new([]),
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {},
+      assignment_prune_checker: checker,
+      assignment_manager: mgr
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: true, assignment_id: "abc12",
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal 1, result[:pruned_assignments].length
+    assert_equal ["abc12"], mgr.delete_calls
+  end
+
+  def test_assignment_prune_blocked_without_force
+    candidate = build_assignment_candidate(id: "abc12", state: "running", safe: false, reasons: ["assignment still running"])
+    checker = FakeAssignmentPruneChecker.new(candidate)
+    mgr = FakeAssignmentManager.new
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: FakeManager.new([]),
+      prune_checker: FakeChecker.new([]),
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {},
+      assignment_prune_checker: checker,
+      assignment_manager: mgr
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: true, assignment_id: "abc12",
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal true, result[:blocked]
+    assert_empty result[:pruned_assignments]
+    assert_empty mgr.delete_calls
+  end
+
+  def test_assignment_prune_force_override
+    candidate = build_assignment_candidate(id: "abc12", state: "running", safe: false, reasons: ["assignment still running"])
+    checker = FakeAssignmentPruneChecker.new(candidate)
+    mgr = FakeAssignmentManager.new
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: FakeManager.new([]),
+      prune_checker: FakeChecker.new([]),
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {},
+      assignment_prune_checker: checker,
+      assignment_manager: mgr
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: true, force: true, assignment_id: "abc12",
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal 1, result[:pruned_assignments].length
+    assert_equal ["abc12"], mgr.delete_calls
+  end
+
+  def test_assignment_prune_abortable
+    candidate = build_assignment_candidate(id: "abc12", state: "completed", safe: true)
+    checker = FakeAssignmentPruneChecker.new(candidate)
+    mgr = FakeAssignmentManager.new
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: FakeManager.new([]),
+      prune_checker: FakeChecker.new([]),
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {},
+      assignment_prune_checker: checker,
+      assignment_manager: mgr
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: false, assignment_id: "abc12",
+      input: StringIO.new("n\n"), output: StringIO.new
+    )
+
+    assert_equal true, result[:aborted]
+    assert_empty mgr.delete_calls
+  end
+
   def test_prompt_can_abort
     manager = FakeManager.new([FakeWorktree.new("/wt/task.230", "230")])
     checker = FakeChecker.new([build_candidate(task_id: "230", safe: true)])
