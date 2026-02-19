@@ -23,7 +23,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://load-project-context`
+- Read and follow: `ace-bundle wfi://bundle`
 
 ## Process Steps
 
