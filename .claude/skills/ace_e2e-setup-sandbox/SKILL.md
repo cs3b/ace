@@ -1,5 +1,5 @@
 ---
-name: ace:setup-e2e-sandbox
+name: ace:e2e-setup-sandbox
 description: Standardized sandbox setup for safe E2E tests with external APIs
 # context: no-fork
 # agent: general-purpose
@@ -18,4 +18,4 @@ last_modified: 2026-02-01
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle wfi://setup-e2e-sandbox`
+read and run `ace-bundle wfi://e2e/setup-sandbox`
