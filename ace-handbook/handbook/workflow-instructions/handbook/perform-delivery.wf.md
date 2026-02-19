@@ -9,7 +9,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 * Task reference (e.g., `215.03`) OR detailed inline instructions
 * Clean git working directory (or staged changes ready for commit)
 * Understanding of the standard delivery workflow steps
-* Access to required skills (`/ace:work-on-task`, `/ace:commit`, `/ace:create-pr`, `/ace:review-pr`)
+* Access to required skills (`/ace:task-work`, `/ace:git-commit`, `/ace:create-pr`, `/ace:review-pr`)
 
 ## Project Context Loading
 
@@ -28,8 +28,8 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 1: Implementation
 
 * [ ] Enter plan mode if implementation required
-* [ ] Execute implementation via `/ace:work-on-task` or inline instructions
-* [ ] Commit all changes (`/ace:commit`)
+* [ ] Execute implementation via `/ace:task-work` or inline instructions
+* [ ] Commit all changes (`/ace:git-commit`)
 * [ ] Release modified packages (`/ace-release` if applicable)
 * [ ] Mark task done and push to remote
 
@@ -44,7 +44,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 * [ ] Run deep code review (`/ace:review-pr preset: code-deep`)
 * [ ] Implement MEDIUM+ severity feedback
 * [ ] Run test suite (`ace-test-suite`)
-* [ ] Commit fixes (`/ace:commit`)
+* [ ] Commit fixes (`/ace:git-commit`)
 * [ ] Repeat review cycle if needed
 
 ## Process Steps
@@ -64,8 +64,8 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 
    **Standard Delivery Steps to Add:**
    ```
-   1. Implement task (via /ace:work-on-task or inline)
-   2. Commit all changes (/ace:commit)
+   1. Implement task (via /ace:task-work or inline)
+   2. Commit all changes (/ace:git-commit)
    3. Release modified packages (/ace-release)
    4. Mark task done and push to remote
    5. Create/update PR (/ace:create-pr)
@@ -83,7 +83,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 1: Implementation
 
 1. **Load Task Context (if task reference provided):**
-   * Run `/ace:work-on-task <ref>` to load task context
+   * Run `/ace:task-work <ref>` to load task context
    * If inline instructions provided, use those directly
 
 2. **Enter Plan Mode (if implementation required):**
@@ -95,7 +95,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Track progress using TodoWrite for sub-tasks
 
 4. **Commit Changes:**
-   * Run `/ace:commit` to commit all changes
+   * Run `/ace:git-commit` to commit all changes
    * Use descriptive commit message
 
 5. **Release Packages (if applicable):**
@@ -135,7 +135,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Fix any failing tests
 
 4. **Commit Fixes:**
-   * Run `/ace:commit` to commit all fixes
+   * Run `/ace:git-commit` to commit all fixes
 
 5. **Repeat Review Cycle (if needed):**
    * If significant changes were made, run another review
