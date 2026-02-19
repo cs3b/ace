@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.270
-status: draft
+status: in-progress
 priority: medium
 estimate: 4h
 dependencies: []
+worktree:
+  branch: 270-add-reflect-and-refactor-phase-to-ace-assign
+  path: "../ace-task.270"
+  created_at: '2026-02-19 02:47:46'
+  updated_at: '2026-02-19 02:47:46'
+  target_branch: main
 ---
 
 # Add reflect-and-refactor phase to ace-assign
