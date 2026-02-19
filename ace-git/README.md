@@ -1,6 +1,6 @@
 # ace-git
 
-Git workflow instructions for ACE projects - comprehensive guidance for rebase operations, PR creation, and commit squashing.
+Git workflow instructions for ACE projects - comprehensive guidance for rebase operations, PR creation, and commit reorganization.
 
 ## Overview
 
@@ -13,9 +13,9 @@ ace-git is a workflow-first gem that provides essential git workflows and contex
 - **PR** (`ace-git pr`): PR metadata lookup
 
 **Workflows:**
-- **Rebase Workflow** (`wfi://rebase`): Changelog-preserving rebase operations
-- **PR Creation Workflow** (`wfi://create-pr`): Pull request creation with structured templates
-- **Squash Workflow** (`wfi://squash-pr`): Version-based commit squashing for clean history
+- **Rebase Workflow** (`wfi://git/rebase`): Changelog-preserving rebase operations
+- **PR Creation Workflow** (`wfi://git/create-pr`): Pull request creation with structured templates
+- **Reorganize Commits Workflow** (`wfi://git/reorganize-commits`): Reorganize commit history into logical groups
 
 ## Installation
 
@@ -39,13 +39,13 @@ Workflows are accessible via ace-nav protocol:
 
 ```bash
 # Rebase with changelog preservation
-ace-nav wfi://rebase
+ace-nav wfi://git/rebase
 
 # Create pull request with template
-ace-nav wfi://create-pr
+ace-nav wfi://git/create-pr
 
 # Squash commits by version
-ace-nav wfi://squash-pr
+ace-nav wfi://git/reorganize-commits
 ```
 
 ### Configuration (Optional)
@@ -66,7 +66,7 @@ Note: Workflows contain sensible defaults inline. Configuration is only for user
 
 Rebase feature branches while preserving CHANGELOG.md and version files.
 
-**Access**: `ace-nav wfi://rebase`
+**Access**: `ace-nav wfi://git/rebase`
 
 **Use Cases**:
 - Update feature branch with latest main
@@ -82,7 +82,7 @@ Rebase feature branches while preserving CHANGELOG.md and version files.
 
 Create well-documented pull requests using structured templates.
 
-**Access**: `ace-nav wfi://create-pr`
+**Access**: `ace-nav wfi://git/create-pr`
 
 **Use Cases**:
 - Create feature PRs with comprehensive descriptions
@@ -102,11 +102,11 @@ gh pr create \
   --body "$(ace-nav template://pr/feature)"
 ```
 
-### 3. Squash Workflow
+### 3. Reorganize Commits Workflow
 
-Squash commits by version for clean, maintainable history.
+Reorganize commits into logical groups for clean, maintainable history.
 
-**Access**: `ace-nav wfi://squash-pr`
+**Access**: `ace-nav wfi://git/reorganize-commits`
 
 **Use Cases**:
 - Clean up feature branch history before merge
@@ -150,7 +150,7 @@ EOF
 
 ```bash
 # 1. Access workflow
-ace-nav wfi://rebase
+ace-nav wfi://git/rebase
 
 # 2. Follow guided steps
 git fetch origin
@@ -184,7 +184,7 @@ gh pr edit --add-label "enhancement"
 
 ```bash
 # 1. Access workflow
-ace-nav wfi://squash-pr
+ace-nav wfi://git/reorganize-commits
 
 # 2. Identify version boundary
 git log --oneline | grep "v0.9.0"
@@ -242,7 +242,7 @@ Workflows are automatically available in Claude Code via handbook integration:
 
 ```bash
 # Workflows accessible through ace-nav
-/ace:bundle wfi://rebase
+/ace:bundle wfi://git/rebase
 ```
 
 ### Other ACE Tools
