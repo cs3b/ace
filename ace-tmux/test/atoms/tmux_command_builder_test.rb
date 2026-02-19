@@ -51,7 +51,7 @@ class TmuxCommandBuilderTest < Minitest::Test
 
   def test_new_window
     cmd = Builder.new_window("dev", name: "logs")
-    assert_equal ["tmux", "new-window", "-t", "dev", "-n", "logs"], cmd
+    assert_equal ["tmux", "new-window", "-t", "dev:", "-n", "logs"], cmd
   end
 
   def test_new_window_with_root
@@ -62,7 +62,7 @@ class TmuxCommandBuilderTest < Minitest::Test
 
   def test_new_window_with_print_format
     cmd = Builder.new_window("dev", name: "logs", print_format: '#{window_id}')
-    assert_equal ["tmux", "new-window", "-t", "dev", "-n", "logs", "-P", "-F", '#{window_id}'], cmd
+    assert_equal ["tmux", "new-window", "-t", "dev:", "-n", "logs", "-P", "-F", '#{window_id}'], cmd
   end
 
   def test_new_window_without_print_format
