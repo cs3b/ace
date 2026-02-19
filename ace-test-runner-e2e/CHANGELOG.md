@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-02-19
+
+### Fixed
+
+- Detect CLI-provider skill mis-invocation patterns (`/ace:...` in shell, invalid `ace-test e2e`, missing tests context) and return explicit infrastructure errors
+- Require deterministic report-directory matching in `TestOrchestrator` for CLI-provider runs to prevent stale report reuse across run IDs
+
+### Changed
+
+- Harden `SkillPromptBuilder` prompts and handbook guidance to explicitly require slash-command execution in chat context (not bash)
+
 ## [0.16.4] - 2026-02-18
 
 ### Changed

@@ -309,7 +309,7 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
-  def test_cli_provider_skips_report_writing
+  def test_cli_provider_missing_expected_report_is_error
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
       orchestrator = create_orchestrator(
@@ -325,10 +325,44 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       assert_equal 1, results.size
-      # CLI providers should NOT have orchestrator-written reports
-      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "cli123-my-pkg-ts001-reports")
-      refute Dir.exist?(report_dir), "CLI provider should not create report dir via ReportWriter"
+      expected_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "cli123-my-pkg-ts001-reports")
+      assert_equal "error", results.first.status
+      assert_equal expected_dir, results.first.report_dir
+      assert_includes results.first.error, "Expected report directory was not created"
       assert_match(/skill mode/, @output.string)
+    end
+  end
+
+  def test_cli_provider_does_not_use_stale_report_dirs
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      stale_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "old111-my-pkg-ts001-reports")
+      FileUtils.mkdir_p(stale_dir)
+      File.write(File.join(stale_dir, "metadata.yml"), <<~YAML)
+        status: "pass"
+        results:
+          passed: 1
+          failed: 0
+          total: 1
+      YAML
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        timestamp_generator: -> { "new222" }
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      expected_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "new222-my-pkg-ts001-reports")
+      assert_equal "error", results.first.status
+      assert_equal expected_dir, results.first.report_dir
+      refute_equal stale_dir, results.first.report_dir
     end
   end
 
