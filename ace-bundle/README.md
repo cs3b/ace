@@ -49,7 +49,7 @@ ace-bundle prompt.md --embed-source   # CLI flag overrides embed_document_source
 ace-bundle prompt.md -e               # Short form
 
 # Load via protocol (ace-nav integration)
-ace-bundle wfi://create-task          # Load workflow
+ace-bundle wfi://task/create          # Load workflow
 ace-bundle guide://testing            # Load guide
 ace-bundle task://061                 # Load task context
 
@@ -230,13 +230,13 @@ bundle:
 ```yaml
 bundle:
   files:
-    - wfi://draft-task        # Workflow via wfi:// protocol
-    - wfi://plan-task         # Another workflow
+    - wfi://task/draft        # Workflow via wfi:// protocol
+    - wfi://task/plan         # Another workflow
     - guide://testing         # Guide via guide:// protocol
 ```
 
 Protocols work in:
-- Input arguments: `ace-bundle wfi://create-task`
+- Input arguments: `ace-bundle wfi://task/create`
 - `context.files` arrays in YAML frontmatter
 - Automatic recursive resolution for nested protocol references
 
@@ -252,7 +252,7 @@ bundle:
   presets: [project]
   files:
     - "lib/new-feature/**/*.rb"
-    - wfi://draft-task           # Protocol reference
+    - wfi://task/draft           # Protocol reference
   diff: {ranges: ["origin/main...HEAD"]}
   commands: ["git log -5 --oneline"]
 ```
@@ -297,7 +297,7 @@ context = Ace::Bundle.inspect_config(['base', '/path/to/config.yml'])
 puts context.content  # Returns YAML of merged configuration
 
 # Load via protocol
-context = Ace::Bundle.load_auto('wfi://create-task')
+context = Ace::Bundle.load_auto('wfi://task/create')
 puts context.content
 
 # Load from file
