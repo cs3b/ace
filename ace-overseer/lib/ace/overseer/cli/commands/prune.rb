@@ -22,11 +22,13 @@ module Ace
           end
 
           def call(**options)
+            progress = options[:quiet] ? nil : ->(msg) { puts msg }
             result = @orchestrator.call(
               dry_run: options[:dry_run],
               yes: options[:yes],
               input: @input,
-              output: @output
+              output: @output,
+              on_progress: progress
             )
 
             return if options[:quiet]

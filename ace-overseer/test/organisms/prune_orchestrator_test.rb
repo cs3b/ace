@@ -112,6 +112,66 @@ class PruneOrchestratorTest < AceOverseerTestCase
     assert_equal 1, tmux.run_calls.length
   end
 
+  def test_on_progress_receives_scanning_messages
+    messages = []
+    manager = FakeManager.new([FakeWorktree.new("/wt/task.230", "230")])
+    checker = FakeChecker.new([build_candidate(task_id: "230", safe: true)])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    orchestrator.call(
+      dry_run: false, yes: true,
+      input: StringIO.new(""), output: StringIO.new,
+      on_progress: ->(msg) { messages << msg }
+    )
+
+    assert messages.any? { |m| m.include?("Scanning") }
+    assert messages.any? { |m| m.include?("Checking") }
+  end
+
+  def test_candidates_displayed_before_confirmation_prompt
+    output = StringIO.new
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      FakeWorktree.new("/wt/task.231", "231")
+    ])
+    checker = FakeChecker.new([
+      build_candidate(task_id: "230", safe: true),
+      build_candidate(task_id: "231", safe: false, reasons: ["task not done"])
+    ])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: { "window_name_format" => "t{task_id}", "tmux_session_name" => "ace" }
+    )
+
+    orchestrator.call(
+      dry_run: false, yes: false,
+      input: StringIO.new("n\n"), output: output
+    )
+
+    text = output.string
+    safe_pos = text.index("Safe to prune")
+    skip_pos = text.index("Skipping")
+    prompt_pos = text.index("Continue?")
+
+    assert safe_pos, "Expected 'Safe to prune' in output"
+    assert skip_pos, "Expected 'Skipping' in output"
+    assert prompt_pos, "Expected 'Continue?' in output"
+    assert safe_pos < prompt_pos, "Candidates should appear before prompt"
+    assert skip_pos < prompt_pos, "Skipped items should appear before prompt"
+    assert_includes text, "task.230"
+    assert_includes text, "task.231"
+    assert_includes text, "task not done"
+  end
+
   def test_prompt_can_abort
     manager = FakeManager.new([FakeWorktree.new("/wt/task.230", "230")])
     checker = FakeChecker.new([build_candidate(task_id: "230", safe: true)])

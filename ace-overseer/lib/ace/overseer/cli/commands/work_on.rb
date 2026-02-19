@@ -24,21 +24,12 @@ module Ace
               raise Ace::Core::CLI::Error.new("--task is required. Usage: ace-overseer work-on --task <ref>")
             end
 
-            result = @orchestrator.call(task_ref: task, cli_preset: preset)
+            progress = options[:quiet] ? nil : ->(msg) { puts msg }
+            result = @orchestrator.call(task_ref: task, cli_preset: preset, on_progress: progress)
 
             return if options[:quiet]
 
-            puts "Worktree ready for task #{result[:task_ref]}."
-            puts "Worktree: #{result[:worktree_path]} (branch: #{result[:branch]})"
-            puts "Tmux window opened: #{result[:window_name]}"
-            if result[:assignment_created]
-              puts "Assignment prepared (preset: #{result[:preset]})."
-              puts "Assignment created: #{result[:assignment_id]}"
-            else
-              puts "Assignment already active in worktree: #{result[:assignment_id]}"
-            end
-            puts
-            puts "Next step: switch to tmux window '#{result[:window_name]}' and run /ace:assign-drive"
+            puts "Done. Switch to tmux window '#{result[:window_name]}' and run /ace:assign-drive"
           rescue Ace::Core::CLI::Error
             raise
           rescue StandardError => e

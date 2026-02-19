@@ -12,7 +12,7 @@ class WorkOnCommandTest < AceOverseerTestCase
       @calls = []
     end
 
-    def call(task_ref:, cli_preset:)
+    def call(task_ref:, cli_preset:, on_progress: nil)
       @calls << { task_ref: task_ref, cli_preset: cli_preset }
       raise @error if @error
 
@@ -38,7 +38,21 @@ class WorkOnCommandTest < AceOverseerTestCase
 
     command.call(task: "230", preset: "fix-bug", quiet: true)
 
-    assert_equal [{ task_ref: "230", cli_preset: "fix-bug" }], orchestrator.calls
+    assert_equal 1, orchestrator.calls.length
+    assert_equal "230", orchestrator.calls.first[:task_ref]
+    assert_equal "fix-bug", orchestrator.calls.first[:cli_preset]
+  end
+
+  def test_progress_output_displayed_when_not_quiet
+    orchestrator = FakeWorkOnOrchestrator.new(result: build_result)
+    command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator)
+
+    output, = capture_io do
+      command.call(task: "230")
+    end
+
+    assert_includes output, "Done."
+    assert_includes output, "t230"
   end
 
   def test_wraps_not_found_errors_as_cli_error
