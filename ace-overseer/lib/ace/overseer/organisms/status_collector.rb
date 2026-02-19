@@ -77,6 +77,7 @@ module Ace
               $stdout.reopen(pipe_write)
               pipe_write.close
               exec("ruby", "-e", worker_script, worktree.path.to_s)
+              exit!(1) # unreachable unless exec fails
             end
             pipe_write.close
             { pid: pid, pipe: pipe_read, worktree: worktree }
@@ -101,7 +102,7 @@ module Ace
             end
           end
 
-          contexts
+          contexts.compact
         end
 
         def context_to_h(context)
