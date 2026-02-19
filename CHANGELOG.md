@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.524] - 2026-02-19
+
+### Fixed
+
+- **ace-tmux v0.5.3**: Include stderr details in "Failed to create window" error message for better debugging
+
+### Added
+
+- **ace-overseer v0.2.13**: Progress callbacks for `work-on` and `prune` — real-time step-by-step output instead of post-hoc summary; prune shows safe/skipped candidates with reasons before confirmation prompt
+
 ## [0.9.523] - 2026-02-19
 
 ### Fixed

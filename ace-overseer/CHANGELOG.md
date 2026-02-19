@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.13] - 2026-02-19
+
+### Added
+- Progress callbacks (`on_progress:`) for `work-on` and `prune` orchestrators — one-line status output per step
+- Prune now displays safe/skipped candidates with reasons before the "Continue?" confirmation prompt
+
+### Changed
+- `work-on` command output replaced with real-time progress messages instead of post-hoc summary
+
 ## [0.2.12] - 2026-02-19
 
 ### Fixed
