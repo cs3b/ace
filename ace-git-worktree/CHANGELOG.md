@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.5] - 2026-02-19
+
+### Fixed
+- Pass `--force` flag to `git worktree remove` when force removal is requested, fixing "contains modified or untracked files" errors during forced prune
+
 ## [0.13.4] - 2026-02-19
 
 ### Fixed
