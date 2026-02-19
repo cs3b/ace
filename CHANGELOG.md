@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.536] - 2026-02-19
+
+### Fixed
+
+- **ace-git-worktree v0.13.6**: Update TaskIDExtractor tests to remove `.00` orchestrator suffix references after TaskReferenceParser change
+
 ## [0.9.535] - 2026-02-19
 
 ### Fixed
