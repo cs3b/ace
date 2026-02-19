@@ -1,5 +1,5 @@
 ---
-name: token-remediation
+name: git/token-remediation
 allowed-tools: Bash, Read, Write
 description: Complete workflow to detect, revoke, and remove authentication tokens from Git history
 argument-hint: "[scan-only|full]"
