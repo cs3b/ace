@@ -1,5 +1,5 @@
 ---
-name: optimize-tests
+name: test/optimize
 description: Semi-automated test performance optimization workflow
 allowed-tools: Read, Edit, Write, Bash, Grep, Glob, Bash(ace-test:*), Bash(ace-search:*)
 argument-hint: 'package name'
@@ -375,4 +375,4 @@ end
 - [Test Performance Guide](guide://test-performance)
 - [Test Layer Decision Guide](guide://test-layer-decision)
 - [Test Mocking Patterns Guide](guide://test-mocking-patterns)
-- [Verify Test Suite Workflow](wfi://verify-test-suite)
+- [Verify Test Suite Workflow](wfi://test/verify-suite)
