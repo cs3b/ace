@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-02-19
+
+### Technical
+- Namespace workflow instructions into docs/ subdirectory with updated wfi:// URIs
+- Migrate update-usage and update-roadmap workflows from ace-taskflow
+
 ## [0.20.0] - 2026-02-13
 
 ### Added
