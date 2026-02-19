@@ -1,5 +1,5 @@
 ---
-name: ace:create-adr
+name: ace:docs-create-adr
 description: Create Architecture Decision Record
 # context: no-fork
 # agent: Plan
@@ -18,6 +18,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://create-adr`
+read and run `ace-bundle wfi://docs/create-adr`
 
 read and run `ace-bundle wfi://commit`

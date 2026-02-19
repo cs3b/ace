@@ -1,5 +1,5 @@
 ---
-name: meta-update-tools-docs
+name: ace:docs-update-tools
 title: "Meta: Update Tools Documentation"
 command: meta-update-tools-docs
 description: Update ace-* package documentation from implementation and tests
@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://update-tools-docs
+For detailed instructions, see: ace-bundle wfi://docs/update-tools
