@@ -1,5 +1,5 @@
 ---
-name: ace:apply-feedback
+name: ace:review-apply-feedback
 description: Apply verified feedback items from code review
 # context: no-fork
 # agent: general-purpose
@@ -17,4 +17,4 @@ last_modified: 2026-02-03
 source: ace-review
 ---
 
-read and run `ace-bundle wfi://apply-feedback`
+read and run `ace-bundle wfi://review/apply-feedback`
