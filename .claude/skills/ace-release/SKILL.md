@@ -28,7 +28,7 @@ Complete version bump for a package including BOTH CHANGELOGs in a single commit
 
 ## Step 1: Bump package version
 
-Run workflow: `ace-bundle wfi://ace-bump-version`
+Run workflow: `ace-bundle wfi://release/bump-version`
 
 Follow all steps (1-6). This updates version.rb, package CHANGELOG, and Gemfile.lock.
 
@@ -36,7 +36,7 @@ Follow all steps (1-6). This updates version.rb, package CHANGELOG, and Gemfile.
 
 ## Step 2: Update main CHANGELOG
 
-Run workflow: `ace-bundle wfi://ace-update-changelog`
+Run workflow: `ace-bundle wfi://release/update-changelog`
 
 Follow all steps (1-4). This updates the main project CHANGELOG.md.
 
