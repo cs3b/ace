@@ -20,13 +20,22 @@ class StatusCollectorTest < AceOverseerTestCase
   end
 
   class FakeContextCollector
-    def initialize(context, main_context: nil)
+    attr_reader :collect_assignments_only_calls
+
+    def initialize(context, main_context: nil, quick_context: nil)
       @context = context
       @main_context = main_context
+      @quick_context = quick_context
+      @collect_assignments_only_calls = []
     end
 
     def collect(path, location_type: :worktree)
       location_type == :main ? @main_context : @context
+    end
+
+    def collect_assignments_only(path, cached_branch:, cached_git_status:, location_type: :worktree)
+      @collect_assignments_only_calls << { path: path, cached_branch: cached_branch, location_type: location_type }
+      @quick_context || @context
     end
   end
 
@@ -95,6 +104,61 @@ class StatusCollectorTest < AceOverseerTestCase
 
     assert_equal 2, snapshot[:contexts].length
     assert_equal :main, snapshot[:contexts].first.location_type
+  end
+
+  def test_collect_quick_reuses_git_data_and_refreshes_assignments
+    original_context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "230",
+      worktree_path: "/wt/ace-task.230",
+      branch: "230-feature",
+      assignments: [make_assignment(id: "8or5kx", state: "running")],
+      git_status: { "clean" => true, "pr_metadata" => { "number" => 99 } }
+    )
+
+    updated_context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "230",
+      worktree_path: "/wt/ace-task.230",
+      branch: "230-feature",
+      assignments: [make_assignment(id: "8or5kx", state: "completed", total: 5, done: 5, failed: 0, in_progress: 0, pending: 0)],
+      git_status: { "clean" => true, "pr_metadata" => { "number" => 99 } }
+    )
+
+    context_collector = FakeContextCollector.new(original_context, quick_context: updated_context)
+
+    collector = Ace::Overseer::Organisms::StatusCollector.new(
+      worktree_manager: FakeWorktreeManager.new([FakeWorktree.new("/wt/ace-task.230", "230")]),
+      context_collector: context_collector,
+      project_root: nil
+    )
+
+    previous_snapshot = { contexts: [original_context] }
+    snapshot = collector.collect_quick(previous_snapshot)
+
+    assert_equal 1, snapshot[:contexts].length
+    assert_equal 1, context_collector.collect_assignments_only_calls.length
+    call = context_collector.collect_assignments_only_calls.first
+    assert_equal "/wt/ace-task.230", call[:path]
+    assert_equal "230-feature", call[:cached_branch]
+  end
+
+  def test_collect_quick_falls_back_to_full_collect_when_no_previous
+    context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "230",
+      worktree_path: "/wt/ace-task.230",
+      branch: "230-feature",
+      assignments: [make_assignment(id: "8or5kx", state: "running")],
+      git_status: { "clean" => true }
+    )
+
+    collector = Ace::Overseer::Organisms::StatusCollector.new(
+      worktree_manager: FakeWorktreeManager.new([FakeWorktree.new("/wt/ace-task.230", "230")]),
+      context_collector: FakeContextCollector.new(context),
+      project_root: nil
+    )
+
+    snapshot = collector.collect_quick({ contexts: [] })
+
+    assert_equal 1, snapshot[:contexts].length
   end
 
   def test_collect_excludes_main_branch_when_no_assignments

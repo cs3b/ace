@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.532] - 2026-02-19
+
+### Added
+
+- **ace-overseer v0.4.1**: `--watch` / `-w` option for `status` command with auto-refreshing ANSI dashboard
+- **ace-overseer v0.4.1**: Two-tier refresh — fast interval (15s) for assignment data, slow interval (5min) for git/PR metadata
+- **ace-overseer v0.4.1**: `collect_assignments_only` on `WorktreeContextCollector` for lightweight assignment-only collection
+- **ace-overseer v0.4.1**: `collect_quick` on `StatusCollector` reusing previous git data while refreshing assignments
+- **ace-overseer v0.4.1**: Dim timestamp footer with countdown to next full refresh
+- **ace-overseer v0.4.1**: Configurable watch intervals via `watch.refresh_interval` and `watch.git_refresh_interval` in config
+
 ## [0.9.531] - 2026-02-19
 
 ### Added

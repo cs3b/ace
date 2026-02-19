@@ -209,6 +209,49 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
+  def test_collect_assignments_only_returns_fresh_assignments_with_cached_git_data
+    info = make_info(id: "9new1x", name: "work-on-task-300", state: :running)
+    cached_git = { "clean" => true, "pr_metadata" => { "number" => 42 } }
+
+    Dir.mktmpdir("task.300") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        repo_status_loader: -> { raise "should not be called" },
+        assignment_discoverer_factory: -> { FakeDiscoverer.new([info]) }
+      )
+
+      context = collector.collect_assignments_only(
+        worktree,
+        cached_branch: "300-feature",
+        cached_git_status: cached_git,
+        location_type: :worktree
+      )
+
+      assert_equal "300", context.task_id
+      assert_equal "300-feature", context.branch
+      assert_equal 1, context.assignments.size
+      assert_equal "9new1x", context.assignment_status.dig("assignment", "id")
+      assert_equal cached_git, context.git_status
+    end
+  end
+
+  def test_collect_assignments_only_preserves_location_type
+    Dir.mktmpdir("main-branch") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        repo_status_loader: -> { raise "should not be called" },
+        assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
+      )
+
+      context = collector.collect_assignments_only(
+        worktree,
+        cached_branch: "main",
+        cached_git_status: { "clean" => true },
+        location_type: :main
+      )
+
+      assert_equal :main, context.location_type
+    end
+  end
+
   def test_collect_extracts_four_digit_task_ids_from_worktree_path
     Dir.mktmpdir("collector-root") do |root|
       worktree = File.join(root, "task.1234")

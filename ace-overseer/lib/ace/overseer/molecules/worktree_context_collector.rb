@@ -26,6 +26,22 @@ module Ace
           end
         end
 
+        def collect_assignments_only(worktree_path, cached_branch:, cached_git_status:, location_type: :worktree)
+          with_worktree_context(worktree_path) do
+            assignments = load_all_assignments
+            task_id = extract_task_id(worktree_path, cached_branch)
+
+            Models::WorkContext.new(
+              task_id: task_id,
+              worktree_path: worktree_path,
+              branch: cached_branch,
+              assignments: assignments,
+              git_status: cached_git_status,
+              location_type: location_type
+            )
+          end
+        end
+
         private
 
         def load_all_assignments
