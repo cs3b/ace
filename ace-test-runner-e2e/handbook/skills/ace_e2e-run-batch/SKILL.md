@@ -1,5 +1,5 @@
 ---
-name: ace:run-e2e-tests
+name: ace:e2e-run-batch
 description: Execute multiple E2E tests in parallel using subagents
 user-invocable: true
 allowed-tools:
@@ -14,6 +14,6 @@ last_modified: 2026-01-29
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle wfi://run-e2e-tests`
+read and run `ace-bundle wfi://e2e/run-batch`
 
 ARGUMENTS: $ARGUMENTS
