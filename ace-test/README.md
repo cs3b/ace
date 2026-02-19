@@ -65,10 +65,10 @@ ace-nav guide://embedded-testing-guide
 
 ```bash
 # Create test cases for features
-ace-nav wfi://create-test-cases
+ace-nav wfi://test/create-cases
 
 # Fix failing tests systematically
-ace-nav wfi://fix-tests
+ace-nav wfi://test/fix
 ```
 
 ### Agent Access

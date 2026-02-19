@@ -1,5 +1,5 @@
 ---
-name: create-test-cases
+name: test/create-cases
 description: Generate structured test cases for features and code changes
 allowed-tools: Read, Write, Edit, Bash
 argument-hint: ''
