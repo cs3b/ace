@@ -1,5 +1,5 @@
 ---
-name: apply-feedback
+name: review/apply-feedback
 description: Apply verified feedback items from code review
 argument-hint: "[--session <path>] [--priority <level>]"
 allowed-tools: Read, Bash, Write, Edit, Grep, Glob

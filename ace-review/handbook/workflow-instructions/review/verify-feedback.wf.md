@@ -1,5 +1,5 @@
 ---
-name: verify-feedback
+name: review/verify-feedback
 description: Verify feedback items through multi-dimensional claim analysis
 argument-hint: "[--session <path>] [--status draft]"
 allowed-tools: Read, Bash, Grep, Glob
