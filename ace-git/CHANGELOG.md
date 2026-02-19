@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.14] - 2026-02-19
+
+### Technical
+- Namespace workflow instructions into git/ subdirectory with updated wfi:// URIs
+
 ## [0.10.13] - 2026-02-17
 
 ### Added
