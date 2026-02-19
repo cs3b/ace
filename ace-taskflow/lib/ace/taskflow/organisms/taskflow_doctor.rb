@@ -65,6 +65,32 @@ module Ace
           @issues.select { |issue| auto_fixable?(issue) }
         end
 
+        # Check if an issue can be auto-fixed
+        # @param issue [Hash] Issue to check
+        # @return [Boolean] Whether the issue is auto-fixable
+        def auto_fixable?(issue)
+          # Define which issues can be auto-fixed
+          return false unless issue[:type] == :error || issue[:type] == :warning
+
+          # Get configured done directory name for dynamic patterns
+          config = Ace::Taskflow.configuration
+          done_dir = Regexp.escape(config.done_dir)
+
+          # Check for specific fixable patterns
+          fixable_patterns = [
+            /Missing closing '---' delimiter/,
+            /not in #{done_dir}\/ directory/,
+            /in #{done_dir}\/ directory but status is/,
+            /Missing recommended field:/,
+            /Missing default/,
+            /Stale backup file/,
+            /invalid nesting, should be in ideas/,
+            /Empty directory/
+          ]
+
+          fixable_patterns.any? { |pattern| issue[:message].match?(pattern) }
+        end
+
         private
 
         def find_taskflow_root
@@ -96,6 +122,9 @@ module Ace
           # Check for stale backup files
           check_backup_files
 
+          # Check for empty directories
+          check_empty_directories
+
           # Check idea scope/status consistency
           check_idea_scope_consistency
         end
@@ -105,9 +134,11 @@ module Ace
           when :tasks
             check_tasks
             check_backup_files
+            check_empty_directories
           when :ideas
             check_ideas
             check_idea_scope_consistency
+            check_empty_directories
           when :releases
             check_releases
           when :retros
@@ -534,6 +565,12 @@ module Ace
           config = Ace::Taskflow.configuration
           done_dir = config.done_dir
           maybe_dir = config.maybe_dir
+          anyday_dir = config.anyday_dir
+
+          # Match both configured names AND legacy variants (without underscore prefix)
+          archive_names = [done_dir, done_dir.delete_prefix("_")].uniq
+          maybe_names = [maybe_dir, maybe_dir.delete_prefix("_")].uniq
+          anyday_names = [anyday_dir, anyday_dir.delete_prefix("_")].uniq
 
           idea_files = Dir.glob(File.join(@root_path, "**/ideas/**/*.md"))
             .reject { |f| f.include?("/.git/") }
@@ -549,13 +586,33 @@ module Ace
             end
 
             status = frontmatter["status"]
-            in_archive = file.include?("/#{done_dir}/")
-            in_maybe = file.include?("/#{maybe_dir}/")
+            in_archive = archive_names.any? { |name| file.include?("/ideas/#{name}/") }
+            in_maybe = maybe_names.any? { |name| file.include?("/ideas/#{name}/") }
+            in_anyday = anyday_names.any? { |name| file.include?("/ideas/#{name}/") }
 
-            # Error: Ideas in maybe/_archive/ — invalid nesting
-            if in_maybe && in_archive
-              add_issue(:error, "Idea in #{maybe_dir}/#{done_dir}/ (invalid nesting, should be in ideas/#{done_dir}/)", file)
+            # Detect nested archive inside scope dirs (maybe/_archive/, anyday/_archive/)
+            nested_archive = (in_maybe || in_anyday) &&
+              archive_names.any? { |name| file.include?("/#{name}/") }
+
+            # Error: Ideas in scope/_archive/ — invalid nesting
+            if nested_archive
+              scope_name = in_maybe ? "maybe" : "anyday"
+              add_issue(:error, "Idea in #{scope_name}/#{done_dir}/ (invalid nesting, should be in ideas/#{done_dir}/)", file)
               next
+            end
+
+            # Also detect archive outside of ideas/ top level (e.g. ideas/maybe/_archive/)
+            if !in_archive && archive_names.any? { |name| file.include?("/#{name}/") }
+              # Archive dir found but not directly under ideas/ — invalid nesting
+              in_archive_nested = true
+            end
+
+            # Warning: Non-standard scope directory name (legacy without underscore)
+            if file.include?("/ideas/maybe/") && !file.include?("/ideas/#{maybe_dir}/") && maybe_dir.start_with?("_")
+              add_issue(:warning, "Idea in legacy scope directory 'maybe/' (expected '#{maybe_dir}/')", file)
+            end
+            if file.include?("/ideas/anyday/") && !file.include?("/ideas/#{anyday_dir}/") && anyday_dir.start_with?("_")
+              add_issue(:warning, "Idea in legacy scope directory 'anyday/' (expected '#{anyday_dir}/')", file)
             end
 
             # Error: Ideas in _archive/ with non-terminal status
@@ -583,6 +640,28 @@ module Ace
 
           result[:misplaced].each do |misplaced|
             add_issue(:warning, "Misplaced idea file: #{misplaced[:reason]}", misplaced[:path])
+          end
+        end
+
+        # Check for empty directories under tasks/ and ideas/
+        def check_empty_directories
+          config = Ace::Taskflow.configuration
+          task_dir = config.task_dir
+          done_dir = config.done_dir
+
+          # Scan for empty directories under tasks/ and ideas/ in each release
+          ["#{task_dir}/**/*", "ideas/**/*"].each do |pattern|
+            Dir.glob(File.join(@root_path, "**", pattern)).each do |path|
+              next unless File.directory?(path)
+              next if path.include?("/.git/")
+              next if File.basename(path) == "_backlog"
+
+              # A directory is "empty" if it contains no files (recursively)
+              files = Dir.glob(File.join(path, "**", "*")).select { |f| File.file?(f) }
+              if files.empty?
+                add_issue(:warning, "Empty directory (safe to delete)", path)
+              end
+            end
           end
         end
 
@@ -623,27 +702,6 @@ module Ace
           [[score, 0].max, 100].min
         end
 
-        def auto_fixable?(issue)
-          # Define which issues can be auto-fixed
-          return false unless issue[:type] == :error || issue[:type] == :warning
-
-          # Get configured done directory name for dynamic patterns
-          config = Ace::Taskflow.configuration
-          done_dir = Regexp.escape(config.done_dir)
-
-          # Check for specific fixable patterns
-          fixable_patterns = [
-            /Missing closing '---' delimiter/,
-            /not in #{done_dir}\/ directory/,
-            /in #{done_dir}\/ directory but status is/,
-            /Missing recommended field:/,
-            /Missing default/,
-            /Stale backup file/,
-            /invalid nesting, should be in ideas/
-          ]
-
-          fixable_patterns.any? { |pattern| issue[:message].match?(pattern) }
-        end
       end
     end
   end
