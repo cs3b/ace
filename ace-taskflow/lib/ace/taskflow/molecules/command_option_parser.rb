@@ -283,7 +283,11 @@ module Ace
             recently_done_limit: :recently_done_limit,
             up_next_limit: :up_next_limit,
             include_drafts: :include_drafts,
-            include_activity: :include_activity
+            include_activity: :include_activity,
+            auto_fix: :fix,
+            auto_fix_with_agent: :fix_with_agent,
+            model: :model,
+            verbose_info: :verbose_info
           }
 
           thor_mappings.each do |thor_key, our_key|
