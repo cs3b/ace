@@ -50,7 +50,7 @@ module Ace
         # @param tmux [String] tmux binary path
         # @return [Array<String>]
         def new_window(session, name: nil, root: nil, print_format: nil, tmux: "tmux")
-          cmd = [tmux, "new-window", "-t", session]
+          cmd = [tmux, "new-window", "-t", "#{session}:"]
           cmd.concat(["-n", name]) if name
           cmd.concat(["-c", File.expand_path(root)]) if root
           cmd.concat(["-P", "-F", print_format]) if print_format
