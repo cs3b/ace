@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.550] - 2026-02-20
+
+### Fixed
+
+- **ace-assign v0.12.5**: Update slash command refs to use git namespace
+
 ## [0.9.549] - 2026-02-20
 
 ### Fixed
