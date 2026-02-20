@@ -66,6 +66,7 @@ module Ace
         end
 
         def detect_current_session
+          return ENV["ACE_TMUX_SESSION"] if ENV["ACE_TMUX_SESSION"]
           return nil unless ENV["TMUX"]
 
           cmd = Atoms::TmuxCommandBuilder.display_message("#S", tmux: @tmux)
