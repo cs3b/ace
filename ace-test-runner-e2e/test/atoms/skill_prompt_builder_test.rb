@@ -99,6 +99,31 @@ class SkillPromptBuilderTest < Minitest::Test
     assert_equal "dangerously-skip-permissions", builder.required_cli_args("claude:sonnet")
   end
 
+  # --- Skill Name Coupling (guards against rename drift) ---
+
+  def test_skill_name_matches_handbook_skill
+    # Derives the expected skill name from the actual skill directory on disk.
+    # If the skill is renamed, the directory name changes and this test fails,
+    # forcing the developer to also update SkillPromptBuilder.
+    skills_dir    = File.expand_path("../../handbook/skills", __dir__)
+    skill_dir     = File.join(skills_dir, "ace_e2e-run")
+    # ace_e2e-run → ace:e2e-run  (replace first underscore with colon)
+    expected_name = File.basename(skill_dir).sub("_", ":")
+
+    scenario   = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
+    scenario_p = @builder.build_skill_prompt(scenario)
+    tc_p       = @builder.build_tc_skill_prompt(
+      test_case: create_test_case, scenario: scenario, sandbox_path: "/tmp/sb"
+    )
+
+    assert File.directory?(skill_dir),
+      "Handbook skill directory missing: #{skill_dir}"
+    assert_includes scenario_p, "/#{expected_name}",
+      "SkillPromptBuilder#build_skill_prompt must use current skill name '#{expected_name}'"
+    assert_includes tc_p, "/#{expected_name}",
+      "SkillPromptBuilder#build_tc_skill_prompt must use current skill name '#{expected_name}'"
+  end
+
   # --- Skill Prompt Building ---
 
   def test_build_skill_prompt_format
