@@ -28,6 +28,25 @@ Process multiple idea files and create draft tasks for each one in sequence, wit
 
 ## Process Steps
 
+### Step 0: Detect Task Structure
+
+Before discovering idea files, check whether the argument requests an orchestrator structure:
+
+| Argument pattern | Structure |
+|-----------------|-----------|
+| "one task with N subtasks" | Single orchestrator + N subtasks |
+| "one task with one subtask per phase" | Single orchestrator + one subtask per phase |
+| "group under one task" / "single parent" | Single orchestrator + N subtasks |
+| (default — no structural hint) | One standalone task per idea file |
+
+**If orchestrator pattern detected:**
+1. Create ONE parent task first: `ace-taskflow task create "Parent" --status draft`
+2. Create each subtask with `--child-of PARENT_ID` (this auto-converts parent to orchestrator)
+3. Do NOT create multiple separate parent tasks
+
+**If flat pattern (default):**
+Proceed to Step 1 and create one standalone task per idea.
+
 ### Step 1: Discover Idea Files
 
 **If no idea pattern provided:**
