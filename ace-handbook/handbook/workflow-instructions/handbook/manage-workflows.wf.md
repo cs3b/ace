@@ -247,6 +247,42 @@ For generating new content:
 3.  Provide directory structure guidance
 4.  Include validation and quality checks
 
+## Renaming a Skill or Workflow
+
+When renaming a skill (directory name + `name:` in SKILL.md frontmatter), complete this
+checklist to avoid silent reference drift:
+
+1. **SkillPromptBuilder** — grep for the old name in runner code:
+   ```bash
+   grep -r "ace:old-name" ace-test-runner-e2e/lib/
+   ```
+   Update `build_skill_prompt` and `build_tc_skill_prompt` in
+   `ace-test-runner-e2e/lib/ace/test/end_to_end_runner/atoms/skill_prompt_builder.rb`.
+
+2. **Symlink** — verify `.claude/skills/` symlink target still resolves:
+   ```bash
+   ls -la .claude/skills/<skill-dir-name>
+   ```
+   Recreate if pointing to old target:
+   ```bash
+   rm .claude/skills/<skill-dir-name>
+   ln -s ../../<package>/handbook/skills/<new-dir> .claude/skills/<skill-dir-name>
+   ```
+
+3. **Handbook references** — grep for old name across all workflow instructions:
+   ```bash
+   grep -r "ace:old-name" ace-*/handbook/
+   ```
+
+4. **Tests** — run the runner unit tests to confirm no remaining string drift:
+   ```bash
+   ace-test ace-test-runner-e2e
+   ```
+
+> **Why this matters**: `SkillPromptBuilder` hardcodes the skill name as a string.
+> A rename without updating this file causes 100% E2E test failures with "Unknown error"
+> because Claude Code receives a reference to a non-existent skill.
+
 ## Usage Example
 
 > "Create a workflow instruction for automating database migrations in our Ruby on Rails application"
