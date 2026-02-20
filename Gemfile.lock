@@ -85,7 +85,7 @@ PATH
 PATH
   remote: ace-handbook
   specs:
-    ace-handbook (0.9.3)
+    ace-handbook (0.9.4)
 
 PATH
   remote: ace-integration-claude
