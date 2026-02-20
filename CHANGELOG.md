@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.548] - 2026-02-20
+
+### Fixed
+
+- **ace-handbook v0.9.3**: Update stale wfi:// references in workflow definition guide
+- **ace-test v0.1.4**: Update stale wfi://work-on-task references to wfi://task/work
+- **ace-config**: Update release workflow context loading instructions
+
 ## [0.9.547] - 2026-02-19
 
 ### Changed
