@@ -782,6 +782,45 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_cli_provider_sandbox_includes_tc_files
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
+
+      received_sandbox = nil
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+        received_sandbox = sandbox_path
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "OK",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        executor: executor
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      refute_nil received_sandbox, "sandbox_path should be set"
+      assert File.exist?(File.join(received_sandbox, "scenario.yml")),
+        "scenario.yml must be copied to sandbox for execute.wf.md discovery"
+      assert File.exist?(File.join(received_sandbox, "TC-001-check.tc.md")),
+        "TC-001.tc.md must be copied to sandbox"
+      assert File.exist?(File.join(received_sandbox, "TC-002-check.tc.md")),
+        "TC-002.tc.md must be copied to sandbox"
+    end
+  end
+
   def test_api_provider_does_not_run_setup
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
