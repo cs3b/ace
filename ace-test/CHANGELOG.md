@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-02-20
+
+### Technical
+- Update stale wfi://work-on-task references to wfi://task/work
+
 ## [0.1.3] - 2026-02-19
 
 ### Technical
