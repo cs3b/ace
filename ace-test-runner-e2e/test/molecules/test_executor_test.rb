@@ -190,7 +190,7 @@ class TestExecutorTest < Minitest::Test
       executor.execute(scenario, sandbox_path: "/tmp/sb")
     end
 
-    assert captured_prompt.include?("/ace:run-e2e-test"), "Non-claude CLI provider should use skill invocation"
+    assert captured_prompt.include?("/ace:e2e-run"), "Non-claude CLI provider should use skill invocation"
     assert captured_prompt.include?("--sandbox /tmp/sb"), "Non-claude CLI should pass --sandbox"
   end
 
