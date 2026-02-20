@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.7] - 2026-02-20
+
+### Fixed
+- Correct skill invocation name from `/ace:run-e2e-test` to `/ace:e2e-run` in `SkillPromptBuilder` (was causing 100% E2E test failure rate)
+- Fix broken `.claude/skills/ace_e2e-run` symlink target from non-existent `ace_run-e2e-test` to `ace_e2e-run`
+
+### Added
+- `tmux-session` setup step in `SetupExecutor` — creates an isolated detached tmux session, stores name as `ACE_TMUX_SESSION` env var, and cleans up via new `teardown` method
+
 ## [0.16.6] - 2026-02-19
 
 ### Technical
