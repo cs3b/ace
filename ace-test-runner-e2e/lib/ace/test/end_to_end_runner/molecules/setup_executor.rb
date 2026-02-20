@@ -11,7 +11,7 @@ module Ace
         #
         # Processes the setup array from scenario.yml, running each action
         # via Ruby system calls (no LLM involved). Supports: git-init,
-        # copy-fixtures, run, write-file, and env actions.
+        # copy-fixtures, run, write-file, env, and tmux-session actions.
         #
         # Note: This is a Molecule because it performs filesystem I/O and
         # system calls via Open3 and FileUtils.
@@ -21,20 +21,29 @@ module Ace
           # @param setup_steps [Array] Setup steps from scenario.yml
           # @param sandbox_dir [String] Path to the sandbox directory
           # @param fixture_source [String, nil] Path to the fixtures/ directory
-          # @return [Hash] Result with :success, :steps_completed, :error keys
+          # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
           def execute(setup_steps:, sandbox_dir:, fixture_source: nil)
             FileUtils.mkdir_p(sandbox_dir)
             env = {}
             steps_completed = 0
+            @tmux_session = nil
 
             setup_steps.each do |step|
               execute_step(step, sandbox_dir, env, fixture_source)
               steps_completed += 1
             end
 
-            { success: true, steps_completed: steps_completed, error: nil, env: env }
+            { success: true, steps_completed: steps_completed, error: nil, env: env, tmux_session: @tmux_session }
           rescue StandardError => e
-            { success: false, steps_completed: steps_completed, error: e.message, env: env }
+            { success: false, steps_completed: steps_completed, error: e.message, env: env, tmux_session: @tmux_session }
+          end
+
+          # Clean up resources created during setup (e.g. tmux session)
+          def teardown
+            return unless @tmux_session
+
+            system("tmux", "kill-session", "-t", @tmux_session, out: File::NULL, err: File::NULL)
+            @tmux_session = nil
           end
 
           private
@@ -51,6 +60,8 @@ module Ace
               handle_git_init(sandbox_dir, env)
             when "copy-fixtures"
               handle_copy_fixtures(sandbox_dir, fixture_source)
+            when "tmux-session"
+              handle_tmux_session(env)
             when Hash
               execute_hash_step(step, sandbox_dir, env)
             else
@@ -73,6 +84,16 @@ module Ace
             else
               raise ArgumentError, "Unknown setup step type: #{key.inspect}"
             end
+          end
+
+          # Create an isolated detached tmux session and store its name in env
+          def handle_tmux_session(env)
+            session_name = "ace-e2e-#{Time.now.to_i}"
+            _stdout, stderr, status = Open3.capture3("tmux", "new-session", "-d", "-s", session_name)
+            raise "Failed to create tmux session '#{session_name}': #{stderr.strip}" unless status.success?
+
+            @tmux_session = session_name
+            env["ACE_TMUX_SESSION"] = session_name
           end
 
           # Initialize a git repo with test user config
