@@ -14,5 +14,6 @@ setup:
   - copy-fixtures
   - run: |
       git add .ace-taskflow/ .ace/ && git commit -m "Add taskflow and config" --quiet
+  - tmux-session
   - env:
       PROJECT_ROOT_PATH: .

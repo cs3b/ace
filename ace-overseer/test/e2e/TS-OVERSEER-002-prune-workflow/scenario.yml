@@ -14,11 +14,11 @@ setup:
   - copy-fixtures
   - run: |
       git add .ace-taskflow/ .ace/ && git commit -m "Add taskflow and config" --quiet
+  - tmux-session
   - env:
       PROJECT_ROOT_PATH: .
   # Create worktrees for both tasks
   - run: |
-      tmux kill-session -t "ace-e2e-test" 2>/dev/null || true
       ace-overseer work-on --task 001
       ace-overseer work-on --task 002
   # Make task 001 safe to prune: mark done, complete assignment, ensure tracked changes are committed
