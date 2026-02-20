@@ -329,10 +329,10 @@ When executing a phase with a `skill:` field:
 |-------|-----------|---------|
 | `onboard` | `/onboard` | Load project context |
 | `ace:task-work` | `/ace:task-work <taskref>` | Implement task changes |
-| `ace:create-pr` | `/ace:create-pr` | Create pull request |
+| `ace:git-create-pr` | `/ace:git-create-pr` | Create pull request |
 | `ace:review-pr` | `/ace:review-pr [pr#]` | Review code changes |
 | `ace:git-commit` | `/ace:git-commit` | Generate commit message |
-| `ace:update-pr-desc` | `/ace:update-pr-desc` | Update PR description |
+| `ace:git-update-pr-desc` | `/ace:git-update-pr-desc` | Update PR description |
 
 ## Error Handling
 
