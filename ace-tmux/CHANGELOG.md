@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-02-20
+
+### Fixed
+- `WindowManager#detect_current_session` now checks `ACE_TMUX_SESSION` env var first, enabling E2E test isolation without requiring an active tmux session
+
 ## [0.5.4] - 2026-02-19
 
 ### Fixed
