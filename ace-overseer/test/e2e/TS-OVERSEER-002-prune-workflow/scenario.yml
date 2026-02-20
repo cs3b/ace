@@ -33,6 +33,9 @@ setup:
         export PROJECT_ROOT_PATH="$WORKTREE_001"
         echo "Phase complete." > /tmp/e2e-report.md
         ace-assign report /tmp/e2e-report.md
+        # Clean untracked files (e.g. .cache/) created by ace-assign report so
+        # git worktree remove can safely delete this worktree during prune tests
+        git clean -fdq .
         cd -
         unset PROJECT_ROOT_PATH
       fi
