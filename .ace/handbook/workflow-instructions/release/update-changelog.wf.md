@@ -19,7 +19,7 @@ Update the main project CHANGELOG.md with new entries, automatically determining
 
 ## Project Context Loading
 
-* Read and follow: `wfi://load-project-context`
+* Read and follow: `ace-bundle project`
 * Load: Keep a Changelog format specification
 
 ## Process Steps
