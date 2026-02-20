@@ -42,8 +42,9 @@ Verify that `ace-overseer prune --yes` removes the safe worktree (task 001), clo
 
 6. Verify tmux cleanup for pruned task
    ```bash
-   WINDOWS=$(tmux list-windows -t "ace-e2e-test" 2>&1)
-   echo "Tmux windows after prune:"
+   SESSION="${ACE_TMUX_SESSION:-ace-e2e-test}"
+   WINDOWS=$(tmux list-windows -t "$SESSION" 2>&1)
+   echo "Tmux windows after prune (session: $SESSION):"
    echo "$WINDOWS"
    echo "$WINDOWS" | grep -q "t001" && echo "FAIL: Tmux window t001 still exists after prune!" || echo "PASS: Tmux window t001 closed by prune"
    echo "$WINDOWS" | grep -q "t002" && echo "PASS: Tmux window t002 still exists (task not pruned)" || echo "INFO: Tmux window t002 not found (may have been closed separately)"
