@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-02-20
+
+### Technical
+- Update /ace:create-pr to /ace:git-create-pr in perform-delivery workflow
+
 ## [0.9.3] - 2026-02-20
 
 ### Technical
