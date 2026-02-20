@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.549] - 2026-02-20
+
+### Fixed
+
+- **ace-handbook v0.9.4**: Update /ace:create-pr to /ace:git-create-pr in perform-delivery workflow
+
 ## [0.9.548] - 2026-02-20
 
 ### Fixed
