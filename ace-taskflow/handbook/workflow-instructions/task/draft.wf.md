@@ -84,13 +84,39 @@ Create high-level behavioral specifications that define WHAT the system should d
    * **NOTE**: Tasks are created with `status: draft` to indicate they need implementation planning
 
 6. **Determine Storage Location and Create Draft Tasks**
-   * For each approved behavioral specification:
-     * Use `ace-taskflow task create --title "Task Title" --status draft --estimate "TBD"` to:
-       * Create task file with proper ID sequencing
-       * Set status to "draft" automatically
-       * Include behavioral specification template
-       * Return full path for the created draft file
-     * Focus on behavioral content, leave implementation for replan phase
+
+   **Detect the task structure needed before creating anything:**
+
+   | User hint | Structure to create |
+   |-----------|---------------------|
+   | "one task with subtasks" | One orchestrator + N subtasks |
+   | "N phases, each as a subtask" | One orchestrator + N subtask children |
+   | "one task with one subtask per phase" | One orchestrator + N subtask children |
+   | No structural hint | Single flat task |
+
+   **Pattern A — Single flat task (default):**
+   ```bash
+   ace-taskflow task create "Task Title" --status draft --estimate "TBD"
+   ```
+
+   **Pattern B — Orchestrator with subtasks:**
+   ```bash
+   # 1. Create the parent task first
+   ace-taskflow task create "Parent Title" --status draft --estimate "TBD"
+   # Returns: v.X.Y+task.NNN
+
+   # 2. Add each subtask with --child-of (auto-converts parent to orchestrator)
+   ace-taskflow task create "Phase 1: ..." --status draft --child-of NNN
+   ace-taskflow task create "Phase 2: ..." --status draft --child-of NNN
+   ace-taskflow task create "Phase 3: ..." --status draft --child-of NNN
+   ```
+   ⚠️ Do NOT use `task move --child-of self` first — `--child-of` on `task create` handles conversion automatically.
+
+   For each created task/subtask:
+   * Create task file with proper ID sequencing
+   * Set status to "draft" automatically
+   * Include behavioral specification template
+   * Focus on behavioral content, leave implementation for replan phase
 
 7. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
