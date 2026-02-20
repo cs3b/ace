@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-02-20
+
+### Fixed
+- E2E scenarios (TS-OVERSEER-001, TS-OVERSEER-002) now use `tmux-session` setup step for isolated tmux sessions instead of leaking windows into the developer's active session
+- Remove hardcoded `tmux kill-session -t "ace-e2e-test"` from TS-OVERSEER-002 setup that was polluting the developer environment
+
 ## [0.4.3] - 2026-02-19
 
 ### Fixed

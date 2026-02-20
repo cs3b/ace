@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.551] - 2026-02-20
+
+### Fixed
+
+- **ace-test-runner-e2e v0.16.7**: Correct skill invocation from `/ace:run-e2e-test` → `/ace:e2e-run` (was causing 100% E2E test failure rate); fix broken `ace_e2e-run` symlink; add `tmux-session` setup step for isolated E2E tmux sessions
+- **ace-tmux v0.5.5**: `WindowManager` checks `ACE_TMUX_SESSION` env var first in `detect_current_session`, enabling test isolation without an active tmux session
+- **ace-overseer v0.4.4**: E2E scenarios use `tmux-session` step instead of leaking windows into the developer's active tmux session
+
 ## [0.9.550] - 2026-02-20
 
 ### Fixed
