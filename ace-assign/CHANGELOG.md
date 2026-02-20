@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.5] - 2026-02-20
+
+### Technical
+- Update slash command refs to use git namespace (ace:git-create-pr, ace:git-update-pr-desc)
+
 ## [0.12.4] - 2026-02-19
 
 ### Technical
