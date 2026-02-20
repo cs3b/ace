@@ -52,7 +52,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Identify relevant existing code, patterns, or documentation.
   * Break down the task into smaller, manageable implementation steps.
   * Outline the required tests based on acceptance criteria.
-* **Workflow:** See [`work-on-task.wf.md`](wfi://work-on-task)
+* **Workflow:** See [`work-on-task.wf.md`](wfi://task/work)
 
 ### Step 2: Write Tests (TDD - Red)
 
@@ -63,7 +63,7 @@ Here's a more detailed breakdown of each step, referencing relevant workflow ins
   * Write a specific test case that captures one aspect of the requirement.
   * Ensure the test clearly describes the expected outcome.
   * Run the test and confirm that it **fails** (this is the "Red" phase).
-* **Workflow:** See the testing section in [`work-on-task.wf.md`](wfi://work-on-task)
+* **Workflow:** See the testing section in [`work-on-task.wf.md`](wfi://task/work)
 
 ### Step 3: Implement Code (TDD - Green)
 
@@ -146,7 +146,7 @@ sub-guide for details:
 ## 6. Related Documentation
 
 * **Workflow Instructions:**
-  * [`work-on-task.wf.md`](wfi://work-on-task) (includes testing guidance)
+  * [`work-on-task.wf.md`](wfi://task/work) (includes testing guidance)
   * [`commit.wf.md`](wfi://git/commit)
   * [`save-session-context.wf.md`](wfi://save-session-context) (for saving session context)
 * **Core Guides:**
