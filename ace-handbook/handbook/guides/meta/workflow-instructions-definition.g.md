@@ -185,7 +185,7 @@ This naming distinction helps both humans and AI agents quickly identify whether
 Review these refactored workflow instructions that demonstrate self-containment principles:
 
 ### Context Loading Example
-`wfi://load-project-context` (formerly load-env.wf.md):
+`wfi://bundle` (project context loading):
 - Includes explicit file loading instructions
 - No external workflow dependencies
 - Clear context gathering steps
