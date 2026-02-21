@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.5] - 2026-02-21
+
+### Added
+- LLM-assisted doctor fixes and model configuration
+- Task management doctor and archiving capabilities
+
+### Fixed
+- Update work-on-task workflow to declare sub-phases
+- Enhance doctor command with empty directory detection and auto-fix
+- Load config from discovered project root in `ConfigLoader.find_root` to fix cross-project resolution
+
+### Changed
+- Remove duplicated and outdated workflow files
+
+### Technical
+- Normalize project context loading URIs across workflows
+- Reorganize workflow instructions into domain subdirectories
+- Update workflow references for git commit and token remediation
+
 ## [0.39.4] - 2026-02-19
 
 ### Technical
