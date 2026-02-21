@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.6] - 2026-02-21
+
+### Added
+- Cross-package reference audit step in plan workflow using `ace-search` for rename/migration tasks
+- Contradiction check in review workflow readiness checklist (conflicting directives, missing consumer packages, deliverables vs scope)
+- Cross-reference validation step in work workflow (mandatory for rename/namespace/migration tasks)
+
 ## [0.39.5] - 2026-02-21
 
 ### Added
