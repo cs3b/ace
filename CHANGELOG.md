@@ -4,6 +4,61 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.558] - 2026-02-21
+
+### Fixed
+- **ace-taskflow v0.39.5**: Load config from discovered project root in `ConfigLoader.find_root` instead of `Dir.pwd`, fixing cross-project task resolution in E2E worktree tests
+- **ace-git-commit v0.18.2**: Add `.gitignore` for test infrastructure files in TS-COMMIT-002 E2E scenario to prevent untracked file pollution
+
+### Technical
+- **ace-git-commit v0.18.2**: Add staged rename verification to mixed operations test
+- **ace-taskflow v0.39.5**: Add unit test for `ConfigLoader.find_root` project root alignment
+
+## [0.9.557] - 2026-02-21
+
+### Fixed
+- **ace-test-runner-e2e v0.16.12**: Pass `--report-dir` explicitly from suite orchestrator to inner subprocesses, eliminating directory name mismatch between Ruby `short_id` computation and LLM agent interpretation
+
+### Added
+- **ace-test-runner-e2e v0.16.12**: `--report-dir` CLI option and `REPORT_DIR` workflow parameter for explicit report directory path override
+
+## [0.9.556] - 2026-02-21
+
+### Fixed
+- **ace-git-worktree v0.13.10**: Fix task ID extraction from worktree path matching incidental 3-digit numbers in parent directories by using `File.basename` instead of full path
+- **ace-test-runner-e2e v0.16.11**: Add `-b main` to `git init` in `SetupExecutor` to ensure consistent default branch name regardless of system git configuration
+- **ace-assign**: Update stale workflow path in TS-ASSIGN-005 E2E test after namespace rename
+- **ace-git-commit**: Add staged-rename verification guard in TS-COMMIT-002 TC-003 to prevent out-of-order execution
+
+## [0.9.555] - 2026-02-21
+
+### Added
+- **ace-test-runner-e2e v0.16.10**: Save subprocess raw output (`subprocess_output.log`) for all test results in report directories for diagnostic context
+- **ace-test-runner-e2e v0.16.10**: Write `subprocess_output.log` alongside failure stub `metadata.yml` for tests with no report directory
+
+## [0.9.554] - 2026-02-21
+
+### Fixed
+- **ace-test-runner-e2e v0.16.9**: Downcase status in `normalize_status` and `normalize_result` so mixed-case statuses (`"Pass"`, `"PASS"`) are correctly recognized
+- **ace-test-runner-e2e v0.16.9**: Reconcile scenario status with case counts in suite and test orchestrators — override to `"pass"` when all cases passed but metadata status is incorrect
+
+## [0.9.553] - 2026-02-21
+
+### Fixed
+- **ace-assign v0.12.7**: Add `CACHE_BASE` env var support to `cache_dir` so E2E sandboxes resolve the correct cache path
+- **ace-assign v0.12.7**: Graceful return in `advance()` when fork subtree is exhausted (prevents "No phase currently in progress" error)
+- **ace-assign v0.12.7**: Fix ISO8601 regex to handle quoted YAML values in TC-002
+- **ace-assign v0.12.7**: Correct `CACHE_BASE` path in TS-ASSIGN-003d scenario
+- **ace-git-worktree v0.13.9**: Rewrite `from_git_output_list` to parse porcelain format by blank-line-separated blocks, correctly handling prunable and detached worktrees
+- **ace-git-worktree v0.13.9**: Pass `--force` to `git worktree remove` when `ignore_untracked` is set
+- **ace-git-worktree v0.13.9**: Use sandbox-local path for worktrees in TS-WORKTREE-001
+- **ace-overseer v0.4.6**: Fix TC-003 tmux window verification to use `tmux list-windows -a` (all sessions)
+- **ace-overseer v0.4.6**: Make `TmuxWindowOpener` idempotent and fix TC-001 output match
+- **ace-b36ts**: Correct scenario.yml test-id fields for E2E tests
+
+### Technical
+- Record E2E test fixes retrospective session
+
 ## [0.9.552] - 2026-02-21
 
 ### Fixed
