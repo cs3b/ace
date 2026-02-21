@@ -359,6 +359,11 @@ module Ace
             # Add pre-generated run ID for deterministic report paths
             if run_id
               cmd_parts.concat(["--run-id", run_id])
+
+              # Pass explicit report directory so the agent doesn't compute it independently
+              scenario = parse_scenario(package, test_file)
+              report_dir = File.join(@base_dir, ".cache", "ace-test-e2e", "#{scenario.dir_name(run_id)}-reports")
+              cmd_parts.concat(["--report-dir", report_dir])
             end
 
             # Add --test-cases for only-failures mode (per-scenario filtering)
@@ -450,6 +455,7 @@ module Ace
 
                 # Parse result
                 result = parse_subprocess_result(process)
+                save_subprocess_output(result)
 
                 # Update results
                 results[:total] += 1
@@ -483,6 +489,7 @@ module Ace
           # @return [Hash] Parsed result with :passed_cases and :total_cases
           def parse_subprocess_result(process)
             result = parse_test_output(process[:output], process[:thread].value.exitstatus, extract_test_name(process[:test_file]))
+            result[:raw_output] = process[:output]
 
             # For non-pass results, check agent-written metadata as authoritative source
             # (mirrors TestOrchestrator#read_agent_result behavior)
@@ -509,6 +516,11 @@ module Ace
 
             passed = metadata.dig("results", "passed") || result[:passed_cases] || 0
             total = metadata.dig("results", "total") || result[:total_cases] || 0
+
+            # Reconcile: if all cases passed, status should be "pass"
+            if passed == total && total > 0 && status != "pass"
+              status = "pass"
+            end
 
             result.merge(
               status: status,
@@ -613,11 +625,30 @@ module Ace
                   "status" => result[:status]
                 }
                 File.write(File.join(stub_dir, "metadata.yml"), YAML.dump(stub_data))
+
+                if result[:raw_output] && !result[:raw_output].empty?
+                  File.write(File.join(stub_dir, "subprocess_output.log"), result[:raw_output])
+                end
               end
             end
           rescue => e
             warn "Warning: Failed to write failure stubs (#{e.class}: #{e.message})"
             warn e.backtrace.first(3).join("\n") if ENV["DEBUG"]
+          end
+
+          # Save subprocess output log to the report directory
+          #
+          # @param result [Hash] Parsed result with :report_dir and :raw_output
+          def save_subprocess_output(result)
+            dir = result[:report_dir]
+            return unless dir && result[:raw_output] && !result[:raw_output].empty?
+
+            # report_dir from parse_test_output may be a file path; use parent dir
+            dir = File.directory?(dir) ? dir : File.dirname(dir)
+            FileUtils.mkdir_p(dir)
+            File.write(File.join(dir, "subprocess_output.log"), result[:raw_output])
+          rescue => e
+            warn "Warning: Failed to save subprocess output: #{e.message}" if ENV["DEBUG"]
           end
 
           # Check if a metadata.yml file exists in the given report directory
@@ -746,12 +777,14 @@ module Ace
             # Combine stdout and stderr for parsing
             combined_output = output + stderr
             result = parse_test_output(combined_output, status.exitstatus, extract_test_name(test_file))
+            result[:raw_output] = combined_output
 
             # Override from metadata for non-pass results
             if result[:status] != "pass" && result[:report_dir]
               result = override_from_metadata(result)
             end
 
+            save_subprocess_output(result)
             result
           rescue => e
             { status: "error", error: e.message }

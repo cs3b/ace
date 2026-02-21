@@ -52,7 +52,7 @@ module Ace
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param output [IO] Output stream for progress messages (default: $stdout)
           # @return [Array<Models::TestResult>] List of test results
-          def run(package:, test_id: nil, test_cases: nil, cli_args: nil, run_id: nil, output: $stdout)
+          def run(package:, test_id: nil, test_cases: nil, cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
             # Discover tests
             files = @discoverer.find_tests(
               package: package,
@@ -70,7 +70,7 @@ module Ace
             timestamp = run_id || generate_timestamp
 
             if files.size == 1
-              run_single_test(files.first, timestamp, cli_args, output, test_cases: test_cases)
+              run_single_test(files.first, timestamp, cli_args, output, test_cases: test_cases, report_dir: report_dir)
             else
               run_package_tests(files, package, timestamp, cli_args, output, test_cases: test_cases)
             end
@@ -137,8 +137,9 @@ module Ace
 
           # Run a single test
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
+          # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Array<Models::TestResult>] Single-element result array
-          def run_single_test(file, timestamp, cli_args, output, test_cases: nil)
+          def run_single_test(file, timestamp, cli_args, output, test_cases: nil, report_dir: nil)
             scenario = @loader.load(File.dirname(file))
             display = build_display_manager([scenario], output)
 
@@ -149,16 +150,22 @@ module Ace
             output.puts "Executing via #{@provider}#{cli_provider? ? " (skill mode)" : ""}..."
 
             run_id = cli_provider? ? timestamp : nil
-            sandbox_path, env_vars = setup_sandbox_if_ts(scenario, timestamp, output)
+            # When report_dir is provided, derive sandbox path from it (strip -reports suffix)
+            if report_dir
+              sandbox_path = report_dir.sub(/-reports\z/, "")
+              sandbox_path, env_vars = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
+            else
+              sandbox_path, env_vars = setup_sandbox_if_ts(scenario, timestamp, output)
+            end
             result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
-                                       sandbox_path: sandbox_path, env_vars: env_vars)
+                                       sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir)
 
-            report_dir = report_dir_for(scenario, timestamp)
+            # Use explicit report_dir when provided, otherwise compute from scenario
+            expected_dir = report_dir || report_dir_for(scenario, timestamp)
 
             if cli_provider?
               # CLI providers write reports via workflow at a deterministic path.
               # Do not fall back to older report directories from other runs.
-              expected_dir = report_dir_for(scenario, timestamp)
               if Dir.exist?(expected_dir)
                 result = read_agent_result(scenario, expected_dir, result)
               else
@@ -166,8 +173,8 @@ module Ace
               end
             else
               # API providers: write reports via ReportWriter
-              report_paths = @report_writer.write(result, scenario, report_dir: report_dir)
-              result = result.with_report_dir(report_dir)
+              report_paths = @report_writer.write(result, scenario, report_dir: expected_dir)
+              result = result.with_report_dir(expected_dir)
             end
 
             display.show_single_result(result)
@@ -335,6 +342,11 @@ module Ace
             passed = metadata.dig("results", "passed") || 0
             failed = metadata.dig("results", "failed") || 0
             total = metadata.dig("results", "total") || 0
+
+            # Reconcile: if all cases passed, status should be "pass"
+            if passed == total && total > 0 && status != "pass"
+              status = "pass"
+            end
 
             # Build synthetic test cases from counts
             test_cases = []

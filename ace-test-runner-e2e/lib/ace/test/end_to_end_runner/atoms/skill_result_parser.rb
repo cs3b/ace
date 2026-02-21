@@ -153,7 +153,7 @@ module Ace
 
           # Normalize a status value: take first word, default to "unknown"
           def self.normalize_status(value)
-            value.to_s.strip.split(/\s+/).first || "unknown"
+            (value.to_s.strip.split(/\s+/).first || "unknown").downcase
           end
 
           private_class_method :parse_markdown, :to_normalized, :extract_field,

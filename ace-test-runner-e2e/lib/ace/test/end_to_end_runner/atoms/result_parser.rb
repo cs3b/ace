@@ -66,7 +66,7 @@ module Ace
           def self.normalize_result(result)
             {
               test_id: result[:test_id],
-              status: result[:status],
+              status: result[:status].to_s.downcase,
               test_cases: normalize_test_cases(result[:test_cases] || []),
               summary: result[:summary] || "",
               observations: result[:observations] || ""

@@ -189,6 +189,53 @@ class SkillResultParserTest < Minitest::Test
     assert_equal "Permission denied on lint command", result[:observations]
   end
 
+  # --- Case-Insensitive Status Normalization ---
+
+  def test_normalize_status_downcases_capitalized
+    text = <<~MD
+      - **Test ID**: TS-TEST-001
+      - **Status**: Pass
+      - **Passed**: 3
+      - **Failed**: 0
+      - **Total**: 3
+      - **Report Paths**: abc-reports/*
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse(text)
+    assert_equal "pass", result[:status]
+  end
+
+  def test_normalize_status_downcases_uppercase
+    text = <<~MD
+      - **Test ID**: TS-TEST-001
+      - **Status**: PASS
+      - **Passed**: 3
+      - **Failed**: 0
+      - **Total**: 3
+      - **Report Paths**: abc-reports/*
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse(text)
+    assert_equal "pass", result[:status]
+  end
+
+  def test_normalize_status_downcases_fail
+    text = <<~MD
+      - **Test ID**: TS-TEST-001
+      - **Status**: FAIL
+      - **Passed**: 0
+      - **Failed**: 1
+      - **Total**: 1
+      - **Report Paths**: abc-reports/*
+      - **Issues**: Something broke
+    MD
+
+    result = SkillResultParser.parse(text)
+    assert_equal "fail", result[:status]
+  end
+
   # --- TC-Level Parsing ---
 
   def test_parse_tc_markdown_contract

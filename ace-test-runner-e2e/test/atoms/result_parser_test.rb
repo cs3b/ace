@@ -119,6 +119,20 @@ class ResultParserTest < Minitest::Test
     assert_nil ResultParser.extract_json("No JSON here")
   end
 
+  # --- Status Downcasing ---
+
+  def test_normalize_result_downcases_status
+    response = '{"test_id": "TS-TEST-001", "status": "Pass", "test_cases": [], "summary": "OK"}'
+    result = ResultParser.parse(response)
+    assert_equal "pass", result[:status]
+  end
+
+  def test_normalize_result_downcases_uppercase_status
+    response = '{"test_id": "TS-TEST-001", "status": "FAIL", "test_cases": [], "summary": "Failed"}'
+    result = ResultParser.parse(response)
+    assert_equal "fail", result[:status]
+  end
+
   # --- TC-Level Parsing ---
 
   def test_parse_tc_valid_json

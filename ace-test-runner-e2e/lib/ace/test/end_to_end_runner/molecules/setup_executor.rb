@@ -98,7 +98,7 @@ module Ace
 
           # Initialize a git repo with test user config
           def handle_git_init(sandbox_dir, env)
-            run_command("git", "init", chdir: sandbox_dir, env: env)
+            run_command("git", "init", "-b", "main", chdir: sandbox_dir, env: env)
             run_command("git", "config", "user.name", "Test User", chdir: sandbox_dir, env: env)
             run_command("git", "config", "user.email", "test@example.com", chdir: sandbox_dir, env: env)
           end

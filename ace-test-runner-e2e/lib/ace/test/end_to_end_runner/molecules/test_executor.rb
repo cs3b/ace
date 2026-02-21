@@ -33,11 +33,12 @@ module Ace
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @param sandbox_path [String, nil] Path to pre-populated sandbox (skips LLM setup)
           # @param env_vars [Hash, nil] Environment variables from setup execution
+          # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Models::TestResult] Test execution result
-          def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil)
+          def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
             if Atoms::SkillPromptBuilder.cli_provider?(@provider)
               execute_via_skill(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
-                                sandbox_path: sandbox_path, env_vars: env_vars)
+                                sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir)
             else
               execute_via_prompt(scenario, cli_args: cli_args, test_cases: test_cases)
             end
@@ -70,13 +71,14 @@ module Ace
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @param sandbox_path [String, nil] Path to pre-populated sandbox
           # @param env_vars [Hash, nil] Environment variables from setup execution
+          # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Models::TestResult]
-          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil)
+          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
             started_at = Time.now
 
             prompt = @skill_prompt_builder.build_skill_prompt(
               scenario, run_id: run_id, test_cases: test_cases,
-              sandbox_path: sandbox_path, env_vars: env_vars
+              sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir
             )
 
             merged_args = merge_cli_args(
