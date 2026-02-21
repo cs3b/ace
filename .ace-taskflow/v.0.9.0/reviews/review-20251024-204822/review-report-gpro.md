@@ -32,7 +32,7 @@ The changes to the CLI and the Claude command interface are positive.
 
 ## Documentation Quality
 
-*   **README completeness**: ⚠️ The main `README.md` provided in the context appears to be out of date. The "AI Integration" and "Usage Examples" sections still describe the old, more limited `/ace:load-context` command. This needs updating to reflect the new file path and protocol support.
+*   **README completeness**: ⚠️ The main `README.md` provided in the context appears to be out of date. The "AI Integration" and "Usage Examples" sections still describe the old, more limited `/ace_bundle` command. This needs updating to reflect the new file path and protocol support.
 *   **API documentation coverage**: ✅ Excellent. The new `load-context.wf.md` file provides comprehensive documentation for the feature.
 *   **Code comment quality**: ✅ Good. The new YAML configuration files include helpful comments explaining their purpose.
 *   **Example code accuracy**: 🟡 The examples are very helpful, but one contains a hardcoded, user-specific absolute path which is not portable.
@@ -46,7 +46,7 @@ The changes to the CLI and the Claude command interface are positive.
 *   **Issue**: Outdated Information
 *   **Severity**: 🟡 High
 *   **Location**: "Usage Examples" and "AI Integration" sections.
-*   **Suggestion**: The documentation for `ace-context` and the `/ace:load-context` command should be updated to reflect the new capability of accepting file paths and protocols, not just presets. The task file (`task.084.md`) includes a checked-off item for this, but the provided `README.md` doesn't seem to have the update. Please ensure this is addressed.
+*   **Suggestion**: The documentation for `ace-context` and the `/ace_bundle` command should be updated to reflect the new capability of accepting file paths and protocols, not just presets. The task file (`task.084.md`) includes a checked-off item for this, but the provided `README.md` doesn't seem to have the update. Please ensure this is addressed.
 
     **Current:**
     ```markdown
@@ -70,11 +70,11 @@ The changes to the CLI and the Claude command interface are positive.
 
     **Current:**
     ```markdown
-    > /ace:load-context /Users/mc/Ps/ace-meta/.ace/context.yml
+    > /ace_bundle /Users/mc/Ps/ace-meta/.ace/context.yml
     ```
     **Suggested:**
     ```markdown
-    > /ace:load-context /path/to/your/project/context.yml
+    > /ace_bundle /path/to/your/project/context.yml
     ```
 
 *   **Issue**: Future Date in Metadata
@@ -109,7 +109,7 @@ The changes to the CLI and the Claude command interface are positive.
 
 ### 🟡 High
 
-*   **`README.md`**: Update the root `README.md` to document the new, more powerful functionality of `ace-context` and `/ace:load-context` (supporting presets, files, and protocols).
+*   **`README.md`**: Update the root `README.md` to document the new, more powerful functionality of `ace-context` and `/ace_bundle` (supporting presets, files, and protocols).
 
 ### 🟢 Medium
 
