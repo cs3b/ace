@@ -1,5 +1,5 @@
 ---
-name: ace:overseer-work-on
+name: ace_overseer
 description: Orchestrate task worktrees with ace-overseer (work-on, status, prune)
 user-invocable: true
 allowed-tools:

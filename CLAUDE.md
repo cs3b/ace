@@ -9,14 +9,14 @@ This project has two distinct types of commands. Understanding the difference is
 ### Claude Commands (Slash Commands)
 
 **Run from:** Claude Code conversation (type directly in chat)
-**Prefix:** `/ace:`
+**Prefix:** `/ace_`
 **Purpose:** Invoke AI-assisted workflows with full agent context
 
 Examples:
-- `/ace:task-work 148` - Work on a specific task with full context
-- `/ace:git-commit` - Generate intelligent commit with LLM assistance
-- `/ace:review-pr 90` - Review a pull request with AI analysis
-- `/ace:task-draft` - Draft a new task specification
+- `/ace_task_work 148` - Work on a specific task with full context
+- `/ace_git_commit` - Generate intelligent commit with LLM assistance
+- `/ace_review_pr 90` - Review a pull request with AI analysis
+- `/ace_task_draft` - Draft a new task specification
 
 ### CLI Tools (Terminal Commands)
 
@@ -36,7 +36,7 @@ ace-test atoms              # Run atom tests
 
 | Type | Environment | Prefix | Example |
 |------|-------------|--------|---------|
-| Claude Command | Chat | `/ace:` | `/ace:task-work 121` |
+| Claude Command | Chat | `/ace_` | `/ace_task_work 121` |
 | CLI Tool | Terminal | `ace-` | `ace-taskflow task 121` |
 
 ## Command Recognition
@@ -48,14 +48,14 @@ Agents should recognize these command patterns:
 
 ## Workflow Context Embedding
 
-**Best practice**: When agents invoke workflows via `/ace:command`, the workflow may include embedded context (via `embed_document_source: true`).
+**Best practice**: When agents invoke workflows via `/ace_command`, the workflow may include embedded context (via `embed_document_source: true`).
 
 Agents should:
 1. Check for embedded XML sections like `<current_repository_status>` or `<available_presets>`
 2. Use this context instead of running redundant commands
 3. Reference embedded sections explicitly in responses
 
-**Example**: When `/ace:git-commit` is invoked, the workflow includes `<current_repository_status>` with git state. No need to run `git status` separately.
+**Example**: When `/ace_git_commit` is invoked, the workflow includes `<current_repository_status>` with git state. No need to run `git status` separately.
 
 For full patterns and guidance, run `ace-bundle guide://workflow-context-embedding`.
 
@@ -134,11 +134,11 @@ Validate entire monorepo (final check before commits).
 
 ## Search & Research Commands
 
-- `/ace:search` - Code/file search and discovery
-- `/ace:research` - Multi-search analysis and synthesis
-- `/ace:feature-research` - Feature gap analysis and implementation patterns
+- `/ace_search_run` - Code/file search and discovery
+- `/ace_search_research` - Multi-search analysis and synthesis
+- `/ace_search_feature-research` - Feature gap analysis and implementation patterns
 
-**Usage**: Invoke via `/ace:command` in Claude Code
+**Usage**: Invoke via `/ace_command` in Claude Code
 
 ## Project Context
 
