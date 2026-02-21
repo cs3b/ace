@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-02-21
+
+### Added
+- Enhance commit message generation with intent and action focus
+
+### Technical
+- Add staged rename verification to mixed operations test
+- Standardize workflow instruction path
+
 ## [0.18.1] - 2026-02-19
 
 ### Technical
