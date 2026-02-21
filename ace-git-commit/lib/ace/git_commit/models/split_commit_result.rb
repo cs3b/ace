@@ -27,12 +27,20 @@ module Ace
           @records << CommitRecord.new(group: group, sha: nil, status: :failure, error: error)
         end
 
+        def add_skipped(group, reason)
+          @records << CommitRecord.new(group: group, sha: nil, status: :skipped, error: reason)
+        end
+
         def commit_shas
           records.map(&:sha).compact
         end
 
         def success?
-          records.all? { |record| record.status == :success || record.status == :dry_run }
+          records.all? { |record| record.status == :success || record.status == :dry_run || record.status == :skipped }
+        end
+
+        def skipped?
+          records.any? { |record| record.status == :skipped }
         end
 
         def dry_run?
