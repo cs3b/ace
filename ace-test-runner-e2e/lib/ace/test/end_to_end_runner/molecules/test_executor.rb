@@ -92,7 +92,8 @@ module Ace
               system: nil,
               cli_args: merged_args,
               timeout: @timeout,
-              fallback: false
+              fallback: false,
+              subprocess_env: env_vars
             )
 
             invocation_error = detect_skill_invocation_error(response[:text])
@@ -256,7 +257,8 @@ module Ace
               response = Ace::LLM::QueryInterface.query(
                 @provider, prompt,
                 system: nil, cli_args: merged_args,
-                timeout: @timeout, fallback: false
+                timeout: @timeout, fallback: false,
+                subprocess_env: env_vars
               )
 
               invocation_error = detect_skill_invocation_error(response[:text])
