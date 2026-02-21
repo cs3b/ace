@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.8] - 2026-02-21
+
+### Added
+- Verification instructions in `mark-task-done` phase requiring status confirmation after `ace-taskflow task done`
+- Subtree completion section in drive workflow requiring task status verification before reporting complete
+
 ## [0.12.7] - 2026-02-21
 
 ### Fixed
