@@ -31,7 +31,7 @@ Verify that `ace-overseer work-on --task 002 --preset custom-e2e-preset` uses th
 
 4. Verify assignment uses the custom preset
    ```bash
-   WORKTREE_PATH=$(git worktree list | grep "002" | awk '{print $1}')
+   WORKTREE_PATH=$(git worktree list | grep "002" | awk '{print $1}' | head -1)
    if [ -n "$WORKTREE_PATH" ]; then
      ASSIGN_OUTPUT=$(cd "$WORKTREE_PATH" && PROJECT_ROOT_PATH="$WORKTREE_PATH" ace-assign status 2>&1)
      echo "$ASSIGN_OUTPUT"

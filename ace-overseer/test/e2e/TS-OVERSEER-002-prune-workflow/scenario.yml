@@ -24,18 +24,17 @@ setup:
   # Make task 001 safe to prune: mark done, complete assignment, ensure tracked changes are committed
   - run: |
       TASK_SPEC=".ace-taskflow/v.0.1.0/t/001-prune-safe/001-prune-safe.s.md"
-      sed -i 's/status: in-progress/status: done/' "$TASK_SPEC"
+      sed -i 's/status: pending/status: done/' "$TASK_SPEC"
       git add "$TASK_SPEC" && git commit -q -m "Mark task 001 as done"
 
-      WORKTREE_001=$(git worktree list | grep "task\.001" | awk '{print $1}')
+      WORKTREE_001=$(git worktree list | grep "task\.001" | awk '{print $1}' | head -1)
       if [ -n "$WORKTREE_001" ]; then
         cd "$WORKTREE_001"
         export PROJECT_ROOT_PATH="$WORKTREE_001"
         echo "Phase complete." > /tmp/e2e-report.md
         ace-assign report /tmp/e2e-report.md
-        # Clean untracked files (e.g. .cache/) created by ace-assign report so
-        # git worktree remove can safely delete this worktree during prune tests
-        git clean -fdq .
+        # Note: untracked files (e.g. .cache/) are kept — ace-overseer prune uses
+        # ignore_untracked: true so they do not block worktree removal.
         cd -
         unset PROJECT_ROOT_PATH
       fi

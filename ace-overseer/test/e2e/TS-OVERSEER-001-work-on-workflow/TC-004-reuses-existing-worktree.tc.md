@@ -28,10 +28,10 @@ Verify that running `ace-overseer work-on --task 001` a second time reuses the e
    [ "$WORKTREE_COUNT" -eq 1 ] && echo "PASS: Exactly 1 worktree for task 001" || echo "FAIL: Expected 1 worktree, found $WORKTREE_COUNT"
    ```
 
-4. Verify only one tmux window for t001
+4. Verify only one tmux window for task 001
    ```bash
-   WINDOW_COUNT=$(tmux list-windows -t "ace-e2e-test" 2>&1 | grep -c "t001")
-   [ "$WINDOW_COUNT" -eq 1 ] && echo "PASS: Exactly 1 tmux window t001" || echo "FAIL: Expected 1 window, found $WINDOW_COUNT"
+   WINDOW_COUNT=$(tmux list-windows -t "${ACE_TMUX_SESSION:-ace-e2e-test}" 2>&1 | grep -cE "t001|task\.001")
+   [ "$WINDOW_COUNT" -eq 1 ] && echo "PASS: Exactly 1 tmux window for task 001" || echo "FAIL: Expected 1 window, found $WINDOW_COUNT"
    ```
 
 ## Expected
