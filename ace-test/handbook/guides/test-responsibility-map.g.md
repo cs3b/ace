@@ -207,14 +207,14 @@ mock_response = JSON.parse(File.read("fixtures/api_response.json"))
 
 ## Integration with Workflows
 
-### With /ace:test-plan
+### With /ace_test_plan
 
 1. Generate responsibility map
 2. Identify gaps
 3. Plan tests by layer
 4. Output test plan
 
-### With /ace:test-verify-suite
+### With /ace_test_verify-suite
 
 1. Check existing tests against map
 2. Identify redundancies
