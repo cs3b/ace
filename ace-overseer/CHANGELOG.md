@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-02-21
+
+### Fixed
+- Fix `WorkOnOrchestrator` to pass `task_root_path` (resolved from `PROJECT_ROOT_PATH` env var or `Dir.pwd`) to `TaskLoader`, ensuring tasks are found correctly in worktree environments
+- Fix E2E tests to use `ACE_TMUX_SESSION` variable instead of hardcoded `ace-e2e-test` session name for tmux window verification
+
 ## [0.4.4] - 2026-02-20
 
 ### Fixed
