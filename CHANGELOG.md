@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.552] - 2026-02-21
+
+### Added
+- **ace-assign v0.12.8**: Verification instructions in `mark-task-done` phase; subtree completion section in drive workflow requiring task status verification
+- **ace-handbook v0.9.5**: "Redundant computation" root cause category in selfimprove workflow with compute-once-pass-explicitly fix template
+- **ace-taskflow v0.39.6**: Cross-package reference audit in plan workflow; contradiction check in review workflow; cross-reference validation in work workflow
+- **ace-test-runner-e2e v0.16.13**: "Refactoring Resilience" section in E2E testing guide (pre-refactoring checklist, refactoring-proof patterns, post-refactoring smoke run)
+
 ## [0.9.551] - 2026-02-20
 
 ### Fixed
