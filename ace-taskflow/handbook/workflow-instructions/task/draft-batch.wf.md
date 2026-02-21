@@ -145,7 +145,7 @@ Provide comprehensive summary including:
 - Context: [details]
 
 **Recommendations:**
-- Next steps (e.g., run /ace:review-task to validate and promote drafts)
+- Next steps (e.g., run /ace_review_run-task to validate and promote drafts)
 - Any follow-up actions needed
 
 ## Error Handling Strategies
@@ -179,13 +179,13 @@ Provide comprehensive summary including:
 
 ```bash
 # Process all backlog ideas
-/ace:draft-tasks
+/ace_task_drafts
 
 # Process specific idea pattern (if supported)
-/ace:draft-tasks [pattern]
+/ace_task_drafts [pattern]
 
 # Process specific ideas by reference
-/ace:draft-tasks [idea-ref-1] [idea-ref-2]
+/ace_task_drafts [idea-ref-1] [idea-ref-2]
 ```
 
 ## Important Notes
