@@ -207,16 +207,16 @@ describe "CodexClient" do
       end
     end
 
-    it "rewrites colon-prefixed skill names using Codex formatter" do
+    it "rewrites underscore-prefixed skill names using Codex formatter" do
       Dir.mktmpdir do |tmpdir|
-        skill_dir = File.join(tmpdir, "ace_commit")
+        skill_dir = File.join(tmpdir, "ace_git_commit")
         Dir.mkdir(skill_dir)
-        File.write(File.join(skill_dir, "SKILL.md"), "---\nname: ace:commit\n---\nContent")
+        File.write(File.join(skill_dir, "SKILL.md"), "---\nname: ace_git_commit\n---\nContent")
 
         client = Ace::LLM::Providers::CLI::CodexClient.new(skills_dir: tmpdir)
-        result = client.send(:rewrite_skill_commands, "/ace:commit please")
-        # Codex formatter: /ace:commit → $ace:commit
-        assert_equal "$ace:commit please", result
+        result = client.send(:rewrite_skill_commands, "/ace_git_commit please")
+        # Codex formatter: /ace_git_commit → $ace_git_commit
+        assert_equal "$ace_git_commit please", result
       end
     end
 

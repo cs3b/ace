@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.7] - 2026-02-21
+
+### Changed
+- Update skill name handling and documentation for colon-free convention (`ace_domain_action` format)
+- Update command rewriter tests for new skill naming convention
+
 ## [0.16.6] - 2026-02-17
 
 ### Fixed
