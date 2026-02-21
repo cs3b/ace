@@ -67,7 +67,7 @@ Within a release directory (primarily in `dev-taskflow/current/`), individual ta
 #### Optional Release Backlog Subdirectory
 
 This holds notes or draft tasks. The AI agent can be instructed to run the
-`/ace:draft-tasks` workflow to process items from this internal backlog and integrate them as structured
+`/ace_task_drafts` workflow to process items from this internal backlog and integrate them as structured
 tasks into the *same* release\'s `tasks/` directory. This workflow can also target a specific release in
 the main `dev-taskflow/backlog/` if needed.
 
@@ -176,7 +176,7 @@ We follow semantic versioning (MAJOR.MINOR.PATCH):
    `mv dev-taskflow/current/v.0.2.0-active-sprint dev-taskflow/done/`.
 
    The archival process is detailed in the [Publish Release Guide](ace-taskflow/handbook/guides/release-publish.g.md) and
-   executed through the `/ace:publish-release` workflow.
+   executed through the `/ace_release_publish` workflow.
 
 ### 4. Task Transitions
 
@@ -255,17 +255,17 @@ Tasks and release structures are typically generated through one of three primar
       `docs/architecture.md`). This detailed planning is crucial input for guiding the AI effectively.
 2. **Test-Driven Development (AI-Assisted)**:
     - **Write Tests (Test Phase in `work-on-task`)**: Guide the AI to generate failing tests based on the planned
-      structure and acceptance criteria using the testing phase described in the `/ace:work-on-task` workflow.
+      structure and acceptance criteria using the testing phase described in the `/ace_task_work` workflow.
       *Review generated tests carefully.*
     - **Implement Code**: Provide the AI with specific, small steps from your plan (e.g., implement function X
       based on this signature and pseudocode). *Review generated code rigorously.*
     - **Refactor**: Guide the AI in refactoring for clarity and efficiency once tests pass.
 3. **Documentation & Committing**: Document decisions within the code or task file. Guide the AI to generate
-   or help format commit messages according to conventions using the `/ace:commit` workflow. *Review commit
+   or help format commit messages according to conventions using the `/ace_git_commit` workflow. *Review commit
    messages.* Commit changes frequently.
 4. **Review & Reflection**: After completing a task or a significant work segment, engage in self-reflection.
    Analyze the implemented solution, the effectiveness of any AI collaboration, update relevant documentation,
-   and capture learnings. Use the `/ace:create-retro` workflow to capture these insights. These individual
+   and capture learnings. Use the `/ace_retro_create` workflow to capture these insights. These individual
    reflection notes serve as valuable input for the retrospective process.
 
 **Key AI Collaboration Principles in this workflow:** Treat the AI as a junior developer needing guidance.
