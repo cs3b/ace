@@ -609,6 +609,7 @@ module Ace
               puts "\nDry run - no changes made:"
               puts "Would create worktree at: #{result[:would_create][:worktree_path]}"
               puts "Would create branch: #{result[:would_create][:branch]}"
+              puts "Target branch: #{result[:would_create][:target_branch]}" if result[:would_create][:target_branch]
               puts "Task ID: #{result[:task_id]}"
               puts "Task title: #{result[:task_title]}"
               if result[:would_create][:task_push]
