@@ -5,7 +5,7 @@ title: Quiet Mode and Legacy Timestamp Format
 
 ## Objective
 
-Verify that quiet mode (-q) suppresses extra output and that legacy YYYYMMDD-HHMMSS input format is accepted and treated as UTC.
+Verify that quiet mode (-q) suppresses config summary output compared to verbose mode (-v), and that legacy YYYYMMDD-HHMMSS input format is accepted and treated as UTC.
 
 ## Steps
 
@@ -21,17 +21,17 @@ Verify that quiet mode (-q) suppresses extra output and that legacy YYYYMMDD-HHM
    fi
    ```
 
-2. Verify non-quiet has more output
+2. Verify verbose mode has more output than quiet mode
    ```bash
-   WITHOUT_QUIET_LINES=$(ace-b36ts encode '2025-06-15 14:32:45' 2>&1 | wc -l | tr -d ' ')
-   WITH_QUIET_LINES=$(ace-b36ts encode -q '2025-06-15 14:32:45' 2>&1 | wc -l | tr -d ' ')
+   VERBOSE_LINES=$(ace-b36ts encode -v '2025-06-15 14:32:45' 2>&1 | wc -l | tr -d ' ')
+   QUIET_LINES=$(ace-b36ts encode -q '2025-06-15 14:32:45' 2>&1 | wc -l | tr -d ' ')
 
-   echo "Without quiet: $WITHOUT_QUIET_LINES lines"
-   echo "With quiet: $WITH_QUIET_LINES lines"
-   if [ "$WITH_QUIET_LINES" -lt "$WITHOUT_QUIET_LINES" ]; then
-     echo "PASS: Quiet reduces output"
+   echo "Verbose: $VERBOSE_LINES lines"
+   echo "Quiet: $QUIET_LINES lines"
+   if [ "$QUIET_LINES" -lt "$VERBOSE_LINES" ]; then
+     echo "PASS: Quiet reduces output compared to verbose"
    else
-     echo "FAIL: Quiet does not reduce output"
+     echo "FAIL: Quiet does not reduce output compared to verbose"
    fi
    ```
 
@@ -52,5 +52,5 @@ Verify that quiet mode (-q) suppresses extra output and that legacy YYYYMMDD-HHM
 ## Expected
 
 - Quiet mode (-q) produces only the compact ID (base36 characters, no headers)
-- Non-quiet mode produces more output lines than quiet mode
+- Verbose mode (-v) produces more output lines than quiet mode (config summary on stderr)
 - Legacy YYYYMMDD-HHMMSS format is treated as UTC and produces the same ID as readable UTC format
