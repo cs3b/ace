@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.17] - 2026-02-21
+
+### Fixed
+- `TestExecutor` now passes setup `env_vars` as `subprocess_env` to `QueryInterface.query`, ensuring environment variables (e.g., `ACE_TMUX_SESSION`) are set on the `claude -p` subprocess rather than only serialized as prompt text
+
+### Added
+- Unit tests verifying `env_vars` propagation as `subprocess_env` for both scenario and test-case execution paths
+
 ## [0.16.16] - 2026-02-21
 
 ### Fixed
