@@ -31,6 +31,7 @@ Verify that ace-assign correctly auto-completes parent phases when all children 
 
 3. Set parent pending, activate first child, and complete it
    ```bash
+   ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d | sort | tail -1)
    sed -i.bak 's/status: in_progress/status: pending/' "$ASSIGNMENT_DIR/phases/010-parent-job.ph.md"
    sed -i.bak 's/status: pending/status: in_progress/' "$ASSIGNMENT_DIR/phases/010.01-child-one.ph.md"
    CHILD1_OUTPUT=$(ace-assign report child1-report.md 2>&1)
@@ -40,6 +41,7 @@ Verify that ace-assign correctly auto-completes parent phases when all children 
 
 4. Verify child two is current and parent still pending
    ```bash
+   ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d | sort | tail -1)
    STATUS_OUTPUT=$(ace-assign status 2>&1)
    echo "$STATUS_OUTPUT" | grep -q "Current Phase:.*child-two" && echo "PASS: Child two is current" || echo "FAIL: Should be current"
    grep -q "status: pending" "$ASSIGNMENT_DIR/phases/010-parent-job.ph.md" && echo "PASS: Parent still pending" || echo "FAIL: Should be pending"
@@ -47,6 +49,7 @@ Verify that ace-assign correctly auto-completes parent phases when all children 
 
 5. Complete second child and verify parent auto-completes
    ```bash
+   ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d | sort | tail -1)
    CHILD2_OUTPUT=$(ace-assign report child2-report.md 2>&1)
    CHILD2_EXIT=$?
    [ "$CHILD2_EXIT" -eq 0 ] && echo "PASS: Child two completed" || echo "FAIL: Completion failed"
@@ -72,6 +75,7 @@ Verify that ace-assign correctly auto-completes parent phases when all children 
 
 7. Activate grandchild and complete it to trigger cascade
    ```bash
+   ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d | sort | tail -1)
    sed -i.bak 's/status: in_progress/status: pending/' "$ASSIGNMENT_DIR/phases/010-grandparent.ph.md"
    sed -i.bak 's/status: in_progress/status: pending/' "$ASSIGNMENT_DIR/phases/010.01-parent.ph.md"
    sed -i.bak 's/status: pending/status: in_progress/' "$ASSIGNMENT_DIR/phases/010.01.01-child.ph.md"
@@ -82,6 +86,7 @@ Verify that ace-assign correctly auto-completes parent phases when all children 
 
 8. Verify full chain auto-completed
    ```bash
+   ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d | sort | tail -1)
    grep -q "status: done" "$ASSIGNMENT_DIR/phases/010.01.01-child.ph.md" && echo "PASS: Grandchild done" || echo "FAIL: Not done"
    grep -q "status: done" "$ASSIGNMENT_DIR/phases/010.01-parent.ph.md" && echo "PASS: Parent auto-completed" || echo "FAIL: Not auto-completed"
    [ -f "$ASSIGNMENT_DIR/reports/010.01-parent.r.md" ] && echo "PASS: Parent report exists" || echo "FAIL: Missing"

@@ -21,6 +21,7 @@ Verify that ace-assign correctly handles child injection via `add --after X --ch
 
 2. Add a third child and verify numbering and metadata
    ```bash
+   ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d | sort | tail -1)
    ADD_OUTPUT=$(ace-assign add setup-fixtures --after 010 --child -i "Set up test fixtures" 2>&1)
    ADD_EXIT=$?
    [ "$ADD_EXIT" -eq 0 ] && echo "PASS: Exit code is 0" || echo "FAIL: Expected exit code 0"
