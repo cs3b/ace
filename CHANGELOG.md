@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.553] - 2026-02-21
+
+### Changed
+- **ace-assign v0.12.9**: Migrate skill name references to colon-free convention (`ace_domain_action` format) for non-Claude Code agent compatibility
+- **ace-lint v0.15.13**: Update skill name validation pattern to colon-free convention
+- **ace-llm-providers-cli v0.16.7**: Update skill name handling and documentation for colon-free convention
+- **ace-test-runner-e2e v0.16.14**: Update skill invocation to colon-free convention (`ace_e2e_run` format)
+- Migrate all skill directories and SKILL.md `name:` fields to colon-free `ace_domain_action` format
+- Update CLAUDE.md documentation with new `/ace_` prefix convention
+
 ## [0.9.552] - 2026-02-21
 
 ### Added
