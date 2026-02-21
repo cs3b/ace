@@ -1,5 +1,5 @@
 ---
-name: ace:b36ts
+name: ace_b36ts
 description: ENCODE and DECODE timestamps to/from compact Base36 IDs
 # context: no-fork
 # agent: general-purpose

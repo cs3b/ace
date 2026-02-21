@@ -1,5 +1,5 @@
 ---
-name: ace:prompt-prep
+name: ace_prompt-prep
 description: Run ace-prompt-prep and follow the printed instructions
 # context: no-fork
 # agent: general-purpose
