@@ -11,14 +11,14 @@ Verify worktree creation with a new branch using --from.
 
 1. Create worktree with new branch from main
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    mkdir -p "$WORKTREES_ROOT"
    ace-git-worktree create new-feature --from main --path "$WORKTREES_ROOT/new-feature-wt"
    ```
 
 2. Verify worktree and branch
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    test -d "$WORKTREES_ROOT/new-feature-wt" && echo "Directory exists - PASS"
    cd "$WORKTREES_ROOT/new-feature-wt"
    git branch --show-current
@@ -26,7 +26,7 @@ Verify worktree creation with a new branch using --from.
 
 3. Confirm branch tracks from main
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    cd "$WORKTREES_ROOT/new-feature-wt"
    git log --oneline -1
    ```
