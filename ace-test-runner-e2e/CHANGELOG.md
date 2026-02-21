@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.13] - 2026-02-21
+
+### Added
+- "Refactoring Resilience" section in E2E testing guide: pre-refactoring checklist, refactoring-proof patterns (variables not literals, flexible regex, runtime path discovery), post-refactoring smoke run requirement
+
 ## [0.16.12] - 2026-02-21
 
 ### Fixed
