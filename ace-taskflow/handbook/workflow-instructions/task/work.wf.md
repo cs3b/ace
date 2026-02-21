@@ -195,6 +195,19 @@ For experienced users, here's the condensed workflow:
      - [x] All automated checks pass
      ```
 
+   * **Cross-Reference Validation** *(MANDATORY for rename/namespace/migration tasks):*
+     - Search for stale references to old names/paths/URIs:
+       ```bash
+       ace-search search "old-pattern" --content --hidden
+       ```
+     - Verify protocol resolution for any changed URIs:
+       ```bash
+       ace-nav wfi://changed/path
+       ace-nav guide://changed/path
+       ```
+     - Check that CHANGELOGs in affected packages mention the rename/migration
+     - If any stale references found, fix them before proceeding to final validation
+
    * Run final validation:
 
      ```bash

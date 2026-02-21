@@ -100,6 +100,17 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
      - Review module and class naming throughout the codebase
    - Document the full renaming scope to prevent partial migrations
 
+   **Cross-Package Reference Audit:**
+   - For rename/namespace/migration tasks that change URIs, paths, or identifiers:
+     - Run `ace-search search "old-pattern" --content --hidden` for each pattern being changed (e.g., `wfi://lint`, `skill://ace_lint-run`, file paths)
+     - Group results by package to understand cross-package impact
+     - Count total references: flag as **HIGH RISK** if >20 references across >3 packages
+     - Include all reference-update work in subtask decomposition — do not treat as follow-up
+   - For interface changes (CLI flags, config keys, method signatures):
+     - Search for all consumers: `ace-search search "method_or_key_name" --content --hidden`
+     - List consumer packages that will need coordinated updates
+   - Document the full downstream scope before implementation begins
+
    **Document Research Findings:**
    - Summarize key technical insights
    - Note recommended approaches with pros/cons
