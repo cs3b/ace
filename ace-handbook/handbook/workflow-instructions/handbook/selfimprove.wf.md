@@ -69,6 +69,7 @@ Ask: "Why did this happen?" Categorize the root cause:
 | **Scope narrowing** | Agent under-scoped the task | Followed plan literally instead of understanding intent |
 | **Scope creep** | Agent over-scoped the task | Made changes beyond what was requested |
 | **Missing example** | No example of correct behavior | Workflow lacks example showing full scope discovery |
+| **Redundant computation** | Multiple agents/computations derive same value independently, causing divergence | Orchestrator computes report directory via Ruby `short_id`, but LLM agent re-derives via different logic and gets wrong path |
 
 ### Step 3: Find the Source
 
@@ -150,6 +151,32 @@ Reorganize the commits into logical groups.
 
 **Correct approach** (query actual state):
 > Run `git log --oneline main..HEAD` → shows 12 commits → reorganize 12 commits
+```
+
+**For redundant computation:**
+```markdown
+## Before
+The orchestrator computes a value, and the subagent independently derives it:
+
+```yaml
+# Orchestrator computes report_dir from task_id
+report_dir: ".cache/ace-test-e2e/#{short_id}-reports/"
+# But subagent re-derives via:
+report_dir = ".cache/ace-test-e2e/#{timestamp}-reports/"  # Wrong!
+```
+
+## After
+Pass computed values explicitly; don't re-derive:
+
+```yaml
+# Orchestrator computes once and passes to subagent
+- phase: run-test
+  params:
+    report_dir: "{{computed_report_dir}}"  # Passed explicitly
+```
+
+# In subagent instructions
+**Use the provided `report_dir` variable.** Do not compute or derive this value — it is passed from the orchestrator to ensure consistency.
 ```
 
 ### Step 5: Present to User
