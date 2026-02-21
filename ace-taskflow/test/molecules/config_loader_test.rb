@@ -257,6 +257,42 @@ class ConfigLoaderTest < AceTaskflowTestCase
     end
   end
 
+  def test_find_root_uses_config_from_project_root_not_pwd
+    # Simulate: PROJECT_ROOT_PATH points to sandbox, but Dir.pwd is the parent project
+    # find_root should load config from the sandbox, not from Dir.pwd
+    Dir.mktmpdir do |sandbox|
+      # Set up sandbox as a project with custom taskflow root
+      taskflow_dir = File.join(sandbox, ".ace-taskflow")
+      FileUtils.mkdir_p(taskflow_dir)
+
+      config_dir = File.join(sandbox, ".ace", "taskflow")
+      FileUtils.mkdir_p(config_dir)
+      File.write(File.join(config_dir, "config.yml"), <<~YAML)
+        taskflow:
+          root: .ace-taskflow
+      YAML
+
+      # Point PROJECT_ROOT_PATH to the sandbox
+      original_env = ENV["PROJECT_ROOT_PATH"]
+      ENV["PROJECT_ROOT_PATH"] = sandbox
+
+      begin
+        # Dir.pwd stays as current directory (parent project)
+        # find_root should still use sandbox config via PROJECT_ROOT_PATH
+        root = Ace::Taskflow::Molecules::ConfigLoader.find_root
+
+        assert_equal taskflow_dir, root,
+          "find_root should resolve taskflow dir relative to PROJECT_ROOT_PATH, not Dir.pwd"
+      ensure
+        if original_env
+          ENV["PROJECT_ROOT_PATH"] = original_env
+        else
+          ENV.delete("PROJECT_ROOT_PATH")
+        end
+      end
+    end
+  end
+
   # ADR-022: Gem default loading tests
 
   def test_load_gem_defaults_returns_hash
