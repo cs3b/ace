@@ -25,3 +25,4 @@ setup:
 
       Implement a feature for testing the prepare workflow.
       EOF
+  - copy-fixtures

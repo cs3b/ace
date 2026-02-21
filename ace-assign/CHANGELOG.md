@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.10] - 2026-02-21
+
+### Technical
+- Stabilize `TS-ASSIGN-004` by replacing live `fork-run` invocation with deterministic scoped `status --assignment <id>@<phase>` assertions
+- Rewrite `TS-ASSIGN-006` to deterministic preset-expansion verification using `Ace::Assign::Atoms::PresetExpander` (no chat-skill invocation dependency)
+- Add prepare-workflow fixture presets (`work-on-task.yml`, `work-on-tasks.yml`) for reproducible E2E generation checks
+
 ## [0.12.9] - 2026-02-21
 
 ### Changed
