@@ -3,6 +3,7 @@
 require "dry/cli"
 require "set"
 require "ace/core"
+require "ace/support/fs"
 require "fileutils"
 # Atoms (needed for CLI helpers)
 require_relative "atoms/task_path_resolver"
@@ -86,6 +87,12 @@ module Ace
           return nil unless result[:found]
 
           prompts_dir = result[:prompts_path]
+          project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
+          unless path_within_root?(prompts_dir, project_root)
+            warn "[ace-prompt-prep] Task auto-detection skipped: resolved path outside project root"
+            return nil
+          end
+
           FileUtils.mkdir_p(prompts_dir)
           File.join(prompts_dir, "the-prompt.md")
         rescue StandardError => e
@@ -95,6 +102,17 @@ module Ace
           # For auto-detection, notify user and continue without task context
           warn "[ace-prompt-prep] Task auto-detection skipped: #{e.message}"
           nil
+        end
+
+        # Returns true when path is inside root (or equal to root)
+        #
+        # @param path [String]
+        # @param root [String]
+        # @return [Boolean]
+        def self.path_within_root?(path, root)
+          expanded_path = File.expand_path(path)
+          expanded_root = File.expand_path(root)
+          expanded_path == expanded_root || expanded_path.start_with?("#{expanded_root}/")
         end
       end
     end
