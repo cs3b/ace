@@ -53,7 +53,7 @@ module Ace
           # Generate short test ID for directory naming
           # @return [String] Short ID (e.g., "ts001" from "TS-LINT-001")
           def short_id
-            match = test_id.match(/TS-[A-Z]+-(\d+[a-z]*)/)
+            match = test_id.match(/TS-[A-Z0-9]+-(\d+[a-z]*)/)
             return "ts#{match[1]}" if match
 
             test_id.downcase.gsub(/[^a-z0-9]/, "")
