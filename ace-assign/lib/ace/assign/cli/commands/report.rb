@@ -23,27 +23,32 @@ module Ace
 
             unless options[:quiet]
               completed = result[:completed]
-              puts "Phase #{completed.number} (#{completed.name}) completed"
-              # Report the actual report file path, not the phase file
-              assignment = result[:assignment]
-              report_filename = Atoms::PhaseFileParser.generate_report_filename(completed.number, completed.name)
-              report_path = File.join(assignment.reports_dir, report_filename)
-              puts "Report saved to: #{report_path}"
-
-              if result[:current]
-                puts "Advancing to phase #{result[:current].number}: #{result[:current].name}"
-                puts
-                puts "Instructions:"
-                puts result[:current].instructions
-              else
-                puts
+              if completed.nil?
                 fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
-                if fork_root && result[:state].subtree_complete?(fork_root)
-                  puts "Fork subtree #{fork_root} completed."
-                elsif result[:state].complete?
-                  puts "Assignment completed! All phases done."
+                puts "Fork subtree #{fork_root} already complete. Nothing to advance."
+              else
+                puts "Phase #{completed.number} (#{completed.name}) completed"
+                # Report the actual report file path, not the phase file
+                assignment = result[:assignment]
+                report_filename = Atoms::PhaseFileParser.generate_report_filename(completed.number, completed.name)
+                report_path = File.join(assignment.reports_dir, report_filename)
+                puts "Report saved to: #{report_path}"
+
+                if result[:current]
+                  puts "Advancing to phase #{result[:current].number}: #{result[:current].name}"
+                  puts
+                  puts "Instructions:"
+                  puts result[:current].instructions
                 else
-                  puts "No active phase selected."
+                  puts
+                  fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
+                  if fork_root && result[:state].subtree_complete?(fork_root)
+                    puts "Fork subtree #{fork_root} completed."
+                  elsif result[:state].complete?
+                    puts "Assignment completed! All phases done."
+                  else
+                    puts "No active phase selected."
+                  end
                 end
               end
             end

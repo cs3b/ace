@@ -11,14 +11,14 @@ Verify assignment drive guidance enforces hard no-skip policy for planned phases
 
 1. Verify workflow forbids skip-by-assumption
    ```bash
-   WF="ace-assign/handbook/workflow-instructions/drive-assignment.wf.md"
+   WF="ace-assign/handbook/workflow-instructions/assign/drive.wf.md"
    rg -n "Planned phases are mandatory work items\\. Do not skip them by judgment\\." "$WF" && echo "PASS: Mandatory no-skip rule present" || echo "FAIL: Missing no-skip rule"
    rg -n "Never use report text to \\\"skip\\\" or synthesize completion for planned phases\\." "$WF" && echo "PASS: Synthetic skip prohibition present" || echo "FAIL: Missing synthetic skip prohibition"
    ```
 
 2. Verify old skip assessment section is removed
    ```bash
-   WF="ace-assign/handbook/workflow-instructions/drive-assignment.wf.md"
+   WF="ace-assign/handbook/workflow-instructions/assign/drive.wf.md"
    if rg -n "^#### Skip Assessment" "$WF"; then
      echo "FAIL: Deprecated Skip Assessment still present"
    else
@@ -28,7 +28,7 @@ Verify assignment drive guidance enforces hard no-skip policy for planned phases
 
 3. Verify attempt-first failure contract exists
    ```bash
-   WF="ace-assign/handbook/workflow-instructions/drive-assignment.wf.md"
+   WF="ace-assign/handbook/workflow-instructions/assign/drive.wf.md"
    rg -n "^### 4\\. External Action Rule \\(Attempt-First\\)" "$WF" && echo "PASS: Attempt-first section present" || echo "FAIL: Attempt-first section missing"
    rg -n "command attempted" "$WF" && echo "PASS: Command evidence requirement present" || echo "FAIL: Missing command evidence requirement"
    rg -n "exact error output" "$WF" && echo "PASS: Exact error requirement present" || echo "FAIL: Missing exact error requirement"
