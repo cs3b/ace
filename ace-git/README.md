@@ -242,7 +242,7 @@ Workflows are automatically available in Claude Code via handbook integration:
 
 ```bash
 # Workflows accessible through ace-nav
-/ace:bundle wfi://git/rebase
+/ace_bundle wfi://git/rebase
 ```
 
 ### Other ACE Tools
