@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.3] - 2026-02-21
+
+### Added
+- `subprocess_env:` parameter on `QueryInterface.query()` for passing environment variables to CLI provider subprocesses
+
 ## [0.22.2] - 2026-02-17
 
 ### Fixed
