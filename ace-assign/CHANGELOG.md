@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.7] - 2026-02-21
+
+### Fixed
+- Add `CACHE_BASE` env var support to `cache_dir` so E2E sandboxes resolve the correct cache path
+- Graceful return in `advance()` when fork subtree is exhausted (prevents "No phase currently in progress" error)
+- Nil guard in `report` command when `advance()` returns `completed: nil` after subtree exhaustion
+
 ## [0.12.6] - 2026-02-21
 
 ### Technical
