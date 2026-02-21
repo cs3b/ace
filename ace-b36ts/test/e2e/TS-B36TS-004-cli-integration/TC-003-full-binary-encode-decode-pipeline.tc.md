@@ -15,8 +15,16 @@ Verify the full end-to-end pipeline: encode a timestamp via the ace-b36ts binary
    echo "Encoded: $ENCODED"
    echo "Length: ${#ENCODED}"
 
-   [ ${#ENCODED} -eq 6 ] && echo "PASS: Default format is 6 chars" || echo "FAIL: Length is ${#ENCODED}"
-   [[ "$ENCODED" =~ ^[0-9a-z]+$ ]] && echo "PASS: Valid base36" || echo "FAIL: Invalid characters"
+   if [ "${#ENCODED}" -eq 6 ]; then
+     echo "PASS: Default format is 6 chars"
+   else
+     echo "FAIL: Length is ${#ENCODED}"
+   fi
+   if [[ "$ENCODED" =~ ^[0-9a-z]+$ ]]; then
+     echo "PASS: Valid base36"
+   else
+     echo "FAIL: Invalid characters"
+   fi
    ```
 
 2. Decode and verify date and approximate time
@@ -24,8 +32,16 @@ Verify the full end-to-end pipeline: encode a timestamp via the ace-b36ts binary
    DECODED=$(ace-b36ts decode -q "$ENCODED")
    echo "Decoded: $DECODED"
 
-   echo "$DECODED" | grep -q "2025-06-15" && echo "PASS: Date matches" || echo "FAIL: Date mismatch"
-   echo "$DECODED" | grep -q "12:3" && echo "PASS: Approximate time matches" || echo "FAIL: Time mismatch"
+   if echo "$DECODED" | grep -q "2025-06-15"; then
+     echo "PASS: Date matches"
+   else
+     echo "FAIL: Date mismatch"
+   fi
+   if echo "$DECODED" | grep -q "12:3"; then
+     echo "PASS: Approximate time matches"
+   else
+     echo "FAIL: Time mismatch"
+   fi
    ```
 
 3. Verify roundtrip for month and ms formats
@@ -33,13 +49,25 @@ Verify the full end-to-end pipeline: encode a timestamp via the ace-b36ts binary
    MONTH_ENC=$(ace-b36ts encode --format month -q '2025-06-15 12:30:45 UTC')
    MONTH_DEC=$(ace-b36ts decode -q "$MONTH_ENC")
    echo "Month: $MONTH_ENC -> $MONTH_DEC"
-   echo "$MONTH_DEC" | grep -q "2025-06" && echo "PASS: Month roundtrip" || echo "FAIL: Month roundtrip"
+   if echo "$MONTH_DEC" | grep -q "2025-06"; then
+     echo "PASS: Month roundtrip"
+   else
+     echo "FAIL: Month roundtrip"
+   fi
 
    MS_ENC=$(ace-b36ts encode --format ms -q '2025-06-15 12:30:45 UTC')
    MS_DEC=$(ace-b36ts decode -q "$MS_ENC")
    echo "ms: $MS_ENC -> $MS_DEC"
-   echo "$MS_DEC" | grep -q "2025-06-15" && echo "PASS: ms roundtrip" || echo "FAIL: ms roundtrip"
-   [ ${#MS_ENC} -eq 8 ] && echo "PASS: ms is 8 chars" || echo "FAIL: ms length is ${#MS_ENC}"
+   if echo "$MS_DEC" | grep -q "2025-06-15"; then
+     echo "PASS: ms roundtrip"
+   else
+     echo "FAIL: ms roundtrip"
+   fi
+   if [ "${#MS_ENC}" -eq 8 ]; then
+     echo "PASS: ms is 8 chars"
+   else
+     echo "FAIL: ms length is ${#MS_ENC}"
+   fi
    ```
 
 ## Expected
