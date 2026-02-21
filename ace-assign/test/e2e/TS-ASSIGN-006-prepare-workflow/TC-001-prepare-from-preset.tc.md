@@ -5,7 +5,7 @@ title: Prepare From Preset
 
 ## Objective
 
-Verify that `/ace:assign-prepare work-on-task --taskref 001` generates a valid job.yaml
+Verify that `/ace_assign_prepare work-on-task --taskref 001` generates a valid job.yaml
 with correct structure, resolved placeholders, and valid skill references.
 
 ## Steps
@@ -14,7 +14,7 @@ with correct structure, resolved placeholders, and valid skill references.
 
 1. Run the prepare workflow with the `work-on-task` preset for taskref 001
    ```
-   /ace:assign-prepare work-on-task --taskref 001
+   /ace_assign_prepare work-on-task --taskref 001
    ```
 
 ### Phase 2: Verify job.yaml exists
@@ -53,11 +53,11 @@ with correct structure, resolved placeholders, and valid skill references.
    grep -q "create-pr\|git-create-pr" "$JOB_FILE" && echo "PASS: create-pr phase present" || echo "FAIL: create-pr phase missing"
    ```
 
-6. Verify skill references use current namespaced format (ace:task-work, not old names)
+6. Verify skill references use current namespaced format (ace_task_work, not old names)
    ```bash
    JOB_FILE=$(ls jobs/*-job.yml 2>/dev/null | tail -1)
    grep "skill:" "$JOB_FILE" | head -5
-   grep -q "ace:task-work\|ace:git-create-pr\|ace:review-pr" "$JOB_FILE" && echo "PASS: Skill references present" || echo "FAIL: No skill references found"
+   grep -q "ace_task_work\|ace_git_create-pr\|ace_review_pr" "$JOB_FILE" && echo "PASS: Skill references present" || echo "FAIL: No skill references found"
    ```
 
 ## Expected

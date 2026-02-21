@@ -1,5 +1,5 @@
 # Quick implementation workflow: onboard → work → commit
-# Usage: /ace:assign-prepare quick-implement --taskref 123
+# Usage: /ace_assign_prepare quick-implement --taskref 123
 
 name: quick-implement
 description: Implement a task with commit, no PR or review cycles
@@ -17,9 +17,9 @@ steps:
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: ace:work-on-task
+    skill: ace_task_work
     instructions:
-      - "First: onboard yourself using /onboard skill to load project context."
+      - "First: onboard yourself using /ace_onboard skill to load project context."
       - "Work on task {{taskref}}."
       - Implement the required changes following project conventions.
       - Keep changes focused and atomic.
@@ -30,7 +30,7 @@ steps:
       - "Run: ace-taskflow task done {{taskref}}"
 
   - name: commit
-    skill: ace:commit
+    skill: ace_git_commit
     instructions:
       - Commit the changes.
       - Use a descriptive commit message following project conventions.

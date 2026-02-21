@@ -59,11 +59,11 @@ class PhaseWriterTest < AceAssignTestCase
         name: "work-on-task",
         instructions: "Implement the feature.",
         status: :pending,
-        extra: { "skill" => "ace:work-on-task", "context" => "task-229" }
+        extra: { "skill" => "ace_task_work", "context" => "task-229" }
       )
 
       content = File.read(file_path)
-      assert_includes content, "skill: ace:work-on-task"
+      assert_includes content, "skill: ace_task_work"
       assert_includes content, "context: task-229"
     end
   end

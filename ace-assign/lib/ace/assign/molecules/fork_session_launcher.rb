@@ -34,7 +34,7 @@ module Ace
           ) do
             query_interface.query(
               resolved_provider,
-              "/ace:assign-drive",
+              "/ace_assign_drive",
               system: nil,
               cli_args: merged_cli_args,
               timeout: resolved_timeout,
