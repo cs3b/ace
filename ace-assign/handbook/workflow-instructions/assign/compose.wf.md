@@ -225,7 +225,7 @@ session:
 
 steps:
   - name: onboard
-    skill: onboard
+    skill: ace_onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context and understand the project structure.
