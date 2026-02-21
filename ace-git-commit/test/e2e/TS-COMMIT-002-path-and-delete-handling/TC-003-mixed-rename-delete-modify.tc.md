@@ -29,24 +29,29 @@ EOF
    git status --porcelain
    ```
 
-4. Commit all changes using --only-staged for rename plus path for modification
+4. Verify rename is staged before committing
+   ```bash
+   git status --porcelain | grep -q "^R" && echo "PASS: Rename staged" || echo "FAIL: Rename not staged"
+   ```
+
+5. Commit all changes using --only-staged for rename plus path for modification
    ```bash
    ace-git-commit new_name.rb old_name.rb keeper.rb -m "Rename old_name and update keeper"
    ```
 
-5. Verify commit contains all changes
+6. Verify commit contains all changes
    ```bash
    git show --stat HEAD
    ```
 
-6. Verify final state
+7. Verify final state
    ```bash
    [ -f new_name.rb ] && echo "PASS: Renamed file exists" || echo "FAIL: Renamed file missing"
    [ ! -f old_name.rb ] && echo "PASS: Old file removed" || echo "FAIL: Old file still exists"
    grep -q "also_stay" keeper.rb && echo "PASS: Keeper modified" || echo "FAIL: Keeper not modified"
    ```
 
-7. Verify working directory is clean
+8. Verify working directory is clean
    ```bash
    UNCOMMITTED=$(git status --porcelain)
    [ -z "$UNCOMMITTED" ] && echo "PASS: All changes committed" || echo "FAIL: Uncommitted: $UNCOMMITTED"
