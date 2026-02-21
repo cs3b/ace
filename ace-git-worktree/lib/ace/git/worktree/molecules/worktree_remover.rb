@@ -77,7 +77,9 @@ module Ace
               branch_name = worktree_info.branch
 
               # Remove the worktree using git
-              result = remove_git_worktree(expanded_path, force: force)
+              # When ignore_untracked is true, we've already verified there are no tracked changes,
+              # so pass force: true to skip git's own untracked-file check.
+              result = remove_git_worktree(expanded_path, force: force || ignore_untracked)
               return result unless result[:success]
 
               # Optionally remove the directory
