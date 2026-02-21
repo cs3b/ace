@@ -283,7 +283,7 @@ module Ace
                         end
 
               # Apply filters
-              if options[:task_associated] || options[:usable] || options[:search]
+              if !options[:task_associated].nil? || !options[:usable].nil? || options[:search]
                 worktrees = @worktree_lister.filter(
                   worktrees,
                   task_associated: options[:task_associated],

@@ -94,6 +94,18 @@ class WorktreeManagerTest < Minitest::Test
     assert result.key?(:success)
   end
 
+  def test_list_all_with_false_task_associated_does_not_raise
+    result = @manager.list_all(task_associated: false)
+    assert result.is_a?(Hash)
+    assert result.key?(:success)
+  end
+
+  def test_list_all_with_false_usable_does_not_raise
+    result = @manager.list_all(usable: false)
+    assert result.is_a?(Hash)
+    assert result.key?(:success)
+  end
+
   def test_get_status_api_exists
     status = @manager.get_status
     assert status.is_a?(Hash)

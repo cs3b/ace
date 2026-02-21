@@ -15,10 +15,12 @@ Verify switching to a worktree returns its path.
    echo "Switch path: $SWITCH_PATH"
    ```
 
-2. Verify we can use the path to navigate
+2. Verify the returned path exists and is navigable
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
-   cd "$WORKTREES_ROOT/feature-wt"
+   echo "Switch returned: $SWITCH_PATH"
+   [ -n "$SWITCH_PATH" ] && echo "PASS: Switch returned a path" || echo "FAIL: Switch returned empty path"
+   [ -d "$SWITCH_PATH" ] && echo "PASS: Switch path is a valid directory" || echo "FAIL: Switch path does not exist"
+   cd "$SWITCH_PATH"
    git branch --show-current
    ```
 
