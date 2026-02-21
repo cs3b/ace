@@ -9,5 +9,10 @@ requires:
 
 setup:
   - copy-fixtures
+  - write-file:
+      path: .ace/prompt-prep/config.yml
+      content: |
+        task:
+          detection: false
   - env:
       PROJECT_ROOT_PATH: .
