@@ -628,6 +628,39 @@ class CLIIntegrationTest < Minitest::Test
     end
   end
 
+  def test_process_with_auto_detection_ignores_task_path_outside_project_root
+    # Create project prompt file as fallback
+    File.write(@prompt_file, "Project-level prompt content", encoding: "utf-8")
+
+    mock_result = {
+      path: "/tmp/external-task",
+      prompts_path: "/tmp/external-task/prompts",
+      found: true,
+      error: nil
+    }
+
+    config_with_detection = @default_config.merge(
+      "task" => { "detection" => true }
+    )
+
+    tmpdir = @tmpdir
+    Ace::PromptPrep.stub :config, config_with_detection do
+      Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, tmpdir do
+        Ace::Git::Molecules::BranchReader.stub :current_branch, "121-feature-branch" do
+          Ace::PromptPrep::Atoms::TaskPathResolver.stub :extract_from_branch, "121" do
+            Ace::PromptPrep::Atoms::TaskPathResolver.stub :resolve, mock_result do
+              output, error = run_cli(["process"])
+
+              # Should fall back to project-level prompt when resolved task is outside root
+              assert_match(/Project-level prompt content/, output)
+              assert_match(/outside project root/, error)
+            end
+          end
+        end
+      end
+    end
+  end
+
   private
 
   def run_cli(args)
