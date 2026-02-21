@@ -13,6 +13,8 @@ with correctly identified phases, loop expansion, and skill mapping from natural
 ### Phase 1: Invoke Prepare with Informal Instructions
 
 1. Run prepare with informal instructions describing a multi-cycle workflow
+   > **NOTE**: This is a skill invocation in the Claude Code chat context, NOT a bash command.
+   > Type this directly in the conversation to invoke the ace_assign_prepare skill.
    ```
    /ace_assign_prepare "Work on task 001, create a PR, then do 2 review cycles"
    ```

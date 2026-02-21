@@ -13,6 +13,8 @@ with correct structure, resolved placeholders, and valid skill references.
 ### Phase 1: Invoke Prepare
 
 1. Run the prepare workflow with the `work-on-task` preset for taskref 001
+   > **NOTE**: This is a skill invocation in the Claude Code chat context, NOT a bash command.
+   > Type this directly in the conversation to invoke the ace_assign_prepare skill.
    ```
    /ace_assign_prepare work-on-task --taskref 001
    ```
