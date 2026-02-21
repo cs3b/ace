@@ -167,6 +167,21 @@ fi
 
 `fork-run` executes the entire subtree in one dedicated process and returns when the subtree is complete or failed.
 
+#### Subtree Completion: Task Status Verification
+
+After a fork subtree completes (work-on-task finishes successfully):
+
+1. **Verify ace-taskflow status matches assignment status.** If the assignment shows `work-on-task` as done but ace-taskflow still shows `in-progress`, status drift has occurred.
+
+2. **If mark-task-done phase was NOT included in the assignment** (common for ad-hoc assignments):
+   ```bash
+   # Manually sync status before reporting subtree complete
+   ace-taskflow task done {taskref}
+   ace-taskflow task {taskref}  # Verify it shows status: done
+   ```
+
+3. **Report the subtree complete only after verification.** This prevents the orchestrator from showing work as done while ace-taskflow shows it as in-progress.
+
 ### 3. Execute Current Phase
 
 Based on the phase configuration:
