@@ -49,7 +49,8 @@ module Ace
             prompt = format_messages_as_prompt(messages)
 
             cmd = build_claude_command(options)
-            stdout, stderr, status = execute_claude_command(cmd, prompt)
+            subprocess_env = options.delete(:subprocess_env)
+            stdout, stderr, status = execute_claude_command(cmd, prompt, subprocess_env: subprocess_env)
 
             parse_claude_response(stdout, stderr, status, prompt, options)
           rescue => e
@@ -154,13 +155,14 @@ module Ace
           end
 
 
-          def execute_claude_command(cmd, prompt)
+          def execute_claude_command(cmd, prompt, subprocess_env: nil)
             timeout_val = @options[:timeout] || 120
             # Clear CLAUDECODE env var so `claude -p` (non-interactive, one-shot mode)
             # can run as a subprocess from within a Claude Code session.
             # The guard was added in Claude Code v2.1.41 to prevent nested interactive
             # sessions, but -p mode doesn't share session state.
             env = {"CLAUDECODE" => nil}
+            env.merge!(subprocess_env) if subprocess_env
             debug_subprocess("spawn timeout=#{timeout_val}s cmd=#{cmd.join(" ")} prompt_bytes=#{prompt.to_s.bytesize}")
             Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: prompt.to_s, env: env, provider_name: "Claude")
           end

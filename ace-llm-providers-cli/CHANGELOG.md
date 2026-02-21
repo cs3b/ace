@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.9] - 2026-02-21
+
+### Fixed
+- `ClaudeCodeClient` now merges `subprocess_env` into the subprocess environment, ensuring env vars like `ACE_TMUX_SESSION` are set on the actual `claude -p` process instead of only appearing as text in the prompt
+
+### Added
+- Unit tests for `ClaudeCodeClient` covering env merging, nil handling, and subprocess_env forwarding from `generate()`
+
 ## [0.16.8] - 2026-02-21
 
 ### Added
