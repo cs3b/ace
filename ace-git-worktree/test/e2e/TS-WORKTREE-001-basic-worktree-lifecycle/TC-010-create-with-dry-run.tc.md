@@ -11,13 +11,13 @@ Verify create --dry-run shows what would be created without creating.
 
 1. Dry-run worktree creation
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    ace-git-worktree create bugfix/test-fix --path "$WORKTREES_ROOT/bugfix-wt" --dry-run
    ```
 
 2. Verify nothing was created
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    test ! -d "$WORKTREES_ROOT/bugfix-wt" && echo "Directory not created - PASS"
    ```
 

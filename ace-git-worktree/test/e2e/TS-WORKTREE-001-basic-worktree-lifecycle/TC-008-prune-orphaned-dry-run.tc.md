@@ -11,7 +11,7 @@ Verify prune command runs successfully in dry-run mode.
 
 1. Create an orphaned worktree scenario
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    rm -rf "$WORKTREES_ROOT/new-feature-wt"
    ```
 
