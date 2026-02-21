@@ -15,7 +15,7 @@ Maintain Claude Code integration using unified handbook CLI commands.
 
 ## Usage
 
-Type `/meta-update-integration-claude [options]` where options can be:
+Type `/ace_integration_update-claude [options]` where options can be:
 - `full` - Complete integration update
 - `commands` - Update commands only
 - `agents` - Update agents only
@@ -42,9 +42,9 @@ The workflow will:
 ## Examples
 
 ```
-/meta-update-integration-claude
-/meta-update-integration-claude full
-/meta-update-integration-claude meta
+/ace_integration_update-claude
+/ace_integration_update-claude full
+/ace_integration_update-claude meta
 ```
 
 ## Full Workflow
