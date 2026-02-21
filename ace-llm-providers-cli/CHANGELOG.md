@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.8] - 2026-02-21
+
+### Added
+- Process-group lifecycle hardening in `SafeCapture`: isolate subprocesses in dedicated process groups and clean up descendants on timeout and successful parent exit
+- Regression tests for success-path and timeout-path descendant cleanup in `SafeCapture`
+- Debug lifecycle tracing for CLI subprocess management via `ACE_LLM_DEBUG_SUBPROCESS=1`
+
+### Changed
+- `ClaudeCodeClient` now emits debug subprocess context (timeout, command, prompt size) when `ACE_LLM_DEBUG_SUBPROCESS=1`
+
 ## [0.16.7] - 2026-02-21
 
 ### Changed
