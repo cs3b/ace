@@ -91,6 +91,9 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **Success Criteria Measurable**: Observable, testable outcomes defined
    - [ ] **Scope Boundaries Clear**: In-scope and out-of-scope explicitly stated
    - [ ] **Validation Questions Addressed**: All validation questions either answered or documented as blocking
+   - [ ] **No Contradictory Directives**: Scan spec for conflicting instructions (e.g., "replace X" and "preserve X" for same entity; "add" and "remove" same dependency). Flag any contradictions as HIGH priority questions
+   - [ ] **Consumer Packages Listed**: When interfaces change (CLI flags, config keys, protocol URIs), spec identifies which packages consume the interface and will need updates
+   - [ ] **Deliverables Match Scope**: Number of deliverables is proportional to scope — flag if spec lists 3 deliverables but scope implies 15+ file changes
    - [ ] **No Blocking Questions Remain**: All HIGH priority questions resolved or have acceptable defaults
 
    **Assessment:**
