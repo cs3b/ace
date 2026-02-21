@@ -1582,4 +1582,39 @@ class SuiteOrchestratorTest < Minitest::Test
       assert_equal existing_report_dir, File.dirname(metadata_files.first)
     end
   end
+
+  def test_warn_on_lingering_claude_processes_emits_warning_in_debug_mode
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    status = Struct.new(:success?).new(true)
+
+    old_env = ENV["ACE_LLM_DEBUG_SUBPROCESS"]
+    ENV["ACE_LLM_DEBUG_SUBPROCESS"] = "1"
+
+    Open3.stub :capture2, ["1234 claude -p --output-format json\n", status] do
+      orchestrator.send(:warn_on_lingering_claude_processes)
+    end
+
+    assert_match(/Warning: Detected lingering claude -p processes \(1\)/, @output.string)
+    assert_match(/1234 claude -p --output-format json/, @output.string)
+  ensure
+    ENV["ACE_LLM_DEBUG_SUBPROCESS"] = old_env
+  end
+
+  def test_warn_on_lingering_claude_processes_is_noop_when_debug_disabled
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    status = Struct.new(:success?).new(true)
+
+    old_env = ENV["ACE_LLM_DEBUG_SUBPROCESS"]
+    ENV.delete("ACE_LLM_DEBUG_SUBPROCESS")
+
+    Open3.stub :capture2, ["1234 claude -p --output-format json\n", status] do
+      orchestrator.send(:warn_on_lingering_claude_processes)
+    end
+
+    assert_equal "", @output.string
+  ensure
+    ENV["ACE_LLM_DEBUG_SUBPROCESS"] = old_env
+  end
 end
