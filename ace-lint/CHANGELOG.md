@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.15.13] - 2026-02-21
+
+### Changed
+- Update skill name validation pattern to colon-free convention (`ace_domain_action` format)
+- Update test fixtures and validator tests for new skill naming convention
+
 ## [0.15.12] - 2026-02-19
 
 ### Technical
