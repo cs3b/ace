@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.8] - 2026-02-21
+
+### Fixed
+- Fix `short_id` regex to support digits in test area names (e.g., `TS-B36TS-001` now correctly yields `ts001`)
+- Copy test definition files (`.tc.md`) to sandbox before execution so the test runner can locate them during E2E runs
+
+### Technical
+- Add test for skill name coupling in `SkillPromptBuilder` to catch invocation name drift
+- Add tests for `short_id` with digit-containing area names (`B36TS`, `ASSIGN`)
+
 ## [0.16.7] - 2026-02-20
 
 ### Fixed

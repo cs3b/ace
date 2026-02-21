@@ -45,6 +45,12 @@ class TestScenarioTest < Minitest::Test
     assert_equal "ts003", create_scenario(test_id: "TS-GIT-003").short_id
   end
 
+  def test_short_id_with_digits_in_area_name
+    assert_equal "ts001", create_scenario(test_id: "TS-B36TS-001").short_id
+    assert_equal "ts002", create_scenario(test_id: "TS-B36TS-002").short_id
+    assert_equal "ts005", create_scenario(test_id: "TS-ASSIGN-005").short_id
+  end
+
   def test_short_id_with_alphabetic_suffix
     assert_equal "ts001a", create_scenario(test_id: "TS-BUNDLE-001a").short_id
     assert_equal "ts001b", create_scenario(test_id: "TS-BUNDLE-001b").short_id
