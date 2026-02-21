@@ -318,6 +318,27 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal "TS-TEST-001-test", result[:test_name]
   end
 
+  def test_parse_subprocess_result_includes_raw_output
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+    thread = Minitest::Mock.new
+    exit_status = Minitest::Mock.new
+    exit_status.expect(:exitstatus, 0)
+    thread.expect(:value, exit_status)
+
+    raw = "Result: \u2713 PASS  3/3 cases\nReport: /tmp/report"
+    process = {
+      output: raw,
+      thread: thread,
+      test_file: "/path/to/TS-TEST-001-test/scenario.yml"
+    }
+
+    result = orchestrator.send(:parse_subprocess_result, process)
+
+    assert_equal raw, result[:raw_output]
+  end
+
   def test_parse_subprocess_result_detects_partial_as_fail_on_exit_zero
     discoverer = StubDiscoverer.new(packages: [], tests: {})
     orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
@@ -750,6 +771,44 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     refute_includes cmd, "--run-id", "Command should not include --run-id when nil"
+  end
+
+  def test_build_test_command_includes_report_dir_when_run_id_provided
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output
+    )
+
+    cmd = orchestrator.send(:build_test_command,
+      "ace-lint",
+      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      {},
+      run_id: "batch01"
+    )
+
+    assert_kind_of Array, cmd
+    report_dir_idx = cmd.index("--report-dir")
+    refute_nil report_dir_idx, "Command should include --report-dir flag when run_id is provided"
+    report_dir_value = cmd[report_dir_idx + 1]
+    assert_includes report_dir_value, "batch01-lint-ts001-reports",
+                    "Report dir should use scenario dir_name with -reports suffix"
+  end
+
+  def test_build_test_command_omits_report_dir_when_no_run_id
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output
+    )
+
+    cmd = orchestrator.send(:build_test_command,
+      "ace-lint",
+      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      {}
+    )
+
+    refute_includes cmd, "--report-dir", "Command should not include --report-dir when no run_id"
   end
 
   def test_generate_run_ids_returns_unique_ids
@@ -1249,6 +1308,106 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal "TC-001,TC-003", cmd[tc_idx + 1]
   end
 
+  # --- Subprocess output saving tests ---
+
+  def test_save_subprocess_output_writes_log_to_report_dir
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      FileUtils.mkdir_p(report_dir)
+
+      discoverer = StubDiscoverer.new(packages: [], tests: {})
+      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+      result = { report_dir: report_dir, raw_output: "test output here" }
+      orchestrator.send(:save_subprocess_output, result)
+
+      log_path = File.join(report_dir, "subprocess_output.log")
+      assert File.exist?(log_path), "subprocess_output.log should be created"
+      assert_equal "test output here", File.read(log_path)
+    end
+  end
+
+  def test_save_subprocess_output_uses_parent_dir_for_file_path
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      FileUtils.mkdir_p(report_dir)
+      file_path = File.join(report_dir, "final-report.md")
+
+      discoverer = StubDiscoverer.new(packages: [], tests: {})
+      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+      result = { report_dir: file_path, raw_output: "output data" }
+      orchestrator.send(:save_subprocess_output, result)
+
+      log_path = File.join(report_dir, "subprocess_output.log")
+      assert File.exist?(log_path), "subprocess_output.log should be written to parent dir"
+      assert_equal "output data", File.read(log_path)
+    end
+  end
+
+  def test_save_subprocess_output_skips_when_no_report_dir
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+    # Should not raise
+    orchestrator.send(:save_subprocess_output, { report_dir: nil, raw_output: "data" })
+  end
+
+  def test_save_subprocess_output_skips_when_empty_output
+    Dir.mktmpdir do |tmpdir|
+      discoverer = StubDiscoverer.new(packages: [], tests: {})
+      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+      orchestrator.send(:save_subprocess_output, { report_dir: tmpdir, raw_output: "" })
+
+      refute File.exist?(File.join(tmpdir, "subprocess_output.log")),
+        "Should not write empty subprocess output"
+    end
+  end
+
+  # --- Metadata override with case count reconciliation ---
+
+  def test_override_from_metadata_reconciles_all_passed_to_pass
+    Dir.mktmpdir do |tmpdir|
+      # Create metadata where status is "fail" but all cases passed
+      report_dir = File.join(tmpdir, "reports")
+      FileUtils.mkdir_p(report_dir)
+      File.write(File.join(report_dir, "metadata.yml"), YAML.dump({
+        "status" => "fail",
+        "results" => { "passed" => 3, "total" => 3 }
+      }))
+
+      discoverer = StubDiscoverer.new(packages: [], tests: {})
+      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+      result = { status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0 }
+      overridden = orchestrator.send(:override_from_metadata, result)
+
+      assert_equal "pass", overridden[:status]
+      assert_equal 3, overridden[:passed_cases]
+      assert_equal 3, overridden[:total_cases]
+    end
+  end
+
+  def test_override_from_metadata_keeps_fail_when_cases_differ
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      FileUtils.mkdir_p(report_dir)
+      File.write(File.join(report_dir, "metadata.yml"), YAML.dump({
+        "status" => "fail",
+        "results" => { "passed" => 2, "total" => 3 }
+      }))
+
+      discoverer = StubDiscoverer.new(packages: [], tests: {})
+      orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+
+      result = { status: "fail", report_dir: report_dir, passed_cases: 0, total_cases: 0 }
+      overridden = orchestrator.send(:override_from_metadata, result)
+
+      assert_equal "fail", overridden[:status]
+    end
+  end
+
   # --- Failure stub writing tests ---
 
   def test_write_failure_stubs_creates_metadata_for_errored_tests
@@ -1294,6 +1453,48 @@ class SuiteOrchestratorTest < Minitest::Test
       assert_equal "ace-lint", data["package"]
       assert_equal "error", data["status"]
       assert_equal "TS-LINT-001", data["test-id"]
+    end
+  end
+
+  def test_write_failure_stubs_writes_subprocess_output_log
+    Dir.mktmpdir do |tmpdir|
+      discoverer = StubDiscoverer.new(
+        packages: ["ace-lint"],
+        tests: { "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"] }
+      )
+
+      ts_counter = 0
+      timestamp_gen = -> { ts_counter += 1; "stub#{format("%03d", ts_counter)}" }
+
+      orchestrator = SuiteOrchestrator.new(
+        discoverer: discoverer,
+        output: @output,
+        base_dir: tmpdir,
+        timestamp_generator: timestamp_gen,
+        suite_report_writer: StubSuiteReportWriter.new,
+        scenario_loader: StubScenarioLoader.new
+      )
+
+      raw_output = "Running TS-LINT-001...\nError: Provider 503\nSome diagnostic info here"
+      results = {
+        packages: {
+          "ace-lint" => [
+            { status: "error", error: "Provider 503", test_name: "TS-LINT-001",
+              report_dir: nil, passed_cases: nil, total_cases: nil,
+              raw_output: raw_output }
+          ]
+        }
+      }
+      package_tests = {
+        "ace-lint" => ["#{tmpdir}/ace-lint/test/e2e/TS-LINT-001/scenario.yml"]
+      }
+
+      orchestrator.send(:write_failure_stubs, results, package_tests)
+
+      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      log_files = Dir.glob(File.join(cache_dir, "*-reports", "subprocess_output.log"))
+      assert_equal 1, log_files.size, "Should write subprocess_output.log alongside metadata stub"
+      assert_equal raw_output, File.read(log_files.first)
     end
   end
 

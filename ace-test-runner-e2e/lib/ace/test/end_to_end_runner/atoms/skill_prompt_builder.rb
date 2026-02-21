@@ -65,13 +65,15 @@ module Ace
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @param sandbox_path [String, nil] Path to pre-populated sandbox (skips setup steps)
           # @param env_vars [Hash, nil] Environment variables from setup execution
+          # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [String] Skill invocation prompt
-          def build_skill_prompt(scenario, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil)
+          def build_skill_prompt(scenario, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
             cmd = "/ace:e2e-run #{scenario.package} #{scenario.test_id}"
             cmd += " #{test_cases.join(',')}" if test_cases&.any?
             cmd += " --run-id #{run_id}" if run_id
             cmd += " --sandbox #{sandbox_path}" if sandbox_path
             cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(',')}" if env_vars&.any?
+            cmd += " --report-dir #{report_dir}" if report_dir
             build_execution_prompt(command: cmd, tc_mode: false)
           end
 
