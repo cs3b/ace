@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.16] - 2026-02-21
+
+### Fixed
+- Tmux sessions created by E2E test setup (`tmux-session` step) are now cleaned up after test execution via `ensure` blocks in `TestOrchestrator`
+- `SetupExecutor` instance returned from `setup_sandbox_if_ts` so `teardown` is called reliably in both single-test and parallel-test paths
+
+### Changed
+- Tmux session naming uses scenario test ID (`{test_id}-e2e`, e.g., `TS-OVERSEER-001-e2e`) instead of generic `ace-e2e-{timestamp}` for easier identification
+- `SetupExecutor#execute` accepts `scenario_name:` parameter for descriptive session naming
+
+### Added
+- Unit tests for tmux session naming (scenario-based and fallback) and teardown cleanup
+
 ## [0.16.15] - 2026-02-21
 
 ### Added

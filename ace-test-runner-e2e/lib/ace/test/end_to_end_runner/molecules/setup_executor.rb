@@ -21,12 +21,14 @@ module Ace
           # @param setup_steps [Array] Setup steps from scenario.yml
           # @param sandbox_dir [String] Path to the sandbox directory
           # @param fixture_source [String, nil] Path to the fixtures/ directory
+          # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
-          def execute(setup_steps:, sandbox_dir:, fixture_source: nil)
+          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil)
             FileUtils.mkdir_p(sandbox_dir)
             env = {}
             steps_completed = 0
             @tmux_session = nil
+            @scenario_name = scenario_name
 
             setup_steps.each do |step|
               execute_step(step, sandbox_dir, env, fixture_source)
@@ -88,7 +90,7 @@ module Ace
 
           # Create an isolated detached tmux session and store its name in env
           def handle_tmux_session(env)
-            session_name = "ace-e2e-#{Time.now.to_i}"
+            session_name = @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{Time.now.to_i}"
             _stdout, stderr, status = Open3.capture3("tmux", "new-session", "-d", "-s", session_name)
             raise "Failed to create tmux session '#{session_name}': #{stderr.strip}" unless status.success?
 
