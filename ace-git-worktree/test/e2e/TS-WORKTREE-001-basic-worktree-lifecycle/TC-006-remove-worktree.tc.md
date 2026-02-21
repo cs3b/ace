@@ -21,7 +21,7 @@ Verify worktree removal works correctly.
 
 3. Verify worktree was removed
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    test ! -d "$WORKTREES_ROOT/feature-wt" && echo "Directory removed - PASS"
    ace-git-worktree list | grep -v feature/test-worktree && echo "Not in list - PASS"
    ```

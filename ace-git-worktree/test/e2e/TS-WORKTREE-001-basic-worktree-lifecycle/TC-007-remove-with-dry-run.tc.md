@@ -16,7 +16,7 @@ Verify --dry-run shows what would be removed without removing.
 
 2. Verify worktree still exists
    ```bash
-   WORKTREES_ROOT="$(pwd)/../worktrees"
+   WORKTREES_ROOT="$(pwd)/worktrees"
    test -d "$WORKTREES_ROOT/new-feature-wt" && echo "Directory still exists - PASS"
    ace-git-worktree list | grep new-feature && echo "Still in list - PASS"
    ```
