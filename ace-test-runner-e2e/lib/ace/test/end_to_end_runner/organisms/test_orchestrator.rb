@@ -92,21 +92,23 @@ module Ace
           # @param scenario [Models::TestScenario] The test scenario
           # @param timestamp [String] Timestamp for sandbox directory naming
           # @param output [IO] Output stream for progress messages
-          # @return [Array(String, Hash), Array(nil, nil)] [sandbox_path, env_vars] or [nil, nil]
+          # @return [Array(String, Hash, SetupExecutor)] [sandbox_path, env_vars, setup_executor] or [nil, nil, nil]
           def setup_sandbox_if_ts(scenario, timestamp, output)
-            return [nil, nil] unless cli_provider? && scenario.setup_steps.any?
+            return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
             sandbox_dir = File.join(@base_dir, ".cache", "ace-test-e2e", scenario.dir_name(timestamp))
             setup_executor = Molecules::SetupExecutor.new
             result = setup_executor.execute(
               setup_steps: scenario.setup_steps,
               sandbox_dir: sandbox_dir,
-              fixture_source: scenario.fixture_path
+              fixture_source: scenario.fixture_path,
+              scenario_name: scenario.test_id
             )
 
             unless result[:success]
               output.puts "Warning: sandbox setup failed: #{result[:error]}"
-              return [nil, nil]
+              setup_executor.teardown
+              return [nil, nil, nil]
             end
 
             # Copy TC definition files so execute.wf.md can discover test cases in sandbox
@@ -117,7 +119,7 @@ module Ace
               env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], sandbox_dir)
             end
 
-            [File.expand_path(sandbox_dir), env]
+            [File.expand_path(sandbox_dir), env, setup_executor]
           end
 
           # Copy *.tc.md and scenario.yml from scenario dir into sandbox root
@@ -142,6 +144,7 @@ module Ace
           def run_single_test(file, timestamp, cli_args, output, test_cases: nil, report_dir: nil)
             scenario = @loader.load(File.dirname(file))
             display = build_display_manager([scenario], output)
+            setup_executor = nil
 
             output.puts "Running E2E test: #{scenario.test_id} (#{scenario.package})"
             if test_cases
@@ -153,9 +156,9 @@ module Ace
             # When report_dir is provided, derive sandbox path from it (strip -reports suffix)
             if report_dir
               sandbox_path = report_dir.sub(/-reports\z/, "")
-              sandbox_path, env_vars = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
+              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output) unless Dir.exist?(sandbox_path)
             else
-              sandbox_path, env_vars = setup_sandbox_if_ts(scenario, timestamp, output)
+              sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
             end
             result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
                                        sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir)
@@ -181,6 +184,8 @@ module Ace
             output.puts "Report: #{result.report_dir}" if result.report_dir
 
             [result]
+          ensure
+            setup_executor&.teardown
           end
 
           # Run all tests in a package
@@ -233,6 +238,7 @@ module Ace
                   end
 
                   # Skip scenario entirely when filtering is active but no test cases match
+                  setup_executor = nil
                   if test_cases && scenario_test_cases.nil?
                     result = Models::TestResult.new(
                       test_id: scenario.test_id,
@@ -241,9 +247,13 @@ module Ace
                       summary: "Skipped: no matching test cases"
                     )
                   else
-                    sandbox_path, env_vars = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
-                    result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: scenario_test_cases,
-                                               sandbox_path: sandbox_path, env_vars: env_vars)
+                    begin
+                      sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
+                      result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: scenario_test_cases,
+                                                 sandbox_path: sandbox_path, env_vars: env_vars)
+                    ensure
+                      setup_executor&.teardown
+                    end
                   end
 
                   report_dir = report_dir_for(scenario, run_id || timestamp)

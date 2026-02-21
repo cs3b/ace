@@ -220,4 +220,63 @@ class SetupExecutorTest < Minitest::Test
       assert_equal({}, result[:env])
     end
   end
+
+  def test_tmux_session_uses_scenario_name_when_provided
+    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: ["tmux-session"],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-TEST-001"
+      )
+
+      assert result[:success]
+      assert_equal "TS-TEST-001-e2e", result[:tmux_session]
+      assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
+    ensure
+      @executor.teardown
+    end
+  end
+
+  def test_tmux_session_uses_fallback_name_without_scenario_name
+    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: ["tmux-session"],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_match(/\Aace-e2e-\d+\z/, result[:tmux_session])
+    ensure
+      @executor.teardown
+    end
+  end
+
+  def test_teardown_clears_tmux_session
+    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: ["tmux-session"],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-TEARDOWN-001"
+      )
+
+      assert result[:success]
+      session_name = result[:tmux_session]
+
+      # Session should exist before teardown
+      assert system("tmux", "has-session", "-t", session_name, out: File::NULL, err: File::NULL),
+        "Session should exist before teardown"
+
+      @executor.teardown
+
+      # Session should be gone after teardown
+      refute system("tmux", "has-session", "-t", session_name, out: File::NULL, err: File::NULL),
+        "Session should not exist after teardown"
+    end
+  end
 end
