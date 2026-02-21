@@ -470,6 +470,59 @@ The `ace-test` tool only runs files matching `*_test.rb`.
 10. **Keep tests focused** - One scenario per test file
 11. **Version prerequisites** - Specify exact tool versions if critical
 
+## Refactoring Resilience
+
+When refactoring changes file paths, protocol URIs, or command names, E2E tests are the most likely to break silently. These patterns prevent fragile tests from becoming a multi-commit tail of fixes.
+
+### Pre-Refactoring Checklist
+
+Before starting a rename/namespace/migration that affects paths or identifiers:
+
+1. **Run baseline E2E suite** — Establish that all tests pass before changes begin
+2. **Audit test cases for hardcoded references** to the patterns being changed:
+   ```bash
+   ace-search search "old-pattern" --content --hidden --glob "*/test/e2e/**"
+   ```
+3. **Count affected test cases** — If >5 TCs reference the changing pattern, plan test updates as a subtask (not follow-up)
+
+### Refactoring-Proof Patterns
+
+- **Use variables for paths, not literals:**
+  ```bash
+  # BAD: Hardcoded path breaks when workflow moves
+  ace-bundle wfi://lint/run
+
+  # GOOD: Variable absorbs path changes
+  WORKFLOW="wfi://lint/run"
+  ace-bundle "$WORKFLOW"
+  ```
+
+- **Use flexible regex for tmux session names:**
+  ```bash
+  # BAD: Exact match breaks on session name format change
+  tmux has-session -t "ace-worktree-task-001" 2>/dev/null
+
+  # GOOD: Pattern match is resilient to prefix/suffix changes
+  tmux list-sessions 2>/dev/null | grep -q "task-001"
+  ```
+
+- **Discover paths at runtime instead of hardcoding:**
+  ```bash
+  # BAD: Assumes specific directory structure
+  REPORT=".cache/ace-test-e2e/lint-ts001-reports/summary.r.md"
+
+  # GOOD: Find the report dynamically
+  REPORT=$(find .cache/ace-test-e2e -name "summary.r.md" -path "*lint*ts001*" | head -1)
+  ```
+
+### Post-Refactoring Smoke Run
+
+After completing a refactoring that changes paths or identifiers:
+
+1. Run the E2E suite for affected packages — failures here indicate missed reference updates
+2. Fix any broken test cases as part of the refactoring work, not as separate follow-up commits
+3. Update `last-verified` metadata in passing scenarios
+
 ## Avoiding False Positive Tests
 
 E2E tests are only valuable if they catch real bugs. A false positive test — one that passes but validates nothing real — is worse than no test at all, because it creates false confidence.
