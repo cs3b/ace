@@ -24,7 +24,7 @@ setup:
   # Make task 001 safe to prune: mark done, complete assignment, ensure tracked changes are committed
   - run: |
       TASK_SPEC=".ace-taskflow/v.0.1.0/t/001-prune-safe/001-prune-safe.s.md"
-      sed -i 's/status: pending/status: done/' "$TASK_SPEC"
+      sed -i 's/status: [a-z_-]*/status: done/' "$TASK_SPEC"
       git add "$TASK_SPEC" && git commit -q -m "Mark task 001 as done"
 
       WORKTREE_001=$(git worktree list | grep "task\.001" | awk '{print $1}' | head -1)
