@@ -103,9 +103,16 @@ module Ace
 
     # Default cache directory for assignments
     # Returns an absolute path resolved from project root.
+    # Respects CACHE_BASE environment variable for sandboxed/isolated testing.
     # Respects PROJECT_ROOT_PATH environment variable for sandboxed/isolated testing.
     # @return [String] Cache directory path (absolute)
     def self.cache_dir
+      # Allow explicit CACHE_BASE override for testing/sandboxing
+      cache_base = ENV["CACHE_BASE"]
+      if cache_base && !cache_base.empty?
+        return File.expand_path(cache_base)
+      end
+
       relative_path = config["cache_dir"] || ".cache/ace-assign"
 
       # If already absolute, return as-is
