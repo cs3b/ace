@@ -35,10 +35,24 @@ module Ace
             label = group.scope_name.to_s.empty? ? DEFAULT_SCOPE_NAME : group.scope_name
             puts "[#{index + 1}/#{ordered_groups.length}] Committing #{label} changes..." unless options.quiet
 
-            unless @file_stager.stage_paths(group.files)
-              result.add_failure(group, @file_stager.last_error || "Failed to stage files")
+            unless @file_stager.stage_paths(group.files, quiet: options.quiet)
+              error_msg = @file_stager.last_error || "Failed to stage files"
+              result.add_failure(group, error_msg)
+              unless options.quiet
+                warn "✗ Failed to stage files for scope '#{label}':"
+                warn "  #{error_msg}"
+              end
               rollback_to(original_head, result, options)
               return result
+            end
+
+            # Check if all files were gitignored - skip commit for this group
+            if @file_stager.all_files_skipped?
+              unless options.quiet
+                puts "✓ No files to commit for scope '#{label}' (all gitignored)"
+              end
+              result.add_skipped(group, "All files gitignored")
+              next
             end
 
             message = messages[index]
@@ -55,6 +69,9 @@ module Ace
             scope_label = group.scope_name.to_s.empty? ? DEFAULT_SCOPE_NAME : group.scope_name
             error_msg = "Failed to commit scope '#{scope_label}': #{e.message}"
             result.add_failure(group, error_msg)
+            unless options.quiet
+              warn "✗ #{error_msg}"
+            end
             rollback_to(original_head, result, options)
             return result
           end

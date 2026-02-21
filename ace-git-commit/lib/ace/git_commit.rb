@@ -8,6 +8,7 @@ require "ace/llm"
 
 # Require all components
 require_relative "git_commit/atoms/git_executor"
+require_relative "git_commit/atoms/gitignore_checker"
 require_relative "git_commit/molecules/diff_analyzer"
 require_relative "git_commit/molecules/message_generator"
 require_relative "git_commit/molecules/file_stager"
