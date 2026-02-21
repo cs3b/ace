@@ -154,61 +154,42 @@ module Ace
           def self.from_git_output_list(output)
             return [] if output.nil? || output.empty?
 
-            lines = output.strip.split("\n")
+            # Split by blank lines to get per-worktree blocks
+            blocks = output.strip.split(/\n\n+/)
             worktrees = []
 
-            # Parse porcelain format: 3 lines per worktree
-            i = 0
-            while i < lines.length
-              line = lines[i].strip
+            blocks.each do |block|
+              lines = block.strip.split("\n").map(&:strip)
+              next unless lines.first&.start_with?("worktree ")
 
-              if line.start_with?("worktree ")
-                # Parse worktree block
-                path = line.sub(/^worktree\s+/, "")
+              path = lines.first.sub(/^worktree\s+/, "")
+              commit = nil
+              branch = nil
+              detached = false
+              bare = false
 
-                # Look ahead for HEAD and branch lines
-                head_line = i + 1 < lines.length ? lines[i + 1].strip : ""
-                branch_line = i + 2 < lines.length ? lines[i + 2].strip : ""
-
-                commit = nil
-                branch = nil
-                detached = false
-                bare = false
-
-                # Parse HEAD line
-                if head_line.start_with?("HEAD ")
-                  commit = head_line.sub(/^HEAD\s+/, "")
-                end
-
-                # Parse branch line
-                if branch_line.start_with?("branch ")
-                  branch_ref = branch_line.sub(/^branch\s+/, "")
-                  # Extract branch name from refs/heads/branch-name
+              lines[1..].each do |line|
+                if line.start_with?("HEAD ")
+                  commit = line.sub(/^HEAD\s+/, "")
+                elsif line.start_with?("branch ")
+                  branch_ref = line.sub(/^branch\s+/, "")
                   if branch_ref.start_with?("refs/heads/")
                     branch = branch_ref.sub(/^refs\/heads\//, "")
                   end
-                else
-                  # No branch line means detached HEAD
+                elsif line == "detached"
                   detached = true
+                elsif line == "bare"
+                  bare = true
                 end
-
-                # Try to extract task ID from path or branch
-                task_id = extract_task_id(path, branch)
-
-                worktrees << new(
-                  path: path,
-                  branch: branch,
-                  commit: commit,
-                  task_id: task_id,
-                  bare: bare,
-                  detached: detached
-                )
-
-                i += 3  # Skip the next 2 lines (HEAD and branch)
-              else
-                # Skip this line (might be empty or malformed)
-                i += 1
+                # skip: locked, prunable, empty lines
               end
+
+              # Detached if no branch line was found and not bare
+              detached = true if branch.nil? && !bare && commit
+
+              task_id = extract_task_id(path, branch)
+              worktrees << new(path: path, branch: branch, commit: commit,
+                               task_id: task_id, bare: bare, detached: detached)
             end
 
             worktrees
@@ -298,7 +279,7 @@ module Ace
           # @return [String, nil] Extracted task ID or nil
           def self.extract_task_id(path, branch)
             # Try to extract from path first (e.g., task.081, 081-work)
-            path_task_id = extract_task_id_from_string(path)
+            path_task_id = extract_task_id_from_string(File.basename(path))
             return path_task_id if path_task_id
 
             # Try to extract from branch name (e.g., 081-fix-something)
