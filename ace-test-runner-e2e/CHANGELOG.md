@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.12] - 2026-02-21
+
+### Fixed
+- Pass `--report-dir` explicitly from suite orchestrator to inner subprocesses, eliminating directory name mismatch between Ruby `short_id` computation and LLM agent interpretation
+- Thread `report_dir` parameter through the full execution chain: `SuiteOrchestrator` → CLI `--report-dir` option → `TestOrchestrator` → `TestExecutor` → `SkillPromptBuilder` → workflow
+
+### Added
+- `--report-dir` CLI option for `ace-test-e2e` to override computed report directory path
+- `REPORT_DIR` parameter in `run.wf.md` workflow instructions for agent-side report path override
+
+## [0.16.11] - 2026-02-21
+
+### Fixed
+- Add `-b main` to `git init` in `SetupExecutor` to ensure consistent default branch name regardless of system git configuration
+
+## [0.16.10] - 2026-02-21
+
+### Added
+- Save subprocess raw output (`subprocess_output.log`) for all test results (pass, fail, error) in report directories for diagnostic context
+- Write `subprocess_output.log` alongside failure stub `metadata.yml` when subprocess has no report directory
+
+### Technical
+- Add `save_subprocess_output` method to persist subprocess stdout+stderr to report directories
+- Attach `:raw_output` to result hashes in both parallel and sequential execution paths
+- Add tests for `parse_subprocess_result` raw output inclusion, `save_subprocess_output` behavior, and failure stub output logging
+
+## [0.16.9] - 2026-02-21
+
+### Fixed
+- Downcase status in `SkillResultParser.normalize_status` so `"Pass"` and `"PASS"` are correctly recognized as `"pass"`
+- Downcase status in `ResultParser.normalize_result` for JSON/API path consistency
+- Reconcile scenario status with case counts in `SuiteOrchestrator.override_from_metadata` — override to `"pass"` when all cases passed but metadata status is incorrect
+- Reconcile scenario status with case counts in `TestOrchestrator.read_agent_result` — same safety net for CLI provider metadata path
+
 ## [0.16.8] - 2026-02-21
 
 ### Fixed
