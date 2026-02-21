@@ -12,3 +12,4 @@ setup:
       PROJECT_ROOT_PATH: .
       CACHE_BASE: .cache/ace-assign
   - copy-fixtures
+  - run: cp phases/8pjrkg-job.yml job.yaml
