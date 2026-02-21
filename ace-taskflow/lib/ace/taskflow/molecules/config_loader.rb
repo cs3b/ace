@@ -72,6 +72,27 @@ module Ace
         end
         private_class_method :load_gem_defaults_only
 
+        # Load config from a specific project root directory
+        # Used by find_root to ensure config comes from the discovered project root,
+        # not from Dir.pwd (which may be a different project)
+        # @param project_root [String] Absolute path to the project root
+        # @return [Hash] Configuration from the project root
+        def self.load_config_from_project_root(project_root)
+          config_file = File.join(project_root, ".ace", "taskflow", "config.yml")
+
+          if File.exist?(config_file)
+            content = YAML.safe_load_file(config_file, permitted_classes: [], aliases: true)
+            taskflow_section = content&.dig("taskflow") || {}
+            extract_taskflow_config(taskflow_section)
+          else
+            load # Fallback to cascade when no config at project root
+          end
+        rescue Psych::SyntaxError, Psych::BadAlias => e
+          warn "Warning: Failed to parse taskflow config at #{config_file}: #{e.message}"
+          load # Fallback to cascade
+        end
+        private_class_method :load_config_from_project_root
+
         # Load specific configuration section
         # @param section [String] Section name (e.g., "taskflow", "idea")
         # @return [Hash] Configuration section
@@ -109,7 +130,9 @@ module Ace
           end
 
           # 2. Get configured taskflow root directory name
-          config = load
+          # Load config from the discovered project root specifically,
+          # not from Dir.pwd which may differ when PROJECT_ROOT_PATH is set
+          config = load_config_from_project_root(project_root)
           root_dir = config["root"] || ".ace-taskflow"
 
           # 3. Build absolute path: project_root + taskflow_root
