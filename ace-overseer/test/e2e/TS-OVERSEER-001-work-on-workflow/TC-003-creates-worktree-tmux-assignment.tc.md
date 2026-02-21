@@ -36,14 +36,14 @@ Verify the full `ace-overseer work-on --task 001` pipeline: creates a git worktr
 
 5. Verify tmux window was created
    ```bash
-   WINDOWS=$(tmux list-windows -t "ace-e2e-test" 2>&1)
+   WINDOWS=$(tmux list-windows -t "${ACE_TMUX_SESSION:-ace-e2e-test}" 2>&1)
    echo "$WINDOWS"
-   echo "$WINDOWS" | grep -q "t001" && echo "PASS: Tmux window t001 exists" || echo "FAIL: No tmux window t001"
+   echo "$WINDOWS" | grep -qE "t001|task\.001" && echo "PASS: Tmux window for task 001 exists" || echo "FAIL: No tmux window for task 001"
    ```
 
 6. Verify assignment was initialised
    ```bash
-   WORKTREE_PATH=$(git worktree list | grep "001" | awk '{print $1}')
+   WORKTREE_PATH=$(git worktree list | grep "001" | awk '{print $1}' | head -1)
    if [ -n "$WORKTREE_PATH" ]; then
      ASSIGN_OUTPUT=$(cd "$WORKTREE_PATH" && PROJECT_ROOT_PATH="$WORKTREE_PATH" ace-assign status 2>&1)
      echo "$ASSIGN_OUTPUT"
@@ -57,5 +57,5 @@ Verify the full `ace-overseer work-on --task 001` pipeline: creates a git worktr
 
 - Exit code: 0
 - Git worktree created for task 001
-- Tmux window "t001" created in session "ace-e2e-test"
+- Tmux window for task 001 created in session "$ACE_TMUX_SESSION"
 - Assignment initialised with the default "work-on-task" preset

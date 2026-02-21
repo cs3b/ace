@@ -9,7 +9,7 @@ module Ace
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
           @tmux_window_opener = tmux_window_opener || Molecules::TmuxWindowOpener.new
           @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new
-          @task_loader = task_loader || Ace::Taskflow::Molecules::TaskLoader.new
+          @task_loader = task_loader || Ace::Taskflow::Molecules::TaskLoader.new(task_root_path)
           @config = config || Ace::Overseer.config
           @assignment_detector = assignment_detector
         end
@@ -76,6 +76,12 @@ module Ace
         end
 
         private
+
+        def task_root_path
+          project_root = ENV["PROJECT_ROOT_PATH"]
+          base = project_root ? File.expand_path(project_root) : Dir.pwd
+          File.join(base, ".ace-taskflow")
+        end
 
         def extract_subtask_refs(task)
           return nil unless task[:is_orchestrator] && task[:subtask_ids]&.any?
