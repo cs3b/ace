@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-02-21
+
+### Fixed
+- Fix TC-003 tmux window verification to use `tmux list-windows -a` (all sessions) to avoid env var propagation issues in E2E test agents
+
 ## [0.4.5] - 2026-02-21
 
 ### Fixed
