@@ -1,6 +1,6 @@
 ---
 name: search
-description: [DEPRECATED] Use `/ace:search-run` instead - SEARCH code patterns and files
+description: [DEPRECATED] Use `/ace_search_run-run` instead - SEARCH code patterns and files
 expected_params:
   required:
   - pattern: Search pattern (text, regex, file glob, or auto-detected)
@@ -16,7 +16,7 @@ source: ace-search
 ---
 
 > **DEPRECATED**: This agent definition has been converted to a skill command.
-> **Use instead**: `/ace:search-run` which delegates to `ace-bundle wfi://search/run`
+> **Use instead**: `/ace_search_run-run` which delegates to `ace-bundle wfi://search/run`
 > **Migration**: The workflow instruction is at `ace-search/handbook/workflow-instructions/search.wf.md`
 > **Reason**: Skills are the preferred pattern for Claude Code integration
 
