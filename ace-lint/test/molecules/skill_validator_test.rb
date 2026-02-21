@@ -59,7 +59,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     refute result.success?
     error_messages = result.errors.map(&:message)
 
-    assert error_messages.any? { |msg| msg.include?("ace:") || msg.include?("ace-") }
+    assert error_messages.any? { |msg| msg.include?("ace_") }
   end
 
   # Workflow validation tests
@@ -107,7 +107,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_validate_content_directly
     content = <<~MARKDOWN
       ---
-      name: ace:direct-test
+      name: ace_direct_test
       description: Test direct content validation
       # bundle: no-fork
       # agent: Bash
@@ -167,7 +167,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_valid_skill
     content = <<~MARKDOWN
       ---
-      name: ace:pure-test
+      name: ace_pure_test
       description: A valid test skill
       # bundle: no-fork
       # agent: Bash
@@ -190,7 +190,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_missing_required_fields
     content = <<~MARKDOWN
       ---
-      name: ace:incomplete
+      name: ace_incomplete
       description: Missing required fields
       ---
 
@@ -210,7 +210,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_invalid_tools
     content = <<~MARKDOWN
       ---
-      name: ace:invalid-tools
+      name: ace_invalid_tools
       description: Skill with invalid tools
       # bundle: no-fork
       # agent: general-purpose
@@ -237,7 +237,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
   def test_pure_missing_comments
     content = <<~MARKDOWN
       ---
-      name: ace:missing-comments
+      name: ace_missing_comments
       description: Skill missing required comments
       user-invocable: true
       allowed-tools:
@@ -270,7 +270,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
       source: test
       ---
 
-      Name doesn't start with ace: or ace-.
+      Name doesn't start with ace_.
     MARKDOWN
 
     result = Ace::Lint::Molecules::SkillValidator.validate_content("test.md", content, :skill)
@@ -278,7 +278,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     refute result.success?
     error_messages = result.errors.map(&:message)
 
-    assert error_messages.any? { |msg| msg.include?("ace:") || msg.include?("ace-") }
+    assert error_messages.any? { |msg| msg.include?("ace_") }
   end
 
   def test_pure_invalid_regex_pattern_in_schema
@@ -287,7 +287,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
     # For now, verify the validate_field method handles it correctly
     content = <<~MARKDOWN
       ---
-      name: ace:test
+      name: ace_test
       description: Test
       # bundle: no-fork
       # agent: Bash
@@ -325,7 +325,7 @@ class Ace::Lint::Molecules::SkillValidatorTest < Minitest::Test
 
     refute result.success?
     # The name field is on line 2 (after ---), so error should reference that line
-    name_error = result.errors.find { |e| e.message.include?("ace:") || e.message.include?("ace-") }
+    name_error = result.errors.find { |e| e.message.include?("ace_") }
     assert name_error, "Expected an error about name pattern"
     assert_equal 2, name_error.line, "Expected error to report line 2 for name field"
   end

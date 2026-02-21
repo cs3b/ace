@@ -9,4 +9,4 @@ allowed-tools:
 source: ace-test
 ---
 
-This skill name doesn't start with ace: or ace-.
+This skill name doesn't start with ace_.
