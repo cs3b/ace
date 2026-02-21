@@ -50,7 +50,8 @@ module Ace
                     system_file: nil,
                     prompt_file: nil,
                     cli_args: nil,
-                    sandbox: nil)
+                    sandbox: nil,
+                    subprocess_env: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -89,6 +90,7 @@ module Ace
         generation_opts[:prompt_file] = prompt_file if prompt_file
         generation_opts[:cli_args] = cli_args if cli_args && !(cli_args.respond_to?(:empty?) && cli_args.empty?)
         generation_opts[:sandbox] = sandbox if sandbox
+        generation_opts[:subprocess_env] = subprocess_env if subprocess_env
 
         # Debug output if requested
         if debug
