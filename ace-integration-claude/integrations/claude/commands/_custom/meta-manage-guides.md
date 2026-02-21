@@ -15,7 +15,7 @@ Create, update, and maintain development guides in the handbook.
 
 ## Usage
 
-Type `/meta-manage-guides [guide-name] [action]` where:
+Type `/ace_handbook_manage-guides [guide-name] [action]` where:
 - `guide-name` is the name of the guide to manage
 - `action` is either "create", "update", or "review"
 
@@ -40,9 +40,9 @@ The workflow will:
 ## Examples
 
 ```
-/meta-manage-guides testing-strategy create
-/meta-manage-guides code-review update
-/meta-manage-guides security-practices review
+/ace_handbook_manage-guides testing-strategy create
+/ace_handbook_manage-guides code-review update
+/ace_handbook_manage-guides security-practices review
 ```
 
 ## Full Workflow
