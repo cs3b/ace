@@ -1,5 +1,5 @@
 ---
-name: ace:bundle
+name: ace_bundle
 description: Load project context from preset names, file paths, or protocol URLs
 # context: no-fork
 # agent: general-purpose

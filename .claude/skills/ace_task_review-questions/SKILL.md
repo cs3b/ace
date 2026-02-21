@@ -1,0 +1,20 @@
+---
+name: ace_task_review-questions
+description: Review and answer clarifying questions about task or implementation
+# context: no-fork
+# agent: general-purpose
+user-invocable: true
+allowed-tools:
+  - Bash(ace-taskflow:*)
+  - Bash(ace-bundle:*)
+  - Read
+  - Write
+  - TodoWrite
+argument-hint: [question-context]
+last_modified: 2026-01-10
+source: ace-taskflow
+---
+
+read and run `ace-bundle wfi://task/review-questions`
+
+read and run `ace-bundle wfi://git/commit`
