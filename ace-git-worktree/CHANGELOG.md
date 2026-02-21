@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.10] - 2026-02-21
+
+### Fixed
+- Fix task ID extraction from worktree path matching incidental 3-digit numbers in parent directories (e.g., `ace-task.273`) by using `File.basename` instead of full path
+
+### Technical
+- Add `WorktreeInfoTest` covering task ID extraction from porcelain output, parent-path false matches, and branch fallback
+
+## [0.13.9] - 2026-02-21
+
+### Fixed
+- Rewrite `from_git_output_list` to parse porcelain format by blank-line-separated blocks instead of fixed 3-line assumption, correctly handling prunable and detached worktrees
+
 ## [0.13.8] - 2026-02-21
 
 ### Fixed
