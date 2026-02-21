@@ -6,10 +6,10 @@ module Ace
       module CLI
         module Atoms
           module CommandFormatters
-            # Pi CLI: `/ace:commit` → `/skill:ace:commit`
+            # Pi CLI: `/ace_git_commit` → `/skill:ace_git_commit`
             PI_FORMATTER = ->(name) { "/skill:#{name}" }
 
-            # Codex CLI: `/ace:commit` → `$ace:commit`
+            # Codex CLI: `/ace_git_commit` → `$ace_git_commit`
             CODEX_FORMATTER = ->(name) { "$#{name}" }
           end
         end
