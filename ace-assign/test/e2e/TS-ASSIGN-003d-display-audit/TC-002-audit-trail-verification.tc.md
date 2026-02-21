@@ -42,7 +42,7 @@ Verify that all audit trail metadata fields are present and correctly populated 
    ```bash
    TIMESTAMP=$(grep 'renumbered_at:' "$RENAMED_FILE" | sed 's/renumbered_at: *//')
    echo "Timestamp: $TIMESTAMP"
-   echo "$TIMESTAMP" | grep -qE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T' && echo "PASS: ISO8601 format" || echo "FAIL: Not ISO8601"
+   echo "$TIMESTAMP" | grep -qE "^['\"]?[0-9]{4}-[0-9]{2}-[0-9]{2}T" && echo "PASS: ISO8601 format" || echo "FAIL: Not ISO8601"
    ```
 
 6. Add dynamic phase and verify dynamic audit trail
