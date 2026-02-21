@@ -1,7 +1,3 @@
-# KNOWN ISSUE: TC-001 launches a real LLM sub-agent via ace-assign fork-run,
-# which exhausts the outer E2E agent's context budget before writing reports.
-# This test needs redesign to pre-populate phase state deterministically
-# instead of running a live fork-run. See task 273 plan for details.
 test-id: TS-ASSIGN-004
 title: Fork Subtree Scope Isolation
 area: assign
