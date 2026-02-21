@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.555] - 2026-02-21
+
+### Fixed
+- **ace-test-runner-e2e v0.16.16**: Fix tmux session leak — `SetupExecutor#teardown` now called via `ensure` blocks in `TestOrchestrator` for both single and parallel test paths
+
+### Changed
+- **ace-test-runner-e2e v0.16.16**: Tmux session naming uses scenario test ID (`{test_id}-e2e`) instead of generic timestamp for easier identification
+
 ## [0.9.554] - 2026-02-21
 
 ### Added
