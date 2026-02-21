@@ -161,6 +161,7 @@ module Ace
             # The guard was added in Claude Code v2.1.41 to prevent nested interactive
             # sessions, but -p mode doesn't share session state.
             env = {"CLAUDECODE" => nil}
+            debug_subprocess("spawn timeout=#{timeout_val}s cmd=#{cmd.join(" ")} prompt_bytes=#{prompt.to_s.bytesize}")
             Molecules::SafeCapture.call(cmd, timeout: timeout_val, stdin_data: prompt.to_s, env: env, provider_name: "Claude")
           end
 
@@ -234,6 +235,12 @@ module Ace
           def handle_claude_error(error)
             # Re-raise the error for proper handling by the base client error flow
             raise error
+          end
+
+          def debug_subprocess(message)
+            return unless ENV["ACE_LLM_DEBUG_SUBPROCESS"] == "1"
+
+            $stderr.puts("[ClaudeCodeClient] #{message}")
           end
         end
       end
