@@ -10,6 +10,6 @@ requires:
 setup:
   - env:
       PROJECT_ROOT_PATH: .
-      CACHE_BASE: .cache/ace-assign-003d
-  - run: mkdir -p .cache/ace-assign-003d
+      CACHE_BASE: .cache/ace-assign
+  - run: mkdir -p .cache/ace-assign
   - copy-fixtures
