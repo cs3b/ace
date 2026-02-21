@@ -138,6 +138,11 @@ module Ace
             if current.nil? || !state.in_subtree?(fork_root, current.number)
               current = state.current_in_subtree(fork_root) || state.next_workable_in_subtree(fork_root)
             end
+            # Subtree exhausted (all phases done or failed) — return gracefully
+            if current.nil?
+              fresh_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+              return { assignment: assignment, state: fresh_state, completed: nil, current: nil }
+            end
           end
           raise Error, "No phase currently in progress. Try 'ace-assign add' to add a new phase or 'ace-assign retry' to retry a failed phase." unless current
 
