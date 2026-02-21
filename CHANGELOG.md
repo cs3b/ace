@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.557] - 2026-02-21
+
+### Technical
+- **ace-assign v0.12.10**: Stabilize `TS-ASSIGN-004` with deterministic scoped-status assertions (remove live nested `fork-run` dependency)
+- **ace-assign v0.12.10**: Rewrite `TS-ASSIGN-006` to deterministic preset-expansion checks and add E2E preset fixtures for reproducible job generation
+
 ## [0.9.556] - 2026-02-21
 
 ### Fixed
