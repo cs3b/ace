@@ -18,6 +18,17 @@ warning: ALL steps must be completed - there are TWO separate CHANGELOG.md files
 
 Complete version bump for a package including BOTH CHANGELOGs in a single commit.
 
+## What Counts as "Code"?
+
+In this system, **handbook content IS code**:
+
+- Workflow instructions (`.wf.md`) define agent execution paths
+- Guides (`.g.md`) define conventions and best practices
+- Phase definitions (`.phase.yml`) define assignment behavior
+- Skills (`SKILL.md`) define agent capabilities
+
+Changes to these files modify agent behavior and should trigger releases, just like Ruby code changes.
+
 **Files updated:**
 - `ace-[package]/lib/ace/[package]/version.rb`
 - `ace-[package]/CHANGELOG.md` (package changelog)
