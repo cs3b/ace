@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.556] - 2026-02-21
+
+### Fixed
+- **ace-llm-providers-cli v0.16.9**: `ClaudeCodeClient` merges `subprocess_env` into actual subprocess environment, fixing env vars like `ACE_TMUX_SESSION` not reaching `claude -p` processes
+- **ace-test-runner-e2e v0.16.17**: `TestExecutor` passes setup `env_vars` as `subprocess_env` to `QueryInterface.query`, preventing tmux windows from leaking into user sessions
+
+### Added
+- **ace-llm v0.22.3**: `subprocess_env:` parameter on `QueryInterface.query()` for CLI provider subprocess environment propagation
+
 ## [0.9.555] - 2026-02-21
 
 ### Fixed
