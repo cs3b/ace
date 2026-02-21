@@ -101,7 +101,7 @@ ace-review feedback list --session .cache/ace-review/sessions/review-8p2pk3
 **For thorough verification**, use the dedicated verification workflow:
 
 ```
-/ace:verify-feedback
+/ace_review_verify-feedback
 ```
 
 This workflow guides you through multi-dimensional claim analysis:
