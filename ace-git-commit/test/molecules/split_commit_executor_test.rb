@@ -32,16 +32,21 @@ class SplitCommitExecutorTest < TestCase
   end
 
   class FakeStager
-    attr_reader :last_error, :paths
+    attr_reader :last_error, :paths, :last_skipped_files
 
     def initialize
       @last_error = nil
       @paths = []
+      @last_skipped_files = []
     end
 
-    def stage_paths(paths)
+    def stage_paths(paths, quiet: false)
       @paths = paths
       true
+    end
+
+    def all_files_skipped?
+      false
     end
   end
 
@@ -144,7 +149,8 @@ class SplitCommitExecutorTest < TestCase
 
     stager = Class.new do
       define_method(:last_error) { nil }
-      define_method(:stage_paths) { |_| true }
+      define_method(:stage_paths) { |_, quiet: false| true }
+      define_method(:all_files_skipped?) { false }
     end.new
 
     diff = FakeDiff.new
@@ -192,10 +198,11 @@ class SplitCommitExecutorTest < TestCase
     stage_count = 0
     stager = Class.new do
       define_method(:last_error) { "Failed to stage files" }
-      define_method(:stage_paths) do |_|
+      define_method(:stage_paths) do |_, quiet: false|
         stage_count += 1
         stage_count <= 1 # First succeeds, second fails
       end
+      define_method(:all_files_skipped?) { false }
     end.new
 
     executor = Ace::GitCommit::Molecules::SplitCommitExecutor.new(
@@ -227,5 +234,140 @@ class SplitCommitExecutorTest < TestCase
     assert result.failed?, "Should fail when staging fails"
     assert git.executed.any? { |args| args == ["reset", "--soft", "abc123"] },
            "Should rollback to original HEAD on staging failure"
+  end
+
+  def test_skips_commit_when_all_files_gitignored
+    git = FakeGit.new
+    diff = FakeDiff.new
+    generator = FakeGenerator.new
+
+    # Create a stager that returns all_files_skipped? as true
+    stager = Class.new do
+      attr_reader :last_error, :last_skipped_files
+
+      def initialize
+        @last_error = nil
+        @last_skipped_files = [{ path: "ignored.log", pattern: "*.log" }]
+      end
+
+      def stage_paths(paths, quiet: false)
+        true
+      end
+
+      def all_files_skipped?
+        true
+      end
+    end.new
+
+    executor = Ace::GitCommit::Molecules::SplitCommitExecutor.new(
+      git_executor: git,
+      diff_analyzer: diff,
+      file_stager: stager,
+      message_generator: generator
+    )
+
+    groups = [
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "docs",
+        source: ".ace/git/commit.yml",
+        config: {},
+        files: ["README.md"]
+      ),
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "taskflow",
+        source: ".ace/git/commit.yml",
+        config: {},
+        files: ["task.md"]
+      )
+    ]
+
+    options = Ace::GitCommit::Models::CommitOptions.new(quiet: true)
+
+    result = executor.execute(groups, options)
+
+    assert result.success?, "Should succeed when all files are gitignored"
+    assert result.skipped?, "Should indicate some groups were skipped"
+    refute git.executed.any? { |args| args.first == "commit" }, "Should not commit gitignored groups"
+  end
+
+  def test_handles_mixed_valid_and_gitignored_groups
+    commit_count = 0
+    git = Class.new do
+      define_method(:initialize) { @executed = [] }
+      attr_reader :executed
+
+      define_method(:execute) do |*args|
+        @executed << args
+        if args == ["rev-parse", "HEAD"]
+          return "original123"
+        elsif args.first == "commit"
+          commit_count += 1
+          return "ok"
+        end
+        "ok"
+      end
+    end.new
+
+    diff = FakeDiff.new
+    generator = FakeGenerator.new
+
+    # First group has valid files, second has all gitignored
+    stage_count = 0
+    stager = Class.new do
+      attr_reader :last_error, :last_skipped_files
+
+      def initialize
+        @last_error = nil
+        @last_skipped_files = []
+        @stage_count = 0
+      end
+
+      def stage_paths(paths, quiet: false)
+        @stage_count += 1
+        if @stage_count == 1
+          @last_skipped_files = []
+          true
+        else
+          @last_skipped_files = [{ path: "ignored.log", pattern: "*.log" }]
+          true
+        end
+      end
+
+      def all_files_skipped?
+        @stage_count > 1
+      end
+    end.new
+
+    executor = Ace::GitCommit::Molecules::SplitCommitExecutor.new(
+      git_executor: git,
+      diff_analyzer: diff,
+      file_stager: stager,
+      message_generator: generator
+    )
+
+    groups = [
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "docs",
+        source: ".ace/git/commit.yml",
+        config: {},
+        files: ["README.md"]
+      ),
+      Ace::GitCommit::Models::CommitGroup.new(
+        scope_name: "taskflow",
+        source: ".ace/git/commit.yml",
+        config: {},
+        files: ["ignored.log"]
+      )
+    ]
+
+    options = Ace::GitCommit::Models::CommitOptions.new(quiet: true)
+
+    result = executor.execute(groups, options)
+
+    assert result.success?, "Should succeed with mixed valid and skipped groups"
+    assert result.skipped?, "Should indicate some groups were skipped"
+    assert_equal 1, commit_count, "Should only commit the valid group"
+    assert_equal 1, result.records.count { |r| r.status == :success }
+    assert_equal 1, result.records.count { |r| r.status == :skipped }
   end
 end
