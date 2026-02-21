@@ -24,7 +24,7 @@ The workflow accepts three input types:
 ### 1. Preset Name Only
 
 ```
-/ace:assign-prepare work-on-task --taskref 123
+/ace_assign_prepare work-on-task --taskref 123
 ```
 
 Loads the preset and injects parameter values.
@@ -32,7 +32,7 @@ Loads the preset and injects parameter values.
 ### 2. Informal Instructions Only
 
 ```
-/ace:assign-prepare "Work on task 123, create a PR, do 2 review cycles"
+/ace_assign_prepare "Work on task 123, create a PR, do 2 review cycles"
 ```
 
 Transforms prose into structured phases.
@@ -40,7 +40,7 @@ Transforms prose into structured phases.
 ### 3. Preset + Customization
 
 ```
-/ace:assign-prepare work-on-task --taskref 123 "skip onboarding, add security review"
+/ace_assign_prepare work-on-task --taskref 123 "skip onboarding, add security review"
 ```
 
 Loads preset then applies modifications.
@@ -77,7 +77,7 @@ parameters:
 
 steps:
   - name: phase-name
-    skill: ace:skill-name  # Optional skill reference
+    skill: ace_skill_name  # Optional skill reference
     instructions:
       - Phase instruction line one.
       - "Phase instruction with {{parameter}} placeholder."
@@ -182,7 +182,7 @@ Loops must be fully expanded into separate phases:
 ```yaml
 # "do 3 review cycles" becomes:
 - name: review-cycle-1
-  skill: ace:review-pr
+  skill: ace_review_pr
   instructions:
     - "Review the code (iteration 1 of 3)."
     - Focus on correctness and architecture.
@@ -193,7 +193,7 @@ Loops must be fully expanded into separate phases:
     - Commit changes after applying fixes.
 
 - name: review-cycle-2
-  skill: ace:review-pr
+  skill: ace_review_pr
   instructions:
     - "Review the code (iteration 2 of 3)."
     - Focus on edge cases and test coverage.
@@ -204,7 +204,7 @@ Loops must be fully expanded into separate phases:
     - Commit changes after applying fixes.
 
 - name: review-cycle-3
-  skill: ace:review-pr
+  skill: ace_review_pr
   instructions:
     - "Review the code (iteration 3 of 3)."
     - Final review for polish and completeness.
@@ -368,13 +368,13 @@ steps:
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: ace:task-work
+    skill: ace_task_work
     instructions:
       - Work on task 123.
       - Implement the required changes following project conventions.
 
   - name: create-pr
-    skill: ace:git-create-pr
+    skill: ace_git_create-pr
     instructions:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review phases.
@@ -397,7 +397,7 @@ steps:
 ### Example 1: Full Workflow Preset
 
 ```
-/ace:assign-prepare work-on-task --taskref 148
+/ace_assign_prepare work-on-task --taskref 148
 ```
 
 Creates job with 13 phases: onboard, work-on-task, release, create-pr, 2 review cycles (review + apply-feedback + release each), reorganize-commits, push-to-remote, update-pr-desc.
@@ -405,7 +405,7 @@ Creates job with 13 phases: onboard, work-on-task, release, create-pr, 2 review 
 ### Example 2: Informal Instructions
 
 ```
-/ace:assign-prepare "implement task 148, create pr, review twice"
+/ace_assign_prepare "implement task 148, create pr, review twice"
 ```
 
 Parses instructions and creates job with:
@@ -419,7 +419,7 @@ Parses instructions and creates job with:
 ### Example 3: Custom Output Path
 
 ```
-/ace:assign-prepare work-on-task --taskref 148 --output .cache/my-job.yaml
+/ace_assign_prepare work-on-task --taskref 148 --output .cache/my-job.yaml
 ```
 
 Writes configuration to specified path.
@@ -427,7 +427,7 @@ Writes configuration to specified path.
 ### Example 4: Multi-Task Batch (Comma-Separated)
 
 ```
-/ace:assign-prepare work-on-tasks --taskrefs 148,149,150
+/ace_assign_prepare work-on-tasks --taskrefs 148,149,150
 ```
 
 Creates job with hierarchical structure:
@@ -441,7 +441,7 @@ Creates job with hierarchical structure:
 ### Example 5: Multi-Task Batch (Range)
 
 ```
-/ace:assign-prepare work-on-tasks --taskrefs 148-152
+/ace_assign_prepare work-on-tasks --taskrefs 148-152
 ```
 
 Expands range to tasks 148, 149, 150, 151, 152.
@@ -449,7 +449,7 @@ Expands range to tasks 148, 149, 150, 151, 152.
 ### Example 6: Multi-Task Batch (Pattern)
 
 ```
-/ace:assign-prepare work-on-tasks --taskrefs "240.*"
+/ace_assign_prepare work-on-tasks --taskrefs "240.*"
 ```
 
 Expands pattern to match subtasks (requires resolution at prepare time).
@@ -471,7 +471,7 @@ After job.yaml is created:
 
 ```bash
 # Start the assignment
-/ace:assign-create job.yaml
+/ace_assign_create job.yaml
 
 # Or directly:
 ace-assign create job.yaml
@@ -480,7 +480,7 @@ ace-assign create job.yaml
 ace-assign status
 
 # Drive execution through the workflow
-/ace:assign-drive
+/ace_assign_drive
 ```
 
 **Note:** Job files created in `<task>/jobs/` stay in place when `ace-assign create` runs. Files created elsewhere are moved to `<task>/jobs/<session_id>-job.yml` for provenance. Always use `ace-assign status` to query the current assignment state.

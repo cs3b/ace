@@ -1,5 +1,5 @@
 name: review-pr
-skill: ace:review-pr
+skill: ace_review_pr
 description: Review code changes for correctness, style, and best practices
 
 prerequisites:

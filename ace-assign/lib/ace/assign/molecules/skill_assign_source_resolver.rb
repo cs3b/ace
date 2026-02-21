@@ -10,8 +10,8 @@ module Ace
       # Resolves assignment metadata from skill frontmatter.
       #
       # Flow:
-      # 1) Find SKILL.md by skill name (e.g., "ace:work-on-task")
-      # 2) Read assign.source URI from skill frontmatter (e.g., wfi://work-on-task)
+      # 1) Find SKILL.md by skill name (e.g., "ace_task_work")
+      # 2) Read assign.source URI from skill frontmatter (e.g., wfi://task/work)
       # 3) Resolve workflow file from URI
       # 4) Parse workflow assign frontmatter (sub-phases/context)
       class SkillAssignSourceResolver
@@ -35,7 +35,7 @@ module Ace
 
         # Resolve assign config for a skill.
         #
-        # @param skill_name [String] Skill identifier (e.g., "ace:work-on-task")
+        # @param skill_name [String] Skill identifier (e.g., "ace_task_work")
         # @return [Hash, nil] Parsed assign config (keys: :sub_phases, :context, etc.) or nil if not declared
         # @raise [Ace::Assign::Error] If skill declares an invalid/unresolvable source
         def resolve_assign_config(skill_name)

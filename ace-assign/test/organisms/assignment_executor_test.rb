@@ -117,8 +117,8 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_persists_skill_in_phase_files
     with_temp_cache do |cache_dir|
       phases = [
-        { "name" => "onboard", "skill" => "ace:onboard", "instructions" => "Load context" },
-        { "name" => "work", "skill" => "ace:custom-work", "instructions" => "Do work" },
+        { "name" => "onboard", "skill" => "ace_onboard", "instructions" => "Load context" },
+        { "name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work" },
         { "name" => "review", "instructions" => "Review changes" }
       ]
       config_path = create_test_config(cache_dir, steps: phases)
@@ -131,10 +131,10 @@ class AssignmentExecutorTest < AceAssignTestCase
       phase_files = Dir.glob(File.join(phases_dir, "*.ph.md")).sort
 
       first_content = File.read(phase_files[0])
-      assert_includes first_content, "skill: ace:onboard"
+      assert_includes first_content, "skill: ace_onboard"
 
       second_content = File.read(phase_files[1])
-      assert_includes second_content, "skill: ace:custom-work"
+      assert_includes second_content, "skill: ace_custom_work"
 
       # Third phase has no skill — should not have skill key
       third_content = File.read(phase_files[2])
@@ -145,7 +145,7 @@ class AssignmentExecutorTest < AceAssignTestCase
   def test_start_persists_skill_readable_by_queue_scanner
     with_temp_cache do |cache_dir|
       phases = [
-        { "name" => "work", "skill" => "ace:custom-work", "instructions" => "Do work" },
+        { "name" => "work", "skill" => "ace_custom_work", "instructions" => "Do work" },
         { "name" => "review", "instructions" => "Review" }
       ]
       config_path = create_test_config(cache_dir, steps: phases)
@@ -153,7 +153,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      assert_equal "ace:custom-work", result[:current].skill
+      assert_equal "ace_custom_work", result[:current].skill
       assert_nil result[:state].phases[1].skill
     end
   end
@@ -509,7 +509,7 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       File.write(File.join(project_root, ".claude", "skills", "ace_work-on-task", "SKILL.md"), <<~MD)
         ---
-        name: ace:work-on-task
+        name: ace_task_work
         assign:
           source: wfi://work-on-task
         ---
@@ -527,7 +527,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       MD
 
       phases = [
-        { "name" => "work-on-task", "skill" => "ace:work-on-task", "instructions" => "Do work" },
+        { "name" => "work-on-task", "skill" => "ace_task_work", "instructions" => "Do work" },
         { "name" => "review", "instructions" => "Review changes" }
       ]
       config_path = create_test_config(project_root, steps: phases)
@@ -567,8 +567,8 @@ class AssignmentExecutorTest < AceAssignTestCase
 
         # Child phases materialize from phase catalog metadata
         assert_equal "onboard", onboard_phase.skill
-        assert_equal "ace:plan-task", plan_phase.skill
-        assert_equal "ace:work-on-task", work_phase.skill
+        assert_equal "ace_task_plan", plan_phase.skill
+        assert_equal "ace_task_work", work_phase.skill
 
         # Parent is fork context: children remain non-fork and execute in same delegated subtree process
         assert_nil onboard_phase.context
@@ -593,7 +593,7 @@ class AssignmentExecutorTest < AceAssignTestCase
       FileUtils.mkdir_p(skill_dir)
       File.write(File.join(skill_dir, "SKILL.md"), <<~MD)
         ---
-        name: ace:work-on-task
+        name: ace_task_work
         assign:
           sub-phases:
             - onboard
@@ -606,10 +606,10 @@ class AssignmentExecutorTest < AceAssignTestCase
       phases = [
         {
           "name" => "work-on-task",
-          "skill" => "ace:work-on-task",
+          "skill" => "ace_task_work",
           "taskref" => "235.01",
           "sub_phases" => %w[onboard plan-task work-on-task],
-          "instructions" => "First: onboard yourself using /onboard skill to load project context.\n" \
+          "instructions" => "First: onboard yourself using /ace_onboard skill to load project context.\n" \
                             "Implement the selected task.\n" \
                             "When complete, mark the task as done: run `ace-taskflow task done 235.01`"
         }
@@ -636,7 +636,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes work_phase.instructions, "Action:"
         assert_includes work_phase.instructions, "Implement the required changes for task 235.01."
         assert_includes plan_phase.instructions, "Verification checklist (from parent phase goals):"
-        assert_includes plan_phase.instructions, "- First: onboard yourself using /onboard skill to load project context."
+        assert_includes plan_phase.instructions, "- First: onboard yourself using /ace_onboard skill to load project context."
         assert_includes work_phase.instructions, "- When complete, mark the task as done: run `ace-taskflow task done 235.01`"
       ensure
         if original_project_root.nil?

@@ -44,21 +44,21 @@ Uses the prepare-assignment workflow for mechanical preset expansion. Best for:
 ### 1. Natural Description (→ Compose Path)
 
 ```
-/ace:assign-start "implement task 148, create pr, review twice"
+/ace_assign_start "implement task 148, create pr, review twice"
 ```
 
 ### 2. Recipe or Preset Name (→ Auto-detected)
 
 ```
-/ace:assign-start work-on-task --taskref 123
-/ace:assign-start implement-with-pr --taskref 123
+/ace_assign_start work-on-task --taskref 123
+/ace_assign_start implement-with-pr --taskref 123
 ```
 
 ### 3. Multiple Tasks
 
 ```
-/ace:assign-start work-on-tasks --taskrefs 148,149,150
-/ace:assign-start "work on tasks 148,149,150" --taskrefs 148,149,150
+/ace_assign_start work-on-tasks --taskrefs 148,149,150
+/ace_assign_start "work on tasks 148,149,150" --taskrefs 148,149,150
 ```
 
 ## Process
@@ -116,7 +116,7 @@ Phases: 10 total
 
 First phase: onboard
 
-Start driving with: /ace:assign-drive
+Start driving with: /ace_assign_drive
 ```
 
 ## Next Steps
@@ -128,7 +128,7 @@ After starting the assignment:
 ace-assign status
 
 # Drive execution through the workflow
-/ace:assign-drive
+/ace_assign_drive
 ```
 
 ## Success Criteria
@@ -137,4 +137,4 @@ ace-assign status
 - Assignment directory created with proper structure
 - Phase files created with pending status
 - Clear summary provided to user
-- User knows how to proceed with /ace:assign-drive
+- User knows how to proceed with /ace_assign_drive

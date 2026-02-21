@@ -1,7 +1,7 @@
 # Multi-task workflow: batch implement → release → PR → review cycles → reorganize → push
-# Usage: /ace:assign-prepare work-on-tasks --taskrefs 148,149,150
-#        /ace:assign-prepare work-on-tasks --taskrefs 148-152
-#        /ace:assign-prepare work-on-tasks --taskrefs "240.*"
+# Usage: /ace_assign_prepare work-on-tasks --taskrefs 148,149,150
+#        /ace_assign_prepare work-on-tasks --taskrefs 148-152
+#        /ace_assign_prepare work-on-tasks --taskrefs "240.*"
 
 name: work-on-tasks
 description: Work on multiple tasks with PR, review cycles, release, and clean history
@@ -30,7 +30,7 @@ steps:
 
   - name: create-pr
     number: "030"
-    skill: ace:create-pr
+    skill: ace_git_create-pr
     instructions:
       - Create a pull request for the changes.
       - Include summary of all implemented tasks.
@@ -38,17 +38,17 @@ steps:
 
   - name: review-valid-1
     number: "040"
-    skill: ace:review-pr
+    skill: ace_review_pr
     context: fork
     instructions:
-      - "First: onboard yourself using /onboard skill to load project context."
+      - "First: onboard yourself using /ace_onboard skill to load project context."
       - Review the code for correctness.
       - Use preset code-valid.
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
 
   - name: apply-valid-1
     number: "050"
-    skill: ace:apply-feedback
+    skill: ace_review_apply-feedback
     instructions:
       - Apply feedback from valid review (medium+ priority).
       - Commit changes with descriptive messages.
@@ -62,17 +62,17 @@ steps:
 
   - name: review-fit-1
     number: "070"
-    skill: ace:review-pr
+    skill: ace_review_pr
     context: fork
     instructions:
-      - "First: onboard yourself using /onboard skill to load project context."
+      - "First: onboard yourself using /ace_onboard skill to load project context."
       - Review the code for quality.
       - Use preset code-fit.
       - "Focus: quality — performance, architecture, standards, test coverage."
 
   - name: apply-fit-1
     number: "080"
-    skill: ace:apply-feedback
+    skill: ace_review_apply-feedback
     instructions:
       - Apply feedback from fit review.
       - Commit changes with descriptive messages.
@@ -86,17 +86,17 @@ steps:
 
   - name: review-shine-1
     number: "100"
-    skill: ace:review-pr
+    skill: ace_review_pr
     context: fork
     instructions:
-      - "First: onboard yourself using /onboard skill to load project context."
+      - "First: onboard yourself using /ace_onboard skill to load project context."
       - Review the code for polish.
       - Use preset code-shine.
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
 
   - name: apply-shine-1
     number: "110"
-    skill: ace:apply-feedback
+    skill: ace_review_apply-feedback
     instructions:
       - Apply feedback from shine review (worthwhile improvements only).
       - Commit changes with descriptive messages.
@@ -110,7 +110,7 @@ steps:
 
   - name: reorganize-commits
     number: "130"
-    skill: ace:reorganize-commits
+    skill: ace_git_reorganize-commits
     instructions:
       - Reorganize commits into logical groups.
       - Group by concern (structure, implementation, tests, release).
@@ -124,7 +124,7 @@ steps:
 
   - name: update-pr-desc
     number: "150"
-    skill: ace:update-pr-desc
+    skill: ace_git_update-pr-desc
     instructions:
       - Update PR description with final implementation summary.
       - Include released version numbers and key components.
@@ -145,9 +145,9 @@ expansion:
     name: "work-on-{{item}}"
     parent: "010"
     context: fork
-    skill: ace:work-on-task
+    skill: ace_task_work
     taskref: "{{item}}"
     instructions: |
-      First: onboard yourself using /onboard skill to load project context.
+      First: onboard yourself using /ace_onboard skill to load project context.
       Implement task {{item}}.
       When complete, mark the task as done: run `ace-taskflow task done {{item}}`

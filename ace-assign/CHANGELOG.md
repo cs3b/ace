@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.9] - 2026-02-21
+
+### Changed
+- Migrate skill name references to colon-free convention (`ace_domain_action` format) for non-Claude Code agent compatibility
+- Update catalog phases and presets with new skill name format
+- Update workflow instructions with new skill invocation patterns
+
 ## [0.12.8] - 2026-02-21
 
 ### Added
