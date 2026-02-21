@@ -78,7 +78,7 @@ These templates are referenced directly from the `draft-release.md` workflow ins
 For more details on how these templates integrate with the project management workflow, refer to:
 
 - [Project Management Guide](ace-taskflow/handbook/guides/project-management.g.md)
-- [Draft Task Workflow](/ace:draft-task)
+- [Draft Task Workflow](/ace_task_draft)
 - [Publish Release Guide](ace-taskflow/handbook/guides/release-publish.g.md)
 
 ## Customization

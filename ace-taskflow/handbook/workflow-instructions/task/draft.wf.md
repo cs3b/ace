@@ -180,7 +180,7 @@ DO NOT during this phase:
 - ❌ Run tests or builds
 - ❌ Make commits to project source code
 
-All code implementation happens during `/ace:work-on-task` (status: in-progress).
+All code implementation happens during `/ace_task_work` (status: in-progress).
 
 ## Input
 
