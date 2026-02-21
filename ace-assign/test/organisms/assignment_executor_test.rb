@@ -566,7 +566,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_equal "010.01", result[:current].number
 
         # Child phases materialize from phase catalog metadata
-        assert_equal "onboard", onboard_phase.skill
+        assert_equal "ace_onboard", onboard_phase.skill
         assert_equal "ace_task_plan", plan_phase.skill
         assert_equal "ace_task_work", work_phase.skill
 
@@ -694,7 +694,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes parent_phase.instructions, "Custom goal header:"
 
         # Project override should not replace entire catalog; default child phase metadata must still resolve.
-        assert_equal "onboard", child_phase.skill
+        assert_equal "ace_onboard", child_phase.skill
       ensure
         if original_project_root.nil?
           ENV.delete("PROJECT_ROOT_PATH")

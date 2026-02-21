@@ -58,7 +58,7 @@ class CatalogLoaderTest < AceAssignTestCase
     phase = Ace::Assign::Atoms::CatalogLoader.find_by_name(@phases, "onboard")
 
     refute_nil phase
-    assert_equal "onboard", phase["skill"]
+    assert_equal "ace_onboard", phase["skill"]
   end
 
   def test_find_by_name_not_found
