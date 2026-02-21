@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "stringio"
 
 describe "CLI Providers" do
   describe "ClaudeCodeClient" do
@@ -51,6 +52,26 @@ describe "CLI Providers" do
       end
 
       assert_includes captured_cmd, "--verbose"
+    end
+
+    it "emits subprocess debug context when enabled" do
+      status = Struct.new(:success?).new(true)
+      old_env = ENV["ACE_LLM_DEBUG_SUBPROCESS"]
+      old_stderr = $stderr
+      stderr_io = StringIO.new
+      ENV["ACE_LLM_DEBUG_SUBPROCESS"] = "1"
+      $stderr = stderr_io
+
+      @client.stub :validate_claude_availability!, true do
+        Ace::LLM::Providers::CLI::Molecules::SafeCapture.stub :call, ['{"result":"ok","usage":{}}', "", status] do
+          @client.generate([{ role: "user", content: "hi" }], cli_args: "--verbose")
+        end
+      end
+
+      assert_includes stderr_io.string, "[ClaudeCodeClient] spawn timeout="
+    ensure
+      ENV["ACE_LLM_DEBUG_SUBPROCESS"] = old_env
+      $stderr = old_stderr
     end
   end
 
