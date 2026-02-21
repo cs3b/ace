@@ -6,7 +6,7 @@ module Ace
       module Atoms
         # Builds skill invocation prompts for CLI-provider E2E test execution
         #
-        # All CLI providers use skill invocation (/ace:e2e-run). The skill
+        # All CLI providers use skill invocation (/ace_e2e_run). The skill
         # routes to the appropriate workflow based on arguments (--sandbox present
         # or not). Provider lists and CLI args are configurable via config.yml.
         class SkillPromptBuilder
@@ -68,7 +68,7 @@ module Ace
           # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [String] Skill invocation prompt
           def build_skill_prompt(scenario, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
-            cmd = "/ace:e2e-run #{scenario.package} #{scenario.test_id}"
+            cmd = "/ace_e2e_run #{scenario.package} #{scenario.test_id}"
             cmd += " #{test_cases.join(',')}" if test_cases&.any?
             cmd += " --run-id #{run_id}" if run_id
             cmd += " --sandbox #{sandbox_path}" if sandbox_path
@@ -86,7 +86,7 @@ module Ace
           # @param env_vars [Hash, nil] Environment variables from setup execution
           # @return [String] Skill invocation prompt
           def build_tc_skill_prompt(test_case:, scenario:, sandbox_path:, run_id: nil, env_vars: nil)
-            cmd = "/ace:e2e-run #{scenario.package} #{scenario.test_id} #{test_case.tc_id} --tc-mode --sandbox #{sandbox_path}"
+            cmd = "/ace_e2e_run #{scenario.package} #{scenario.test_id} #{test_case.tc_id} --tc-mode --sandbox #{sandbox_path}"
             cmd += " --run-id #{run_id}" if run_id
             cmd += " --env #{env_vars.map { |k, v| "#{k}=#{v}" }.join(',')}" if env_vars&.any?
             build_execution_prompt(command: cmd, tc_mode: true)
@@ -124,7 +124,7 @@ module Ace
               #{command}
 
               Execution requirements:
-              - Do not run `/ace:...` inside a shell command.
+              - Do not run `/ace_...` inside a shell command.
               - If slash commands are unavailable, stop and report that limitation in `Issues`.
               - Write reports under `.cache/ace-test-e2e/*-reports/`.
               - Return only this structured summary:

@@ -13,14 +13,14 @@ This workflow takes the review output (coverage matrix) from Stage 1 and produce
 **Pipeline position:** Stage 2 of 3 (Decide)
 
 ```
-/ace:review-e2e-tests  →  /ace:plan-e2e-changes  →  /ace:rewrite-e2e-tests
+/ace_e2e_review  →  /ace_e2e_plan-changes  →  /ace_e2e_rewrite
      (explore)               ▶ (decide) ◀               (execute)
 ```
 
 ## Arguments
 
 - `PACKAGE` (required) - The package to plan changes for (e.g., `ace-lint`)
-- `--review-report <path>` (optional) - Path to review report from Stage 1. If omitted, runs `/ace:review-e2e-tests {PACKAGE}` first.
+- `--review-report <path>` (optional) - Path to review report from Stage 1. If omitted, runs `/ace_e2e_review {PACKAGE}` first.
 - `--scope <scenario-id>` (optional) - Limit planning to a single scenario (e.g., `TS-LINT-001`)
 
 ## Workflow Steps
@@ -31,7 +31,7 @@ This workflow takes the review output (coverage matrix) from Stage 1 and produce
 Read the file at the given path. Verify it contains a coverage matrix with the expected structure (features × unit tests × E2E columns).
 
 **If no review report:**
-Invoke `/ace:review-e2e-tests {PACKAGE}` and capture the full output including coverage matrix, overlap analysis, gap analysis, and health status.
+Invoke `/ace_e2e_review {PACKAGE}` and capture the full output including coverage matrix, overlap analysis, gap analysis, and health status.
 
 If `--scope` is provided, filter the review data to only the specified scenario and its related features.
 
@@ -203,7 +203,7 @@ TS-{AREA}-002-{slug}/  ({n} TCs)
 ### Next Steps
 
 - Review and approve this plan
-- Run `/ace:rewrite-e2e-tests {PACKAGE} --plan {path}` to execute
+- Run `/ace_e2e_rewrite {PACKAGE} --plan {path}` to execute
 - Or modify the plan and re-run
 ```
 
@@ -213,28 +213,28 @@ TS-{AREA}-002-{slug}/  ({n} TCs)
 
 **Plan changes with a prior review report:**
 ```
-/ace:plan-e2e-changes ace-lint --review-report .cache/ace-test-e2e/review-ace-lint.md
+/ace_e2e_plan-changes ace-lint --review-report .cache/ace-test-e2e/review-ace-lint.md
 ```
 
 **Plan changes (runs review automatically):**
 ```
-/ace:plan-e2e-changes ace-lint
+/ace_e2e_plan-changes ace-lint
 ```
 
 **Plan changes for a single scenario:**
 ```
-/ace:plan-e2e-changes ace-lint --scope TS-LINT-001
+/ace_e2e_plan-changes ace-lint --scope TS-LINT-001
 ```
 
 ## Error Handling
 
 ### No Review Data
 
-If no `--review-report` is provided and `/ace:review-e2e-tests` finds no tests:
+If no `--review-report` is provided and `/ace_e2e_review` finds no tests:
 ```
 No E2E tests found for {package}. Nothing to plan changes for.
 
-To create the first E2E test: /ace:create-e2e-test {package} {AREA}
+To create the first E2E test: /ace_e2e_create {package} {AREA}
 ```
 
 ### Empty Coverage Matrix

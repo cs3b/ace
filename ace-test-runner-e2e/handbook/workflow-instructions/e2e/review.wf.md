@@ -13,7 +13,7 @@ This workflow performs deep exploration of a package to produce a **coverage mat
 **Pipeline position:** Stage 1 of 3 (Explore)
 
 ```
-/ace:review-e2e-tests  →  /ace:plan-e2e-changes  →  /ace:rewrite-e2e-tests
+/ace_e2e_review  →  /ace_e2e_plan-changes  →  /ace_e2e_rewrite
    ▶ (explore) ◀               (decide)                  (execute)
 ```
 
@@ -233,19 +233,19 @@ TCs sharing the same CLI invocation that could be merged:
 
 ### Next Step
 
-Run `/ace:plan-e2e-changes {PACKAGE} --review-report {this-report-path}` to generate a concrete change plan.
+Run `/ace_e2e_plan-changes {PACKAGE} --review-report {this-report-path}` to generate a concrete change plan.
 ```
 
 ## Example Invocations
 
 **Review a package:**
 ```
-/ace:review-e2e-tests ace-lint
+/ace_e2e_review ace-lint
 ```
 
 **Review a single scenario:**
 ```
-/ace:review-e2e-tests ace-lint --scope TS-LINT-001
+/ace_e2e_review ace-lint --scope TS-LINT-001
 ```
 
 ## Error Handling
@@ -259,7 +259,7 @@ No E2E tests found for {package}.
 Unit test inventory was still performed. The package has {n} unit test files
 with {n} assertions covering {n} features.
 
-To create the first E2E test: /ace:create-e2e-test {package} {AREA}
+To create the first E2E test: /ace_e2e_create {package} {AREA}
 ```
 
 ### No Unit Tests Found

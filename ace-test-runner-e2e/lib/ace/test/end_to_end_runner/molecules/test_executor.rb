@@ -351,7 +351,7 @@ module Ace
           end
 
           # Detect common failure modes where the agent did not execute the
-          # /ace:run-e2e-test skill correctly.
+          # /ace_e2e_run skill correctly.
           #
           # @param text [String] Raw LLM response text
           # @return [String, nil] Error message when a known failure is detected
@@ -359,8 +359,8 @@ module Ace
             return nil if text.nil? || text.strip.empty?
 
             checks = [
-              [/\/ace:run-e2e-test.*command not found/i, "The slash command was executed in a shell instead of chat."],
-              [/exit code 127.*\/ace:run-e2e-test|\/ace:run-e2e-test.*exit code 127/im, "The slash command failed with shell exit code 127."],
+              [/\/ace_e2e_run.*command not found/i, "The slash command was executed in a shell instead of chat."],
+              [/exit code 127.*\/ace_e2e_run|\/ace_e2e_run.*exit code 127/im, "The slash command failed with shell exit code 127."],
               [/No tests found for package/i, "The test command ran in the wrong context or with invalid arguments."],
               [/\bace-test\s+e2e\b/i, "An invalid command (`ace-test e2e`) was attempted instead of `ace-test-e2e`."],
               [/slash commands are unavailable/i, "The agent reported slash commands are unavailable in this environment."]

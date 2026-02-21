@@ -333,7 +333,7 @@ setup:
       PROJECT_ROOT_PATH: "."
 ```
 
-### With /ace:run-e2e-test
+### With /ace_e2e_run
 
 This workflow is called automatically when running E2E tests.
 

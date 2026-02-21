@@ -1,5 +1,5 @@
 ---
-name: ace:e2e-run
+name: ace_e2e_run
 description: Execute an E2E test scenario
 user-invocable: true
 allowed-tools:
@@ -28,13 +28,13 @@ ARGUMENTS: $ARGUMENTS
 
 ## Execution Context
 
-- `/ace:run-e2e-test ...` is a chat slash command, not a shell command.
-- Do **not** run `/ace:...` in bash (this causes `command not found` and no reports).
+- `/ace_e2e_run ...` is a chat slash command, not a shell command.
+- Do **not** run `/ace_...` in bash (this causes `command not found` and no reports).
 - If slash commands are unavailable in the current environment, report that limitation explicitly in `Issues`.
 
 ## Subagent Return Contract
 
-When invoked as a subagent (via Task tool from `/ace:run-e2e-tests`), return a structured summary instead of verbose output:
+When invoked as a subagent (via Task tool from `/ace_e2e_run-batch`), return a structured summary instead of verbose output:
 
 ```markdown
 - **Test ID**: {test-id}
