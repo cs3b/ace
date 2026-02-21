@@ -9,7 +9,25 @@ module Ace
         end
 
         def open(worktree_path:)
+          return if window_already_open?(worktree_path)
+
           @tmux_window_command.call(root: worktree_path.to_s, quiet: true)
+        end
+
+        private
+
+        def window_already_open?(worktree_path)
+          session = ENV["ACE_TMUX_SESSION"]
+          return false unless session
+
+          name = File.basename(worktree_path.to_s)
+          executor = Ace::Tmux::Molecules::TmuxExecutor.new
+          result = executor.capture(["tmux", "list-windows", "-t", session, "-F", '#{window_name}'])
+          return false unless result.success?
+
+          result.stdout.split("\n").any? { |w| w.strip == name }
+        rescue StandardError
+          false
         end
       end
     end
