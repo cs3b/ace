@@ -11,7 +11,11 @@ module Ace
         def open(worktree_path:)
           return if window_already_open?(worktree_path)
 
-          @tmux_window_command.call(root: worktree_path.to_s, quiet: true)
+          @tmux_window_command.call(
+            root: worktree_path.to_s,
+            quiet: true,
+            session: ENV["ACE_TMUX_SESSION"]
+          )
         end
 
         private
