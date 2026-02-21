@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.554] - 2026-02-21
+
+### Added
+- **ace-llm-providers-cli v0.16.8**: Harden subprocess lifecycle with process-group cleanup in `SafeCapture`, including descendant cleanup on timeout and normal completion, plus new lifecycle regression tests
+- **ace-test-runner-e2e v0.16.15**: Add debug-only suite diagnostics to detect lingering `claude -p` processes after E2E runs
+
+### Changed
+- **ace-llm-providers-cli v0.16.8**: Add opt-in CLI subprocess debug tracing via `ACE_LLM_DEBUG_SUBPROCESS=1`, including Claude client subprocess context logging
+
 ## [0.9.553] - 2026-02-21
 
 ### Changed
