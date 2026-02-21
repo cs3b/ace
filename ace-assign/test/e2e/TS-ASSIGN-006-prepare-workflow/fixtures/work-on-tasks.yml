@@ -1,0 +1,153 @@
+# Multi-task workflow: batch implement → release → PR → review cycles → reorganize → push
+# Usage: /ace_assign_prepare work-on-tasks --taskrefs 148,149,150
+#        /ace_assign_prepare work-on-tasks --taskrefs 148-152
+#        /ace_assign_prepare work-on-tasks --taskrefs "240.*"
+
+name: work-on-tasks
+description: Work on multiple tasks with PR, review cycles, release, and clean history
+
+parameters:
+  taskrefs:
+    required: true
+    type: array
+    description: Task references (comma-separated, range, or pattern)
+
+steps:
+  - name: onboard
+    number: "000"
+    skill: onboard
+    instructions:
+      - Load project context.
+      - Review task queue and priorities.
+
+  - name: release-minor
+    number: "020"
+    skill: ace-release
+    instructions:
+      - Bump version (minor or patch, usually minor) and update CHANGELOGs.
+      - This is the initial release for new functionality.
+      - Follow semantic versioning conventions.
+
+  - name: create-pr
+    number: "030"
+    skill: ace_git_create-pr
+    instructions:
+      - Create a pull request for the changes.
+      - Include summary of all implemented tasks.
+      - Capture the PR number for subsequent review steps.
+
+  - name: review-valid-1
+    number: "040"
+    skill: ace_review_pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - Review the code for correctness.
+      - Use preset code-valid.
+      - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
+
+  - name: apply-valid-1
+    number: "050"
+    skill: ace_review_apply-feedback
+    instructions:
+      - Apply feedback from valid review (medium+ priority).
+      - Commit changes with descriptive messages.
+
+  - name: release-valid-1
+    number: "060"
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs.
+      - This captures valid review fixes.
+
+  - name: review-fit-1
+    number: "070"
+    skill: ace_review_pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - Review the code for quality.
+      - Use preset code-fit.
+      - "Focus: quality — performance, architecture, standards, test coverage."
+
+  - name: apply-fit-1
+    number: "080"
+    skill: ace_review_apply-feedback
+    instructions:
+      - Apply feedback from fit review.
+      - Commit changes with descriptive messages.
+
+  - name: release-fit-1
+    number: "090"
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs.
+      - This captures fit review fixes.
+
+  - name: review-shine-1
+    number: "100"
+    skill: ace_review_pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - Review the code for polish.
+      - Use preset code-shine.
+      - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
+
+  - name: apply-shine-1
+    number: "110"
+    skill: ace_review_apply-feedback
+    instructions:
+      - Apply feedback from shine review (worthwhile improvements only).
+      - Commit changes with descriptive messages.
+
+  - name: release-shine-1
+    number: "120"
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs.
+      - This captures shine review fixes.
+
+  - name: reorganize-commits
+    number: "130"
+    skill: ace_git_reorganize-commits
+    instructions:
+      - Reorganize commits into logical groups.
+      - Group by concern (structure, implementation, tests, release).
+
+  - name: push-to-remote
+    number: "140"
+    instructions:
+      - Push all changes to the remote repository.
+      - "Run: git push --force-with-lease origin HEAD"
+      - Force-with-lease needed because reorganize-commits rewrites history.
+
+  - name: update-pr-desc
+    number: "150"
+    skill: ace_git_update-pr-desc
+    instructions:
+      - Update PR description with final implementation summary.
+      - Include released version numbers and key components.
+      - Ensure PR is ready for human review.
+
+expansion:
+  batch-parent:
+    name: batch-tasks
+    number: "010"
+    instructions: |
+      Batch container for multiple task implementations.
+      This step auto-completes when all child tasks are done.
+
+      Tasks to implement: {{taskrefs}}
+
+  foreach: taskrefs
+  child-template:
+    name: "work-on-{{item}}"
+    parent: "010"
+    context: fork
+    skill: ace_task_work
+    taskref: "{{item}}"
+    instructions: |
+      First: onboard yourself using /ace_onboard skill to load project context.
+      Implement task {{item}}.
+      When complete, mark the task as done: run `ace-taskflow task done {{item}}`

@@ -1,0 +1,125 @@
+# Full task workflow: implement → release → PR → review cycles → reorganize → push
+# Usage: /ace_assign_prepare work-on-task --taskref 123
+
+name: work-on-task
+description: Work on a task with PR, review cycles, release, and clean history
+
+parameters:
+  taskref:
+    required: true
+    description: Task reference (e.g., 123 or 256.01)
+
+steps:
+  - name: onboard
+    skill: onboard
+    instructions:
+      - Onboard yourself to the codebase.
+      - Load context and understand the project structure.
+
+  - name: work-on-task
+    context: fork
+    skill: ace_task_work
+    instructions:
+      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - "Work on task {{taskref}}."
+      - Implement the required changes following project conventions.
+
+  - name: mark-task-done
+    instructions:
+      - "Mark task {{taskref}} as done."
+      - "Run: ace-taskflow task done {{taskref}}"
+
+  - name: release-minor
+    skill: ace-release
+    instructions:
+      - Bump version (minor or patch, usually minor) and update CHANGELOGs.
+      - This is the initial release for new functionality.
+      - Follow semantic versioning conventions.
+
+  - name: create-pr
+    skill: ace_git_create-pr
+    instructions:
+      - Create a pull request for the changes.
+      - Capture the PR number for subsequent review steps.
+
+  - name: review-valid-1
+    skill: ace_review_pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - Review the code for correctness.
+      - Use preset code-valid.
+      - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
+
+  - name: apply-valid-1
+    skill: ace_review_apply-feedback
+    instructions:
+      - Apply feedback from valid review (medium+ priority).
+      - Commit changes with descriptive messages.
+
+  - name: release-valid-1
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs.
+      - This captures valid review fixes.
+
+  - name: review-fit-1
+    skill: ace_review_pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - Review the code for quality.
+      - Use preset code-fit.
+      - "Focus: quality — performance, architecture, standards, test coverage."
+
+  - name: apply-fit-1
+    skill: ace_review_apply-feedback
+    instructions:
+      - Apply feedback from fit review.
+      - Commit changes with descriptive messages.
+
+  - name: release-fit-1
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs.
+      - This captures fit review fixes.
+
+  - name: review-shine-1
+    skill: ace_review_pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - Review the code for polish.
+      - Use preset code-shine.
+      - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
+
+  - name: apply-shine-1
+    skill: ace_review_apply-feedback
+    instructions:
+      - Apply feedback from shine review (worthwhile improvements only).
+      - Commit changes with descriptive messages.
+
+  - name: release-shine-1
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs.
+      - This captures shine review fixes.
+
+  - name: reorganize-commits
+    skill: ace_git_reorganize-commits
+    instructions:
+      - Reorganize commits into logical groups.
+      - Group by concern (structure, implementation, tests, release).
+
+  - name: push-to-remote
+    instructions:
+      - Push all changes to the remote repository.
+      - "Run: git push --force-with-lease origin HEAD"
+      - Force-with-lease needed because reorganize-commits rewrites history.
+
+  - name: update-pr-desc
+    skill: ace_git_update-pr-desc
+    instructions:
+      - Update PR description with final implementation summary.
+      - Include released version numbers and key components.
+      - Ensure PR is ready for human review.
