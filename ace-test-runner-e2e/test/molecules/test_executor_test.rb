@@ -181,6 +181,45 @@ class TestExecutorTest < Minitest::Test
     assert captured_prompt.include?("--env PROJECT_ROOT=/code"), "Prompt should contain --env flag"
   end
 
+  def test_execute_via_skill_passes_env_vars_as_subprocess_env
+    executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    env_vars = { "ACE_TMUX_SESSION" => "TS-TEST-001-e2e", "PROJECT_ROOT" => "/code" }
+
+    captured_kwargs = nil
+    Ace::LLM::QueryInterface.stub(:query, ->(*args, **kw) { captured_kwargs = kw; { text: "- **Test ID**: TS-LINT-001\n- **Status**: pass\n- **Passed**: 1\n- **Failed**: 0\n- **Total**: 1\n- **Report Paths**: x\n- **Issues**: None" } }) do
+      executor.execute(scenario, sandbox_path: "/tmp/sb", env_vars: env_vars)
+    end
+
+    assert_equal env_vars, captured_kwargs[:subprocess_env], "env_vars should be passed as subprocess_env to QueryInterface.query"
+  end
+
+  def test_execute_tc_via_skill_passes_env_vars_as_subprocess_env
+    executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+    tc = create_test_case
+    env_vars = { "ACE_TMUX_SESSION" => "TS-TEST-001-e2e" }
+
+    captured_kwargs = nil
+    Ace::LLM::QueryInterface.stub(:query, ->(*args, **kw) { captured_kwargs = kw; { text: "- **Test ID**: TS-LINT-001\n- **TC ID**: TC-001\n- **Status**: pass\n- **Issues**: None" } }) do
+      executor.execute_tc(test_case: tc, sandbox_path: "/tmp/sb", scenario: scenario, env_vars: env_vars)
+    end
+
+    assert_equal env_vars, captured_kwargs[:subprocess_env], "env_vars should be passed as subprocess_env to QueryInterface.query for TC execution"
+  end
+
+  def test_execute_via_skill_passes_nil_subprocess_env_when_no_env_vars
+    executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+    scenario = create_scenario(test_id: "TS-LINT-001")
+
+    captured_kwargs = nil
+    Ace::LLM::QueryInterface.stub(:query, ->(*args, **kw) { captured_kwargs = kw; { text: "- **Test ID**: TS-LINT-001\n- **Status**: pass\n- **Passed**: 1\n- **Failed**: 0\n- **Total**: 1\n- **Report Paths**: x\n- **Issues**: None" } }) do
+      executor.execute(scenario, sandbox_path: "/tmp/sb")
+    end
+
+    assert_nil captured_kwargs[:subprocess_env], "subprocess_env should be nil when env_vars not provided"
+  end
+
   def test_non_claude_cli_uses_skill_invocation
     executor = TestExecutor.new(provider: "gemini:flash", timeout: 10)
     scenario = create_scenario(test_id: "TS-LINT-001")
