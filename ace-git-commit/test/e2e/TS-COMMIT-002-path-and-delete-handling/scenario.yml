@@ -11,5 +11,11 @@ setup:
   - git-init
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
+  - write-file:
+      path: .gitignore
+      content: |
+        *.tc.md
+        scenario.yml
+  - run: git add .gitignore && git commit -m "Add gitignore" --quiet
   - env:
       PROJECT_ROOT_PATH: .
