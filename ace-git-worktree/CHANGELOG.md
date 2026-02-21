@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.8] - 2026-02-21
+
+### Fixed
+- Fix worktree filter to handle `false` values for `task_associated` and `usable` options (use nil check instead of truthy check, preventing false from being treated as "not set")
+- Show `target_branch` in dry-run output when present
+
+### Technical
+- Add tests for `list_all` with `false` filter values to prevent regression
+- Improve E2E test for `switch` command to verify path existence dynamically
+
 ## [0.13.7] - 2026-02-19
 
 ### Technical
