@@ -15,7 +15,7 @@ parameters:
 steps:
   - name: onboard
     number: "000"
-    skill: onboard
+    skill: ace_onboard
     instructions:
       - Load project context.
       - Review task queue and priorities.

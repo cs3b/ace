@@ -141,12 +141,12 @@ When executing this phase, invoke `/ace_task_work 123` then follow the skill wor
 
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
-| `onboard` | `/ace_onboard` | Load project context |
-| `ace:task-work` | `/ace_task_work <taskref>` | Implement task changes |
-| `ace:git-create-pr` | `/ace_git_create-pr` | Create pull request |
-| `ace:review-pr` | `/ace_review_pr [pr#]` | Review code changes |
-| `ace:git-commit` | `/ace_git_commit` | Generate commit message |
-| `ace:git-update-pr-desc` | `/ace_git_update-pr-desc` | Update PR description |
+| `ace_onboard` | `/ace_onboard` | Load project context |
+| `ace_task_work` | `/ace_task_work <taskref>` | Implement task changes |
+| `ace_git_create-pr` | `/ace_git_create-pr` | Create pull request |
+| `ace_review_pr` | `/ace_review_pr [pr#]` | Review code changes |
+| `ace_git_commit` | `/ace_git_commit` | Generate commit message |
+| `ace_git_update-pr-desc` | `/ace_git_update-pr-desc` | Update PR description |
 
 ### Parameter Passing
 
