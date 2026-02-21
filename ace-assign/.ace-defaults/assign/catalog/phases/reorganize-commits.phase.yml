@@ -1,5 +1,5 @@
 name: reorganize-commits
-skill: ace:reorganize-commits
+skill: ace_git_reorganize-commits
 description: Reorganize commits into logical groups for clean history
 
 prerequisites:

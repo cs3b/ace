@@ -2,7 +2,7 @@ name: test-workflow
 description: Test workflow for E2E testing
 steps:
   - name: analyze
-    skill: "ace:research"
+    skill: "ace_search_research"
     instructions:
       - Analyze the codebase structure
       - Identify key components and dependencies

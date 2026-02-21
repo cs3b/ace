@@ -1,5 +1,5 @@
 # Release-only workflow: onboard → release → commit
-# Usage: /ace:assign-prepare release-only --version_type patch
+# Usage: /ace_assign_prepare release-only --version_type patch
 
 name: release-only
 description: Version bump and changelog update without code changes
@@ -25,7 +25,7 @@ steps:
       - Update both gem version files and CHANGELOGs.
 
   - name: commit
-    skill: ace:commit
+    skill: ace_git_commit
     instructions:
       - Commit the version bump and changelog changes.
       - Use conventional commit format.

@@ -51,7 +51,7 @@ class CatalogLoaderTest < AceAssignTestCase
 
     refute_nil phase
     assert_equal "work-on-task", phase["name"]
-    assert_equal "ace:work-on-task", phase["skill"]
+    assert_equal "ace_task_work", phase["skill"]
   end
 
   def test_find_by_name_onboard

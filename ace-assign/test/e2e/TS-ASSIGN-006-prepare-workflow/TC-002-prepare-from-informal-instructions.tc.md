@@ -5,7 +5,7 @@ title: Prepare From Informal Instructions
 
 ## Objective
 
-Verify that `/ace:assign-prepare` with informal text instructions generates a valid job.yaml
+Verify that `/ace_assign_prepare` with informal text instructions generates a valid job.yaml
 with correctly identified phases, loop expansion, and skill mapping from natural language.
 
 ## Steps
@@ -14,7 +14,7 @@ with correctly identified phases, loop expansion, and skill mapping from natural
 
 1. Run prepare with informal instructions describing a multi-cycle workflow
    ```
-   /ace:assign-prepare "Work on task 001, create a PR, then do 2 review cycles"
+   /ace_assign_prepare "Work on task 001, create a PR, then do 2 review cycles"
    ```
 
 ### Phase 2: Verify job.yaml generated

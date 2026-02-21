@@ -49,4 +49,4 @@ Verify assignment drive guidance enforces hard no-skip policy for planned phases
 - Workflow contains explicit hard no-skip policy language.
 - Legacy `Skip Assessment` section is absent.
 - Workflow includes attempt-first external action + failure evidence requirements.
-- `ace:assign-drive` skill stays thin and defers policy to workflow.
+- `ace_assign_drive` skill stays thin and defers policy to workflow.

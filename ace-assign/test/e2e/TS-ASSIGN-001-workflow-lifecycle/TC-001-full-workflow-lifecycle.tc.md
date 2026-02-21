@@ -34,7 +34,7 @@ Verify the full ace-assign workflow lifecycle end-to-end: assignment creation vi
    [ -f "$ASSIGNMENT_DIR/phases/020-implement.ph.md" ] && echo "PASS: 020-implement.ph.md exists" || echo "FAIL: 020-implement.ph.md missing"
    [ -f "$ASSIGNMENT_DIR/phases/030-verify.ph.md" ] && echo "PASS: 030-verify.ph.md exists" || echo "FAIL: 030-verify.ph.md missing"
    grep -q "status: in_progress" "$ASSIGNMENT_DIR/phases/010-analyze.ph.md" && echo "PASS: Phase 010 is in_progress" || echo "FAIL: Phase 010 not in_progress"
-   grep -q 'skill:.*ace:research' "$ASSIGNMENT_DIR/phases/010-analyze.ph.md" && echo "PASS: skill field preserved" || echo "FAIL: skill field missing"
+   grep -q 'skill:.*ace_search_research' "$ASSIGNMENT_DIR/phases/010-analyze.ph.md" && echo "PASS: skill field preserved" || echo "FAIL: skill field missing"
    grep -q "Analyze the codebase structure" "$ASSIGNMENT_DIR/phases/010-analyze.ph.md" && echo "PASS: First instruction line present" || echo "FAIL: First instruction line missing"
    grep -q "Identify key components and dependencies" "$ASSIGNMENT_DIR/phases/010-analyze.ph.md" && echo "PASS: Second instruction line present" || echo "FAIL: Second instruction line missing"
    grep -q "Implement the required changes" "$ASSIGNMENT_DIR/phases/020-implement.ph.md" && echo "PASS: Plain string instructions preserved" || echo "FAIL: Plain string instructions missing"
@@ -58,7 +58,7 @@ Verify the full ace-assign workflow lifecycle end-to-end: assignment creation vi
    echo "$STATUS_OUTPUT" | grep -q "implement" && echo "PASS: implement phase shown" || echo "FAIL: implement phase missing"
    echo "$STATUS_OUTPUT" | grep -q "verify" && echo "PASS: verify phase shown" || echo "FAIL: verify phase missing"
    echo "$STATUS_OUTPUT" | grep -q "in_progress" && echo "PASS: in_progress status shown" || echo "FAIL: in_progress not shown"
-   echo "$STATUS_OUTPUT" | grep -q "Skill:.*ace:research" && echo "PASS: Skill field displayed" || echo "FAIL: Skill field not displayed"
+   echo "$STATUS_OUTPUT" | grep -q "Skill:.*ace_search_research" && echo "PASS: Skill field displayed" || echo "FAIL: Skill field not displayed"
    ```
 
 5. Complete analyze phase with report and verify advancement
@@ -178,7 +178,7 @@ Verify the full ace-assign workflow lifecycle end-to-end: assignment creation vi
 - No wrong paths (.assign/, queue.yaml, .md without .ph.md)
 
 ### Phase 2
-- Status shows all 3 phases, current phase analyze with Skill: ace:research
+- Status shows all 3 phases, current phase analyze with Skill: ace_search_research
 - Report completes phase 010 as "done" (not "completed"), creates separate .r.md report
 - Phase 020 advances to in_progress
 

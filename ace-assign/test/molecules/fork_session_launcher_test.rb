@@ -34,7 +34,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
 
     call = fake.calls.last
     assert_equal "codex:gpt-5", call[:provider_model]
-    assert_equal "/ace:assign-drive", call[:prompt]
+    assert_equal "/ace_assign_drive", call[:prompt]
     assert_equal "full-auto", call[:options][:cli_args]
     assert_equal 900, call[:options][:timeout]
     assert_equal false, call[:options][:fallback]
