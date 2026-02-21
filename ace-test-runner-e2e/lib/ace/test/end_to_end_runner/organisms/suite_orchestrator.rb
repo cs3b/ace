@@ -578,6 +578,7 @@ module Ace
             write_failure_stubs(results, package_tests)
 
             @display.show_summary(results, Time.now - start_time)
+            warn_on_lingering_claude_processes
 
             report_path = generate_suite_report(results, package_tests)
             if report_path
@@ -762,6 +763,24 @@ module Ace
           # @return [String] Compact Base36 timestamp ID
           def default_timestamp
             Ace::B36ts.encode(Time.now.utc, format: :"50ms")
+          end
+
+          # Emit diagnostics for lingering Claude one-shot processes.
+          # This is debug-only visibility and does not fail the suite.
+          def warn_on_lingering_claude_processes
+            return unless ENV["ACE_LLM_DEBUG_SUBPROCESS"] == "1"
+
+            output, status = Open3.capture2("pgrep", "-af", "claude .* -p")
+            return unless status.success?
+
+            lines = output.lines.map(&:strip).reject(&:empty?)
+            lines.reject! { |line| line.include?("pgrep -af") }
+            return if lines.empty?
+
+            @output.puts "Warning: Detected lingering claude -p processes (#{lines.size})"
+            lines.each { |line| @output.puts "  #{line}" }
+          rescue StandardError => e
+            @output.puts "Warning: Failed to scan lingering Claude processes: #{e.message}" if ENV["DEBUG"]
           end
 
           # Run a single test (sequential mode)
