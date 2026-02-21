@@ -34,7 +34,7 @@ Verify that `ace-overseer prune --dry-run` correctly identifies task 001 as safe
 
 5. Verify count message
    ```bash
-   echo "$OUTPUT" | grep -qE "worktree\(s\) can be safely pruned" && echo "PASS: Count message present" || echo "FAIL: Missing count message"
+   echo "$OUTPUT" | grep -qE "worktree\(s\) can be pruned" && echo "PASS: Count message present" || echo "FAIL: Missing count message"
    ```
 
 6. Verify dry-run has no side effects
