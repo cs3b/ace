@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.6] - 2026-02-21
+
+### Technical
+- Add E2E tests for prepare workflow (from preset and from informal instructions)
+- Fix `ASSIGNMENT_DIR` lookup in injection/renumbering E2E tests to use dynamic directory discovery
+- Reorganize TS-ASSIGN-003b fixtures: replace flat `job.yaml` with structured `phases/` directory
+
 ## [0.12.5] - 2026-02-20
 
 ### Technical

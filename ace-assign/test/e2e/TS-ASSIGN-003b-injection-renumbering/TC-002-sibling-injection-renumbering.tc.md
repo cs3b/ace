@@ -22,6 +22,7 @@ Verify that injecting a sibling after a child phase correctly renumbers subseque
 
 2. Verify file state after renumbering
    ```bash
+   ASSIGNMENT_DIR=$(find "$CACHE_BASE" -maxdepth 1 -mindepth 1 -type d | sort | tail -1)
    [ -f "$ASSIGNMENT_DIR/phases/010.02-run-linter.ph.md" ] && echo "PASS: 010.02-run-linter.ph.md exists" || echo "FAIL: Missing"
    grep -q 'added_by:.*injected_after:010.01' "$ASSIGNMENT_DIR/phases/010.02-run-linter.ph.md" && echo "PASS: added_by shows injected_after" || echo "FAIL: Incorrect added_by"
    [ -f "$ASSIGNMENT_DIR/phases/010.03-write-integration-tests.ph.md" ] && echo "PASS: Old 010.02 is now 010.03" || echo "FAIL: Not found at 010.03"
