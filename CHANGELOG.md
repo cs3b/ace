@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.552] - 2026-02-21
+
+### Fixed
+- **ace-git-worktree v0.13.8**: Fix worktree filter to handle `false` values for `task_associated` and `usable` options (nil check instead of truthy check)
+- **ace-git-worktree v0.13.8**: Show `target_branch` in dry-run output when present
+- **ace-overseer v0.4.5**: Fix `WorkOnOrchestrator` to pass `task_root_path` (resolved from `PROJECT_ROOT_PATH` env var) to `TaskLoader`, ensuring correct task lookup in worktree environments
+- **ace-test-runner-e2e v0.16.8**: Fix `short_id` regex to support digits in test area names (e.g., `TS-B36TS-001` → `ts001`)
+- **ace-test-runner-e2e v0.16.8**: Copy test definition files (`.tc.md`) to sandbox before execution
+- Fix E2E skill symlink for correct invocation
+
+### Technical
+- **ace-assign v0.12.6**: Add E2E tests for prepare workflow (from preset and informal instructions); fix `ASSIGNMENT_DIR` lookup in injection/renumbering tests
+- **ace-test-runner-e2e v0.16.8**: Add test for skill name coupling in `SkillPromptBuilder`; add tests for `short_id` with digit-containing area names
+- **ace-overseer v0.4.5**: Fix E2E tests to use `ACE_TMUX_SESSION` variable instead of hardcoded session name
+- **ace-git-worktree v0.13.8**: Add regression tests for `false` filter values; improve E2E switch test
+- **ace-handbook**: Add guide for renaming skills to prevent skill name drift
+
 ## [0.9.551] - 2026-02-20
 
 ### Fixed
