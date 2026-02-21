@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.15] - 2026-02-21
+
+### Added
+- Debug-only post-suite diagnostics in `SuiteOrchestrator` to detect and report lingering `claude -p` processes when `ACE_LLM_DEBUG_SUBPROCESS=1`
+- Unit tests for lingering-process diagnostics behavior in debug-enabled and debug-disabled modes
+
 ## [0.16.14] - 2026-02-21
 
 ### Changed
