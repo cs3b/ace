@@ -106,9 +106,9 @@ class SkillPromptBuilderTest < Minitest::Test
     # If the skill is renamed, the directory name changes and this test fails,
     # forcing the developer to also update SkillPromptBuilder.
     skills_dir    = File.expand_path("../../handbook/skills", __dir__)
-    skill_dir     = File.join(skills_dir, "ace_e2e-run")
-    # ace_e2e-run → ace:e2e-run  (replace first underscore with colon)
-    expected_name = File.basename(skill_dir).sub("_", ":")
+    skill_dir     = File.join(skills_dir, "ace_e2e_run")
+    # Skill name matches directory name (ace_e2e_run)
+    expected_name = File.basename(skill_dir)
 
     scenario   = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
     scenario_p = @builder.build_skill_prompt(scenario)
@@ -130,7 +130,7 @@ class SkillPromptBuilderTest < Minitest::Test
     scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
     prompt = @builder.build_skill_prompt(scenario)
 
-    assert_includes prompt, "/ace:e2e-run ace-lint TS-LINT-001"
+    assert_includes prompt, "/ace_e2e_run ace-lint TS-LINT-001"
     assert_includes prompt, "not in bash"
     assert_includes prompt, "- **Status**: pass | fail | partial"
   end
@@ -139,14 +139,14 @@ class SkillPromptBuilderTest < Minitest::Test
     scenario = create_scenario(package: "ace-review", test_id: "TS-REVIEW-002")
     prompt = @builder.build_skill_prompt(scenario)
 
-    assert_includes prompt, "/ace:e2e-run ace-review TS-REVIEW-002"
+    assert_includes prompt, "/ace_e2e_run ace-review TS-REVIEW-002"
   end
 
   def test_build_skill_prompt_with_run_id
     scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
     prompt = @builder.build_skill_prompt(scenario, run_id: "abc123")
 
-    assert_includes prompt, "/ace:e2e-run ace-lint TS-LINT-001 --run-id abc123"
+    assert_includes prompt, "/ace_e2e_run ace-lint TS-LINT-001 --run-id abc123"
   end
 
   def test_build_skill_prompt_without_run_id_has_no_flag
@@ -184,7 +184,7 @@ class SkillPromptBuilderTest < Minitest::Test
     scenario = create_scenario(package: "ace-lint", test_id: "TS-LINT-001")
     prompt = @builder.build_skill_prompt(scenario, sandbox_path: "/tmp/sandbox")
 
-    assert prompt.include?("/ace:e2e-run")
+    assert prompt.include?("/ace_e2e_run")
     assert prompt.include?("--sandbox /tmp/sandbox")
   end
 
@@ -195,7 +195,7 @@ class SkillPromptBuilderTest < Minitest::Test
     tc = create_test_case(tc_id: "TC-001")
     prompt = @builder.build_tc_skill_prompt(test_case: tc, scenario: scenario, sandbox_path: "/tmp/sandbox")
 
-    assert prompt.include?("/ace:e2e-run ace-lint TS-LINT-001 TC-001")
+    assert prompt.include?("/ace_e2e_run ace-lint TS-LINT-001 TC-001")
   end
 
   def test_build_tc_skill_prompt_includes_tc_mode_flag

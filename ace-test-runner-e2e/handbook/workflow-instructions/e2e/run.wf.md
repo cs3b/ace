@@ -29,13 +29,13 @@ This workflow guides an agent through executing an E2E test scenario.
 
 ## Command Context (Important)
 
-- `/ace:run-e2e-test ...` is a chat slash command and must be invoked in agent chat, not in bash.
+- `/ace_e2e_run ...` is a chat slash command and must be invoked in agent chat, not in bash.
 - Never run `/ace:...` as a shell command.
 - If slash commands are unavailable in the environment, stop and report that limitation in the final `Issues` field.
 
 ## Subagent Mode
 
-When invoked as a subagent (via Task tool from `/ace:run-e2e-tests` orchestrator), this workflow operates with special considerations:
+When invoked as a subagent (via Task tool from `/ace_e2e_runs` orchestrator), this workflow operates with special considerations:
 
 ### Context Isolation
 
@@ -763,7 +763,7 @@ If you realize you executed test cases that should have been filtered:
 
 **Run a specific test in a package:**
 ```
-/ace:run-e2e-test ace-lint TS-LINT-001
+/ace_e2e_run ace-lint TS-LINT-001
 ```
 
 This would:
@@ -773,7 +773,7 @@ This would:
 
 **Run a single test case within a test scenario:**
 ```
-/ace:run-e2e-test ace-lint TS-LINT-003 TC-002
+/ace_e2e_run ace-lint TS-LINT-003 TC-002
 ```
 
 This would:
@@ -784,7 +784,7 @@ This would:
 
 **Run multiple specific test cases:**
 ```
-/ace:run-e2e-test ace-lint TS-LINT-001 TC-001,tc-003,002
+/ace_e2e_run ace-lint TS-LINT-001 TC-001,tc-003,002
 ```
 
 This would:
@@ -796,7 +796,7 @@ This would:
 
 **Run all tests in a package:**
 ```
-/ace:run-e2e-test ace-lint
+/ace_e2e_run ace-lint
 ```
 
 This would:
@@ -806,7 +806,7 @@ This would:
 
 **Run all tests in project root:**
 ```
-/ace:run-e2e-test
+/ace_e2e_run
 ```
 
 This would:

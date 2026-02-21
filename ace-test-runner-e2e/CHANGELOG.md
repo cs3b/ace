@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.14] - 2026-02-21
+
+### Changed
+- Update skill invocation to colon-free convention (`ace_e2e_run` format)
+- Update skill prompt builder and tests for new skill naming convention
+
 ## [0.16.13] - 2026-02-21
 
 ### Added

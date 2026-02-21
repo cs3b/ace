@@ -312,7 +312,7 @@ Shared test data files placed in `fixtures/` are copied into the sandbox via the
 
 Use the skill to run a single test:
 ```
-/ace:run-e2e-test <package> <test-id>
+/ace_e2e_run <package> <test-id>
 ```
 
 The skill routes to the appropriate workflow:
@@ -323,16 +323,16 @@ The skill routes to the appropriate workflow:
 
 Run specific test cases within a scenario:
 ```
-/ace:run-e2e-test <package> <test-id> TC-001,TC-003
+/ace_e2e_run <package> <test-id> TC-001,TC-003
 ```
 
 ### Running Multiple Tests (Parallel)
 
 Use the multi-test skill to run all tests in a package:
 ```
-/ace:run-e2e-tests <package>
-/ace:run-e2e-tests <package> --sequential
-/ace:run-e2e-tests --all
+/ace_e2e_runs <package>
+/ace_e2e_runs <package> --sequential
+/ace_e2e_runs --all
 ```
 
 This uses subagents (Task tool) to execute tests in parallel, with results aggregated into a suite report.
@@ -429,7 +429,7 @@ Periodically review E2E suites for overlap with unit test coverage, especially a
 3. For each overlapping TC, ask: "Does this TC test something the unit test CAN'T — real binary, real subprocess, real filesystem?"
 4. Archive TCs that fail the E2E Value Gate
 
-See also: `/ace:review-e2e-tests` workflow, which includes overlap analysis.
+See also: `/ace_e2e_review` workflow, which includes overlap analysis.
 
 ### Archiving Tests
 
