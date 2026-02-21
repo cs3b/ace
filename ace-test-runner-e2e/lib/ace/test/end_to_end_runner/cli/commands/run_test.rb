@@ -54,6 +54,8 @@ module Ace
             option :progress, type: :boolean, desc: "Enable live animated display"
             option :run_id, type: :string,
                    desc: "Pre-generated run ID for deterministic report paths"
+            option :report_dir, type: :string,
+                   desc: "Explicit report directory path (overrides computed path)"
             option :test_cases, type: :string,
                    desc: "Comma-separated test case IDs to run (e.g., tc-001,002,TC-3)"
             option :dry_run, type: :boolean,
@@ -98,6 +100,7 @@ module Ace
                 test_cases: test_cases,
                 cli_args: options[:cli_args],
                 run_id: options[:run_id],
+                report_dir: options[:report_dir],
                 output: output
               )
 

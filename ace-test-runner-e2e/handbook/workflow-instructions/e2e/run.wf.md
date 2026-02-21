@@ -16,6 +16,7 @@ This workflow guides an agent through executing an E2E test scenario.
 - `TEST_ID` (optional) - The test identifier (e.g., `TS-LINT-001`). If omitted, runs all tests.
 - `RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths. Passed via `--run-id ID`. When provided, use this instead of generating a new timestamp.
 - `TEST_CASES` (optional) - Comma-separated list of test case IDs to execute (e.g., `TC-001,tc-003,002`). When provided, only the specified test cases are executed; all others are skipped. IDs are normalized to `TC-NNN` format automatically.
+- `REPORT_DIR` (optional) - Explicit report directory path. Passed via `--report-dir PATH`. When provided, use this path directly instead of computing `${TEST_DIR}-reports` from timestamp/package/test-id.
 
   **Accepted formats:**
   - `TC-001` - already normalized
@@ -467,8 +468,13 @@ After test execution completes (pass or fail), write three report files to a rep
 
 **Set up report paths (reports subfolder):**
 ```bash
-# Reports go in a subfolder alongside the sandbox folder
-REPORT_DIR="${TEST_DIR}-reports"  # e.g., .cache/ace-test-e2e/8osvnh-lint-ts001-reports
+# If --report-dir was provided as argument, use it directly:
+if [ -n "$PROVIDED_REPORT_DIR" ]; then
+  REPORT_DIR="$PROVIDED_REPORT_DIR"
+else
+  # Otherwise compute from sandbox path:
+  REPORT_DIR="${TEST_DIR}-reports"  # e.g., .cache/ace-test-e2e/8osvnh-lint-ts001-reports
+fi
 mkdir -p "$REPORT_DIR"
 # Report files: ${REPORT_DIR}/summary.r.md, ${REPORT_DIR}/experience.r.md, ${REPORT_DIR}/metadata.yml
 ```

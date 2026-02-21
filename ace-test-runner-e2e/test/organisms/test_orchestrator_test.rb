@@ -16,7 +16,7 @@ class TestOrchestratorTest < Minitest::Test
       @summary = summary
     end
 
-    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil)
+    def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
       TestResult.new(
         test_id: scenario.test_id,
         status: @status,
@@ -284,7 +284,7 @@ class TestOrchestratorTest < Minitest::Test
       call_count = 0
       # Executor that alternates pass/fail
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         call_count += 1
         TestResult.new(
           test_id: scenario.test_id,
@@ -486,7 +486,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received_run_id = nil
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         received_run_id = run_id
         TestResult.new(
           test_id: scenario.test_id,
@@ -520,7 +520,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received_run_id = :not_called
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         received_run_id = run_id
         TestResult.new(
           test_id: scenario.test_id,
@@ -557,7 +557,7 @@ class TestOrchestratorTest < Minitest::Test
       received_run_ids = []
       mutex = Mutex.new
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         mutex.synchronize { received_run_ids << run_id }
         TestResult.new(
           test_id: scenario.test_id,
@@ -639,7 +639,7 @@ class TestOrchestratorTest < Minitest::Test
       mutex = Mutex.new
 
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         mutex.synchronize { execution_order << scenario.test_id }
         TestResult.new(
           test_id: scenario.test_id,
@@ -719,7 +719,7 @@ class TestOrchestratorTest < Minitest::Test
       # Executor where test 1 is slow, test 2/3 are fast
       # With parallel > 1, test 2 may finish before test 1
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         sleep(0.05) if scenario.test_id == "TS-TEST-001"
         TestResult.new(
           test_id: scenario.test_id,
@@ -748,7 +748,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         received[:sandbox_path] = sandbox_path
         received[:env_vars] = env_vars
         TestResult.new(
@@ -788,7 +788,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received_sandbox = nil
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         received_sandbox = sandbox_path
         TestResult.new(
           test_id: scenario.test_id,
@@ -827,7 +827,7 @@ class TestOrchestratorTest < Minitest::Test
 
       received = {}
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         received[:sandbox_path] = sandbox_path
         received[:env_vars] = env_vars
         TestResult.new(
@@ -856,6 +856,75 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_cli_provider_reconciles_all_passed_metadata_to_pass
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002 TC-003])
+
+      # Simulate agent-written report with status "fail" but all 3/3 passed
+      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "rec001-my-pkg-ts001-reports")
+      FileUtils.mkdir_p(agent_dir)
+      File.write(File.join(agent_dir, "metadata.yml"), <<~YAML)
+        status: "fail"
+        results:
+          passed: 3
+          failed: 0
+          total: 3
+      YAML
+
+      executor = StubExecutor.new(status: "fail", summary: "Agent said fail")
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        timestamp_generator: -> { "rec001" },
+        executor: executor
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_equal "pass", results.first.status
+      assert_equal 3, results.first.passed_count
+      assert_equal 0, results.first.failed_count
+    end
+  end
+
+  def test_cli_provider_keeps_fail_when_cases_not_all_passed
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002 TC-003])
+
+      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "rec002-my-pkg-ts001-reports")
+      FileUtils.mkdir_p(agent_dir)
+      File.write(File.join(agent_dir, "metadata.yml"), <<~YAML)
+        status: "fail"
+        results:
+          passed: 2
+          failed: 1
+          total: 3
+      YAML
+
+      executor = StubExecutor.new(status: "fail", summary: "Agent said fail")
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        timestamp_generator: -> { "rec002" },
+        executor: executor
+      )
+
+      results = orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_equal "fail", results.first.status
+      assert_equal 2, results.first.passed_count
+      assert_equal 1, results.first.failed_count
+    end
+  end
+
   def test_package_run_with_test_cases_skips_non_matching_scenarios
     Dir.mktmpdir do |tmpdir|
       # Create two scenarios with different test cases
@@ -864,7 +933,7 @@ class TestOrchestratorTest < Minitest::Test
 
       executed_scenarios = []
       executor = Object.new
-      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil|
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
         executed_scenarios << { test_id: scenario.test_id, test_cases: test_cases }
         TestResult.new(
           test_id: scenario.test_id,
