@@ -13,4 +13,4 @@ argument-hint: [idea-pattern]
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://task/draft-batch`
+read and run `ace-bundle load wfi://task/draft-batch`

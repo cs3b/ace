@@ -16,4 +16,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://task/create`
+read and run `ace-bundle load wfi://task/create`

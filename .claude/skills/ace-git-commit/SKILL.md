@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-git-commit
 ---
 
-read and run `ace-bundle wfi://git/commit`
+read and run `ace-bundle load wfi://git/commit`

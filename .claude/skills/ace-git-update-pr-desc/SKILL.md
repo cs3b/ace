@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-git
 ---
 
-read and run `ace-bundle wfi://git/update-pr-desc`
+read and run `ace-bundle load wfi://git/update-pr-desc`

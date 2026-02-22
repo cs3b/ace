@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://docs/update-tools
+For detailed instructions, see: ace-bundle load wfi://docs/update-tools

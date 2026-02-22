@@ -33,7 +33,7 @@ ace-test --profile 20 [package]
 Use the performance audit template to document findings:
 
 ```bash
-ace-bundle tmpl://test-performance-audit
+ace-bundle load tmpl://test-performance-audit
 ```
 
 ### Step 3: Reference Performance Guide
@@ -41,7 +41,7 @@ ace-bundle tmpl://test-performance-audit
 Review the test performance guide for optimization strategies:
 
 ```bash
-ace-bundle guide://test-performance
+ace-bundle load guide://test-performance
 ```
 
 ### Step 4: Document and Track

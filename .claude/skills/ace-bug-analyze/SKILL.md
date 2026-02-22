@@ -17,4 +17,4 @@ last_modified: 2025-12-09
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://bug/analyze`
+read and run `ace-bundle load wfi://bug/analyze`

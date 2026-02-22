@@ -17,6 +17,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://handbook/init-project`
+read and run `ace-bundle load wfi://handbook/init-project`
 
-read and run `ace-bundle wfi://git/commit`
+read and run `ace-bundle load wfi://git/commit`

@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-handbook
 ---
 
-read and run `ace-bundle wfi://release/bump-version`
+read and run `ace-bundle load wfi://release/bump-version`

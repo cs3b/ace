@@ -58,4 +58,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://handbook/review-guides
+For detailed instructions, see: ace-bundle load wfi://handbook/review-guides

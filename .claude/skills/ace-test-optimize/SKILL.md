@@ -18,4 +18,4 @@ last_modified: 2026-01-31
 source: ace-test
 ---
 
-read and run `ace-bundle wfi://test/optimize`
+read and run `ace-bundle load wfi://test/optimize`
