@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.587] - 2026-02-22
+
+### Changed
+- **ace-taskflow v0.40.5**: Migrate ace-idea CLI to standard help pattern — remove DWIM default routing so no args shows help instead of running list command
+
+### Technical
+- **ace-taskflow v0.40.5**: Remove DefaultRouting extension and DWIM command routing from IdeaCLI; move cache clearing from CLI.start override to exe/ace-idea wrapper
+
 ## [0.9.586] - 2026-02-22
 
 ### Changed
