@@ -81,7 +81,7 @@ cat .ace-taskflow/roadmap.md
 
 ```bash
 # Get current release
-ace-taskflow release
+ace-release
 
 # List all release directories
 ls -d .ace-taskflow/v.*/ 2>/dev/null || echo "No releases found"
