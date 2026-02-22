@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.563] - 2026-02-22
+
+### Added
+- **ace-support-core v0.24.0**: `HelpCommand.build` helper for standard top-level help commands in dry-cli registries
+
+### Changed
+- **ace-support-core v0.24.0**: Drop DWIM default routing — `DefaultRouting` and `HelpRouter` simplified to thin compatibility shims; empty args now show help
+
 ## [0.9.562] - 2026-02-22
 
 ### Changed
