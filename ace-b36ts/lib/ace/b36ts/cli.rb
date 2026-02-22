@@ -29,6 +29,9 @@ module Ace
     #
     module CLI
         extend Dry::CLI::Registry
+        extend Ace::Core::CLI::DryCli::DefaultRouting
+
+        PROGRAM_NAME = "ace-b36ts"
 
         # Application commands registered in this CLI (single source of truth)
         REGISTERED_COMMANDS = %w[encode decode config].freeze
@@ -40,20 +43,6 @@ module Ace
         KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
 
         DEFAULT_COMMAND = "encode"
-
-        # Testable start method with default command routing
-        def self.start(args)
-          # Handle help explicitly (dry-cli doesn't handle registry-level help)
-          if args.first && %w[help --help -h].include?(args.first)
-            puts Dry::CLI::Usage.call(get([]), registry: self)
-            return 0
-          end
-
-          if args.empty? || !KNOWN_COMMANDS.include?(args.first)
-            args = [DEFAULT_COMMAND] + args
-          end
-          Dry::CLI.new(self).call(arguments: args)
-        end
 
         # Register commands (Hanami pattern: CLI::Commands::*)
         register "encode", Commands::Encode
