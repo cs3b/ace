@@ -107,7 +107,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.16.10)
+    ace-llm-providers-cli (0.17.0)
       ace-llm (~> 0.16)
 
 PATH
@@ -166,7 +166,7 @@ PATH
 PATH
   remote: ace-search
   specs:
-    ace-search (0.19.5)
+    ace-search (0.19.6)
       ace-git (~> 0.3)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.18)
