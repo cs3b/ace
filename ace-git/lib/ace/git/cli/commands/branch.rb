@@ -17,9 +17,9 @@ module Ace
                        desc: "Output format: text, json"
 
         # Standard options
-        option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-        option :verbose, type: :boolean, aliases: %w[-v], desc: "Verbose output"
-        option :debug, type: :boolean, aliases: %w[-d], desc: "Debug output"
+        option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+        option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+        option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
         def call(**options)
           # Get branch info

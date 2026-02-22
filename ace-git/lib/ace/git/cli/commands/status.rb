@@ -23,9 +23,9 @@ module Ace
                         desc: "Number of recent commits to show (0 to disable, default: config)"
 
         # Standard options
-        option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-        option :verbose, type: :boolean, aliases: %w[-v], desc: "Verbose output"
-        option :debug, type: :boolean, aliases: %w[-d], desc: "Debug output"
+        option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+        option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+        option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
         def call(**options)
           # Determine PR settings based on --no-pr flag
