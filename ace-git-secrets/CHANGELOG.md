@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.9] - 2026-02-22
+
+### Changed
+- Migrate top-level CLI help to the standard multi-command help pattern with explicit `help`, `--help`, and `-h` commands.
+
+### Technical
+- Remove custom default-routing (`CLI.start`, `KNOWN_COMMANDS`, `DEFAULT_COMMAND`) from CLI registry.
+- Move config preloading and no-args help handling to `exe/ace-git-secrets` before dry-cli dispatch.
+- Update CLI command tests to assert executable-equivalent dry-cli dispatch behavior.
+
 ## [0.7.7] - 2026-02-19
 
 ### Technical
