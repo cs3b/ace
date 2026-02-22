@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.598] - 2026-02-22
+
+### Fixed
+- **ace-review v0.41.2**: Add flag variants (`--help`, `-h`, `--version`) to KNOWN_COMMAND_NAMES for preprocessing safety
+
 ## [0.9.597] - 2026-02-22
 
 ### Fixed
