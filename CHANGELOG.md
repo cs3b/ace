@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.565] - 2026-02-22
+
+### Technical
+- **ace-bundle v0.30.9**: Update `ace-bundle project` → `ace-bundle load project` across docs and usage guide
+- **ace-assign v0.12.15**: Update `ace-bundle project` → `ace-bundle load project` in README, fork-context guide, and test fixture
+- **ace-docs v0.20.3**: Update `ace-bundle project` → `ace-bundle load project` in markdown-style guide
+- **ace-handbook v0.9.7**: Update `ace-bundle project` → `ace-bundle load project` in update-docs workflow
+- **ace-integration-claude v0.3.5**: Update `ace-bundle project` → `ace-bundle load project` in CLAUDE.md template
+
 ## [0.9.564] - 2026-02-22
 
 ### Added
