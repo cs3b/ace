@@ -89,7 +89,7 @@ ace-nav 'wfi://*test*' --list        # Test-related workflows
 
 ### Task Navigation
 
-The `task://` protocol delegates to `ace-taskflow task` commands, providing unified navigation across all ACE resources.
+The `task://` protocol delegates to `ace-task` commands, providing unified navigation across all ACE resources.
 
 ```bash
 # Basic task navigation
