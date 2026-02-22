@@ -42,7 +42,17 @@ module Ace
           # Help flags that should trigger usage output
           HELP_FLAGS = %w[help --help -h].freeze
 
+          # Full help flags (show complete reference with ALL-CAPS sections)
+          FULL_HELP_FLAGS = %w[help --help].freeze
+
+          # Concise help flags (show compact scannable output)
+          CONCISE_HELP_FLAGS = %w[-h].freeze
+
           # Start the CLI with default command routing.
+          #
+          # Two-tier help:
+          # - `-h` renders concise, scannable output
+          # - `--help` / `help` renders full reference with ALL-CAPS sections
           #
           # @param args [Array<String>] Command-line arguments
           # @return [Integer] Exit code (0 for success, non-zero for failure)
@@ -56,7 +66,12 @@ module Ace
             # Without this, --help returns exit code 1 because dry-cli's spell_checker
             # is invoked when the registry can't find the command
             if args.first && HELP_FLAGS.include?(args.first)
-              puts Dry::CLI::Usage.call(get([]))
+              result = get([])
+              if CONCISE_HELP_FLAGS.include?(args.first)
+                puts Dry::CLI::Usage.call_concise(result)
+              else
+                puts Dry::CLI::Usage.call(result, registry: self)
+              end
               return 0
             end
 

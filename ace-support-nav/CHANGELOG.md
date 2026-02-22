@@ -105,3 +105,9 @@ For detailed changes prior to 0.17.0, see the git history of the ace-nav directo
 - **0.13.0**: Renamed `.ace.example/` to `.ace-defaults/`
 - **0.10.0**: Added task:// Protocol Support
 - **0.9.0**: Initial release with core navigation functionality
+
+
+## [0.17.8] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings

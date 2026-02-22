@@ -113,6 +113,6 @@ class TaskProtocolIntegrationTest < Minitest::Test
     end
 
     # Help should display dry-cli-standard format
-    assert_match(/Commands:|Usage:/, stdout_output[0])
+    assert_match(/COMMANDS|Commands:|Usage:/, stdout_output[0])
   end
 end
