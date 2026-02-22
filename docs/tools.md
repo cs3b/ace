@@ -88,7 +88,7 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 
 | Tool | Purpose |
 |------|---------|
-| `ace-bundle project` | Load project context |
+| `ace-bundle load project` | Load project context |
 | `ace-bundle load wfi://namespace/action` | Load workflow via protocol |
 | `ace-nav wfi://namespace/action` | Get path of resource |
 | `ace-nav wfi://*` | List all workflows |
