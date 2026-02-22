@@ -5,11 +5,11 @@ priority: anyday
 
 # Idea
 
-# add batch reschedule options to ace-taskflow ideas...
+# add batch reschedule options to ace-idea list...
 
 ## Description
 
-add batch reschedule options to ace-taskflow ideas reschedule <Id1> <id2> <id3> ...
+add batch reschedule options to ace-idea list reschedule <Id1> <id2> <id3> ...
 
 ## Implementation Approach
 

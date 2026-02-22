@@ -5,11 +5,11 @@ priority: maybe
 
 # Idea
 
-# ace-taskflow idea create :: allow to add --task -t...
+# ace-idea create :: allow to add --task -t...
 
 ## Description
 
-ace-taskflow idea create :: allow to add --task -t param with optional tag references, by default add it to task in progress state or next task. e.g.: ace-taskflow idae create --task task.071  => will create in task.071 folder => ideas/. The reaseon behind this is to allow gather feedback to task as we develop it
+ace-idea create :: allow to add --task -t param with optional tag references, by default add it to task in progress state or next task. e.g.: ace-taskflow idae create --task task.071  => will create in task.071 folder => ideas/. The reaseon behind this is to allow gather feedback to task as we develop it
 
 ## Implementation Approach
 
