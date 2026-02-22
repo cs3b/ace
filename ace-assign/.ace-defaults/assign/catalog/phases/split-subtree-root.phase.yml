@@ -10,9 +10,9 @@ instructions:
   fork:
     - "Delegate this subtree into forked context:"
     - "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}"
-    - "Inside the forked agent, run /ace_assign_drive for this subtree scope."
+    - "Inside the forked agent, run /ace-assign-drive for this subtree scope."
   inline:
-    - "Run /ace_assign_drive and execute only child phases under this node."
+    - "Run /ace-assign-drive and execute only child phases under this node."
 
 goal_header: "Goal to satisfy through child phases:"
 

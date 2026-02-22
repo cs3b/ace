@@ -529,11 +529,11 @@ module Ace
               [
                 "Delegate this subtree into forked context:",
                 "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}",
-                "Inside the forked agent, run /ace_assign_drive for this subtree scope."
+                "Inside the forked agent, run /ace-assign-drive for this subtree scope."
               ]
             )
           else
-            lines << "Run /ace_assign_drive and execute only child phases under this node."
+            lines << "Run /ace-assign-drive and execute only child phases under this node."
           end
 
           lines
@@ -646,7 +646,7 @@ module Ace
 
           case sub_name
           when "onboard"
-            "- Run /ace_onboard to load project context#{task_hint}.\n- Confirm required files and workflow context are available."
+            "- Run /ace-onboard to load project context#{task_hint}.\n- Confirm required files and workflow context are available."
           when "plan-task"
             "- Analyze requirements#{task_hint}.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"

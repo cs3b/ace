@@ -112,7 +112,7 @@ steps:
       Report when done: ace-assign report init.md
 
   - name: implement
-    skill: ace_task_work      # Optional skill reference
+    skill: ace-task-work      # Optional skill reference
     instructions: |
       Implement the feature.
       Report when done: ace-assign report impl.md
@@ -129,24 +129,24 @@ Phases can include a `skill:` field that references a Claude Code skill to invok
 
 ```yaml
 - name: work-on-task
-  skill: ace_task_work
+  skill: ace-task-work
   instructions: |
     Work on task 123.
     Follow project conventions.
 ```
 
-When executing this phase, invoke `/ace_task_work 123` then follow the skill workflow.
+When executing this phase, invoke `/ace-task-work 123` then follow the skill workflow.
 
 ### Common Skill References
 
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
-| `ace_onboard` | `/ace_onboard` | Load project context |
-| `ace_task_work` | `/ace_task_work <taskref>` | Implement task changes |
-| `ace_git_create-pr` | `/ace_git_create-pr` | Create pull request |
-| `ace_review_pr` | `/ace_review_pr [pr#]` | Review code changes |
-| `ace_git_commit` | `/ace_git_commit` | Generate commit message |
-| `ace_git_update-pr-desc` | `/ace_git_update-pr-desc` | Update PR description |
+| `ace-onboard` | `/ace-onboard` | Load project context |
+| `ace-task-work` | `/ace-task-work <taskref>` | Implement task changes |
+| `ace-git-create-pr` | `/ace-git-create-pr` | Create pull request |
+| `ace-review-pr` | `/ace-review-pr [pr#]` | Review code changes |
+| `ace-git-commit` | `/ace-git-commit` | Generate commit message |
+| `ace-git-update-pr-desc` | `/ace-git-update-pr-desc` | Update PR description |
 
 ### Parameter Passing
 
@@ -154,13 +154,13 @@ Extract parameters from instructions for skill invocation:
 
 ```yaml
 - name: work-on-task
-  skill: ace_task_work
+  skill: ace-task-work
   instructions: |
     Work on task 148.          # Extract "148" as taskref
     Implement required changes.
 ```
 
-Agent Action: Run `/ace_task_work 148`
+Agent Action: Run `/ace-task-work 148`
 
 ### Dynamic Parameter Updates
 
@@ -168,7 +168,7 @@ Some phases need parameters from previous phases (e.g., PR number):
 
 ```yaml
 - name: create-pr
-  skill: ace_git_create-pr
+  skill: ace-git-create-pr
   instructions: |
     Create a pull request.
     Capture the PR number for subsequent review phases.
@@ -222,5 +222,5 @@ After creating the assignment, use the drive workflow to work through phases:
 ace-assign status
 
 # Drive execution through the workflow
-/ace_assign_drive
+/ace-assign-drive
 ```

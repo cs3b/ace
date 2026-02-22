@@ -1,5 +1,5 @@
 name: research
-skill: ace_search_research
+skill: ace-search-research
 description: Research a topic, codebase pattern, or external documentation
 
 prerequisites: []
