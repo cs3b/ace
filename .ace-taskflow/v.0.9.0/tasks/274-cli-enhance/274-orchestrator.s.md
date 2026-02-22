@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.274
-status: draft
+status: in-progress
 priority: medium
 estimate: 8h
 dependencies: []
+worktree:
+  branch: 274-unified-cli-help-core-formatter
+  path: "../ace-task.274"
+  created_at: '2026-02-22 01:00:17'
+  updated_at: '2026-02-22 01:00:17'
+  target_branch: main
 ---
 
 # Unified CLI Help: Core Formatter
