@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.572] - 2026-02-22
+
+### Changed
+- **ace-test-runner v0.15.5**: Migrate `ace-test` to single-command dry-cli entrypoint and handle `--version` in command flow while preserving no-arg test execution
+
+### Technical
+- **ace-test-runner v0.15.5**: Remove legacy default-routing/registry scaffolding and update CLI routing tests for direct single-command invocation
+
 ## [0.9.571] - 2026-02-22
 
 ### Changed
