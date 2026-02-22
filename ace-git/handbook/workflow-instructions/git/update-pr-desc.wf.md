@@ -262,10 +262,10 @@ gh pr view $pr_number --json url -q .url
 
 ```bash
 # Auto-detect PR from current branch
-/ace_git_update-pr-desc
+/ace-git-update-pr-desc
 
 # Specify PR number
-/ace_git_update-pr-desc 35
+/ace-git-update-pr-desc 35
 ```
 
 ## Output Example
