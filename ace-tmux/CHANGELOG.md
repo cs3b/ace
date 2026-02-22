@@ -143,3 +143,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ace-tmux list [sessions|windows|panes]` — List available presets
 - ACE config cascade integration (project > user > gem defaults)
 - tmuxinator-compatible YAML keys
+
+
+## [0.5.6] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings
