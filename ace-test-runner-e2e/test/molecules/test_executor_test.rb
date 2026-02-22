@@ -27,7 +27,7 @@ class TestExecutorTest < Minitest::Test
     scenario = create_scenario
 
     bad_response = {
-      text: "bash: line 1: /ace_e2e_run: command not found"
+      text: "bash: line 1: /ace-e2e-run: command not found"
     }
 
     Ace::LLM::QueryInterface.stub(:query, ->(*_args, **_kw) { bad_response }) do
@@ -37,7 +37,7 @@ class TestExecutorTest < Minitest::Test
       assert_equal "error", result.status
       assert_equal "Skill invocation failed before test execution", result.summary
       assert_includes result.error, "slash command was executed in a shell"
-      assert_includes result.error, "/ace_e2e_run"
+      assert_includes result.error, "/ace-e2e-run"
     end
   end
 
@@ -229,7 +229,7 @@ class TestExecutorTest < Minitest::Test
       executor.execute(scenario, sandbox_path: "/tmp/sb")
     end
 
-    assert captured_prompt.include?("/ace_e2e_run"), "Non-claude CLI provider should use skill invocation"
+    assert captured_prompt.include?("/ace-e2e-run"), "Non-claude CLI provider should use skill invocation"
     assert captured_prompt.include?("--sandbox /tmp/sb"), "Non-claude CLI should pass --sandbox"
   end
 

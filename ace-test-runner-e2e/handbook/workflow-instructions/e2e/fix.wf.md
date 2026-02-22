@@ -47,9 +47,9 @@ E2E tests are fundamentally different from unit tests: they are agent-executed v
 
 **NOT for:**
 
-- Unit test failures (use `/ace_test_fix`)
-- New E2E test creation (use `/ace_e2e_create`)
-- E2E test coverage review (use `/ace_e2e_review`)
+- Unit test failures (use `/ace-test-fix`)
+- New E2E test creation (use `/ace-e2e-create`)
+- E2E test coverage review (use `/ace-e2e-review`)
 - General application bugs not causing E2E failures
 
 ## Step 1: Gather Failure Information

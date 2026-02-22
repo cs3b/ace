@@ -1,5 +1,5 @@
 ---
-name: ace_e2e_run-batch
+name: ace-e2e-run-batch
 description: Execute multiple E2E tests in parallel using subagents
 user-invocable: true
 allowed-tools:
