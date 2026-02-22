@@ -18,4 +18,4 @@ last_modified: 2026-02-01
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle wfi://e2e/setup-sandbox`
+read and run `ace-bundle load wfi://e2e/setup-sandbox`

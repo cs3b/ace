@@ -12,4 +12,4 @@ last_modified: 2026-01-31
 source: ace-handbook
 ---
 
-read and run `ace-bundle wfi://handbook/synthesize-research`
+read and run `ace-bundle load wfi://handbook/synthesize-research`

@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-read and run ace-bundle wfi://handbook/manage-guides
+read and run ace-bundle load wfi://handbook/manage-guides

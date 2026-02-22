@@ -15,4 +15,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://test/create-cases`
+read and run `ace-bundle load wfi://test/create-cases`

@@ -17,6 +17,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle wfi://lint/run`
+read and run `ace-bundle load wfi://lint/run`
 
-read and run `ace-bundle wfi://git/commit`
+read and run `ace-bundle load wfi://git/commit`

@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://handbook/manage-agents
+For detailed instructions, see: ace-bundle load wfi://handbook/manage-agents

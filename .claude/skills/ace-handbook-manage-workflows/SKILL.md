@@ -62,4 +62,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://handbook/manage-workflows
+For detailed instructions, see: ace-bundle load wfi://handbook/manage-workflows

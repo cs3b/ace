@@ -64,4 +64,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle wfi://integration/update-claude
+For detailed instructions, see: ace-bundle load wfi://integration/update-claude
