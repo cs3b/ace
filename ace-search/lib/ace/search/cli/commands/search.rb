@@ -38,8 +38,7 @@ module Ace
               Search presets configured via search.presets
           DESC
 
-          # Examples shown in help output
-          # Note: dry-cli automatically prefixes with "ace-search search"
+          # Examples shown in help output for single-command usage
           example [
             'TODO                      # Content search (auto-detect)',
             '"*.rb"                    # File search (glob pattern)',
@@ -95,6 +94,7 @@ module Ace
           option :preset, type: :string, aliases: %w[-p], desc: "Use search preset"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
+          option :version, type: :boolean, desc: "Show version information"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -106,6 +106,10 @@ module Ace
 
             # Remove dry-cli specific keys (args is leftover arguments)
             clean_options = options.reject { |k, _| k == :args }
+            if clean_options[:version]
+              puts "ace-search #{Ace::Search::VERSION}"
+              return 0
+            end
 
             # Type-convert numeric options using Base helper for proper validation
             # convert_types uses Integer() which raises ArgumentError on invalid input

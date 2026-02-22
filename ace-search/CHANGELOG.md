@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.6] - 2026-02-22
+
+### Changed
+- Migrate CLI from registry/default-routing to single-command entrypoint (`Dry::CLI.new(Ace::Search::CLI::Commands::Search).call`).
+- Treat no-argument invocation as help (`--help`) in `exe/ace-search`.
+
+### Fixed
+- Handle `--version` directly in the search command path, ensuring version output works in single-command mode.
+
+### Technical
+- Update workflow/guide references to use `ace-search "pattern"` (no `search` subcommand).
+- Align CLI routing and integration tests with single-command behavior.
+
 ## [0.19.4] - 2026-02-22
 
 ### Changed
@@ -60,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Replaced `thor` dependency with `dry-cli ~> 1.0`
   - Added `ace-support-core ~> 0.19` dependency for dry-cli infrastructure
   - All user-facing commands, options, and behavior remain identical
-  - Default command routing (`ace-search pattern` → `ace-search search pattern`) preserved
+  - Single-command usage supported (`ace-search pattern`)
   - Numeric option type-conversion handled for parity with Thor implementation
   - Standardized `KNOWN_COMMANDS` pattern across dry-cli gems
 
