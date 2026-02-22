@@ -7,104 +7,84 @@ require "ace/taskflow/cli/release_cli"
 require "ace/taskflow/cli/retro_cli"
 
 # Unit tests for dry-cli routing behavior
-# Verifies default command routing, command aliases, and KNOWN_COMMANDS
+# Verifies command registration and help examples
 class CliRoutingIntegrationTest < AceTaskflowTestCase
   # === ace-taskflow (utility commands only) ===
 
-  def test_known_commands_includes_all_registered_commands
-    expected_registered = %w[status doctor config]
-
-    expected_registered.each do |cmd|
-      assert Ace::Taskflow::CLI::KNOWN_COMMANDS.include?(cmd),
-             "KNOWN_COMMANDS should include '#{cmd}'"
-    end
-  end
-
-  def test_known_commands_includes_builtin_commands
-    expected_builtins = %w[version help --help -h --version]
-
-    expected_builtins.each do |cmd|
-      assert Ace::Taskflow::CLI::KNOWN_COMMANDS.include?(cmd),
-             "KNOWN_COMMANDS should include builtin '#{cmd}'"
-    end
-  end
-
-  def test_known_command_returns_false_for_unknown_commands
-    assert_equal false, Ace::Taskflow::CLI.known_command?("114")
-    assert_equal false, Ace::Taskflow::CLI.known_command?(nil)
-    assert_equal false, Ace::Taskflow::CLI.known_command?("some-random-string")
-  end
-
-  def test_known_command_returns_true_for_registered_commands
-    %w[status doctor config].each do |cmd|
-      assert_equal true, Ace::Taskflow::CLI.known_command?(cmd),
-                   "known_command?('#{cmd}') should return true"
-    end
-  end
-
-  def test_default_command_is_status
-    assert_equal "status", Ace::Taskflow::CLI::DEFAULT_COMMAND
-  end
-
   def test_registered_commands_constant_matches_expected
-    expected = %w[status doctor config]
-    assert_equal expected.sort, Ace::Taskflow::CLI::REGISTERED_COMMANDS.sort
+    expected = [%w[status "Show taskflow status"], %w[doctor "Run health checks"], %w[config "Show configuration"]]
+    expected_commands = expected.map(&:first)
+
+    actual_commands = Ace::Taskflow::CLI::REGISTERED_COMMANDS.map(&:first)
+    assert_equal expected_commands.sort, actual_commands.sort
+  end
+
+  def test_help_examples_constant_exists
+    examples = Ace::Taskflow::CLI::HELP_EXAMPLES
+    assert_instance_of Array, examples
+    assert examples.any? { |ex| ex.include?("status") }
   end
 
   # === ace-task (task management) ===
 
-  def test_task_cli_known_commands
+  def test_task_cli_registered_commands
     expected = %w[list show create start done undone defer undefer move update add-dependency remove-dependency]
-    expected.each do |cmd|
-      assert Ace::Taskflow::TaskCLI::KNOWN_COMMANDS.include?(cmd),
-             "TaskCLI KNOWN_COMMANDS should include '#{cmd}'"
-    end
+    actual_commands = Ace::Taskflow::TaskCLI::REGISTERED_COMMANDS.map(&:first)
+    assert_equal expected.sort, actual_commands.sort
   end
 
-  def test_task_cli_default_command
-    assert_equal "list", Ace::Taskflow::TaskCLI::DEFAULT_COMMAND
+  def test_task_cli_help_examples
+    examples = Ace::Taskflow::TaskCLI::HELP_EXAMPLES
+    assert_instance_of Array, examples
+    assert examples.any? { |ex| ex.include?("list") }
+    assert examples.any? { |ex| ex.include?("done") }
   end
 
   # === ace-idea (idea management) ===
 
-  def test_idea_cli_known_commands
-    expected = %w[list create done park unpark reschedule]
-    expected.each do |cmd|
-      assert Ace::Taskflow::IdeaCLI::KNOWN_COMMANDS.include?(cmd),
-             "IdeaCLI KNOWN_COMMANDS should include '#{cmd}'"
-    end
+  def test_idea_cli_registered_commands
+    expected = %w[list show create done park unpark reschedule]
+    actual_commands = Ace::Taskflow::IdeaCLI::REGISTERED_COMMANDS.map(&:first)
+    assert_equal expected.sort, actual_commands.sort
   end
 
-  def test_idea_cli_default_command
-    assert_equal "list", Ace::Taskflow::IdeaCLI::DEFAULT_COMMAND
+  def test_idea_cli_help_examples
+    examples = Ace::Taskflow::IdeaCLI::HELP_EXAMPLES
+    assert_instance_of Array, examples
+    assert examples.any? { |ex| ex.include?("list") }
+    assert examples.any? { |ex| ex.include?("done") }
   end
 
   # === ace-release (release management) ===
+  # Note: ReleaseCLI uses old pattern (array of strings) until migrated
 
-  def test_release_cli_known_commands
+  def test_release_cli_registered_commands
     expected = %w[list show]
-    expected.each do |cmd|
-      assert Ace::Taskflow::ReleaseCLI::KNOWN_COMMANDS.include?(cmd),
-             "ReleaseCLI KNOWN_COMMANDS should include '#{cmd}'"
-    end
+    # Handle both old pattern (strings) and new pattern (arrays)
+    registered = Ace::Taskflow::ReleaseCLI::REGISTERED_COMMANDS
+    actual_commands = registered.first.is_a?(Array) ? registered.map(&:first) : registered
+    assert_equal expected.sort, actual_commands.sort
   end
 
-  def test_release_cli_default_command
-    assert_equal "list", Ace::Taskflow::ReleaseCLI::DEFAULT_COMMAND
+  def test_release_cli_help_examples
+    examples = Ace::Taskflow::ReleaseCLI::HELP_EXAMPLES
+    assert_instance_of Array, examples
   end
 
   # === ace-retro (retrospective management) ===
+  # Note: RetroCLI uses old pattern (array of strings) until migrated
 
-  def test_retro_cli_known_commands
+  def test_retro_cli_registered_commands
     expected = %w[list create]
-    expected.each do |cmd|
-      assert Ace::Taskflow::RetroCLI::KNOWN_COMMANDS.include?(cmd),
-             "RetroCLI KNOWN_COMMANDS should include '#{cmd}'"
-    end
+    # Handle both old pattern (strings) and new pattern (arrays)
+    registered = Ace::Taskflow::RetroCLI::REGISTERED_COMMANDS
+    actual_commands = registered.first.is_a?(Array) ? registered.map(&:first) : registered
+    assert_equal expected.sort, actual_commands.sort
   end
 
-  def test_retro_cli_default_command
-    assert_equal "list", Ace::Taskflow::RetroCLI::DEFAULT_COMMAND
+  def test_retro_cli_help_examples
+    examples = Ace::Taskflow::RetroCLI::HELP_EXAMPLES
+    assert_instance_of Array, examples
   end
 
   # === SharedOptions (used by command classes) ===
@@ -162,10 +142,5 @@ class CliRoutingIntegrationTest < AceTaskflowTestCase
     end
 
     assert_match(/--recently-done-limit/, error.message)
-  end
-
-  def test_empty_args_routes_to_default_command
-    assert_equal "status", Ace::Taskflow::CLI::DEFAULT_COMMAND
-    assert_equal false, Ace::Taskflow::CLI.known_command?(nil)
   end
 end
