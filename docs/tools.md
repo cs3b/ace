@@ -17,9 +17,9 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 | Tool | Purpose |
 |------|---------|
 | `ace-taskflow status` | Show current task/release status |
-| `ace-taskflow task 047` | View task details |
-| `ace-taskflow tasks` | List tasks in current release |
-| `ace-taskflow task done 047` | Mark task complete |
+| `ace-task 047` | View task details |
+| `ace-task list` | List tasks in current release |
+| `ace-task done 047` | Mark task complete |
 | `ace-taskflow doctor` | Run health checks and auto-fix |
 
 ## Assignment Management
