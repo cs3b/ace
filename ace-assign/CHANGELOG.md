@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.16] - 2026-02-22
+
+### Fixed
+- Prevent fork subtree recursion by auto-scoping `status` command to `ACE_ASSIGN_FORK_ROOT` when set
+- Mark first workable child phase as `in_progress` before launching forked session in `fork-run`
+
 ## [0.12.15] - 2026-02-22
 
 ### Technical
