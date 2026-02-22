@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.580] - 2026-02-22
+
+### Changed
+- **ace-support-nav v0.17.9**: Migrate `ace-nav` to the standard multi-command help pattern with explicit top-level help commands and explicit command selection.
+
+### Technical
+- **ace-support-nav v0.17.9**: Remove custom default-routing from CLI registry, move no-arg handling plus legacy `--sources`/`--create` alias translation to executable dispatch, and update integration tests for direct dry-cli invocation semantics.
+
 ## [0.9.579] - 2026-02-22
 
 ### Fixed
