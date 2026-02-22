@@ -167,6 +167,18 @@ fi
 
 `fork-run` executes the entire subtree in one dedicated process and returns when the subtree is complete or failed.
 
+> **Long-running execution:** `fork-run` typically takes 10-30 minutes depending on subtree complexity. If your environment has bash timeout limits (e.g., Claude Code's 10-minute Bash tool limit), run `fork-run` in background and poll for completion:
+>
+> ```bash
+> # Run fork-run in background (use run_in_background: true in Claude Code)
+> ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" &
+>
+> # Poll ace-assign status every 5 minutes until subtree completes
+> while ! ace-assign status --assignment $ASSIGNMENT_ID 2>&1 | grep -q "${FORK_ROOT}.*Done\|${FORK_ROOT}.*Failed"; do
+>   sleep 300
+> done
+> ```
+
 #### Subtree Completion: Task Status Verification
 
 After a fork subtree completes (work-on-task finishes successfully):

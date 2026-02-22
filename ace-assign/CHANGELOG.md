@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.13] - 2026-02-22
+
+### Added
+- Background execution guidance for fork-run in drive workflow (10-30 min timeout handling)
+- Timeout note in split-subtree-root phase template for environments with bash limits
+
 ## [0.12.11] - 2026-02-22
 
 ### Changed

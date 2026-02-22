@@ -11,6 +11,7 @@ instructions:
     - "Delegate this subtree into forked context:"
     - "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}"
     - "Inside the forked agent, run /ace-assign-drive for this subtree scope."
+    - "Note: fork-run may take 10-30 minutes. If your environment has bash timeout limits, run in background and poll ace-assign status every 5 minutes."
   inline:
     - "Run /ace-assign-drive and execute only child phases under this node."
 
