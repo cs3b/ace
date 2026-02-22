@@ -114,7 +114,7 @@ Enable AI agents and users to dynamically customize ace-taskflow behavior throug
   - Validation and security checks for protocol content
 
 - **Interface Scope**:
-  - ace-taskflow task frontmatter protocol definitions
+  - ace-task frontmatter protocol definitions
   - ace-context protocol URI resolution (wfi://, prompt://)
   - ace-nav workflow protocol execution
   - ace-llm prompt consumption from ace-context

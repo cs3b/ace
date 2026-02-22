@@ -5,7 +5,7 @@ priority: maybe
 
 # Idea
 
-we should have for consistenty --current flag ⏺ Bash(ace-taskflow release --current)
+we should have for consistenty --current flag ⏺ Bash(ace-release --current)
   ⎿  Error: Release '--current' not found.
 
 ---

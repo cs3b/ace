@@ -34,7 +34,7 @@ Extract utilities currently in ace-taskflow that ace-idea will need:
 
 ### Phase 2: Update ace-taskflow
 - Remove idea code from ace-taskflow
-- Add backward compatibility wrapper for `ace-taskflow idea`
+- Add backward compatibility wrapper for `ace-idea`
 
 ### Phase 3: Update Skills & Workflows
 - Update `ace_capture-idea`, `ace_prioritize-ideas` skills
@@ -60,7 +60,7 @@ Extract utilities currently in ace-taskflow that ace-idea will need:
 - [ ] ace-support-slug gem created with Sanitizer and builders
 - [ ] ace-idea gem functional standalone (without ace-taskflow)
 - [ ] ace-idea integrates with ace-taskflow when present (uses release storage)
-- [ ] `ace-taskflow idea` wrapper delegates to ace-idea
+- [ ] `ace-idea` wrapper delegates to ace-idea
 - [ ] All existing idea tests pass in ace-idea
 - [ ] Skills work with new ace-idea commands
 
@@ -98,4 +98,4 @@ end
 ## References
 
 - Plan file: `/Users/mc/.claude/plans/serialized-baking-sundae.md`
-- Research: Exploration of ace-taskflow idea subsystem
+- Research: Exploration of ace-idea subsystem
