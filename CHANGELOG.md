@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.582] - 2026-02-22
+
+### Fixed
+- **ace-llm v0.22.5**: Pass `backends` config from provider YAML to client, fixing ClaudeOaiClient not receiving env vars and model tier mappings for non-Anthropic backends (e.g., zai)
+
 ## [0.9.581] - 2026-02-22
 
 ### Changed
