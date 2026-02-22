@@ -176,7 +176,7 @@ Provide comprehensive summary including:
 
 **Recommendations:**
 - Priority actions (e.g., answer HIGH priority questions)
-- Tasks ready for /ace_task_works
+- Tasks ready for /ace-task-works
 - Tasks needing more research or planning
 - Any follow-up actions needed
 
@@ -213,19 +213,19 @@ Provide comprehensive summary including:
 
 ```bash
 # Review next 5 actionable tasks (default)
-/ace_review_run-tasks
+ace-review-run-tasks
 
 # Review all tasks needing human input
-/ace_review_run-tasks --filter needs_review:true
+ace-review-run-tasks --filter needs_review:true
 
 # Review all draft tasks for clarity
-/ace_review_run-tasks --status draft
+ace-review-run-tasks --status draft
 
 # Review pending tasks for implementation readiness
-/ace_review_run-tasks --status pending
+ace-review-run-tasks --status pending
 
 # Review specific tasks by ID
-/ace_review_run-tasks v.X.Y+NNN v.X.Y+MMM
+ace-review-run-tasks v.X.Y+NNN v.X.Y+MMM
 ```
 
 ## Important Notes

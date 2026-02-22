@@ -100,7 +100,7 @@ For experienced users, here's the condensed workflow:
 
    * Use the behavioral spec's Success Criteria and Interface Contract to guide implementation decisions
    * If invoked via ace-assign: JIT planning happened as a prior phase; use that planning output as context alongside the behavioral spec
-   * If invoked standalone: For complex tasks, ensure the task has been promoted to pending via `/ace_review_run-task` first, then run `/ace_task_plan` for JIT planning. For straightforward tasks, proceed directly with the behavioral spec
+   * If invoked standalone: For complex tasks, ensure the task has been promoted to pending via `ace-review-run-task` first, then run `/ace-task-plan` for JIT planning. For straightforward tasks, proceed directly with the behavioral spec
 
    **Task Type Detection:**
    After loading the task, determine if it's an orchestrator or regular task:
@@ -425,7 +425,7 @@ When working with temporary files:
 2. Check Behavioral Specification structure:
    * Must have Success Criteria section
    * Must have Interface Contract section
-   * If spec is incomplete, run `/ace_review_run-task` to identify gaps
+   * If spec is incomplete, run `ace-review-run-task` to identify gaps
 3. For malformed tasks:
    * Report structure issues to user
    * Ask for task file correction
