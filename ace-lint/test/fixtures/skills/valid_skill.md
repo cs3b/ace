@@ -1,5 +1,5 @@
 ---
-name: ace_test-skill
+name: ace-test-skill
 description: A valid test skill for linting
 # bundle: project
 # agent: Bash

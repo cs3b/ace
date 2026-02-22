@@ -67,8 +67,8 @@ schemas:
     field_validations:
       name:
         type: string
-        pattern: "^ace_"
-        error_message: "name must start with 'ace_'"
+        pattern: "^ace-[a-z0-9-]+$"
+        error_message: "name must use lowercase alphanumerics and hyphens, and start with 'ace-'"
       user-invocable:
         type: boolean
       allowed-tools:
