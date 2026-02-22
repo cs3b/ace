@@ -12,14 +12,14 @@ describe "Provider Registration" do
     assert defined?(Ace::LLM::Providers::CLI::ClaudeCodeClient), "ClaudeCodeClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::CodexClient), "CodexClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::OpenCodeClient), "OpenCodeClient should be defined"
-    assert defined?(Ace::LLM::Providers::CLI::CodexOSSClient), "CodexOSSClient should be defined"
+    assert defined?(Ace::LLM::Providers::CLI::CodexOaiClient), "CodexOaiClient should be defined"
   end
 
   it "providers have correct provider_name" do
     assert_equal "claude", Ace::LLM::Providers::CLI::ClaudeCodeClient.provider_name
     assert_equal "codex", Ace::LLM::Providers::CLI::CodexClient.provider_name
     assert_equal "opencode", Ace::LLM::Providers::CLI::OpenCodeClient.provider_name
-    assert_equal "codexoss", Ace::LLM::Providers::CLI::CodexOSSClient.provider_name
+    assert_equal "codexoai", Ace::LLM::Providers::CLI::CodexOaiClient.provider_name
   end
 
   it "providers don't need credentials" do
@@ -33,7 +33,7 @@ describe "Provider Registration" do
     oc = Ace::LLM::Providers::CLI::OpenCodeClient.new
     assert_equal false, oc.needs_credentials?
 
-    oss = Ace::LLM::Providers::CLI::CodexOSSClient.new
-    assert_equal false, oss.needs_credentials?
+    oai = Ace::LLM::Providers::CLI::CodexOaiClient.new
+    assert_equal false, oai.needs_credentials?
   end
 end

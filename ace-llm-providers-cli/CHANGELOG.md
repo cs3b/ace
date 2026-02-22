@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-02-22
+
+### Added
+- New `CodexOaiClient` multi-backend provider that wraps `codex` CLI to target any OpenAI-compatible endpoint via `-c` flag overrides
+- Provider config `codexoai.yml` with Z.ai backend (glm-5, glm-4.7, glm-4.6) and model aliases
+- Tests for command building, backend model splitting, availability validation, and generate flow
+
+### Removed
+- `CodexOSSClient` and `codexoss.yml` provider (called non-existent `codex-oss` binary)
+
 ## [0.16.10] - 2026-02-22
 
 ### Changed
