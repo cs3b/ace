@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "dry/cli"
+require "open3"
 
 class CliTest < Minitest::Test
   def setup
     setup_temp_dir
+    @exe_path = File.expand_path("../../exe/ace-git-worktree", __dir__)
   end
 
   def teardown
@@ -12,71 +15,46 @@ class CliTest < Minitest::Test
   end
 
   def test_run_without_arguments_shows_help
-    # dry-cli shows help when no arguments (using default command routing)
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start([])
-    end
-    # With dry-cli, empty args routes to default command (create)
-    # which shows help since no branch is provided
-    assert_includes output.first, "USAGE:"
+    stdout, stderr, status = run_exe
+    assert status.success?
+    assert_match(/Commands:|USAGE:/i, stdout + stderr)
   end
 
   def test_run_with_help_flag
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["--help"])
-    end
-    # dry-cli help format shows available commands
+    output = run_cli(["--help"])
     assert_match(/COMMANDS|Commands:/, output.first)
   end
 
   def test_run_with_short_help_flag
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["-h"])
-    end
+    output = run_cli(["-h"])
     assert_match(/COMMANDS|Commands:/, output.first)
   end
 
   def test_run_with_help_command
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["help"])
-    end
+    output = run_cli(["help"])
     assert_match(/COMMANDS|Commands:/, output.first)
   end
 
   def test_run_with_version_flag
-    output = capture_io do
-      result = Ace::Git::Worktree::CLI.start(["--version"])
-    end
-    # Check version is output
+    output = run_cli(["--version"])
     assert_includes output.first, "ace-git-worktree"
-    # Note: dry-cli doesn't return exit codes, so we check output instead
   end
 
   def test_run_with_short_version_flag
     # Note: -v is now --verbose per ADR-018, --version is for version
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["--version"])
-    end
+    output = run_cli(["--version"])
     assert_includes output.first, "ace-git-worktree"
   end
 
   def test_run_with_version_command
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["version"])
-    end
+    output = run_cli(["version"])
     assert_includes output.first, "ace-git-worktree"
   end
 
   def test_run_with_invalid_command
-    # dry-cli treats unknown commands as arguments to the default command
-    # So "invalid-command" is treated as a branch name for "create"
-    # This will show a "Failed to create worktree" message
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["invalid-command"])
-    end
-    # Should show error about failed creation
-    combined_output = output.join
-    assert_match(/Failed to create|Error:|Usage:|Must specify/i, combined_output)
+    stdout, stderr, status = run_exe("invalid-command")
+    refute status.success?
+    assert_match(/Commands:|COMMANDS|unknown command/i, stdout + stderr)
   end
 
   def test_create_command_integration
@@ -106,7 +84,7 @@ class CliTest < Minitest::Test
 
     # Stub the ace-taskflow command and execute CLI inside the stub block
     Open3.stub(:capture3, [task_output, "", 0]) do
-      output = Ace::Git::Worktree::CLI.start(["create", "081", "--dry-run"])
+      output = run_cli(["create", "081", "--dry-run"])
       # Check output for successful dry-run message
       assert_includes output.join, "DRY RUN"
     end
@@ -115,18 +93,14 @@ class CliTest < Minitest::Test
   def test_list_command_integration
     # The list command runs without crashing
     # Actual git worktree mocking happens at the molecule level
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["list"])
-    end
+    output = run_cli(["list"])
     # Verify meaningful output - list shows table header or summary
     combined_output = output.join
     assert_match(/Task|Branch|Path|Summary|worktree/i, combined_output)
   end
 
   def test_remove_command_with_dry_run
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["remove", "/some/path", "--dry-run"])
-    end
+    output = run_cli(["remove", "/some/path", "--dry-run"])
     # Check for dry-run output (may be in stderr)
     combined_output = output.join
     assert_includes combined_output, "DRY RUN"
@@ -136,7 +110,7 @@ class CliTest < Minitest::Test
     skip "Integration test requires full git/worktree setup - depends on command-level fixes"
 
     stub_git_command do
-      output = Ace::Git::Worktree::CLI.start(["switch", "main"])
+      output = run_cli(["switch", "main"])
       # Check that switch command ran
       assert_includes output.join, "/"
     end
@@ -146,25 +120,21 @@ class CliTest < Minitest::Test
     skip "Integration test requires full git/worktree setup - depends on command-level fixes"
 
     stub_git_command do
-      output = Ace::Git::Worktree::CLI.start(["prune", "--dry-run"])
+      output = run_cli(["prune", "--dry-run"])
       # Check for dry-run or prune output
       assert_match(/DRY RUN|Pruned|No worktrees/i, output.join)
     end
   end
 
   def test_config_command_show
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["config", "show"])
-    end
+    output = run_cli(["config", "show"])
     # Should show configuration output
     assert_includes output.first, "Configuration"
   end
 
   def test_config_command_with_invalid_subcommand
     # Config command with invalid subcommand - shows help
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["config", "invalid"])
-    end
+    output = run_cli(["config", "invalid"])
     # Just verify it runs without raising and shows some output
     assert_kind_of Array, output
   end
@@ -173,9 +143,7 @@ class CliTest < Minitest::Test
   def test_handles_missing_ace_taskflow_gracefully
     # Mock ace-taskflow as unavailable
     Open3.stub(:capture3, ["", "command not found: ace-taskflow", 1]) do
-      output = capture_io do
-        Ace::Git::Worktree::CLI.start(["create", "081"])
-      end
+      output = run_cli(["create", "081"])
 
       # Should handle gracefully - check for error message
       combined_output = output.join
@@ -207,9 +175,7 @@ class CliTest < Minitest::Test
     # BEFORE any git operations. No stub needed - if validation fails,
     # git/Open3 would never be called.
     dangerous_ids.each do |dangerous_id|
-      output = capture_io do
-        Ace::Git::Worktree::CLI.start(["create", dangerous_id, "--dry-run"])
-      end
+      output = run_cli(["create", dangerous_id, "--dry-run"])
 
       # Should reject dangerous input without executing any commands
       # Check for error message indicating rejection
@@ -238,9 +204,7 @@ class CliTest < Minitest::Test
 
   def test_create_pr_worktree_cli_routes_correctly
     # Test that --pr flag routes to PR creation (no network needed)
-    output = capture_io do
-      Ace::Git::Worktree::CLI.start(["create", "--pr", "invalid-not-numeric"])
-    end
+    output = run_cli(["create", "--pr", "invalid-not-numeric"])
 
     # Should fail validation (PR number must be numeric) - check for error message
     combined_output = output.join
@@ -250,15 +214,19 @@ class CliTest < Minitest::Test
 
   private
 
-  def stub_git_command(output = "", error = "", exit_status = 0)
-    # Mock git command execution via ace-git-diff
-    mock_result = {
-      success: exit_status == 0,
-      output: output,
-      error: error,
-      exit_code: exit_status
-    }
+  def run_cli(args)
+    capture_io do
+      Dry::CLI.new(Ace::Git::Worktree::CLI).call(arguments: args)
+    rescue SystemExit
+      nil
+    end
+  end
 
+  def run_exe(*args)
+    Open3.capture3(@exe_path, *args)
+  end
+
+  def stub_git_command(output = "", error = "", exit_status = 0)
     # Stub any git-related commands that might be called
     Open3.stub(:capture3, [output, error, exit_status]) do
       yield
