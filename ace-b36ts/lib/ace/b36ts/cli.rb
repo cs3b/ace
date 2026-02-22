@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "cli/commands/encode"
 require_relative "cli/commands/decode"
@@ -28,35 +27,47 @@ module Ace
     #   alphabet: 0123456789abcdefghijklmnopqrstuvwxyz
     #
     module CLI
-        extend Dry::CLI::Registry
-        extend Ace::Core::CLI::DryCli::DefaultRouting
+      extend Dry::CLI::Registry
 
-        PROGRAM_NAME = "ace-b36ts"
+      PROGRAM_NAME = "ace-b36ts"
 
-        # Application commands registered in this CLI (single source of truth)
-        REGISTERED_COMMANDS = %w[encode decode config].freeze
+      REGISTERED_COMMANDS = [
+        ["encode", "Encode timestamp to compact ID"],
+        ["decode", "Decode compact ID to timestamp"],
+        ["config", "Show current configuration"]
+      ].freeze
 
-        # dry-cli built-in commands (standard across all CLI gems)
-        BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+      HELP_EXAMPLES = [
+        "ace-b36ts encode",
+        "ace-b36ts encode 2024-01-15T10:30:00Z",
+        "ace-b36ts decode abc123",
+        "ace-b36ts config"
+      ].freeze
 
-        # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
-        KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+      # Register commands (Hanami pattern: CLI::Commands::*)
+      register "encode", Commands::Encode
+      register "decode", Commands::Decode
+      register "config", Commands::Config
 
-        DEFAULT_COMMAND = "encode"
+      # Version command
+      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
+        gem_name: "ace-b36ts",
+        version: Ace::B36ts::VERSION
+      )
+      register "version", version_cmd
+      register "--version", version_cmd
 
-        # Register commands (Hanami pattern: CLI::Commands::*)
-        register "encode", Commands::Encode
-        register "decode", Commands::Decode
-        register "config", Commands::Config
-
-        # Version command
-        version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
-          gem_name: "ace-b36ts",
-          version: Ace::B36ts::VERSION
-        )
-        register "version", version_cmd
-        register "--version", version_cmd
-      end
+      # Help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::B36ts::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
     end
   end
+end
 

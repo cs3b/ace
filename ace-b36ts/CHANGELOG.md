@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-02-22
+
+### Changed
+- Migrated to standard dry-cli help pattern (no args shows help)
+- Removed DefaultRouting extension in favor of HelpCommand registration
+
+## [0.7.1] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings
+
 ## [0.7.0] - 2026-02-17
 
 ### Changed
@@ -164,9 +175,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Position 3: Day of month (1-31 mapped to 0-30)
 - Position 4: 40-minute block of day (36 blocks)
 - Positions 5-6: Precision within block (~1.85s)
-
-
-## [0.7.1] - 2026-02-22
-
-### Fixed
-- Standardized quiet, verbose, debug option descriptions to canonical strings
