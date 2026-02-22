@@ -155,49 +155,6 @@ module Ace
             refute_includes output, "Task Management"
           end
 
-          # ---- Two-tier routing integration ----
-
-          def test_default_routing_help_renders_full_format
-            registry = build_routing_registry("load" => "Load context")
-
-            stdout, = capture_io do
-              registry.start(["--help"])
-            end
-
-            assert_includes stdout, "COMMANDS"
-            assert_includes stdout, "Load context"
-          end
-
-          def test_default_routing_concise_h_renders_compact_format
-            registry = build_routing_registry("load" => "Load context")
-
-            stdout, = capture_io do
-              registry.start(["-h"])
-            end
-
-            assert_includes stdout, "Commands:"
-            assert_includes stdout, "Load context"
-          end
-
-          private
-
-          def build_routing_registry(commands = {})
-            reg = Module.new do
-              extend Dry::CLI::Registry
-              extend Ace::Core::CLI::DryCli::DefaultRouting
-            end
-
-            commands.each do |name, desc|
-              cmd_class = Class.new(Dry::CLI::Command) { self.desc desc }
-              reg.register(name, cmd_class)
-            end
-
-            all_cmds = commands.keys + %w[version help --help -h --version]
-            reg.const_set(:KNOWN_COMMANDS, Set.new(all_cmds))
-            reg.const_set(:DEFAULT_COMMAND, commands.keys.first)
-
-            reg
-          end
         end
       end
     end

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-02-22
+
+### Added
+- `HelpCommand.build` helper for creating standard top-level help commands in dry-cli registries
+
+### Changed
+- Drop DWIM default routing from `DefaultRouting` — empty args now show help instead of routing to a default command
+- Simplify `DefaultRouting` and `HelpRouter` to thin compatibility shims
+- Remove DWIM-dependent integration tests from usage_formatter_test
+
 ## [0.23.2] - 2026-02-22
 
 ### Added
