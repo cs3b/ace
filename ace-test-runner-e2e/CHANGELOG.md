@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.16.20] - 2026-02-22
+## [0.16.21] - 2026-02-22
+
+### Changed
+- Migrate CLI to standard help pattern with explicit subcommands
+- Remove DWIM default routing - users must now use `run` subcommand explicitly
+- Empty args now shows help instead of requiring a command
+
+### Technical
+- Add `HELP_EXAMPLES` constant with usage examples
+- Update tests to match new CLI pattern (remove `known_command?` tests)
 
 ### Technical
 - Update e2e-testing guide to use `ace-search "pattern"` single-command syntax (drop `search` subcommand)
