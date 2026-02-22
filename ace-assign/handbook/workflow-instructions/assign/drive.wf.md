@@ -176,8 +176,8 @@ After a fork subtree completes (work-on-task finishes successfully):
 2. **If mark-task-done phase was NOT included in the assignment** (common for ad-hoc assignments):
    ```bash
    # Manually sync status before reporting subtree complete
-   ace-taskflow task done {taskref}
-   ace-taskflow task {taskref}  # Verify it shows status: done
+   ace-task done {taskref}
+   ace-task {taskref}  # Verify it shows status: done
    ```
 
 3. **Report the subtree complete only after verification.** This prevents the orchestrator from showing work as done while ace-taskflow shows it as in-progress.
