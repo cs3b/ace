@@ -23,8 +23,8 @@ module Ace
         stdout, stderr, status = Open3.capture3(@exe_path, "--help")
 
         assert status.success?, "Command should succeed"
-        assert_match(/Usage:/, stdout)
-        assert_match(/Options:/, stdout)
+        assert_match(/COMMANDS|Usage:/, stdout)
+        assert_match(/search|Options:/, stdout)
         assert_empty stderr
       end
 

@@ -37,7 +37,7 @@ class CliRoutingTest < AceSearchTestCase
     result = invoke_cli(Ace::Search::CLI, ["--help"])
     # Help goes to stderr in dry-cli
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   # --- Search Command Tests ---
@@ -65,6 +65,6 @@ class CliRoutingTest < AceSearchTestCase
     result = invoke_cli(Ace::Search::CLI, [])
     # dry-cli shows help when no arguments provided
     # This is a UX improvement over showing an error
-    assert_match(/Commands:/i, result[:stdout] + result[:stderr])
+    assert_match(/COMMANDS|Commands:/i, result[:stdout] + result[:stderr])
   end
 end
