@@ -141,7 +141,7 @@ Provide comprehensive summary including:
 - Context: [details]
 
 **Recommendations:**
-- Next steps (e.g., run /ace_task_works)
+- Next steps (e.g., run /ace-task-works)
 - Any follow-up actions needed
 
 ## Error Handling Strategies
@@ -175,13 +175,13 @@ Provide comprehensive summary including:
 
 ```bash
 # Plan all draft tasks
-/ace_task_plans
+/ace-task-plans
 
 # Plan specific task pattern (if supported)
-/ace_task_plans [pattern]
+/ace-task-plans [pattern]
 
 # Plan specific tasks by ID
-/ace_task_plans v.X.Y+NNN v.X.Y+MMM
+/ace-task-plans v.X.Y+NNN v.X.Y+MMM
 ```
 
 ## Important Notes
