@@ -28,9 +28,9 @@ module Ace
             option :show, desc: "Show current configuration", type: :boolean, aliases: []
             option :validate, desc: "Validate configuration", type: :boolean, aliases: []
             option :files, desc: "Show configuration file locations", type: :boolean, aliases: []
-            option :verbose, desc: "Show detailed information", type: :boolean, aliases: ["-v"]
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :verbose, desc: "Show verbose output", type: :boolean, aliases: ["-v"]
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             def call(subcommand: nil, **options)
               display_config_summary("config", options)

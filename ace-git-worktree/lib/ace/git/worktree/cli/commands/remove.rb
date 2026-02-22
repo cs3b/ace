@@ -27,9 +27,9 @@ module Ace
             option :keep_directory, desc: "Keep the worktree directory", type: :boolean, aliases: ["--keep-directory"]
             option :delete_branch, desc: "Also delete the associated branch", type: :boolean, aliases: ["-db"]
             option :dry_run, desc: "Show what would be removed", type: :boolean, aliases: ["--dry-run"]
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :verbose, type: :boolean, aliases: ["-v"], desc: "Verbose output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             def call(identifier: nil, **options)
               display_config_summary("remove", options)

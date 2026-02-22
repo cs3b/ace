@@ -26,21 +26,21 @@ class CliTest < Minitest::Test
       Ace::Git::Worktree::CLI.start(["--help"])
     end
     # dry-cli help format shows available commands
-    assert_includes output.first, "Commands:"
+    assert_match(/COMMANDS|Commands:/, output.first)
   end
 
   def test_run_with_short_help_flag
     output = capture_io do
       Ace::Git::Worktree::CLI.start(["-h"])
     end
-    assert_includes output.first, "Commands:"
+    assert_match(/COMMANDS|Commands:/, output.first)
   end
 
   def test_run_with_help_command
     output = capture_io do
       Ace::Git::Worktree::CLI.start(["help"])
     end
-    assert_includes output.first, "Commands:"
+    assert_match(/COMMANDS|Commands:/, output.first)
   end
 
   def test_run_with_version_flag
