@@ -284,3 +284,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `StatusCollector`
   - `PruneOrchestrator`
 - Test coverage for atoms, models, molecules, organisms, and CLI command registration.
+
+
+## [0.4.8] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings
