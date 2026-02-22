@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.7] - 2026-02-22
+
+### Changed
+- Migrate skill naming and invocation references to hyphenated `ace-*` format (no underscores).
+
 ## [0.30.6] - 2026-02-19
 
 ### Technical
