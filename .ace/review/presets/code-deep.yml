@@ -9,7 +9,7 @@ description: "Multi-model PR review - concurrent execution across codex, gemini,
 models:
   - claude:opus              # Deep reasoning, architecture analysis
   - codex:max  # Code-focused, implementation details
-  - gemini:pro-latest
+  - gemini:pro
   # - xai:fast
   # - openrouter:minimax
   # - opencode:glm
