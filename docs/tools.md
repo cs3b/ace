@@ -106,7 +106,7 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 
 | Tool | Purpose |
 |------|---------|
-| `ace-llm "prompt" -m MODEL` | Query LLM provider |
+| `ace-llm query "prompt" -m MODEL` | Query LLM provider |
 | `ace-b36ts` | Generate timestamp ID (6-char Base36) |
 | `ace-b36ts decode ID` | Decode ID to datetime |
 
