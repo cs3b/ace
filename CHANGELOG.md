@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.577] - 2026-02-22
+
+### Added
+- **ace-llm-providers-cli v0.19.0**: Git worktree sandbox support — `CodexClient` and `CodexOaiClient` auto-detect worktrees and add `--add-dir` for git metadata writability
+- **ace-llm-providers-cli v0.19.0**: New `WorktreeDirResolver` atom for worktree detection and common git dir resolution
+
 ## [0.9.576] - 2026-02-22
 
 ### Changed
