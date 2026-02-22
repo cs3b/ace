@@ -15,7 +15,7 @@ Update dev-tools documentation to reflect current implementation.
 
 ## Usage
 
-Type `/ace_docs_update-tools [component]` where:
+Type `/ace-docs-update-tools [component]` where:
 - `component` is optional - specific tool or command to document
 
 ## What This Does
@@ -39,9 +39,9 @@ The workflow will:
 ## Examples
 
 ```
-/ace_docs_update-tools
-/ace_docs_update-tools context
-/ace_docs_update-tools handbook
+/ace-docs-update-tools
+/ace-docs-update-tools context
+/ace-docs-update-tools handbook
 ```
 
 ## Full Workflow
