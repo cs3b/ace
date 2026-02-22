@@ -3,6 +3,7 @@
 require "test_helper"
 require "tmpdir"
 require "fileutils"
+require "dry/cli"
 require "ace/git"
 
 class CLIIntegrationTest < Minitest::Test
@@ -674,7 +675,7 @@ class CLIIntegrationTest < Minitest::Test
     $stderr = error
 
     begin
-      Ace::PromptPrep::CLI.start(args)
+      Dry::CLI.new(Ace::PromptPrep::CLI).call(arguments: args)
     rescue Ace::Core::CLI::Error => e
       $stderr.print e.message
     ensure
@@ -694,7 +695,7 @@ class CLIIntegrationTest < Minitest::Test
     $stderr = StringIO.new
 
     begin
-      Ace::PromptPrep::CLI.start(args)
+      Dry::CLI.new(Ace::PromptPrep::CLI).call(arguments: args)
       nil
     rescue Ace::Core::CLI::Error => e
       e.exit_code

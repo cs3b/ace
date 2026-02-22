@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dry/cli"
 
 class SetupResetCommandsTest < Minitest::Test
   def setup
@@ -11,11 +12,11 @@ class SetupResetCommandsTest < Minitest::Test
     FileUtils.rm_rf(@tmpdir)
   end
 
-  # Helper method to invoke CLI
+  # Helper method to invoke CLI using Dry::CLI pattern
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
       begin
-        @_cli_result = Ace::PromptPrep::CLI.start(args)
+        @_cli_result = Dry::CLI.new(Ace::PromptPrep::CLI).call(arguments: args)
       rescue SystemExit => e
         @_cli_result = e.status
       rescue Ace::Core::CLI::Error => e
