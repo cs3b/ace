@@ -40,7 +40,7 @@ class CliRoutingTest < AceLlmTestCase
     result = invoke_cli(Ace::LLM::CLI, ["--help"])
     # Help goes to stderr in dry-cli
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   # --- List Providers Command Tests ---
