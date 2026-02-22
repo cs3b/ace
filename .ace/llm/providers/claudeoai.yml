@@ -6,6 +6,10 @@ backends:
   zai:
     base_url: "https://api.z.ai/api/anthropic"
     env_key: "ZAI_API_KEY"
+    model_tiers:
+      opus: glm-5
+      sonnet: glm-5
+      haiku: glm-4.7
     models: [glm-5, glm-4.7, glm-4.6]
 models:
   - zai/glm-5
