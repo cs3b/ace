@@ -147,7 +147,7 @@ bundle:
 ```markdown
 1. Check if task exists:
    ```bash
-   ace-taskflow task $task_ref
+   ace-task $task_ref
    ```
 
 2. If error, report to user
