@@ -1,8 +1,8 @@
-# use full name for cmdlines -> ace-taskflow ideas a
+# use full name for cmdlines -> ace-idea list a
 
 ## Idea Description
 
-use full name for cmdlines -> ace-taskflow ideas and use abbrevation in ace-tf ace-tfi ace-tfr
+use full name for cmdlines -> ace-idea list and use abbrevation in ace-tf ace-tfi ace-tfr
 
 ## Metadata
 
