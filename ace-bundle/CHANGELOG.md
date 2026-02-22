@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.9] - 2026-02-22
+
+### Technical
+- Update `ace-bundle project` → `ace-bundle load project` in README and usage docs
+- Update `ace-bundle project-base` → `ace-bundle load project-base` throughout usage guide
+
 ## [0.30.7] - 2026-02-22
 
 ### Changed
