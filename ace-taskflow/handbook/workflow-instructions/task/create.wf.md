@@ -34,7 +34,7 @@ DO NOT during this phase:
 - Run tests or builds
 - Make commits to project source code
 
-All code implementation happens during `/ace_task_work` (status: in-progress).
+All code implementation happens during `/ace-task-work` (status: in-progress).
 
 ## Variables
 
@@ -52,7 +52,7 @@ This workflow automatically loads the following workflows via frontmatter `conte
 
 All workflow content is embedded automatically by ace-bundle protocol resolution.
 
-**Note**: Implementation planning (plan-task) is no longer part of task creation. Planning happens JIT via ace-assign phases just before implementation begins. Use `/ace_review_run-task` to validate and promote drafts to pending.
+**Note**: Implementation planning (plan-task) is no longer part of task creation. Planning happens JIT via ace-assign phases just before implementation begins. Use `ace-review-run-task` to validate and promote drafts to pending.
 
 ## Process Steps
 
@@ -122,11 +122,11 @@ I can have consistent content loading across all ACE tools."
 - [ ] Changes committed to git with proper message and co-authorship
 - [ ] Task discoverable via `ace-taskflow task XXX`
 - [ ] Task file contains proper YAML frontmatter with task ID
-- [ ] Task ready for review via `/ace_review_run-task`
+- [ ] Task ready for review via `ace-review-run-task`
 
 ## Next Steps After Task Creation
 
-- Run `/ace_review_run-task` to validate the draft and promote to pending
+- Run `ace-review-run-task` to validate the draft and promote to pending
 - Implementation planning happens JIT via ace-assign phases when work begins
 
 ## Notes

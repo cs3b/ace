@@ -193,7 +193,7 @@ Provide comprehensive summary including:
 - Context: [details]
 
 **Recommendations:**
-- Next steps (e.g., run /ace_review_run-tasks, address blockers)
+- Next steps (e.g., run ace-review-run-tasks, address blockers)
 - Any follow-up actions needed
 
 ## Error Handling Strategies
@@ -233,13 +233,13 @@ Provide comprehensive summary including:
 
 ```bash
 # Work on next single pending task
-/ace_task_works
+/ace-task-works
 
 # Work on specific task pattern (if supported)
-/ace_task_works [pattern]
+/ace-task-works [pattern]
 
 # Work on specific tasks by ID
-/ace_task_works v.X.Y+NNN v.X.Y+MMM
+/ace-task-works v.X.Y+NNN v.X.Y+MMM
 ```
 
 ## Important Notes

@@ -202,7 +202,7 @@ module Ace
 
         def build_agent_prompt(issue_count, issue_list)
           <<~PROMPT
-            /ace_onboard
+            /ace-onboard
 
             ---
 
