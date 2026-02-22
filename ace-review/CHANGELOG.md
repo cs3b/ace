@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-02-22
+
+### Changed
+- **Breaking:** Migrated from multi-command Registry to single-command pattern (task 278)
+  - Removed `review` subcommand: `ace-review review --preset pr` → `ace-review --preset pr`
+  - Removed `list-presets` subcommand: `ace-review list-presets` → `ace-review --list-presets`
+  - Removed `list-prompts` subcommand: `ace-review list-prompts` → `ace-review --list-prompts`
+  - Removed `version`/`help` subcommands: use `--version`/`--help` flags only
+  - Added `--version`, `--list-presets`, `--list-prompts` flags to main command
+  - Simplified `preprocess_array_options` (no command name detection needed)
+  - No backward compatibility (per ADR-024)
+
 ## [0.41.2] - 2026-02-22
 
 ### Fixed

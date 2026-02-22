@@ -18,9 +18,9 @@ require "dry/cli"
 args = Ace::Review::CLI.preprocess_array_options(ARGV)
 args = ["--help"] if args.empty?
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+# Start dry-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 begin
-  Dry::CLI.new(Ace::Review::CLI).call(arguments: args)
+  Dry::CLI.new(Ace::Review::CLI::Commands::Review).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
