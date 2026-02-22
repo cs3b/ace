@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.590] - 2026-02-22
+
+### Changed
+- **ace-tmux v0.6.0**: Migrate CLI to standard help pattern — remove DWIM context-aware routing so no args shows help instead of routing to start/window based on TMUX env
+
+### Technical
+- **ace-tmux v0.6.0**: Remove KNOWN_COMMANDS, DEFAULT_COMMAND, inside_tmux?, known_command? methods; register HelpCommand for --help/-h; add no-args handling to exe/ace-tmux
+
 ## [0.9.589] - 2026-02-22
 
 ### Changed
