@@ -94,7 +94,7 @@ Self-contained instruction documents for complete processes:
 * **Structure**: Frontmatter (purpose, params, tools) + complete instructions + embedded templates
 * **Principle**: ADR-001 self-containment - include all context inline
 * **Namespaces**: `task/`, `bug/`, `git/`, `docs/`, `test/`, `e2e/`, `review/`, `handbook/`, `release/`, `assign/`, `lint/`, `search/`, `idea/`, `retro/`, `integration/`
-* **Discovery**: `ace-bundle wfi://namespace/action` or browse with `ace-nav wfi://namespace/*`
+* **Discovery**: `ace-bundle load wfi://namespace/action` or browse with `ace-nav wfi://namespace/*`
 * **Use when**: Multi-step process, decision points, context management
 
 ### Agents (.ag.md)
