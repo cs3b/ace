@@ -62,9 +62,9 @@ module Ace
                    desc: "Preview which test cases would run without executing"
             option :only_failures, type: :boolean,
                    desc: "Re-run only previously failed test cases"
-            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress detailed output"
-            option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-            option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
             def call(package:, test_id: nil, **options)
               options = convert_types(options, timeout: :integer, parallel: :integer)
