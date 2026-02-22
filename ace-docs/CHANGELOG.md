@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-02-22
+
+### Added
+- Standard help pattern with `HELP_EXAMPLES` constant and formatted help output
+- No-args behavior now shows help (consistent with other ace-* CLIs)
+
+### Changed
+- Migrate from DWIM DefaultRouting to standard dry-cli help pattern
+- Remove `KNOWN_COMMANDS`, `BUILTIN_COMMANDS`, `DEFAULT_COMMAND` constants
+- CLI invocation now uses `Dry::CLI.new().call()` pattern
+
 ## [0.20.3] - 2026-02-22
 
 ### Technical

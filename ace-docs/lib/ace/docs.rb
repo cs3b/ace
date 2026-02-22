@@ -4,6 +4,17 @@ require "yaml"
 require_relative "docs/version"
 require 'ace/support/config' # For config cascade
 
+# CLI Commands (Hanami pattern)
+require_relative "docs/cli/commands/status"
+require_relative "docs/cli/commands/discover"
+require_relative "docs/cli/commands/update"
+require_relative "docs/cli/commands/analyze"
+require_relative "docs/cli/commands/validate"
+require_relative "docs/cli/commands/analyze_consistency"
+
+# CLI
+require_relative "docs/cli"
+
 module Ace
   module Docs
     class Error < StandardError; end

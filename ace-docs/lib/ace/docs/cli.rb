@@ -1,16 +1,7 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
-require_relative "../docs"
-# CLI Commands (Hanami pattern)
-require_relative "cli/commands/status"
-require_relative "cli/commands/discover"
-require_relative "cli/commands/update"
-require_relative "cli/commands/analyze"
-require_relative "cli/commands/validate"
-require_relative "cli/commands/analyze_consistency"
 
 module Ace
   module Docs
@@ -20,20 +11,26 @@ module Ace
     # complete command parity and user-facing behavior.
     module CLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
-      # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[status discover update analyze validate analyze-consistency].freeze
+      PROGRAM_NAME = "ace-docs"
 
-      # dry-cli built-in commands (standard across all CLI gems)
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+      REGISTERED_COMMANDS = [
+        ["status", "Show documentation status"],
+        ["discover", "Discover undocumented items"],
+        ["update", "Update documentation metadata"],
+        ["analyze", "Analyze documentation quality"],
+        ["validate", "Validate documentation structure"],
+        ["analyze-consistency", "Check documentation consistency"]
+      ].freeze
 
-      # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
-      # Using Set for O(1) lookup performance
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      # Default command to use when first argument is not a known command
-      DEFAULT_COMMAND = "status"
+      HELP_EXAMPLES = [
+        "ace-docs status",
+        "ace-docs discover",
+        "ace-docs update docs/architecture.md",
+        "ace-docs analyze",
+        "ace-docs validate",
+        "ace-docs analyze-consistency"
+      ].freeze
 
       # Register all commands (Hanami pattern: CLI::Commands::*)
       register "status", Commands::Status.new
@@ -50,6 +47,17 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Docs::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
     end
   end
 end
