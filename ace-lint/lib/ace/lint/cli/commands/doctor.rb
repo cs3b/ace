@@ -40,7 +40,7 @@ module Ace
           ]
 
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show all diagnostics including info"
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Only show errors and warnings"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(**options)
             ruby_groups = Ace::Lint.ruby_config&.dig("groups")

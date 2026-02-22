@@ -417,3 +417,9 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 [2]: https://semver.org/spec/v2.0.0.html
 [3]: https://github.com/your-org/ace-lint/compare/v0.1.0...v0.1.1
 [4]: https://github.com/your-org/ace-lint/releases/tag/v0.1.0
+
+
+## [0.15.15] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings
