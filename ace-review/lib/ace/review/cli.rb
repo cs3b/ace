@@ -31,8 +31,8 @@ module Ace
       # ASCII Unit Separator (0x1F) is designed for separating fields
       ARRAY_SEPARATOR = "\x1F"
 
-      # Known command names for preprocessing (includes built-in help/version commands)
-      KNOWN_COMMAND_NAMES = (REGISTERED_COMMANDS.map(&:first) + %w[help version]).to_set.freeze
+      # Known command names for preprocessing (includes built-in help/version commands and flag variants)
+      KNOWN_COMMAND_NAMES = (REGISTERED_COMMANDS.map(&:first) + %w[help version --help -h --version]).to_set.freeze
 
       HELP_EXAMPLES = [
         "ace-review review --preset pr",
