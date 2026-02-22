@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-02-22
+
+### Changed
+- **Breaking:** Migrated from multi-command Registry to single-command pattern (task 278)
+  - Removed `query` subcommand: `ace-llm query gflash "prompt"` → `ace-llm gflash "prompt"`
+  - Removed `list-providers` subcommand: `ace-llm list-providers` → `ace-llm --list-providers`
+  - Removed `version`/`help` subcommands: use `--version`/`--help` flags only
+  - Added `--version` and `--list-providers` flags to main command
+  - Updated help text references from `ace-llm-query` to `ace-llm`
+  - No backward compatibility (per ADR-024)
+
 ## [0.22.6] - 2026-02-22
 
 ### Changed
