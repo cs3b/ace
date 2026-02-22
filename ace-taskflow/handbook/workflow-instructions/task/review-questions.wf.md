@@ -19,7 +19,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 - Understanding of task review question format and structure
 - Authority to make implementation decisions or access to stakeholders
 - Write access to task files in `.ace-taskflow/`
-- Access to `ace-taskflow tasks` tool for finding tasks
+- Access to `ace-task list` tool for finding tasks
 
 ## Project Context Loading
 
@@ -32,8 +32,8 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 
    ```bash
    # List tasks by status (needs_review is a metadata field, not a filter)
-   ace-taskflow tasks --status draft
-   ace-taskflow tasks --status pending
+   ace-task list --status draft
+   ace-task list --status pending
 
    # You'll need to check task files manually for needs_review: true flag
    # Or use ace-search to find tasks with the flag:
@@ -336,7 +336,7 @@ Interactively review and resolve questions in tasks marked with `needs_review: t
 ### Common Issues:
 
 **"No tasks need review"**
-- Run `ace-taskflow tasks needs-review` (preset) or `cd .ace-taskflow && ace-search "needs_review: true" --content`
+- Run `ace-task list needs-review` (preset) or `cd .ace-taskflow && ace-search "needs_review: true" --content`
 - Check if reviews were already completed
 - Look for tasks with questions but missing flag
 

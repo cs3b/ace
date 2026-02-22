@@ -35,12 +35,12 @@ user-provided release scope into actionable tasks.
      * Release codename (derive from user input if not explicitly given, using project-themed naming).
      * Raw scope notes (bullet list, document paths, or free-form text).
 
-2. **Create Release Using ace-taskflow release**
-   * Use the ace-taskflow release tool to create the release structure:
+2. **Create Release Using ace-release**
+   * Use the ace-release tool to create the release structure:
      ```bash
-     ace-taskflow release create v.X.Y.Z codename
+     ace-release create v.X.Y.Z codename
      ```
-     Example: `ace-taskflow release create v.0.3.0 new-feature`
+     Example: `ace-release create v.0.3.0 new-feature`
    
    * This automatically creates:
      - Release directory: `.ace-taskflow/backlog/v.X.Y.Z-codename/`
@@ -48,7 +48,7 @@ user-provided release scope into actionable tasks.
      - Initial `release-overview.md` file with basic structure
 
 3. **Rename Overview to README.md**
-   * The ace-taskflow release created `release-overview.md` - rename it to follow standard convention:
+   * The ace-release created `release-overview.md` - rename it to follow standard convention:
      ```bash
      mv .ace-taskflow/backlog/v.X.Y.Z-codename/release-overview.md \
         .ace-taskflow/backlog/v.X.Y.Z-codename/README.md
@@ -76,7 +76,7 @@ user-provided release scope into actionable tasks.
      b. Create a new task file using the task template:
 
      c. Key rules for task creation:
-        * Use `ace-taskflow task create "Task Title" --estimate "4h"` to generate tasks automatically
+        * Use `ace-task create "Task Title" --estimate "4h"` to generate tasks automatically
         * This handles ID generation, file naming, and proper directory placement
         * Planning steps use asterisk markers (`* [ ]`)
         * Execution steps use hyphen markers (`- [ ]`)
@@ -125,7 +125,7 @@ user-provided release scope into actionable tasks.
      find .ace-taskflow/backlog/v.X.Y.Z-codename/t -name "*.md" | wc -l
      ```
      
-   * The subdirectory structure is guaranteed by ace-taskflow release create
+   * The subdirectory structure is guaranteed by ace-release create
 
 9. **Prepare Commit Message (Do NOT Execute)**
    * Display the following git command for the user:
@@ -191,15 +191,15 @@ user-provided release scope into actionable tasks.
 
 **Symptoms:**
 
-* `ace-taskflow release create` command not found
+* `ace-release create` command not found
 * Release creation fails with error
 * Template directory not found
 
 **Recovery Steps:**
 
-1. Verify ace-taskflow release is available:
+1. Verify ace-release is available:
    ```bash
-   which ace-taskflow release || echo "ace-taskflow release not found"
+   which ace-release || echo "ace-release not found"
    ```
 2. Check if templates are accessible:
    ```bash
@@ -215,29 +215,29 @@ user-provided release scope into actionable tasks.
 
 * Ensure dev-tools are properly installed and in PATH
 * Verify templates are accessible via ace-nav
-* Test ace-taskflow release command before starting workflow
+* Test ace-release command before starting workflow
 
 **Task ID Generation Failures:**
 
 **Symptoms:**
 
-* `ace-taskflow task create` command not found or fails
+* `ace-task create` command not found or fails
 * Duplicate task ID generation
 * Inconsistent numbering sequence
 
 **Recovery Steps:**
 
 1. Check if higher-order navigation tools are available
-2. Verify ace-taskflow tasks tools are properly configured
-3. Use ace-taskflow task with simpler parameters if complex ones fail
+2. Verify ace-task list tools are properly configured
+3. Use ace-task with simpler parameters if complex ones fail
 4. Ensure task uniqueness is maintained by the system
 5. Ask user to verify task numbering approach
 
 **Prevention:**
 
-* Test `ace-taskflow task create` functionality before starting release creation
+* Test `ace-task create` functionality before starting release creation
 * Verify project tooling is properly set up
-* Understand available ace-taskflow task options and capabilities
+* Understand available ace-task options and capabilities
 
 **Version Conflicts:**
 
@@ -275,7 +275,7 @@ user-provided release scope into actionable tasks.
 **Symptoms:**
 
 * Cannot rename release-overview.md to README.md
-* File not found after ace-taskflow release create
+* File not found after ace-release create
 * Permission denied on rename operation
 
 **Recovery Steps:**
@@ -295,7 +295,7 @@ user-provided release scope into actionable tasks.
 
 **Prevention:**
 
-* Verify ace-taskflow release completed successfully before rename
+* Verify ace-release completed successfully before rename
 * Check file permissions in release directory
 * Have template content ready as fallback
 
@@ -416,11 +416,11 @@ user-provided release scope into actionable tasks.
    [ -f ".ace-taskflow/backlog/v.X.Y.Z-codename/README.md" ] || \
      echo "README.md missing - check for release-overview.md"
    ```
-2. If structure is incomplete, re-run ace-taskflow release create:
+2. If structure is incomplete, re-run ace-release create:
    ```bash
    # Remove partial release and recreate
    rm -rf .ace-taskflow/backlog/v.X.Y.Z-codename
-   ace-taskflow release create v.X.Y.Z codename
+   ace-release create v.X.Y.Z codename
    ```
 3. Verify task creation completed successfully
 4. Validate README.md content has been populated

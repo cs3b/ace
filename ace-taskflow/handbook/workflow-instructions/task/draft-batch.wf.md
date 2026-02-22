@@ -18,7 +18,7 @@ Process multiple idea files and create draft tasks for each one in sequence, wit
 
 ## Prerequisites
 
-- Idea files exist in backlog (discoverable via `ace-taskflow ideas --backlog`)
+- Idea files exist in backlog (discoverable via `ace-idea list --backlog`)
 - Access to `draft-task` singular workflow via `ace-bundle wfi://task/draft`
 - Understanding of ace-taskflow commands
 
@@ -40,7 +40,7 @@ Before discovering idea files, check whether the argument requests an orchestrat
 | (default — no structural hint) | One standalone task per idea file |
 
 **If orchestrator pattern detected:**
-1. Create ONE parent task first: `ace-taskflow task create "Parent" --status draft`
+1. Create ONE parent task first: `ace-task create "Parent" --status draft`
 2. Create each subtask with `--child-of PARENT_ID` (this auto-converts parent to orchestrator)
 3. Do NOT create multiple separate parent tasks
 
@@ -52,7 +52,7 @@ Proceed to Step 1 and create one standalone task per idea.
 **If no idea pattern provided:**
 ```bash
 # Discover all backlog ideas
-ace-taskflow ideas --backlog
+ace-idea list --backlog
 ```
 
 **If idea pattern provided:**
@@ -104,10 +104,10 @@ After task creation succeeds:
 TASK_NUM=$(echo "$TASK_PATH" | grep -oE '[0-9]+' | tail -1)
 
 # Move idea file using ace-taskflow
-ace-taskflow idea done [idea-reference]
+ace-idea done [idea-reference]
 ```
 
-**Note:** `ace-taskflow idea done` automatically:
+**Note:** `ace-idea done` automatically:
 - Moves idea file to ideas/done/ subdirectory in its current location
 - Updates idea frontmatter with completion status and timestamp
 
@@ -170,7 +170,7 @@ Provide comprehensive summary including:
 ## Error Handling Strategies
 
 ### Idea Discovery Failure
-- **Symptom:** `ace-taskflow ideas --backlog` returns no results or errors
+- **Symptom:** `ace-idea list --backlog` returns no results or errors
 - **Action:** Report issue, check if backlog directory exists, exit gracefully
 
 ### Task Creation Failure
@@ -178,7 +178,7 @@ Provide comprehensive summary including:
 - **Action:** Log failure, skip to next idea, include in final summary
 
 ### Idea Cleanup Failure
-- **Symptom:** `ace-taskflow idea done` fails
+- **Symptom:** `ace-idea done` fails
 - **Action:** Warn user, task still created, manual cleanup may be needed
 
 ### Validation Failure
@@ -216,4 +216,4 @@ Provide comprehensive summary including:
 - Maintain detailed progress logs
 - Continue on failure (collect all results)
 - Always provide comprehensive final summary
-- Use `ace-taskflow idea done` for idea cleanup (not manual git mv)
+- Use `ace-idea done` for idea cleanup (not manual git mv)

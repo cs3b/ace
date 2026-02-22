@@ -111,9 +111,9 @@ For experienced users, here's the condensed workflow:
 
 ```bash
 # Get orchestrator task details
-ace-taskflow task <orchestrator-id>
+ace-task <orchestrator-id>
 
-# Example: ace-taskflow task 122
+# Example: ace-task 122
 # Returns: orchestrator path, subtasks list
 ```
 
@@ -130,7 +130,7 @@ subtasks:
 
 ```bash
 # List subtasks with status
-ace-taskflow tasks --filter "122.*" --filter status:pending
+ace-task list --filter "122.*" --filter status:pending
 ```
 
 **Filter for actionable subtasks:**
@@ -187,7 +187,7 @@ ALL work MUST happen in this directory. Before ANY file operations:
 ## Steps
 
 1. `cd <WORKTREE_PATH>`
-2. Read task: `ace-taskflow task 122.01`
+2. Read task: `ace-task 122.01`
 3. Implement changes per task file
 4. Run tests: `ace-test`
 5. Commit on subtask branch
@@ -288,7 +288,7 @@ After review approval, prompt user:
 **Subtask 122.01 implementation is complete.**
 
 Please validate manually:
-1. Test the CLI: `ace-taskflow task 121.01`
+1. Test the CLI: `ace-task 121.01`
 2. Verify new functionality works as expected
 3. Run: `ace-test test/atoms/task_reference_parser_test.rb`
 
@@ -378,7 +378,7 @@ After PR is merged:
 
 ```bash
 # Mark subtask as done
-ace-taskflow task done 122.01
+ace-task done 122.01
 ```
 
 ### Step 4: Progress Summary

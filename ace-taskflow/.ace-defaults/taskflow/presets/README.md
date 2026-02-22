@@ -11,8 +11,8 @@ Copy any of these example preset files to your project's `.ace/taskflow/presets/
 cp ace-taskflow/.ace-defaults/taskflow/presets/urgent.yml .ace/taskflow/presets/
 
 # Use the preset
-ace-taskflow tasks urgent
-ace-taskflow ideas urgent  # If type is null/universal
+ace-task list urgent
+ace-idea list urgent  # If type is null/universal
 ```
 
 ## Preset Structure
@@ -36,9 +36,9 @@ display:
 
 ## Type Configuration
 
-- **`type: "tasks"`** - Preset only available for `ace-taskflow tasks`
-- **`type: "ideas"`** - Preset only available for `ace-taskflow ideas`
-- **`type: "releases"`** - Preset only available for `ace-taskflow releases`
+- **`type: "tasks"`** - Preset only available for `ace-task list`
+- **`type: "ideas"`** - Preset only available for `ace-idea list`
+- **`type: "releases"`** - Preset only available for `ace-release list`
 - **`type:` (null/empty)** - Universal preset, available for all commands
 
 ## Built-in Presets
@@ -65,13 +65,13 @@ You can apply additional filters on top of presets:
 
 ```bash
 # Add time filter to any preset
-ace-taskflow tasks urgent --days 3
+ace-task list urgent --days 3
 
 # Add status filter to preset
-ace-taskflow ideas recent --status pending
+ace-idea list recent --status pending
 
 # Get statistics for a preset
-ace-taskflow tasks urgent --stats
+ace-task list urgent --stats
 ```
 
 ## Custom Fields

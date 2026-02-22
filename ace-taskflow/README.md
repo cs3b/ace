@@ -89,14 +89,14 @@ Quickly capture ideas with automatic timestamping and organization:
 
 ```bash
 # Capture text idea
-ace-taskflow idea create "Add dark mode support to the application"
+ace-idea create "Add dark mode support to the application"
 
 # Capture from clipboard (macOS with rich content support)
-ace-taskflow idea create --clipboard "Design review findings"
+ace-idea create --clipboard "Design review findings"
 # Automatically detects and saves images, files, HTML, RTF from clipboard
 
 # Capture with clipboard merge
-ace-taskflow idea create -gc --clipboard "Meeting notes"
+ace-idea create -gc --clipboard "Meeting notes"
 # Merges typed content with clipboard content
 ```
 
@@ -120,7 +120,7 @@ Ensure all ideas follow the proper directory organization:
 
 ```bash
 # Validate that all ideas are in folders within ideas/ subdirectory
-ace-taskflow idea validate-structure
+ace-idea validate-structure
 ```
 
 **Success case:**
@@ -160,27 +160,27 @@ Browse and filter ideas with flexible display options:
 
 ```bash
 # List pending ideas (default - optimized for LLMs with paths)
-ace-taskflow ideas
-ace-taskflow ideas next
+ace-idea list
+ace-idea list next
 
 # Human-friendly list (no paths, shows IDs for reference)
-ace-taskflow ideas --short
+ace-idea list --short
 
 # JSON output for programmatic use
-ace-taskflow ideas --format json
+ace-idea list --format json
 
 # List all ideas including completed
-ace-taskflow ideas all
+ace-idea list all
 
 # List only completed ideas
-ace-taskflow ideas done
+ace-idea list done
 
 # Recent ideas (last 7 days)
-ace-taskflow ideas recent
-ace-taskflow ideas recent --days 3
+ace-idea list recent
+ace-idea list recent --days 3
 
 # Limit results
-ace-taskflow ideas --limit 10
+ace-idea list --limit 10
 ```
 
 **Note**: The `ideas` command automatically checks for misplaced ideas and shows a warning if any are found. Use `validate-structure` for detailed information.
@@ -229,22 +229,22 @@ Create and manage tasks with descriptive paths:
 
 ```bash
 # Create a new task (automatically generates descriptive path)
-ace-taskflow task create "Implement user authentication"
+ace-task create "Implement user authentication"
 # Creates: .ace-taskflow/v.0.9.0/t/035-feat-user-authentication/task.035.md
 
 # Create with metadata flags
-ace-taskflow task create --title "Fix bug" --status draft --estimate 2h
-ace-taskflow task create "Write tests" --dependencies 041,042 --estimate 4h
+ace-task create --title "Fix bug" --status draft --estimate 2h
+ace-task create "Write tests" --dependencies 041,042 --estimate 4h
 
 # Create in different contexts
-ace-taskflow task create "Future feature" --backlog
-ace-taskflow task create "Hotfix" --release v.0.10.0
+ace-task create "Future feature" --backlog
+ace-task create "Hotfix" --release v.0.10.0
 
 # List and navigate tasks
-ace-taskflow task list
-ace-taskflow task          # Get next task
-ace-taskflow task 035      # Navigate to specific task
-ace-taskflow task complete 035
+ace-task list
+ace-task          # Get next task
+ace-task 035      # Navigate to specific task
+ace-task complete 035
 
 # Migrate existing tasks to new descriptive format
 ace-taskflow migrate-paths              # Migrate all tasks
@@ -269,7 +269,7 @@ Benefits:
 
 #### Orphan Subtasks Display
 
-When filtering tasks with presets (e.g., `ace-taskflow tasks next`), subtasks whose parent tasks are not in the filtered results are displayed with their parent context shown above them. These are called "orphan subtasks."
+When filtering tasks with presets (e.g., `ace-task list next`), subtasks whose parent tasks are not in the filtered results are displayed with their parent context shown above them. These are called "orphan subtasks."
 
 The parent task is marked with a `[context]` indicator to show it's being displayed for context only (it's not part of the filtered results):
 
@@ -289,7 +289,7 @@ The parent task is marked with a `[context]` indicator to show it's being displa
 
 ```
 # Parent task 202 is "done", subtask 203 is "pending"
-ace-taskflow tasks next   # Shows only pending tasks
+ace-task list next   # Shows only pending tasks
 
 # Output:
   v.0.9.0+task.202 🟢 Rename Support Gems (Orchestrator) [context]
@@ -304,7 +304,7 @@ The parent (202) is shown because it provides context for subtask 203, even thou
 If a parent task cannot be found (e.g., it was deleted), use `--verbose` or `--debug` to see which subtasks were skipped:
 
 ```bash
-ace-taskflow tasks next --verbose
+ace-task list next --verbose
 # Output: [DEBUG] Parent task 202 not found for orphan subtask group (1 subtask(s) skipped)
 ```
 
@@ -314,22 +314,22 @@ Capture and manage reflection notes for development sessions:
 
 ```bash
 # Create a new reflection note
-ace-taskflow retro create "sprint-23-learnings"
+ace-retro create "sprint-23-learnings"
 
 # List active retrospective notes
-ace-taskflow retros
+ace-retro list
 
 # View specific retro
-ace-taskflow retro show sprint-23-learnings
+ace-retro show sprint-23-learnings
 
 # Mark retro as done (moves to configured archive directory)
-ace-taskflow retro done sprint-23-learnings
+ace-retro done sprint-23-learnings
 
 # List all retros including done
-ace-taskflow retros --all
+ace-retro list --all
 
 # List only done retros
-ace-taskflow retros --done
+ace-retro list --done
 ```
 
 Retrospective notes follow the archive pattern similar to ideas:
@@ -396,9 +396,9 @@ Requires the `ace-git` gem for task pattern detection from branch names.
 Future releases will include release management features:
 
 ```bash
-ace-taskflow release create v1.0.0
-ace-taskflow release current
-ace-taskflow release list
+ace-release create v1.0.0
+ace-release current
+ace-release list
 ```
 
 ## Configuration
@@ -472,7 +472,7 @@ bundle exec rake test
 To test the CLI:
 
 ```bash
-bundle exec ace-taskflow idea "Test idea"
+bundle exec ace-idea "Test idea"
 ```
 
 ## License

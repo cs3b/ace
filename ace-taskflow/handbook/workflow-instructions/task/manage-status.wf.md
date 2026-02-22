@@ -19,7 +19,7 @@ update:
 
 # Manage Task Status
 
-Control task lifecycle using `ace-taskflow task` status commands.
+Control task lifecycle using `ace-task` status commands.
 
 ## Goal
 
@@ -38,16 +38,16 @@ Mark a task as in-progress to indicate active work.
 
 **Command**:
 ```bash
-ace-taskflow task start <task_ref>
+ace-task start <task_ref>
 ```
 
 **Example**:
 ```bash
 # Start working on task 121
-ace-taskflow task start 121
+ace-task start 121
 
 # Start working on subtask 121.01
-ace-taskflow task start 121.01
+ace-task start 121.01
 ```
 
 **What happens**:
@@ -63,16 +63,16 @@ Mark a task as completed when all work is finished.
 
 **Command**:
 ```bash
-ace-taskflow task done <task_ref>
+ace-task done <task_ref>
 ```
 
 **Example**:
 ```bash
 # Mark task 121 as complete
-ace-taskflow task done 121
+ace-task done 121
 
 # Mark subtask 121.01 as complete
-ace-taskflow task done 121.01
+ace-task done 121.01
 ```
 
 **What happens**:
@@ -89,16 +89,16 @@ Reopen a completed task to continue work.
 
 **Command**:
 ```bash
-ace-taskflow task undone <task_ref>
+ace-task undone <task_ref>
 ```
 
 **Example**:
 ```bash
 # Reopen task 121
-ace-taskflow task undone 121
+ace-task undone 121
 
 # Reopen subtask 121.01
-ace-taskflow task undone 121.01
+ace-task undone 121.01
 ```
 
 **What happens**:
@@ -128,7 +128,7 @@ Before marking a task as started:
 ### After Completing
 
 After marking a task as done:
-1. Run `ace-taskflow task show <ref>` to verify status
+1. Run `ace-task show <ref>` to verify status
 2. Check if parent orchestrator needs status update
 3. Consider if related tasks should be updated
 
@@ -137,7 +137,7 @@ After marking a task as done:
 For orchestrator tasks with subtasks:
 - Mark subtasks done as you complete them
 - Orchestrator status typically reflects aggregate subtask status
-- Use `ace-taskflow task show <orchestrator_ref>` to see full progress
+- Use `ace-task show <orchestrator_ref>` to see full progress
 
 ## Error Handling
 
@@ -150,9 +150,9 @@ For orchestrator tasks with subtasks:
 
 ## Related Commands
 
-- `ace-taskflow task show <ref>` - View task details and current status
-- `ace-taskflow task list --status in_progress` - List all in-progress tasks
-- `ace-taskflow task list --status completed` - List all completed tasks
+- `ace-task show <ref>` - View task details and current status
+- `ace-task list --status in_progress` - List all in-progress tasks
+- `ace-task list --status completed` - List all completed tasks
 
 ## Success Criteria
 

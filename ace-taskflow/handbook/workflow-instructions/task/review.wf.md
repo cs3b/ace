@@ -29,7 +29,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
 1. **Load and Analyze Draft Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `ace-taskflow tasks --status draft` to view draft tasks
+     - If no task specified: Run `ace-task list --status draft` to view draft tasks
    - **Load Task Content:**
      - Read the task file from the identified path
      - Verify the task has `status: draft`
@@ -105,8 +105,8 @@ Validate draft behavioral specifications and promote to pending when ready. This
    **If Ready (all readiness criteria met):**
    - Promote the task status and clear any existing `needs_review` flag:
      ```bash
-     ace-taskflow task update <ref> --field status=pending
-     ace-taskflow task update <ref> --field needs_review=false
+     ace-task update <ref> --field status=pending
+     ace-task update <ref> --field needs_review=false
      ```
    - Report promotion:
      ```
@@ -219,10 +219,10 @@ For non-draft tasks, skip the Readiness Checklist and Promote/Block steps. Focus
 
 ```bash
 # List all draft tasks ready for review
-ace-taskflow tasks --status draft
+ace-task list --status draft
 
 # List all tasks requiring human input (using preset)
-ace-taskflow tasks needs-review
+ace-task list needs-review
 
 # Alternative: use ace-search to find tasks with needs_review flag
 cd .ace-taskflow && ace-search "needs_review: true" --content
@@ -252,7 +252,7 @@ cd .ace-taskflow && ace-search "needs_review: true" --content
 
 **"Task not found" Error:**
 - **Cause**: Invalid task path or ID
-- **Solution**: Use `ace-taskflow tasks` to find correct path
+- **Solution**: Use `ace-task list` to find correct path
 
 **"Task is not draft" Warning:**
 - **Cause**: Task has a non-draft status

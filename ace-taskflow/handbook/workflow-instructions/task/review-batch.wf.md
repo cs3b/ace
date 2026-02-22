@@ -18,7 +18,7 @@ Process multiple tasks through review workflow and aggregate findings, questions
 
 ## Prerequisites
 
-- Tasks exist for review (discoverable via `ace-taskflow tasks` with various filters)
+- Tasks exist for review (discoverable via `ace-task list` with various filters)
 - Access to `review-task` singular workflow via `ace-bundle wfi://task/review`
 - Understanding of ace-taskflow commands
 
@@ -33,13 +33,13 @@ Process multiple tasks through review workflow and aggregate findings, questions
 **If no task pattern provided (default behavior):**
 ```bash
 # Get next 5 actionable tasks (excludes completed)
-ace-taskflow tasks --status pending --limit 5
+ace-task list --status pending --limit 5
 ```
 
 **Common filter patterns if user specifies:**
-- Tasks needing human input: `ace-taskflow tasks needs-review` (preset)
-- Draft tasks needing clarification: `ace-taskflow tasks --status draft`
-- Pending tasks for implementation review: `ace-taskflow tasks --status pending`
+- Tasks needing human input: `ace-task list needs-review` (preset)
+- Draft tasks needing clarification: `ace-task list --status draft`
+- Pending tasks for implementation review: `ace-task list --status pending`
 - Specific task IDs or ranges
 
 **Output:**
