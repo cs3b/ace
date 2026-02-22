@@ -136,20 +136,17 @@ module Ace
               # Set the model provider
               cmd << "-c" << "model_provider=\"#{backend_name}\""
 
+              # Provider name (required by codex)
+              provider_display = backend_config["name"] || backend_config[:name] || backend_name
+              cmd << "-c" << "model_providers.#{backend_name}.name=\"#{provider_display}\""
+
               # Configure backend-specific settings
-              if backend_config["base_url"] || backend_config[:base_url]
-                base_url = backend_config["base_url"] || backend_config[:base_url]
+              if (base_url = backend_config["base_url"] || backend_config[:base_url])
                 cmd << "-c" << "model_providers.#{backend_name}.base_url=\"#{base_url}\""
               end
 
-              if backend_config["env_key"] || backend_config[:env_key]
-                env_key = backend_config["env_key"] || backend_config[:env_key]
+              if (env_key = backend_config["env_key"] || backend_config[:env_key])
                 cmd << "-c" << "model_providers.#{backend_name}.env_key=\"#{env_key}\""
-              end
-
-              if backend_config["wire_api"] || backend_config[:wire_api]
-                wire_api = backend_config["wire_api"] || backend_config[:wire_api]
-                cmd << "-c" << "model_providers.#{backend_name}.wire_api=\"#{wire_api}\""
               end
 
               # Set the model
