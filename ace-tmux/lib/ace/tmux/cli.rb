@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../tmux"
 require_relative "cli/commands/start"
@@ -14,57 +13,27 @@ module Ace
     module CLI
       extend Dry::CLI::Registry
 
-      # Application commands registered in this CLI
-      REGISTERED_COMMANDS = %w[start window list].freeze
+      PROGRAM_NAME = "ace-tmux"
 
-      # dry-cli built-in commands
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["start", "Start tmux session from preset"],
+        ["window", "Add window to existing session"],
+        ["list", "List available presets"]
+      ].freeze
 
-      # Auto-derived known commands set (O(1) lookup)
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+      HELP_EXAMPLES = [
+        "ace-tmux start dev",
+        "ace-tmux window cc --root /path/to/project",
+        "ace-tmux list"
+      ].freeze
 
-      # Default command when first argument is not a known command
-      DEFAULT_COMMAND = "start"
-
-      # Start the CLI with default command routing
-      #
-      # Per ADR-023, returns nil. Exit codes via Ace::Core::CLI::Error exceptions.
+      # Start the CLI
       #
       # @param args [Array<String>] Command-line arguments
-      # @return [nil]
+      # @return [Integer] Exit code (0 for success, non-zero for failure)
       def self.start(args)
-        # Handle help explicitly
-        return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
-
-        # When args are empty, route based on tmux context:
-        # inside tmux → add default window, outside → start default session
-        if args.empty?
-          args = inside_tmux? ? ["window"] : ["start"]
-        elsif !known_command?(args.first)
-          # If first argument isn't a known command,
-          # prepend the default command based on tmux context
-          default = inside_tmux? ? "window" : DEFAULT_COMMAND
-          args = [default] + args
-        end
-
         Dry::CLI.new(self).call(arguments: args)
-      end
-
-      # Check if argument is a known command
-      #
-      # @param arg [String] First argument to check
-      # @return [Boolean]
-      def self.known_command?(arg)
-        return false if arg.nil?
-
-        KNOWN_COMMANDS.include?(arg)
-      end
-
-      # Check if currently running inside a tmux session
-      #
-      # @return [Boolean]
-      def self.inside_tmux?
-        ENV.key?("TMUX") && !ENV["TMUX"].to_s.empty?
       end
 
       # Register commands
@@ -79,6 +48,17 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Tmux::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
     end
   end
 end
