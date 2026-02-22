@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-22
+
+### Added
+- Migrate CLI to standard help pattern with HelpCommand
+  - Register `--help` and `-h` for formatted help output
+  - No args now shows help instead of command list
+
+### Changed
+- Remove DefaultRouting extension and DWIM default behavior
+  - Remove KNOWN_COMMANDS, DEFAULT_COMMAND, BUILTIN_COMMANDS constants
+  - Update REGISTERED_COMMANDS to [name, description] format
+  - Convert HELP_EXAMPLES to simple string array
+  - Add explicit start(args) method for CLI invocation
+- Centralize CLI help routing and formatting (shared with ace-support-core)
+- Centralize CLI error handling and exit code management (shared)
+
+### Technical
+- Update CLI command usage in README
+- Lower Ruby version requirement to >= 3.2.0
+
+## [0.5.2] - 2026-02-02
+
+### Technical
+- Update support-packages metadata
+
 ## [0.5.1] - 2026-01-15
 
 ### Changed
