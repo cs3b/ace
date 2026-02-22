@@ -314,7 +314,7 @@ Output a summary:
 1. Review and customize `scenario.yml` and TC files
 2. Add fixtures to the `fixtures/` directory if needed
 3. Review the E2E Decision Record and ensure `unit-coverage-reviewed` is populated
-4. Run the test with: `/ace_e2e_run {package} TS-{AREA}-{NNN}`
+4. Run the test with: `/ace-e2e-run {package} TS-{AREA}-{NNN}`
 5. Update `last-verified` after successful execution
 ```
 
@@ -322,21 +322,21 @@ Output a summary:
 
 **Create a test:**
 ```
-/ace_e2e_create ace-lint LINT
+/ace-e2e-create ace-lint LINT
 ```
 
 Creates: `ace-lint/test/e2e/TS-LINT-003-new-test-scenario/` with `scenario.yml` and TC files.
 
 **Create a contextual test:**
 ```
-/ace_e2e_create ace-lint LINT --context "Test config file validation"
+/ace-e2e-create ace-lint LINT --context "Test config file validation"
 ```
 
 Creates: `ace-lint/test/e2e/TS-LINT-003-config-file-validation/` with `scenario.yml` and TC files for config validation.
 
 **Create test for new area:**
 ```
-/ace_e2e_create ace-review COMMENT --context "Test PR comment threading"
+/ace-e2e-create ace-review COMMENT --context "Test PR comment threading"
 ```
 
 Creates: `ace-review/test/e2e/TS-COMMENT-001-pr-comment-threading/` with `scenario.yml` and TC files.
