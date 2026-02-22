@@ -107,11 +107,17 @@ module Ace
         option :cleanup_age, type: :string, desc: "Delete reports older than DAYS (default: 30)"
 
         # Standard options (inherited from Base but need explicit definition for dry-cli)
+        option :version, type: :boolean, desc: "Show version information"
         option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
         option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
         option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
         def call(args: [], **options)
+          if options[:version]
+            puts "ace-test #{Ace::TestRunner::VERSION}"
+            return 0
+          end
+
           # Type-convert numeric options (dry-cli returns strings, Thor converted to integers)
           # This maintains parity with the Thor implementation
           numeric_options = %i[timeout max_display profile cleanup_keep cleanup_age]
