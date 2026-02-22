@@ -28,9 +28,9 @@ module Ace
             option :usable, desc: "Show only usable worktrees", type: :boolean, aliases: ["--usable"]
             option :no_usable, desc: "Show only unusable worktrees", type: :boolean, aliases: ["--no-usable"]
             option :search, desc: "Filter by branch name pattern", aliases: []
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :verbose, type: :boolean, aliases: ["-v"], desc: "Verbose output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             def call(**options)
               display_config_summary("list", options)

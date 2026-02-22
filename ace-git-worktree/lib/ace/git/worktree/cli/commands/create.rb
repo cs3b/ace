@@ -54,9 +54,9 @@ module Ace
             option :commit_message, desc: "Custom commit message", aliases: []
             option :target_branch, desc: "Override PR target branch (default: auto-detect from parent)", aliases: []
             option :force, desc: "Create even if worktree exists", type: :boolean, aliases: []
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :verbose, type: :boolean, aliases: ["-v"], desc: "Verbose output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             def call(branch: nil, **options)
               display_config_summary("create", options)
