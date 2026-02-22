@@ -2,10 +2,12 @@
 # frozen_string_literal: true
 
 require_relative "../lib/ace/b36ts"
+require "dry/cli"
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+args = ARGV.empty? ? ["--help"] : ARGV
+
 begin
-  Ace::B36ts::CLI.start(ARGV)
+  Dry::CLI.new(Ace::B36ts::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
