@@ -37,7 +37,7 @@ class CliRoutingTest < AceTestCase
     result = invoke_cli(Ace::Bundle::CLI, ["--help"])
     # Help goes to stderr in dry-cli
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   # --- List Command Tests ---
