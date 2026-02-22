@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.596] - 2026-02-22
+
+### Changed
+- **ace-prompt-prep v0.16.5**: Migrate CLI to standard help pattern — remove DWIM default routing so no args shows help instead of routing to process command
+
+### Technical
+- **ace-prompt-prep v0.16.5**: Remove DefaultRouting extension; add PROGRAM_NAME, HELP_EXAMPLES, REGISTERED_COMMANDS with descriptions; register HelpCommand for --help/-h; update exe to use Dry::CLI.new().call() pattern with no-args default to --help; update all test helpers to use new invocation pattern
+
 ## [0.9.595] - 2026-02-22
 
 ### Changed
