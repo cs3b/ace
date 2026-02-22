@@ -227,7 +227,7 @@ class CLITest < GitSecretsTestCase
 
     # dry-cli help goes to stderr
     combined = output + stderr
-    assert_match(/Commands:/, combined)
+    assert_match(/COMMANDS|Commands:/, combined)
   end
 
   def test_help_for_scan_command

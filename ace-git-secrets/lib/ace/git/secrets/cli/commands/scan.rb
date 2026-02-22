@@ -28,9 +28,9 @@ module Ace
             option :verbose, type: :boolean, default: false,
                    desc: "Enable verbose output with full report to stdout"
             option :quiet, type: :boolean, aliases: ["q"], default: false,
-                   desc: "Suppress non-essential output (for CI)"
+                   desc: "Suppress non-essential output"
             option :debug, type: :boolean, default: false,
-                   desc: "Enable debug output"
+                   desc: "Show debug output"
 
             def call(**options)
               debug_log("Starting scan with options: #{format_pairs(options)}", options)
