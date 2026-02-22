@@ -12,8 +12,8 @@ Combine parallel agent research outputs into a unified, high-quality result thro
 
 ## Project Context Loading
 
-- Load multi-agent research guide: `ace-bundle guide://multi-agent-research`
-- Load comparison template: `ace-bundle tmpl://research-comparison`
+- Load multi-agent research guide: `ace-bundle load guide://multi-agent-research`
+- Load comparison template: `ace-bundle load tmpl://research-comparison`
 - List research folder contents to identify agent outputs
 
 ## High-Level Execution Plan
