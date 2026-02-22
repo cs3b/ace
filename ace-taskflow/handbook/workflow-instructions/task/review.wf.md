@@ -22,7 +22,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle load wfi://bundle`
 
 ## Process Steps
 

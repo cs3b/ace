@@ -19,7 +19,7 @@ Process multiple idea files and create draft tasks for each one in sequence, wit
 ## Prerequisites
 
 - Idea files exist in backlog (discoverable via `ace-idea list --backlog`)
-- Access to `draft-task` singular workflow via `ace-bundle wfi://task/draft`
+- Access to `draft-task` singular workflow via `ace-bundle load wfi://task/draft`
 - Understanding of ace-taskflow commands
 
 ## Variables
@@ -82,7 +82,7 @@ Execute draft-task workflow for idea: [idea-file-path]
 ARGUMENTS: [idea-file-path]
 
 Follow the complete draft-task workflow:
-1. Read and execute: ace-bundle wfi://task/draft
+1. Read and execute: ace-bundle load wfi://task/draft
 2. Create draft task with status: draft
 3. Follow all workflow steps exactly
 4. Report task ID and path when complete

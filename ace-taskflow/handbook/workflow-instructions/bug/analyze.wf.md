@@ -26,14 +26,14 @@ Systematically analyze bug reports to identify root cause, verify reproduction, 
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle load wfi://bundle`
 
 **Before starting bug analysis:**
 
 1. Check recent changes: `git log --oneline -10`
 2. Review related code areas mentioned in the bug report
 3. Understand testing framework: Check `Gemfile`, `package.json`, or `requirements.txt`
-4. For testing guidelines, use `ace-bundle guide://testing-philosophy` or `ace-bundle guide://mocking-patterns`
+4. For testing guidelines, use `ace-bundle load guide://testing-philosophy` or `ace-bundle load guide://mocking-patterns`
 
 ## When to Use This Workflow
 
