@@ -17,7 +17,7 @@ ace-support-nav provides unified navigation and path resolution across the ACE e
   - Intelligent detection of multi-result patterns
 - **Fuzzy Matching**: Intelligent autocorrection and partial path matching
 - **Performance**: Fast cached lookups after initial scan (< 100ms)
-- **Simple CLI**: Single command with options, no complex subcommands
+- **Standard CLI**: Explicit subcommands (`resolve`, `list`, `create`, `sources`)
 
 ## Installation
 
@@ -39,30 +39,30 @@ gem install ace-support-nav
 
 ```bash
 # Cascade search (searches all sources in order)
-ace-nav wfi://setup                   # Finds first 'setup' workflow
-ace-nav tmpl://minitest              # Finds first matching template
-ace-nav guide://configuration        # Finds first matching guide
+ace-nav resolve wfi://setup          # Finds first 'setup' workflow
+ace-nav resolve tmpl://minitest      # Finds first matching template
+ace-nav resolve guide://configuration # Finds first matching guide
 
 # Source-specific with @ prefix
-ace-nav wfi://@ace-git/setup         # Only from ace-git gem
-ace-nav tmpl://@project/minitest     # Only from project overrides
-ace-nav wfi://@user/setup            # Only from user overrides
+ace-nav resolve wfi://@ace-git/setup     # Only from ace-git gem
+ace-nav resolve tmpl://@project/minitest # Only from project overrides
+ace-nav resolve wfi://@user/setup        # Only from user overrides
 ```
 
 ### Content Retrieval
 
 ```bash
 # Get content directly
-ace-nav wfi://setup --content        # First matching content
-ace-nav wfi://@ace-git/setup --content  # From specific source
+ace-nav resolve wfi://setup --content           # First matching content
+ace-nav resolve wfi://@ace-git/setup --content  # From specific source
 ```
 
 ### Resource Creation
 
 ```bash
 # Create from template
-ace-nav wfi://bundle --create  # Creates in project .ace/handbook
-ace-nav tmpl://@ace-test/minitest --create  # Uses ace-test template
+ace-nav create wfi://bundle                  # Creates in project .ace/handbook
+ace-nav create tmpl://@ace-test/minitest     # Uses ace-test template
 ```
 
 ### Resource Discovery
@@ -71,20 +71,20 @@ ace-nav intelligently detects patterns that should return multiple results:
 
 ```bash
 # Automatic list mode (no --list needed!)
-ace-nav prompt://                    # All prompts (protocol-only)
-ace-nav prompt://guidelines/         # All files in guidelines/ directory
-ace-nav "prompt://format/*"          # All files matching pattern
-ace-nav "wfi://create*"              # All workflows starting with 'create'
+ace-nav resolve prompt://            # All prompts (protocol-only)
+ace-nav resolve prompt://guidelines/ # All files in guidelines/ directory
+ace-nav resolve "prompt://format/*"  # All files matching pattern
+ace-nav resolve "wfi://create*"      # All workflows starting with 'create'
 
 # Subdirectory and prefix patterns
-ace-nav prompt://focus/               # Lists all focus modules
-ace-nav prompt://focus/quality/       # Lists quality-specific focus modules
-ace-nav wfi://review/                 # Lists all review-related workflows
+ace-nav resolve prompt://focus/         # Lists all focus modules
+ace-nav resolve prompt://focus/quality/ # Lists quality-specific focus modules
+ace-nav resolve wfi://review/           # Lists all review-related workflows
 
 # Explicit list mode still works
-ace-nav 'wfi://*' --list             # All workflows
-ace-nav 'tmpl://@project/*' --list   # Project template overrides
-ace-nav 'wfi://*test*' --list        # Test-related workflows
+ace-nav list 'wfi://*'               # All workflows
+ace-nav list 'tmpl://@project/*'     # Project template overrides
+ace-nav list 'wfi://*test*'          # Test-related workflows
 ```
 
 ### Task Navigation
@@ -93,19 +93,19 @@ The `task://` protocol delegates to `ace-task` commands, providing unified navig
 
 ```bash
 # Basic task navigation
-ace-nav task://083                   # Show task summary
-ace-nav task://083 --path            # Get task file path
-ace-nav task://083 --content         # Show full task content
-ace-nav task://083 --tree            # Show task dependencies
+ace-nav resolve task://083                   # Show task summary
+ace-nav resolve task://083 --path            # Get task file path
+ace-nav resolve task://083 --content         # Show full task content
+ace-nav resolve task://083 --tree            # Show task dependencies
 
 # All ace-taskflow reference formats supported
-ace-nav task://018                   # Task in current context
-ace-nav task://task.018              # Prefixed format
-ace-nav task://v.0.9.0+task.018      # Specific release
-ace-nav task://backlog+025           # Backlog tasks
+ace-nav resolve task://018                   # Task in current context
+ace-nav resolve task://task.018              # Prefixed format
+ace-nav resolve task://v.0.9.0+task.018      # Specific release
+ace-nav resolve task://backlog+025           # Backlog tasks
 
 # Shell integration
-nvim $(ace-nav task://083 --path)    # Open task in editor
+nvim $(ace-nav resolve task://083 --path)    # Open task in editor
 ```
 
 ## Configuration
@@ -151,8 +151,8 @@ protocols:
 
 The extension inference feature enables DWIM (Do What I Mean) behavior by automatically trying common file extensions when a resource is not found. For example:
 
-- `ace-nav wfi://setup` will try: `setup.wfi.md`, `setup.md`, `setup.markdown.md`, `setup`
-- `ace-nav tmpl://custom` will try: `custom.tmpl.md`, `custom.md`, `custom.markdown.md`, `custom`
+- `ace-nav resolve wfi://setup` will try: `setup.wfi.md`, `setup.md`, `setup.markdown.md`, `setup`
+- `ace-nav resolve tmpl://custom` will try: `custom.tmpl.md`, `custom.md`, `custom.markdown.md`, `custom`
 
 This reduces the need to type full extensions while maintaining compatibility with existing resources.
 
@@ -183,9 +183,9 @@ The cascade priority is:
 3. **@gem** - Bundled resources in ace-* gems
 
 Use @ prefix to bypass cascade and target specific sources:
-- `wfi://setup` - Cascade search (project > user > gems)
-- `wfi://@ace-git/setup` - Only from ace-git gem
-- `wfi://@project/setup` - Only from project overrides
+- `ace-nav resolve wfi://setup` - Cascade search (project > user > gems)
+- `ace-nav resolve wfi://@ace-git/setup` - Only from ace-git gem
+- `ace-nav resolve wfi://@project/setup` - Only from project overrides
 
 ## Ruby API
 
@@ -196,7 +196,7 @@ require "ace/support/nav"
 Ace::Support::Nav.config
 
 # Use CLI programmatically
-Ace::Support::Nav::CLI.start(["wfi://setup"])
+Dry::CLI.new(Ace::Support::Nav::CLI).call(arguments: ["resolve", "wfi://setup"])
 
 # Use navigation engine directly
 engine = Ace::Support::Nav::Organisms::NavigationEngine.new

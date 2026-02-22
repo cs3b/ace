@@ -30,9 +30,6 @@ module Ace
                 # Tree format
                 $ ace-nav list wfi:// --tree
 
-                # Can also use wildcard directly (auto-routed)
-                $ ace-nav wfi://*
-
               CONFIGURATION:
 
                 Global config:  ~/.ace/nav/config.yml
@@ -49,8 +46,7 @@ module Ace
             example [
               "'wfi://*'                 # List all workflows",
               "'tmpl://@ace-*/*'         # List templates with pattern",
-              "wfi:// --tree             # Tree format",
-              "wfi://*                   # Auto-routed from resolve"
+              "wfi:// --tree             # Tree format"
             ]
 
             argument :pattern, required: true, desc: "Pattern to match resources"

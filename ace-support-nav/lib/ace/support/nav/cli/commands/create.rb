@@ -27,9 +27,6 @@ module Ace
                 # Create from template to specific file
                 $ ace-nav create tmpl://custom ./output.md
 
-                # Backward compat: using --create flag
-                $ ace-nav --create wfi://my-workflow
-
               CONFIGURATION:
 
                 Global config:  ~/.ace/nav/config.yml
@@ -44,8 +41,7 @@ module Ace
 
             example [
               "wfi://my-workflow           # Create from workflow template",
-              "tmpl://custom ./output.md   # Create from template to file",
-              "--create wfi://my-workflow  # Backward compatibility"
+              "tmpl://custom ./output.md   # Create from template to file"
             ]
 
             argument :uri, required: true, desc: "Template URI"

@@ -216,7 +216,7 @@ PATH
 PATH
   remote: ace-support-nav
   specs:
-    ace-support-nav (0.17.8)
+    ace-support-nav (0.17.9)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.10)
       ace-support-fs (~> 0.1)

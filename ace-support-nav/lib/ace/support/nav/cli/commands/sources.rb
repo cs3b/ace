@@ -26,9 +26,6 @@ module Ace
                 # Verbose JSON output
                 $ ace-nav sources --verbose
 
-                # Backward compat: using --sources flag
-                $ ace-nav --sources
-
               CONFIGURATION:
 
                 Sources configured in: .ace/nav/config.yml
@@ -44,8 +41,7 @@ module Ace
 
             example [
               "                          # Show all sources",
-              "--verbose                 # Show detailed information (JSON)",
-              "                          # Backward compat: --sources flag"
+              "--verbose                 # Show detailed information (JSON)"
             ]
 
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
