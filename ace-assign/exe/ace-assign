@@ -3,9 +3,13 @@
 
 require_relative "../lib/ace/assign"
 
+# No args → show help
+args = ARGV.empty? ? ["--help"] : ARGV
+
 # Start dry-cli with exception-based exit code handling (per ADR-023)
 begin
-  Ace::Assign::CLI.start(ARGV)
+  exit_code = Ace::Assign::CLI.start(args)
+  exit(exit_code) if exit_code.nonzero?
 rescue Ace::Core::CLI::Error => e
   warn e
   exit(e.exit_code)

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.17] - 2026-02-22
+
+### Changed
+- Migrate CLI to standard help pattern: register HelpCommand for `--help`/`-h`, simplify `start()` by removing DWIM default routing
+
 ## [0.12.16] - 2026-02-22
 
 ### Fixed
