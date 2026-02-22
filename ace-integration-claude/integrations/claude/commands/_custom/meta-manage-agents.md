@@ -15,7 +15,7 @@ Create, update, and maintain agent definitions following the standardized agent 
 
 ## Usage
 
-Type `/ace_handbook_manage-agents [agent-name] [action]` where:
+Type `/ace-handbook-manage-agents [agent-name] [action]` where:
 - `agent-name` is the name of the agent to manage
 - `action` is either "create", "update", or "review"
 
@@ -40,9 +40,9 @@ The workflow will:
 ## Examples
 
 ```
-/ace_handbook_manage-agents task-finder create
-/ace_handbook_manage-agents git-commit update
-/ace_handbook_manage-agents release-navigator review
+/ace-handbook-manage-agents task-finder create
+/ace-handbook-manage-agents git-commit update
+/ace-handbook-manage-agents release-navigator review
 ```
 
 ## Full Workflow
