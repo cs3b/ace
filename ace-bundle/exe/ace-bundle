@@ -2,17 +2,18 @@
 # frozen_string_literal: true
 
 require "ace/bundle"
+require "dry/cli"
 
-# Handle --list flag (legacy Thor mapping)
 if ARGV.include?("--list") || ARGV.include?("--list-presets")
   ARGV.delete("--list")
   ARGV.delete("--list-presets")
   ARGV.unshift("list")
 end
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+args = ARGV.empty? ? ["--help"] : ARGV
+
 begin
-  Ace::Bundle::CLI.start(ARGV)
+  Dry::CLI.new(Ace::Bundle::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
