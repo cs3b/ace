@@ -59,14 +59,14 @@ ace-models cache clear
 
 ```bash
 # List all providers with model counts
-ace-models providers list
+ace-llm-providers list
 # Providers (69):
 #   openrouter: 127 models
 #   openai: 36 models
 #   ...
 
 # Show provider details
-ace-models providers show openai
+ace-llm-providers show openai
 # Provider: openai
 # Models (36):
 #   gpt-4o
@@ -76,8 +76,8 @@ ace-models providers show openai
 #   ...
 
 # Sync provider YAML configs with models.dev
-ace-models providers sync
-ace-models providers sync --apply  # Apply changes
+ace-llm-providers sync
+ace-llm-providers sync --apply  # Apply changes
 ```
 
 ### Model Commands
@@ -134,7 +134,7 @@ All commands support `--json` for machine-readable output:
 
 ```bash
 ace-models cache status --json
-ace-models providers list --json
+ace-llm-providers list --json
 ace-models models search gpt --json
 ace-models models info openai:gpt-4o --json
 ```
