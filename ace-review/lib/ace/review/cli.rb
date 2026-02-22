@@ -8,29 +8,20 @@ require_relative "../review"
 require_relative "cli/commands/review"
 require_relative "cli/commands/list_presets"
 require_relative "cli/commands/list_prompts"
-# Feedback commands
-require_relative "cli/commands/feedback"
-require_relative "cli/commands/feedback/create"
-require_relative "cli/commands/feedback/list"
-require_relative "cli/commands/feedback/show"
-require_relative "cli/commands/feedback/verify"
-require_relative "cli/commands/feedback/skip"
-require_relative "cli/commands/feedback/resolve"
 
 module Ace
   module Review
     # dry-cli based CLI registry for ace-review
     #
-    # This replaces the Thor-based CLI with dry-cli while maintaining
-    # complete command parity and user-facing behavior.
+    # After the split, ace-review handles review execution and configuration.
+    # Feedback management moved to ace-review-feedback.
     module CLI
       extend Dry::CLI::Registry
 
-      # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[review list-presets list-prompts feedback].freeze
+      PROGRAM_NAME = "ace-review"
 
-      # Feedback subcommands (for routing disambiguation)
-      FEEDBACK_SUBCOMMANDS = %w[create list show verify skip resolve].freeze
+      # Application commands registered in this CLI (single source of truth)
+      REGISTERED_COMMANDS = %w[review list-presets list-prompts].freeze
 
       # dry-cli built-in commands (standard across all CLI gems)
       BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
@@ -46,27 +37,21 @@ module Ace
       # ASCII Unit Separator (0x1F) is designed for separating fields
       ARRAY_SEPARATOR = "\x1F"
 
-      # Start the CLI with default command routing
-      #
-      # This method handles the default task routing that was previously
-      # in the exe/ace-review wrapper. Moving it here makes the routing
-      # logic testable and ensures consistent behavior for all consumers
-      # (shell, tests, internal Ruby calls).
+      HELP_EXAMPLES = [
+        ["Run review with a preset", "ace-review --preset code-pr"],
+        ["Review specific files", "ace-review --subject files:lib/app.rb"],
+        ["List available presets", "ace-review list-presets"],
+        ["List prompt modules", "ace-review list-prompts"],
+      ].freeze
+
+      # Start the CLI with default command routing.
+      # Custom start() required for array option preprocessing.
       #
       # @param args [Array<String>] Command-line arguments
       # @return [Integer] Exit code (0 for success, non-zero for failure)
-      #
-      # @example From shell
-      #   Ace::Review::CLI.start(ARGV)
-      #
-      # @example From tests
-      #   result = Ace::Review::CLI.start(["--preset", "code-pr"])
       def self.start(args)
         # Handle help explicitly (dry-cli doesn't handle registry-level help)
-        if args.first && %w[help --help -h].include?(args.first)
-          puts Dry::CLI::Usage.call(get([]), registry: self)
-          return 0
-        end
+        return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
 
         # Pre-process args to handle dry-cli's array option accumulation limitation
         # dry-cli only returns the last occurrence of --subject/--model flags,
@@ -179,15 +164,6 @@ module Ace
 
       # Register the list-prompts command
       register "list-prompts", Commands::ListPrompts
-
-      # Register feedback commands
-      register "feedback", Commands::Feedback
-      register "feedback create", Commands::FeedbackSubcommands::Create
-      register "feedback list", Commands::FeedbackSubcommands::List
-      register "feedback show", Commands::FeedbackSubcommands::Show
-      register "feedback verify", Commands::FeedbackSubcommands::Verify
-      register "feedback skip", Commands::FeedbackSubcommands::Skip, hidden: true
-      register "feedback resolve", Commands::FeedbackSubcommands::Resolve
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
