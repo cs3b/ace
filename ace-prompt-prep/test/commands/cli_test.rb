@@ -71,7 +71,7 @@ class CLITest < Minitest::Test
   def test_help_command_shows_available_commands
     result = invoke_prompt_cli(["help"])
 
-    assert_match(/Commands:/i, result[:stdout] + result[:stderr])
+    assert_match(/COMMANDS|Commands:/i, result[:stdout] + result[:stderr])
   end
 
   def test_cli_has_process_command

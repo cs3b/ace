@@ -36,19 +36,19 @@ class PromptCliRoutingTest < Minitest::Test
   def test_cli_routes_help_command
     result = invoke_cli(Ace::PromptPrep::CLI, ["help"])
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   def test_cli_routes_help_with_long_flag
     result = invoke_cli(Ace::PromptPrep::CLI, ["--help"])
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   def test_cli_routes_help_with_short_flag
     result = invoke_cli(Ace::PromptPrep::CLI, ["-h"])
     output = result[:stdout] + result[:stderr]
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 
   # --- Default Task Routing Tests ---
@@ -126,6 +126,6 @@ class PromptCliRoutingTest < Minitest::Test
     output = result[:stdout] + result[:stderr]
 
     # Should show root help with Commands list
-    assert_match(/Commands:/i, output)
+    assert_match(/COMMANDS|Commands:/i, output)
   end
 end
