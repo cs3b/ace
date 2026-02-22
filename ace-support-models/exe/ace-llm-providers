@@ -7,9 +7,12 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require "ace/support/models"
 require "ace/support/models/cli/providers_cli"
 
+# No args → show help
+args = ARGV.empty? ? ["--help"] : ARGV
+
 # Start dry-cli with exception-based exit code handling (per ADR-023)
 begin
-  Ace::Support::Models::ProvidersCLI.start(ARGV)
+  Ace::Support::Models::ProvidersCLI.start(args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
