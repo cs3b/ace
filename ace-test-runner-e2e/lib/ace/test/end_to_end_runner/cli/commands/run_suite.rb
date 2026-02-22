@@ -55,9 +55,9 @@ module Ace
             option :timeout, type: :string, default: Molecules::ConfigLoader.default_timeout.to_s,
                    desc: "Timeout per test in seconds"
             option :progress, type: :boolean, desc: "Enable live animated display"
-            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress detailed output"
-            option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-            option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
             def call(packages: nil, **options)
               options = convert_types(options, parallel: :integer, timeout: :integer)

@@ -784,3 +784,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Guide documenting E2E testing conventions (`e2e-testing.g.md`)
 - Default configuration for test paths and patterns
 - Skill for invoking E2E tests (`/ace:run-e2e-test`)
+
+
+## [0.16.19] - 2026-02-22
+
+### Fixed
+- Added --help/-h and --version flag handling to ace-test-e2e-sh (was causing FATAL error)
+- Standardized quiet, verbose, debug option descriptions to canonical strings
