@@ -25,7 +25,7 @@ user-provided release scope into actionable tasks.
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle load wfi://bundle`
 
 ## Process Steps
 

@@ -27,7 +27,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle load wfi://bundle`
 
 ## High-Level Execution Plan
 
