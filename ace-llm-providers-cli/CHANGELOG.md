@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-02-22
+
+### Added
+- Git worktree sandbox support for `CodexClient` and `CodexOaiClient` — automatically appends `--add-dir` with the common `.git/` directory when running inside a git worktree, allowing Codex sandbox to write git metadata (index.lock etc.)
+- New `WorktreeDirResolver` atom that detects git worktree environments and resolves the common git directory path
+
 ## [0.18.0] - 2026-02-22
 
 ### Added
