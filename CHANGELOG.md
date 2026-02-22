@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.578] - 2026-02-22
+
+### Changed
+- **ace-git-secrets v0.7.9**: Migrate to standard multi-command top-level help (`help`, `--help`, `-h`) and make no-arg invocation show help.
+
+### Technical
+- **ace-git-secrets v0.7.9**: Remove custom default-routing (`CLI.start`, command coercion) and move config preloading to executable-level dispatch.
+- **ace-git-secrets v0.7.9**: Update CLI routing tests to use direct dry-cli dispatch semantics aligned with executable behavior.
+
 ## [0.9.577] - 2026-02-22
 
 ### Added
