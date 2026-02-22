@@ -2,11 +2,12 @@
 # frozen_string_literal: true
 
 require_relative "../lib/ace/docs"
-require_relative "../lib/ace/docs/cli"
+require "dry/cli"
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+args = ARGV.empty? ? ["--help"] : ARGV
+
 begin
-  Ace::Docs::CLI.start(ARGV)
+  Dry::CLI.new(Ace::Docs::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
