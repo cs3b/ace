@@ -27,7 +27,7 @@ significant architectural decision, its context, rationale, and consequences.
 
 ## Project Context Loading
 
-* Read and follow: `ace-bundle wfi://bundle`
+* Read and follow: `ace-bundle load wfi://bundle`
 
 ## High-Level Execution Plan
 
