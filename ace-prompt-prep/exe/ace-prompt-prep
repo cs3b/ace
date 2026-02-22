@@ -1,11 +1,15 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require "ace/prompt_prep"
+require_relative "../lib/ace/prompt_prep"
+require "dry/cli"
+
+# No args → show help
+args = ARGV.empty? ? ["--help"] : ARGV
 
 # Start dry-cli with exception-based exit code handling (per ADR-023)
 begin
-  Ace::PromptPrep::CLI.start(ARGV)
+  Dry::CLI.new(Ace::PromptPrep::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

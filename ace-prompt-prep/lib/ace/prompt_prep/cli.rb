@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require "ace/support/fs"
 require "fileutils"
@@ -20,26 +19,24 @@ module Ace
   module PromptPrep
     # dry-cli based CLI registry for ace-prompt-prep
     #
-    # This replaces the Thor-based CLI with dry-cli while maintaining
-    # complete command parity and user-facing behavior.
+    # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
     module CLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
-      # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[process setup].freeze
+      PROGRAM_NAME = "ace-prompt-prep"
 
-      # dry-cli built-in commands (standard across all CLI gems)
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+      REGISTERED_COMMANDS = [
+        ["process", "Process prompts from workspace"],
+        ["setup", "Setup prompt prep environment"]
+      ].freeze
 
-      # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
-      # Using Set for O(1) lookup performance
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+      HELP_EXAMPLES = [
+        "ace-prompt-prep process",
+        "ace-prompt-prep process --task 148",
+        "ace-prompt-prep setup"
+      ].freeze
 
-      # Default command to use when first argument is not a known command
-      DEFAULT_COMMAND = "process"
-
-      # Register the process command (default)
+      # Register the process command
       register "process", Commands::Process.new
 
       # Register the setup command
@@ -52,6 +49,17 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::PromptPrep::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
 
       # Shared helper module for common CLI functionality
       module Helpers
