@@ -111,9 +111,9 @@ describe "CLI Providers" do
     end
   end
 
-  describe "CodexOSSClient" do
+  describe "CodexOaiClient" do
     before do
-      @client = Ace::LLM::Providers::CLI::CodexOSSClient.new
+      @client = Ace::LLM::Providers::CLI::CodexOaiClient.new
     end
 
     it "initializes with default model" do
@@ -121,11 +121,10 @@ describe "CLI Providers" do
       assert model # Just check it has a model
     end
 
-    it "lists single default model" do
+    it "lists models" do
       models = @client.list_models
       assert_kind_of Array, models
-      assert_equal 1, models.size
-      assert_equal "default", models.first[:id]
+      assert models.any? { |m| m[:id] == "zai/glm-5" }
     end
   end
 end
