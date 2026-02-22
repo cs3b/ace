@@ -10,6 +10,8 @@ assign:
     - onboard
     - plan-task
     - work-on-task
+    - release
+    - verify-test-suite
   context: fork
 ---
 
