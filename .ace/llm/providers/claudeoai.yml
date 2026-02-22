@@ -1,0 +1,26 @@
+name: claudeoai
+class: Ace::LLM::Providers::CLI::ClaudeOaiClient
+gem: ace-llm-providers-cli
+context_limit: 128000
+backends:
+  zai:
+    base_url: "https://api.z.ai/api/anthropic"
+    env_key: "ZAI_API_KEY"
+    models: [glm-5, glm-4.7, glm-4.6]
+models:
+  - zai/glm-5
+  - zai/glm-4.7
+  - zai/glm-4.6
+aliases:
+  global:
+    claude-oai: claudeoai:zai/glm-5
+  model:
+    glm: zai/glm-5
+    glm47: zai/glm-4.7
+capabilities:
+  - text_generation
+  - code_generation
+  - multi_provider
+default_options:
+  temperature: 0.7
+  max_tokens: 12000
