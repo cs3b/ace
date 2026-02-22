@@ -175,3 +175,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Organisms: SecurityAuditor, HistoryCleaner, ReleaseGate
 - Configuration via ace-core config cascade (.ace/git-secrets/config.yml)
 - ATOM architecture following ACE gem standards
+
+
+## [0.7.8] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings

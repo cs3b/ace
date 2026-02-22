@@ -21,7 +21,7 @@ module Ace
             option :format, type: :string, aliases: ["f"], default: "table",
                    desc: "Output format (table, json)"
             option :debug, type: :boolean, default: false,
-                   desc: "Enable debug output"
+                   desc: "Show debug output"
 
             def call(**options)
               debug_log("Starting check-release with options: #{format_pairs(options)}", options)

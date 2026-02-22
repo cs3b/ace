@@ -23,7 +23,7 @@ module Ace
             option :scan_file, type: :string,
                    desc: "Use previous scan results file"
             option :debug, type: :boolean, default: false,
-                   desc: "Enable debug output"
+                   desc: "Show debug output"
 
             def call(**options)
               debug_log("Starting revoke with options: #{format_pairs(options)}", options)
