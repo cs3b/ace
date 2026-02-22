@@ -1,5 +1,5 @@
 name: onboard
-skill: ace_onboard
+skill: ace-onboard
 description: Load project context and understand the codebase
 
 prerequisites: []

@@ -1,5 +1,5 @@
 name: commit
-skill: ace_git_commit
+skill: ace-git-commit
 description: Generate and create a commit with a descriptive message
 
 prerequisites:
