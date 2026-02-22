@@ -4,9 +4,9 @@ gem: ace-llm-providers-cli
 context_limit: 128000
 backends:
   zai:
+    name: "Z.ai GLM"
     base_url: "https://api.z.ai/api/coding/paas/v4"
     env_key: "ZAI_API_KEY"
-    wire_api: "chat"
     models: [glm-5, glm-4.7, glm-4.6]
 models:
   - zai/glm-5
