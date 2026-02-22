@@ -49,6 +49,15 @@ module Ace
     # Uses the Hanami pattern: CLI::Commands::* namespace for all commands.
     module CLI
       extend Dry::CLI::Registry
+      include Ace::Core::CLI::DryCli::CommandGroups
+
+      # Command groups for --help output (used by usage_formatter)
+      COMMAND_GROUPS = {
+        "Task Management" => %w[task tasks],
+        "Idea Management" => %w[idea ideas],
+        "Release & Retro" => %w[release releases retro retros],
+        "Utilities" => %w[status doctor config migrate]
+      }.freeze
 
       # Application commands registered in this CLI (single source of truth)
       REGISTERED_COMMANDS = %w[
@@ -86,7 +95,7 @@ module Ace
 
         # Handle help explicitly (dry-cli doesn't handle registry-level help)
         if args.first && %w[help --help -h].include?(args.first)
-          puts Dry::CLI::Usage.call(get([]))
+          puts Dry::CLI::Usage.call(get([]), registry: self)
           return 0
         end
 

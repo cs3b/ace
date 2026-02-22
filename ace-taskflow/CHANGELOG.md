@@ -1528,3 +1528,13 @@ For file references in custom scripts:
 - Retrospective management
 - Configuration cascade system
 - ATOM architecture pattern
+
+
+## [0.40.0] - 2026-02-22
+
+### Added
+- Command grouping in CLI help: Task Management, Idea Management, Release & Retro, Utilities
+
+### Fixed
+- Misleading examples in task add-dependency/remove-dependency (was showing --depends-on flag, now shows positional args)
+- Standardized quiet, verbose, debug option descriptions to canonical strings

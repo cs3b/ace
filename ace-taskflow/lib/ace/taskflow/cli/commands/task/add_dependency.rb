@@ -22,17 +22,17 @@ module Ace
             DESC
 
             example [
-              '034 --depends-on 031    # Make task 034 depend on task 031',
-              '034 -d 031             # Short form'
+              '034 031                 # Make task 034 depend on task 031',
+              'task.034 task.031       # Using task ID format'
             ]
 
             argument :task_ref, required: true, desc: "Task reference to add dependency to"
             argument :depends_on, required: true, desc: "Task reference that this task depends on"
 
             # Standard options
-            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary output"
-            option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-            option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
             def call(task_ref:, depends_on:, **options)
               # Display config summary unless quiet mode
