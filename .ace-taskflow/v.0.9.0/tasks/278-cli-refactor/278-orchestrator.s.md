@@ -1,8 +1,14 @@
 ---
 id: v.0.9.0+task.278
-status: draft
+status: in-progress
 priority: high
 estimate: TBD
+worktree:
+  branch: 278-drop-dwim-default-routing-and-standardize-cli-help
+  path: "../ace-task.278"
+  created_at: '2026-02-22 11:39:29'
+  updated_at: '2026-02-22 11:39:29'
+  target_branch: 274-unified-cli-help-core-formatter
 ---
 
 # Drop DWIM Default Routing and Standardize CLI Help
