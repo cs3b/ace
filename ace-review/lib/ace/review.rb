@@ -59,6 +59,7 @@ require_relative "review/models/feedback_item"
 require_relative "review/models/reviewer"
 
 require_relative "review/cli"
+require_relative "review/cli/feedback_cli"
 
 module Ace
   module Review
