@@ -56,6 +56,11 @@ module Ace
             merged_options[:api_key] = resolve_api_key(provider_config["api_key"])
           end
 
+          # Pass backend configurations (base_url, env_key, model_tiers) to client
+          if provider_config["backends"]
+            merged_options[:backends] = provider_config["backends"]
+          end
+
           client_class.new(model: model, **merged_options)
         end
 
