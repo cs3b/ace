@@ -670,7 +670,7 @@ Unknown models fall back to a conservative 128K default.
 
 ## Task Integration
 
-The `--task` flag enables saving review reports directly to ace-taskflow task directories for improved traceability and context.
+The `--task` flag enables saving review reports directly to ace-task directories for improved traceability and context.
 
 ### Usage
 

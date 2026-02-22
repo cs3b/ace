@@ -26,22 +26,22 @@ Key benefits:
 
 2. List feedback items:
    ```bash
-   ace-review feedback list
+   ace-review-feedback list
    ```
 
 3. Process feedback:
    ```bash
    # Verify a draft item as valid
-   ace-review feedback verify abc123 --valid --research "Confirmed issue in production logs"
+   ace-review-feedback verify abc123 --valid --research "Confirmed issue in production logs"
 
    # Verify as invalid (false positive)
-   ace-review feedback verify abc123 --invalid --research "False positive: validation exists"
+   ace-review-feedback verify abc123 --invalid --research "False positive: validation exists"
 
    # Skip an item that's not applicable
-   ace-review feedback verify abc123 --skip --research "Out of scope for this PR"
+   ace-review-feedback verify abc123 --skip --research "Out of scope for this PR"
 
    # Resolve a pending item
-   ace-review feedback resolve abc123 --resolution "Fixed in commit def456"
+   ace-review-feedback resolve abc123 --resolution "Fixed in commit def456"
    ```
 
 ## Feedback Item Lifecycle
@@ -72,31 +72,31 @@ Terminal states (`invalid`, `skip`, `done`) are automatically archived.
 
 ## CLI Commands
 
-### `ace-review feedback list`
+### `ace-review-feedback list`
 
 Lists feedback items with optional filters.
 
 ```bash
 # List all active items
-ace-review feedback list
+ace-review-feedback list
 
 # Filter by status
-ace-review feedback list --status pending
+ace-review-feedback list --status pending
 
 # Filter by priority
-ace-review feedback list --priority high
+ace-review-feedback list --priority high
 
 # Combine filters
-ace-review feedback list --status pending --priority critical
+ace-review-feedback list --status pending --priority critical
 
 # Include archived items
-ace-review feedback list --archived
+ace-review-feedback list --archived
 
 # Output as JSON
-ace-review feedback list --format json
+ace-review-feedback list --format json
 
 # Use specific session
-ace-review feedback list --session .cache/ace-review/sessions/review-8p2h11
+ace-review-feedback list --session .cache/ace-review/sessions/review-8p2h11
 ```
 
 **Options:**
@@ -106,19 +106,19 @@ ace-review feedback list --session .cache/ace-review/sessions/review-8p2h11
 - `--archived` - Include archived items
 - `--format FORMAT` - Output format (table/json)
 
-### `ace-review feedback show <id>`
+### `ace-review-feedback show <id>`
 
 Displays detailed information about a feedback item.
 
 ```bash
 # Show by full ID
-ace-review feedback show abc123
+ace-review-feedback show abc123
 
 # Show by partial ID (minimum 3 characters)
-ace-review feedback show abc
+ace-review-feedback show abc
 
 # Use specific session
-ace-review feedback show abc123 --session .cache/ace-review/sessions/review-8p2h11
+ace-review-feedback show abc123 --session .cache/ace-review/sessions/review-8p2h11
 ```
 
 **Output includes:**
@@ -130,24 +130,24 @@ ace-review feedback show abc123 --session .cache/ace-review/sessions/review-8p2h
 - Research notes (verification)
 - Resolution (how it was fixed)
 
-### `ace-review feedback verify <id>`
+### `ace-review-feedback verify <id>`
 
 Verifies a draft item as valid, invalid, or skipped.
 
 ```bash
 # Mark as valid (moves to pending)
-ace-review feedback verify abc123 --valid
+ace-review-feedback verify abc123 --valid
 
 # Mark as invalid (archives the item)
-ace-review feedback verify abc123 --invalid
+ace-review-feedback verify abc123 --invalid
 
 # Mark as skipped (archives the item)
-ace-review feedback verify abc123 --skip
+ace-review-feedback verify abc123 --skip
 
 # Add research notes
-ace-review feedback verify abc123 --valid --research "Confirmed: code path is reachable"
-ace-review feedback verify abc123 --invalid --research "False positive: handled elsewhere"
-ace-review feedback verify abc123 --skip --research "Design: using polling for simplicity"
+ace-review-feedback verify abc123 --valid --research "Confirmed: code path is reachable"
+ace-review-feedback verify abc123 --invalid --research "False positive: handled elsewhere"
+ace-review-feedback verify abc123 --skip --research "Design: using polling for simplicity"
 ```
 
 **Options:**
@@ -186,36 +186,36 @@ All three modes archive feedback items, but they mean different things:
 
 ```bash
 # Claimed code doesn't exist, but it does
-ace-review feedback verify abc123 --invalid --research "Class exists at lib/extractor.rb:42"
+ace-review-feedback verify abc123 --invalid --research "Class exists at lib/extractor.rb:42"
 
 # Claimed missing validation, but it exists elsewhere
-ace-review feedback verify abc124 --invalid --research "Validation exists in AuthMiddleware:23"
+ace-review-feedback verify abc124 --invalid --research "Validation exists in AuthMiddleware:23"
 
 # Claimed issue in CI, but code doesn't run in CI
-ace-review feedback verify abc125 --invalid --research "E2E tests are agent-executed, not in CI"
+ace-review-feedback verify abc125 --invalid --research "E2E tests are agent-executed, not in CI"
 ```
 
 **Use `verify --skip` for correct findings that won't be fixed:**
 
 ```bash
 # Design decision - intentionally choosing this approach
-ace-review feedback verify abc126 --skip --research "Design: using polling for simplicity"
+ace-review-feedback verify abc126 --skip --research "Design: using polling for simplicity"
 
 # Deferred - correct issue, but tracking separately
-ace-review feedback verify abc127 --skip --research "Tracked in task 253"
+ace-review-feedback verify abc127 --skip --research "Tracked in task 253"
 
 # Duplicate - already covered by another item
-ace-review feedback verify abc128 --skip --research "Duplicate of abc120"
+ace-review-feedback verify abc128 --skip --research "Duplicate of abc120"
 ```
 
-### `ace-review feedback resolve <id>`
+### `ace-review-feedback resolve <id>`
 
 Resolves a pending item with resolution text.
 
 ```bash
-ace-review feedback resolve abc123 --resolution "Fixed in commit def456"
-ace-review feedback resolve abc123 --resolution "Added input validation in UserController"
-ace-review feedback resolve abc123 --resolution "Refactored to use parameterized queries"
+ace-review-feedback resolve abc123 --resolution "Fixed in commit def456"
+ace-review-feedback resolve abc123 --resolution "Added input validation in UserController"
+ace-review-feedback resolve abc123 --resolution "Refactored to use parameterized queries"
 ```
 
 **Options:**
@@ -257,7 +257,7 @@ feedback:
 
 Feedback is stored within session directories and discovered via:
 
-1. **`--session` flag** (explicit): `ace-review feedback list --session .cache/ace-review/sessions/review-8p2h11`
+1. **`--session` flag** (explicit): `ace-review-feedback list --session .cache/ace-review/sessions/review-8p2h11`
 2. **`.ace-review-session` cache file**: Auto-created after reviews, remembers the latest session
 3. **Current working directory**: Fallback to pwd
 
@@ -429,7 +429,7 @@ To fix items stuck in wrong state, manually edit the YAML frontmatter.
 By default, `list` shows only active items. Use `--archived` to include:
 
 ```bash
-ace-review feedback list --archived
+ace-review-feedback list --archived
 ```
 
 Archived items are in `feedback/_archived/` subdirectory within each session.
@@ -451,7 +451,7 @@ ls -la .cache/ace-review/sessions/
 # review-8p2xyz/
 
 # Work with a specific session
-ace-review feedback list --session .cache/ace-review/sessions/review-8p2h11
+ace-review-feedback list --session .cache/ace-review/sessions/review-8p2h11
 ```
 
 This enables:
