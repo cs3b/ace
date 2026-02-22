@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.595] - 2026-02-22
+
+### Changed
+- **ace-overseer v0.4.9**: Migrate CLI to standard help pattern — remove DWIM default routing so no args shows help instead of custom usage display
+
+### Technical
+- **ace-overseer v0.4.9**: Remove KNOWN_COMMANDS, BUILTIN_COMMANDS constants and custom `start()` method; add PROGRAM_NAME, HELP_EXAMPLES, REGISTERED_COMMANDS with descriptions; register HelpCommand for --help/-h; update exe to use no-args → --help pattern
+
 ## [0.9.594] - 2026-02-22
 
 ### Changed
