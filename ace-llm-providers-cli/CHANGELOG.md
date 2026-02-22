@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-02-22
+
+### Fixed
+- `ClaudeOaiClient` now passes tier alias (`sonnet`/`opus`/`haiku`) to `--model` instead of backend model name (`glm-5`), fixing claude CLI model recognition errors
+- Sets `ANTHROPIC_DEFAULT_<TIER>_MODEL` env var so tier alias resolves to backend model name at runtime
+
+### Added
+- `model_tiers` mapping in backend config (`claudeoai.yml`) to associate backend models with Claude CLI tier aliases
+- `resolve_model_tier` method for tier lookup with `sonnet` fallback
+
 ## [0.19.0] - 2026-02-22
 
 ### Added
