@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.599] - 2026-02-22
+
+### Changed
+- **ace-bundle v0.31.0**: Migrate from multi-command Registry to single-command pattern — `ace-bundle project` replaces `ace-bundle load project`, `--list-presets` replaces `list` subcommand
+- **ace-llm v0.23.0**: Migrate from multi-command Registry to single-command pattern — `ace-llm gflash "prompt"` replaces `ace-llm query gflash "prompt"`, `--list-providers` replaces `list-providers` subcommand
+- **ace-review v0.42.0**: Migrate from multi-command Registry to single-command pattern — `ace-review --preset pr` replaces `ace-review review --preset pr`, `--list-presets`/`--list-prompts` replace subcommands
+
+### Removed
+- **ace-bundle v0.31.0**: Remove `list` and `load` subcommands, `version`/`help` subcommands (use `--version`/`--help` flags)
+- **ace-llm v0.23.0**: Remove `query` and `list-providers` subcommands, `version`/`help` subcommands
+- **ace-review v0.42.0**: Remove `review`, `list-presets`, `list-prompts` subcommands, `version`/`help` subcommands, `KNOWN_COMMAND_NAMES` preprocessing
+
 ## [0.9.598] - 2026-02-22
 
 ### Fixed
