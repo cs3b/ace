@@ -33,11 +33,11 @@ module Ace
           DESC
 
           example [
-            "ace-docs status                      # All tracked documents",
-            "ace-docs status --type handbook      # Filter by document type",
-            "ace-docs status --needs-update       # Show only documents needing update",
-            "ace-docs status --freshness stale    # Filter by freshness status",
-            "ace-docs status --freshness current  # Filter by freshness status"
+            "                             # All tracked documents",
+            "--type handbook              # Filter by document type",
+            "--needs-update               # Show only documents needing update",
+            "--freshness stale            # Filter by freshness status",
+            "--freshness current          # Filter by freshness status"
           ]
 
           option :type, type: :string, desc: "Filter by document type"
@@ -45,9 +45,9 @@ module Ace
           option :freshness, type: :string, desc: "Filter by freshness status (current/stale/outdated)"
 
           # Standard options
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(**options)
             execute_status(options)

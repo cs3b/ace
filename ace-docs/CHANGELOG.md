@@ -862,3 +862,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration with ace-core for configuration management
 - CLI commands for status checking and document updates
 - Support for automatic document updates based on frontmatter metadata
+
+
+## [0.20.2] - 2026-02-22
+
+### Fixed
+- Stripped duplicate command name prefixes from example strings
+- Standardized quiet, verbose, debug option descriptions to canonical strings

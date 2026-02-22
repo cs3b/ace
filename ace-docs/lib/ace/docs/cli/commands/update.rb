@@ -44,10 +44,10 @@ module Ace
           DESC
 
           example [
-            "ace-docs update README.md --set last-updated=today",
-            "ace-docs update docs/guide.md --set status=complete --set last-reviewed=2025-01-04",
-            "ace-docs update --set last-updated=today --preset handbook",
-            "ace-docs update file.md --set last-updated=2025-01-04"
+            "README.md --set last-updated=today",
+            "docs/guide.md --set status=complete --set last-reviewed=2025-01-04",
+            "--set last-updated=today --preset handbook",
+            "file.md --set last-updated=2025-01-04"
           ]
 
           argument :file, required: false, desc: "File to update (or use --preset)"
@@ -56,9 +56,9 @@ module Ace
           option :preset, type: :string, desc: "Update all documents matching preset"
 
           # Standard options
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(file: nil, **options)
             # Handle --help/-h passed as file argument
