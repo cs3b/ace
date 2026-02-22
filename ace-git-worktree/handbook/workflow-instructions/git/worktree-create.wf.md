@@ -217,7 +217,7 @@ ace-git-worktree list --format json --show-tasks
 
 | Error | Check | Fix |
 |-------|-------|-----|
-| Task not found | `ace-taskflow task show <id>` | Verify task ID exists |
+| Task not found | `ace-task show <id>` | Verify task ID exists |
 | Not in git repo | `git status` | Run from git repository |
 | Invalid config | `ace-git-worktree config --validate` | Fix configuration errors |
 | Permission denied | `ls -la <worktree-root>` | Fix directory permissions |

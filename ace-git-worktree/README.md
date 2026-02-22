@@ -498,16 +498,16 @@ ls -la /path/to/worktrees
 **Solutions:**
 ```bash
 # 1. Check available tasks
-ace-taskflow tasks
+ace-task list
 
 # 2. Verify task ID format
 # Try these formats: 081, task.081, v.0.9.0+081
 
 # 3. Check current release context
-ace-taskflow release
+ace-release
 
 # 4. List recent tasks
-ace-taskflow tasks recent
+ace-task list recent
 ```
 
 #### Worktree already exists
@@ -704,7 +704,7 @@ ace-git-worktree prune --cleanup-directories --verbose
 ### Common Issues
 
 **"Task not found"**
-- Verify task ID: `ace-taskflow task show 081`
+- Verify task ID: `ace-task show 081`
 - Check ace-taskflow is available: `ace-taskflow --version`
 
 **"Not in a git repository"**
