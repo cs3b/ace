@@ -34,12 +34,12 @@ module Ace
           DESC
 
           example [
-            "ace-git-commit                    # Commit all changes",
-            "ace-git-commit src/auth.rb        # Commit specific file",
-            "ace-git-commit -i 'fix bug'       # With intention",
-            "ace-git-commit -m 'feat: add'     # With explicit message",
-            "ace-git-commit --only-staged      # Only staged changes",
-            "ace-git-commit --no-split         # Force a single commit"
+            "                             # Commit all changes",
+            "src/auth.rb                  # Commit specific file",
+            "-i 'fix bug'                # With intention",
+            "-m 'feat: add'              # With explicit message",
+            "--only-staged                # Only staged changes",
+            "--no-split                   # Force a single commit"
           ]
 
           # Define files as variadic argument (can be 0 or more)
@@ -55,9 +55,9 @@ module Ace
           option :no_split, type: :boolean, desc: "Force a single commit even when multiple config scopes are detected"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary and informational messages"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output (default: true)"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(**options)
             # Extract files array from options (dry-cli passes args as :files)

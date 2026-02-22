@@ -267,3 +267,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flexible model selection with `--model` flag
 - Intention-based message generation with `-i/--intention` flag
 - Dry-run mode for previewing commit messages
+
+
+## [0.18.3] - 2026-02-22
+
+### Fixed
+- Stripped duplicate command name prefix from commit examples
+- Standardized quiet, verbose, debug option descriptions to canonical strings
