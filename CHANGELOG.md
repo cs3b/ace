@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.579] - 2026-02-22
+
+### Fixed
+- **ace-llm-providers-cli v0.19.1**: `ClaudeOaiClient` now passes tier alias (`sonnet`/`opus`/`haiku`) to `--model` instead of backend model name, fixing claude CLI model recognition errors
+- **ace-llm-providers-cli v0.19.1**: Sets `ANTHROPIC_DEFAULT_<TIER>_MODEL` env var for tier-to-model resolution at runtime
+
+### Added
+- **ace-llm-providers-cli v0.19.1**: `model_tiers` backend config mapping and `resolve_model_tier` method
+
 ## [0.9.578] - 2026-02-22
 
 ### Changed
