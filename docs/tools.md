@@ -63,12 +63,12 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 
 | Skill | Purpose |
 |-------|---------|
-| `/ace_test_plan` | Plan test coverage before coding |
-| `/ace_test_verify-suite` | Audit test suite health (quick/standard/deep) |
-| `/ace_test_optimize` | Profile and fix slow tests |
-| `/ace_test_review` | Review test PR for quality |
-| `/ace_e2e_setup-sandbox` | Set up safe E2E environment |
-| `/ace_test_performance-audit` | Generate test performance audit report |
+| `/ace-test-plan` | Plan test coverage before coding |
+| `/ace-test-verify-suite` | Audit test suite health (quick/standard/deep) |
+| `/ace-test-optimize` | Profile and fix slow tests |
+| `/ace-test-review` | Review test PR for quality |
+| `/ace-e2e-setup-sandbox` | Set up safe E2E environment |
+| `/ace-test-performance-audit` | Generate test performance audit report |
 
 ## Linting
 
