@@ -34,6 +34,7 @@ execution:
 providers:
   cli:
     - "claude"
+    - "claudeoai"
     - "gemini"
     - "codex"
     - "codexoss"
@@ -41,4 +42,6 @@ providers:
     - "pi"
   cli_args:
     claude: "dangerously-skip-permissions"
+    claudeoai: "dangerously-skip-permissions"
     codex: "full-auto"
+    codexoss: "full-auto"
