@@ -15,7 +15,7 @@ Update and maintain handbook documentation, including README files and indexes.
 
 ## Usage
 
-Type `/ace_handbook_update-docs [section]` where:
+Type `/ace-handbook-update-docs [section]` where:
 - `section` is optional - specific section to update (e.g., "guides", "workflows", "agents")
 
 ## What This Does
@@ -39,9 +39,9 @@ The workflow will:
 ## Examples
 
 ```
-/ace_handbook_update-docs
-/ace_handbook_update-docs guides
-/ace_handbook_update-docs workflows
+/ace-handbook-update-docs
+/ace-handbook-update-docs guides
+/ace-handbook-update-docs workflows
 ```
 
 ## Full Workflow
