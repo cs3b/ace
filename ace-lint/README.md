@@ -64,13 +64,9 @@ StandardRB is a zero-config RuboCop wrapper that provides sensible defaults for 
 
 ## Quick Start
 
-Validate a markdown file (lint is the default command):
+Validate a markdown file:
 
 ```bash
-# Short form (recommended)
-ace-lint docs/architecture.md
-
-# Or explicit
 ace-lint lint docs/architecture.md
 ```
 
@@ -180,17 +176,17 @@ For all kramdown options, see: https://kramdown.gettalong.org/options.html
 ### Basic Commands
 
 ```bash
-# Lint single file (lint is the default command)
-ace-lint docs/file.md
+# Lint single file
+ace-lint lint docs/file.md
 
 # Lint multiple files
-ace-lint docs/*.md
+ace-lint lint docs/*.md
 
 # Lint YAML files
-ace-lint config.yml --type yaml
+ace-lint lint config.yml --type yaml
 
 # Auto-format markdown with kramdown
-ace-lint docs/file.md --fix
+ace-lint lint docs/file.md --fix
 
 # Show help
 ace-lint --help
@@ -269,44 +265,44 @@ skill:
 
 ```bash
 # Lint a skill file
-ace-lint .claude/skills/ace-git-commit/SKILL.md
+ace-lint lint .claude/skills/ace-git-commit/SKILL.md
 
 # Lint all workflow files
-ace-lint .claude/workflows/*.wf.md
+ace-lint lint .claude/workflows/*.wf.md
 
 # Format a skill file
-ace-lint .claude/skills/ace-review-run/SKILL.md --fix
+ace-lint lint .claude/skills/ace-review-run/SKILL.md --fix
 ```
 
 ### Examples
 
 ```bash
 # Validate all markdown files
-ace-lint docs/*.md
+ace-lint lint docs/*.md
 
 # Lint Ruby files (auto-detected by .rb extension)
-ace-lint lib/**/*.rb
+ace-lint lint lib/**/*.rb
 
 # Lint and auto-fix Ruby files with StandardRB
-ace-lint lib/code.rb --fix
+ace-lint lint lib/code.rb --fix
 
 # Lint Rake files and gemspecs
-ace-lint Rakefile mygem.gemspec
+ace-lint lint Rakefile mygem.gemspec
 
 # Format markdown files
-ace-lint docs/*.md --fix
+ace-lint lint docs/*.md --fix
 
 # Validate YAML configuration
-ace-lint .ace/config.yml --type yaml
+ace-lint lint .ace/config.yml --type yaml
 
 # Validate frontmatter
-ace-lint docs/guide.md --type frontmatter
+ace-lint lint docs/guide.md --type frontmatter
 
 # Quiet mode (only show summary)
-ace-lint docs/*.md --quiet
+ace-lint lint docs/*.md --quiet
 
 # Run multiple validators on Ruby files
-ace-lint lib/**/*.rb --validators standardrb,rubocop
+ace-lint lint lib/**/*.rb --validators standardrb,rubocop
 
 # Check configuration health
 ace-lint doctor
@@ -356,10 +352,10 @@ Use the `--validators` flag to run specific validators:
 
 ```bash
 # Run only RuboCop
-ace-lint lib/code.rb --validators rubocop
+ace-lint lint lib/code.rb --validators rubocop
 
 # Run both StandardRB and RuboCop
-ace-lint lib/code.rb --validators standardrb,rubocop
+ace-lint lint lib/code.rb --validators standardrb,rubocop
 ```
 
 **Groups Configuration:**
@@ -612,7 +608,7 @@ Ruby files are auto-detected by extension: `.rb`, `.rake`, `.gemspec`, and speci
 1. **Check extension**: Ensure file has `.rb`, `.rake`, or `.gemspec` extension
 2. **Force type**: Use `--type ruby` to override auto-detection:
    ```bash
-   ace-lint some_file --type ruby
+   ace-lint lint some_file --type ruby
    ```
 
 ### Batch Processing Performance
@@ -623,7 +619,7 @@ If batch Ruby linting fails (e.g., StandardRB crash), all Ruby files in the batc
 
 ```bash
 # Process Ruby files individually (slower, more isolated)
-ace-lint file1.rb file2.rb --no-batch
+ace-lint lint file1.rb file2.rb --no-batch
 ```
 
 **Exit Status Behavior:**

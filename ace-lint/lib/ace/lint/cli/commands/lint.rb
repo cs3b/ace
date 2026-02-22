@@ -86,7 +86,7 @@ module Ace
 
             # Validate inputs
             if files.empty?
-              raise Ace::Core::CLI::Error.new("No files specified\nUsage: ace-lint [FILES...] [OPTIONS]")
+              raise Ace::Core::CLI::Error.new("No files specified\nUsage: ace-lint lint [FILES...] [OPTIONS]")
             end
 
             # Expand globs

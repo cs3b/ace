@@ -2,9 +2,12 @@
 # frozen_string_literal: true
 
 require_relative "../lib/ace/lint"
+require "dry/cli"
+
+args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Ace::Lint::CLI.start(ARGV)
+  Dry::CLI.new(Ace::Lint::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
