@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-02-22
+
+### Changed
+- Migrate ace-retro CLI to standard help pattern with HelpCommand registration
+- Remove DefaultRouting extension and DWIM command routing from RetroCLI
+- Add no-args behavior to show help instead of running default command
+
 ## [0.40.6] - 2026-02-22
 
 ### Changed
