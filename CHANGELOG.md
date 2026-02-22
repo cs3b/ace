@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.597] - 2026-02-22
+
+### Fixed
+- **ace-review v0.41.1**: Include built-in help/version commands in KNOWN_COMMAND_NAMES for correct array option preprocessing
+- **ace-llm-providers-cli v0.19.2**: Document first-matching-tier behavior in ClaudeOaiClient model tier resolution
+
 ## [0.9.596] - 2026-02-22
 
 ### Changed
