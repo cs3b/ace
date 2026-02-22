@@ -194,6 +194,22 @@ After a fork subtree completes (work-on-task finishes successfully):
 
 3. **Report the subtree complete only after verification.** This prevents the orchestrator from showing work as done while ace-taskflow shows it as in-progress.
 
+#### Subtree Guard: Review Fork Reports Before Continuing
+
+After fork-run returns and completion is verified, the driver acts as the **guard** for the subtree. Before continuing to the next phase:
+
+1. **Read all subtree report files** from `.cache/ace-assign/<assignment-id>/reports/`:
+   ```bash
+   # List and read all reports for the completed subtree
+   ls .cache/ace-assign/${ASSIGNMENT_ID}/reports/${FORK_ROOT}.*
+   # Read each report file to review the forked agent's work
+   ```
+2. **Verify quality**: Check that reports indicate successful completion, not just phase advancement.
+3. **Flag concerns**: If any report indicates partial work, errors, or skipped steps, stop and ask the user before continuing.
+4. **Only then continue** the main drive loop to the next phase.
+
+> The driver is the only entity with cross-subtree visibility. Skipping report review means errors in one subtree propagate silently to the next.
+
 ### 3. Execute Current Phase
 
 Based on the phase configuration:
