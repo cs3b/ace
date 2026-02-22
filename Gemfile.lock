@@ -233,7 +233,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.40.4)
+    ace-taskflow (0.40.5)
       ace-b36ts (~> 0.2)
       ace-git (~> 0.3)
       ace-llm
