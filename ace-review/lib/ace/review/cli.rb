@@ -1,46 +1,21 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../review"
 # Commands
 require_relative "cli/commands/review"
-require_relative "cli/commands/list_presets"
-require_relative "cli/commands/list_prompts"
 
 module Ace
   module Review
-    # dry-cli based CLI registry for ace-review
+    # CLI namespace for ace-review command loading.
     #
-    # After the split, ace-review handles review execution and configuration.
-    # Feedback management moved to ace-review-feedback.
+    # ace-review uses a single-command dry-cli entrypoint that calls
+    # CLI::Commands::Review directly from the executable.
     module CLI
-      extend Dry::CLI::Registry
-
-      PROGRAM_NAME = "ace-review"
-
-      # Application commands with descriptions (for help output)
-      REGISTERED_COMMANDS = [
-        ["review", "Run code review with preset or PR context"],
-        ["list-presets", "List available review presets"],
-        ["list-prompts", "List prompt modules for review"]
-      ].freeze
-
       # Separator for array options that won't conflict with internal commas
       # ASCII Unit Separator (0x1F) is designed for separating fields
       ARRAY_SEPARATOR = "\x1F"
-
-      # Known command names for preprocessing (includes built-in help/version commands and flag variants)
-      KNOWN_COMMAND_NAMES = (REGISTERED_COMMANDS.map(&:first) + %w[help version --help -h --version]).to_set.freeze
-
-      HELP_EXAMPLES = [
-        "ace-review review --preset pr",
-        "ace-review review --pr 90",
-        "ace-review review --subject files:lib/app.rb",
-        "ace-review list-presets",
-        "ace-review list-prompts"
-      ].freeze
 
       # Pre-process array options to work around dry-cli limitation
       #
@@ -80,11 +55,10 @@ module Ace
           i += 1
         end
 
-        # Insert merged flags after the command name (if present) but before other args.
-        insert_pos = result.first && known_command?(result.first) ? 1 : 0
-        result.insert(insert_pos, "--model", accumulated_model.join(",")) unless accumulated_model.empty?
+        # Insert merged flags at position 0 (single-command mode, no command name to skip)
+        result.insert(0, "--model", accumulated_model.join(",")) unless accumulated_model.empty?
         # Subject uses ARRAY_SEPARATOR to preserve internal commas (e.g., files:a.rb,b.rb)
-        result.insert(insert_pos, "--subject", accumulated_subject.join(ARRAY_SEPARATOR)) unless accumulated_subject.empty?
+        result.insert(0, "--subject", accumulated_subject.join(ARRAY_SEPARATOR)) unless accumulated_subject.empty?
 
         result
       end
@@ -118,43 +92,12 @@ module Ace
         end
       end
 
-      # Check if argument is a known command
+      # Entry point for CLI invocation (used by tests via cli_helpers)
       #
-      # @param arg [String] First argument to check
-      # @return [Boolean] true if it's a command, false if it's an argument
-      def self.known_command?(arg)
-        return false if arg.nil?
-
-        KNOWN_COMMAND_NAMES.include?(arg)
+      # @param args [Array<String>] Command-line arguments
+      def self.start(args)
+        Dry::CLI.new(Commands::Review).call(arguments: args)
       end
-
-      # Register the review command
-      register "review", Commands::Review
-
-      # Register the list-presets command
-      register "list-presets", Commands::ListPresets
-
-      # Register the list-prompts command
-      register "list-prompts", Commands::ListPrompts
-
-      # Register version command
-      version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
-        gem_name: "ace-review",
-        version: Ace::Review::VERSION
-      )
-      register "version", version_cmd
-      register "--version", version_cmd
-
-      # Register help command
-      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
-        program_name: PROGRAM_NAME,
-        version: Ace::Review::VERSION,
-        commands: REGISTERED_COMMANDS,
-        examples: HELP_EXAMPLES
-      )
-      register "help", help_cmd
-      register "--help", help_cmd
-      register "-h", help_cmd
     end
   end
 end

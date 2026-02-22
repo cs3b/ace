@@ -66,6 +66,9 @@ module Ace
         option :gh_timeout, type: :integer, desc: "Timeout for gh CLI operations in seconds (default: 30)"
 
         # Standard options
+        option :version, type: :boolean, desc: "Show version information"
+        option :list_presets, type: :boolean, desc: "List available review presets"
+        option :list_prompts, type: :boolean, desc: "List available prompt modules"
         option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
         option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
         option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -75,6 +78,21 @@ module Ace
         def call(**cli_options)
           # Remove dry-cli specific keys (args is leftover arguments)
           cli_options = cli_options.reject { |k, _| k == :args }
+
+          if cli_options[:version]
+            puts "ace-review #{Ace::Review::VERSION}"
+            return
+          end
+
+          if cli_options[:list_presets]
+            show_list_presets
+            return
+          end
+
+          if cli_options[:list_prompts]
+            show_list_prompts
+            return
+          end
 
           # Type-convert numeric options (dry-cli returns strings, Thor converted to integers)
           cli_options[:gh_timeout] = cli_options[:gh_timeout]&.to_i if cli_options[:gh_timeout]
@@ -277,6 +295,84 @@ module Ace
             options: @options,
             quiet: false
           )
+        end
+
+        def show_list_presets
+          manager = Organisms::ReviewManager.new
+
+          presets = manager.list_presets
+          if presets.empty?
+            puts "No presets found"
+            puts "Create presets in .ace/review/config.yml or .ace/review/presets/"
+            return
+          end
+
+          puts "Available Review Presets:"
+          puts
+
+          # Header
+          puts format("%-20s %-50s %-10s", "Preset", "Description", "Source")
+          puts "-" * 80
+
+          # Load preset manager to get descriptions
+          preset_manager = Molecules::PresetManager.new
+
+          presets.each do |name|
+            preset = preset_manager.load_preset(name)
+            description = preset&.dig("description") || "-"
+
+            # Determine source
+            source = if preset_manager.send(:load_preset_from_file, name)
+                       "file"
+                     elsif preset_manager.send(:load_preset_from_config, name)
+                       "config"
+                     else
+                       "default"
+                     end
+
+            puts format("%-20s %-50s %-10s", name, description, source)
+          end
+        end
+
+        def show_list_prompts
+          manager = Organisms::ReviewManager.new
+
+          prompts = manager.list_prompts
+          if prompts.empty?
+            puts "No prompt modules found"
+            return
+          end
+
+          puts "Available Prompt Modules:"
+          puts
+
+          prompts.each do |category, items|
+            puts "  #{category}/"
+            format_prompt_items(items, "    ")
+          end
+        end
+
+        def format_prompt_items(items, indent)
+          case items
+          when Hash
+            items.each do |name, value|
+              if value.is_a?(Array)
+                puts "#{indent}#{name}/"
+                value.each do |item|
+                  source = item.is_a?(Hash) ? " (#{item[:source]})" : ""
+                  item_name = item.is_a?(Hash) ? item[:name] : item
+                  puts "#{indent}  #{item_name}#{source}"
+                end
+              else
+                source = value.is_a?(String) ? " (#{value})" : ""
+                puts "#{indent}#{name}#{source}"
+              end
+            end
+          when Array
+            items.each { |item| puts "#{indent}#{item}" }
+          when String
+            puts "#{indent}#{items}"
+          end
         end
 
         def load_defaults
