@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-taskflow
 ---
 
-Execute `ace-taskflow release "$@"` to navigate releases
+Execute `ace-release "$@"` to navigate releases
