@@ -61,13 +61,13 @@ module Ace
 
         # Examples shown in help output
         example [
-          "ace-test                             # All tests in current package",
-          "ace-test atoms                       # Atom tests only",
-          "ace-test ace-bundle molecules        # Package + target",
-          "ace-test test/foo_test.rb            # Specific test file",
-          "ace-test --format progress           # Run with progress output",
-          "ace-test --profile 10                # Profile slowest tests",
-          "ace-test --fail-fast                 # Stop on first failure"
+          "                                    # All tests in current package",
+          "atoms                               # Atom tests only",
+          "ace-bundle molecules                # Package + target",
+          "test/foo_test.rb                    # Specific test file",
+          "--format progress                   # Run with progress output",
+          "--profile 10                        # Profile slowest tests",
+          "--fail-fast                         # Stop on first failure"
         ]
 
         # Output format options
@@ -107,9 +107,9 @@ module Ace
         option :cleanup_age, type: :string, desc: "Delete reports older than DAYS (default: 30)"
 
         # Standard options (inherited from Base but need explicit definition for dry-cli)
-        option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary output"
-        option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-        option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+        option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+        option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+        option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
         def call(args: [], **options)
           # Type-convert numeric options (dry-cli returns strings, Thor converted to integers)
