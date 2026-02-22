@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.5] - 2026-02-22
+
+### Fixed
+- Pass `backends` configuration from provider YAML to client, fixing ClaudeOaiClient missing env vars (`ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`) and model tier mappings
+
 ## [0.22.3] - 2026-02-21
 
 ### Added
