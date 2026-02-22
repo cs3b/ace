@@ -275,7 +275,7 @@ PATH
 PATH
   remote: ace-tmux
   specs:
-    ace-tmux (0.5.6)
+    ace-tmux (0.6.0)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.22)
       ace-support-fs (~> 0.2)
