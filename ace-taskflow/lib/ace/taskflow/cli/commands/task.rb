@@ -59,9 +59,9 @@ module Ace
             'v.0.9.0+114              # Show task by full reference'
           ]
 
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary output"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           option :path, type: :boolean, desc: "Show only task file path"
           option :content, type: :boolean, desc: "Show full task content"

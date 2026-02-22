@@ -39,9 +39,9 @@ module Ace
             option :before, type: :string, desc: "Place before specific idea reference"
 
             # Standard options
-            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary output"
-            option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-            option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
             def call(reference:, **options)
               # Display config summary unless quiet mode
