@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.581] - 2026-02-22
+
+### Changed
+- **ace-bundle v0.30.11**: Replace ace-nav subprocess with in-process SDK call (`NavigationEngine#resolve`) for protocol resolution, eliminating shell overhead and fixing compatibility with ace-nav's new multi-command CLI
+
+### Technical
+- **ace-bundle v0.30.11**: Add `ace-support-nav` as runtime dependency, remove ace-nav command mock from test helper, update integration test to use SDK directly
+
 ## [0.9.580] - 2026-02-22
 
 ### Changed
