@@ -82,7 +82,7 @@ git merge 140.01-branch into 140.02-branch
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle load wfi://bundle`
 
 ## Quick Start
 

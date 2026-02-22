@@ -27,7 +27,7 @@ Execute a bug fix based on analysis from the analyze-bug workflow (or user-provi
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle load wfi://bundle`
 
 **Before starting bug fix:**
 
