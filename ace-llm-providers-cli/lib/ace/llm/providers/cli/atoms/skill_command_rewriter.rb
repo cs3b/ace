@@ -17,7 +17,7 @@ module Ace
             # Rewrite skill command references in a prompt string.
             #
             # @param prompt [String] The prompt text to rewrite
-            # @param skill_names [Array<String>] Known skill names (e.g. ["ace_onboard", "ace_git_commit"])
+            # @param skill_names [Array<String>] Known skill names (e.g. ["ace-onboard", "ace-git-commit"])
             # @return [String] Prompt with `/name` rewritten to `/skill:name`
             def self.call(prompt, skill_names:)
               CommandRewriter.call(prompt, skill_names: skill_names, formatter: CommandFormatters::PI_FORMATTER)
