@@ -15,9 +15,16 @@ options = {
 }
 
 parser = OptionParser.new do |opts|
-  opts.banner = "Usage: ace-test-suite [options]"
-  opts.separator ""
-  opts.separator "Options:"
+  # Custom banner matching dry-cli ALL-CAPS style
+  opts.banner = <<~BANNER.chomp
+    NAME
+      ace-test-suite - Run all tests across the monorepo
+
+    USAGE
+      ace-test-suite [OPTIONS]
+
+    OPTIONS
+  BANNER
 
   opts.on("-c", "--config FILE", "Configuration file (default: .ace/test/suite.yml)") do |config|
     options[:config] = config
@@ -31,7 +38,7 @@ parser = OptionParser.new do |opts|
     options[:group] = group
   end
 
-  opts.on("-v", "--verbose", "Show detailed output from tests") do
+  opts.on("-v", "--verbose", "Show verbose output") do
     options[:verbose] = true
   end
 
@@ -43,24 +50,22 @@ parser = OptionParser.new do |opts|
     options[:no_color] = true
   end
 
-  opts.on("-h", "--help", "Display this help") do
+  opts.on("-h", "--help", "Show this help") do
     puts opts
+    puts
+    puts "EXAMPLES"
+    puts "  $ ace-test-suite                    Run all (simple line-by-line output)"
+    puts "  $ ace-test-suite --progress         Show live animated progress bars"
+    puts "  $ ace-test-suite --parallel 16      Run with 16 parallel processes"
+    puts "  $ ace-test-suite --group foundation Run only foundation group"
+    puts "  $ ace-test-suite --verbose          Show detailed test output"
     exit 0
   end
 
-  opts.on("--version", "Display version") do
+  opts.on("--version", "Show version") do
     puts "ace-test-suite #{Ace::TestRunner::VERSION}"
     exit 0
   end
-
-  opts.separator ""
-  opts.separator "Examples:"
-  opts.separator "  ace-test-suite                    # Run all (simple line-by-line output)"
-  opts.separator "  ace-test-suite --progress         # Show live animated progress bars"
-  opts.separator "  ace-test-suite --parallel 16      # Run with 16 parallel processes"
-  opts.separator "  ace-test-suite --group foundation # Run only foundation group"
-  opts.separator "  ace-test-suite --verbose          # Show detailed test output"
-  opts.separator ""
 end
 
 begin
