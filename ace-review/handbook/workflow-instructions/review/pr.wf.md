@@ -66,7 +66,7 @@ The review includes:
 List the feedback items extracted from the review:
 
 ```bash
-ace-review feedback list --status draft
+ace-review-feedback list --status draft
 ```
 
 **Precondition**: Run this step only after Step 2 process exit is confirmed.
@@ -74,7 +74,7 @@ ace-review feedback list --status draft
 When session ambiguity is possible, use explicit session path from Step 2:
 
 ```bash
-ace-review feedback list --status draft --session <session-dir-from-step-2>
+ace-review-feedback list --status draft --session <session-dir-from-step-2>
 ```
 
 This shows all draft feedback items with their IDs, severity, summaries, and sources (LLM or Developer).
@@ -87,11 +87,11 @@ Feedback items are **session-scoped**. The `feedback list` command discovers ite
 
 If `feedback list` returns empty after a review, first verify Step 2 process completion.
 The session may not be linked to current context.
-Use `ace-review feedback list --session <session-dir>` to list from a specific session:
+Use `ace-review-feedback list --session <session-dir>` to list from a specific session:
 
 ```bash
 # List feedback from a specific session (path shown in review output)
-ace-review feedback list --session .cache/ace-review/sessions/review-8p2pk3
+ace-review-feedback list --session .cache/ace-review/sessions/review-8p2pk3
 ```
 
 ### Step 4: Verify Each Feedback Item
@@ -100,7 +100,7 @@ For each feedback item (prioritize Critical and High severity):
 
 ```bash
 # Read the finding details
-ace-review feedback show {id}
+ace-review-feedback show {id}
 ```
 
 **Note which items come from Developer Feedback** - these are from PR comments and should be resolved after implementation.
@@ -116,10 +116,10 @@ ace-review feedback show {id}
 
    ```bash
    # If issue is confirmed (valid finding)
-   ace-review feedback verify {id} --valid --research "Confirmed: issue exists at line X"
+   ace-review-feedback verify {id} --valid --research "Confirmed: issue exists at line X"
 
    # If issue is not real (false positive)
-   ace-review feedback verify {id} --invalid --research "False positive: handled by Y"
+   ace-review-feedback verify {id} --invalid --research "False positive: handled by Y"
    ```
 
 3. **Categorization guide:**
@@ -148,7 +148,7 @@ ace-review feedback show {id}
 # Claim: "TaskPatternExtractor is undefined"
 grep -rn "class TaskPatternExtractor" ace-git/lib/
 # Result: Found at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10
-ace-review feedback verify {id} --invalid --research "Class exists at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10"
+ace-review-feedback verify {id} --invalid --research "Class exists at ace-git/lib/ace/git/atoms/task_pattern_extractor.rb:10"
 ```
 
 **Skip verification for:**
@@ -162,7 +162,7 @@ ace-review feedback verify {id} --invalid --research "Class exists at ace-git/li
 After verification, list items ready to work on:
 
 ```bash
-ace-review feedback list --status pending
+ace-review-feedback list --status pending
 ```
 
 This shows only verified valid items that need fixing.
@@ -185,14 +185,14 @@ For each pending item:
 
 1. **Read the full details:**
    ```bash
-   ace-review feedback show {id}
+   ace-review-feedback show {id}
    ```
 
 2. **Implement the fix** based on the recommendation
 
 3. **IMMEDIATELY mark as resolved** (do NOT skip this step):
    ```bash
-   ace-review feedback resolve {id} --resolution "Fixed: <description>"
+   ace-review-feedback resolve {id} --resolution "Fixed: <description>"
    ```
 
 4. **Commit the fix** with a clear message referencing the feedback item
@@ -213,10 +213,10 @@ For items that won't be fixed in this PR:
 
 ```bash
 # Design decision - intentionally this way
-ace-review feedback verify {id} --skip --research "Design: uses polling for simplicity"
+ace-review-feedback verify {id} --skip --research "Design: uses polling for simplicity"
 
 # Important but deferred - ALWAYS create/reference a task
-ace-review feedback verify {id} --skip --research "Tracked in task 253"
+ace-review-feedback verify {id} --skip --research "Tracked in task 253"
 ```
 
 **Never skip with "out of scope"** - either:
@@ -258,15 +258,15 @@ Note: The thread IDs are included in `review-dev-feedback.md` in the format `(th
 
 ```bash
 # Feedback commands
-ace-review feedback list                      # All feedback
-ace-review feedback list --status draft       # Unverified items
-ace-review feedback list --status pending     # Verified valid items
-ace-review feedback list --session <path>     # From specific session
-ace-review feedback show {id}                 # Full item details
-ace-review feedback verify {id} --valid       # Mark as valid
-ace-review feedback verify {id} --invalid     # Mark as false positive
-ace-review feedback verify {id} --skip        # Mark as skipped
-ace-review feedback resolve {id}              # Mark as fixed
+ace-review-feedback list                      # All feedback
+ace-review-feedback list --status draft       # Unverified items
+ace-review-feedback list --status pending     # Verified valid items
+ace-review-feedback list --session <path>     # From specific session
+ace-review-feedback show {id}                 # Full item details
+ace-review-feedback verify {id} --valid       # Mark as valid
+ace-review-feedback verify {id} --invalid     # Mark as false positive
+ace-review-feedback verify {id} --skip        # Mark as skipped
+ace-review-feedback resolve {id}              # Mark as fixed
 
 # PR comment resolution
 gh pr comment $PR --body "Fixed in $(git rev-parse --short HEAD)"

@@ -8,9 +8,9 @@ bundle:
   sections:
     feedback_cli_reference:
       commands:
-        - ace-review feedback verify --help
-        - ace-review feedback resolve --help
-        - ace-review feedback skip --help
+        - ace-review-feedback verify --help
+        - ace-review-feedback resolve --help
+        - ace-review-feedback skip --help
 update:
   frequency: on-change
   last-updated: '2026-02-06'
@@ -32,7 +32,7 @@ Work through verified (pending) feedback items one by one, implementing fixes an
 
 Before running this workflow:
 1. Run a code review: `/ace-review-run` or `/ace-review-pr`
-2. Verify feedback items: `ace-review feedback verify <id> --valid` for confirmed issues
+2. Verify feedback items: `ace-review-feedback verify <id> --valid` for confirmed issues
 
 ## Instructions
 
@@ -42,11 +42,11 @@ List all items that have been verified as valid (status: pending):
 
 ```bash
 # List pending items (verified valid, ready to fix)
-ace-review feedback list --status pending
+ace-review-feedback list --status pending
 
 # Filter by priority
-ace-review feedback list --status pending --priority critical
-ace-review feedback list --status pending --priority high
+ace-review-feedback list --status pending --priority critical
+ace-review-feedback list --status pending --priority high
 ```
 
 If no items are shown, either:
@@ -62,7 +62,7 @@ For each pending item:
 #### 2a. Read the Feedback Details
 
 ```bash
-ace-review feedback show <id>
+ace-review-feedback show <id>
 ```
 
 Note the:
@@ -82,9 +82,9 @@ Before implementing, confirm the issue is still present:
 
 If the issue was already fixed or doesn't exist:
 ```bash
-ace-review feedback resolve <id> --resolution "Already fixed"
+ace-review-feedback resolve <id> --resolution "Already fixed"
 # or
-ace-review feedback verify <id> --invalid --research "Issue not found in code"
+ace-review-feedback verify <id> --invalid --research "Issue not found in code"
 ```
 
 #### 2c. Implement the Fix
@@ -99,12 +99,12 @@ Apply the recommended fix or an appropriate alternative:
 After implementing the fix:
 
 ```bash
-ace-review feedback resolve <id> --resolution "Fixed: <brief description>"
+ace-review-feedback resolve <id> --resolution "Fixed: <brief description>"
 ```
 
 Example:
 ```bash
-ace-review feedback resolve 8p3abc --resolution "Added input validation in user_handler.rb"
+ace-review-feedback resolve 8p3abc --resolution "Added input validation in user_handler.rb"
 ```
 
 ### Step 3: Handle Items That Won't Be Fixed
@@ -131,16 +131,16 @@ Before skipping any item, complete the **verification checklist**:
 
 ```bash
 # Design decision - intentionally this way
-ace-review feedback skip <id> --reason "Design: uses polling for simplicity"
+ace-review-feedback skip <id> --reason "Design: uses polling for simplicity"
 
 # False positive confirmed
-ace-review feedback skip <id> --reason "False positive: validation exists in middleware"
+ace-review-feedback skip <id> --reason "False positive: validation exists in middleware"
 
 # Duplicate of another item
-ace-review feedback skip <id> --reason "Duplicate of 8p3xyz"
+ace-review-feedback skip <id> --reason "Duplicate of 8p3xyz"
 
 # Deferred with task tracking (important items)
-ace-review feedback skip <id> --reason "Tracked in task 253"
+ace-review-feedback skip <id> --reason "Tracked in task 253"
 ```
 
 #### NOT Valid Skip Reasons
@@ -177,10 +177,10 @@ After processing all items:
 
 ```bash
 # Verify no pending items remain
-ace-review feedback list --status pending
+ace-review-feedback list --status pending
 
 # Check overall stats
-ace-review feedback list
+ace-review-feedback list
 ```
 
 ## Priority Guidelines
@@ -200,13 +200,13 @@ ace-review feedback list
 
 ```bash
 # Feedback commands
-ace-review feedback list --status pending     # Items ready to fix
-ace-review feedback show <id>                 # View details
-ace-review feedback resolve <id> --resolution "Fixed in commit abc"
-ace-review feedback skip <id> --reason "Design: intentional choice"
+ace-review-feedback list --status pending     # Items ready to fix
+ace-review-feedback show <id>                 # View details
+ace-review-feedback resolve <id> --resolution "Fixed in commit abc"
+ace-review-feedback skip <id> --reason "Design: intentional choice"
 
 # If feedback is empty, try specifying session
-ace-review feedback list --session .cache/ace-review/sessions/review-xxx
+ace-review-feedback list --session .cache/ace-review/sessions/review-xxx
 ```
 
 ## Success Criteria

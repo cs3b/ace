@@ -8,8 +8,8 @@ bundle:
   sections:
     feedback_cli_reference:
       commands:
-        - ace-review feedback verify --help
-        - ace-review feedback skip --help
+        - ace-review-feedback verify --help
+        - ace-review-feedback skip --help
 update:
   frequency: on-change
   last-updated: '2026-02-06'
@@ -48,10 +48,10 @@ Before running this workflow, you need feedback items from a code review:
 
 ```bash
 # List unverified items
-ace-review feedback list --status draft
+ace-review-feedback list --status draft
 
 # From specific session
-ace-review feedback list --status draft --session <path>
+ace-review-feedback list --status draft --session <path>
 ```
 
 If no items appear, the review may not have generated extractable feedback.
@@ -63,7 +63,7 @@ For each feedback item, verify claims across multiple dimensions before marking 
 #### 2a. Read the Feedback Item
 
 ```bash
-ace-review feedback show <id>
+ace-review-feedback show <id>
 ```
 
 Identify the claim being made. Common claim types:
@@ -135,18 +135,18 @@ Based on verification:
 
 **Valid Finding** - All claim dimensions check out:
 ```bash
-ace-review feedback verify <id> --valid --research "Confirmed: <evidence>"
+ace-review-feedback verify <id> --valid --research "Confirmed: <evidence>"
 ```
 
 **Invalid Finding** - Any claim dimension fails:
 ```bash
-ace-review feedback verify <id> --invalid --research "<dimension> incorrect: <evidence>"
+ace-review-feedback verify <id> --invalid --research "<dimension> incorrect: <evidence>"
 ```
 
 **Skip Finding** - Valid but not being fixed:
 ```bash
-ace-review feedback verify <id> --skip --research "Design: <reason>"
-ace-review feedback verify <id> --skip --research "Tracked in task XXX"
+ace-review-feedback verify <id> --skip --research "Design: <reason>"
+ace-review-feedback verify <id> --skip --research "Tracked in task XXX"
 ```
 
 ### Step 3: Common False Positive Patterns
@@ -176,7 +176,7 @@ After verifying all items:
 
 ```bash
 # Check verification status
-ace-review feedback list
+ace-review-feedback list
 
 # Should show items as pending (valid) or invalid
 ```
@@ -194,7 +194,7 @@ ace-review feedback list
 
 **Result**: INVALID - scope claim is wrong
 ```bash
-ace-review feedback verify <id> --invalid --research "E2E tests are agent-executed, not CI. API requirements documented in frontmatter."
+ace-review-feedback verify <id> --invalid --research "E2E tests are agent-executed, not CI. API requirements documented in frontmatter."
 ```
 
 ### Example 2: Valid Finding
@@ -208,7 +208,7 @@ ace-review feedback verify <id> --invalid --research "E2E tests are agent-execut
 
 **Result**: VALID
 ```bash
-ace-review feedback verify <id> --valid --research "Confirmed: API can return null, no check present"
+ace-review-feedback verify <id> --valid --research "Confirmed: API can return null, no check present"
 ```
 
 ### Example 3: Location Error
@@ -222,7 +222,7 @@ ace-review feedback verify <id> --valid --research "Confirmed: API can return nu
 
 **Result**: INVALID - validation exists in different location
 ```bash
-ace-review feedback verify <id> --invalid --research "Email validated in AuthMiddleware:23"
+ace-review-feedback verify <id> --invalid --research "Email validated in AuthMiddleware:23"
 ```
 
 ## Quick Reference
@@ -231,19 +231,19 @@ ace-review feedback verify <id> --invalid --research "Email validated in AuthMid
 
 ```bash
 # List items to verify
-ace-review feedback list --status draft
+ace-review-feedback list --status draft
 
 # Show item details
-ace-review feedback show <id>
+ace-review-feedback show <id>
 
 # Mark as valid (confirmed issue)
-ace-review feedback verify <id> --valid --research "Evidence..."
+ace-review-feedback verify <id> --valid --research "Evidence..."
 
 # Mark as invalid (false positive)
-ace-review feedback verify <id> --invalid --research "Reason..."
+ace-review-feedback verify <id> --invalid --research "Reason..."
 
 # Mark as skipped (valid but not fixing)
-ace-review feedback verify <id> --skip --research "Design: reason..."
+ace-review-feedback verify <id> --skip --research "Design: reason..."
 
 # Search helpers
 grep -rn "pattern" path/           # Find code
