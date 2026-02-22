@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../taskflow"
 
@@ -19,22 +18,21 @@ module Ace
     #   ace-task, ace-idea, ace-release, ace-retro
     module CLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
       PROGRAM_NAME = "ace-taskflow"
 
-      REGISTERED_COMMANDS = %w[status doctor config].freeze
-
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      DEFAULT_COMMAND = "status"
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["status", "Show taskflow status"],
+        ["doctor", "Run health checks"],
+        ["config", "Show configuration"]
+      ].freeze
 
       HELP_EXAMPLES = [
-        ["Show taskflow status", "ace-taskflow"],
-        ["Run health check", "ace-taskflow doctor"],
-        ["Show configuration", "ace-taskflow config"],
+        "ace-taskflow status",
+        "ace-taskflow doctor",
+        "ace-taskflow config",
+        "ace-taskflow config --format yaml"
       ].freeze
 
       # Register utility commands
@@ -50,11 +48,23 @@ module Ace
       register "version", version_cmd
       register "--version", version_cmd
 
-      # Clear caches before each invocation
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Taskflow::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
+
+      # Entry point for CLI invocation (used by tests and exe/)
+      #
+      # @param args [Array<String>] Command-line arguments
+      # @return [Integer] Exit code (0 for success, non-zero for errors)
       def self.start(args)
-        Ace::Taskflow::Molecules::TaskLoader.clear_cache!
-        Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
-        super
+        Dry::CLI.new(self).call(arguments: args)
       end
     end
   end

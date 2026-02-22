@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.3] - 2026-02-22
+
+### Changed
+- Migrate CLI to standard help pattern with HelpCommand registration
+- Move cache clearing from CLI.start override to exe/ wrapper
+- Add no-args behavior to show help instead of running default command
+- Remove DefaultRouting extension and DWIM command routing
+
 ## [0.40.2] - 2026-02-22
 
 ### Technical
