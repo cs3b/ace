@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.588] - 2026-02-22
+
+### Changed
+- **ace-taskflow v0.41.0**: Migrate ace-retro CLI to standard help pattern — remove DWIM default routing so no args shows help instead of running list command
+
+### Technical
+- **ace-taskflow v0.41.0**: Remove DefaultRouting extension and DWIM command routing from RetroCLI; add no-args handling to exe/ace-retro wrapper
+
 ## [0.9.587] - 2026-02-22
 
 ### Changed
