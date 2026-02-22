@@ -2,6 +2,7 @@
 
 require "test_helper"
 require "ace/support/models/cli"
+require "ace/support/models/cli/providers_cli"
 require "json"
 
 class ProvidersCommandsTest < AceModelsTestCase
