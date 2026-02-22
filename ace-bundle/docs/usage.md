@@ -12,7 +12,7 @@ The simplest usage loads a preset by name:
 
 ```bash
 # Load the 'project-base' preset
-ace-bundle project-base
+ace-bundle load project-base
 
 # Load the 'code-review' preset
 ace-bundle code-review
@@ -70,13 +70,13 @@ Specify output file location.
 
 ```bash
 # Save to specific file
-ace-bundle project-base --output context.md
+ace-bundle load project-base --output context.md
 
 # Save to cache directory (default behavior)
-ace-bundle project-base --output cache
+ace-bundle load project-base --output cache
 
 # Short form
-ace-bundle project-base -o context.md
+ace-bundle load project-base -o context.md
 ```
 
 #### `--format`, `-F`
@@ -84,19 +84,19 @@ Specify output format.
 
 ```bash
 # Markdown with XML-style tags (recommended for sections)
-ace-bundle project-base --format markdown-xml
+ace-bundle load project-base --format markdown-xml
 
 # Standard markdown
-ace-bundle project-base --format markdown
+ace-bundle load project-base --format markdown
 
 # YAML format
-ace-bundle project-base --format yaml
+ace-bundle load project-base --format yaml
 
 # JSON format
-ace-bundle project-base --format json
+ace-bundle load project-base --format json
 
 # Short form
-ace-bundle project-base -F markdown-xml
+ace-bundle load project-base -F markdown-xml
 ```
 
 ### Input Options
@@ -137,7 +137,7 @@ You can also specify presets as positional arguments:
 
 ```bash
 # These are equivalent:
-ace-bundle project-base
+ace-bundle load project-base
 ace-bundle --preset project-base
 ```
 
@@ -163,7 +163,7 @@ Show the resolved configuration without processing content.
 
 ```bash
 # Show what will be loaded
-ace-bundle project-base --inspect-config
+ace-bundle load project-base --inspect-config
 ```
 
 #### `--embed-source`, `-e`
@@ -214,7 +214,7 @@ Maximum output size in bytes.
 
 ```bash
 # Limit output to 5MB
-ace-bundle project-base --max-size 5242880
+ace-bundle load project-base --max-size 5242880
 ```
 
 #### `--timeout`
@@ -222,7 +222,7 @@ Command execution timeout in seconds.
 
 ```bash
 # Set 60-second timeout
-ace-bundle project-base --timeout 60
+ace-bundle load project-base --timeout 60
 ```
 
 ## Advanced Usage
@@ -236,7 +236,7 @@ You can combine different input types:
 ace-bundle --preset base --file project-overrides.yml
 
 # Mix preset with inline YAML
-ace-bundle project-base --context '{"files": ["extra-file.md"]}'
+ace-bundle load project-base --context '{"files": ["extra-file.md"]}'
 ```
 
 ### Protocol-based Loading
@@ -260,7 +260,7 @@ ace-bundle automatically detects input types:
 
 ```bash
 # Preset name
-ace-bundle project-base
+ace-bundle load project-base
 
 # File path (if file exists)
 ace-bundle config/project.yml
@@ -320,7 +320,7 @@ Arrays are supported for reviewing multiple PRs in a single context.
 
 ```bash
 # Complete project context
-ace-bundle project-base
+ace-bundle load project-base
 
 # Development setup
 ace-bundle development
@@ -329,7 +329,7 @@ ace-bundle development
 ace-bundle testing
 
 # Project overview in YAML format
-ace-bundle project-base --format yaml
+ace-bundle load project-base --format yaml
 ```
 
 ### Documentation Workflow
@@ -349,13 +349,13 @@ ace-bundle load wfi://documentation-workflow --format markdown
 
 ```bash
 # Check configuration without processing
-ace-bundle project-base --inspect-config
+ace-bundle load project-base --inspect-config
 
 # Quick system check
 ace-bundle --preset system-check --format json
 
 # Verbose output with larger timeout
-ace-bundle project-base --timeout 120 --max-size 20971520
+ace-bundle load project-base --timeout 120 --max-size 20971520
 ```
 
 ## Output Formats
@@ -363,7 +363,7 @@ ace-bundle project-base --timeout 120 --max-size 20971520
 ### Markdown Format (Default)
 
 ```bash
-ace-bundle project-base
+ace-bundle load project-base
 ```
 
 Produces standard markdown with code blocks:
@@ -388,7 +388,7 @@ Produces standard markdown with code blocks:
 ### Markdown-XML Format
 
 ```bash
-ace-bundle project-base --format markdown-xml
+ace-bundle load project-base --format markdown-xml
 ```
 
 Produces markdown with XML-style tags:
@@ -415,7 +415,7 @@ Produces markdown with XML-style tags:
 ### YAML Format
 
 ```bash
-ace-bundle project-base --format yaml
+ace-bundle load project-base --format yaml
 ```
 
 Produces structured YAML output:
@@ -435,7 +435,7 @@ metadata:
 ### JSON Format
 
 ```bash
-ace-bundle project-base --format json
+ace-bundle load project-base --format json
 ```
 
 Produces JSON output:
@@ -477,7 +477,7 @@ Creates multiple files:
 
 ```bash
 # Output to cache (default)
-ace-bundle project-base
+ace-bundle load project-base
 
 # Cache files are organized by preset name:
 # ~/.ace/cache/contexts/project-base-20251106-153000.md
@@ -498,7 +498,7 @@ Override default cache directory.
 
 ```bash
 export ACE_CACHE_DIR="/path/to/my/cache"
-ace-bundle project-base --output cache
+ace-bundle load project-base --output cache
 ```
 
 ### `ACE_DEBUG`
@@ -506,7 +506,7 @@ Enable debug output.
 
 ```bash
 export ACE_DEBUG=1
-ace-bundle project-base
+ace-bundle load project-base
 ```
 
 ## Exit Codes
@@ -561,7 +561,7 @@ Enable debug output for troubleshooting:
 
 ```bash
 export ACE_DEBUG=1
-ace-bundle project-base
+ace-bundle load project-base
 ```
 
 Debug output includes:
@@ -575,7 +575,7 @@ Debug output includes:
 Use `--inspect-config` to understand what will be loaded:
 
 ```bash
-ace-bundle project-base --inspect-config
+ace-bundle load project-base --inspect-config
 ```
 
 Shows:
