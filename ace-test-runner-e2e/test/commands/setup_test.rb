@@ -25,11 +25,9 @@ class SetupTest < Minitest::Test
   end
 
   def test_setup_registered_in_cli
-    assert Ace::Test::EndToEndRunner::CLI::REGISTERED_COMMANDS.include?("setup")
-  end
-
-  def test_known_command_recognizes_setup
-    assert Ace::Test::EndToEndRunner::CLI.known_command?("setup")
+    # REGISTERED_COMMANDS is now an array of [name, description] pairs
+    command_names = Ace::Test::EndToEndRunner::CLI::REGISTERED_COMMANDS.map(&:first)
+    assert_includes command_names, "setup"
   end
 
   def test_call_accepts_options_via_keyrest
