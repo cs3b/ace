@@ -4,9 +4,13 @@
 require "bundler/setup"
 require "ace/tmux"
 
+# No args → show help
+args = ARGV.empty? ? ["--help"] : ARGV
+
 # Start CLI with exception-based exit code handling (per ADR-023)
 begin
-  Ace::Tmux::CLI.start(ARGV)
+  exit_code = Ace::Tmux::CLI.start(args)
+  exit(exit_code) if exit_code.is_a?(Integer) && exit_code.nonzero?
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-22
+
+### Changed
+
+- **Breaking**: Removed DWIM context-aware default routing
+  - `ace-tmux` (no args) now shows help instead of routing to `start`/`window` based on TMUX env
+  - Users must now use explicit commands: `ace-tmux start`, `ace-tmux window`, `ace-tmux list`
+  - Unknown first arguments are no longer prepended with default command
+- Migrated to standard help pattern (ADR-023)
+  - Added `HELP_EXAMPLES` constant with usage examples
+  - Registered `HelpCommand` for `help`, `--help`, `-h`
+  - Updated `REGISTERED_COMMANDS` to include descriptions
+
+### Technical
+
+- Updated CLI tests to test standard help pattern instead of DWIM routing
+
 ## [0.5.5] - 2026-02-20
 
 ### Fixed
