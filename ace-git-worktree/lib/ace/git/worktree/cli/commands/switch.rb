@@ -23,9 +23,9 @@ module Ace
             argument :identifier, required: false, desc: "Worktree identifier (task ID, branch, directory, or path)"
 
             option :list, desc: "List available worktrees", type: :boolean, aliases: ["-l"]
-            option :verbose, desc: "Show detailed information", type: :boolean, aliases: ["-v"]
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :verbose, desc: "Show verbose output", type: :boolean, aliases: ["-v"]
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             def call(identifier: nil, **options)
               display_config_summary("switch", options)

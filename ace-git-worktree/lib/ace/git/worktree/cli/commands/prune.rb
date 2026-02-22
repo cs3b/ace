@@ -23,9 +23,9 @@ module Ace
             option :dry_run, desc: "Show what would be pruned", type: :boolean, aliases: ["--dry-run"]
             option :cleanup_directories, desc: "Remove orphaned worktree directories", type: :boolean, aliases: ["--cleanup-directories"]
             option :force, desc: "Force cleanup", type: :boolean, aliases: []
-            option :verbose, desc: "Show detailed information", type: :boolean, aliases: ["-v"]
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :verbose, desc: "Show verbose output", type: :boolean, aliases: ["-v"]
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             def call(**options)
               display_config_summary("prune", options)
