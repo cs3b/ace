@@ -29,8 +29,7 @@ module Ace
               - create:  Create feedback items from review reports
               - list:    List feedback items with optional filters
               - show:    Show feedback item details
-              - verify:  Verify a draft feedback item (mark valid/invalid)
-              - skip:    Skip a feedback item (not applicable)
+              - verify:  Verify a draft feedback item (mark valid/invalid/skip)
               - resolve: Resolve a pending feedback item
 
             EXAMPLES:
@@ -56,7 +55,7 @@ module Ace
             'list --status pending    # List pending items',
             'show abc123              # Show item details',
             'verify abc123 --valid    # Mark as valid',
-            'skip abc123 --reason "Not applicable"',
+            'verify abc123 --skip    # Skip (not applicable)',
             'resolve abc123 --resolution "Fixed"'
           ]
 
@@ -68,8 +67,7 @@ module Ace
             puts "  create   Create feedback items from review reports"
             puts "  list     List feedback items"
             puts "  show     Show feedback item details"
-            puts "  verify   Verify a draft feedback item"
-            puts "  skip     Skip a feedback item"
+            puts "  verify   Verify a draft feedback item (valid/invalid/skip)"
             puts "  resolve  Resolve a pending feedback item"
             puts
             puts "Run 'ace-review feedback <subcommand> --help' for more information."
