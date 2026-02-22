@@ -245,10 +245,10 @@ Load contexts using protocols (requires ace-nav integration):
 
 ```bash
 # Load workflow file
-ace-bundle wfi://code-review-workflow
+ace-bundle load wfi://code-review-workflow
 
 # Load guide file
-ace-bundle guide://development-guide
+ace-bundle load guide://development-guide
 
 # Load task file
 ace-bundle task://planning-session
@@ -266,7 +266,7 @@ ace-bundle project-base
 ace-bundle config/project.yml
 
 # Protocol URL
-ace-bundle wfi://my-workflow
+ace-bundle load wfi://my-workflow
 
 # Inline YAML (if contains YAML syntax)
 ace-bundle '{"files": ["README.md"]}'
@@ -342,7 +342,7 @@ ace-bundle documentation-review
 ace-bundle --preset docs --format markdown-xml --output docs-context.md
 
 # Include workflow files
-ace-bundle wfi://documentation-workflow --format markdown
+ace-bundle load wfi://documentation-workflow --format markdown
 ```
 
 ### Troubleshooting Workflow
