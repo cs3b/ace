@@ -158,6 +158,63 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
+  def test_fork_run_marks_first_workable_child_as_in_progress
+    with_temp_cache do |cache_dir|
+      # Two top-level phases: first non-fork, second fork with sub_phases.
+      # start() marks 010 as in_progress, so 020.01 stays pending.
+      phases = [
+        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      # Verify first child of fork subtree starts as pending
+      state_before = executor.status[:state]
+      first_child = state_before.find_by_number("020.01")
+      assert_equal :pending, first_child.status, "First fork child should be pending before fork_run"
+
+      # Use a launcher that captures state after mark but before completing
+      marked_status = nil
+      spy_launcher = Class.new do
+        define_method(:initialize) { |cache_base:| @cache_base = cache_base }
+        define_method(:launch) do |assignment_id:, fork_root:, **_kwargs|
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          writer = Ace::Assign::Molecules::PhaseWriter.new
+
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.phases_dir, assignment: assignment)
+          marked_status = state.find_by_number("020.01")&.status
+
+          # Complete all phases so fork_run doesn't error
+          state.subtree_phases(fork_root).each do |phase|
+            next if phase.status == :done
+            writer.mark_done(phase.file_path, report_content: "Done", reports_dir: assignment.reports_dir)
+          end
+        end
+      end
+
+      capture_io do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: spy_launcher.new(cache_base: cache_dir)
+        ).call(root: "020", assignment: result[:assignment].id)
+      end
+
+      assert_equal :in_progress, marked_status, "First workable child should be marked in_progress before launch"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_fork_run_accepts_assignment_scope_without_root_and_without_current_in_scope
     with_temp_cache do |cache_dir|
       phases = [

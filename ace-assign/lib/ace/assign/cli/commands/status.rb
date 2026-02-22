@@ -59,6 +59,13 @@ module Ace
 
           def call(**options)
             target = resolve_assignment_target(options)
+
+            # Auto-scope to fork root when inside a forked subtree
+            fork_root_env = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
+            if fork_root_env && !fork_root_env.empty? && (target.scope.nil? || target.scope.strip.empty?)
+              target = Target.new(assignment_id: target.assignment_id, scope: fork_root_env)
+            end
+
             executor = build_executor_for_target(target)
             result = executor.status
             state = result[:state]

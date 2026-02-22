@@ -49,6 +49,13 @@ module Ace
               puts "Next phase: #{next_phase.number} - #{next_phase.name}" if next_phase
             end
 
+            # Mark first workable child as in_progress (analogous to start())
+            first_workable = state.next_workable_in_subtree(root_phase.number)
+            if first_workable && first_workable.number != root_phase.number
+              phase_writer = Molecules::PhaseWriter.new
+              phase_writer.mark_in_progress(first_workable.file_path)
+            end
+
             launcher.launch(
               assignment_id: assignment.id,
               fork_root: root_phase.number,
