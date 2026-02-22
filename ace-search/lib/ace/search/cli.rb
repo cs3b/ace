@@ -63,7 +63,7 @@ module Ace
       def self.start(args)
         # Handle help explicitly (dry-cli doesn't handle registry-level help)
         if args.first && %w[help --help -h].include?(args.first)
-          puts Dry::CLI::Usage.call(get([]))
+          puts Dry::CLI::Usage.call(get([]), registry: self)
           return 0
         end
 
