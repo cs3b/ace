@@ -22,7 +22,7 @@ assign:
 
 ## Load Project Info
 
-- read and run `ace-bundle project`
+- read and run `ace-bundle load project`
 
 ## Do the Work
 
