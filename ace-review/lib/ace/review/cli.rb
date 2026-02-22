@@ -20,60 +20,34 @@ module Ace
 
       PROGRAM_NAME = "ace-review"
 
-      # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[review list-presets list-prompts].freeze
-
-      # dry-cli built-in commands (standard across all CLI gems)
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-
-      # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
-      # Using Set for O(1) lookup performance
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      # Default command to use when first argument is not a known command
-      DEFAULT_COMMAND = "review"
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["review", "Run code review with preset or PR context"],
+        ["list-presets", "List available review presets"],
+        ["list-prompts", "List prompt modules for review"]
+      ].freeze
 
       # Separator for array options that won't conflict with internal commas
       # ASCII Unit Separator (0x1F) is designed for separating fields
       ARRAY_SEPARATOR = "\x1F"
 
+      # Known command names for preprocessing (derived from REGISTERED_COMMANDS)
+      KNOWN_COMMAND_NAMES = REGISTERED_COMMANDS.map(&:first).to_set.freeze
+
       HELP_EXAMPLES = [
-        ["Run review with a preset", "ace-review --preset code-pr"],
-        ["Review specific files", "ace-review --subject files:lib/app.rb"],
-        ["List available presets", "ace-review list-presets"],
-        ["List prompt modules", "ace-review list-prompts"],
+        "ace-review review --preset pr",
+        "ace-review review --pr 90",
+        "ace-review review --subject files:lib/app.rb",
+        "ace-review list-presets",
+        "ace-review list-prompts"
       ].freeze
-
-      # Start the CLI with default command routing.
-      # Custom start() required for array option preprocessing.
-      #
-      # @param args [Array<String>] Command-line arguments
-      # @return [Integer] Exit code (0 for success, non-zero for failure)
-      def self.start(args)
-        # Handle help explicitly (dry-cli doesn't handle registry-level help)
-        return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
-
-        # Pre-process args to handle dry-cli's array option accumulation limitation
-        # dry-cli only returns the last occurrence of --subject/--model flags,
-        # but Thor accumulated all. We merge multiple occurrences into comma-separated
-        # values, which the existing ReviewCommand already handles correctly.
-        args = preprocess_array_options(args)
-
-        # If args is empty OR first argument isn't a known command,
-        # prepend the default command. This maintains Thor's default_task parity.
-        if args.empty? || !known_command?(args.first)
-          args = [DEFAULT_COMMAND] + args
-        end
-
-        Dry::CLI.new(self).call(arguments: args)
-      end
 
       # Pre-process array options to work around dry-cli limitation
       #
       # dry-cli's type: :array only captures the last occurrence of a flag.
-      # Thor accumulated all occurrences. This method merges multiple
-      # occurrences using ARRAY_SEPARATOR (not comma) to preserve internal commas
-      # in subject values like "files:a.rb,b.rb".
+      # This method merges multiple occurrences using ARRAY_SEPARATOR
+      # (not comma) to preserve internal commas in subject values
+      # like "files:a.rb,b.rb".
       #
       # @param args [Array<String>] Raw command-line arguments
       # @return [Array<String>] Pre-processed arguments with merged array options
@@ -107,8 +81,6 @@ module Ace
         end
 
         # Insert merged flags after the command name (if present) but before other args.
-        # If first element is a known command, preserve it at position 0.
-        # Use ARRAY_SEPARATOR to preserve internal commas in values.
         insert_pos = result.first && known_command?(result.first) ? 1 : 0
         result.insert(insert_pos, "--model", accumulated_model.join(",")) unless accumulated_model.empty?
         # Subject uses ARRAY_SEPARATOR to preserve internal commas (e.g., files:a.rb,b.rb)
@@ -153,10 +125,10 @@ module Ace
       def self.known_command?(arg)
         return false if arg.nil?
 
-        KNOWN_COMMANDS.include?(arg)
+        KNOWN_COMMAND_NAMES.include?(arg)
       end
 
-      # Register the review command (default)
+      # Register the review command
       register "review", Commands::Review
 
       # Register the list-presets command
@@ -172,6 +144,17 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Review::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
     end
   end
 end
