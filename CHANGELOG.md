@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.594] - 2026-02-22
+
+### Changed
+- **ace-test-e2e v0.16.21**: Migrate CLI to standard help pattern — remove DWIM default routing so users must now use explicit `run` subcommand
+
+### Technical
+- **ace-test-e2e v0.16.21**: Remove KNOWN_COMMANDS, BUILTIN_COMMANDS, DEFAULT_COMMAND constants and custom `start()` method; add PROGRAM_NAME, HELP_EXAMPLES, REGISTERED_COMMANDS with descriptions; register HelpCommand for --help/-h; update exe to use no-args → --help pattern
+
 ## [0.9.593] - 2026-02-22
 
 ### Changed
