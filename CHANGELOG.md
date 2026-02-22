@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.566] - 2026-02-22
+
+### Fixed
+- **ace-assign v0.12.16**: Prevent fork subtree recursion — auto-scope `status` to `ACE_ASSIGN_FORK_ROOT` and mark first workable child as `in_progress` before forked session launch
+
 ## [0.9.565] - 2026-02-22
 
 ### Technical
