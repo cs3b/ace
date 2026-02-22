@@ -13,4 +13,4 @@ last_modified: 2026-01-19
 source: ace-git
 ---
 
-read and run `ace-bundle wfi://git/reorganize-commits`
+read and run `ace-bundle load wfi://git/reorganize-commits`

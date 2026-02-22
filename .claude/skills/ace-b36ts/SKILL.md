@@ -13,4 +13,4 @@ last_modified: 2026-02-14
 source: ace-b36ts
 ---
 
-read and run `ace-bundle wfi://b36ts`
+read and run `ace-bundle load wfi://b36ts`

@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-search
 ---
 
-read and run `ace-bundle wfi://search/feature-research`
+read and run `ace-bundle load wfi://search/feature-research`

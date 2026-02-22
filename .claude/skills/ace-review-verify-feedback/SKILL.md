@@ -15,4 +15,4 @@ last_modified: 2026-02-04
 source: ace-review
 ---
 
-read and run `ace-bundle wfi://review/verify-feedback`
+read and run `ace-bundle load wfi://review/verify-feedback`

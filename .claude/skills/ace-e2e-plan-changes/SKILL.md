@@ -15,6 +15,6 @@ last_modified: 2026-02-11
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle wfi://e2e/plan-changes`
+read and run `ace-bundle load wfi://e2e/plan-changes`
 
 ARGUMENTS: $ARGUMENTS

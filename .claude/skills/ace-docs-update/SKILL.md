@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-docs
 ---
 
-read and run `ace-bundle wfi://docs/update`
+read and run `ace-bundle load wfi://docs/update`

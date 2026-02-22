@@ -16,6 +16,6 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle wfi://retro/synthesize`
+read and run `ace-bundle load wfi://retro/synthesize`
 
-read and run `ace-bundle wfi://git/commit`
+read and run `ace-bundle load wfi://git/commit`
