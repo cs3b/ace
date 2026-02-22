@@ -12,8 +12,8 @@ module Ace
           desc "Show status of active task worktrees"
 
           option :format, default: "table", desc: "Output format (table, json)"
-          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress output"
-          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
+          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
+          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :watch, aliases: ["-w"], type: :boolean, default: false, desc: "Auto-refresh dashboard"
 
           def initialize(collector: nil, config: nil)

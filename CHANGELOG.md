@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.561] - 2026-02-22
+
+### Technical
+- **ace-support-core v0.23.2**: Integration tests for two-tier help routing, documented dry-cli version coupling
+
+## [0.9.560] - 2026-02-22
+
+### Fixed
+- **ace-support-core v0.23.1**: Clear instance variable state after use, nil-safe subcommand access, standardize hidden checks, use local Hash instead of ivars on external objects, fix CHANGELOG ordering
+
+## [0.9.559] - 2026-02-22
+
+### Added
+- **ace-support-core v0.23.0**: Two-tier CLI help system — `-h` shows concise format, `--help` shows full ALL-CAPS reference (NAME, USAGE, DESCRIPTION, ARGUMENTS, OPTIONS, EXAMPLES). Adds usage_formatter, help_concise, command_groups, and standard_options modules.
+- **ace-taskflow v0.40.0**: Command grouping in CLI help (Task Management, Idea Management, Release & Retro, Utilities)
+
+### Fixed
+- **ace-support-core v0.23.0**: Duplicate command name in examples auto-stripped; hidden subcommands filtered from help; ace-framework exe path fixed
+- **ace-support-models v0.5.2**: Namespace subcommand help (cache/providers/models --help) now exits 0, outputs to stdout; command grouping added
+- **ace-test-runner-e2e v0.16.19**: ace-test-e2e-sh now handles --help/-h flags (was causing FATAL error)
+- **ace-review v0.40.4**: Hidden deprecated 'feedback skip' from help output
+- **ace-taskflow v0.40.0**: Fixed misleading examples in task add-dependency/remove-dependency
+- **ace-docs v0.20.2, ace-git-commit v0.18.3, ace-prompt-prep v0.16.4, ace-test-runner v0.15.4**: Stripped duplicate command name prefixes from examples
+
+### Changed
+- **21 packages**: Standardized quiet, verbose, debug option descriptions to canonical strings across all CLI commands
+
 ## [0.9.558] - 2026-02-22
 
 ### Changed
