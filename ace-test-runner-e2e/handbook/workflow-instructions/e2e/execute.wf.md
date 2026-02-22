@@ -30,7 +30,7 @@ This workflow guides an agent through executing test cases in a **pre-populated 
 
 ## Subagent Mode
 
-When invoked as a subagent (via Task tool from `/ace_e2e_runs` orchestrator), this workflow operates with special considerations:
+When invoked as a subagent (via Task tool from `/ace-e2e-runs` orchestrator), this workflow operates with special considerations:
 
 ### Context Isolation
 

@@ -19,12 +19,12 @@ This workflow executes multiple E2E tests in parallel using Task tool subagents.
 ## Architecture
 
 ```
-/ace_e2e_runs ace-lint          (Orchestrator)
+/ace-e2e-runs ace-lint          (Orchestrator)
          │
-         ├──► Task[Subagent 1] → /ace_e2e_run ace-lint TS-LINT-001
-         ├──► Task[Subagent 2] → /ace_e2e_run ace-lint TS-LINT-002
-         ├──► Task[Subagent 3] → /ace_e2e_run ace-lint TS-LINT-003
-         └──► Task[Subagent 4] → /ace_e2e_run ace-lint TS-LINT-004
+         ├──► Task[Subagent 1] → /ace-e2e-run ace-lint TS-LINT-001
+         ├──► Task[Subagent 2] → /ace-e2e-run ace-lint TS-LINT-002
+         ├──► Task[Subagent 3] → /ace-e2e-run ace-lint TS-LINT-003
+         └──► Task[Subagent 4] → /ace-e2e-run ace-lint TS-LINT-004
                     │
                     ▼
          Reports in .cache/ace-test-e2e/ (parallel-safe via unique timestamps)
@@ -92,7 +92,7 @@ Task[subagent_type=general-purpose]:
   prompt: |
     Run the E2E test scenario using the skill command.
 
-    Execute: /ace_e2e_run {package} {test-id}
+    Execute: /ace-e2e-run {package} {test-id}
 
     After execution completes, return a structured summary:
 
@@ -268,17 +268,17 @@ Individual test reports in `.cache/ace-test-e2e/`:
 
 **Run all tests in a package (parallel):**
 ```
-/ace_e2e_runs ace-lint
+/ace-e2e-runs ace-lint
 ```
 
 **Run all tests across all packages:**
 ```
-/ace_e2e_runs --all
+/ace-e2e-runs --all
 ```
 
 **Force sequential execution:**
 ```
-/ace_e2e_runs ace-lint --sequential
+/ace-e2e-runs ace-lint --sequential
 ```
 
 ## Error Handling
@@ -289,7 +289,7 @@ If no tests are discovered:
 ```
 No E2E tests found for {package}.
 
-Use `/ace_e2e_create {package} {area}` to create tests.
+Use `/ace-e2e-create {package} {area}` to create tests.
 ```
 
 ### Subagent Failure
@@ -309,7 +309,7 @@ If some tests pass and others fail:
 
 ## Comparison with Single Test Execution
 
-| Aspect | /ace_e2e_run (singular) | /ace_e2e_runs (plural) |
+| Aspect | /ace-e2e-run (singular) | /ace-e2e-runs (plural) |
 |--------|------------------------------|------------------------------|
 | Execution | Sequential in single agent | Parallel via subagents |
 | Scope | Single test or all in package | Package or all packages |
