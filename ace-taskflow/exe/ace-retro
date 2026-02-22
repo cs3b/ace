@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/taskflow"
+
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Taskflow::RetroCLI.start(ARGV)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end

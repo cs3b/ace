@@ -9,6 +9,10 @@ require_relative "taskflow/molecules/task_loader"
 require_relative "taskflow/molecules/release_resolver"
 
 require_relative "taskflow/cli"
+require_relative "taskflow/cli/task_cli"
+require_relative "taskflow/cli/idea_cli"
+require_relative "taskflow/cli/release_cli"
+require_relative "taskflow/cli/retro_cli"
 
 module Ace
   module Taskflow
