@@ -52,8 +52,8 @@ module Ace
 
           option :flat, aliases: ["-f"], type: :boolean, default: false, desc: "Show flat list (no hierarchy)"
           option :format, desc: "Output format (table, json)", default: "table"
-          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress detailed output"
-          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
+          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
+          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :assignment, desc: "Show status for specific assignment ID"
           option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments in other assignments section"
 

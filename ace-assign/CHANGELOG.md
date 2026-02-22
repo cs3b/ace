@@ -715,3 +715,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - History preservation (failed phases remain visible)
 - Dynamic phase addition with automatic numbering
 - Retry mechanism that creates new phases linked to original
+
+
+## [0.12.12] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings

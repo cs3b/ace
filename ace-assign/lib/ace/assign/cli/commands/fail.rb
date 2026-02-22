@@ -13,8 +13,8 @@ module Ace
 
           option :message, aliases: ["-m"], required: true, desc: "Error message"
           option :assignment, desc: "Target specific assignment ID"
-          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress output"
-          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
+          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
+          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(**options)
             message = options[:message]

@@ -45,8 +45,8 @@ module Ace
           option :task, aliases: ["-t"], desc: "Filter by task reference"
           option :tree, type: :boolean, default: false, desc: "Show assignment hierarchy as tree"
           option :format, aliases: ["-f"], desc: "Output format (table, json)", default: "table"
-          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress output"
-          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
+          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
+          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def call(**options)
             discoverer = Molecules::AssignmentDiscoverer.new
