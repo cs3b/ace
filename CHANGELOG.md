@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.589] - 2026-02-22
+
+### Changed
+- **ace-assign v0.12.17**: Migrate CLI to standard help pattern — remove DWIM default routing so no args shows help instead of running status command
+
+### Technical
+- **ace-assign v0.12.17**: Remove KNOWN_COMMANDS, DEFAULT_COMMAND, deprecated command remapping; register HelpCommand for --help/-h; add no-args handling to exe/ace-assign
+
 ## [0.9.588] - 2026-02-22
 
 ### Changed
