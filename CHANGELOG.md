@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.592] - 2026-02-22
+
+### Changed
+- **ace-support-models v0.6.1**: Migrate ace-llm-providers CLI to standard help pattern — remove DWIM default routing so no args shows help instead of routing to list command
+
+### Technical
+- **ace-support-models v0.6.1**: Remove DefaultRouting extension from ProvidersCLI; convert REGISTERED_COMMANDS to [name, description] format; register HelpCommand for --help/-h; add no-args handling to exe/ace-llm-providers
+
 ## [0.9.591] - 2026-02-22
 
 ### Changed
