@@ -29,43 +29,8 @@ module Ace
         # @param args [Array<String>] Command-line arguments
         # @return [Integer] Exit code
         def self.start(args)
-          # Handle --version explicitly
-          if args.first && args.first == "--version"
-            puts "ace-test-e2e #{Ace::Test::EndToEndRunner::VERSION}"
-            return 0
-          end
-
-          # Handle help explicitly
-          if args.first && %w[help --help -h].include?(args.first)
-            puts "ace-test-e2e - Run E2E tests via LLM execution"
-            puts ""
-            puts "Usage:"
-            puts "  ace-test-e2e PACKAGE [TEST_ID] [OPTIONS]"
-            puts ""
-            puts "Examples:"
-            puts "  ace-test-e2e ace-lint TS-LINT-001"
-            puts "  ace-test-e2e ace-lint"
-            puts "  ace-test-e2e ace-lint --provider claude:sonnet"
-            puts "  ace-test-e2e ace-lint TS-LINT-003 --test-cases tc-001,002"
-            puts "  ace-test-e2e ace-lint TS-LINT-003 --test-cases TC-001 --dry-run"
-            puts "  ace-test-e2e ace-lint --only-failures"
-            puts "  ace-test-e2e ace-lint --only-failures --dry-run"
-            puts "  ace-test-e2e setup ace-lint TS-LINT-001"
-            puts ""
-            puts "Options:"
-            puts "  --provider       LLM provider:model (default: #{Molecules::ConfigLoader.default_provider})"
-            puts "  --cli-args       Extra args for CLI providers"
-            puts "  --timeout        Timeout per test in seconds (default: 300)"
-            puts "  --test-cases     Comma-separated test case IDs (e.g., tc-001,002,TC-3)"
-            puts "  --dry-run        Preview which test cases would run without executing"
-            puts "  --only-failures  Re-run only previously failed test cases"
-            puts "  --progress       Enable live animated display"
-            puts "  --quiet/-q       Suppress detailed output"
-            puts "  --verbose/-v     Enable verbose output"
-            puts "  --debug/-d       Enable debug output"
-            puts "  --version        Show version"
-            return 0
-          end
+          # Handle help explicitly (dry-cli doesn't handle registry-level help)
+          return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
 
           # If first argument isn't a known command, prepend default
           if args.any? && !known_command?(args.first)
