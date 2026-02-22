@@ -171,7 +171,7 @@ The `ace-taskflow` gem uses this library automatically on macOS:
 ```bash
 # Copy a screenshot (Cmd+Ctrl+Shift+4)
 # Then create an idea with the clipboard content
-ace-taskflow idea create --clipboard "Bug in login form"
+ace-idea create --clipboard "Bug in login form"
 
 # Result: Creates directory with idea.md and clipboard-image-1.png
 ```
