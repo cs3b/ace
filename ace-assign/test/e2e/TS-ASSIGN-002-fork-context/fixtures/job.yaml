@@ -13,7 +13,7 @@ steps:
       ## Onboard
 
       Load context before starting:
-      - ace-bundle project
+      - ace-bundle load project
       - ace-taskflow task 123
 
       ## Work
