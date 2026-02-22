@@ -29,7 +29,7 @@ module Ace
 
             return if options[:quiet]
 
-            puts "Done. Switch to tmux window and run /ace_assign_drive"
+            puts "Done. Switch to tmux window and run /ace-assign-drive"
           rescue Ace::Core::CLI::Error
             raise
           rescue StandardError => e

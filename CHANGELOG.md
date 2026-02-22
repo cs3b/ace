@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.558] - 2026-02-22
+
+### Changed
+- **ace-assign v0.12.11**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-bundle v0.30.7**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-git v0.10.15**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-handbook v0.9.6**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-integration-claude v0.3.4**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-lint v0.15.14**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-llm-providers-cli v0.16.10**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-overseer v0.4.7**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-review v0.40.3**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-search v0.19.4**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-taskflow v0.39.7**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-test v0.1.5**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+- **ace-test-runner-e2e v0.16.18**: Patch release for hyphenated skill naming migration (`ace-*`) and related reference updates.
+
 ## [0.9.557] - 2026-02-21
 
 ### Technical

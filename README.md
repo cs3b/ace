@@ -46,7 +46,7 @@ defaults:
 
 ```
 # In Claude Code chat:
-/ace_review_pr 123 --preset code-deep
+/ace-review-pr 123 --preset code-deep
 ```
 
 The same review runs identically from CLI or as a Claude Code skill.
