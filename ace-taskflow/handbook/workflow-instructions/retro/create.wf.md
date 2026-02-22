@@ -66,12 +66,12 @@ Capture individual or team observations, learnings, and ideas for improvement du
 
    ```bash
    # Create retro file - tool automatically determines location
-   ace-taskflow retro create "topic-slug"
+   ace-retro create "topic-slug"
 
    # Examples:
-   ace-taskflow retro create "ace-test-runner-fixes"
-   ace-taskflow retro create "oauth-integration-challenges"
-   ace-taskflow retro create "sprint-23-learnings"
+   ace-retro create "ace-test-runner-fixes"
+   ace-retro create "oauth-integration-challenges"
+   ace-retro create "sprint-23-learnings"
    ```
 
    The command automatically:
@@ -158,7 +158,7 @@ Capture individual or team observations, learnings, and ideas for improvement du
    - Ensure all sections have meaningful content
    - Remove empty sections if not applicable
    - Save the file (it's already in the correct location from step 2)
-   - Verify with: `ace-taskflow retros` to see your new retro listed
+   - Verify with: `ace-retro list` to see your new retro listed
 
 ## Conversation Analysis Process
 
@@ -227,7 +227,7 @@ When no specific context is provided, follow this process:
    git diff --name-only HEAD~5
 
    # Review completed tasks using task manager
-   ace-taskflow tasks recent --limit 5
+   ace-task list recent --limit 5
    ```
 
 2. **Extract Insights:**

@@ -36,42 +36,42 @@ The workflows have been updated to use ace-taskflow commands:
 ### Task Management
 ```bash
 # Get next task or navigate to specific task
-ace-taskflow task                      # Get next pending task
-ace-taskflow task 024                  # Navigate to task 024
-ace-taskflow task v.0.9.0+024         # Navigate to specific version+task
+ace-task                      # Get next pending task
+ace-task 024                  # Navigate to task 024
+ace-task v.0.9.0+024         # Navigate to specific version+task
 
 # Create new tasks
-ace-taskflow task create "Task Title"  # Create new task
+ace-task create "Task Title"  # Create new task
 
 # List tasks
-ace-taskflow tasks                     # List all tasks
-ace-taskflow tasks --status pending    # Filter by status
-ace-taskflow tasks --current          # Tasks in current release
+ace-task list                     # List all tasks
+ace-task list --status pending    # Filter by status
+ace-task list --current          # Tasks in current release
 ```
 
 ### Release Management
 ```bash
 # Release operations
-ace-taskflow release                   # Show current release info
-ace-taskflow release create            # Create new release
+ace-release                   # Show current release info
+ace-release create            # Create new release
 ```
 
 ### Idea Management
 ```bash
 # Capture ideas
-ace-taskflow idea "Your idea text"     # Capture idea from text
-ace-taskflow idea --clipboard          # Capture from clipboard
-ace-taskflow idea --file input.txt     # Capture from file
+ace-idea "Your idea text"     # Capture idea from text
+ace-idea --clipboard          # Capture from clipboard
+ace-idea --file input.txt     # Capture from file
 ```
 
 ## Path References
 
 Workflows now use dynamic path discovery instead of hardcoded paths:
 
-- Use `ace-taskflow release` to get the current release path
+- Use `ace-release` to get the current release path
 - Replace hardcoded `.ace-taskflow/current/` with dynamic discovery
 - Example: Instead of `.ace-taskflow/current/v.X.Y.Z/docs/`, use:
-  1. Run `ace-taskflow release` to get path (e.g., `.ace-taskflow/v.0.9.0`)
+  1. Run `ace-release` to get path (e.g., `.ace-taskflow/v.0.9.0`)
   2. Append subdirectory (e.g., `.ace-taskflow/v.0.9.0/docs/`)
 
 ## Integration with dev-tools

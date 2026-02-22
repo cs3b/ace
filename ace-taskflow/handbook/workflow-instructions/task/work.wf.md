@@ -32,7 +32,7 @@ assign:
 For experienced users, here's the condensed workflow:
 
 1. **Read linked documents** - Load project context and workflow instructions
-2. **Select task** - Use `ace-taskflow task` (next) or `ace-taskflow task <ref>` (specific)
+2. **Select task** - Use `ace-task` (next) or `ace-task <ref>` (specific)
 3. **Mark in-progress** - Update task status to `in-progress`
 4. **Execute plan** - Work through planning and execution steps autonomously
 5. **Validate completion** - Verify all subtasks and acceptance criteria are done
@@ -41,16 +41,16 @@ For experienced users, here's the condensed workflow:
 ## Detailed Process Steps
 
 1. **Select Task:**
-   * Use `ace-taskflow task` command to get task by reference or next available:
+   * Use `ace-task` command to get task by reference or next available:
 
      ```bash
      # Get next task to work on (auto-selects based on priority/dependencies)
-     ace-taskflow task
+     ace-task
 
      # Or specify task by any reference format:
-     ace-taskflow task 071           # Task number
-     ace-taskflow task task.071      # Task ID format
-     ace-taskflow task v.0.9.0+071   # Full task reference
+     ace-task 071           # Task number
+     ace-task task.071      # Task ID format
+     ace-task v.0.9.0+071   # Full task reference
      ```
 
    * The command automatically:
@@ -225,9 +225,9 @@ For experienced users, here's the condensed workflow:
 
      ```bash
      # Use task ID or task number
-     ace-taskflow task done v.0.9.0+009
+     ace-task done v.0.9.0+009
      # OR
-     ace-taskflow task done 009
+     ace-task done 009
      ```
 
    * Work is complete and ready for review
@@ -238,7 +238,7 @@ When creating task-related documentation and deliverables:
 
 ### Document Placement Rules
 
-* **Task-specific documentation**: Create in `{release-path}/docs/` (use `ace-taskflow release` to find current release path)
+* **Task-specific documentation**: Create in `{release-path}/docs/` (use `ace-release` to find current release path)
 * **Task-specific naming**: Prefix documents with task number (e.g., `25-validation-criteria-checklist.md`)
 * **Analysis documents**: Research findings, compliance reports, validation results
 * **Planning documents**: Action plans, design specifications
@@ -249,7 +249,7 @@ When creating task-related documentation and deliverables:
 * **Analysis Report**: `{release-path}/docs/25-workflow-compliance-report.md`
 * **Action Plan**: `{release-path}/docs/25-workflow-compliance-fixes.md`
 * **Process Guide**: `{release-path}/docs/25-validation-criteria-checklist.md`
-* Note: Use `ace-taskflow release` to get the current release path, e.g., `.ace-taskflow/v.0.3.0`
+* Note: Use `ace-release` to get the current release path, e.g., `.ace-taskflow/v.0.3.0`
 
 ### Documentation Standards
 
@@ -298,7 +298,7 @@ When working with temporary files:
 
    ```bash
    # Check specific dependency task (listed in task metadata)
-   ace-taskflow task <dependency-task-ref>
+   ace-task <dependency-task-ref>
    ```
 
 2. Verify required tools are available:
@@ -626,8 +626,8 @@ When errors occur during task execution:
 
 ## Usage Example
 >
-> "Work on next task: ace-taskflow task"
-> "Work on specific task: ace-taskflow task 071" or "ace-taskflow task task.071" or "ace-taskflow task v.0.9.0+071"
+> "Work on next task: ace-task"
+> "Work on specific task: ace-task 071" or "ace-task task.071" or "ace-task v.0.9.0+071"
 
 ---
 

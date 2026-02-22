@@ -21,7 +21,7 @@ update:
 
 # Reorganize Tasks
 
-Restructure task hierarchy using the `ace-taskflow task move` command with `--child-of` flag.
+Restructure task hierarchy using the `ace-task move` command with `--child-of` flag.
 
 ## Goal
 
@@ -40,16 +40,16 @@ Convert a subtask (e.g., `121.01`) to a standalone task with a new number and di
 
 **Command**:
 ```bash
-ace-taskflow task move <subtask_ref> --child-of
+ace-task move <subtask_ref> --child-of
 ```
 
 **Example**:
 ```bash
 # Promote subtask 121.01 to standalone task
-ace-taskflow task move 121.01 --child-of
+ace-task move 121.01 --child-of
 
 # With dry-run to preview
-ace-taskflow task move 121.01 --child-of --dry-run
+ace-task move 121.01 --child-of --dry-run
 ```
 
 **What happens**:
@@ -76,16 +76,16 @@ Convert a standalone task to a subtask under a parent orchestrator.
 
 **Command**:
 ```bash
-ace-taskflow task move <task_ref> --child-of <parent_ref>
+ace-task move <task_ref> --child-of <parent_ref>
 ```
 
 **Example**:
 ```bash
 # Demote task 019 to subtask under orchestrator 121
-ace-taskflow task move 019 --child-of 121
+ace-task move 019 --child-of 121
 
 # With dry-run to preview
-ace-taskflow task move 019 --child-of 121 --dry-run
+ace-task move 019 --child-of 121 --dry-run
 ```
 
 **What happens**:
@@ -111,16 +111,16 @@ Convert a standalone task to an orchestrator, with the original task becoming th
 
 **Command**:
 ```bash
-ace-taskflow task move <task_ref> --child-of self
+ace-task move <task_ref> --child-of self
 ```
 
 **Example**:
 ```bash
 # Convert task 019 to orchestrator
-ace-taskflow task move 019 --child-of self
+ace-task move 019 --child-of self
 
 # With dry-run to preview
-ace-taskflow task move 019 --child-of self --dry-run
+ace-task move 019 --child-of self --dry-run
 ```
 
 **What happens**:
@@ -129,7 +129,7 @@ ace-taskflow task move 019 --child-of self --dry-run
 3. Subtask ID updated (e.g., `v.0.9.0+task.019` → `v.0.9.0+task.019.01`)
 4. Parent field added to subtask frontmatter
 5. Original standalone file deleted
-6. Task can now have more subtasks added via `ace-taskflow task create --child-of 019`
+6. Task can now have more subtasks added via `ace-task create --child-of 019`
 
 **Output**:
 ```
@@ -146,8 +146,8 @@ Subtask file: .ace-taskflow/v.0.9.0/tasks/019-task-slug/019.01-task-slug.s.md
 Preview any operation without making changes:
 
 ```bash
-ace-taskflow task move <ref> [options] --dry-run
-ace-taskflow task move <ref> [options] -n
+ace-task move <ref> [options] --dry-run
+ace-task move <ref> [options] -n
 ```
 
 Dry-run shows:
@@ -161,13 +161,13 @@ Move tasks between releases (this is the original `move` behavior):
 
 ```bash
 # Move to specific release
-ace-taskflow task move 019 --release v.0.10.0
+ace-task move 019 --release v.0.10.0
 
 # Move to backlog
-ace-taskflow task move 019 --backlog
+ace-task move 019 --backlog
 
 # Legacy positional syntax still works
-ace-taskflow task move 019 backlog
+ace-task move 019 backlog
 ```
 
 ## Decision Guide
@@ -196,19 +196,19 @@ ace-taskflow task move 019 backlog
 After promoting a subtask:
 1. Update any references to the old subtask ID in other tasks
 2. Consider updating the orchestrator's scope
-3. Run `ace-taskflow task show <new_ref>` to verify
+3. Run `ace-task show <new_ref>` to verify
 
 ### After Demotion
 
 After demoting a task:
 1. Check if dependencies need updating
 2. Subtask inherits orchestrator's release
-3. Run `ace-taskflow task show <parent_ref>` to see full structure
+3. Run `ace-task show <parent_ref>` to see full structure
 
 ### After Conversion
 
 After converting to orchestrator:
-1. Create subtasks: `ace-taskflow task create --child-of <ref> "Subtask title"`
+1. Create subtasks: `ace-task create --child-of <ref> "Subtask title"`
 2. Original task becomes the orchestrator file (`NNN-orchestrator.s.md`)
 3. Consider adding orchestrator scope/description
 
@@ -217,5 +217,5 @@ After converting to orchestrator:
 * Task reorganized with appropriate new ID format
 * Old task/subtask file properly cleaned up
 * Metadata updated (parent field added/removed as appropriate)
-* New location accessible via `ace-taskflow task show`
+* New location accessible via `ace-task show`
 * Dry-run accurately previews operations

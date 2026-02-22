@@ -65,7 +65,7 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
 1. **Load and Analyze Pending Task:**
    - **Task Selection:**
      - If specific task provided: Use the provided task path
-     - If no task specified: Run `ace-taskflow tasks --status pending` to get pending tasks
+     - If no task specified: Run `ace-task list --status pending` to get pending tasks
      - Document the selected task path for reference
    - **Load Task Content:**
      - Read the task file from the identified path

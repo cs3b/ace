@@ -68,12 +68,12 @@ Document significant work completed during a session that wasn't part of any pla
    For each piece of significant unplanned work:
 
    ```bash
-   ace-taskflow task create --title "[Descriptive title of work completed]" --status done
+   ace-task create --title "[Descriptive title of work completed]" --status done
    ```
 
    Example:
    ```bash
-   ace-taskflow task create --title "Fix invalid Claude tool specifications in command metadata" --status done
+   ace-task create --title "Fix invalid Claude tool specifications in command metadata" --status done
    ```
 
 3. **Document the Completed Work:**
