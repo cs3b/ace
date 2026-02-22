@@ -4,71 +4,118 @@ Complete reference for implementing CLI interfaces in ace-* gems using dry-cli.
 
 ## Overview
 
-All ACE CLI gems use dry-cli with the Registry pattern. See [ADR-023](../../../docs/decisions/ADR-023-dry-cli-framework.md) for decision rationale.
+All ACE CLI gems use dry-cli. See [ADR-023](../../../docs/decisions/ADR-023-dry-cli-framework.md) for decision rationale.
 
-## Registry Pattern
+**Two patterns:**
+- **Multi-command**: Subcommand tools (ace-bundle, ace-taskflow)
+- **Single-command**: One-action tools (ace-git-commit, ace-search)
+
+## Multi-Command Pattern
+
+For CLIs with subcommands, use the Registry pattern with `HelpCommand.build()`:
 
 ```ruby
 # lib/ace/gem/cli.rb
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "cli/commands/process"
+require_relative "cli/commands/status"
 
 module Ace::Gem
   module CLI
     extend Dry::CLI::Registry
 
-    # Single source of truth for application commands
-    REGISTERED_COMMANDS = %w[process].freeze
+    PROGRAM_NAME = 'ace-gem'
 
-    # dry-cli built-ins (standard across all CLI gems)
-    BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+    # Commands with descriptions for help output
+    REGISTERED_COMMANDS = [
+      ['process', 'Process files with auto-detection'],
+      ['status',  'Show current status']
+    ].freeze
 
-    # Auto-derived - no manual maintenance needed
-    KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+    HELP_EXAMPLES = [
+      'ace-gem process file.txt',
+      'ace-gem status --verbose'
+    ].freeze
 
-    DEFAULT_COMMAND = "process"
-
-    # Testable start method with default command routing
-    def self.start(args)
-      if args.empty? || !KNOWN_COMMANDS.include?(args.first)
-        args = [DEFAULT_COMMAND] + args
-      end
-      Dry::CLI.new(self).call(arguments: args)
-    end
-
-    register "process", Commands::Process
+    register 'process', Commands::Process.new
+    register 'status', Commands::Status.new
 
     # Version command
     version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
-      gem_name: "ace-gem",
+      gem_name: 'ace-gem',
       version: Ace::Gem::VERSION
     )
-    register "version", version_cmd
-    register "--version", version_cmd
+    register 'version', version_cmd
+    register '--version', version_cmd
+
+    # Help command (standard pattern)
+    help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+      program_name: PROGRAM_NAME,
+      version: Ace::Gem::VERSION,
+      commands: REGISTERED_COMMANDS,
+      examples: HELP_EXAMPLES
+    )
+    register 'help', help_cmd
+    register '--help', help_cmd
+    register '-h', help_cmd
   end
 end
 ```
 
-## KNOWN_COMMANDS Pattern
-
-The three-constant pattern ensures adding a new command only requires updating `REGISTERED_COMMANDS`:
-
+**Exe wrapper:**
 ```ruby
-# Single source of truth for application commands
-REGISTERED_COMMANDS = %w[process].freeze
+#!/usr/bin/env ruby
+require "ace/gem"
 
-# dry-cli built-ins (standard across all CLI gems)
-BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+args = ARGV.empty? ? ["--help"] : ARGV
 
-# Auto-derived using Set for O(1) lookup
-KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+begin
+  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
 ```
 
-**Multi-command example** (ace-review):
+## Single-Command Pattern
+
+For CLIs with one primary action, skip the registry:
+
 ```ruby
-REGISTERED_COMMANDS = %w[review synthesize list-presets list-prompts].freeze
+# lib/ace/gem/cli/commands/search.rb
+module Ace::Gem
+  module CLI
+    module Commands
+      class Search < Dry::CLI::Command
+        include Ace::Core::CLI::DryCli::Base
+
+        desc "Search files and content"
+        argument :pattern, required: false
+        option :files, type: :boolean, aliases: ["-f"]
+
+        def call(pattern: nil, **options)
+          # ... implementation
+        end
+      end
+    end
+  end
+end
+```
+
+**Exe wrapper:**
+```ruby
+#!/usr/bin/env ruby
+require "ace/gem"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+begin
+  Dry::CLI.new(Ace::Gem::CLI::Commands::Search).call(arguments: args)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
 ```
 
 ## Command Class Pattern
@@ -101,32 +148,33 @@ end
 
 **Directory structure**: `lib/ace/gem/cli/commands/` (not `lib/ace/gem/commands/`)
 
-## Multi-Command CLIs
+## Nested Commands
 
-For tools with subcommands (ace-taskflow):
+For hierarchical commands (ace-taskflow, ace-git-worktree):
 
 ```ruby
-module CLI
-  extend Dry::CLI::Registry
+# lib/ace/taskflow/cli.rb
+module Ace::Taskflow
+  module CLI
+    extend Dry::CLI::Registry
 
-  # Hierarchical registration
-  register "task show", Commands::TaskShow
-  register "task list", Commands::TaskList
-  register "tasks", Commands::Tasks  # Alias
+    # Hierarchical registration with space-separated names
+    register "task show", Commands::Task::Show
+    register "task list", Commands::Task::List
+    register "release bump", Commands::Release::Bump
 
-  # Nested registration for subcommand groups
-  register "worktree create", Commands::WorktreeCreate
-  register "worktree delete", Commands::WorktreeDelete
-end
-
-# With nested directory structure:
-# lib/ace/gem/cli/commands/task/show.rb
-module Ace::Gem::CLI::Commands::Task
-  class Show < Dry::CLI::Command
-    include Ace::Core::CLI::DryCli::Base
-    # ...
+    # Help and version
+    help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(...)
+    register "help", help_cmd
+    register "--help", help_cmd
+    register "-h", help_cmd
   end
 end
+
+# Directory structure:
+# lib/ace/taskflow/cli/commands/task/show.rb
+# lib/ace/taskflow/cli/commands/task/list.rb
+# lib/ace/taskflow/cli/commands/release/bump.rb
 ```
 
 ## Type Conversion
@@ -172,10 +220,17 @@ def call(file: nil, **options)
   puts result[:message]
   # Success - no exception, exits 0
 end
+```
 
-# exe/ace-gem catches exceptions and exits
+**Exe wrapper catches exceptions:**
+```ruby
+#!/usr/bin/env ruby
+require "ace/gem"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
 begin
-  Ace::Gem::CLI.start(ARGV)
+  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
