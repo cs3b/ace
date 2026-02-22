@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.564] - 2026-02-22
+
+### Added
+- **ace-assign v0.12.14**: Subtree guard step — driver reviews fork report files before continuing; report review instruction in split-subtree-root template
+
 ## [0.9.563] - 2026-02-22
 
 ### Added
