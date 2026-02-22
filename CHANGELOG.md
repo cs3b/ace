@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.573] - 2026-02-22
+
+### Changed
+- **ace-bundle v0.30.10**: Standardize docs and examples to explicit `ace-bundle load ...` command usage across README and usage guide.
+
+### Technical
+- **ace-bundle v0.30.10**: Update CLI routing tests to executable-level assertions and remove stale `load` command example that referenced `--list`.
+
 ## [0.9.572] - 2026-02-22
 
 ### Changed
