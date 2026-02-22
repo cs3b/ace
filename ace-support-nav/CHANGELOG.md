@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.9] - 2026-02-22
+
+### Changed
+- Migrate `ace-nav` to the standard multi-command help pattern with explicit top-level `help`, `--help`, and `-h` commands.
+- Remove implicit default-command routing and require explicit `resolve`/`list`/`create`/`sources` command usage.
+- Update README and command help examples to canonical explicit command forms.
+
+### Technical
+- Remove custom default-routing from `CLI` (`start`, `KNOWN_COMMANDS`, `DEFAULT_COMMAND`) and switch executable dispatch to `Dry::CLI.new(...).call(arguments: ...)`.
+- Normalize no-argument invocation to `--help` in `exe/ace-nav` and preserve legacy `--sources` / `--create` aliases via executable argument translation.
+- Update integration tests to assert explicit dry-cli invocation behavior.
+
 ## [0.17.7] - 2026-02-19
 
 ### Technical

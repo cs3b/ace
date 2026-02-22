@@ -3,10 +3,46 @@
 
 require "bundler/setup"
 require "ace/support/nav"
+require "dry/cli"
+
+def translate_legacy_args(args)
+  return ["--help"] if args.empty?
+
+  if args.include?("--sources")
+    return ["sources"] + args.reject { |arg| arg == "--sources" }
+  end
+
+  return args unless args.include?("--create")
+
+  create_index = args.index("--create")
+  uri = args[create_index + 1]
+  target = args[create_index + 2]
+  translated = ["create"]
+  consumed = [create_index]
+
+  if uri && !uri.start_with?("-")
+    translated << uri
+    consumed << create_index + 1
+  end
+
+  if target && !target.start_with?("-")
+    translated << target
+    consumed << create_index + 2
+  end
+
+  args.each_with_index do |arg, index|
+    translated << arg unless consumed.include?(index)
+  end
+
+  translated
+end
 
 # Start CLI with exception-based exit code handling (per ADR-023)
 begin
-  Ace::Support::Nav::CLI.start(ARGV)
+  argv = translate_legacy_args(ARGV.dup)
+  Dry::CLI.new(Ace::Support::Nav::CLI).call(arguments: argv)
+rescue SystemExit => e
+  exit(e.status)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

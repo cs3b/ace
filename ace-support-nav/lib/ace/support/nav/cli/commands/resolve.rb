@@ -19,7 +19,6 @@ module Ace
               Resolve resource path or content
 
               SYNTAX:
-                ace-nav [URI] [OPTIONS]
                 ace-nav resolve [URI] [OPTIONS]
 
               Automatically detects list mode for wildcards, patterns ending with /,
@@ -27,24 +26,24 @@ module Ace
 
               Magic Wildcard Routing:
                 Wildcard patterns are auto-routed to 'list' command:
-                  ace-nav wfi://*              → ace-nav list wfi://*
-                  ace-nav tmpl://@ace-*/*     → ace-nav list tmpl://@ace-*
-                  ace-nav wfi://              → ace-nav list wfi:// (protocol-only)
+                  ace-nav resolve wfi://*              → ace-nav list wfi://*
+                  ace-nav resolve tmpl://@ace-*/*     → ace-nav list tmpl://@ace-*
+                  ace-nav resolve wfi://              → ace-nav list wfi:// (protocol-only)
                 Recognized patterns: *, ?, trailing /, protocol-only
 
               EXAMPLES:
 
                 # Resolve URI to path
-                $ ace-nav wfi://setup
+                $ ace-nav resolve wfi://setup
 
                 # Display content
-                $ ace-nav wfi://setup --content
+                $ ace-nav resolve wfi://setup --content
 
                 # Wildcard patterns auto-route to list
-                $ ace-nav wfi://*
+                $ ace-nav resolve wfi://*
 
                 # Protocol-only URIs auto-route to list
-                $ ace-nav tmpl:///
+                $ ace-nav resolve tmpl:///
 
               CONFIGURATION:
 
@@ -64,7 +63,7 @@ module Ace
             example [
               "wfi://setup                # Resolve workflow",
               "wfi://*                    # List workflows (auto-routing)",
-              "tmpl://custom ./output.md  # Create from template",
+              "tmpl://                    # List templates (auto-routing)",
               "wfi://setup --content      # Display resource content"
             ]
 

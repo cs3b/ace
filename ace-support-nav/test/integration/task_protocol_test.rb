@@ -2,9 +2,14 @@
 
 require "test_helper"
 require "ace/support/nav/cli"
+require "dry/cli"
 require "tempfile"
 
 class TaskProtocolIntegrationTest < Minitest::Test
+  private def run_cli(args)
+    Dry::CLI.new(Ace::Support::Nav::CLI).call(arguments: args)
+  end
+
   def setup
     @temp_dir = create_temp_ace_directory
     setup_task_protocol_config
@@ -48,51 +53,51 @@ class TaskProtocolIntegrationTest < Minitest::Test
 
   def test_task_protocol_delegation_with_simple_reference
     # Test that delegation succeeds (no exception = exit code 0)
-    # Per ADR-023, CLI.start returns nil, success is no exception
+    # Per ADR-023, success is represented by no exception raised
     capture_io do
-      Ace::Support::Nav::CLI.start(["task://083"])
+      run_cli(["resolve", "task://083"])
     end
     # No exception raised = success
   end
 
   def test_task_protocol_delegation_with_full_reference
     capture_io do
-      Ace::Support::Nav::CLI.start(["task://v.0.9.0+task.083"])
+      run_cli(["resolve", "task://v.0.9.0+task.083"])
     end
     # No exception raised = success
   end
 
   def test_task_protocol_with_path_option
     capture_io do
-      Ace::Support::Nav::CLI.start(["task://083", "--path"])
+      run_cli(["resolve", "task://083", "--path"])
     end
     # No exception raised = success
   end
 
   def test_task_protocol_with_content_option
     capture_io do
-      Ace::Support::Nav::CLI.start(["task://083", "--content"])
+      run_cli(["resolve", "task://083", "--content"])
     end
     # No exception raised = success
   end
 
   def test_task_protocol_with_tree_option
     capture_io do
-      Ace::Support::Nav::CLI.start(["task://083", "--tree"])
+      run_cli(["resolve", "task://083", "--tree"])
     end
     # No exception raised = success
   end
 
   def test_task_protocol_with_backlog_reference
     capture_io do
-      Ace::Support::Nav::CLI.start(["task://backlog+025"])
+      run_cli(["resolve", "task://backlog+025"])
     end
     # No exception raised = success
   end
 
   def test_task_protocol_with_prefixed_reference
     capture_io do
-      Ace::Support::Nav::CLI.start(["task://task.083"])
+      run_cli(["resolve", "task://task.083"])
     end
     # No exception raised = success
   end
@@ -109,7 +114,7 @@ class TaskProtocolIntegrationTest < Minitest::Test
 
   def test_cli_help_displays_successfully
     stdout_output = capture_io do
-      Ace::Support::Nav::CLI.start(["--help"])
+      run_cli(["--help"])
     end
 
     # Help should display dry-cli-standard format
