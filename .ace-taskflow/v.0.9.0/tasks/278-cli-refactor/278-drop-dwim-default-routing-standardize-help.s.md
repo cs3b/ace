@@ -28,9 +28,17 @@ Both are eliminated. After this migration:
 - **`--help` / `-h` at tool level**: Registered as commands (like `--version`), print subcommand list + examples, exit 0
 - **`--help` / `-h` at command level**: Handled by dry-cli built-in (no custom code)
 - **No `help` subcommand**: Not a git-era CLI; `--help`/`-h` is sufficient and universal
-- **No `start()` override**: `Dry::CLI.new(self).call(arguments: ARGV)` called directly from `exe/` wrappers
+- **No `start()` override**: CLI invocation called directly from `exe/` wrappers
+- **Two CLI patterns** based on command count:
+
+| Pattern | When | Invocation | Help |
+|---------|------|-----------|------|
+| **Registry** (multi-command) | 2+ commands | `Dry::CLI.new(registry).call` | Custom `--help`/`-h` registered commands |
+| **Single command** | 1 command | `Dry::CLI.new(command).call` | dry-cli built-in `--help`/`-h` on the command |
 
 ### Interface Contract
+
+#### Multi-command tools (registry pattern)
 
 **Tool-level help** (`ace-taskflow --help` or `ace-taskflow -h`):
 ```
@@ -72,29 +80,72 @@ This is dry-cli's built-in Banner output — no custom code.
 **Running tool with no arguments** (`ace-taskflow`):
 - Shows help output (same as `--help`) — no implicit default command
 
+#### Single-command tools (command pattern)
+
+Tools with only one real command (e.g., ace-search, ace-git-commit, ace-b36ts, ace-prompt-prep)
+use `Dry::CLI.new(command)` instead of a registry. The command IS the tool — no subcommand name needed.
+
+**Usage** (`ace-search "pattern" /path`):
+- No subcommand name — arguments go directly to the command
+- `--help` / `-h` handled by dry-cli's built-in parser (same as command-level help)
+- No registry, no `--help`/`-h` command registration, no `HelpCommand` needed
+
+**Help** (`ace-search --help`):
+```
+Command:
+  ace-search
+
+Usage:
+  ace-search [PATTERN] [SEARCH_PATH]
+
+Description:
+  Search across the codebase with intelligent pattern matching
+
+Options:
+  --files                           # Search file names instead of content
+  --max-results=VALUE               # Maximum results, default: 50
+  --help, -h                        # Print this help
+```
+
+This is dry-cli's built-in Banner — zero custom code.
+
+**Version**: For single-command tools, `--version` is handled as a flag on the command itself
+(via `option :version, type: :boolean`) rather than a registered subcommand.
+
 **Error Handling:**
 - Unknown subcommand: dry-cli's built-in spell checker + command list, exit 1
 - `--help` / `-h` at any level: Always exit 0
 
 ### Success Criteria
 
+**Cleanup:**
 - [ ] All `start()` method overrides removed from CLI modules (currently 12 inline + 6 using DefaultRouting)
 - [ ] `DefaultRouting` module deleted from ace-support-core
 - [ ] `KNOWN_COMMANDS`, `DEFAULT_COMMAND` constants removed from all CLI modules
-- [ ] `--help` and `-h` registered as commands in all CLI registries (reusable builder in ace-support-core)
+- [ ] No `help` subcommand registered anywhere
+
+**Multi-command tools (registry pattern):**
+- [ ] `--help` and `-h` registered as commands in all multi-command CLI registries (reusable builder in ace-support-core)
 - [ ] Tool-level help shows: version, commands with descriptions, curated examples, options
-- [ ] `HELP_EXAMPLES` constant defined in each CLI module (~7 lines of real-world usage)
+- [ ] `HELP_EXAMPLES` constant defined in each multi-command CLI module (~7 lines of real-world usage)
+- [ ] Running multi-command tool with no args shows help (not an error)
+- [ ] exe/ wrappers use `Dry::CLI.new(registry).call`
+
+**Single-command tools (command pattern):**
+- [ ] Single-command gems use `Dry::CLI.new(command).call` — no registry
+- [ ] No custom help code — dry-cli built-in handles `--help`/`-h`
+- [ ] `--version` handled as command option (not a registered subcommand)
+- [ ] exe/ wrappers use `Dry::CLI.new(command).call`
+
+**All tools:**
 - [ ] All help exits with code 0
 - [ ] Command-level help unchanged (dry-cli built-in)
-- [ ] No `help` subcommand registered anywhere
-- [ ] Running tool with no args shows help (not an error)
 - [ ] All existing tests pass; help output tests updated
-- [ ] exe/ wrappers simplified to direct `Dry::CLI.new(CLI).call` calls
 
 ### Validation Questions
 
 - [ ] **ace-nav backward compat**: `ace-nav --sources` and `ace-nav --create URI` are flag-based legacy aliases. How to handle? Options: (a) drop them, (b) handle in exe/ wrapper, (c) register as hidden commands
-- [ ] **ace-search path edge case**: `ace-search ./version` currently avoids matching as `version` command. Without DWIM, this is no longer an issue — but verify
+- [ ] **ace-search path edge case**: `ace-search ./version` currently avoids matching as `version` command. With single-command pattern (no registry), this is no longer an issue — verify
 - [ ] **ace-taskflow cache clearing**: `start()` currently clears caches before invocation. Move to `before` callback or exe/ wrapper?
 - [ ] **Subcommand-only gems**: Some gems have only one real command (e.g., ace-bundle has `load` and `list`). Running `ace-bundle` without subcommand should show help, not error
 
@@ -106,26 +157,26 @@ Align all ACE CLI tools with industry-standard CLI conventions (clig.dev). Elimi
 
 ### Gems affected (22 CLI registries)
 
-**Have inline `start()` override (12):**
-ace-bundle, ace-search, ace-lint, ace-git, ace-git-secrets, ace-assign, ace-review,
-ace-tmux, ace-support-nav, ace-test-runner-e2e, ace-overseer, ace-support-core
+**Multi-command tools → registry pattern** (need HelpCommand + HELP_EXAMPLES):
+ace-bundle, ace-git, ace-git-secrets, ace-assign, ace-review, ace-lint,
+ace-tmux, ace-support-nav, ace-test-runner-e2e, ace-overseer, ace-llm,
+ace-git-worktree, ace-docs, ace-test-runner, ace-support-models,
+ace-taskflow, ace-taskflow/task_cli, ace-taskflow/idea_cli,
+ace-taskflow/release_cli, ace-taskflow/retro_cli, ace-review/feedback_cli
 
-**Use `DefaultRouting` module (6+ new CLIs):**
-ace-taskflow, ace-taskflow/task_cli, ace-taskflow/idea_cli, ace-taskflow/release_cli,
-ace-taskflow/retro_cli, and any others extending DefaultRouting
-
-**Have `start()` but no DWIM (need help command only):**
-ace-llm, ace-b36ts, ace-git-worktree, ace-git-commit, ace-docs, ace-prompt-prep,
-ace-test-runner, ace-support-models, ace-review/feedback_cli
+**Single-command tools → command pattern** (no registry, dry-cli built-in help):
+ace-search, ace-git-commit, ace-b36ts, ace-prompt-prep
 
 ### Deliverables
 
-1. **HelpCommand builder in ace-support-core** — reusable, like `VersionCommand.build()`
-2. **Per-gem migration** — remove `start()`, add `--help`/`-h` registration, add `HELP_EXAMPLES`
-3. **Delete DefaultRouting** module and related constants
-4. **Update exe/ wrappers** — direct `Dry::CLI.new(CLI).call` invocation
-5. **Update tests** — help output assertions, remove DWIM routing tests
-6. **Update docs** — ADR-023, cli-dry-cli.g.md, ace-gems.g.md
+1. **HelpCommand builder in ace-support-core** — reusable, like `VersionCommand.build()`, for multi-command tools
+2. **Classify and migrate each gem** to the correct pattern (registry or single-command)
+3. **Per multi-command gem** — remove `start()`, add `--help`/`-h` registration, add `HELP_EXAMPLES`
+4. **Per single-command gem** — remove registry, use `Dry::CLI.new(command).call`
+5. **Delete DefaultRouting** module and related constants
+6. **Update exe/ wrappers** — direct `Dry::CLI.new(...)` invocation
+7. **Update tests** — help output assertions, remove DWIM routing tests
+8. **Update docs** — ADR-023, cli-dry-cli.g.md, ace-gems.g.md
 
 ## Out of Scope
 
