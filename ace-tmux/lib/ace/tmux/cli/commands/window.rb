@@ -36,8 +36,8 @@ module Ace
           option :name, type: :string, aliases: %w[-n], desc: "Window name (default: basename of --root)"
           option :root, type: :string, aliases: %w[-r], desc: "Working directory for the window"
           option :session, type: :string, aliases: %w[-s], desc: "Target session name"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show detailed output"
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(preset: nil, **options)
             config = Tmux.config
