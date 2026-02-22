@@ -24,12 +24,12 @@ module Ace
           DESC
 
           example [
-            'ace-prompt-prep setup              # Basic setup (archives existing prompt)',
-            '--template bug                # Custom template (short form)',
-            '--template tmpl://custom      # Custom template (full URI)',
-            '--no-archive                  # Skip archiving existing prompt',
-            '--force                       # Force overwrite (alias for --no-archive)',
-            '--task 121                    # Setup for specific task'
+            '                             # Basic setup (archives existing prompt)',
+            '--template bug               # Custom template (short form)',
+            '--template tmpl://custom     # Custom template (full URI)',
+            '--no-archive                 # Skip archiving existing prompt',
+            '--force                      # Force overwrite (alias for --no-archive)',
+            '--task 121                   # Setup for specific task'
           ]
 
           option :template, type: :string, aliases: %w[-t],
@@ -42,9 +42,9 @@ module Ace
                       desc: "Use task's prompts directory (e.g., '117' or '121.01')"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(**options)
             template_uri = options[:template] || Organisms::PromptInitializer::DEFAULT_TEMPLATE_URI
