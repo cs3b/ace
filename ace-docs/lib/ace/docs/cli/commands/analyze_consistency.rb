@@ -37,12 +37,12 @@ module Ace
           DESC
 
           example [
-            "ace-docs analyze-consistency",
-            "ace-docs analyze-consistency docs/handbook/",
-            "ace-docs analyze-consistency --terminology",
-            "ace-docs analyze-consistency --duplicates --threshold 80",
-            "ace-docs analyze-consistency --save",
-            "ace-docs analyze-consistency --model gpt-4"
+            "                             # Analyze all documents",
+            "docs/handbook/               # Analyze specific directory",
+            "--terminology                # Check terminology conflicts only",
+            "--duplicates --threshold 80  # Check duplicates with threshold",
+            "--save                       # Save report to file",
+            "--model gpt-4               # Use specific LLM model"
           ]
 
           argument :pattern, required: false, desc: "Pattern to analyze"
@@ -59,9 +59,9 @@ module Ace
           option :strict, type: :boolean, desc: "Exit with code 1 if issues found"
 
           # Standard options
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(pattern: nil, **options)
             # Handle --help/-h passed as pattern argument

@@ -38,12 +38,12 @@ module Ace
           DESC
 
           example [
-            "ace-docs validate                      # Validate all documents",
-            "ace-docs validate README.md            # Validate specific file",
-            "ace-docs validate docs/**/*.md         # Validate by pattern",
-            "ace-docs validate --syntax             # Run syntax validation only",
-            "ace-docs validate --semantic           # Run semantic validation only",
-            "ace-docs validate --all                # Run all validation types"
+            "                             # Validate all documents",
+            "README.md                    # Validate specific file",
+            "docs/**/*.md                 # Validate by pattern",
+            "--syntax                     # Run syntax validation only",
+            "--semantic                   # Run semantic validation only",
+            "--all                        # Run all validation types"
           ]
 
           argument :pattern, required: false, desc: "File or pattern to validate"
@@ -53,9 +53,9 @@ module Ace
           option :all, type: :boolean, desc: "Run all validation types"
 
           # Standard options
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(pattern: nil, **options)
             # Handle --help/-h passed as pattern argument
