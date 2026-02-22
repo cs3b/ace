@@ -74,8 +74,8 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 
 | Tool | Purpose |
 |------|---------|
-| `ace-lint file.md` | Lint file |
-| `ace-lint file.md --fix` | Auto-fix lint issues |
+| `ace-lint lint file.md` | Lint file |
+| `ace-lint lint file.md --fix` | Auto-fix lint issues |
 
 ## Documentation
 
