@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.574] - 2026-02-22
+
+### Changed
+- **ace-git v0.10.17**: Migrate to standard multi-command help pattern with explicit help commands and executable-level range shorthand routing.
+
+### Technical
+- **ace-git v0.10.17**: Replace legacy `CLI.start` routing tests with executable-level CLI routing coverage and update usage guide examples.
+
 ## [0.9.573] - 2026-02-22
 
 ### Changed
