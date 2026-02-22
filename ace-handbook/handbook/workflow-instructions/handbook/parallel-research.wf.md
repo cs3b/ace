@@ -13,7 +13,7 @@ Set up and execute parallel research across multiple AI agents, producing consis
 
 ## Project Context Loading
 
-- Load multi-agent research guide: `ace-bundle guide://multi-agent-research`
+- Load multi-agent research guide: `ace-bundle load guide://multi-agent-research`
 - Check existing research folder structure if continuing previous work
 
 ## High-Level Execution Plan

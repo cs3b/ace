@@ -77,13 +77,13 @@ Search for the relevant process files:
 
 ```bash
 # Search workflow instructions
-ace-bundle wfi://{relevant-workflow}
+ace-bundle load wfi://{relevant-workflow}
 
 # Search guides
-ace-bundle guide://{relevant-guide}
+ace-bundle load guide://{relevant-guide}
 
 # Search skills
-ace-bundle skill://{relevant-skill}
+ace-bundle load skill://{relevant-skill}
 ```
 
 **Search targets (in preference order):**
