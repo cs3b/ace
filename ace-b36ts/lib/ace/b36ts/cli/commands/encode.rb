@@ -19,9 +19,9 @@ module Ace
             option :path_only, type: :boolean, desc: "Output only the split path"
             option :json, type: :boolean, desc: "Output split data as JSON (works with --split or --count)"
             option :year_zero, type: :integer, aliases: ["-y"], desc: "Base year for encoding (default: 2000)"
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :verbose, type: :boolean, aliases: ["-v"], desc: "Verbose output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             example [
               "'2025-01-06 12:30:00'    # Encode readable timestamp",
