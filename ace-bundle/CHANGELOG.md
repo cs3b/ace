@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.11] - 2026-02-22
+
+### Changed
+- Replace ace-nav subprocess call with in-process SDK (`NavigationEngine#resolve`) for protocol resolution
+- Add `ace-support-nav` as runtime dependency (was only used via CLI subprocess)
+
+### Technical
+- Remove ace-nav command mock from test helper (no longer needed)
+- Update integration test to use SDK directly instead of `CommandExecutor`
+
 ## [0.30.10] - 2026-02-22
 
 ### Changed
