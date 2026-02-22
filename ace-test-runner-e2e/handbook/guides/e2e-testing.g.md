@@ -633,7 +633,7 @@ Export `PROJECT_ROOT_PATH` after creating the isolated repo:
 export PROJECT_ROOT_PATH="$REPO_DIR"
 
 # Now ace-* commands will use the isolated repo as project root
-ace-taskflow task 001  # Looks in $REPO_DIR/.ace-taskflow/
+ace-task 001  # Looks in $REPO_DIR/.ace-taskflow/
 ace-git-worktree create --task 001  # Uses isolated taskflow
 ```
 
