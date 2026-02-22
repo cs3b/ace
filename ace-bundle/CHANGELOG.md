@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.30.10] - 2026-02-22
+
+### Changed
+- Standardize `ace-bundle` docs and usage examples to explicit `load` subcommand invocation.
+
+### Technical
+- Update CLI routing tests to assert executable behavior (`Open3`), including no-arg help and no implicit default routing.
+- Refresh `load` command examples to remove stale `--list` reference and use `--inspect-config`.
+
 ## [0.30.9] - 2026-02-22
 
 ### Technical

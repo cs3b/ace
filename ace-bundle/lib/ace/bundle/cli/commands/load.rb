@@ -48,7 +48,7 @@ module Ace
             '--presets base,team      # Load multiple presets (comma-separated)',
             '-f config.yml            # Load from file',
             '--embed-source           # Embed source document in output',
-            '--list                   # List available presets'
+            '--inspect-config         # Show resolved configuration'
           ]
 
           # Define positional argument
