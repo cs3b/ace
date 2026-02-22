@@ -49,8 +49,8 @@ ace-bundle prompt.md --embed-source   # CLI flag overrides embed_document_source
 ace-bundle prompt.md -e               # Short form
 
 # Load via protocol (ace-nav integration)
-ace-bundle wfi://task/create          # Load workflow
-ace-bundle guide://testing            # Load guide
+ace-bundle load wfi://task/create          # Load workflow
+ace-bundle load guide://testing            # Load guide
 ace-bundle task://061                 # Load task context
 
 # Output modes
@@ -72,7 +72,7 @@ The positional argument to `ace-bundle` supports automatic input type detection:
 ace-bundle project                     # Detected as preset
 ace-bundle /path/to/config.yml         # Detected as file
 ace-bundle ./relative/path.md          # Detected as file
-ace-bundle wfi://workflow-name         # Detected as protocol
+ace-bundle load wfi://workflow-name         # Detected as protocol
 ```
 
 ### Configuration
@@ -236,7 +236,7 @@ bundle:
 ```
 
 Protocols work in:
-- Input arguments: `ace-bundle wfi://task/create`
+- Input arguments: `ace-bundle load wfi://task/create`
 - `context.files` arrays in YAML frontmatter
 - Automatic recursive resolution for nested protocol references
 
