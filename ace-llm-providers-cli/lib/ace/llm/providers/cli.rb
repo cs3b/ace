@@ -23,6 +23,7 @@ module Ace
             # Require each CLI provider client
             providers = %w[
               claude_code_client
+              claude_oai_client
               codex_client
               open_code_client
               codex_oai_client
