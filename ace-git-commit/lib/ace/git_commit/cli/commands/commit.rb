@@ -21,12 +21,6 @@ module Ace
             When no files are specified, all changes are staged.
             When files are provided, only those files are staged and committed.
 
-            Default Command Routing:
-              Unknown arguments are auto-routed to 'commit' - files can be passed directly:
-                ace-git-commit file.rb                   → ace-git-commit commit file.rb
-                ace-git-commit lib/ test/               → ace-git-commit commit lib/ test/
-              No need to type 'commit' explicitly
-
             Configuration:
               Global config:  ~/.ace/git/commit.yml
               Project config: .ace/git/commit.yml
@@ -50,11 +44,13 @@ module Ace
           option :message, type: :string, aliases: %w[-m], desc: "Use provided message directly (no LLM)"
           option :model, type: :string, desc: "Override default LLM model (e.g., glite, gflash)"
           option :only_staged, type: :boolean, aliases: %w[-s], desc: "Commit only currently staged changes"
+          option :staged, type: :boolean, desc: "Alias for --only-staged"
           option :dry_run, type: :boolean, aliases: %w[-n], desc: "Show what would be committed without doing it"
           option :force, type: :boolean, aliases: %w[-f], desc: "Force operation (for future use)"
           option :no_split, type: :boolean, desc: "Force a single commit even when multiple config scopes are detected"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
+          option :version, type: :boolean, desc: "Show version information"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -65,6 +61,10 @@ module Ace
 
             # Remove dry-cli specific keys (args is leftover arguments)
             @options = options.reject { |k, _| k == :files || k == :args }
+            if @options[:version]
+              puts "ace-git-commit #{Ace::GitCommit::VERSION}"
+              return 0
+            end
 
             execute
           end
@@ -103,7 +103,7 @@ module Ace
               message: @options[:message],
               model: @options[:model],
               files: @files,
-              only_staged: @options[:only_staged] || false,
+              only_staged: @options[:only_staged] || @options[:staged] || false,
               dry_run: @options[:dry_run] || false,
               debug: @options[:debug] || false,
               force: @options[:force] || false,
