@@ -20,9 +20,10 @@ module Dry
 
       # Full registry-level help with ALL-CAPS COMMANDS header.
       # Supports grouped commands if the registry defines COMMAND_GROUPS.
+      # Appends EXAMPLES section if the registry defines HELP_EXAMPLES.
       #
       # @param result [Dry::CLI::CommandRegistry::LookupResult] registry lookup result
-      # @param registry [Module, nil] the CLI registry (for group support)
+      # @param registry [Module, nil] the CLI registry (for group and examples support)
       # @return [String] formatted command listing
       def self.call(result, registry: nil)
         max_length, commands, node_names = commands_and_arguments(result)
@@ -30,21 +31,30 @@ module Dry
         # Check for command groups
         groups = resolve_groups(registry)
 
-        if groups && !groups.empty?
-          format_grouped(commands, groups, max_length, node_names)
-        else
-          format_flat(commands, max_length)
-        end
+        output = if groups && !groups.empty?
+                   format_grouped(commands, groups, max_length, node_names)
+                 else
+                   format_flat(commands, max_length)
+                 end
+
+        # Append EXAMPLES section if defined
+        examples = resolve_examples(registry)
+        output += "\n\n#{format_examples(examples)}" if examples
+
+        output
       end
 
       # Concise registry-level help for -h flag.
-      # Always flat (no groups), compact.
+      # Always flat (no groups), compact, with footer hint.
       #
       # @param result [Dry::CLI::CommandRegistry::LookupResult] registry lookup result
+      # @param registry [Module, nil] the CLI registry (for program name detection)
       # @return [String] compact command listing
-      def self.call_concise(result)
+      def self.call_concise(result, registry: nil)
         max_length, commands, _node_names = commands_and_arguments(result)
-        format_flat(commands, max_length, header: "Commands:")
+        output = format_flat(commands, max_length, header: "Commands:")
+        output += "\n\n#{concise_footer(registry)}" if registry
+        output
       end
 
       # Override: return ONLY the first line of a multiline description.
@@ -183,6 +193,53 @@ module Dry
         return nil unless registry.respond_to?(:const_defined?) && registry.const_defined?(:COMMAND_GROUPS)
 
         registry.const_get(:COMMAND_GROUPS)
+      end
+
+      # Resolve HELP_EXAMPLES from a registry module, if defined.
+      #
+      # @param registry [Module, nil] the CLI registry
+      # @return [Array<Array(String, String)>, nil] array of [description, command] pairs
+      def self.resolve_examples(registry)
+        return nil unless registry
+        return nil unless registry.respond_to?(:const_defined?) && registry.const_defined?(:HELP_EXAMPLES)
+
+        registry.const_get(:HELP_EXAMPLES)
+      end
+
+      # Format HELP_EXAMPLES into an EXAMPLES section.
+      #
+      # @param examples [Array<Array(String, String)>] [description, command] pairs
+      # @return [String] formatted EXAMPLES block
+      def self.format_examples(examples)
+        lines = examples.map do |desc, cmd|
+          "  $ #{cmd}  # #{desc}"
+        end
+
+        "EXAMPLES\n#{lines.join("\n")}"
+      end
+
+      # Generate footer hint for concise help.
+      #
+      # @param registry [Module] the CLI registry
+      # @return [String] footer text
+      def self.concise_footer(registry)
+        name = resolve_program_name(registry)
+        "Run '#{name} --help' for more info. Each command has its own --help."
+      end
+
+      # Derive program name from registry module.
+      #
+      # @param registry [Module] the CLI registry
+      # @return [String] the program name (e.g., "ace-task")
+      def self.resolve_program_name(registry)
+        return $PROGRAM_NAME.split("/").last if registry.nil?
+
+        if registry.respond_to?(:const_defined?) && registry.const_defined?(:PROGRAM_NAME)
+          return registry.const_get(:PROGRAM_NAME)
+        end
+
+        # Derive from $0 as fallback
+        $PROGRAM_NAME.split("/").last
       end
     end
   end
