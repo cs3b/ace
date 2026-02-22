@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.562] - 2026-02-22
+
+### Changed
+- **ace-taskflow v0.40.1**: Add release and verify-test-suite to work-on-task sub-phases for complete subtree lifecycle
+- **ace-assign v0.12.13**: Background execution guidance for fork-run in drive workflow; timeout note in split-subtree-root phase template
+
 ## [0.9.561] - 2026-02-22
 
 ### Technical
