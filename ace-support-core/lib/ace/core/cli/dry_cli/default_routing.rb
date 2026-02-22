@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require "set"
+require_relative "help_router"
 
 module Ace
   module Core
@@ -65,15 +66,7 @@ module Ace
             # Handle help explicitly (dry-cli doesn't handle registry-level help)
             # Without this, --help returns exit code 1 because dry-cli's spell_checker
             # is invoked when the registry can't find the command
-            if args.first && HELP_FLAGS.include?(args.first)
-              result = get([])
-              if CONCISE_HELP_FLAGS.include?(args.first)
-                puts Dry::CLI::Usage.call_concise(result)
-              else
-                puts Dry::CLI::Usage.call(result, registry: self)
-              end
-              return 0
-            end
+            return 0 if HelpRouter.handle(args, self)
 
             # If args is empty OR first arg isn't a known command,
             # prepend the default command. This maintains Thor's default_task parity.
