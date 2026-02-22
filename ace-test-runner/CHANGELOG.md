@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-02-22
+
+### Changed
+- Migrate `ace-test` from registry/default-routing to single-command dry-cli entrypoint while preserving no-arg "run all tests" behavior
+- Handle `--version` directly in the test command path for single-command mode
+
+### Technical
+- Remove legacy routing constants/scaffolding from `CLI` module and update CLI routing tests for single-command invocation
+
 ## [0.15.3] - 2026-02-12
 
 ### Fixed
