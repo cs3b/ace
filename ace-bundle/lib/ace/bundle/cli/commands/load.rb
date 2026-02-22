@@ -3,6 +3,7 @@
 require "fileutils"
 require "ace/support/fs"
 require_relative "../../atoms/line_counter"
+require_relative "../../atoms/preset_list_formatter"
 
 module Ace
   module Bundle
@@ -74,6 +75,8 @@ module Ace
           option :timeout, type: :integer, desc: "Command timeout in seconds"
 
           # Standard options (inherited from Base but need explicit definition for dry-cli)
+          option :version, type: :boolean, desc: "Show version information"
+          option :list_presets, type: :boolean, desc: "List available context presets"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -82,6 +85,17 @@ module Ace
             # Handle --help/-h passed as input argument
             if input == "--help" || input == "-h"
               # dry-cli will handle this
+              return
+            end
+
+            if options[:version]
+              puts "ace-bundle #{Ace::Bundle::VERSION}"
+              return
+            end
+
+            if options[:list_presets]
+              presets = Ace::Bundle.list_presets
+              Atoms::PresetListFormatter.format(presets).each { |line| puts line }
               return
             end
 
