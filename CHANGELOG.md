@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.583] - 2026-02-22
+
+### Fixed
+- **ace-review v0.40.5**: Migrate to standard help pattern with explicit `review` subcommand — remove DWIM default routing so no args shows help instead of running review
+
 ## [0.9.582] - 2026-02-22
 
 ### Fixed
