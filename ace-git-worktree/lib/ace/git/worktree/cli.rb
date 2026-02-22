@@ -21,6 +21,9 @@ module Ace
       # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
       module CLI
         extend Dry::CLI::Registry
+        extend Ace::Core::CLI::DryCli::DefaultRouting
+
+        PROGRAM_NAME = "ace-git-worktree"
 
         # Application commands registered in this CLI (single source of truth)
         REGISTERED_COMMANDS = %w[create list switch remove prune config].freeze
@@ -32,25 +35,10 @@ module Ace
         BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
 
         # Auto-derived from REGISTERED + ALIASES + BUILTIN (no manual maintenance needed)
-        # Using Set for O(1) lookup performance
         KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + COMMAND_ALIASES + BUILTIN_COMMANDS).freeze
 
         # Default command - create is the most common action
         DEFAULT_COMMAND = "create"
-
-        # Testable start method with default command routing
-        def self.start(args)
-          # Handle help explicitly (dry-cli doesn't handle registry-level help)
-          if args.first && %w[help --help -h].include?(args.first)
-            puts Dry::CLI::Usage.call(get([]), registry: self)
-            return 0
-          end
-
-          if args.empty? || !KNOWN_COMMANDS.include?(args.first)
-            args = [DEFAULT_COMMAND] + args
-          end
-          Dry::CLI.new(self).call(arguments: args)
-        end
 
         # Register commands (Hanami pattern: CLI::Commands::*)
         register "create", CLI::Commands::Create, aliases: []
