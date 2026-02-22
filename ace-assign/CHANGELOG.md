@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.14] - 2026-02-22
+
+### Added
+- Subtree guard step in drive workflow — driver reviews all fork report files before continuing to next phase
+- Report review instruction in split-subtree-root phase template for fork context
+
 ## [0.12.13] - 2026-02-22
 
 ### Added
