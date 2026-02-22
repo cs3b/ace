@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-02-22
+
+### Fixed
+- Include built-in help/version commands in KNOWN_COMMAND_NAMES for correct array option preprocessing
+
 ## [0.41.0] - 2026-02-22
 
 ### Changed
