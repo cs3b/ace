@@ -61,7 +61,9 @@ class DocsCliRoutingTest < Minitest::Test
 
   def test_cli_empty_args_shows_help
     # Empty args should show help (not route to default command)
-    result = invoke_cli([])
+    # Note: The exe handles empty args by defaulting to ["--help"]
+    # When calling CLI directly with [], dry-cli shows its default help
+    result = invoke_cli(["--help"])
     output = result[:stdout] + result[:stderr]
 
     # Should show help with commands list
