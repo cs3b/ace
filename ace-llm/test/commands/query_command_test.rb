@@ -37,7 +37,7 @@ class QueryCommandTest < AceLlmTestCase
       )
   end
 
-  # Helper method to invoke CLI with routing logic
+  # Helper method to invoke CLI
   def invoke_llm_cli(args)
     invoke_cli_stdout(Ace::LLM::CLI, args)
   end
@@ -54,16 +54,16 @@ class QueryCommandTest < AceLlmTestCase
     stub_llm_api_success
     with_real_config do
       # This should NOT show help, but should attempt to execute
-      result = invoke_llm_cli_result(["--model", "google:gemini-2.5-flash", "What is Ruby?"])
+      result = invoke_llm_cli_result(["query", "--model", "google:gemini-2.5-flash", "What is Ruby?"])
       # Should show something other than just help/usage - either output or provider info
       # The output may include provider aliases or other info, but it shouldn't be the full help
-      refute_match(/^Usage: ace-llm PROVIDER\[:MODEL\]/, result)
+      refute_match(/^Usage: ace-llm query/, result)
     end
   end
 
   def test_model_flag_with_provider_model_format_no_prompt_shows_help
     with_real_config do
-      output = invoke_llm_cli(["--model", "google:gemini-2.5-flash"])
+      output = invoke_llm_cli(["query", "--model", "google:gemini-2.5-flash"])
       # Should show provider help since no prompt
       assert_match(/alias|Usage:/i, output)
     end
@@ -73,7 +73,7 @@ class QueryCommandTest < AceLlmTestCase
     with_real_config do
       # When positional arg "test" is present, it's interpreted as provider_model
       # and --model is used for model override. Without prompt, shows provider help.
-      output = invoke_llm_cli_result(["--model", "invalid:provider", "test"])
+      output = invoke_llm_cli_result(["query", "--model", "invalid:provider", "test"])
       # Should show aliases for the "test" provider (provider help)
       assert_match(/Available aliases/i, output)
     end
@@ -83,35 +83,35 @@ class QueryCommandTest < AceLlmTestCase
     with_real_config do
       # When positional arg "test" is present, it's interpreted as provider_model
       # and --model is used for model override. Without prompt, shows provider help.
-      output = invoke_llm_cli_result(["--model", "unknown-model", "test"])
+      output = invoke_llm_cli_result(["query", "--model", "unknown-model", "test"])
       # Should show aliases for the "test" provider (provider help)
       assert_match(/Available aliases/i, output)
     end
   end
 
-  # --- Backward Compatibility Tests ---
+  # --- Positional Provider Tests ---
 
   def test_positional_provider_takes_precedence
     stub_llm_api_success
     with_real_config do
-      output = invoke_llm_cli_result(["google", "test", "--model", "gemini-2.0-flash-lite"])
+      output = invoke_llm_cli_result(["query", "google", "test", "--model", "gemini-2.0-flash-lite"])
       # Should not show help - CLI routing should work and return API response (mocked)
-      refute_match(/^Usage: ace-llm PROVIDER\[:MODEL\]/, output)
+      refute_match(/^Usage: ace-llm query/, output)
     end
   end
 
   def test_positional_provider_model_still_works
     stub_llm_api_success
     with_real_config do
-      output = invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?"])
+      output = invoke_llm_cli_result(["query", "google:gemini-2.5-flash", "What is Ruby?"])
       # Should not show help - CLI routing should work and return API response (mocked)
-      refute_match(/^Usage: ace-llm PROVIDER\[:MODEL\]/, output)
+      refute_match(/^Usage: ace-llm query/, output)
     end
   end
 
-  def test_positional_provider_only_still_works
+  def test_positional_provider_only_shows_help
     with_real_config do
-      output = invoke_llm_cli(["google"])
+      output = invoke_llm_cli(["query", "google"])
       # Should show aliases/help for the provider
       assert_match(/alias|Usage:/i, output)
     end
