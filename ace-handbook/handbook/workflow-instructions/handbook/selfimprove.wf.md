@@ -238,4 +238,4 @@ After user approval:
 
 - [Manage Workflow Instructions](wfi://handbook/manage-workflows) - Creating and updating workflows
 - [Manage Guides](wfi://handbook/manage-guides) - Creating and updating guides
-- [Create Retro](skill://ace_create-retro) - Documenting learnings from incidents
+- [Create Retro](skill://ace-create-retro) - Documenting learnings from incidents
