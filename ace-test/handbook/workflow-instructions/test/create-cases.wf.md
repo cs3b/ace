@@ -371,7 +371,7 @@ end
 
    ```bash
    # Get current release path
-   ace-taskflow release --path
+   ace-release --path
    ```
 
    ```
