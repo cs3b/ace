@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.4] - 2026-02-22
+
+### Changed
+- Migrate ace-task CLI to standard help pattern with HelpCommand registration
+- Remove DefaultRouting extension and DWIM command routing from TaskCLI
+- Move cache clearing from CLI.start override to exe/ace-task wrapper
+- Add no-args behavior to show help instead of running default command
+
 ## [0.40.3] - 2026-02-22
 
 ### Changed

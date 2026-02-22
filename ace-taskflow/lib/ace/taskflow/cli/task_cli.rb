@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../version"
-require_relative "../molecules/task_loader"
-require_relative "../molecules/release_resolver"
 
 # Reuse existing command classes
 require_relative "commands/task"
@@ -30,27 +27,33 @@ module Ace
     # flat `ace-task <command>` invocations.
     module TaskCLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
       PROGRAM_NAME = "ace-task"
 
-      REGISTERED_COMMANDS = %w[
-        list show create start done undone defer undefer move update
-        add-dependency remove-dependency
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["list", "List tasks in current release"],
+        ["show", "Show task details"],
+        ["create", "Create a new task"],
+        ["start", "Mark task as in-progress"],
+        ["done", "Mark task as complete"],
+        ["undone", "Reopen completed task"],
+        ["defer", "Defer task to future release"],
+        ["undefer", "Restore deferred task"],
+        ["move", "Move or reorganize task"],
+        ["update", "Update task metadata"],
+        ["add-dependency", "Add dependency to task"],
+        ["remove-dependency", "Remove dependency from task"]
       ].freeze
 
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      DEFAULT_COMMAND = "list"
-
       HELP_EXAMPLES = [
-        ["List pending tasks", "ace-task"],
-        ["Show a specific task", "ace-task show 148"],
-        ["Create a new task", "ace-task create \"Add caching layer\""],
-        ["Mark task as done", "ace-task done 114"],
-        ["Start working on a task", "ace-task start 148"],
+        "ace-task list",
+        "ace-task show 148",
+        "ace-task create \"Fix login bug\"",
+        "ace-task start 148",
+        "ace-task done 148",
+        "ace-task move 148 --child-of 100",
+        "ace-task add-dependency 148 --on 147"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
@@ -75,11 +78,23 @@ module Ace
       register "version", version_cmd
       register "--version", version_cmd
 
-      # Clear caches before each invocation
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Taskflow::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
+
+      # Entry point for CLI invocation (used by tests and exe/)
+      #
+      # @param args [Array<String>] Command-line arguments
+      # @return [Integer] Exit code (0 for success, non-zero for errors)
       def self.start(args)
-        Ace::Taskflow::Molecules::TaskLoader.clear_cache!
-        Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
-        super
+        Dry::CLI.new(self).call(arguments: args)
       end
     end
   end
