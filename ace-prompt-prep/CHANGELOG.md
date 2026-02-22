@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.5] - 2026-02-22
+
+### Changed
+- Migrate to standard dry-cli help pattern (Task 278.28)
+  - Remove DefaultRouting pattern in favor of explicit HelpCommand registration
+  - No args now shows help instead of running default command
+  - Update tests to use Dry::CLI.new().call() pattern
+
 ## [0.16.3] - 2026-02-12
 
 ### Added

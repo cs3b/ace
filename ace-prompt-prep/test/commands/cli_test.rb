@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "dry/cli"
 
 class CLITest < Minitest::Test
   def setup
@@ -14,12 +15,12 @@ class CLITest < Minitest::Test
     FileUtils.rm_rf(@tmpdir)
   end
 
-  # Helper method to invoke CLI with routing logic
+  # Helper method to invoke CLI using Dry::CLI pattern
   # Note: dry-cli calls exit(0) for --help, so we catch SystemExit
   def invoke_prompt_cli(args)
     stdout, stderr = capture_io do
       begin
-        @_cli_result = Ace::PromptPrep::CLI.start(args)
+        @_cli_result = Dry::CLI.new(Ace::PromptPrep::CLI).call(arguments: args)
       rescue SystemExit => e
         @_cli_result = e.status
       rescue Ace::Core::CLI::Error => e
@@ -51,21 +52,10 @@ class CLITest < Minitest::Test
   end
 
   def test_shows_help_when_no_args
-    # Stub PromptReader to simulate file not found error
-    # This avoids filesystem/git dependencies and ensures test isolation
-    error_response = {
-      content: nil,
-      path: "/fake/path/prompts/the-prompt.md",
-      success: false,
-      error: "Prompt file not found: /fake/path/prompts/the-prompt.md"
-    }
+    result = invoke_prompt_cli([])
 
-    Ace::PromptPrep::Molecules::PromptReader.stub(:call, ->(**kwargs) { error_response }) do
-      result = invoke_prompt_cli([])
-
-      # CLI routes to default 'process' command, which raises Ace::Core::CLI::Error when prompt file not found
-      assert_match(/Prompt file not found/i, result[:stdout] + result[:stderr])
-    end
+    # No args now shows help instead of running default command
+    assert_match(/Commands:|COMMANDS/i, result[:stdout] + result[:stderr])
   end
 
   def test_help_command_shows_available_commands
@@ -90,17 +80,15 @@ class CLITest < Minitest::Test
     assert_match(/setup/i, result[:stdout] + result[:stderr])
   end
 
-  # Default command routing tests
-  def test_process_is_default_command
+  # Process command tests
+  def test_process_command_runs_with_file
     # Create a test prompt file
     File.write(@prompt_file, "# Test prompt\n\nContent here")
 
-    # Invoke CLI without explicit command name
-    # Should route to process command (default)
-    result = invoke_prompt_cli([])
+    # Invoke process command explicitly
+    result = invoke_prompt_cli(["process"])
 
-    # When no args, dry-cli shows help. Verify CLI didn't crash
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Verify CLI didn't crash
     refute_nil result[:result]
   end
 
@@ -118,7 +106,7 @@ class CLITest < Minitest::Test
     # Test that --no-context flag is accepted
     result = invoke_prompt_cli(["process", "--no-context"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: dry-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -135,7 +123,7 @@ class CLITest < Minitest::Test
     # Test that --enhance flag is accepted
     result = invoke_prompt_cli(["process", "--enhance"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: dry-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -143,7 +131,7 @@ class CLITest < Minitest::Test
     # Test that --no-enhance flag is accepted
     result = invoke_prompt_cli(["process", "--no-enhance"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: dry-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -151,7 +139,7 @@ class CLITest < Minitest::Test
     # Test that --model flag is accepted
     result = invoke_prompt_cli(["process", "--model", "gpt-4"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: dry-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -192,7 +180,7 @@ class CLITest < Minitest::Test
     # Test that --output flag is accepted
     result = invoke_prompt_cli(["process", "--output", "/tmp/test.md"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: dry-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 
@@ -200,7 +188,7 @@ class CLITest < Minitest::Test
     # Test that -o flag is accepted
     result = invoke_prompt_cli(["process", "-o", "/tmp/test.md"])
 
-    # Note: dry-cli returns a Set, not the command's exit code
+    # Note: dry-cli returns a Set, not the exit code
     refute_nil result[:result]
   end
 end
