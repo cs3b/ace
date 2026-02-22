@@ -64,7 +64,7 @@ module Ace
       def self.start(args)
         # Handle help explicitly (dry-cli doesn't handle registry-level help)
         if args.first && %w[help --help -h].include?(args.first)
-          puts Dry::CLI::Usage.call(get([]))
+          puts Dry::CLI::Usage.call(get([]), registry: self)
           return 0
         end
 
@@ -186,7 +186,7 @@ module Ace
       register "feedback list", Commands::FeedbackSubcommands::List
       register "feedback show", Commands::FeedbackSubcommands::Show
       register "feedback verify", Commands::FeedbackSubcommands::Verify
-      register "feedback skip", Commands::FeedbackSubcommands::Skip
+      register "feedback skip", Commands::FeedbackSubcommands::Skip, hidden: true
       register "feedback resolve", Commands::FeedbackSubcommands::Resolve
 
       # Register version command

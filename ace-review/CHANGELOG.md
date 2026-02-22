@@ -1514,3 +1514,10 @@ To migrate from the old code-review system:
 2. Copy `.coding-agent/code-review.yml` to `.ace/review/config.yml`
 3. Update workflow files to use `ace-review code` instead of `code-review`
 4. Synthesis is now handled via workflow instructions only (no CLI command)
+
+
+## [0.40.4] - 2026-02-22
+
+### Fixed
+- Hidden deprecated 'feedback skip' subcommand from help (use 'verify --skip' instead)
+- Standardized quiet, verbose, debug option descriptions to canonical strings
