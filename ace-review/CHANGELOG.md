@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.2] - 2026-02-22
+
+### Fixed
+- Add flag variants (`--help`, `-h`, `--version`) to KNOWN_COMMAND_NAMES for preprocessing safety
+
 ## [0.41.1] - 2026-02-22
 
 ### Fixed
