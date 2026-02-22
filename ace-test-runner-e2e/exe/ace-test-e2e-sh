@@ -9,6 +9,35 @@
 #     git add . && git commit -m "test"
 #   SANDBOX
 
+# Handle --help/-h before shifting arguments
+if ARGV.first && %w[--help -h].include?(ARGV.first)
+  puts <<~HELP
+    NAME
+      ace-test-e2e-sh - Execute commands within E2E test sandbox
+
+    USAGE
+      ace-test-e2e-sh <test-dir> [command...]
+
+    ARGUMENTS
+      test-dir                          Sandbox directory path (must be under .cache/ace-test-e2e/)
+      command                           Command to execute inside the sandbox
+
+    OPTIONS
+      --help, -h                        Show this help
+
+    EXAMPLES
+      $ ace-test-e2e-sh /path/to/sandbox bash
+      $ ace-test-e2e-sh /path/to/sandbox git add . && git commit -m "test"
+  HELP
+  exit 0
+end
+
+if ARGV.first == "--version"
+  require_relative "../lib/ace/test/end_to_end_runner/version"
+  puts "ace-test-e2e-sh #{Ace::Test::EndToEndRunner::VERSION}"
+  exit 0
+end
+
 test_dir = ARGV.shift
 
 unless test_dir
