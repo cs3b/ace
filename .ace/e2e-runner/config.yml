@@ -57,7 +57,7 @@ providers:
     - codexoss
     - opencode
     - pi
-  # Skill-aware CLI providers (use /ace_e2e_run invocation)
+  # Skill-aware CLI providers (use /ace-e2e-run invocation)
   skill_aware:
     - claude
   # Required CLI args per provider (merged with user-provided --cli-args)
