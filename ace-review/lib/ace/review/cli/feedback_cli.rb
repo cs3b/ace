@@ -21,24 +21,25 @@ module Ace
     # flat `ace-review-feedback <command>` invocations.
     module FeedbackCLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
       PROGRAM_NAME = "ace-review-feedback"
 
-      REGISTERED_COMMANDS = %w[list create show verify skip resolve].freeze
-
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      DEFAULT_COMMAND = "list"
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["list", "List feedback items from a review"],
+        ["create", "Create feedback from review output"],
+        ["show", "Show feedback details"],
+        ["verify", "Verify feedback as valid or invalid"],
+        ["skip", "Skip a feedback item"],
+        ["resolve", "Resolve a feedback item"]
+      ].freeze
 
       HELP_EXAMPLES = [
-        ["List feedback items", "ace-review-feedback"],
-        ["Create feedback from review", "ace-review-feedback create"],
-        ["Show feedback details", "ace-review-feedback show abc123"],
-        ["Verify feedback as valid", "ace-review-feedback verify abc123 --valid"],
-        ["Resolve feedback item", "ace-review-feedback resolve abc123 --resolution 'Fixed in PR #42'"],
+        "ace-review-feedback list",
+        "ace-review-feedback show abc123",
+        "ace-review-feedback create --file report.md",
+        "ace-review-feedback verify 42",
+        "ace-review-feedback resolve 42"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
@@ -56,6 +57,17 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Review::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
     end
   end
 end

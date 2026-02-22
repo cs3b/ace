@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-02-22
+
+### Changed
+- Migrate ace-review-feedback CLI to standard help pattern (task 278.13)
+- Remove DWIM default routing — no args now shows help instead of running list command
+
 ## [0.40.5] - 2026-02-22
 
 ### Fixed
