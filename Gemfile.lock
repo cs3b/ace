@@ -208,7 +208,7 @@ PATH
 PATH
   remote: ace-support-models
   specs:
-    ace-support-models (0.5.2)
+    ace-support-models (0.6.0)
       ace-support-core (~> 0.10)
       dry-cli (~> 1.1)
       faraday (~> 2.0)
