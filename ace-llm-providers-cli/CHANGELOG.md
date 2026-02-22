@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-02-22
+
+### Added
+- New `ClaudeOaiClient` provider for Claude over Anthropic-compatible APIs (Z.ai, OpenRouter)
+- Provider config `claudeoai.yml` with Z.ai backend targeting Anthropic-compatible endpoint (`/api/anthropic`)
+- Backend env injection: sets `ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, and clears `ANTHROPIC_API_KEY` on subprocess
+- Skill command rewriting support via `CommandRewriter` and `SkillNameReader`
+- Tests for backend env injection, command building, model splitting, availability validation, and JSON response parsing
+
 ## [0.17.1] - 2026-02-22
 
 ### Changed
