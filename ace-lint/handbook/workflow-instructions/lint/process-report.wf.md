@@ -65,7 +65,7 @@ Parse a lint report file and create structured tasks for issues requiring manual
 
    **For grouped issues (multiple similar errors):**
    ```bash
-   ace-taskflow idea create --llm-enhance "Fix [N] [rule-type] lint errors in [component]
+   ace-idea create --llm-enhance "Fix [N] [rule-type] lint errors in [component]
 
    Affected files:
    - file1.md (line 10, 25)
@@ -76,7 +76,7 @@ Parse a lint report file and create structured tasks for issues requiring manual
 
    **For complex single issues:**
    ```bash
-   ace-taskflow idea create --llm-enhance "Fix [rule-type] in [file]
+   ace-idea create --llm-enhance "Fix [rule-type] in [file]
 
    Error: [error message]
    Location: [file:line]
