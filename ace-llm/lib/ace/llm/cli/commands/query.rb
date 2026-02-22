@@ -29,9 +29,9 @@ module Ace
         argument :prompt_text, required: false, desc: "Prompt text (can also use --prompt flag)"
 
         # Standard options
-        option :quiet, type: :boolean, default: false, desc: "Suppress config summary output"
-        option :verbose, type: :boolean, default: false, desc: "Enable verbose output"
-        option :debug, type: :boolean, default: false, desc: "Enable debug output"
+        option :quiet, type: :boolean, default: false, desc: "Suppress non-essential output"
+        option :verbose, type: :boolean, default: false, desc: "Show verbose output"
+        option :debug, type: :boolean, default: false, desc: "Show debug output"
 
         # Query-specific options
         option :output, type: :string, aliases: %w[o], desc: "Output file path"

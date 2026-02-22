@@ -20,9 +20,9 @@ module Ace
         desc "List available LLM providers"
 
         # Standard options
-        option :quiet, type: :boolean, default: false, desc: "Suppress extra output"
-        option :verbose, type: :boolean, default: false, desc: "Enable verbose output"
-        option :debug, type: :boolean, default: false, desc: "Enable debug output"
+        option :quiet, type: :boolean, default: false, desc: "Suppress non-essential output"
+        option :verbose, type: :boolean, default: false, desc: "Show verbose output"
+        option :debug, type: :boolean, default: false, desc: "Show debug output"
 
         # Execute the list-providers command
         #

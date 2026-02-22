@@ -363,3 +363,9 @@ None
 - LLM alias resolution for quick access to models
 - Cost tracking and output formatting
 - ATOM architecture pattern (Atoms, Molecules, Organisms, Commands)
+
+
+## [0.22.4] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings
