@@ -267,3 +267,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--output` option to write to file
 - ATOM architecture: atoms, molecules, organisms
 - Comprehensive test suite with edge cases
+
+
+## [0.16.4] - 2026-02-22
+
+### Fixed
+- Stripped duplicate command name prefixes from example strings
+- Standardized quiet, verbose, debug option descriptions to canonical strings
