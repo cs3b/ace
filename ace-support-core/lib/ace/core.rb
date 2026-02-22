@@ -18,7 +18,9 @@ require_relative "core/config_discovery"
 require_relative "core/cli/error"
 require_relative "core/cli/dry_cli/base"
 require_relative "core/cli/dry_cli/config_summary_mixin"
+require_relative "core/cli/dry_cli/help_command"
 require_relative "core/cli/dry_cli/default_routing"
+require_relative "core/cli/dry_cli/help_router"
 require_relative "core/cli/dry_cli/version_command"
 
 module Ace
