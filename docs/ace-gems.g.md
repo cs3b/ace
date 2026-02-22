@@ -24,9 +24,9 @@ This guide covers patterns for developing ace-* gems: CLI setup with dry-cli, co
 All CLI gems use dry-cli ([ADR-023](decisions/ADR-023-dry-cli-framework.md)):
 
 - **CLI Base Module**: `Ace::Core::CLI::DryCli::Base` provides helper methods
-- **Registry Pattern**: Use `extend Dry::CLI::Registry` and register commands
-- **CLI.start Method**: Testable `CLI.start(args)` with default command routing
-- **Exit Codes**: Commands return status codes, exe/ handles exit
+- **Two Patterns**: Multi-command (Registry) or single-command (direct class)
+- **Help Command**: Use `Ace::Core::CLI::DryCli::HelpCommand.build()` for multi-command CLIs
+- **Exit Codes**: Commands raise `Ace::Core::CLI::Error`, exe/ handles exit
 - **Reserved Flags**: `-v`=verbose, `-q`=quiet, `-d`=debug, `-h`=help, `-o`=output
 - **Version Command**: Use `Ace::Core::CLI::DryCli::VersionCommand.build()`
 
@@ -150,9 +150,9 @@ end
 - `--version`: Show version
 - `--help/-h`: Show help
 
-**Exit codes**: Commands return status codes (0=success, 1=error). Never call `exit` in commands.
+**Exit codes**: Commands raise `Ace::Core::CLI::Error` for non-zero exit. Never call `exit` in commands.
 
-See [cli-dry-cli.g.md](../ace-handbook/handbook/guides/cli-dry-cli.g.md) for Registry pattern, KNOWN_COMMANDS, and multi-command CLIs.
+See [cli-dry-cli.g.md](../ace-handbook/handbook/guides/cli-dry-cli.g.md) for multi-command and single-command CLI patterns.
 
 ## Mono-Repo Development
 
