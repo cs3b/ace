@@ -10,6 +10,7 @@ describe "Provider Registration" do
 
   it "defines all provider clients" do
     assert defined?(Ace::LLM::Providers::CLI::ClaudeCodeClient), "ClaudeCodeClient should be defined"
+    assert defined?(Ace::LLM::Providers::CLI::ClaudeOaiClient), "ClaudeOaiClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::CodexClient), "CodexClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::OpenCodeClient), "OpenCodeClient should be defined"
     assert defined?(Ace::LLM::Providers::CLI::CodexOaiClient), "CodexOaiClient should be defined"
@@ -17,6 +18,7 @@ describe "Provider Registration" do
 
   it "providers have correct provider_name" do
     assert_equal "claude", Ace::LLM::Providers::CLI::ClaudeCodeClient.provider_name
+    assert_equal "claudeoai", Ace::LLM::Providers::CLI::ClaudeOaiClient.provider_name
     assert_equal "codex", Ace::LLM::Providers::CLI::CodexClient.provider_name
     assert_equal "opencode", Ace::LLM::Providers::CLI::OpenCodeClient.provider_name
     assert_equal "codexoai", Ace::LLM::Providers::CLI::CodexOaiClient.provider_name
@@ -35,5 +37,8 @@ describe "Provider Registration" do
 
     oai = Ace::LLM::Providers::CLI::CodexOaiClient.new
     assert_equal false, oai.needs_credentials?
+
+    coai = Ace::LLM::Providers::CLI::ClaudeOaiClient.new
+    assert_equal false, coai.needs_credentials?
   end
 end

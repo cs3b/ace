@@ -127,4 +127,21 @@ describe "CLI Providers" do
       assert models.any? { |m| m[:id] == "zai/glm-5" }
     end
   end
+
+  describe "ClaudeOaiClient" do
+    before do
+      @client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new
+    end
+
+    it "initializes with default model" do
+      model = @client.instance_variable_get(:@model)
+      assert model # Just check it has a model
+    end
+
+    it "lists models" do
+      models = @client.list_models
+      assert_kind_of Array, models
+      assert models.any? { |m| m[:id] == "zai/glm-5" }
+    end
+  end
 end
