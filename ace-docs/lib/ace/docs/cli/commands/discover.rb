@@ -30,17 +30,13 @@ module Ace
           DESC
 
           example [
-            "ace-docs discover                    # List all managed documents",
-            "# Output shows count and file paths with types",
-            "# Found 15 managed documents:",
-            "#   docs/architecture.md (architecture)",
-            "#   ace-handbook/handbook/guides/testing.g.md (guide)"
+            "                             # List all managed documents"
           ]
 
           # Standard options
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Enable verbose output"
-          option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(**options)
             registry = Ace::Docs::Organisms::DocumentRegistry.new
