@@ -56,10 +56,7 @@ module Ace
         #   result = Ace::Git::Secrets::CLI.start(["scan", "--verbose"])
         def self.start(args = ARGV)
           # Handle help explicitly (dry-cli doesn't handle registry-level help)
-          if args.first && %w[help --help -h].include?(args.first)
-            puts Dry::CLI::Usage.call(get([]), registry: self)
-            return 0
-          end
+          return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
 
           # Preload config before dry-cli dispatches to commands
           Ace::Git::Secrets.config
