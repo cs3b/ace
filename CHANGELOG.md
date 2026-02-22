@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.570] - 2026-02-22
+
+### Changed
+- **ace-search v0.19.6**: Migrate CLI from registry/default-routing to single-command entrypoint; no-arg invocation now shows help instead of error
+- **ace-search v0.19.6**: Handle `--version` directly in search command path for single-command mode
+
+### Technical
+- **ace-taskflow v0.40.2**: Update workflow instructions to use `ace-search "pattern"` single-command syntax
+- **ace-test-runner-e2e v0.16.20**: Update e2e-testing guide to use `ace-search "pattern"` single-command syntax
+
 ## [0.9.569] - 2026-02-22
 
 ### Changed
