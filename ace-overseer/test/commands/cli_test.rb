@@ -1,24 +1,69 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
+require "dry/cli"
 
 class CliTest < AceOverseerTestCase
-  def test_help_lists_registered_commands
-    output = capture_io do
-      Ace::Overseer::CLI.start(["--help"])
+  # Helper to invoke CLI using the Dry::CLI pattern
+  def invoke_cli(args)
+    stdout, stderr = capture_io do
+      begin
+        @_cli_result = Dry::CLI.new(Ace::Overseer::CLI).call(arguments: args)
+      rescue SystemExit => e
+        @_cli_result = e.status
+      rescue Ace::Core::CLI::Error => e
+        $stderr.puts e.message
+        @_cli_result = e.exit_code
+      end
     end
 
-    assert_includes output.first, "work-on"
-    assert_includes output.first, "status"
-    assert_includes output.first, "prune"
+    {
+      stdout: stdout,
+      stderr: stderr,
+      result: @_cli_result
+    }
+  end
+
+  def test_help_lists_registered_commands
+    result = invoke_cli(["--help"])
+    output = result[:stdout] + result[:stderr]
+
+    assert_includes output, "work-on"
+    assert_includes output, "status"
+    assert_includes output, "prune"
+  end
+
+  def test_help_with_short_flag
+    result = invoke_cli(["-h"])
+    output = result[:stdout] + result[:stderr]
+
+    assert_includes output, "work-on"
+    assert_includes output, "status"
+    assert_includes output, "prune"
   end
 
   def test_version_command_prints_version
-    output = capture_io do
-      Ace::Overseer::CLI.start(["version"])
-    end
+    result = invoke_cli(["version"])
+    output = result[:stdout] + result[:stderr]
 
-    assert_includes output.first, "ace-overseer"
-    assert_includes output.first, Ace::Overseer::VERSION
+    assert_includes output, "ace-overseer"
+    assert_includes output, Ace::Overseer::VERSION
+  end
+
+  def test_version_with_long_flag
+    result = invoke_cli(["--version"])
+    output = result[:stdout] + result[:stderr]
+
+    assert_includes output, "ace-overseer"
+    assert_includes output, Ace::Overseer::VERSION
+  end
+
+  def test_help_shows_examples
+    result = invoke_cli(["--help"])
+    output = result[:stdout] + result[:stderr]
+
+    assert_includes output, "ace-overseer work-on"
+    assert_includes output, "ace-overseer status"
+    assert_includes output, "ace-overseer prune"
   end
 end
