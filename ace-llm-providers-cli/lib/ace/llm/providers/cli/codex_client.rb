@@ -7,6 +7,7 @@ require "shellwords"
 require_relative "cli_args_support"
 require_relative "atoms/command_rewriter"
 require_relative "atoms/command_formatters"
+require_relative "atoms/worktree_dir_resolver"
 require_relative "molecules/skill_name_reader"
 
 module Ace
@@ -155,6 +156,11 @@ module Ace
 
             # Note: Codex exec doesn't support direct system prompts or temperature/max_tokens
             # These would need to be incorporated into the prompt itself
+
+            # Add writable dir for git worktree metadata
+            if (git_dir = Atoms::WorktreeDirResolver.call)
+              cmd << "--add-dir" << git_dir
+            end
 
             # User CLI args last so they take precedence (last-wins in most CLIs)
             cmd.concat(normalized_cli_args(options))
