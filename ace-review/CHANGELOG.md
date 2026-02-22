@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.5] - 2026-02-22
+
+### Fixed
+- Migrate to standard help pattern with explicit `review` subcommand
+- Remove DWIM default routing — no args now shows help instead of running review
+
 ## [0.40.3] - 2026-02-22
 
 ### Changed
