@@ -12,7 +12,7 @@ module Ace
 
             desc "Show current configuration"
 
-            option :verbose, type: :boolean, aliases: ["-v"], desc: "Show additional config details"
+            option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
 
             example [
               "           # Show basic config",
