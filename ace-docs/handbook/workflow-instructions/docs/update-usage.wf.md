@@ -698,7 +698,7 @@ Before completing updates, verify:
 
 ## Usage Example
 
-> "Update the usage documentation for ace-taskflow retro commands based on user feedback that the examples are unclear"
+> "Update the usage documentation for ace-retro commands based on user feedback that the examples are unclear"
 
 **Expected Workflow:**
 1. Analyze feedback to identify specific issues
