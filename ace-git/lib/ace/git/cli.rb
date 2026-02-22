@@ -53,14 +53,13 @@ module Ace
       #   ace-git status                   # Runs status command
       #   ace-git branch                   # Runs branch command
       def self.start(args)
+        # Handle help explicitly
+        return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
+
         # Handle special routing for git ranges
         # If args is empty, route to default command
         if args.empty?
           args = [DEFAULT_COMMAND] + args
-        # Explicit help routes to usage output
-        elsif %w[help --help -h].include?(args.first)
-          puts Dry::CLI::Usage.call(get([]), registry: self)
-          return
         # If first arg looks like a git range, route to diff
         elsif git_range_pattern?(args.first)
           args = [DEFAULT_COMMAND] + args
