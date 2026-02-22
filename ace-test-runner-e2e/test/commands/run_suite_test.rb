@@ -69,8 +69,9 @@ class RunSuiteTest < Minitest::Test
   def test_suite_registered_in_cli
     cli = Ace::Test::EndToEndRunner::CLI
 
-    # Check that 'suite' command is registered
-    assert Ace::Test::EndToEndRunner::CLI::REGISTERED_COMMANDS.include?("suite")
+    # REGISTERED_COMMANDS is now an array of [name, description] pairs
+    command_names = cli::REGISTERED_COMMANDS.map(&:first)
+    assert_includes command_names, "suite"
   end
 
   def test_call_accepts_only_failures_option

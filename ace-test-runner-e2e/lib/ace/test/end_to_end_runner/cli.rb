@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../end_to_end_runner"
 
@@ -12,45 +11,21 @@ module Ace
       module CLI
         extend Dry::CLI::Registry
 
-        # Application commands registered in this CLI
-        REGISTERED_COMMANDS = %w[run suite setup].freeze
+        PROGRAM_NAME = "ace-test-e2e"
 
-        # dry-cli built-in commands
-        BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+        REGISTERED_COMMANDS = [
+          ["run", "Run E2E test scenario"],
+          ["suite", "Run all E2E test suites"],
+          ["setup", "Setup E2E test sandbox"]
+        ].freeze
 
-        # All known commands for default routing
-        KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-        # Default command when first argument is not a known command
-        DEFAULT_COMMAND = "run"
-
-        # Start the CLI with default command routing
-        #
-        # @param args [Array<String>] Command-line arguments
-        # @return [Integer] Exit code
-        def self.start(args)
-          # Handle help explicitly (dry-cli doesn't handle registry-level help)
-          return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
-
-          # If first argument isn't a known command, prepend default
-          if args.any? && !known_command?(args.first)
-            args = [DEFAULT_COMMAND] + args
-          end
-
-          Dry::CLI.new(self).call(arguments: args)
-        end
-
-        # Check if argument is a known command
-        #
-        # @param arg [String] First argument to check
-        # @return [Boolean]
-        def self.known_command?(arg)
-          return false if arg.nil?
-          return false if arg.include?("/") || arg.start_with?(".")
-          return false if arg.start_with?("-")
-
-          KNOWN_COMMANDS.include?(arg)
-        end
+        HELP_EXAMPLES = [
+          "ace-test-e2e run ace-lint TS-LINT-001",
+          "ace-test-e2e run ace-lint TS-LINT-001 --dry-run",
+          "ace-test-e2e run ace-lint TS-LINT-001 --test-cases TC-001",
+          "ace-test-e2e suite",
+          "ace-test-e2e setup ace-lint TS-LINT-001"
+        ].freeze
 
         # Register the run command
         register "run", Commands::RunTest
@@ -68,6 +43,17 @@ module Ace
         )
         register "version", version_cmd
         register "--version", version_cmd
+
+        # Register help command
+        help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+          program_name: PROGRAM_NAME,
+          version: Ace::Test::EndToEndRunner::VERSION,
+          commands: REGISTERED_COMMANDS,
+          examples: HELP_EXAMPLES
+        )
+        register "help", help_cmd
+        register "--help", help_cmd
+        register "-h", help_cmd
       end
     end
   end
