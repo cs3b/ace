@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.568] - 2026-02-22
+
+### Added
+- **ace-llm-providers-cli v0.17.0**: New `CodexOaiClient` multi-backend provider that wraps `codex` CLI to target OpenAI-compatible endpoints (Z.ai, DeepSeek, etc.) via dynamic `-c` flag overrides
+
+### Removed
+- **ace-llm-providers-cli v0.17.0**: Remove broken `CodexOSSClient` provider that called non-existent `codex-oss` binary
+
+## [0.9.567] - 2026-02-22
+
+### Changed
+- **ace-search v0.19.6**: Migrate to single-command CLI entrypoint (`ace-search "pattern"`), add command-level `--version`, and normalize no-arg invocation to help output.
+
+### Technical
+- **ace-search v0.19.6**: Update workflow/guide references from `ace-search search "..."` to `ace-search "..."`; refresh CLI routing/integration tests for single-command behavior.
+
 ## [0.9.566] - 2026-02-22
 
 ### Fixed
