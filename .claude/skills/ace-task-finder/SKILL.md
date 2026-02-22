@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-taskflow
 ---
 
-Execute `ace-taskflow tasks "$@"` to find tasks
+Execute `ace-task list "$@"` to find tasks
