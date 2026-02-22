@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 
 require_relative "version"
 require_relative "cli/commands/create"
@@ -21,24 +20,25 @@ module Ace
       # This follows the Hanami pattern with all commands in CLI::Commands:: namespace.
       module CLI
         extend Dry::CLI::Registry
-        extend Ace::Core::CLI::DryCli::DefaultRouting
 
         PROGRAM_NAME = "ace-git-worktree"
 
-        # Application commands registered in this CLI (single source of truth)
-        REGISTERED_COMMANDS = %w[create list switch remove prune config].freeze
+        REGISTERED_COMMANDS = [
+          ["create", "Create a new worktree for task, PR, or branch"],
+          ["list", "List active worktrees with optional task metadata"],
+          ["switch", "Resolve a worktree path for cd navigation"],
+          ["remove", "Remove a worktree by task, branch, or path"],
+          ["prune", "Prune stale/deleted worktree references"],
+          ["config", "Show and validate configuration"]
+        ].freeze
 
-        # Command aliases (must be kept in sync with register calls below)
-        COMMAND_ALIASES = %w[ls cd rm].freeze
-
-        # dry-cli built-in commands (standard across all CLI gems)
-        BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-
-        # Auto-derived from REGISTERED + ALIASES + BUILTIN (no manual maintenance needed)
-        KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + COMMAND_ALIASES + BUILTIN_COMMANDS).freeze
-
-        # Default command - create is the most common action
-        DEFAULT_COMMAND = "create"
+        HELP_EXAMPLES = [
+          "ace-git-worktree create --task 148",
+          "ace-git-worktree list --show-tasks",
+          "ace-git-worktree switch 148",
+          "ace-git-worktree remove --task 148",
+          "ace-git-worktree prune --dry-run"
+        ].freeze
 
         # Register commands (Hanami pattern: CLI::Commands::*)
         register "create", CLI::Commands::Create, aliases: []
@@ -55,6 +55,16 @@ module Ace
         )
         register "version", version_cmd
         register "--version", version_cmd
+
+        help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+          program_name: PROGRAM_NAME,
+          version: Ace::Git::Worktree::VERSION,
+          commands: REGISTERED_COMMANDS,
+          examples: HELP_EXAMPLES
+        )
+        register "help", help_cmd
+        register "--help", help_cmd
+        register "-h", help_cmd
       end
     end
   end
