@@ -34,10 +34,7 @@ module Ace
       # @return [nil]
       def self.start(args)
         # Handle help explicitly
-        if args.first && %w[help --help -h].include?(args.first)
-          puts Dry::CLI::Usage.call(get([]), registry: self)
-          return 0
-        end
+        return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
 
         # When args are empty, route based on tmux context:
         # inside tmux → add default window, outside → start default session
