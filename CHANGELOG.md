@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.591] - 2026-02-22
+
+### Changed
+- **ace-llm v0.22.6**: Migrate CLI to standard help pattern — remove DWIM default routing so no args shows help instead of routing to query command
+- **ace-llm v0.22.6**: Update docs/tools.md to use explicit `ace-llm query` command syntax
+
+### Technical
+- **ace-llm v0.22.6**: Remove KNOWN_COMMANDS, DEFAULT_COMMAND, BUILTIN_COMMANDS; register HelpCommand for --help/-h; remove --list-providers alias; add no-args handling to exe/ace-llm
+
 ## [0.9.590] - 2026-02-22
 
 ### Changed
