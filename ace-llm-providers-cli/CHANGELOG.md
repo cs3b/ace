@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-02-22
+
+### Fixed
+- Document that first matching tier wins when multiple tiers map to the same model in `ClaudeOaiClient`
+
 ## [0.19.1] - 2026-02-22
 
 ### Fixed
