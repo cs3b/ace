@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.593] - 2026-02-22
+
+### Changed
+- **ace-docs v0.21.0**: Migrate CLI to standard help pattern — remove DWIM default routing so no args shows help instead of routing to status command
+
+### Technical
+- **ace-docs v0.21.0**: Remove KNOWN_COMMANDS, BUILTIN_COMMANDS, DEFAULT_COMMAND constants; add PROGRAM_NAME, HELP_EXAMPLES, REGISTERED_COMMANDS with descriptions; register HelpCommand for --help/-h; update exe/ace-docs to use Dry::CLI.new().call() pattern with no-args default to --help
+
 ## [0.9.592] - 2026-02-22
 
 ### Changed
