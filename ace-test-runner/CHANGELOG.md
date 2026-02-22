@@ -487,3 +487,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-10-05
 
 Initial release with test execution and reporting capabilities.
+
+
+## [0.15.4] - 2026-02-22
+
+### Fixed
+- Stripped duplicate command name prefix from test examples
+- Standardized quiet, verbose, debug option descriptions to canonical strings

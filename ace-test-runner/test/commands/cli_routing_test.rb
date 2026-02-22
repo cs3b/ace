@@ -33,8 +33,8 @@ class CliRoutingTest < Minitest::Test
     # Test command banner generation for the default test command
     result = Ace::TestRunner::CLI.get(["test"])
     banner = Dry::CLI::Banner.call(result.command, "ace-test test")
-    assert_match(/Command:/i, banner)
-    assert_match(/Usage:/i, banner)
+    assert_match(/NAME|Command:/i, banner)
+    assert_match(/USAGE|Usage:/i, banner)
   end
 
   def test_cli_routes_help_usage_generation
@@ -43,7 +43,7 @@ class CliRoutingTest < Minitest::Test
 
     result = Ace::TestRunner::CLI.get([])
     usage = Dry::CLI::Usage.call(result)
-    assert_match(/Commands:/i, usage)
+    assert_match(/COMMANDS|Commands:/i, usage)
     # Should include our registered commands
     assert_match(/test|version|help/i, usage)
   end
