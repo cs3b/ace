@@ -284,8 +284,8 @@ For critical issues, create follow-up tasks:
 
 ```bash
 # Example task creation
-ace-taskflow idea "Fix zombie mock in ace-docs test_change_detection"
-ace-taskflow idea "Move ace-git test_diff_with_large_file to E2E"
+ace-idea "Fix zombie mock in ace-docs test_change_detection"
+ace-idea "Move ace-git test_diff_with_large_file to E2E"
 ```
 
 ## Automation
