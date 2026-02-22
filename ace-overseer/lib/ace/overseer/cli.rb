@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "cli/commands/work_on"
 require_relative "cli/commands/status"
@@ -12,26 +11,19 @@ module Ace
     module CLI
       extend Dry::CLI::Registry
 
-      REGISTERED_COMMANDS = %w[work-on status prune].freeze
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
+      PROGRAM_NAME = "ace-overseer"
 
-      def self.start(args)
-        return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
+      REGISTERED_COMMANDS = [
+        ["work-on", "Work on a task in isolated worktree"],
+        ["status", "Show status of task worktrees"],
+        ["prune", "Remove stale task worktrees"]
+      ].freeze
 
-        if args.empty?
-          puts Dry::CLI::Usage.call(get([]), registry: self)
-          return 0
-        end
-
-        Dry::CLI.new(self).call(arguments: args)
-      end
-
-      def self.known_command?(arg)
-        return false if arg.nil?
-
-        KNOWN_COMMANDS.include?(arg)
-      end
+      HELP_EXAMPLES = [
+        "ace-overseer work-on 148",
+        "ace-overseer status",
+        "ace-overseer prune"
+      ].freeze
 
       register "work-on", Commands::WorkOn
       register "status", Commands::Status
@@ -43,6 +35,16 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Overseer::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
     end
   end
 end

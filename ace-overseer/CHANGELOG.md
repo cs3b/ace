@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.9] - 2026-02-22
+
+### Changed
+- Migrate CLI to standard dry-cli help pattern with HelpCommand registration
+- Remove custom `start()` method and `KNOWN_COMMANDS` constant in favor of standard pattern
+
+## [0.4.8] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings
+
 ## [0.4.7] - 2026-02-22
 
 ### Changed
@@ -284,9 +295,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `StatusCollector`
   - `PruneOrchestrator`
 - Test coverage for atoms, models, molecules, organisms, and CLI command registration.
-
-
-## [0.4.8] - 2026-02-22
-
-### Fixed
-- Standardized quiet, verbose, debug option descriptions to canonical strings
