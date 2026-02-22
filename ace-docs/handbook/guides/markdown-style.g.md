@@ -193,7 +193,7 @@ Use 2-space indentation in code examples for compactness.
 Use `bash` or `sh` for shell examples. Include `$` prompt only when showing interactive sessions:
 
 ```bash
-ace-bundle project
+ace-bundle load project
 ace-test atoms
 ```
 
