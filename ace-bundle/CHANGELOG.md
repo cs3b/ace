@@ -115,3 +115,9 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
   - Replaced `thor` dependency with `dry-cli ~> 1.0`
   - Converted CLI class to `Dry::CLI::Registry` pattern with explicit command registration
   - Moved default command routing logic from method_missing to `CLI.start` method
+
+
+## [0.30.8] - 2026-02-22
+
+### Fixed
+- Standardized quiet, verbose, debug option descriptions to canonical strings
