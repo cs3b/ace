@@ -80,6 +80,23 @@ describe "CodexClient" do
       assert_includes cmd, "--model"
       assert_includes cmd, "gpt-5-mini"
     end
+
+    it "includes --add-dir when in a git worktree" do
+      fake_git_dir = "/home/user/repo/.git"
+      Ace::LLM::Providers::CLI::Atoms::WorktreeDirResolver.stub(:call, fake_git_dir) do
+        cmd = @client.send(:build_codex_command, "Test prompt", {})
+        add_dir_idx = cmd.index("--add-dir")
+        refute_nil add_dir_idx, "expected --add-dir in command"
+        assert_equal fake_git_dir, cmd[add_dir_idx + 1]
+      end
+    end
+
+    it "omits --add-dir when not in a git worktree" do
+      Ace::LLM::Providers::CLI::Atoms::WorktreeDirResolver.stub(:call, nil) do
+        cmd = @client.send(:build_codex_command, "Test prompt", {})
+        refute_includes cmd, "--add-dir"
+      end
+    end
   end
 
   describe "availability validation" do
