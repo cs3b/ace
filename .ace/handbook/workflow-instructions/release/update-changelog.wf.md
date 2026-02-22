@@ -28,14 +28,14 @@ Update the main project CHANGELOG.md with new entries, automatically determining
 
 Get current release:
 ```bash
-ace-taskflow release | grep "Release:" | awk '{print $2}'
+ace-release | grep "Release:" | awk '{print $2}'
 # Example output: v.0.9.0
 ```
 
 Extract major.minor (remove 'v.' prefix and last '.0'):
 ```bash
 # From v.0.9.0 → 0.9
-VERSION_BASE=$(ace-taskflow release | grep "Release:" | awk '{print $2}' | sed 's/v\.//' | sed 's/\.[0-9]*$//')
+VERSION_BASE=$(ace-release | grep "Release:" | awk '{print $2}' | sed 's/v\.//' | sed 's/\.[0-9]*$//')
 echo "Version base: $VERSION_BASE"
 ```
 
@@ -176,7 +176,7 @@ grep -A 5 "## \[$NEW_VERSION\]" CHANGELOG.md
 
 **One-liner solutions:**
 
-- `cannot find current release` → ensure active release exists with `ace-taskflow release`
+- `cannot find current release` → ensure active release exists with `ace-release`
 - `CHANGELOG.md not found` → check you're in project root directory
 - `version extraction fails` → verify CHANGELOG follows Keep a Changelog format
 - `duplicate version in changelog` → check if version was already added, adjust patch number
