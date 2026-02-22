@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.1] - 2026-02-22
+
+### Changed
+- Add release and verify-test-suite to work-on-task sub-phases for complete subtree lifecycle
+
 ## [0.39.7] - 2026-02-22
 
 ### Changed
