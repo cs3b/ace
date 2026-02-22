@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.17] - 2026-02-22
+
+### Changed
+- Migrate `ace-git` CLI to standard multi-command help pattern with registered `help`, `--help`, and `-h` commands.
+- Move shorthand git range routing (`ace-git HEAD~5..HEAD`) to the executable wrapper while preserving `diff` shorthand behavior.
+
+### Technical
+- Rewrite CLI routing integration tests to executable-level assertions for help/version/default routing behavior.
+- Update usage documentation to reflect explicit help invocation and shorthand diff examples.
+
 ## [0.10.15] - 2026-02-22
 
 ### Changed

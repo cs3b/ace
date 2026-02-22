@@ -14,6 +14,17 @@ gem install ace-git
 
 ## Commands
 
+### `ace-git --help`
+
+Show formatted command help and examples.
+
+```bash
+ace-git --help
+ace-git -h
+```
+
+`ace-git` with no arguments also shows help.
+
 ### `ace-git diff [RANGE]`
 
 Generate git diff with configurable filtering and formatting.
@@ -26,6 +37,10 @@ ace-git diff --since "7d"
 # Specific range
 ace-git diff HEAD~10..HEAD
 ace-git diff origin/main...HEAD
+
+# Range shorthand (routes to diff)
+ace-git HEAD~5..HEAD
+ace-git HEAD
 
 # Time-based filtering
 ace-git diff --since "1 week ago"
