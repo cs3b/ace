@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.20] - 2026-02-22
+
+### Technical
+- Update e2e-testing guide to use `ace-search "pattern"` single-command syntax (drop `search` subcommand)
+
 ## [0.16.18] - 2026-02-22
 
 ### Changed
