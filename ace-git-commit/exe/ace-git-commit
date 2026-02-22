@@ -1,11 +1,13 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
+require "dry/cli"
 require_relative "../lib/ace/git_commit"
 
-# Start dry-cli with exception-based exit code handling (per ADR-023)
+# Start dry-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 begin
-  Ace::GitCommit::CLI.start(ARGV)
+  args = ARGV.empty? ? ["--help"] : ARGV
+  Dry::CLI.new(Ace::GitCommit::CLI::Commands::Commit).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

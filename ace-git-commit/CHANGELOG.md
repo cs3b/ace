@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-02-22
+
+### Changed
+- Migrate CLI entrypoint to single-command dry-cli execution (`ace-git-commit [FILES] [OPTIONS]`)
+- Handle `--version` directly in commit command flow for single-command mode
+- Add `--staged` as an alias for `--only-staged`
+
+### Technical
+- Remove registry/default-routing wiring from CLI module
+- Rewrite CLI routing tests to executable-level single-command behavior checks
+
 ## [0.18.2] - 2026-02-21
 
 ### Added
