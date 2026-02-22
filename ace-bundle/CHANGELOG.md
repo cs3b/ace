@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-02-22
+
+### Changed
+- **Breaking:** Migrated from multi-command Registry to single-command pattern (task 278)
+  - Removed `load` subcommand: `ace-bundle load project` → `ace-bundle project`
+  - Removed `list` subcommand: `ace-bundle list` → `ace-bundle --list-presets`
+  - Removed `version`/`help` subcommands: use `--version`/`--help` flags only
+  - Added `--version` and `--list-presets` flags to main command
+  - No backward compatibility (per ADR-024)
+
 ## [0.30.11] - 2026-02-22
 
 ### Changed
