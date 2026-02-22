@@ -13,17 +13,14 @@ class PlainMarkdownLoadTest < AceTestCase
   end
 
   def test_loads_workflow_file_via_wfi_protocol
-    # Resolve wfi:// protocol to file path using ace-nav
-    # This is an E2E test that requires ace-nav to be installed
-    # Use CommandExecutor to resolve protocol (testable, mockable)
-    result = Ace::Core::Atoms::CommandExecutor.execute("ace-nav wfi://commit")
-    file_path = result[:stdout].strip
+    # Resolve wfi:// protocol to file path using ace-nav SDK
+    require "ace/support/nav"
+    engine = Ace::Support::Nav::Organisms::NavigationEngine.new
+    file_path = engine.resolve("wfi://commit")
 
-    # Skip if ace-nav not available or workflow doesn't exist
-    # Note: This is a genuine E2E test validating ace-nav protocol resolution.
-    # For isolated testing of ace-bundle without ace-nav, see test_loads_wfi_content_directly.
-    unless result[:success] && File.exist?(file_path)
-      skip "ace-nav CLI not available - E2E test requires ace-nav for wfi:// protocol resolution"
+    # Skip if workflow doesn't exist
+    unless file_path && File.exist?(file_path)
+      skip "wfi://commit could not be resolved - E2E test requires ace-nav protocol resolution"
     end
 
     # Load via ace-bundle API (load_auto handles protocol resolution)

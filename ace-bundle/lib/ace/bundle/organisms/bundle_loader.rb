@@ -1030,28 +1030,18 @@ module Ace
         end
 
         def resolve_protocol(protocol_ref)
-          # Use ace-nav to resolve protocol to real path
-          # Using CommandExecutor for testability and security
-          require "shellwords"
+          require "ace/support/nav"
+          engine = Ace::Support::Nav::Organisms::NavigationEngine.new
+          path = engine.resolve(protocol_ref)
 
-          # Escape the protocol ref to prevent command injection
-          escaped_ref = Shellwords.escape(protocol_ref)
-          command = "ace-nav #{escaped_ref}"
-
-          # Execute using CommandExecutor (intercepted by test mocks)
-          result = Ace::Core::Atoms::CommandExecutor.execute(command)
-
-          if result[:success] && !result[:stdout].strip.empty? && File.exist?(result[:stdout].strip)
-            result[:stdout].strip
+          if path && File.exist?(path)
+            path
           else
-            # Log failure reason for debugging (only in debug mode)
             if @options[:debug]
-              if !result[:success]
-                warn "Warning: ace-nav command failed for '#{protocol_ref}': #{result[:error]}"
-              elsif result[:stdout].strip.empty?
-                warn "Warning: ace-nav returned empty path for '#{protocol_ref}'"
+              if path.nil?
+                warn "Warning: ace-nav could not resolve '#{protocol_ref}'"
               else
-                warn "Warning: ace-nav path does not exist for '#{protocol_ref}': #{result[:stdout].strip}"
+                warn "Warning: ace-nav path does not exist for '#{protocol_ref}': #{path}"
               end
             end
             nil
