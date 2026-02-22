@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.12] - 2026-02-22
+
+### Changed
+- Migrate CLI to standard multi-command help pattern with explicit `help`, `--help`, and `-h` registration via `HelpCommand`
+- Remove implicit default routing behavior and require explicit command selection for unknown inputs
+
+### Technical
+- Route executable through `Dry::CLI.new(...).call(arguments: ...)` with no-argument normalization to `--help`
+- Update CLI command tests to use explicit `Dry::CLI` and executable-level routing assertions
+
 ## [0.13.10] - 2026-02-21
 
 ### Fixed
