@@ -69,7 +69,7 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Command**: `ace-bundle [input]`
 **Examples**:
 
-- `ace-bundle project` (default context)
+- `ace-bundle load project` (default context)
 - `ace-bundle load wfi://bundle` (flat protocol)
 - `ace-bundle load wfi://task/work` (namespaced protocol)
 
@@ -95,11 +95,11 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Anti-pattern examples to AVOID**:
 ❌ `ace-review --pr 90 | tail -20`
 ❌ `tail -f /tmp/claude/.../output`
-❌ `ace-bundle project | head -100`
+❌ `ace-bundle load project | head -100`
 
 **Correct patterns**:
 ✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
-✅ `ace-bundle project` → output is already concise; read referenced files as needed
+✅ `ace-bundle load project` → output is already concise; read referenced files as needed
 ✅ `ace-bundle load wfi://namespace/action` → returns workflow content (may include embedded context)
 
 Never reset or discard changes you didn't make - use `ace-git-commit $paths` to commit only your changes.
@@ -142,7 +142,7 @@ Validate entire monorepo (final check before commits).
 
 ## Project Context
 
-For comprehensive project details, run: `ace-bundle project`
+For comprehensive project details, run: `ace-bundle load project`
 This provides architecture, tools, conventions, and structure (1371 lines).
 
 **Key Point**: Do not duplicate project context in responses - reference ace-bundle output.
