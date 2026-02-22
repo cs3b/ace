@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../llm"
 # Commands
@@ -12,32 +11,29 @@ module Ace
   module LLM
     # dry-cli based CLI registry for ace-llm
     #
-    # This replaces the Thor-based CLI with dry-cli while maintaining
-    # complete command parity and user-facing behavior.
+    # Standard multi-command CLI with help, version, query, and list-providers.
     module CLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
       PROGRAM_NAME = "ace-llm"
 
-      # Application commands registered in this CLI (single source of truth)
-      REGISTERED_COMMANDS = %w[query list-providers --list-providers].freeze
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["query", "Send a prompt to an LLM provider"],
+        ["list-providers", "List available LLM providers"]
+      ].freeze
 
-      # dry-cli built-in commands (standard across all CLI gems)
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+      HELP_EXAMPLES = [
+        "ace-llm query \"Explain this code\"",
+        "ace-llm query --model claude-sonnet \"Summarize\"",
+        "ace-llm list-providers"
+      ].freeze
 
-      # Auto-derived from REGISTERED + BUILTIN (no manual maintenance needed)
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      # Default command to use when first argument is not a known command
-      DEFAULT_COMMAND = "query"
-
-      # Register the query command (default)
-      register "query", Commands::Query.new
+      # Register query command
+      register "query", Commands::Query
 
       # Register list-providers command
-      register "list-providers", Commands::ListProviders.new
-      register "--list-providers", Commands::ListProviders.new
+      register "list-providers", Commands::ListProviders
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
@@ -46,6 +42,25 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::LLM::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
+
+      # Entry point for CLI invocation (used by tests and exe/)
+      #
+      # @param args [Array<String>] Command-line arguments
+      # @return [Integer] Exit code (0 for success, non-zero for errors)
+      def self.start(args)
+        Dry::CLI.new(self).call(arguments: args)
+      end
     end
   end
 end
