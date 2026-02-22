@@ -106,7 +106,7 @@ For each TC in the scenario, create `TC-{NNN}-{slug}.tc.md` following the E2E te
 
 **Load the TC template for reference:**
 ```bash
-ace-bundle tmpl://test-e2e
+ace-bundle load tmpl://test-e2e
 ```
 
 ### 4. Modify Existing TCs

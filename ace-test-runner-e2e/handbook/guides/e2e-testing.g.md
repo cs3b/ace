@@ -490,7 +490,7 @@ Before starting a rename/namespace/migration that affects paths or identifiers:
 - **Use variables for paths, not literals:**
   ```bash
   # BAD: Hardcoded path breaks when workflow moves
-  ace-bundle wfi://lint/run
+  ace-bundle load wfi://lint/run
 
   # GOOD: Variable absorbs path changes
   WORKFLOW="wfi://lint/run"
