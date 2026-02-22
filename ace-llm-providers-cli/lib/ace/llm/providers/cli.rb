@@ -25,7 +25,7 @@ module Ace
               claude_code_client
               codex_client
               open_code_client
-              codex_oss_client
+              codex_oai_client
               gemini_client
               pi_client
             ]

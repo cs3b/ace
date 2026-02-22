@@ -443,14 +443,14 @@ describe "CLI Execution Edge Cases" do
     end
   end
 
-  describe "CodexOSSClient Error Handling" do
+  describe "CodexOaiClient Error Handling" do
     before do
-      @client = Ace::LLM::Providers::CLI::CodexOSSClient.new
+      @client = Ace::LLM::Providers::CLI::CodexOaiClient.new
     end
 
     it "handles command not found gracefully" do
       # Use stub pattern for thread-safe mocking
-      @client.stub :codexoss_available?, false do
+      @client.stub :codex_available?, false do
         err = assert_raises(Ace::LLM::Error) do
           @client.generate([{ role: "user", content: "test" }])
         end
