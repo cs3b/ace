@@ -28,11 +28,11 @@ module Ace
         assert_empty stderr
       end
 
-      def test_missing_pattern_shows_error
+      def test_no_args_shows_help
         stdout, stderr, status = Open3.capture3(@exe_path)
 
-        refute status.success?, "Command should fail without pattern"
-        assert_match(/No search pattern provided/, stdout + stderr)
+        assert status.success?, "Command should show help without args"
+        assert_match(/Usage:/, stdout + stderr)
       end
 
       def test_content_search_with_max_results
