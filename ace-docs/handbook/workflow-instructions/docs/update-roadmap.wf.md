@@ -27,7 +27,7 @@ Synchronize the project roadmap (`.ace-taskflow/roadmap.md`) with the current st
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle wfi://bundle`
+- Read and follow: `ace-bundle load wfi://bundle`
 
 ## Process Steps
 
