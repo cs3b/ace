@@ -236,7 +236,7 @@ ace-git-secrets scan --branch feature-branch --since "$(git merge-base main feat
 - **Token Safety**: Never log or display full token values
 - **Gitleaks Priority**: Uses gitleaks when available for comprehensive detection
 - **False Positives**: Always verify medium/low confidence findings
-- **Remediation Workflow**: For cleanup, use `ace-bundle wfi://git/token-remediation`
+- **Remediation Workflow**: For cleanup, use `ace-bundle load wfi://git/token-remediation`
 
 ## Command Reference
 
