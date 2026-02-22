@@ -36,7 +36,7 @@ Verify assignment drive guidance enforces hard no-skip policy for planned phases
 
 4. Verify skill wrapper remains thin (no duplicated policy text)
    ```bash
-   SKILL=".claude/skills/ace_assign-drive/SKILL.md"
+   SKILL=".claude/skills/ace-assign-drive/SKILL.md"
    if rg -n "Do not skip planned assignment phases|synthetic skip mechanism|attempt execution and fail with concrete command/error evidence" "$SKILL"; then
      echo "FAIL: Skill should not duplicate policy guardrails"
    else
@@ -49,4 +49,4 @@ Verify assignment drive guidance enforces hard no-skip policy for planned phases
 - Workflow contains explicit hard no-skip policy language.
 - Legacy `Skip Assessment` section is absent.
 - Workflow includes attempt-first external action + failure evidence requirements.
-- `ace_assign_drive` skill stays thin and defers policy to workflow.
+- `ace-assign-drive` skill stays thin and defers policy to workflow.

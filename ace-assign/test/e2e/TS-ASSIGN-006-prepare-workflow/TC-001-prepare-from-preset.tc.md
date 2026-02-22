@@ -70,9 +70,9 @@ Verify deterministic preset expansion for `work-on-task` generates a valid job Y
    ```bash
    JOB_FILE="jobs/tc001-work-on-task-001-job.yml"
    grep "skill:" "$JOB_FILE" | head -8
-   grep -q "skill: ace_task_work" "$JOB_FILE" && echo "PASS: ace_task_work skill present" || echo "FAIL: ace_task_work skill missing"
-   grep -q "skill: ace_git_create-pr" "$JOB_FILE" && echo "PASS: ace_git_create-pr skill present" || echo "FAIL: ace_git_create-pr skill missing"
-   grep -q "skill: ace_review_pr" "$JOB_FILE" && echo "PASS: ace_review_pr skill present" || echo "FAIL: ace_review_pr skill missing"
+   grep -q "skill: ace-task-work" "$JOB_FILE" && echo "PASS: ace-task-work skill present" || echo "FAIL: ace-task-work skill missing"
+   grep -q "skill: ace-git-create-pr" "$JOB_FILE" && echo "PASS: ace-git-create-pr skill present" || echo "FAIL: ace-git-create-pr skill missing"
+   grep -q "skill: ace-review-pr" "$JOB_FILE" && echo "PASS: ace-review-pr skill present" || echo "FAIL: ace-review-pr skill missing"
    ```
 
 ## Expected
@@ -82,4 +82,4 @@ Verify deterministic preset expansion for `work-on-task` generates a valid job Y
 - No unresolved `{{placeholder}}` tokens remain
 - Taskref `001` appears in generated instructions
 - `work-on-task`, `create-pr`, and review phases exist
-- Skill references include `ace_task_work`, `ace_git_create-pr`, and `ace_review_pr`
+- Skill references include `ace-task-work`, `ace-git-create-pr`, and `ace-review-pr`

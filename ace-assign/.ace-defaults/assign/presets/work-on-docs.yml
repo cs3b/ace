@@ -1,5 +1,5 @@
 # Documentation workflow: onboard → research → write → commit
-# Usage: /ace_assign_prepare work-on-docs --scope ace-review
+# Usage: /ace-assign-prepare work-on-docs --scope ace-review
 
 name: work-on-docs
 description: Create or update documentation with research and commit
@@ -11,22 +11,22 @@ parameters:
 
 steps:
   - name: onboard
-    skill: ace_onboard
+    skill: ace-onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context for the documentation target area.
 
   - name: research
-    skill: ace_search_research
+    skill: ace-search-research
     context: fork
     instructions:
-      - "First: onboard yourself using /ace_onboard skill to load project context."
+      - "First: onboard yourself using /ace-onboard skill to load project context."
       - "Research documentation gaps for {{scope}}."
       - Identify outdated, missing, or incorrect documentation.
       - Review existing docs to understand the documentation style.
 
   - name: work-on-task
-    skill: ace_task_work
+    skill: ace-task-work
     instructions:
       - "Create or update documentation for {{scope}}."
       - Focus on clarity, accuracy, and completeness.
@@ -34,7 +34,7 @@ steps:
       - Use markdown formatting appropriately.
 
   - name: commit
-    skill: ace_git_commit
+    skill: ace-git-commit
     instructions:
       - Commit the documentation changes.
       - Use a descriptive commit message.

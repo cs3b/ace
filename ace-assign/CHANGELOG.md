@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.11] - 2026-02-22
+
+### Changed
+- Migrate skill naming and invocation references to hyphenated `ace-*` format (no underscores).
+
 ## [0.12.10] - 2026-02-21
 
 ### Technical

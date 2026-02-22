@@ -36,7 +36,7 @@ module Ace
         # @param added_by [String, nil] How phase was added (nil, "dynamic", "retry_of:NNN")
         # @param parent [String, nil] Parent phase number (for sub-phases)
         # @param file_path [String, nil] Path to phase file
-        # @param skill [String, nil] Skill reference for this phase (e.g., "ace_task_work")
+        # @param skill [String, nil] Skill reference for this phase (e.g., "ace-task-work")
         # @param context [String, nil] Execution context ("fork" for Task tool execution)
         def initialize(number:, name:, status:, instructions:, report: nil, error: nil,
                        started_at: nil, completed_at: nil, added_by: nil, parent: nil,
