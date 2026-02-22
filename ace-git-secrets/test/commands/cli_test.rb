@@ -3,6 +3,10 @@
 require_relative "../test_helper"
 
 class CLITest < GitSecretsTestCase
+  def dispatch_cli(args)
+    Dry::CLI.new(Ace::Git::Secrets::CLI).call(arguments: args)
+  end
+
   def setup
     # Use mock repo for fast tests - no real git subprocess calls
     @mock_repo = MockGitRepo.new
@@ -15,9 +19,8 @@ class CLITest < GitSecretsTestCase
     @mock_repo&.cleanup
   end
 
-  # Note: dry-cli returns a Set, not the command's exit code.
-  # Tests that previously checked exit codes now verify behavior via output.
-  # Exit code behavior is tested at the integration level via shell execution.
+  # Note: dry-cli returns command metadata, not process exit codes.
+  # Exit code behavior is verified at integration level via executable tests.
 
   def test_cli_completes_scan_successfully_when_clean
     # Verify that CLI.start runs scan without error on clean repo
@@ -26,7 +29,7 @@ class CLITest < GitSecretsTestCase
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["scan"])
+          dispatch_cli(["scan"])
         rescue SystemExit
           # dry-cli may call exit
         end
@@ -52,7 +55,7 @@ class CLITest < GitSecretsTestCase
     with_mocked_gitleaks(findings: mock_findings) do
       output, = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["scan"])
+          dispatch_cli(["scan"])
         rescue SystemExit
           # dry-cli may call exit
         rescue Ace::Core::CLI::Error
@@ -68,7 +71,7 @@ class CLITest < GitSecretsTestCase
   def test_version_command
     output, = capture_io do
       begin
-        Ace::Git::Secrets::CLI.start(["version"])
+        dispatch_cli(["version"])
       rescue SystemExit
         # dry-cli may call exit for some commands
       end
@@ -80,7 +83,7 @@ class CLITest < GitSecretsTestCase
   def test_version_long_flag
     output, = capture_io do
       begin
-        Ace::Git::Secrets::CLI.start(["--version"])
+        dispatch_cli(["--version"])
       rescue SystemExit
         # dry-cli may call exit for some commands
       end
@@ -95,7 +98,7 @@ class CLITest < GitSecretsTestCase
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["scan", "--report-format", "json"])
+          dispatch_cli(["scan", "--report-format", "json"])
         rescue SystemExit
           # dry-cli may call exit
         end
@@ -123,7 +126,7 @@ class CLITest < GitSecretsTestCase
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["scan", "--verbose"])
+          dispatch_cli(["scan", "--verbose"])
         rescue SystemExit
           # dry-cli may call exit
         end
@@ -141,7 +144,7 @@ class CLITest < GitSecretsTestCase
       # High confidence should pass for clean repo - verify no error
       output, stderr = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["scan", "--confidence", "high"])
+          dispatch_cli(["scan", "--confidence", "high"])
         rescue SystemExit
           # dry-cli may call exit
         end
@@ -158,7 +161,7 @@ class CLITest < GitSecretsTestCase
     with_mocked_gitleaks(clean: true) do
       output, = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["check-release"])
+          dispatch_cli(["check-release"])
         rescue SystemExit
           # dry-cli may call exit
         end
@@ -184,7 +187,7 @@ class CLITest < GitSecretsTestCase
     with_mocked_gitleaks(findings: mock_findings) do
       output, = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["check-release"])
+          dispatch_cli(["check-release"])
         rescue SystemExit
           # dry-cli may call exit
         rescue Ace::Core::CLI::Error
@@ -205,7 +208,7 @@ class CLITest < GitSecretsTestCase
       # Should not raise an error
       output, stderr = capture_io do
         begin
-          Ace::Git::Secrets::CLI.start(["scan", "--verbose"])
+          dispatch_cli(["scan", "--verbose"])
         rescue SystemExit
           # dry-cli may call exit
         end
@@ -219,7 +222,7 @@ class CLITest < GitSecretsTestCase
   def test_help_command
     output, stderr = capture_io do
       begin
-        Ace::Git::Secrets::CLI.start(["help"])
+        dispatch_cli(["help"])
       rescue SystemExit
         # dry-cli calls exit(0) for help
       end
@@ -233,7 +236,7 @@ class CLITest < GitSecretsTestCase
   def test_help_for_scan_command
     output, stderr = capture_io do
       begin
-        Ace::Git::Secrets::CLI.start(["help", "scan"])
+        dispatch_cli(["help", "scan"])
       rescue SystemExit
         # dry-cli calls exit(0) for help
       end
