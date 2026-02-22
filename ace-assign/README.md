@@ -204,7 +204,7 @@ context: fork
 ## Onboard
 
 Load context before starting work:
-- `ace-bundle project`
+- `ace-bundle load project`
 - `ace-bundle task://{{taskref}}`
 
 ## Work
