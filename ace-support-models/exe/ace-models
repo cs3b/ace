@@ -8,12 +8,15 @@ require_relative "../lib/ace/support/models/cli"
 old_cache_path = File.join(Dir.home, ".cache", "ace-llm-models-dev")
 if Dir.exist?(old_cache_path)
   warn "Note: Old cache detected at ~/.cache/ace-llm-models-dev"
-  warn "Run: ace-models cache sync && rm -rf ~/.cache/ace-llm-models-dev"
+  warn "Run: ace-models sync && rm -rf ~/.cache/ace-llm-models-dev"
 end
+
+# No args → show help
+args = ARGV.empty? ? ["--help"] : ARGV
 
 # Start dry-cli with exception-based exit code handling (per ADR-023)
 begin
-  Ace::Support::Models::CLI.start(ARGV)
+  Ace::Support::Models::CLI.start(args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
