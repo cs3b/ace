@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-02-22
+
+### Changed
+- Update codexoai provider: add `name` field to backend config, remove `wire_api` setting, rename env key to `ZAI_API_KEY`
+- `CodexOaiClient` now passes provider `name` to codex via `-c` config override, falls back to backend key when name not configured
+- Remove `wire_api` config override from `CodexOaiClient` (no longer needed)
+
+### Technical
+- Updated tests for new provider name assertion, env key rename, and name fallback behavior
+
 ## [0.17.0] - 2026-02-22
 
 ### Added

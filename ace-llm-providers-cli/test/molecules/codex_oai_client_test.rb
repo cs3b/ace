@@ -6,9 +6,9 @@ describe "CodexOaiClient" do
   before do
     @backends = {
       "zai" => {
+        "name" => "Z.ai GLM",
         "base_url" => "https://api.z.ai/api/coding/paas/v4",
-        "env_key" => "Z_AI_API_KEY",
-        "wire_api" => "chat"
+        "env_key" => "ZAI_API_KEY"
       }
     }
     @client = Ace::LLM::Providers::CLI::CodexOaiClient.new(backends: @backends)
@@ -88,9 +88,9 @@ describe "CodexOaiClient" do
       # Should have -c overrides for the backend
       assert_includes cmd, "-c"
       assert cmd.any? { |arg| arg.include?('model_provider=') }
+      assert cmd.any? { |arg| arg.include?("model_providers.zai.name=") }
       assert cmd.any? { |arg| arg.include?("model_providers.zai.base_url=") }
       assert cmd.any? { |arg| arg.include?("model_providers.zai.env_key=") }
-      assert cmd.any? { |arg| arg.include?("model_providers.zai.wire_api=") }
 
       # Should have -m with just the model name (not backend/model)
       m_index = cmd.index("-m")
@@ -107,13 +107,21 @@ describe "CodexOaiClient" do
     it "includes correct env_key in config override" do
       cmd = @client.send(:build_codex_oai_command, "Test prompt", {})
       env_key_arg = cmd.find { |arg| arg.include?("env_key=") }
-      assert_includes env_key_arg, "Z_AI_API_KEY"
+      assert_includes env_key_arg, "ZAI_API_KEY"
     end
 
-    it "includes correct wire_api in config override" do
+    it "includes provider name in config override" do
       cmd = @client.send(:build_codex_oai_command, "Test prompt", {})
-      wire_api_arg = cmd.find { |arg| arg.include?("wire_api=") }
-      assert_includes wire_api_arg, "chat"
+      name_arg = cmd.find { |arg| arg.include?("model_providers.zai.name=") }
+      assert_includes name_arg, "Z.ai GLM"
+    end
+
+    it "falls back to backend key as name when name not configured" do
+      backends = { "deepseek" => { "base_url" => "https://api.deepseek.com/v1", "env_key" => "DEEPSEEK_API_KEY" } }
+      client = Ace::LLM::Providers::CLI::CodexOaiClient.new(model: "deepseek/deepseek-chat", backends: backends)
+      cmd = client.send(:build_codex_oai_command, "Test prompt", {})
+      name_arg = cmd.find { |arg| arg.include?("model_providers.deepseek.name=") }
+      assert_includes name_arg, "deepseek"
     end
 
     it "uses different backend model" do
