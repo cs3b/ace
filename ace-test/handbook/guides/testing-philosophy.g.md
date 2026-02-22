@@ -57,7 +57,7 @@ Real IO belongs in **E2E tests only** (`test/e2e/TS-*/`):
 - Run infrequently (on-demand, not every commit)
 - Document real tool requirements (standardrb, rubocop, etc.)
 
-See `/ace_e2e_run` workflow for execution.
+See `/ace-e2e-run` workflow for execution.
 
 ## Core Principles
 
