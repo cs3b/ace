@@ -4,9 +4,9 @@
 require "ace/core"
 require "ace/core/cli"
 
-# Start CLI with exception-based exit code handling (per ADR-023)
+# Start FrameworkCLI (separate from Ace::Core::CLI module which is dry-cli infrastructure)
 begin
-  Ace::Core::CLI.start(ARGV)
+  Ace::Core::FrameworkCLI.start(ARGV)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

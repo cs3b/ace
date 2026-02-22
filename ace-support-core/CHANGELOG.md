@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.2] - 2026-02-22
+
+### Added
+- Integration tests for two-tier help routing (-h concise vs --help full) via DefaultRouting.start
+
+### Technical
+- Documented dry-cli 1.4.1 version coupling in COMPATIBILITY comments for monkey-patch modules
+
+## [0.23.1] - 2026-02-22
+
+### Fixed
+- Clear `@_original_arguments` after use in help method to prevent state leakage across CLI calls
+- Add nil-safe navigation (`command&.description`) for subcommand description access
+- Standardize hidden check to use `respond_to?(:hidden)` guard in all usage_formatter locations
+- Replace `instance_variable_set` on external dry-cli Node objects with local Hash mapping for command name tracking
+- Fix CHANGELOG entry ordering (0.23.0 was appended at end instead of after [Unreleased])
+
+## [0.23.0] - 2026-02-22
+
+### Added
+- Two-tier CLI help: `-h` shows concise format, `--help` shows full ALL-CAPS reference (NAME, USAGE, DESCRIPTION, ARGUMENTS, OPTIONS, EXAMPLES)
+- `help_formatter.rb` - Monkey-patch `Dry::CLI::Banner` with ALL-CAPS sections and duplicate command name fix in examples
+- `help_concise.rb` - Concise `-h` format with compact options (no descriptions), max 3 examples, footer
+- `usage_formatter.rb` - Monkey-patch `Dry::CLI::Usage` with COMMANDS header, first-line-only descriptions, command group support
+- `command_groups.rb` - Mixin for CLI registries to define COMMAND_GROUPS for grouped `--help` output
+- `standard_options.rb` - Canonical description constants (QUIET_DESC, VERBOSE_DESC, DEBUG_DESC, HELP_DESC)
+- Updated `default_routing.rb` to distinguish `-h` (concise) from `--help` (full) at registry level
+
+### Fixed
+- Duplicate command name in examples (Banner strips prefix automatically)
+- Hidden subcommands now filtered from help output
+
+### Changed
+- `default_routing.rb` routes `-h` to concise format, `--help` to full format
+- `base.rb` wires all new formatter modules
+- Renamed `Ace::Core::CLI` class to `Ace::Core::FrameworkCLI` to avoid collision with CLI module
+- Fixed ace-framework exe path and help output formatting
+
 ## [0.22.2] - 2026-01-31
 
 ### Fixed

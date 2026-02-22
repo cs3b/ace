@@ -73,3 +73,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 *For history prior to 0.3.2 (versions 0.1.0-0.3.1), see git history under the original gem name `ace-llm-models-dev`.*
+
+
+## [0.5.2] - 2026-02-22
+
+### Fixed
+- Added command grouping (Cache, Providers, Models, Shortcuts)
+- Fixed namespace subcommand help (cache/providers/models --help) to exit 0 and print to stdout
+- Standardized quiet, verbose, debug option descriptions to canonical strings
