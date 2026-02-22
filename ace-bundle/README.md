@@ -26,7 +26,7 @@ ace-bundle --list
 ace-bundle
 
 # Load specific preset
-ace-bundle project
+ace-bundle load project
 
 # Load configuration from file (positional argument - auto-detected)
 ace-bundle /path/to/config.yml         # Auto-detects as file
@@ -54,9 +54,9 @@ ace-bundle load guide://testing            # Load guide
 ace-bundle task://061                 # Load task context
 
 # Output modes
-ace-bundle project --output stdio    # Output to terminal
-ace-bundle project --output cache    # Save to cache (default for some presets)
-ace-bundle project --output ./out.md # Save to specific file
+ace-bundle load project --output stdio    # Output to terminal
+ace-bundle load project --output cache    # Save to cache (default for some presets)
+ace-bundle load project --output ./out.md # Save to specific file
 ```
 
 ### Input Auto-Detection
@@ -69,7 +69,7 @@ The positional argument to `ace-bundle` supports automatic input type detection:
 - **Inline YAML**: Direct YAML configuration with `files:`, `commands:`, etc.
 
 ```bash
-ace-bundle project                     # Detected as preset
+ace-bundle load project                     # Detected as preset
 ace-bundle /path/to/config.yml         # Detected as file
 ace-bundle ./relative/path.md          # Detected as file
 ace-bundle load wfi://workflow-name         # Detected as protocol
