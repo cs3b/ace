@@ -14,49 +14,36 @@ class CliRoutingTest < AceLlmTestCase
     invoke_cli_stdout(Ace::LLM::CLI, args)
   end
 
-  # --- Version Command Tests ---
-
-  def test_cli_routes_version_command
-    output = invoke_llm_cli(["version"])
-    assert_match(/\d+\.\d+\.\d+/, output)
-  end
+  # --- Version Tests ---
 
   def test_cli_routes_version_with_long_flag
     output = invoke_llm_cli(["--version"])
-    assert_match(/\d+\.\d+\.\d+/, output)
+    assert_match(/ace-llm \d+\.\d+\.\d+/, output)
   end
 
-  # --- Help Command Tests ---
-
-  def test_cli_routes_help_command
-    result = invoke_cli(Ace::LLM::CLI, ["help"])
-    # Help goes to stderr in dry-cli
-    output = result[:stdout] + result[:stderr]
-    assert_match(/query|list-providers/i, output)
-  end
+  # --- Help Tests ---
 
   def test_cli_routes_help_with_long_flag
     result = invoke_cli(Ace::LLM::CLI, ["--help"])
-    # Help goes to stderr in dry-cli
     output = result[:stdout] + result[:stderr]
-    assert_match(/COMMANDS|Commands:/i, output)
+    assert_match(/PROVIDER|Query|LLM/i, output)
   end
 
-  # --- List Providers Command Tests ---
+  # --- List Providers Flag Tests ---
 
-  def test_cli_routes_list_providers_command
+  def test_cli_routes_list_providers_flag
     with_real_config do
-      output = invoke_llm_cli(["list-providers"])
-      # Should list at least some providers
+      output = invoke_llm_cli(["--list-providers"])
       assert_match(/google|anthropic|openai/i, output)
     end
   end
 
-  # --- Query Command with Help ---
+  # --- Query with No Args Shows Help ---
 
-  def test_cli_query_empty_args_shows_help
-    output = invoke_llm_cli(["query"])
-    # Empty args should show query help
+  def test_cli_no_args_shows_help
+    output = invoke_llm_cli([])
+    # Empty args should show query help (via --help default in exe)
+    # But through CLI.start, empty args = no provider/prompt = show help
     assert_match(/Usage:|PROVIDER/i, output)
   end
 end
