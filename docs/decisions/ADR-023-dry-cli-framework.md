@@ -63,47 +63,119 @@ lib/ace/gem/
 └── version.rb
 ```
 
-### CLI Entry Point (`cli.rb`)
+### Two CLI Patterns
+
+ACE gems use two patterns depending on complexity:
+
+#### Multi-Command Pattern (subcommand tools)
+
+For CLIs with multiple commands (ace-bundle, ace-taskflow, ace-git-worktree):
 
 ```ruby
 # lib/ace/gem/cli.rb
 require "dry/cli"
-require "set"
+require "ace/core"
+require_relative "cli/commands/process"
+require_relative "cli/commands/status"
 
 module Ace
   module Gem
     module CLI
       extend Dry::CLI::Registry
 
-      # Commands in this CLI
-      REGISTERED_COMMANDS = %w[process status].freeze
-      COMMAND_ALIASES = %w[ps].freeze  # If any
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
+      PROGRAM_NAME = 'ace-gem'
 
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + COMMAND_ALIASES + BUILTIN_COMMANDS).freeze
-      DEFAULT_COMMAND = "process"
+      # Commands with descriptions for help output
+      REGISTERED_COMMANDS = [
+        ['process', 'Process files with auto-detection'],
+        ['status',  'Show current status']
+      ].freeze
 
-      # Testable start method with default command routing
-      # Note: Returns nil (dry-cli behavior). Exit codes via exceptions.
-      def self.start(args)
-        if args.empty? || !KNOWN_COMMANDS.include?(args.first)
-          args = [DEFAULT_COMMAND] + args
-        end
-        Dry::CLI.new(self).call(arguments: args)
-      end
+      HELP_EXAMPLES = [
+        'ace-gem process file.txt',
+        'ace-gem status --verbose'
+      ].freeze
 
-      register "process", Process, aliases: ["ps"]
-      register "status", Status, aliases: []
+      register 'process', Commands::Process.new
+      register 'status', Commands::Status.new
 
-      # Version command using ace-support-core helper
+      # Version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
-        gem_name: "ace-gem",
+        gem_name: 'ace-gem',
         version: Ace::Gem::VERSION
       )
-      register "version", version_cmd
-      register "--version", version_cmd
+      register 'version', version_cmd
+      register '--version', version_cmd
+
+      # Help command (standard pattern)
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Gem::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register 'help', help_cmd
+      register '--help', help_cmd
+      register '-h', help_cmd
     end
   end
+end
+```
+
+**Exe wrapper** (handles no-args case):
+```ruby
+#!/usr/bin/env ruby
+require "ace/gem"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+begin
+  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
+```
+
+#### Single-Command Pattern
+
+For CLIs with one primary action (ace-git-commit, ace-search, ace-test):
+
+```ruby
+# lib/ace/gem/cli/commands/search.rb (no separate cli.rb registry)
+module Ace
+  module Search
+    module CLI
+      module Commands
+        class Search < Dry::CLI::Command
+          include Ace::Core::CLI::DryCli::Base
+
+          desc "Search files and content"
+          argument :pattern, required: false
+          option :files, type: :boolean, aliases: ["-f"]
+
+          def call(pattern: nil, **options)
+            # ... implementation
+          end
+        end
+      end
+    end
+  end
+end
+```
+
+**Exe wrapper**:
+```ruby
+#!/usr/bin/env ruby
+require "ace/search"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+begin
+  Dry::CLI.new(Ace::Search::CLI::Commands::Search).call(arguments: args)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
 end
 ```
 
@@ -252,8 +324,10 @@ end
 #!/usr/bin/env ruby
 require "ace/gem"
 
+args = ARGV.empty? ? ["--help"] : ARGV
+
 begin
-  Ace::Gem::CLI.start(ARGV)
+  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -267,7 +341,7 @@ The exception pattern enables clean testing:
 ```ruby
 def test_missing_file_raises_error
   error = assert_raises(Ace::Core::CLI::Error) do
-    capture_io { CLI.start(["process"]) }
+    capture_io { Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process"]) }
   end
   assert_equal "file required", error.message
   assert_equal 1, error.exit_code
@@ -275,7 +349,9 @@ end
 
 def test_successful_processing
   # No exception = success (exit 0)
-  output, = capture_io { CLI.start(["process", "test.txt"]) }
+  output, = capture_io do
+    Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process", "test.txt"])
+  end
   assert_includes output, "Processed"
 end
 ```
@@ -300,8 +376,10 @@ CLI tools should handle SIGINT (Ctrl+C) gracefully and return exit code 130 (128
 #!/usr/bin/env ruby
 require "ace/gem"
 
+args = ARGV.empty? ? ["--help"] : ARGV
+
 begin
-  Ace::Gem::CLI.start(ARGV)
+  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -377,33 +455,35 @@ end
 ### Requirements
 
 **DO:**
-- Use dry-cli Registry pattern in `cli.rb`
-- Create `cli/` directory for command classes
-- Include SharedHelpers in command classes
-- Include command aliases in `KNOWN_COMMANDS`
-- Use `self.start(args)` for testable entry point
-- Test in `test/commands/` (unchanged from ADR-018)
+- Use dry-cli Registry pattern in `cli.rb` (multi-command) or direct command class (single-command)
+- Create `cli/commands/` directory for command classes
+- Include `Ace::Core::CLI::DryCli::Base` in command classes
+- Use `HelpCommand.build()` for multi-command CLIs
+- Use `VersionCommand.build()` for version commands
+- Test in `test/commands/`
 - Reserve `-v` for `--verbose` (inherited from ADR-018)
 - Raise `Ace::Core::CLI::Error` for non-zero exit codes
 - Catch `Ace::Core::CLI::Error` in exe wrappers and call `exit(e.exit_code)`
+- Handle no-args with `ARGV.empty? ? ["--help"] : ARGV`
 
 **DON'T:**
 - Use Thor (deprecated)
+- Use DWIM default routing (removed in Task 278)
 - Put all options in cli.rb (let commands define their own)
 - Return integers from commands expecting them to become exit codes (dry-cli ignores returns)
 - Use `exit()` directly in command classes (breaks testability)
 - Use thread-local storage for exit codes (unnecessary complexity)
-- Duplicate helpers across command files (use SharedHelpers)
+- Create `KNOWN_COMMANDS`, `DEFAULT_COMMAND`, `BUILTIN_COMMANDS` constants (removed)
 
 ## Consequences
 
 ### Positive
 
 - **No option consumption bugs**: Commands receive all options as intended
-- **Simpler default routing**: `KNOWN_COMMANDS` set provides clean routing
-- **Better testability**: `CLI.start(args)` can be called directly in tests
-- **Less boilerplate**: Automatic help generation, no manual `--help` checks
-- **Consistent patterns**: SharedHelpers DRY up common code
+- **Standard help behavior**: No-args shows help (aligns with clig.dev conventions)
+- **Better testability**: `Dry::CLI.new().call()` can be tested directly
+- **Less boilerplate**: Automatic help generation via `HelpCommand.build()`
+- **Consistent patterns**: Two patterns (multi-command vs single-command) cover all cases
 
 ### Negative
 
@@ -424,24 +504,43 @@ Key differences when migrating:
 | Aspect | Thor (ADR-018) | dry-cli (ADR-023) |
 |--------|----------------|-------------------|
 | Entry point | `class CLI < Thor` | `module CLI; extend Dry::CLI::Registry` |
-| Commands | Methods on CLI class | Separate classes in `cli/` |
+| Commands | Methods on CLI class | Separate classes in `cli/commands/` |
 | Options | `class_option` on CLI | `option` on each command |
-| Default command | `default_task :name` | `KNOWN_COMMANDS` + routing |
-| Version | `version_command` helper | `VersionCommand.build` |
-| Help | Automatic but inconsistent | Automatic and consistent |
+| No-args behavior | `default_task :name` | Shows help (`["--help"]`) |
+| Version | `version_command` helper | `VersionCommand.build()` |
+| Help | Automatic but inconsistent | `HelpCommand.build()` for multi-command |
 | Aliases | `aliases: ["alias"]` in register | Same |
 
 ## Exe Wrapper Pattern
 
+**Multi-command CLI:**
 ```ruby
-# exe/ace-gem
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
 require "ace/gem"
 
+args = ARGV.empty? ? ["--help"] : ARGV
+
 begin
-  Ace::Gem::CLI.start(ARGV)
+  Dry::CLI.new(Ace::Gem::CLI).call(arguments: args)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
+```
+
+**Single-command CLI:**
+```ruby
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "ace/gem"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+begin
+  Dry::CLI.new(Ace::Gem::CLI::Commands::Process).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)
@@ -450,12 +549,14 @@ end
 
 ## Testing Pattern
 
+For multi-command CLIs, test via `Dry::CLI.new(Registry).call()`:
+
 ```ruby
 # test/commands/cli_test.rb
 class CliTest < AceTestCase
   def test_process_command_success
     output, = capture_io do
-      Ace::Gem::CLI.start(["process", "file.txt"])
+      Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process", "file.txt"])
     end
     assert_includes output, "Processed"
     # No exception = exit code 0
@@ -463,55 +564,77 @@ class CliTest < AceTestCase
 
   def test_process_command_failure
     error = assert_raises(Ace::Core::CLI::Error) do
-      capture_io { Ace::Gem::CLI.start(["process"]) }
+      capture_io { Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["process"]) }
     end
     assert_equal 1, error.exit_code
     assert_includes error.message, "file required"
   end
 
-  def test_default_command_routing
+  def test_no_args_shows_help
     output, = capture_io do
-      Ace::Gem::CLI.start(["file.txt"])  # No command specified
+      Dry::CLI.new(Ace::Gem::CLI).call(arguments: ["--help"])
     end
-    assert_includes output, "Processed"
+    assert_includes output, "Commands:"
+    assert_includes output, "process"
   end
+end
+```
 
-  def test_alias_routing
-    # Aliases must be in KNOWN_COMMANDS to work
-    assert Ace::Gem::CLI::KNOWN_COMMANDS.include?("ps")
+For single-command CLIs:
+
+```ruby
+class SingleCommandCliTest < AceTestCase
+  def test_search_success
+    output, = capture_io do
+      Dry::CLI.new(Ace::Search::CLI::Commands::Search).call(arguments: ["pattern"])
+    end
+    assert_includes output, "Results"
   end
 end
 ```
 
 ## Examples from Production
 
-### ace-git-worktree (Complex CLI)
+### ace-bundle (Multi-Command CLI)
 ```
-lib/ace/git/worktree/
-├── cli/
-│   ├── shared_helpers.rb   # Common methods
-│   ├── create.rb
-│   ├── list.rb
-│   ├── switch.rb
-│   ├── remove.rb
-│   ├── prune.rb
-│   └── config.rb
-├── commands/               # Business logic unchanged
-│   ├── create_command.rb
-│   └── [... 5 more]
-├── cli.rb                  # Registry with KNOWN_COMMANDS
-└── version.rb
+ace-bundle/
+├── lib/ace/bundle/
+│   ├── cli/
+│   │   └── commands/
+│   │       ├── load.rb
+│   │       └── list.rb
+│   ├── cli.rb                  # Registry with HelpCommand.build()
+│   └── version.rb
+├── exe/ace-bundle              # Dry::CLI.new(CLI).call()
+└── ...
 ```
 
-### ace-search (Simple CLI)
+### ace-git-commit (Single-Command CLI)
 ```
-lib/ace/search/
-├── cli/
-│   └── search.rb
-├── commands/
-│   └── search_command.rb
-├── cli.rb
-└── version.rb
+ace-git-commit/
+├── lib/ace/git_commit/
+│   ├── cli/
+│   │   └── commit.rb           # Single command class
+│   └── version.rb
+├── exe/ace-git-commit          # Dry::CLI.new(Commands::Commit).call()
+└── ...
+```
+
+### ace-git-worktree (Multi-Command CLI with Aliases)
+```
+ace-git-worktree/
+├── lib/ace/git/worktree/
+│   ├── cli/
+│   │   └── commands/
+│   │       ├── create.rb
+│   │       ├── list.rb
+│   │       ├── switch.rb
+│   │       ├── remove.rb
+│   │       └── prune.rb
+│   ├── cli.rb                  # Registry with commands
+│   └── version.rb
+├── exe/ace-git-worktree
+└── ...
 ```
 
 ## Related Decisions
