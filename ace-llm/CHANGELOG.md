@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.6] - 2026-02-22
+
+### Changed
+- Migrated from DefaultRouting to standard help pattern (task 278.21)
+  - Removed DWIM default routing to query command
+  - Added explicit `query` command requirement
+  - Removed `--list-providers` alias (use `list-providers` command)
+  - Added HelpCommand registration for `--help`, `-h`, `help`
+  - No-args now shows help instead of error
+
+### Technical
+- Updated CLI tests to use explicit `query` command prefix
+- Removed tests for deprecated DefaultRouting behavior
+
 ## [0.22.5] - 2026-02-22
 
 ### Fixed
