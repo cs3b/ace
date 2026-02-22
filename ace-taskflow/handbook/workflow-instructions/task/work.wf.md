@@ -200,7 +200,7 @@ For experienced users, here's the condensed workflow:
    * **Cross-Reference Validation** *(MANDATORY for rename/namespace/migration tasks):*
      - Search for stale references to old names/paths/URIs:
        ```bash
-       ace-search search "old-pattern" --content --hidden
+       ace-search "old-pattern" --content --hidden
        ```
      - Verify protocol resolution for any changed URIs:
        ```bash
