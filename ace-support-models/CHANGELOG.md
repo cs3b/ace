@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-02-22
+
+### Changed
+- Migrate ace-llm-providers CLI to standard help pattern
+  - Remove DefaultRouting extension and DWIM default behavior
+  - Add HelpCommand registration for `--help` and `-h`
+  - Update REGISTERED_COMMANDS to [name, description] format
+  - Add explicit start(args) method for CLI invocation
+
 ## [0.6.0] - 2026-02-22
 
 ### Added
