@@ -1297,6 +1297,13 @@ module Ace
           dir = Dir.glob(File.join(tasks_dir, "#{parent_number}-*")).find { |d| File.directory?(d) }
           return dir if dir
 
+          # Try in archive directory
+          archive_dir = File.join(tasks_dir, task_config.done_dir)
+          if File.directory?(archive_dir)
+            dir = Dir.glob(File.join(archive_dir, "#{parent_number}-*")).find { |d| File.directory?(d) }
+            return dir if dir
+          end
+
           # Fallback to old naming convention: {number}/
           old_dir = File.join(tasks_dir, parent_number)
           return old_dir if File.directory?(old_dir)
