@@ -207,7 +207,8 @@ module Ace
             backend_config = @backends[backend_name] || @backends[backend_name.to_sym] || {}
             tiers = backend_config["model_tiers"] || backend_config[:model_tiers] || {}
 
-            # Find the tier whose value matches the requested model
+            # Find the tier whose value matches the requested model.
+            # Note: first matching tier wins when multiple tiers map to the same model.
             matched = tiers.find { |_tier, m| m.to_s == model_name }
             return matched[0].to_s if matched
 
