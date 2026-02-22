@@ -22,36 +22,36 @@ gem 'ace-bundle', '~> 0.29.1'
 # List available presets
 ace-bundle --list
 
-# Load default preset
+# Show help
 ace-bundle
 
 # Load specific preset
 ace-bundle load project
 
 # Load configuration from file (positional argument - auto-detected)
-ace-bundle /path/to/config.yml         # Auto-detects as file
-ace-bundle ./custom-context.md         # Auto-detects as markdown file
+ace-bundle load /path/to/config.yml         # Auto-detects as file
+ace-bundle load ./custom-context.md         # Auto-detects as markdown file
 
 # Load configuration from file (explicit -f flag)
-ace-bundle -f config.yml               # Explicitly load YAML configuration
-ace-bundle -f config.md                # Explicitly load markdown with frontmatter
-ace-bundle -f config1.yml -f config2.md # Load multiple files
+ace-bundle load -f config.yml               # Explicitly load YAML configuration
+ace-bundle load -f config.md                # Explicitly load markdown with frontmatter
+ace-bundle load -f config1.yml -f config2.md # Load multiple files
 
 # Mix presets and files
-ace-bundle -p base -f custom.yml       # Combine preset with file config
-ace-bundle -p base -f config.yml -p extended # Mix in any order
+ace-bundle load -p base -f custom.yml       # Combine preset with file config
+ace-bundle load -p base -f config.yml -p extended # Mix in any order
 
 # Inspect configuration without execution
-ace-bundle -f config.yml --inspect-config # View merged configuration
+ace-bundle load -f config.yml --inspect-config # View merged configuration
 
 # Embed source document in output (overrides frontmatter setting)
-ace-bundle prompt.md --embed-source   # CLI flag overrides embed_document_source
-ace-bundle prompt.md -e               # Short form
+ace-bundle load prompt.md --embed-source   # CLI flag overrides embed_document_source
+ace-bundle load prompt.md -e               # Short form
 
 # Load via protocol (ace-nav integration)
 ace-bundle load wfi://task/create          # Load workflow
 ace-bundle load guide://testing            # Load guide
-ace-bundle task://061                 # Load task context
+ace-bundle load task://061                 # Load task context
 
 # Output modes
 ace-bundle load project --output stdio    # Output to terminal
@@ -70,8 +70,8 @@ The positional argument to `ace-bundle` supports automatic input type detection:
 
 ```bash
 ace-bundle load project                     # Detected as preset
-ace-bundle /path/to/config.yml         # Detected as file
-ace-bundle ./relative/path.md          # Detected as file
+ace-bundle load /path/to/config.yml         # Detected as file
+ace-bundle load ./relative/path.md          # Detected as file
 ace-bundle load wfi://workflow-name         # Detected as protocol
 ```
 
@@ -162,7 +162,7 @@ Files can:
 - Define the same configuration structure as presets
 - Reference and compose with existing presets via `presets:` key
 - Override parameters with `params:`
-- Be combined with presets: `ace-bundle -p base -f custom.yml`
+- Be combined with presets: `ace-bundle load -p base -f custom.yml`
 
 
 ### Content Sources

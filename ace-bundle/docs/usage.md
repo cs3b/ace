@@ -5,7 +5,7 @@ This guide explains how to use the ace-bundle command-line interface to load, pr
 ## Basic Usage
 
 ```bash
-ace-bundle <preset-name> [options]
+ace-bundle load <input> [options]
 ```
 
 The simplest usage loads a preset by name:
@@ -15,7 +15,7 @@ The simplest usage loads a preset by name:
 ace-bundle load project-base
 
 # Load the 'code-review' preset
-ace-bundle code-review
+ace-bundle load code-review
 ```
 
 ## Discovering Presets
@@ -40,7 +40,7 @@ test -f ~/.ace/bundle/presets/security-review.md && echo "Preset exists" || echo
 When you reference a non-existent preset, ace-bundle provides helpful error messages:
 
 ```bash
-ace-bundle unknown-preset
+ace-bundle load unknown-preset
 # Error: Preset 'unknown-preset' not found. Available presets: project-base, code-review, security-review, development
 ```
 
@@ -55,7 +55,7 @@ You can override the default preset location using environment variables:
 ```bash
 # Use custom bundle directory
 export ACE_BUNDLE_DIR="/path/to/my/contexts"
-ace-bundle my-custom-preset
+ace-bundle load my-custom-preset
 
 # Check current preset directory
 echo "Presets directory: ${ACE_BUNDLE_DIR:-$HOME/.ace/bundle/presets}"
@@ -106,13 +106,13 @@ Load specific preset(s). Can be used multiple times.
 
 ```bash
 # Load single preset
-ace-bundle --preset project-base
+ace-bundle load --preset project-base
 
 # Load multiple presets (composed together)
-ace-bundle --preset base --preset development --preset testing
+ace-bundle load --preset base --preset development --preset testing
 
 # Short form
-ace-bundle -p base -p development
+ace-bundle load -p base -p development
 ```
 
 #### `--file`, `-f`
@@ -120,16 +120,16 @@ Load configuration from YAML or markdown file with frontmatter.
 
 ```bash
 # Load from YAML file
-ace-bundle --file config/project.yml
+ace-bundle load --file config/project.yml
 
 # Load from markdown file with frontmatter
-ace-bundle --file docs/project-config.md
+ace-bundle load --file docs/project-config.md
 
 # Load multiple files
-ace-bundle --file base.yml --file overrides.md
+ace-bundle load --file base.yml --file overrides.md
 
 # Short form
-ace-bundle -f config.yml
+ace-bundle load -f config.yml
 ```
 
 #### Positional Arguments
@@ -138,7 +138,7 @@ You can also specify presets as positional arguments:
 ```bash
 # These are equivalent:
 ace-bundle load project-base
-ace-bundle --preset project-base
+ace-bundle load --preset project-base
 ```
 
 ### Display Options
@@ -148,7 +148,7 @@ Create separate files for each section when using section-based presets.
 
 ```bash
 # Create separate section files
-ace-bundle code-review --organize-by-sections --output context.md
+ace-bundle load code-review --organize-by-sections --output context.md
 
 # Results in:
 # - context.md (main file with all sections)
@@ -171,13 +171,13 @@ Embed the source document content in the output. This flag overrides the `embed_
 
 ```bash
 # Embed source document in output
-ace-bundle prompt.md --embed-source
+ace-bundle load prompt.md --embed-source
 
 # Short form
-ace-bundle prompt.md -e
+ace-bundle load prompt.md -e
 
 # Combine with other options
-ace-bundle prompt.md --embed-source --output stdio
+ace-bundle load prompt.md --embed-source --output stdio
 ```
 
 **Use Cases:**
@@ -204,7 +204,7 @@ My prompt content
 EOF
 
 # Load with embedded source
-ace-bundle prompt.md --embed-source --output stdio
+ace-bundle load prompt.md --embed-source --output stdio
 ```
 
 ### Processing Options
@@ -233,7 +233,7 @@ You can combine different input types:
 
 ```bash
 # Combine preset with file configuration
-ace-bundle --preset base --file project-overrides.yml
+ace-bundle load --preset base --file project-overrides.yml
 
 # Mix preset with inline YAML
 ace-bundle load project-base --context '{"files": ["extra-file.md"]}'
@@ -251,7 +251,7 @@ ace-bundle load wfi://code-review-workflow
 ace-bundle load guide://development-guide
 
 # Load task file
-ace-bundle task://planning-session
+ace-bundle load task://planning-session
 ```
 
 ### Auto-Detection
@@ -263,13 +263,13 @@ ace-bundle automatically detects input types:
 ace-bundle load project-base
 
 # File path (if file exists)
-ace-bundle config/project.yml
+ace-bundle load config/project.yml
 
 # Protocol URL
 ace-bundle load wfi://my-workflow
 
 # Inline YAML (if contains YAML syntax)
-ace-bundle '{"files": ["README.md"]}'
+ace-bundle load '{"files": ["README.md"]}'
 ```
 
 ## Common Workflows
@@ -278,35 +278,35 @@ ace-bundle '{"files": ["README.md"]}'
 
 ```bash
 # Basic code review
-ace-bundle code-review
+ace-bundle load code-review
 
 # Code review with security focus
-ace-bundle security-review
+ace-bundle load security-review
 
 # Custom code review to specific file
-ace-bundle --preset base --context '{"files": ["src/auth/**/*.rb"]}' --format markdown-xml
+ace-bundle load --preset base --context '{"files": ["src/auth/**/*.rb"]}' --format markdown-xml
 
 # Save code review to file
-ace-bundle code-review --output review.md --format markdown-xml
+ace-bundle load code-review --output review.md --format markdown-xml
 ```
 
 ### Pull Request Review Workflow
 
 ```bash
 # Load PR diff for review (single PR)
-ace-bundle --context '{"pr": [123]}'
+ace-bundle load --context '{"pr": [123]}'
 
 # Load multiple PRs at once
-ace-bundle --context '{"pr": [123, 456, 789]}'
+ace-bundle load --context '{"pr": [123, 456, 789]}'
 
 # Load PR with qualified reference (cross-repo)
-ace-bundle --context '{"pr": ["owner/repo#123"]}'
+ace-bundle load --context '{"pr": ["owner/repo#123"]}'
 
 # Combine PR with file patterns
-ace-bundle --context '{"pr": [123], "files": ["docs/**/*.md"]}'
+ace-bundle load --context '{"pr": [123], "files": ["docs/**/*.md"]}'
 
 # PR diff from GitHub URL
-ace-bundle --context '{"pr": ["https://github.com/owner/repo/pull/123"]}'
+ace-bundle load --context '{"pr": ["https://github.com/owner/repo/pull/123"]}'
 ```
 
 **Note:** The `pr` configuration accepts:
@@ -323,10 +323,10 @@ Arrays are supported for reviewing multiple PRs in a single context.
 ace-bundle load project-base
 
 # Development setup
-ace-bundle development
+ace-bundle load development
 
 # Testing setup
-ace-bundle testing
+ace-bundle load testing
 
 # Project overview in YAML format
 ace-bundle load project-base --format yaml
@@ -336,10 +336,10 @@ ace-bundle load project-base --format yaml
 
 ```bash
 # Documentation review
-ace-bundle documentation-review
+ace-bundle load documentation-review
 
 # Generate project documentation context
-ace-bundle --preset docs --format markdown-xml --output docs-context.md
+ace-bundle load --preset docs --format markdown-xml --output docs-context.md
 
 # Include workflow files
 ace-bundle load wfi://documentation-workflow --format markdown
@@ -352,7 +352,7 @@ ace-bundle load wfi://documentation-workflow --format markdown
 ace-bundle load project-base --inspect-config
 
 # Quick system check
-ace-bundle --preset system-check --format json
+ace-bundle load --preset system-check --format json
 
 # Verbose output with larger timeout
 ace-bundle load project-base --timeout 120 --max-size 20971520
@@ -463,7 +463,7 @@ Produces JSON output:
 When using section-based presets with `--organize-by-sections`:
 
 ```bash
-ace-bundle code-review --organize-by-sections --output review.md
+ace-bundle load code-review --organize-by-sections --output review.md
 ```
 
 Creates multiple files:
@@ -490,7 +490,7 @@ Override default bundle directory.
 
 ```bash
 export ACE_BUNDLE_DIR="/path/to/my/contexts"
-ace-bundle my-preset
+ace-bundle load my-preset
 ```
 
 ### `ACE_CACHE_DIR`
@@ -525,7 +525,7 @@ ace-bundle load project-base
 
 #### Preset Not Found
 ```bash
-ace-bundle unknown-preset
+ace-bundle load unknown-preset
 # Error: Preset 'unknown-preset' not found
 ```
 
@@ -533,7 +533,7 @@ ace-bundle unknown-preset
 
 #### File Not Found
 ```bash
-ace-bundle --file missing-config.yml
+ace-bundle load --file missing-config.yml
 # Error: File not found: missing-config.yml
 ```
 
@@ -541,7 +541,7 @@ ace-bundle --file missing-config.yml
 
 #### Timeout Exceeded
 ```bash
-ace-bundle slow-preset
+ace-bundle load slow-preset
 # Error: Command execution timeout exceeded
 ```
 
@@ -549,7 +549,7 @@ ace-bundle slow-preset
 
 #### Size Limit Exceeded
 ```bash
-ace-bundle large-preset
+ace-bundle load large-preset
 # Error: Output size limit exceeded
 ```
 
@@ -592,7 +592,7 @@ Shows:
 #!/bin/sh
 # pre-commit hook
 echo "Generating pre-commit context..."
-ace-bundle code-review --format markdown-xml --output .git/context.md
+ace-bundle load code-review --format markdown-xml --output .git/context.md
 ```
 
 ### CI/CD Pipeline
@@ -601,10 +601,10 @@ ace-bundle code-review --format markdown-xml --output .git/context.md
 #!/bin/bash
 # CI pipeline step
 echo "Generating build context..."
-ace-bundle ci-build --format json --output build-context.json
+ace-bundle load ci-build --format json --output build-context.json
 
 echo "Running security scan..."
-ace-bundle security-review --format markdown --output security-report.md
+ace-bundle load security-review --format markdown --output security-report.md
 ```
 
 ### Development Scripts
@@ -615,10 +615,10 @@ ace-bundle security-review --format markdown --output security-report.md
 echo "Setting up development environment..."
 
 # Generate project context
-ace-bundle development --output dev-context.md
+ace-bundle load development --output dev-context.md
 
 # Show system info
-ace-bundle system-check --format yaml
+ace-bundle load system-check --format yaml
 ```
 
 ## Performance Tips
