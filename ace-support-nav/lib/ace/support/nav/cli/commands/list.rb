@@ -56,9 +56,9 @@ module Ace
             argument :pattern, required: true, desc: "Pattern to match resources"
 
             option :tree, type: :boolean, desc: "Display resources in tree format"
-            option :verbose, type: :boolean, aliases: %w[-v], desc: "Show detailed information"
-            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress config summary"
-            option :debug, type: :boolean, aliases: %w[-d], desc: "Enable debug output"
+            option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+            option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+            option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
             def call(pattern:, **options)
               # Initialize instance variables for use in private methods

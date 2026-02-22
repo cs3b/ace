@@ -26,6 +26,15 @@ module Ace
       # CLI for ace-models using dry-cli
       module CLI
         extend Dry::CLI::Registry
+        include Ace::Core::CLI::DryCli::CommandGroups
+
+        # Command groups for --help output (used by usage_formatter)
+        COMMAND_GROUPS = {
+          "Cache" => %w[cache],
+          "Providers" => %w[providers],
+          "Models" => %w[models],
+          "Shortcuts" => %w[search info sync]
+        }.freeze
 
         # Application commands registered in this CLI (single source of truth)
         REGISTERED_COMMANDS = %w[cache providers models search info sync].freeze
@@ -38,11 +47,25 @@ module Ace
 
         DEFAULT_COMMAND = "help"
 
+        # Namespace commands that have subcommands but no leaf command.
+        # dry-cli prints these to stderr with exit code 1 when --help is passed.
+        NAMESPACE_COMMANDS = %w[cache providers models].freeze
+
         # Testable start method with default command routing
         def self.start(args)
           # Handle help explicitly (dry-cli doesn't handle registry-level help)
           if args.first && %w[help --help -h].include?(args.first)
-            puts Dry::CLI::Usage.call(get([]))
+            puts Dry::CLI::Usage.call(get([]), registry: self)
+            return 0
+          end
+
+          # Handle namespace-level help (e.g., "cache --help", "providers -h")
+          # dry-cli doesn't handle this properly — it prints to stderr with exit code 1
+          if args.length == 2 && NAMESPACE_COMMANDS.include?(args.first) && %w[--help -h].include?(args.last)
+            result = get(args.first(1))
+            # Don't pass registry for namespace help — avoids group matching
+            # against top-level groups when showing a namespace subtree
+            puts Dry::CLI::Usage.call(result)
             return 0
           end
 

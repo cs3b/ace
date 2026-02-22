@@ -7,7 +7,10 @@ require_relative "models/config_templates"
 
 module Ace
   module Core
-    class CLI
+    # Framework CLI for ace-framework binary.
+    # Uses a separate class name to avoid collision with Ace::Core::CLI module
+    # (which provides shared dry-cli infrastructure).
+    class FrameworkCLI
       def self.start(argv)
         new.run(argv)
       end
@@ -24,7 +27,7 @@ module Ace
           run_diff(argv)
         when "list"
           run_list(argv)
-        when "version", "--version", "-v"
+        when "version", "--version"
           show_version
         when "help", "--help", "-h"
           show_help
@@ -43,11 +46,19 @@ module Ace
         gem_name = nil
 
         parser = OptionParser.new do |opts|
-          opts.banner = "Usage: ace-framework init [GEM] [options]"
+          opts.banner = <<~BANNER.chomp
+            NAME
+              ace-framework init - Initialize configuration for ace-* gems
+
+            USAGE
+              ace-framework init [GEM] [OPTIONS]
+
+            OPTIONS
+          BANNER
           opts.on("--force", "Overwrite existing files") { options[:force] = true }
           opts.on("--dry-run", "Show what would be done") { options[:dry_run] = true }
           opts.on("--global", "Use ~/.ace instead of ./.ace") { options[:global] = true }
-          opts.on("--verbose", "Show detailed output") { options[:verbose] = true }
+          opts.on("--verbose", "Show verbose output") { options[:verbose] = true }
           opts.on("-h", "--help", "Show this help") { puts opts; exit }
         end
 
@@ -68,7 +79,15 @@ module Ace
         gem_name = nil
 
         parser = OptionParser.new do |opts|
-          opts.banner = "Usage: ace-framework diff [GEM] [options]"
+          opts.banner = <<~BANNER.chomp
+            NAME
+              ace-framework diff - Compare configs with examples
+
+            USAGE
+              ace-framework diff [GEM] [OPTIONS]
+
+            OPTIONS
+          BANNER
           opts.on("--global", "Compare global configs") { options[:global] = true }
           opts.on("--local", "Compare local configs (default)") { options[:local] = true }
           opts.on("--file PATH", "Compare specific file") { |f| options[:file] = f }
@@ -92,7 +111,15 @@ module Ace
         verbose = false
 
         parser = OptionParser.new do |opts|
-          opts.banner = "Usage: ace-framework list [options]"
+          opts.banner = <<~BANNER.chomp
+            NAME
+              ace-framework list - List available ace-* gems with example configs
+
+            USAGE
+              ace-framework list [OPTIONS]
+
+            OPTIONS
+          BANNER
           opts.on("--verbose", "Show detailed information") { verbose = true }
           opts.on("-h", "--help", "Show this help") { puts opts; exit }
         end
@@ -136,18 +163,22 @@ module Ace
       end
 
       def show_help
-        puts "ace-framework - Configuration management for ace-* gems"
-        puts ""
-        puts "Usage: ace-framework COMMAND [options]"
-        puts ""
-        puts "Commands:"
-        puts "  init [GEM]    Initialize configuration for specific gem or all"
-        puts "  diff [GEM]    Compare configs with examples for specific gem or all"
-        puts "  list          List available ace-* gems with example configs"
-        puts "  version       Show version"
-        puts "  help          Show this help"
-        puts ""
-        puts "Run 'ace-framework COMMAND --help' for more information on a command."
+        puts <<~HELP
+          NAME
+            ace-framework - Configuration management for ace-* gems
+
+          USAGE
+            ace-framework COMMAND [OPTIONS]
+
+          COMMANDS
+            init [GEM]                        Initialize configuration for specific gem or all
+            diff [GEM]                        Compare configs with examples
+            list                              List available ace-* gems with example configs
+            version                           Show version
+            help                              Show this help
+
+          Run 'ace-framework COMMAND --help' for more information on a command.
+        HELP
       end
     end
   end

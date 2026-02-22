@@ -3,7 +3,7 @@
 module Ace
   module Support
     module Models
-      VERSION = "0.5.1"
+      VERSION = "0.5.2"
     end
   end
 end
