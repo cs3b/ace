@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.576] - 2026-02-22
+
+### Changed
+- **ace-git-worktree v0.13.12**: Migrate to standard multi-command help pattern with explicit top-level help commands and no-args help behavior.
+
+### Technical
+- **ace-git-worktree v0.13.12**: Remove default-routing command coercion and update CLI routing tests to explicit Dry::CLI/executable assertions.
+
+## [0.9.575] - 2026-02-22
+
+### Added
+- **ace-llm-providers-cli v0.18.0**: New `ClaudeOaiClient` provider for Claude over Anthropic-compatible APIs (Z.ai, OpenRouter) with backend env injection
+
 ## [0.9.574] - 2026-02-22
 
 ### Changed
