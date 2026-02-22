@@ -1,11 +1,8 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../version"
-require_relative "../molecules/task_loader"
-require_relative "../molecules/release_resolver"
 
 # Reuse existing command classes
 require_relative "commands/idea"
@@ -24,23 +21,26 @@ module Ace
     # flat `ace-idea <command>` invocations.
     module IdeaCLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
       PROGRAM_NAME = "ace-idea"
 
-      REGISTERED_COMMANDS = %w[list create done park unpark reschedule].freeze
-
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      DEFAULT_COMMAND = "list"
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["list", "List ideas in current release"],
+        ["show", "Show idea details"],
+        ["create", "Create a new idea"],
+        ["done", "Mark idea as complete"],
+        ["park", "Park an idea for later"],
+        ["unpark", "Restore a parked idea"],
+        ["reschedule", "Reschedule idea to different release"]
+      ].freeze
 
       HELP_EXAMPLES = [
-        ["List pending ideas", "ace-idea"],
-        ["Capture a new idea", "ace-idea create \"Add dark mode support\""],
-        ["Mark idea as done", "ace-idea done my-feature"],
-        ["Park an idea for later", "ace-idea park low-priority-item"],
+        "ace-idea list",
+        "ace-idea show 42",
+        "ace-idea create \"New feature concept\"",
+        "ace-idea done 42",
+        "ace-idea park 42"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
@@ -60,11 +60,23 @@ module Ace
       register "version", version_cmd
       register "--version", version_cmd
 
-      # Clear caches before each invocation
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Taskflow::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
+
+      # Entry point for CLI invocation (used by tests and exe/)
+      #
+      # @param args [Array<String>] Command-line arguments
+      # @return [Integer] Exit code (0 for success, non-zero for errors)
       def self.start(args)
-        Ace::Taskflow::Molecules::TaskLoader.clear_cache!
-        Ace::Taskflow::Molecules::ReleaseResolver.clear_cache!
-        super
+        Dry::CLI.new(self).call(arguments: args)
       end
     end
   end
