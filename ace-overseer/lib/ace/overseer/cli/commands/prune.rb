@@ -15,8 +15,8 @@ module Ace
           option :force, aliases: ["-f"], type: :boolean, default: false, desc: "Force-remove unsafe worktrees"
           option :yes, aliases: ["-y"], type: :boolean, default: false, desc: "Skip confirmation"
           option :dry_run, type: :boolean, default: false, desc: "Show candidates only"
-          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress output"
-          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Enable debug output"
+          option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
+          option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
 
           def initialize(orchestrator: nil, input: $stdin, output: $stdout)
             super()
