@@ -127,12 +127,10 @@ module Ace
             # Always use JSON output for consistent parsing
             cmd << "--output-format" << "json"
 
-            # Parse backend/model — use just the model name for --model flag
-            _backend_name, model_name = split_backend_model(@model)
-
-            if model_name
-              cmd << "--model" << model_name
-            end
+            # Use a tier alias (sonnet/opus/haiku) that claude CLI recognizes,
+            # rather than the backend model name (e.g. glm-5) which it doesn't.
+            tier = resolve_model_tier
+            cmd << "--model" << tier if tier
 
             # Add temperature if provided
             temp = options[:temperature] || @generation_config[:temperature]
@@ -188,7 +186,33 @@ module Ace
             # Clear ANTHROPIC_API_KEY so claude doesn't use cached Anthropic creds
             env["ANTHROPIC_API_KEY"] = ""
 
+            # Map the tier alias to the backend's actual model name so
+            # `--model sonnet` resolves to e.g. "glm-5" at the backend
+            _bn, model_name = split_backend_model(@model)
+            tier = resolve_model_tier
+            if tier && model_name
+              env_key_for_tier = "ANTHROPIC_DEFAULT_#{tier.upcase}_MODEL"
+              env[env_key_for_tier] = model_name
+            end
+
             env
+          end
+
+          # Resolve which Claude CLI tier alias to use for --model.
+          # Looks up model_tiers in backend config; falls back to "sonnet".
+          def resolve_model_tier
+            backend_name, model_name = split_backend_model(@model)
+            return "sonnet" unless backend_name && model_name
+
+            backend_config = @backends[backend_name] || @backends[backend_name.to_sym] || {}
+            tiers = backend_config["model_tiers"] || backend_config[:model_tiers] || {}
+
+            # Find the tier whose value matches the requested model
+            matched = tiers.find { |_tier, m| m.to_s == model_name }
+            return matched[0].to_s if matched
+
+            # No explicit tier mapping — default to sonnet
+            "sonnet"
           end
 
           def parse_claude_response(stdout, stderr, status, prompt, options)

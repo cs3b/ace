@@ -7,7 +7,12 @@ describe "ClaudeOaiClient" do
     @backends = {
       "zai" => {
         "base_url" => "https://api.z.ai/api/anthropic",
-        "env_key" => "ZAI_API_KEY"
+        "env_key" => "ZAI_API_KEY",
+        "model_tiers" => {
+          "opus" => "glm-5",
+          "sonnet" => "glm-5",
+          "haiku" => "glm-4.7"
+        }
       }
     }
     @client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new(backends: @backends)
@@ -89,20 +94,28 @@ describe "ClaudeOaiClient" do
       assert_equal "json", cmd[json_idx + 1]
     end
 
-    it "uses just the model name (not backend/model) for --model flag" do
+    it "uses a tier alias (not backend model name) for --model flag" do
       cmd = @client.send(:build_claude_command, {})
 
       m_index = cmd.index("--model")
       refute_nil m_index
-      assert_equal "glm-5", cmd[m_index + 1]
+      assert_equal "opus", cmd[m_index + 1]
     end
 
-    it "uses different backend model" do
+    it "resolves haiku tier for glm-4.7" do
       client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new(model: "zai/glm-4.7", backends: @backends)
       cmd = client.send(:build_claude_command, {})
 
       m_index = cmd.index("--model")
-      assert_equal "glm-4.7", cmd[m_index + 1]
+      assert_equal "haiku", cmd[m_index + 1]
+    end
+
+    it "falls back to sonnet for unknown model" do
+      client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new(model: "zai/glm-999", backends: @backends)
+      cmd = client.send(:build_claude_command, {})
+
+      m_index = cmd.index("--model")
+      assert_equal "sonnet", cmd[m_index + 1]
     end
   end
 
@@ -125,6 +138,23 @@ describe "ClaudeOaiClient" do
     it "clears ANTHROPIC_API_KEY to prevent cached creds" do
       env = @client.send(:backend_env_vars)
       assert_equal "", env["ANTHROPIC_API_KEY"]
+    end
+
+    it "sets ANTHROPIC_DEFAULT_OPUS_MODEL for tier-mapped model" do
+      env = @client.send(:backend_env_vars)
+      assert_equal "glm-5", env["ANTHROPIC_DEFAULT_OPUS_MODEL"]
+    end
+
+    it "sets ANTHROPIC_DEFAULT_HAIKU_MODEL for haiku-tier model" do
+      client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new(model: "zai/glm-4.7", backends: @backends)
+      env = client.send(:backend_env_vars)
+      assert_equal "glm-4.7", env["ANTHROPIC_DEFAULT_HAIKU_MODEL"]
+    end
+
+    it "sets ANTHROPIC_DEFAULT_SONNET_MODEL for unknown model (fallback)" do
+      client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new(model: "zai/glm-999", backends: @backends)
+      env = client.send(:backend_env_vars)
+      assert_equal "glm-999", env["ANTHROPIC_DEFAULT_SONNET_MODEL"]
     end
 
     it "returns empty hash when no backend matches" do
