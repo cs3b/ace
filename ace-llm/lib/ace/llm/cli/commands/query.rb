@@ -46,6 +46,10 @@ module Ace
         option :prompt, type: :string, desc: "Prompt text (overrides positional PROMPT)"
         option :force, type: :boolean, default: false, desc: "Force overwrite existing files"
 
+        # Discovery and meta options
+        option :version, type: :boolean, desc: "Show version information"
+        option :list_providers, type: :boolean, desc: "List available LLM providers"
+
         # Execute the query command
         #
         # @param provider_model [String, nil] PROVIDER[:MODEL] or alias from positional arg
@@ -53,6 +57,16 @@ module Ace
         # @param options [Hash] Command options
         # @return [Integer] Exit code (0 for success, 1 for failure)
         def call(provider_model: nil, prompt_text: nil, **options)
+          if options[:version]
+            puts "ace-llm #{Ace::LLM::VERSION}"
+            return
+          end
+
+          if options[:list_providers]
+            list_providers
+            return
+          end
+
           # Resolve provider_model: positional arg > --model flag
           @provider_model = provider_model
           if @provider_model.nil? && options[:model]
@@ -94,9 +108,9 @@ module Ace
         #
         # @return [Integer] Exit code (0 for success)
         def show_help
-          puts "Usage: ace-llm-query PROVIDER[:MODEL] [PROMPT] [options]"
-          puts "       ace-llm-query PROVIDER --prompt PROMPT [options]"
-          puts "       ace-llm-query PROVIDER PROMPT --model MODEL [options]"
+          puts "Usage: ace-llm PROVIDER[:MODEL] [PROMPT] [options]"
+          puts "       ace-llm PROVIDER --prompt PROMPT [options]"
+          puts "       ace-llm PROVIDER PROMPT --model MODEL [options]"
           puts ""
           puts "Query any LLM provider through a unified interface"
           puts ""
@@ -117,12 +131,12 @@ module Ace
           puts "  -h, --help                     Show this help message"
           puts ""
           puts "Examples:"
-          puts '  ace-llm-query google:gemini-2.5-flash "What is Ruby?"'
-          puts '  ace-llm-query gflash "Quick question" # using alias'
-          puts '  ace-llm-query google --prompt "What is Ruby?" # using --prompt flag'
-          puts '  ace-llm-query google "What is Ruby?" --model gemini-2.0-flash-lite'
-          puts '  ace-llm-query claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
-          puts '  ace-llm-query claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
+          puts '  ace-llm google:gemini-2.5-flash "What is Ruby?"'
+          puts '  ace-llm gflash "Quick question" # using alias'
+          puts '  ace-llm google --prompt "What is Ruby?" # using --prompt flag'
+          puts '  ace-llm google "What is Ruby?" --model gemini-2.0-flash-lite'
+          puts '  ace-llm claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
+          puts '  ace-llm claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
           puts ""
           puts "Provider Aliases:"
           puts "  Short aliases for common provider:MODEL combinations:"
@@ -151,7 +165,7 @@ module Ace
           end
 
           puts ""
-          puts "Use: ace-llm-query #{@provider_model} \"your prompt here\""
+          puts "Use: ace-llm #{@provider_model} \"your prompt here\""
         end
 
         # Display configuration summary
@@ -314,6 +328,38 @@ module Ace
           else
             # Output to stdout
             puts formatted_output
+          end
+        end
+
+        # List available LLM providers with status
+        def list_providers
+          require "ace/llm/molecules/client_registry"
+
+          registry = Ace::LLM::Molecules::ClientRegistry.new
+          providers = registry.list_providers_with_status
+
+          puts "Available LLM Providers:"
+          puts ""
+
+          providers.each do |provider|
+            status = provider[:available] ? "\u2713" : "\u2717"
+            api_status = if provider[:api_key_required]
+                          provider[:api_key_present] ? "(API key configured)" : "(API key required)"
+                        else
+                          "(No API key needed)"
+                        end
+
+            puts "#{status} #{provider[:name]} #{api_status}"
+
+            if provider[:models] && !provider[:models].empty?
+              puts "  Models: #{provider[:models].join(', ')}"
+            end
+
+            unless provider[:available]
+              puts "  Gem required: #{provider[:gem]}"
+            end
+
+            puts ""
           end
         end
 
