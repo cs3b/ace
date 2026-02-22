@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "dry/cli"
-require "set"
 require "ace/core"
 require_relative "../version"
 
@@ -17,21 +16,18 @@ module Ace
     # flat `ace-retro <command>` invocations.
     module RetroCLI
       extend Dry::CLI::Registry
-      extend Ace::Core::CLI::DryCli::DefaultRouting
 
       PROGRAM_NAME = "ace-retro"
 
-      REGISTERED_COMMANDS = %w[list create].freeze
-
-      BUILTIN_COMMANDS = %w[version help --help -h --version].freeze
-
-      KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
-
-      DEFAULT_COMMAND = "list"
+      # Application commands with descriptions (for help output)
+      REGISTERED_COMMANDS = [
+        ["list", "List retrospective reflection notes"],
+        ["create", "Create a retrospective for a task"]
+      ].freeze
 
       HELP_EXAMPLES = [
-        ["List retrospectives", "ace-retro"],
-        ["Create a retrospective for a task", "ace-retro create 148"],
+        "ace-retro list",
+        "ace-retro create 148"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
@@ -45,6 +41,25 @@ module Ace
       )
       register "version", version_cmd
       register "--version", version_cmd
+
+      # Register help command
+      help_cmd = Ace::Core::CLI::DryCli::HelpCommand.build(
+        program_name: PROGRAM_NAME,
+        version: Ace::Taskflow::VERSION,
+        commands: REGISTERED_COMMANDS,
+        examples: HELP_EXAMPLES
+      )
+      register "help", help_cmd
+      register "--help", help_cmd
+      register "-h", help_cmd
+
+      # Entry point for CLI invocation (used by tests and exe/)
+      #
+      # @param args [Array<String>] Command-line arguments
+      # @return [Integer] Exit code (0 for success, non-zero for errors)
+      def self.start(args)
+        Dry::CLI.new(self).call(arguments: args)
+      end
     end
   end
 end
