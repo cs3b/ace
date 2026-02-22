@@ -481,7 +481,7 @@ Before starting a rename/namespace/migration that affects paths or identifiers:
 1. **Run baseline E2E suite** — Establish that all tests pass before changes begin
 2. **Audit test cases for hardcoded references** to the patterns being changed:
    ```bash
-   ace-search search "old-pattern" --content --hidden --glob "*/test/e2e/**"
+   ace-search "old-pattern" --content --hidden --glob "*/test/e2e/**"
    ```
 3. **Count affected test cases** — If >5 TCs reference the changing pattern, plan test updates as a subtask (not follow-up)
 
