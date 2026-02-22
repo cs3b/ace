@@ -25,10 +25,11 @@ class GitCommitCliRoutingTest < TestCase
     assert_match(/USAGE|Usage:/, stdout + stderr)
   end
 
-  def test_cli_shows_help_when_no_args
-    stdout, stderr, status = Open3.capture3(@exe_path)
-    assert status.success?
-    assert_match(/USAGE|Usage:/, stdout + stderr)
+  def test_cli_runs_commit_when_no_args
+    stdout, stderr, _status = Open3.capture3(@exe_path)
+    output = stdout + stderr
+    refute_match(/unknown command/i, output)
+    refute_match(/was called with arguments/i, output)
   end
 
   # --- Commit Command Tests ---
