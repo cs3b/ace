@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.569] - 2026-02-22
+
+### Changed
+- **ace-llm-providers-cli v0.17.1**: Update codexoai provider config — add backend `name` field, remove `wire_api`, rename env key to `ZAI_API_KEY`
+- **ace-llm-providers-cli v0.17.1**: `CodexOaiClient` now passes provider `name` via `-c` config override with fallback to backend key
+
 ## [0.9.568] - 2026-02-22
 
 ### Added
