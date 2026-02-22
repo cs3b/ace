@@ -42,7 +42,7 @@ All code implementation happens during `/ace-task-work` (status: in-progress).
 - Explicit plan text describing what to build
 - Behavioral requirements or user stories
 - Reference to Claude Code plan mode results
-- Enhanced idea from `ace-taskflow idea`
+- Enhanced idea from `ace-idea`
 
 ## Context Workflows
 
@@ -120,7 +120,7 @@ I can have consistent content loading across all ACE tools."
 
 - [ ] Draft task created with complete behavioral specification (`status: draft`)
 - [ ] Changes committed to git with proper message and co-authorship
-- [ ] Task discoverable via `ace-taskflow task XXX`
+- [ ] Task discoverable via `ace-task XXX`
 - [ ] Task file contains proper YAML frontmatter with task ID
 - [ ] Task ready for review via `ace-review-run-task`
 

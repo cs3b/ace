@@ -18,7 +18,7 @@ Process multiple draft tasks and create implementation plans for each one in seq
 
 ## Prerequisites
 
-- Draft tasks exist (discoverable via `ace-taskflow tasks --status draft`)
+- Draft tasks exist (discoverable via `ace-task list --status draft`)
 - Access to `plan-task` singular workflow via `ace-bundle wfi://task/plan`
 - Understanding of ace-taskflow commands
 
@@ -33,7 +33,7 @@ Process multiple draft tasks and create implementation plans for each one in seq
 **If no task pattern provided:**
 ```bash
 # Discover all draft tasks
-ace-taskflow tasks --status draft
+ace-task list --status draft
 ```
 
 **If task pattern provided:**
@@ -84,7 +84,7 @@ Expected output:
 After planning succeeds:
 ```bash
 # Verify task status changed
-ace-taskflow task [task-id] | grep -q "status:pending" || echo "WARNING: Status not updated"
+ace-task [task-id] | grep -q "status:pending" || echo "WARNING: Status not updated"
 ```
 
 **2.4 Error Handling:**
@@ -147,7 +147,7 @@ Provide comprehensive summary including:
 ## Error Handling Strategies
 
 ### Task Discovery Failure
-- **Symptom:** `ace-taskflow tasks --status draft` returns no results or errors
+- **Symptom:** `ace-task list --status draft` returns no results or errors
 - **Action:** Report issue, check if draft tasks exist, exit gracefully
 
 ### Planning Workflow Failure

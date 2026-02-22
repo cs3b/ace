@@ -15,7 +15,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 
 ## Prerequisites
 
-* Enhanced ideas or direct requirements (optional input from ace-taskflow idea)
+* Enhanced ideas or direct requirements (optional input from ace-idea)
 * Understanding of user experience and interface requirements
 * Access to `.ace-taskflow/` directory for task storage
 * ace-taskflow command available for task management
@@ -30,7 +30,7 @@ Create high-level behavioral specifications that define WHAT the system should d
 1. **Gather Behavioral Requirements**
    * Collect input material focusing on user experience:
      * Direct behavioral requirements from user
-     * Enhanced ideas from ace-taskflow idea output
+     * Enhanced ideas from ace-idea output
      * User stories or experience descriptions
      * Interface specifications or contracts
    * If files are referenced, read their contents
@@ -55,7 +55,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * API endpoints with request/response formats
      * UI components with expected behaviors
      * Data flow and interaction patterns
-   * Use examples from existing tools (like ace-taskflow idea pattern)
+   * Use examples from existing tools (like ace-idea pattern)
    * Specify public contracts that implementation must satisfy
 
 4. **Present Behavioral Draft for Verification**
@@ -96,19 +96,19 @@ Create high-level behavioral specifications that define WHAT the system should d
 
    **Pattern A — Single flat task (default):**
    ```bash
-   ace-taskflow task create "Task Title" --status draft --estimate "TBD"
+   ace-task create "Task Title" --status draft --estimate "TBD"
    ```
 
    **Pattern B — Orchestrator with subtasks:**
    ```bash
    # 1. Create the parent task first
-   ace-taskflow task create "Parent Title" --status draft --estimate "TBD"
+   ace-task create "Parent Title" --status draft --estimate "TBD"
    # Returns: v.X.Y+task.NNN
 
    # 2. Add each subtask with --child-of (auto-converts parent to orchestrator)
-   ace-taskflow task create "Phase 1: ..." --status draft --child-of NNN
-   ace-taskflow task create "Phase 2: ..." --status draft --child-of NNN
-   ace-taskflow task create "Phase 3: ..." --status draft --child-of NNN
+   ace-task create "Phase 1: ..." --status draft --child-of NNN
+   ace-task create "Phase 2: ..." --status draft --child-of NNN
+   ace-task create "Phase 3: ..." --status draft --child-of NNN
    ```
    ⚠️ Do NOT use `task move --child-of self` first — `--child-of` on `task create` handles conversion automatically.
 
@@ -124,7 +124,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * Interface Contract definitions with examples
      * Success Criteria as mandatory requirements
      * Validation Questions highlighting unknowns
-     * Integration with ace-taskflow idea if applicable
+     * Integration with ace-idea if applicable
    * Avoid adding implementation details
 
 8. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
@@ -133,7 +133,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * List all idea files referenced during behavioral specification
      * Note: Multiple idea files may be combined into one task
    * For EACH source idea file:
-     * Mark idea as done using ace-taskflow: `ace-taskflow idea done <idea-folder-reference>`
+     * Mark idea as done using ace-taskflow: `ace-idea done <idea-folder-reference>`
        * Use the idea folder name (e.g., `20251128-224153-my-idea`), not a file path
        * This moves the entire idea folder to `ideas/done/<idea-folder>/`
        * Updates idea frontmatter with completion status and timestamp
@@ -148,7 +148,7 @@ Create high-level behavioral specifications that define WHAT the system should d
      * [ ] Task references updated to new locations
      * [ ] Git movements committed
    * Error handling:
-     * If ace-taskflow idea done fails: Report error and manual intervention needed
+     * If ace-idea done fails: Report error and manual intervention needed
    * Success indicators:
      * Report each file movement: "Idea marked as done: [idea-reference]"
      * Confirm all source ideas organized: "All X idea files marked as done"
@@ -210,7 +210,7 @@ All code implementation happens during `/ace-task-work` (status: in-progress).
 
 ## Input
 
-* Enhanced ideas from ace-taskflow idea (optional but recommended)
+* Enhanced ideas from ace-idea (optional but recommended)
 * Direct behavioral requirements or user stories
 * Interface specifications or contracts
 * User experience descriptions
@@ -353,7 +353,7 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 
 ## References
 
-- Related ace-taskflow idea output (if applicable)
+- Related ace-idea output (if applicable)
 - User experience requirements
 - Interface specification examples
 ```

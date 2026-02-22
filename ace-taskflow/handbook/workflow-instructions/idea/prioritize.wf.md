@@ -75,7 +75,7 @@ Systematically organize, prioritize, and align backlog ideas with current projec
    * Existing tools inventory complete
 
 ### 4. **Prioritize Ideas Using Reschedule:**
-   * Use `ace-taskflow idea reschedule` to set priority order via sort metadata
+   * Use `ace-idea reschedule` to set priority order via sort metadata
    * Priority levels:
      - **High priority** (Critical impact, low complexity): Position first
      - **Medium priority** (High impact or medium complexity): Position middle
@@ -84,25 +84,25 @@ Systematically organize, prioritize, and align backlog ideas with current projec
    * Rescheduling pattern:
      ```bash
      # Position highest priority idea first
-     ace-taskflow idea reschedule <idea-1> --add-next --backlog
+     ace-idea reschedule <idea-1> --add-next --backlog
 
      # Position subsequent ideas relative to previous
-     ace-taskflow idea reschedule <idea-2> --after <idea-1> --backlog
-     ace-taskflow idea reschedule <idea-3> --after <idea-2> --backlog
+     ace-idea reschedule <idea-2> --after <idea-1> --backlog
+     ace-idea reschedule <idea-3> --after <idea-2> --backlog
      # ... continue for each prioritized idea
 
      # Position lower priority ideas at end
-     ace-taskflow idea reschedule <low-priority-idea> --add-at-end --backlog
+     ace-idea reschedule <low-priority-idea> --add-at-end --backlog
      ```
 
    **How it works:**
    * Updates `sort:` field in idea frontmatter (no filename changes)
-   * Ideas are sorted by sort value when listing with `ace-taskflow ideas`
+   * Ideas are sorted by sort value when listing with `ace-idea list`
    * No git history issues from renaming files
 
    **Validation:**
    * All ideas have `sort:` metadata in frontmatter
-   * Running `ace-taskflow ideas --backlog` shows ideas in priority order
+   * Running `ace-idea list --backlog` shows ideas in priority order
    * Can re-prioritize later using same reschedule commands
 
 ### 5. **Align Ideas with Project Architecture:**
@@ -164,13 +164,13 @@ Systematically organize, prioritize, and align backlog ideas with current projec
 ### 7. **Clean Up and Finalize:**
    * Remove any temporary files created during process
    * Verify all ideas have sort metadata updated
-   * Verify idea order with `ace-taskflow ideas --backlog`
+   * Verify idea order with `ace-idea list --backlog`
    * Create summary of changes for commit message
 
    **Validation:**
    * No temporary files remain
    * All prioritized ideas have `sort:` field in frontmatter
-   * `ace-taskflow ideas --backlog` shows correct priority order
+   * `ace-idea list --backlog` shows correct priority order
    * Git status shows modified idea files (not renamed)
    * Ready for review and commit
 
@@ -180,7 +180,7 @@ Systematically organize, prioritize, and align backlog ideas with current projec
 * Ideas aligned with current project architecture
 * Implementation roadmap created with clear timeline
 * No broken references or missing dependencies
-* `ace-taskflow ideas --backlog` displays ideas in priority order
+* `ace-idea list --backlog` displays ideas in priority order
 * Changes ready for version control commit
 
 ## Error Handling

@@ -121,7 +121,7 @@ update:
 
 ```bash
 # Run cascade review after completing task 4
-ace-taskflow task v.0.4.0+004
+ace-task v.0.4.0+004
 # Verify task is complete
 
 # Execute cascade review

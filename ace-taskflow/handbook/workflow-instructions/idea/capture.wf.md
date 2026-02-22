@@ -11,11 +11,11 @@ update:
 
 ## Goal
 
-Use the ace-taskflow idea tool to capture and enhance raw ideas within project context, transforming informal thoughts into structured, contextual ideas ready for future specification phases.
+Use the ace-idea tool to capture and enhance raw ideas within project context, transforming informal thoughts into structured, contextual ideas ready for future specification phases.
 
 ## Prerequisites
 
-* `ace-taskflow idea` tool available (from dev-tools Ruby gem)
+* `ace-idea` tool available (from dev-tools Ruby gem)
 * Raw idea text or concept to capture
 * LLM provider configured (Google Gemini recommended)
 * Write access to `.ace-taskflow/backlog/ideas/` directory
@@ -32,51 +32,51 @@ Use the ace-taskflow idea tool to capture and enhance raw ideas within project c
 2. **Choose Appropriate Command Options:**
    * **Basic usage** (most common):
      ```bash
-     ace-taskflow idea create "your raw idea text here"
+     ace-idea create "your raw idea text here"
      ```
 
    * **From clipboard**:
      ```bash
-     ace-taskflow idea create --clipboard
+     ace-idea create --clipboard
      # OR combine with context:
-     ace-taskflow idea create "Main context" --clipboard
+     ace-idea create "Main context" --clipboard
      ```
 
    * **With explicit note text**:
      ```bash
-     ace-taskflow idea create --note "Explicit idea text here"
+     ace-idea create --note "Explicit idea text here"
      ```
 
    * **Scoped ideas**:
      ```bash
      # For active release (default):
-     ace-taskflow idea create "New feature idea"
+     ace-idea create "New feature idea"
 
      # For backlog:
-     ace-taskflow idea create "Future feature" --backlog
+     ace-idea create "Future feature" --backlog
 
      # For specific release:
-     ace-taskflow idea create "Bug fix" --release v.0.9.1
+     ace-idea create "Bug fix" --release v.0.9.1
 
      # For uncertain ideas (maybe/ scope):
-     ace-taskflow idea create "Uncertain idea" --maybe
+     ace-idea create "Uncertain idea" --maybe
 
      # For low priority (anyday/ scope):
-     ace-taskflow idea create "Low priority enhancement" --anyday
+     ace-idea create "Low priority enhancement" --anyday
      ```
 
    * **With Git commit**:
      ```bash
-     ace-taskflow idea create "New feature" --git-commit
+     ace-idea create "New feature" --git-commit
      ```
 
    * **With LLM enhancement**:
      ```bash
-     ace-taskflow idea create "Complex idea" --llm-enhance
+     ace-idea create "Complex idea" --llm-enhance
      ```
 
 3. **Execute Idea Capture:**
-   * Run the selected `ace-taskflow idea create` command
+   * Run the selected `ace-idea create` command
    * The tool will automatically:
      * Create structured idea file with frontmatter metadata
      * Generate timestamp-based subdirectory and filename
@@ -123,37 +123,37 @@ Use the ace-taskflow idea tool to capture and enhance raw ideas within project c
 * **Backlog ideas** (`--backlog`): Future work not tied to specific release
 * **Maybe scope** (`--maybe`): Uncertain if we should do it, needs evaluation
 * **Anyday scope** (`--anyday`): Good ideas but not urgent, low priority
-* **Done scope**: Completed or skipped ideas (moved via `ace-taskflow idea done`)
+* **Done scope**: Completed or skipped ideas (moved via `ace-idea done`)
 
 ## Common Usage Patterns
 
 ### Pattern 1: Quick Idea Capture (Active Release)
 ```bash
 # Capture a brief concept immediately for current release
-ace-taskflow idea create "Add real-time notifications to the dashboard"
+ace-idea create "Add real-time notifications to the dashboard"
 # => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143000-real-time-notifications/20251116-143000-real-time-notifications.s.md
 ```
 
 ### Pattern 2: Backlog Idea
 ```bash
 # Capture future idea not tied to current release
-ace-taskflow idea create "Migrate to PostgreSQL" --backlog
+ace-idea create "Migrate to PostgreSQL" --backlog
 # => Created: .ace-taskflow/backlog/ideas/20251116-143200-migrate-postgresql/20251116-143200-migrate-postgresql.s.md
 ```
 
 ### Pattern 3: Clipboard Integration
 ```bash
 # Copy idea text to clipboard first, then:
-ace-taskflow idea create --clipboard
+ace-idea create --clipboard
 # OR combine with main context:
-ace-taskflow idea create "Dashboard improvements" --clipboard
+ace-idea create "Dashboard improvements" --clipboard
 # => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143400-dashboard-improvements/20251116-143400-dashboard-improvements.s.md
 ```
 
 ### Pattern 4: Enhanced Idea with Git Commit
 ```bash
 # Create enhanced idea and automatically commit
-ace-taskflow idea create "Complex refactoring task" --llm-enhance --git-commit
+ace-idea create "Complex refactoring task" --llm-enhance --git-commit
 # => LLM enhances idea, creates file, commits to git
 # => Created: .ace-taskflow/v.0.9.0/ideas/20251116-143600-complex-refactoring/20251116-143600-complex-refactoring.s.md
 ```
@@ -161,13 +161,13 @@ ace-taskflow idea create "Complex refactoring task" --llm-enhance --git-commit
 ### Pattern 5: Scoped Ideas (GTD Organization)
 ```bash
 # Uncertain idea (maybe/ scope)
-ace-taskflow idea create "Consider switching to TypeScript" --maybe
+ace-idea create "Consider switching to TypeScript" --maybe
 
 # Low priority idea (anyday/ scope)
-ace-taskflow idea create "Add dark mode theme" --anyday
+ace-idea create "Add dark mode theme" --anyday
 
 # Specific release
-ace-taskflow idea create "Critical bug fix" --release v.0.9.1
+ace-idea create "Critical bug fix" --release v.0.9.1
 ```
 
 ## Error Handling
@@ -176,7 +176,7 @@ ace-taskflow idea create "Critical bug fix" --release v.0.9.1
 
 **"No content provided" Error:**
 * **Cause**: Missing idea text argument and no clipboard/note specified
-* **Solution**: Provide idea text: `ace-taskflow idea create "your idea"`
+* **Solution**: Provide idea text: `ace-idea create "your idea"`
 * **Alternative**: Use `--clipboard` or `--note "text"` flag
 
 **"Could not read from clipboard" Error:**
@@ -186,7 +186,7 @@ ace-taskflow idea create "Critical bug fix" --release v.0.9.1
 
 **"Release not found" Error:**
 * **Cause**: Specified release doesn't exist
-* **Solution**: Check available releases with `ace-taskflow release list` or use `--backlog`
+* **Solution**: Check available releases with `ace-release list` or use `--backlog`
 
 **LLM Enhancement Failures:**
 * **Cause**: API issues, model unavailability, or `--no-llm-enhance` flag
@@ -238,7 +238,7 @@ ace-taskflow idea create "Critical bug fix" --release v.0.9.1
 ### Example 1: User Feedback Integration
 ```bash
 # After receiving user feedback: "Users want better mobile experience"
-ace-taskflow idea create "Users report difficulties with mobile interface - want better responsive design and touch interactions" --llm-enhance
+ace-idea create "Users report difficulties with mobile interface - want better responsive design and touch interactions" --llm-enhance
 # Output: Creates enhanced idea with mobile UX questions and project-specific considerations
 # => .ace-taskflow/v.0.9.0/ideas/20251116-150000-mobile-interface-improvements/...
 ```
@@ -246,7 +246,7 @@ ace-taskflow idea create "Users report difficulties with mobile interface - want
 ### Example 2: Technical Improvement Ideas
 ```bash
 # During code review, note performance concerns
-ace-taskflow idea create "Database queries in user dashboard are slow - consider caching layer and query optimization" --git-commit
+ace-idea create "Database queries in user dashboard are slow - consider caching layer and query optimization" --git-commit
 # Output: Creates idea and commits to git automatically
 # => .ace-taskflow/v.0.9.0/ideas/20251116-150200-database-query-optimization/...
 ```
@@ -254,7 +254,7 @@ ace-taskflow idea create "Database queries in user dashboard are slow - consider
 ### Example 3: Backlog Feature Ideas
 ```bash
 # Capture future feature not for current release
-ace-taskflow idea create "Add GraphQL API alongside REST" --backlog --maybe
+ace-idea create "Add GraphQL API alongside REST" --backlog --maybe
 # Output: Creates idea in backlog with 'maybe' scope for evaluation
 # => .ace-taskflow/backlog/ideas/maybe/20251116-150400-graphql-api/...
 ```
@@ -270,10 +270,10 @@ taskflow:
 ```
 ```bash
 # Now simple command does both
-ace-taskflow idea create "New feature concept"
+ace-idea create "New feature concept"
 # => Automatically enhanced and committed
 ```
 
 ---
 
-This workflow enables efficient capture and enhancement of raw ideas, ensuring they're preserved with proper project context and structured for future development consideration. The ace-taskflow idea tool handles the complexity of context loading and enhancement, providing a simple interface for idea preservation.
+This workflow enables efficient capture and enhancement of raw ideas, ensuring they're preserved with proper project context and structured for future development consideration. The ace-idea tool handles the complexity of context loading and enhancement, providing a simple interface for idea preservation.

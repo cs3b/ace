@@ -18,7 +18,7 @@ Process multiple pending tasks and execute implementation work for each one in s
 
 ## Prerequisites
 
-- Pending tasks exist (discoverable via `ace-taskflow tasks --status pending`)
+- Pending tasks exist (discoverable via `ace-task list --status pending`)
 - Access to `work-on-task` singular workflow via `ace-bundle wfi://task/work`
 - Understanding of ace-taskflow commands and git operations
 
@@ -33,13 +33,13 @@ Process multiple pending tasks and execute implementation work for each one in s
 **If no task pattern provided:**
 ```bash
 # Get next pending task (singular)
-ace-taskflow task
+ace-task
 ```
 
 **If task pattern provided:**
 - Use the provided pattern/list to filter tasks
 - Support specific task IDs or ranges
-- Use `ace-taskflow tasks --status pending` for filtering
+- Use `ace-task list --status pending` for filtering
 
 **Output:**
 - List of pending task IDs/paths to process
@@ -199,7 +199,7 @@ Provide comprehensive summary including:
 ## Error Handling Strategies
 
 ### Task Discovery Failure
-- **Symptom:** `ace-taskflow task` or `ace-taskflow tasks --status pending` returns no results or errors
+- **Symptom:** `ace-task` or `ace-task list --status pending` returns no results or errors
 - **Action:** Report issue, check if pending tasks exist, exit gracefully
 
 ### Work Execution Failure

@@ -144,9 +144,9 @@ Execute the final deployment and archival phase of project releases, transitioni
 
 15. **Archive Release Documentation:**
     - Create archive directory: `mkdir -p .ace-taskflow/done/`
-    - Move current release documentation: `mv .ace-taskflow/$(ace-taskflow release --path)/* .ace-taskflow/done/v<X.Y.Z>-<codename>/`
-    - Example: `mv .ace-taskflow/$(ace-taskflow release --path)/v.0.3.0-feedback-after-meta.v.0.2 .ace-taskflow/done/`
-    - Verify move completed successfully and `.ace-taskflow/$(ace-taskflow release --path)/` is empty
+    - Move current release documentation: `mv .ace-taskflow/$(ace-release --path)/* .ace-taskflow/done/v<X.Y.Z>-<codename>/`
+    - Example: `mv .ace-taskflow/$(ace-release --path)/v.0.3.0-feedback-after-meta.v.0.2 .ace-taskflow/done/`
+    - Verify move completed successfully and `.ace-taskflow/$(ace-release --path)/` is empty
 
 16. **Update Roadmap (Remove Completed Release):**
     - Remove the completed release from roadmap's "Planned Major Releases" table
@@ -165,7 +165,7 @@ Execute the final deployment and archival phase of project releases, transitioni
       ```
 
 17. **Commit Documentation Archival:**
-    - Stage archival changes: `git add .ace-taskflow/done/v<X.Y.Z>-<codename>/ .ace-taskflow/$(ace-taskflow release --path)/`
+    - Stage archival changes: `git add .ace-taskflow/done/v<X.Y.Z>-<codename>/ .ace-taskflow/$(ace-release --path)/`
     - Commit archival: `git commit -m "chore(release): archive v<X.Y.Z>-<codename> documentation"`
     - Example: `git commit -m "chore(release): archive v0.3.0-feedback-after-meta documentation"`
 
