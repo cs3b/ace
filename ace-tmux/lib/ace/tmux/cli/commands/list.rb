@@ -38,8 +38,8 @@ module Ace
 
           argument :type, required: false, desc: "Preset type: sessions, windows, or panes"
 
-          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show detailed output"
-          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
 
           def call(type: nil, **options)
             preset_loader = Molecules::PresetLoader.new(
