@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.584] - 2026-02-22
+
+### Changed
+- **ace-review v0.41.0**: Migrate ace-review-feedback CLI to standard help pattern — remove DWIM default routing so no args shows help instead of running list command
+
 ## [0.9.583] - 2026-02-22
 
 ### Fixed
