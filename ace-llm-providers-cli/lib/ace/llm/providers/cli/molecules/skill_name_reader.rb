@@ -20,7 +20,7 @@ module Ace
             # Read skill names from a skills directory.
             #
             # @param skills_dir [String] Path to the skills directory
-            # @return [Array<String>] Array of skill names (e.g. ["ace_onboard", "ace_git_commit"])
+            # @return [Array<String>] Array of skill names (e.g. ["ace-onboard", "ace-git-commit"])
             def call(skills_dir)
               return [] unless skills_dir && Dir.exist?(skills_dir)
 
