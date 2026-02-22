@@ -16,9 +16,9 @@ module Ace
             option :year_zero, type: :integer, aliases: ["-y"], desc: "Base year for decoding (default: 2000)"
             option :format, type: :string, aliases: ["-f"], desc: "Output format (readable, iso, timestamp)"
             option :split, type: :boolean, desc: "Force hierarchical split decoding"
-            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress config summary output"
-            option :verbose, type: :boolean, aliases: ["-v"], desc: "Verbose output"
-            option :debug, type: :boolean, aliases: ["-d"], desc: "Debug output"
+            option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
+            option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
+            option :debug, type: :boolean, aliases: ["-d"], desc: "Show debug output"
 
             example [
               "i5                        # Decode 2-char month ID",
