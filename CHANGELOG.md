@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.571] - 2026-02-22
+
+### Changed
+- **ace-git-commit v0.18.4**: Migrate from registry/default-routing to single-command dry-cli entrypoint; no-arg invocation now shows command help
+- **ace-git-commit v0.18.4**: Handle `--version` in command flow and accept `--staged` as alias for `--only-staged`
+
+### Technical
+- **ace-git-commit v0.18.4**: Remove legacy CLI routing scaffolding and update CLI routing tests to executable-level single-command coverage
+
 ## [0.9.570] - 2026-02-22
 
 ### Changed
