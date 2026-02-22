@@ -17,10 +17,7 @@ module Ace
       KNOWN_COMMANDS = Set.new(REGISTERED_COMMANDS + BUILTIN_COMMANDS).freeze
 
       def self.start(args)
-        if args.first && %w[help --help -h].include?(args.first)
-          puts Dry::CLI::Usage.call(get([]), registry: self)
-          return 0
-        end
+        return 0 if Ace::Core::CLI::DryCli::HelpRouter.handle(args, self)
 
         if args.empty?
           puts Dry::CLI::Usage.call(get([]), registry: self)
