@@ -81,7 +81,7 @@ The slug is the directory name suffix: `TS-LINT-003-config-file-validation/`
 
 Load the test template:
 ```bash
-ace-bundle tmpl://test-e2e
+ace-bundle load tmpl://test-e2e
 ```
 
 Or read directly:
