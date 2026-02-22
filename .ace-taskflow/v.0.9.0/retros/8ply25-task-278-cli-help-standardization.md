@@ -15,15 +15,15 @@
 
 ## What Could Be Improved
 
-- **Git index lock in sandbox**: Fork-run agents consistently failed on the release/commit phase due to git worktree index lock permissions (subtrees 010.04–010.07, 010.10–010.11, 010.22, 010.27). This required manual intervention from the orchestrator for ~8 of 26 subtrees
-- **Manual phase fixup overhead**: When fork-run failed on release, the orchestrator had to: read 3 phase files, edit them to done, commit manually, then continue. This pattern repeated ~8 times and consumed significant orchestrator context
+- **Git index lock in sandbox (first 8 subtrees)**: The first ~8 fork-run subtrees (010.04–010.11) consistently failed on the release/commit phase due to git worktree index lock permissions. This was a configuration issue resolved when the user changed the fork config around subtree 010.12 — all subsequent subtrees (010.12–010.29) completed fully including release
+- **Manual phase fixup overhead for early subtrees**: For the first ~8 subtrees before the config fix, the orchestrator had to: read 3 phase files, edit them to done, commit manually, then continue. This consumed significant orchestrator context until the root cause was resolved
 - **Long polling cycles**: Each fork-run took 10-20 minutes. The sleep-and-poll pattern used ~60% of orchestrator time on waiting. No productive parallel work was done during these waits
 - **Stale background task notifications**: Completed fork-runs generated notification messages long after the orchestrator had moved on, requiring 20+ "handled/standing by" responses
 - **Provider instability**: The codex provider failed on 010.12 twice before config was changed, wasting ~15 minutes
 
 ## Key Learnings
 
-- **Fork-run sandbox git permissions are a systemic issue**: The sandbox environment restricts writes to `.git/worktrees/*/index.lock`. This affects any fork-run that tries to commit. The fix was eventually applied to the fork config, but the first ~8 subtrees all hit it
+- **Fork-run sandbox git permissions need correct initial config**: The sandbox environment restricts writes to `.git/worktrees/*/index.lock` unless configured. The first ~8 subtrees failed before the user corrected the fork config — after the fix, all remaining subtrees worked cleanly
 - **Orchestrator should batch-fix phase files**: Instead of reading+editing 3 files per stuck subtree, a single `ace-assign` command to mark a subtree as done would save significant time
 - **Release phase should be optional or orchestrator-owned**: Since the orchestrator has git commit access and the forked agent doesn't (in sandbox), the release phase should either run in the orchestrator context or be skipped in fork-run
 - **Idle orchestrator time is wasted context**: While waiting for fork-runs, the orchestrator could review previous subtree reports, pre-read task specs for upcoming subtrees, or run test suites
@@ -34,10 +34,10 @@
 
 #### High Impact Issues
 
-- **Git index lock in fork-run sandbox**: Forked agents cannot commit because the sandbox restricts access to `.git/worktrees/*/index.lock`
-  - Occurrences: ~8 out of 26 subtrees (010.04–010.07, 010.10–010.11, 010.22, 010.27)
+- **Git index lock in fork-run sandbox (first 8 subtrees only)**: Forked agents could not commit because the initial sandbox config didn't include git worktree metadata in writable roots
+  - Occurrences: First ~8 subtrees in queue (010.04–010.11) — all failed on release phase
   - Impact: Each required 3-5 minutes of manual orchestrator intervention (read phases, edit to done, commit manually)
-  - Root Cause: Sandbox writable-roots don't include the parent git repo's worktree metadata directory
+  - Root Cause: Fork config needed writable-roots update for `.git/worktrees/*/index.lock`; once the user updated the config at 010.12, all remaining 18 subtrees completed fully
 
 - **Provider failures**: Codex provider failed on 010.12 twice before config change
   - Occurrences: 2 consecutive failures
