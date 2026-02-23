@@ -1,0 +1,28 @@
+test-id: TS-B36TS-001
+title: "ace-b36ts Goal-Based E2E Pilot"
+package: ace-b36ts
+priority: high
+tags: [smoke, happy-path, "use-case:b36ts", pilot]
+cost-tier: smoke
+mode: goal
+tool-under-test: ace-b36ts
+
+sandbox-layout:
+  goal/1/:  "Help survey observations"
+  goal/2/:  "Encoded today-date file"
+  goal/3/:  "Decoded 70000 token file"
+  goal/4/:  "Error behavior captures (exit code, stdout, stderr)"
+  goal/5/:  "Output routing captures per verbosity mode"
+  goal/6/:  "Structured output integration artifacts"
+  goal/7/:  "Roundtrip pipeline evidence (original, encoded, decoded)"
+  goal/8/:  "Batch sort order comparison files"
+
+e2e-justification: >
+  All goals require real binary execution through a shell. The runner discovers
+  the tool via --help (no hardcoded flags), encodes/decodes through the actual
+  binary (not Ruby methods), and writes artifacts that prove the tool works
+  end-to-end. Unit tests verify correctness of algorithms; these tests verify
+  the tool works in the wild.
+
+requires:
+  tools: [ace-b36ts, jq]
