@@ -31,9 +31,8 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-prompt-prep process",
-        "ace-prompt-prep process --task 148",
-        "ace-prompt-prep setup"
+        "ace-prompt-prep process --task 148    # Process prompts for task",
+        "ace-prompt-prep setup                 # Initialize workspace"
       ].freeze
 
       # Register the process command
