@@ -37,12 +37,10 @@ module Ace
         ].freeze
 
         HELP_EXAMPLES = [
-          "ace-models search claude",
-          "ace-models info claude-sonnet-4-6",
-          "ace-models cost claude-opus-4-6",
-          "ace-models sync",
-          "ace-models status",
-          "ace-models diff"
+          "ace-models search claude              # Find models by name",
+          "ace-models info claude-sonnet-4-6     # Pricing and context window",
+          "ace-models cost claude-opus-4-6       # Token cost calculator",
+          "ace-models sync                       # Update from models.dev"
         ].freeze
 
         # Register flat commands (previously nested under cache/models namespaces)
