@@ -14,8 +14,11 @@ module Ace
     module CLI
       # Entry point for CLI invocation (used by tests via cli_helpers)
       #
+      # Mirrors exe behavior: empty args show help.
+      #
       # @param args [Array<String>] Command-line arguments
       def self.start(args)
+        args = ["--help"] if args.empty?
         Dry::CLI.new(Commands::Load).call(arguments: args)
       end
     end
