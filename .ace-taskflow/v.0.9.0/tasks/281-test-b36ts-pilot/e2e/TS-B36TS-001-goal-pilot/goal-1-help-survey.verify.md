@@ -2,11 +2,11 @@
 
 ## Injected Context
 
-The verifier receives the `goal/` directory tree and access to the sandbox path.
+The verifier receives the `results/` directory tree and access to the sandbox path.
 
 ## Expectations
 
-1. **File exists** — At least one file exists in `goal/1/`.
+1. **File exists** — At least one file exists in `results/1/`.
 2. **Substantive content** — The file contains more than 5 lines of non-empty text (not boilerplate or placeholder).
 3. **Mentions subcommands** — The content references specific subcommands or actions the tool provides.
 4. **Observations present** — The content includes at least one observation, note, or assessment about the tool's help output (not just a raw copy-paste of `--help`).

@@ -6,7 +6,7 @@ Run the same encode operation in different verbosity modes. Using your knowledge
 
 ## Workspace
 
-Save all output to `goal/5/`. Use descriptive filenames that identify the mode and stream (e.g., `goal/5/quiet.stdout`, `goal/5/quiet.stderr`, `goal/5/verbose.stdout`, `goal/5/verbose.stderr`).
+Save all output to `results/5/`. Use descriptive filenames that identify the mode and stream (e.g., `results/5/quiet.stdout`, `results/5/quiet.stderr`, `results/5/verbose.stdout`, `results/5/verbose.stderr`).
 
 ## Constraints
 
