@@ -72,7 +72,7 @@ Determine the path based on input:
 Run the prepare workflow (legacy path):
 
 ```bash
-ace-bundle load wfi://assign/prepare
+ace-bundle wfi://assign/prepare
 ```
 
 #### Otherwise (default):
@@ -80,7 +80,7 @@ ace-bundle load wfi://assign/prepare
 Run the compose workflow:
 
 ```bash
-ace-bundle load wfi://assign/compose
+ace-bundle wfi://assign/compose
 ```
 
 Both paths produce a `job.yaml` file.
@@ -90,7 +90,7 @@ Both paths produce a `job.yaml` file.
 Run the create workflow:
 
 ```bash
-ace-bundle load wfi://assign/create
+ace-bundle wfi://assign/create
 ```
 
 This creates the assignment directory structure and initializes the work queue.

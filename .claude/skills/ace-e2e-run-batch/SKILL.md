@@ -14,6 +14,6 @@ last_modified: 2026-01-29
 source: ace-test-runner-e2e
 ---
 
-read and run `ace-bundle load wfi://e2e/run-batch`
+read and run `ace-bundle wfi://e2e/run-batch`
 
 ARGUMENTS: $ARGUMENTS

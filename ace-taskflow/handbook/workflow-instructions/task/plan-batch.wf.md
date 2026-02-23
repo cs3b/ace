@@ -19,7 +19,7 @@ Process multiple draft tasks and create implementation plans for each one in seq
 ## Prerequisites
 
 - Draft tasks exist (discoverable via `ace-task list --status draft`)
-- Access to `plan-task` singular workflow via `ace-bundle load wfi://task/plan`
+- Access to `plan-task` singular workflow via `ace-bundle wfi://task/plan`
 - Understanding of ace-taskflow commands
 
 ## Variables
@@ -63,7 +63,7 @@ Execute plan-task workflow for task: [task-id]
 ARGUMENTS: [task-id]
 
 Follow the complete plan-task workflow:
-1. Read and execute: ace-bundle load wfi://task/plan
+1. Read and execute: ace-bundle wfi://task/plan
 2. Transform task from status:draft to status:pending
 3. Add complete implementation plan
 4. Follow all workflow steps exactly

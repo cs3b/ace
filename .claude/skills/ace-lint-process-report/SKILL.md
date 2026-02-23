@@ -12,4 +12,4 @@ argument-hint: [report-path]
 source: ace-lint
 ---
 
-read and run `ace-bundle load wfi://lint/process-report`
+read and run `ace-bundle wfi://lint/process-report`

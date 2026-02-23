@@ -14,7 +14,7 @@ last_modified: 2026-01-10
 source: ace-review
 ---
 
-read and run `ace-bundle load wfi://review/pr`
+read and run `ace-bundle wfi://review/pr`
 
 **CRITICAL REMINDER**: After implementing ANY fix from feedback:
 1. Run `ace-review-feedback resolve {id} --resolution "Fixed: <description>"`

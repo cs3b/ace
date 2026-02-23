@@ -81,7 +81,7 @@ The slug is the directory name suffix: `TS-LINT-003-config-file-validation/`
 
 Load the test template:
 ```bash
-ace-bundle load tmpl://test-e2e
+ace-bundle tmpl://test-e2e
 ```
 
 Or read directly:
@@ -215,7 +215,7 @@ See: **e2e-testing.g.md § "Avoiding False Positive Tests"** for the full list o
 
 **Valid approach:**
 ```bash
-OUTPUT=$(ace-review review --preset code --subject "diff:HEAD~1" --auto-execute 2>&1)
+OUTPUT=$(ace-review --preset code --subject "diff:HEAD~1" --auto-execute 2>&1)
 EXIT_CODE=$?
 [ "$EXIT_CODE" -eq 0 ] && echo "PASS" || echo "FAIL"
 ```

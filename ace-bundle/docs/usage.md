@@ -5,17 +5,17 @@ This guide explains how to use the ace-bundle command-line interface to load, pr
 ## Basic Usage
 
 ```bash
-ace-bundle load <input> [options]
+ace-bundle <input> [options]
 ```
 
 The simplest usage loads a preset by name:
 
 ```bash
 # Load the 'project-base' preset
-ace-bundle load project-base
+ace-bundle project-base
 
 # Load the 'code-review' preset
-ace-bundle load code-review
+ace-bundle code-review
 ```
 
 ## Discovering Presets
@@ -40,7 +40,7 @@ test -f ~/.ace/bundle/presets/security-review.md && echo "Preset exists" || echo
 When you reference a non-existent preset, ace-bundle provides helpful error messages:
 
 ```bash
-ace-bundle load unknown-preset
+ace-bundle unknown-preset
 # Error: Preset 'unknown-preset' not found. Available presets: project-base, code-review, security-review, development
 ```
 
@@ -55,7 +55,7 @@ You can override the default preset location using environment variables:
 ```bash
 # Use custom bundle directory
 export ACE_BUNDLE_DIR="/path/to/my/contexts"
-ace-bundle load my-custom-preset
+ace-bundle my-custom-preset
 
 # Check current preset directory
 echo "Presets directory: ${ACE_BUNDLE_DIR:-$HOME/.ace/bundle/presets}"
@@ -70,13 +70,13 @@ Specify output file location.
 
 ```bash
 # Save to specific file
-ace-bundle load project-base --output context.md
+ace-bundle project-base --output context.md
 
 # Save to cache directory (default behavior)
-ace-bundle load project-base --output cache
+ace-bundle project-base --output cache
 
 # Short form
-ace-bundle load project-base -o context.md
+ace-bundle project-base -o context.md
 ```
 
 #### `--format`, `-F`
@@ -84,19 +84,19 @@ Specify output format.
 
 ```bash
 # Markdown with XML-style tags (recommended for sections)
-ace-bundle load project-base --format markdown-xml
+ace-bundle project-base --format markdown-xml
 
 # Standard markdown
-ace-bundle load project-base --format markdown
+ace-bundle project-base --format markdown
 
 # YAML format
-ace-bundle load project-base --format yaml
+ace-bundle project-base --format yaml
 
 # JSON format
-ace-bundle load project-base --format json
+ace-bundle project-base --format json
 
 # Short form
-ace-bundle load project-base -F markdown-xml
+ace-bundle project-base -F markdown-xml
 ```
 
 ### Input Options
@@ -106,13 +106,13 @@ Load specific preset(s). Can be used multiple times.
 
 ```bash
 # Load single preset
-ace-bundle load --preset project-base
+ace-bundle --preset project-base
 
 # Load multiple presets (composed together)
-ace-bundle load --preset base --preset development --preset testing
+ace-bundle --preset base --preset development --preset testing
 
 # Short form
-ace-bundle load -p base -p development
+ace-bundle -p base -p development
 ```
 
 #### `--file`, `-f`
@@ -120,16 +120,16 @@ Load configuration from YAML or markdown file with frontmatter.
 
 ```bash
 # Load from YAML file
-ace-bundle load --file config/project.yml
+ace-bundle --file config/project.yml
 
 # Load from markdown file with frontmatter
-ace-bundle load --file docs/project-config.md
+ace-bundle --file docs/project-config.md
 
 # Load multiple files
-ace-bundle load --file base.yml --file overrides.md
+ace-bundle --file base.yml --file overrides.md
 
 # Short form
-ace-bundle load -f config.yml
+ace-bundle -f config.yml
 ```
 
 #### Positional Arguments
@@ -137,8 +137,8 @@ You can also specify presets as positional arguments:
 
 ```bash
 # These are equivalent:
-ace-bundle load project-base
-ace-bundle load --preset project-base
+ace-bundle project-base
+ace-bundle --preset project-base
 ```
 
 ### Display Options
@@ -148,7 +148,7 @@ Create separate files for each section when using section-based presets.
 
 ```bash
 # Create separate section files
-ace-bundle load code-review --organize-by-sections --output context.md
+ace-bundle code-review --organize-by-sections --output context.md
 
 # Results in:
 # - context.md (main file with all sections)
@@ -163,7 +163,7 @@ Show the resolved configuration without processing content.
 
 ```bash
 # Show what will be loaded
-ace-bundle load project-base --inspect-config
+ace-bundle project-base --inspect-config
 ```
 
 #### `--embed-source`, `-e`
@@ -171,13 +171,13 @@ Embed the source document content in the output. This flag overrides the `embed_
 
 ```bash
 # Embed source document in output
-ace-bundle load prompt.md --embed-source
+ace-bundle prompt.md --embed-source
 
 # Short form
-ace-bundle load prompt.md -e
+ace-bundle prompt.md -e
 
 # Combine with other options
-ace-bundle load prompt.md --embed-source --output stdio
+ace-bundle prompt.md --embed-source --output stdio
 ```
 
 **Use Cases:**
@@ -204,7 +204,7 @@ My prompt content
 EOF
 
 # Load with embedded source
-ace-bundle load prompt.md --embed-source --output stdio
+ace-bundle prompt.md --embed-source --output stdio
 ```
 
 ### Processing Options
@@ -214,7 +214,7 @@ Maximum output size in bytes.
 
 ```bash
 # Limit output to 5MB
-ace-bundle load project-base --max-size 5242880
+ace-bundle project-base --max-size 5242880
 ```
 
 #### `--timeout`
@@ -222,7 +222,7 @@ Command execution timeout in seconds.
 
 ```bash
 # Set 60-second timeout
-ace-bundle load project-base --timeout 60
+ace-bundle project-base --timeout 60
 ```
 
 ## Advanced Usage
@@ -233,10 +233,10 @@ You can combine different input types:
 
 ```bash
 # Combine preset with file configuration
-ace-bundle load --preset base --file project-overrides.yml
+ace-bundle --preset base --file project-overrides.yml
 
 # Mix preset with inline YAML
-ace-bundle load project-base --context '{"files": ["extra-file.md"]}'
+ace-bundle project-base --context '{"files": ["extra-file.md"]}'
 ```
 
 ### Protocol-based Loading
@@ -245,13 +245,13 @@ Load contexts using protocols (requires ace-nav integration):
 
 ```bash
 # Load workflow file
-ace-bundle load wfi://code-review-workflow
+ace-bundle wfi://code-review-workflow
 
 # Load guide file
-ace-bundle load guide://development-guide
+ace-bundle guide://development-guide
 
 # Load task file
-ace-bundle load task://planning-session
+ace-bundle task://planning-session
 ```
 
 ### Auto-Detection
@@ -260,16 +260,16 @@ ace-bundle automatically detects input types:
 
 ```bash
 # Preset name
-ace-bundle load project-base
+ace-bundle project-base
 
 # File path (if file exists)
-ace-bundle load config/project.yml
+ace-bundle config/project.yml
 
 # Protocol URL
-ace-bundle load wfi://my-workflow
+ace-bundle wfi://my-workflow
 
 # Inline YAML (if contains YAML syntax)
-ace-bundle load '{"files": ["README.md"]}'
+ace-bundle '{"files": ["README.md"]}'
 ```
 
 ## Common Workflows
@@ -278,35 +278,35 @@ ace-bundle load '{"files": ["README.md"]}'
 
 ```bash
 # Basic code review
-ace-bundle load code-review
+ace-bundle code-review
 
 # Code review with security focus
-ace-bundle load security-review
+ace-bundle security-review
 
 # Custom code review to specific file
-ace-bundle load --preset base --context '{"files": ["src/auth/**/*.rb"]}' --format markdown-xml
+ace-bundle --preset base --context '{"files": ["src/auth/**/*.rb"]}' --format markdown-xml
 
 # Save code review to file
-ace-bundle load code-review --output review.md --format markdown-xml
+ace-bundle code-review --output review.md --format markdown-xml
 ```
 
 ### Pull Request Review Workflow
 
 ```bash
 # Load PR diff for review (single PR)
-ace-bundle load --context '{"pr": [123]}'
+ace-bundle --context '{"pr": [123]}'
 
 # Load multiple PRs at once
-ace-bundle load --context '{"pr": [123, 456, 789]}'
+ace-bundle --context '{"pr": [123, 456, 789]}'
 
 # Load PR with qualified reference (cross-repo)
-ace-bundle load --context '{"pr": ["owner/repo#123"]}'
+ace-bundle --context '{"pr": ["owner/repo#123"]}'
 
 # Combine PR with file patterns
-ace-bundle load --context '{"pr": [123], "files": ["docs/**/*.md"]}'
+ace-bundle --context '{"pr": [123], "files": ["docs/**/*.md"]}'
 
 # PR diff from GitHub URL
-ace-bundle load --context '{"pr": ["https://github.com/owner/repo/pull/123"]}'
+ace-bundle --context '{"pr": ["https://github.com/owner/repo/pull/123"]}'
 ```
 
 **Note:** The `pr` configuration accepts:
@@ -320,42 +320,42 @@ Arrays are supported for reviewing multiple PRs in a single context.
 
 ```bash
 # Complete project context
-ace-bundle load project-base
+ace-bundle project-base
 
 # Development setup
-ace-bundle load development
+ace-bundle development
 
 # Testing setup
-ace-bundle load testing
+ace-bundle testing
 
 # Project overview in YAML format
-ace-bundle load project-base --format yaml
+ace-bundle project-base --format yaml
 ```
 
 ### Documentation Workflow
 
 ```bash
 # Documentation review
-ace-bundle load documentation-review
+ace-bundle documentation-review
 
 # Generate project documentation context
-ace-bundle load --preset docs --format markdown-xml --output docs-context.md
+ace-bundle --preset docs --format markdown-xml --output docs-context.md
 
 # Include workflow files
-ace-bundle load wfi://documentation-workflow --format markdown
+ace-bundle wfi://documentation-workflow --format markdown
 ```
 
 ### Troubleshooting Workflow
 
 ```bash
 # Check configuration without processing
-ace-bundle load project-base --inspect-config
+ace-bundle project-base --inspect-config
 
 # Quick system check
-ace-bundle load --preset system-check --format json
+ace-bundle --preset system-check --format json
 
 # Verbose output with larger timeout
-ace-bundle load project-base --timeout 120 --max-size 20971520
+ace-bundle project-base --timeout 120 --max-size 20971520
 ```
 
 ## Output Formats
@@ -363,7 +363,7 @@ ace-bundle load project-base --timeout 120 --max-size 20971520
 ### Markdown Format (Default)
 
 ```bash
-ace-bundle load project-base
+ace-bundle project-base
 ```
 
 Produces standard markdown with code blocks:
@@ -388,7 +388,7 @@ Produces standard markdown with code blocks:
 ### Markdown-XML Format
 
 ```bash
-ace-bundle load project-base --format markdown-xml
+ace-bundle project-base --format markdown-xml
 ```
 
 Produces markdown with XML-style tags:
@@ -415,7 +415,7 @@ Produces markdown with XML-style tags:
 ### YAML Format
 
 ```bash
-ace-bundle load project-base --format yaml
+ace-bundle project-base --format yaml
 ```
 
 Produces structured YAML output:
@@ -435,7 +435,7 @@ metadata:
 ### JSON Format
 
 ```bash
-ace-bundle load project-base --format json
+ace-bundle project-base --format json
 ```
 
 Produces JSON output:
@@ -463,7 +463,7 @@ Produces JSON output:
 When using section-based presets with `--organize-by-sections`:
 
 ```bash
-ace-bundle load code-review --organize-by-sections --output review.md
+ace-bundle code-review --organize-by-sections --output review.md
 ```
 
 Creates multiple files:
@@ -477,7 +477,7 @@ Creates multiple files:
 
 ```bash
 # Output to cache (default)
-ace-bundle load project-base
+ace-bundle project-base
 
 # Cache files are organized by preset name:
 # ~/.ace/cache/contexts/project-base-20251106-153000.md
@@ -490,7 +490,7 @@ Override default bundle directory.
 
 ```bash
 export ACE_BUNDLE_DIR="/path/to/my/contexts"
-ace-bundle load my-preset
+ace-bundle my-preset
 ```
 
 ### `ACE_CACHE_DIR`
@@ -498,7 +498,7 @@ Override default cache directory.
 
 ```bash
 export ACE_CACHE_DIR="/path/to/my/cache"
-ace-bundle load project-base --output cache
+ace-bundle project-base --output cache
 ```
 
 ### `ACE_DEBUG`
@@ -506,7 +506,7 @@ Enable debug output.
 
 ```bash
 export ACE_DEBUG=1
-ace-bundle load project-base
+ace-bundle project-base
 ```
 
 ## Exit Codes
@@ -525,7 +525,7 @@ ace-bundle load project-base
 
 #### Preset Not Found
 ```bash
-ace-bundle load unknown-preset
+ace-bundle unknown-preset
 # Error: Preset 'unknown-preset' not found
 ```
 
@@ -533,7 +533,7 @@ ace-bundle load unknown-preset
 
 #### File Not Found
 ```bash
-ace-bundle load --file missing-config.yml
+ace-bundle --file missing-config.yml
 # Error: File not found: missing-config.yml
 ```
 
@@ -541,7 +541,7 @@ ace-bundle load --file missing-config.yml
 
 #### Timeout Exceeded
 ```bash
-ace-bundle load slow-preset
+ace-bundle slow-preset
 # Error: Command execution timeout exceeded
 ```
 
@@ -549,7 +549,7 @@ ace-bundle load slow-preset
 
 #### Size Limit Exceeded
 ```bash
-ace-bundle load large-preset
+ace-bundle large-preset
 # Error: Output size limit exceeded
 ```
 
@@ -561,7 +561,7 @@ Enable debug output for troubleshooting:
 
 ```bash
 export ACE_DEBUG=1
-ace-bundle load project-base
+ace-bundle project-base
 ```
 
 Debug output includes:
@@ -575,7 +575,7 @@ Debug output includes:
 Use `--inspect-config` to understand what will be loaded:
 
 ```bash
-ace-bundle load project-base --inspect-config
+ace-bundle project-base --inspect-config
 ```
 
 Shows:
@@ -592,7 +592,7 @@ Shows:
 #!/bin/sh
 # pre-commit hook
 echo "Generating pre-commit context..."
-ace-bundle load code-review --format markdown-xml --output .git/context.md
+ace-bundle code-review --format markdown-xml --output .git/context.md
 ```
 
 ### CI/CD Pipeline
@@ -601,10 +601,10 @@ ace-bundle load code-review --format markdown-xml --output .git/context.md
 #!/bin/bash
 # CI pipeline step
 echo "Generating build context..."
-ace-bundle load ci-build --format json --output build-context.json
+ace-bundle ci-build --format json --output build-context.json
 
 echo "Running security scan..."
-ace-bundle load security-review --format markdown --output security-report.md
+ace-bundle security-review --format markdown --output security-report.md
 ```
 
 ### Development Scripts
@@ -615,10 +615,10 @@ ace-bundle load security-review --format markdown --output security-report.md
 echo "Setting up development environment..."
 
 # Generate project context
-ace-bundle load development --output dev-context.md
+ace-bundle development --output dev-context.md
 
 # Show system info
-ace-bundle load system-check --format yaml
+ace-bundle system-check --format yaml
 ```
 
 ## Performance Tips

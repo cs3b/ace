@@ -21,7 +21,7 @@ Perform automated semantic version bumping for a single ACE gem package by analy
 
 ## Project Context Loading
 
-* Read and follow: `ace-bundle load project`
+* Read and follow: `ace-bundle project`
 * Load: Keep a Changelog and Semantic Versioning 2.0.0 specifications
 
 ## Process Steps

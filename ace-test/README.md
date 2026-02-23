@@ -220,7 +220,7 @@ The gem is available as open source under the terms of the MIT License.
 | `/ace-test-review` | Review test PR for quality |
 | `/ace-e2e-setup-sandbox` | Set up safe E2E environment |
 
-Load guides via: `ace-bundle load guide://test-layer-decision`
+Load guides via: `ace-bundle guide://test-layer-decision`
 
 See [handbook/guides/SUMMARY.md](handbook/guides/SUMMARY.md) for the complete navigation index.
 

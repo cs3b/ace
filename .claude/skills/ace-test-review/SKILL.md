@@ -21,7 +21,7 @@ source: ace-test
 Load and follow the test review checklist guide:
 
 ```bash
-ace-bundle load guide://test-review-checklist
+ace-bundle guide://test-review-checklist
 ```
 
 ## Review Focus Areas
@@ -33,5 +33,5 @@ ace-bundle load guide://test-review-checklist
 
 Reference the test responsibility map guide for layer decisions:
 ```bash
-ace-bundle load guide://test-responsibility-map
+ace-bundle guide://test-responsibility-map
 ```

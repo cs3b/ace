@@ -22,11 +22,11 @@ assign:
 
 ## Load Project Info
 
-- read and run `ace-bundle load project`
+- read and run `ace-bundle project`
 
 ## Do the Work
 
-- read and run `ace-bundle load wfi://task/work` with earlier defined task
+- read and run `ace-bundle wfi://task/work` with earlier defined task
 
 ## Report
 

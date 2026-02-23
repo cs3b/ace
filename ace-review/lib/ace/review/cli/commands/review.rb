@@ -207,14 +207,14 @@ module Ace
               unless @options[:dry_run]
                 puts
                 puts "To execute with LLM:"
-                puts "  ace-llm query --file #{result[:user_prompt_file]} --context #{result[:system_prompt_file]}"
+                puts "  ace-llm --file #{result[:user_prompt_file]} --context #{result[:system_prompt_file]}"
               end
             elsif result[:prompt_file]
               puts "  Prompt: #{result[:prompt_file]}"
               unless @options[:dry_run]
                 puts
                 puts "To execute with LLM:"
-                puts "  ace-llm query --file #{result[:prompt_file]}"
+                puts "  ace-llm --file #{result[:prompt_file]}"
               end
             end
           end

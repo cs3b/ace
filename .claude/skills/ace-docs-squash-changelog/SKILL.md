@@ -12,4 +12,4 @@ allowed-tools:
 argument-hint: "[target-branch]"
 ---
 
-read and run `ace-bundle load wfi://docs/squash-changelog`
+read and run `ace-bundle wfi://docs/squash-changelog`

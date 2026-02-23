@@ -15,6 +15,6 @@ last_modified: 2026-02-16
 source: ace-taskflow
 ---
 
-read and run `ace-bundle load wfi://task/review`
+read and run `ace-bundle wfi://task/review`
 
-read and run `ace-bundle load wfi://git/commit`
+read and run `ace-bundle wfi://git/commit`

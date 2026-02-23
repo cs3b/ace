@@ -17,4 +17,4 @@ last_modified: 2026-02-03
 source: ace-review
 ---
 
-read and run `ace-bundle load wfi://review/apply-feedback`
+read and run `ace-bundle wfi://review/apply-feedback`

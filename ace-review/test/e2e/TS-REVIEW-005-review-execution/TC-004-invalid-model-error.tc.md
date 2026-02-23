@@ -22,7 +22,7 @@ Verify that ace-review handles invalid model configurations and nonexistent pres
 
 2. Run ace-review with invalid model
    ```bash
-   OUTPUT_MODEL=$(ace-review review \
+   OUTPUT_MODEL=$(ace-review \
      --preset invalid-model \
      --subject "diff:HEAD~1" \
      --auto-execute 2>&1)
@@ -36,7 +36,7 @@ Verify that ace-review handles invalid model configurations and nonexistent pres
 
 3. Run ace-review with nonexistent preset
    ```bash
-   OUTPUT_PRESET=$(ace-review review \
+   OUTPUT_PRESET=$(ace-review \
      --preset nonexistent-preset-xyz \
      --subject "diff:HEAD~1" \
      --auto-execute 2>&1)

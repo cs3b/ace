@@ -20,9 +20,9 @@ source: ace-test-runner-e2e
 <!-- --sandbox absent  → full workflow (locate, setup, execute) -->
 
 If `$ARGUMENTS` contains `--sandbox`:
-  read and run `ace-bundle load wfi://e2e/execute`
+  read and run `ace-bundle wfi://e2e/execute`
 Otherwise:
-  read and run `ace-bundle load wfi://e2e/run`
+  read and run `ace-bundle wfi://e2e/run`
 
 ARGUMENTS: $ARGUMENTS
 

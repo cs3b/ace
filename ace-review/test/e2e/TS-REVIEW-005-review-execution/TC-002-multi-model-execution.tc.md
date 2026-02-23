@@ -13,7 +13,7 @@ Verify that ace-review can execute with multiple models via the models array pre
    ```bash
    SESSION_DIR="$PWD/session-tc002"
 
-   OUTPUT=$(ace-review review \
+   OUTPUT=$(ace-review \
      --preset multi \
      --subject "diff:HEAD~1" \
      --session-dir "$SESSION_DIR" \
