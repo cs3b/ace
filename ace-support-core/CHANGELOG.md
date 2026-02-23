@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.1] - 2026-02-23
+
+### Removed
+- Removed legacy ConfigResolver wrapper with deprecated search_paths/file_patterns API
+- Removed legacy integration tests superseded by ace-support-config
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.24.0] - 2026-02-22
 
 ### Added
