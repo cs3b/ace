@@ -34,8 +34,8 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency "dry-cli", "~> 1.0"
-  spec.add_dependency "ace-support-config", "~> 0.6"
-  spec.add_dependency "ace-support-core", "~> 0.10"
+  spec.add_dependency "ace-support-config", "~> 0.7"
+  spec.add_dependency "ace-support-core", "~> 0.24"
   spec.add_dependency "faraday", "~> 2.0"
   spec.add_dependency "addressable", "~> 2.8"
   spec.add_dependency "kramdown", "~> 2.0"
