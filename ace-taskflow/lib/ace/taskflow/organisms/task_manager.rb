@@ -13,7 +13,7 @@ require_relative "../molecules/task_statistics"
 require_relative "../molecules/status_validator"
 require_relative "../atoms/task_reference_parser"
 require_relative "../atoms/path_builder"
-require_relative "../atoms/yaml_parser"
+require_relative "../atoms/frontmatter_parser"
 require_relative "../atoms/dependency_validator"
 require_relative "../molecules/llm_slug_generator"
 
