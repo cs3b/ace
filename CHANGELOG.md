@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.601] - 2026-02-23
+
+### Changed
+- **ace-lint v0.16.0**: Flatten CLI from multi-command Registry to single-command pattern — `ace-lint file.md` replaces `ace-lint lint file.md`, `--doctor` replaces `doctor` subcommand
+
+### Removed
+- **ace-lint v0.16.0**: Remove separate Doctor command class; diagnostics absorbed into Lint command as `--doctor`/`--doctor-verbose` flags
+
 ## [0.9.600] - 2026-02-23
 
 ### Fixed
