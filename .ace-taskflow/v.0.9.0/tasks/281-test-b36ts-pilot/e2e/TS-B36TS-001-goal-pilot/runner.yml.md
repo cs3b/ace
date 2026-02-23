@@ -33,3 +33,11 @@ build on what you learn there. Do not re-run --help after Goal 1.
 - Do not fabricate output — all artifacts must come from real tool execution
 - If a goal fails, note the failure and continue to the next goal
 - After all goals, output a brief summary of what you produced for each goal
+
+## Artifact conventions
+
+When a goal requires capturing command output:
+- Save stdout to `{name}.stdout`, stderr to `{name}.stderr`, exit code to `{name}.exit`
+- The `.exit` file contains only the numeric exit code (e.g., `0` or `1`)
+- When a goal says "save the output to a file", default to this three-file pattern unless the goal specifies a different format
+- Summary or analysis files (.md) are optional extras — the raw captures are the primary artifacts
