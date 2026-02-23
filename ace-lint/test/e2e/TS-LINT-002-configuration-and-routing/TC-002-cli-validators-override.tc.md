@@ -11,7 +11,7 @@ Verify that `--validators` CLI flag overrides the config file, forcing all files
 
 1. Run with explicit --validators rubocop override
    ```bash
-   OUTPUT=$(ace-lint lint --validators rubocop legacy/app.rb modern/app.rb 2>&1)
+   OUTPUT=$(ace-lint --validators rubocop legacy/app.rb modern/app.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"

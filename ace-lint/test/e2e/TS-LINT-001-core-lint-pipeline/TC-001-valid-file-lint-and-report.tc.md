@@ -12,7 +12,7 @@ Verify that linting a valid Ruby file exits 0, generates a well-structured repor
 1. Lint the valid file and capture output
    ```bash
    rm -rf .cache/ace-lint
-   OUTPUT=$(ace-lint lint valid.rb 2>&1)
+   OUTPUT=$(ace-lint valid.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"

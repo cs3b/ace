@@ -5,14 +5,14 @@ title: Healthy Environment
 
 ## Objective
 
-Verify that `ace-lint doctor` in a healthy environment (valid config, validators available) exits without error, mentions validators, and shows config information.
+Verify that `ace-lint --doctor` in a healthy environment (valid config, validators available) exits without error, mentions validators, and shows config information.
 
 ## Steps
 
 1. Run doctor in the valid-config directory
    ```bash
    cd valid-config
-   OUTPUT=$(ace-lint doctor 2>&1)
+   OUTPUT=$(ace-lint --doctor 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "$OUTPUT"

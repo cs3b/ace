@@ -13,7 +13,7 @@ Verify that `--fix` mode modifies files with style issues, reports fixed count >
    ```bash
    rm -rf .cache/ace-lint
    cp style_issues.rb fixable.rb
-   OUTPUT=$(ace-lint lint --fix fixable.rb 2>&1)
+   OUTPUT=$(ace-lint --fix fixable.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"

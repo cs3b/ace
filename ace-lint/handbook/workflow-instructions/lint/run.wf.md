@@ -54,22 +54,22 @@ ace-lint automatically:
 
    **Basic lint (all markdown/yaml):**
    ```bash
-   ace-lint lint
+   ace-lint "**/*.md" "**/*.yml"
    ```
 
    **Lint specific files:**
    ```bash
-   ace-lint lint path/to/file.md path/to/other.yml
+   ace-lint path/to/file.md path/to/other.yml
    ```
 
    **Lint with glob pattern:**
    ```bash
-   ace-lint lint "**/*.md"
+   ace-lint "**/*.md"
    ```
 
    **Lint changed files only:**
    ```bash
-   git diff --name-only --diff-filter=AM | grep -E '\.(md|ya?ml)$' | xargs ace-lint lint
+   git diff --name-only --diff-filter=AM | grep -E '\.(md|ya?ml)$' | xargs ace-lint
    ```
 
 4. **Handle results**:

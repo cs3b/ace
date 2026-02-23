@@ -7,7 +7,7 @@ require "dry/cli"
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Lint::CLI).call(arguments: args)
+  Dry::CLI.new(Ace::Lint::CLI::Commands::Lint).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

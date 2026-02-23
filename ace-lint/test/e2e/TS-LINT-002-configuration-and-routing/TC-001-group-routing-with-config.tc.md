@@ -16,7 +16,7 @@ Verify that `.ace/lint/ruby.yml` is discovered from the filesystem and group pat
 
 2. Lint both legacy and modern files
    ```bash
-   OUTPUT=$(ace-lint lint legacy/app.rb modern/app.rb 2>&1)
+   OUTPUT=$(ace-lint legacy/app.rb modern/app.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"

@@ -12,7 +12,7 @@ Verify that a file with syntax errors produces a non-zero exit code and generate
 1. Lint the syntax error file
    ```bash
    rm -rf .cache/ace-lint
-   OUTPUT=$(ace-lint lint syntax_error.rb 2>&1)
+   OUTPUT=$(ace-lint syntax_error.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
