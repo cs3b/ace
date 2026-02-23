@@ -28,6 +28,7 @@ module Ace
 
         def initialize(options = {})
           @options = options
+          @template_dir = nil
           @preset_manager = Molecules::PresetManager.new
           @section_processor = Molecules::SectionProcessor.new
           @merger = Molecules::BundleMerger.new
@@ -405,6 +406,9 @@ module Ace
         end
 
         def load_template(path)
+          # Track the template file's directory for resolving ./ relative paths
+          @template_dir = File.dirname(File.expand_path(path))
+
           # Read template file (preserve original for workflow fallback)
           original_content = File.read(path)
           template_content = original_content
@@ -1052,8 +1056,11 @@ module Ace
           # Check if it's a protocol reference (contains ://)
           if file_ref.match?(/^[\w-]+:\/\//)
             resolve_protocol(file_ref)
+          elsif file_ref.start_with?('./') && @template_dir
+            # Resolve ./ paths relative to the template file's directory
+            File.join(@template_dir, file_ref)
           else
-            # Regular file path or glob pattern
+            # Regular file path or glob pattern (resolved from project root)
             file_ref
           end
         end

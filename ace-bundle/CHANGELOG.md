@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.2] - 2026-02-23
+
+### Fixed
+- Resolve `./` prefixed file paths relative to template config directory instead of project root
+
 ## [0.31.1] - 2026-02-23
 
 ### Changed

@@ -980,6 +980,70 @@ class BundleLoaderTest < AceTestCase
     end
   end
 
+  def test_resolves_dot_slash_paths_relative_to_template_directory
+    with_temp_dir do |dir|
+      # Create a nested directory with a config file and a sibling file
+      nested_dir = File.join(dir, "deep", "nested")
+      FileUtils.mkdir_p(nested_dir)
+
+      File.write(File.join(nested_dir, "sibling.md"), "# Sibling Content")
+
+      # Create template config that references ./sibling.md
+      template_path = File.join(nested_dir, "config.yml.md")
+      File.write(template_path, <<~MARKDOWN)
+        ---
+        bundle:
+          embed_document_source: true
+          files:
+            - ./sibling.md
+        ---
+        # Config
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: dir)
+      bundle = loader.load_template(template_path)
+
+      assert_nil bundle.metadata[:error], "Should not have an error, got: #{bundle.metadata[:error]}"
+      assert bundle.file_count >= 1, "Should have loaded at least 1 file"
+
+      sibling_file = bundle.files.find { |f| f[:path]&.include?("sibling.md") }
+      assert sibling_file, "Should have loaded sibling.md"
+      assert_equal "# Sibling Content", sibling_file[:content]
+    end
+  end
+
+  def test_non_dot_slash_paths_resolve_from_project_root
+    with_temp_dir do |dir|
+      # Create a file at project root level
+      File.write(File.join(dir, "root-file.md"), "# Root Content")
+
+      # Create a nested template that references a non-./ path
+      nested_dir = File.join(dir, "deep", "nested")
+      FileUtils.mkdir_p(nested_dir)
+
+      template_path = File.join(nested_dir, "config.yml.md")
+      File.write(template_path, <<~MARKDOWN)
+        ---
+        bundle:
+          embed_document_source: true
+          files:
+            - root-file.md
+        ---
+        # Config
+      MARKDOWN
+
+      loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: dir)
+      bundle = loader.load_template(template_path)
+
+      assert_nil bundle.metadata[:error], "Should not have an error, got: #{bundle.metadata[:error]}"
+      assert bundle.file_count >= 1, "Should have loaded at least 1 file"
+
+      root_file = bundle.files.find { |f| f[:path]&.include?("root-file.md") }
+      assert root_file, "Should have loaded root-file.md from project root"
+      assert_equal "# Root Content", root_file[:content]
+    end
+  end
+
   def test_generate_diff_safe_does_not_crash_on_git_error
     with_temp_dir do
       yaml_config = <<~YAML
