@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.1] - 2026-02-23
+
+### Fixed
+- Fix `ace-retro create` failing with "not found" error by creating dedicated CreateRetro command
+- Title argument is now properly handled as a positional arg instead of being misrouted through subaction dispatching
+
 ## [0.41.0] - 2026-02-22
 
 ### Changed

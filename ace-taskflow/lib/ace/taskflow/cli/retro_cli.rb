@@ -7,6 +7,7 @@ require_relative "../version"
 # Reuse existing command classes
 require_relative "commands/retro"
 require_relative "commands/retros"
+require_relative "commands/create_retro"
 
 module Ace
   module Taskflow
@@ -22,17 +23,18 @@ module Ace
       # Application commands with descriptions (for help output)
       REGISTERED_COMMANDS = [
         ["list", "List retrospective reflection notes"],
-        ["create", "Create a retrospective for a task"]
+        ["create", "Create a new retrospective reflection note"]
       ].freeze
 
       HELP_EXAMPLES = [
         "ace-retro list",
-        "ace-retro create 148"
+        'ace-retro create "Session learnings"',
+        "ace-retro create my-topic --release v.0.9.0"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
       register "list", CLI::Commands::Retros
-      register "create", CLI::Commands::Retro
+      register "create", CLI::Commands::CreateRetro
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
