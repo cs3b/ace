@@ -39,13 +39,13 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'dry-cli', '~> 1.0'
-  spec.add_dependency 'ace-support-config', '~> 0.6'
-  spec.add_dependency 'ace-support-core', '~> 0.10' # For FileAggregator, OutputFormatter, etc.
+  spec.add_dependency 'ace-support-config', '~> 0.7'
+  spec.add_dependency 'ace-support-core', '~> 0.24' # For FileAggregator, OutputFormatter, etc.
   spec.add_dependency 'ace-support-fs', '~> 0.2' # For ProjectRootFinder
   # ace-git: Centralized Git/GitHub operations (diffs, PR metadata, branch info)
   # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)
-  spec.add_dependency 'ace-git', '~> 0.3'
-  spec.add_dependency 'ace-support-nav', '~> 0.9' # For in-process protocol resolution (wfi://, guide://, etc.)
+  spec.add_dependency 'ace-git', '~> 0.10'
+  spec.add_dependency 'ace-support-nav', '~> 0.17' # For in-process protocol resolution (wfi://, guide://, etc.)
 
   # Development dependencies managed in root Gemfile
 end
