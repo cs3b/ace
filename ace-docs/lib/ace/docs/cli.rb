@@ -24,12 +24,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-docs status",
-        "ace-docs discover",
-        "ace-docs update docs/architecture.md",
-        "ace-docs analyze",
-        "ace-docs validate",
-        "ace-docs analyze-consistency"
+        "ace-docs status --needs-update        # Docs due for refresh",
+        "ace-docs update docs/architecture.md  # Refresh metadata",
+        "ace-docs analyze-consistency          # Cross-doc link check"
       ].freeze
 
       # Register all commands (Hanami pattern: CLI::Commands::*)
