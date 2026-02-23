@@ -6,6 +6,7 @@ require_relative "../../atoms/validator_registry"
 require_relative "../../organisms/lint_orchestrator"
 require_relative "../../organisms/result_reporter"
 require_relative "../../organisms/report_generator"
+require_relative "../../organisms/lint_doctor"
 
 module Ace
   module Lint
@@ -14,7 +15,7 @@ module Ace
         # dry-cli Command class for the lint command
         #
         # This command provides linting functionality for markdown, YAML, and
-        # frontmatter files, maintaining complete parity with the Thor implementation.
+        # frontmatter files, with built-in doctor diagnostics via --doctor flag.
         class Lint < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
 
@@ -40,7 +41,6 @@ module Ace
           DESC
 
           # Examples shown in help output
-          # Note: dry-cli automatically prefixes with "ace-lint lint"
           example [
             "README.md                    # Auto-detect type from extension",
             "--fix README.md              # Auto-fix and format",
@@ -49,7 +49,9 @@ module Ace
             "docs/**/*.md --format        # Format with kramdown",
             "file1.md file2.rb --fix      # Multiple files with options",
             "**/*.rb --quiet              # Glob pattern with options",
-            "**/*.rb --validators standardrb,rubocop  # Run multiple validators"
+            "**/*.rb --validators standardrb,rubocop  # Run multiple validators",
+            "--doctor                     # Diagnose lint configuration",
+            "--doctor-verbose             # Diagnose with all details"
           ]
 
           # Define positional arguments for file paths
@@ -69,7 +71,22 @@ module Ace
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
+          # Single-command options
+          option :version, type: :boolean, desc: "Show version information"
+          option :doctor, type: :boolean, desc: "Diagnose lint configuration and validator health"
+          option :doctor_verbose, type: :boolean, desc: "Run doctor with verbose output (all diagnostics including info)"
+
           def call(**options)
+            if options[:version]
+              puts "ace-lint #{Ace::Lint::VERSION}"
+              return
+            end
+
+            if options[:doctor] || options[:doctor_verbose]
+              run_doctor(verbose: !!options[:doctor_verbose], quiet: !!options[:quiet])
+              return
+            end
+
             # Reset availability caches to ensure fresh tool detection per invocation
             # This handles cases where tools are installed/removed during long-lived sessions
             Ace::Lint::Atoms::ValidatorRegistry.reset_all_caches!
@@ -86,7 +103,7 @@ module Ace
 
             # Validate inputs
             if files.empty?
-              raise Ace::Core::CLI::Error.new("No files specified\nUsage: ace-lint lint [FILES...] [OPTIONS]")
+              raise Ace::Core::CLI::Error.new("No files specified\nUsage: ace-lint [FILES...] [OPTIONS]")
             end
 
             # Expand globs
@@ -135,6 +152,105 @@ module Ace
           end
 
           private
+
+          # Run doctor diagnostics
+          def run_doctor(verbose: false, quiet: false)
+            puts "Diagnoses:"
+            puts "  - Validator availability (StandardRB, RuboCop)"
+            puts "  - Configuration file locations and existence"
+            puts "  - Pattern coverage for validator groups"
+            puts ""
+            puts "Status indicators:"
+            puts "  [OK]   - Configuration is correct"
+            puts "  [WARN] - Potential issue that may affect linting"
+            puts "  [ERR]  - Configuration error that needs fixing"
+
+            ruby_groups = Ace::Lint.ruby_config&.dig("groups")
+            doctor = Organisms::LintDoctor.new(project_root: Dir.pwd, groups: ruby_groups)
+            diagnostics = doctor.diagnose
+
+            diagnostics = diagnostics.reject(&:info?) if quiet
+            display_diagnostics(diagnostics, verbose: verbose)
+
+            if doctor.errors?
+              raise Ace::Core::CLI::Error.new("Configuration has errors", exit_code: 2)
+            elsif doctor.warnings?
+              raise Ace::Core::CLI::Error.new("Configuration has warnings", exit_code: 1)
+            end
+          end
+
+          def display_diagnostics(diagnostics, verbose: false)
+            if diagnostics.empty?
+              puts "No diagnostics to display."
+              return
+            end
+
+            # Group by category
+            by_category = diagnostics.group_by(&:category)
+
+            by_category.each do |category, items|
+              puts "\n#{format_category(category)}:"
+              puts "-" * 40
+
+              items.each do |diag|
+                # Skip info unless verbose
+                next if diag.info? && !verbose
+
+                puts "  #{format_level(diag.level)} #{diag.message}"
+              end
+            end
+
+            puts "\n"
+            display_summary(diagnostics)
+          end
+
+          def format_category(category)
+            case category
+            when :validator
+              "Validators"
+            when :config
+              "Configuration Files"
+            when :pattern
+              "Pattern Groups"
+            else
+              category.to_s.capitalize
+            end
+          end
+
+          def format_level(level)
+            case level
+            when :error
+              "[ERR] "
+            when :warning
+              "[WARN]"
+            when :info
+              "[OK]  "
+            else
+              "[???] "
+            end
+          end
+
+          def display_summary(diagnostics)
+            errors = diagnostics.count(&:error?)
+            warnings = diagnostics.count(&:warning?)
+            infos = diagnostics.count(&:info?)
+
+            parts = []
+            parts << "#{errors} error(s)" if errors > 0
+            parts << "#{warnings} warning(s)" if warnings > 0
+            parts << "#{infos} OK" if infos > 0
+
+            status = if errors > 0
+              "Configuration has issues"
+            elsif warnings > 0
+              "Configuration has warnings"
+            else
+              "Configuration looks healthy"
+            end
+
+            puts "Summary: #{status}"
+            puts "         #{parts.join(", ")}"
+          end
 
           # Find the project root directory (git root or current directory)
           # @return [String] Project root path

@@ -41,7 +41,6 @@ require_relative "lint/organisms/lint_doctor"
 
 # Commands
 require_relative "lint/cli/commands/lint"
-require_relative "lint/cli/commands/doctor"
 
 # CLI
 require_relative "lint/cli"

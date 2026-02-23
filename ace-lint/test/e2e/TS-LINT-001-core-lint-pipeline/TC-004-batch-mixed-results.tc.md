@@ -13,7 +13,7 @@ Verify that `--fix` on a mix of valid, fixable, and broken files correctly categ
    ```bash
    rm -rf .cache/ace-lint
    cp style_issues.rb fixable.rb
-   OUTPUT=$(ace-lint lint --fix valid.rb fixable.rb syntax_error.rb 2>&1)
+   OUTPUT=$(ace-lint --fix valid.rb fixable.rb syntax_error.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"

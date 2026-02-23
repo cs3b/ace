@@ -5,14 +5,14 @@ title: YAML Syntax Error Detection
 
 ## Objective
 
-Verify that `ace-lint doctor` detects YAML syntax errors in config files and reports the issue without crashing. Note: exit code should be 2 for errors but is currently 0 (known bug — not asserted here).
+Verify that `ace-lint --doctor` detects YAML syntax errors in config files and reports the issue without crashing. Note: exit code should be 2 for errors but is currently 0 (known bug — not asserted here).
 
 ## Steps
 
 1. Run doctor in the syntax-error directory
    ```bash
    cd syntax-error
-   OUTPUT=$(ace-lint doctor 2>&1)
+   OUTPUT=$(ace-lint --doctor 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "$OUTPUT"
