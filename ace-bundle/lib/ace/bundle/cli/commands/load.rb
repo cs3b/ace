@@ -46,9 +46,7 @@ module Ace
             'project                  # Load project preset',
             'wfi://work-on-task       # Load workflow via protocol',
             '-p base -p custom        # Merge multiple presets',
-            '--presets base,team      # Load multiple presets (comma-separated)',
             '-f config.yml            # Load from file',
-            '--embed-source           # Embed source document in output',
             '--inspect-config         # Show resolved configuration'
           ]
 
