@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-22'
+  last-updated: '2026-02-23'
 ---
 
 # Project Decisions
@@ -81,7 +81,7 @@ This document provides actionable decisions from Architecture Decision Records (
 
 ### dry-cli CLI Framework
 **Decision**: All CLI gems use dry-cli with `lib/ace/gem/cli/` directory for command classes.
-**Impact**: Create command classes in `cli/`, use Registry pattern in `cli.rb`, test in `test/commands/`. Commands use SharedHelpers module for common patterns. `-v` reserved for `--verbose`.
+**Impact**: Create command classes in `cli/`. Use multi-command (Registry) pattern for tools with subcommands, or single-command pattern for focused tools. Multi-command CLIs use `HelpCommand.build()` for help display. Commands raise `Ace::Core::CLI::Error` for non-zero exit. Test in `test/commands/`. `-v` reserved for `--verbose`.
 **Details**: [ADR-023](decisions/ADR-023-dry-cli-framework.md) (supersedes ADR-018)
 
 ### Semantic Versioning and CHANGELOG

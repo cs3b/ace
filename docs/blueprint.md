@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-22'
+  last-updated: '2026-02-23'
 ---
 
 # Project Blueprint: ACE (Agentic Coding Environment)
