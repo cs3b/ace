@@ -12,7 +12,7 @@ Verify that `--no-report` flag prevents report generation entirely — no "Repor
 1. Clean previous reports and run with --no-report
    ```bash
    rm -rf .cache/ace-lint
-   OUTPUT=$(ace-lint lint --no-report valid.rb 2>&1)
+   OUTPUT=$(ace-lint --no-report valid.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"

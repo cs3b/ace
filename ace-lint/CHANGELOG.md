@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-02-23
+
+### Changed
+- **BREAKING**: Drop multi-command Registry in favor of single-command CLI pattern (ADR-024)
+  - `ace-lint lint file.md` → `ace-lint file.md`
+  - `ace-lint doctor` → `ace-lint --doctor`
+  - `ace-lint doctor --verbose` → `ace-lint --doctor-verbose`
+- Add `--version`, `--doctor`, `--doctor-verbose` options to main command
+- Delete separate Doctor command class; logic absorbed into Lint command
+
 ## [0.15.14] - 2026-02-22
 
 ### Changed
