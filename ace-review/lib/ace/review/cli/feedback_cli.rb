@@ -35,11 +35,10 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-review-feedback list",
-        "ace-review-feedback show abc123",
-        "ace-review-feedback create --file report.md",
-        "ace-review-feedback verify 42",
-        "ace-review-feedback resolve 42"
+        "ace-review-feedback create                        # From latest review session",
+        "ace-review-feedback list --status pending          # Unresolved items",
+        "ace-review-feedback verify 42 --valid              # Confirm finding",
+        "ace-review-feedback resolve 42                     # Mark as resolved"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
