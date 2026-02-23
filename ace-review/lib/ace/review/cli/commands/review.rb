@@ -32,12 +32,10 @@ module Ace
 
         example [
           '--preset code-pr             # PR code review',
-          '--preset security --auto-execute',
-          '--preset code-pr --task 114',
+          '--preset security --auto-execute  # Run and apply fixes',
           '--pr 123                      # Review by PR number',
           '--preset code --subject diff:HEAD~3 --subject files:docs/**/*.md',
-          '--preset code-pr --model gemini --model gpt-4 --auto-execute',
-          '--preset security --dry-run'
+          '--preset security --dry-run   # Preview without executing'
         ]
 
         # Review configuration options
