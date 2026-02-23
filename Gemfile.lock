@@ -20,7 +20,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.31.1)
+    ace-bundle (0.31.2)
       ace-git (~> 0.10)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)

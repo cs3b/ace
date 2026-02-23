@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.603] - 2026-02-23
+
+### Fixed
+- **ace-bundle v0.31.2**: Resolve `./` prefixed file paths relative to template config directory instead of project root
+
 ## [0.9.602] - 2026-02-23
 
 ### Fixed
