@@ -33,11 +33,10 @@ module Ace
         ].freeze
 
         HELP_EXAMPLES = [
-          "ace-git-worktree create --task 148",
-          "ace-git-worktree list --show-tasks",
-          "ace-git-worktree switch 148",
-          "ace-git-worktree remove --task 148",
-          "ace-git-worktree prune --dry-run"
+          "ace-git-worktree create --task 148    # Isolated worktree for task",
+          "ace-git-worktree list --show-tasks    # Worktrees with task context",
+          "ace-git-worktree switch 148           # Get path for cd",
+          "ace-git-worktree prune --dry-run      # Preview stale cleanup"
         ].freeze
 
         # Register commands (Hanami pattern: CLI::Commands::*)
