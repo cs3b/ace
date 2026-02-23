@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-02-23
+
+### Changed
+- Centralized error class hierarchy: SectionValidationError and PresetLoadError now inherit from Ace::Bundle::Error
+- Removed duplicate SectionValidationError definitions
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.31.0] - 2026-02-22
 
 ### Changed
