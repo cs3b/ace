@@ -26,8 +26,8 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-release list",
-        "ace-release show v.0.9.0"
+        "ace-release list                      # All releases",
+        "ace-release show v.0.9.0              # Release details and progress"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
