@@ -122,6 +122,12 @@ module Ace
           super(message)
         end
       end
+
+      # Raised when context composition fails
+      class ContextComposerError < Error; end
+
+      # Raised when an unknown review strategy is requested
+      class UnknownStrategyError < Error; end
     end
   end
 end
