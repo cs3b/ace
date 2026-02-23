@@ -1,18 +1,19 @@
 ---
 description: "E2E runner input for ace-b36ts goal-based pilot"
 bundle:
+  embed_document_source: true
   params:
     output: cache
     max_size: 81920
   files:
     - ./goal-1-help-survey.runner.md
-    - goal-2-encode-today.runner.md
-    - goal-3-decode-token.runner.md
-    - goal-4-error-behavior.runner.md
-    - goal-5-output-routing.runner.md
-    - goal-6-structured-output.runner.md
-    - goal-7-roundtrip-pipeline.runner.md
-    - goal-8-batch-sort.runner.md
+    - ./goal-2-encode-today.runner.md
+    - ./goal-3-decode-token.runner.md
+    - ./goal-4-error-behavior.runner.md
+    - ./goal-5-output-routing.runner.md
+    - ./goal-6-structured-output.runner.md
+    - ./goal-7-roundtrip-pipeline.runner.md
+    - ./goal-8-batch-sort.runner.md
 ---
 
 # E2E Test Runner: ace-b36ts Goal-Based Pilot
