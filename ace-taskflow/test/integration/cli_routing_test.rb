@@ -52,7 +52,7 @@ class CliRoutingIntegrationTest < AceTaskflowTestCase
     examples = Ace::Taskflow::IdeaCLI::HELP_EXAMPLES
     assert_instance_of Array, examples
     assert examples.any? { |ex| ex.include?("list") }
-    assert examples.any? { |ex| ex.include?("done") }
+    assert examples.any? { |ex| ex.include?("park") }
   end
 
   # === ace-release (release management) ===
