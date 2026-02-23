@@ -14,3 +14,5 @@ Save output to `results/7/`. The file should contain all three values: the origi
 - The encode→decode must happen through shell pipeline (`|`) or command substitution (`$(...)`) — not by manually copying the encoded value.
 - Do not fabricate output — all values must come from actual tool execution.
 - The original date should be a specific, known date (not "today" — use a fixed date so the roundtrip can be verified).
+- Additionally, capture the pipeline's stdout, stderr, and exit code:
+  `results/7/roundtrip.stdout`, `results/7/roundtrip.stderr`, `results/7/roundtrip.exit`.
