@@ -18,8 +18,8 @@ all 8 goals sequentially, writing artifacts to `results/{1..8}/`.
 cd experiment/sandbox
 
 ace-llm claude:sonnet \
-  --system "$(cat .cache/ace-e2e/runner-system.md)" \
-  --prompt "$(cat .cache/ace-e2e/runner-prompt.md)" \
+  --system .cache/ace-e2e/runner-system.md \
+  --prompt .cache/ace-e2e/runner-prompt.md \
   --output .cache/ace-e2e/runner-output.md \
   --timeout 360
 ```
