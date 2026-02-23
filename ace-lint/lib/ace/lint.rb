@@ -15,7 +15,7 @@ require_relative "lint/models/lint_result"
 # Atoms
 require_relative "lint/atoms/type_detector"
 require_relative "lint/atoms/kramdown_parser"
-require_relative "lint/atoms/yaml_parser"
+require_relative "lint/atoms/yaml_validator"
 require_relative "lint/atoms/frontmatter_extractor"
 require_relative "lint/atoms/pattern_matcher"
 require_relative "lint/atoms/validator_registry"
