@@ -96,7 +96,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.15.16)
+    ace-lint (0.16.0)
       ace-b36ts (~> 0.2)
       ace-support-config (~> 0.6)
       ace-support-core (~> 0.11)
@@ -233,7 +233,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.41.0)
+    ace-taskflow (0.41.1)
       ace-b36ts (~> 0.2)
       ace-git (~> 0.3)
       ace-llm
