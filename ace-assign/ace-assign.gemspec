@@ -34,14 +34,14 @@ Gem::Specification.new do |spec|
 
   # Dependencies
   spec.add_dependency "dry-cli", "~> 1.0"
-  spec.add_dependency "ace-support-core", "~> 0.18"
-  spec.add_dependency "ace-support-config", "~> 0.6"
-  spec.add_dependency "ace-b36ts", "~> 0.4"
+  spec.add_dependency "ace-support-core", "~> 0.24"
+  spec.add_dependency "ace-support-config", "~> 0.7"
+  spec.add_dependency "ace-b36ts", "~> 0.7"
   spec.add_dependency "ace-support-markdown", "~> 0.2"
-  spec.add_dependency "ace-llm", "~> 0.14"
+  spec.add_dependency "ace-llm", "~> 0.23"
 
   # Development dependencies
-  spec.add_development_dependency "ace-support-test-helpers", "~> 0.9"
+  spec.add_development_dependency "ace-support-test-helpers", "~> 0.12"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
 end
