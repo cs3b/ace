@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-02-23
+
+### Changed
+- Extracted format-specific encode/decode/increment methods into FormatCodecs module
+- Reduced CompactIdEncoder from 1,294 to 654 lines
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.7.2] - 2026-02-22
 
 ### Changed
