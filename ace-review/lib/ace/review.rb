@@ -108,7 +108,7 @@ module Ace
         return {} unless File.exist?(defaults_path)
 
         YAML.safe_load_file(defaults_path, permitted_classes: [Date], aliases: true) || {}
-      rescue StandardError
+      rescue Psych::SyntaxError, Errno::ENOENT, Errno::EACCES
         {} # Only return empty hash if even defaults fail to load
       end
 
