@@ -20,9 +20,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-overseer work-on 148",
-        "ace-overseer status",
-        "ace-overseer prune"
+        "ace-overseer work-on 148              # Launch task in worktree",
+        "ace-overseer status                   # All active worktrees",
+        "ace-overseer prune                    # Clean up finished tasks"
       ].freeze
 
       register "work-on", Commands::WorkOn
