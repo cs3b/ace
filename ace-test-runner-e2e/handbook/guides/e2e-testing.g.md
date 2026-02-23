@@ -53,7 +53,7 @@ Do NOT create E2E test cases for:
 
 **Healthy scenario scope:**
 - **2-5 TCs per scenario** — TCs within a scenario share setup (fixtures, git init, env vars). Fewer than 2 suggests the scenario could merge with another; more than 5 suggests splitting.
-- **Consolidation rule:** Multiple assertions that share the same CLI invocation and setup belong in ONE TC, not separate TCs. For example, checking `report.json` structure, exit code, and `ok.md` existence after a single `ace-lint lint` call is one TC with multiple verification steps, not three TCs.
+- **Consolidation rule:** Multiple assertions that share the same CLI invocation and setup belong in ONE TC, not separate TCs. For example, checking `report.json` structure, exit code, and `ok.md` existence after a single `ace-lint` call is one TC with multiple verification steps, not three TCs.
 
 **Reference:** ace-lint consolidated from 8 scenarios / 31 TCs to 3 scenarios (5, 2, 2 TCs) — each scenario is a coherent pipeline with shared fixtures.
 
@@ -245,7 +245,7 @@ Example:
    ```
 2. Run linter
    ```bash
-   ace-lint lint "$TEST_DIR/valid.rb"
+   ace-lint "$TEST_DIR/valid.rb"
    ```
 
 **Expected:**

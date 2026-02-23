@@ -80,7 +80,7 @@ Numbered steps with code blocks for commands.
 1. Lint the valid file and capture output
    ```bash
    rm -rf .cache/ace-lint
-   OUTPUT=$(ace-lint lint valid.rb 2>&1)
+   OUTPUT=$(ace-lint valid.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
@@ -124,7 +124,7 @@ report.json, and produces ok.md with correct format.
 1. Lint the valid file and capture output
    ```bash
    rm -rf .cache/ace-lint
-   OUTPUT=$(ace-lint lint valid.rb 2>&1)
+   OUTPUT=$(ace-lint valid.rb 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"
@@ -197,7 +197,7 @@ REPORT_DIR="$TEST_DIR/.cache/ace-lint/reports"
 Use `2>&1` to capture all output:
 
 ```bash
-OUTPUT=$(ace-lint lint file.rb 2>&1)
+OUTPUT=$(ace-lint file.rb 2>&1)
 ```
 
 ### Include Negative Assertions
@@ -229,7 +229,7 @@ correct exit code.
 
 1. Run with nonexistent file
    ```bash
-   OUTPUT=$(ace-lint lint nonexistent.rb 2>&1)
+   OUTPUT=$(ace-lint nonexistent.rb 2>&1)
    EXIT_CODE=$?
    echo "Exit code: $EXIT_CODE"
    echo "Output: $OUTPUT"
@@ -281,7 +281,7 @@ When `copy-fixtures` is in the scenario setup, fixture files are available at th
 1. Lint the fixture file
    ```bash
    # valid.rb was copied from fixtures/ by copy-fixtures
-   ace-lint lint valid.rb
+   ace-lint valid.rb
    ```
 ```
 
