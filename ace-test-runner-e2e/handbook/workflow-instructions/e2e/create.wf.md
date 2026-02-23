@@ -193,7 +193,7 @@ If a context description was provided, enhance the test with:
 - Verify that status values match actual implementation (e.g., `done` vs `completed`)
 
 **COST-AWARE (reduce LLM invocations):**
-- Consolidate assertions that share the same CLI invocation into a single TC. For example, after running `ace-lint lint file.rb`, check exit code, report.json structure, and ok.md existence in ONE TC — not three.
+- Consolidate assertions that share the same CLI invocation into a single TC. For example, after running `ace-lint file.rb`, check exit code, report.json structure, and ok.md existence in ONE TC — not three.
 - Target 2-5 TCs per scenario. More than 5 suggests the scenario is too broad; split into focused scenarios. Fewer than 2 suggests merging with a related scenario.
 - Never create a TC for a single assertion when that assertion could be appended to an existing TC that runs the same command.
 
