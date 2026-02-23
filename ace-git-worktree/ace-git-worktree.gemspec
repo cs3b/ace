@@ -45,14 +45,14 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'dry-cli', '~> 1.0'
-  spec.add_dependency 'ace-support-core', '~> 0.10'
-  spec.add_dependency 'ace-support-config', '~> 0.6'
-  spec.add_dependency 'ace-git', '~> 0.4'
-  spec.add_dependency 'ace-taskflow', '>= 0.10.0'
+  spec.add_dependency 'ace-support-core', '~> 0.24'
+  spec.add_dependency 'ace-support-config', '~> 0.7'
+  spec.add_dependency 'ace-git', '~> 0.10'
+  spec.add_dependency 'ace-taskflow', '~> 0.41'
 
   # Development dependencies are managed in the root Gemfile
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'minitest'
-  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.9'
+  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.12'
 end
 
