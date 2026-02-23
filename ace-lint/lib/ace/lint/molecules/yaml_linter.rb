@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "../atoms/yaml_parser"
+require_relative "../atoms/yaml_validator"
 require_relative "../models/lint_result"
 require_relative "../models/validation_error"
 
@@ -34,7 +34,7 @@ module Ace
         # @param content [String] YAML content
         # @return [Models::LintResult] Validation result
         def self.lint_content(file_path, content)
-          result = Atoms::YamlParser.validate(content)
+          result = Atoms::YamlValidator.validate(content)
 
           errors = result[:errors].map do |msg|
             Models::ValidationError.new(message: msg, severity: :error)
