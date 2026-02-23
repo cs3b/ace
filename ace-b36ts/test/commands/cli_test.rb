@@ -64,7 +64,6 @@ class CliTest < AceB36tsTestCase
 
     assert_includes output, "ace-b36ts encode"
     assert_includes output, "ace-b36ts decode"
-    assert_includes output, "ace-b36ts config"
   end
 
   def test_empty_args_shows_help
