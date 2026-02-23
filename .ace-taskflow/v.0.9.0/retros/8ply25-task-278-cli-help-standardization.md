@@ -101,6 +101,41 @@
 - Add a "commit-from-orchestrator" phase that runs after fork-run returns, rather than expecting the forked agent to commit
 - Use orchestrator idle time during fork-run to pre-read upcoming task specs or review completed reports
 
+## Test Writing Learnings
+
+### In-Process vs Subprocess CLI Testing
+
+The fork-run agents rewrote CLI routing tests using `Open3.capture3` (subprocess spawning), which introduced a severe performance regression:
+
+| Package | Subprocess (Open3) | In-Process (invoke_cli) | Speedup |
+|---------|-------------------|------------------------|---------|
+| ace-bundle | 7.12s | 0.005s | **1400x** |
+| ace-git-commit | 6.34s | 0.004s | **1585x** |
+| ace-git | 2.14s | 0.008s | **267x** |
+
+**Root cause**: Each `Open3.capture3` call spawns a full Ruby process with complete gem loading (~1s per subprocess). A 7-test file with 7 subprocess calls = 7s minimum.
+
+**Fix pattern**: The project already had `Ace::TestSupport::CliHelpers` providing `invoke_cli(CLI, args)` which runs `capture_io { CLI.start(args) }` in-process. Two packages (ace-llm, ace-docs) already used this fast pattern on the same branch — the fork-run agents didn't learn from them.
+
+### Key Test Patterns Learned
+
+1. **CLI.start(args) is the in-process entry point**: Every CLI module needs a `.start(args)` class method that mirrors what the exe does. For single-command CLIs: `Dry::CLI.new(Command).call(arguments: args)`. For registry CLIs: `Dry::CLI.new(self).call(arguments: normalized_args(args))`.
+
+2. **Exe-level normalization belongs in CLI.start, not just the exe**: The ace-git exe had `normalized_args` logic (empty args → help, range patterns → diff). Moving this into `CLI.start` made it testable in-process without duplicating logic.
+
+3. **Stub the heavy operations, not the routing**: Routing tests verify command dispatch, not behavior. Stub at the orchestrator/domain level:
+   - `Ace::Bundle.stub(:load_auto, mock_context)` — prevents preset file loading
+   - `Ace::GitCommit::Organisms::CommitOrchestrator.stub(:new, mock)` — prevents git/LLM operations
+   - `Ace::Git::Organisms::DiffOrchestrator.stub(:generate, mock)` — prevents git diff execution
+
+4. **Struct.new can't use `empty?` as a member**: When creating mock objects with predicate methods like `empty?`, use `Object.new` with `define_singleton_method` instead of Struct — Ruby's `Struct.new(:empty?)` raises `NameError: cannot make operator ID :empty? attrset`.
+
+5. **Routing tests don't need exit-code assertions for error cases**: The original subprocess tests checked `refute_match(/unknown command/)` on output — this works identically in-process since `invoke_cli` catches `CLI::Error` and captures stderr.
+
+### Automation Insight: Detect Subprocess Testing Anti-Pattern
+
+A lint rule or test review check could flag `require "open3"` in test files as a potential performance anti-pattern when `CliHelpers` is available, especially for CLI routing tests where in-process testing is always preferable.
+
 ## Technical Details
 
 - **Total commits**: ~70 commits across the session
