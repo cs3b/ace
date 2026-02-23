@@ -1,69 +1,90 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require "open3"
+require "ace/git/cli"
+require "ace/test_support/cli_helpers"
 
 class CliRoutingTest < AceGitTestCase
-  def setup
-    super
-    @exe_path = File.expand_path("../../exe/ace-git", __dir__)
-    skip "executable not found" unless File.exist?(@exe_path)
-  end
+  include Ace::TestSupport::CliHelpers
 
   def test_cli_routes_version_command
-    stdout, _stderr, status = Open3.capture3(@exe_path, "version")
-    assert status.success?
-    assert_match(/ace-git \d+\.\d+\.\d+/, stdout)
+    result = invoke_cli(Ace::Git::CLI, ["version"])
+    assert_match(/ace-git \d+\.\d+\.\d+/, result[:stdout])
   end
 
   def test_cli_routes_version_with_long_flag
-    stdout, _stderr, status = Open3.capture3(@exe_path, "--version")
-    assert status.success?
-    assert_match(/ace-git \d+\.\d+\.\d+/, stdout)
+    result = invoke_cli(Ace::Git::CLI, ["--version"])
+    assert_match(/ace-git \d+\.\d+\.\d+/, result[:stdout])
   end
 
   def test_cli_routes_help_command
-    stdout, stderr, status = Open3.capture3(@exe_path, "help")
-    assert status.success?
-    assert_match(/Commands:/i, stdout + stderr)
+    result = invoke_cli(Ace::Git::CLI, ["help"])
+    output = result[:stdout] + result[:stderr]
+    assert_match(/Commands:/i, output)
   end
 
   def test_cli_routes_help_with_long_flag
-    stdout, stderr, status = Open3.capture3(@exe_path, "--help")
-    assert status.success?
-    assert_match(/Commands:/i, stdout + stderr)
+    result = invoke_cli(Ace::Git::CLI, ["--help"])
+    output = result[:stdout] + result[:stderr]
+    assert_match(/Commands:/i, output)
   end
 
   def test_cli_routes_help_with_short_flag
-    stdout, stderr, status = Open3.capture3(@exe_path, "-h")
-    assert status.success?
-    assert_match(/Commands:/i, stdout + stderr)
+    result = invoke_cli(Ace::Git::CLI, ["-h"])
+    output = result[:stdout] + result[:stderr]
+    assert_match(/Commands:/i, output)
   end
 
   def test_cli_shows_help_when_no_args
-    stdout, stderr, status = Open3.capture3(@exe_path)
-    assert status.success?
-    assert_match(/Commands:/i, stdout + stderr)
+    result = invoke_cli(Ace::Git::CLI, [])
+    output = result[:stdout] + result[:stderr]
+    assert_match(/Commands:/i, output)
   end
 
   def test_cli_routes_explicit_diff_range
-    _stdout, _stderr, status = Open3.capture3(@exe_path, "diff", "HEAD~1..HEAD")
-    assert status.success?
+    stub_diff_orchestrator do
+      result = invoke_cli(Ace::Git::CLI, ["diff", "HEAD~1..HEAD"])
+      # Routing succeeds — no unknown command error
+      output = result[:stdout] + result[:stderr]
+      refute_match(/unknown command/i, output)
+    end
   end
 
   def test_cli_routes_range_shorthand_to_diff
-    _stdout, _stderr, status = Open3.capture3(@exe_path, "HEAD~1..HEAD")
-    assert status.success?
+    stub_diff_orchestrator do
+      result = invoke_cli(Ace::Git::CLI, ["HEAD~1..HEAD"])
+      output = result[:stdout] + result[:stderr]
+      refute_match(/unknown command/i, output)
+    end
   end
 
   def test_cli_routes_head_shorthand_to_diff
-    _stdout, _stderr, status = Open3.capture3(@exe_path, "HEAD")
-    assert status.success?
+    stub_diff_orchestrator do
+      result = invoke_cli(Ace::Git::CLI, ["HEAD"])
+      output = result[:stdout] + result[:stderr]
+      refute_match(/unknown command/i, output)
+    end
   end
 
   def test_cli_unknown_command_returns_error
-    stdout, stderr, status = Open3.capture3(@exe_path, "log")
-    refute status.success?
-    assert_match(/COMMANDS|Commands:|unknown command/i, stdout + stderr)
+    result = invoke_cli(Ace::Git::CLI, ["log"])
+    output = result[:stdout] + result[:stderr]
+    assert_match(/COMMANDS|Commands:|unknown command/i, output)
+  end
+
+  private
+
+  # Stub the diff orchestrator to avoid actual git operations
+  def stub_diff_orchestrator(&block)
+    mock_result = Object.new
+    mock_result.define_singleton_method(:content) { "mock diff" }
+    mock_result.define_singleton_method(:summary) { "1 file changed" }
+    mock_result.define_singleton_method(:files) { ["test.rb"] }
+    mock_result.define_singleton_method(:empty?) { false }
+    mock_result.define_singleton_method(:to_s) { "mock diff" }
+
+    Ace::Git::Organisms::DiffOrchestrator.stub(:generate, mock_result) do
+      Ace::Git::Organisms::DiffOrchestrator.stub(:raw, mock_result, &block)
+    end
   end
 end

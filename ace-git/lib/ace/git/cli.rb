@@ -14,6 +14,38 @@ module Ace
     module CLI
       extend Dry::CLI::Registry
 
+      # Entry point for CLI invocation (used by tests via cli_helpers)
+      #
+      # Mirrors the exe's normalized_args logic so in-process tests
+      # can exercise range-pattern routing.
+      #
+      # @param args [Array<String>] Command-line arguments
+      def self.start(args)
+        Dry::CLI.new(self).call(arguments: normalized_args(args))
+      end
+
+      # Normalize arguments to handle empty args and git range patterns.
+      # Extracted from exe/ace-git for in-process testability.
+      def self.normalized_args(argv)
+        return ["--help"] if argv.empty?
+        return ["diff"] + argv if git_range_pattern?(argv.first)
+
+        argv
+      end
+
+      def self.git_range_pattern?(arg)
+        return false if arg.nil?
+
+        return true if arg.match?(/\.\.\.?/) # Range operators: .. or ...
+        return true if arg.match?(/[~^]\d*/) # Ref modifiers: ~, ~2, ^, ^2
+        return true if arg == "HEAD"         # Exact HEAD match
+        return true if arg.match?(/@\{/)     # Reflog: @{1}, @{yesterday}
+
+        false
+      end
+
+      private_class_method :git_range_pattern?
+
       PROGRAM_NAME = "ace-git"
 
       REGISTERED_COMMANDS = [
