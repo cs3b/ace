@@ -162,9 +162,9 @@ end
 
 **Steps:**
 1. Create test file with lint issues
-2. Run `ace-lint lint test.rb`
+2. Run `ace-lint test.rb`
 3. Verify issues detected
-4. Run `ace-lint lint test.rb --fix`
+4. Run `ace-lint test.rb --fix`
 5. Verify issues fixed
 
 **Expected:**
