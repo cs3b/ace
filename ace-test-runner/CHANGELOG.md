@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.6] - 2026-02-23
+
+### Fixed
+- Enabled ace-support-core integration (was disabled with stale TODO since v0.10)
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.15.5] - 2026-02-22
 
 ### Changed
