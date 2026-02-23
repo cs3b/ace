@@ -35,10 +35,9 @@ module Ace
         ].freeze
 
         HELP_EXAMPLES = [
-          "ace-git-secrets scan",
-          "ace-git-secrets scan --staged",
-          "ace-git-secrets check-release",
-          "ace-git-secrets revoke --token TOKEN"
+          "ace-git-secrets scan --staged         # Pre-commit check",
+          "ace-git-secrets check-release         # Verify before publish",
+          "ace-git-secrets revoke --token TOKEN  # Revoke leaked credential"
         ].freeze
 
         # Register the scan command (default) - Hanami pattern: CLI::Commands::
