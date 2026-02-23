@@ -34,10 +34,10 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'dry-cli', '~> 1.0'
-  spec.add_dependency 'ace-support-core', '~> 0.9'
-  spec.add_dependency 'ace-support-config', '~> 0.6'
-  spec.add_dependency 'ace-git', '~> 0.3'
-  spec.add_dependency 'ace-llm', '~> 0.16'
+  spec.add_dependency 'ace-support-core', '~> 0.24'
+  spec.add_dependency 'ace-support-config', '~> 0.7'
+  spec.add_dependency 'ace-git', '~> 0.10'
+  spec.add_dependency 'ace-llm', '~> 0.23'
 
   # Development dependencies managed in root Gemfile
 end
