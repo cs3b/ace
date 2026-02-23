@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-02-23
+
+### Changed
+- Renamed YamlParser atom to YamlValidator to reflect its validation purpose
+- Added backward-compatibility alias (YamlParser = YamlValidator)
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.16.0] - 2026-02-23
 
 ### Changed
