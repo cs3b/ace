@@ -218,7 +218,7 @@ module Ace
             else
               nil
             end
-          rescue
+          rescue Errno::ENOENT, Errno::EACCES, IOError
             nil
           end
         end

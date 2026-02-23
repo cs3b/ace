@@ -7,7 +7,7 @@ require_relative "../models/idea"
 require_relative "release_resolver"
 require_relative "config_loader"
 require_relative "../configuration"
-require_relative "../atoms/yaml_parser"
+require_relative "../atoms/frontmatter_parser"
 require_relative "../atoms/id_title_extractor"
 require_relative "idea_structure_validator"
 
@@ -244,7 +244,7 @@ module Ace
 
           # Read content to parse frontmatter
           content = File.read(idea_file)
-          parsed = Atoms::YamlParser.parse(content)
+          parsed = Atoms::FrontmatterParser.parse(content)
           frontmatter = parsed[:frontmatter] || {}
           body_content = parsed[:content]
 
@@ -321,7 +321,7 @@ module Ace
 
           # Read content to parse frontmatter
           content = File.read(path)
-          parsed = Atoms::YamlParser.parse(content)
+          parsed = Atoms::FrontmatterParser.parse(content)
           frontmatter = parsed[:frontmatter]
           body_content = parsed[:content]
 
