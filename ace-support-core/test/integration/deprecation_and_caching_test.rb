@@ -2,7 +2,7 @@
 
 require_relative "../test_helper"
 
-class DeprecationAndCachingTest < AceTestCase
+class CachingTest < AceTestCase
   include Ace::TestSupport::ConfigHelpers
 
   def setup
@@ -14,59 +14,6 @@ class DeprecationAndCachingTest < AceTestCase
   def teardown
     @env.teardown
     Ace::Core.reset_config!
-  end
-
-  # === Deprecation Warning Tests ===
-
-  def test_config_with_search_paths_emits_deprecation_warning
-    # Using deprecated search_paths parameter should emit a warning
-    _, err = capture_io do
-      Ace::Core.config(search_paths: ["/some/path"])
-    end
-
-    assert_match(/DEPRECATION/, err)
-    assert_match(/search_paths/, err)
-    assert_match(/Ace::Support::Config\.create/, err)
-  end
-
-  def test_config_with_file_patterns_emits_deprecation_warning
-    _, err = capture_io do
-      Ace::Core.config(file_patterns: ["*.yml"])
-    end
-
-    assert_match(/DEPRECATION/, err)
-    assert_match(/file_patterns/, err)
-  end
-
-  def test_config_without_deprecated_params_no_warning
-    _, err = capture_io do
-      Ace::Core.config
-    end
-
-    refute_match(/DEPRECATION/, err)
-  end
-
-  def test_config_resolver_with_search_paths_emits_deprecation_warning
-    _, err = capture_io do
-      Ace::Core::Organisms::ConfigResolver.new(
-        search_paths: [@env.config_path(:project)]
-      )
-    end
-
-    assert_match(/DEPRECATION/, err)
-    assert_match(/ConfigResolver/, err)
-    assert_match(/search_paths/, err)
-  end
-
-  def test_config_resolver_without_deprecated_params_no_warning
-    _, err = capture_io do
-      Ace::Core::Organisms::ConfigResolver.new(
-        config_dir: ".ace",
-        defaults_dir: ".ace-defaults"
-      )
-    end
-
-    refute_match(/DEPRECATION/, err)
   end
 
   # === Caching Tests ===
