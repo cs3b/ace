@@ -44,12 +44,8 @@ module Ace
           example [
             "README.md                    # Auto-detect type from extension",
             "--fix README.md              # Auto-fix and format",
-            "--type yaml config.yml       # Explicit type specification",
-            "--type ruby lib/file.rb      # Lint Ruby file",
             "docs/**/*.md --format        # Format with kramdown",
-            "file1.md file2.rb --fix      # Multiple files with options",
-            "**/*.rb --quiet              # Glob pattern with options",
-            "**/*.rb --validators standardrb,rubocop  # Run multiple validators",
+            "**/*.rb --validators standardrb,rubocop  # Multiple validators",
             "--doctor                     # Diagnose lint configuration",
             "--doctor-verbose             # Diagnose with all details"
           ]
