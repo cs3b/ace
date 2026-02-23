@@ -223,7 +223,7 @@ module Ace
                 else
                   result[key] = value
                 end
-              rescue
+              rescue Psych::SyntaxError, ArgumentError
                 result[key] = value
               end
             end

@@ -2,7 +2,7 @@
 
 require_relative "../molecules/idea_loader"
 require_relative "../molecules/sort_value_calculator"
-require_relative "../atoms/yaml_parser"
+require_relative "../atoms/frontmatter_parser"
 
 module Ace
   module Taskflow
@@ -78,7 +78,7 @@ module Ace
           return false unless File.exist?(idea_path)
 
           content = File.read(idea_path)
-          parsed = Atoms::YamlParser.parse(content)
+          parsed = Atoms::FrontmatterParser.parse(content)
 
           frontmatter = parsed[:frontmatter]
           body = parsed[:content]

@@ -162,7 +162,7 @@ module Ace
         # @param release_path [String] Path to the release
         # @return [Hash] Statistics about the release
         def get_statistics(release_path)
-          require_relative "../atoms/yaml_parser"
+          require_relative "../atoms/frontmatter_parser"
           config = Ace::Taskflow.configuration
           task_path = File.join(release_path, config.task_dir)
           return default_statistics unless File.directory?(task_path)
@@ -178,7 +178,7 @@ module Ace
             md_files.each do |file|
               begin
                 content = File.read(file, encoding: "utf-8")
-                parsed = Atoms::YamlParser.parse(content)
+                parsed = Atoms::FrontmatterParser.parse(content)
                 frontmatter = parsed[:frontmatter]
 
                 # Only count files with proper task frontmatter

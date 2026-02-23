@@ -2,7 +2,7 @@
 
 require "set"
 require "ace/support/markdown"
-require_relative "../atoms/yaml_parser"
+require_relative "../atoms/frontmatter_parser"
 require_relative "../atoms/path_builder"
 require_relative "../atoms/task_reference_parser"
 require_relative "../configuration"
@@ -62,7 +62,7 @@ module Ace
           return nil unless File.exist?(path)
 
           content = File.read(path)
-          parsed = Atoms::YamlParser.parse(content)
+          parsed = Atoms::FrontmatterParser.parse(content)
 
           frontmatter = parsed[:frontmatter]
           body_content = parsed[:content]
@@ -513,7 +513,7 @@ module Ace
         # @param content [String] Task file content
         # @return [Hash] Parsed metadata
         def parse_metadata(content)
-          parsed = Atoms::YamlParser.parse(content)
+          parsed = Atoms::FrontmatterParser.parse(content)
           frontmatter = parsed[:frontmatter]
 
           return nil unless frontmatter
@@ -590,7 +590,7 @@ module Ace
 
           begin
             content = File.read(file_path, encoding: "utf-8")
-            parsed = Atoms::YamlParser.parse(content)
+            parsed = Atoms::FrontmatterParser.parse(content)
 
             # Check if frontmatter exists and contains task metadata
             frontmatter = parsed[:frontmatter]

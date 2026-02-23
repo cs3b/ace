@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 require_relative "../test_helper"
-require_relative "../../lib/ace/taskflow/atoms/yaml_parser"
+require_relative "../../lib/ace/taskflow/atoms/frontmatter_parser"
 
-class YamlParserTest < AceTaskflowTestCase
+class FrontmatterParserTest < AceTaskflowTestCase
   def setup
-    @parser = Ace::Taskflow::Atoms::YamlParser
+    @parser = Ace::Taskflow::Atoms::FrontmatterParser
   end
 
   def test_parse_frontmatter_with_valid_yaml
