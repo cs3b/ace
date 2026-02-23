@@ -5,7 +5,7 @@ module Ace
     module Atoms
       # Validates section definitions and ensures section integrity
       class SectionValidator
-        class SectionValidationError < StandardError; end
+        SectionValidationError = Ace::Bundle::SectionValidationError
 
         # Required section fields (none - all fields are optional)
         REQUIRED_FIELDS = [].freeze

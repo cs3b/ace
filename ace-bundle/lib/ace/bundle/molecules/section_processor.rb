@@ -599,8 +599,8 @@ module Ace
 
       end
 
-      # Custom exception for section validation errors
-      class SectionValidationError < StandardError; end
+      # Backward-compat alias for centralized error class
+      SectionValidationError = Ace::Bundle::SectionValidationError
     end
   end
 end
