@@ -34,7 +34,7 @@ module Ace
           write_atomic(file_path, content)
         rescue ArgumentError => e
           { success: false, error: e.message }
-        rescue => e
+        rescue SystemCallError, IOError => e
           { success: false, error: "Failed to write feedback file: #{e.message}" }
         end
 
