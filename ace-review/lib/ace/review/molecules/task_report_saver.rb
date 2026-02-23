@@ -23,7 +23,7 @@ module Ace
           reviews_dir = File.join(task_dir, "reviews")
           begin
             FileUtils.mkdir_p(reviews_dir)
-          rescue => e
+          rescue SystemCallError, IOError => e
             return { success: false, error: "Cannot create reviews directory: #{e.message}" }
           end
 
@@ -35,7 +35,7 @@ module Ace
           begin
             FileUtils.cp(review_file, output_path)
             { success: true, path: output_path }
-          rescue => e
+          rescue SystemCallError, IOError => e
             { success: false, error: "Failed to save review: #{e.message}" }
           end
         end
@@ -74,7 +74,7 @@ module Ace
             # Copy review to release directory
             FileUtils.cp(review_file, output_path)
             { success: true, path: output_path }
-          rescue => e
+          rescue StandardError => e # Broad: wraps mkdir_p, cp, generate_filename, YAML operations
             { success: false, error: "Failed to save to release: #{e.message}" }
           end
         end
@@ -149,7 +149,7 @@ module Ace
           feedback_dir = feedback_path(task_path)
           begin
             FileUtils.mkdir_p(feedback_dir)
-          rescue => e
+          rescue SystemCallError, IOError => e
             return { success: false, error: "Cannot create feedback directory: #{e.message}" }
           end
 
@@ -161,7 +161,7 @@ module Ace
           begin
             FileUtils.cp(feedback_file, output_path)
             { success: true, path: output_path }
-          rescue => e
+          rescue SystemCallError, IOError => e
             { success: false, error: "Failed to save feedback: #{e.message}" }
           end
         end
@@ -179,7 +179,7 @@ module Ace
           archive_dir = feedback_archive_path(task_path)
           begin
             FileUtils.mkdir_p(archive_dir)
-          rescue => e
+          rescue SystemCallError, IOError => e
             return { success: false, error: "Cannot create archive directory: #{e.message}" }
           end
 
@@ -190,7 +190,7 @@ module Ace
           begin
             FileUtils.mv(feedback_file, archive_path)
             { success: true, path: archive_path }
-          rescue => e
+          rescue SystemCallError, IOError => e
             { success: false, error: "Failed to archive feedback: #{e.message}" }
           end
         end

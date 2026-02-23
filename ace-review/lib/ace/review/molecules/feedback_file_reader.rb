@@ -41,7 +41,9 @@ module Ace
           { success: false, error: "File not found: #{file_path}" }
         rescue Errno::EACCES
           { success: false, error: "Permission denied: #{file_path}" }
-        rescue => e
+        rescue ArgumentError => e
+          { success: false, error: e.message }
+        rescue SystemCallError, IOError => e
           { success: false, error: "Failed to read file: #{e.message}" }
         end
 
@@ -112,7 +114,7 @@ module Ace
           { success: true, feedback_item: feedback_item }
         rescue ArgumentError => e
           { success: false, error: "Invalid feedback item in #{file_path}: #{e.message}" }
-        rescue => e
+        rescue Psych::SyntaxError, TypeError, KeyError => e
           { success: false, error: "Failed to parse #{file_path}: #{e.message}" }
         end
 

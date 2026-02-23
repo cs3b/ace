@@ -33,8 +33,8 @@ module Ace
           adaptive: "Ace::Review::Molecules::Strategies::AdaptiveStrategy"
         }.freeze
 
-        # Error raised when an unknown strategy type is requested
-        class UnknownStrategyError < StandardError; end
+        # Backward-compat alias for centralized error class
+        UnknownStrategyError = Ace::Review::Errors::UnknownStrategyError
 
         # Factory method to create a strategy instance
         #

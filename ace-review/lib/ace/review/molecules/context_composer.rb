@@ -120,8 +120,8 @@ module Ace
           end
         end
 
-        # Custom error class for ContextComposer failures
-        class ContextComposerError < StandardError; end
+        # Backward-compat alias for centralized error class
+        ContextComposerError = Ace::Review::Errors::ContextComposerError
       end
     end
   end
