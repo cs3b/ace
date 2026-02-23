@@ -23,9 +23,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-tmux start dev",
-        "ace-tmux window cc --root /path/to/project",
-        "ace-tmux list"
+        "ace-tmux start dev                    # Launch dev session preset",
+        "ace-tmux window cc --root ~/project   # Add window to session",
+        "ace-tmux list                         # Available presets"
       ].freeze
 
       # Start the CLI
