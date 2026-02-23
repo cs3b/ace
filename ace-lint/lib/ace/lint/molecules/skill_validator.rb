@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "../atoms/frontmatter_extractor"
-require_relative "../atoms/yaml_parser"
+require_relative "../atoms/yaml_validator"
 require_relative "../atoms/skill_schema_loader"
 require_relative "../atoms/allowed_tools_validator"
 require_relative "../atoms/comment_validator"
@@ -76,7 +76,7 @@ module Ace
             end
 
             # Parse frontmatter YAML
-            parse_result = Atoms::YamlParser.parse(extraction[:frontmatter])
+            parse_result = Atoms::YamlValidator.parse(extraction[:frontmatter])
 
             unless parse_result[:success]
               parse_errors = parse_result[:errors].map do |msg|
