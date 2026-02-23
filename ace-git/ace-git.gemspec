@@ -40,12 +40,12 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   # Runtime dependencies
-  spec.add_dependency 'ace-support-config', '~> 0.6'
-  spec.add_dependency 'ace-support-core', '~> 0.9'
+  spec.add_dependency 'ace-support-config', '~> 0.7'
+  spec.add_dependency 'ace-support-core', '~> 0.24'
   spec.add_dependency 'dry-cli', '~> 1.0'
 
   # Development dependencies
-  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.9'
+  spec.add_development_dependency 'ace-support-test-helpers', '~> 0.12'
   spec.add_development_dependency 'minitest', '~> 5.0'
   spec.add_development_dependency 'rake', '~> 13.0'
 end
