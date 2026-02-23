@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.2] - 2026-02-23
+
+### Changed
+- Renamed YamlParser atom to FrontmatterParser to reflect its frontmatter parsing purpose
+- Added backward-compatibility alias (YamlParser = FrontmatterParser)
+- Narrowed bare rescue in SafeYamlParser and StatsFormatter to specific exception classes
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.41.1] - 2026-02-23
 
 ### Fixed
