@@ -34,15 +34,15 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "dry-cli", "~> 1.0"
-  spec.add_dependency "ace-support-core", "~> 0.22"
+  spec.add_dependency "ace-support-core", "~> 0.24"
   spec.add_dependency "ace-support-config", "~> 0.7"
-  spec.add_dependency "ace-assign", "~> 0.11"
+  spec.add_dependency "ace-assign", "~> 0.12"
   spec.add_dependency "ace-git", "~> 0.10"
   spec.add_dependency "ace-git-worktree", "~> 0.13"
-  spec.add_dependency "ace-taskflow", "~> 0.36"
-  spec.add_dependency "ace-tmux", "~> 0.5"
+  spec.add_dependency "ace-taskflow", "~> 0.41"
+  spec.add_dependency "ace-tmux", "~> 0.6"
 
-  spec.add_development_dependency "ace-support-test-helpers", "~> 0.1"
+  spec.add_development_dependency "ace-support-test-helpers", "~> 0.12"
   spec.add_development_dependency "bundler", "~> 2.0"
   spec.add_development_dependency "minitest", "~> 5.0"
   spec.add_development_dependency "rake", "~> 13.0"
