@@ -30,7 +30,7 @@ experiment/
 └── sandbox/                         # Created by phase A (gitignored)
     ├── mise.toml
     ├── results/{1..8}/                # Runner writes artifacts here
-    └── reports/                      # Prompts, outputs, final report
+    └── .cache/ace-e2e/                      # Prompts, outputs, final report
 ```
 
 ## Key Design Decisions

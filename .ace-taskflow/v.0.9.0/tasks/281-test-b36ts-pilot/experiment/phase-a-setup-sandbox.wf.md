@@ -82,7 +82,7 @@ Expected: help output showing subcommands and flags. Non-zero exit = setup failu
 - `sandbox/` directory with git repo initialized
 - `sandbox/mise.toml` with correct PATH configuration
 - `sandbox/results/{1..8}/` empty directories ready for artifacts
-- `sandbox/reports/` empty directory for prompts and outputs
+- `sandbox/.cache/ace-e2e/` empty directory for prompts and outputs
 
 ## Gitignore
 

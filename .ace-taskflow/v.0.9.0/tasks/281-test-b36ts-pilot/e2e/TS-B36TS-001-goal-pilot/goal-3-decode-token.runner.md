@@ -6,7 +6,7 @@ Decode the token `70000` using `ace-b36ts`. Save a file named `70000` whose **co
 
 ## Workspace
 
-Save the file to `goal/3/`.
+Save the file to `results/3/`.
 
 ## Constraints
 

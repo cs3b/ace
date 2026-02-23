@@ -2,11 +2,11 @@
 
 ## Injected Context
 
-The verifier receives the `goal/` directory tree and access to the sandbox path.
+The verifier receives the `results/` directory tree and access to the sandbox path.
 
 ## Expectations
 
-1. **File exists** — At least one file exists in `goal/7/`.
+1. **File exists** — At least one file exists in `results/7/`.
 2. **Three values present** — The file contains all three components: an original date, an encoded token, and a decoded result.
 3. **Valid token** — The encoded token consists of lowercase alphanumeric characters only (base36 charset: `[0-9a-z]`).
 4. **Roundtrip match** — The decoded result contains the original date (the roundtrip preserved the input).
