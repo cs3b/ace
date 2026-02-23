@@ -5,6 +5,20 @@ require 'ace/core'
 require 'ace/git'
 require_relative 'bundle/version'
 
+# Define error hierarchy before loading components (they reference these classes)
+module Ace
+  module Bundle
+    # Base error class for all ace-bundle errors
+    class Error < StandardError; end
+
+    # Raised when section validation fails
+    class SectionValidationError < Error; end
+
+    # Raised when preset loading fails
+    class PresetLoadError < Error; end
+  end
+end
+
 # Main API
 require_relative 'bundle/organisms/bundle_loader'
 require_relative 'bundle/molecules/preset_manager'

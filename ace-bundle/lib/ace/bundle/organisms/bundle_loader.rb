@@ -23,8 +23,8 @@ module Ace
     module Organisms
       # Main bundle loader that orchestrates preset loading using ace-core components
       class BundleLoader
-        # Error raised when preset loading fails
-        class PresetLoadError < StandardError; end
+        # Backward-compat alias for centralized error class
+        PresetLoadError = Ace::Bundle::PresetLoadError
 
         def initialize(options = {})
           @options = options
