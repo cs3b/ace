@@ -10,7 +10,7 @@ Save output to `goal/7/`. The file should contain all three values: the original
 
 ## Constraints
 
-- Use `--help` to discover how to encode and decode. Do not assume flag names or subcommand syntax.
+- Using the encode and decode operations you've already exercised in Goals 2–3, compose them into a pipeline.
 - The encode→decode must happen through shell pipeline (`|`) or command substitution (`$(...)`) — not by manually copying the encoded value.
 - Do not fabricate output — all values must come from actual tool execution.
 - The original date should be a specific, known date (not "today" — use a fixed date so the roundtrip can be verified).

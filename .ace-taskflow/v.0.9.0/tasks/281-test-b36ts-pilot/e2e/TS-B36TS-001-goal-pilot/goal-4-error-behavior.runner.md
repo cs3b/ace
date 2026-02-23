@@ -10,7 +10,7 @@ Save all output to `goal/4/`. For each error case, create a descriptive subdirec
 
 ## Constraints
 
-- Use `--help` to discover valid subcommands and arguments first, then deliberately misuse them.
+- Using your knowledge of valid subcommands from Goal 1, deliberately misuse them.
 - Test at least 2 distinct error cases (e.g., invalid subcommand, invalid argument to a valid subcommand).
 - Capture exit code, stdout, and stderr separately for each case. Do not merge streams.
 - Do not fabricate output — all captured content must come from actual tool execution.

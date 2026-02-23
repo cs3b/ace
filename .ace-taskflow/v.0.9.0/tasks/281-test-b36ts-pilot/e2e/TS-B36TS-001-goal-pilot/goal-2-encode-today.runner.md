@@ -11,5 +11,5 @@ Save the file to `goal/2/`.
 ## Constraints
 
 - Use only `ace-b36ts` to perform the encoding. Do not compute the token manually.
-- Use `--help` to discover how to encode a date. Do not assume flag names or subcommand syntax.
+- Using what you learned from Goal 1, encode a date. Do not assume syntax beyond what Goal 1 revealed.
 - The file must be created from the tool's actual output, not fabricated.
