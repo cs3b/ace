@@ -12,7 +12,7 @@ Save output to `goal/8/`. Create two files:
 
 ## Constraints
 
-- Use `--help` to discover how to encode dates. Do not assume flag names or subcommand syntax.
+- Using the encode operation you've already exercised in earlier goals, encode each date.
 - Choose at least 4 dates that are NOT in chronological order when encoded (e.g., encode 2025, then 2020, then 2030, then 2022).
 - Do not fabricate tokens — all encoded values must come from actual tool execution.
 - The lexicographic sort must use a standard sort tool (e.g., `sort`) — do not manually arrange the output.
