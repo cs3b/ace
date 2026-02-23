@@ -17,8 +17,8 @@ and renders PASS/FAIL verdicts for each goal.
 cd experiment/sandbox
 
 ace-llm claude:sonnet \
-  --system "$(cat .cache/ace-e2e/verifier-system.md)" \
-  --prompt "$(cat .cache/ace-e2e/verifier-prompt.md)" \
+  --system .cache/ace-e2e/verifier-system.md \
+  --prompt .cache/ace-e2e/verifier-prompt.md \
   --output reports/verifier-output.md \
   --timeout 120
 ```
