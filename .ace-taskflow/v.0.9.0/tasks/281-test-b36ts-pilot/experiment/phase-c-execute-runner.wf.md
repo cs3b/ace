@@ -21,7 +21,7 @@ ace-llm claude:sonnet \
   --system "$(cat .cache/ace-e2e/runner-system.md)" \
   --prompt "$(cat .cache/ace-e2e/runner-prompt.md)" \
   --output .cache/ace-e2e/runner-output.md \
-  --timeout 300
+  --timeout 360
 ```
 
 ### 2. Verify artifacts

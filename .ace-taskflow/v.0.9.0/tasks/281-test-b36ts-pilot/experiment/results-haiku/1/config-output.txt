@@ -1,0 +1,4 @@
+Current ace-b36ts configuration:
+
+  year_zero: 2000
+  alphabet: 0123456789abcdefghijklmnopqrstuvwxyz

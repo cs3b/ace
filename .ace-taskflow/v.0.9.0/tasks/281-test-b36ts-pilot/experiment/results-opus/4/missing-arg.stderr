@@ -1,0 +1,2 @@
+ERROR: "ace-b36ts decode" was called with no arguments
+Usage: "ace-b36ts decode COMPACT_ID"
