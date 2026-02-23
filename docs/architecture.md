@@ -6,7 +6,7 @@ update:
   - overview
   - scope
   frequency: weekly
-  last-updated: '2026-01-22'
+  last-updated: '2026-02-23'
 ---
 
 # ACE - System Architecture
@@ -57,7 +57,7 @@ All ace-\* gems follow the ATOM pattern for consistent, testable code organizati
 
 ### Implementation
 
-All gems use flat directory structure: `lib/ace/gem/{atoms,molecules,organisms,models}/` with `cli/commands/` for dry-cli. See [ADR-023](decisions/ADR-023-dry-cli-framework.md).
+All gems use flat directory structure: `lib/ace/gem/{atoms,molecules,organisms,models}/` with `cli/commands/` for dry-cli. CLIs use either multi-command (Registry) or single-command pattern. See [ADR-023](decisions/ADR-023-dry-cli-framework.md).
 Tests mirror this in `test/{atoms,molecules,organisms,models,commands}/` (flat, not nested).
 
 ## Component Types
@@ -78,7 +78,7 @@ Modular Ruby gems providing focused CLI functionality:
 * **ace-nav**: Resource discovery and navigation with wfi:// protocol
 * **ace-prompt-prep**: Prompt workspace with archiving, LLM enhancement, and task integration
 * **ace-review**: Preset-based code review with LLM-powered analysis
-* **ace-search**: Unified file and content search with DWIM pattern matching
+* **ace-search**: Unified file and content search with auto-detected pattern matching
 * **ace-taskflow**: Task, release, and idea management with presets
 * **ace-test**: Test execution and reporting
 * **ace-test-support**: Shared testing infrastructure

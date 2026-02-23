@@ -5,7 +5,7 @@ update:
   update_frequency: weekly
   max_lines: 150
   required_sections: []
-  last-updated: '2026-01-30'
+  last-updated: '2026-02-23'
 ---
 
 # ACE CLI Tools Reference
@@ -76,6 +76,7 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 |------|---------|
 | `ace-lint file.md` | Lint file |
 | `ace-lint file.md --fix` | Auto-fix lint issues |
+| `ace-lint --doctor` | Diagnose lint configuration health |
 
 ## Documentation
 
