@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.1] - 2026-02-23
+
+### Changed
+- Centralized ContextComposerError and UnknownStrategyError into Ace::Review::Errors module
+- Narrowed exception handling in feedback_file_reader, feedback_file_writer, and task_report_saver
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.42.0] - 2026-02-22
 
 ### Changed
