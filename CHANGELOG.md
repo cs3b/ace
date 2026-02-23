@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.602] - 2026-02-23
+
+### Fixed
+- **ace-test-runner v0.15.6**: Enable ace-support-core integration (was disabled with stale TODO since v0.10)
+
+### Changed
+- **ace-b36ts v0.7.3**: Extract FormatCodecs module from CompactIdEncoder (1,294 to 654 lines)
+- **ace-bundle v0.31.1**: Centralize error class hierarchy — SectionValidationError and PresetLoadError inherit from Ace::Bundle::Error
+- **ace-lint v0.16.1**: Rename YamlParser atom to YamlValidator with backward-compat alias
+- **ace-llm-providers-cli v0.19.3**: Refactor cli-check into ATOM structure (ProviderDetector, AuthChecker, HealthChecker)
+- **ace-review v0.42.1**: Centralize error classes into Errors module, narrow exception handling in file I/O
+- **ace-taskflow v0.41.2**: Rename YamlParser atom to FrontmatterParser with backward-compat alias, narrow bare rescues
+- **ace-tmux v0.6.1**: Centralize error class hierarchy — PresetNotFoundError and NotInTmuxError inherit from Ace::Tmux::Error
+
+### Removed
+- **ace-support-core v0.24.1**: Remove legacy ConfigResolver wrapper with deprecated search_paths/file_patterns API
+
+### Technical
+- Standardized internal dependency version constraints across all 23 gemspecs to current releases
+- Deprecated root Rakefile in favor of ace-test-suite
+
 ## [0.9.601] - 2026-02-23
 
 ### Changed
