@@ -1,0 +1,14 @@
+Split path: 8p/m/000
+results/6/:
+8p
+jq-extracted.txt
+raw-json.json
+split-path.txt
+
+results/6/8p:
+m
+
+results/6/8p/m:
+000
+
+results/6/8p/m/000:

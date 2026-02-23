@@ -1,0 +1,3 @@
+Original Date: 2015-06-15
+Encoded Token: 55dyi0
+Decoded Result: 2015-06-14 23:00:00 UTC
