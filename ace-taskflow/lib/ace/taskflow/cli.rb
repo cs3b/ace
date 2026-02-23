@@ -29,10 +29,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-taskflow status",
-        "ace-taskflow doctor",
-        "ace-taskflow config",
-        "ace-taskflow config --format yaml"
+        "ace-taskflow status                   # Current task and release overview",
+        "ace-taskflow doctor --auto-fix        # Fix safe issues automatically",
+        "ace-taskflow config                   # Show resolved configuration"
       ].freeze
 
       # Register utility commands

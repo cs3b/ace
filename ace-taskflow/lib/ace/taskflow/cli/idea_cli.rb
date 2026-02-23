@@ -36,11 +36,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-idea list",
-        "ace-idea show 42",
-        "ace-idea create \"New feature concept\"",
-        "ace-idea done 42",
-        "ace-idea park 42"
+        "ace-idea list                         # Pending ideas",
+        "ace-idea create 'Cache layer' --llm-enhance  # Create with AI suggestions",
+        "ace-idea park 42                      # Defer for later"
       ].freeze
 
       # Register flat commands (reusing existing command classes)

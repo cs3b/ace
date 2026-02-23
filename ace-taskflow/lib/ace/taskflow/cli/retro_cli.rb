@@ -27,9 +27,8 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-retro list",
-        'ace-retro create "Session learnings"',
-        "ace-retro create my-topic --release v.0.9.0"
+        "ace-retro list                        # Active retrospectives",
+        "ace-retro create my-topic --release v.0.9.0  # Create with release scope"
       ].freeze
 
       # Register flat commands (reusing existing command classes)

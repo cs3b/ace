@@ -47,13 +47,11 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-task list",
-        "ace-task show 148",
-        "ace-task create \"Fix login bug\"",
-        "ace-task start 148",
-        "ace-task done 148",
-        "ace-task move 148 --child-of 100",
-        "ace-task add-dependency 148 --on 147"
+        "ace-task show 148                     # View task details",
+        "ace-task list --status pending        # Filter by status",
+        "ace-task create 'Fix login' --child-of 100  # Create subtask",
+        "ace-task start 148                    # Mark in-progress",
+        "ace-task done 148                     # Mark complete"
       ].freeze
 
       # Register flat commands (reusing existing command classes)
