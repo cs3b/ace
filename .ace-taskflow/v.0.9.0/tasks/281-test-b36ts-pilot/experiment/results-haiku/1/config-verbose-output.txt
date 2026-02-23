@@ -1,0 +1,14 @@
+Current ace-b36ts configuration:
+
+  year_zero: 2000
+  alphabet: 0123456789abcdefghijklmnopqrstuvwxyz
+
+Configuration sources (in order of precedence):
+  1. Runtime options (passed to commands)
+  2. Project config: .ace/b36ts/config.yml
+  3. User config: ~/.ace/b36ts/config.yml
+  4. Gem defaults: .ace-defaults/b36ts/config.yml
+
+Year range: 2000 to 2107
+ID length: 6 characters (Base36)
+Time precision: ~1.85 seconds

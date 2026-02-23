@@ -19,14 +19,14 @@ cd experiment/sandbox
 ace-llm claude:sonnet \
   --system "$(cat .cache/ace-e2e/verifier-system.md)" \
   --prompt "$(cat .cache/ace-e2e/verifier-prompt.md)" \
-  --output .cache/ace-e2e/verifier-output.md \
+  --output reports/verifier-output.md \
   --timeout 120
 ```
 
 ### 2. Inspect results
 
 ```bash
-cat .cache/ace-e2e/verifier-output.md
+cat reports/verifier-output.md
 ```
 
 Expected: per-goal PASS/FAIL verdicts with evidence, ending with `**Results: X/8 passed**`.
@@ -39,4 +39,4 @@ Expected: per-goal PASS/FAIL verdicts with evidence, ending with `**Results: X/8
 
 ## Outputs
 
-- `sandbox/.cache/ace-e2e/verifier-output.md` — per-goal PASS/FAIL verdicts
+- `sandbox/reports/verifier-output.md` — per-goal PASS/FAIL verdicts

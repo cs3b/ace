@@ -7,19 +7,19 @@ parsing and a markdown body for human reading.
 
 ## Prerequisites
 
-- Phase E completed (verifier-output.md exists)
+- Phase E completed (verifier-output.md exists in `sandbox/reports/`)
 
 ## Steps
 
 ### 1. Parse verifier output
 
-Extract from `.cache/ace-e2e/verifier-output.md`:
+Extract from `reports/verifier-output.md`:
 - Per-goal verdicts (PASS/FAIL with evidence)
 - Final results line (`Results: X/8 passed`)
 
 ### 2. Generate report
 
-Write `sandbox/.cache/ace-e2e/report.md` with this structure:
+Write `sandbox/reports/report.md` with this structure:
 
 ```markdown
 ---
@@ -73,7 +73,7 @@ This can be done manually or with a small script that:
 
 ```bash
 SANDBOX_DIR="experiment/sandbox"
-VERIFIER="$SANDBOX_DIR/.cache/ace-e2e/verifier-output.md"
+VERIFIER="$SANDBOX_DIR/reports/verifier-output.md"
 
 passed=$(grep -c "**Verdict**: PASS" "$VERIFIER" || echo 0)
 failed=$(grep -c "**Verdict**: FAIL" "$VERIFIER" || echo 0)
@@ -96,7 +96,7 @@ fi
 
 ## Outputs
 
-- `sandbox/.cache/ace-e2e/report.md` — final E2E report with YAML frontmatter
+- `sandbox/reports/report.md` — final E2E report with YAML frontmatter
 
 ## Report Schema
 

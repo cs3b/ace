@@ -1,0 +1,21 @@
+❯ ace-llm claude:opus --prompt .cache/ace-e2e/runner-prompt.md --system .cache/ace-e2e/runner-system.md --cli-args dangerously-skip-permissions --timeout 600
+---
+
+## Summary
+
+| Goal | Status | Artifacts |
+|------|--------|-----------|
+| **1 — Help Survey** | Pass | `results/1/` — root-help.txt, encode-help.txt, decode-help.txt, config-help.txt, config-output.txt, observations.md |
+| **2 — Encode Today** | Pass | `results/2/8pm000` — file named with encoded token for 2026-02-23 |
+| **3 — Decode Token** | Partial | `results/3/70000` — token `70000` (5 chars) is unsupported length; error captured with exit code, stdout, stderr |
+| **4 — Error Behavior** | Pass | `results/4/` — 4 error cases (invalid-subcommand, nonsense-decode, invalid-date, missing-arg) each with .exit, .stdout, .stderr files. All exit code 1, errors on stderr, empty stdout |
+| **5 — Output Routing** | Pass | `results/5/` — 4 modes (default, quiet, verbose, debug) with .stdout/.stderr/.exit. Token always on stdout; verbose config info on stderr; quiet/default/debug have empty stderr |
+| **6 — Structured Output** | Pass | `results/6/` — JSON array via `--count --json` consumed by jq; split path via `--path-only` consumed by mkdir to create `8p/m/000` directory tree |
+| **7 — Roundtrip Pipeline** | Pass | `results/7/roundtrip.txt` — encode `2025-07-04T12:00:00Z` → `8i3i00` → decode back to `2025-07-04 12:00:00 UTC` via command substitution |
+| **8 — Batch Sort** | Pass | `results/8/` — 4 dates encoded out of chronological order; lexicographic sort of tokens produces chronological order, confirming sort-preserving property |
+
+**Key finding from Goal 3**: The token `70000` cannot be decoded — 5-character IDs are not a valid format length (valid: 2, 3, 4, 6, 7, 8). This is a gap in the format hierarchy (no 5-char format exists).
+
+**Key finding from Goal 8**: Lexicographic sort of base-36 tokens preserves chronological order, which is a core design property of the encoding scheme.
+
+mc in 🌐 archione in sandbox on  master [?] took 2m42s

@@ -9,10 +9,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 1. **File exists** — A file named `70000` exists in `results/3/`.
 2. **Content is a valid date/timestamp** — The file content contains a recognizable date or timestamp (e.g., ISO 8601 format, or a human-readable date string). It must not be empty or contain only whitespace.
 3. **Content is plausible** — The decoded date should be a real, reasonable date (not epoch zero, not far-future).
+4. **Error diagnostics** — If the file is missing or empty, check for `results/3/70000.stderr` and `results/3/70000.exit`. Report the error message and exit code as evidence for why the decode failed.
 
 ## Verdict
 
 - **PASS**: File `results/3/70000` exists with non-empty content containing a valid, plausible date or timestamp.
-- **FAIL**: File missing, wrong name, empty content, or content is not a recognizable date/timestamp.
+- **FAIL**: File missing, wrong name, empty content, or content is not a recognizable date/timestamp. If `.stderr` and `.exit` files exist, cite the error message and exit code as supporting evidence.
 
 Report: `PASS` or `FAIL` with evidence (the file content found, or the absence/violation).
