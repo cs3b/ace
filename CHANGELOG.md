@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.600] - 2026-02-23
+
+### Fixed
+- **ace-taskflow v0.41.1**: Fix `ace-retro create` failing with "not found" error — create dedicated `CreateRetro` command that handles title as a proper positional argument
+
 ## [0.9.599] - 2026-02-22
 
 ### Changed
