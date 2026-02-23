@@ -3,6 +3,19 @@
 require_relative "tmux/version"
 require "ace/support/config"
 
+# Define error hierarchy before loading components (they reference these classes)
+module Ace
+  module Tmux
+    class Error < StandardError; end
+
+    # Raised when a preset is not found
+    class PresetNotFoundError < Error; end
+
+    # Raised when not running inside tmux
+    class NotInTmuxError < Error; end
+  end
+end
+
 # Load all ace-tmux components
 require_relative "tmux/models/pane"
 require_relative "tmux/models/layout_node"
@@ -21,8 +34,6 @@ require_relative "tmux/cli"
 
 module Ace
   module Tmux
-    class Error < StandardError; end
-
     # Initialize mutex for thread-safe config access
     @config_mutex = Mutex.new
 
