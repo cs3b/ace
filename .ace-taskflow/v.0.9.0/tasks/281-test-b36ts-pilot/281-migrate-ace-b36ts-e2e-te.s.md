@@ -22,9 +22,10 @@ This pilot adopts an **all-goal, runner/verifier split** approach:
 
 1. **All goal-oriented** — No procedural steps, no hardcoded commands. Specs describe WHAT to achieve, not HOW.
 2. **Runner/verifier split** — `.runner.md` gives the agent a goal and constraints; `.verify.md` inspects artifacts independently.
-3. **Discovery-first** — The runner starts by exploring `--help` at every level. No flag names or subcommand syntax are prescribed.
+3. **Sequential learning model** — A single agent executes all goals in order with accumulated context. Goal 1 is the discovery phase (`--help` exploration). Goals 2–8 build on that discovery — they reference earlier goals instead of re-discovering the tool independently. This mirrors how a real user learns a tool: explore once, then apply.
 4. **Artifact-based verification** — Runner writes outputs to `goal/{N}/` folders. Verifier reads those artifacts and renders a PASS/FAIL verdict.
 5. **Loosely coupled** — If `--help` output changes and the tool still works, tests pass. If it changes and breaks behavior, tests fail naturally.
+6. **Progressive complexity** — Goals form an ascending difficulty arc: discovery → basic operations → error handling → output control → composition → batch properties. Each goal builds on what the agent learned and produced in previous goals.
 
 ## Critical Analysis of Current E2E Tests
 

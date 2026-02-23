@@ -11,5 +11,5 @@ Save the file to `goal/3/`.
 ## Constraints
 
 - Use only `ace-b36ts` to perform the decoding. Do not compute the result manually.
-- Use `--help` to discover how to decode a token. Do not assume flag names or subcommand syntax.
+- Using what you learned from Goal 1, decode a token. Do not assume syntax beyond what Goal 1 revealed.
 - The file content must come from the tool's actual output, not fabricated.

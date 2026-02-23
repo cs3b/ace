@@ -13,3 +13,4 @@ Save all output to `goal/1/`. Write an observations file summarizing your findin
 - Use only `ace-b36ts` to gather information. Do not create files manually or fabricate output.
 - Start with `--help` to discover the tool's interface. Do not assume flag names or subcommands.
 - Your observations file should reflect what the tool actually reports, not what you expect it to report.
+- **Foundation for later goals**: Your observations here serve as the reference for all subsequent goals. Later goals will build on what you discover — they will not re-run `--help`.
