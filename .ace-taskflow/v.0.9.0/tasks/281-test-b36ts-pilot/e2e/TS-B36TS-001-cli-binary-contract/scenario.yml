@@ -1,0 +1,17 @@
+test-id: TS-B36TS-001
+title: CLI Binary Contract
+area: timestamp
+package: ace-b36ts
+priority: high
+tags: [smoke, happy-path, "use-case:b36ts"]
+cost-tier: smoke
+e2e-justification: >
+  Unit tests call Ruby methods directly. This scenario tests the actual installed
+  binary through a real shell — shebang resolution, gem loading, exit codes, and
+  file descriptor routing (stdout vs stderr). These concerns are invisible to unit tests.
+unit-coverage-reviewed: true
+requires:
+  tools: [ace-b36ts]
+  ruby: ">= 3.0"
+
+setup: []
