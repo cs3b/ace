@@ -56,10 +56,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-git diff HEAD~5..HEAD",
-        "ace-git status",
-        "ace-git branch",
-        "ace-git pr"
+        "ace-git diff --since 7d           # Changes from last week",
+        "ace-git diff -p 'lib/**' -f summary  # Filtered summary",
+        "ace-git status --no-pr            # Quick status, skip network"
       ].freeze
 
       register "diff", Commands::Diff.new
