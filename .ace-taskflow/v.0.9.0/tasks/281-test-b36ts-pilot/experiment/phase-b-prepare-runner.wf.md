@@ -9,7 +9,7 @@ for the runner agent to execute.
 
 ### 1. Create runner system prompt
 
-Write `sandbox/reports/runner-system.md`:
+Write `sandbox/.cache/ace-e2e/runner-system.md`:
 
 ```markdown
 You are an E2E test executor working in a sandbox directory.
@@ -25,7 +25,7 @@ Rules:
 
 ### 2. Create runner prompt
 
-Write `sandbox/reports/runner-prompt.md` by concatenating all 8 runner files:
+Write `sandbox/.cache/ace-e2e/runner-prompt.md` by concatenating all 8 runner files:
 
 ```markdown
 # E2E Test Runner: ace-b36ts Goal-Based Pilot
@@ -82,7 +82,7 @@ SANDBOX_DIR="$TASK_DIR/experiment/sandbox"
 GOAL_DIR="$TASK_DIR/e2e/TS-B36TS-001-goal-pilot"
 
 # System prompt
-cat > "$SANDBOX_DIR/reports/runner-system.md" << 'SYSTEM_EOF'
+cat > "$SANDBOX_DIR/.cache/ace-e2e/runner-system.md" << 'SYSTEM_EOF'
 You are an E2E test executor working in a sandbox directory.
 
 Rules:
@@ -95,7 +95,7 @@ Rules:
 SYSTEM_EOF
 
 # Runner prompt — header + all 8 goals
-cat > "$SANDBOX_DIR/reports/runner-prompt.md" << HEADER_EOF
+cat > "$SANDBOX_DIR/.cache/ace-e2e/runner-prompt.md" << HEADER_EOF
 # E2E Test Runner: ace-b36ts Goal-Based Pilot
 
 Tool under test: ace-b36ts
@@ -108,12 +108,12 @@ HEADER_EOF
 
 for i in 1 2 3 4 5 6 7 8; do
   name=$(ls "$GOAL_DIR"/goal-${i}-*.runner.md)
-  echo -e "\n---\n" >> "$SANDBOX_DIR/reports/runner-prompt.md"
-  cat "$name" >> "$SANDBOX_DIR/reports/runner-prompt.md"
+  echo -e "\n---\n" >> "$SANDBOX_DIR/.cache/ace-e2e/runner-prompt.md"
+  cat "$name" >> "$SANDBOX_DIR/.cache/ace-e2e/runner-prompt.md"
 done
 ```
 
 ## Outputs
 
-- `sandbox/reports/runner-system.md` — system prompt for the runner agent
-- `sandbox/reports/runner-prompt.md` — concatenated prompt with all 8 goals
+- `sandbox/.cache/ace-e2e/runner-system.md` — system prompt for the runner agent
+- `sandbox/.cache/ace-e2e/runner-prompt.md` — concatenated prompt with all 8 goals

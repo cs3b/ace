@@ -6,7 +6,7 @@ Encode today's date using `ace-b36ts`. Create a file in the workspace whose **fi
 
 ## Workspace
 
-Save the file to `goal/2/`.
+Save the file to `results/2/`.
 
 ## Constraints
 

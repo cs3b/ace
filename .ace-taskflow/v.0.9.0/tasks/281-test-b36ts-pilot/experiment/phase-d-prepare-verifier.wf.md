@@ -13,7 +13,7 @@ all 8 verify.md files into a single verifier prompt.
 
 ### 1. Create verifier system prompt
 
-Write `sandbox/reports/verifier-system.md`:
+Write `sandbox/.cache/ace-e2e/verifier-system.md`:
 
 ```markdown
 You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdicts.
@@ -27,7 +27,7 @@ Rules:
 
 ### 2. Create verifier prompt
 
-Write `sandbox/reports/verifier-prompt.md` with this structure:
+Write `sandbox/.cache/ace-e2e/verifier-prompt.md` with this structure:
 
 ```markdown
 # E2E Verification: ace-b36ts Goal-Based Pilot
@@ -95,7 +95,7 @@ SANDBOX_DIR="$TASK_DIR/experiment/sandbox"
 GOAL_DIR="$TASK_DIR/e2e/TS-B36TS-001-goal-pilot"
 
 # System prompt
-cat > "$SANDBOX_DIR/reports/verifier-system.md" << 'SYSTEM_EOF'
+cat > "$SANDBOX_DIR/.cache/ace-e2e/verifier-system.md" << 'SYSTEM_EOF'
 You are an E2E test verifier. You inspect artifacts and render PASS/FAIL verdicts.
 
 Rules:
@@ -147,10 +147,10 @@ SYSTEM_EOF
   echo "- **Evidence**: <specific file/content citations>"
   echo ""
   echo "Final line: **Results: X/8 passed**"
-} > "$SANDBOX_DIR/reports/verifier-prompt.md"
+} > "$SANDBOX_DIR/.cache/ace-e2e/verifier-prompt.md"
 ```
 
 ## Outputs
 
-- `sandbox/reports/verifier-system.md` — system prompt for the verifier agent
-- `sandbox/reports/verifier-prompt.md` — artifacts + verification criteria
+- `sandbox/.cache/ace-e2e/verifier-system.md` — system prompt for the verifier agent
+- `sandbox/.cache/ace-e2e/verifier-prompt.md` — artifacts + verification criteria

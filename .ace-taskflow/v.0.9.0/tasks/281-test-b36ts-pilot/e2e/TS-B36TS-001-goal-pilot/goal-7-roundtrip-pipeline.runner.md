@@ -6,7 +6,7 @@ Encode a known date, then pipe or feed the encoded result into the decode operat
 
 ## Workspace
 
-Save output to `goal/7/`. The file should contain all three values: the original date, the encoded token, and the decoded result.
+Save output to `results/7/`. The file should contain all three values: the original date, the encoded token, and the decoded result.
 
 ## Constraints
 

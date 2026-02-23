@@ -18,9 +18,9 @@ all 8 goals sequentially, writing artifacts to `results/{1..8}/`.
 cd experiment/sandbox
 
 ace-llm claude:sonnet \
-  --system "$(cat reports/runner-system.md)" \
-  --prompt "$(cat reports/runner-prompt.md)" \
-  --output reports/runner-output.md \
+  --system "$(cat .cache/ace-e2e/runner-system.md)" \
+  --prompt "$(cat .cache/ace-e2e/runner-prompt.md)" \
+  --output .cache/ace-e2e/runner-output.md \
   --timeout 300
 ```
 
@@ -38,10 +38,10 @@ Expected: at least one file per goal directory.
 
 - `claude:sonnet` invokes `claude -p` as a subprocess with full bash/tool access
 - Timeout of 300 seconds (5 minutes) allows for sequential execution of all 8 goals
-- Runner output (agent's response) is saved to `reports/runner-output.md`
+- Runner output (agent's response) is saved to `.cache/ace-e2e/runner-output.md`
 - Actual artifacts are in `results/{1..8}/` directories
 
 ## Outputs
 
-- `sandbox/reports/runner-output.md` — runner agent's response/summary
+- `sandbox/.cache/ace-e2e/runner-output.md` — runner agent's response/summary
 - `sandbox/results/{1..8}/` — populated with test artifacts

@@ -9,14 +9,14 @@ execution-model: sequential  # goals run in order, shared agent context
 tool-under-test: ace-b36ts
 
 sandbox-layout:
-  goal/1/:  "Help survey observations"
-  goal/2/:  "Encoded today-date file"
-  goal/3/:  "Decoded 70000 token file"
-  goal/4/:  "Error behavior captures (exit code, stdout, stderr)"
-  goal/5/:  "Output routing captures per verbosity mode"
-  goal/6/:  "Structured output integration artifacts"
-  goal/7/:  "Roundtrip pipeline evidence (original, encoded, decoded)"
-  goal/8/:  "Batch sort order comparison files"
+  results/1/:  "Help survey observations"
+  results/2/:  "Encoded today-date file"
+  results/3/:  "Decoded 70000 token file"
+  results/4/:  "Error behavior captures (exit code, stdout, stderr)"
+  results/5/:  "Output routing captures per verbosity mode"
+  results/6/:  "Structured output integration artifacts"
+  results/7/:  "Roundtrip pipeline evidence (original, encoded, decoded)"
+  results/8/:  "Batch sort order comparison files"
 
 e2e-justification: >
   All goals require real binary execution through a shell. The runner discovers

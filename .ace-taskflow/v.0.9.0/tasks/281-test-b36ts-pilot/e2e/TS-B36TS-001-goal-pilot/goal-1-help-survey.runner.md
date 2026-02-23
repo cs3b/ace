@@ -6,7 +6,7 @@ Explore `ace-b36ts --help` at every level — root help and each subcommand's he
 
 ## Workspace
 
-Save all output to `goal/1/`. Write an observations file summarizing your findings.
+Save all output to `results/1/`. Write an observations file summarizing your findings.
 
 ## Constraints
 
