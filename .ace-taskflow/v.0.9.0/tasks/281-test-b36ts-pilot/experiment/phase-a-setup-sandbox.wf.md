@@ -68,7 +68,24 @@ mise trust
 Mise requires explicit trust for config files in new directories. Without this step,
 mise will refuse to load the toml and tools won't be on PATH.
 
-### 5. Verify tooling
+### 5. Symlink ace-llm provider configs
+
+The sandbox has its own `.git` directory (from `git init`), so ace-llm's project-root
+discovery stops here and never reaches ace-meta's `.ace/llm/providers/`. Symlink them in:
+
+```bash
+mkdir -p "$SANDBOX_DIR/.ace/llm"
+ln -s "$WORKTREE_ROOT/.ace/llm/providers" "$SANDBOX_DIR/.ace/llm/providers"
+```
+
+Verify ace-llm sees providers:
+
+```bash
+cd "$SANDBOX_DIR"
+ace-llm --list-providers | grep claude
+```
+
+### 6. Verify tooling
 
 ```bash
 cd "$SANDBOX_DIR"
@@ -81,6 +98,7 @@ Expected: help output showing subcommands and flags. Non-zero exit = setup failu
 
 - `sandbox/` directory with git repo initialized
 - `sandbox/mise.toml` with correct PATH configuration
+- `sandbox/.ace/llm/providers` symlink to worktree's provider configs
 - `sandbox/results/{1..8}/` empty directories ready for artifacts
 - `sandbox/.cache/ace-e2e/` empty directory for prompts and outputs
 
