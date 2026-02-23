@@ -16,17 +16,17 @@ and renders PASS/FAIL verdicts for each goal.
 ```bash
 cd experiment/sandbox
 
-ace-llm claude:sonnet \
+ace-llm claude:opus \
   --system .cache/ace-e2e/verifier-system.md \
   --prompt .cache/ace-e2e/verifier-prompt.md \
-  --output reports/verifier-output.md \
+  --output .cache/ace-e2e/verifier-output.md \
   --timeout 120
 ```
 
 ### 2. Inspect results
 
 ```bash
-cat reports/verifier-output.md
+cat .cache/ace-e2e/verifier-output.md
 ```
 
 Expected: per-goal PASS/FAIL verdicts with evidence, ending with `**Results: X/8 passed**`.
@@ -39,4 +39,4 @@ Expected: per-goal PASS/FAIL verdicts with evidence, ending with `**Results: X/8
 
 ## Outputs
 
-- `sandbox/reports/verifier-output.md` — per-goal PASS/FAIL verdicts
+- `sandbox/.cache/ace-e2e/verifier-output.md` — raw per-goal PASS/FAIL verdicts

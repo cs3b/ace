@@ -1,9 +1,0 @@
-COMMANDS
-  ace-b36ts --help                            # Show top-level help
-  ace-b36ts --version                         # Show version information
-  ace-b36ts -h                                # Show top-level help
-  ace-b36ts config                            # Show current configuration
-  ace-b36ts decode COMPACT_ID                 # Decode a compact ID (2-8 characters) to a timestamp
-  ace-b36ts encode [TIMESTAMP]                # Encode a timestamp to a compact ID (2-8 characters)
-  ace-b36ts help                              # Show top-level help
-  ace-b36ts version                           # Show version information

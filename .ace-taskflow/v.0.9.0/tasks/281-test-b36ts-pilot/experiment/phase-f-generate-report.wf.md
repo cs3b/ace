@@ -7,13 +7,13 @@ parsing and a markdown body for human reading.
 
 ## Prerequisites
 
-- Phase E completed (verifier-output.md exists in `sandbox/reports/`)
+- Phase E completed (verifier-output.md exists in `sandbox/.cache/ace-e2e/`)
 
 ## Steps
 
 ### 1. Parse verifier output
 
-Extract from `reports/verifier-output.md`:
+Extract from `.cache/ace-e2e/verifier-output.md`:
 - Per-goal verdicts (PASS/FAIL with evidence)
 - Final results line (`Results: X/8 passed`)
 
@@ -73,7 +73,7 @@ This can be done manually or with a small script that:
 
 ```bash
 SANDBOX_DIR="experiment/sandbox"
-VERIFIER="$SANDBOX_DIR/reports/verifier-output.md"
+VERIFIER="$SANDBOX_DIR/.cache/ace-e2e/verifier-output.md"
 
 passed=$(grep -c "**Verdict**: PASS" "$VERIFIER" || echo 0)
 failed=$(grep -c "**Verdict**: FAIL" "$VERIFIER" || echo 0)

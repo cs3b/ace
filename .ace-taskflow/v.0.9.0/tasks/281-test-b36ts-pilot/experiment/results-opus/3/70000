@@ -1,5 +1,0 @@
-Error: Cannot decode '70000' — 5-character IDs are not a supported format length.
-Supported lengths: 2 (month), 3 (week/day), 4 (40min), 6 (2sec), 7 (50ms), 8 (ms)
-
-Exit code: 1
-Stderr: Error: Cannot detect format for compact ID: 70000 (unsupported length or invalid characters)
