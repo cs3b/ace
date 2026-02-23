@@ -11,7 +11,7 @@ development work through systematic documentation of proven procedures.
 
 ## Project Context Loading
 
-* Read and follow: `ace-bundle load wfi://bundle`
+* Read and follow: `ace-bundle wfi://bundle`
 
 ## High-Level Execution Plan
 

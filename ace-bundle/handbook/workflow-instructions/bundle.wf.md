@@ -86,7 +86,7 @@ Analyze the loaded context and prepare a concise summary covering:
 > "Load context from absolute path"
 
 **Protocols** - Workflow-embedded context, dynamic discovery:
-> `/ace-bundle load wfi://workflow-name`
+> `/ace-bundle wfi://workflow-name`
 > "Load context via protocol"
 
 ## Error Handling

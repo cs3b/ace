@@ -12,4 +12,4 @@ argument-hint: "[file-pattern] [--fix] [--report]"
 source: ace-lint
 ---
 
-read and run `ace-bundle load wfi://lint/run`
+read and run `ace-bundle wfi://lint/run`

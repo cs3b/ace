@@ -13,7 +13,7 @@ Verify that the reviewers format (named reviewer objects with individual models)
    ```bash
    SESSION_DIR="$PWD/session-tc003"
 
-   OUTPUT=$(ace-review review \
+   OUTPUT=$(ace-review \
      --preset reviewers-test \
      --subject "diff:HEAD~1" \
      --session-dir "$SESSION_DIR" \

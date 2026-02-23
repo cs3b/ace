@@ -687,7 +687,7 @@ ace-docs validate
 
 ```bash
 # Load context for documentation work
-ace-bundle load --preset docs
+ace-bundle --preset docs
 
 # Check documentation status in context
 ace-docs status | ace-bundle add --tag doc-status

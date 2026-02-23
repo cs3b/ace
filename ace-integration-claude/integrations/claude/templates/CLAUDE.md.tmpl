@@ -49,8 +49,8 @@ The following are CLI tools that run in your terminal (bash/fish).
 **Command**: `ace-bundle [input]`
 **Examples**:
 
-- `ace-bundle load project` (default context)
-- `ace-bundle load wfi://{{workflow-name}}` (protocol-based)
+- `ace-bundle project` (default context)
+- `ace-bundle wfi://{{workflow-name}}` (protocol-based)
 
 ### ace-nav (CLI Tool)
 
@@ -73,11 +73,11 @@ The following are CLI tools that run in your terminal (bash/fish).
 
 **Anti-pattern examples to AVOID**:
 - `ace-review --pr {{pr-number}} | tail -20`
-- `ace-bundle load project | head -100`
+- `ace-bundle project | head -100`
 
 **Correct patterns**:
 - `ace-review --pr {{pr-number}}` - then `Read` the output path
-- `ace-bundle load project` - output is already concise
+- `ace-bundle project` - output is already concise
 
 ## Testing Constraints
 
@@ -119,7 +119,7 @@ Validate entire project (final check before commits).
 
 ## Project Context
 
-For comprehensive project details, run: `ace-bundle load project`
+For comprehensive project details, run: `ace-bundle project`
 
 **Key Point**: Do not duplicate project context in responses - reference ace-bundle output.
 

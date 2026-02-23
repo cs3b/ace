@@ -57,7 +57,7 @@ Agents should:
 
 **Example**: When `/ace-git-commit` is invoked, the workflow includes `<current_repository_status>` with git state. No need to run `git status` separately.
 
-For full patterns and guidance, run `ace-bundle load guide://workflow-context-embedding`.
+For full patterns and guidance, run `ace-bundle guide://workflow-context-embedding`.
 
 ## CLI Tool Usage
 
@@ -69,9 +69,9 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Command**: `ace-bundle [input]`
 **Examples**:
 
-- `ace-bundle load project` (default context)
-- `ace-bundle load wfi://bundle` (flat protocol)
-- `ace-bundle load wfi://task/work` (namespaced protocol)
+- `ace-bundle project` (default context)
+- `ace-bundle wfi://bundle` (flat protocol)
+- `ace-bundle wfi://task/work` (namespaced protocol)
 
 ### ace-nav (CLI Tool)
 
@@ -80,7 +80,7 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Protocols**: wfi://, guide://, prompt://, tmpl://
 **Examples**:
 
-- `ace-bundle load wfi://bundle` → Read output file path, then read that file
+- `ace-bundle wfi://bundle` → Read output file path, then read that file
 - `ace-nav --sources` → List available resource sources
 
 ### ace-* CLI Tools: Output Handling (Terminal)
@@ -95,12 +95,12 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 **Anti-pattern examples to AVOID**:
 ❌ `ace-review --pr 90 | tail -20`
 ❌ `tail -f /tmp/claude/.../output`
-❌ `ace-bundle load project | head -100`
+❌ `ace-bundle project | head -100`
 
 **Correct patterns**:
 ✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
-✅ `ace-bundle load project` → output is already concise; read referenced files as needed
-✅ `ace-bundle load wfi://namespace/action` → returns workflow content (may include embedded context)
+✅ `ace-bundle project` → output is already concise; read referenced files as needed
+✅ `ace-bundle wfi://namespace/action` → returns workflow content (may include embedded context)
 
 Never reset or discard changes you didn't make - use `ace-git-commit $paths` to commit only your changes.
 
@@ -142,7 +142,7 @@ Validate entire monorepo (final check before commits).
 
 ## Project Context
 
-For comprehensive project details, run: `ace-bundle load project`
+For comprehensive project details, run: `ace-bundle project`
 This provides architecture, tools, conventions, and structure (1371 lines).
 
 **Key Point**: Do not duplicate project context in responses - reference ace-bundle output.

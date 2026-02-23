@@ -13,4 +13,4 @@ argument-hint: [description of what went wrong]
 source: ace-handbook
 ---
 
-read and run `ace-bundle load wfi://handbook/selfimprove`
+read and run `ace-bundle wfi://handbook/selfimprove`

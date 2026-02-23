@@ -18,4 +18,4 @@ last_modified: 2026-01-18
 source: ace-handbook
 ---
 
-read and run `ace-bundle load wfi://handbook/perform-delivery`
+read and run `ace-bundle wfi://handbook/perform-delivery`

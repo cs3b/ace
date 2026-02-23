@@ -15,7 +15,7 @@ free of duplication.
 
 ## Project Context Loading
 
-* Read and follow: `ace-bundle load wfi://bundle`
+* Read and follow: `ace-bundle wfi://bundle`
 
 ## Core Context Documents
 

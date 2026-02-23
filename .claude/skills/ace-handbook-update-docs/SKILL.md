@@ -61,4 +61,4 @@ The workflow will:
 
 ## Full Workflow
 
-For detailed instructions, see: ace-bundle load wfi://handbook/update-docs
+For detailed instructions, see: ace-bundle wfi://handbook/update-docs

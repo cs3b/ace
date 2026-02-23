@@ -18,4 +18,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle load wfi://bug/fix`
+read and run `ace-bundle wfi://bug/fix`

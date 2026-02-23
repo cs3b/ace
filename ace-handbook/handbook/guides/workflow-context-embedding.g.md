@@ -13,7 +13,7 @@ Define clear patterns for:
 
 ## Background
 
-**PR #120** introduced `ace-bundle load wfi://protocol` which loads workflow instructions AND any embedded context in one operation. When an agent invokes `/ace:command`, they get:
+**PR #120** introduced `ace-bundle wfi://protocol` which loads workflow instructions AND any embedded context in one operation. When an agent invokes `/ace:command`, they get:
 
 1. The workflow instructions
 2. Any embedded context (from commands, files, or protocols)
@@ -267,7 +267,7 @@ When updating a workflow to use embedded context:
 
 ## Related Documents
 
-- **PR #120**: Replace ace-nav wfi:// with ace-bundle load wfi:// in Claude Code commands
+- **PR #120**: Replace ace-nav wfi:// with ace-bundle wfi:// in Claude Code commands
 - **Task 152**: ace-bundle auto-format output by line count
 - **documents-embedding.g.md**: Template and guide embedding standards
 - **CLAUDE.md**: Agent guidance for workflow usage

@@ -13,4 +13,4 @@ last_modified: 2026-01-09
 source: ace-git-secrets
 ---
 
-read and run `ace-bundle load wfi://git/security-audit`
+read and run `ace-bundle wfi://git/security-audit`

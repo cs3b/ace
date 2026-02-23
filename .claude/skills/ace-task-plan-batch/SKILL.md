@@ -13,6 +13,6 @@ argument-hint: [task-id-pattern like 12* or *]
 source: ace-taskflow
 ---
 
-read and run `ace-bundle load wfi://task/plan-batch`
+read and run `ace-bundle wfi://task/plan-batch`
 
 ARGUMENTS: $ARGUMENTS

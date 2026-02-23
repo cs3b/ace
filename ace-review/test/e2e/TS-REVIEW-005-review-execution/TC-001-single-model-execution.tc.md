@@ -14,7 +14,7 @@ Verify that ace-review executes with a single model, produces a session director
    SESSION_DIR="$PWD/session-tc001"
 
    START_TIME=$(date +%s)
-   OUTPUT=$(ace-review review \
+   OUTPUT=$(ace-review \
      --preset single \
      --subject "diff:HEAD~1" \
      --session-dir "$SESSION_DIR" \
