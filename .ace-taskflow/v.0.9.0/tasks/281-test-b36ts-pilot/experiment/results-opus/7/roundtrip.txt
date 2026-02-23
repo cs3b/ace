@@ -1,3 +1,0 @@
-Original:  2025-07-04T12:00:00Z
-Encoded:   8i3i00
-Decoded:   2025-07-04 12:00:00 UTC

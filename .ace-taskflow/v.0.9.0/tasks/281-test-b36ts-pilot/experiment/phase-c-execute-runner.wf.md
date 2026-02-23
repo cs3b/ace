@@ -17,7 +17,7 @@ all 8 goals sequentially, writing artifacts to `results/{1..8}/`.
 ```bash
 cd experiment/sandbox
 
-ace-llm claude:sonnet \
+ace-llm claude:haiku \
   --system .cache/ace-e2e/runner-system.md \
   --prompt .cache/ace-e2e/runner-prompt.md \
   --output .cache/ace-e2e/runner-output.md \
