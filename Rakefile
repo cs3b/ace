@@ -2,40 +2,13 @@
 
 require "bundler/setup"
 
-desc "Run tests for all packages"
+desc "Run tests for all packages (DEPRECATED: use ace-test-suite instead)"
 task :test do
-  packages = %w[
-    ace-bundle
-    ace-support-core
-    ace-test-support
-    ace-test-runner
-    ace-support-nav
-    ace-taskflow
-    ace-git-commit
-    ace-llm
-    ace-llm-providers-cli
-  ]
-
-  failed = []
-
-  packages.each do |package|
-    puts "\n" + "=" * 60
-    puts "Testing #{package}"
-    puts "=" * 60
-
-    Dir.chdir(package) do
-      unless system("bundle exec rake test")
-        failed << package
-      end
-    end
-  end
-
-  if failed.empty?
-    puts "\n✅ All tests passed!"
-  else
-    puts "\n❌ Tests failed in: #{failed.join(', ')}"
-    exit 1
-  end
+  warn "WARNING: `rake test` is deprecated. Use `ace-test-suite` instead."
+  warn "         See CLAUDE.md for testing conventions."
+  warn ""
+  warn "Delegating to `rake test:suite`..."
+  Rake::Task["test:suite"].invoke
 end
 
 namespace :test do
@@ -52,41 +25,33 @@ namespace :test do
     exit(exit_code)
   end
 
-  desc "Run tests for a specific package"
+  desc "Run tests for a specific package (DEPRECATED: use ace-test <path> instead)"
   task :package, [:name] do |_t, args|
     package = args[:name]
     unless package
-      puts "Usage: rake test:package[package-name]"
-      puts "Example: rake test:package[ace-support-core]"
+      warn "Usage: ace-test <package-name>"
+      warn "Example: ace-test ace-support-core"
       exit 1
     end
+
+    warn "WARNING: `rake test:package[#{package}]` is deprecated. Use `ace-test` instead:"
+    warn "         ace-test   (from within the package directory)"
+    warn ""
 
     unless Dir.exist?(package)
-      puts "Package directory not found: #{package}"
+      warn "Package directory not found: #{package}"
       exit 1
     end
 
     Dir.chdir(package) do
-      system("bundle exec rake test") || exit(1)
+      system("ace-test") || exit(1)
     end
   end
 
-  desc "Run tests in CI mode (simple output)"
+  desc "Run tests in CI mode"
   task :ci do
     ENV["CI"] = "true"
-    Rake::Task["test"].invoke
-  end
-end
-
-desc "Install dependencies for all packages"
-task :bundle do
-  system("bundle install")
-
-  %w[ace-bundle ace-support-core ace-test-support ace-test-runner ace-support-nav ace-taskflow ace-git-commit ace-llm ace-llm-providers-cli].each do |package|
-    puts "Installing dependencies for #{package}..."
-    Dir.chdir(package) do
-      system("bundle install")
-    end
+    Rake::Task["test:suite"].invoke
   end
 end
 
