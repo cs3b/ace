@@ -67,11 +67,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-assign create --preset review",
-        "ace-assign status",
-        "ace-assign list",
-        "ace-assign fork-run 010.01",
-        "ace-assign report done.md"
+        "ace-assign create --preset review     # Start review assignment",
+        "ace-assign status                     # Current phase progress",
+        "ace-assign fork-run 010.01            # Run subtree in subprocess"
       ].freeze
 
       # Captured command exit code from last run
