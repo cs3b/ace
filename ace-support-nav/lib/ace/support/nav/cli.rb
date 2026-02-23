@@ -26,10 +26,9 @@ module Ace
         ].freeze
 
         HELP_EXAMPLES = [
-          "ace-nav resolve wfi://bundle",
-          "ace-nav list 'wfi://*'",
-          "ace-nav create wfi://new-workflow",
-          "ace-nav sources"
+          "ace-nav resolve wfi://task/work       # Get workflow file path",
+          "ace-nav list 'wfi://*'               # Browse all workflows",
+          "ace-nav sources                       # Show registered sources"
         ].freeze
 
         # Register the resolve command (default) - Hanami pattern: CLI::Commands::
