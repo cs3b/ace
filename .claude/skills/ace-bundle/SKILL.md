@@ -12,5 +12,5 @@ last_modified: 2026-01-10
 source: ace-bundle
 ---
 
-Run `ace-bundle load project`, And read the whole output (sdio and files content)
+Run `ace-bundle project`, And read the whole output (sdio and files content)
 

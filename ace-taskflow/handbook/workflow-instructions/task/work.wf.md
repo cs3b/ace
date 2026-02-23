@@ -27,7 +27,7 @@ assign:
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle load wfi://bundle`
+- Read and follow: `ace-bundle wfi://bundle`
 
 ## Quick Start
 
@@ -115,7 +115,7 @@ For experienced users, here's the condensed workflow:
 
       **→ Redirect to work-on-subtasks workflow:**
       ```
-      Read and execute: ace-bundle load wfi://task/work-subtasks
+      Read and execute: ace-bundle wfi://task/work-subtasks
       Pass context: orchestrator task path and pending subtasks
       ```
 

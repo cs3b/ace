@@ -271,7 +271,7 @@ This workflow provides:
 ### With ace-bundle
 Load project context for documentation:
 ```bash
-ace-bundle load --preset docs
+ace-bundle --preset docs
 ```
 
 ### With LLM Analysis

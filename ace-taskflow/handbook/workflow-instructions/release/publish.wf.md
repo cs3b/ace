@@ -23,7 +23,7 @@ Execute the final deployment and archival phase of project releases, transitioni
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle load wfi://bundle`
+- Read and follow: `ace-bundle wfi://bundle`
 
 ## High-Level Execution Plan
 
@@ -73,7 +73,7 @@ Execute the final deployment and archival phase of project releases, transitioni
    - For strict mode (fail on medium confidence too): `ace-git-secrets check-release --strict`
    - If tokens are detected:
      - **STOP**: Do not proceed with release
-     - Follow `ace-bundle load wfi://git/token-remediation` workflow to remediate
+     - Follow `ace-bundle wfi://git/token-remediation` workflow to remediate
      - Re-run security check after remediation
    - Verify scan passes before continuing
 

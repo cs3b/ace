@@ -109,7 +109,7 @@ If multi-agent approach selected:
    ```
    /ace-handbook-parallel-research [topic]
    ```
-   Or follow: `ace-bundle load wfi://handbook/parallel-research`
+   Or follow: `ace-bundle wfi://handbook/parallel-research`
 
 2. **Complete Parallel Research Phases**
    - Setup: Define question, select agents
@@ -122,7 +122,7 @@ If multi-agent approach selected:
    ```
    /ace-handbook-synthesize-research [research_folder]
    ```
-   Or follow: `ace-bundle load wfi://handbook/synthesize-research`
+   Or follow: `ace-bundle wfi://handbook/synthesize-research`
 
 4. **Complete Synthesis Phases**
    - Inventory: Catalog all outputs
@@ -221,7 +221,7 @@ Evaluate these factors:
 
 ### How to Escalate
 
-1. Review: `ace-bundle load guide://multi-agent-research`
+1. Review: `ace-bundle guide://multi-agent-research`
 2. Invoke: `/ace-handbook-parallel-research [topic]`
 3. Follow: Parallel Research → Synthesis workflows
 

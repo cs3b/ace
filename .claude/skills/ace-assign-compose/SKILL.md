@@ -17,4 +17,4 @@ last_modified: 2026-02-13
 source: ace-assign
 ---
 
-read and run `ace-bundle load wfi://assign/compose`
+read and run `ace-bundle wfi://assign/compose`

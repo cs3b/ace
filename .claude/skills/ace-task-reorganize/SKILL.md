@@ -11,4 +11,4 @@ last_modified: 2026-02-14
 source: ace-taskflow
 ---
 
-read and run `ace-bundle load wfi://task/reorganize`
+read and run `ace-bundle wfi://task/reorganize`

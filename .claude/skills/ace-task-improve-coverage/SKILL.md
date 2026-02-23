@@ -18,4 +18,4 @@ last_modified: 2026-01-10
 source: ace-taskflow
 ---
 
-read and run `ace-bundle load wfi://task/improve-coverage`
+read and run `ace-bundle wfi://task/improve-coverage`

@@ -65,7 +65,7 @@ This preset demonstrates the new preset-in-section functionality that allows you
 
 ```bash
 # Load this preset with section-based context
-ace-bundle load project-context
+ace-bundle project-context
 
 # The sections will be processed with all preset content merged in
 ```

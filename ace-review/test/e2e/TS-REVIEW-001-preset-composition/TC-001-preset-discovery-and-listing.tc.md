@@ -11,7 +11,7 @@ Verify that ace-review discovers presets from both config and file-based sources
 
 1. List available presets
    ```bash
-   OUTPUT=$(ace-review list-presets 2>&1)
+   OUTPUT=$(ace-review --list-presets 2>&1)
    EXIT_CODE=$?
    echo "$OUTPUT"
    echo "Exit code: $EXIT_CODE"

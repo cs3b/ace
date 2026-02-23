@@ -152,7 +152,7 @@ ace-test-e2e setup <package> <test-id>
 
 Use the template:
 ```
-ace-bundle load tmpl://test-e2e
+ace-bundle tmpl://test-e2e
 ```
 
 ### Discovery

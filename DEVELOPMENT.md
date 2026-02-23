@@ -89,5 +89,5 @@ ace-test
 For detailed contribution workflows, code standards, and taskflow processes, see:
 
 - [docs/contributing/README.md](docs/contributing/README.md)
-- Project context: `ace-bundle load project`
+- Project context: `ace-bundle project`
 - Available tools: [docs/tools.md](docs/tools.md)

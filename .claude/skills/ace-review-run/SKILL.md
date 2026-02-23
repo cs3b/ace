@@ -14,4 +14,4 @@ last_modified: 2026-01-10
 source: ace-review
 ---
 
-read and run `ace-bundle load wfi://review/run`
+read and run `ace-bundle wfi://review/run`

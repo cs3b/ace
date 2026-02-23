@@ -15,4 +15,4 @@ last_modified: 2026-02-11
 source: ace-assign
 ---
 
-read and run `ace-bundle load wfi://assign/create`
+read and run `ace-bundle wfi://assign/create`

@@ -25,7 +25,7 @@ Systematically diagnose and fix failing automated tests (unit, integration, etc.
 
 ## Project Context Loading
 
-- Read and follow: `ace-bundle load wfi://bundle`
+- Read and follow: `ace-bundle wfi://bundle`
 
 **Before starting test fixes:**
 

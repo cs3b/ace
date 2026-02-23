@@ -29,7 +29,7 @@ obsolete patterns, and maintaining the decisions.md summary.
 
 ## Project Context Loading
 
-* Read and follow: `ace-bundle load wfi://bundle`
+* Read and follow: `ace-bundle wfi://bundle`
 
 ## Maintenance Actions
 

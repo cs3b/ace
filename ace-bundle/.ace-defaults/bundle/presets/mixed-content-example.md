@@ -84,7 +84,7 @@ This example demonstrates advanced section capabilities:
 
 ```bash
 # Load comprehensive review with all content
-ace-bundle load mixed-content-example
+ace-bundle mixed-content-example
 
 # Content from code-review and security-review presets
 # + local files, commands, diffs, and notes

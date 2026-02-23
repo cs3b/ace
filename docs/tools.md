@@ -48,7 +48,7 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 |------|---------|
 | `ace-review --preset code-deep --pr 123` | Review PR with preset |
 | `ace-review --task 121` | Review task implementation |
-| `ace-review list-presets` | Show available presets |
+| `ace-review --list-presets` | Show available presets |
 
 ## Testing
 
@@ -88,8 +88,8 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 
 | Tool | Purpose |
 |------|---------|
-| `ace-bundle load project` | Load project context |
-| `ace-bundle load wfi://namespace/action` | Load workflow via protocol |
+| `ace-bundle project` | Load project context |
+| `ace-bundle wfi://namespace/action` | Load workflow via protocol |
 | `ace-nav wfi://namespace/action` | Get path of resource |
 | `ace-nav wfi://*` | List all workflows |
 | `ace-search "pattern"` | Search content (regex) |
@@ -106,7 +106,7 @@ Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.
 
 | Tool | Purpose |
 |------|---------|
-| `ace-llm query "prompt" -m MODEL` | Query LLM provider |
+| `ace-llm "prompt" -m MODEL` | Query LLM provider |
 | `ace-b36ts` | Generate timestamp ID (6-char Base36) |
 | `ace-b36ts decode ID` | Decode ID to datetime |
 

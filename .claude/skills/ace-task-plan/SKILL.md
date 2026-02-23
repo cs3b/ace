@@ -14,4 +14,4 @@ last_modified: 2026-02-16
 source: ace-taskflow
 ---
 
-read and run `ace-bundle load wfi://task/plan`
+read and run `ace-bundle wfi://task/plan`

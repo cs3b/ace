@@ -18,6 +18,6 @@ last_modified: 2026-01-10
 source: generated
 ---
 
-read and run `ace-bundle load wfi://docs/create-adr`
+read and run `ace-bundle wfi://docs/create-adr`
 
-read and run `ace-bundle load wfi://git/commit`
+read and run `ace-bundle wfi://git/commit`
