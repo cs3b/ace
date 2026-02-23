@@ -38,10 +38,9 @@ module Ace
       ].freeze
 
       HELP_EXAMPLES = [
-        "ace-b36ts encode",
-        "ace-b36ts encode 2024-01-15T10:30:00Z",
-        "ace-b36ts decode abc123",
-        "ace-b36ts config"
+        "ace-b36ts encode                          # Generate ID from now",
+        "ace-b36ts encode 2024-01-15T10:30:00Z     # Encode specific time",
+        "ace-b36ts decode abc123                   # Decode ID to timestamp"
       ].freeze
 
       # Register commands (Hanami pattern: CLI::Commands::*)
