@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-02-23
+
+### Changed
+- Refactored cli-check script into ATOM structure with ProviderDetector, AuthChecker atoms and HealthChecker molecule
+
+### Technical
+- Updated internal dependency version constraints to current releases
+
 ## [0.19.2] - 2026-02-22
 
 ### Fixed
