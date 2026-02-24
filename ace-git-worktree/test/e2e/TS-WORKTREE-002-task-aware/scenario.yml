@@ -32,3 +32,6 @@ setup:
   - run: git add -A && git commit -m "initial" --quiet
   - env:
       ACE_WORKTREES_ROOT: ./worktrees
+
+sandbox-setup:
+  - "mise trust $SANDBOX_PATH/mise.toml"
