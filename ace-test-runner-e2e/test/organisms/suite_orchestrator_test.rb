@@ -17,7 +17,7 @@ class SuiteOrchestratorTest < Minitest::Test
       @packages
     end
 
-    def find_tests(package:, test_id: nil, base_dir:)
+    def find_tests(package:, test_id: nil, base_dir:, **_filters)
       @tests.fetch(package, [])
     end
   end
@@ -129,6 +129,36 @@ class SuiteOrchestratorTest < Minitest::Test
 
     assert_match(/Affected packages: ace-lint/, @output.string)
     assert_match(/ACE E2E Test Suite - Running 1 tests across 1 packages/, @output.string)
+  end
+
+  def test_run_passes_tag_and_mode_filters_to_discoverer
+    discoverer = StubDiscoverer.new(
+      packages: ["ace-lint"],
+      tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
+    )
+    captured = []
+
+    discoverer.define_singleton_method(:find_tests) do |package:, test_id: nil, base_dir:, **filters|
+      captured << filters
+      @tests.fetch(package, [])
+    end
+
+    orchestrator = SuiteOrchestrator.new(discoverer: discoverer, output: @output)
+    def orchestrator.build_test_command(package, test_file, options, run_id: nil)
+      "echo 'PASS' && exit 0"
+    end
+
+    orchestrator.run(
+      parallel: false,
+      tags: ["smoke", "happy-path"],
+      exclude_tags: ["deep"],
+      mode: "goal"
+    )
+
+    assert_equal 1, captured.length
+    assert_equal ["smoke", "happy-path"], captured.first[:tags]
+    assert_equal ["deep"], captured.first[:exclude_tags]
+    assert_equal "goal", captured.first[:mode]
   end
 
   def test_run_with_affected_filter_does_not_filter_when_no_affected_detected

@@ -232,6 +232,109 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_parses_tags_mode_execution_model_and_optional_fields
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-META-001",
+        scenario_yml: <<~YAML)
+          test-id: TS-META-001
+          title: Metadata Test
+          area: test
+          mode: goal
+          execution-model: sequential
+          tool-under-test: ace-test-e2e
+          tags: [Smoke, use-case:Lint, happy-path]
+          sandbox-layout:
+            output/: "Results"
+            cache/: "Cached files"
+        YAML
+
+      scenario = @loader.load(scenario_dir)
+
+      assert_equal ["smoke", "use-case:lint", "happy-path"], scenario.tags
+      assert_equal "goal", scenario.mode
+      assert_equal "sequential", scenario.execution_model
+      assert_equal "ace-test-e2e", scenario.tool_under_test
+      assert_equal({ "output/" => "Results", "cache/" => "Cached files" }, scenario.sandbox_layout)
+    end
+  end
+
+  def test_load_invalid_mode_raises
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-BADMODE-001",
+        scenario_yml: <<~YAML)
+          test-id: TS-BADMODE-001
+          title: Invalid Mode
+          area: test
+          mode: unsupported
+        YAML
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Invalid mode/, error.message)
+    end
+  end
+
+  def test_load_invalid_execution_model_raises
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-BADEXEC-001",
+        scenario_yml: <<~YAML)
+          test-id: TS-BADEXEC-001
+          title: Invalid Execution Model
+          area: test
+          execution-model: parallel-unbounded
+        YAML
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Invalid execution-model/, error.message)
+    end
+  end
+
+  def test_load_goal_mode_standalone_files
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-GOAL-001",
+        scenario_yml: <<~YAML,
+          test-id: TS-GOAL-001
+          title: Goal Mode
+          area: test
+          mode: goal
+        YAML
+        tc_files: {
+          "TC-001-first.runner.md" => "# Goal 1 - First\n\nRun first goal.",
+          "TC-001-first.verify.md" => "# Goal 1 - First Verify\n\nVerify first goal.",
+          "TC-002-second.runner.md" => "# Goal 2 - Second\n\nRun second goal.",
+          "TC-002-second.verify.md" => "# Goal 2 - Second Verify\n\nVerify second goal.",
+          "runner.yml.md" => "---\ndescription: runner\n---\nRunner config",
+          "verifier.yml.md" => "---\ndescription: verifier\n---\nVerifier config"
+        })
+
+      scenario = @loader.load(scenario_dir)
+
+      assert_equal ["TC-001", "TC-002"], scenario.test_cases.map(&:tc_id)
+      assert_equal "Goal 1 - First", scenario.test_cases.first.title
+      assert_includes scenario.test_cases.first.content, "## Runner"
+      assert_includes scenario.test_cases.first.content, "## Verifier"
+      assert scenario.test_cases.first.file_path.end_with?("TC-001-first.runner.md")
+    end
+  end
+
+  def test_load_goal_mode_standalone_requires_runner_and_verifier_configs
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-GOAL-002",
+        scenario_yml: <<~YAML,
+          test-id: TS-GOAL-002
+          title: Goal Mode Missing Config
+          area: test
+          mode: goal
+        YAML
+        tc_files: {
+          "TC-001-first.runner.md" => "# Goal 1 - First\n\nRun first goal.",
+          "TC-001-first.verify.md" => "# Goal 1 - First Verify\n\nVerify first goal."
+        })
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Missing goal-mode file/, error.message)
+    end
+  end
+
   def test_infer_package_from_path
     Dir.mktmpdir do |tmpdir|
       pkg_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-test")

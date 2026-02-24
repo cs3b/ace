@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.605] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.17.0**: Add scenario tag/mode metadata and discovery-time filtering (`--tags`, `--exclude-tags`, `--mode`) plus goal-mode standalone TC discovery (`TC-*.runner.md` / `TC-*.verify.md`)
+
 ## [0.9.604] - 2026-02-24
 
 ### Changed

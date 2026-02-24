@@ -34,6 +34,7 @@ module Ace
               "ace-lint                      # Run all tests in package",
               "ace-lint --provider gemini:flash  # Use specific provider",
               "ace-lint --provider glite     # Use API provider (predict mode)",
+              "ace-lint --tags smoke         # Run only smoke-tagged scenarios",
               "ace-lint TS-LINT-003 --test-cases tc-001,002  # Run specific test cases",
               "ace-lint TS-LINT-003 --test-cases TC-001 --dry-run  # Preview test cases",
               "ace-lint --only-failures      # Re-run only previously failed test cases",
@@ -62,6 +63,8 @@ module Ace
                    desc: "Preview which test cases would run without executing"
             option :only_failures, type: :boolean,
                    desc: "Re-run only previously failed test cases"
+            option :tags, type: :string,
+                   desc: "Comma-separated scenario tags to include"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -84,6 +87,7 @@ module Ace
               # Handle dry-run mode
               if options[:dry_run]
                 return handle_dry_run(package, test_id, test_cases, output,
+                                      tags: parse_tags(options[:tags]),
                                       only_failures_wildcard: options[:only_failures] && test_cases.nil?)
               end
 
@@ -98,6 +102,7 @@ module Ace
                 package: package,
                 test_id: test_id,
                 test_cases: test_cases,
+                tags: parse_tags(options[:tags]),
                 cli_args: options[:cli_args],
                 run_id: options[:run_id],
                 report_dir: options[:report_dir],
@@ -188,11 +193,16 @@ module Ace
             # @param test_cases [Array<String>, nil] Normalized test case IDs
             # @param output [IO] Output stream
             # @param only_failures_wildcard [Boolean] True when --only-failures resolved to wildcard
-            def handle_dry_run(package, test_id, test_cases, output, only_failures_wildcard: false)
+            def handle_dry_run(package, test_id, test_cases, output, tags: [], only_failures_wildcard: false)
               discoverer = Molecules::TestDiscoverer.new
               loader = Molecules::ScenarioLoader.new
 
-              files = discoverer.find_tests(package: package, test_id: test_id, base_dir: Dir.pwd)
+              files = discoverer.find_tests(
+                package: package,
+                test_id: test_id,
+                tags: tags,
+                base_dir: Dir.pwd
+              )
               if files.empty?
                 raise Ace::Core::CLI::Error.new(
                   "No tests found for package '#{package}'" +
@@ -227,6 +237,12 @@ module Ace
 
                 output.puts ""
               end
+            end
+
+            def parse_tags(raw)
+              return [] if raw.nil? || raw.strip.empty?
+
+              raw.split(",").map(&:strip).reject(&:empty?).map(&:downcase)
             end
           end
         end
