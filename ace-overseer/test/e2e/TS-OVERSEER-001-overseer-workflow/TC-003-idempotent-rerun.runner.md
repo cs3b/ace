@@ -14,4 +14,5 @@ Save all output to `results/tc/03/`. Capture:
 ## Constraints
 
 - This goal depends on Goal 2 having already created the worktree.
+- When counting tmux windows, target `ACE_TMUX_SESSION` explicitly (for example `tmux list-windows -t "$ACE_TMUX_SESSION"`).
 - All artifacts must come from real tool execution, not fabricated.

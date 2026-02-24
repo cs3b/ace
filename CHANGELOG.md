@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.627] - 2026-02-24
+
+### Fixed
+- **ace-overseer v0.4.13**: Isolate `TS-OVERSEER-001` E2E tmux usage per run by adopting run-ID session naming (`tmux-session: { name-source: run-id }`) and eliminating implicit/default session collisions.
+
+### Changed
+- **ace-overseer v0.4.13**: Require tmux verification commands to target `ACE_TMUX_SESSION` explicitly in runner guidance.
+
 ## [0.9.626] - 2026-02-24
 
 ### Added

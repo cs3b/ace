@@ -27,6 +27,8 @@ requires:
 
 setup:
   - git-init
+  - tmux-session:
+      name-source: run-id
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
