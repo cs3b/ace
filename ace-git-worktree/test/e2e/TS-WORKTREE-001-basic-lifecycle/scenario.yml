@@ -37,5 +37,3 @@ setup:
       echo "bugfix content" > bugfix.txt
       git add bugfix.txt && git commit -m "Add bugfix" --quiet
       git checkout main --quiet
-  - agent-env:
-      ACE_WORKTREES_ROOT: ./worktrees
