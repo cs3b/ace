@@ -26,7 +26,9 @@ Environment provides:
 
 - Create assignment from `fixtures/subtree/job.yaml`. Capture assignment ID.
 - Verify initial current phase is outside the subtree (010-precheck).
-- Use scoped syntax: `ace-assign status --assignment "<id>@020"`.
+- Use scoped syntax exactly: `ace-assign status --assignment "<id>@020"` for `status-scoped.stdout`.
+- Use unscoped syntax exactly: `ace-assign status --assignment "<id>"` for `status-after-scope.stdout`.
+- Do **not** reuse unscoped output for scoped capture.
 - Verify scoped status detects fork subtree root (020-subtree-a).
 - Verify scoped status shows only subtree phases: 020, 020.01, 020.02, 020.03.
 - Verify scoped current phase resolves to subtree child (020.01-onboard).

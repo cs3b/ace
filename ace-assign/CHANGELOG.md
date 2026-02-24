@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.19] - 2026-02-24
+
+### Fixed
+- Apply assignment scope (`<id>@<phase>`) during report execution by setting `ACE_ASSIGN_FORK_ROOT` for the report command, so child-phase completions resolve in the correct subtree.
+
+### Technical
+- Harden TS-ASSIGN-002 hierarchy E2E runner/verifier instructions for scoped completion commands and scoped subtree status assertions.
+
 ## [0.12.18] - 2026-02-23
 
 ### Technical

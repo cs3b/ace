@@ -80,7 +80,7 @@ class ReportCommandTest < AceAssignTestCase
       output = capture_io do
         Ace::Assign::CLI::Commands::Report.new.call(
           file: report_path,
-          assignment: "#{target_id}@010"
+          assignment: target_id
         )
       end
 
@@ -95,6 +95,47 @@ class ReportCommandTest < AceAssignTestCase
       # Verify the first assignment was not affected (still on 010)
       first_state = scanner.scan(result1[:assignment].phases_dir, assignment: result1[:assignment])
       assert_equal "010", first_state.current.number
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_report_with_assignment_scope_completes_scoped_phase
+    with_temp_cache do |cache_dir|
+      report_path = create_report(cache_dir, "Scoped progress")
+      phases = [
+        { "name" => "precheck", "instructions" => "Run precheck" },
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        },
+        { "name" => "postcheck", "instructions" => "Run postcheck" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      start = executor.start(config_path)
+      target_id = start[:assignment].id
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Report.new.call(
+          file: report_path,
+          assignment: "#{target_id}@020"
+        )
+      end
+
+      assert_includes output.first, "Phase 020.01 (onboard) completed"
+
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      state = scanner.scan(start[:assignment].phases_dir, assignment: start[:assignment])
+
+      assert_equal :in_progress, state.find_by_number("010").status
+      assert_equal :done, state.find_by_number("020.01").status
+      assert_equal :in_progress, state.find_by_number("020.02").status
+      assert_nil ENV["ACE_ASSIGN_FORK_ROOT"], "Report command should restore scoped env variable"
 
       Ace::Assign.reset_config!
     end
