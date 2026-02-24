@@ -28,6 +28,7 @@ build on what you learn there. Do not re-run --help after Goal 1.
 - Execute each goal in order (1 through 6)
 - Use only ace-git-worktree, git, and standard shell utilities
 - Save all artifacts to results/tc/{NN}/ directories as specified
+- For system-operation goals (create/remove/prune), capture final system-state evidence with real commands (git metadata + filesystem), not narrative-only notes
 - Do not fabricate output — all artifacts must come from real tool execution
 - If a goal fails, note the failure and continue to the next goal
 - After all goals, output a brief summary of what you produced for each goal

@@ -38,3 +38,6 @@ setup:
       git checkout main --quiet
   - env:
       ACE_WORKTREES_ROOT: ./worktrees
+
+sandbox-setup:
+  - "mise trust $SANDBOX_PATH/mise.toml"
