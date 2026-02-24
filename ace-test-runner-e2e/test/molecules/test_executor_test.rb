@@ -259,6 +259,55 @@ class TestExecutorTest < Minitest::Test
     assert prompts[1].include?("independent verifier"), "Second invocation should be verifier prompt"
   end
 
+  def test_execute_goal_mode_standalone_uses_pipeline_and_always_runs_verifier
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_goal_mode_files(tmpdir)
+      sandbox_path = File.join(tmpdir, "sandbox")
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_goal_scenario(scenario_dir)
+      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+
+      calls = []
+      responses = [
+        { text: "Runner completed." },
+        { text: <<~OUT }
+          ### Goal 1 - First
+          - **Verdict**: PASS
+          - **Evidence**: ok
+
+          ### Goal 2 - Second
+          - **Verdict**: FAIL
+          - **Category**: tool-bug
+          - **Evidence**: mismatch
+
+          **Results: 1/2 passed**
+        OUT
+      ]
+
+      Ace::LLM::QueryInterface.stub(:query, lambda { |*args, **kwargs|
+        calls << { prompt: args[1], kwargs: kwargs }
+        responses.shift
+      }) do
+        result = executor.execute(
+          scenario,
+          sandbox_path: sandbox_path,
+          report_dir: report_dir,
+          verify: false
+        )
+
+        assert_equal "partial", result.status
+        assert_equal 2, result.total_count
+        assert_equal 1, result.failed_count
+        assert_equal report_dir, result.report_dir
+      end
+
+      assert_equal 2, calls.size, "runner and verifier should both execute"
+      refute_includes calls[0][:prompt], "/ace-e2e-run"
+      refute_includes calls[1][:prompt], "/ace-e2e-run"
+      assert File.exist?(File.join(report_dir, "metadata.yml")), "goal-mode pipeline should write metadata"
+    end
+  end
+
   private
 
   def create_scenario(overrides = {})
@@ -273,6 +322,74 @@ class TestExecutorTest < Minitest::Test
       content: "# Test content"
     }
     TestScenario.new(**defaults.merge(overrides))
+  end
+
+  def create_goal_scenario(dir_path)
+    TestScenario.new(
+      test_id: "TS-B36TS-001",
+      title: "Goal Scenario",
+      area: "timestamp",
+      package: "ace-b36ts",
+      priority: "high",
+      duration: "~5min",
+      file_path: File.join(dir_path, "scenario.yml"),
+      content: "",
+      mode: "goal",
+      dir_path: dir_path,
+      test_cases: [
+        Ace::Test::EndToEndRunner::Models::TestCase.new(
+          tc_id: "TC-001",
+          title: "First",
+          content: "",
+          file_path: File.join(dir_path, "TC-001-first.runner.md"),
+          mode: "goal",
+          goal_format: "standalone"
+        ),
+        Ace::Test::EndToEndRunner::Models::TestCase.new(
+          tc_id: "TC-002",
+          title: "Second",
+          content: "",
+          file_path: File.join(dir_path, "TC-002-second.runner.md"),
+          mode: "goal",
+          goal_format: "standalone"
+        )
+      ],
+      sandbox_layout: {
+        "results/tc/01/" => "one",
+        "results/tc/02/" => "two"
+      }
+    )
+  end
+
+  def create_goal_mode_files(tmpdir)
+    dir_path = File.join(tmpdir, "TS-B36TS-001")
+    FileUtils.mkdir_p(dir_path)
+    File.write(File.join(dir_path, "runner.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+          - ./TC-001-first.runner.md
+          - ./TC-002-second.runner.md
+      ---
+
+      # Runner
+      Workspace root: (current directory)
+    MD
+    File.write(File.join(dir_path, "verifier.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+          - ./TC-001-first.verify.md
+          - ./TC-002-second.verify.md
+      ---
+
+      # Verifier
+    MD
+    File.write(File.join(dir_path, "TC-001-first.runner.md"), "# Goal 1")
+    File.write(File.join(dir_path, "TC-002-second.runner.md"), "# Goal 2")
+    File.write(File.join(dir_path, "TC-001-first.verify.md"), "# Verify 1")
+    File.write(File.join(dir_path, "TC-002-second.verify.md"), "# Verify 2")
+    dir_path
   end
 
   def create_test_case(overrides = {})

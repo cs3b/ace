@@ -38,6 +38,18 @@ module Ace
           def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
                       env_vars: nil, report_dir: nil, verify: false)
             if Atoms::SkillPromptBuilder.cli_provider?(@provider)
+              if standalone_goal_mode?(scenario)
+                return execute_via_goal_mode(
+                  scenario,
+                  cli_args: cli_args,
+                  run_id: run_id,
+                  test_cases: test_cases,
+                  sandbox_path: sandbox_path,
+                  env_vars: env_vars,
+                  report_dir: report_dir
+                )
+              end
+
               execute_via_skill(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
                                 sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir,
                                 verify: verify)
@@ -64,6 +76,39 @@ module Ace
           end
 
           private
+
+          # Execute standalone goal-mode scenarios with the deterministic 6-phase pipeline.
+          def execute_via_goal_mode(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
+                                    env_vars: nil, report_dir: nil)
+            started_at = Time.now
+            resolved_report_dir = report_dir || default_report_dir_for(scenario, run_id)
+            resolved_sandbox_path = sandbox_path || resolve_sandbox_path(nil, resolved_report_dir)
+
+            if resolved_report_dir.nil? || resolved_sandbox_path.nil?
+              return Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: "error",
+                summary: "Goal-mode execution requires run_id/report_dir",
+                error: "Could not resolve deterministic sandbox/report paths",
+                started_at: started_at,
+                completed_at: Time.now
+              )
+            end
+
+            merged_args = merge_cli_args(
+              Atoms::SkillPromptBuilder.required_cli_args(@provider),
+              cli_args
+            )
+
+            goal_mode_executor.execute(
+              scenario: scenario,
+              cli_args: merged_args,
+              sandbox_path: resolved_sandbox_path,
+              report_dir: resolved_report_dir,
+              env_vars: env_vars,
+              test_cases: test_cases
+            )
+          end
 
           # Execute via skill invocation for CLI providers
           #
@@ -239,6 +284,12 @@ module Ace
             return nil unless report_dir
 
             report_dir.sub(/-reports\z/, "")
+          end
+
+          def default_report_dir_for(scenario, run_id)
+            return nil unless run_id && !run_id.to_s.empty?
+
+            File.join(Dir.pwd, ".cache", "ace-test-e2e", "#{scenario.dir_name(run_id)}-reports")
           end
 
           # Execute via prompt for API providers (original behavior)
@@ -459,6 +510,17 @@ module Ace
             return line.strip if line && !line.strip.empty?
 
             text.to_s.strip.split(/\s+/).first(30).join(" ")
+          end
+
+          def standalone_goal_mode?(scenario)
+            scenario.mode == "goal" && scenario.test_cases.any? { |tc| tc.goal_format == "standalone" }
+          end
+
+          def goal_mode_executor
+            @goal_mode_executor ||= Molecules::GoalModeExecutor.new(
+              provider: @provider,
+              timeout: @timeout
+            )
           end
         end
       end
