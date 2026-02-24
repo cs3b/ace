@@ -5,8 +5,6 @@ package: ace-lint
 priority: high
 tags: [smoke, happy-path, deep, "use-case:lint"]
 cost-tier: smoke
-mode: goal
-execution-model: sequential
 tool-under-test: ace-lint
 
 sandbox-layout:
