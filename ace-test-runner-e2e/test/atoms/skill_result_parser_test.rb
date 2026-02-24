@@ -368,6 +368,44 @@ class SkillResultParserTest < Minitest::Test
     end
   end
 
+  def test_parse_verifier_failed_tcs_without_category
+    text = <<~MD
+      - **Test ID**: TS-B36TS-001
+      - **Status**: partial
+      - **TCs Passed**: 7
+      - **TCs Failed**: 1
+      - **TCs Total**: 8
+      - **Score**: 0.875
+      - **Verdict**: partial
+      - **Failed TCs**: TC-003
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_verifier(text)
+    failed_cases = result[:test_cases].select { |tc| tc[:status] == "fail" }
+    assert_equal 1, failed_cases.size
+    assert_equal "TC-003", failed_cases[0][:id]
+    assert_equal "unknown", failed_cases[0][:category]
+  end
+
+  def test_parse_verifier_no_duplicate_tc_ids
+    text = <<~MD
+      - **Test ID**: TS-TEST-001
+      - **Status**: partial
+      - **TCs Passed**: 6
+      - **TCs Failed**: 2
+      - **TCs Total**: 8
+      - **Score**: 0.75
+      - **Verdict**: partial
+      - **Failed TCs**: TC-003:test-spec-error, TC-007:tool-bug
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_verifier(text)
+    ids = result[:test_cases].map { |tc| tc[:id] }
+    assert_equal ids.uniq.size, ids.size, "Expected no duplicate TC IDs but found: #{ids.tally.select { |_, v| v > 1 }}"
+  end
+
   def test_parse_tc_result_has_single_test_case
     text = <<~MD
       - **Test ID**: TS-LINT-001
