@@ -330,8 +330,9 @@ Add setup directives to `scenario.yml`:
 # scenario.yml
 setup:
   - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
-  - env:
+  - agent-env:
       PROJECT_ROOT_PATH: "."
 ```
 

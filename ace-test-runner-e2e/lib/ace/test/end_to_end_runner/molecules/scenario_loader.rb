@@ -46,9 +46,7 @@ module Ace
               test_cases: test_cases,
               tags: parse_tags(frontmatter["tags"]),
               tool_under_test: frontmatter["tool-under-test"],
-              sandbox_layout: frontmatter["sandbox-layout"] || {},
-              sandbox_setup: parse_sandbox_commands(frontmatter["sandbox-setup"]),
-              sandbox_teardown: parse_sandbox_commands(frontmatter["sandbox-teardown"])
+              sandbox_layout: frontmatter["sandbox-layout"] || {}
             )
           end
 
@@ -194,13 +192,6 @@ module Ace
 
             tags = raw_tags.is_a?(Array) ? raw_tags : [raw_tags]
             tags.map(&:to_s).map(&:strip).reject(&:empty?).map(&:downcase)
-          end
-
-          def parse_sandbox_commands(raw)
-            return [] unless raw
-
-            commands = raw.is_a?(Array) ? raw : [raw]
-            commands.map(&:to_s).map(&:strip).reject(&:empty?)
           end
 
           # Detect fixtures directory if it exists

@@ -2,6 +2,7 @@
 
 require "fileutils"
 require "open3"
+require "shellwords"
 
 module Ace
   module Test
@@ -11,7 +12,7 @@ module Ace
         #
         # Processes the setup array from scenario.yml, running each action
         # via Ruby system calls (no LLM involved). Supports: git-init,
-        # copy-fixtures, run, write-file, env, and tmux-session actions.
+        # copy-fixtures, run, write-file, agent-env, and tmux-session actions.
         #
         # Note: This is a Molecule because it performs filesystem I/O and
         # system calls via Open3 and FileUtils.
@@ -81,7 +82,7 @@ module Ace
               handle_run(value, sandbox_dir, env)
             when "write-file"
               handle_write_file(value["path"], value["content"], sandbox_dir)
-            when "env"
+            when "agent-env"
               handle_env(value, env)
             else
               raise ArgumentError, "Unknown setup step type: #{key.inspect}"
@@ -117,7 +118,16 @@ module Ace
           # shell operators (&&, |, >) in scenario.yml setup steps. Commands originate from
           # committed scenario.yml files, not user input, so shell injection risk is mitigated.
           def handle_run(command, sandbox_dir, env)
-            stdout, stderr, status = Open3.capture3(merged_environment(env), "bash", "-lc", command, chdir: sandbox_dir)
+            full_env = merged_environment(env)
+            # Re-export env vars after profile sourcing to protect against
+            # mise's shell hook clobbering (mise manages PROJECT_ROOT_PATH).
+            export_vars = env.dup
+            %w[PROJECT_ROOT_PATH ACE_TASKFLOW_PATH].each do |key|
+              export_vars[key] ||= ENV[key] if ENV[key]
+            end
+            exports = export_vars.map { |k, v| "export #{k}=#{Shellwords.shellescape(v.to_s)}" }.join("; ")
+            wrapped = exports.empty? ? command : "#{exports}; #{command}"
+            stdout, stderr, status = Open3.capture3(full_env, "bash", "-lc", wrapped, chdir: sandbox_dir)
 
             unless status.success?
               raise "Setup step 'run' failed (exit #{status.exitstatus}): #{command}\n#{stderr}"
