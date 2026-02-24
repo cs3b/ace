@@ -48,6 +48,12 @@ setup:
   # - env:                  # Set environment variables
   #     PROJECT_ROOT_PATH: "."
 
+# Sandbox-setup: Shell commands run inside the pipeline sandbox AFTER
+# infrastructure (git-init, mise.toml, provider links, result dirs)
+# but BEFORE tool verification. Available env: $SANDBOX_PATH, $PROJECT_ROOT_PATH
+sandbox-setup:
+  - "mise trust $SANDBOX_PATH/mise.toml"
+
 # Optional: Verification tracking
 # last-verified: YYYY-MM-DD
 # verified-by: {agent-name}

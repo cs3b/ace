@@ -81,6 +81,8 @@ class TestScenarioTest < Minitest::Test
     assert_equal [], scenario.tags
     assert_nil scenario.tool_under_test
     assert_equal({}, scenario.sandbox_layout)
+    assert_equal [], scenario.sandbox_setup
+    assert_equal [], scenario.sandbox_teardown
   end
 
   def test_new_fields_set
@@ -94,7 +96,9 @@ class TestScenarioTest < Minitest::Test
       test_cases: [tc],
       tags: ["smoke", "happy-path"],
       tool_under_test: "ace-lint",
-      sandbox_layout: { "output/" => "Report output" }
+      sandbox_layout: { "output/" => "Report output" },
+      sandbox_setup: ["mise trust $SANDBOX_PATH/mise.toml"],
+      sandbox_teardown: ["rm -rf tmp/"]
     )
     assert_equal ["git-init", "copy-fixtures"], scenario.setup_steps
     assert_equal "/tmp/scenario", scenario.dir_path
@@ -103,6 +107,8 @@ class TestScenarioTest < Minitest::Test
     assert_equal ["smoke", "happy-path"], scenario.tags
     assert_equal "ace-lint", scenario.tool_under_test
     assert_equal({ "output/" => "Report output" }, scenario.sandbox_layout)
+    assert_equal ["mise trust $SANDBOX_PATH/mise.toml"], scenario.sandbox_setup
+    assert_equal ["rm -rf tmp/"], scenario.sandbox_teardown
   end
 
   # test_case_ids from test_cases array
