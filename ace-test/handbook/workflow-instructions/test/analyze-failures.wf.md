@@ -26,6 +26,7 @@ This workflow produces a decision report that answers:
 - Do not edit application code or test files in this workflow.
 - Do not run formatting/autofix commands in this workflow.
 - This workflow ends with an analysis report only.
+- Do not ask the user where/how to fix during this workflow; decide from evidence.
 
 ## Prerequisites
 
@@ -70,11 +71,18 @@ Use exactly one category per failing test:
 - Assign one category (`implementation-bug`, `test-defect`, `test-infrastructure`)
 - Add confidence: `high`, `medium`, or `low`
 - Record one disconfirming check (what could prove this classification wrong)
+- If confidence is `medium` or `low`, run at least one additional diagnostic read/search before final decision
 
 4. Determine fix target
 - `implementation code`
 - `test code`
 - `test infrastructure`
+
+5. Choose autonomous fix decision
+- Select a single primary fix action per failure
+- Provide concrete file targets in priority order
+- Define explicit no-touch boundaries
+- Do not emit option lists that require user selection
 
 ## Required Output Contract
 
@@ -83,18 +91,24 @@ Produce this section before exiting:
 ```markdown
 ## Failure Analysis Report
 
-| Failure | Category | Evidence | Fix Target | Confidence | Disconfirming Check |
-|---|---|---|---|---|---|
-| path/to/test_file.rb:TestName | implementation-bug | stacktrace + behavior mismatch summary | implementation code | high | run related tests after patch |
+| Failure | Category | Evidence | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check |
+|---|---|---|---|---|---|---|---|---|---|
+| path/to/test_file.rb:TestName | implementation-bug | stacktrace + behavior mismatch summary | implementation code | implementation | app/service.rb, app/model.rb | test/integration/foo_test.rb | test/e2e/** | high | run related tests after patch |
 ```
 
 Then include:
 
 ```markdown
+## Fix Decisions
+- First item to fix: ...
+- Chosen fix decision: ...
+- Why this target first: ...
+
 ### Execution Plan Input
 - Primary failure to fix first: ...
 - Why first: ...
 - Required verification commands: ...
+- Expected pass criteria per command: ...
 ```
 
 ## Success Criteria
@@ -102,5 +116,8 @@ Then include:
 - Every failing test is classified
 - Evidence is concrete and traceable
 - Fix target is explicit per failure
+- Fix target files are explicit per failure (primary + fallback)
+- No-touch boundaries are explicit per failure
+- A single autonomous chosen fix decision is present per failure
 - A prioritized first failure is selected
 - No code/test edits were made in this workflow

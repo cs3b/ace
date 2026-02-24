@@ -25,6 +25,9 @@ Do not apply any fix until an analysis report exists with:
 - category (`implementation-bug`, `test-defect`, `test-infrastructure`)
 - evidence
 - fix target
+- fix target layer
+- primary candidate files
+- do-not-touch boundaries
 - confidence
 
 If analysis is missing or incomplete, stop and run:
@@ -36,13 +39,21 @@ ace-bundle wfi://test/analyze-failures
 
 Use the output section from `test/analyze-failures`:
 - `## Failure Analysis Report`
+- `## Fix Decisions`
 - `### Execution Plan Input`
+
+## Autonomy Rule
+
+- Do not ask the user to choose fix target, category, or rerun scope.
+- If analysis is incomplete, auto-complete missing decision fields via local evidence (logs, tests, source/test files), then proceed.
+- Only stop for hard blockers (missing files/tools/permissions).
 
 ## Fix Procedure
 
 1. Pick the first prioritized failure from analysis
 - Use the "Primary failure to fix first" item
 - Confirm category and fix target
+- Apply the "Chosen fix decision" and primary candidate files directly
 
 2. Apply category-specific fix
 
@@ -64,7 +75,7 @@ Use the output section from `test/analyze-failures`:
 
 4. Re-check classification if verification contradicts analysis
 - If new evidence invalidates original category, return to `test/analyze-failures`
-- Update analysis report before continuing
+- Update analysis report and re-select a new autonomous chosen fix decision before continuing
 
 5. Iterate until failures are resolved
 - Fix one prioritized failure at a time
@@ -108,4 +119,5 @@ If unresolved:
 - Fixes are traceable to analyzed failures
 - Verification commands and outcomes are documented
 - No speculative fixes outside analyzed scope
+- No user clarification was required for fix targeting/scope in normal flow
 - Full test suite passes (or unresolved blockers are explicitly documented)

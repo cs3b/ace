@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-02-24
+
+### Changed
+- Strengthen `test/analyze-failures` output contract with autonomous fix decisions, concrete candidate file targets, and explicit no-touch boundaries.
+- Update `test/fix` to consume autonomous analysis decisions directly and proceed without user clarification for normal targeting/scope choices.
+
 ## [0.2.0] - 2026-02-24
 
 ### Added
