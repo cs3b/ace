@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.610] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.17.5**: Implement standalone goal-mode 6-phase execution pipeline (sandbox builder, runner/verifier prompt bundling, dual `ace-llm` execution, TC-first report generation), route standalone goal-mode away from slash-command skill invocation, and force verifier pass for this mode
+
 ## [0.9.609] - 2026-02-24
 
 ### Fixed
