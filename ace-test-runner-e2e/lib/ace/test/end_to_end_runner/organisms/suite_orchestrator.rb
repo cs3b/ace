@@ -386,6 +386,8 @@ module Ace
               end
             end
 
+            cmd_parts << "--verify" if options[:verify]
+
             # Add parallel=1 for subprocess isolation
             cmd_parts.concat(["--parallel", "1"])
 
@@ -525,8 +527,8 @@ module Ace
             status = metadata["status"]
             return result unless status
 
-            passed = metadata.dig("results", "passed") || result[:passed_cases] || 0
-            total = metadata.dig("results", "total") || result[:total_cases] || 0
+            passed = metadata["tcs-passed"] || metadata.dig("results", "passed") || result[:passed_cases] || 0
+            total = metadata["tcs-total"] || metadata.dig("results", "total") || result[:total_cases] || 0
 
             # Reconcile: if all cases passed, status should be "pass"
             if passed == total && total > 0 && status != "pass"

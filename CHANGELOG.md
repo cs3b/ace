@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.607] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.17.2**: Add optional independent verifier mode (`--verify`) for run/suite, introduce TC-first verifier/result schema fields, and wire dual runner+verifier execution flow with updated reporting/failure extraction
+
 ## [0.9.606] - 2026-02-24
 
 ### Changed

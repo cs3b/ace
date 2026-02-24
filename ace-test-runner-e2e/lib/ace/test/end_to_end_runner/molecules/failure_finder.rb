@@ -179,6 +179,13 @@ module Ace
           # @param data [Hash] Parsed metadata.yml data
           # @return [Array<String>] Failed test case IDs, ["*"] for wildcard, or []
           def extract_failed_test_cases(data)
+            # TC-first schema: failed: [{tc: "TC-001", ...}, ...]
+            failed_entries = data["failed"]
+            if failed_entries.is_a?(Array) && !failed_entries.empty?
+              tc_ids = failed_entries.filter_map { |entry| entry.is_a?(Hash) ? entry["tc"] : nil }.compact
+              return tc_ids unless tc_ids.empty?
+            end
+
             # Primary: use failed_test_cases array (written by ReportWriter or workflow template)
             failed_ids = data["failed_test_cases"]
             return Array(failed_ids) if failed_ids.is_a?(Array) && !failed_ids.empty?

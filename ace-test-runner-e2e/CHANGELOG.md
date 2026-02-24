@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-02-24
+
+### Added
+- Optional independent verifier execution mode via `--verify` for `ace-test-e2e run` and `ace-test-e2e suite`
+- Verifier parsing support for TC-first contracts including failure categorization (`test-spec-error`, `tool-bug`, `runner-error`, `infrastructure-error`)
+
+### Changed
+- `TestExecutor`/`TestOrchestrator` execution path now supports runner + verifier dual invocation while keeping default single-agent behavior unchanged
+- Report metadata and summary frontmatter now emit TC-first fields (`tcs-passed`, `tcs-failed`, `tcs-total`, `score`, `verdict`) and structured `failed[].tc` entries
+- Failure discovery and metadata reconciliation now read TC-first schema fields in addition to existing result counters
+- Execute workflow documentation updated to reflect verify mode and TC-first report structure
+
 ## [0.17.1] - 2026-02-24
 
 ### Added

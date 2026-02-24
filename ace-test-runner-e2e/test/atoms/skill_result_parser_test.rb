@@ -318,6 +318,50 @@ class SkillResultParserTest < Minitest::Test
     end
   end
 
+  # --- Verifier Parsing ---
+
+  def test_parse_verifier_contract_with_failed_categories
+    text = <<~MD
+      - **Test ID**: TS-B36TS-001
+      - **Status**: partial
+      - **TCs Passed**: 6
+      - **TCs Failed**: 2
+      - **TCs Total**: 8
+      - **Score**: 0.75
+      - **Verdict**: partial
+      - **Failed TCs**: TC-003:test-spec-error, TC-007:tool-bug
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_verifier(text)
+
+    assert_equal "TS-B36TS-001", result[:test_id]
+    assert_equal "partial", result[:status]
+    assert_equal 8, result[:test_cases].size
+    failed_cases = result[:test_cases].select { |tc| tc[:status] == "fail" }
+    assert_equal 2, failed_cases.size
+    assert_equal "TC-003", failed_cases[0][:id]
+    assert_equal "test-spec-error", failed_cases[0][:category]
+    assert_equal "TC-007", failed_cases[1][:id]
+    assert_equal "tool-bug", failed_cases[1][:category]
+  end
+
+  def test_parse_verifier_falls_back_to_standard_parse_when_verifier_fields_missing
+    text = <<~MD
+      - **Test ID**: TS-LINT-001
+      - **Status**: pass
+      - **Passed**: 1
+      - **Failed**: 0
+      - **Total**: 1
+      - **Issues**: None
+    MD
+
+    result = SkillResultParser.parse_verifier(text)
+    assert_equal "TS-LINT-001", result[:test_id]
+    assert_equal "pass", result[:status]
+    assert_equal 1, result[:test_cases].size
+  end
+
   def test_parse_tc_nil_raises
     assert_raises(ResultParser::ParseError) do
       SkillResultParser.parse_tc(nil)
