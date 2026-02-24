@@ -76,12 +76,15 @@ from `../e2e/TS-B36TS-001-goal-pilot/`.
 
 ### 3. Implementation
 
+The `runner.yml.md` file has `bundle:` frontmatter that lists all 8 runner goal files
+and includes the header/rules. Use `ace-bundle` to generate the prompt in one step:
+
 ```bash
 TASK_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SANDBOX_DIR="$TASK_DIR/experiment/sandbox"
 GOAL_DIR="$TASK_DIR/e2e/TS-B36TS-001-goal-pilot"
 
-# System prompt
+# System prompt (standalone — not part of runner.yml.md bundle)
 cat > "$SANDBOX_DIR/.cache/ace-e2e/runner-system.md" << 'SYSTEM_EOF'
 You are an E2E test executor working in a sandbox directory.
 
@@ -94,23 +97,8 @@ Rules:
 - After all goals, output a brief summary of what you produced for each goal
 SYSTEM_EOF
 
-# Runner prompt — header + all 8 goals
-cat > "$SANDBOX_DIR/.cache/ace-e2e/runner-prompt.md" << HEADER_EOF
-# E2E Test Runner: ace-b36ts Goal-Based Pilot
-
-Tool under test: ace-b36ts
-Required tools: ace-b36ts, jq
-Workspace root: $SANDBOX_DIR
-
-Execute each goal sequentially. Goal 1 is discovery — all later goals
-build on what you learn there. Do not re-run --help after Goal 1.
-HEADER_EOF
-
-for i in 1 2 3 4 5 6 7 8; do
-  name=$(ls "$GOAL_DIR"/goal-${i}-*.runner.md)
-  echo -e "\n---\n" >> "$SANDBOX_DIR/.cache/ace-e2e/runner-prompt.md"
-  cat "$name" >> "$SANDBOX_DIR/.cache/ace-e2e/runner-prompt.md"
-done
+# Runner prompt — use ace-bundle to expand runner.yml.md (header + all 8 goals)
+ace-bundle "$GOAL_DIR/runner.yml.md" > "$SANDBOX_DIR/.cache/ace-e2e/runner-prompt.md"
 ```
 
 ## Outputs
