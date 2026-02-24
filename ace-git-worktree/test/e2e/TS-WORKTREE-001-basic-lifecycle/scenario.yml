@@ -26,6 +26,7 @@ requires:
 
 setup:
   - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - run: |
@@ -36,8 +37,5 @@ setup:
       echo "bugfix content" > bugfix.txt
       git add bugfix.txt && git commit -m "Add bugfix" --quiet
       git checkout main --quiet
-  - env:
+  - agent-env:
       ACE_WORKTREES_ROOT: ./worktrees
-
-sandbox-setup:
-  - "mise trust $SANDBOX_PATH/mise.toml"
