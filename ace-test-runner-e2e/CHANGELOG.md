@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-02-24
+
+### Changed
+- Rewrite `run.wf.md` (v2.0): restructure dual-mode execution, add `--tags`/`--exclude-tags`, add pipeline context section, standardize report fields to TC-first schema
+- Rewrite `execute.wf.md` (v2.0): document SetupExecutor contract, add dual-agent verifier documentation, clarify tag filtering at discovery time
+
+### Added
+- Add `tags` field to scenario-yml-reference guide with naming conventions and OR filtering semantics
+- Add `## Execution Pipeline` section to e2e-testing guide documenting 6-phase deterministic pipeline
+- Add `## Scenario-Level Configuration` section to tc-authoring guide explaining tags, runner/verifier roles, and sequential context model
+- Add `tags` field to scenario.yml template
+- Add `score`, `verdict`, and `failed[]` (TC-first schema) to test-report template
+- Add `--tags`/`--exclude-tags` arguments to manage, run-batch workflow instructions
+- Add tag-related guidance to create, fix, rewrite, review, plan-changes, setup-sandbox workflows
+- Add essential E2E test suite plan covering 10 new scenarios across 7 packages
+
+### Fixed
+- Fix `cost-tier` default from `standard` to `smoke` and values to `smoke|happy-path|deep` across all guides and templates
+- Rename legacy `passed`/`failed`/`total` frontmatter fields to `tcs-passed`/`tcs-failed`/`tcs-total` in test-report template
+
 ## [0.18.1] - 2026-02-24
 
 ### Fixed

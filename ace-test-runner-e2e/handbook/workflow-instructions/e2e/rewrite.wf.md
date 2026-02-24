@@ -99,7 +99,7 @@ mkdir -p {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}
 ```
 
 **Write `scenario.yml`:**
-Include metadata, setup directives, and fixture requirements. Follow the existing scenario.yml format from other scenarios in the package.
+Include metadata, setup directives, tags, and fixture requirements. Follow the existing scenario.yml format from other scenarios in the package. Preserve existing `tags` when modifying scenarios; add `tags: [{cost-tier}, "use-case:{area}"]` to new scenarios.
 
 **Write fixture files** (if needed):
 Create test data files in the scenario's `fixtures/` directory.

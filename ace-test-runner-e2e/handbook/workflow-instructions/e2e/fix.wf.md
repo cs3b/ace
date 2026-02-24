@@ -351,6 +351,7 @@ ace-test-e2e {package}
 Failure Type → First Action
 
 Sandbox setup failed       → Check ace-test-e2e-sh and SetupExecutor (Category C)
+Tag filtering excluded TC  → Check scenario.yml tags and --tags/--exclude-tags args (Category B)
 Agent executed wrong TCs   → Check TC fidelity validation (Category C)
 Provider/API error         → Retry once; if persistent, check config (Category C)
 Exit code mismatch         → git log on code under test (Category A or B)
