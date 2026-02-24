@@ -140,9 +140,13 @@ module Ace
             status = normalize_status(fields[:status])
 
             failed_entries = parse_failed_tcs(fields[:failed_tcs])
+            failed_ids = failed_entries.map { |e| e[:tc] }.to_set
             test_cases = []
-            passed.times do |i|
-              test_cases << { id: "TC-#{format('%03d', i + 1)}", description: "", status: "pass", actual: "", notes: "" }
+            pass_index = 0
+            passed.times do
+              pass_index += 1
+              pass_index += 1 while failed_ids.include?("TC-#{format('%03d', pass_index)}")
+              test_cases << { id: "TC-#{format('%03d', pass_index)}", description: "", status: "pass", actual: "", notes: "" }
             end
             if failed_entries.empty?
               failed.times do |i|
