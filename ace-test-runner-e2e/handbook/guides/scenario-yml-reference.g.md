@@ -89,17 +89,22 @@ requires:
 ## `setup` Directives
 
 Available directives:
-- `copy-fixtures`
-- `git-init`
-- `env:`
+- `git-init` — Initialize git repository in sandbox
+- `run:` — Execute a shell command (bash -lc; env vars are re-exported to protect against mise clobbering)
+- `copy-fixtures` — Copy fixtures/ directory into sandbox
+- `write-file:` — Write inline content to a file (`path:` + `content:`)
+- `agent-env:` — Environment variables passed to the runner/verifier agent subprocess (not setup commands)
+- `tmux-session` — Create a detached tmux session
 
 Example:
 
 ```yaml
 setup:
   - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
-  - env:
+  - run: git add -A && git commit -m "initial" --quiet
+  - agent-env:
       PROJECT_ROOT_PATH: "."
 ```
 
@@ -126,8 +131,9 @@ requires:
   ruby: ">= 3.0"
 setup:
   - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
-  - env:
+  - agent-env:
       PROJECT_ROOT_PATH: "."
 last-verified: 2026-02-24
 verified-by: claude-opus-4

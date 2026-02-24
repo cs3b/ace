@@ -89,7 +89,7 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "env" => { "MY_VAR" => "hello_world" } },
+          { "agent-env" =>{ "MY_VAR" => "hello_world" } },
           { "run" => "echo $MY_VAR > env_out.txt" }
         ],
         sandbox_dir: sandbox
@@ -128,7 +128,7 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "env" => { "GREETING" => "hi", "NAME" => "world" } },
+          { "agent-env" =>{ "GREETING" => "hi", "NAME" => "world" } },
           { "run" => "echo \"$GREETING $NAME\" > out.txt" }
         ],
         sandbox_dir: sandbox
@@ -198,7 +198,7 @@ class SetupExecutorTest < Minitest::Test
     Dir.mktmpdir do |sandbox|
       result = @executor.execute(
         setup_steps: [
-          { "env" => { "FOO" => "bar", "BAZ" => "qux" } },
+          { "agent-env" =>{ "FOO" => "bar", "BAZ" => "qux" } },
           { "run" => "echo ok" }
         ],
         sandbox_dir: sandbox
@@ -277,6 +277,44 @@ class SetupExecutorTest < Minitest::Test
       # Session should be gone after teardown
       refute system("tmux", "has-session", "-t", session_name, out: File::NULL, err: File::NULL),
         "Session should not exist after teardown"
+    end
+  end
+
+  def test_run_re_exports_env_vars_to_protect_against_mise_clobbering
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [
+          { "agent-env" =>{ "PROJECT_ROOT_PATH" => "/custom/path" } },
+          { "run" => "echo $PROJECT_ROOT_PATH > prp_out.txt" }
+        ],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_equal "/custom/path\n", File.read(File.join(sandbox, "prp_out.txt"))
+    end
+  end
+
+  def test_run_re_exports_process_env_vars_when_no_explicit_override
+    Dir.mktmpdir do |sandbox|
+      original = ENV["PROJECT_ROOT_PATH"]
+      ENV["PROJECT_ROOT_PATH"] = "/from/process/env"
+
+      result = @executor.execute(
+        setup_steps: [
+          { "run" => "echo $PROJECT_ROOT_PATH > prp_out.txt" }
+        ],
+        sandbox_dir: sandbox
+      )
+
+      assert result[:success]
+      assert_equal "/from/process/env\n", File.read(File.join(sandbox, "prp_out.txt"))
+    ensure
+      if original
+        ENV["PROJECT_ROOT_PATH"] = original
+      else
+        ENV.delete("PROJECT_ROOT_PATH")
+      end
     end
   end
 end
