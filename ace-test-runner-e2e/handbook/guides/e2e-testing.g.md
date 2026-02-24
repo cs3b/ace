@@ -17,6 +17,16 @@ E2E (end-to-end) tests are tests that are executed by an AI agent rather than an
 - **Complex** requiring agent judgment
 - **Exploratory** in nature
 
+## Canonical Conventions
+
+- CLI split:
+  - `ace-test-e2e` runs tests for a single package
+  - `ace-test-e2e-suite` runs suite-level execution across packages/scopes
+- Scenario IDs follow `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Standalone goal mode uses `TC-*.runner.md` + `TC-*.verify.md`
+- TC artifacts use `results/tc/{NN}/`
+- Summary reports use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
+
 ## When to Use E2E Tests
 
 ### The E2E Value Gate
