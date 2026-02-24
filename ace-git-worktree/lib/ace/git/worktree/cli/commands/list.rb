@@ -24,9 +24,7 @@ module Ace
             option :format, desc: "Output format: table, json, simple", aliases: [], default: "table"
             option :show_tasks, desc: "Include task associations", type: :boolean, aliases: ["--show-tasks"]
             option :task_associated, desc: "Show only task-associated worktrees", type: :boolean, aliases: ["--task-associated"]
-            option :no_task_associated, desc: "Show only non-task worktrees", type: :boolean, aliases: ["--no-task-associated"]
             option :usable, desc: "Show only usable worktrees", type: :boolean, aliases: ["--usable"]
-            option :no_usable, desc: "Show only unusable worktrees", type: :boolean, aliases: ["--no-usable"]
             option :search, desc: "Filter by branch name pattern", aliases: []
             option :quiet, type: :boolean, aliases: ["-q"], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: ["-v"], desc: "Show verbose output"
@@ -35,10 +33,40 @@ module Ace
             def call(**options)
               display_config_summary("list", options)
 
-              # Convert dry-cli options to args array format
-              args = options_to_args(options)
+              # Keep explicit false values as --no-* flags so legacy parser receives filters.
+              args = list_options_to_args(options)
 
               Ace::Git::Worktree::Commands::ListCommand.new.run(args)
+            end
+
+            private
+
+            def list_options_to_args(options)
+              args = []
+              args.concat(format_arg(options))
+              args << "--show-tasks" if options[:show_tasks]
+
+              if options.key?(:task_associated)
+                args << (options[:task_associated] ? "--task-associated" : "--no-task-associated")
+              end
+
+              if options.key?(:usable)
+                args << (options[:usable] ? "--usable" : "--no-usable")
+              end
+
+              if options[:search].is_a?(String) && !options[:search].empty?
+                args << "--search"
+                args << options[:search]
+              end
+
+              args
+            end
+
+            def format_arg(options)
+              format = options[:format]
+              return [] if format.nil? || format.empty?
+
+              ["--format", format]
             end
           end
         end
