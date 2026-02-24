@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.612] - 2026-02-24
+
+### Added
+- **ace-taskflow v0.41.3**: Add orchestrator safeguards to workflow instructions — end-state coherence check in review workflow, spike-first rule and concept inventory in draft workflow, architecture drift check in work-subtasks workflow
+
 ## [0.9.611] - 2026-02-24
 
 ### Changed
