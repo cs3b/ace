@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.613] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.18.0**: Simplify `ace-test-e2e` and `ace-test-e2e-suite` to single-command CLIs — no more `run`/`suite`/`setup` subcommands, both executables now invoke their command class directly via `Dry::CLI`
+
+### Removed
+- **ace-test-e2e v0.18.0**: Remove multi-command CLI Registry and `ace-test-e2e setup` command (setup runs automatically during test execution)
+
 ## [0.9.612] - 2026-02-24
 
 ### Added
