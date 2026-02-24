@@ -19,7 +19,7 @@ module Ace
           def call(file:, **options)
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)
-            result = executor.advance(file)
+            result = with_scoped_fork_root(target.scope) { executor.advance(file) }
 
             unless options[:quiet]
               completed = result[:completed]
@@ -55,6 +55,20 @@ module Ace
           end
 
           private
+
+          def with_scoped_fork_root(scope)
+            return yield if scope.nil? || scope.strip.empty?
+
+            previous = ENV["ACE_ASSIGN_FORK_ROOT"]
+            ENV["ACE_ASSIGN_FORK_ROOT"] = scope.strip
+            yield
+          ensure
+            if previous.nil?
+              ENV.delete("ACE_ASSIGN_FORK_ROOT")
+            else
+              ENV["ACE_ASSIGN_FORK_ROOT"] = previous
+            end
+          end
         end
       end
     end
