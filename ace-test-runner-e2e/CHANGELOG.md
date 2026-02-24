@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.3] - 2026-02-24
+
+### Added
+- Support run-ID-driven tmux session naming via `tmux-session: { name-source: run-id }` in scenario `setup` directives.
+
+### Changed
+- Pass the orchestrator run ID into setup execution so tmux setup can use deterministic per-run session names.
+- Document run-ID tmux session setup and teardown behavior in scenario reference/template guidance.
+
+### Technical
+- Add regression coverage for run-ID tmux session naming in setup executor and orchestrator setup integration.
+
 ## [0.20.2] - 2026-02-24
 
 ### Changed

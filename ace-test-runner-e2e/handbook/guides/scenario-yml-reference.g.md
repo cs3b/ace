@@ -95,12 +95,17 @@ Available directives:
 - `write-file:` — Write inline content to a file (`path:` + `content:`)
 - `agent-env:` — Environment variables passed to the runner/verifier agent subprocess (not setup commands)
 - `tmux-session` — Create a detached tmux session
+  - String form: `tmux-session` (uses scenario-based naming)
+  - Hash form: `tmux-session: { name-source: run-id }` (uses unique E2E run ID as session name)
+  - Runner teardown removes the created session after test execution
 
 Example:
 
 ```yaml
 setup:
   - git-init
+  - tmux-session:
+      name-source: run-id
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
