@@ -24,17 +24,16 @@ module Ace
           # @param test_id [String, nil] Optional specific test ID (e.g., "TS-LINT-001")
           # @param tags [Array<String>, String, nil] Scenario tags to include (OR semantics)
           # @param exclude_tags [Array<String>, String, nil] Scenario tags to exclude (OR semantics)
-          # @param mode [String, nil] Scenario mode filter ("procedural" or "goal")
           # @param base_dir [String] Base directory to search from (default: current dir)
           # @return [Array<String>] Sorted list of matching scenario.yml file paths
-          def find_tests(package:, test_id: nil, tags: nil, exclude_tags: nil, mode: nil, base_dir: Dir.pwd)
+          def find_tests(package:, test_id: nil, tags: nil, exclude_tags: nil, base_dir: Dir.pwd)
             test_ids = test_id ? test_id.split(",").map(&:strip) : [nil]
             scenario_files = test_ids
                              .flat_map { |id| Dir.glob(build_scenario_pattern(package, id, base_dir)) }
                              .uniq
                              .sort
 
-            return scenario_files if no_filters?(tags, exclude_tags, mode)
+            return scenario_files if no_filters?(tags, exclude_tags)
 
             loader = ScenarioLoader.new
             scenarios = scenario_files.map do |yml_path|
@@ -44,8 +43,7 @@ module Ace
             filter_scenarios(
               scenarios,
               tags: normalize_tags(tags),
-              exclude_tags: normalize_tags(exclude_tags),
-              mode: mode
+              exclude_tags: normalize_tags(exclude_tags)
             ).map(&:file_path).sort
           end
 
@@ -55,10 +53,9 @@ module Ace
           # @param test_id [String, nil] Optional test ID to filter
           # @param tags [Array<String>, String, nil] Scenario tags to include (OR semantics)
           # @param exclude_tags [Array<String>, String, nil] Scenario tags to exclude (OR semantics)
-          # @param mode [String, nil] Scenario mode filter ("procedural" or "goal")
           # @param base_dir [String] Base directory to search from
           # @return [Array<Models::TestScenario>] Loaded scenario models with test_cases
-          def find_scenarios(package:, test_id: nil, tags: nil, exclude_tags: nil, mode: nil, base_dir: Dir.pwd)
+          def find_scenarios(package:, test_id: nil, tags: nil, exclude_tags: nil, base_dir: Dir.pwd)
             test_dir = File.join(base_dir, package, TEST_DIR)
             pattern = File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
             scenario_files = Dir.glob(pattern).sort
@@ -76,8 +73,7 @@ module Ace
             filter_scenarios(
               scenarios,
               tags: normalize_tags(tags),
-              exclude_tags: normalize_tags(exclude_tags),
-              mode: mode
+              exclude_tags: normalize_tags(exclude_tags)
             )
           end
 
@@ -109,8 +105,8 @@ module Ace
             end
           end
 
-          def no_filters?(tags, exclude_tags, mode)
-            normalize_tags(tags).empty? && normalize_tags(exclude_tags).empty? && mode.nil?
+          def no_filters?(tags, exclude_tags)
+            normalize_tags(tags).empty? && normalize_tags(exclude_tags).empty?
           end
 
           def normalize_tags(raw)
@@ -120,7 +116,7 @@ module Ace
             values.map(&:to_s).map(&:strip).reject(&:empty?).map(&:downcase)
           end
 
-          def filter_scenarios(scenarios, tags:, exclude_tags:, mode:)
+          def filter_scenarios(scenarios, tags:, exclude_tags:)
             filtered = scenarios
 
             unless tags.empty?
@@ -129,11 +125,6 @@ module Ace
 
             unless exclude_tags.empty?
               filtered = filtered.reject { |scenario| !(scenario.tags & exclude_tags).empty? }
-            end
-
-            if mode
-              normalized_mode = mode.to_s.strip.downcase
-              filtered = filtered.select { |scenario| scenario.mode == normalized_mode }
             end
 
             filtered

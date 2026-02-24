@@ -33,7 +33,7 @@ This workflow guides an agent through executing test cases in a **pre-populated 
 
 - `ace-test-e2e` runs single-package scenarios; `ace-test-e2e-suite` runs suite-level execution
 - Scenario IDs use `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
-- Standalone goal-mode test cases use `TC-*.runner.md` and `TC-*.verify.md`
+- Standalone test cases use `TC-*.runner.md` and `TC-*.verify.md`
 - TC artifacts are written under `results/tc/{NN}/`
 - Summary counters use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
 
@@ -139,12 +139,6 @@ Parse arguments and prepare for execution:
 Discover test case definitions in the scenario directory within the sandbox:
 
 ```bash
-find "${SANDBOX_PATH}" -name "*.tc.md" 2>/dev/null | sort
-```
-
-If `scenario.yml` indicates standalone goal mode files are present, also discover:
-
-```bash
 find "${SANDBOX_PATH}" -name "TC-*.runner.md" -o -name "TC-*.verify.md" 2>/dev/null | sort
 ```
 
@@ -157,7 +151,7 @@ Found N test case files:
 ...
 ```
 
-> **CRITICAL TC FIDELITY RULE:** You MUST execute ONLY the discovered test definitions (`.tc.md` for inline/procedural mode, or paired `.runner.md`/`.verify.md` for standalone goal mode). Do NOT invent test cases.
+> **CRITICAL TC FIDELITY RULE:** You MUST execute ONLY the discovered standalone pair definitions (`TC-*.runner.md` + `TC-*.verify.md`). Do NOT invent test cases.
 
 If `TEST_CASES` argument was provided, parse and normalize the filter:
 
@@ -228,22 +222,7 @@ When `TEST_CASES` is empty or not provided, execute all discovered test cases (d
 - If `FILTERED_CASES` is set (from step 2), execute **only** test cases whose IDs are in the `FILTERED_CASES` array. Skip all other test cases.
 - If `FILTERED_CASES` is not set, execute **all** test cases in the scenario (default behavior).
 
-For each test case (TC-NNN), branch by mode:
-
-**Procedural TC (`mode: procedural` or omitted):**
-1. Read objective
-2. Execute steps
-3. Compare against expected section
-4. Record pass/fail
-
-**Inline goal TC (`mode: goal` in `.tc.md`):**
-1. Read `## Objective`
-2. Read `## Available Tools`
-3. Plan and execute your own approach (do not require explicit `## Steps`)
-4. Evaluate every item in `## Success Criteria`
-5. Record per-criterion `PASS`/`FAIL` evidence
-
-**Standalone goal-mode pair (`TC-*.runner.md` + `TC-*.verify.md`):**
+For each test case (TC-NNN), execute the standalone pair flow:
 1. Execute runner goals and write artifacts to `results/tc/{NN}/`
 2. Verify artifacts against expectations from paired `.verify.md`
 3. Record per-goal verdicts with evidence
@@ -252,17 +231,17 @@ For each test case (TC-NNN):
 
 1. **Check filter** - If `FILTERED_CASES` is set and this test case ID is not in the array, **skip** this test case entirely. Log: `Skipping TC-NNN (not in filter)`.
 2. **Read the objective** - Understand what this test verifies
-3. **Execute according to mode** - procedural steps or goal evaluation flow
+3. **Execute runner/verifier flow** - run goals, then validate evidence
 4. **Capture results** - Record:
    - Actual exit code
    - Command output
    - Any error messages
-5. **Evaluate evidence** - Check expected behavior or success criteria
-6. **Record status** - Pass or Fail (with criterion/goal evidence for goal mode)
+5. **Evaluate evidence** - Check verifier expectations and goal evidence
+6. **Record status** - Pass or Fail with per-goal evidence
 
 Report each test case result immediately after execution.
 
-**Self-check:** Before writing reports, verify your result table has exactly N rows matching the N `.tc.md` files found in Step 2 (or the filtered subset). If you have more or fewer results than expected, STOP and re-examine — you may have skipped a test case or invented one.
+**Self-check:** Before writing reports, verify your result table has exactly N rows matching the discovered TC IDs in Step 2 (or the filtered subset). If you have more or fewer results than expected, STOP and re-examine — you may have skipped a test case or invented one.
 
 **During execution, track friction points** for the Agent Experience Report:
 - Documentation gaps discovered
@@ -331,7 +310,7 @@ filtered: {true|false}
 
 ## Overall Status: {PASS/FAIL/PARTIAL}
 
-### Goal Evaluation (for mode: goal)
+### Goal Evaluation
 
 | Goal/Criterion | Status | Evidence |
 |----------------|--------|----------|

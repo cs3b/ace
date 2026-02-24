@@ -42,7 +42,6 @@ module Ace
               "--affected --only-failures    # Re-run failures in affected packages",
               "--tags smoke,happy-path       # Include scenarios by tag",
               "--exclude-tags deep           # Exclude scenarios by tag",
-              "--mode goal                   # Run only goal-mode scenarios",
               "--cli-args dangerously-skip-permissions  # Pass args to provider"
             ]
 
@@ -59,7 +58,6 @@ module Ace
                    desc: "Timeout per test in seconds"
             option :tags, type: :string, desc: "Comma-separated scenario tags to include"
             option :exclude_tags, type: :string, desc: "Comma-separated scenario tags to exclude"
-            option :mode, type: :string, desc: "Scenario mode filter: procedural or goal"
             option :progress, type: :boolean, desc: "Enable live animated display"
             option :verify, type: :boolean,
                    desc: "Run independent verifier pass for each scenario"
@@ -73,7 +71,6 @@ module Ace
               parallel = options[:parallel]
               affected = options[:affected]
               only_failures = options[:only_failures]
-              mode = parse_mode_filter(options[:mode])
               tags = parse_csv_list(options[:tags])
               exclude_tags = parse_csv_list(options[:exclude_tags])
 
@@ -96,7 +93,6 @@ module Ace
                 timeout: options[:timeout],
                 tags: tags,
                 exclude_tags: exclude_tags,
-                mode: mode,
                 verify: options[:verify]
               )
 
@@ -127,18 +123,6 @@ module Ace
               raw.split(",").map(&:strip).reject(&:empty?).map(&:downcase)
             end
 
-            def parse_mode_filter(raw_mode)
-              return nil if raw_mode.nil? || raw_mode.strip.empty?
-
-              mode = raw_mode.strip.downcase
-              unless %w[procedural goal].include?(mode)
-                raise Ace::Core::CLI::Error.new(
-                  "Invalid --mode '#{raw_mode}'. Expected: procedural or goal"
-                )
-              end
-
-              mode
-            end
           end
         end
       end

@@ -814,10 +814,14 @@ class TestOrchestratorTest < Minitest::Test
       refute_nil received_sandbox, "sandbox_path should be set"
       assert File.exist?(File.join(received_sandbox, "scenario.yml")),
         "scenario.yml must be copied to sandbox for execute.wf.md discovery"
-      assert File.exist?(File.join(received_sandbox, "TC-001-check.tc.md")),
-        "TC-001.tc.md must be copied to sandbox"
-      assert File.exist?(File.join(received_sandbox, "TC-002-check.tc.md")),
-        "TC-002.tc.md must be copied to sandbox"
+      assert File.exist?(File.join(received_sandbox, "runner.yml.md")),
+        "runner config must be copied to sandbox"
+      assert File.exist?(File.join(received_sandbox, "verifier.yml.md")),
+        "verifier config must be copied to sandbox"
+      assert File.exist?(File.join(received_sandbox, "TC-001-check.runner.md")),
+        "TC-001 runner file must be copied to sandbox"
+      assert File.exist?(File.join(received_sandbox, "TC-002-check.verify.md")),
+        "TC-002 verifier file must be copied to sandbox"
     end
   end
 
@@ -966,7 +970,7 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
-  def test_goal_mode_standalone_forces_verify_even_when_flag_disabled
+  def test_standalone_scenario_does_not_force_verify_when_flag_disabled
     Dir.mktmpdir do |tmpdir|
       create_goal_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001")
       expected_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "test00-my-pkg-ts001-reports")
@@ -988,7 +992,7 @@ class TestOrchestratorTest < Minitest::Test
       orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor, provider: "claude:sonnet")
       orchestrator.run(package: "my-pkg", test_id: "TS-TEST-001", verify: false, output: @output)
 
-      assert_equal true, captured_verify
+      assert_equal false, captured_verify
     end
   end
 
@@ -1018,24 +1022,38 @@ class TestOrchestratorTest < Minitest::Test
       priority: medium
     YAML
 
+    runner_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.runner.md" }.join("\n")
+    verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")
+
+    File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{runner_files}
+      ---
+
+      # Runner
+      Workspace root: (current directory)
+    MD
+
+    File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{verify_files}
+      ---
+
+      # Verifier
+    MD
+
     tc_ids.each do |tc_id|
-      File.write(File.join(ts_dir, "#{tc_id}-check.tc.md"), <<~CONTENT)
-        ---
-        tc-id: #{tc_id}
-        title: Check #{tc_id}
-        ---
-
-        ## Objective
+      File.write(File.join(ts_dir, "#{tc_id}-check.runner.md"), <<~CONTENT)
+        # Goal #{tc_id}
+        Run #{tc_id}.
+      CONTENT
+      File.write(File.join(ts_dir, "#{tc_id}-check.verify.md"), <<~CONTENT)
+        # Verify #{tc_id}
         Verify #{tc_id}.
-
-        ## Steps
-        1. Run test
-           ```bash
-           echo "#{tc_id}"
-           ```
-
-        ## Expected
-        - Output contains #{tc_id}
       CONTENT
     end
   end
@@ -1058,24 +1076,38 @@ class TestOrchestratorTest < Minitest::Test
             PROJECT_ROOT_PATH: "."
     YAML
 
+    runner_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.runner.md" }.join("\n")
+    verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")
+
+    File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{runner_files}
+      ---
+
+      # Runner
+      Workspace root: (current directory)
+    MD
+
+    File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{verify_files}
+      ---
+
+      # Verifier
+    MD
+
     tc_ids.each do |tc_id|
-      File.write(File.join(ts_dir, "#{tc_id}-check.tc.md"), <<~CONTENT)
-        ---
-        tc-id: #{tc_id}
-        title: Check #{tc_id}
-        ---
-
-        ## Objective
+      File.write(File.join(ts_dir, "#{tc_id}-check.runner.md"), <<~CONTENT)
+        # Goal #{tc_id}
+        Run #{tc_id}.
+      CONTENT
+      File.write(File.join(ts_dir, "#{tc_id}-check.verify.md"), <<~CONTENT)
+        # Verify #{tc_id}
         Verify #{tc_id}.
-
-        ## Steps
-        1. Run test
-           ```bash
-           echo "#{tc_id}"
-           ```
-
-        ## Expected
-        - Output contains #{tc_id}
       CONTENT
     end
   end
@@ -1089,7 +1121,6 @@ class TestOrchestratorTest < Minitest::Test
       title: Goal #{scenario_id}
       area: test
       package: #{package}
-      mode: goal
       tool-under-test: fake-tool
     YAML
 

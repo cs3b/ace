@@ -118,8 +118,7 @@ module Ace
             @scenario_failures = scenario_failures
             @discovery_filters = {
               tags: options[:tags],
-              exclude_tags: options[:exclude_tags],
-              mode: options[:mode]
+              exclude_tags: options[:exclude_tags]
             }
 
             # Discover tests in each package
@@ -180,8 +179,7 @@ module Ace
                 package: package,
                 base_dir: @base_dir,
                 tags: @discovery_filters[:tags],
-                exclude_tags: @discovery_filters[:exclude_tags],
-                mode: @discovery_filters[:mode]
+                exclude_tags: @discovery_filters[:exclude_tags]
               )
 
               # Filter to only failing scenarios when in --only-failures mode

@@ -28,7 +28,7 @@ This workflow executes an approved change plan by deleting old scenarios, creati
 ## Canonical Conventions
 
 - Keep scenario IDs in `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
-- Keep standalone goal-mode pairs as `TC-*.runner.md` + `TC-*.verify.md`
+- Keep standalone pairs as `TC-*.runner.md` + `TC-*.verify.md`
 - Keep TC artifact outputs under `results/tc/{NN}/`
 - Keep summary report fields as `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 - CLI split reminder:
@@ -69,13 +69,14 @@ rm -rf {PACKAGE}/test/e2e/{scenario-dir}/
 
 **Individual TC removal** (some TCs in a scenario survive):
 ```bash
-rm {PACKAGE}/test/e2e/{scenario-dir}/{tc-file}.tc.md
+rm {PACKAGE}/test/e2e/{scenario-dir}/{tc-file}.runner.md
+rm {PACKAGE}/test/e2e/{scenario-dir}/{tc-file}.verify.md
 ```
 
 After all deletions, check if any scenario directories are now empty:
 ```bash
 # Find scenarios with no remaining TC files
-find {PACKAGE}/test/e2e/TS-* -maxdepth 1 -name "*.tc.md" 2>/dev/null | sort
+find {PACKAGE}/test/e2e/TS-* -maxdepth 1 -name "TC-*.runner.md" 2>/dev/null | sort
 ```
 
 Remove empty scenario directories (no TCs left):
@@ -104,7 +105,11 @@ Include metadata, setup directives, and fixture requirements. Follow the existin
 Create test data files in the scenario's `fixtures/` directory.
 
 **Write TC files:**
-For each TC in the scenario, create `TC-{NNN}-{slug}.tc.md` following the E2E test writing rules:
+For each TC in the scenario, create paired files:
+- `TC-{NNN}-{slug}.runner.md`
+- `TC-{NNN}-{slug}.verify.md`
+
+Follow the E2E test writing rules:
 
 - **Run the tool first** to verify actual behavior before writing assertions
 - Apply the E2E Value Gate — every TC must require real CLI binary + external tools + filesystem I/O
@@ -123,20 +128,20 @@ ace-bundle tmpl://test-e2e
 
 For each TC classified as MODIFY:
 
-1. Read the current TC file
+1. Read the current TC runner/verifier pair
 2. Apply the changes specified in the plan:
    - **Update assertions** — if source code changed, run the tool to observe new behavior, then update expected output
    - **Narrow scope** — remove assertions that unit tests cover, keep only E2E-exclusive checks
    - **Broaden scope** — add assertions for related behavior tested by the same CLI invocation
    - **Fix structure** — add missing sections, fix formatting issues
 3. Update the `last-verified` field if the TC was re-run during modification
-4. Write the updated TC file
+4. Write the updated TC runner/verifier files
 
 ### 5. Consolidate TCs
 
 For each CONSOLIDATE group:
 
-1. Read all source TC files in the group
+1. Read all source TC runner/verifier pairs in the group
 2. Identify the target TC (the one that survives)
 3. Merge assertion steps from source TCs into the target TC:
    - Combine verification steps under the shared CLI invocation
@@ -144,7 +149,7 @@ For each CONSOLIDATE group:
    - Remove duplicate assertions
    - Maintain the PASS/FAIL pattern for each verification
 4. Write the updated target TC
-5. Delete the source TC files (except the target)
+5. Delete source TC runner/verifier files (except the target pair)
 6. Verify the consolidated TC count stays within 2-5 per scenario
 
 ### 6. Verify Result
@@ -153,7 +158,7 @@ After all changes are applied (or in `--dry-run` mode, report what would happen)
 
 **List all remaining E2E test files:**
 ```bash
-find {PACKAGE}/test/e2e -name "scenario.yml" -o -name "*.tc.md" 2>/dev/null | sort
+find {PACKAGE}/test/e2e -name "scenario.yml" -o -name "runner.yml.md" -o -name "verifier.yml.md" -o -name "TC-*.runner.md" -o -name "TC-*.verify.md" 2>/dev/null | sort
 ```
 
 **Verify counts match the plan:**

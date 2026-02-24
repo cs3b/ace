@@ -2,8 +2,8 @@
 
 require_relative "../test_helper"
 
-class GoalModePromptBundlerTest < Minitest::Test
-  PromptBundler = Ace::Test::EndToEndRunner::Molecules::GoalModePromptBundler
+class PipelinePromptBundlerTest < Minitest::Test
+  PromptBundler = Ace::Test::EndToEndRunner::Molecules::PipelinePromptBundler
   TestScenario = Ace::Test::EndToEndRunner::Models::TestScenario
   TestCase = Ace::Test::EndToEndRunner::Models::TestCase
 
@@ -62,18 +62,17 @@ class GoalModePromptBundlerTest < Minitest::Test
   def build_scenario(scenario_dir)
     TestScenario.new(
       test_id: "TS-B36TS-001",
-      title: "Goal Mode",
+      title: "Pipeline",
       area: "timestamp",
       package: "ace-b36ts",
       file_path: File.join(scenario_dir, "scenario.yml"),
       content: "",
-      mode: "goal",
       dir_path: scenario_dir,
       test_cases: [
         TestCase.new(tc_id: "TC-001", title: "Goal 1", content: "", file_path: File.join(scenario_dir, "TC-001-one.runner.md"),
-                     mode: "goal", goal_format: "standalone"),
+                     goal_format: "standalone"),
         TestCase.new(tc_id: "TC-002", title: "Goal 2", content: "", file_path: File.join(scenario_dir, "TC-002-two.runner.md"),
-                     mode: "goal", goal_format: "standalone")
+                     goal_format: "standalone")
       ]
     )
   end

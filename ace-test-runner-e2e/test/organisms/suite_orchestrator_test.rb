@@ -131,7 +131,7 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_match(/ACE E2E Test Suite - Running 1 tests across 1 packages/, @output.string)
   end
 
-  def test_run_passes_tag_and_mode_filters_to_discoverer
+  def test_run_passes_tag_filters_to_discoverer
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
       tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
@@ -151,14 +151,12 @@ class SuiteOrchestratorTest < Minitest::Test
     orchestrator.run(
       parallel: false,
       tags: ["smoke", "happy-path"],
-      exclude_tags: ["deep"],
-      mode: "goal"
+      exclude_tags: ["deep"]
     )
 
     assert_equal 1, captured.length
     assert_equal ["smoke", "happy-path"], captured.first[:tags]
     assert_equal ["deep"], captured.first[:exclude_tags]
-    assert_equal "goal", captured.first[:mode]
   end
 
   def test_run_with_affected_filter_does_not_filter_when_no_affected_detected

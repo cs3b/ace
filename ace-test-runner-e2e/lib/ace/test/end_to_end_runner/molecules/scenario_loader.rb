@@ -7,19 +7,13 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Loads a TS-format scenario directory into TestScenario + TestCase models
+        # Loads a TS-format scenario directory into TestScenario + TestCase models.
         #
-        # Reads scenario.yml for metadata and setup steps, discovers test case
-        # files (`TC-*.tc.md` for procedural/inline goal mode or standalone
-        # `TC-*.runner.md` + `TC-*.verify.md` for goal mode), and returns a fully populated
-        # TestScenario model.
-        #
-        # Note: This is a Molecule (not an Atom) because it performs filesystem
-        # I/O via File.read, File.exist?, and Dir.glob.
+        # Supported test case format is standalone TC pairs only:
+        # - `TC-*.runner.md`
+        # - `TC-*.verify.md`
         class ScenarioLoader
-          VALID_MODES = %w[procedural goal].freeze
-          VALID_EXECUTION_MODELS = %w[isolated sequential].freeze
-          VALID_TC_MODES = %w[procedural goal].freeze
+          LEGACY_FIELDS = %w[mode execution-model].freeze
 
           # Load a scenario directory
           #
@@ -33,8 +27,7 @@ module Ace
             frontmatter = parse_scenario_yml(yml_path)
             validate_scenario!(frontmatter, yml_path)
 
-            mode = parse_mode(frontmatter["mode"])
-            test_cases = discover_test_cases(scenario_dir, mode: mode)
+            test_cases = discover_test_cases(scenario_dir)
             fixture_path = detect_fixture_path(scenario_dir)
 
             Models::TestScenario.new(
@@ -52,8 +45,6 @@ module Ace
               fixture_path: fixture_path,
               test_cases: test_cases,
               tags: parse_tags(frontmatter["tags"]),
-              mode: mode,
-              execution_model: parse_execution_model(frontmatter["execution-model"]),
               tool_under_test: frontmatter["tool-under-test"],
               sandbox_layout: frontmatter["sandbox-layout"] || {}
             )
@@ -70,6 +61,7 @@ module Ace
             content = File.read(path)
             result = YAML.safe_load(content, permitted_classes: [Date])
             raise ArgumentError, "Empty or invalid YAML in #{path}" if result.nil?
+
             result
           rescue Psych::SyntaxError => e
             raise ArgumentError, "Invalid YAML in #{path}: #{e.message}"
@@ -87,43 +79,28 @@ module Ace
               raise ArgumentError, "Missing required fields in #{path}: #{missing.join(', ')}"
             end
 
-            mode = frontmatter["mode"] || "procedural"
-            unless VALID_MODES.include?(mode)
-              raise ArgumentError, "Invalid mode '#{mode}' in #{path}. Expected: #{VALID_MODES.join(', ')}"
-            end
+            legacy = LEGACY_FIELDS.select { |field| frontmatter.key?(field) }
+            return if legacy.empty?
 
-            execution_model = frontmatter["execution-model"] || "isolated"
-            unless VALID_EXECUTION_MODELS.include?(execution_model)
-              raise ArgumentError,
-                    "Invalid execution-model '#{execution_model}' in #{path}. " \
-                    "Expected: #{VALID_EXECUTION_MODELS.join(', ')}"
-            end
+            raise ArgumentError,
+                  "Legacy field(s) not supported in #{path}: #{legacy.join(', ')}. " \
+                  "Remove these fields; standalone runner/verify scenarios are the only supported format."
           end
 
-          # Discover and parse TC-*.tc.md files in the scenario directory
+          # Discover and parse standalone TC files in the scenario directory.
           #
           # @param scenario_dir [String] Path to the scenario directory
-          # @return [Array<Models::TestCase>] Parsed test case models, sorted by filename
-          def discover_test_cases(scenario_dir, mode:)
-            if mode == "goal"
-              discover_goal_mode_test_cases(scenario_dir)
-            else
-              discover_inline_test_cases(scenario_dir)
-            end
-          end
-
-          def discover_inline_test_cases(scenario_dir)
-            tc_files = Dir.glob(File.join(scenario_dir, "TC-*.tc.md")).sort
-            tc_files.map { |file| parse_test_case(file) }
-          end
-
-          def discover_goal_mode_test_cases(scenario_dir)
+          # @return [Array<Models::TestCase>] Parsed test case models, sorted by TC ID
+          def discover_test_cases(scenario_dir)
             runner_files = Dir.glob(File.join(scenario_dir, "TC-*.runner.md")).sort
             verify_files = Dir.glob(File.join(scenario_dir, "TC-*.verify.md")).sort
 
-            return discover_inline_test_cases(scenario_dir) if runner_files.empty? && verify_files.empty?
+            if runner_files.empty? && verify_files.empty?
+              reject_inline_tc_files!(scenario_dir)
+              return []
+            end
 
-            validate_goal_mode_files!(scenario_dir, runner_files, verify_files)
+            validate_standalone_files!(scenario_dir, runner_files, verify_files)
 
             runner_by_id = runner_files.to_h { |f| [extract_tc_id_from_standalone_name(f), f] }
             verify_by_id = verify_files.to_h { |f| [extract_tc_id_from_standalone_name(f), f] }
@@ -131,52 +108,30 @@ module Ace
             runner_by_id.keys.sort.map do |tc_id|
               runner_file = runner_by_id.fetch(tc_id)
               verify_file = verify_by_id.fetch(tc_id)
-              parse_goal_test_case(tc_id, runner_file, verify_file)
+              parse_standalone_test_case(tc_id, runner_file, verify_file)
             end
           end
 
-          # Parse a single TC-*.tc.md file
-          #
-          # @param file_path [String] Path to the .tc.md file
-          # @return [Models::TestCase] Parsed test case
-          # @raise [ArgumentError] If frontmatter is missing or invalid
-          def parse_test_case(file_path)
-            content = File.read(file_path)
-            match = content.match(/\A---\s*\r?\n(.*?)\r?\n---\s*\r?\n(.*)\z/m)
-            raise ArgumentError, "No frontmatter found in: #{file_path}" unless match
+          def reject_inline_tc_files!(scenario_dir)
+            inline_files = Dir.glob(File.join(scenario_dir, "TC-*.tc.md")).sort
+            return if inline_files.empty?
 
-            frontmatter = YAML.safe_load(match[1], permitted_classes: [Date])
-            body = match[2]
-
-            unless frontmatter&.key?("tc-id") && frontmatter&.key?("title")
-              raise ArgumentError, "Missing tc-id or title in: #{file_path}"
-            end
-
-            tc_mode = parse_tc_mode(frontmatter["mode"], file_path)
-            validate_inline_goal_structure!(body, file_path) if tc_mode == "goal"
-
-            Models::TestCase.new(
-              tc_id: frontmatter["tc-id"],
-              title: frontmatter["title"],
-              content: body,
-              file_path: File.expand_path(file_path),
-              pending: frontmatter["pending"],
-              mode: tc_mode,
-              goal_format: (tc_mode == "goal" ? "inline" : nil)
-            )
+            raise ArgumentError,
+                  "Inline TC files are no longer supported in #{scenario_dir}. " \
+                  "Replace #{inline_files.map { |f| File.basename(f) }.join(', ')} with standalone " \
+                  "TC-*.runner.md and TC-*.verify.md pairs."
           end
 
-          def parse_goal_test_case(tc_id, runner_file, verify_file)
+          def parse_standalone_test_case(tc_id, runner_file, verify_file)
             runner_content = File.read(runner_file)
             verify_content = File.read(verify_file)
 
             Models::TestCase.new(
               tc_id: tc_id,
               title: extract_title_from_markdown(runner_content) || tc_id,
-              content: build_goal_mode_content(runner_content, verify_content),
+              content: build_standalone_content(runner_content, verify_content),
               file_path: File.expand_path(runner_file),
               pending: nil,
-              mode: "goal",
               goal_format: "standalone"
             )
           end
@@ -186,7 +141,7 @@ module Ace
             match = basename.match(/\A(TC-\d+[a-z]*)(?:-[^.]+)?\.(?:runner|verify)\.md\z/i)
             return match[1].upcase if match
 
-            raise ArgumentError, "Invalid goal-mode test case filename: #{basename}"
+            raise ArgumentError, "Invalid standalone test case filename: #{basename}"
           end
 
           def extract_title_from_markdown(markdown)
@@ -196,7 +151,7 @@ module Ace
             line.sub(/\A#+\s*/, "").strip
           end
 
-          def build_goal_mode_content(runner_content, verify_content)
+          def build_standalone_content(runner_content, verify_content)
             <<~CONTENT
               ## Runner
 
@@ -208,13 +163,12 @@ module Ace
             CONTENT
           end
 
-          def validate_goal_mode_files!(scenario_dir, runner_files, verify_files)
-            missing_runner_ids = verify_files
-                                 .map { |f| extract_tc_id_from_standalone_name(f) }
-                                 .uniq - runner_files.map { |f| extract_tc_id_from_standalone_name(f) }.uniq
-            missing_verify_ids = runner_files
-                                 .map { |f| extract_tc_id_from_standalone_name(f) }
-                                 .uniq - verify_files.map { |f| extract_tc_id_from_standalone_name(f) }.uniq
+          def validate_standalone_files!(scenario_dir, runner_files, verify_files)
+            runner_ids = runner_files.map { |f| extract_tc_id_from_standalone_name(f) }.uniq
+            verify_ids = verify_files.map { |f| extract_tc_id_from_standalone_name(f) }.uniq
+
+            missing_runner_ids = verify_ids - runner_ids
+            missing_verify_ids = runner_ids - verify_ids
 
             unless missing_runner_ids.empty?
               raise ArgumentError,
@@ -229,8 +183,8 @@ module Ace
             runner_yml = File.join(scenario_dir, "runner.yml.md")
             verifier_yml = File.join(scenario_dir, "verifier.yml.md")
 
-            raise ArgumentError, "Missing goal-mode file: #{runner_yml}" unless File.exist?(runner_yml)
-            raise ArgumentError, "Missing goal-mode file: #{verifier_yml}" unless File.exist?(verifier_yml)
+            raise ArgumentError, "Missing standalone file: #{runner_yml}" unless File.exist?(runner_yml)
+            raise ArgumentError, "Missing standalone file: #{verifier_yml}" unless File.exist?(verifier_yml)
           end
 
           def parse_tags(raw_tags)
@@ -238,39 +192,6 @@ module Ace
 
             tags = raw_tags.is_a?(Array) ? raw_tags : [raw_tags]
             tags.map(&:to_s).map(&:strip).reject(&:empty?).map(&:downcase)
-          end
-
-          def parse_mode(raw_mode)
-            raw_mode || "procedural"
-          end
-
-          def parse_tc_mode(raw_mode, file_path)
-            mode = raw_mode || "procedural"
-            return mode if VALID_TC_MODES.include?(mode)
-
-            raise ArgumentError, "Invalid tc mode '#{mode}' in #{file_path}. Expected: #{VALID_TC_MODES.join(', ')}"
-          end
-
-          def parse_execution_model(raw_execution_model)
-            raw_execution_model || "isolated"
-          end
-
-          def validate_inline_goal_structure!(body, file_path)
-            required = [
-              "## Objective",
-              "## Available Tools",
-              "## Success Criteria"
-            ]
-            missing = required.reject { |heading| body.match?(/^#{Regexp.escape(heading)}\b/i) }
-            unless missing.empty?
-              raise ArgumentError,
-                    "Goal-mode TC missing required section(s) in #{file_path}: #{missing.join(', ')}"
-            end
-
-            if body.match?(/^##\s+Steps\b/i)
-              raise ArgumentError,
-                    "Goal-mode TC must not include '## Steps' in #{file_path}; use success criteria instead"
-            end
           end
 
           # Detect fixtures directory if it exists

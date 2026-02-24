@@ -14,13 +14,13 @@ This workflow guides an agent through creating a new E2E test scenario.
 
 - `PACKAGE` (required) - The package for the test (e.g., `ace-lint`)
 - `AREA` (required) - The test area code (e.g., `LINT`, `REVIEW`, `GIT`)
-- `--format ts` (optional, default) - Test format. Creates a directory with `scenario.yml` and `.tc.md` files (TS-format). This is the only supported format.
+- `--format ts` (optional, default) - Test format. Creates a directory with `scenario.yml`, `runner.yml.md`, `verifier.yml.md`, and TC runner/verifier pairs (TS-format). This is the only supported format.
 - `--context <description>` (optional) - Description of what the test should verify
 
 ## Canonical Conventions
 
 - Scenario ID format: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
-- Standalone goal-mode files: `TC-*.runner.md` and `TC-*.verify.md`
+- Standalone files: `TC-*.runner.md` and `TC-*.verify.md`
 - TC artifact layout: `results/tc/{NN}/`
 - Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 - CLI split reminder:
@@ -290,10 +290,16 @@ Write `scenario.yml` (metadata and setup):
 {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/scenario.yml
 ```
 
-Write individual TC files for each test case:
+Write scenario pair configs:
 ```
-{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.tc.md
-{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-002-{tc-slug}.tc.md
+{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/runner.yml.md
+{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/verifier.yml.md
+```
+
+Write individual TC runner/verifier files for each test case:
+```
+{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.runner.md
+{PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/TC-001-{tc-slug}.verify.md
 ```
 
 Optionally create a fixtures directory if test data is needed:
@@ -316,8 +322,10 @@ Output a summary:
 **Directory:** {PACKAGE}/test/e2e/TS-{AREA}-{NNN}-{slug}/
 **Files:**
 - scenario.yml
-- TC-001-{tc-slug}.tc.md
-- TC-002-{tc-slug}.tc.md
+- runner.yml.md
+- verifier.yml.md
+- TC-001-{tc-slug}.runner.md
+- TC-001-{tc-slug}.verify.md
 
 ### Next Steps
 
