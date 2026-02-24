@@ -20,6 +20,14 @@ This is the minimum viable delegation brief. Everything else in this research �
 
 **Why it works**: (1) separates intent from implementation so the agent can find its own path, (2) gives an unambiguous completion signal so the agent knows when to stop, (3) makes verification mechanical rather than subjective so review is fast.
 
+**Applies beyond task delegation**: The same 3 questions work wherever intent needs to be communicated:
+- **Task/idea specs** — what the work should achieve
+- **PR descriptions** — what is the intention of this change, so reviewers know what to verify
+- **Review focus** — reviewer evaluates against stated intent, not just code correctness
+- **Commit messages** — why this change exists, not just what changed
+
+The brief is a universal intent contract: the author states what they're trying to accomplish, and the reviewer (human or agent) checks whether the output achieves it.
+
 **Anti-pattern**: Delegating with steps instead of outcomes ("do X, then Y, then Z") — this over-constrains the agent and makes it impossible to verify whether the *goal* was achieved vs. the *steps* were followed.
 
 ## Research Synthesis
