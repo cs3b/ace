@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.617] - 2026-02-24
+
+### Added
+- **ace-test v0.2.0**: Add `test/analyze-failures` workflow for evidence-based failure classification before changes.
+- **ace-test-e2e v0.19.0**: Add `e2e/analyze-failures` workflow for scenario/TC classification and rerun-scope planning.
+
+### Changed
+- **ace-test v0.2.0**: Convert `test/fix` into an execution-only workflow gated on prior analysis output.
+- **ace-test-e2e v0.19.0**: Convert `e2e/fix` into an execution-only workflow gated on prior analysis output and cost-aware rerun scope.
+
 ## [0.9.616] - 2026-02-24
 
 ### Changed
