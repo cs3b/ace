@@ -94,6 +94,10 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **No Contradictory Directives**: Scan spec for conflicting instructions (e.g., "replace X" and "preserve X" for same entity; "add" and "remove" same dependency). Flag any contradictions as HIGH priority questions
    - [ ] **Consumer Packages Listed**: When interfaces change (CLI flags, config keys, protocol URIs), spec identifies which packages consume the interface and will need updates
    - [ ] **Deliverables Match Scope**: Number of deliverables is proportional to scope — flag if spec lists 3 deliverables but scope implies 15+ file changes
+   - [ ] **End-State Coherence** (orchestrator subtasks only): Concepts introduced by this subtask
+         (new fields, modes, formats) are expected to exist in the final deliverable —
+         not be removed by a later subtask. If this subtask adds a concept that a later
+         subtask will consolidate away, flag as SCOPE RISK and consider merging subtasks.
    - [ ] **No Blocking Questions Remain**: All HIGH priority questions resolved or have acceptable defaults
 
    **Assessment:**

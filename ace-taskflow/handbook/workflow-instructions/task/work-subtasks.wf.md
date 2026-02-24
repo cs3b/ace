@@ -381,6 +381,20 @@ After PR is merged:
 ace-task done 122.01
 ```
 
+#### 3.10 Architecture Drift Check
+
+After completing each subtask, briefly assess:
+- Did implementation reveal that concepts from EARLIER subtasks are now unnecessary?
+- Did the approach change in ways that affect LATER subtask specs?
+
+If drift detected:
+1. Document the drift in the orchestrator task file
+2. Flag affected sibling subtasks with `needs_review: true`
+3. Ask user: "Subtask N revealed [finding]. Should we update subtask specs M, O, P before continuing?"
+
+**Why**: Implementation learnings in subtask 3 may invalidate assumptions in subtasks 1-2 (backward)
+or require spec updates in subtasks 4-5 (forward). Catching drift early prevents wasted work.
+
 ### Step 4: Progress Summary
 
 After each subtask completion, provide summary:
