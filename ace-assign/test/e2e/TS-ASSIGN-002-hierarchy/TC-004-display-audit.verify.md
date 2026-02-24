@@ -12,10 +12,14 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 3. **Nested numbers** — Status shows nested phase numbers 010.01, 010.02, 020.01.
 
 ### Audit Trail
-4. **Child audit** — `child-of-metadata.stdout` shows `added_by: child_of:010` and `parent: "010"`.
-5. **Injection audit** — `injected-after-metadata.stdout` shows `added_by: injected_after:010.01`.
-6. **Renumbering audit** — `renumbered-metadata.stdout` shows `renumbered_from` with old number and `renumbered_at` with ISO8601 timestamp.
+4. **Child audit** — `child-of-metadata.stdout` shows `added_by: child_of:010` and `parent: "010"` from real phase `.ph.md` content.
+5. **Injection audit** — `injected-after-metadata.stdout` shows `added_by: injected_after:010.01` from injected phase `.ph.md`.
+6. **Renumbering audit** — `renumbered-metadata.stdout` shows `renumbered_from` with old number and `renumbered_at` with ISO8601 timestamp from renumbered phase `.ph.md`.
 7. **Dynamic audit** — `dynamic-metadata.stdout` shows `added_by: dynamic`.
+
+Path discipline for verdict:
+- Missing `.yaml` files is not failure evidence by itself; phase artifacts are `.ph.md`.
+- If metadata check fails, treat wrong assignment-id/path/extension lookup as runner artifact error, not tool behavior regression.
 
 ## Verdict
 
