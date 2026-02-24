@@ -257,7 +257,7 @@ PATH
 PATH
   remote: ace-test-runner
   specs:
-    ace-test-runner (0.15.6)
+    ace-test-runner (0.15.7)
       ace-b36ts (~> 0.7)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
