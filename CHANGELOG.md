@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.609] - 2026-02-24
+
+### Fixed
+- **ace-test-e2e v0.17.4**: Fix synthetic TC ID collision and add parser test coverage
+
 ## [0.9.608] - 2026-02-24
 
 ### Fixed

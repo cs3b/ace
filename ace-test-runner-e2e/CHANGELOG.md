@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.4] - 2026-02-24
+
+### Fixed
+- Prevent synthetic TC ID collision with real failed TC IDs in verifier results
+- Add test coverage for no-category TC parsing and unique TC ID guarantee
+
 ## [0.17.3] - 2026-02-24
 
 ### Fixed
