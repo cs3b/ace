@@ -1,8 +1,14 @@
 ---
 id: v.0.9.0+task.280
-status: draft
+status: in-progress
 priority: medium
 estimate: TBD
+worktree:
+  branch: 280-define-e2e-test-levels-grouping-and-goal-based-execution
+  path: "../ace-task.280"
+  created_at: '2026-02-24 02:21:57'
+  updated_at: '2026-02-24 02:21:57'
+  target_branch: main
 ---
 
 # Define E2E Test Levels, Grouping, and Goal-Based Execution
