@@ -49,14 +49,17 @@ module Ace
           # @param package [String] Package name (e.g., "ace-lint")
           # @param test_id [String, nil] Optional test ID to run specific test
           # @param test_cases [Array<String>, nil] Optional normalized test case IDs to filter
+          # @param tags [Array<String>, nil] Optional scenario tags for discovery filtering
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param output [IO] Output stream for progress messages (default: $stdout)
           # @return [Array<Models::TestResult>] List of test results
-          def run(package:, test_id: nil, test_cases: nil, cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
+          def run(package:, test_id: nil, test_cases: nil, tags: nil,
+                  cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
             # Discover tests
             files = @discoverer.find_tests(
               package: package,
               test_id: test_id,
+              tags: tags,
               base_dir: @base_dir
             )
 
@@ -122,7 +125,7 @@ module Ace
             [File.expand_path(sandbox_dir), env, setup_executor]
           end
 
-          # Copy *.tc.md and scenario.yml from scenario dir into sandbox root
+          # Copy test definitions and scenario.yml from scenario dir into sandbox root
           #
           # The execute.wf.md workflow searches the sandbox for .tc.md files to discover
           # test cases. Without this copy, sandboxed tests find 0 TCs and fail.
@@ -130,8 +133,18 @@ module Ace
           # @param dir_path [String] Source scenario directory (scenario.dir_path)
           # @param sandbox_dir [String] Destination sandbox directory
           def copy_scenario_definitions(dir_path, sandbox_dir)
-            Dir.glob(File.join(dir_path, "*.tc.md")).each do |tc_file|
-              FileUtils.cp(tc_file, sandbox_dir)
+            patterns = [
+              "*.tc.md",
+              "TC-*.runner.md",
+              "TC-*.verify.md",
+              "runner.yml.md",
+              "verifier.yml.md"
+            ]
+
+            patterns.each do |pattern|
+              Dir.glob(File.join(dir_path, pattern)).each do |definition_file|
+                FileUtils.cp(definition_file, sandbox_dir)
+              end
             end
             scenario_yml = File.join(dir_path, "scenario.yml")
             FileUtils.cp(scenario_yml, sandbox_dir) if File.exist?(scenario_yml)

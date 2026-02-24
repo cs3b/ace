@@ -176,6 +176,59 @@ class TestDiscovererTest < Minitest::Test
     end
   end
 
+  def test_find_tests_filters_by_tags
+    Dir.mktmpdir do |tmpdir|
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-smoke", ["TC-001"], tags: ["smoke"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-deep", ["TC-001"], tags: ["deep"])
+
+      files = @discoverer.find_tests(package: "my-package", tags: "smoke", base_dir: tmpdir)
+
+      assert_equal 1, files.size
+      assert files.first.include?("TS-TEST-001")
+    end
+  end
+
+  def test_find_tests_filters_by_exclude_tags
+    Dir.mktmpdir do |tmpdir|
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-smoke", ["TC-001"], tags: ["smoke"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-deep", ["TC-001"], tags: ["deep"])
+
+      files = @discoverer.find_tests(package: "my-package", exclude_tags: "deep", base_dir: tmpdir)
+
+      assert_equal 1, files.size
+      assert files.first.include?("TS-TEST-001")
+    end
+  end
+
+  def test_find_tests_include_then_exclude_exclude_wins
+    Dir.mktmpdir do |tmpdir|
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-smoke", ["TC-001"], tags: ["smoke"])
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-smoke-deep", ["TC-001"], tags: ["smoke", "deep"])
+
+      files = @discoverer.find_tests(
+        package: "my-package",
+        tags: "smoke",
+        exclude_tags: "deep",
+        base_dir: tmpdir
+      )
+
+      assert_equal 1, files.size
+      assert files.first.include?("TS-TEST-001")
+    end
+  end
+
+  def test_find_tests_filters_by_mode
+    Dir.mktmpdir do |tmpdir|
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-procedural", ["TC-001"], mode: "procedural")
+      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-goal", ["TC-001"], mode: "goal")
+
+      files = @discoverer.find_tests(package: "my-package", mode: "goal", base_dir: tmpdir)
+
+      assert_equal 1, files.size
+      assert files.first.include?("TS-TEST-002")
+    end
+  end
+
   def test_list_packages_includes_ts_format_packages
     Dir.mktmpdir do |tmpdir|
       create_ts_scenario(tmpdir, "ace-lint", "TS-LINT-001-test", ["TC-001"])
@@ -188,17 +241,22 @@ class TestDiscovererTest < Minitest::Test
 
   private
 
-  def create_ts_scenario(base_dir, package, scenario_name, tc_ids)
+  def create_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil, mode: nil)
     scenario_dir = File.join(base_dir, package, "test", "e2e", scenario_name)
     FileUtils.mkdir_p(scenario_dir)
 
     test_id = scenario_name.split("-")[0..2].join("-")
+    extra = []
+    extra << "mode: #{mode}" if mode
+    extra << "tags: [#{tags.join(', ')}]" if tags
+
     File.write(File.join(scenario_dir, "scenario.yml"), <<~YAML)
       test-id: #{test_id}
       title: Test Scenario
       area: test
       setup:
         - git-init
+      #{extra.join("\n")}
     YAML
 
     tc_ids.each do |tc_id|

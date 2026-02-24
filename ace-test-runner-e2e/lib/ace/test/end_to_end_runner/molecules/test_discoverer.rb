@@ -22,24 +22,43 @@ module Ace
           #
           # @param package [String] Package name (e.g., "ace-lint")
           # @param test_id [String, nil] Optional specific test ID (e.g., "TS-LINT-001")
+          # @param tags [Array<String>, String, nil] Scenario tags to include (OR semantics)
+          # @param exclude_tags [Array<String>, String, nil] Scenario tags to exclude (OR semantics)
+          # @param mode [String, nil] Scenario mode filter ("procedural" or "goal")
           # @param base_dir [String] Base directory to search from (default: current dir)
           # @return [Array<String>] Sorted list of matching scenario.yml file paths
-          def find_tests(package:, test_id: nil, base_dir: Dir.pwd)
+          def find_tests(package:, test_id: nil, tags: nil, exclude_tags: nil, mode: nil, base_dir: Dir.pwd)
             test_ids = test_id ? test_id.split(",").map(&:strip) : [nil]
+            scenario_files = test_ids
+                             .flat_map { |id| Dir.glob(build_scenario_pattern(package, id, base_dir)) }
+                             .uniq
+                             .sort
 
-            test_ids
-              .flat_map { |id| Dir.glob(build_scenario_pattern(package, id, base_dir)) }
-              .uniq
-              .sort
+            return scenario_files if no_filters?(tags, exclude_tags, mode)
+
+            loader = ScenarioLoader.new
+            scenarios = scenario_files.map do |yml_path|
+              loader.load(File.dirname(yml_path))
+            end
+
+            filter_scenarios(
+              scenarios,
+              tags: normalize_tags(tags),
+              exclude_tags: normalize_tags(exclude_tags),
+              mode: mode
+            ).map(&:file_path).sort
           end
 
           # Find TS-format scenario directories and load them as TestScenario models
           #
           # @param package [String] Package name
           # @param test_id [String, nil] Optional test ID to filter
+          # @param tags [Array<String>, String, nil] Scenario tags to include (OR semantics)
+          # @param exclude_tags [Array<String>, String, nil] Scenario tags to exclude (OR semantics)
+          # @param mode [String, nil] Scenario mode filter ("procedural" or "goal")
           # @param base_dir [String] Base directory to search from
           # @return [Array<Models::TestScenario>] Loaded scenario models with test_cases
-          def find_scenarios(package:, test_id: nil, base_dir: Dir.pwd)
+          def find_scenarios(package:, test_id: nil, tags: nil, exclude_tags: nil, mode: nil, base_dir: Dir.pwd)
             test_dir = File.join(base_dir, package, TEST_DIR)
             pattern = File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
             scenario_files = Dir.glob(pattern).sort
@@ -51,10 +70,15 @@ module Ace
             end
 
             if test_id
-              scenarios.select { |s| s.test_id == test_id }
-            else
-              scenarios
+              scenarios = scenarios.select { |s| s.test_id == test_id }
             end
+
+            filter_scenarios(
+              scenarios,
+              tags: normalize_tags(tags),
+              exclude_tags: normalize_tags(exclude_tags),
+              mode: mode
+            )
           end
 
           # List all packages that have E2E tests
@@ -83,6 +107,36 @@ module Ace
             else
               File.join(test_dir, SCENARIO_DIR_PATTERN, SCENARIO_FILE)
             end
+          end
+
+          def no_filters?(tags, exclude_tags, mode)
+            normalize_tags(tags).empty? && normalize_tags(exclude_tags).empty? && mode.nil?
+          end
+
+          def normalize_tags(raw)
+            return [] if raw.nil?
+
+            values = raw.is_a?(Array) ? raw : raw.to_s.split(",")
+            values.map(&:to_s).map(&:strip).reject(&:empty?).map(&:downcase)
+          end
+
+          def filter_scenarios(scenarios, tags:, exclude_tags:, mode:)
+            filtered = scenarios
+
+            unless tags.empty?
+              filtered = filtered.select { |scenario| !(scenario.tags & tags).empty? }
+            end
+
+            unless exclude_tags.empty?
+              filtered = filtered.reject { |scenario| !(scenario.tags & exclude_tags).empty? }
+            end
+
+            if mode
+              normalized_mode = mode.to_s.strip.downcase
+              filtered = filtered.select { |scenario| scenario.mode == normalized_mode }
+            end
+
+            filtered
           end
         end
       end

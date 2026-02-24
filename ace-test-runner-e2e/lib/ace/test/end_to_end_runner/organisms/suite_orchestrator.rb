@@ -116,6 +116,11 @@ module Ace
 
             # Store scenario failures for use in test discovery and command building
             @scenario_failures = scenario_failures
+            @discovery_filters = {
+              tags: options[:tags],
+              exclude_tags: options[:exclude_tags],
+              mode: options[:mode]
+            }
 
             # Discover tests in each package
             package_tests = discover_package_tests(packages)
@@ -171,7 +176,13 @@ module Ace
           def discover_package_tests(packages)
             package_tests = {}
             packages.each do |package|
-              tests = @discoverer.find_tests(package: package, base_dir: @base_dir)
+              tests = @discoverer.find_tests(
+                package: package,
+                base_dir: @base_dir,
+                tags: @discovery_filters[:tags],
+                exclude_tags: @discovery_filters[:exclude_tags],
+                mode: @discovery_filters[:mode]
+              )
 
               # Filter to only failing scenarios when in --only-failures mode
               if @scenario_failures && @scenario_failures[package]

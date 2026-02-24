@@ -78,6 +78,11 @@ class TestScenarioTest < Minitest::Test
     assert_nil scenario.dir_path
     assert_nil scenario.fixture_path
     assert_equal [], scenario.test_cases
+    assert_equal [], scenario.tags
+    assert_equal "procedural", scenario.mode
+    assert_equal "isolated", scenario.execution_model
+    assert_nil scenario.tool_under_test
+    assert_equal({}, scenario.sandbox_layout)
   end
 
   def test_new_fields_set
@@ -88,12 +93,22 @@ class TestScenarioTest < Minitest::Test
       setup_steps: ["git-init", "copy-fixtures"],
       dir_path: "/tmp/scenario",
       fixture_path: "/tmp/scenario/fixtures",
-      test_cases: [tc]
+      test_cases: [tc],
+      tags: ["smoke", "happy-path"],
+      mode: "goal",
+      execution_model: "sequential",
+      tool_under_test: "ace-lint",
+      sandbox_layout: { "output/" => "Report output" }
     )
     assert_equal ["git-init", "copy-fixtures"], scenario.setup_steps
     assert_equal "/tmp/scenario", scenario.dir_path
     assert_equal "/tmp/scenario/fixtures", scenario.fixture_path
     assert_equal [tc], scenario.test_cases
+    assert_equal ["smoke", "happy-path"], scenario.tags
+    assert_equal "goal", scenario.mode
+    assert_equal "sequential", scenario.execution_model
+    assert_equal "ace-lint", scenario.tool_under_test
+    assert_equal({ "output/" => "Report output" }, scenario.sandbox_layout)
   end
 
   # test_case_ids from test_cases array
