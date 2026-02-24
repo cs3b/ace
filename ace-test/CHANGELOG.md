@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-24
+
+### Added
+- Add `test/analyze-failures` workflow to classify failing tests before applying fixes.
+
+### Changed
+- Rewrite `test/fix` as an execution-only workflow with a hard gate to prior analysis output.
+- Update testing guide references to use analyze-first then fix workflow sequencing.
+
 ## [0.1.5] - 2026-02-22
 
 ### Changed
