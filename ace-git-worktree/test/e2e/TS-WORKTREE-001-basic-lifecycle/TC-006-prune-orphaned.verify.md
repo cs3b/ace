@@ -6,15 +6,17 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-1. **All artifacts exist** — results/tc/06/ contains orphan-create evidence, prune-dry captures, prune captures, and list-after.
-2. **Orphan created** — orphan-create.txt confirms the worktree directory was manually deleted.
-3. **Dry-run detects orphan** — prune-dry.stdout identifies the orphaned worktree entry.
-4. **Prune cleans up** — prune.exit is 0 and output indicates the orphan was cleaned.
-5. **Clean state after prune** — list-after.stdout shows only the main worktree (all created worktrees are gone).
+1. **All required artifacts exist** — results/tc/06/ contains orphan-target path, prune captures, list-after, git-worktree-porcelain-after, and fs-state-after.
+2. **Prune command succeeded** — prune.exit is 0.
+3. **Final git metadata is clean** — git-worktree-porcelain-after shows only expected remaining worktrees and does not contain the orphan target.
+4. **Final filesystem is clean** — fs-state-after confirms orphan target path does not exist.
+5. **Final list is consistent** — list-after.stdout matches the clean post-prune state (no orphaned worktree entry).
+
+`prune --dry-run` output is diagnostic only and must not override final-state checks.
 
 ## Verdict
 
-- **PASS**: Orphan detected by dry-run, cleaned by prune, final list shows only main.
-- **FAIL**: Orphan not detected, prune fails, or orphan still appears after prune.
+- **PASS**: Final system state is clean after prune (git metadata + filesystem + list consistency).
+- **FAIL**: Prune fails or final system state still contains orphan artifacts/entries.
 
-Report: `PASS` or `FAIL` with evidence (prune output, list after prune).
+Report: `PASS` or `FAIL` with evidence, prioritizing final-state artifacts.
