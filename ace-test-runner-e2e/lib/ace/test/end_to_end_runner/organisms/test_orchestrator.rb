@@ -53,7 +53,7 @@ module Ace
           # @param cli_args [String, nil] Extra args for CLI providers
           # @param output [IO] Output stream for progress messages (default: $stdout)
           # @return [Array<Models::TestResult>] List of test results
-          def run(package:, test_id: nil, test_cases: nil, tags: nil,
+          def run(package:, test_id: nil, test_cases: nil, verify: false, tags: nil,
                   cli_args: nil, run_id: nil, report_dir: nil, output: $stdout)
             # Discover tests
             files = @discoverer.find_tests(
@@ -73,9 +73,17 @@ module Ace
             timestamp = run_id || generate_timestamp
 
             if files.size == 1
-              run_single_test(files.first, timestamp, cli_args, output, test_cases: test_cases, report_dir: report_dir)
+              run_single_test(
+                files.first,
+                timestamp,
+                cli_args,
+                output,
+                test_cases: test_cases,
+                verify: verify,
+                report_dir: report_dir
+              )
             else
-              run_package_tests(files, package, timestamp, cli_args, output, test_cases: test_cases)
+              run_package_tests(files, package, timestamp, cli_args, output, test_cases: test_cases, verify: verify)
             end
           end
 
@@ -154,7 +162,7 @@ module Ace
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Array<Models::TestResult>] Single-element result array
-          def run_single_test(file, timestamp, cli_args, output, test_cases: nil, report_dir: nil)
+          def run_single_test(file, timestamp, cli_args, output, test_cases: nil, verify: false, report_dir: nil)
             scenario = @loader.load(File.dirname(file))
             display = build_display_manager([scenario], output)
             setup_executor = nil
@@ -173,8 +181,16 @@ module Ace
             else
               sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, timestamp, output)
             end
-            result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
-                                       sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir)
+            result = execute_scenario(
+              scenario,
+              cli_args: cli_args,
+              run_id: run_id,
+              test_cases: test_cases,
+              sandbox_path: sandbox_path,
+              env_vars: env_vars,
+              report_dir: report_dir,
+              verify: verify
+            )
 
             # Use explicit report_dir when provided, otherwise compute from scenario
             expected_dir = report_dir || report_dir_for(scenario, timestamp)
@@ -183,7 +199,7 @@ module Ace
               # CLI providers write reports via workflow at a deterministic path.
               # Do not fall back to older report directories from other runs.
               if Dir.exist?(expected_dir)
-                result = read_agent_result(scenario, expected_dir, result)
+                result = verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
               else
                 result = missing_agent_report_result(scenario, expected_dir, result)
               end
@@ -204,7 +220,7 @@ module Ace
           # Run all tests in a package
           # @param test_cases [Array<String>, nil] Optional test case IDs to filter
           # @return [Array<Models::TestResult>] Results for all tests
-          def run_package_tests(files, package, timestamp, cli_args, output, test_cases: nil)
+          def run_package_tests(files, package, timestamp, cli_args, output, test_cases: nil, verify: false)
             # Load scenarios upfront for titles and report generation
             scenarios = files.map { |f| @loader.load(File.dirname(f)) }
 
@@ -262,8 +278,15 @@ module Ace
                   else
                     begin
                       sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
-                      result = @executor.execute(scenario, cli_args: cli_args, run_id: run_id, test_cases: scenario_test_cases,
-                                                 sandbox_path: sandbox_path, env_vars: env_vars)
+                      result = execute_scenario(
+                        scenario,
+                        cli_args: cli_args,
+                        run_id: run_id,
+                        test_cases: scenario_test_cases,
+                        sandbox_path: sandbox_path,
+                        env_vars: env_vars,
+                        verify: verify
+                      )
                     ensure
                       setup_executor&.teardown
                     end
@@ -274,7 +297,7 @@ module Ace
                   if cli_provider?
                     expected_dir = report_dir_for(scenario, run_id || timestamp)
                     if Dir.exist?(expected_dir)
-                      result = read_agent_result(scenario, expected_dir, result)
+                      result = verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
                     else
                       result = missing_agent_report_result(scenario, expected_dir, result)
                     end
@@ -362,9 +385,9 @@ module Ace
 
             metadata = YAML.safe_load_file(metadata_path, permitted_classes: [Date])
             status = metadata["status"] || fallback_result.status
-            passed = metadata.dig("results", "passed") || 0
-            failed = metadata.dig("results", "failed") || 0
-            total = metadata.dig("results", "total") || 0
+            passed = metadata["tcs-passed"] || metadata.dig("results", "passed") || 0
+            failed = metadata["tcs-failed"] || metadata.dig("results", "failed") || 0
+            total = metadata["tcs-total"] || metadata.dig("results", "total") || 0
 
             # Reconcile: if all cases passed, status should be "pass"
             if passed == total && total > 0 && status != "pass"
@@ -415,6 +438,26 @@ module Ace
           # @return [String] 7-char timestamp ID
           def default_timestamp
             Ace::B36ts.encode(Time.now.utc, format: :"50ms")
+          end
+
+          # Execute a scenario while preserving compatibility with legacy executor
+          # doubles that do not accept the newer :verify keyword.
+          def execute_scenario(scenario, cli_args:, run_id:, test_cases:, sandbox_path:, env_vars:, report_dir: nil, verify: false)
+            kwargs = {
+              cli_args: cli_args,
+              run_id: run_id,
+              test_cases: test_cases,
+              sandbox_path: sandbox_path,
+              env_vars: env_vars,
+              report_dir: report_dir
+            }
+
+            supports_verify = @executor.method(:execute).parameters.any? do |type, name|
+              type == :keyrest || (%i[key keyreq].include?(type) && name == :verify)
+            end
+            kwargs[:verify] = verify if supports_verify
+
+            @executor.execute(scenario, **kwargs)
           end
         end
       end

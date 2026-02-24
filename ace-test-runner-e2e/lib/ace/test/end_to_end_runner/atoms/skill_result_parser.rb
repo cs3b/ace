@@ -113,6 +113,69 @@ module Ace
             parse(text)
           end
 
+          # Parse verifier-mode markdown return contract.
+          #
+          # @param text [String]
+          # @return [Hash] Normalized test result payload
+          def self.parse_verifier(text)
+            raise ResultParser::ParseError, "Empty response from CLI provider" if text.nil? || text.strip.empty?
+
+            fields = {}
+            fields[:test_id] = extract_field(text, "Test ID")
+            fields[:status] = extract_field(text, "Status")
+            fields[:tcs_passed] = extract_field(text, "TCs Passed")
+            fields[:tcs_failed] = extract_field(text, "TCs Failed")
+            fields[:tcs_total] = extract_field(text, "TCs Total")
+            fields[:score] = extract_field(text, "Score")
+            fields[:verdict] = extract_field(text, "Verdict")
+            fields[:failed_tcs] = extract_field(text, "Failed TCs")
+            fields[:issues] = extract_field(text, "Issues")
+
+            return parse(text) unless fields[:test_id] && fields[:status] &&
+                                      fields[:tcs_passed] && fields[:tcs_failed] && fields[:tcs_total]
+
+            passed = fields[:tcs_passed].to_i
+            failed = fields[:tcs_failed].to_i
+            total = fields[:tcs_total].to_i
+            status = normalize_status(fields[:status])
+
+            failed_entries = parse_failed_tcs(fields[:failed_tcs])
+            test_cases = []
+            passed.times do |i|
+              test_cases << { id: "TC-#{format('%03d', i + 1)}", description: "", status: "pass", actual: "", notes: "" }
+            end
+            if failed_entries.empty?
+              failed.times do |i|
+                test_cases << { id: "TC-#{format('%03d', passed + i + 1)}", description: "", status: "fail", actual: "", notes: "" }
+              end
+            else
+              failed_entries.each do |entry|
+                test_cases << {
+                  id: entry[:tc],
+                  description: "",
+                  status: "fail",
+                  actual: "",
+                  notes: entry[:category],
+                  category: entry[:category]
+                }
+              end
+            end
+
+            summary = if total.positive?
+              "#{passed}/#{total} passed (#{fields[:verdict] || status})"
+            else
+              fields[:verdict] || status
+            end
+
+            {
+              test_id: fields[:test_id],
+              status: status,
+              test_cases: test_cases,
+              summary: summary,
+              observations: (fields[:issues].to_s.strip.casecmp("none").zero? ? "" : fields[:issues].to_s)
+            }
+          end
+
           # Parse TC-level markdown return contract
           def self.parse_tc_markdown(text)
             fields = {}
@@ -156,8 +219,20 @@ module Ace
             (value.to_s.strip.split(/\s+/).first || "unknown").downcase
           end
 
+          def self.parse_failed_tcs(value)
+            return [] if value.nil? || value.strip.empty? || value.strip.casecmp("none").zero?
+
+            value.split(",").map(&:strip).filter_map do |entry|
+              tc, category = entry.split(":", 2).map { |part| part.to_s.strip }
+              next if tc.empty?
+
+              { tc: tc.upcase, category: (category.empty? ? "unknown" : category) }
+            end
+          end
+
           private_class_method :parse_markdown, :to_normalized, :extract_field,
-                              :parse_tc_markdown, :to_tc_normalized, :normalize_status
+                              :parse_tc_markdown, :to_tc_normalized, :normalize_status,
+                              :parse_failed_tcs
         end
       end
     end

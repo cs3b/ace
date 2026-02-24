@@ -17,6 +17,7 @@ This workflow guides an agent through executing test cases in a **pre-populated 
 - `--sandbox SANDBOX_PATH` (required) - Path to the pre-populated sandbox directory
 - `--run-id RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths
 - `--env KEY=VALUE[,...]` (optional) - Comma-separated environment variables to set before execution (e.g., `--env PROJECT_ROOT_PATH=/code,MODE=test`)
+- `--verify` (optional) - Enable independent verifier mode (second agent pass with sandbox inspection)
 - `TEST_CASES` (optional) - Comma-separated list of test case IDs to execute (e.g., `TC-001,tc-003,002`). When provided, only the specified test cases are executed; all others are skipped.
 
   **Accepted formats:**
@@ -390,10 +391,15 @@ started: "{start-timestamp}"
 completed: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 duration: "{duration-seconds}s"
 status: "{status}"
-results:
-  passed: {count}
-  failed: {count}
-  total: {count}
+score: {0.0-1.0}
+verdict: pass|partial|fail
+tcs-passed: {count}
+tcs-failed: {count}
+tcs-total: {count}
+failed:
+  - tc: TC-NNN
+    category: tool-bug|runner-error|test-spec-error|infrastructure-error
+    evidence: "brief evidence"
 failed_test_cases:
   - TC-NNN
 test_cases:

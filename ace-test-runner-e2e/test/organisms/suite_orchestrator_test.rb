@@ -238,6 +238,22 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal "1", cmd[parallel_idx + 1]
   end
 
+  def test_build_test_command_includes_verify_flag_when_enabled
+    discoverer = StubDiscoverer.new(packages: [], tests: {})
+    orchestrator = SuiteOrchestrator.new(
+      discoverer: discoverer,
+      output: @output
+    )
+
+    cmd = orchestrator.send(:build_test_command,
+      "ace-lint",
+      "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+      { verify: true }
+    )
+
+    assert_includes cmd, "--verify"
+  end
+
   def test_extract_test_id_from_filename
     discoverer = StubDiscoverer.new(packages: [], tests: {})
     orchestrator = SuiteOrchestrator.new(

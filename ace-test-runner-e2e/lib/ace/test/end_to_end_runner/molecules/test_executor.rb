@@ -35,10 +35,12 @@ module Ace
           # @param env_vars [Hash, nil] Environment variables from setup execution
           # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Models::TestResult] Test execution result
-          def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
+          def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
+                      env_vars: nil, report_dir: nil, verify: false)
             if Atoms::SkillPromptBuilder.cli_provider?(@provider)
               execute_via_skill(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
-                                sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir)
+                                sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir,
+                                verify: verify)
             else
               execute_via_prompt(scenario, cli_args: cli_args, test_cases: test_cases)
             end
@@ -73,7 +75,8 @@ module Ace
           # @param env_vars [Hash, nil] Environment variables from setup execution
           # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
           # @return [Models::TestResult]
-          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil)
+          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
+                                env_vars: nil, report_dir: nil, verify: false)
             started_at = Time.now
 
             prompt = @skill_prompt_builder.build_skill_prompt(
@@ -106,6 +109,19 @@ module Ace
                 error: invocation_error,
                 started_at: started_at,
                 completed_at: Time.now
+              )
+            end
+
+            if verify
+              return execute_verifier(
+                scenario: scenario,
+                cli_args: cli_args,
+                run_id: run_id,
+                test_cases: test_cases,
+                sandbox_path: resolve_sandbox_path(sandbox_path, report_dir),
+                env_vars: env_vars,
+                report_dir: report_dir,
+                started_at: started_at
               )
             end
 
@@ -163,6 +179,66 @@ module Ace
               started_at: started_at || Time.now,
               completed_at: Time.now
             )
+          end
+
+          # Execute verifier as an independent second invocation.
+          #
+          # The verifier result is authoritative for status in verify mode.
+          def execute_verifier(scenario:, cli_args:, run_id:, test_cases:, sandbox_path:, env_vars:, report_dir:, started_at:)
+            verifier_prompt = @skill_prompt_builder.build_verifier_prompt(
+              scenario,
+              run_id: run_id,
+              sandbox_path: sandbox_path,
+              test_cases: test_cases,
+              report_dir: report_dir
+            )
+
+            merged_args = merge_cli_args(
+              Atoms::SkillPromptBuilder.required_cli_args(@provider),
+              cli_args
+            )
+
+            verifier_response = Ace::LLM::QueryInterface.query(
+              @provider,
+              verifier_prompt,
+              system: nil,
+              cli_args: merged_args,
+              timeout: @timeout,
+              fallback: false,
+              subprocess_env: env_vars
+            )
+
+            invocation_error = detect_skill_invocation_error(verifier_response[:text])
+            if invocation_error
+              return Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: "error",
+                test_cases: [],
+                summary: "Verifier invocation failed before verification",
+                error: invocation_error,
+                started_at: started_at,
+                completed_at: Time.now
+              )
+            end
+
+            parsed = Atoms::SkillResultParser.parse_verifier(verifier_response[:text])
+            completed_at = Time.now
+
+            Models::TestResult.new(
+              test_id: scenario.test_id,
+              status: parsed[:status],
+              test_cases: parsed[:test_cases],
+              summary: parsed[:summary],
+              started_at: started_at,
+              completed_at: completed_at
+            )
+          end
+
+          def resolve_sandbox_path(sandbox_path, report_dir)
+            return sandbox_path if sandbox_path && !sandbox_path.empty?
+            return nil unless report_dir
+
+            report_dir.sub(/-reports\z/, "")
           end
 
           # Execute via prompt for API providers (original behavior)

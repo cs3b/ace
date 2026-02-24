@@ -61,6 +61,8 @@ module Ace
             option :exclude_tags, type: :string, desc: "Comma-separated scenario tags to exclude"
             option :mode, type: :string, desc: "Scenario mode filter: procedural or goal"
             option :progress, type: :boolean, desc: "Enable live animated display"
+            option :verify, type: :boolean,
+                   desc: "Run independent verifier pass for each scenario"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -94,7 +96,8 @@ module Ace
                 timeout: options[:timeout],
                 tags: tags,
                 exclude_tags: exclude_tags,
-                mode: mode
+                mode: mode,
+                verify: options[:verify]
               )
 
               if results[:total].zero?

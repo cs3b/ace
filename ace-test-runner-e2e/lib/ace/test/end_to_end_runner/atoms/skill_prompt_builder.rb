@@ -92,6 +92,49 @@ module Ace
             build_execution_prompt(command: cmd, tc_mode: true)
           end
 
+          # Build an independent verifier prompt.
+          #
+          # This is intentionally a second invocation to avoid sharing runner context.
+          def build_verifier_prompt(scenario, run_id: nil, sandbox_path: nil, test_cases: nil, report_dir: nil)
+            report_dir ||= if run_id
+              ".cache/ace-test-e2e/#{scenario.dir_name(run_id)}-reports"
+            end
+
+            tc_filter = test_cases&.any? ? test_cases.join(", ") : "all discovered test cases"
+            sandbox_info = sandbox_path || "(unknown)"
+            report_info = report_dir || "(unknown)"
+
+            <<~PROMPT.strip
+              You are the independent verifier for an E2E scenario.
+
+              Verify this scenario in a new, isolated agent context:
+              - Package: #{scenario.package}
+              - Test ID: #{scenario.test_id}
+              - Sandbox path: #{sandbox_info}
+              - Report directory: #{report_info}
+              - Scope: #{tc_filter}
+
+              Verification requirements:
+              - Inspect sandbox artifacts and scenario files directly.
+              - Evaluate each test case using `TC-*.verify.md` criteria when present.
+              - Classify each failed test case with one category:
+                `test-spec-error`, `tool-bug`, `runner-error`, or `infrastructure-error`.
+              - Write/update report files under the report directory.
+              - Use TC-first schema in report frontmatter and metadata.
+
+              Return only this structured summary:
+              - **Test ID**: ...
+              - **Status**: pass | fail | partial | error
+              - **TCs Passed**: ...
+              - **TCs Failed**: ...
+              - **TCs Total**: ...
+              - **Score**: ...
+              - **Verdict**: pass | partial | fail
+              - **Failed TCs**: TC-001:tool-bug, TC-002:runner-error (or `None`)
+              - **Issues**: ...
+            PROMPT
+          end
+
           # Lazily-loaded default instance backed by ConfigLoader
           # @return [SkillPromptBuilder]
           def self.default_instance

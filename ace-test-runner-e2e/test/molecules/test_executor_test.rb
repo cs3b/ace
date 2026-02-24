@@ -233,6 +233,32 @@ class TestExecutorTest < Minitest::Test
     assert captured_prompt.include?("--sandbox /tmp/sb"), "Non-claude CLI should pass --sandbox"
   end
 
+  def test_execute_verify_mode_runs_runner_then_verifier
+    executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+    scenario = create_scenario(test_id: "TS-B36TS-001")
+
+    prompts = []
+    responses = [
+      { text: "- **Test ID**: TS-B36TS-001\n- **Status**: pass\n- **Passed**: 8\n- **Failed**: 0\n- **Total**: 8\n- **Issues**: None" },
+      { text: "- **Test ID**: TS-B36TS-001\n- **Status**: partial\n- **TCs Passed**: 6\n- **TCs Failed**: 2\n- **TCs Total**: 8\n- **Score**: 0.75\n- **Verdict**: partial\n- **Failed TCs**: TC-003:test-spec-error, TC-007:tool-bug\n- **Issues**: None" }
+    ]
+
+    Ace::LLM::QueryInterface.stub(:query, lambda { |*args, **_kw|
+      prompts << args[1]
+      responses.shift
+    }) do
+      result = executor.execute(scenario, sandbox_path: "/tmp/sb", verify: true)
+
+      assert_equal "partial", result.status
+      assert_equal 8, result.test_cases.size
+      assert_equal 2, result.test_cases.count { |tc| tc[:status] == "fail" }
+    end
+
+    assert_equal 2, prompts.size
+    assert prompts[0].include?("/ace-e2e-run"), "First invocation should be runner command"
+    assert prompts[1].include?("independent verifier"), "Second invocation should be verifier prompt"
+  end
+
   private
 
   def create_scenario(overrides = {})
