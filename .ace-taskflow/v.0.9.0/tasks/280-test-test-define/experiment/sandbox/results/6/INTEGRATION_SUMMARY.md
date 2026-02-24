@@ -7,7 +7,7 @@
 - **Output Format**: Hierarchical path
 - **Downstream Tool**: `mkdir -p`
 - **Result**: Successfully created directory structure: `8d/4/m/i00`
-- **Proof**: Directory created at `results/6/test-structure/8d/4/m/i00/`
+- **Proof**: Directory created at `results/tc/06/test-structure/8d/4/m/i00/`
 
 ### 2. JSON Array → JQ Parsing
 - **Source**: `ace-b36ts encode '2025-02-23 12:00:00' --count 3 --format ms --json`
