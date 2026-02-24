@@ -5,8 +5,6 @@ package: ace-support-nav
 priority: high
 tags: [smoke, happy-path, "use-case:nav"]
 cost-tier: smoke
-mode: goal
-execution-model: sequential
 tool-under-test: ace-nav
 
 sandbox-layout:
