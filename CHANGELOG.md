@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.614] - 2026-02-24
+
+### Technical
+- **ace-test-runner v0.15.7**: Patch release requested to keep package versioning aligned; no functional `ace-test-runner` code changes in this bump
+
 ## [0.9.613] - 2026-02-24
 
 ### Changed
