@@ -22,7 +22,7 @@ module Ace
               Discovers and executes TS-* test scenarios from all packages
               in the monorepo. Tests run sequentially by default or in parallel
               with --parallel flag. Use --affected to only test changed packages.
-              Use --only-failures to re-run only previously failed test cases.
+              Use --only-failures to re-run only previously failed scenarios.
               Optionally filter to specific packages with a comma-separated list.
 
               Output:
@@ -38,8 +38,8 @@ module Ace
               "--parallel 4                  # Run with 4 parallel workers",
               "--affected                    # Only test changed packages",
               "--affected --parallel 8       # Parallel affected tests only",
-              "--only-failures               # Re-run only failed tests",
-              "--affected --only-failures    # Re-run failures in affected packages",
+              "--only-failures               # Re-run failed scenarios from cache",
+              "--affected --only-failures    # Re-run failed scenarios in affected packages",
               "--tags smoke,happy-path       # Include scenarios by tag",
               "--exclude-tags deep           # Exclude scenarios by tag",
               "--cli-args dangerously-skip-permissions  # Pass args to provider"
@@ -49,7 +49,7 @@ module Ace
                    desc: "Number of parallel workers (0 = sequential)"
             option :affected, type: :boolean, desc: "Only test affected packages"
             option :only_failures, type: :boolean,
-                   desc: "Re-run only previously failed test cases"
+                   desc: "Re-run only previously failed scenarios"
             option :cli_args, type: :string,
                    desc: "Extra args for CLI-based LLM providers"
             option :provider, type: :string, default: Molecules::ConfigLoader.default_provider,
@@ -99,7 +99,7 @@ module Ace
               if results[:total].zero?
                 if only_failures
                   raise Ace::Core::CLI::Error.new(
-                    "No failed test cases found in cache"
+                    "No failed test scenarios found in cache"
                   )
                 else
                   raise Ace::Core::CLI::Error.new("No tests found to run")

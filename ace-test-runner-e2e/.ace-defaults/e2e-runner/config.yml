@@ -47,7 +47,7 @@ execution:
 
 # Provider configuration
 providers:
-  # CLI providers can execute commands (skill/workflow mode)
+  # CLI providers use deterministic pipeline execution (runner + verifier)
   cli:
     - claude
     - gemini

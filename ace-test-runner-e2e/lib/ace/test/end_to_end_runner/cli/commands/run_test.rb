@@ -35,10 +35,7 @@ module Ace
               "ace-lint --provider gemini:flash  # Use specific provider",
               "ace-lint --provider glite     # Use API provider (predict mode)",
               "ace-lint --tags smoke         # Run only smoke-tagged scenarios",
-              "ace-lint TS-LINT-003 --test-cases tc-001,002  # Run specific test cases",
-              "ace-lint TS-LINT-003 --test-cases TC-001 --dry-run  # Preview test cases",
-              "ace-lint --only-failures      # Re-run only previously failed test cases",
-              "ace-lint --only-failures --dry-run  # Preview which failures would re-run"
+              "ace-lint TS-LINT-003 --dry-run  # Preview scenarios that would run"
             ]
 
             argument :package, required: true, desc: "Package name (e.g., ace-lint)"
@@ -57,12 +54,8 @@ module Ace
                    desc: "Pre-generated run ID for deterministic report paths"
             option :report_dir, type: :string,
                    desc: "Explicit report directory path (overrides computed path)"
-            option :test_cases, type: :string,
-                   desc: "Comma-separated test case IDs to run (e.g., tc-001,002,TC-3)"
             option :dry_run, type: :boolean,
-                   desc: "Preview which test cases would run without executing"
-            option :only_failures, type: :boolean,
-                   desc: "Re-run only previously failed test cases"
+                   desc: "Preview which scenarios would run without executing"
             option :tags, type: :string,
                    desc: "Comma-separated scenario tags to include"
             option :verify, type: :boolean,
@@ -75,22 +68,9 @@ module Ace
               options = convert_types(options, timeout: :integer, parallel: :integer)
               output = quiet?(options) ? StringIO.new : $stdout
 
-              # Validate mutually exclusive flags
-              validate_exclusive_flags!(options)
-
-              # Resolve --only-failures to test case IDs
-              if options[:only_failures]
-                test_cases = resolve_only_failures(package, output)
-              else
-                # Parse and normalize test case IDs if provided
-                test_cases = parse_test_cases(options[:test_cases])
-              end
-
               # Handle dry-run mode
               if options[:dry_run]
-                return handle_dry_run(package, test_id, test_cases, output,
-                                      tags: parse_tags(options[:tags]),
-                                      only_failures_wildcard: options[:only_failures] && test_cases.nil?)
+                return handle_dry_run(package, test_id, output, tags: parse_tags(options[:tags]))
               end
 
               orchestrator = Organisms::TestOrchestrator.new(
@@ -103,7 +83,6 @@ module Ace
               results = orchestrator.run(
                 package: package,
                 test_id: test_id,
-                test_cases: test_cases,
                 verify: options[:verify],
                 tags: parse_tags(options[:tags]),
                 cli_args: options[:cli_args],
@@ -119,12 +98,6 @@ module Ace
                 )
               end
 
-              # Warn if test cases were specified but resulted in all skips (no matches)
-              if test_cases && results.all? { |r| r.status == "skip" }
-                output.puts "Warning: No matching test cases found for '#{test_cases.join(', ')}'. " \
-                            "Available test cases may differ. Use --dry-run to preview available cases."
-              end
-
               # Exit with error if any test failed (excluding skips)
               if results.any?(&:failed?)
                 failed = results.select(&:failed?)
@@ -137,66 +110,12 @@ module Ace
 
             private
 
-            # Validate that mutually exclusive flags are not combined
-            #
-            # @param options [Hash] CLI options
-            # @raise [Ace::Core::CLI::Error] If conflicting flags are used together
-            def validate_exclusive_flags!(options)
-              if options[:test_cases] && options[:only_failures]
-                raise Ace::Core::CLI::Error.new(
-                  "--test-cases and --only-failures are mutually exclusive. " \
-                  "Use one or the other."
-                )
-              end
-            end
-
-            # Resolve --only-failures flag by scanning cache for failed test cases
-            #
-            # @param package [String] Package name
-            # @param output [IO] Output stream
-            # @return [Array<String>, nil] Failed test case IDs, or nil for wildcard (run all)
-            # @raise [Ace::Core::CLI::Error] If no failures found
-            def resolve_only_failures(package, output)
-              finder = Molecules::FailureFinder.new
-              failed_ids = finder.find_failures(package: package, base_dir: Dir.pwd)
-
-              if failed_ids.empty?
-                raise Ace::Core::CLI::Error.new(
-                  "No failed test cases found for package '#{package}'. " \
-                  "Run tests first, then use --only-failures to re-run failures."
-                )
-              end
-
-              # Wildcard means "re-run entire test" (legacy metadata without specific IDs)
-              if failed_ids.include?("*")
-                output.puts "Found previously failed test(s) (no granular test case data — will re-run all test cases)"
-                return nil
-              end
-
-              output.puts "Found #{failed_ids.size} previously failed test case(s): #{failed_ids.join(', ')}"
-              failed_ids
-            end
-
-            # Parse comma-separated test case IDs into normalized format
-            #
-            # @param raw [String, nil] Raw test cases string from CLI
-            # @return [Array<String>, nil] Normalized test case IDs or nil
-            def parse_test_cases(raw)
-              return nil if raw.nil? || raw.strip.empty?
-
-              Atoms::TestCaseParser.parse(raw)
-            rescue ArgumentError => e
-              raise Ace::Core::CLI::Error.new("Invalid test cases: #{e.message}")
-            end
-
-            # Handle dry-run mode: preview which test cases would run
+            # Handle dry-run mode: preview which scenarios would run
             #
             # @param package [String] Package name
             # @param test_id [String, nil] Test ID
-            # @param test_cases [Array<String>, nil] Normalized test case IDs
             # @param output [IO] Output stream
-            # @param only_failures_wildcard [Boolean] True when --only-failures resolved to wildcard
-            def handle_dry_run(package, test_id, test_cases, output, tags: [], only_failures_wildcard: false)
+            def handle_dry_run(package, test_id, output, tags: [])
               discoverer = Molecules::TestDiscoverer.new
               loader = Molecules::ScenarioLoader.new
 
@@ -213,31 +132,13 @@ module Ace
                 )
               end
 
-              output.puts "Dry run: preview of test cases to execute"
+              output.puts "Dry run: preview of scenarios to execute"
               output.puts ""
 
               files.each do |file|
                 scenario = loader.load(File.dirname(file))
-                available_ids = scenario.test_case_ids
                 output.puts "#{scenario.test_id}: #{scenario.title}"
-
-                if test_cases
-                  # Intersect with available IDs (test cases may span multiple scenarios)
-                  matching = test_cases & available_ids
-                  matching.each { |tc| output.puts "  [run] #{tc}" }
-                  skipped = available_ids - test_cases
-                  skipped.each { |tc| output.puts "  [skip] #{tc}" }
-                  if matching.empty?
-                    output.puts "  (no matching test cases)"
-                  end
-                elsif only_failures_wildcard
-                  # Wildcard: no granular failure data, run all test cases in failed scenario
-                  output.puts "  [run] all test cases (no granular failure data available)"
-                else
-                  # Show all test cases
-                  available_ids.each { |tc| output.puts "  [run] #{tc}" }
-                end
-
+                output.puts "  [run] full scenario (#{scenario.test_case_ids.size} test cases)"
                 output.puts ""
               end
             end

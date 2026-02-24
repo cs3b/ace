@@ -92,7 +92,7 @@ module Ace
           # Check if the current provider is a CLI provider
           # @return [Boolean]
           def cli_provider?
-            Atoms::SkillPromptBuilder.cli_provider?(@provider)
+            Atoms::CliProviderAdapter.cli_provider?(@provider)
           end
 
           # Run deterministic setup in Ruby before handing off to LLM
@@ -170,7 +170,7 @@ module Ace
             if test_cases
               output.puts "Filtering test cases: #{test_cases.join(', ')}"
             end
-            output.puts "Executing via #{@provider}#{cli_provider? ? " (skill mode)" : ""}..."
+            output.puts "Executing via #{@provider}#{cli_provider? ? " (pipeline mode: runner+verifier)" : ""}..."
 
             run_id = cli_provider? ? timestamp : nil
             # When report_dir is provided, derive sandbox path from it (strip -reports suffix)

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-02-24
+
+### Fixed
+- Harden verifier goal parsing for standalone pipeline reports: accept both `##` and `###` goal headings, normalize emphasized verdict tokens, and extract failure categories from mixed category text
+- Ensure deterministic `*-reports` output on pipeline failures by writing structured error reports (summary, experience, metadata, and goal report) instead of leaving missing report directories
+- Improve suite subprocess parsing to reliably extract the final `Report:` and `Error:` lines and preserve error summaries from metadata reconciliation
+
+### Changed
+- Rename CLI provider helper to `CliProviderAdapter` and keep `SkillPromptBuilder` as a backward-compatible alias
+- Route executor/orchestrator CLI-provider detection and required-args lookup through the new adapter name
+- Standardize `--only-failures` behavior around scenario-level reruns and update suite messaging accordingly
+- Prefer workspace-local `bin/ace-test-e2e` when suite orchestration spawns subprocesses
+
+### Technical
+- Expand parser and pipeline tests for h2/h3 goal headings, category normalization, deterministic failure report generation, and adapter alias compatibility
+- Update workflow/config wording to reflect deterministic pipeline execution terminology
+
 ## [0.18.0] - 2026-02-24
 
 ### Changed
