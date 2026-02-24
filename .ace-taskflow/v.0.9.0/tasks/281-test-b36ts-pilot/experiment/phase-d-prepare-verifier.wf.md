@@ -89,6 +89,10 @@ Final line: **Results: X/8 passed**
 
 ### 3. Implementation
 
+The `verifier.yml.md` file has `bundle:` frontmatter listing all 8 verify goal files
+with the header/rules. Use `ace-bundle` for the verification criteria, then prepend
+the sandbox artifacts (which ace-bundle can't collect since they're runtime output).
+
 ```bash
 TASK_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SANDBOX_DIR="$TASK_DIR/experiment/sandbox"
@@ -105,10 +109,9 @@ Rules:
 - Follow the output format exactly
 SYSTEM_EOF
 
-# Verifier prompt — artifacts + verification criteria
+# Verifier prompt — artifacts (manual) + verification criteria (ace-bundle)
 {
-  echo "# E2E Verification: ace-b36ts Goal-Based Pilot"
-  echo ""
+  # Part 1: Sandbox artifacts (collected at runtime, not bundleable)
   echo "## Sandbox Artifacts"
   echo ""
   echo "### Directory tree"
@@ -127,26 +130,9 @@ SYSTEM_EOF
   done
   echo "---"
   echo ""
-  echo "## Verification Criteria"
-  for i in 1 2 3 4 5 6 7 8; do
-    name=$(ls "$GOAL_DIR"/goal-${i}-*.verify.md)
-    echo ""
-    echo "---"
-    echo ""
-    cat "$name"
-  done
-  echo ""
-  echo "---"
-  echo ""
-  echo "## Output Format"
-  echo ""
-  echo "For each goal output:"
-  echo ""
-  echo "### Goal N — <title>"
-  echo "- **Verdict**: PASS | FAIL"
-  echo "- **Evidence**: <specific file/content citations>"
-  echo ""
-  echo "Final line: **Results: X/8 passed**"
+
+  # Part 2: Verification criteria from verifier.yml.md (header + all 8 verify goals)
+  ace-bundle "$GOAL_DIR/verifier.yml.md"
 } > "$SANDBOX_DIR/.cache/ace-e2e/verifier-prompt.md"
 ```
 

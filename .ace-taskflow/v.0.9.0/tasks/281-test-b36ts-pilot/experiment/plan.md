@@ -35,7 +35,7 @@ experiment/
 
 ## Key Design Decisions
 
-- **ace-llm with CLI provider** (`claude:sonnet`) — invokes `claude -p` which has full bash/tool access
+- **ace-llm with CLI provider** — runner uses `claude:haiku`, verifier uses `claude:opus`
 - **Same tool for runner + verifier** — uniform execution model
 - **sandbox/ is gitignored** — ephemeral execution artifacts
 - **Report with YAML frontmatter** — machine-parseable metadata + human-readable body
