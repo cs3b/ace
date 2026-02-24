@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.621] - 2026-02-24
+
+### Fixed
+- **ace-git-worktree v0.13.16**: Fix dry-cli list flag forwarding so `--task-associated`, `--no-task-associated`, and `--no-usable` apply the intended filters instead of collapsing false-valued flags.
+
 ## [0.9.620] - 2026-02-24
 
 ### Fixed
