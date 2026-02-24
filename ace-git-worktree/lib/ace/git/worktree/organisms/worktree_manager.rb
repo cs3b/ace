@@ -275,8 +275,10 @@ module Ace
           # @option options [String] :search Filter by search pattern
           def list_all(options = {})
             begin
+              task_filter_requested = !options[:task_associated].nil?
+
               # Get worktrees
-              worktrees = if options[:show_tasks]
+              worktrees = if options[:show_tasks] || task_filter_requested
                           @worktree_lister.list_with_tasks
                         else
                           @worktree_lister.list_all
