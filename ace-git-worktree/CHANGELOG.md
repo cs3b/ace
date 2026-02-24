@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.16] - 2026-02-24
+
+### Fixed
+- Restore correct `list` filter behavior for `--task-associated`, `--no-task-associated`, and `--no-usable` when invoked via the dry-cli command path by preserving explicit false flags during CLI-to-legacy argument forwarding.
+
+### Technical
+- Add CLI regression coverage to assert forwarding of `--task-associated`, `--no-task-associated`, and `--no-usable` to `ListCommand`.
+
 ## [0.13.15] - 2026-02-24
 
 ### Fixed

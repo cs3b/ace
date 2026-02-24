@@ -99,6 +99,54 @@ class CliTest < Minitest::Test
     assert_match(/Task|Branch|Path|Summary|worktree/i, combined_output)
   end
 
+  def test_list_cli_forwards_task_associated_true_filter
+    captured_args = nil
+    fake = Object.new
+    fake.define_singleton_method(:run) do |args|
+      captured_args = args
+      0
+    end
+
+    Ace::Git::Worktree::Commands::ListCommand.stub(:new, fake) do
+      run_cli(["list", "--task-associated"])
+    end
+
+    assert_includes captured_args, "--task-associated"
+    refute_includes captured_args, "--no-task-associated"
+  end
+
+  def test_list_cli_forwards_task_associated_false_filter
+    captured_args = nil
+    fake = Object.new
+    fake.define_singleton_method(:run) do |args|
+      captured_args = args
+      0
+    end
+
+    Ace::Git::Worktree::Commands::ListCommand.stub(:new, fake) do
+      run_cli(["list", "--no-task-associated"])
+    end
+
+    assert_includes captured_args, "--no-task-associated"
+    refute_includes captured_args, "--task-associated"
+  end
+
+  def test_list_cli_forwards_no_usable_filter
+    captured_args = nil
+    fake = Object.new
+    fake.define_singleton_method(:run) do |args|
+      captured_args = args
+      0
+    end
+
+    Ace::Git::Worktree::Commands::ListCommand.stub(:new, fake) do
+      run_cli(["list", "--no-usable"])
+    end
+
+    assert_includes captured_args, "--no-usable"
+    refute_includes captured_args, "--usable"
+  end
+
   def test_remove_command_with_dry_run
     output = run_cli(["remove", "/some/path", "--dry-run"])
     # Check for dry-run output (may be in stderr)
