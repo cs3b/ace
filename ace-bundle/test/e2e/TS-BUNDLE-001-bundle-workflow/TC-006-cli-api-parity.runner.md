@@ -17,4 +17,6 @@ Save all output to `results/tc/06/`. Capture:
 
 - The sandbox has `test-context.md` as the test input file.
 - For API output, use: `ruby -r ace/bundle -e 'result = Ace::Bundle.load_file("test-context.md"); puts result.content'`
+- For API error case, treat `result.metadata[:error]` as failure and exit non-zero. Example:
+  `ruby -r ace/bundle -e 'result = Ace::Bundle.load_file("nonexistent-file.md"); if result.metadata[:error]; warn result.metadata[:error]; exit 1; else puts result.content; end'`
 - All artifacts must come from real tool execution, not fabricated.
