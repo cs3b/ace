@@ -14,6 +14,10 @@ Save all output to `results/tc/04/`. Capture:
 ## Constraints
 
 - For JSON output: use the scan command with JSON format flag discovered in Goal 1.
-- For whitelist: create a config that excludes the `test/` directory, then scan.
+- For whitelist: create `.ace/git-secrets/config.yml` (exact path) with a whitelist file rule excluding `test/**`, then scan.
+- Example whitelist entry:
+  - `whitelist:`
+  - `  - file: "test/**"`
+  - `    reason: "E2E fixture tokens"`
 - The sandbox has `test/mock_tokens.json` (should be excluded by whitelist) and `config.env` (should still be detected).
 - All artifacts must come from real tool execution, not fabricated.

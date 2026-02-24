@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.11] - 2026-02-24
+
+### Technical
+- Correct TS-SECRETS-001 E2E runner config path references to `.ace/git-secrets/config.yml` and document whitelist file-rule setup for fixture exclusions.
+
 ## [0.7.10] - 2026-02-23
 
 ### Technical
