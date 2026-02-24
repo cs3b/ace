@@ -299,7 +299,7 @@ module Ace
               )
 
               # Get statistics
-              stats = @worktree_lister.get_statistics
+              stats = @worktree_lister.get_statistics(worktrees)
 
               {
                 success: true,
