@@ -31,10 +31,11 @@ Evolve the E2E test runner from flat scenario execution to a structured, filtera
 - **280.05** — Goal-Based Test Case Format: Two formats — inline `mode: goal` TCs and standalone `TC-*.runner.md`/`TC-*.verify.md`
 - **280.06** — Independent Verifier Agent Pattern: Sandbox-aware verifier with filesystem access for higher confidence
 - **280.07** — Handbook/Workflow/Template Migration: Update all `ace-test-runner-e2e` guides, workflows, and templates to the new canonical format
+- **280.08** — 6-Phase Goal-Mode Execution Pipeline: Implement the validated experiment pipeline (sandbox setup, prompt bundling, dual-agent execution, deterministic report generation)
 
 ## Dependency Chain
 
-280.01 (live b36ts migration) → 280.02 (vision) → 280.03 (tags infra) → 280.04 (classification uses tags) → 280.05 (goal format) → 280.06 (verifier) → 280.07 (handbook/workflow/template alignment)
+280.01 (live b36ts migration) → 280.02 (vision) → 280.03 (tags infra) → 280.04 (classification uses tags) → 280.05 (goal format) → 280.06 (verifier) → 280.07 (handbook/workflow/template alignment) → 280.08 (6-phase pipeline implementation)
 
 ## Success Criteria
 
