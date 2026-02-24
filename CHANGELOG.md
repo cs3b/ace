@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.618] - 2026-02-24
+
+### Fixed
+- **ace-assign v0.12.19**: Scope report execution for `<assignment>@<phase>` to fork-subtree context so child-phase completion uses the correct report path resolution.
+- **ace-git-worktree v0.13.14**: Fix filtered list statistics to compute totals from the filtered worktree set.
+
+### Changed
+- **ace-test-e2e v0.19.1**: Raise default CLI pipeline timeout to 600 seconds to reduce infrastructure timeout failures in longer scenarios.
+
+### Technical
+- **ace-bundle v0.31.3**: Harden CLI/API parity E2E error-path instructions to map API error metadata to non-zero failures.
+- **ace-git-secrets v0.7.11**: Correct E2E config-path and whitelist instructions for `git-secrets` scenario execution.
+- **ace-review v0.42.2**: Harden preset-composition E2E runner/verifier criteria for dry-run subject and artifact checks.
+
 ## [0.9.617] - 2026-02-24
 
 ### Added
