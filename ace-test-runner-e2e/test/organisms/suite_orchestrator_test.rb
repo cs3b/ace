@@ -196,7 +196,7 @@ class SuiteOrchestratorTest < Minitest::Test
     )
 
     assert_kind_of Array, cmd
-    assert_includes cmd, "ace-test-e2e"
+    assert_equal "ace-test-e2e", File.basename(cmd.first)
     assert_includes cmd, "ace-lint"
     assert_includes cmd, "TS-LINT-001"
 
@@ -234,6 +234,31 @@ class SuiteOrchestratorTest < Minitest::Test
     parallel_idx = cmd.index("--parallel")
     refute_nil parallel_idx
     assert_equal "1", cmd[parallel_idx + 1]
+  end
+
+  def test_build_test_command_prefers_local_bin_wrapper_when_available
+    Dir.mktmpdir do |tmpdir|
+      bin_dir = File.join(tmpdir, "bin")
+      FileUtils.mkdir_p(bin_dir)
+      local_exe = File.join(bin_dir, "ace-test-e2e")
+      File.write(local_exe, "#!/bin/sh\nexit 0\n")
+      FileUtils.chmod(0o755, local_exe)
+
+      discoverer = StubDiscoverer.new(packages: [], tests: {})
+      orchestrator = SuiteOrchestrator.new(
+        base_dir: tmpdir,
+        discoverer: discoverer,
+        output: @output
+      )
+
+      cmd = orchestrator.send(:build_test_command,
+        "ace-lint",
+        "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
+        {}
+      )
+
+      assert_equal local_exe, cmd.first
+    end
   end
 
   def test_build_test_command_includes_verify_flag_when_enabled
@@ -966,8 +991,8 @@ class SuiteOrchestratorTest < Minitest::Test
     refute_includes results[:packages].keys, "ace-review"
 
     # Progress messages
-    assert_match(/Packages with failures: ace-lint/, @output.string)
-    assert_match(%r{ace-lint/TS-LINT-001: TC-001, TC-003}, @output.string)
+    assert_match(/Packages with failed scenarios: ace-lint/, @output.string)
+    assert_match(%r{ace-lint/TS-LINT-001}, @output.string)
   end
 
   def test_run_with_only_failures_returns_empty_when_no_failures
@@ -986,10 +1011,10 @@ class SuiteOrchestratorTest < Minitest::Test
     results = orchestrator.run(only_failures: true, parallel: false)
 
     assert_equal 0, results[:total]
-    assert_match(/No failed test cases found in cache/, @output.string)
+    assert_match(/No failed test scenarios found in cache/, @output.string)
   end
 
-  def test_run_with_only_failures_passes_test_cases_to_command
+  def test_run_with_only_failures_does_not_add_test_case_filters_to_command
     discoverer = StubDiscoverer.new(
       packages: ["ace-lint"],
       tests: { "ace-lint" => ["/path/to/TS-LINT-001-test/scenario.yml"] }
@@ -1014,9 +1039,7 @@ class SuiteOrchestratorTest < Minitest::Test
       {}
     )
 
-    test_cases_idx = cmd.index("--test-cases")
-    refute_nil test_cases_idx, "Command should include --test-cases flag"
-    assert_equal "TC-001,TC-003", cmd[test_cases_idx + 1]
+    refute_includes cmd, "--test-cases"
   end
 
   def test_run_with_only_failures_no_test_cases_without_failures
@@ -1026,7 +1049,7 @@ class SuiteOrchestratorTest < Minitest::Test
       output: @output
     )
 
-    # Without @package_failures set (nil), no --test-cases should appear
+    # Without scenario failures, no --test-cases should appear
     cmd = orchestrator.send(:build_test_command,
       "ace-lint",
       "/path/to/ace-lint/test/e2e/TS-LINT-001-test/scenario.yml",
@@ -1151,18 +1174,18 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_includes results[:packages].keys, "ace-lint"
     assert_includes results[:packages].keys, "ace-review"
 
-    assert_match(/Packages with failures: ace-lint, ace-review/, @output.string)
-    assert_match(%r{ace-review/TS-REVIEW-001: TC-002, TC-003}, @output.string)
+    assert_match(/Packages with failed scenarios: ace-lint, ace-review/, @output.string)
+    assert_match(%r{ace-review/TS-REVIEW-001}, @output.string)
   end
 
-  def test_build_test_command_omits_test_cases_for_wildcard_failures
+  def test_build_test_command_omits_test_cases_for_scenario_failures
     discoverer = StubDiscoverer.new(packages: [], tests: {})
     orchestrator = SuiteOrchestrator.new(
       discoverer: discoverer,
       output: @output
     )
 
-    # Wildcard failures = re-run entire test, no --test-cases filter
+    # Scenario-level failures always re-run full scenario, no --test-cases filter
     orchestrator.instance_variable_set(:@scenario_failures,
       { "ace-lint" => { "TS-LINT-001" => ["*"] } })
 
@@ -1217,7 +1240,7 @@ class SuiteOrchestratorTest < Minitest::Test
     assert_equal ["TS-SECRETS-001-test"], orchestrator.executed_tests
   end
 
-  def test_run_with_only_failures_per_scenario_test_cases
+  def test_run_with_only_failures_keeps_scenario_scope_without_test_case_flags
     # Two scenarios in same package with different failing TCs
     discoverer = StubDiscoverer.new(
       packages: ["ace-git-secrets"],
@@ -1243,7 +1266,7 @@ class SuiteOrchestratorTest < Minitest::Test
       output: @output
     )
 
-    # Set up @scenario_failures to test build_test_command per-scenario
+    # Set up @scenario_failures to ensure per-scenario filtering in discovery only
     orchestrator.instance_variable_set(:@scenario_failures, {
       "ace-git-secrets" => {
         "TS-SECRETS-001" => ["TC-001"],
@@ -1262,15 +1285,8 @@ class SuiteOrchestratorTest < Minitest::Test
       {}
     )
 
-    # TS-SECRETS-001 should get TC-001
-    tc_idx1 = cmd1.index("--test-cases")
-    refute_nil tc_idx1
-    assert_equal "TC-001", cmd1[tc_idx1 + 1]
-
-    # TS-SECRETS-002 should get TC-002,TC-003
-    tc_idx2 = cmd2.index("--test-cases")
-    refute_nil tc_idx2
-    assert_equal "TC-002,TC-003", cmd2[tc_idx2 + 1]
+    refute_includes cmd1, "--test-cases"
+    refute_includes cmd2, "--test-cases"
   end
 
   def test_file_matches_test_id_with_descriptive_suffix
@@ -1347,9 +1363,8 @@ class SuiteOrchestratorTest < Minitest::Test
       {}
     )
 
-    tc_idx = cmd.index("--test-cases")
-    refute_nil tc_idx, "Should match test-id despite filename suffix"
-    assert_equal "TC-001,TC-003", cmd[tc_idx + 1]
+    assert_equal "ace-test-e2e", File.basename(cmd.first)
+    refute_includes cmd, "--test-cases"
   end
 
   # --- Subprocess output saving tests ---

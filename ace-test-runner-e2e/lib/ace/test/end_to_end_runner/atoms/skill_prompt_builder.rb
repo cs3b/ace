@@ -4,12 +4,12 @@ module Ace
   module Test
     module EndToEndRunner
       module Atoms
-        # Builds skill invocation prompts for CLI-provider E2E test execution
+        # Holds CLI-provider detection and CLI-args helpers.
         #
-        # All CLI providers use skill invocation (/ace-e2e-run). The skill
-        # routes to the appropriate workflow based on arguments (--sandbox present
-        # or not). Provider lists and CLI args are configurable via config.yml.
-        class SkillPromptBuilder
+        # Standalone scenario execution for CLI providers now runs through the
+        # deterministic runner/verifier pipeline.
+        # Provider lists and CLI args are configurable via config.yml.
+        class CliProviderAdapter
           # @param config [Hash] Configuration hash (string keys) with providers section
           def initialize(config = {})
             @cli_providers = config.dig("providers", "cli") || %w[claude gemini codex codexoss opencode pi]
@@ -136,7 +136,7 @@ module Ace
           end
 
           # Lazily-loaded default instance backed by ConfigLoader
-          # @return [SkillPromptBuilder]
+          # @return [CliProviderAdapter]
           def self.default_instance
             @default_instance ||= begin
               config = if defined?(Molecules::ConfigLoader)
@@ -175,6 +175,9 @@ module Ace
             PROMPT
           end
         end
+
+        # Backward-compatible alias while callers migrate off the legacy name.
+        SkillPromptBuilder = CliProviderAdapter
       end
     end
   end

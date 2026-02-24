@@ -329,7 +329,7 @@ class TestOrchestratorTest < Minitest::Test
       assert_equal "error", results.first.status
       assert_equal expected_dir, results.first.report_dir
       assert_includes results.first.error, "Expected report directory was not created"
-      assert_match(/skill mode/, @output.string)
+      assert_match(/pipeline mode: runner\+verifier/, @output.string)
     end
   end
 
@@ -384,7 +384,7 @@ class TestOrchestratorTest < Minitest::Test
       assert_equal 1, results.size
       report_dir = results.first.report_dir
       assert Dir.exist?(report_dir), "API provider should create report dir via ReportWriter"
-      refute_match(/skill mode/, @output.string)
+      refute_match(/pipeline mode: runner\+verifier/, @output.string)
     end
   end
 

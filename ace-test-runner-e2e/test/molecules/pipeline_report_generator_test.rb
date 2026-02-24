@@ -16,11 +16,11 @@ class PipelineReportGeneratorTest < Minitest::Test
         scenario: build_scenario(tmpdir),
         verifier_output: <<~OUT,
           ### Goal 1 - Help Survey
-          - **Verdict**: PASS
+          - **Verdict**: **PASS**
           - **Evidence**: results/tc/01/help.txt has encode/decode commands
 
           ### Goal 2 - Roundtrip
-          - **Verdict**: FAIL
+          - **Verdict**: **FAIL**
           - **Category**: tool-bug
           - **Evidence**: decoded date does not match original
 
@@ -46,6 +46,62 @@ class PipelineReportGeneratorTest < Minitest::Test
       goal_report = File.read(File.join(report_dir, "report.md"))
       assert_includes goal_report, "runner-provider: claude:haiku"
       assert_includes goal_report, "| TC-002 | FAIL |"
+    end
+  end
+
+  def test_generate_accepts_h2_goal_headings_and_category_with_suffix_text
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          ## Goal 1 - Help Survey
+          - **Verdict**: PASS
+          - **Evidence**: results/tc/01/help.txt has all commands
+
+          ## Goal 2 — Roundtrip
+          - **Verdict**: FAIL
+          - **Category**: tool-bug - output mismatch on decode
+          - **Evidence**: decoded date does not match original
+        OUT
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal "partial", result.status
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "tool-bug", metadata["failed"].first["category"]
+    end
+  end
+
+  def test_write_failure_report_creates_deterministic_error_reports
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+      scenario = build_scenario(tmpdir)
+
+      result = generator.write_failure_report(
+        scenario: scenario,
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0),
+        error_message: "RuntimeError: verifier parse failed"
+      )
+
+      assert_equal "error", result.status
+      assert_equal report_dir, result.report_dir
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "error", metadata["status"]
+
+      summary = File.read(File.join(report_dir, "summary.r.md"))
+      assert_includes summary, "RuntimeError: verifier parse failed"
     end
   end
 

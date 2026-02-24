@@ -76,11 +76,10 @@ module Ace
             result
           end
 
-          # Find failed test cases grouped by package and scenario (test-id)
+          # Find failed test scenarios grouped by package and scenario (test-id)
           #
           # Like find_failures_by_package but preserves per-scenario granularity.
-          # This allows callers to filter and pass --test-cases per scenario
-          # instead of applying the same flat list to every scenario in a package.
+          # Callers can use this to re-run full failed scenarios.
           #
           # @param packages [Array<String>] Package names to scan
           # @param base_dir [String] Base directory to search from (default: current dir)
