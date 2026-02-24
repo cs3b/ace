@@ -25,6 +25,16 @@ E2E tests are fundamentally different from unit tests: they are agent-executed v
 - Package source code accessible
 - `ace-test-e2e` CLI available
 
+## Canonical Conventions
+
+- CLI split:
+  - `ace-test-e2e` for single-package runs
+  - `ace-test-e2e-suite` for suite-level runs
+- Scenario IDs: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Standalone goal-mode files: `TC-*.runner.md` + `TC-*.verify.md`
+- TC artifact layout: `results/tc/{NN}/`
+- Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
+
 ## Project Context Loading
 
 - Read and follow: `ace-bundle wfi://bundle`
