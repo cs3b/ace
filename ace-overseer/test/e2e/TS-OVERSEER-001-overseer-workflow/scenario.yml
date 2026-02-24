@@ -5,8 +5,6 @@ package: ace-overseer
 priority: high
 tags: [smoke, happy-path, deep, "use-case:overseer"]
 cost-tier: happy-path
-mode: goal
-execution-model: sequential
 tool-under-test: ace-overseer
 
 sandbox-layout:
