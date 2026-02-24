@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.616] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.18.2**: Rewrite `run.wf.md` and `execute.wf.md` to v2.0 with dual-mode execution, pipeline context, SetupExecutor contract, and dual-agent verifier documentation
+
+### Added
+- **ace-test-e2e v0.18.2**: Add `tags` field, execution pipeline section, and scenario-level configuration to handbook guides and templates; add `--tags`/`--exclude-tags` to workflow instructions; add essential E2E test suite plan for 10 new scenarios
+
+### Fixed
+- **ace-test-e2e v0.18.2**: Fix `cost-tier` default from `standard` to `smoke` and rename legacy report fields to TC-first schema across all handbook files
+
 ## [0.9.615] - 2026-02-24
 
 ### Fixed
