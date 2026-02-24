@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-02-24
+
+### Added
+- Scenario-level metadata support for `tags`, `mode`, `execution-model`, `tool-under-test`, and `sandbox-layout`
+- Goal-mode standalone discovery for `TC-*.runner.md` and `TC-*.verify.md` pairs with required `runner.yml.md` and `verifier.yml.md`
+- CLI filtering options: `ace-test-e2e suite --tags/--exclude-tags/--mode` and `ace-test-e2e run --tags`
+
+### Changed
+- Apply tag and mode filtering at scenario discovery time so excluded scenarios never enter execution
+- Extend sandbox definition copying to include goal-mode standalone files alongside procedural `.tc.md` files
+
+### Technical
+- Expanded model, loader, discoverer, orchestrator, and command test coverage for metadata parsing, filter semantics, and option wiring
+
 ## [0.16.22] - 2026-02-23
 
 ### Technical

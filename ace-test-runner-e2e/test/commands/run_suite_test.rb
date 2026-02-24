@@ -83,4 +83,28 @@ class RunSuiteTest < Minitest::Test
     param_types = method.parameters.map(&:first)
     assert_includes param_types, :keyrest, "call should accept **options for only_failures"
   end
+
+  def test_parse_csv_list_normalizes_tags
+    command = RunSuite.new
+
+    tags = command.send(:parse_csv_list, "Smoke, happy-path, use-case:Lint")
+
+    assert_equal ["smoke", "happy-path", "use-case:lint"], tags
+  end
+
+  def test_parse_mode_filter_accepts_goal
+    command = RunSuite.new
+
+    assert_equal "goal", command.send(:parse_mode_filter, "goal")
+  end
+
+  def test_parse_mode_filter_rejects_invalid_value
+    command = RunSuite.new
+
+    error = assert_raises(Ace::Core::CLI::Error) do
+      command.send(:parse_mode_filter, "experimental")
+    end
+
+    assert_match(/Invalid --mode/, error.message)
+  end
 end
