@@ -1,17 +1,14 @@
-# Default configuration for e2e test runner
-# This file provides defaults for the ace-test-runner-e2e gem
+# Project override configuration for e2e test runner
 
 paths:
   # Where test scenarios are stored in packages
   scenarios: "test/e2e"
-  # File extension for test scenarios
-  extension: ".mt.md"
   # Directory for test execution artifacts (gitignored)
   cache_dir: ".cache/ace-test-e2e"
 
 patterns:
-  # Glob pattern for finding test scenarios
-  discovery: "test/e2e/**/*.mt.md"
+  # Glob pattern for finding test scenarios (TS-format directories)
+  discovery: "test/e2e/TS-*/scenario.yml"
 
 # Test scenario frontmatter requirements
 required_fields:
@@ -43,13 +40,13 @@ execution:
   # Default LLM provider:model for test execution
   provider: "claude:haiku"
   # Timeout per test in seconds
-  timeout: 420
+  timeout: 600
   # Number of tests to run in parallel (1 = sequential)
   parallel: 6
 
 # Provider configuration
 providers:
-  # CLI providers can execute commands (skill/workflow mode)
+  # CLI providers use deterministic pipeline execution (runner + verifier)
   cli:
     - claude
     - gemini
@@ -57,9 +54,6 @@ providers:
     - codexoss
     - opencode
     - pi
-  # Skill-aware CLI providers (use /ace-e2e-run invocation)
-  skill_aware:
-    - claude
   # Required CLI args per provider (merged with user-provided --cli-args)
   cli_args:
     claude: "dangerously-skip-permissions"
@@ -67,8 +61,8 @@ providers:
 
 # Test ID format validation
 test_id:
-  # Pattern: MT-{AREA}-{NNN}
-  pattern: "^MT-[A-Z]+-\\d{3}$"
+  # Pattern: TS-{AREA}-{NNN}
+  pattern: "^TS-[A-Z]+-\\d{3}$"
   # Known area codes
   areas:
     - LINT
