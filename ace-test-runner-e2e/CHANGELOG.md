@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.5] - 2026-02-24
+
+### Added
+- Add standalone goal-mode execution pipeline components:
+  - `GoalModeSandboxBuilder` (sandbox bootstrapping and tool validation)
+  - `GoalModePromptBundler` (runner/verifier prompt preparation with artifact embedding)
+  - `GoalModeReportGenerator` (TC-first report synthesis from verifier output)
+  - `GoalModeExecutor` (Phase A-F orchestration)
+
+### Changed
+- Route standalone goal-mode scenarios away from slash-command skill invocation to deterministic dual-agent execution via `ace-llm` prompts
+- Force verifier execution for standalone goal-mode scenarios regardless of CLI `--verify` flag (`--verify` is effectively always-on for this mode)
+- Keep procedural and inline-goal execution behavior unchanged
+
 ## [0.17.4] - 2026-02-24
 
 ### Fixed

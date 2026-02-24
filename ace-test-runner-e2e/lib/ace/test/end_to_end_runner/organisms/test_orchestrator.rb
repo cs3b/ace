@@ -164,6 +164,7 @@ module Ace
           # @return [Array<Models::TestResult>] Single-element result array
           def run_single_test(file, timestamp, cli_args, output, test_cases: nil, verify: false, report_dir: nil)
             scenario = @loader.load(File.dirname(file))
+            effective_verify = verify || force_verify_for_goal_mode?(scenario)
             display = build_display_manager([scenario], output)
             setup_executor = nil
 
@@ -189,7 +190,7 @@ module Ace
               sandbox_path: sandbox_path,
               env_vars: env_vars,
               report_dir: report_dir,
-              verify: verify
+              verify: effective_verify
             )
 
             # Use explicit report_dir when provided, otherwise compute from scenario
@@ -199,7 +200,7 @@ module Ace
               # CLI providers write reports via workflow at a deterministic path.
               # Do not fall back to older report directories from other runs.
               if Dir.exist?(expected_dir)
-                result = verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
+                result = effective_verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
               else
                 result = missing_agent_report_result(scenario, expected_dir, result)
               end
@@ -277,6 +278,7 @@ module Ace
                     )
                   else
                     begin
+                      effective_verify = verify || force_verify_for_goal_mode?(scenario)
                       sandbox_path, env_vars, setup_executor = setup_sandbox_if_ts(scenario, run_id || timestamp, output)
                       result = execute_scenario(
                         scenario,
@@ -285,7 +287,7 @@ module Ace
                         test_cases: scenario_test_cases,
                         sandbox_path: sandbox_path,
                         env_vars: env_vars,
-                        verify: verify
+                        verify: effective_verify
                       )
                     ensure
                       setup_executor&.teardown
@@ -297,7 +299,8 @@ module Ace
                   if cli_provider?
                     expected_dir = report_dir_for(scenario, run_id || timestamp)
                     if Dir.exist?(expected_dir)
-                      result = verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
+                      effective_verify = verify || force_verify_for_goal_mode?(scenario)
+                      result = effective_verify ? result.with_report_dir(expected_dir) : read_agent_result(scenario, expected_dir, result)
                     else
                       result = missing_agent_report_result(scenario, expected_dir, result)
                     end
@@ -458,6 +461,10 @@ module Ace
             kwargs[:verify] = verify if supports_verify
 
             @executor.execute(scenario, **kwargs)
+          end
+
+          def force_verify_for_goal_mode?(scenario)
+            scenario.mode == "goal" && scenario.test_cases.any? { |tc| tc.goal_format == "standalone" }
           end
         end
       end
