@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.2] - 2026-02-24
+
+### Technical
+- Strengthen TS-REVIEW-001 preset-composition E2E runner/verifier instructions by requiring explicit dry-run subject input and resilient artifact-based verification criteria.
+
 ## [0.42.1] - 2026-02-23
 
 ### Changed
