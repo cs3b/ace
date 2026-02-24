@@ -85,6 +85,18 @@ Research findings informing Task 280 — E2E Test Levels, Grouping, and Goal-Bas
 - Most valuable for goal-mode tests (procedural tests have deterministic steps)
 - Disagreement is signal, not failure — flags items for human review
 
+## ACE Task 280.02 Decision Mapping
+
+How these patterns map to ACE decisions for this task:
+
+- **Tag filtering contract**: inclusion is OR, exclusion overrides inclusion, and untagged scenarios are excluded from tag-filtered runs.
+- **Tier model**: `smoke -> happy-path -> deep` should define both execution depth and verification depth, not just labels.
+- **Goal-mode quality**: each goal must be objectively verifiable with artifact-based checks (outputs, files, exit codes, state changes).
+- **Verifier policy**: verifier instructions must be executable from artifacts and scenario context without runner reasoning.
+- **Adoption strategy**: keep migration incremental and backward-compatible for procedural scenarios during rollout.
+
+These mappings are the rationale foundation for 280.03-280.06 implementation subtasks.
+
 ## References
 
 - RSpec metadata/tags: https://rspec.info/features/filtering/
