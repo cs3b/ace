@@ -5,8 +5,6 @@ package: ace-review
 priority: high
 tags: [smoke, happy-path, deep, "use-case:review"]
 cost-tier: happy-path
-mode: goal
-execution-model: sequential
 tool-under-test: ace-review
 
 sandbox-layout:
