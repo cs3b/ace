@@ -18,15 +18,16 @@ Evolve the E2E test runner from flat scenario execution to a structured, filtera
 
 ## Subtasks
 
-- **280.01** — Research and Vision: WHY we need this, principles, industry patterns
-- **280.02** — Tag System and CLI Filtering: `tags` field, `--tags`/`--exclude-tags` CLI options
-- **280.03** — Test Grouping Strategy: Standard groups, classify all 36 existing scenarios
-- **280.04** — Goal-Based Test Case Format: `mode: goal` TC structure with objective + success criteria
-- **280.05** — Independent Verifier Agent Pattern: Separate executor/verifier agents for higher confidence
+- **280.01** — B36TS E2E Pilot: Validated runner/verifier split with 8 goal-based tests (concrete reference)
+- **280.02** — Research and Vision: WHY we need this, principles, industry patterns
+- **280.03** — Tag System and CLI Filtering: `tags` field, `--tags`/`--exclude-tags` CLI options
+- **280.04** — Test Grouping Strategy: Standard groups, classify all 36 existing scenarios
+- **280.05** — Goal-Based Test Case Format: `mode: goal` TC structure with objective + success criteria
+- **280.06** — Independent Verifier Agent Pattern: Separate executor/verifier agents for higher confidence
 
 ## Dependency Chain
 
-280.01 (vision) → 280.02 (tags infra) → 280.03 (classification uses tags) → 280.04 (goal format) → 280.05 (verifier)
+280.01 (pilot) → 280.02 (vision) → 280.03 (tags infra) → 280.04 (classification uses tags) → 280.05 (goal format) → 280.06 (verifier)
 
 ## Success Criteria
 
