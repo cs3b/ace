@@ -114,3 +114,5 @@ The YAML frontmatter fields:
 | `goals-total` | integer | Total goals (always 8) |
 | `score` | float | goals-passed / goals-total |
 | `verdict` | string | pass, partial, or fail |
+| `passed` | array[string] | List of passed goal titles |
+| `failed` | array[object] | List of failed goals with `goal`, `reason`, `category` |
