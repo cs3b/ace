@@ -17,6 +17,7 @@ and renders PASS/FAIL verdicts for each goal.
 cd experiment/sandbox
 
 ace-llm claude:opus \
+  --cli-args dangerously-skip-permissions \
   --system .cache/ace-e2e/verifier-system.md \
   --prompt .cache/ace-e2e/verifier-prompt.md \
   --output .cache/ace-e2e/verifier-output.md \
