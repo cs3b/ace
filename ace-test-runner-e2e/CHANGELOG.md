@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-02-24
+
+### Added
+- Test case frontmatter `mode` support (`procedural` default, `goal` explicit) in `ScenarioLoader`/`TestCase`
+- Inline goal-mode TC validation: required `Objective`/`Available Tools`/`Success Criteria` and rejection of `## Steps`
+
+### Changed
+- E2E execution workflow docs (`run.wf.md`, `execute.wf.md`) now define procedural, inline-goal, and standalone-goal execution paths
+- Goal-mode report template examples now document `passed`/`failed` arrays plus `score` and `verdict` frontmatter fields
+- TC/scenario authoring guides and templates updated for goal-mode conventions
+
 ## [0.17.0] - 2026-02-24
 
 ### Added

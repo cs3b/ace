@@ -2,7 +2,7 @@
 guide-id: g-tc-authoring
 title: Test Case Authoring Guide
 description: Guide for writing TC-*.tc.md test case files for TS-format E2E scenarios
-version: "1.1"
+version: "1.2"
 source: ace-test-runner-e2e
 ---
 
@@ -10,9 +10,17 @@ source: ace-test-runner-e2e
 
 ## Overview
 
-TC (Test Case) files are the individual test units in TS-format E2E scenarios. Each TC file defines a specific test case with its objective, steps, and expected outcomes.
+TC (Test Case) files are the individual test units in TS-format E2E scenarios.
+
+ACE supports two goal-based authoring formats:
+- Inline goal mode in `TC-*.tc.md` (`mode: goal`)
+- Standalone goal-mode pairs (`TC-*.runner.md` + `TC-*.verify.md`)
+
+Procedural mode remains supported as the default.
 
 ## File Naming
+
+### Inline / Procedural TC Files
 
 ```
 TC-{NNN}-{slug}.tc.md
@@ -26,6 +34,13 @@ Examples:
 - `TC-001-valid-file-lint.tc.md`
 - `TC-002-fix-mode-modifies-file.tc.md`
 - `TC-003-syntax-error-handling.tc.md`
+
+### Standalone Goal-Mode Pairs
+
+- `TC-{NNN}-{slug}.runner.md`
+- `TC-{NNN}-{slug}.verify.md`
+- `runner.yml.md`
+- `verifier.yml.md`
 
 ## Location
 
@@ -47,6 +62,7 @@ Required fields:
 ---
 tc-id: TC-001
 title: Valid File Lint and Report Generation
+mode: procedural
 ---
 ```
 
@@ -54,10 +70,13 @@ title: Valid File Lint and Report Generation
 |-------|------|-------------|
 | `tc-id` | string | Test case identifier (TC-NNN format) |
 | `title` | string | Descriptive title for this test case |
+| `mode` | string | `procedural` (default) or `goal` |
 
-## Structure
+## Inline TC Structure
 
-Each TC file should follow this structure:
+### Procedural Mode (`mode: procedural`)
+
+Procedural TCs follow the classic structure:
 
 ### 1. Objective
 
@@ -103,6 +122,65 @@ Bulleted list of expected outcomes.
 - report.json exists with top-level keys: `["report_metadata", "results", "summary"]`
 - ok.md exists with "# Lint: Passed Files" header
 ```
+
+### Inline Goal Mode (`mode: goal`)
+
+Inline goal mode is outcome-based and self-assessed by the executing agent.
+
+Required sections:
+- `## Objective`
+- `## Available Tools`
+- `## Success Criteria`
+
+Optional sections:
+- `## Hints`
+- `## Constraints`
+
+Prohibited sections:
+- `## Steps` (goal mode must not prescribe step-by-step procedure)
+
+Example:
+
+```yaml
+---
+tc-id: TC-003
+title: Generate commit message from staged changes
+mode: goal
+---
+```
+
+```markdown
+## Objective
+
+Generate a meaningful commit message for staged changes.
+
+## Available Tools
+
+- `ace-git-commit`
+- `git`
+- standard shell utilities
+
+## Success Criteria
+
+- [ ] A commit is created in the sandbox repository
+- [ ] Message reflects the nature of staged changes
+- [ ] `git log --oneline -1` shows the new commit
+```
+
+## Standalone Goal-Mode Pair Structure
+
+Use this format when you need independent verifier evaluation or multi-goal context sharing.
+
+`TC-*.runner.md`:
+- `# Goal N — Title`
+- `## Goal`
+- `## Workspace`
+- `## Constraints`
+
+`TC-*.verify.md`:
+- `# Goal N — Title`
+- `## Expectations`
+- `## Verdict`
 
 ## Complete Example
 

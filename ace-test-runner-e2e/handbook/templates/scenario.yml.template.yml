@@ -11,6 +11,12 @@ package: {package-name}
 # Optional: Priority level (high|medium|low)
 priority: high
 
+# Optional: Scenario mode (procedural|goal)
+mode: procedural
+
+# Optional: Goal-mode execution strategy (isolated|sequential)
+# execution-model: isolated
+
 # Optional: Estimated duration
 duration: ~{X}min
 

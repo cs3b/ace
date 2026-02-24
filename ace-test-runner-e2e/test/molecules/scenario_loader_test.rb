@@ -310,9 +310,132 @@ class ScenarioLoaderTest < Minitest::Test
 
       assert_equal ["TC-001", "TC-002"], scenario.test_cases.map(&:tc_id)
       assert_equal "Goal 1 - First", scenario.test_cases.first.title
+      assert_equal "goal", scenario.test_cases.first.mode
+      assert_equal "standalone", scenario.test_cases.first.goal_format
       assert_includes scenario.test_cases.first.content, "## Runner"
       assert_includes scenario.test_cases.first.content, "## Verifier"
       assert scenario.test_cases.first.file_path.end_with?("TC-001-first.runner.md")
+    end
+  end
+
+  def test_load_inline_goal_mode_tc_in_procedural_scenario
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-001",
+        scenario_yml: <<~YAML,
+          test-id: TS-INLINE-GOAL-001
+          title: Inline Goal In Procedural Scenario
+          area: test
+        YAML
+        tc_files: {
+          "TC-001-inline-goal.tc.md" => <<~MD
+            ---
+            tc-id: TC-001
+            title: Inline Goal
+            mode: goal
+            ---
+
+            ## Objective
+            Verify outcome.
+
+            ## Available Tools
+            - ace-lint
+
+            ## Success Criteria
+            - [ ] Exit code is 0
+          MD
+        })
+
+      scenario = @loader.load(scenario_dir)
+      tc = scenario.test_cases.first
+      assert_equal "goal", tc.mode
+      assert_equal "inline", tc.goal_format
+    end
+  end
+
+  def test_load_goal_mode_tc_rejects_steps_section
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-002",
+        scenario_yml: <<~YAML,
+          test-id: TS-INLINE-GOAL-002
+          title: Inline Goal Reject Steps
+          area: test
+        YAML
+        tc_files: {
+          "TC-001-inline-goal.tc.md" => <<~MD
+            ---
+            tc-id: TC-001
+            title: Inline Goal
+            mode: goal
+            ---
+
+            ## Objective
+            Verify outcome.
+
+            ## Available Tools
+            - ace-lint
+
+            ## Success Criteria
+            - [ ] Exit code is 0
+
+            ## Steps
+            1. Do not allow this
+          MD
+        })
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/must not include '## Steps'/, error.message)
+    end
+  end
+
+  def test_load_goal_mode_tc_requires_sections
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-003",
+        scenario_yml: <<~YAML,
+          test-id: TS-INLINE-GOAL-003
+          title: Inline Goal Missing Sections
+          area: test
+        YAML
+        tc_files: {
+          "TC-001-inline-goal.tc.md" => <<~MD
+            ---
+            tc-id: TC-001
+            title: Inline Goal
+            mode: goal
+            ---
+
+            ## Objective
+            Verify outcome.
+          MD
+        })
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Goal-mode TC missing required section/, error.message)
+    end
+  end
+
+  def test_load_goal_mode_tc_invalid_frontmatter_mode_raises
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-004",
+        scenario_yml: <<~YAML,
+          test-id: TS-INLINE-GOAL-004
+          title: Invalid TC Mode
+          area: test
+        YAML
+        tc_files: {
+          "TC-001-inline-goal.tc.md" => <<~MD
+            ---
+            tc-id: TC-001
+            title: Inline Goal
+            mode: unsupported
+            ---
+
+            ## Objective
+            Verify outcome.
+          MD
+        })
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Invalid tc mode/, error.message)
     end
   end
 

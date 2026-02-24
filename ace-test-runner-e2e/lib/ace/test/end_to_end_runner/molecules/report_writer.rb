@@ -44,6 +44,8 @@ module Ace
               "| #{tc[:id]} | #{tc[:description]} | #{tc[:status].capitalize} |"
             end.join("\n")
 
+            goal_criteria_sections = build_goal_criteria_sections(result.test_cases)
+
             frontmatter_lines = [
               "test-id: #{result.test_id}"
             ]
@@ -92,6 +94,8 @@ module Ace
               #{tc_rows}
 
               ## Overall Status: #{result.status.upcase}
+
+              #{goal_criteria_sections}
 
               #{result.summary}
               #{"## Error\n\n#{result.error}" if result.error}
@@ -180,6 +184,30 @@ module Ace
 
             File.write(path, YAML.dump(metadata))
             path
+          end
+
+          def build_goal_criteria_sections(test_cases)
+            sections = test_cases.filter_map do |tc|
+              criteria = tc[:criteria]
+              next if criteria.nil? || criteria.empty?
+
+              rows = criteria.map do |criterion|
+                desc = criterion[:description].to_s.empty? ? criterion[:id] : criterion[:description]
+                "| #{desc} | #{criterion[:status].to_s.upcase} | #{criterion[:evidence]} |"
+              end.join("\n")
+
+              <<~SECTION
+                ### Goal Criteria: #{tc[:id]}
+
+                | Criterion | Status | Evidence |
+                |-----------|--------|----------|
+                #{rows}
+              SECTION
+            end
+
+            return "" if sections.empty?
+
+            "## Goal Evaluation\n\n#{sections.join("\n")}"
           end
         end
       end
