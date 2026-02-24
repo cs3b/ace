@@ -122,39 +122,12 @@ module Ace
               return [nil, nil, nil]
             end
 
-            # Copy TC definition files so execute.wf.md can discover test cases in sandbox
-            copy_scenario_definitions(scenario.dir_path, File.expand_path(sandbox_dir))
-
             env = result[:env]
             if env["PROJECT_ROOT_PATH"] && !env["PROJECT_ROOT_PATH"].start_with?("/")
               env["PROJECT_ROOT_PATH"] = File.expand_path(env["PROJECT_ROOT_PATH"], sandbox_dir)
             end
 
             [File.expand_path(sandbox_dir), env, setup_executor]
-          end
-
-          # Copy test definitions and scenario.yml from scenario dir into sandbox root
-          #
-          # The execute workflow searches sandbox root for standalone runner/verifier files.
-          # Without this copy, sandboxed tests find 0 TCs and fail.
-          #
-          # @param dir_path [String] Source scenario directory (scenario.dir_path)
-          # @param sandbox_dir [String] Destination sandbox directory
-          def copy_scenario_definitions(dir_path, sandbox_dir)
-            patterns = [
-              "TC-*.runner.md",
-              "TC-*.verify.md",
-              "runner.yml.md",
-              "verifier.yml.md"
-            ]
-
-            patterns.each do |pattern|
-              Dir.glob(File.join(dir_path, pattern)).each do |definition_file|
-                FileUtils.cp(definition_file, sandbox_dir)
-              end
-            end
-            scenario_yml = File.join(dir_path, "scenario.yml")
-            FileUtils.cp(scenario_yml, sandbox_dir) if File.exist?(scenario_yml)
           end
 
           # Run a single test
