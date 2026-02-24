@@ -5,8 +5,6 @@ package: ace-git-worktree
 priority: high
 tags: [deep, "use-case:worktree"]
 cost-tier: happy-path
-mode: goal
-execution-model: sequential
 tool-under-test: ace-git-worktree
 
 sandbox-layout:
