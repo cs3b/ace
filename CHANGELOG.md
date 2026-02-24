@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.626] - 2026-02-24
+
+### Added
+- **ace-test-e2e v0.20.3**: Add run-ID tmux session setup support (`tmux-session: { name-source: run-id }`) to isolate CLI pipeline runs with deterministic `ACE_TMUX_SESSION` naming.
+
+### Changed
+- **ace-test-e2e v0.20.3**: Wire setup execution to receive the run ID and update scenario authoring docs/templates with run-ID tmux session guidance and teardown lifecycle.
+
 ## [0.9.625] - 2026-02-24
 
 ### Changed
