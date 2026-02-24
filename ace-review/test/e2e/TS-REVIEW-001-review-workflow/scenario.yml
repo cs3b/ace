@@ -28,13 +28,11 @@ requires:
 
 setup:
   - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: git add -A && git commit -m "initial" --quiet
   - run: |
       echo "# Updated" >> README.md
       git add README.md && git commit -m "Update readme" --quiet
-  - env:
+  - agent-env:
       PROJECT_ROOT_PATH: .
-
-sandbox-setup:
-  - "mise trust $SANDBOX_PATH/mise.toml"
