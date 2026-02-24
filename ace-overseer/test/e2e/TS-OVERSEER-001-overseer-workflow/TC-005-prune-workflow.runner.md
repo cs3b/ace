@@ -49,4 +49,7 @@ Save all output to `results/tc/05/`. Capture:
   - `ace-overseer prune --dry-run`
   - `ace-overseer prune --yes`
 - Do **not** use assignment prune mode/flags (for example `--assignment`).
+- Do **not** use `--force`.
+- Do **not** pass positional prune targets (for example `ace-overseer prune 001 ...`).
+- If normal prune returns 0 candidates or prunes 0 worktrees, capture that outcome and continue; do not run alternate prune modes.
 - All artifacts must come from real tool execution, not fabricated.

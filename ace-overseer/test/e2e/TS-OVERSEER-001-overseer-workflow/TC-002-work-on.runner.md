@@ -10,10 +10,13 @@ Save all output to `results/tc/02/`. Capture:
 - The command's stdout, stderr, and exit code
 - Worktree verification (ace-git-worktree list showing task 001)
 - Tmux verification (tmux list showing window for task)
-- Assignment verification (ace-assign status showing active assignment)
+- Assignment verification (ace-overseer status --format json showing task 001 assignment state)
+- `results/tc/02/overseer-status.json` — machine-readable overseer status output
+- `results/tc/02/overseer-status.exit` and `results/tc/02/overseer-status.stderr`
 
 ## Constraints
 
 - The sandbox has task 001 in .ace-taskflow/ and default preset in .ace/assign/presets/.
 - Using what you learned from Goal 1, invoke ace-overseer work-on.
+- Verify assignment activation via `ace-overseer status --format json` (cross-worktree oracle), not root-scoped `ace-assign status`.
 - All artifacts must come from real tool execution, not fabricated.
