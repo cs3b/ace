@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.611] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.17.6**: Complete standalone-only execution model by removing scenario/test-case mode semantics, replacing goal-mode naming with neutral pipeline components, dropping suite `--mode` filtering, and updating E2E guides/templates/workflows to runner/verifier pair format
+
+### Removed
+- **ace-test-e2e v0.17.6**: Remove support for legacy `mode` and `execution-model` fields plus inline `.tc.md` test definitions; remove goal-mode-specific verify forcing path
 ## [0.9.610] - 2026-02-24
 
 ### Changed
