@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.622] - 2026-02-24
+
+### Added
+- **ace-test-e2e v0.20.0**: Generic `sandbox-setup:` field in scenario.yml for declaring shell commands that run inside the pipeline sandbox after infrastructure setup, replacing hardcoded `mise trust` with a scenario-driven mechanism
+
 ## [0.9.621] - 2026-02-24
 
 ### Fixed
