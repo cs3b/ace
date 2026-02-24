@@ -220,11 +220,11 @@ Start with the highest-priority category. Within a category, pick the TC most li
 2. Run runner unit tests: `ace-test ace-test-runner-e2e`
 3. Verify the fix doesn't break other runner functionality
 
-### 3.3 Re-Run the Specific TC
+### 3.3 Re-Run the Scenario
 
 ```bash
-# Re-run only the fixed TC (cost-conscious: single TC, not full suite)
-ace-test-e2e {package} {test-id} --test-cases TC-NNN
+# Re-run the scenario after applying a fix
+ace-test-e2e {package} {test-id}
 ```
 
 ### 3.4 Verify the Fix
@@ -238,17 +238,14 @@ ls -t .cache/ace-test-e2e/*-reports/summary.r.md | head -1 | xargs cat
 
 ### 3.5 Loop
 
-Repeat steps 3.1–3.4 until all failing TCs are resolved.
+Repeat steps 3.1–3.4 until all failing scenario checks are resolved.
 
 ## Step 4: Final Verification
 
 After fixing all individual TCs, run a broader verification:
 
 ```bash
-# Option A: Re-run only previously-failed TCs
-ace-test-e2e {package} {test-id} --only-failures
-
-# Option B: Run the full test scenario
+# Run the full test scenario
 ace-test-e2e {package} {test-id}
 ```
 
@@ -263,27 +260,20 @@ ace-test ace-test-runner-e2e
 
 E2E tests cost money per invocation. Follow these rules:
 
-- **Never** blindly re-run all TCs; target specific failures
-- **Use `--test-cases TC-NNN`** for individual TC re-runs during the fix loop
-- **Use `--only-failures`** for final verification of all previously-failed TCs
-- **Use `--dry-run`** to preview what would execute before committing to a full run
-- **Batch related fixes** before re-running — if 3 TCs fail for the same reason, fix all 3 then re-run together
+- **Never** blindly re-run the full package suite when only one scenario failed
+- **Use scenario-targeted runs** (`ace-test-e2e {package} {test-id}`) during the fix loop
+- **Use `--dry-run`** to preview what would execute before committing to a run
+- **Batch related code fixes** before re-running the same scenario repeatedly
 
 ```bash
 # Preview (free)
 ace-test-e2e {package} {test-id} --dry-run
 
-# Single TC (cheapest verification)
-ace-test-e2e {package} {test-id} --test-cases TC-002
-
-# Multiple specific TCs
-ace-test-e2e {package} {test-id} --test-cases TC-002,TC-005
-
-# Only failures from last run
-ace-test-e2e {package} {test-id} --only-failures
-
-# Full suite (most expensive — use only for final verification)
+# Scenario verification run
 ace-test-e2e {package} {test-id}
+
+# Package-wide run (more expensive)
+ace-test-e2e {package}
 ```
 
 ## Common E2E Failure Patterns

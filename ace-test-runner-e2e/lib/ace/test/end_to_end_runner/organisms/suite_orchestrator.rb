@@ -96,25 +96,21 @@ module Ace
               )
 
               if scenario_failures.empty?
-                @output.puts "No failed test cases found in cache"
+                @output.puts "No failed test scenarios found in cache"
                 return { total: 0, passed: 0, failed: 0, errors: 0, packages: {} }
               end
 
               # Filter packages to only those with failures
               packages = packages & scenario_failures.keys
-              @output.puts "Packages with failures: #{packages.join(", ")}"
+              @output.puts "Packages with failed scenarios: #{packages.join(", ")}"
               packages.each do |pkg|
-                scenario_failures[pkg].each do |test_id, tc_ids|
-                  if tc_ids.include?("*")
-                    @output.puts "  #{pkg}/#{test_id}: all test cases (no granular failure data)"
-                  else
-                    @output.puts "  #{pkg}/#{test_id}: #{tc_ids.join(", ")}"
-                  end
+                scenario_failures[pkg].each_key do |test_id|
+                  @output.puts "  #{pkg}/#{test_id}"
                 end
               end
             end
 
-            # Store scenario failures for use in test discovery and command building
+            # Store scenario failures for test discovery filters
             @scenario_failures = scenario_failures
             @discovery_filters = {
               tags: options[:tags],
@@ -348,7 +344,7 @@ module Ace
             # Extract test_id from filename
             test_id = extract_test_id(test_file)
 
-            cmd_parts = ["ace-test-e2e", package, test_id]
+            cmd_parts = [e2e_executable_path, package, test_id]
 
             # Add provider if specified
             if options[:provider]
@@ -375,21 +371,23 @@ module Ace
               cmd_parts.concat(["--report-dir", report_dir])
             end
 
-            # Add --test-cases for only-failures mode (per-scenario filtering)
-            # Skip when failures include "*" (wildcard = re-run entire test, no granular data)
-            if @scenario_failures && @scenario_failures[package]
-              failures = find_scenario_tc_ids(package, test_file)
-              if failures && !failures.include?("*")
-                cmd_parts.concat(["--test-cases", failures.join(",")])
-              end
-            end
-
             cmd_parts << "--verify" if options[:verify]
 
             # Add parallel=1 for subprocess isolation
             cmd_parts.concat(["--parallel", "1"])
 
             cmd_parts
+          end
+
+          # Resolve the ace-test-e2e executable used by suite subprocesses.
+          #
+          # Prefer the workspace wrapper (bin/ace-test-e2e) to avoid PATH drift
+          # against older globally-installed binaries.
+          #
+          # @return [String]
+          def e2e_executable_path
+            local = File.join(@base_dir, "bin", "ace-test-e2e")
+            File.executable?(local) ? local : "ace-test-e2e"
           end
 
           # Extract test ID from file path
@@ -413,20 +411,6 @@ module Ace
           def file_matches_test_id?(test_file, test_id)
             dir_name = File.basename(File.dirname(test_file))
             dir_name == test_id || dir_name.start_with?("#{test_id}-")
-          end
-
-          # Find the failed TC IDs for a test file from @scenario_failures
-          #
-          # @param package [String] Package name
-          # @param test_file [String] Path to test file
-          # @return [Array<String>, nil] Failed TC IDs or nil if no match
-          def find_scenario_tc_ids(package, test_file)
-            return nil unless @scenario_failures&.dig(package)
-
-            @scenario_failures[package].each do |tid, tc_ids|
-              return tc_ids if file_matches_test_id?(test_file, tid)
-            end
-            nil
           end
 
           # Check running processes for completion
@@ -533,11 +517,17 @@ module Ace
               status = "pass"
             end
 
+            summary = if status == "error"
+              metadata["summary"] || result[:error] || result[:summary] || "Test errored"
+            else
+              "#{passed}/#{total} passed"
+            end
+
             result.merge(
               status: status,
               passed_cases: passed,
               total_cases: total,
-              summary: "#{passed}/#{total} passed"
+              summary: summary
             )
           rescue => e
             warn "Warning: Failed to override from metadata: #{e.message}" if ENV["DEBUG"]
@@ -552,7 +542,7 @@ module Ace
           # @return [Hash] Parsed result with :status, :passed_cases, :total_cases, etc.
           def parse_test_output(output, exit_status, test_name)
             # Try to find report directory in output
-            report_dir = output.match(/Report: (.+?)$/m)&.captures&.first&.strip
+            report_dir = output.lines.filter_map { |line| line[/^Report:\s+(.+)\s*$/, 1] }.last
 
             # Extract test case counts from "Result: ... N/M cases" line
             cases_match = output.match(/(\d+)\/(\d+) cases/)
@@ -569,7 +559,8 @@ module Ace
                 base.merge(status: "pass", summary: "Test passed")
               end
             elsif output.include?("ERROR") || output.include?("Error:")
-              error_msg = output.match(/Error: (.+?)$/m)&.captures&.first || "Unknown error"
+              error_msg = output.lines.filter_map { |line| line[/^Error:\s+(.+?)\s*$/, 1] }.last
+              error_msg ||= "Test execution returned ERROR status"
               base.merge(status: "error", error: error_msg)
             else
               summary = output.match(/(\d+)\/(\d+) passed/)&.captures&.join("/") || "Test failed"

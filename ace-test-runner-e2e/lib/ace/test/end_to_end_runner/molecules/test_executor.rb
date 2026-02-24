@@ -21,7 +21,7 @@ module Ace
             @provider = provider || config.dig("execution", "provider") || "claude:sonnet"
             @timeout = timeout || config.dig("execution", "timeout") || 300
             @prompt_builder = Atoms::PromptBuilder.new
-            @skill_prompt_builder = Atoms::SkillPromptBuilder.new(config)
+            @cli_provider_adapter = Atoms::CliProviderAdapter.new(config)
           end
 
           # Execute a single test scenario via LLM
@@ -36,7 +36,7 @@ module Ace
           # @return [Models::TestResult] Test execution result
           def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
                       env_vars: nil, report_dir: nil, verify: false)
-            if Atoms::SkillPromptBuilder.cli_provider?(@provider)
+            if Atoms::CliProviderAdapter.cli_provider?(@provider)
               execute_via_pipeline(
                 scenario,
                 cli_args: cli_args,
@@ -61,7 +61,7 @@ module Ace
           # @param env_vars [Hash, nil] Environment variables from setup execution
           # @return [Models::TestResult] Test execution result
           def execute_tc(test_case:, sandbox_path:, scenario:, cli_args: nil, run_id: nil, env_vars: nil)
-            if Atoms::SkillPromptBuilder.cli_provider?(@provider)
+            if Atoms::CliProviderAdapter.cli_provider?(@provider)
               execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: cli_args, run_id: run_id, env_vars: env_vars)
             else
               execute_tc_via_prompt(test_case, sandbox_path, scenario, cli_args: cli_args)
@@ -89,7 +89,7 @@ module Ace
             end
 
             merged_args = merge_cli_args(
-              Atoms::SkillPromptBuilder.required_cli_args(@provider),
+              Atoms::CliProviderAdapter.required_cli_args(@provider),
               cli_args
             )
 
@@ -195,13 +195,13 @@ module Ace
           # Execute TC via skill invocation for CLI providers
           def execute_tc_via_skill(test_case, sandbox_path, scenario, cli_args: nil, run_id: nil, env_vars: nil)
             with_tc_error_handling(scenario) do |started_at|
-              prompt = @skill_prompt_builder.build_tc_skill_prompt(
+              prompt = @cli_provider_adapter.build_tc_skill_prompt(
                 test_case: test_case, scenario: scenario,
                 sandbox_path: sandbox_path, run_id: run_id, env_vars: env_vars
               )
 
               merged_args = merge_cli_args(
-                Atoms::SkillPromptBuilder.required_cli_args(@provider),
+                Atoms::CliProviderAdapter.required_cli_args(@provider),
                 cli_args
               )
 

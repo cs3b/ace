@@ -4,6 +4,7 @@ require_relative "../test_helper"
 
 class SkillPromptBuilderTest < Minitest::Test
   SkillPromptBuilder = Ace::Test::EndToEndRunner::Atoms::SkillPromptBuilder
+  CliProviderAdapter = Ace::Test::EndToEndRunner::Atoms::CliProviderAdapter
 
   def setup
     @builder = SkillPromptBuilder.new
@@ -18,6 +19,10 @@ class SkillPromptBuilderTest < Minitest::Test
   def test_cli_provider_detects_claude
     assert SkillPromptBuilder.cli_provider?("claude:sonnet")
     assert SkillPromptBuilder.cli_provider?("claude:opus")
+  end
+
+  def test_cli_provider_adapter_alias_points_to_legacy_constant
+    assert_same CliProviderAdapter, SkillPromptBuilder
   end
 
   def test_cli_provider_detects_gemini

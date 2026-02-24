@@ -74,14 +74,25 @@ module Ace
               completed_at: Time.now
             )
           rescue StandardError => e
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: "error",
-              summary: "Execution pipeline failed",
-              error: "#{e.class}: #{e.message}",
-              started_at: started_at || Time.now,
-              completed_at: Time.now
-            )
+            begin
+              @report_generator.write_failure_report(
+                scenario: scenario,
+                report_dir: report_dir,
+                provider: @provider,
+                started_at: started_at || Time.now,
+                completed_at: Time.now,
+                error_message: "#{e.class}: #{e.message}"
+              )
+            rescue StandardError => write_error
+              Models::TestResult.new(
+                test_id: scenario.test_id,
+                status: "error",
+                summary: "Execution pipeline failed",
+                error: "#{e.class}: #{e.message}; failed to write error report: #{write_error.class}: #{write_error.message}",
+                started_at: started_at || Time.now,
+                completed_at: Time.now
+              )
+            end
           end
 
           private

@@ -66,6 +66,37 @@ class TestExecutorTest < Minitest::Test
     end
   end
 
+  def test_execute_pipeline_writes_error_report_when_verifier_output_is_unparseable
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_pipeline_files(tmpdir)
+      sandbox_path = File.join(tmpdir, "sandbox")
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_pipeline_scenario(scenario_dir)
+      executor = TestExecutor.new(provider: "claude:sonnet", timeout: 10)
+
+      responses = [
+        { text: "Runner completed." },
+        { text: "Verifier output was malformed and had no contract fields." }
+      ]
+
+      Ace::LLM::QueryInterface.stub(:query, lambda { |_provider, _prompt, **_kwargs|
+        responses.shift
+      }) do
+        result = executor.execute(
+          scenario,
+          sandbox_path: sandbox_path,
+          report_dir: report_dir
+        )
+
+        assert_equal "error", result.status
+        assert_equal report_dir, result.report_dir
+      end
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      assert_equal "error", metadata["status"]
+    end
+  end
+
   def test_execute_via_prompt_catches_unexpected_error
     executor = TestExecutor.new(provider: "google:gemini-pro", timeout: 10)
     scenario = create_scenario

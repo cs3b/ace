@@ -46,6 +46,38 @@ module Ace
             result.with_report_dir(report_dir)
           end
 
+          # Write deterministic error reports when pipeline execution fails before
+          # normal verifier parsing/report generation can complete.
+          #
+          # @param scenario [Models::TestScenario]
+          # @param report_dir [String]
+          # @param provider [String]
+          # @param started_at [Time]
+          # @param completed_at [Time]
+          # @param error_message [String]
+          # @return [Models::TestResult]
+          def write_failure_report(scenario:, report_dir:, provider:, started_at:, completed_at:, error_message:)
+            result = Models::TestResult.new(
+              test_id: scenario.test_id,
+              status: "error",
+              test_cases: [],
+              summary: "Execution pipeline failed",
+              error: error_message,
+              started_at: started_at,
+              completed_at: completed_at
+            )
+
+            FileUtils.mkdir_p(report_dir)
+            @report_writer.write(result, scenario, report_dir: report_dir)
+            write_goal_report(
+              path: File.join(report_dir, "report.md"),
+              scenario: scenario,
+              provider: provider,
+              result: result
+            )
+            result.with_report_dir(report_dir)
+          end
+
           private
 
           def parse_verifier_output(text, scenario)
@@ -64,20 +96,22 @@ module Ace
             lines = text.to_s.lines
             headers = []
             lines.each_with_index do |line, idx|
-              match = line.match(/^###\s+Goal\s+(\d+)\s+[—-]\s*(.+?)\s*$/)
+              match = line.match(/^\#{2,3}\s+Goal\s+(\d+)\s*[—-]\s*(.+?)\s*$/i)
               headers << [idx, match[1].to_i, match[2].strip] if match
             end
             return [] if headers.empty?
+
+            scenario_test_cases = scenario.test_cases || []
 
             headers.each_with_index.map do |(start_idx, goal_number, title), index|
               end_idx = index + 1 < headers.size ? headers[index + 1][0] : lines.size
               block = lines[start_idx...end_idx].join
 
-              verdict = extract_value(block, "Verdict")&.upcase
+              verdict = normalize_verdict(extract_value(block, "Verdict"))
               evidence = extract_value(block, "Evidence") || ""
               next if verdict.nil?
 
-              tc_id = scenario.test_cases[goal_number - 1]&.tc_id || format("TC-%03d", goal_number)
+              tc_id = scenario_test_cases[goal_number - 1]&.tc_id || format("TC-%03d", goal_number)
               category = extract_category(block, evidence)
 
               {
@@ -91,7 +125,7 @@ module Ace
           end
 
           def extract_value(block, field)
-            match = block.match(/- \*\*#{Regexp.escape(field)}\*\*:\s*(.+?)\s*$/i)
+            match = block.match(/^\s*[-*]?\s*\*\*#{Regexp.escape(field)}\*\*:\s*(.+?)\s*$/im)
             return nil unless match
 
             match[1].strip
@@ -101,17 +135,25 @@ module Ace
             explicit = extract_value(block, "Category")
             return normalize_category(explicit) if explicit
 
-            inferred = FAILURE_CATEGORIES.find do |name|
-              block.to_s.downcase.include?(name) || evidence.to_s.downcase.include?(name)
-            end
-            inferred || "runner-error"
+            normalize_category("#{block}\n#{evidence}")
           end
 
           def normalize_category(value)
             category = value.to_s.strip.downcase
-            return category if FAILURE_CATEGORIES.include?(category)
+            match = category.match(/\b(test-spec-error|tool-bug|runner-error|infrastructure-error)\b/)
+            return match[1] if match
 
             "runner-error"
+          end
+
+          def normalize_verdict(value)
+            raw = value.to_s.strip
+            return nil if raw.empty?
+
+            token = raw.gsub(/[*_`]/, "").strip.split(/\s+/).first.to_s.upcase
+            return token if %w[PASS FAIL].include?(token)
+
+            nil
           end
 
           def build_result_from_goals(goals)
@@ -137,7 +179,9 @@ module Ace
             failed = result.failed_count
             total = result.total_count
             score = total.zero? ? 0.0 : (passed.to_f / total).round(3)
-            verdict = if failed.zero?
+            verdict = if result.status == "error"
+              "fail"
+            elsif failed.zero?
               "pass"
             elsif passed.zero?
               "fail"
