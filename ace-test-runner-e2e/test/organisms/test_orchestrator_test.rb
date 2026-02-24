@@ -1072,7 +1072,7 @@ class TestOrchestratorTest < Minitest::Test
       priority: medium
       setup:
         - copy-fixtures
-        - env:
+        - agent-env:
             PROJECT_ROOT_PATH: "."
     YAML
 

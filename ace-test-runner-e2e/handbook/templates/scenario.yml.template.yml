@@ -40,19 +40,14 @@ requires:
   ruby: ">= 3.0"
 
 # Setup directives (executed before test cases)
-# Available: copy-fixtures, git-init, env:
+# Available: git-init, run:, copy-fixtures, write-file:, agent-env:, tmux-session
 setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   # Uncomment as needed:
-  # - git-init              # Initialize git repository in sandbox
   # - copy-fixtures         # Copy fixtures/ directory to sandbox
-  # - env:                  # Set environment variables
+  # - agent-env:            # Environment variables passed to runner/verifier agent subprocess
   #     PROJECT_ROOT_PATH: "."
-
-# Sandbox-setup: Shell commands run inside the pipeline sandbox AFTER
-# infrastructure (git-init, mise.toml, provider links, result dirs)
-# but BEFORE tool verification. Available env: $SANDBOX_PATH, $PROJECT_ROOT_PATH
-sandbox-setup:
-  - "mise trust $SANDBOX_PATH/mise.toml"
 
 # Optional: Verification tracking
 # last-verified: YYYY-MM-DD

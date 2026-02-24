@@ -200,7 +200,7 @@ class ScenarioLoaderTest < Minitest::Test
             - write-file:
                 path: config.yml
                 content: "key: value"
-            - env:
+            - agent-env:
                 FOO: bar
         YAML
 
@@ -212,7 +212,7 @@ class ScenarioLoaderTest < Minitest::Test
       assert_equal({ "run" => "echo hello" }, scenario.setup_steps[2])
       assert_equal({ "write-file" => { "path" => "config.yml", "content" => "key: value" } },
         scenario.setup_steps[3])
-      assert_equal({ "env" => { "FOO" => "bar" } }, scenario.setup_steps[4])
+      assert_equal({ "agent-env" => { "FOO" => "bar" } }, scenario.setup_steps[4])
     end
   end
 
@@ -265,7 +265,7 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
-  def test_load_parses_sandbox_setup
+  def test_load_ignores_sandbox_setup_field
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-SETUP-002",
         scenario_yml: <<~YAML)
@@ -273,30 +273,13 @@ class ScenarioLoaderTest < Minitest::Test
           title: Sandbox Setup Test
           area: test
           sandbox-setup:
-            - "mise trust $SANDBOX_PATH/mise.toml"
-            - "echo hello"
+            - "mise trust mise.toml"
         YAML
 
       scenario = @loader.load(scenario_dir)
 
-      assert_equal ["mise trust $SANDBOX_PATH/mise.toml", "echo hello"], scenario.sandbox_setup
-      assert_equal [], scenario.sandbox_teardown
-    end
-  end
-
-  def test_load_defaults_sandbox_setup_to_empty
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-SETUP-003",
-        scenario_yml: <<~YAML)
-          test-id: TS-SETUP-003
-          title: No Sandbox Setup
-          area: test
-        YAML
-
-      scenario = @loader.load(scenario_dir)
-
-      assert_equal [], scenario.sandbox_setup
-      assert_equal [], scenario.sandbox_teardown
+      refute_respond_to scenario, :sandbox_setup
+      refute_respond_to scenario, :sandbox_teardown
     end
   end
 

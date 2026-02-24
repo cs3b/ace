@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-02-24
+
+### Changed
+- Consolidate mise.toml handling into `setup:` as `run:` steps; remove `sandbox-setup:` mechanism from `PipelineSandboxBuilder`, `TestScenario`, and `ScenarioLoader`
+- Rename `env:` → `agent-env:` in scenario.yml `setup:` to clarify these are environment variables passed to the runner/verifier agent subprocess, not setup commands
+- Re-export env vars (including `PROJECT_ROOT_PATH`, `ACE_TASKFLOW_PATH`) after login shell profile sourcing in `SetupExecutor#handle_run` to protect against mise's shell hook clobbering
+
 ## [0.20.0] - 2026-02-24
 
 ### Added
