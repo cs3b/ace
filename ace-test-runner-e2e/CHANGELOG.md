@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-02-24
+
+### Added
+- Add `e2e/analyze-failures` workflow to classify failed scenarios/TCs before any fix is applied.
+
+### Changed
+- Rewrite `e2e/fix` as an execution-only workflow with a required analysis gate and explicit rerun-scope discipline.
+
 ## [0.18.2] - 2026-02-24
 
 ### Changed
