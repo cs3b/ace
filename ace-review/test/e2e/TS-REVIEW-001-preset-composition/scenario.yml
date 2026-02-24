@@ -3,6 +3,7 @@ title: Preset Composition and Inheritance
 area: review
 package: ace-review
 priority: high
+tags: [smoke, happy-path, "use-case:review"]
 requires:
   tools: [ace-review, ace-bundle]
   ruby: ">= 3.0"

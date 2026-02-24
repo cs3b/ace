@@ -3,6 +3,7 @@ title: Configuration and Routing
 area: lint
 package: ace-lint
 priority: high
+tags: [happy-path, "use-case:lint"]
 requires:
   tools: [standardrb, rubocop]
   ruby: ">= 3.0"

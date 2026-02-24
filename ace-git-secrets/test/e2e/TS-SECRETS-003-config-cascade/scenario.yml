@@ -3,6 +3,7 @@ title: Configuration Cascade
 area: git-secrets
 package: ace-git-secrets
 priority: high
+tags: [happy-path, "use-case:secrets"]
 requires:
   tools: [ace-git-secrets, git]
   ruby: ">= 3.0"

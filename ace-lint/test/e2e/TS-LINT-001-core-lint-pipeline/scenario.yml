@@ -3,6 +3,7 @@ title: Core Lint Pipeline
 area: lint
 package: ace-lint
 priority: high
+tags: [smoke, happy-path, "use-case:lint"]
 requires:
   tools: [ace-lint, standardrb, jq]
   ruby: ">= 3.0"

@@ -3,6 +3,7 @@ title: Task-Aware Worktree
 area: git-worktree
 package: ace-git-worktree
 priority: high
+tags: [deep, "use-case:worktree"]
 requires:
   tools: [git, ace-git-worktree, ace-taskflow]
 

@@ -3,6 +3,7 @@ title: Basic Extension Inference
 area: NAV
 package: ace-support-nav
 priority: high
+tags: [smoke, happy-path, "use-case:nav"]
 requires:
   tools: [ace-nav]
   ruby: ">= 3.0"

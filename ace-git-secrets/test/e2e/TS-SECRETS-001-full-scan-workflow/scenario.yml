@@ -3,6 +3,7 @@ title: Full Scan Workflow
 area: git-secrets
 package: ace-git-secrets
 priority: high
+tags: [smoke, happy-path, "use-case:secrets"]
 requires:
   tools: [ace-git-secrets, git, gitleaks]
   ruby: ">= 3.0"

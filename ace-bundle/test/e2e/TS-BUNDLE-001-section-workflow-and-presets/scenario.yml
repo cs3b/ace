@@ -3,6 +3,7 @@ title: Section Workflow and Presets
 area: bundle
 package: ace-bundle
 priority: high
+tags: [smoke, happy-path, "use-case:bundle"]
 requires:
   tools: [ace-bundle]
   ruby: ">= 3.0"
