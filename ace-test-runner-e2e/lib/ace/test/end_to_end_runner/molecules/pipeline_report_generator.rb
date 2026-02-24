@@ -108,7 +108,7 @@ module Ace
               block = lines[start_idx...end_idx].join
 
               verdict = normalize_verdict(extract_value(block, "Verdict"))
-              evidence = extract_value(block, "Evidence") || ""
+              evidence = extract_evidence(block)
               next if verdict.nil?
 
               tc_id = scenario_test_cases[goal_number - 1]&.tc_id || format("TC-%03d", goal_number)
@@ -129,6 +129,41 @@ module Ace
             return nil unless match
 
             match[1].strip
+          end
+
+          def extract_evidence(block)
+            lines = block.to_s.lines
+            marker_index = nil
+            inline_value = nil
+
+            lines.each_with_index do |line, idx|
+              match = line.match(/^\s*[-*]?\s*\*\*Evidence(?:\s+of\s+failure)?\*\*:\s*(.*)$/i)
+              next unless match
+
+              marker_index = idx
+              inline_value = match[1].to_s.strip
+              break
+            end
+
+            return inline_value unless marker_index
+
+            collected = []
+            collected << inline_value unless inline_value.empty?
+
+            lines[(marker_index + 1)..]&.each do |line|
+              break if line.match?(/^\s*[-*]?\s*\*\*(Category|Verdict)\*\*:/i)
+              break if line.match?(/^\#{2,3}\s+Goal\s+\d+/i)
+              break if line.match?(/^\s*\*\*Results/i)
+              break if line.strip == "---"
+
+              text = line.rstrip
+              next if text.strip.empty?
+
+              text = text.sub(/^\s*[-*]\s+/, "")
+              collected << text.strip
+            end
+
+            collected.join(" ").strip
           end
 
           def extract_category(block, evidence)

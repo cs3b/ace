@@ -79,6 +79,43 @@ class PipelineReportGeneratorTest < Minitest::Test
     end
   end
 
+  def test_generate_extracts_multiline_evidence_blocks
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      generator = ReportGenerator.new
+
+      result = generator.generate(
+        scenario: build_scenario(tmpdir),
+        verifier_output: <<~OUT,
+          ### Goal 1 - Help Survey
+          - **Verdict**: PASS
+          - **Evidence**: results/tc/01/help.txt has all commands
+
+          ### Goal 2 - Roundtrip
+          - **Verdict**: FAIL
+          - **Evidence of failure**:
+            - `results/tc/02/dry-run.stdout`: no safe candidates
+            - `results/tc/02/prune.stdout`: removed both task.001 and task.002
+          - **Category**: test-spec-error
+        OUT
+        report_dir: report_dir,
+        provider: "claude:haiku",
+        started_at: Time.utc(2026, 2, 24, 10, 0, 0),
+        completed_at: Time.utc(2026, 2, 24, 10, 1, 0)
+      )
+
+      assert_equal "partial", result.status
+
+      metadata = YAML.safe_load_file(File.join(report_dir, "metadata.yml"))
+      failed = metadata.fetch("failed").first
+      assert_equal "TC-002", failed["tc"]
+      assert_equal "test-spec-error", failed["category"]
+      refute_empty failed["evidence"]
+      assert_includes failed["evidence"], "no safe candidates"
+      assert_includes failed["evidence"], "removed both task.001 and task.002"
+    end
+  end
+
   def test_write_failure_report_creates_deterministic_error_reports
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "reports")
