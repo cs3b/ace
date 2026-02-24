@@ -5,49 +5,41 @@ require "dry/cli"
 require "stringio"
 
 class CLITest < Minitest::Test
-  CLI = Ace::Test::EndToEndRunner::CLI
+  RunTest = Ace::Test::EndToEndRunner::CLI::Commands::RunTest
 
   def call_cli(args)
-    capture_io { Dry::CLI.new(CLI).call(arguments: args) }
-  end
-
-  def test_version_command
-    out, = call_cli(["version"])
-    assert_match(/ace-test-e2e \d+\.\d+\.\d+/, out)
-  end
-
-  def test_version_flag
-    out, = call_cli(["--version"])
-    assert_match(/ace-test-e2e \d+\.\d+\.\d+/, out)
+    out = StringIO.new
+    err = StringIO.new
+    old_stdout = $stdout
+    old_stderr = $stderr
+    $stdout = out
+    $stderr = err
+    begin
+      Dry::CLI.new(RunTest).call(arguments: args)
+    rescue SystemExit
+      # dry-cli single-command --help calls exit(0)
+    ensure
+      $stdout = old_stdout
+      $stderr = old_stderr
+    end
+    [out.string, err.string]
   end
 
   def test_help_flag
     out, = call_cli(["--help"])
-    assert out.include?("Commands:"), "Help should show commands"
-    assert out.include?("ace-test-e2e"), "Help should include command name"
-    assert out.include?("run"), "Help should list run command"
-    assert out.include?("suite"), "Help should list suite command"
-    assert out.include?("setup"), "Help should list setup command"
-  end
-
-  def test_help_command
-    out, = call_cli(["help"])
-    assert out.include?("Commands:"), "Help should show commands"
-    assert out.include?("Examples:"), "Help should show examples section"
+    assert out.include?("Run E2E tests via LLM execution"), "Help should show RunTest description"
+    assert out.include?("PACKAGE"), "Help should show package argument"
   end
 
   def test_help_shows_examples
     out, = call_cli(["--help"])
-    assert out.include?("ace-test-e2e run ace-lint TS-LINT-001"), "Help should include run example"
-    assert out.include?("ace-test-e2e suite"), "Help should include suite example"
-    assert out.include?("ace-test-e2e setup"), "Help should include setup example"
+    assert out.include?("ace-lint TS-LINT-001"), "Help should include run example"
   end
 
-  def test_no_args_shows_help
-    # Note: The exe handles empty args by defaulting to ["--help"]
-    # When calling CLI directly with [], dry-cli shows its default help
-    # So we test --help here to verify the help behavior
+  def test_no_subcommand_list
     out, = call_cli(["--help"])
-    assert out.include?("Commands:"), "Help should show commands"
+    refute out.include?("Commands:"), "Single-command CLI should not show subcommand list"
+    refute out.include?("suite"), "Single-command CLI should not mention suite"
+    refute out.include?("setup"), "Single-command CLI should not mention setup"
   end
 end

@@ -11,5 +11,6 @@ class SuiteExecutableTest < Minitest::Test
     assert status.success?, "Expected --help to succeed, got: #{stderr}"
     output = "#{stdout}\n#{stderr}"
     assert_includes output, "Run E2E test suite across all packages"
+    refute_includes output, "Commands:", "Single-command CLI should not show subcommand list"
   end
 end
