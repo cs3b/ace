@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-02-24
+
+### Added
+- Generic `sandbox-setup:` field in scenario.yml for declaring shell commands that run inside the pipeline sandbox after infrastructure setup, with `$SANDBOX_PATH` and `$PROJECT_ROOT_PATH` environment variables
+- `sandbox_setup` and `sandbox_teardown` attributes on `TestScenario` model
+- `parse_sandbox_commands` method in `ScenarioLoader` for parsing sandbox command fields from YAML
+- `execute_sandbox_setup` method in `PipelineSandboxBuilder` replacing hardcoded `trust_mise_config`
+
+### Changed
+- Replace hardcoded `mise trust` call in `PipelineSandboxBuilder` with generic `execute_sandbox_setup` mechanism driven by scenario configuration
+
 ## [0.19.3] - 2026-02-24
 
 ### Fixed

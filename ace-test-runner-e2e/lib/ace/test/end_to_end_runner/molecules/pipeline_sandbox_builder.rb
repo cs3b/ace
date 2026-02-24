@@ -44,6 +44,7 @@ module Ace
             write_mise_config(sandbox_path)
             link_provider_configs(sandbox_path)
             create_result_directories(scenario, sandbox_path, test_cases: test_cases)
+            execute_sandbox_setup(scenario.sandbox_setup, sandbox_path)
             verify_tool_access(scenario, sandbox_path)
 
             {
@@ -119,6 +120,21 @@ module Ace
           def extract_result_dir_index(path)
             match = path.to_s.match(%r{results/tc/(\d{1,3})/?})
             match ? match[1].to_i : nil
+          end
+
+          def execute_sandbox_setup(commands, sandbox_path)
+            return if commands.nil? || commands.empty?
+
+            env = {
+              "SANDBOX_PATH" => sandbox_path,
+              "PROJECT_ROOT_PATH" => @config_root
+            }
+            commands.each do |command|
+              _stdout, stderr, status = Open3.capture3(env, "bash", "-lc", command, chdir: sandbox_path)
+              next if status.success?
+
+              raise "Sandbox setup command failed (exit #{status.exitstatus}): #{command}\n#{stderr}".strip
+            end
           end
 
           def verify_tool_access(scenario, sandbox_path)

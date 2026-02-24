@@ -265,6 +265,41 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_parses_sandbox_setup
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-SETUP-002",
+        scenario_yml: <<~YAML)
+          test-id: TS-SETUP-002
+          title: Sandbox Setup Test
+          area: test
+          sandbox-setup:
+            - "mise trust $SANDBOX_PATH/mise.toml"
+            - "echo hello"
+        YAML
+
+      scenario = @loader.load(scenario_dir)
+
+      assert_equal ["mise trust $SANDBOX_PATH/mise.toml", "echo hello"], scenario.sandbox_setup
+      assert_equal [], scenario.sandbox_teardown
+    end
+  end
+
+  def test_load_defaults_sandbox_setup_to_empty
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-SETUP-003",
+        scenario_yml: <<~YAML)
+          test-id: TS-SETUP-003
+          title: No Sandbox Setup
+          area: test
+        YAML
+
+      scenario = @loader.load(scenario_dir)
+
+      assert_equal [], scenario.sandbox_setup
+      assert_equal [], scenario.sandbox_teardown
+    end
+  end
+
   def test_infer_package_from_path
     Dir.mktmpdir do |tmpdir|
       pkg_dir = File.join(tmpdir, "ace-lint", "test", "e2e", "TS-LINT-001-test")
