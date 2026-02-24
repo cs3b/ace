@@ -29,6 +29,7 @@ build on what you learn there. Do not re-run --help after Goal 1.
 - Save all artifacts to results/tc/{NN}/ directories as specified
 - Define `SANDBOX_ROOT="$(pwd)"` once at start; if you must `cd` into a worktree, return outputs to `${SANDBOX_ROOT}/results/...`
 - Do not fabricate output — all artifacts must come from real tool execution
+- Do not run remediation or fallback commands outside the explicit goal contracts
 - If a goal fails, note the failure and continue to the next goal
 - After all goals, output a brief summary of what you produced for each goal
 
