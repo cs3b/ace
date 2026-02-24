@@ -1,0 +1,39 @@
+# Goal 2 — Workflow Lifecycle
+
+## Goal
+
+Test the full ace-assign workflow lifecycle: create an assignment from `fixtures/lifecycle/job.yaml`, verify directory structure and phase files, display status, complete phases with reports, handle a failure (queue stall), add a dynamic phase, retry the failed phase, and complete the workflow.
+
+## Workspace
+
+Save all output to `results/tc/02/`. Capture evidence at each stage:
+- `results/tc/02/create.stdout`, `.exit` — assignment creation
+- `results/tc/02/structure.stdout` — directory structure listing
+- `results/tc/02/status-initial.stdout` — initial status
+- `results/tc/02/report-analyze.stdout`, `.exit` — first phase completion
+- `results/tc/02/fail-implement.stdout`, `.exit` — failure handling
+- `results/tc/02/status-stalled.stdout` — stalled queue status
+- `results/tc/02/add-dynamic.stdout`, `.exit` — dynamic phase addition
+- `results/tc/02/retry.stdout`, `.exit` — retry mechanics
+- `results/tc/02/status-final.stdout` — final completion status
+
+## Setup
+
+Environment provides:
+- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
+- `PROJECT_ROOT_PATH=.`
+- Fixtures: `fixtures/lifecycle/job.yaml`, `fixtures/lifecycle/report.md`, `fixtures/lifecycle/fix-report.md`, `fixtures/lifecycle/implement-report.md`, `fixtures/lifecycle/verify-report.md`
+
+## Constraints
+
+- Create assignment from `fixtures/lifecycle/job.yaml`.
+- After creation, verify assignment.yaml, phases/, reports/ directories exist.
+- Verify 3 phase files (010-analyze, 020-implement, 030-verify) with .ph.md extension.
+- First phase should be in_progress with skill field and array instructions.
+- Complete analyze phase with `fixtures/lifecycle/report.md`, verify phase 010 marked done and 020 advances.
+- Mark 020 as failed via `ace-assign fail -m "..."`, verify queue stalls.
+- Verify report is rejected on stalled queue.
+- Add dynamic phase "fix-issue" (auto-activates on stalled queue), complete it.
+- Retry failed phase 020 (should NOT change current phase).
+- Complete verify phase, then complete retry phase, verify assignment completion.
+- All artifacts must come from real tool execution.

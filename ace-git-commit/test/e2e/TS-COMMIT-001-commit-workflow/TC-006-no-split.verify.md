@@ -1,0 +1,18 @@
+# Goal 6 — No-Split Override Verification
+
+## Injected Context
+
+The verifier receives the `results/` directory tree and access to the sandbox path.
+
+## Expectations
+
+1. **Artifacts exist** — results/tc/06/ contains git log and git show captures.
+2. **Single commit** — Git log shows exactly one new commit.
+3. **Both packages** — Git show --stat shows files from both pkg-a and pkg-b in the same commit.
+
+## Verdict
+
+- **PASS**: Single commit contains files from both package scopes.
+- **FAIL**: Multiple commits, or only one package's files in the commit.
+
+Report: `PASS` or `FAIL` with evidence (commit log, file list).
