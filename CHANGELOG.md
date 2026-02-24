@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.625] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.20.2**: Make analyze/fix workflows autonomous by requiring concrete fix decisions (target layers, candidate files, and boundaries) and removing normal user-clarification branching for fix targeting.
+
 ## [0.9.624] - 2026-02-24
 
 ### Changed
