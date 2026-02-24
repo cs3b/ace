@@ -66,12 +66,8 @@ class RunSuiteTest < Minitest::Test
     assert_includes param_names, :packages
   end
 
-  def test_suite_registered_in_cli
-    cli = Ace::Test::EndToEndRunner::CLI
-
-    # REGISTERED_COMMANDS is now an array of [name, description] pairs
-    command_names = cli::REGISTERED_COMMANDS.map(&:first)
-    assert_includes command_names, "suite"
+  def test_run_suite_is_available_as_command_class
+    assert_equal RunSuite, Ace::Test::EndToEndRunner::CLI::Commands::RunSuite
   end
 
   def test_call_accepts_only_failures_option

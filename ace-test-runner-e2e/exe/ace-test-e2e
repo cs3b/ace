@@ -4,10 +4,11 @@
 require_relative "../lib/ace/test/end_to_end_runner"
 require "dry/cli"
 
+# Start dry-cli single-command entrypoint with exception-based exit code handling (per ADR-023)
 args = ARGV.empty? ? ["--help"] : ARGV
 
 begin
-  Dry::CLI.new(Ace::Test::EndToEndRunner::CLI).call(arguments: args)
+  Dry::CLI.new(Ace::Test::EndToEndRunner::CLI::Commands::RunTest).call(arguments: args)
 rescue Ace::Core::CLI::Error => e
   warn e.message
   exit(e.exit_code)

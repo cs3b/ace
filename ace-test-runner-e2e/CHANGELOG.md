@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-02-24
+
+### Changed
+- Simplify `ace-test-e2e` to single-command CLI (no `run` subcommand needed)
+- Simplify `ace-test-e2e-suite` to single-command CLI (clean `--help` output)
+
+### Removed
+- Multi-command Registry (`CLI` module with `run`/`suite`/`setup` subcommands)
+- `ace-test-e2e setup` command (setup runs automatically during test execution)
+
 ## [0.17.6] - 2026-02-24
 
 ### Changed
