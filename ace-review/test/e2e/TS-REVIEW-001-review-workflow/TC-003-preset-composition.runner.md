@@ -13,5 +13,7 @@ Save all output to `results/tc/03/`. Capture:
 ## Constraints
 
 - Use --dry-run to test preset resolution without making real API calls.
+- Use explicit local subject input for both commands to avoid empty-subject failures:
+  - `--subject "files:fixtures/**/*.rb"`
 - Using what you learned from Goal 1, invoke ace-review with preset and dry-run flags.
 - All artifacts must come from real tool execution, not fabricated.
