@@ -15,7 +15,7 @@ Save all output to `results/tc/07/`. Capture:
 ## Constraints
 
 - For defaults: ensure no `.ace/` config exists, run scan.
-- For user config: create `.ace/git/secrets.yml` with custom settings, run scan.
+- For user config: create `.ace/git-secrets/config.yml` with custom settings, run scan.
 - For CLI override: use a CLI flag (e.g., --format) that overrides the user config setting.
-- For empty config: create an empty `.ace/git/secrets.yml`, run scan.
+- For empty config: create an empty `.ace/git-secrets/config.yml`, run scan.
 - All artifacts must come from real tool execution, not fabricated.
