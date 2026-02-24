@@ -226,7 +226,7 @@ module Ace
               tc, category = entry.split(":", 2).map { |part| part.to_s.strip }
               next if tc.empty?
 
-              { tc: tc.upcase, category: (category.empty? ? "unknown" : category) }
+              { tc: tc.upcase, category: (category.to_s.empty? ? "unknown" : category) }
             end
           end
 
