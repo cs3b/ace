@@ -14,7 +14,7 @@ parsing and a markdown body for human reading.
 ### 1. Parse verifier output
 
 Extract from `.cache/ace-e2e/verifier-output.md`:
-- Per-goal verdicts (PASS/FAIL with evidence)
+- Per-TC verdicts (PASS/FAIL with evidence)
 - Final results line (`Results: X/8 passed`)
 
 ### 2. Generate report
@@ -29,9 +29,9 @@ package: ace-b36ts
 runner-provider: claude:haiku
 verifier-provider: claude:opus
 timestamp: {{ISO 8601 timestamp}}
-goals-passed: {{N}}
-goals-failed: {{M}}
-goals-total: 8
+tcs-passed: {{N}}
+tcs-failed: {{M}}
+tcs-total: 8
 score: {{N/8 as decimal, e.g. 0.75}}
 verdict: {{pass if 8/8, partial if 1-7, fail if 0}}
 ---
@@ -42,7 +42,7 @@ verdict: {{pass if 8/8, partial if 1-7, fail if 0}}
 
 ## Goal Results
 
-{{per-goal sections from verifier output, reformatted as:}}
+{{per-TC sections from verifier output, reformatted as:}}
 
 ### Goal 1 — Help Survey: PASS
 Evidence: ...
@@ -111,10 +111,10 @@ The YAML frontmatter fields:
 | `runner-provider` | string | LLM provider used for runner |
 | `verifier-provider` | string | LLM provider used for verifier |
 | `timestamp` | string | ISO 8601 execution time |
-| `goals-passed` | integer | Count of PASS verdicts |
-| `goals-failed` | integer | Count of FAIL verdicts |
-| `goals-total` | integer | Total goals (always 8) |
-| `score` | float | goals-passed / goals-total |
+| `tcs-passed` | integer | Count of PASS verdicts |
+| `tcs-failed` | integer | Count of FAIL verdicts |
+| `tcs-total` | integer | Total test cases (always 8) |
+| `score` | float | tcs-passed / tcs-total |
 | `verdict` | string | pass, partial, or fail |
-| `passed` | array[string] | List of passed goal titles |
-| `failed` | array[object] | List of failed goals with `goal`, `reason`, `category` |
+| `passed` | array[string] | List of passed TC IDs or titles |
+| `failed` | array[object] | List of failed TCs with `tc`, `reason`, `category` |

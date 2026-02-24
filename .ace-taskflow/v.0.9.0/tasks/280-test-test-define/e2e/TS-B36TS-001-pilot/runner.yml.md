@@ -6,14 +6,14 @@ bundle:
     output: cache
     max_size: 81920
   files:
-    - ./goal-1-help-survey.runner.md
-    - ./goal-2-encode-today.runner.md
-    - ./goal-3-decode-token.runner.md
-    - ./goal-4-error-behavior.runner.md
-    - ./goal-5-output-routing.runner.md
-    - ./goal-6-structured-output.runner.md
-    - ./goal-7-roundtrip-pipeline.runner.md
-    - ./goal-8-batch-sort.runner.md
+    - ./TC-001-help-survey.runner.md
+    - ./TC-002-encode-today.runner.md
+    - ./TC-003-decode-token.runner.md
+    - ./TC-004-error-behavior.runner.md
+    - ./TC-005-output-routing.runner.md
+    - ./TC-006-structured-output.runner.md
+    - ./TC-007-roundtrip-pipeline.runner.md
+    - ./TC-008-batch-sort.runner.md
 ---
 
 # E2E Test Runner: ace-b36ts Goal-Based Pilot
@@ -29,7 +29,7 @@ build on what you learn there. Do not re-run --help after Goal 1.
 
 - Execute each goal in order (1 through 8)
 - Use only ace-b36ts, jq, and standard shell utilities
-- Save all artifacts to results/{N}/ directories as specified
+- Save all artifacts to results/tc/{NN}/ directories as specified
 - Do not fabricate output — all artifacts must come from real tool execution
 - If a goal fails, note the failure and continue to the next goal
 - After all goals, output a brief summary of what you produced for each goal

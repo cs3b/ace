@@ -6,7 +6,7 @@ Using your knowledge of the tool's output formats from Goal 1, use one structure
 
 ## Workspace
 
-Save all output to `results/6/`. Include both the raw structured output from the tool and the evidence that a downstream tool consumed it successfully (e.g., a created directory, a jq-extracted field, or similar).
+Save all output to `results/tc/06/`. Include both the raw structured output from the tool and the evidence that a downstream tool consumed it successfully (e.g., a created directory, a jq-extracted field, or similar).
 
 ## Constraints
 

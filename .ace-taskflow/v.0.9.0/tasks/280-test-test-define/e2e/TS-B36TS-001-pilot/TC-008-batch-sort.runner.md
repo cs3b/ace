@@ -6,7 +6,7 @@ Encode at least 4 timestamps from different dates (chosen deliberately out of ch
 
 ## Workspace
 
-Save output to `results/8/`. Create two files:
+Save output to `results/tc/08/`. Create two files:
 - One file with the IDs in encode order (alongside their original dates for reference).
 - One file with the IDs in lexicographic sort order (alongside their original dates).
 

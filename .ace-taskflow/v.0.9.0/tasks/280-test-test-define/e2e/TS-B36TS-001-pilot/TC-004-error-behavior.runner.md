@@ -6,7 +6,7 @@ Feed `ace-b36ts` clearly invalid input — nonsense strings, wrong subcommands, 
 
 ## Workspace
 
-Save all output to `results/4/`. For each error case, create a descriptive subdirectory or file set (e.g., `results/4/nonsense-input.exit`, `results/4/nonsense-input.stdout`, `results/4/nonsense-input.stderr`).
+Save all output to `results/tc/04/`. For each error case, create a descriptive subdirectory or file set (e.g., `results/tc/04/nonsense-input.exit`, `results/tc/04/nonsense-input.stdout`, `results/tc/04/nonsense-input.stderr`).
 
 ## Constraints
 
