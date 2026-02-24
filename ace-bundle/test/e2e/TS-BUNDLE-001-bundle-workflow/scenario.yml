@@ -28,6 +28,7 @@ requires:
 
 setup:
   - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - run: |
       # Generate large preset (over 500 lines)
@@ -41,8 +42,5 @@ setup:
         printf '%s\n' '---' 'name: below-threshold-test' '---' '' '# Test Content' ''
         for i in $(seq 1 95); do echo "Line $i"; done
       } > .ace/bundle/presets/below-threshold-test.md
-  - env:
+  - agent-env:
       PROJECT_ROOT_PATH: .
-
-sandbox-setup:
-  - "mise trust $SANDBOX_PATH/mise.toml"
