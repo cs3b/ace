@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.14] - 2026-02-24
+
+### Fixed
+- Compute list statistics from the filtered worktree set in `list` output so `--task-associated` and other filtered views report accurate totals.
+
 ## [0.13.13] - 2026-02-23
 
 ### Technical
