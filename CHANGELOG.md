@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.619] - 2026-02-24
+
+### Fixed
+- **ace-git-worktree v0.13.15**: Resolve task-association filtering through task-aware listing data whenever `--task-associated`/`--no-task-associated` is used, and add regression tests for filter-path behavior.
+- **ace-test-e2e v0.19.2**: Improve verifier evidence parsing to preserve multiline failure evidence (including `Evidence of failure`) in generated metadata and reports.
+
+### Changed
+- **ace-overseer v0.4.11**: Update `TS-OVERSEER-001` TC-005 E2E workflow/verifier instructions to require explicit assignment-completion and post-prune evidence capture.
+
 ## [0.9.618] - 2026-02-24
 
 ### Fixed

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.11] - 2026-02-24
+
+### Changed
+- Update `TS-OVERSEER-001` TC-005 prune workflow instructions to require explicit assignment-completion evidence and post-prune verification artifacts.
+
 ## [0.4.10] - 2026-02-23
 
 ### Technical
