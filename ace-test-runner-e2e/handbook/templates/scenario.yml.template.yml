@@ -14,8 +14,11 @@ priority: high
 # Optional: Estimated duration
 duration: ~{X}min
 
-# Optional: Cost profile for manual runs (smoke|standard|deep)
-cost-tier: standard
+# Optional: Cost profile (smoke|happy-path|deep)
+cost-tier: smoke
+
+# Optional: Tags for discovery-time filtering (--tags/--exclude-tags, OR semantics)
+tags: [{cost-tier}, "use-case:{area}"]
 
 # Optional: Why this scenario must be E2E (not unit-only)
 e2e-justification: "{Requires real CLI/tools/filesystem behavior}"

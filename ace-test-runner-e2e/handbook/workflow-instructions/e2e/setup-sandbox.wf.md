@@ -35,6 +35,8 @@ Set up a safe, isolated environment for E2E tests that:
 - When E2E test calls external APIs
 - When test creates resources that need cleanup
 
+**Note:** For CLI pipeline runs (`ace-test-e2e`), `SetupExecutor` handles sandbox creation automatically using the 6-phase deterministic pipeline. This workflow is the reference for what `SetupExecutor` implements and for manual/agent-driven runs via `/ace-e2e-run`.
+
 ## Prerequisites
 
 - `ace-b36ts` available for unique IDs

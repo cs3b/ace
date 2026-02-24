@@ -2,55 +2,62 @@
 workflow-id: wfi-execute-e2e-test
 name: e2e/execute
 description: Execute test cases in a pre-populated sandbox with reporting
-version: "1.0"
+version: "2.0"
 source: ace-test-runner-e2e
 ---
 
 # Execute E2E Test Workflow
 
-This workflow guides an agent through executing test cases in a **pre-populated sandbox**. The sandbox was created by `SetupExecutor` in Ruby — this workflow handles only execution and reporting.
+This workflow guides an agent through executing test cases in a **pre-populated sandbox**. The sandbox was created by `SetupExecutor` — this workflow handles only execution and reporting.
+
+## SetupExecutor Contract
+
+Before this workflow is invoked, `SetupExecutor` has already:
+- Created an isolated sandbox directory under `.cache/ace-test-e2e/`
+- Initialized git (`git init`, user config, `.gitignore`)
+- Installed `mise.toml` for tool version management
+- Created `.ace` symlinks for configuration access
+- Created `results/tc/{NN}/` directories for each TC
+- Copied fixtures from the scenario's `fixtures/` directory
+- Placed `TC-*.runner.md` and `TC-*.verify.md` files in the sandbox
+
+Tag filtering happens at discovery time (before `SetupExecutor` runs). By the time this workflow executes, only matching scenarios are included.
 
 ## Arguments
 
-- `PACKAGE` (required) - The package containing the test (e.g., `ace-lint`)
-- `TEST_ID` (required) - The test identifier (e.g., `TS-LINT-001`)
-- `--sandbox SANDBOX_PATH` (required) - Path to the pre-populated sandbox directory
+- `PACKAGE` (required) - Package containing the test (e.g., `ace-lint`)
+- `TEST_ID` (required) - Test identifier (e.g., `TS-LINT-001`)
+- `--sandbox SANDBOX_PATH` (required) - Path to pre-populated sandbox directory
 - `--run-id RUN_ID` (optional) - Pre-generated timestamp ID for deterministic report paths
-- `--env KEY=VALUE[,...]` (optional) - Comma-separated environment variables to set before execution (e.g., `--env PROJECT_ROOT_PATH=/code,MODE=test`)
+- `--env KEY=VALUE[,...]` (optional) - Comma-separated environment variables to set before execution
 - `--verify` (optional) - Enable independent verifier mode (second agent pass with sandbox inspection)
-- `TEST_CASES` (optional) - Comma-separated list of test case IDs to execute (e.g., `TC-001,tc-003,002`). When provided, only the specified test cases are executed; all others are skipped.
+- `TEST_CASES` (optional) - Comma-separated TC IDs to execute (e.g., `TC-001,tc-003,002`)
 
-  **Accepted formats:**
-  - `TC-001` - already normalized
-  - `tc-001` - uppercased to `TC-001`
-  - `001` - prefix added: `TC-001`
-  - `1` - zero-padded and prefixed: `TC-001`
-  - `TC-1` - zero-padded: `TC-001`
-
-  When omitted, all test cases in the scenario are executed (default behavior).
+  **TC ID normalization:** `TC-001` (unchanged), `tc-001` → `TC-001`, `001` → `TC-001`, `1` → `TC-001`, `TC-1` → `TC-001`
 
 ## Canonical Conventions
 
 - `ace-test-e2e` runs single-package scenarios; `ace-test-e2e-suite` runs suite-level execution
-- Scenario IDs use `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
-- Standalone test cases use `TC-*.runner.md` and `TC-*.verify.md`
-- TC artifacts are written under `results/tc/{NN}/`
-- Summary counters use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
+- Scenario IDs: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Standalone TC pairs: `TC-*.runner.md` + `TC-*.verify.md`
+- TC artifacts: `results/tc/{NN}/`
+- Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
+
+## Dual-Agent Verifier
+
+When `--verify` is passed (or always-on for CLI pipeline runs), execution follows a dual-agent pattern:
+
+1. **Runner agent** executes TC steps and produces artifacts in `results/tc/{NN}/`
+2. **Verifier agent** independently inspects the sandbox and artifacts against `TC-*.verify.md` expectations
+3. **Report generator** (`PipelineReportGenerator`) produces deterministic summary from verifier output
+
+The verifier has no access to the runner's conversation — it evaluates purely from on-disk evidence. This prevents self-confirmation bias.
 
 ## Subagent Mode
 
-When invoked as a subagent (via Task tool from `/ace-e2e-runs` orchestrator), this workflow operates with special considerations:
+When invoked as a subagent (via Task tool from orchestrator):
 
-### Context Isolation
-
-- Each subagent runs in a clean context with no shared state
-- Timestamp IDs ensure unique report paths (no collisions with parallel runs)
-- All reports are written to disk, not returned inline
-
-### Return Contract
-
-After completing all steps, return a **minimal structured summary** instead of verbose output:
-
+**Return contract:**
 ```markdown
 - **Test ID**: {test-id}
 - **Status**: pass | fail | partial
@@ -61,322 +68,131 @@ After completing all steps, return a **minimal structured summary** instead of v
 - **Issues**: Brief description or "None"
 ```
 
-**Do NOT include:**
-- Full report contents (they're on disk)
-- Detailed test case output
-- Environment setup logs
-
-The orchestrator aggregates these summaries and reads report files as needed.
-
-### Report-First Design
-
-1. Write all reports to `.cache/ace-test-e2e/` (steps 3.1-3.3)
-2. Return only paths and summary counts
-3. Orchestrator reads files for detailed aggregation
+Do NOT return full report contents — they are on disk.
 
 ## TC-Level Execution Mode
 
-When invoked with `--tc-mode`, this workflow operates in TC-level mode where only a single test case is executed. Steps 1-2 of the standard workflow are skipped.
+When invoked with `--tc-mode`, only a single TC is executed.
 
-### TC-Level Arguments
+**TC-Level Arguments:**
+- `PACKAGE` (required), `TEST_ID` (required), `TC_ID` (required)
+- `--tc-mode` (required), `--sandbox SANDBOX_PATH` (required)
+- `--run-id RUN_ID` (optional)
 
-- `PACKAGE` (required) - Package name (e.g., `ace-lint`)
-- `TEST_ID` (required) - Parent scenario ID (e.g., `TS-LINT-001`)
-- `TC_ID` (required) - Test case ID (e.g., `TC-001`)
-- `--tc-mode` (required) - Activates TC-level execution mode
-- `--sandbox SANDBOX_PATH` (required) - Path to pre-populated sandbox directory
-- `--run-id RUN_ID` (optional) - Pre-generated timestamp ID for report paths
+**TC-Level Steps:**
+1. Verify `SANDBOX_PATH` exists
+2. `cd SANDBOX_PATH`
+3. Execute TC steps from the runner file
+4. Write per-TC reports to `{RUN_ID}-{pkg}-{scenario}-{tc}-reports/`
+5. Return TC-level contract
 
-### TC-Level Execution Steps
-
-1. **Verify sandbox** — Confirm `SANDBOX_PATH` exists and contains the expected test environment
-2. **Enter sandbox** — `cd SANDBOX_PATH`
-3. **Execute TC steps** — Follow the test case instructions (objective, steps, expected results)
-4. **Write per-TC reports** — Generate `summary.r.md`, `experience.r.md`, `metadata.yml` in `{RUN_ID}-{pkg}-{scenario}-{tc}-reports/`
-5. **Return TC-level contract:**
-
-```markdown
-- **Test ID**: {TEST_ID}
-- **TC ID**: {TC_ID}
-- **Status**: pass | fail
-- **Report Paths**: {run-id}-{pkg}-{scenario}-{tc}-reports/*
-- **Issues**: Brief description or "None"
-```
-
-### TC-Level Rules
-
-- Do NOT create or modify sandbox setup — it is already prepared by `SetupExecutor`
-- Do NOT run setup scripts or environment initialization
-- Execute only the steps described in the test case content
+**TC-Level Rules:**
+- Do NOT create or modify sandbox — `SetupExecutor` already prepared it
+- Execute only the steps described in the TC content
 - Report actual results even if they differ from expected
 
 ---
 
 ## Sandbox Rules
 
-- Do NOT create or modify the sandbox setup — it is already prepared by `SetupExecutor`
+- Do NOT create or modify sandbox setup — it is already prepared
 - Do NOT run environment setup, prerequisite checks, or test data creation
-- The sandbox directory and fixtures are already in place
-- Focus exclusively on test case execution and reporting
+- Focus exclusively on TC execution and reporting
 
 ## Workflow Steps
 
 ### 1. Set Up Execution Environment
 
-Parse arguments and prepare for execution:
+1. Parse `--env` and export each `KEY=VALUE`
+2. `cd SANDBOX_PATH`
+3. Set `TIMESTAMP_ID` from `--run-id` or generate with `ace-b36ts encode`
 
-1. **Set environment variables** — Parse `--env` and export each `KEY=VALUE`
-2. **Enter sandbox** — `cd SANDBOX_PATH`
-3. **Set TIMESTAMP_ID** — Use `--run-id` value if provided, otherwise generate with `ace-b36ts encode`
-
-**Expected Variables After Setup:**
-- `SANDBOX_PATH` - The pre-populated sandbox directory (current working directory)
-- `TIMESTAMP_ID` - Unique identifier for this test run
-- Any variables from `--env` (e.g., `PROJECT_ROOT_PATH`, `MODE`)
+**Expected variables:**
+- `SANDBOX_PATH` — Pre-populated sandbox (cwd)
+- `TIMESTAMP_ID` — Unique run identifier
+- Any variables from `--env`
 
 ### 2. Discover and Filter Test Cases
 
-Discover test case definitions in the scenario directory within the sandbox:
+Find TC definitions in the sandbox:
 
 ```bash
 find "${SANDBOX_PATH}" -name "TC-*.runner.md" -o -name "TC-*.verify.md" 2>/dev/null | sort
 ```
 
-**After discovery, explicitly list all found test cases before proceeding:**
-
+List all found TCs before proceeding:
 ```
 Found N test case files:
 - TC-001: {filename}
 - TC-002: {filename}
-...
 ```
 
-> **CRITICAL TC FIDELITY RULE:** You MUST execute ONLY the discovered standalone pair definitions (`TC-*.runner.md` + `TC-*.verify.md`). Do NOT invent test cases.
+> **TC FIDELITY RULE:** Execute ONLY discovered `TC-*.runner.md` + `TC-*.verify.md` pairs. Do NOT invent TCs. Every runner must have a matching verifier and vice versa. Missing pairs are errors — report them and skip the unmatched TC.
 
-If `TEST_CASES` argument was provided, parse and normalize the filter:
-
-**Step 1: Parse TEST_CASES argument**
-
-Split the comma-separated list into individual IDs:
-
-```bash
-IFS=',' read -ra RAW_CASES <<< "$TEST_CASES"
-```
-
-**Step 2: Normalize test case IDs**
-
-Each ID must be normalized to the canonical `TC-NNN` format (uppercase, zero-padded to 3 digits):
-
-```bash
-normalize_tc_id() {
-  local id="$1"
-  id="$(echo "$id" | xargs)"
-  id="$(echo "$id" | tr '[:lower:]' '[:upper:]')"
-  local num
-  if [[ "$id" =~ ^TC-([0-9]+)$ ]]; then
-    num="${BASH_REMATCH[1]}"
-  elif [[ "$id" =~ ^([0-9]+)$ ]]; then
-    num="${BASH_REMATCH[1]}"
-  else
-    echo "ERROR: Invalid test case ID format: '$1'" >&2
-    return 1
-  fi
-  printf "TC-%03d" "$((10#$num))"
-}
-
-declare -A SEEN_CASES
-FILTERED_CASES=()
-for raw_id in "${RAW_CASES[@]}"; do
-  normalized="$(normalize_tc_id "$raw_id")" || exit 1
-  if [[ -z "${SEEN_CASES[$normalized]+x}" ]]; then
-    SEEN_CASES[$normalized]=1
-    FILTERED_CASES+=("$normalized")
-  fi
-done
-
-echo "Test cases to execute: ${FILTERED_CASES[*]}"
-```
-
-When `TEST_CASES` is empty or not provided, execute all discovered test cases (default behavior).
+If `TEST_CASES` argument provided, normalize IDs to `TC-NNN` format and filter. Only execute matching TCs.
 
 ### 3. Execute Test Cases
 
-> **CRITICAL: Use `ace-test-e2e-sh` for ALL test case commands**
->
-> Each bash block runs in a fresh shell. Use `ace-test-e2e-sh "$SANDBOX_PATH"` to ensure
-> every command executes inside the sandbox. See syntax examples below.
->
-> **Single command:** `ace-test-e2e-sh "$SANDBOX_PATH" git add README.md`
-> **Multi-command block:** Pass via stdin:
-> ```
-> ace-test-e2e-sh "$SANDBOX_PATH" bash << 'SANDBOX'
-> cat > file.txt << 'EOF'
-> content
-> EOF
-> git add file.txt
-> SANDBOX
-> ```
+> **Use `ace-test-e2e-sh "$SANDBOX_PATH"` for ALL commands.**
 
-**Determine execution scope:**
+For each TC (TC-NNN):
 
-- If `FILTERED_CASES` is set (from step 2), execute **only** test cases whose IDs are in the `FILTERED_CASES` array. Skip all other test cases.
-- If `FILTERED_CASES` is not set, execute **all** test cases in the scenario (default behavior).
+1. **Check filter** — skip if `FILTERED_CASES` is set and TC not in list
+2. **Read** the runner file objective
+3. **Execute** runner steps, save artifacts to `results/tc/{NN}/`
+4. **Capture** exit codes, output, error messages
+5. **Evaluate** against verifier expectations
+6. **Record** Pass/Fail with per-TC evidence
 
-For each test case (TC-NNN), execute the standalone pair flow:
-1. Execute runner goals and write artifacts to `results/tc/{NN}/`
-2. Verify artifacts against expectations from paired `.verify.md`
-3. Record per-goal verdicts with evidence
+**Self-check:** Before writing reports, verify your result table has exactly N rows matching discovered TCs (or filtered subset).
 
-For each test case (TC-NNN):
+Track friction points for the experience report.
 
-1. **Check filter** - If `FILTERED_CASES` is set and this test case ID is not in the array, **skip** this test case entirely. Log: `Skipping TC-NNN (not in filter)`.
-2. **Read the objective** - Understand what this test verifies
-3. **Execute runner/verifier flow** - run goals, then validate evidence
-4. **Capture results** - Record:
-   - Actual exit code
-   - Command output
-   - Any error messages
-5. **Evaluate evidence** - Check verifier expectations and goal evidence
-6. **Record status** - Pass or Fail with per-goal evidence
+### 4. Write Reports
 
-Report each test case result immediately after execution.
+Write three report files to `${SANDBOX_PATH}-reports/`.
 
-**Self-check:** Before writing reports, verify your result table has exactly N rows matching the discovered TC IDs in Step 2 (or the filtered subset). If you have more or fewer results than expected, STOP and re-examine — you may have skipped a test case or invented one.
-
-**During execution, track friction points** for the Agent Experience Report:
-- Documentation gaps discovered
-- Unexpected tool behavior
-- Confusing error messages
-- Workarounds needed
-- Positive observations
-
-### 4. Write Reports to Disk
-
-After test execution completes (pass or fail), write three report files to a reports subfolder.
-
-**Important:** Replace all `{placeholder}` values with actual data before writing. Do not copy placeholders literally.
-
-**Set up report paths (reports subfolder):**
 ```bash
 REPORT_DIR="${SANDBOX_PATH}-reports"
 mkdir -p "$REPORT_DIR"
 ```
 
-**Error Handling:**
-- If the cache directory doesn't exist, create it with `mkdir -p "$(dirname "$SANDBOX_PATH")"`
-- If write fails (permissions), report the error and suggest manual intervention
-- For partial test completion, still write reports with status "partial" or "incomplete"
+Replace all `{placeholder}` values with actual data.
 
-#### 4.1 Write summary report (summary.r.md)
+#### 4.1 summary.r.md
 
-**Note:** When test case filtering is active (`FILTERED_CASES` is set), include **only** the executed test cases in the Results Summary table.
-
-```bash
-cat > "${REPORT_DIR}/summary.r.md" << 'EOF'
+```yaml
 ---
 test-id: {test-id}
 package: {package}
 agent: {agent-name}
 executed: {timestamp}
-status: {status}  # One of: pass, fail, partial, incomplete
-passed: [{list of passed TC IDs or goal IDs}]
-failed: [{list of failed TC IDs or goal IDs}]
-score: "{passed-count}/{total-count}"
+status: pass|fail|partial|incomplete
+tcs-passed: {count}
+tcs-failed: {count}
+tcs-total: {count}
+score: "{passed}/{total}"
 verdict: pass|fail|partial|incomplete
-total: {count}
-filtered: {true|false}
+filtered: true|false
+failed:
+  - tc: TC-NNN
+    category: tool-bug|runner-error|test-spec-error|infrastructure-error
+    evidence: "brief evidence"
 ---
-
-# E2E Test Report: {test-id}
-
-## Test Information
-
-| Field | Value |
-|-------|-------|
-| Test ID | {test-id} |
-| Title | {test-title} |
-| Package | {package} |
-| Agent | {agent-name} |
-| Executed | {timestamp} |
-| Duration | {duration} |
-| Filtered | {Yes: TC-001, TC-003 / No} |
-
-## Results Summary
-
-| Test Case | Description | Status |
-|-----------|-------------|--------|
-| TC-001 | {description} | Pass/Fail |
-...
-
-## Overall Status: {PASS/FAIL/PARTIAL}
-
-### Goal Evaluation
-
-| Goal/Criterion | Status | Evidence |
-|----------------|--------|----------|
-| {criterion-1} | PASS/FAIL | {artifact/output reference} |
-| {criterion-2} | PASS/FAIL | {artifact/output reference} |
-
-{Include failed test details, environment info, observations}
-EOF
 ```
 
-#### 4.2 Write agent experience report (experience.r.md)
+Followed by test information table, results summary, and TC evaluation details.
 
-```bash
-cat > "${REPORT_DIR}/experience.r.md" << 'EOF'
----
-test-id: {test-id}
-test-title: {test-title}
-package: {package}
-agent: {agent-name}
-executed: {timestamp}
-status: complete|partial|incomplete
----
+#### 4.2 experience.r.md
 
-# Agent Experience Report: {test-id}
+Agent experience report with friction points, root cause analysis, improvement suggestions, and positive observations.
 
-## Summary
-{Brief summary of execution experience and friction level}
+#### 4.3 metadata.yml
 
-## Friction Points
-
-### Documentation Gaps
-- {Any missing or unclear documentation}
-
-### Tool Behavior Issues
-- {Unexpected behavior, confusing errors}
-
-### API/CLI Friction
-- {Inconsistent flags, awkward workflows}
-
-## Root Cause Analysis
-{For failures: WHY not just WHAT}
-
-## Improvement Suggestions
-- [ ] {Actionable improvements}
-
-## Workarounds Used
-- {What required workarounds}
-
-## Positive Observations
-- {What worked well}
-EOF
-```
-
-**Note:** If no friction was encountered, the AX report should note "No significant friction encountered" in the Summary section.
-
-#### 4.3 Write metadata (metadata.yml)
-
-```bash
-cat > "${REPORT_DIR}/metadata.yml" << EOF
-run-id: "${TIMESTAMP_ID}"
+```yaml
+run-id: "{TIMESTAMP_ID}"
 test-id: "{test-id}"
 package: "{package}"
-agent: "{agent-name}"
-started: "{start-timestamp}"
-completed: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-duration: "{duration-seconds}s"
 status: "{status}"
 score: {0.0-1.0}
 verdict: pass|partial|fail
@@ -387,22 +203,15 @@ failed:
   - tc: TC-NNN
     category: tool-bug|runner-error|test-spec-error|infrastructure-error
     evidence: "brief evidence"
-failed_test_cases:
-  - TC-NNN
 test_cases:
-  filtered: {true|false}
-  executed: [{list of TC IDs}]
+  filtered: true|false
+  executed: [TC-001, TC-003]
 git:
-  branch: "$(git symbolic-ref --short HEAD 2>/dev/null || echo 'detached-HEAD')"
-  commit: "$(git rev-parse --short HEAD)"
-tools:
-  ruby: "$(ruby --version | cut -d' ' -f2)"
-EOF
+  branch: "{branch}"
+  commit: "{short-sha}"
 ```
 
 #### 4.4 Report file paths
-
-After writing reports, include the paths in the response:
 
 ```
 Reports written:
@@ -413,58 +222,22 @@ Reports written:
 
 ### 5. Return Summary
 
-Summarize the test execution in the response. Reports have been persisted to disk in step 4.
-
 ```markdown
 ## E2E Test Execution Report
-
-**Test ID:** {test-id}
-**Package:** {package}
-**Executed:** {timestamp}
-**Agent:** {agent-name}
-
-### Results
+**Test ID:** {test-id} | **Package:** {package} | **Status:** {PASS/FAIL}
 
 | Test Case | Description | Status |
 |-----------|-------------|--------|
 | TC-001    | ...         | Pass   |
-| TC-002    | ...         | Fail   |
 
-### Overall Status: {PASS/FAIL}
-
-### Observations
-
-{Any observations or issues noted during execution}
-
-### Reports
-
-Reports persisted to `.cache/ace-test-e2e/`:
-- `{timestamp}-{short-pkg}-{short-id}/` - Sandbox with test artifacts
-- `{timestamp}-{short-pkg}-{short-id}-reports/` - Reports folder containing:
-  - `summary.r.md` - Detailed test results
-  - `experience.r.md` - Friction points and improvement suggestions
-  - `metadata.yml` - Run metadata
+Reports: `.cache/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/`
 ```
 
 ## Error Handling
 
-### Test Case Failure
-
-If a test case fails:
-1. Record the failure details
-2. Continue with remaining test cases
-3. Include failure in summary report
-
-### Environment Issues
-
-If the sandbox is missing or corrupted:
-1. Report the error immediately
-2. Do NOT attempt to recreate the sandbox
-3. Return an error summary
-
-### Test Case Filter Failure
-
-If you realize you executed test cases that should have been filtered:
-1. **STOP** - Do not write reports with incorrect data
-2. Note the error in your response
-3. Offer to re-run with correct filtering
+| Failure | Action |
+|---------|--------|
+| TC fails | Record details, continue remaining TCs, include in report |
+| Sandbox missing/corrupted | Report error, do NOT recreate, return error summary |
+| TC filter mismatch | STOP, do not write reports, offer re-run |
+| Missing TC pair file | Report error for that TC, skip it, continue others |

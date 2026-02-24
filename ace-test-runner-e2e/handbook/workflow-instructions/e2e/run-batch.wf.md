@@ -15,6 +15,8 @@ This workflow executes multiple E2E tests in parallel using Task tool subagents.
 - `PACKAGE` (optional) - The package containing tests (e.g., `ace-lint`). If omitted with `--all`, runs all packages.
 - `--all` (optional) - Run tests across all packages.
 - `--sequential` (optional) - Force sequential execution instead of parallel.
+- `--tags TAG,...` (optional) - Include only scenarios matching any specified tag (OR semantics).
+- `--exclude-tags TAG,...` (optional) - Exclude scenarios matching any specified tag (OR semantics).
 
 ## Architecture
 

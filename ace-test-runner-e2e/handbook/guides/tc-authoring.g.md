@@ -106,6 +106,13 @@ Example:
 Pass only when all expectations are satisfied by on-disk evidence.
 ```
 
+## Scenario-Level Configuration
+
+- `tags` in `scenario.yml` control discovery-time filtering via `--tags`/`--exclude-tags`. Tags are not set per-TC; they apply to the entire scenario.
+- `runner.yml.md` bundles execution context for the runner agent (tool paths, sandbox conventions, environment setup).
+- `verifier.yml.md` bundles validation criteria for the independent verifier agent (artifact expectations, verdict rules).
+- TCs execute sequentially within a scenario. The runner agent accumulates context across TCs (e.g., files created in TC-001 are available in TC-002).
+
 ## Best Practices
 
 - Keep each TC focused on one coherent behavior path.

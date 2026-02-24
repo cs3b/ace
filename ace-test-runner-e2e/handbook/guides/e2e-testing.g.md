@@ -25,6 +25,7 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
   - `verifier.yml.md`
 - TC artifacts use `results/tc/{NN}/`
 - Summary reports use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
+- Scenarios declare `tags` for discovery-time filtering via `--tags`/`--exclude-tags`
 
 ## E2E Value Gate
 
@@ -40,7 +41,22 @@ If not, keep coverage in unit/integration tests.
 - Keep scenarios small and coherent.
 - Typical scenario size: 2-5 TCs.
 - Consolidate assertions that share the same command/setup into one TC.
-- Use `cost-tier` to stage manual execution (`smoke` -> `standard` -> `deep`).
+- Use `cost-tier` to stage execution (`smoke` → `happy-path` → `deep`).
+
+## Execution Pipeline
+
+CLI providers (`ace-test-e2e`, `ace-test-e2e-suite`) use a deterministic 6-phase pipeline:
+
+1. **Setup** — `SetupExecutor` creates sandbox (git init, mise.toml, .ace symlinks, results/tc/{NN}/ dirs)
+2. **Runner prompt** — `SkillPromptBuilder` assembles context from `runner.yml.md` and `TC-*.runner.md`
+3. **Runner LLM** — Agent executes TC steps in sandbox, produces artifacts
+4. **Verifier prompt** — `SkillPromptBuilder` assembles context from `verifier.yml.md` and `TC-*.verify.md`
+5. **Verifier LLM** — Independent agent evaluates artifacts against expectations
+6. **Report** — `PipelineReportGenerator` produces deterministic summary from verifier output
+
+API providers use a single-prompt approach (runner and verifier in one pass).
+
+The verifier is always-on for standalone goal-mode TCs in the CLI pipeline. For procedural runs via `/ace-e2e-run`, the verifier is opt-in via `--verify`.
 
 ## Scenario Layout
 
@@ -57,6 +73,7 @@ If not, keep coverage in unit/integration tests.
 ## Required Scenario Evidence
 
 In `scenario.yml`, record:
+- `tags` (cost-tier tag + use-case tags)
 - `e2e-justification`
 - `unit-coverage-reviewed`
 - `cost-tier`

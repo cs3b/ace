@@ -4,9 +4,11 @@ package: {package}
 agent: {agent-name}
 executed: {timestamp}  # ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ
 status: pass|fail|partial|incomplete
-passed: {count}
-failed: {count}
-total: {count}
+tcs-passed: {count}
+tcs-failed: {count}
+tcs-total: {count}
+score: "{passed-count}/{total-count}"
+verdict: pass|fail|partial|incomplete
 ---
 
 # E2E Test Report: {test-id}
@@ -36,7 +38,12 @@ total: {count}
 
 ## Failed Test Details
 
-{If any tests failed, provide detailed information for each failure.}
+```yaml
+failed:
+  - tc: TC-{NNN}
+    category: tool-bug|runner-error|test-spec-error|infrastructure-error
+    evidence: "{Brief description of failure and supporting artifacts}"
+```
 
 ### TC-{NNN}: {Test Case Name}
 
