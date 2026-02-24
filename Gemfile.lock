@@ -126,7 +126,7 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.4.11)
+    ace-overseer (0.4.12)
       ace-assign (~> 0.12)
       ace-git (~> 0.10)
       ace-git-worktree (~> 0.13)
@@ -247,7 +247,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.19.2)
+    ace-test-runner-e2e (0.19.3)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.23)
       ace-support-config (~> 0.7)

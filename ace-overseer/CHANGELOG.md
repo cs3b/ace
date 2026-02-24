@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.12] - 2026-02-24
+
+### Changed
+- Refine `TS-OVERSEER-001` TC-005 prune workflow runner instructions to explicitly resolve task.001 worktree path and execute `ace-assign` steps from that worktree while writing artifacts to the sandbox `results/` tree.
+
 ## [0.4.11] - 2026-02-24
 
 ### Changed

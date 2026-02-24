@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.620] - 2026-02-24
+
+### Fixed
+- **ace-test-e2e v0.19.3**: Remove sandbox copying of standalone TC definition files (`TC-*.runner.md` / `TC-*.verify.md`) and clarify SANDBOX_ROOT artifact-write rules for worktree-context execution.
+
+### Changed
+- **ace-overseer v0.4.12**: Tighten `TS-OVERSEER-001` TC-005 instructions to resolve and use the task.001 worktree context for `ace-assign` operations while persisting evidence in sandbox `results/`.
+
 ## [0.9.619] - 2026-02-24
 
 ### Fixed

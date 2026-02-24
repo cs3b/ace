@@ -27,6 +27,7 @@ build on what you learn there. Do not re-run --help after Goal 1.
 - Execute each goal in order (1 through 5)
 - Use only ace-overseer, ace-git-worktree, git, tmux, and standard shell utilities
 - Save all artifacts to results/tc/{NN}/ directories as specified
+- Define `SANDBOX_ROOT="$(pwd)"` once at start; if you must `cd` into a worktree, return outputs to `${SANDBOX_ROOT}/results/...`
 - Do not fabricate output — all artifacts must come from real tool execution
 - If a goal fails, note the failure and continue to the next goal
 - After all goals, output a brief summary of what you produced for each goal
