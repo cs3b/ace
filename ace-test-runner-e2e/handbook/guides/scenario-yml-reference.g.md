@@ -63,7 +63,13 @@ When `mode: goal` is used:
 
 Artifact layout conventions:
 - Canonical: `results/tc/{NN}/`
-- Legacy `results/{N}/` layout is deprecated and should not be authored in new scenarios
+- Avoid non-TC-scoped result folders; keep artifacts under canonical TC-indexed paths
+
+Canonical summary report fields:
+- `tcs-passed`
+- `tcs-failed`
+- `tcs-total`
+- `failed[].tc`
 
 ### `requires` Object
 

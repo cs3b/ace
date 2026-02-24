@@ -17,6 +17,16 @@ This workflow guides an agent through creating a new E2E test scenario.
 - `--format ts` (optional, default) - Test format. Creates a directory with `scenario.yml` and `.tc.md` files (TS-format). This is the only supported format.
 - `--context <description>` (optional) - Description of what the test should verify
 
+## Canonical Conventions
+
+- Scenario ID format: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Standalone goal-mode files: `TC-*.runner.md` and `TC-*.verify.md`
+- TC artifact layout: `results/tc/{NN}/`
+- Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
+- CLI split reminder:
+  - `ace-test-e2e` for single-package execution
+  - `ace-test-e2e-suite` for suite-level execution
+
 ## Workflow Steps
 
 ### 1. Validate Inputs

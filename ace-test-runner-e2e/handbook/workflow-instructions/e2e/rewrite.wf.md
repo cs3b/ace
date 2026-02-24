@@ -25,6 +25,16 @@ This workflow executes an approved change plan by deleting old scenarios, creati
 - `--plan <path>` (optional) - Path to change plan from Stage 2. If omitted, runs Stages 1+2 first.
 - `--dry-run` (optional) - Show what would change without writing files.
 
+## Canonical Conventions
+
+- Keep scenario IDs in `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Keep standalone goal-mode pairs as `TC-*.runner.md` + `TC-*.verify.md`
+- Keep TC artifact outputs under `results/tc/{NN}/`
+- Keep summary report fields as `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
+- CLI split reminder:
+  - `ace-test-e2e` runs single-package tests
+  - `ace-test-e2e-suite` runs suite-level tests
+
 ## Workflow Steps
 
 ### 1. Load Change Plan

@@ -18,6 +18,13 @@ ACE supports two goal-based authoring formats:
 
 Procedural mode remains supported as the default.
 
+## Canonical Conventions
+
+- Scenario IDs: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Standalone goal mode uses `TC-*.runner.md` and `TC-*.verify.md`
+- TC artifacts write to `results/tc/{NN}/`
+- Summary counters use `tcs-passed`, `tcs-failed`, and `tcs-total`
+
 ## File Naming
 
 ### Inline / Procedural TC Files

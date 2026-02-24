@@ -33,6 +33,14 @@ This workflow guides an agent through executing an E2E test scenario.
 - Never run `/ace:...` as a shell command.
 - If slash commands are unavailable in the environment, stop and report that limitation in the final `Issues` field.
 
+## Canonical Conventions
+
+- `ace-test-e2e` runs single-package scenarios; `ace-test-e2e-suite` runs suite-level execution
+- Scenario IDs use `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Standalone goal-mode test cases use `TC-*.runner.md` and `TC-*.verify.md`
+- TC artifacts are written under `results/tc/{NN}/`
+- Summary counters use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
+
 ## Subagent Mode
 
 When invoked as a subagent (via Task tool from `/ace-e2e-runs` orchestrator), this workflow operates with special considerations:

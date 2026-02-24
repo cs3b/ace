@@ -29,6 +29,14 @@ This workflow guides an agent through executing test cases in a **pre-populated 
 
   When omitted, all test cases in the scenario are executed (default behavior).
 
+## Canonical Conventions
+
+- `ace-test-e2e` runs single-package scenarios; `ace-test-e2e-suite` runs suite-level execution
+- Scenario IDs use `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
+- Standalone goal-mode test cases use `TC-*.runner.md` and `TC-*.verify.md`
+- TC artifacts are written under `results/tc/{NN}/`
+- Summary counters use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
+
 ## Subagent Mode
 
 When invoked as a subagent (via Task tool from `/ace-e2e-runs` orchestrator), this workflow operates with special considerations:
