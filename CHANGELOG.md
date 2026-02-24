@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.604] - 2026-02-24
+
+### Changed
+- **ace-b36ts v0.7.4**: Migrate package E2E suite to single goal-mode pilot scenario (`TS-B36TS-001-pilot`) with runner/verifier split artifacts and remove four legacy procedural scenarios
+
 ## [0.9.603] - 2026-02-23
 
 ### Fixed
