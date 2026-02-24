@@ -239,6 +239,43 @@ class SetupExecutorTest < Minitest::Test
     end
   end
 
+  def test_tmux_session_uses_run_id_with_name_source_run_id
+    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [{ "tmux-session" => { "name-source" => "run-id" } }],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-TEST-001",
+        run_id: "8pny7t0"
+      )
+
+      assert result[:success]
+      assert_equal "8pny7t0", result[:tmux_session]
+      assert_equal "8pny7t0", result[:env]["ACE_TMUX_SESSION"]
+    ensure
+      @executor.teardown
+    end
+  end
+
+  def test_tmux_session_name_source_run_id_falls_back_when_run_id_missing
+    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+
+    Dir.mktmpdir do |sandbox|
+      result = @executor.execute(
+        setup_steps: [{ "tmux-session" => { "name-source" => "run-id" } }],
+        sandbox_dir: sandbox,
+        scenario_name: "TS-TEST-001"
+      )
+
+      assert result[:success]
+      assert_equal "TS-TEST-001-e2e", result[:tmux_session]
+      assert_equal "TS-TEST-001-e2e", result[:env]["ACE_TMUX_SESSION"]
+    ensure
+      @executor.teardown
+    end
+  end
+
   def test_tmux_session_uses_fallback_name_without_scenario_name
     skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
 

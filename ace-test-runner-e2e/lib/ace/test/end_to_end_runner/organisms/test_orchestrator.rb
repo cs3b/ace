@@ -113,7 +113,8 @@ module Ace
               setup_steps: scenario.setup_steps,
               sandbox_dir: sandbox_dir,
               fixture_source: scenario.fixture_path,
-              scenario_name: scenario.test_id
+              scenario_name: scenario.test_id,
+              run_id: timestamp
             )
 
             unless result[:success]

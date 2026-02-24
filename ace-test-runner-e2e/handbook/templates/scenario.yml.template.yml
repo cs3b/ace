@@ -43,6 +43,9 @@ requires:
 # Available: git-init, run:, copy-fixtures, write-file:, agent-env:, tmux-session
 setup:
   - git-init
+  # Optional detached tmux session for test isolation (uses unique run ID)
+  # - tmux-session:
+  #     name-source: run-id
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   # Uncomment as needed:
   # - copy-fixtures         # Copy fixtures/ directory to sandbox

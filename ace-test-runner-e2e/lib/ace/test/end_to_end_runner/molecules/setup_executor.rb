@@ -23,13 +23,15 @@ module Ace
           # @param sandbox_dir [String] Path to the sandbox directory
           # @param fixture_source [String, nil] Path to the fixtures/ directory
           # @param scenario_name [String, nil] Test ID for tmux session naming (e.g., "TS-OVERSEER-001")
+          # @param run_id [String, nil] Unique run ID for deterministic tmux session naming
           # @return [Hash] Result with :success, :steps_completed, :error, :env, :tmux_session keys
-          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil)
+          def execute(setup_steps:, sandbox_dir:, fixture_source: nil, scenario_name: nil, run_id: nil)
             FileUtils.mkdir_p(sandbox_dir)
             env = {}
             steps_completed = 0
             @tmux_session = nil
             @scenario_name = scenario_name
+            @run_id = run_id
 
             setup_steps.each do |step|
               execute_step(step, sandbox_dir, env, fixture_source)
@@ -84,14 +86,21 @@ module Ace
               handle_write_file(value["path"], value["content"], sandbox_dir)
             when "agent-env"
               handle_env(value, env)
+            when "tmux-session"
+              handle_tmux_session(env, value)
             else
               raise ArgumentError, "Unknown setup step type: #{key.inspect}"
             end
           end
 
           # Create an isolated detached tmux session and store its name in env
-          def handle_tmux_session(env)
-            session_name = @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{Time.now.to_i}"
+          def handle_tmux_session(env, config = nil)
+            name_source = config.is_a?(Hash) ? config["name-source"] : nil
+            session_name = if name_source == "run-id" && @run_id && !@run_id.to_s.empty?
+                             @run_id
+                           else
+                             @scenario_name ? "#{@scenario_name}-e2e" : "ace-e2e-#{Time.now.to_i}"
+                           end
             _stdout, stderr, status = Open3.capture3("tmux", "new-session", "-d", "-s", session_name)
             raise "Failed to create tmux session '#{session_name}': #{stderr.strip}" unless status.success?
 

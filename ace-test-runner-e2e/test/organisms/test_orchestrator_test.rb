@@ -782,6 +782,44 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_cli_provider_passes_run_id_to_setup_tmux_session
+    skip "tmux not available" unless system("tmux", "-V", out: File::NULL, err: File::NULL)
+
+    Dir.mktmpdir do |tmpdir|
+      create_ts_test_package_with_run_id_tmux_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
+
+      received = {}
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil|
+        received[:env_vars] = env_vars
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "OK",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(
+        base_dir: tmpdir,
+        provider: "claude:sonnet",
+        executor: executor,
+        timestamp_generator: -> { "8pny7t0" }
+      )
+
+      orchestrator.run(
+        package: "my-pkg",
+        test_id: "TS-TEST-001",
+        output: @output
+      )
+
+      assert_equal "8pny7t0", received.dig(:env_vars, "ACE_TMUX_SESSION")
+    ensure
+      system("tmux", "kill-session", "-t", "8pny7t0", out: File::NULL, err: File::NULL)
+    end
+  end
+
   def test_cli_provider_sandbox_includes_tc_files
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package_with_setup(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002])
@@ -1072,6 +1110,59 @@ class TestOrchestratorTest < Minitest::Test
       priority: medium
       setup:
         - copy-fixtures
+        - agent-env:
+            PROJECT_ROOT_PATH: "."
+    YAML
+
+    runner_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.runner.md" }.join("\n")
+    verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-check.verify.md" }.join("\n")
+
+    File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{runner_files}
+      ---
+
+      # Runner
+      Workspace root: (current directory)
+    MD
+
+    File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{verify_files}
+      ---
+
+      # Verifier
+    MD
+
+    tc_ids.each do |tc_id|
+      File.write(File.join(ts_dir, "#{tc_id}-check.runner.md"), <<~CONTENT)
+        # Goal #{tc_id}
+        Run #{tc_id}.
+      CONTENT
+      File.write(File.join(ts_dir, "#{tc_id}-check.verify.md"), <<~CONTENT)
+        # Verify #{tc_id}
+        Verify #{tc_id}.
+      CONTENT
+    end
+  end
+
+  def create_ts_test_package_with_run_id_tmux_setup(tmpdir, package, scenario_id, tc_ids)
+    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-tmux-runid")
+    FileUtils.mkdir_p(ts_dir)
+
+    File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+      test-id: #{scenario_id}
+      title: Test #{scenario_id}
+      area: test
+      package: #{package}
+      priority: medium
+      setup:
+        - tmux-session:
+            name-source: run-id
         - agent-env:
             PROJECT_ROOT_PATH: "."
     YAML
