@@ -5,8 +5,6 @@ package: ace-prompt-prep
 priority: high
 tags: [smoke, happy-path, "use-case:prep"]
 cost-tier: smoke
-mode: goal
-execution-model: sequential
 tool-under-test: ace-prompt-prep
 
 sandbox-layout:
