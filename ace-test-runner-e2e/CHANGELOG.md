@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-02-24
+
+### Changed
+- Increase default CLI pipeline timeout from 300s to 600s in default E2E runner configuration.
+
 ## [0.19.0] - 2026-02-24
 
 ### Added
