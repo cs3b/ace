@@ -966,6 +966,32 @@ class TestOrchestratorTest < Minitest::Test
     end
   end
 
+  def test_goal_mode_standalone_forces_verify_even_when_flag_disabled
+    Dir.mktmpdir do |tmpdir|
+      create_goal_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001")
+      expected_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "test00-my-pkg-ts001-reports")
+      FileUtils.mkdir_p(expected_dir)
+
+      captured_verify = nil
+      executor = Object.new
+      executor.define_singleton_method(:execute) do |scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil, env_vars: nil, report_dir: nil, verify: false|
+        captured_verify = verify
+        TestResult.new(
+          test_id: scenario.test_id,
+          status: "pass",
+          summary: "OK",
+          started_at: Time.now,
+          completed_at: Time.now + 1
+        )
+      end
+
+      orchestrator = create_orchestrator(base_dir: tmpdir, executor: executor, provider: "claude:sonnet")
+      orchestrator.run(package: "my-pkg", test_id: "TS-TEST-001", verify: false, output: @output)
+
+      assert_equal true, captured_verify
+    end
+  end
+
   private
 
   def create_orchestrator(base_dir: nil, timestamp_generator: nil, executor: nil, provider: nil, parallel: nil)
@@ -1052,5 +1078,42 @@ class TestOrchestratorTest < Minitest::Test
         - Output contains #{tc_id}
       CONTENT
     end
+  end
+
+  def create_goal_ts_test_package(tmpdir, package, scenario_id)
+    ts_dir = File.join(tmpdir, package, "test", "e2e", "#{scenario_id}-goal")
+    FileUtils.mkdir_p(ts_dir)
+
+    File.write(File.join(ts_dir, "scenario.yml"), <<~YAML)
+      test-id: #{scenario_id}
+      title: Goal #{scenario_id}
+      area: test
+      package: #{package}
+      mode: goal
+      tool-under-test: fake-tool
+    YAML
+
+    File.write(File.join(ts_dir, "runner.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+          - ./TC-001-first.runner.md
+      ---
+
+      # Runner
+    MD
+
+    File.write(File.join(ts_dir, "verifier.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+          - ./TC-001-first.verify.md
+      ---
+
+      # Verifier
+    MD
+
+    File.write(File.join(ts_dir, "TC-001-first.runner.md"), "# Goal 1")
+    File.write(File.join(ts_dir, "TC-001-first.verify.md"), "# Verify 1")
   end
 end
