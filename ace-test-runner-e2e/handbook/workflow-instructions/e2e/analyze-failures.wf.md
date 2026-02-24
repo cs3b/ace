@@ -26,6 +26,7 @@ This workflow determines whether each failure is caused by:
 - Do not edit package code, scenario files, or runner code in this workflow.
 - Do not run rewrite/fix actions here.
 - This workflow ends with an analysis report only.
+- Do not ask the user where/how to fix during this workflow; decide from evidence.
 
 ## Prerequisites
 
@@ -75,12 +76,19 @@ ls -lt .cache/ace-test-e2e/*-reports/ 2>/dev/null | head -20
 - Use `code-issue`, `test-issue`, or `runner-infrastructure-issue`
 - Add confidence: `high|medium|low`
 - Add one disconfirming check per TC
+- If confidence is `medium` or `low`, run at least one additional diagnostic read/search before final decision
 
 4. Recommend rerun scope (cost-aware)
 - `scenario` (default)
 - `package`
 - `suite`
 with explicit rationale
+
+5. Choose autonomous fix decision per failed TC
+- Select a single primary fix action
+- Provide concrete file targets in priority order
+- Define explicit no-touch boundaries
+- Do not emit option lists that require user selection
 
 ## Required Output Contract
 
@@ -89,18 +97,24 @@ Produce this section before exiting:
 ```markdown
 ## E2E Failure Analysis Report
 
-| Scenario / TC | Category | Evidence | Fix Target | Confidence | Disconfirming Check | Rerun Scope |
-|---|---|---|---|---|---|---|
-| TS-FOO-001 / TC-003 | test-issue | summary + artifact mismatch details | scenario files | high | re-run scenario after spec adjustment | scenario |
+| Scenario / TC | Category | Evidence | Fix Target | Fix Target Layer | Primary Candidate Files | Fallback Candidate Files | Do-Not-Touch Boundaries | Confidence | Disconfirming Check | Rerun Scope |
+|---|---|---|---|---|---|---|---|---|---|---|
+| TS-FOO-001 / TC-003 | test-issue | summary + artifact mismatch details | scenario files | test-scenario-runner | TC-003-foo.runner.md | TC-003-foo.verify.md | lib/** | high | re-run scenario after spec adjustment | scenario |
 ```
 
 Then include:
 
 ```markdown
+## Fix Decisions
+- First item to fix: ...
+- Chosen fix decision: ...
+- Why this target first (unblocks most): ...
+
 ### Execution Plan Input
 - First item to fix: ...
 - Why first (unblocks most): ...
 - Required verification commands: ...
+- Expected pass criteria per command: ...
 ```
 
 ## Success Criteria
@@ -108,5 +122,8 @@ Then include:
 - Every failed TC has a category and evidence
 - Category is traceable to report/artifact facts
 - Fix target is explicit per failed TC
+- Fix target files are explicit per failed TC (primary + fallback)
+- No-touch boundaries are explicit per failed TC
+- A single autonomous chosen fix decision is present per failed TC
 - Rerun scope recommendation is cost-aware
 - No code/scenario/runner edits were made in this workflow

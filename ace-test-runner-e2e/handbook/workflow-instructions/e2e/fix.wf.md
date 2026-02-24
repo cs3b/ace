@@ -25,6 +25,9 @@ Do not apply any fix until an analysis report exists with:
 - category (`code-issue`, `test-issue`, `runner-infrastructure-issue`)
 - evidence from reports/artifacts
 - fix target
+- fix target layer
+- primary candidate files
+- do-not-touch boundaries
 - rerun scope recommendation
 
 If analysis is missing or incomplete, stop and run:
@@ -36,7 +39,14 @@ ace-bundle wfi://e2e/analyze-failures
 
 Use the output section from `e2e/analyze-failures`:
 - `## E2E Failure Analysis Report`
+- `## Fix Decisions`
 - `### Execution Plan Input`
+
+## Autonomy Rule
+
+- Do not ask the user to choose fix target, category, or rerun scope.
+- If analysis is incomplete, auto-complete missing decision fields via local evidence (reports, artifacts, scenario files, implementation), then proceed.
+- Only stop for hard blockers (missing files/tools/permissions).
 
 ## Priority Order
 
@@ -50,6 +60,7 @@ Apply fixes in this order:
 1. Pick the first prioritized item from analysis
 - Use the selected "First item to fix"
 - Confirm category, fix target, and rerun scope
+- Apply the "Chosen fix decision" and primary candidate files directly
 
 2. Apply category-specific fix
 
@@ -80,7 +91,7 @@ ace-test-e2e-suite --only-failures
 
 4. Re-check classification when evidence conflicts
 - If outcome contradicts analysis, return to `e2e/analyze-failures`
-- Update analysis report before continuing
+- Update analysis report and re-select a new autonomous chosen fix decision before continuing
 
 5. Iterate until all targeted failures are resolved
 - Keep one active scenario/TC at a time
@@ -117,4 +128,5 @@ If unresolved:
 - Fixes are traceable to analyzed failures
 - Verification scope matches analysis recommendation
 - Cost-conscious rerun strategy was followed
+- No user clarification was required for fix targeting/scope in normal flow
 - Targeted failures pass, or blockers are explicitly documented
