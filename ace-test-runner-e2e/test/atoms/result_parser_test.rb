@@ -167,6 +167,58 @@ class ResultParserTest < Minitest::Test
     assert_equal "Wrong exit code", result[:test_cases].first[:actual]
   end
 
+  def test_parse_includes_goal_criteria_for_multi_tc_results
+    response = <<~JSON
+      {
+        "test_id": "TS-GOAL-001",
+        "status": "partial",
+        "test_cases": [
+          {
+            "id": "TC-001",
+            "status": "fail",
+            "criteria": [
+              {"id": "C1", "description": "Commit created", "status": "pass", "evidence": "git log -1"},
+              {"description": "Message quality", "status": "fail"}
+            ]
+          }
+        ]
+      }
+    JSON
+
+    result = ResultParser.parse(response)
+    criteria = result[:test_cases].first[:criteria]
+
+    assert_equal 2, criteria.size
+    assert_equal "C1", criteria[0][:id]
+    assert_equal "Commit created", criteria[0][:description]
+    assert_equal "pass", criteria[0][:status]
+    assert_equal "git log -1", criteria[0][:evidence]
+    assert_equal "Message quality", criteria[1][:description]
+    assert_equal "fail", criteria[1][:status]
+  end
+
+  def test_parse_tc_includes_goal_criteria
+    response = <<~JSON
+      {
+        "test_id": "TS-GOAL-001",
+        "tc_id": "TC-003",
+        "status": "pass",
+        "summary": "All criteria met",
+        "criteria": [
+          {"description": "Artifact exists", "status": "PASS", "evidence": "results/tc/03/out.txt"}
+        ]
+      }
+    JSON
+
+    result = ResultParser.parse_tc(response)
+    criteria = result[:test_cases].first[:criteria]
+
+    assert_equal 1, criteria.size
+    assert_equal "Artifact exists", criteria[0][:description]
+    assert_equal "pass", criteria[0][:status]
+    assert_equal "results/tc/03/out.txt", criteria[0][:evidence]
+  end
+
   def test_parse_tc_no_json_raises
     assert_raises(ResultParser::ParseError) do
       ResultParser.parse_tc("No JSON here, just plain text")

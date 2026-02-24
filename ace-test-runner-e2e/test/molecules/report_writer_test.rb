@@ -57,6 +57,30 @@ class ReportWriterTest < Minitest::Test
     end
   end
 
+  def test_summary_report_contains_goal_criteria_section_when_present
+    Dir.mktmpdir do |tmpdir|
+      report_dir = File.join(tmpdir, "reports")
+      scenario = create_scenario
+      result = create_result(test_cases: [
+        {
+          id: "TC-001",
+          description: "Goal mode case",
+          status: "pass",
+          criteria: [
+            { description: "Artifact exists", status: "pass", evidence: "results/tc/01/output.txt" }
+          ]
+        }
+      ])
+
+      paths = @writer.write(result, scenario, report_dir: report_dir)
+      content = File.read(paths[:summary])
+
+      assert content.include?("## Goal Evaluation"), "Should contain goal evaluation section"
+      assert content.include?("Artifact exists"), "Should contain criterion description"
+      assert content.include?("results/tc/01/output.txt"), "Should contain criterion evidence"
+    end
+  end
+
   def test_metadata_is_valid_yaml
     Dir.mktmpdir do |tmpdir|
       report_dir = File.join(tmpdir, "reports")

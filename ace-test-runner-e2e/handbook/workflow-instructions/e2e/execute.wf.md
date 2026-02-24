@@ -127,10 +127,16 @@ Parse arguments and prepare for execution:
 
 ### 2. Discover and Filter Test Cases
 
-Discover `.tc.md` files in the scenario directory within the sandbox:
+Discover test case definitions in the scenario directory within the sandbox:
 
 ```bash
 find "${SANDBOX_PATH}" -name "*.tc.md" 2>/dev/null | sort
+```
+
+If `scenario.yml` indicates standalone goal mode files are present, also discover:
+
+```bash
+find "${SANDBOX_PATH}" -name "TC-*.runner.md" -o -name "TC-*.verify.md" 2>/dev/null | sort
 ```
 
 **After discovery, explicitly list all found test cases before proceeding:**
@@ -142,7 +148,7 @@ Found N test case files:
 ...
 ```
 
-> **CRITICAL TC FIDELITY RULE:** You MUST execute ONLY the test cases defined in `.tc.md` files. Do NOT create, modify, or invent additional test cases. Do NOT substitute your own test scenarios for the defined ones. Each `.tc.md` file contains specific steps you must follow exactly.
+> **CRITICAL TC FIDELITY RULE:** You MUST execute ONLY the discovered test definitions (`.tc.md` for inline/procedural mode, or paired `.runner.md`/`.verify.md` for standalone goal mode). Do NOT invent test cases.
 
 If `TEST_CASES` argument was provided, parse and normalize the filter:
 
@@ -213,17 +219,37 @@ When `TEST_CASES` is empty or not provided, execute all discovered test cases (d
 - If `FILTERED_CASES` is set (from step 2), execute **only** test cases whose IDs are in the `FILTERED_CASES` array. Skip all other test cases.
 - If `FILTERED_CASES` is not set, execute **all** test cases in the scenario (default behavior).
 
+For each test case (TC-NNN), branch by mode:
+
+**Procedural TC (`mode: procedural` or omitted):**
+1. Read objective
+2. Execute steps
+3. Compare against expected section
+4. Record pass/fail
+
+**Inline goal TC (`mode: goal` in `.tc.md`):**
+1. Read `## Objective`
+2. Read `## Available Tools`
+3. Plan and execute your own approach (do not require explicit `## Steps`)
+4. Evaluate every item in `## Success Criteria`
+5. Record per-criterion `PASS`/`FAIL` evidence
+
+**Standalone goal-mode pair (`TC-*.runner.md` + `TC-*.verify.md`):**
+1. Execute runner goals and write artifacts to `results/tc/{NN}/`
+2. Verify artifacts against expectations from paired `.verify.md`
+3. Record per-goal verdicts with evidence
+
 For each test case (TC-NNN):
 
 1. **Check filter** - If `FILTERED_CASES` is set and this test case ID is not in the array, **skip** this test case entirely. Log: `Skipping TC-NNN (not in filter)`.
 2. **Read the objective** - Understand what this test verifies
-3. **Execute the steps** - Run each command in sequence
+3. **Execute according to mode** - procedural steps or goal evaluation flow
 4. **Capture results** - Record:
    - Actual exit code
    - Command output
    - Any error messages
-5. **Compare to expected** - Check against expected results
-6. **Record status** - Pass or Fail
+5. **Evaluate evidence** - Check expected behavior or success criteria
+6. **Record status** - Pass or Fail (with criterion/goal evidence for goal mode)
 
 Report each test case result immediately after execution.
 
@@ -265,8 +291,10 @@ package: {package}
 agent: {agent-name}
 executed: {timestamp}
 status: {status}  # One of: pass, fail, partial, incomplete
-passed: {count}
-failed: {count}
+passed: [{list of passed TC IDs or goal IDs}]
+failed: [{list of failed TC IDs or goal IDs}]
+score: "{passed-count}/{total-count}"
+verdict: pass|fail|partial|incomplete
 total: {count}
 filtered: {true|false}
 ---
@@ -293,6 +321,13 @@ filtered: {true|false}
 ...
 
 ## Overall Status: {PASS/FAIL/PARTIAL}
+
+### Goal Evaluation (for mode: goal)
+
+| Goal/Criterion | Status | Evidence |
+|----------------|--------|----------|
+| {criterion-1} | PASS/FAIL | {artifact/output reference} |
+| {criterion-2} | PASS/FAIL | {artifact/output reference} |
 
 {Include failed test details, environment info, observations}
 EOF

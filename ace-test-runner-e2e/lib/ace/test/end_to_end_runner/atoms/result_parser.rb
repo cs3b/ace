@@ -84,7 +84,23 @@ module Ace
                 description: tc[:description] || "",
                 status: tc[:status] || "fail",
                 actual: tc[:actual] || "",
-                notes: tc[:notes] || ""
+                notes: tc[:notes] || "",
+                criteria: normalize_criteria(tc[:criteria] || [])
+              }
+            end
+          end
+
+          # Normalize optional inline goal-mode criteria evaluations
+          #
+          # @param criteria [Array<Hash>] Raw criteria results
+          # @return [Array<Hash>] Normalized criteria entries
+          def self.normalize_criteria(criteria)
+            criteria.map do |criterion|
+              {
+                id: criterion[:id] || "",
+                description: criterion[:description] || criterion[:criterion] || "",
+                status: (criterion[:status] || "fail").to_s.downcase,
+                evidence: criterion[:evidence] || ""
               }
             end
           end
@@ -131,7 +147,8 @@ module Ace
                 description: result[:summary] || "",
                 status: result[:status],
                 actual: result[:actual] || "",
-                notes: result[:notes] || ""
+                notes: result[:notes] || "",
+                criteria: normalize_criteria(result[:criteria] || [])
               }],
               summary: result[:summary] || "",
               observations: result[:notes] || ""
@@ -139,7 +156,7 @@ module Ace
           end
 
           private_class_method :validate_result, :normalize_result, :normalize_test_cases,
-                              :validate_tc_result, :normalize_tc_result
+                              :normalize_criteria, :validate_tc_result, :normalize_tc_result
 
           # Error raised when parsing LLM response fails
           class ParseError < StandardError; end

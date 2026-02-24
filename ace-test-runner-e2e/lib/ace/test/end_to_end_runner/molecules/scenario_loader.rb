@@ -19,6 +19,7 @@ module Ace
         class ScenarioLoader
           VALID_MODES = %w[procedural goal].freeze
           VALID_EXECUTION_MODELS = %w[isolated sequential].freeze
+          VALID_TC_MODES = %w[procedural goal].freeze
 
           # Load a scenario directory
           #
@@ -151,12 +152,17 @@ module Ace
               raise ArgumentError, "Missing tc-id or title in: #{file_path}"
             end
 
+            tc_mode = parse_tc_mode(frontmatter["mode"], file_path)
+            validate_inline_goal_structure!(body, file_path) if tc_mode == "goal"
+
             Models::TestCase.new(
               tc_id: frontmatter["tc-id"],
               title: frontmatter["title"],
               content: body,
               file_path: File.expand_path(file_path),
-              pending: frontmatter["pending"]
+              pending: frontmatter["pending"],
+              mode: tc_mode,
+              goal_format: (tc_mode == "goal" ? "inline" : nil)
             )
           end
 
@@ -169,7 +175,9 @@ module Ace
               title: extract_title_from_markdown(runner_content) || tc_id,
               content: build_goal_mode_content(runner_content, verify_content),
               file_path: File.expand_path(runner_file),
-              pending: nil
+              pending: nil,
+              mode: "goal",
+              goal_format: "standalone"
             )
           end
 
@@ -236,8 +244,33 @@ module Ace
             raw_mode || "procedural"
           end
 
+          def parse_tc_mode(raw_mode, file_path)
+            mode = raw_mode || "procedural"
+            return mode if VALID_TC_MODES.include?(mode)
+
+            raise ArgumentError, "Invalid tc mode '#{mode}' in #{file_path}. Expected: #{VALID_TC_MODES.join(', ')}"
+          end
+
           def parse_execution_model(raw_execution_model)
             raw_execution_model || "isolated"
+          end
+
+          def validate_inline_goal_structure!(body, file_path)
+            required = [
+              "## Objective",
+              "## Available Tools",
+              "## Success Criteria"
+            ]
+            missing = required.reject { |heading| body.match?(/^#{Regexp.escape(heading)}\b/i) }
+            unless missing.empty?
+              raise ArgumentError,
+                    "Goal-mode TC missing required section(s) in #{file_path}: #{missing.join(', ')}"
+            end
+
+            if body.match?(/^##\s+Steps\b/i)
+              raise ArgumentError,
+                    "Goal-mode TC must not include '## Steps' in #{file_path}; use success criteria instead"
+            end
           end
 
           # Detect fixtures directory if it exists
