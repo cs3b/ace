@@ -3,6 +3,7 @@ title: Basic Commit Workflow
 area: git-commit
 package: ace-git-commit
 priority: high
+tags: [smoke, happy-path, "use-case:commit"]
 requires:
   tools: [git, ace-git-commit]
   ruby: ">= 3.0"

@@ -3,6 +3,7 @@ title: Basic Prompt Processing Workflow
 area: prep
 package: ace-prompt-prep
 priority: high
+tags: [smoke, happy-path, "use-case:prep"]
 requires:
   tools: [ace-prompt-prep, ace-b36ts]
   ruby: ">= 3.0"

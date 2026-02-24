@@ -3,6 +3,7 @@ title: Hierarchical Phases - Error Handling
 area: assign
 package: ace-assign
 priority: high
+tags: [deep, "use-case:assign"]
 requires:
   tools: [ace-assign]
   ruby: ">= 3.0"
