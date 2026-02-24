@@ -1,0 +1,32 @@
+test-id: TS-ASSIGN-001
+title: "ace-assign Core Workflow Goal-Based E2E"
+area: assign
+package: ace-assign
+priority: high
+tags: [smoke, happy-path, "use-case:assign"]
+cost-tier: smoke
+mode: goal
+execution-model: sequential
+tool-under-test: ace-assign
+
+sandbox-layout:
+  results/tc/01/:  "Help survey observations"
+  results/tc/02/:  "Workflow lifecycle evidence (create, complete phases, finish)"
+  results/tc/03/:  "Fork context evidence (regular vs fork phases)"
+  results/tc/04/:  "Prepare workflow evidence (preset expansion, multi-task)"
+  results/tc/05/:  "No-skip policy evidence (drive guidance enforcement)"
+
+e2e-justification: >
+  All goals require the real ace-assign binary managing real assignment
+  state on the filesystem. Workflow lifecycle creates directories, writes
+  YAML state, and transitions phases. Fork context generates Task tool
+  prompts. Prepare workflow expands preset templates. None testable with mocks.
+
+requires:
+  tools: [ace-assign]
+  ruby: ">= 3.0"
+
+setup:
+  - copy-fixtures
+  - env:
+      PROJECT_ROOT_PATH: .
