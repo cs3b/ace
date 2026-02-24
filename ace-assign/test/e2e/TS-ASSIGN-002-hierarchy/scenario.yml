@@ -5,8 +5,6 @@ package: ace-assign
 priority: high
 tags: [deep, "use-case:assign"]
 cost-tier: happy-path
-mode: goal
-execution-model: sequential
 tool-under-test: ace-assign
 
 sandbox-layout:

@@ -5,8 +5,6 @@ package: ace-assign
 priority: high
 tags: [smoke, happy-path, "use-case:assign"]
 cost-tier: smoke
-mode: goal
-execution-model: sequential
 tool-under-test: ace-assign
 
 sandbox-layout:
