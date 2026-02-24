@@ -32,6 +32,8 @@ This workflow is a lightweight orchestrator that chains the 3-stage E2E test pip
 - `PACKAGE` (required) - The package to manage (e.g., `ace-lint`)
 - `--dry-run` (optional) - Stop after presenting the change plan (skip execution)
 - `--run-tests` (optional) - Run all E2E tests after rewriting
+- `--tags TAG,...` (optional) - Include only scenarios matching any specified tag (OR semantics)
+- `--exclude-tags TAG,...` (optional) - Exclude scenarios matching any specified tag (OR semantics)
 
 ## Workflow Steps
 

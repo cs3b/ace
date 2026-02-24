@@ -48,7 +48,8 @@ Example: `ace-lint/test/e2e/TS-LINT-001-lint-pipeline/scenario.yml`
 | `sandbox-layout` | object | `{}` | Declared artifact paths and expected outputs |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
 | `automation-candidate` | boolean | `false` | Whether test is automatable |
-| `cost-tier` | string | `standard` | Run profile: `smoke`, `standard`, `deep` |
+| `tags` | array | `[]` | Scenario tags for filtering with `--tags`/`--exclude-tags` (OR semantics) |
+| `cost-tier` | string | `smoke` | Run profile: `smoke`, `happy-path`, `deep` |
 | `e2e-justification` | string | — | Why E2E is needed |
 | `unit-coverage-reviewed` | array | `[]` | Unit/integration files reviewed |
 | `requires` | object | — | Test prerequisites |
@@ -111,7 +112,8 @@ area: lint
 package: ace-lint
 priority: high
 duration: ~10min
-cost-tier: standard
+cost-tier: smoke
+tags: [smoke, "use-case:lint"]
 e2e-justification: "Validates real subprocess behavior and report file generation"
 unit-coverage-reviewed:
   - test/molecules/lint_runner_test.rb
@@ -130,6 +132,20 @@ setup:
 last-verified: 2026-02-24
 verified-by: claude-opus-4
 ```
+
+## Tags
+
+The `tags` field enables discovery-time filtering with `--tags` and `--exclude-tags`.
+
+**Naming conventions:**
+- Cost tier is auto-included: `smoke`, `happy-path`, `deep`
+- Use-case tags use the `use-case:{area}` pattern (e.g., `use-case:lint`, `use-case:config`)
+- Custom tags are lowercase kebab-case
+
+**Filtering semantics:**
+- `--tags` uses OR: scenario matches if it has **any** of the specified tags
+- `--exclude-tags` uses OR: scenario is excluded if it has **any** of the specified tags
+- Both filters can be combined; exclude is applied after include
 
 ## Directory Structure
 

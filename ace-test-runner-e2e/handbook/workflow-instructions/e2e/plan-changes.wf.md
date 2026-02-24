@@ -122,6 +122,7 @@ Group all planned TCs (KEEP + MODIFY + CONSOLIDATE targets + ADD) into scenarios
 
 **For each scenario:**
 - Name: `TS-{AREA}-{NNN}-{slug}`
+- Tags: `[{cost-tier}, "use-case:{area}"]`
 - List of TCs with ordering (errors first, happy path, structure verification, lifecycle)
 - Shared setup requirements
 - Fixtures needed

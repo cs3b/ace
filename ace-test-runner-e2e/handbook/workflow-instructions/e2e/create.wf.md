@@ -116,7 +116,8 @@ Initial values for optional fields:
 - `priority: medium`
 - `duration: ~10min`
 - `automation-candidate: false`
-- `cost-tier: standard`
+- `cost-tier: smoke`
+- `tags: [{cost-tier}, "use-case:{area}"]`
 - `e2e-justification:` (brief statement of why this cannot be unit-only)
 - `unit-coverage-reviewed:` (list of unit test files checked during Value Gate)
 - `last-verified:` (leave empty)

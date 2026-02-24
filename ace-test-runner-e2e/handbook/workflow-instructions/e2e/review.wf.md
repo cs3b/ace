@@ -108,7 +108,7 @@ find {PACKAGE}/test/e2e -name "scenario.yml" -path "*/TS-*" 2>/dev/null | sort
 **For each scenario/TC:**
 - Read the file and extract frontmatter metadata:
   - `test-id`, `title`, `area`, `priority`
-  - `cost-tier`, `e2e-justification`, `unit-coverage-reviewed`
+  - `tags`, `cost-tier`, `e2e-justification`, `unit-coverage-reviewed`
   - `last-verified`, `verified-by`
 - Extract the objective (what the TC verifies)
 - Identify which CLI commands the TC runs
@@ -122,9 +122,9 @@ If `--scope` was provided, filter to only the specified scenario.
 
 Build an E2E test map:
 
-| TC ID | Title | CLI Command | Feature Tested | Verifications | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence |
-|-------|-------|-------------|----------------|---------------|-----------|-------------------|------------------------|----------|
-| {id} | {title} | {command} | {feature} | {n} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing} |
+| TC ID | Title | CLI Command | Feature Tested | Verifications | Tags | Cost Tier | E2E Justification | Unit Coverage Reviewed | Evidence |
+|-------|-------|-------------|----------------|---------------|------|-----------|-------------------|------------------------|----------|
+| {id} | {title} | {command} | {feature} | {n} | {tags} | {tier} | {reason or "(missing)"} | {files or "(missing)"} | {complete/missing} |
 
 ### 5. Build Coverage Matrix
 
