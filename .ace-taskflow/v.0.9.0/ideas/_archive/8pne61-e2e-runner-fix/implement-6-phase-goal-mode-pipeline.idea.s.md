@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2026-02-24T10:11:33+00:00
+---
+
 # Idea: Implement 6-Phase Goal-Mode Pipeline in ace-test-e2e
 
 **Origin**: Post-delivery validation of task 280 (E2E Test Levels, Grouping, Goal-Based Execution)
