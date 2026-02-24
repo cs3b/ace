@@ -1,49 +1,31 @@
----
-tc-id: TC-{NNN}
-title: {Test Case Title}
-mode: procedural
----
+# Goal {N} - {Goal Title}
 
-## Objective
+## Goal
 
-{What this test case verifies - 1-2 sentences}
-
-## Steps
-
-1. {Step description}
-   ```bash
-   {command to execute}
-   ```
-
-2. {Verification step}
-   ```bash
-   [ "$EXIT_CODE" -eq {expected} ] && echo "PASS: {description}" || echo "FAIL: {details}"
-   ```
-
-## Expected
-
-- {Expected outcome 1}
-- {Expected outcome 2}
-
-<!--
-Inline goal-mode variant:
-
----
-tc-id: TC-{NNN}
-title: {Test Case Title}
-mode: goal
----
-
-## Objective
 {Outcome to achieve}
 
-## Available Tools
-- {tool-1}
-- {tool-2}
+## Workspace
 
-## Success Criteria
-- [ ] {criterion 1}
-- [ ] {criterion 2}
+- Working directory: {sandbox-root}
+- Output directory: `results/tc/{NN}/`
 
-Do not include a "## Steps" section in mode: goal.
+## Constraints
+
+- Use only declared tools
+- Keep artifacts under `results/tc/{NN}/`
+- Do not write outside sandbox
+
+<!--
+Companion verifier file (`TC-{NNN}-{slug}.verify.md`) example:
+
+# Goal {N} - {Goal Title}
+
+## Expectations
+
+- {Expectation 1}
+- {Expectation 2}
+
+## Verdict
+
+- Pass when all expectations are satisfied from sandbox evidence.
 -->

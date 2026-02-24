@@ -7,19 +7,19 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Executes standalone goal-mode scenarios using the 6-phase pipeline.
-        class GoalModeExecutor
+        # Executes standalone scenarios using the deterministic pipeline.
+        class PipelineExecutor
           # @param provider [String]
           # @param timeout [Integer]
-          # @param sandbox_builder [Molecules::GoalModeSandboxBuilder]
-          # @param prompt_bundler [Molecules::GoalModePromptBundler]
-          # @param report_generator [Molecules::GoalModeReportGenerator]
+          # @param sandbox_builder [Molecules::PipelineSandboxBuilder]
+          # @param prompt_bundler [Molecules::PipelinePromptBundler]
+          # @param report_generator [Molecules::PipelineReportGenerator]
           def initialize(provider:, timeout:, sandbox_builder: nil, prompt_bundler: nil, report_generator: nil)
             @provider = provider
             @timeout = timeout
-            @sandbox_builder = sandbox_builder || GoalModeSandboxBuilder.new
-            @prompt_bundler = prompt_bundler || GoalModePromptBundler.new
-            @report_generator = report_generator || GoalModeReportGenerator.new
+            @sandbox_builder = sandbox_builder || PipelineSandboxBuilder.new
+            @prompt_bundler = prompt_bundler || PipelinePromptBundler.new
+            @report_generator = report_generator || PipelineReportGenerator.new
           end
 
           # @param scenario [Models::TestScenario]
@@ -77,7 +77,7 @@ module Ace
             Models::TestResult.new(
               test_id: scenario.test_id,
               status: "error",
-              summary: "Goal-mode execution pipeline failed",
+              summary: "Execution pipeline failed",
               error: "#{e.class}: #{e.message}",
               started_at: started_at || Time.now,
               completed_at: Time.now

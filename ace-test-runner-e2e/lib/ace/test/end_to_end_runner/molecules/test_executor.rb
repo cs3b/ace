@@ -10,9 +10,8 @@ module Ace
         # Executes a single E2E test scenario via LLM
         #
         # Routes execution through two paths based on provider type:
-        # - CLI providers (claude, gemini, codex): Skill-based execution
-        #   with actual command execution and sandbox creation
-        # - API providers (google, anthropic): Prompt-based prediction (original behavior)
+        # - CLI providers (claude, gemini, codex): deterministic standalone pipeline
+        # - API providers (google, anthropic): prompt-based prediction mode
         class TestExecutor
           # @param provider [String] LLM provider:model string
           # @param timeout [Integer] Request timeout in seconds
@@ -38,21 +37,15 @@ module Ace
           def execute(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
                       env_vars: nil, report_dir: nil, verify: false)
             if Atoms::SkillPromptBuilder.cli_provider?(@provider)
-              if standalone_goal_mode?(scenario)
-                return execute_via_goal_mode(
-                  scenario,
-                  cli_args: cli_args,
-                  run_id: run_id,
-                  test_cases: test_cases,
-                  sandbox_path: sandbox_path,
-                  env_vars: env_vars,
-                  report_dir: report_dir
-                )
-              end
-
-              execute_via_skill(scenario, cli_args: cli_args, run_id: run_id, test_cases: test_cases,
-                                sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir,
-                                verify: verify)
+              execute_via_pipeline(
+                scenario,
+                cli_args: cli_args,
+                run_id: run_id,
+                test_cases: test_cases,
+                sandbox_path: sandbox_path,
+                env_vars: env_vars,
+                report_dir: report_dir
+              )
             else
               execute_via_prompt(scenario, cli_args: cli_args, test_cases: test_cases)
             end
@@ -77,9 +70,9 @@ module Ace
 
           private
 
-          # Execute standalone goal-mode scenarios with the deterministic 6-phase pipeline.
-          def execute_via_goal_mode(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
-                                    env_vars: nil, report_dir: nil)
+          # Execute standalone scenarios with the deterministic pipeline.
+          def execute_via_pipeline(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
+                                   env_vars: nil, report_dir: nil)
             started_at = Time.now
             resolved_report_dir = report_dir || default_report_dir_for(scenario, run_id)
             resolved_sandbox_path = sandbox_path || resolve_sandbox_path(nil, resolved_report_dir)
@@ -88,7 +81,7 @@ module Ace
               return Models::TestResult.new(
                 test_id: scenario.test_id,
                 status: "error",
-                summary: "Goal-mode execution requires run_id/report_dir",
+                summary: "Execution pipeline requires run_id/report_dir",
                 error: "Could not resolve deterministic sandbox/report paths",
                 started_at: started_at,
                 completed_at: Time.now
@@ -100,182 +93,13 @@ module Ace
               cli_args
             )
 
-            goal_mode_executor.execute(
+            pipeline_executor.execute(
               scenario: scenario,
               cli_args: merged_args,
               sandbox_path: resolved_sandbox_path,
               report_dir: resolved_report_dir,
               env_vars: env_vars,
               test_cases: test_cases
-            )
-          end
-
-          # Execute via skill invocation for CLI providers
-          #
-          # @param scenario [Models::TestScenario] The test scenario
-          # @param cli_args [String, nil] User-provided CLI args
-          # @param run_id [String, nil] Pre-generated run ID for deterministic report paths
-          # @param test_cases [Array<String>, nil] Optional test case IDs to filter
-          # @param sandbox_path [String, nil] Path to pre-populated sandbox
-          # @param env_vars [Hash, nil] Environment variables from setup execution
-          # @param report_dir [String, nil] Explicit report directory path (overrides computed path)
-          # @return [Models::TestResult]
-          def execute_via_skill(scenario, cli_args: nil, run_id: nil, test_cases: nil, sandbox_path: nil,
-                                env_vars: nil, report_dir: nil, verify: false)
-            started_at = Time.now
-
-            prompt = @skill_prompt_builder.build_skill_prompt(
-              scenario, run_id: run_id, test_cases: test_cases,
-              sandbox_path: sandbox_path, env_vars: env_vars, report_dir: report_dir
-            )
-
-            merged_args = merge_cli_args(
-              Atoms::SkillPromptBuilder.required_cli_args(@provider),
-              cli_args
-            )
-
-            response = Ace::LLM::QueryInterface.query(
-              @provider,
-              prompt,
-              system: nil,
-              cli_args: merged_args,
-              timeout: @timeout,
-              fallback: false,
-              subprocess_env: env_vars
-            )
-
-            invocation_error = detect_skill_invocation_error(response[:text])
-            if invocation_error
-              return Models::TestResult.new(
-                test_id: scenario.test_id,
-                status: "error",
-                test_cases: [],
-                summary: "Skill invocation failed before test execution",
-                error: invocation_error,
-                started_at: started_at,
-                completed_at: Time.now
-              )
-            end
-
-            if verify
-              return execute_verifier(
-                scenario: scenario,
-                cli_args: cli_args,
-                run_id: run_id,
-                test_cases: test_cases,
-                sandbox_path: resolve_sandbox_path(sandbox_path, report_dir),
-                env_vars: env_vars,
-                report_dir: report_dir,
-                started_at: started_at
-              )
-            end
-
-            parsed = Atoms::SkillResultParser.parse(response[:text])
-            completed_at = Time.now
-
-            # Validate TC fidelity: ensure agent executed the expected test cases
-            fidelity = Atoms::TcFidelityValidator.validate(
-              parsed, scenario, filtered_tc_ids: test_cases
-            )
-            if fidelity
-              return Models::TestResult.new(
-                test_id: scenario.test_id,
-                status: "error",
-                test_cases: parsed[:test_cases],
-                summary: fidelity[:error],
-                error: fidelity[:error],
-                started_at: started_at,
-                completed_at: completed_at
-              )
-            end
-
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: parsed[:status],
-              test_cases: parsed[:test_cases],
-              summary: parsed[:summary],
-              started_at: started_at,
-              completed_at: completed_at
-            )
-          rescue Atoms::ResultParser::ParseError => e
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: "error",
-              summary: "Failed to parse CLI provider response",
-              error: e.message,
-              started_at: started_at,
-              completed_at: Time.now
-            )
-          rescue Ace::LLM::Error => e
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: "error",
-              summary: "CLI provider execution failed",
-              error: e.message,
-              started_at: started_at || Time.now,
-              completed_at: Time.now
-            )
-          rescue StandardError => e
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: "error",
-              summary: "Unexpected execution error",
-              error: "#{e.class}: #{e.message}",
-              started_at: started_at || Time.now,
-              completed_at: Time.now
-            )
-          end
-
-          # Execute verifier as an independent second invocation.
-          #
-          # The verifier result is authoritative for status in verify mode.
-          def execute_verifier(scenario:, cli_args:, run_id:, test_cases:, sandbox_path:, env_vars:, report_dir:, started_at:)
-            verifier_prompt = @skill_prompt_builder.build_verifier_prompt(
-              scenario,
-              run_id: run_id,
-              sandbox_path: sandbox_path,
-              test_cases: test_cases,
-              report_dir: report_dir
-            )
-
-            merged_args = merge_cli_args(
-              Atoms::SkillPromptBuilder.required_cli_args(@provider),
-              cli_args
-            )
-
-            verifier_response = Ace::LLM::QueryInterface.query(
-              @provider,
-              verifier_prompt,
-              system: nil,
-              cli_args: merged_args,
-              timeout: @timeout,
-              fallback: false,
-              subprocess_env: env_vars
-            )
-
-            invocation_error = detect_skill_invocation_error(verifier_response[:text])
-            if invocation_error
-              return Models::TestResult.new(
-                test_id: scenario.test_id,
-                status: "error",
-                test_cases: [],
-                summary: "Verifier invocation failed before verification",
-                error: invocation_error,
-                started_at: started_at,
-                completed_at: Time.now
-              )
-            end
-
-            parsed = Atoms::SkillResultParser.parse_verifier(verifier_response[:text])
-            completed_at = Time.now
-
-            Models::TestResult.new(
-              test_id: scenario.test_id,
-              status: parsed[:status],
-              test_cases: parsed[:test_cases],
-              summary: parsed[:summary],
-              started_at: started_at,
-              completed_at: completed_at
             )
           end
 
@@ -512,12 +336,8 @@ module Ace
             text.to_s.strip.split(/\s+/).first(30).join(" ")
           end
 
-          def standalone_goal_mode?(scenario)
-            scenario.mode == "goal" && scenario.test_cases.any? { |tc| tc.goal_format == "standalone" }
-          end
-
-          def goal_mode_executor
-            @goal_mode_executor ||= Molecules::GoalModeExecutor.new(
+          def pipeline_executor
+            @pipeline_executor ||= Molecules::PipelineExecutor.new(
               provider: @provider,
               timeout: @timeout
             )

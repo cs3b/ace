@@ -7,7 +7,7 @@ class ScenarioLoaderTest < Minitest::Test
     @loader = Ace::Test::EndToEndRunner::Molecules::ScenarioLoader.new
   end
 
-  def test_load_valid_scenario
+  def test_load_valid_standalone_scenario
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-LINT-001-validator-fallback",
         scenario_yml: <<~YAML,
@@ -23,25 +23,15 @@ class ScenarioLoaderTest < Minitest::Test
             - copy-fixtures
             - run: git add -A && git commit -m "initial" --quiet
         YAML
-        tc_files: {
-          "TC-001-standardrb-present.tc.md" => <<~MD,
-            ---
-            tc-id: TC-001
-            title: StandardRB Used When Present
-            ---
-
-            ## Objective
-            Verify ace-lint prefers standardrb.
-          MD
-          "TC-002-rubocop-fallback.tc.md" => <<~MD
-            ---
-            tc-id: TC-002
-            title: Rubocop Fallback When No StandardRB
-            ---
-
-            ## Objective
-            Verify rubocop is used as fallback.
-          MD
+        standalone_tcs: {
+          "TC-001-standardrb-present" => {
+            runner: "# Goal 1 - StandardRB\n\nRun standardrb path.",
+            verify: "# Goal 1 - Verify\n\nVerify standardrb path."
+          },
+          "TC-002-rubocop-fallback" => {
+            runner: "# Goal 2 - Rubocop\n\nRun fallback path.",
+            verify: "# Goal 2 - Verify\n\nVerify fallback path."
+          }
         })
 
       scenario = @loader.load(scenario_dir)
@@ -56,47 +46,28 @@ class ScenarioLoaderTest < Minitest::Test
       assert_equal "git-init", scenario.setup_steps[0]
       assert_equal File.expand_path(scenario_dir), scenario.dir_path
       assert_equal 2, scenario.test_cases.length
+
+      first_tc = scenario.test_cases.first
+      assert_equal "TC-001", first_tc.tc_id
+      assert_equal "standalone", first_tc.goal_format
+      assert_includes first_tc.content, "## Runner"
+      assert_includes first_tc.content, "## Verifier"
     end
   end
 
-  def test_load_discovers_tc_files_sorted
+  def test_load_discovers_standalone_files_sorted
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-TEST-001-sorting",
-        tc_files: {
-          "TC-003-third.tc.md" => tc_content("TC-003", "Third"),
-          "TC-001-first.tc.md" => tc_content("TC-001", "First"),
-          "TC-002-second.tc.md" => tc_content("TC-002", "Second")
+        standalone_tcs: {
+          "TC-003-third" => { runner: "# Third", verify: "# Third Verify" },
+          "TC-001-first" => { runner: "# First", verify: "# First Verify" },
+          "TC-002-second" => { runner: "# Second", verify: "# Second Verify" }
         })
 
       scenario = @loader.load(scenario_dir)
       tc_ids = scenario.test_cases.map(&:tc_id)
 
       assert_equal ["TC-001", "TC-002", "TC-003"], tc_ids
-    end
-  end
-
-  def test_load_parses_tc_frontmatter
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-TEST-001-parse",
-        tc_files: {
-          "TC-001-example.tc.md" => <<~MD
-            ---
-            tc-id: TC-001
-            title: Example Test Case
-            ---
-
-            ## Steps
-            1. Do something
-          MD
-        })
-
-      scenario = @loader.load(scenario_dir)
-      tc = scenario.test_cases.first
-
-      assert_equal "TC-001", tc.tc_id
-      assert_equal "Example Test Case", tc.title
-      assert_includes tc.content, "Do something"
-      assert tc.file_path.end_with?("TC-001-example.tc.md")
     end
   end
 
@@ -135,9 +106,61 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
+  def test_load_rejects_legacy_mode_field
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-LEGACY-001",
+        scenario_yml: <<~YAML)
+          test-id: TS-LEGACY-001
+          title: Legacy Mode
+          area: test
+          mode: goal
+        YAML
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Legacy field\(s\) not supported/, error.message)
+      assert_match(/mode/, error.message)
+    end
+  end
+
+  def test_load_rejects_legacy_execution_model_field
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-LEGACY-002",
+        scenario_yml: <<~YAML)
+          test-id: TS-LEGACY-002
+          title: Legacy Execution Model
+          area: test
+          execution-model: sequential
+        YAML
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Legacy field\(s\) not supported/, error.message)
+      assert_match(/execution-model/, error.message)
+    end
+  end
+
+  def test_load_rejects_inline_tc_files
+    Dir.mktmpdir do |tmpdir|
+      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-001",
+        inline_tcs: {
+          "TC-001-inline.tc.md" => <<~MD
+            ---
+            tc-id: TC-001
+            title: Inline
+            ---
+
+            ## Steps
+            1. Unsupported format
+          MD
+        })
+
+      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
+      assert_match(/Inline TC files are no longer supported/, error.message)
+    end
+  end
+
   def test_load_no_tc_files
     Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-EMPTY-002", tc_files: {})
+      scenario_dir = create_scenario_dir(tmpdir, "TS-EMPTY-002")
 
       scenario = @loader.load(scenario_dir)
       assert_equal [], scenario.test_cases
@@ -193,54 +216,13 @@ class ScenarioLoaderTest < Minitest::Test
     end
   end
 
-  def test_load_parses_pending_from_tc_frontmatter
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-TEST-001-pending",
-        tc_files: {
-          "TC-001-active.tc.md" => <<~MD,
-            ---
-            tc-id: TC-001
-            title: Active Test
-            ---
-
-            ## Steps
-            1. Do something
-          MD
-          "TC-002-pending.tc.md" => <<~MD
-            ---
-            tc-id: TC-002
-            title: Pending Test
-            pending: "Requires sandbox environment"
-            ---
-
-            ## Steps
-            1. This can't run yet
-          MD
-        })
-
-      scenario = @loader.load(scenario_dir)
-      assert_equal 2, scenario.test_cases.length
-
-      active_tc = scenario.test_cases.find { |tc| tc.tc_id == "TC-001" }
-      pending_tc = scenario.test_cases.find { |tc| tc.tc_id == "TC-002" }
-
-      refute active_tc.pending?
-      assert_nil active_tc.pending
-
-      assert pending_tc.pending?
-      assert_equal "Requires sandbox environment", pending_tc.pending
-    end
-  end
-
-  def test_load_parses_tags_mode_execution_model_and_optional_fields
+  def test_load_parses_tags_and_optional_fields
     Dir.mktmpdir do |tmpdir|
       scenario_dir = create_scenario_dir(tmpdir, "TS-META-001",
         scenario_yml: <<~YAML)
           test-id: TS-META-001
           title: Metadata Test
           area: test
-          mode: goal
-          execution-model: sequential
           tool-under-test: ace-test-e2e
           tags: [Smoke, use-case:Lint, happy-path]
           sandbox-layout:
@@ -251,210 +233,35 @@ class ScenarioLoaderTest < Minitest::Test
       scenario = @loader.load(scenario_dir)
 
       assert_equal ["smoke", "use-case:lint", "happy-path"], scenario.tags
-      assert_equal "goal", scenario.mode
-      assert_equal "sequential", scenario.execution_model
       assert_equal "ace-test-e2e", scenario.tool_under_test
       assert_equal({ "output/" => "Results", "cache/" => "Cached files" }, scenario.sandbox_layout)
     end
   end
 
-  def test_load_invalid_mode_raises
+  def test_load_standalone_requires_runner_and_verifier_configs
     Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-BADMODE-001",
-        scenario_yml: <<~YAML)
-          test-id: TS-BADMODE-001
-          title: Invalid Mode
-          area: test
-          mode: unsupported
-        YAML
+      scenario_dir = create_scenario_dir(tmpdir, "TS-PAIR-001",
+        standalone_tcs: {
+          "TC-001-first" => { runner: "# Goal 1", verify: "# Verify 1" }
+        },
+        include_runner_config: false)
 
       error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
-      assert_match(/Invalid mode/, error.message)
+      assert_match(/Missing standalone file/, error.message)
+      assert_match(/runner\.yml\.md/, error.message)
     end
   end
 
-  def test_load_invalid_execution_model_raises
+  def test_load_standalone_requires_matching_pairs
     Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-BADEXEC-001",
-        scenario_yml: <<~YAML)
-          test-id: TS-BADEXEC-001
-          title: Invalid Execution Model
-          area: test
-          execution-model: parallel-unbounded
-        YAML
+      scenario_dir = create_scenario_dir(tmpdir, "TS-PAIR-002",
+        standalone_tcs: {
+          "TC-001-first" => { runner: "# Goal 1", verify: "# Verify 1" }
+        })
+      FileUtils.rm_f(File.join(scenario_dir, "TC-001-first.verify.md"))
 
       error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
-      assert_match(/Invalid execution-model/, error.message)
-    end
-  end
-
-  def test_load_goal_mode_standalone_files
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-GOAL-001",
-        scenario_yml: <<~YAML,
-          test-id: TS-GOAL-001
-          title: Goal Mode
-          area: test
-          mode: goal
-        YAML
-        tc_files: {
-          "TC-001-first.runner.md" => "# Goal 1 - First\n\nRun first goal.",
-          "TC-001-first.verify.md" => "# Goal 1 - First Verify\n\nVerify first goal.",
-          "TC-002-second.runner.md" => "# Goal 2 - Second\n\nRun second goal.",
-          "TC-002-second.verify.md" => "# Goal 2 - Second Verify\n\nVerify second goal.",
-          "runner.yml.md" => "---\ndescription: runner\n---\nRunner config",
-          "verifier.yml.md" => "---\ndescription: verifier\n---\nVerifier config"
-        })
-
-      scenario = @loader.load(scenario_dir)
-
-      assert_equal ["TC-001", "TC-002"], scenario.test_cases.map(&:tc_id)
-      assert_equal "Goal 1 - First", scenario.test_cases.first.title
-      assert_equal "goal", scenario.test_cases.first.mode
-      assert_equal "standalone", scenario.test_cases.first.goal_format
-      assert_includes scenario.test_cases.first.content, "## Runner"
-      assert_includes scenario.test_cases.first.content, "## Verifier"
-      assert scenario.test_cases.first.file_path.end_with?("TC-001-first.runner.md")
-    end
-  end
-
-  def test_load_inline_goal_mode_tc_in_procedural_scenario
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-001",
-        scenario_yml: <<~YAML,
-          test-id: TS-INLINE-GOAL-001
-          title: Inline Goal In Procedural Scenario
-          area: test
-        YAML
-        tc_files: {
-          "TC-001-inline-goal.tc.md" => <<~MD
-            ---
-            tc-id: TC-001
-            title: Inline Goal
-            mode: goal
-            ---
-
-            ## Objective
-            Verify outcome.
-
-            ## Available Tools
-            - ace-lint
-
-            ## Success Criteria
-            - [ ] Exit code is 0
-          MD
-        })
-
-      scenario = @loader.load(scenario_dir)
-      tc = scenario.test_cases.first
-      assert_equal "goal", tc.mode
-      assert_equal "inline", tc.goal_format
-    end
-  end
-
-  def test_load_goal_mode_tc_rejects_steps_section
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-002",
-        scenario_yml: <<~YAML,
-          test-id: TS-INLINE-GOAL-002
-          title: Inline Goal Reject Steps
-          area: test
-        YAML
-        tc_files: {
-          "TC-001-inline-goal.tc.md" => <<~MD
-            ---
-            tc-id: TC-001
-            title: Inline Goal
-            mode: goal
-            ---
-
-            ## Objective
-            Verify outcome.
-
-            ## Available Tools
-            - ace-lint
-
-            ## Success Criteria
-            - [ ] Exit code is 0
-
-            ## Steps
-            1. Do not allow this
-          MD
-        })
-
-      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
-      assert_match(/must not include '## Steps'/, error.message)
-    end
-  end
-
-  def test_load_goal_mode_tc_requires_sections
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-003",
-        scenario_yml: <<~YAML,
-          test-id: TS-INLINE-GOAL-003
-          title: Inline Goal Missing Sections
-          area: test
-        YAML
-        tc_files: {
-          "TC-001-inline-goal.tc.md" => <<~MD
-            ---
-            tc-id: TC-001
-            title: Inline Goal
-            mode: goal
-            ---
-
-            ## Objective
-            Verify outcome.
-          MD
-        })
-
-      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
-      assert_match(/Goal-mode TC missing required section/, error.message)
-    end
-  end
-
-  def test_load_goal_mode_tc_invalid_frontmatter_mode_raises
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-INLINE-GOAL-004",
-        scenario_yml: <<~YAML,
-          test-id: TS-INLINE-GOAL-004
-          title: Invalid TC Mode
-          area: test
-        YAML
-        tc_files: {
-          "TC-001-inline-goal.tc.md" => <<~MD
-            ---
-            tc-id: TC-001
-            title: Inline Goal
-            mode: unsupported
-            ---
-
-            ## Objective
-            Verify outcome.
-          MD
-        })
-
-      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
-      assert_match(/Invalid tc mode/, error.message)
-    end
-  end
-
-  def test_load_goal_mode_standalone_requires_runner_and_verifier_configs
-    Dir.mktmpdir do |tmpdir|
-      scenario_dir = create_scenario_dir(tmpdir, "TS-GOAL-002",
-        scenario_yml: <<~YAML,
-          test-id: TS-GOAL-002
-          title: Goal Mode Missing Config
-          area: test
-          mode: goal
-        YAML
-        tc_files: {
-          "TC-001-first.runner.md" => "# Goal 1 - First\n\nRun first goal.",
-          "TC-001-first.verify.md" => "# Goal 1 - First Verify\n\nVerify first goal."
-        })
-
-      error = assert_raises(ArgumentError) { @loader.load(scenario_dir) }
-      assert_match(/Missing goal-mode file/, error.message)
+      assert_match(/Missing standalone verify file/, error.message)
     end
   end
 
@@ -475,7 +282,8 @@ class ScenarioLoaderTest < Minitest::Test
 
   private
 
-  def create_scenario_dir(tmpdir, name, scenario_yml: nil, tc_files: {}, fixtures: nil)
+  def create_scenario_dir(tmpdir, name, scenario_yml: nil, standalone_tcs: {}, inline_tcs: {}, fixtures: nil,
+                          include_runner_config: true, include_verifier_config: true)
     scenario_dir = File.join(tmpdir, name)
     FileUtils.mkdir_p(scenario_dir)
 
@@ -488,7 +296,34 @@ class ScenarioLoaderTest < Minitest::Test
     YAML
     File.write(File.join(scenario_dir, "scenario.yml"), yml)
 
-    tc_files.each do |filename, content|
+    if include_runner_config
+      File.write(File.join(scenario_dir, "runner.yml.md"), <<~MD)
+        ---
+        bundle:
+          files: []
+        ---
+
+        # Runner Config
+      MD
+    end
+
+    if include_verifier_config
+      File.write(File.join(scenario_dir, "verifier.yml.md"), <<~MD)
+        ---
+        bundle:
+          files: []
+        ---
+
+        # Verifier Config
+      MD
+    end
+
+    standalone_tcs.each do |basename, parts|
+      File.write(File.join(scenario_dir, "#{basename}.runner.md"), parts.fetch(:runner))
+      File.write(File.join(scenario_dir, "#{basename}.verify.md"), parts.fetch(:verify))
+    end
+
+    inline_tcs.each do |filename, content|
       File.write(File.join(scenario_dir, filename), content)
     end
 
@@ -501,17 +336,5 @@ class ScenarioLoaderTest < Minitest::Test
     end
 
     scenario_dir
-  end
-
-  def tc_content(tc_id, title)
-    <<~MD
-      ---
-      tc-id: #{tc_id}
-      title: #{title}
-      ---
-
-      ## Objective
-      Test #{title.downcase}.
-    MD
   end
 end

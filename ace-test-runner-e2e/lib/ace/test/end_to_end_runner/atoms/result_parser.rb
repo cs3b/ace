@@ -90,7 +90,7 @@ module Ace
             end
           end
 
-          # Normalize optional inline goal-mode criteria evaluations
+          # Normalize optional criteria evaluations
           #
           # @param criteria [Array<Hash>] Raw criteria results
           # @return [Array<Hash>] Normalized criteria entries

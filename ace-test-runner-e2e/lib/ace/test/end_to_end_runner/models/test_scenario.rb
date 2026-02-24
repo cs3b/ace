@@ -12,7 +12,7 @@ module Ace
           attr_reader :test_id, :title, :area, :package, :priority, :duration,
                       :requires, :file_path, :content,
                       :setup_steps, :dir_path, :fixture_path, :test_cases,
-                      :tags, :mode, :execution_model, :tool_under_test, :sandbox_layout
+                      :tags, :tool_under_test, :sandbox_layout
 
           # @param test_id [String] Test identifier (e.g., "TS-LINT-001")
           # @param title [String] Test title
@@ -28,15 +28,12 @@ module Ace
           # @param fixture_path [String, nil] Path to the fixtures/ directory
           # @param test_cases [Array<Models::TestCase>] Independent test case files
           # @param tags [Array<String>] Scenario-level tags for discovery-time filtering
-          # @param mode [String] Scenario mode: "procedural" or "goal"
-          # @param execution_model [String] Execution model: "isolated" or "sequential"
           # @param tool_under_test [String, nil] Primary tool under test
           # @param sandbox_layout [Hash] Declared sandbox artifact layout
           def initialize(test_id:, title:, area:, package:, file_path:, content:,
                          priority: "medium", duration: "~5min", requires: {},
                          setup_steps: [], dir_path: nil, fixture_path: nil, test_cases: [],
-                         tags: [], mode: "procedural", execution_model: "isolated",
-                         tool_under_test: nil, sandbox_layout: {})
+                         tags: [], tool_under_test: nil, sandbox_layout: {})
             @test_id = test_id
             @title = title
             @area = area
@@ -51,8 +48,6 @@ module Ace
             @fixture_path = fixture_path
             @test_cases = test_cases
             @tags = tags
-            @mode = mode
-            @execution_model = execution_model
             @tool_under_test = tool_under_test
             @sandbox_layout = sandbox_layout
           end

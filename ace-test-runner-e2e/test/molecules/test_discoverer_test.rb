@@ -217,18 +217,6 @@ class TestDiscovererTest < Minitest::Test
     end
   end
 
-  def test_find_tests_filters_by_mode
-    Dir.mktmpdir do |tmpdir|
-      create_ts_scenario(tmpdir, "my-package", "TS-TEST-001-procedural", ["TC-001"], mode: "procedural")
-      create_ts_scenario(tmpdir, "my-package", "TS-TEST-002-goal", ["TC-001"], mode: "goal")
-
-      files = @discoverer.find_tests(package: "my-package", mode: "goal", base_dir: tmpdir)
-
-      assert_equal 1, files.size
-      assert files.first.include?("TS-TEST-002")
-    end
-  end
-
   def test_list_packages_includes_ts_format_packages
     Dir.mktmpdir do |tmpdir|
       create_ts_scenario(tmpdir, "ace-lint", "TS-LINT-001-test", ["TC-001"])
@@ -241,13 +229,12 @@ class TestDiscovererTest < Minitest::Test
 
   private
 
-  def create_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil, mode: nil)
+  def create_ts_scenario(base_dir, package, scenario_name, tc_ids, tags: nil)
     scenario_dir = File.join(base_dir, package, "test", "e2e", scenario_name)
     FileUtils.mkdir_p(scenario_dir)
 
     test_id = scenario_name.split("-")[0..2].join("-")
     extra = []
-    extra << "mode: #{mode}" if mode
     extra << "tags: [#{tags.join(', ')}]" if tags
 
     File.write(File.join(scenario_dir, "scenario.yml"), <<~YAML)
@@ -259,16 +246,33 @@ class TestDiscovererTest < Minitest::Test
       #{extra.join("\n")}
     YAML
 
-    tc_ids.each do |tc_id|
-      File.write(File.join(scenario_dir, "#{tc_id}-test.tc.md"), <<~MD)
-        ---
-        tc-id: #{tc_id}
-        title: #{tc_id} Test
-        ---
+    runner_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-test.runner.md" }.join("\n")
+    verify_files = tc_ids.map { |tc_id| "          - ./#{tc_id}-test.verify.md" }.join("\n")
 
-        ## Objective
-        Test #{tc_id}.
-      MD
+    File.write(File.join(scenario_dir, "runner.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{runner_files}
+      ---
+
+      # Runner
+      Workspace root: (current directory)
+    MD
+
+    File.write(File.join(scenario_dir, "verifier.yml.md"), <<~MD)
+      ---
+      bundle:
+        files:
+#{verify_files}
+      ---
+
+      # Verifier
+    MD
+
+    tc_ids.each do |tc_id|
+      File.write(File.join(scenario_dir, "#{tc_id}-test.runner.md"), "# Goal #{tc_id}\nRun #{tc_id}\n")
+      File.write(File.join(scenario_dir, "#{tc_id}-test.verify.md"), "# Verify #{tc_id}\nCheck #{tc_id}\n")
     end
   end
 end

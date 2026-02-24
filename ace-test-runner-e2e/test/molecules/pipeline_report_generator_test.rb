@@ -2,8 +2,8 @@
 
 require_relative "../test_helper"
 
-class GoalModeReportGeneratorTest < Minitest::Test
-  ReportGenerator = Ace::Test::EndToEndRunner::Molecules::GoalModeReportGenerator
+class PipelineReportGeneratorTest < Minitest::Test
+  ReportGenerator = Ace::Test::EndToEndRunner::Molecules::PipelineReportGenerator
   TestScenario = Ace::Test::EndToEndRunner::Models::TestScenario
   TestCase = Ace::Test::EndToEndRunner::Models::TestCase
 
@@ -59,12 +59,11 @@ class GoalModeReportGeneratorTest < Minitest::Test
       package: "ace-b36ts",
       file_path: File.join(tmpdir, "scenario.yml"),
       content: "",
-      mode: "goal",
       test_cases: [
         TestCase.new(tc_id: "TC-001", title: "Help Survey", content: "", file_path: File.join(tmpdir, "TC-001.runner.md"),
-                     mode: "goal", goal_format: "standalone"),
+                     goal_format: "standalone"),
         TestCase.new(tc_id: "TC-002", title: "Roundtrip", content: "", file_path: File.join(tmpdir, "TC-002.runner.md"),
-                     mode: "goal", goal_format: "standalone")
+                     goal_format: "standalone")
       ]
     )
   end

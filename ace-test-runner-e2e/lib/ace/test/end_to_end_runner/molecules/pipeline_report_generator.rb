@@ -7,8 +7,8 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Generates TC-first reports from standalone goal-mode verifier output.
-        class GoalModeReportGenerator
+        # Generates TC-first reports from standalone verifier output.
+        class PipelineReportGenerator
           FAILURE_CATEGORIES = %w[test-spec-error tool-bug runner-error infrastructure-error].freeze
 
           # @param report_writer [Molecules::ReportWriter]

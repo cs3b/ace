@@ -37,7 +37,7 @@ This workflow guides an agent through executing an E2E test scenario.
 
 - `ace-test-e2e` runs single-package scenarios; `ace-test-e2e-suite` runs suite-level execution
 - Scenario IDs use `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
-- Standalone goal-mode test cases use `TC-*.runner.md` and `TC-*.verify.md`
+- Standalone test cases use `TC-*.runner.md` and `TC-*.verify.md`
 - TC artifacts are written under `results/tc/{NN}/`
 - Summary counters use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
 
@@ -447,22 +447,7 @@ TC-003: Check filter → "TC-003" not in ["TC-002"] → SKIP, log "Skipping TC-0
 
 **Result**: Only TC-002 executes, report shows 1 test case total.
 
-For each test case (TC-NNN), branch by mode:
-
-**Procedural TC (`mode: procedural` or omitted):**
-1. Read objective
-2. Execute steps
-3. Compare to expected
-4. Record pass/fail
-
-**Inline goal TC (`mode: goal` in `.tc.md`):**
-1. Read `## Objective`
-2. Read `## Available Tools`
-3. Plan and execute your own approach (no required step list)
-4. Evaluate each `## Success Criteria` item and capture evidence
-5. Record per-criterion PASS/FAIL
-
-**Standalone goal-mode pair (`TC-*.runner.md` + `TC-*.verify.md`):**
+For each test case (TC-NNN), execute the standalone runner/verifier flow:
 1. Execute runner goals and save artifacts to `results/tc/{NN}/`
 2. Verify artifacts using paired `.verify.md`
 3. Record per-goal verdict with evidence
@@ -471,12 +456,12 @@ For each test case (TC-NNN):
 
 1. **Check filter** - If `FILTERED_CASES` is set and this test case ID is not in the array, **skip** this test case entirely (do not execute any of its steps). Log: `Skipping TC-NNN (not in filter)`.
 2. **Read the objective** - Understand what this test verifies
-3. **Execute according to mode** - procedural steps or goal-evaluation flow
+3. **Execute runner/verifier flow** - run goals, then validate evidence
 4. **Capture results** - Record:
    - Actual exit code
    - Command output
    - Any error messages
-5. **Evaluate evidence** - expected results or goal criteria
+5. **Evaluate evidence** - verifier expectations and artifacts
 6. **Record status** - Pass or Fail
 
 Report each test case result immediately after execution.
@@ -557,7 +542,7 @@ filtered: {true|false}  # Whether test case filtering was applied
 
 {Include failed test details, environment info, observations}
 
-### Goal Evaluation (for mode: goal)
+### Goal Evaluation
 
 | Goal/Criterion | Status | Evidence |
 |----------------|--------|----------|

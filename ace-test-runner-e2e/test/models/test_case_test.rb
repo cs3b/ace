@@ -36,23 +36,14 @@ class TestCaseTest < Minitest::Test
     refute tc.pending?
   end
 
-  def test_default_mode_is_procedural
+  def test_goal_format_defaults_to_nil
     tc = create_test_case
-    assert_equal "procedural", tc.mode
-    refute tc.goal_mode?
     assert_nil tc.goal_format
   end
 
-  def test_goal_mode_attributes
-    tc = create_test_case(mode: "goal", goal_format: "inline")
-    assert_equal "goal", tc.mode
-    assert tc.goal_mode?
-    assert_equal "inline", tc.goal_format
-  end
-
-  def test_invalid_mode_raises
-    error = assert_raises(ArgumentError) { create_test_case(mode: "invalid") }
-    assert_match(/Invalid test case mode/, error.message)
+  def test_standalone_goal_format
+    tc = create_test_case(goal_format: "standalone")
+    assert_equal "standalone", tc.goal_format
   end
 
   def test_pending_with_reason
