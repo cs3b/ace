@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.7] - 2026-02-24
+
+### Technical
+- Patch release requested for `ace-test-runner` with no functional code changes since `0.15.6`
+
 ## [0.15.6] - 2026-02-23
 
 ### Fixed
