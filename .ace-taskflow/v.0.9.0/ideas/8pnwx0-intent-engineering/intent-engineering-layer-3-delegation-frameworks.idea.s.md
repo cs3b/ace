@@ -6,7 +6,21 @@ captured_at: "2026-02-24T12:00:00+00:00"
 
 # Intent Engineering (Layer 3): Delegation Frameworks for Agent Workflows
 
-Research synthesis on translating human aspirations into agent-actionable parameters through structured delegation frameworks. Covers goal translation infrastructure, delegation frameworks with resolution hierarchies, and feedback loops for alignment drift detection.
+Research synthesis on translating human aspirations into agent-actionable parameters through structured delegation frameworks. The goal: help us delegate work to agents more efficiently.
+
+## Rule of Thumb: The 3-Question Delegation Brief
+
+Before delegating any task to an agent, answer three questions:
+
+1. **What I hope to accomplish** — the impact we want to have, not the steps to get there. This is the *why*, framed as the change in the world we're after.
+2. **What "complete" looks like** — a concrete description of the end state. The agent should be able to compare its output against this and know whether it's done.
+3. **Specific success criteria** — a list of verifiable key results. Each one should be something the agent (or a reviewer) can check as pass/fail.
+
+This is the minimum viable delegation brief. Everything else in this research — Huryn's 7 components, autonomy tiers, drift detection — builds on top of these three. If you only do one thing differently, do this.
+
+**Why it works**: (1) separates intent from implementation so the agent can find its own path, (2) gives an unambiguous completion signal so the agent knows when to stop, (3) makes verification mechanical rather than subjective so review is fast.
+
+**Anti-pattern**: Delegating with steps instead of outcomes ("do X, then Y, then Z") — this over-constrains the agent and makes it impossible to verify whether the *goal* was achieved vs. the *steps* were followed.
 
 ## Research Synthesis
 
