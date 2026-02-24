@@ -22,7 +22,7 @@ Evolve the E2E test runner from flat scenario execution to a structured, filtera
 - **280.02** — Research and Vision: WHY we need this, principles, group hierarchy, runner config per tier
 - **280.03** — Tag System and CLI Filtering: `tags` field, `--tags`/`--exclude-tags` CLI options, goal-mode discovery
 - **280.04** — Test Grouping Strategy: Standard groups, classify all ~33 existing scenarios
-- **280.05** — Goal-Based Test Case Format: Two formats — inline `mode: goal` TCs and standalone `goal-*.runner.md`/`verify.md`
+- **280.05** — Goal-Based Test Case Format: Two formats — inline `mode: goal` TCs and standalone `TC-*.runner.md`/`TC-*.verify.md`
 - **280.06** — Independent Verifier Agent Pattern: Sandbox-aware verifier with filesystem access for higher confidence
 
 ## Dependency Chain
@@ -33,6 +33,6 @@ Evolve the E2E test runner from flat scenario execution to a structured, filtera
 
 - Tag-based filtering works for `ace-test-e2e suite` and `ace-test-e2e run`
 - All ~33 scenarios classified with tags and cost-tier
-- Two goal formats supported: inline TC (`mode: goal`) and standalone (`goal-*.runner.md` + `goal-*.verify.md`)
+- Two goal formats supported: inline TC (`mode: goal`) and standalone (`TC-*.runner.md` + `TC-*.verify.md`)
 - Verifier pattern documented with sandbox-aware architecture (filesystem access to artifacts)
 - Report format: YAML frontmatter with `passed`/`failed` arrays, `score`, `verdict` (pilot-validated)

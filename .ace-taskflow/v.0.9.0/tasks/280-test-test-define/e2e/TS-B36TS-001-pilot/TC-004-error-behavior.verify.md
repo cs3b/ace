@@ -6,7 +6,7 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-1. **Files exist** — At least 2 distinct error-case file sets exist in `results/4/` (each with exit code, stdout, and stderr captured).
+1. **Files exist** — At least 2 distinct error-case file sets exist in `results/tc/04/` (each with exit code, stdout, and stderr captured).
 2. **Non-zero exit codes** — Every captured exit code is non-zero.
 3. **Error on stderr** — Every stderr capture contains a non-empty error message.
 4. **Clean stdout** — Every stdout capture is either empty or contains no error message content (errors must not leak to stdout).

@@ -6,14 +6,14 @@ bundle:
     output: cache
     max_size: 81920
   files:
-    - ./goal-1-help-survey.verify.md
-    - ./goal-2-encode-today.verify.md
-    - ./goal-3-decode-token.verify.md
-    - ./goal-4-error-behavior.verify.md
-    - ./goal-5-output-routing.verify.md
-    - ./goal-6-structured-output.verify.md
-    - ./goal-7-roundtrip-pipeline.verify.md
-    - ./goal-8-batch-sort.verify.md
+    - ./TC-001-help-survey.verify.md
+    - ./TC-002-encode-today.verify.md
+    - ./TC-003-decode-token.verify.md
+    - ./TC-004-error-behavior.verify.md
+    - ./TC-005-output-routing.verify.md
+    - ./TC-006-structured-output.verify.md
+    - ./TC-007-roundtrip-pipeline.verify.md
+    - ./TC-008-batch-sort.verify.md
 ---
 
 # E2E Verification: ace-b36ts Goal-Based Pilot

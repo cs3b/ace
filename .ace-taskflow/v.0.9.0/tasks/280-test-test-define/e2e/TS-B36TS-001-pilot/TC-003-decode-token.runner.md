@@ -6,7 +6,7 @@ Decode the token `i50jj3` using `ace-b36ts`. Save a file named `i50jj3` whose **
 
 ## Workspace
 
-Save the file to `results/3/`.
+Save the file to `results/tc/03/`.
 
 ## Constraints
 
@@ -14,4 +14,4 @@ Save the file to `results/3/`.
 - Using what you learned from Goal 1, decode a token. Do not assume syntax beyond what Goal 1 revealed.
 - The file content must come from the tool's actual output, not fabricated.
 - For the decode attempt, capture stdout, stderr, and exit code as separate files:
-  `results/3/i50jj3.stdout`, `results/3/i50jj3.stderr`, `results/3/i50jj3.exit`.
+  `results/tc/03/i50jj3.stdout`, `results/tc/03/i50jj3.stderr`, `results/tc/03/i50jj3.exit`.

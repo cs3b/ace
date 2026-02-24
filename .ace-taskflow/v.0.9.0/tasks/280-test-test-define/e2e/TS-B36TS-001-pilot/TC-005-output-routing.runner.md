@@ -6,8 +6,8 @@ Run the same encode operation in different verbosity modes. Using your knowledge
 
 ## Workspace
 
-Save all output to `results/5/`. Use descriptive filenames that identify the mode and stream
-(e.g., `results/5/quiet.stdout`, `results/5/quiet.stderr`, `results/5/quiet.exit`).
+Save all output to `results/tc/05/`. Use descriptive filenames that identify the mode and stream
+(e.g., `results/tc/05/quiet.stdout`, `results/tc/05/quiet.stderr`, `results/tc/05/quiet.exit`).
 
 ## Constraints
 

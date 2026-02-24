@@ -6,7 +6,7 @@ Encode a known date, then pipe or feed the encoded result into the decode operat
 
 ## Workspace
 
-Save output to `results/7/`. The file should contain all three values: the original date, the encoded token, and the decoded result.
+Save output to `results/tc/07/`. The file should contain all three values: the original date, the encoded token, and the decoded result.
 
 ## Constraints
 
@@ -15,4 +15,4 @@ Save output to `results/7/`. The file should contain all three values: the origi
 - Do not fabricate output — all values must come from actual tool execution.
 - The original date should be a specific, known date (not "today" — use a fixed date so the roundtrip can be verified).
 - Additionally, capture the pipeline's stdout, stderr, and exit code:
-  `results/7/roundtrip.stdout`, `results/7/roundtrip.stderr`, `results/7/roundtrip.exit`.
+  `results/tc/07/roundtrip.stdout`, `results/tc/07/roundtrip.stderr`, `results/tc/07/roundtrip.exit`.
