@@ -2,8 +2,8 @@
 
 require_relative "../test_helper"
 
-class GoalModeSandboxBuilderTest < Minitest::Test
-  SandboxBuilder = Ace::Test::EndToEndRunner::Molecules::GoalModeSandboxBuilder
+class PipelineSandboxBuilderTest < Minitest::Test
+  SandboxBuilder = Ace::Test::EndToEndRunner::Molecules::PipelineSandboxBuilder
   TestScenario = Ace::Test::EndToEndRunner::Models::TestScenario
   TestCase = Ace::Test::EndToEndRunner::Models::TestCase
 
@@ -45,15 +45,14 @@ class GoalModeSandboxBuilderTest < Minitest::Test
       package: "ace-test",
       file_path: File.join(tmpdir, "scenario.yml"),
       content: "",
-      mode: "goal",
       tool_under_test: "fake-tool",
       sandbox_layout: {
         "results/tc/01/" => "first",
         "results/tc/02/" => "second"
       },
       test_cases: [
-        TestCase.new(tc_id: "TC-001", title: "One", content: "", file_path: "one.runner.md", mode: "goal", goal_format: "standalone"),
-        TestCase.new(tc_id: "TC-002", title: "Two", content: "", file_path: "two.runner.md", mode: "goal", goal_format: "standalone")
+        TestCase.new(tc_id: "TC-001", title: "One", content: "", file_path: "one.runner.md", goal_format: "standalone"),
+        TestCase.new(tc_id: "TC-002", title: "Two", content: "", file_path: "two.runner.md", goal_format: "standalone")
       ]
     )
   end

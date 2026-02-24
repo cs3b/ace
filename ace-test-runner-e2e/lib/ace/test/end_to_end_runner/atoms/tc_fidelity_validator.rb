@@ -7,7 +7,7 @@ module Ace
         # Validates that agent-reported test cases match the scenario's expected TCs
         #
         # Detects when an agent invents its own test cases instead of executing
-        # the defined .tc.md files. Returns an error result when fidelity check fails.
+        # the defined standalone TC files. Returns an error result when fidelity check fails.
         class TcFidelityValidator
           # Validate parsed result against expected test case count
           #

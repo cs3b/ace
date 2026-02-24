@@ -31,7 +31,7 @@ E2E tests are fundamentally different from unit tests: they are agent-executed v
   - `ace-test-e2e` for single-package runs
   - `ace-test-e2e-suite` for suite-level runs
 - Scenario IDs: `TS-<PACKAGE_SHORT>-<NNN>[-slug]`
-- Standalone goal-mode files: `TC-*.runner.md` + `TC-*.verify.md`
+- Standalone files: `TC-*.runner.md` + `TC-*.verify.md`
 - TC artifact layout: `results/tc/{NN}/`
 - Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 
@@ -152,7 +152,7 @@ For each failing TC, classify into one of three categories:
 3. Verify expected output matches current tool behavior by running manually
 4. For TS-format: check `scenario.yml` setup directives and `fixtures/` contents
 
-**Action:** Update the test definition (`TC-*.tc.md` and/or `scenario.yml`).
+**Action:** Update the test definition (`TC-*.runner.md`, `TC-*.verify.md`, and/or `scenario.yml`).
 
 ### Category C: Runner/Infrastructure Issue (Test Execution Machinery Is Broken)
 
@@ -211,7 +211,7 @@ Start with the highest-priority category. Within a category, pick the TC most li
 **Category B (test fix):**
 
 1. Update the test definition to match current behavior
-2. Edit the relevant `TC-*.tc.md` and/or `scenario.yml`
+2. Edit the relevant `TC-*.runner.md`, `TC-*.verify.md`, and/or `scenario.yml`
 3. Update fixtures if needed
 
 **Category C (runner fix):**

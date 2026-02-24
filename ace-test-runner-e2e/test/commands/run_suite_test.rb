@@ -91,20 +91,4 @@ class RunSuiteTest < Minitest::Test
 
     assert_equal ["smoke", "happy-path", "use-case:lint"], tags
   end
-
-  def test_parse_mode_filter_accepts_goal
-    command = RunSuite.new
-
-    assert_equal "goal", command.send(:parse_mode_filter, "goal")
-  end
-
-  def test_parse_mode_filter_rejects_invalid_value
-    command = RunSuite.new
-
-    error = assert_raises(Ace::Core::CLI::Error) do
-      command.send(:parse_mode_filter, "experimental")
-    end
-
-    assert_match(/Invalid --mode/, error.message)
-  end
 end

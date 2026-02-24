@@ -9,8 +9,8 @@ module Ace
   module Test
     module EndToEndRunner
       module Molecules
-        # Prepares deterministic runner/verifier prompt files for goal-mode execution.
-        class GoalModePromptBundler
+        # Prepares deterministic runner/verifier prompt files for pipeline execution.
+        class PipelinePromptBundler
           RUNNER_SYSTEM_PROMPT = <<~PROMPT
             You are an E2E test executor working in a sandbox directory.
 

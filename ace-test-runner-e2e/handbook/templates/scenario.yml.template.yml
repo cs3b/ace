@@ -1,5 +1,5 @@
 # E2E Test Scenario Configuration
-# TS-format scenario definition for per-TC test execution
+# Standalone runner/verifier pair format
 # See: handbook/guides/scenario-yml-reference.g.md
 
 # Required: Unique test identifier
@@ -10,12 +10,6 @@ package: {package-name}
 
 # Optional: Priority level (high|medium|low)
 priority: high
-
-# Optional: Scenario mode (procedural|goal)
-mode: procedural
-
-# Optional: Goal-mode execution strategy (isolated|sequential)
-# execution-model: isolated
 
 # Optional: Estimated duration
 duration: ~{X}min
@@ -29,6 +23,13 @@ e2e-justification: "{Requires real CLI/tools/filesystem behavior}"
 # Optional: Unit test files reviewed during Value Gate analysis
 unit-coverage-reviewed:
   - test/{layer}/{file}_test.rb
+
+# Optional: Primary command under test
+tool-under-test: {ace-tool}
+
+# Optional: Declared sandbox artifact layout
+sandbox-layout:
+  results/tc/01/: "Goal 1 artifacts"
 
 # Optional: Prerequisites
 requires:

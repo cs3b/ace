@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.6] - 2026-02-24
+
+### Changed
+- Simplify E2E execution to a single standalone pipeline model for CLI providers
+- Rename internal pipeline components to neutral names:
+  - `PipelineSandboxBuilder`
+  - `PipelinePromptBundler`
+  - `PipelineReportGenerator`
+  - `PipelineExecutor`
+- Update handbook guides, templates, and workflow instructions to standalone runner/verifier pair format
+
+### Removed
+- Scenario-level `mode` and `execution-model` support in `scenario.yml` parsing
+- Inline `.tc.md` test-case format support in `ScenarioLoader`
+- `ace-test-e2e suite --mode` option and mode-based scenario discovery filtering
+- Goal-mode-specific verify forcing in `TestOrchestrator` (verify now respects CLI flag only)
+
 ## [0.17.5] - 2026-02-24
 
 ### Added
