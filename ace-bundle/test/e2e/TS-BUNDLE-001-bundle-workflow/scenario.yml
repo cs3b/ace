@@ -1,0 +1,47 @@
+test-id: TS-BUNDLE-001
+title: "ace-bundle Goal-Based E2E"
+area: bundle
+package: ace-bundle
+priority: high
+tags: [smoke, happy-path, "use-case:bundle"]
+cost-tier: smoke
+mode: goal
+execution-model: sequential
+tool-under-test: ace-bundle
+
+sandbox-layout:
+  results/tc/01/:  "Help survey observations"
+  results/tc/02/:  "Preset loading artifacts (section output, simple preset output)"
+  results/tc/03/:  "File pattern matching evidence (included/excluded files)"
+  results/tc/04/:  "Auto-format threshold evidence (small→stdio, large→cache)"
+  results/tc/05/:  "Output override evidence (--output stdio, --output cache)"
+  results/tc/06/:  "CLI-API parity evidence (output comparison, error handling)"
+
+e2e-justification: >
+  All goals require the real ace-bundle binary executing through a shell.
+  Preset loading discovers and processes real filesystem presets. Section
+  workflow executes embedded commands and resolves file globs. Auto-format
+  thresholds depend on actual output size. CLI-API parity requires both
+  binary and Ruby API execution. None of this is testable with mocks.
+
+requires:
+  tools: [ace-bundle]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - copy-fixtures
+  - run: |
+      # Generate large preset (over 500 lines)
+      {
+        printf '%s\n' '---' 'name: large-test' '---' '' '# Large Test Content' ''
+        for i in $(seq 1 600); do echo "Line $i of large content"; done
+      } > .ace/bundle/presets/large-test.md
+  - run: |
+      # Generate below-threshold preset (100 lines)
+      {
+        printf '%s\n' '---' 'name: below-threshold-test' '---' '' '# Test Content' ''
+        for i in $(seq 1 95); do echo "Line $i"; done
+      } > .ace/bundle/presets/below-threshold-test.md
+  - env:
+      PROJECT_ROOT_PATH: .

@@ -1,0 +1,17 @@
+# Goal 3 — Idempotent Re-Run
+
+## Goal
+
+Run `ace-overseer work-on --task 001` a second time (after Goal 2 already created the worktree). Verify the command reuses the existing worktree and tmux window rather than creating duplicates.
+
+## Workspace
+
+Save all output to `results/tc/03/`. Capture:
+- The command's stdout, stderr, and exit code
+- Worktree count for task 001 (should be exactly 1)
+- Tmux window count for task (should be exactly 1)
+
+## Constraints
+
+- This goal depends on Goal 2 having already created the worktree.
+- All artifacts must come from real tool execution, not fabricated.
