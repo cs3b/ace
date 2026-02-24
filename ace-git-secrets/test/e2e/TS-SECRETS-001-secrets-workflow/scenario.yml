@@ -33,3 +33,6 @@ setup:
   - run: git add -A && git commit -m "initial" --quiet
   - env:
       PROJECT_ROOT_PATH: .
+
+sandbox-setup:
+  - "mise trust $SANDBOX_PATH/mise.toml"
