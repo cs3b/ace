@@ -73,11 +73,26 @@ class ListCommandTest < Minitest::Test
 
   def test_run_with_task_associated_filter
     mock_worktree_manager = Minitest::Mock.new
-    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }, [Hash])
+    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+      options[:task_associated] == true
+    end
 
     @command.instance_variable_set(:@manager, mock_worktree_manager)
 
     result = @command.run(["--task-associated"])
+    assert_equal 0, result
+    mock_worktree_manager.verify
+  end
+
+  def test_run_with_no_task_associated_filter
+    mock_worktree_manager = Minitest::Mock.new
+    mock_worktree_manager.expect(:list_all, { success: true, worktrees: [] }) do |options|
+      options[:task_associated] == false
+    end
+
+    @command.instance_variable_set(:@manager, mock_worktree_manager)
+
+    result = @command.run(["--no-task-associated"])
     assert_equal 0, result
     mock_worktree_manager.verify
   end

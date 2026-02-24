@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.15] - 2026-02-24
+
+### Fixed
+- Resolve task-association listing via task-aware worktree metadata whenever `--task-associated` or `--no-task-associated` filters are requested, even without `--show-tasks`.
+
+### Technical
+- Add regression coverage for CLI filter option propagation and manager-side task-filter listing path selection.
+
 ## [0.13.14] - 2026-02-24
 
 ### Fixed

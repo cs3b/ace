@@ -106,6 +106,98 @@ class WorktreeManagerTest < Minitest::Test
     assert result.key?(:success)
   end
 
+  def test_list_all_uses_task_resolved_listing_when_task_filter_requested
+    calls = []
+    fake_lister = Object.new
+    worktrees = []
+
+    fake_lister.define_singleton_method(:list_all) do
+      calls << :list_all
+      worktrees
+    end
+
+    fake_lister.define_singleton_method(:list_with_tasks) do
+      calls << :list_with_tasks
+      worktrees
+    end
+
+    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:|
+      calls << [:filter, task_associated, usable, branch_pattern]
+      items
+    end
+
+    fake_lister.define_singleton_method(:format_for_display) do |_items, _format|
+      ""
+    end
+
+    fake_lister.define_singleton_method(:get_statistics) do |_items|
+      {
+        total: 0,
+        task_associated: 0,
+        non_task_associated: 0,
+        usable: 0,
+        unusable: 0,
+        bare: 0,
+        detached: 0,
+        branches: [],
+        task_ids: []
+      }
+    end
+
+    @manager.instance_variable_set(:@worktree_lister, fake_lister)
+    result = @manager.list_all(task_associated: false)
+
+    assert result[:success]
+    assert_includes calls, :list_with_tasks
+    refute_includes calls, :list_all
+  end
+
+  def test_list_all_uses_plain_listing_when_no_task_filter_and_show_tasks_disabled
+    calls = []
+    fake_lister = Object.new
+    worktrees = []
+
+    fake_lister.define_singleton_method(:list_all) do
+      calls << :list_all
+      worktrees
+    end
+
+    fake_lister.define_singleton_method(:list_with_tasks) do
+      calls << :list_with_tasks
+      worktrees
+    end
+
+    fake_lister.define_singleton_method(:filter) do |items, task_associated:, usable:, branch_pattern:|
+      calls << [:filter, task_associated, usable, branch_pattern]
+      items
+    end
+
+    fake_lister.define_singleton_method(:format_for_display) do |_items, _format|
+      ""
+    end
+
+    fake_lister.define_singleton_method(:get_statistics) do |_items|
+      {
+        total: 0,
+        task_associated: 0,
+        non_task_associated: 0,
+        usable: 0,
+        unusable: 0,
+        bare: 0,
+        detached: 0,
+        branches: [],
+        task_ids: []
+      }
+    end
+
+    @manager.instance_variable_set(:@worktree_lister, fake_lister)
+    result = @manager.list_all(format: :table)
+
+    assert result[:success]
+    assert_includes calls, :list_all
+    refute_includes calls, :list_with_tasks
+  end
+
   def test_get_status_api_exists
     status = @manager.get_status
     assert status.is_a?(Hash)
