@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-02-24
+
+### Changed
+- Strengthen `e2e/analyze-failures` output contract with autonomous fix decisions, concrete candidate file targets, and explicit no-touch boundaries.
+- Update `e2e/fix` to consume autonomous analysis decisions directly and proceed without user clarification for normal targeting/scope choices.
+
 ## [0.20.1] - 2026-02-24
 
 ### Changed
