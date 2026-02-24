@@ -23,14 +23,13 @@ requires:
   ruby: ">= 3.0"
 
 setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
   - write-file:
       path: .ace/prompt-prep/config.yml
       content: |
         task:
           detection: false
-  - env:
+  - agent-env:
       PROJECT_ROOT_PATH: .
-
-sandbox-setup:
-  - "mise trust $SANDBOX_PATH/mise.toml"
