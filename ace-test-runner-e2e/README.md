@@ -19,7 +19,7 @@ lib/ace/test/end_to_end_runner/
 ├── molecules/      # Orchestration components (executor, loader, config, setup)
 ├── organisms/      # TestOrchestrator, SuiteOrchestrator
 ├── models/         # TestScenario, TestCase, TestResult
-└── cli/            # CLI commands (run_test, run_suite, setup)
+└── cli/            # CLI commands (run_test, run_suite)
 ```
 
 ## Overview
@@ -68,7 +68,7 @@ ace-test-runner-e2e/
         ├── molecules/      # 15 components
         ├── organisms/      # 2 orchestrators
         ├── models/         # 3 models
-        └── cli/            # 3 commands
+        └── cli/            # 2 commands
 ```
 
 ## Convention
@@ -120,6 +120,17 @@ Example:
 /ace-e2e-run ace-lint MT-LINT-001
 ```
 
+### CLI Usage
+
+```bash
+ace-test-e2e <package> [test-id]          # Run E2E test(s)
+ace-test-e2e ace-lint TS-LINT-001         # Run specific test
+ace-test-e2e ace-lint                     # Run all tests in package
+ace-test-e2e ace-lint --dry-run           # Preview test cases
+ace-test-e2e-suite                        # Run full suite
+ace-test-e2e-suite --affected             # Test changed packages only
+```
+
 ### Running with Test Case Filtering
 
 ```
@@ -140,12 +151,6 @@ When the sandbox is already set up (via Ruby `SetupExecutor`):
 /ace-e2e-runs <package>
 /ace-e2e-runs <package> --sequential
 /ace-e2e-runs --all
-```
-
-### Setup Only (No Execution)
-
-```
-ace-test-e2e setup <package> <test-id>
 ```
 
 ### Creating a New Test Scenario
