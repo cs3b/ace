@@ -5,8 +5,6 @@ package: ace-git-commit
 priority: high
 tags: [smoke, happy-path, "use-case:commit"]
 cost-tier: smoke
-mode: goal
-execution-model: sequential
 tool-under-test: ace-git-commit
 
 sandbox-layout:
