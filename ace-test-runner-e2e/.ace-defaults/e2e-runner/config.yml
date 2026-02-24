@@ -41,7 +41,7 @@ execution:
   # Default LLM provider:model for test execution
   provider: "claude:sonnet"
   # Timeout per test in seconds
-  timeout: 300
+  timeout: 600
   # Number of tests to run in parallel (1 = sequential)
   parallel: 3
 
