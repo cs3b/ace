@@ -5,8 +5,6 @@ package: ace-b36ts
 priority: high
 tags: [smoke, happy-path, "use-case:b36ts", pilot]
 cost-tier: smoke
-mode: goal
-execution-model: sequential  # goals run in order, shared agent context
 tool-under-test: ace-b36ts
 
 sandbox-layout:
