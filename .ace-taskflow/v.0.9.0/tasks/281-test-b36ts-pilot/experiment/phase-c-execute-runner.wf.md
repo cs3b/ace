@@ -37,7 +37,7 @@ Expected: at least one file per goal directory.
 
 ## Notes
 
-- `claude:sonnet` invokes `claude -p` as a subprocess with full bash/tool access
+- `claude:haiku` invokes `claude -p` as a subprocess with full bash/tool access
 - Timeout of 300 seconds (5 minutes) allows for sequential execution of all 8 goals
 - Runner output (agent's response) is saved to `.cache/ace-e2e/runner-output.md`
 - Actual artifacts are in `results/{1..8}/` directories

@@ -26,7 +26,8 @@ Write `sandbox/reports/report.md` with this structure:
 test-id: TS-B36TS-001
 title: "ace-b36ts Goal-Based E2E Pilot"
 package: ace-b36ts
-provider: claude:sonnet
+runner-provider: claude:haiku
+verifier-provider: claude:opus
 timestamp: {{ISO 8601 timestamp}}
 goals-passed: {{N}}
 goals-failed: {{M}}
@@ -37,7 +38,7 @@ verdict: {{pass if 8/8, partial if 1-7, fail if 0}}
 
 # E2E Report: ace-b36ts Goal-Based Pilot
 
-**Score: N/8 (XX%)**  |  Provider: claude:sonnet  |  Date: {{YYYY-MM-DD}}
+**Score: N/8 (XX%)**  |  Runner: claude:haiku  |  Verifier: claude:opus  |  Date: {{YYYY-MM-DD}}
 
 ## Goal Results
 
@@ -107,7 +108,8 @@ The YAML frontmatter fields:
 | `test-id` | string | Test scenario ID |
 | `title` | string | Human-readable title |
 | `package` | string | Package under test |
-| `provider` | string | LLM provider used |
+| `runner-provider` | string | LLM provider used for runner |
+| `verifier-provider` | string | LLM provider used for verifier |
 | `timestamp` | string | ISO 8601 execution time |
 | `goals-passed` | integer | Count of PASS verdicts |
 | `goals-failed` | integer | Count of FAIL verdicts |

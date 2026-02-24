@@ -11,7 +11,7 @@ tool-under-test: ace-b36ts
 sandbox-layout:
   results/1/:  "Help survey observations"
   results/2/:  "Encoded today-date file"
-  results/3/:  "Decoded 70000 token file"
+  results/3/:  "Decoded i50jj3 token file"
   results/4/:  "Error behavior captures (exit code, stdout, stderr)"
   results/5/:  "Output routing captures per verbosity mode"
   results/6/:  "Structured output integration artifacts"
