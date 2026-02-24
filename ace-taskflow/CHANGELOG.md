@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.3] - 2026-02-24
+
+### Added
+- Add "End-State Coherence" checklist item to review workflow readiness gate for orchestrator subtasks
+- Add "Spike-First Rule" guidance to draft workflow for engine/pipeline redesign tasks
+- Add "Concept Inventory" section to orchestrator task template to track concept lifecycle across subtasks
+- Add "Architecture Drift Check" (Step 3.10) to work-subtasks workflow to catch spec-implementation divergence early
+
 ## [0.41.2] - 2026-02-23
 
 ### Changed

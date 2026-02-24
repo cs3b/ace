@@ -118,6 +118,20 @@ Create high-level behavioral specifications that define WHAT the system should d
    * Include behavioral specification template
    * Focus on behavioral content, leave implementation for replan phase
 
+### Spike-First Rule for Engine/Pipeline Redesigns
+
+When an orchestrator task redesigns a core execution path (test runner, build pipeline,
+deployment flow), the FIRST subtask should be a time-boxed spike that:
+1. Validates the target architecture end-to-end with a single scenario
+2. Identifies which existing concepts survive and which get removed
+3. Produces a "concept inventory" showing what the final system looks like
+
+Only AFTER the spike validates the end-state should remaining subtasks be drafted.
+This prevents decomposing into subtasks that add concepts the spike later proves unnecessary.
+
+**Anti-pattern**: 8 subtasks drafted upfront, each adding features, then a late subtask undoes half.
+**Correct pattern**: 1 spike subtask validates the end-state, then remaining subtasks build toward it.
+
 7. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
      * Behavioral Specification section with embedded template
@@ -342,6 +356,17 @@ Why are we doing this? Focus on user value and behavioral outcomes.
 - Success criteria validation methods
 - User acceptance criteria
 - Behavioral test scenarios
+
+### Concept Inventory (Orchestrator Only)
+
+Track concepts introduced and removed across subtasks to detect churn:
+
+| Concept | Introduced by | Removed by | Status |
+|---------|--------------|------------|--------|
+| _example concept_ | _subtask ref_ | — | KEPT |
+
+**Churn threshold**: If >30% of concepts introduced by subtasks get removed by later subtasks,
+the decomposition was premature. Consider consolidating remaining subtasks.
 
 ## Out of Scope
 <!-- Explicitly exclude implementation concerns to maintain behavioral focus -->
