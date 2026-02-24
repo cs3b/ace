@@ -3,6 +3,7 @@ title: Path and Delete Handling
 area: git-commit
 package: ace-git-commit
 priority: critical
+tags: [happy-path, "use-case:commit"]
 requires:
   tools: [git, ace-git-commit]
   ruby: ">= 3.0"

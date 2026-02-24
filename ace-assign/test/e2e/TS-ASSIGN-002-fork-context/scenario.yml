@@ -3,6 +3,7 @@ title: Fork Context Feature
 area: assign
 package: ace-assign
 priority: high
+tags: [happy-path, "use-case:assign"]
 requires:
   tools: [ace-assign]
   ruby: ">= 3.0"

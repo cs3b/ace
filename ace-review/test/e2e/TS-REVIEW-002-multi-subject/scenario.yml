@@ -3,6 +3,7 @@ title: Multi-Subject Merging and Type Detection
 area: review
 package: ace-review
 priority: high
+tags: [happy-path, "use-case:review"]
 requires:
   tools: [ace-review, git]
   ruby: ">= 3.0"

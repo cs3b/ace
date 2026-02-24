@@ -3,6 +3,7 @@ title: Rewrite Workflow
 area: git-secrets
 package: ace-git-secrets
 priority: high
+tags: [happy-path, "use-case:secrets"]
 requires:
   tools: [ace-git-secrets, git, gitleaks, git-filter-repo]
   ruby: ">= 3.0"

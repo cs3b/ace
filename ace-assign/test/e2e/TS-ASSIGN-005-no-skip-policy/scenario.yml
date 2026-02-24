@@ -3,6 +3,7 @@ title: No-Skip Drive Policy Guardrails
 area: assign
 package: ace-assign
 priority: high
+tags: [deep, "use-case:assign"]
 requires:
   tools: [rg]
   ruby: ">= 3.0"

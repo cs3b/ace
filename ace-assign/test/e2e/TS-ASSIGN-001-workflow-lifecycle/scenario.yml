@@ -3,6 +3,7 @@ title: Workflow Lifecycle
 area: assign
 package: ace-assign
 priority: high
+tags: [smoke, happy-path, "use-case:assign"]
 requires:
   tools: [ace-assign]
   ruby: ">= 3.0"

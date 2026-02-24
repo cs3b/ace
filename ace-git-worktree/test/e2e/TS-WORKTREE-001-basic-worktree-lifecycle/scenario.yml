@@ -3,6 +3,7 @@ title: Basic Worktree Lifecycle
 area: git-worktree
 package: ace-git-worktree
 priority: high
+tags: [smoke, happy-path, "use-case:worktree"]
 last-verified: 2026-02-17
 verified-by: claude-sonnet-4-6
 requires:

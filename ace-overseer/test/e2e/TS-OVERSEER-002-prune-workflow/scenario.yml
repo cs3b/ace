@@ -3,6 +3,7 @@ title: Prune Workflow
 area: overseer
 package: ace-overseer
 priority: high
+tags: [deep, "use-case:overseer"]
 requires:
   tools: [ace-overseer, ace-git-worktree, ace-tmux, ace-assign, ace-taskflow, git, tmux]
 
