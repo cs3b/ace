@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-02-24
+
+### Fixed
+- Stop copying `TC-*.runner.md` / `TC-*.verify.md` scenario definitions into the sandbox root during setup; pipeline execution now relies on prompt bundling from scenario source files only.
+- Clarify pipeline runner system prompt to treat initial cwd as `SANDBOX_ROOT` and keep artifact writes under `SANDBOX_ROOT/results` even when commands must run inside created worktrees.
+
 ## [0.19.2] - 2026-02-24
 
 ### Fixed

@@ -17,6 +17,7 @@ module Ace
             Rules:
             - Execute each goal in order
             - Save all artifacts to results/tc/{NN}/ directories as specified
+            - Treat the initial working directory as SANDBOX_ROOT; if a goal needs commands in a created worktree, cd there for execution but keep artifact writes under SANDBOX_ROOT/results
             - Do not fabricate output - all artifacts must come from real tool execution
             - If a goal fails, note the failure and continue to the next goal
             - After all goals, output a brief summary of what you produced for each goal
