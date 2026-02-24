@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2] - 2026-02-24
+
+### Fixed
+- Improve pipeline verifier evidence extraction to support multiline evidence blocks and `Evidence of failure` headings in report parsing.
+
+### Technical
+- Add parser regression coverage for multiline failure evidence propagation into metadata and report outputs.
+
 ## [0.19.1] - 2026-02-24
 
 ### Changed
