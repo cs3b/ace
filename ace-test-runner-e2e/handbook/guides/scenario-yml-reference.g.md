@@ -2,7 +2,7 @@
 guide-id: g-scenario-yml-reference
 title: scenario.yml Reference
 description: Complete schema reference for TS-format scenario configuration files
-version: "1.1"
+version: "1.2"
 source: ace-test-runner-e2e
 ---
 
@@ -36,6 +36,10 @@ Example: `ace-lint/test/e2e/TS-LINT-001-core-lint-pipeline/scenario.yml`
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `priority` | string | `medium` | Test priority: `high`, `medium`, or `low` |
+| `mode` | string | `procedural` | Scenario mode: `procedural` or `goal` |
+| `execution-model` | string | `isolated` | Goal-mode execution strategy: `isolated` or `sequential` |
+| `tool-under-test` | string | — | Primary command/tool being validated |
+| `sandbox-layout` | object | `{}` | Declared artifact paths and expected outputs |
 | `duration` | string | — | Estimated duration (e.g., `~15min`) |
 | `automation-candidate` | boolean | `false` | Whether this test could be automated |
 | `cost-tier` | string | `standard` | Expected run cost profile: `smoke`, `standard`, or `deep` |
@@ -45,6 +49,21 @@ Example: `ace-lint/test/e2e/TS-LINT-001-core-lint-pipeline/scenario.yml`
 | `setup` | array | `[]` | Setup directives to execute before tests |
 | `last-verified` | string | — | Date of last successful verification (YYYY-MM-DD) |
 | `verified-by` | string | — | Agent that performed last verification |
+
+### Goal-Mode File Conventions
+
+When `mode: goal` is used:
+
+- Inline goal mode uses `TC-*.tc.md` with per-TC frontmatter `mode: goal`
+- Standalone goal mode uses paired files:
+  - `TC-*.runner.md`
+  - `TC-*.verify.md`
+  - `runner.yml.md`
+  - `verifier.yml.md`
+
+Artifact layout conventions:
+- Canonical: `results/tc/{NN}/`
+- Legacy `results/{N}/` layout is deprecated and should not be authored in new scenarios
 
 ### `requires` Object
 

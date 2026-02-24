@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.606] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.17.1**: Add inline goal-mode TC format support (`mode: goal`) with structure validation, criteria-aware parsing/reporting, and updated run/execute workflow guidance for procedural + goal execution paths
+
 ## [0.9.605] - 2026-02-24
 
 ### Changed

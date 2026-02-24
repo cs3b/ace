@@ -1,6 +1,7 @@
 ---
 tc-id: TC-{NNN}
 title: {Test Case Title}
+mode: procedural
 ---
 
 ## Objective
@@ -23,3 +24,26 @@ title: {Test Case Title}
 
 - {Expected outcome 1}
 - {Expected outcome 2}
+
+<!--
+Inline goal-mode variant:
+
+---
+tc-id: TC-{NNN}
+title: {Test Case Title}
+mode: goal
+---
+
+## Objective
+{Outcome to achieve}
+
+## Available Tools
+- {tool-1}
+- {tool-2}
+
+## Success Criteria
+- [ ] {criterion 1}
+- [ ] {criterion 2}
+
+Do not include a "## Steps" section in mode: goal.
+-->
