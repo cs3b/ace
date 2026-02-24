@@ -18,5 +18,6 @@ Save all output to `results/tc/02/`. Capture:
 
 - The sandbox has task 001 in .ace-taskflow/ and default preset in .ace/assign/presets/.
 - Using what you learned from Goal 1, invoke ace-overseer work-on.
+- When verifying tmux windows, target `ACE_TMUX_SESSION` explicitly (for example `tmux list-windows -t "$ACE_TMUX_SESSION"`).
 - Verify assignment activation via `ace-overseer status --format json` (cross-worktree oracle), not root-scoped `ace-assign status`.
 - All artifacts must come from real tool execution, not fabricated.
