@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.615] - 2026-02-24
+
+### Fixed
+- **ace-test-e2e v0.18.1**: Fix standalone pipeline report parsing and failure handling by accepting multiple goal heading formats, normalizing verifier verdict/category extraction, and always writing deterministic error reports when runner/verifier execution fails
+
+### Changed
+- **ace-test-e2e v0.18.1**: Rename CLI provider helper internals to `CliProviderAdapter` (with compatibility alias), improve suite subprocess result parsing/metadata reconciliation, and align `--only-failures` reruns to scenario-level execution with workspace-local executable resolution
+
 ## [0.9.614] - 2026-02-24
 
 ### Technical
