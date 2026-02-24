@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.623] - 2026-02-24
+
+### Changed
+- **ace-test-e2e v0.20.1**: Consolidate mise.toml handling into `setup:` run steps, remove `sandbox-setup:` mechanism, rename `env:` → `agent-env:` for clarity, and re-export env vars in `SetupExecutor#handle_run` to protect against mise clobbering
+
 ## [0.9.622] - 2026-02-24
 
 ### Added
