@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.13] - 2026-02-24
+
+### Fixed
+- Isolate `TS-OVERSEER-001` E2E tmux execution per run by switching scenario setup to `tmux-session: { name-source: run-id }`, preventing cross-run/default-session collisions.
+
+### Changed
+- Clarify runner guidance for tmux evidence collection to always target `ACE_TMUX_SESSION` explicitly.
+
 ## [0.4.12] - 2026-02-24
 
 ### Changed
