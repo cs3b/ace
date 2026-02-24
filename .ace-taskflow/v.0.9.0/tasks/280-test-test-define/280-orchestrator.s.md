@@ -33,9 +33,23 @@ Evolve the E2E test runner from flat scenario execution to a structured, filtera
 - **280.07** — Handbook/Workflow/Template Migration: Update all `ace-test-runner-e2e` guides, workflows, and templates to the new canonical format
 - **280.08** — 6-Phase Goal-Mode Execution Pipeline: Implement the validated experiment pipeline (sandbox setup, prompt bundling, dual-agent execution, deterministic report generation)
 
+### E2E Test Creation (per-package)
+
+These subtasks are independent of each other and can be parallelized. All depend on 280.07 + 280.08.
+
+- **280.09** — Create E2E tests for ace-taskflow: 3 scenarios (TASK-001, TASK-002, IDEA-001), ~11 TCs [P1]
+- **280.10** — Create E2E tests for ace-test-runner: 2 scenarios (TEST-001, TEST-002), ~5 TCs [P1]
+- **280.11** — Create E2E tests for ace-search: 1 scenario (SEARCH-001), ~3 TCs [P2]
+- **280.12** — Create E2E tests for ace-git: 1 scenario (GIT-001), ~4 TCs [P2]
+- **280.13** — Create E2E tests for ace-docs: 1 scenario (DOCS-001), ~3 TCs [P2]
+- **280.14** — Create E2E tests for ace-llm: 1 scenario (LLM-001), ~2 TCs [P3]
+- **280.15** — Create E2E tests for ace-tmux: 1 scenario (TMUX-001), ~2 TCs [P3]
+
 ## Dependency Chain
 
 280.01 (live b36ts migration) → 280.02 (vision) → 280.03 (tags infra) → 280.04 (classification uses tags) → 280.05 (goal format) → 280.06 (verifier) → 280.07 (handbook/workflow/template alignment) → 280.08 (6-phase pipeline implementation)
+
+280.07 + 280.08 → 280.09–280.15 (all parallelizable)
 
 ## Success Criteria
 
