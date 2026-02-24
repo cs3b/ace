@@ -16,11 +16,12 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-argument-hint: "[package] [test-id]"
-last_modified: 2026-02-11
+argument-hint: '[package] [test-id]'
+last_modified: 2026-02-24
 source: ace-test-runner-e2e
 ---
 
+read and run `ace-bundle wfi://e2e/analyze-failures`
 read and run `ace-bundle wfi://e2e/fix`
 
 ARGUMENTS: $ARGUMENTS
