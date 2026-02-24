@@ -26,7 +26,6 @@ requires:
   ruby: ">= 3.0"
 
 setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
   - copy-fixtures
-
-sandbox-setup:
-  - "mise trust $SANDBOX_PATH/mise.toml"
