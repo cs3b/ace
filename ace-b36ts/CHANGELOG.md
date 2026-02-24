@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-02-24
+
+### Changed
+- Migrated `ace-b36ts/test/e2e` to goal-mode pilot scenario `TS-B36TS-001-pilot`
+- Replaced four legacy procedural E2E scenarios with runner/verifier split test assets
+- Updated pilot `scenario.yml` with required loader fields (`area`, `setup`) for `ace-test-e2e` compatibility
+
 ## [0.7.3] - 2026-02-23
 
 ### Changed
