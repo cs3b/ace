@@ -14,8 +14,9 @@ allowed-tools:
   - Grep
   - Glob
 argument-hint: [test-file-pattern]
-last_modified: 2026-01-10
+last_modified: 2026-02-24
 source: ace-taskflow
 ---
 
+read and run `ace-bundle wfi://test/analyze-failures`
 read and run `ace-bundle wfi://test/fix`
