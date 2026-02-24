@@ -196,6 +196,7 @@ module Ace
 
           # Get worktree statistics
           #
+          # @param worktrees [Array<WorktreeInfo>, nil] Optional pre-filtered worktree list
           # @return [Hash] Statistics about worktrees
           #
           # @example
@@ -203,8 +204,8 @@ module Ace
           #   puts "Total worktrees: #{stats[:total]}"
           #   puts "Task-associated: #{stats[:task_associated]}"
           #   puts "Usable: #{stats[:usable]}"
-          def get_statistics
-            worktrees = list_with_tasks
+          def get_statistics(worktrees = nil)
+            worktrees = worktrees ? Array(worktrees) : list_with_tasks
 
             {
               total: worktrees.length,
