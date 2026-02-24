@@ -27,7 +27,6 @@ e2e-justification: >
 requires:
   tools: [ace-b36ts, jq]
 
-setup: []
-
-sandbox-setup:
-  - "mise trust $SANDBOX_PATH/mise.toml"
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
