@@ -34,8 +34,15 @@ Environment provides:
 
 ### Audit Trail
 - Clean cache, create assignment from `fixtures/display/job-audit.yaml`.
+- Phase files are markdown files under `"$CACHE_BASE/<assignment-id>/phases/"` with `.ph.md` extension (not `.yaml`).
+- Derive `<assignment-id>` from real command output and/or `results/tc/04/assignment-id-audit.txt` captured during this TC.
+- For metadata checks, read the concrete phase files by number prefix, e.g.:
+  - child: `010.01-*.ph.md`
+  - injected sibling: `010.02-*.ph.md` immediately after sibling injection
+  - renumbered target: `010.03-*.ph.md` after renumbering
 - Add child under 010 (`add --after 010 --child`). Verify `added_by: child_of:010` and `parent: "010"`.
 - Add another child, then inject sibling after first child. Verify `added_by: injected_after:010.01`.
 - Verify renumbered phase has `renumbered_from` and `renumbered_at` (ISO8601 format).
 - Mark parent done, add dynamic phase. Verify `added_by: dynamic`.
+- If expected metadata is missing, first verify file path/extension/assignment-id correctness before concluding failure.
 - All artifacts must come from real tool execution.
