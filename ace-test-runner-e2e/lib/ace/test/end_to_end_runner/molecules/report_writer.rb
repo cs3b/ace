@@ -45,23 +45,44 @@ module Ace
             end.join("\n")
 
             goal_criteria_sections = build_goal_criteria_sections(result.test_cases)
-
-            frontmatter_lines = [
-              "test-id: #{result.test_id}"
-            ]
-            if test_case
-              frontmatter_lines << "tc-id: #{test_case.tc_id}"
-              frontmatter_lines << "scenario-id: #{scenario.test_id}"
+            failed_entries = result.test_cases
+                                   .select { |tc| tc[:status] == "fail" }
+                                   .map do |tc|
+              {
+                "tc" => tc[:id],
+                "category" => tc[:category] || "runner-error",
+                "evidence" => tc[:notes].to_s
+              }
             end
-            frontmatter_lines.concat([
-              "package: #{scenario.package}",
-              "agent: ace-test-e2e",
-              "executed: #{result.completed_at.utc.strftime('%Y-%m-%dT%H:%M:%SZ')}",
-              "status: #{result.status}",
-              "passed: #{result.passed_count}",
-              "failed: #{result.failed_count}",
-              "total: #{result.total_count}"
-            ])
+            verdict = if result.failed_count.zero?
+              "pass"
+            elsif result.passed_count.zero?
+              "fail"
+            else
+              "partial"
+            end
+            score = result.total_count.zero? ? 0.0 : (result.passed_count.to_f / result.total_count).round(3)
+
+            frontmatter_hash = {
+              "test-id" => result.test_id
+            }
+            if test_case
+              frontmatter_hash["tc-id"] = test_case.tc_id
+              frontmatter_hash["scenario-id"] = scenario.test_id
+            end
+            frontmatter_hash.merge!(
+              "package" => scenario.package,
+              "agent" => "ace-test-e2e",
+              "executed" => result.completed_at.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
+              "status" => result.status,
+              "tcs-passed" => result.passed_count,
+              "tcs-failed" => result.failed_count,
+              "tcs-total" => result.total_count,
+              "score" => score,
+              "verdict" => verdict,
+              "failed" => failed_entries
+            )
+            frontmatter_yaml = YAML.dump(frontmatter_hash).sub(/\A---\s*\n/, "").sub(/\.\.\.\s*\n\z/, "")
 
             tc_info_rows = if test_case
               "| TC ID | #{test_case.tc_id} |\n| TC Title | #{test_case.title} |\n"
@@ -71,7 +92,7 @@ module Ace
 
             content = <<~REPORT
               ---
-              #{frontmatter_lines.join("\n")}
+              #{frontmatter_yaml.rstrip}
               ---
 
               # E2E Test Report: #{result.test_id}
@@ -169,11 +190,25 @@ module Ace
               "completed" => result.completed_at.utc.strftime("%Y-%m-%dT%H:%M:%SZ"),
               "duration" => "#{result.duration.round(0)}s",
               "status" => result.status,
+              "score" => (result.total_count.zero? ? 0.0 : (result.passed_count.to_f / result.total_count).round(3)),
+              "verdict" => (result.failed_count.zero? ? "pass" : (result.passed_count.zero? ? "fail" : "partial")),
+              "tcs-passed" => result.passed_count,
+              "tcs-failed" => result.failed_count,
+              "tcs-total" => result.total_count,
               "results" => {
                 "passed" => result.passed_count,
                 "failed" => result.failed_count,
                 "total" => result.total_count
               },
+              "failed" => result.test_cases
+                                .select { |tc| tc[:status] == "fail" }
+                                .map do |tc|
+                {
+                  "tc" => tc[:id],
+                  "category" => tc[:category] || "runner-error",
+                  "evidence" => tc[:notes].to_s
+                }
+              end,
               "failed_test_cases" => result.failed_test_case_ids
             }
 

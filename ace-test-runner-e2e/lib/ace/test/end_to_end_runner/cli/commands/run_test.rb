@@ -65,6 +65,8 @@ module Ace
                    desc: "Re-run only previously failed test cases"
             option :tags, type: :string,
                    desc: "Comma-separated scenario tags to include"
+            option :verify, type: :boolean,
+                   desc: "Run independent verifier pass after runner execution"
             option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
             option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
             option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -102,6 +104,7 @@ module Ace
                 package: package,
                 test_id: test_id,
                 test_cases: test_cases,
+                verify: options[:verify],
                 tags: parse_tags(options[:tags]),
                 cli_args: options[:cli_args],
                 run_id: options[:run_id],
