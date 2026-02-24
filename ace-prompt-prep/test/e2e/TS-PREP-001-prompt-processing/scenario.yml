@@ -31,3 +31,6 @@ setup:
           detection: false
   - env:
       PROJECT_ROOT_PATH: .
+
+sandbox-setup:
+  - "mise trust $SANDBOX_PATH/mise.toml"
