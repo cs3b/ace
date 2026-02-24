@@ -6,8 +6,8 @@ estimate: TBD
 worktree:
   branch: 280-define-e2e-test-levels-grouping-and-goal-based-execution
   path: "../ace-task.280"
-  created_at: '2026-02-24 02:21:57'
-  updated_at: '2026-02-24 02:21:57'
+  created_at: '2026-02-24 02:49:56'
+  updated_at: '2026-02-24 02:49:56'
   target_branch: main
 ---
 
