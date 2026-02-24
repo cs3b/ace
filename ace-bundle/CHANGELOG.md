@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.3] - 2026-02-24
+
+### Technical
+- Clarify TS-BUNDLE-001 CLI/API parity E2E runner instructions to treat API `result.metadata[:error]` as a non-zero failure in parity checks.
+
 ## [0.31.2] - 2026-02-23
 
 ### Fixed
