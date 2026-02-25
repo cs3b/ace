@@ -11,9 +11,10 @@
 
 ## Constraints
 
-- Use only declared tools
+- Use only declared scenario tools (`ace-*` and explicit exceptions)
 - Keep artifacts under `results/tc/{NN}/`
 - Do not write outside sandbox
+- Execute actions only; do not assign PASS/FAIL in runner file
 
 <!--
 Companion verifier file (`TC-{NNN}-{slug}.verify.md`) example:
@@ -22,10 +23,14 @@ Companion verifier file (`TC-{NNN}-{slug}.verify.md`) example:
 
 ## Expectations
 
-- {Expectation 1}
-- {Expectation 2}
+- Impact Checks:
+  - {Sandbox/project impact expectation}
+- Artifact Checks:
+  - {Artifact expectation}
+- Debug Fallback:
+  - {Optional stdout/stderr/exit evidence when needed}
 
 ## Verdict
 
-- Pass when all expectations are satisfied from sandbox evidence.
+- Pass when impact and artifact checks are satisfied from sandbox evidence.
 -->

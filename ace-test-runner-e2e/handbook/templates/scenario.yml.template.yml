@@ -41,6 +41,9 @@ requires:
 
 # Setup directives (executed before test cases)
 # Available: git-init, run:, copy-fixtures, write-file:, agent-env:, tmux-session
+# Rules:
+# - setup is fail-fast (do not use `|| true`)
+# - fixtures/setup own sandbox preparation; runner TCs do not re-implement setup
 setup:
   - git-init
   # Optional detached tmux session for test isolation (uses unique run ID)

@@ -28,6 +28,8 @@ Set up a safe, isolated environment for E2E tests that:
 - Ensures cleanup on success AND failure
 - Captures outputs for debugging
 
+Setup is owned by scenario configuration and fixtures. Runner TC files must not re-implement environment bootstrapping.
+
 ## When to Use
 
 - Before running E2E tests that touch filesystem

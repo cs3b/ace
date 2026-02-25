@@ -36,6 +36,20 @@ This workflow guides an agent through executing an E2E test scenario. It support
 - Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 - Tag filtering happens at discovery time (before sandbox setup)
 
+## Execution Contract
+
+- Runner instructions are execution-only: perform actions and write evidence.
+- Verifier instructions are verification-only: assign verdicts using impact-first checks:
+  1. sandbox/project state impact
+  2. explicit artifacts
+  3. debug captures as fallback
+- Do not place ad-hoc setup logic in TC runner files; sandbox setup belongs to `scenario.yml` and fixtures.
+
+## Execution Environment Guardrail
+
+- Do **not** run `ace-test-e2e` / `ace-test-e2e-suite` autonomously in constrained or uncertain environments.
+- Provide exact run commands for the user unless explicit user request and confirmed environment fidelity.
+
 ## Pipeline Context
 
 For CLI providers (`ace-test-e2e`), the deterministic 6-phase pipeline handles execution automatically:

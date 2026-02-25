@@ -27,6 +27,23 @@ E2E tests are executed by an AI agent and reserved for behaviors that require re
 - Summary reports use `tcs-passed`, `tcs-failed`, `tcs-total`, and `failed[].tc`
 - Scenarios declare `tags` for discovery-time filtering via `--tags`/`--exclude-tags`
 
+## Runner vs Verifier Contract
+
+- Runner is **execution-only**:
+  - perform user-like CLI actions in sandbox
+  - produce evidence files under `results/tc/{NN}/`
+  - do not issue PASS/FAIL verdicts
+  - do not perform verifier-style assertion/classification
+- Verifier is **verification-only**:
+  - evaluate TC outcome from sandbox evidence
+  - apply an **impact-first** evidence order:
+    1. sandbox/project state impact
+    2. explicit TC artifacts
+    3. debug captures (`stdout`, `stderr`, `*.exit`, metadata) only as fallback
+- Setup ownership:
+  - sandbox preparation belongs to `scenario.yml` `setup:` + `fixtures/`
+  - TC runner files must not define independent environment setup procedures
+
 ## E2E Value Gate
 
 Before adding a TC, confirm the behavior needs:
@@ -83,7 +100,7 @@ This prevents duplicate assertions across test layers.
 ## Authoring Rules
 
 - Keep runner goals outcome-oriented and deterministic.
-- Keep verifier expectations artifact-based.
+- Keep verifier expectations impact-first, then artifacts, then debug fallback.
 - Preserve strict TC pairing (`runner` + `verify`).
 - Keep outputs inside `results/tc/{NN}/`.
 - Avoid hidden dependencies between TCs unless explicitly intended.

@@ -27,6 +27,15 @@ This workflow guides an agent through creating a new E2E test scenario.
   - `ace-test-e2e` for single-package execution
   - `ace-test-e2e-suite` for suite-level execution
 
+## Authoring Contract
+
+- Runner files (`runner.yml.md`, `TC-*.runner.md`) are execution-only.
+- Verifier files (`verifier.yml.md`, `TC-*.verify.md`) are verdict-only with impact-first evidence order:
+  1. sandbox/project state impact
+  2. explicit artifacts
+  3. debug captures as fallback
+- Setup belongs to `scenario.yml` `setup:` and fixtures; do not duplicate setup in runner TC instructions.
+
 ## Workflow Steps
 
 ### 1. Validate Inputs
