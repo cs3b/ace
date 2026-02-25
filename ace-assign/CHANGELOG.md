@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Show scoped fork PID telemetry in status output (`Scoped Fork PID`, PID tree, and PID file path) when viewing fork-root scopes.
 - Update drive workflow guidance to use stepped background polling (`5m → 3m → 1m → 60s`) with scoped `ace-assign status --filter`.
+- Update generated `plan-task` phase action instructions to require planning against behavioral spec sections, cover relevant operating modes, and report missing spec details in a `Behavioral Gaps` section
 
 ### Technical
 - Add command/model/parser/launcher coverage for PID telemetry persistence and status filter behavior.
