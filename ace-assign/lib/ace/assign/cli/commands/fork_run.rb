@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require "fileutils"
+require "yaml"
+
 module Ace
   module Assign
     module CLI
@@ -56,13 +59,14 @@ module Ace
               phase_writer.mark_in_progress(first_workable.file_path)
             end
 
-            launcher.launch(
+            launch_result = launcher.launch(
               assignment_id: assignment.id,
               fork_root: root_phase.number,
               provider: options[:provider],
               cli_args: options[:cli_args],
               timeout: options[:timeout]
             )
+            record_fork_pid_info(root_phase, launch_result)
 
             refreshed = executor.status
             refreshed_state = refreshed[:state]
@@ -114,6 +118,43 @@ module Ace
             return if root_phase.fork?
 
             raise Error, "Phase #{root_phase.number} is not fork-enabled (context: fork missing)."
+          end
+
+          def record_fork_pid_info(root_phase, launch_result)
+            pid_info = launch_result.is_a?(Hash) ? launch_result[:fork_pid_info] : nil
+            return unless pid_info
+
+            pid_file = write_pid_file(root_phase, pid_info)
+            phase_writer = Molecules::PhaseWriter.new
+            phase_writer.record_fork_pid_info(
+              root_phase.file_path,
+              launch_pid: pid_info[:launch_pid] || Process.pid,
+              tracked_pids: pid_info[:tracked_pids] || [],
+              pid_file: pid_file
+            )
+          rescue StandardError
+            # Keep fork-run resilient even if telemetry persistence fails.
+            nil
+          end
+
+          def write_pid_file(root_phase, pid_info)
+            phase_dir = File.dirname(root_phase.file_path)
+            assignment_dir = File.expand_path("..", phase_dir)
+            pids_dir = File.join(assignment_dir, "pids")
+            FileUtils.mkdir_p(pids_dir)
+
+            phase_ref = root_phase.number.to_s.gsub(/[^0-9.]/, "")
+            file_name = "#{phase_ref}.pid.yml"
+            pid_file = File.join(pids_dir, file_name)
+            payload = {
+              "assignment_phase" => root_phase.number,
+              "phase_name" => root_phase.name,
+              "launch_pid" => (pid_info[:launch_pid] || Process.pid).to_i,
+              "tracked_pids" => Array(pid_info[:tracked_pids]).map(&:to_i).uniq.sort,
+              "captured_at" => Time.now.utc.iso8601
+            }
+            File.write(pid_file, payload.to_yaml)
+            pid_file
           end
         end
       end

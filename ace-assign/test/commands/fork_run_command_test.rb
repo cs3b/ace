@@ -26,13 +26,27 @@ class ForkRunCommandTest < AceAssignTestCase
 
         executor.advance(report_path)
       end
+
+      {
+        fork_pid_info: {
+          launch_pid: 12_345,
+          tracked_pids: [22_222, 33_333]
+        }
+      }
     ensure
       ENV.delete("ACE_ASSIGN_FORK_ROOT")
     end
   end
 
   class NoopLauncher
-    def launch(**_kwargs); end
+    def launch(**_kwargs)
+      {
+        fork_pid_info: {
+          launch_pid: 10_001,
+          tracked_pids: [10_002]
+        }
+      }
+    end
   end
 
   class DirectSubtreeCompletingLauncher
@@ -52,6 +66,13 @@ class ForkRunCommandTest < AceAssignTestCase
 
         writer.mark_done(phase.file_path, report_content: "Completed by subtree launcher", reports_dir: assignment.reports_dir)
       end
+
+      {
+        fork_pid_info: {
+          launch_pid: 44_444,
+          tracked_pids: [44_445, 44_446]
+        }
+      }
     end
   end
 
@@ -79,6 +100,14 @@ class ForkRunCommandTest < AceAssignTestCase
 
       assert_includes output.first, "Starting fork subtree execution: 010 - work-on-task"
       assert_includes output.first, "Fork subtree 010 completed successfully."
+      phase_path = File.join(cache_dir, result[:assignment].id, "phases", "010-work-on-task.ph.md")
+      phase_content = File.read(phase_path)
+      assert_includes phase_content, "fork_launch_pid: 12345"
+      assert_includes phase_content, "fork_tracked_pids:"
+      assert_includes phase_content, "- 22222"
+      assert_includes phase_content, "- 33333"
+      assert_includes phase_content, "fork_pid_file:"
+      assert File.exist?(File.join(cache_dir, result[:assignment].id, "pids", "010.pid.yml"))
 
       Ace::Assign.reset_config!
     end

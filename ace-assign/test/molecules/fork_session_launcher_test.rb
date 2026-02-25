@@ -30,7 +30,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
-    launcher.launch(assignment_id: "abc123", fork_root: "010.01")
+    result = launcher.launch(assignment_id: "abc123", fork_root: "010.01")
 
     call = fake.calls.last
     assert_equal "codex:gpt-5", call[:provider_model]
@@ -40,6 +40,8 @@ class ForkSessionLauncherTest < AceAssignTestCase
     assert_equal false, call[:options][:fallback]
     assert_equal "abc123", call[:env_assign_id]
     assert_equal "010.01", call[:env_fork_root]
+    assert_equal Process.pid, result.dig(:fork_pid_info, :launch_pid)
+    assert_kind_of Array, result.dig(:fork_pid_info, :tracked_pids)
   end
 
   def test_launch_merges_required_and_user_cli_args

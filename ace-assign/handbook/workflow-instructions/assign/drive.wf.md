@@ -173,11 +173,18 @@ fi
 > # Run fork-run in background (use run_in_background: true in Claude Code)
 > ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" &
 >
-> # Poll ace-assign status every 5 minutes until subtree completes
-> while ! ace-assign status --assignment $ASSIGNMENT_ID 2>&1 | grep -q "${FORK_ROOT}.*Done\|${FORK_ROOT}.*Failed"; do
->   sleep 300
+> # Poll scoped status with stepped backoff (avoids long single bash waits)
+> sleep 300 && ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
+> sleep 180 && ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
+> sleep 60 && ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
+>
+> # Repeat 60s polling until subtree completes
+> while ! ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}" 2>&1 | grep -q "${FORK_ROOT}.*Done\\|${FORK_ROOT}.*Failed"; do
+>   sleep 60
 > done
 > ```
+>
+> The scoped status view shows fork PID metadata (`Fork PID`, `Fork PID Tree`) for active fork roots when available.
 
 #### Subtree Completion: Task Status Verification
 
@@ -189,7 +196,7 @@ After a fork subtree completes (work-on-task finishes successfully):
    ```bash
    # Manually sync status before reporting subtree complete
    ace-task done {taskref}
-   ace-task {taskref}  # Verify it shows status: done
+   ace-task show {taskref}  # Verify it shows status: done
    ```
 
 3. **Report the subtree complete only after verification.** This prevents the orchestrator from showing work as done while ace-taskflow shows it as in-progress.

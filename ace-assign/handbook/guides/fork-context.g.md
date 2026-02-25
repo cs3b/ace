@@ -37,7 +37,7 @@ context: fork
 
 Load context before starting work:
 - `ace-bundle project`
-- `ace-task {{taskref}}`
+- `ace-task show {{taskref}}`
 
 ## Work
 
@@ -169,7 +169,7 @@ phases:
     instructions: |
       ## Onboard
       - ace-bundle project
-      - ace-task {{taskref}}
+      - ace-task show {{taskref}}
 
       ## Work
       Implement the task following the specification.

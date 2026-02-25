@@ -53,6 +53,10 @@ module Ace
             context: context, # "fork" triggers Task tool execution
             started_at: parse_time(fm["started_at"]),
             completed_at: parse_time(fm["completed_at"]),
+            fork_launch_pid: parse_integer(fm["fork_launch_pid"]),
+            fork_tracked_pids: parse_integer_array(fm["fork_tracked_pids"]),
+            fork_pid_updated_at: parse_time(fm["fork_pid_updated_at"]),
+            fork_pid_file: fm["fork_pid_file"],
             error: fm["error"],
             added_by: fm["added_by"],
             parent: fm["parent"],
@@ -147,6 +151,22 @@ module Ace
           nil
         end
         private_class_method :parse_time
+
+        def self.parse_integer(value)
+          return nil if value.nil?
+
+          Integer(value)
+        rescue ArgumentError, TypeError
+          nil
+        end
+        private_class_method :parse_integer
+
+        def self.parse_integer_array(value)
+          return [] if value.nil?
+
+          Array(value).map { |v| parse_integer(v) }.compact.uniq.sort
+        end
+        private_class_method :parse_integer_array
       end
     end
   end
