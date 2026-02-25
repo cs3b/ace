@@ -1,0 +1,1 @@
+/home/mc/.local/share/mise/installs/ruby/3.4.8/bin/ruby
