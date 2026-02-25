@@ -74,6 +74,15 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
        - Behavioral specification (User Experience, Interface Contract, Success Criteria)
        - Existing scope and deliverables
        - Any existing implementation notes
+   - **Plan Against Behavioral Spec Structure:**
+     - Treat the behavioral spec as the planning checklist, not background context
+     - Explicitly cover each section in the plan: Interface Contract, Error Handling, Edge Cases, Success Criteria
+     - Ensure the plan covers operating modes defined by the spec (dry-run, force, verbose, quiet) when relevant
+     - If the spec omits information needed for implementation, add a `Behavioral Gaps` section at the end of the plan rather than silently working around omissions
+   - **Enumerate Paths Separately for Shared-Behavior Specs:**
+     - If the spec says "same behavior" across multiple paths, list each path explicitly in the plan
+     - Note per-path divergences (guard logic, dry-run interaction, error handling differences, parameter differences)
+     - Do not assume one path's implementation automatically generalizes to all others
 
 2. **Technical Research Phase:**
 
