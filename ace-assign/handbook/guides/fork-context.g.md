@@ -101,6 +101,26 @@ The orchestrating agent:
 - Processes subagent reports
 - Handles failures and retries
 
+## Recovery From Failed Fork Subtrees
+
+When a forked subtree fails, use **adaptive minimal-safe replay**:
+
+- Do not automatically replay the whole subtree.
+- Replay only the minimum set of phases needed to restore context confidence.
+- Always review prior subtree reports before choosing replay depth.
+
+Typical recovery shape:
+
+```
+failed phase
+  -> recovery onboarding/report review
+  -> verify-test-suite
+  -> retry failed or nearest affected phase
+  -> resume remaining subtree phases
+```
+
+Recovery phases are inserted between the failed phase and the next pending phase (or appended if the failure happened at subtree end). This keeps history intact while avoiding unnecessary rework.
+
 ## Anti-Patterns
 
 ### Do Not Combine Work and Verify
