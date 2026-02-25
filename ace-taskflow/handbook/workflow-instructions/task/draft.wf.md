@@ -34,6 +34,16 @@ Create high-level behavioral specifications that define WHAT the system should d
      * User stories or experience descriptions
      * Interface specifications or contracts
    * If files are referenced, read their contents
+   * **Intent mapping from enhanced ideas**: When the source idea contains the
+     3-Question Delegation Brief sections (`What I Hope to Accomplish`,
+     `What "Complete" Looks Like`, `Success Criteria`), use them as the
+     starting point for the task's Objective, Expected Behavior, and
+     Success Criteria respectively. Carry the idea's framing forward -
+     add behavioral specificity, don't restate from scratch.
+     If the idea contains italicized gap markers, surface these as
+     questions to the user during verification (step 4).
+     For ideas without the 3-question structure, gather requirements
+     normally (no change to current behavior).
    * Focus on understanding WHAT users need, not HOW to build it
 
 2. **Define Behavioral Specification**
@@ -335,7 +345,9 @@ GET/POST/PUT/DELETE /endpoint
 
 ## Objective
 
-Why are we doing this? Focus on user value and behavioral outcomes.
+Why are we doing this? If this task originated from an enhanced idea,
+carry forward the idea's "What I Hope to Accomplish" - that is the
+authoritative intent. Add context but don't replace the original framing.
 
 ## Scope of Work
 <!-- Define the behavioral scope - what user experiences and system behaviors are included -->
