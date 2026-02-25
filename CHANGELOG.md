@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.630] - 2026-02-25
+
+### Added
+- **ace-taskflow v0.42.0**: Add filtering by task status in list command
+
+### Changed
+- **ace-taskflow v0.42.0**: Auto-convert non-orchestrator parents on `ace-task create --child-of` and `ace-task move --child-of`, eliminating the manual `--child-of self` intermediate step
+
+### Technical
+- **ace-taskflow v0.42.0**: Add goal-mode E2E lifecycle scenarios and update E2E test configurations
+
 ## [0.9.629] - 2026-02-25
 
 ### Changed
