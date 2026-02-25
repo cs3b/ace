@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.5] - 2026-02-25
+
+### Changed
+- Update work-subtasks delegation guidance to read parent task context before subtask execution and clarify parent-vs-subtask responsibility with graceful fallback when parent context is unavailable
+
 ## [0.42.4] - 2026-02-25
 
 ### Changed
