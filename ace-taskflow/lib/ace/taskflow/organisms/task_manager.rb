@@ -204,6 +204,8 @@ module Ace
           converted_flag = parent_context[:converted_to_orchestrator]
 
           # 5. Get next subtask number
+          # Safety: after auto-conversion the .01 file exists on disk so
+          # get_next_subtask_number normally returns 2, but guard anyway.
           subtask_num = get_next_subtask_number(parent_dir, parent_number)
           if converted_flag && subtask_num == 1
             subtask_num = 2
@@ -897,6 +899,9 @@ module Ace
           converted_flag = parent_context[:converted_to_orchestrator]
 
           # Get next subtask number
+          # Essential for dry-run: conversion doesn't write .01 file, so
+          # get_next_subtask_number returns 1 instead of 2. Also a safety
+          # net for real execution in case of filesystem timing.
           subtask_num = get_next_subtask_number(parent_dir, parent_number)
           if converted_flag && subtask_num == 1
             subtask_num = 2
