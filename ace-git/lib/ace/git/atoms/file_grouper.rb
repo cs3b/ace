@@ -77,12 +77,7 @@ module Ace
             segments = path.split("/")
             top = segments.first
 
-            if top&.start_with?("ace-")
-              group_name = "#{top}/"
-              layer = resolve_layer(segments[1], layers)
-              prefix = layer == "other/" || layer == "root/" ? top : [top, layer.delete_suffix("/")].join("/")
-              [group_name, layer, relativize_entry(entry, prefix)]
-            elsif top&.start_with?(".")
+            if top&.start_with?("ace-") || (top&.start_with?(".") && segments.length > 1)
               group_name = "#{top}/"
               layer = resolve_layer(segments[1], layers)
               prefix = layer == "other/" || layer == "root/" ? top : [top, layer.delete_suffix("/")].join("/")

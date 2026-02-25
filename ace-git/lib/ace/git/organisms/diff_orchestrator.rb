@@ -21,6 +21,11 @@ module Ace
             # Load configuration
             config = Molecules::ConfigLoader.load(options)
 
+            # Short-circuit for grouped_stats — only numstat needed, skip full diff
+            if config.format == :grouped_stats
+              return build_grouped_stats_result(config, nil, filtered: !config.exclude_patterns.empty?)
+            end
+
             # Generate raw diff
             raw_diff = Molecules::DiffGenerator.generate(config)
 
@@ -29,10 +34,6 @@ module Ace
 
             # Parse and create result
             parsed = Atoms::DiffParser.parse(filtered_diff)
-
-            if config.format == :grouped_stats
-              return build_grouped_stats_result(config, parsed, filtered: !config.exclude_patterns.empty?)
-            end
 
             Models::DiffResult.from_parsed(
               parsed,
@@ -148,7 +149,7 @@ module Ace
                 deletions: totals[:deletions],
                 files: totals[:files],
                 total_changes: totals[:additions] + totals[:deletions],
-                line_count: parsed_diff[:line_count]
+                line_count: parsed_diff&.[](:line_count)
               },
               files: grouped[:files],
               metadata: {
@@ -165,7 +166,10 @@ module Ace
             return entries if exclude_patterns.nil? || exclude_patterns.empty?
 
             patterns = Atoms::PatternFilter.glob_to_regex(exclude_patterns)
-            entries.reject { |entry| Atoms::PatternFilter.should_exclude?(entry[:path], patterns) }
+            entries.reject do |entry|
+              Atoms::PatternFilter.should_exclude?(entry[:path], patterns) ||
+                (entry[:rename_from] && Atoms::PatternFilter.should_exclude?(entry[:rename_from], patterns))
+            end
           end
         end
       end
