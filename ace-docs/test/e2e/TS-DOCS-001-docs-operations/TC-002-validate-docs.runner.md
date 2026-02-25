@@ -14,3 +14,5 @@ Save artifacts to `results/tc/02/`.
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/02/`.
 - Do not write outside the sandbox.
+- Reuse the docs seeded in Goal 1; do not run validation against an empty workspace.
+- If Goal 1 docs are missing, create the same minimal docs set first and capture that bootstrap as `results/tc/02/setup.*`.
