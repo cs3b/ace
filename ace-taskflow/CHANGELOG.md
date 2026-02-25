@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.4] - 2026-02-25
+
+### Changed
+- Add explicit intent-mapping guidance in task draft workflow to map enhanced 3-question idea sections into Objective, Expected Behavior, and Success Criteria while preserving advisory framing
+- Update embedded task draft template `## Objective` guidance to carry forward the source idea's "What I Hope to Accomplish" as authoritative intent
+
 ## [0.42.3] - 2026-02-25
 
 ### Changed
