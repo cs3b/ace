@@ -42,6 +42,25 @@ class GroupedStatsFormatterTest < AceGitTestCase
     assert_match(/assets\/logo\.bin \(binary\)/, output)
   end
 
+  def test_format_plain_no_blank_lines_within_group
+    output = @formatter.format(grouped_data)
+    lines = output.split("\n")
+
+    # Find the group header line index
+    group_header_idx = lines.index { |l| l.include?("ace-git/") }
+    refute_nil group_header_idx, "expected group header line"
+
+    # No blank line immediately after group header
+    refute_equal "", lines[group_header_idx + 1],
+                 "expected no blank line after group header"
+
+    # No blank line between layer header and file lines
+    layer_idx = lines.index { |l| l.include?("lib/") }
+    refute_nil layer_idx, "expected layer header line"
+    refute_equal "", lines[layer_idx + 1],
+                 "expected no blank line after layer header"
+  end
+
   def test_format_markdown_wraps_large_groups_in_details
     output = @formatter.format(grouped_data, markdown: true, collapse_above: 1)
 
