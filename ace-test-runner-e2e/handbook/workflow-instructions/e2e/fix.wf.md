@@ -48,6 +48,13 @@ Use the output section from `e2e/analyze-failures`:
 - If analysis is incomplete, auto-complete missing decision fields via local evidence (reports, artifacts, scenario files, implementation), then proceed.
 - Only stop for hard blockers (missing files/tools/permissions).
 
+## Execution Environment Guardrail
+
+- Do **not** run E2E commands autonomously in constrained/sandboxed agent environments.
+- Treat `ace-test-e2e` and `ace-test-e2e-suite` as **user-executed verification** by default.
+- Provide exact rerun commands for the user instead of executing them when environment fidelity is uncertain (missing `mise`, restricted HOME/state dirs, missing provider credentials, restricted tmux/socket access).
+- Run E2E commands directly only when the user explicitly requests execution in the current environment and confirms it is properly configured.
+
 ## Priority Order
 
 Apply fixes in this order:
@@ -80,12 +87,15 @@ Apply fixes in this order:
 
 ```bash
 # scenario scope (default)
+# user executes locally
 ace-test-e2e {package} {test-id}
 
 # package scope (only if analysis recommended)
+# user executes locally
 ace-test-e2e {package}
 
 # suite scope (only if analysis recommended)
+# user executes locally
 ace-test-e2e-suite --only-failures
 ```
 
