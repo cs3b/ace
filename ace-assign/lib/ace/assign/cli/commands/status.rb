@@ -55,18 +55,10 @@ module Ace
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :assignment, desc: "Show status for specific assignment ID"
-          option :filter, desc: "Filter by scope (e.g., 010.01 or (assignment@)010.01)"
           option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments in other assignments section"
 
           def call(**options)
             target = resolve_assignment_target(options)
-            target = apply_filter_target(target, options[:filter])
-
-            # Auto-scope to fork root when inside a forked subtree
-            fork_root_env = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
-            if fork_root_env && !fork_root_env.empty? && (target.scope.nil? || target.scope.strip.empty?)
-              target = Target.new(assignment_id: target.assignment_id, scope: fork_root_env)
-            end
 
             executor = build_executor_for_target(target)
             result = executor.status
@@ -87,8 +79,6 @@ module Ace
 
               if current_for_display
                 fork_root = fork_scope_root(state, current_for_display)
-                in_fork_scope = ENV["ACE_ASSIGN_FORK_ROOT"] == fork_root&.number
-                scope_phase = scope_root ? scoped_state.find_by_number(scope_root) : nil
 
                 puts
                 puts "Current Phase: #{current_for_display.number} - #{current_for_display.name}"
@@ -99,8 +89,6 @@ module Ace
                 if current_for_display.context
                   puts "Context: #{current_for_display.context}"
                 end
-                print_phase_pid_info(scope_phase, label: "Scoped Fork PID") if scope_phase
-                print_phase_pid_info(current_for_display)
                 puts
 
                 if current_for_display.fork?
@@ -110,14 +98,11 @@ module Ace
                   puts "Instructions:"
                   puts current_for_display.instructions
 
-                  if fork_root && !in_fork_scope
+                  if fork_root && (target.scope.nil? || target.scope.strip.empty?)
                     puts
                     puts "Fork subtree detected (root: #{fork_root.number} - #{fork_root.name})."
                     puts "Run in forked process:"
                     puts "  ace-assign fork-run --root #{fork_root.number} --assignment #{assignment.id}"
-                  elsif fork_root && in_fork_scope
-                    puts
-                    puts "Fork scope: #{fork_root.number} (ACE_ASSIGN_FORK_ROOT=#{fork_root.number})"
                   end
                 end
               elsif scoped_state.complete?
@@ -156,35 +141,8 @@ module Ace
               status: phase.status.to_s,
               skill: phase.skill,
               context: phase.context,
-              parent: phase.parent,
-              fork_pid_info: {
-                launch_pid: phase.fork_launch_pid,
-                tracked_pids: phase.fork_tracked_pids,
-                updated_at: phase.fork_pid_updated_at&.iso8601,
-                pid_file: phase.fork_pid_file
-              }
+              parent: phase.parent
             }.compact
-          end
-
-          def apply_filter_target(target, raw_filter)
-            filter = raw_filter&.to_s&.strip
-            return target if filter.nil? || filter.empty?
-
-            from_parenthesized = filter.match(/^\(([^@)]+)@\)(.+)$/)
-            if from_parenthesized
-              assignment_id = from_parenthesized[1].strip
-              scope = from_parenthesized[2].strip
-              raise Ace::Core::CLI::Error, "Filter assignment id cannot be empty" if assignment_id.empty?
-              raise Ace::Core::CLI::Error, "Filter scope cannot be empty" if scope.empty?
-
-              return Target.new(assignment_id: assignment_id, scope: scope)
-            end
-
-            if filter.include?("@")
-              return parse_assignment_target(filter)
-            end
-
-            Target.new(assignment_id: target.assignment_id, scope: filter)
           end
 
           def scoped_status_view(state, scope)
@@ -347,26 +305,6 @@ module Ace
             puts
             puts "To execute entire subtree in one forked process:"
             puts "  ace-assign fork-run --root #{phase.number} --assignment #{assignment.id}"
-          end
-
-          def print_phase_pid_info(phase, label: "Fork PID")
-            return unless phase
-
-            launch_pid = phase.fork_launch_pid
-            tracked_pids = phase.fork_tracked_pids
-            updated_at = phase.fork_pid_updated_at
-            pid_file = phase.fork_pid_file
-            return if launch_pid.nil? && (tracked_pids.nil? || tracked_pids.empty?) && (pid_file.nil? || pid_file.empty?)
-
-            puts "#{label}: #{launch_pid}" if launch_pid
-            unless tracked_pids.nil? || tracked_pids.empty?
-              prefix = label == "Fork PID" ? "Fork PID Tree" : "#{label} Tree"
-              puts "#{prefix}: #{tracked_pids.join(', ')}"
-            end
-            prefix = label == "Fork PID" ? "Fork PID Updated" : "#{label} Updated"
-            puts "#{prefix}: #{updated_at.utc.iso8601}" if updated_at
-            prefix = label == "Fork PID" ? "Fork PID File" : "#{label} File"
-            puts "#{prefix}: #{pid_file}" if pid_file
           end
 
           def fork_scope_root(state, current_phase)

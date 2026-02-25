@@ -747,16 +747,11 @@ class AssignmentExecutorTest < AceAssignTestCase
 
       report_path = create_report(cache_dir, "Done")
 
-      begin
-        ENV["ACE_ASSIGN_FORK_ROOT"] = "010"
-        result = executor.advance(report_path)
-        assert_equal "010.02", result[:current].number
+      result = executor.advance(report_path, fork_root: "010")
+      assert_equal "010.02", result[:current].number
 
-        result = executor.advance(report_path)
-        assert_nil result[:current], "Subtree-scoped execution should stop after subtree completes"
-      ensure
-        ENV.delete("ACE_ASSIGN_FORK_ROOT")
-      end
+      result = executor.advance(report_path, fork_root: "010")
+      assert_nil result[:current], "Subtree-scoped execution should stop after subtree completes"
     end
   end
 
@@ -779,18 +774,13 @@ class AssignmentExecutorTest < AceAssignTestCase
       assert_equal "010", start_result[:current].number
 
       report_path = create_report(cache_dir, "Scoped progress")
-      begin
-        ENV["ACE_ASSIGN_FORK_ROOT"] = "020"
-        result = executor.advance(report_path)
+      result = executor.advance(report_path, fork_root: "020")
 
-        scoped_state = result[:state]
-        refute_equal :done, scoped_state.find_by_number("010").status
-        assert_equal :done, scoped_state.find_by_number("020.01").status
-        assert_equal :in_progress, scoped_state.find_by_number("020.02").status
-        assert_equal "010", result[:current]&.number
-      ensure
-        ENV.delete("ACE_ASSIGN_FORK_ROOT")
-      end
+      scoped_state = result[:state]
+      refute_equal :done, scoped_state.find_by_number("010").status
+      assert_equal :done, scoped_state.find_by_number("020.01").status
+      assert_equal :in_progress, scoped_state.find_by_number("020.02").status
+      assert_equal "010", result[:current]&.number
     end
   end
 end

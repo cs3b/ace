@@ -27,41 +27,38 @@ Drive agent execution through an active assignment by continuously checking stat
 When working with multiple concurrent assignments, the active assignment is resolved in this order:
 
 1. `--assignment <id>` flag on any command (highest priority)
-2. `ACE_ASSIGN_ID` environment variable
-3. `.current` symlink (set via `ace-assign select <id>`)
-4. `.latest` symlink (auto-updated on any activity)
-5. Scan all assignments (fallback)
+2. `.current` symlink (set via `ace-assign select <id>`)
+3. `.latest` symlink (auto-updated on any activity)
+4. Scan all assignments (fallback)
 
-### Using ACE_ASSIGN_ID
-
-Set `ACE_ASSIGN_ID` to propagate assignment context across subprocesses:
+If this workflow is invoked with an argument (for example `/ace-assign-drive abc123@010.01`), treat that value as the assignment target for the entire loop and append `--assignment <target>` to all `ace-assign` commands.
 
 ```bash
-# Set for current shell session
-export ACE_ASSIGN_ID=abc123
-
-# All commands now target this assignment
-ace-assign status          # Shows abc123
-ace-assign report done.md  # Reports to abc123
-ace-assign fail -m "err"   # Fails phase in abc123
+# Set once from workflow argument (empty when not provided)
+ASSIGNMENT_TARGET="abc123@010.01"
 ```
 
-This is particularly useful for:
-- Forked agent contexts (Task tool) where the parent sets the env var
-- CI/CD pipelines running assignment-driven workflows
-- Scripts operating on a specific assignment
+### Explicit Assignment Targeting (Recommended)
 
-### Subtree Fork Scope (`ACE_ASSIGN_FORK_ROOT`)
+Use explicit flags to propagate assignment context across subprocesses and tools:
+
+```bash
+# Explicitly target assignment on every command
+ace-assign status --assignment abc123
+ace-assign report done.md --assignment abc123
+ace-assign fail --message "err" --assignment abc123
+```
+
+### Subtree Fork Scope (Explicit `@<phase-number>`)
 
 For split-task delegation, run the entire subtree in one forked process:
 
 ```bash
-export ACE_ASSIGN_ID=abc123
-export ACE_ASSIGN_FORK_ROOT=010.01
-ace-assign status --assignment abc123
+ace-assign status --assignment abc123@010.01
+ace-assign report done.md --assignment abc123@010.01
 ```
 
-When `ACE_ASSIGN_FORK_ROOT` is set, `ace-assign report` advances only within that subtree and stops when the subtree is complete.
+When an assignment target includes scope (`<id>@<root>`), `ace-assign report` advances only within that subtree and stops when the subtree is complete.
 
 Helper command:
 
@@ -127,7 +124,7 @@ Use `decision_notes` from phase metadata (if present) as additional guidance for
 ### 1. Check Status
 
 ```bash
-STATUS_OUTPUT=$(ace-assign status 2>&1)
+STATUS_OUTPUT=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} 2>&1)
 echo "$STATUS_OUTPUT"
 ```
 
@@ -145,23 +142,19 @@ Before executing the current phase inline, check whether the active phase is ins
 
 #### Delegation Rule
 
-- If `ACE_ASSIGN_FORK_ROOT` is already set: you are already inside fork scope, so continue inline.
-- If `ACE_ASSIGN_FORK_ROOT` is not set and status output contains:
-  - `Fork subtree detected (root: <phase-number> - <phase-name>).`
-  then delegate the subtree via `fork-run` and restart the loop.
+- If status output contains `Fork subtree detected (root: <phase-number> - <phase-name>).`
+  delegate the subtree via `fork-run` and restart the loop.
+- If status output is already scoped to `Current Phase: <root>.*` based on explicit `--assignment <id>@<root>`, continue inline.
 
 #### Example
 
 ```bash
-# Only delegate from orchestrator context (not from an already forked subtree)
-if [ -z "${ACE_ASSIGN_FORK_ROOT:-}" ]; then
-  FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/.*Fork subtree detected (root: \([0-9.]*\) -.*/\1/p' | head -1)
-  if [ -n "$FORK_ROOT" ]; then
-    ASSIGNMENT_ID=${ACE_ASSIGN_ID:-$(basename "$(readlink .cache/ace-assign/.current 2>/dev/null || readlink .cache/ace-assign/.latest)")}
-    ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
-    # Re-check status after subtree delegation completes
-    continue
-  fi
+FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/.*Fork subtree detected (root: \([0-9.]*\) -.*/\1/p' | head -1)
+if [ -n "$FORK_ROOT" ]; then
+  ASSIGNMENT_ID=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} --format json | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
+  ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
+  # Re-check status after subtree delegation completes
+  continue
 fi
 ```
 
@@ -173,18 +166,11 @@ fi
 > # Run fork-run in background (use run_in_background: true in Claude Code)
 > ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" &
 >
-> # Poll scoped status with stepped backoff (avoids long single bash waits)
-> sleep 300 && ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
-> sleep 180 && ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
-> sleep 60 && ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
->
-> # Repeat 60s polling until subtree completes
-> while ! ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}" 2>&1 | grep -q "${FORK_ROOT}.*Done\\|${FORK_ROOT}.*Failed"; do
->   sleep 60
+> # Poll ace-assign status every 5 minutes until subtree completes
+> while ! ace-assign status --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}" 2>&1 | grep -q "${FORK_ROOT}.*Done\|${FORK_ROOT}.*Failed"; do
+>   sleep 300
 > done
 > ```
->
-> The scoped status view shows fork PID metadata (`Fork PID`, `Fork PID Tree`) for active fork roots when available.
 
 #### Subtree Completion: Task Status Verification
 
@@ -196,7 +182,7 @@ After a fork subtree completes (work-on-task finishes successfully):
    ```bash
    # Manually sync status before reporting subtree complete
    ace-task done {taskref}
-   ace-task show {taskref}  # Verify it shows status: done
+   ace-task {taskref}  # Verify it shows status: done
    ```
 
 3. **Report the subtree complete only after verification.** This prevents the orchestrator from showing work as done while ace-taskflow shows it as in-progress.
@@ -216,31 +202,6 @@ After fork-run returns and completion is verified, the driver acts as the **guar
 4. **Only then continue** the main drive loop to the next phase.
 
 > The driver is the only entity with cross-subtree visibility. Skipping report review means errors in one subtree propagate silently to the next.
-
-#### Failed Subtree Recovery (Adaptive Minimal-Safe Replay)
-
-If `fork-run` returns with a subtree failure (or scoped status shows failed phases), do **not** default to replaying the entire subtree. Use adaptive minimal-safe replay:
-
-1. **Capture failed scope state**
-   ```bash
-   ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
-   ```
-2. **Review prior subtree reports** before deciding replay depth.
-3. **Choose replay depth using minimal-safe policy**
-   - Replay only what is needed to restore confidence and continue safely.
-   - If context/evidence is unclear, inject a recovery onboarding/report-review phase first.
-   - If failure is deterministic and localized, retry only the failed phase (or nearest affected chain).
-4. **Inject recovery phases between failed and next phase**
-   - End-of-subtree failure: append recovery phases, then retry/verify.
-   - Mid-subtree failure: insert recovery phases immediately after failed phase and before pending siblings.
-5. **Re-run failed/affected phases**, then re-check scoped status before resuming the normal drive loop.
-
-Typical recovery pattern for context-sensitive failures:
-- Recovery phase A: onboard + read all prior subtree reports
-- Recovery phase B: verify-test-suite
-- Then retry the failed/affected phase(s)
-
-Do not synthesize completion from partial evidence. Recovery still follows the no-skip policy.
 
 ### 3. Execute Current Phase
 
@@ -286,7 +247,7 @@ For external-facing phases (for example PR/review/release/push/update lifecycle 
 - Mark phase failed with evidence (do not report synthetic completion).
 
 ```bash
-ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>"
+ace-assign fail --message "Command failed: <cmd>. Error: <exact stderr>" ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
 ```
 
 ### 5. Write Report (Only After Real Execution)
@@ -308,7 +269,7 @@ All setup prerequisites are now satisfied.
 EOF
 
 # Submit report to advance the queue
-ace-assign report /tmp/phase-report.md
+ace-assign report /tmp/phase-report.md ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
 ```
 
 ### 6. Verify State Transition (Required)
@@ -316,7 +277,7 @@ ace-assign report /tmp/phase-report.md
 After each `ace-assign report` or `ace-assign fail`, verify queue state:
 
 ```bash
-POST_STATUS=$(ace-assign status 2>&1)
+POST_STATUS=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} 2>&1)
 echo "$POST_STATUS"
 ```
 
@@ -331,7 +292,7 @@ If a phase cannot be completed:
 
 ```bash
 # Mark phase as failed with reason
-ace-assign fail --message "Tests failed: test_greet, test_shout"
+ace-assign fail --message "Tests failed: test_greet, test_shout" ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
 ```
 
 Then decide on next action:
