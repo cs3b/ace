@@ -55,3 +55,42 @@ This suggests three pipeline improvements:
 3. **Planning agent instruction** — tell the planning agent to flag behavioral gaps it discovers (e.g., "The spec doesn't mention dry-run behavior — should I assume it's unsupported, or is this a gap?") rather than silently working around them
 
 These three changes become subtask 281.04.
+
+## Full Pipeline Results (PR #215)
+
+Task 282 completed the full pipeline: behavioral spec → plan → implement → 4 review sessions → PR #215 with 1391 passing tests, in ~40 minutes. This section documents findings from the complete experiment beyond the dry-run omission above.
+
+### Finding: Self-Demotion Edge Case (Degenerate Inputs)
+
+Review session 2 discovered that `demote_to_subtask(X, X)` — demoting a task to be a subtask of itself — was unhandled. Auto-conversion deletes the original task file, then the code tries to read it as the parent, causing state corruption.
+
+The spec's Edge Cases section didn't prompt the author to think about *degenerate inputs* — cases where the same entity appears in both argument positions (source = target). Neither the planner nor the implementer caught it either; only a reviewer did.
+
+**Pipeline improvement**: The Edge Cases section (and the review gate) needs a "Degenerate Inputs" prompt: does the spec consider identity operations (X=Y), empty inputs, and self-referential calls?
+
+### Finding: Reviewers Contradicted the Spec (Missing Spec Context)
+
+Review session 3 (review-8pooad) produced 3 invalid findings and 3 skipped items. One invalid finding (item 8pooeg9e) called archived-task conversion "significant" and wanted to block it — but spec line 86 explicitly said "status is orthogonal to structure," meaning archived tasks should convert like any other.
+
+Two more false positives in the same session: a missing test that actually existed, and a cache invalidation concern that doesn't apply to the file-based architecture.
+
+The root cause: review agents had project context (README, architecture, vision docs) but NOT the task's behavioral spec. They invented constraints that the spec had already decided.
+
+**Pipeline improvement**: The review pipeline should include the task's behavioral spec as context for review agents. This becomes subtask 281.05.
+
+### Finding: Asymmetric Implementation Across Parallel Code Paths
+
+The spec said "Same behavior for `ace-task move`" with one example flow. The implementer handled `create_subtask` and `demote_to_subtask` as separate code paths and got the `subtask_num` guard right in one but missed it in the other.
+
+When a spec covers multiple code paths with "same behavior" shorthand, it creates an asymmetry risk: the implementer writes one path correctly and assumes the other follows, but each path has unique edge cases (guard logic, error handling, parameter differences).
+
+**Pipeline improvement**: When a spec covers multiple code paths with "same behavior," the planning workflow should enumerate each path and note per-path variations (dry-run interaction, guard logic, error handling differences). The review gate should include a "Per-Path Variations" check.
+
+### Observation: Review Value Curve Is Front-Loaded
+
+| Sessions | Valid Issues Found | Invalid/Skipped |
+|----------|-------------------|-----------------|
+| 1–2 | 5 (all fixed in releases) | 0 |
+| 3–4 | 1 (comment-level) | 10 |
+
+Sessions 1–2 found all substantive issues. Sessions 3–4 produced diminishing returns with a high false-positive rate. This suggests the review pipeline should front-load effort (deeper initial sessions) rather than running many shallow passes.
