@@ -7,7 +7,9 @@ module Ace
       # Migrated from ace-git-diff
       class DiffConfig
         attr_reader :exclude_patterns, :exclude_whitespace, :exclude_renames,
-                    :exclude_moves, :max_lines, :ranges, :paths, :since, :format, :timeout
+                    :exclude_moves, :max_lines, :ranges, :paths, :since, :format, :timeout,
+                    :grouped_stats_layers, :grouped_stats_collapse_above,
+                    :grouped_stats_show_full_tree, :grouped_stats_dotfile_groups
 
         # @param exclude_patterns [Array<String>] Glob patterns to exclude
         # @param exclude_whitespace [Boolean] Whether to exclude whitespace changes
@@ -19,6 +21,10 @@ module Ace
         # @param since [String] Date or commit to diff from
         # @param format [Symbol] Output format (:diff or :summary)
         # @param timeout [Integer] Command timeout in seconds (default from config)
+        # @param grouped_stats_layers [Array<String>] Layer order for grouped-stats output
+        # @param grouped_stats_collapse_above [Integer] Markdown collapse threshold
+        # @param grouped_stats_show_full_tree [String] Tree rendering mode
+        # @param grouped_stats_dotfile_groups [Array<String>] Dot directories to prioritize
         def initialize(
           exclude_patterns: [],
           exclude_whitespace: true,
@@ -29,7 +35,11 @@ module Ace
           paths: [],
           since: nil,
           format: :diff,
-          timeout: Ace::Git.git_timeout
+          timeout: Ace::Git.git_timeout,
+          grouped_stats_layers: %w[lib test handbook],
+          grouped_stats_collapse_above: 5,
+          grouped_stats_show_full_tree: "collapsible",
+          grouped_stats_dotfile_groups: %w[.ace-taskflow .ace]
         )
           @exclude_patterns = Array(exclude_patterns)
           @exclude_whitespace = exclude_whitespace
@@ -41,6 +51,10 @@ module Ace
           @since = since
           @format = format&.to_sym || :diff
           @timeout = timeout || Ace::Git.git_timeout
+          @grouped_stats_layers = Array(grouped_stats_layers).map(&:to_s)
+          @grouped_stats_collapse_above = grouped_stats_collapse_above.to_i
+          @grouped_stats_show_full_tree = grouped_stats_show_full_tree.to_s
+          @grouped_stats_dotfile_groups = Array(grouped_stats_dotfile_groups).map(&:to_s)
         end
 
         # Check if diff should exclude whitespace changes
@@ -96,14 +110,20 @@ module Ace
             paths: paths,
             since: since,
             format: format,
-            timeout: timeout
+            timeout: timeout,
+            grouped_stats: {
+              layers: grouped_stats_layers,
+              collapse_above: grouped_stats_collapse_above,
+              show_full_tree: grouped_stats_show_full_tree,
+              dotfile_groups: grouped_stats_dotfile_groups
+            }
           }
         end
 
         # Known configuration keys
         KNOWN_KEYS = %w[
           exclude_patterns exclude_whitespace exclude_renames exclude_moves
-          max_lines ranges paths since format timeout
+          max_lines ranges paths since format timeout grouped_stats
         ].freeze
 
         # Create DiffConfig from hash (e.g., from YAML config)
@@ -116,6 +136,8 @@ module Ace
           # Warn about unknown keys to help catch typos
           warn_unknown_keys(hash)
 
+          grouped_stats = hash["grouped_stats"] || hash[:grouped_stats] || {}
+
           new(
             exclude_patterns: hash["exclude_patterns"] || hash[:exclude_patterns] || [],
             exclude_whitespace: hash.fetch("exclude_whitespace", hash.fetch(:exclude_whitespace, true)),
@@ -126,7 +148,11 @@ module Ace
             paths: hash["paths"] || hash[:paths] || [],
             since: hash["since"] || hash[:since],
             format: hash["format"] || hash[:format] || :diff,
-            timeout: hash.fetch("timeout", hash.fetch(:timeout, Ace::Git.git_timeout))
+            timeout: hash.fetch("timeout", hash.fetch(:timeout, Ace::Git.git_timeout)),
+            grouped_stats_layers: grouped_stats["layers"] || grouped_stats[:layers] || %w[lib test handbook],
+            grouped_stats_collapse_above: grouped_stats.fetch("collapse_above", grouped_stats.fetch(:collapse_above, 5)),
+            grouped_stats_show_full_tree: grouped_stats["show_full_tree"] || grouped_stats[:show_full_tree] || "collapsible",
+            grouped_stats_dotfile_groups: grouped_stats["dotfile_groups"] || grouped_stats[:dotfile_groups] || %w[.ace-taskflow .ace]
           )
         end
 

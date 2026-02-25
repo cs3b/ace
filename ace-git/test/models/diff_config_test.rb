@@ -80,6 +80,15 @@ class DiffConfigTest < AceGitTestCase
     assert_equal :summary, config.format
   end
 
+  def test_grouped_stats_defaults_are_set
+    config = @config_class.new
+
+    assert_equal %w[lib test handbook], config.grouped_stats_layers
+    assert_equal 5, config.grouped_stats_collapse_above
+    assert_equal "collapsible", config.grouped_stats_show_full_tree
+    assert_equal %w[.ace-taskflow .ace], config.grouped_stats_dotfile_groups
+  end
+
   # --- from_hash tests ---
 
   def test_from_hash_handles_string_keys
@@ -104,6 +113,24 @@ class DiffConfigTest < AceGitTestCase
     assert_equal ["test/**/*"], config.exclude_patterns
     assert_equal false, config.exclude_whitespace?
     assert_equal :summary, config.format
+  end
+
+  def test_from_hash_reads_grouped_stats_nested_config
+    config = @config_class.from_hash(
+      "format" => "grouped_stats",
+      "grouped_stats" => {
+        "layers" => %w[lib handbook],
+        "collapse_above" => 7,
+        "show_full_tree" => "always",
+        "dotfile_groups" => [".ace-taskflow"]
+      }
+    )
+
+    assert_equal :grouped_stats, config.format
+    assert_equal %w[lib handbook], config.grouped_stats_layers
+    assert_equal 7, config.grouped_stats_collapse_above
+    assert_equal "always", config.grouped_stats_show_full_tree
+    assert_equal [".ace-taskflow"], config.grouped_stats_dotfile_groups
   end
 
   # --- merge tests ---

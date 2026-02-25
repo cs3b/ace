@@ -293,4 +293,29 @@ class DiffGeneratorTest < AceGitTestCase
     assert_equal "range diff", result
     assert_includes executor.last_args, "HEAD~1..HEAD"
   end
+
+  def test_generate_numstat_includes_numstat_flag
+    config = Ace::Git::Models::DiffConfig.from_hash(
+      "ranges" => ["HEAD~1..HEAD"],
+      "paths" => ["ace-git/lib/**/*.rb"]
+    )
+
+    executor = Object.new
+    def executor.execute(*args, timeout: nil)
+      @last_args = args
+      @timeout = timeout
+      { success: true, output: "7\t2\tace-git/lib/ace/git/cli/commands/diff.rb\n" }
+    end
+
+    def executor.last_args
+      @last_args
+    end
+
+    output = Ace::Git::Molecules::DiffGenerator.generate_numstat(config, executor: executor)
+
+    assert_match(/ace-git\/lib\/ace\/git\/cli\/commands\/diff\.rb/, output)
+    assert_includes executor.last_args, "--numstat"
+    assert_includes executor.last_args, "HEAD~1..HEAD"
+    assert_includes executor.last_args, "ace-git/lib/**/*.rb"
+  end
 end
