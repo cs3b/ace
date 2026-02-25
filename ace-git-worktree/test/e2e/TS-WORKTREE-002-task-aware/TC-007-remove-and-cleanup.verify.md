@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **All removal artifacts exist** — results/tc/07/ contains captures for remove-888, remove-999, list-after, branch-check, and fs-check.
 2. **Both removals succeed** — remove-888.exit and remove-999.exit are both 0.
 3. **Clean worktree list** — list-after.stdout shows only the main worktree (no task worktrees remain).

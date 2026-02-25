@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Creation artifacts exist** — results/tc/02/ contains stdout/exit for create-task.
 2. **Creation succeeds** — create-task.exit is 0.
 3. **Branch includes task ID** — branch-check.stdout shows a branch name containing "999".
