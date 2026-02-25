@@ -68,6 +68,27 @@ class PhaseFileParserTest < AceAssignTestCase
     assert_equal "Implement the feature.", result[:instructions]
   end
 
+  def test_extract_fields_with_fork_pid_metadata
+    parsed = {
+      frontmatter: {
+        "name" => "work-on-task",
+        "status" => "in_progress",
+        "fork_launch_pid" => "355349",
+        "fork_tracked_pids" => %w[355366 355367],
+        "fork_pid_updated_at" => "2026-02-25T18:30:00Z",
+        "fork_pid_file" => "/tmp/010.pid.yml"
+      },
+      body: "Execute in fork context."
+    }
+
+    result = Ace::Assign::Atoms::PhaseFileParser.extract_fields(parsed)
+
+    assert_equal 355_349, result[:fork_launch_pid]
+    assert_equal [355_366, 355_367], result[:fork_tracked_pids]
+    assert_equal Time.utc(2026, 2, 25, 18, 30, 0), result[:fork_pid_updated_at]
+    assert_equal "/tmp/010.pid.yml", result[:fork_pid_file]
+  end
+
   def test_extract_fields_without_context
     parsed = {
       frontmatter: {

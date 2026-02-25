@@ -123,6 +123,21 @@ module Ace
           })
         end
 
+        # Record fork execution PID metadata on a phase.
+        #
+        # @param file_path [String] Path to fork root phase file
+        # @param launch_pid [Integer] PID of launcher process
+        # @param tracked_pids [Array<Integer>] Observed subprocess/descendant PIDs
+        # @return [String] Updated file path
+        def record_fork_pid_info(file_path, launch_pid:, tracked_pids:, pid_file: nil)
+          update_frontmatter(file_path, {
+            "fork_launch_pid" => launch_pid.to_i,
+            "fork_tracked_pids" => Array(tracked_pids).map(&:to_i).uniq.sort,
+            "fork_pid_updated_at" => Time.now.utc.iso8601,
+            "fork_pid_file" => pid_file
+          })
+        end
+
         # Append report content to phase file
         #
         # @param file_path [String] Path to phase file

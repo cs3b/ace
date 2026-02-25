@@ -23,7 +23,8 @@ module Ace
         VALID_CONTEXTS = %w[fork].freeze
 
         attr_reader :number, :name, :status, :instructions, :report, :error,
-                    :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context
+                    :started_at, :completed_at, :added_by, :parent, :file_path, :skill, :context,
+                    :fork_launch_pid, :fork_tracked_pids, :fork_pid_updated_at, :fork_pid_file
 
         # @param number [String] Phase number (e.g., "010", "010.01")
         # @param name [String] Phase name
@@ -38,9 +39,15 @@ module Ace
         # @param file_path [String, nil] Path to phase file
         # @param skill [String, nil] Skill reference for this phase (e.g., "ace-task-work")
         # @param context [String, nil] Execution context ("fork" for Task tool execution)
+        # @param fork_launch_pid [Integer, nil] PID of the process that launched the fork run
+        # @param fork_tracked_pids [Array<Integer>, nil] Observed subprocess/descendant PIDs during fork execution
+        # @param fork_pid_updated_at [Time, nil] Timestamp when fork PID metadata was last updated
+        # @param fork_pid_file [String, nil] Path to fork PID metadata file
         def initialize(number:, name:, status:, instructions:, report: nil, error: nil,
                        started_at: nil, completed_at: nil, added_by: nil, parent: nil,
-                       file_path: nil, skill: nil, context: nil)
+                       file_path: nil, skill: nil, context: nil,
+                       fork_launch_pid: nil, fork_tracked_pids: nil, fork_pid_updated_at: nil,
+                       fork_pid_file: nil)
           validate_status!(status)
           validate_context!(context) if context
 
@@ -57,6 +64,10 @@ module Ace
           @file_path = file_path&.freeze
           @skill = skill&.freeze
           @context = context&.freeze
+          @fork_launch_pid = fork_launch_pid&.to_i
+          @fork_tracked_pids = Array(fork_tracked_pids).map(&:to_i).uniq.sort.freeze
+          @fork_pid_updated_at = fork_pid_updated_at
+          @fork_pid_file = fork_pid_file&.freeze
         end
 
         # Check if phase is complete (done or failed)
@@ -101,6 +112,10 @@ module Ace
             "context" => context,
             "started_at" => started_at&.iso8601,
             "completed_at" => completed_at&.iso8601,
+            "fork_launch_pid" => fork_launch_pid,
+            "fork_tracked_pids" => fork_tracked_pids,
+            "fork_pid_updated_at" => fork_pid_updated_at&.iso8601,
+            "fork_pid_file" => fork_pid_file,
             "error" => error,
             "added_by" => added_by,
             "parent" => parent

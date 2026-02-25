@@ -268,4 +268,95 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_filter_scopes_by_phase_without_assignment_override
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        },
+        { "name" => "post-step", "instructions" => "Run post-step" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(filter: "010.01")
+      end
+
+      assert_includes output.first, "010.01"
+      refute_includes output.first, "020"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_filter_with_parenthesized_assignment_and_scope
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        },
+        { "name" => "post-step", "instructions" => "Run post-step" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(filter: "(#{result[:assignment].id}@)010.01")
+      end
+
+      assert_includes output.first, "010.01"
+      refute_includes output.first, "020"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_status_shows_fork_pid_info_when_available
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => ["onboard"]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      phase_writer = Ace::Assign::Molecules::PhaseWriter.new
+      phase_writer.record_fork_pid_info(
+        File.join(cache_dir, result[:assignment].id, "phases", "010-work-on-task.ph.md"),
+        launch_pid: 35_5349,
+        tracked_pids: [3_553_666, 3_553_667],
+        pid_file: File.join(cache_dir, result[:assignment].id, "pids", "010.pid.yml")
+      )
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@010")
+      end
+
+      assert_includes output.first, "Scoped Fork PID: 355349"
+      assert_includes output.first, "Scoped Fork PID Tree: 3553666, 3553667"
+      assert_includes output.first, "Scoped Fork PID File:"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
 end

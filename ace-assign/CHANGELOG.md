@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.20] - 2026-02-25
+
+### Added
+- Record fork subtree PID telemetry in phase frontmatter (`fork_launch_pid`, `fork_tracked_pids`, `fork_pid_updated_at`, `fork_pid_file`) and write per-phase PID files under `.cache/ace-assign/<assignment>/pids/`.
+- Add `ace-assign status --filter` support for scope targeting via `010.01`, `<assignment>@<scope>`, and parenthesized form `(assignment@)scope`.
+
+### Changed
+- Show scoped fork PID telemetry in status output (`Scoped Fork PID`, PID tree, and PID file path) when viewing fork-root scopes.
+- Update drive workflow guidance to use stepped background polling (`5m → 3m → 1m → 60s`) with scoped `ace-assign status --filter`.
+
+### Technical
+- Add command/model/parser/launcher coverage for PID telemetry persistence and status filter behavior.
+
 ## [0.12.19] - 2026-02-24
 
 ### Fixed
