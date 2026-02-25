@@ -217,6 +217,31 @@ After fork-run returns and completion is verified, the driver acts as the **guar
 
 > The driver is the only entity with cross-subtree visibility. Skipping report review means errors in one subtree propagate silently to the next.
 
+#### Failed Subtree Recovery (Adaptive Minimal-Safe Replay)
+
+If `fork-run` returns with a subtree failure (or scoped status shows failed phases), do **not** default to replaying the entire subtree. Use adaptive minimal-safe replay:
+
+1. **Capture failed scope state**
+   ```bash
+   ace-assign status --filter "(${ASSIGNMENT_ID}@)${FORK_ROOT}"
+   ```
+2. **Review prior subtree reports** before deciding replay depth.
+3. **Choose replay depth using minimal-safe policy**
+   - Replay only what is needed to restore confidence and continue safely.
+   - If context/evidence is unclear, inject a recovery onboarding/report-review phase first.
+   - If failure is deterministic and localized, retry only the failed phase (or nearest affected chain).
+4. **Inject recovery phases between failed and next phase**
+   - End-of-subtree failure: append recovery phases, then retry/verify.
+   - Mid-subtree failure: insert recovery phases immediately after failed phase and before pending siblings.
+5. **Re-run failed/affected phases**, then re-check scoped status before resuming the normal drive loop.
+
+Typical recovery pattern for context-sensitive failures:
+- Recovery phase A: onboard + read all prior subtree reports
+- Recovery phase B: verify-test-suite
+- Then retry the failed/affected phase(s)
+
+Do not synthesize completion from partial evidence. Recovery still follows the no-skip policy.
+
 ### 3. Execute Current Phase
 
 Based on the phase configuration:
