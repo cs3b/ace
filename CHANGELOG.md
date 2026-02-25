@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.634] - 2026-02-25
+
+### Changed
+- **ace-taskflow v0.42.4**: Add idea-to-task intent inheritance guidance in task draft workflow, mapping 3-question idea sections into Objective/Expected Behavior/Success Criteria and preserving advisory framing
+
 ## [0.9.633] - 2026-02-25
 
 ### Changed
