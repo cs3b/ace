@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.7] - 2026-02-25
+
+### Fixed
+- Make `ace-idea create --maybe` resolve through configured scope directories (default `_maybe`) instead of hardcoded `maybe/`
+
+### Changed
+- Route idea creation scope directory resolution through `Configuration#maybe_dir` and `Configuration#anyday_dir` in both dry-cli and legacy command paths
+- Update default `maybe` list preset to prefer `_maybe` while preserving legacy `maybe/` compatibility
+
 ## [0.42.6] - 2026-02-25
 
 ### Changed
