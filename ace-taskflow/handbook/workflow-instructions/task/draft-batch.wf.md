@@ -43,6 +43,7 @@ Before discovering idea files, check whether the argument requests an orchestrat
 1. Create ONE parent task first: `ace-task create "Parent" --status draft`
 2. Create each subtask with `--child-of PARENT_ID` (this auto-converts parent to orchestrator)
 3. Do NOT create multiple separate parent tasks
+* When reorganizing via `ace-task move --child-of <parent>`, the parent conversion also runs automatically so the same `--child-of` workflow applies.
 
 **If flat pattern (default):**
 Proceed to Step 1 and create one standalone task per idea.

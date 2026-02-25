@@ -253,8 +253,15 @@ class TaskManagerTest < AceTaskflowTestCase
         # Task 123 is a regular task, not an orchestrator (no .00 file, no subtasks)
         result = manager.create_subtask("123", "Subtask Under Regular", metadata: {})
 
-        refute result[:success], "Should fail when parent is not orchestrator"
-        assert_match(/not an orchestrator/, result[:message])
+        assert result[:success], "Should auto-convert parent and create subtask: #{result[:message]}"
+        assert_match(/Converted task.*123.*orchestrator/, result[:message])
+        assert_match(/Created subtask/, result[:message])
+        assert_match(/\.02/, result[:task_id])
+
+        subtask_file = result[:path]
+        assert File.exist?(subtask_file), "Expected new subtask file to exist"
+        content = File.read(subtask_file)
+        assert_match(/parent: v\.0\.9\.0\+task\.123/, content)
       end
     end
   end

@@ -190,16 +190,24 @@ module Ace
             }
           end
 
-          # 5. Check parent is orchestrator or has subtasks already
-          unless is_orchestrator_directory?(parent_dir, parent_number)
-            return {
-              success: false,
-              message: "Task #{parent_number} is not an orchestrator. Convert it to an orchestrator first with `ace-taskflow task move #{parent_number} --child-of self`."
-            }
-          end
+          parent_context = prepare_parent_for_subtask(
+            parent_dir,
+            parent_number,
+            parent_ref,
+            release_path,
+            dry_run: false
+          )
+          return parent_context unless parent_context[:success]
 
-          # 6. Get next subtask number
+          parent_dir = parent_context[:parent_dir]
+          conversion_message = parent_context[:conversion_message]
+          converted_flag = parent_context[:converted_to_orchestrator]
+
+          # 5. Get next subtask number
           subtask_num = get_next_subtask_number(parent_dir, parent_number)
+          if converted_flag && subtask_num == 1
+            subtask_num = 2
+          end
 
           if subtask_num > 99
             return { success: false, message: "Maximum subtask limit (99) reached for task #{parent_number}" }
@@ -240,9 +248,12 @@ module Ace
               validate: true
             )
 
+            creation_message = "Created subtask #{subtask_id}"
+            final_message = [conversion_message, creation_message].compact.join("\n")
+
             {
               success: true,
-              message: "Created subtask #{subtask_id}",
+              message: final_message,
               task_id: subtask_id,
               path: subtask_file
             }
@@ -865,13 +876,20 @@ module Ace
             return { success: false, message: "Parent task directory not found for #{parent_ref}" }
           end
 
-          # Verify parent is an orchestrator
-          unless is_orchestrator_directory?(parent_dir, parent_number)
-            return {
-              success: false,
-              message: "Parent task #{parent_ref} is not an orchestrator. Convert it to orchestrator first."
-            }
-          end
+          # Prepare parent directory (auto-convert non-orchestrators)
+          parent_context = prepare_parent_for_subtask(
+            parent_dir,
+            parent_number,
+            parent[:id] || parent_ref,
+            release_path,
+            dry_run: dry_run
+          )
+          return parent_context unless parent_context[:success]
+
+          parent_dir = parent_context[:parent_dir]
+          conversion_message = parent_context[:conversion_message]
+          conversion_operations = parent_context[:conversion_operations] || []
+          converted_flag = parent_context[:converted_to_orchestrator]
 
           # Get next subtask number
           subtask_num = get_next_subtask_number(parent_dir, parent_number)
@@ -896,18 +914,23 @@ module Ace
           new_reference = "#{resolved_release}+task.#{parent_number}.#{formatted_subtask}"
 
           if dry_run
+            dry_run_message = [conversion_message, "[DRY-RUN] Would demote task #{task_ref} to subtask #{new_reference}"].compact.join("\n")
+            operations = []
+            operations.concat(conversion_operations) if conversion_operations.any?
+            operations.concat([
+              "Copy file: #{task[:path]} -> #{new_path}",
+              "Update ID in file: #{task[:id]} -> #{new_id}",
+              "Add parent field: #{parent_id}",
+              "Delete original directory: #{File.dirname(task[:path])}"
+            ])
+
             return {
               success: true,
-              message: "[DRY-RUN] Would demote task #{task_ref} to subtask #{new_reference}",
+              message: dry_run_message,
               dry_run: true,
               new_reference: new_reference,
               new_path: new_path,
-              operations: [
-                "Copy file: #{task[:path]} -> #{new_path}",
-                "Update ID in file: #{task[:id]} -> #{new_id}",
-                "Add parent field: #{parent_id}",
-                "Delete original directory: #{File.dirname(task[:path])}"
-              ]
+              operations: operations
             }
           end
 
@@ -958,9 +981,12 @@ module Ace
 
             FileUtils.rm_rf(old_dir)
 
+            demote_message = "Demoted task #{task_ref} to subtask #{new_reference}"
+            final_message = [conversion_message, demote_message].compact.join("\n")
+
             {
               success: true,
-              message: "Demoted task #{task_ref} to subtask #{new_reference}",
+              message: final_message,
               new_reference: new_reference,
               new_path: new_path
             }
@@ -1309,6 +1335,35 @@ module Ace
           return old_dir if File.directory?(old_dir)
 
           nil
+        end
+
+        def prepare_parent_for_subtask(parent_dir, parent_number, parent_ref, release_path, dry_run:)
+          return {
+            success: true,
+            parent_dir: parent_dir,
+            converted_to_orchestrator: false,
+            conversion_message: nil,
+            conversion_operations: []
+          } if is_orchestrator_directory?(parent_dir, parent_number)
+
+          convert_result = convert_to_orchestrator(parent_ref, dry_run: dry_run)
+          return convert_result unless convert_result[:success]
+
+          updated_parent_dir = find_parent_task_directory(release_path, parent_number)
+          unless updated_parent_dir
+            return {
+              success: false,
+              message: "Parent task directory not found after conversion to orchestrator"
+            }
+          end
+
+          {
+            success: true,
+            parent_dir: updated_parent_dir,
+            converted_to_orchestrator: true,
+            conversion_message: convert_result[:message],
+            conversion_operations: Array(convert_result[:operations])
+          }
         end
 
         # Check if directory contains orchestrator file or subtasks

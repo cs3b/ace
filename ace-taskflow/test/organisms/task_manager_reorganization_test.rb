@@ -193,8 +193,15 @@ dependencies: []
         manager = Ace::Taskflow::Organisms::TaskManager.new
         result = manager.demote_to_subtask("125", "126")
 
-        refute result[:success], "Should fail when parent is not orchestrator"
-        assert_match(/not an orchestrator/, result[:message])
+        assert result[:success], "Should auto-convert parent and demote: #{result[:message]}"
+        assert_match(/Converted task.*126.*orchestrator/, result[:message])
+        assert_match(/Demoted task.*125.*subtask/, result[:message])
+        assert_match(/\.02/, result[:new_reference])
+
+        assert result[:new_path], "Should return new subtask path"
+        assert File.exist?(result[:new_path]), "New subtask file should exist"
+        content = File.read(result[:new_path])
+        assert_match(/^parent: v\.0\.9\.0\+task\.126/, content)
       end
     end
   end
