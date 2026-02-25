@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.637] - 2026-02-25
+
+### Changed
+- **ace-assign v0.12.21**: Add adaptive failed-subtree restart guidance (minimal-safe replay) to drive and fork-context docs, including recovery phase insertion rules and report-first recovery sequencing.
+
+### Technical
+- **ace-assign v0.12.21**: Update split-subtree-root catalog instructions with adaptive recovery and stepped scoped polling guidance.
+
 ## [0.9.636] - 2026-02-25
 
 ### Technical
