@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Assignment created** — `create.exit` contains `0`. Assignment ID captured.
 2. **Initial state** — `status-initial.stdout` shows current phase as 010-precheck (outside subtree).
 3. **Scoped subtree detected** — `status-scoped.stdout` includes phase 020 subtree entries.

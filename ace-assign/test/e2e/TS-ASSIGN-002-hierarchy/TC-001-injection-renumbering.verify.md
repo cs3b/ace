@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Children created** — Child injection outputs show exit code 0. Phase files 010.01, 010.02, 010.03 created.
 2. **Child metadata** — Phase files contain parent: "010" and added_by: child_of:010.
 3. **Sibling injection** — `sibling-inject.stdout` shows new phase as 010.02 with "sibling after 010.01" relationship. Renumbering announced.
