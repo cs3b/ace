@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Dry-run artifacts exist** — results/tc/04/ contains captures for both create-dry and remove-dry.
 2. **Create dry-run shows plan** — create-dry.stdout indicates what would be created (path or branch name) and exit code is 0.
 3. **Create dry-run is no-op** — create-dry-check.txt confirms the planned worktree directory does NOT exist.
