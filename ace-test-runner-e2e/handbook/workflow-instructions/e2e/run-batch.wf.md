@@ -18,6 +18,12 @@ This workflow executes multiple E2E tests in parallel using Task tool subagents.
 - `--tags TAG,...` (optional) - Include only scenarios matching any specified tag (OR semantics).
 - `--exclude-tags TAG,...` (optional) - Exclude scenarios matching any specified tag (OR semantics).
 
+## Execution Environment Guardrail
+
+- Do **not** run `ace-test-e2e` / `ace-test-e2e-suite` autonomously in constrained or uncertain environments.
+- Treat batch execution as user-invoked verification by default.
+- Provide exact run commands unless the user explicitly requests execution and confirms environment fidelity.
+
 ## Architecture
 
 ```

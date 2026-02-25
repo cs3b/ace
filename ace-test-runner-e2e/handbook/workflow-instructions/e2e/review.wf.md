@@ -10,6 +10,10 @@ source: ace-test-runner-e2e
 
 This workflow performs deep exploration of a package to produce a **coverage matrix** mapping functionality to unit test and E2E test coverage. The matrix is the primary input for Stage 2 (planning changes).
 
+During review, treat the runner/verifier split as a first-class quality check:
+- Runner must be execution-only (no verdict language).
+- Verifier must be impact-first (sandbox impact before artifacts/debug).
+
 **Pipeline position:** Stage 1 of 3 (Explore)
 
 ```

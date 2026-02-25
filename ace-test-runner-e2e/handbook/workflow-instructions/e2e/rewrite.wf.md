@@ -35,6 +35,12 @@ This workflow executes an approved change plan by deleting old scenarios, creati
   - `ace-test-e2e` runs single-package tests
   - `ace-test-e2e-suite` runs suite-level tests
 
+## Rewrite Contract
+
+- Normalize runner files to execution-only language.
+- Normalize verifier files to verdict-only, impact-first validation.
+- Keep setup concerns in `scenario.yml` and fixtures, not in TC runner setup sections.
+
 ## Workflow Steps
 
 ### 1. Load Change Plan

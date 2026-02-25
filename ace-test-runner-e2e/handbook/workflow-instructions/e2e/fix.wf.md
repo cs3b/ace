@@ -81,6 +81,7 @@ Apply fixes in this order:
 
 ### Category: test-issue
 - Fix scenario definition, runner/verifier criteria, fixtures, or setup steps
+- Preserve role split: runner is execution-only, verifier is impact-first verdict
 - Keep implementation unchanged unless analysis is revised
 
 3. Verify using analysis-selected rerun scope

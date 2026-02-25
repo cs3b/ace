@@ -78,6 +78,10 @@ Canonical summary report fields:
 - `tcs-total`
 - `failed[].tc`
 
+Role contract:
+- `runner.yml.md` + `TC-*.runner.md` are execution-only.
+- `verifier.yml.md` + `TC-*.verify.md` are verification-only with impact-first checks.
+
 ## `requires` Object
 
 ```yaml
@@ -112,6 +116,11 @@ setup:
   - agent-env:
       PROJECT_ROOT_PATH: "."
 ```
+
+Setup rules:
+- Setup is fail-fast. Do not hide setup failures with `|| true`.
+- Setup belongs in `scenario.yml` and fixtures, not in TC runner instructions.
+- If setup fails (for example, missing `mise trust` support), stop scenario execution and report infrastructure failure.
 
 ## Complete Example
 

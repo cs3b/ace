@@ -82,6 +82,7 @@ Run `ace-lint` and produce report artifacts for a valid file.
 
 - Use only sandbox paths
 - Keep evidence under `results/tc/01/`
+- Execute actions only; do not assign PASS/FAIL or final verdicts
 ```
 
 ## Verifier File Structure (`TC-*.verify.md`)
@@ -98,8 +99,9 @@ Example:
 
 ## Expectations
 
-- `results/tc/01/report.json` exists
-- report indicates pass status
+- **Impact Checks**: target sandbox/project state changed as expected
+- **Artifact Checks**: `results/tc/01/report.json` exists and is valid
+- **Debug Fallback**: inspect `stdout`/`stderr`/`*.exit` only when primary checks are inconclusive
 
 ## Verdict
 
@@ -117,7 +119,8 @@ Pass only when all expectations are satisfied by on-disk evidence.
 
 - Keep each TC focused on one coherent behavior path.
 - Ensure goal numbers and TC numbers remain aligned (`TC-001` -> Goal 1).
-- Make verifier expectations evidence-based and deterministic.
+- Keep runner files execution-only and verifier files verdict-only.
+- Make verifier expectations deterministic with impact-first ordering.
 - Keep all artifacts under `results/tc/{NN}/` to avoid cross-goal contamination.
 - Record why each scenario remains E2E via `e2e-justification` and `unit-coverage-reviewed` in `scenario.yml`.
 
