@@ -54,7 +54,7 @@ gh pr diff $pr_number
 gh pr view $pr_number --json commits -q '.commits[].messageHeadline'
 
 # File-change grouping (preferred)
-ace-git diff --format grouped-stats
+ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats
 ```
 
 Also gather test evidence and release evidence:
@@ -90,7 +90,7 @@ Section sourcing rules:
 |---|---|---|
 | Summary | Behavioral change in diff + commit intent | Task spec objective text |
 | Changes | Concern-grouped diff changes, traced to commits | Raw commit list dump |
-| File Changes | `ace-git diff --format grouped-stats` | Manual hand-written file listing |
+| File Changes | `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` | Manual hand-written file listing |
 | Test Evidence | Test names mapped to behaviors + suite totals | Raw unstructured test output paste |
 | Releases | CHANGELOG entries from diff | Repeating content already in Changes |
 
@@ -110,7 +110,7 @@ Constraints:
 
 - If no changelog evidence: omit `## Releases`
 - If no test-file evidence: keep `## Test Evidence` with suite totals only
-- If `ace-git diff --format grouped-stats` is unavailable: use flat file list fallback under `## File Changes`
+- If `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` is unavailable: use flat file list fallback under `## File Changes`
 - Omit sections with no supporting evidence instead of leaving placeholders
 
 ### 8. Update PR
