@@ -648,7 +648,7 @@ module Ace
           when "onboard"
             "- Run /ace-onboard to load project context#{task_hint}.\n- Confirm required files and workflow context are available."
           when "plan-task"
-            "- Analyze requirements#{task_hint}.\n- Produce a concrete implementation plan with acceptance checks."
+            "- Analyze requirements#{task_hint}.\n- Plan against the behavioral spec structure: cover Interface Contract, Error Handling, Edge Cases, and operating modes (dry-run, force, verbose, quiet) where relevant.\n- If the spec is missing details needed for implementation, include them in a \"Behavioral Gaps\" section instead of silently working around omissions.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"
             "- Implement the required changes#{task_hint}.\n- Verify behavior with relevant checks/tests before reporting completion."
           else
