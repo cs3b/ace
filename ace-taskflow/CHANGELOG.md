@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.6] - 2026-02-25
+
+### Changed
+- Add spec-coverage readiness checks to review workflow for operating modes, degenerate inputs, and per-path variation handling
+- Update plan workflow guidance to require section-by-section behavioral-spec coverage and explicit `Behavioral Gaps` reporting when spec details are missing
+
 ## [0.42.5] - 2026-02-25
 
 ### Changed
