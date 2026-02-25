@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.633] - 2026-02-25
+
+### Added
+- **ace-assign v0.12.20**: Record fork subtree PID telemetry (`fork_launch_pid`, PID tree, timestamp, PID file) and persist per-phase PID files in assignment cache.
+- **ace-assign v0.12.20**: Add scoped status filtering via `ace-assign status --filter` including parenthesized target syntax `(assignment@)scope`.
+
+### Changed
+- **ace-assign v0.12.20**: Update status output and drive workflow guidance for long-running fork execution polling with scoped PID visibility.
+
 ## [0.9.632] - 2026-02-25
 
 ### Technical
