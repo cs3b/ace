@@ -13,3 +13,5 @@ Save artifacts to `results/tc/03/`.
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/03/`.
 - Do not write outside the sandbox.
+- Reuse the docs corpus from Goals 1-2 so status output has real managed documents to summarize.
+- If the docs corpus is missing, create it before status and capture the bootstrap in `results/tc/03/setup.*`.
