@@ -43,5 +43,5 @@ providers:
   cli_args:
     claude: "dangerously-skip-permissions"
     claudeoai: "dangerously-skip-permissions"
-    codex: "full-auto"
+    codex: "dangerously-bypass-approvals-and-sandbox"
     codexoss: "full-auto"
