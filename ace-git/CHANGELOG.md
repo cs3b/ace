@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-02-25
+
+### Changed
+- Rewrite PR description workflows to require evidence-based sections and sourcing rules (`Summary`, `Changes`, `File Changes`, `Test Evidence`, `Releases`) derived from diff, commit, test, and changelog evidence.
+- Align PR creation workflow guidance with grouped-stats-first file change reporting, user-impact-first summary writing, and explicit omission/fallback rules for missing evidence.
+
+### Technical
+- Replace feature/default PR template scaffolds with concise evidence-oriented placeholders and update embedded workflow template blocks accordingly.
+
 ## [0.11.0] - 2026-02-25
 
 ### Added
