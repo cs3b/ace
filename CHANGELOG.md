@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.632] - 2026-02-25
+
+### Technical
+- **ace-taskflow v0.42.2**: Add clarifying comments for subtask number guard behavior
+
 ## [0.9.631] - 2026-02-25
 
 ### Fixed
