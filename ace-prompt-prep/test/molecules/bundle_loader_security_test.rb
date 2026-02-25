@@ -278,7 +278,7 @@ class BundleLoaderSecurityTest < Minitest::Test
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
-          assert_equal "", result, "Should process with debug logging enabled"
+          assert_equal "# Debug test", result, "Should process with debug logging enabled"
           assert debug_messages.any? { |msg| msg.include?("Loading bundle from:") }, "Should log bundle loading debug messages"
         end
       end
@@ -303,7 +303,7 @@ class BundleLoaderSecurityTest < Minitest::Test
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
-          assert_equal "", result, "Should process with debug enabled but category filtered"
+          assert_equal "# Filtered test", result, "Should process with debug enabled but category filtered"
           refute debug_messages.any? { |msg| msg.include?("Loading bundle from:") }, "Should filter context loading debug messages"
         end
       end
@@ -328,7 +328,7 @@ class BundleLoaderSecurityTest < Minitest::Test
       Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @project_root do
         Object.stub(:warn, ->(message) { debug_messages << message if message.include?("[DEBUG]") }) do
           result = Ace::PromptPrep::Molecules::BundleLoader.call(test_file)
-          assert_equal "", result, "Should process without debug logging"
+          assert_equal "# No debug test", result, "Should process without debug logging"
           refute debug_messages.any?, "Should not output debug messages when disabled"
         end
       end
