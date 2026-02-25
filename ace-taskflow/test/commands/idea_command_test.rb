@@ -236,7 +236,7 @@ class IdeaCommandTest < AceTaskflowTestCase
         enhancement_response = mock_enhancement_response(
           title: "Enhanced Test Idea",
           filename: "enhanced-test-idea",
-          enhanced_description: "## Problem\nTest problem.\n\n## Solution\nTest solution."
+          enhanced_description: "## What I Hope to Accomplish\nImprove workflow quality.\n\n## What \"Complete\" Looks Like\nThe enhancement has clear intent sections.\n\n## Success Criteria\n- Uses the required headings."
         )
 
         # Mock LLM calls in sequence - first for enhancement, then for slug generation
@@ -279,7 +279,7 @@ class IdeaCommandTest < AceTaskflowTestCase
               idea_files = Dir.glob(File.join(created_path, "*.s.md"))
               if idea_files.any?
                 content = File.read(idea_files.first)
-                assert_match(/Enhanced Test Idea|## Problem/, content, "Should include enhanced content")
+                assert_match(/Enhanced Test Idea|## What I Hope to Accomplish/, content, "Should include enhanced content")
               end
             end
           end
