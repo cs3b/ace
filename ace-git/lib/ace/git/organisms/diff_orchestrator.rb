@@ -30,6 +30,10 @@ module Ace
             # Parse and create result
             parsed = Atoms::DiffParser.parse(filtered_diff)
 
+            if config.format == :grouped_stats
+              return build_grouped_stats_result(config, parsed, filtered: !config.exclude_patterns.empty?)
+            end
+
             Models::DiffResult.from_parsed(
               parsed,
               metadata: {
@@ -121,6 +125,47 @@ module Ace
           def save_with_format(output_path, format: :diff, **options)
             options_with_format = options.merge(format: format)
             save_to_file(output_path, options_with_format)
+          end
+
+          private
+
+          def build_grouped_stats_result(config, parsed_diff, filtered:)
+            numstat_output = Molecules::DiffGenerator.generate_numstat(config)
+            entries = Atoms::DiffNumstatParser.parse(numstat_output)
+            filtered_entries = filter_entries(entries, config.exclude_patterns)
+            grouped = Atoms::FileGrouper.group(
+              filtered_entries,
+              layers: config.grouped_stats_layers,
+              dotfile_groups: config.grouped_stats_dotfile_groups
+            )
+            content = Atoms::GroupedStatsFormatter.format(grouped, collapse_above: config.grouped_stats_collapse_above)
+            totals = grouped[:total]
+
+            Models::DiffResult.new(
+              content: content,
+              stats: {
+                additions: totals[:additions],
+                deletions: totals[:deletions],
+                files: totals[:files],
+                total_changes: totals[:additions] + totals[:deletions],
+                line_count: parsed_diff[:line_count]
+              },
+              files: grouped[:files],
+              metadata: {
+                config: config.to_h,
+                generated_at: Time.now.iso8601,
+                filtered: filtered,
+                grouped_stats: grouped.merge(collapse_above: config.grouped_stats_collapse_above)
+              },
+              filtered: filtered
+            )
+          end
+
+          def filter_entries(entries, exclude_patterns)
+            return entries if exclude_patterns.nil? || exclude_patterns.empty?
+
+            patterns = Atoms::PatternFilter.glob_to_regex(exclude_patterns)
+            entries.reject { |entry| Atoms::PatternFilter.should_exclude?(entry[:path], patterns) }
           end
         end
       end

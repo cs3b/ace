@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-02-25
+
+### Added
+- Add `ace-git diff --format grouped-stats` with package/layer grouped and aligned diff statistics output.
+- Add grouped stats configuration defaults (`layers`, `collapse_above`, `show_full_tree`, `dotfile_groups`) and numstat-based grouping/formatting internals.
+
+### Changed
+- Normalize `--format grouped-stats` handling to internal `:grouped_stats` format dispatch and support markdown-oriented grouped rendering for file output.
+
+### Technical
+- Add grouped-stats unit coverage for parser, grouper, formatter, diff config, diff generator, orchestrator, and diff command integration points.
+
 ## [0.10.18] - 2026-02-23
 
 ### Technical

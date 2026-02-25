@@ -137,4 +137,31 @@ class DiffOrchestratorTest < AceGitTestCase
       assert_equal "", File.read(output_path)
     end
   end
+
+  def test_generate_grouped_stats_uses_numstat_and_returns_grouped_output
+    grouped_config = Ace::Git::Models::DiffConfig.new(
+      ranges: ["HEAD~1..HEAD"],
+      exclude_patterns: [],
+      format: :grouped_stats
+    )
+
+    numstat_output = "7\t2\tace-git/lib/ace/git/cli/commands/diff.rb\n"
+
+    Ace::Git::Molecules::ConfigLoader.stub :load, grouped_config do
+      Ace::Git::Molecules::DiffGenerator.stub :generate, @mock_raw_diff do
+        Ace::Git::Molecules::DiffFilter.stub :filter, @mock_raw_diff do
+          Ace::Git::Molecules::DiffGenerator.stub :generate_numstat, numstat_output do
+            result = @orchestrator.generate(format: :grouped_stats, ranges: ["HEAD~1..HEAD"])
+
+            assert_match(/total/, result.content)
+            assert_match(/ace-git\//, result.content)
+            assert_equal 7, result.stats[:additions]
+            assert_equal 2, result.stats[:deletions]
+            assert_equal 1, result.stats[:files]
+            assert result.metadata[:grouped_stats]
+          end
+        end
+      end
+    end
+  end
 end

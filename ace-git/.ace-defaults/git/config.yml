@@ -48,6 +48,12 @@ git:
     exclude_moves: false
     # Maximum lines in diff output (default: 10000)
     max_lines: 10000
+    # Grouped stats output tuning for `ace-git diff --format grouped-stats`
+    grouped_stats:
+      layers: [lib, test, handbook]
+      collapse_above: 5
+      show_full_tree: collapsible
+      dotfile_groups: [.ace-taskflow, .ace]
 
   # Rebase configuration (optional - workflows have defaults)
   # rebase:
