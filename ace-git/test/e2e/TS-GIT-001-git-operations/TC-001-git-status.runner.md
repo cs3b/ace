@@ -14,3 +14,5 @@ Save artifacts to `results/tc/01/`.
 - Execute actions and capture evidence only; do not assign PASS/FAIL verdicts.
 - Keep all artifacts under `results/tc/01/`.
 - Do not write outside the sandbox.
+- Bootstrap a real branch context first: create one tracked file, run `git add -A`, and commit once so later `branch` and `diff` goals run against an initialized repository.
+- Capture bootstrap command output in `results/tc/01/bootstrap.stdout|stderr|exit`.
