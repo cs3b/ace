@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-02-25
+
+### Added
+- Add filtering by task status in list command
+
 ### Changed
-- Auto-convert non-orchestrator parents when running `ace-taskflow task create --child-of` or `ace-taskflow task move --child-of`, and report both the conversion and child creation/demotion in the command output so manual `--child-of self` conversions are no longer required.
+- Auto-convert non-orchestrator parents when running `ace-task create --child-of` or `ace-task move --child-of`, eliminating the need for manual `--child-of self` conversions
+
+### Technical
+- Add goal-mode E2E lifecycle scenarios
+- Update E2E test configurations for taskflow and idea lifecycles
+- Refine E2E runner and verifier documentation
 
 ## [0.41.3] - 2026-02-24
 
