@@ -23,8 +23,11 @@ rely on IDs and state created in previous steps.
 
 ## Rules
 
+- Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
 - Execute each goal in order (1 through 4)
+- Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save artifacts to `results/tc/{NN}/`
+- Do not assign PASS/FAIL verdicts in runner output
 - Use real command execution only; do not fabricate output
 - If a goal fails, capture evidence and continue
 - End with a short summary of produced artifacts per goal
