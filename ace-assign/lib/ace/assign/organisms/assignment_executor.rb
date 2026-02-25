@@ -124,8 +124,9 @@ module Ace
         # - Parent phases auto-complete when all children are done
         #
         # @param report_path [String] Path to report file
+        # @param fork_root [String, nil] Optional subtree root to constrain advancement
         # @return [Hash] Result with updated state
-        def advance(report_path)
+        def advance(report_path, fork_root: nil)
           raise Error, "Report file not found: #{report_path}" unless File.exist?(report_path)
 
           assignment = assignment_manager.find_active
@@ -133,7 +134,7 @@ module Ace
 
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
           current = state.current
-          fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
+          fork_root = fork_root&.strip
           if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
             if current.nil? || !state.in_subtree?(fork_root, current.number)
               current = state.current_in_subtree(fork_root) || state.next_workable_in_subtree(fork_root)
@@ -170,7 +171,7 @@ module Ace
           state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
 
           # Find next phase to work on using hierarchical rules.
-          # When ACE_ASSIGN_FORK_ROOT is set, keep advancement inside that subtree.
+          # When fork_root is provided, keep advancement inside that subtree.
           next_phase = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
                          find_next_phase_in_subtree(state, current.number, fork_root)
                        else

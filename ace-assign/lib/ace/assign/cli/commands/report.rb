@@ -19,12 +19,12 @@ module Ace
           def call(file:, **options)
             target = resolve_assignment_target(options)
             executor = build_executor_for_target(target)
-            result = with_scoped_fork_root(target.scope) { executor.advance(file) }
+            result = executor.advance(file, fork_root: target.scope)
 
             unless options[:quiet]
               completed = result[:completed]
               if completed.nil?
-                fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
+                fork_root = target.scope&.strip
                 puts "Fork subtree #{fork_root} already complete. Nothing to advance."
               else
                 puts "Phase #{completed.number} (#{completed.name}) completed"
@@ -41,7 +41,7 @@ module Ace
                   puts result[:current].instructions
                 else
                   puts
-                  fork_root = ENV["ACE_ASSIGN_FORK_ROOT"]&.strip
+                  fork_root = target.scope&.strip
                   if fork_root && result[:state].subtree_complete?(fork_root)
                     puts "Fork subtree #{fork_root} completed."
                   elsif result[:state].complete?
@@ -51,22 +51,6 @@ module Ace
                   end
                 end
               end
-            end
-          end
-
-          private
-
-          def with_scoped_fork_root(scope)
-            return yield if scope.nil? || scope.strip.empty?
-
-            previous = ENV["ACE_ASSIGN_FORK_ROOT"]
-            ENV["ACE_ASSIGN_FORK_ROOT"] = scope.strip
-            yield
-          ensure
-            if previous.nil?
-              ENV.delete("ACE_ASSIGN_FORK_ROOT")
-            else
-              ENV["ACE_ASSIGN_FORK_ROOT"] = previous
             end
           end
         end
