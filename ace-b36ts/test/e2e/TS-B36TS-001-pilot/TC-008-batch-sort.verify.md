@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Files exist** — Two files exist in `results/tc/08/`: one with encode-order IDs and one with sorted IDs.
 2. **At least 4 IDs** — Each file contains at least 4 token/date pairs.
 3. **Lexicographic = chronological** — The lexicographically sorted order of the tokens matches the chronological order of their original dates. Earlier dates produce tokens that sort before later dates.

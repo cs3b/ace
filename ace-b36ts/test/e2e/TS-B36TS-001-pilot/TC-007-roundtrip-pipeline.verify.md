@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **File exists** — At least one file exists in `results/tc/07/`.
 2. **Three values present** — The file contains all three components: an original date, an encoded token, and a decoded result.
 3. **Valid token** — The encoded token consists of lowercase alphanumeric characters only (base36 charset: `[0-9a-z]`).

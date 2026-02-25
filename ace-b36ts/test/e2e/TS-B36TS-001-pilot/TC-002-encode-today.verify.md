@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Token file exists** — At least one token-like artifact exists in `results/tc/02/`.
 2. **Valid token format** — At least one filename in the directory consists of lowercase alphanumeric characters only (base36 charset: `[0-9a-z]`).
 3. **Reasonable length** — At least one token-like filename is 2–8 characters long, consistent with ace-b36ts token format.
