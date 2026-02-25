@@ -16,7 +16,7 @@ bundle:
 # E2E Test Runner: ace-assign Core Workflow
 
 Tool under test: ace-assign
-Required tools: ace-assign, ruby, rg
+Required tools: ace-assign, ace-bundle, ace-search
 Workspace root: (current directory)
 
 Execute each goal sequentially. Goal 1 is discovery — all later goals

@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Assignment created** — `create.exit` contains `0`.
 2. **Regular phase display** — `status-regular.stdout` shows raw "Instructions:" header, mentions instruction content ("Load project context"), does NOT mention "Task tool".
 3. **Fork phase display** — `status-fork.stdout` shows "Context: fork", mentions "forked context" or "Task tool", includes "Working directory:", "Assignment:", and "Prompt for forked agent". Phase content sections (Onboard, Work, Report) present.

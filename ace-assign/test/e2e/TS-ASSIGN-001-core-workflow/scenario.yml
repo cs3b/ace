@@ -21,7 +21,7 @@ e2e-justification: >
   prompts. Prepare workflow expands preset templates. None testable with mocks.
 
 requires:
-  tools: [ace-assign]
+  tools: [ace-assign, ace-bundle, ace-search]
   ruby: ">= 3.0"
 
 setup:

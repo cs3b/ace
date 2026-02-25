@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Assignment created** — `create.exit` contains `0`. `create.stdout` mentions assignment info and first phase.
 2. **Structure correct** — `structure.stdout` shows assignment.yaml, phases/, reports/ directories. Three phase files with .ph.md extension exist.
 3. **Phase completion** — `report-analyze.exit` is `0`. Phase 010 marked done (not "completed"), report file at reports/010-analyze.r.md.
