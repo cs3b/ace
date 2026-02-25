@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **All four capture sets exist** — results/tc/07/ contains captures for defaults, user-config, cli-override, and empty-config.
 2. **Defaults work** — Scan completes (any exit code) without crashing when no user config exists.
 3. **User config applied** — Scan completes when user config is present.
