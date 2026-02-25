@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.638] - 2026-02-25
+
+### Added
+- **ace-git v0.11.0**: Add `ace-git diff --format grouped-stats` with package/layer grouped, aligned change statistics suitable for terminal review and PR description evidence.
+
+### Changed
+- **ace-git v0.11.0**: Add grouped-stats configuration support and wire numstat parsing/grouping/formatting through diff configuration, generator, orchestrator, and CLI output handling.
+
+## [0.9.637] - 2026-02-25
+
+### Added
+- **ace-review v0.42.3**: Automatically include the directly relevant task behavioral spec (`.s.md`) in PR review context when task references are discoverable from PR branch metadata or PR text.
+
+### Changed
+- **ace-review v0.42.3**: Add PR task-spec resolution helpers and enrich PR metadata/task resolution wiring (`body` metadata and `spec_path`) to support graceful spec-aware review context loading.
+
 ## [0.9.636] - 2026-02-25
 
 ### Changed
