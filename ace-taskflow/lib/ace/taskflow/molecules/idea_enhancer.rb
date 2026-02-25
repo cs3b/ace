@@ -56,24 +56,18 @@ module Ace
           enhanced << content.strip
           enhanced << ""
 
-          # Add stub sections that would be filled by LLM
-          enhanced << "## Implementation Approach"
+          # Add stub sections aligned with the 3-question delegation brief
+          enhanced << "## What I Hope to Accomplish"
           enhanced << ""
-          enhanced << "_[This section will be enhanced with LLM integration]_"
+          enhanced << "_[What impact should this have? Why does it matter?]_"
           enhanced << ""
-          enhanced << "- Analyze requirements"
-          enhanced << "- Design solution architecture"
-          enhanced << "- Implement core functionality"
-          enhanced << "- Add tests and documentation"
+          enhanced << "## What \"Complete\" Looks Like"
           enhanced << ""
-
-          enhanced << "## Technical Considerations"
+          enhanced << "_[What concrete end state would indicate this idea is fully realized?]_"
           enhanced << ""
-          enhanced << "_[This section will be enhanced with LLM integration]_"
+          enhanced << "## Success Criteria"
           enhanced << ""
-          enhanced << "- Dependencies and integrations"
-          enhanced << "- Performance implications"
-          enhanced << "- Security considerations"
+          enhanced << "_[What verifiable checks would confirm success?]_"
           enhanced << ""
 
           if context[:location]
@@ -278,7 +272,10 @@ module Ace
             Given a raw idea, provide a JSON response with:
             - filename: suggested filename (lowercase, hyphenated)
             - title: clear title for the idea
-            - enhanced_description: expanded description with problem, solution, and benefits
+            - enhanced_description: exactly 3 sections with these headings:
+              * ## What I Hope to Accomplish
+              * ## What "Complete" Looks Like
+              * ## Success Criteria
 
             Keep the enhancement concise and actionable.
           PROMPT
