@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Files exist** — At least 2 distinct error-case file sets exist in `results/tc/04/` (each with exit code, stdout, and stderr captured).
 2. **Non-zero exit codes** — Every captured exit code is non-zero.
 3. **Error on stderr** — Every stderr capture contains a non-empty error message.
