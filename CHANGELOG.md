@@ -4,40 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.637] - 2026-02-25
-
-### Changed
-- **ace-assign v0.12.21**: Add adaptive failed-subtree restart guidance (minimal-safe replay) to drive and fork-context docs, including recovery phase insertion rules and report-first recovery sequencing.
-
-### Technical
-- **ace-assign v0.12.21**: Update split-subtree-root catalog instructions with adaptive recovery and stepped scoped polling guidance.
-
-## [0.9.636] - 2026-02-25
-
-### Technical
-- **ace-test-e2e v0.20.5**: Update taskflow fixture template lookup examples to use `ace-task show`.
-
-## [0.9.635] - 2026-02-25
-
-### Changed
-- **ace-handbook v0.9.8**: Update `perform-delivery` workflow guidance to use `ace-task show <ref>` for explicit task lookup.
-
-## [0.9.634] - 2026-02-25
-
-### Changed
-- **ace-taskflow v0.42.3**: Update task-detail command references to `ace-task show <ref>` across handbook workflows and examples.
-
-### Technical
-- **ace-taskflow v0.42.3**: Sync taskflow E2E fixture template command examples to `ace-task show`.
-
 ## [0.9.633] - 2026-02-25
 
-### Added
-- **ace-assign v0.12.20**: Record fork subtree PID telemetry (`fork_launch_pid`, PID tree, timestamp, PID file) and persist per-phase PID files in assignment cache.
-- **ace-assign v0.12.20**: Add scoped status filtering via `ace-assign status --filter` including parenthesized target syntax `(assignment@)scope`.
-
 ### Changed
-- **ace-assign v0.12.20**: Update status output and drive workflow guidance for long-running fork execution polling with scoped PID visibility.
+- **ace-taskflow v0.42.3**: Replace LLM-enhanced idea output with 3-Question Delegation Brief sections and align fallback/system prompt content to the same structure
+
+### Technical
+- **ace-taskflow v0.42.3**: Update idea enhancement tests to assert the new section headings
 
 ## [0.9.632] - 2026-02-25
 
