@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Capture set exists** — `results/tc/05/` contains stdout/stderr/exit captures for the wfi:// resolution.
 2. **Zero exit code** — The resolution succeeded (exit code `0`).
 3. **Correct extension resolved** — The stdout contains a path ending in `.wf.md`, proving the wfi:// protocol uses its own shorthand extension for inference.

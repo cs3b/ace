@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Capture set exists** — `results/tc/04/` contains stdout/stderr/exit captures for the missing resource attempt.
 2. **Non-zero exit code** — The exit code is non-zero (the tool correctly signals failure).
 3. **Informative error message** — Stderr contains a human-readable error message (e.g., mentioning "not found", the resource name, or suggesting alternatives).
