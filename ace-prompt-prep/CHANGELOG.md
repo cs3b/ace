@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.7] - 2026-02-25
+
+### Fixed
+- Align `BundleLoader` security test expectations with current return behavior for debug logging paths
+- Resolve three failing tests in `bundle_loader_security_test.rb` by asserting returned content instead of empty string
+
 ## [0.16.6] - 2026-02-23
 
 ### Technical
