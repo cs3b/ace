@@ -43,6 +43,17 @@ class IdeaSubcommandsTest < AceTaskflowTestCase
     end
   end
 
+  def test_idea_create_maybe_scope_uses_configured_directory
+    with_real_test_project do |_dir|
+      result = invoke_cli(Ace::Taskflow::IdeaCLI, ["create", "--note", "Uncertain idea", "--maybe"])
+      output = result[:stdout] + result[:stderr]
+
+      refute_match(/unknown command/i, output)
+      assert_match(/Idea captured:/, output)
+      assert_match(%r{/ideas/_maybe/}, output)
+    end
+  end
+
   # --- Idea Done Subcommand Tests ---
 
   def test_cli_routes_idea_done_command

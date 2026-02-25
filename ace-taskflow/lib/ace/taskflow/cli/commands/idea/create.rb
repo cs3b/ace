@@ -171,7 +171,8 @@ module Ace
 
               # Append scope subdirectory if --maybe or --anyday flag was provided
               if capture_options[:subdirectory]
-                target_config["directory"] = File.join(target_config["directory"], capture_options[:subdirectory])
+                scope_dir = resolve_scope_directory(capture_options[:subdirectory])
+                target_config["directory"] = File.join(target_config["directory"], scope_dir)
               end
 
               # Capture the idea with options
@@ -204,6 +205,19 @@ module Ace
               resolver = Ace::Taskflow::Molecules::ReleaseResolver.new(root_path)
               release = resolver.find_release(release_name)
               release ? release[:path] : nil
+            end
+
+            # Map logical scope flags to configured directory names.
+            # Example: --maybe should resolve to _maybe by default.
+            def resolve_scope_directory(scope)
+              case scope
+              when "maybe"
+                Ace::Taskflow.configuration.maybe_dir
+              when "anyday"
+                Ace::Taskflow.configuration.anyday_dir
+              else
+                scope
+              end
             end
           end
         end
