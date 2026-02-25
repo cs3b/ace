@@ -12,7 +12,7 @@ Save all output to `results/tc/07/`. Capture:
 
 ## Constraints
 
-- Set up two subdirectories: one with valid `.ace/lint/config.yml` and one with intentionally broken YAML (bad indentation).
+- Set up two subdirectories: one with valid `.ace/lint/.rubocop.yml` and one with intentionally broken `.ace/lint/.rubocop.yml` (bad indentation/YAML syntax).
 - Initialize each as a git repo (ace-lint may require it).
-- Using what you learned from Goal 1, invoke the --doctor operation.
+- Run `ace-lint --doctor` in each subdirectory and capture both outputs separately.
 - All artifacts must come from real tool execution, not fabricated.
