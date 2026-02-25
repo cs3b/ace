@@ -12,4 +12,23 @@ bundle:
 
 # E2E Test Runner: ace-tmux Management
 
+Tool under test: ace-tmux
+Required tools: ace-tmux, tmux
+Workspace root: (current directory)
+
 Run goals sequentially. Goal 1 discovers presets; Goal 2 uses discovered preset.
+
+## Rules
+
+- Execute each goal in order (1 through 2)
+- Use ace-tmux/tmux and standard shell utilities only
+- Save all artifacts to results/tc/{NN}/ directories as specified
+- Do not fabricate output; all artifacts must come from real command execution
+- For each command capture stdout, stderr, and exit code
+- If a goal fails, continue to the next goal
+
+## Artifact conventions
+
+- Save stdout to `{name}.stdout`, stderr to `{name}.stderr`, exit code to `{name}.exit`
+- The `.exit` file must contain only a numeric exit code
+- Keep optional summaries in `.md` files, but raw command captures are the primary evidence
