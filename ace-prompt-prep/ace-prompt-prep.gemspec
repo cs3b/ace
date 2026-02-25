@@ -41,7 +41,7 @@ Gem::Specification.new do |spec|
   # Runtime dependencies
   spec.add_dependency 'ace-support-config', '~> 0.7'
   spec.add_dependency 'ace-bundle', '~> 0.31'
-  spec.add_dependency 'ace-git', '~> 0.10' # Unified git operations (task 140.04)
+  spec.add_dependency 'ace-git', '~> 0.11' # Unified git operations (task 140.04)
   spec.add_dependency 'ace-llm', '~> 0.23'
   spec.add_dependency 'ace-support-nav', '~> 0.17'
   spec.add_dependency 'ace-support-core', '~> 0.24' # dry-cli infrastructure (task 179.01)
