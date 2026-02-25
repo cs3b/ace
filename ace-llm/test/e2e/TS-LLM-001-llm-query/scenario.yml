@@ -1,0 +1,31 @@
+test-id: TS-LLM-001
+title: "ace-llm Query and Model Routing"
+area: llm
+package: ace-llm
+priority: low
+cost-tier: deep
+tags: [deep, "use-case:llm"]
+tool-under-test: ace-llm
+
+sandbox-layout:
+  results/tc/01/: "Basic query artifacts"
+  results/tc/02/: "Model-selection query artifacts"
+
+e2e-justification: >
+  Requires live provider integration and response handling through the real
+  ace-llm CLI, including provider/model routing and output formatting behavior.
+
+unit-coverage-reviewed:
+  - test/commands/query_command_test.rb
+  - test/integration/query_interface_fallback_test.rb
+  - test/molecules/client_registry_test.rb
+
+requires:
+  tools: [ace-llm]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - agent-env:
+      PROJECT_ROOT_PATH: .
