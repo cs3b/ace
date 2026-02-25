@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.644] - 2026-02-25
+
+### Changed
+- **ace-assign v0.12.21**: Remove assignment runtime env coupling and require explicit assignment targeting (`--assignment <id>` / `--assignment <id>@<scope>`) across forked workflow execution, including updated drive/fork guidance and scoped launcher invocation.
+
+### Technical
+- **ace-bundle v0.31.5**: Bump runtime dependency constraint to `ace-git ~> 0.11`.
+- **ace-git-commit v0.18.6**: Bump runtime dependency constraint to `ace-git ~> 0.11`.
+- **ace-git-worktree v0.13.17**: Bump runtime dependency constraint to `ace-git ~> 0.11`.
+- **ace-prompt-prep v0.16.8**: Bump runtime dependency constraint to `ace-git ~> 0.11`.
+- **ace-review v0.42.6**: Bump runtime dependency constraint to `ace-git ~> 0.11`.
+
 ## [0.9.643] - 2026-02-25
 
 ### Fixed
