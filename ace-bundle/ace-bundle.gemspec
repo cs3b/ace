@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-fs', '~> 0.2' # For ProjectRootFinder
   # ace-git: Centralized Git/GitHub operations (diffs, PR metadata, branch info)
   # Replaces internal GitExtractor, PrIdentifierParser, GhPrExecutor (removed in v0.20.0)
-  spec.add_dependency 'ace-git', '~> 0.10'
+  spec.add_dependency 'ace-git', '~> 0.11'
   spec.add_dependency 'ace-support-nav', '~> 0.17' # For in-process protocol resolution (wfi://, guide://, etc.)
 
   # Development dependencies managed in root Gemfile
