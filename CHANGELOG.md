@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.645] - 2026-02-25
+
+### Added
+- **ace-git v0.11.6**: Squash repeated directory prefixes in `grouped-stats` — consecutive files in the same directory show the shared prefix once, subsequent files show only the indented basename
+- **ace-git v0.11.6**: Squash consecutive renames sharing the same from-dir/to-dir — second and later renames show only the indented basenames on each side of the arrow
+
+### Changed
+- **ace-git v0.11.6**: `update-pr-desc` workflow now explicitly forbids trimming or abbreviating the grouped-stats output in `## File Changes`
+
 ## [0.9.644] - 2026-02-25
 
 ### Changed
