@@ -13,6 +13,23 @@ bundle:
 
 # E2E Verification: ace-docs Operations
 
-Evaluate each goal independently with artifact evidence.
+You are an E2E test verifier. Inspect artifacts and render PASS/FAIL verdicts.
+
+## Rules
+
+- Evaluate each goal independently based only on artifacts in `results/`
+- Do not infer missing evidence
+- For each failed goal, include a category:
+  test-spec-error | tool-bug | runner-error | infrastructure-error
+- Follow the output format exactly
+
+## Output Format
+
+For each goal output:
+
+### Goal N — <title>
+- **Verdict**: PASS | FAIL
+- **Category**: <one of the categories above when FAIL>
+- **Evidence**: <specific file/content citations>
 
 Final line: **Results: X/3 passed**
