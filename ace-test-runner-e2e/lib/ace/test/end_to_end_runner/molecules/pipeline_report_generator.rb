@@ -107,7 +107,7 @@ module Ace
               end_idx = index + 1 < headers.size ? headers[index + 1][0] : lines.size
               block = lines[start_idx...end_idx].join
 
-              verdict = normalize_verdict(extract_value(block, "Verdict"))
+              verdict = normalize_verdict(extract_field_token(block, %w[Verdict Status]))
               evidence = extract_evidence(block)
               next if verdict.nil?
 
@@ -167,8 +167,14 @@ module Ace
           end
 
           def extract_category(block, evidence)
-            explicit = extract_value(block, "Category")
+            explicit = extract_field_token(block, %w[Category])
             return normalize_category(explicit) if explicit
+
+            inline = block.to_s.match(/`(test-spec-error|tool-bug|runner-error|infrastructure-error)`/i)
+            return normalize_category(inline[1]) if inline
+
+            paren = block.to_s.match(/\((test-spec-error|tool-bug|runner-error|infrastructure-error)\)/i)
+            return normalize_category(paren[1]) if paren
 
             normalize_category("#{block}\n#{evidence}")
           end
@@ -185,8 +191,23 @@ module Ace
             raw = value.to_s.strip
             return nil if raw.empty?
 
-            token = raw.gsub(/[*_`]/, "").strip.split(/\s+/).first.to_s.upcase
-            return token if %w[PASS FAIL].include?(token)
+            token = raw.gsub(/[*_`]/, "").upcase.match(/\b(PASS|FAIL)\b/)
+            return token[1] if token
+
+            nil
+          end
+
+          def extract_field_token(block, fields)
+            fields.each do |field|
+              direct = extract_value(block, field)
+              return direct if direct && !direct.empty?
+
+              bold_inline = block.match(/\*\*#{Regexp.escape(field)}\s*:\s*([^*\n]+)\*\*/i)
+              return bold_inline[1].strip if bold_inline
+
+              plain = block.match(/^\s*(?:[-*]\s+)?#{Regexp.escape(field)}\s*:\s*(.+?)\s*$/im)
+              return plain[1].strip if plain
+            end
 
             nil
           end
