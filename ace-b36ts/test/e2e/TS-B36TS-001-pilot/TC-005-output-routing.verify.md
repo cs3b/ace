@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Files exist** — At least 2 mode pairs (stdout + stderr files) exist in `results/tc/05/`.
 2. **Quiet mode stdout** — In the quietest mode, stdout contains only the primary output (a base36 token) with no extra decoration or logging.
 3. **Quiet mode stderr** — In the quietest mode, stderr is empty or minimal.
