@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.17] - 2026-02-25
+
+### Technical
+- Bump runtime dependency constraint from `ace-git ~> 0.10` to `ace-git ~> 0.11`.
+
 ## [0.13.16] - 2026-02-24
 
 ### Fixed
