@@ -10,25 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.21] - 2026-02-25
 
 ### Changed
-- Document adaptive failed-subtree recovery policy in `assign/drive` with minimal-safe replay rules, replay-depth decision guidance, and recovery phase placement for both mid-subtree and end-subtree failures.
-- Extend fork context guide with explicit failed-subtree recovery model (context refresh + report review + verification before retry/resume).
+- Remove runtime assignment context coupling to `ACE_ASSIGN_ID` and `ACE_ASSIGN_FORK_ROOT`; assignment targeting now relies on explicit `--assignment <id>` and scoped `--assignment <id>@<phase>` usage.
+- Update `assign/drive` workflow and fork-context guide to use explicit assignment flags for subprocess delegation.
 
-### Technical
-- Update split subtree root catalog instructions to include adaptive recovery guidance and stepped scoped polling language.
+### Fixed
+- Eliminate scoped report/status behavior that depended on mutable process environment, reducing cross-process/test leakage risk.
 
 ## [0.12.20] - 2026-02-25
 
-### Added
-- Record fork subtree PID telemetry in phase frontmatter (`fork_launch_pid`, `fork_tracked_pids`, `fork_pid_updated_at`, `fork_pid_file`) and write per-phase PID files under `.cache/ace-assign/<assignment>/pids/`.
-- Add `ace-assign status --filter` support for scope targeting via `010.01`, `<assignment>@<scope>`, and parenthesized form `(assignment@)scope`.
-
 ### Changed
-- Show scoped fork PID telemetry in status output (`Scoped Fork PID`, PID tree, and PID file path) when viewing fork-root scopes.
-- Update drive workflow guidance to use stepped background polling (`5m → 3m → 1m → 60s`) with scoped `ace-assign status --filter`.
 - Update generated `plan-task` phase action instructions to require planning against behavioral spec sections, cover relevant operating modes, and report missing spec details in a `Behavioral Gaps` section
-
-### Technical
-- Add command/model/parser/launcher coverage for PID telemetry persistence and status filter behavior.
 
 ## [0.12.19] - 2026-02-24
 

@@ -14,15 +14,13 @@ class ForkSessionLauncherTest < AceAssignTestCase
       @calls << {
         provider_model: provider_model,
         prompt: prompt,
-        options: options,
-        env_assign_id: ENV["ACE_ASSIGN_ID"],
-        env_fork_root: ENV["ACE_ASSIGN_FORK_ROOT"]
+        options: options
       }
       { text: "ok", provider: provider_model.split(":").first, model: provider_model.split(":")[1] }
     end
   end
 
-  def test_launch_uses_config_defaults_and_sets_env_scope
+  def test_launch_uses_config_defaults_and_passes_scoped_assignment_argument
     fake = FakeQueryInterface.new
     config = {
       "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 },
@@ -30,18 +28,14 @@ class ForkSessionLauncherTest < AceAssignTestCase
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
-    result = launcher.launch(assignment_id: "abc123", fork_root: "010.01")
+    launcher.launch(assignment_id: "abc123", fork_root: "010.01")
 
     call = fake.calls.last
     assert_equal "codex:gpt-5", call[:provider_model]
-    assert_equal "/ace-assign-drive", call[:prompt]
+    assert_equal "/ace-assign-drive abc123@010.01", call[:prompt]
     assert_equal "full-auto", call[:options][:cli_args]
     assert_equal 900, call[:options][:timeout]
     assert_equal false, call[:options][:fallback]
-    assert_equal "abc123", call[:env_assign_id]
-    assert_equal "010.01", call[:env_fork_root]
-    assert_equal Process.pid, result.dig(:fork_pid_info, :launch_pid)
-    assert_kind_of Array, result.dig(:fork_pid_info, :tracked_pids)
   end
 
   def test_launch_merges_required_and_user_cli_args

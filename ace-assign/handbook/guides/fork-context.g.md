@@ -7,7 +7,7 @@ Fork context enables phase files to run in isolated agent contexts using the Tas
 For hierarchical split workflows, use **parent-only** fork markers:
 - Split parent phase: `context: fork`
 - Child phases (`onboard`, `plan-task`, `work-on-task`): no `context: fork`
-- Runtime execution scope is controlled by `ACE_ASSIGN_FORK_ROOT`
+- Runtime execution scope is controlled explicitly with `--assignment <id>@<root>`
 
 ## When to Use Fork Context
 
@@ -71,7 +71,7 @@ When `ace:assign-drive` (or manual orchestration) encounters a fork-enabled subt
 1. Runs `ace-assign status`
 2. Detects `Fork subtree detected (root: ...)` in output (outside fork scope)
 3. Delegates with `ace-assign fork-run --assignment <id>@<root>`
-4. Fork launcher executes `/ace-assign-drive` in a scoped process (`ACE_ASSIGN_FORK_ROOT=<root>`)
+4. Fork launcher executes `/ace-assign-drive <id>@<root>` in a scoped process
 5. Scoped process advances only inside subtree
 6. Parent process resumes after subtree completion
 
@@ -81,7 +81,7 @@ ace:assign-drive loop
   +-- ace-assign status
   +-- Detects "Fork subtree detected (root: ...)"
   +-- ace-assign fork-run --assignment <id>@<root>
-  +-- Forked /ace-assign-drive (ACE_ASSIGN_FORK_ROOT=<root>)
+  +-- Forked /ace-assign-drive <id>@<root>
   +-- Subtree completes
   +-- Parent loop continues
 ```

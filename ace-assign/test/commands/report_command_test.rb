@@ -135,7 +135,6 @@ class ReportCommandTest < AceAssignTestCase
       assert_equal :in_progress, state.find_by_number("010").status
       assert_equal :done, state.find_by_number("020.01").status
       assert_equal :in_progress, state.find_by_number("020.02").status
-      assert_nil ENV["ACE_ASSIGN_FORK_ROOT"], "Report command should restore scoped env variable"
 
       Ace::Assign.reset_config!
     end
