@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.636] - 2026-02-25
+
+### Technical
+- **ace-test-e2e v0.20.5**: Update taskflow fixture template lookup examples to use `ace-task show`.
+
 ## [0.9.635] - 2026-02-25
 
 ### Changed
