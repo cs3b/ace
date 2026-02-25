@@ -21,13 +21,15 @@ The 3 questions:
 Each subtask below addresses one handoff point where intent is currently lost.
 
 ### Packages Affected
-- `ace-taskflow` (idea enhancement, task draft workflow, work-subtasks workflow)
+- `ace-taskflow` (idea enhancement, task draft workflow, work-subtasks workflow, review + plan workflows)
+- `ace-assign` (planning phase instruction in assignment executor)
 
 ## Subtasks
 
 - **01**: Idea Capture with 3-Question Delegation Brief — replace the LLM enhancement output format with the 3-question structure
 - **02**: Idea-to-Task Intent Inheritance — update the task draft workflow to map idea intent into task sections
 - **03**: Parent Task as Subtask Context — update the work-subtasks delegation prompt to include parent task as context
+- **04**: Spec-Aware Planning at the Spec-to-Agent Handoff — teach planning agents to plan against the behavioral spec structure; add operating-modes checklist to review
 
 ### Concept Inventory
 
@@ -38,6 +40,8 @@ Each subtask below addresses one handoff point where intent is currently lost.
 | Intent mapping guidance in draft workflow | 281.02 | — | NEW |
 | Graceful fallback for pre-3Q ideas | 281.02 | — | NEW |
 | Parent task reference in subtask delegation | 281.03 | — | NEW |
+| "Operating Modes Covered" review checklist item | 281.04 | — | NEW |
+| "Behavioral Gaps" section in planning output | 281.04 | — | NEW |
 
 ## References
 
