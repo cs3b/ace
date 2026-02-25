@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.282
-status: draft
+status: in-progress
 priority: high
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 282-auto-convert-parent-to-orchestrator-on-child-operations
+  path: "../ace-task.282"
+  created_at: '2026-02-25 15:43:02'
+  updated_at: '2026-02-25 15:43:02'
+  target_branch: main
 ---
 
 # Auto-Convert Parent to Orchestrator on Child Operations
