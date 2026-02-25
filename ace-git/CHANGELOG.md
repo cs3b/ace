@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.5] - 2026-02-25
+
+### Fixed
+- Remove blank lines within groups in `grouped-stats` plain output (between group header and first layer, and between layers)
+- Wire positional `range` argument in `ace-git diff` so `ace-git diff origin/main..HEAD` correctly passes the range to the diff generator instead of silently falling back to working-tree state
+
+### Changed
+- Align stats and name columns in `grouped-stats` output: stats use `%5s, %5s` (12 chars, handles ±9999) and file-count field is right-padded so names start at a consistent column across package, layer, and file lines
+- Update `update-pr-desc` workflow to use `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` for correct PR diff coverage
+
 ## [0.11.4] - 2026-02-25
 
 ### Fixed

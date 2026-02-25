@@ -72,19 +72,38 @@ class CliRoutingTest < AceGitTestCase
     assert_match(/COMMANDS|Commands:|unknown command/i, output)
   end
 
+  def test_cli_passes_range_to_orchestrator
+    captured_options = nil
+    mock_result = build_mock_result
+    spy = ->(opts) { captured_options = opts; mock_result }
+
+    Ace::Git::Organisms::DiffOrchestrator.stub(:generate, spy) do
+      Ace::Git::Organisms::DiffOrchestrator.stub(:raw, mock_result) do
+        invoke_cli(Ace::Git::CLI, ["diff", "origin/main..HEAD"])
+      end
+    end
+
+    assert_equal ["origin/main..HEAD"], captured_options[:ranges]
+  end
+
   private
 
   # Stub the diff orchestrator to avoid actual git operations
   def stub_diff_orchestrator(&block)
-    mock_result = Object.new
-    mock_result.define_singleton_method(:content) { "mock diff" }
-    mock_result.define_singleton_method(:summary) { "1 file changed" }
-    mock_result.define_singleton_method(:files) { ["test.rb"] }
-    mock_result.define_singleton_method(:empty?) { false }
-    mock_result.define_singleton_method(:to_s) { "mock diff" }
+    mock_result = build_mock_result
 
     Ace::Git::Organisms::DiffOrchestrator.stub(:generate, mock_result) do
       Ace::Git::Organisms::DiffOrchestrator.stub(:raw, mock_result, &block)
     end
+  end
+
+  def build_mock_result
+    result = Object.new
+    result.define_singleton_method(:content) { "mock diff" }
+    result.define_singleton_method(:summary) { "1 file changed" }
+    result.define_singleton_method(:files) { ["test.rb"] }
+    result.define_singleton_method(:empty?) { false }
+    result.define_singleton_method(:to_s) { "mock diff" }
+    result
   end
 end
