@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.639] - 2026-02-25
+
+### Changed
+- **ace-git v0.11.1**: Make PR creation/update workflows evidence-based by enforcing section-level sourcing from diff/commits/tests/changelog, grouped-stats-first file reporting, and user-impact-first summary rules.
+
+### Technical
+- **ace-git v0.11.1**: Simplify feature/default PR templates and embedded workflow templates to the new evidence-oriented section structure.
+
 ## [0.9.638] - 2026-02-25
 
 ### Added
