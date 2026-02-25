@@ -17,13 +17,6 @@ Save all output to `results/tc/04/`. Capture:
 - `results/tc/04/renumbered-metadata.stdout` — renumbered_from/renumbered_at audit trail
 - `results/tc/04/dynamic-metadata.stdout` — dynamic add audit trail
 
-## Setup
-
-Environment provides:
-- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
-- `PROJECT_ROOT_PATH=.`
-- Fixtures: `fixtures/display/job-tree.yaml`, `fixtures/display/job-audit.yaml`
-
 ## Constraints
 
 ### Tree Display

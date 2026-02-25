@@ -17,13 +17,6 @@ Save all output to `results/tc/02/`. Capture evidence at each stage:
 - `results/tc/02/retry.stdout`, `.exit` — retry mechanics
 - `results/tc/02/status-final.stdout` — final completion status
 
-## Setup
-
-Environment provides:
-- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
-- `PROJECT_ROOT_PATH=.`
-- Fixtures: `fixtures/lifecycle/job.yaml`, `fixtures/lifecycle/report.md`, `fixtures/lifecycle/fix-report.md`, `fixtures/lifecycle/implement-report.md`, `fixtures/lifecycle/verify-report.md`
-
 ## Constraints
 
 - Create assignment from `fixtures/lifecycle/job.yaml`.
