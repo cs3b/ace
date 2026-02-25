@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.634] - 2026-02-25
+
+### Changed
+- **ace-taskflow v0.42.3**: Update task-detail command references to `ace-task show <ref>` across handbook workflows and examples.
+
+### Technical
+- **ace-taskflow v0.42.3**: Sync taskflow E2E fixture template command examples to `ace-task show`.
+
 ## [0.9.633] - 2026-02-25
 
 ### Added
