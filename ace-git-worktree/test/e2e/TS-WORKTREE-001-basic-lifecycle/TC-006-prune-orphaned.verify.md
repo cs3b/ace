@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **All required artifacts exist** — results/tc/06/ contains orphan-target path, prune captures, list-after, git-worktree-porcelain-after, and fs-state-after.
 2. **Prune command succeeded** — prune.exit is 0.
 3. **Final git metadata is clean** — git-worktree-porcelain-after shows only expected remaining worktrees and does not contain the orphan target.

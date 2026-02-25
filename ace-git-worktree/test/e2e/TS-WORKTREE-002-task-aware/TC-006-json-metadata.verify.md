@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **JSON artifacts exist** — results/tc/06/ contains list-json.stdout and list-json.exit.
 2. **Valid JSON** — list-json.stdout contains well-formed JSON (parseable array or object).
 3. **Task entries have metadata** — Task-associated entries contain task_id fields with values "999" and "888" (or equivalent identifiers) and branch fields.
