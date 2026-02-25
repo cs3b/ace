@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.635] - 2026-02-25
+
+### Changed
+- **ace-handbook v0.9.8**: Update `perform-delivery` workflow guidance to use `ace-task show <ref>` for explicit task lookup.
+
 ## [0.9.634] - 2026-02-25
 
 ### Changed
