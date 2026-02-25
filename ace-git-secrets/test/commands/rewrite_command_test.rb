@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "json"
 require_relative "../test_helper"
 
 class RewriteCommandTest < GitSecretsTestCase
@@ -114,6 +115,39 @@ class RewriteCommandTest < GitSecretsTestCase
       end
 
       assert_match(/No tokens found/i, output)
+    end
+  end
+
+  def test_returns_failure_when_scan_file_lacks_raw_value
+    broken_report_path = File.join(@mock_repo.path, "broken-report.json")
+    File.write(
+      broken_report_path,
+      JSON.generate(
+        {
+          "tokens" => [
+            {
+              "token_type" => "github_pat_classic",
+              "pattern_name" => "github_pat_classic",
+              "confidence" => "high",
+              "commit_hash" => "abc1234",
+              "file_path" => "secret.txt",
+              "line_number" => 1
+            }
+          ]
+        }
+      )
+    )
+
+    with_rewrite_test_mocks do
+      _stdout, stderr = capture_io do
+        exit_code = Ace::Git::Secrets::Commands::RewriteCommand.execute(
+          force: true,
+          scan_file: broken_report_path
+        )
+        assert_equal 1, exit_code
+      end
+
+      assert_match(/missing raw_value/i, stderr)
     end
   end
 
