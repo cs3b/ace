@@ -192,4 +192,25 @@ class PhaseTest < AceAssignTestCase
 
     refute fm.key?("context")
   end
+
+  def test_to_frontmatter_includes_fork_pid_metadata
+    now = Time.utc(2026, 2, 25, 19, 0, 0)
+    phase = Ace::Assign::Models::Phase.new(
+      number: "010",
+      name: "work-on-task",
+      status: :in_progress,
+      instructions: "Run fork execution",
+      fork_launch_pid: 35_5349,
+      fork_tracked_pids: [3_553_666, 3_553_667],
+      fork_pid_updated_at: now,
+      fork_pid_file: "/tmp/010.pid.yml"
+    )
+
+    fm = phase.to_frontmatter
+
+    assert_equal 355_349, fm["fork_launch_pid"]
+    assert_equal [3_553_666, 3_553_667], fm["fork_tracked_pids"]
+    assert_equal "2026-02-25T19:00:00Z", fm["fork_pid_updated_at"]
+    assert_equal "/tmp/010.pid.yml", fm["fork_pid_file"]
+  end
 end
