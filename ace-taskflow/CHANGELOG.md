@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.3] - 2026-02-25
+
+### Changed
+- Update task-detail CLI references to `ace-task show <ref>` across task workflows and handbook command examples.
+
+### Technical
+- Sync E2E taskflow fixture template examples to use `ace-task show`.
+
 ## [0.42.2] - 2026-02-25
 
 ### Technical
