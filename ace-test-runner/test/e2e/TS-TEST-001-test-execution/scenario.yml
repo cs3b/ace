@@ -28,3 +28,4 @@ requires:
 setup:
   - git-init
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
+  - copy-fixtures
