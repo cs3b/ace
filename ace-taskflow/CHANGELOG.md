@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.2] - 2026-02-25
+
+### Technical
+- Add clarifying comments for subtask number guard explaining dry-run vs real execution behavior
+
 ## [0.42.1] - 2026-02-25
 
 ### Fixed
