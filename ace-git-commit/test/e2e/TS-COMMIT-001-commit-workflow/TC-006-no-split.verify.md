@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Artifacts exist** — results/tc/06/ contains git log and git show captures.
 2. **Single commit** — Git log shows exactly one new commit.
 3. **Both packages** — Git show --stat shows files from both pkg-a and pkg-b in the same commit.
