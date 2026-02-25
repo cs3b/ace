@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.4] - 2026-02-25
+
+### Fixed
+- Classify single-segment dotfiles (e.g. `.gitignore`) as "Project root" instead of creating per-file groups
+
+### Technical
+- Add inline comment for unbraced exact rename fallback in `DiffNumstatParser`
+
+## [0.11.3] - 2026-02-25
+
+### Fixed
+- Filter numstat entries by `rename_from` path in addition to `rename_to` so renames from excluded locations are correctly suppressed
+- Consolidate duplicate `ace-` and dot-prefix classification branches in `FileGrouper#classify`
+
+## [0.11.2] - 2026-02-25
+
+### Fixed
+- Short-circuit full diff generation for `grouped-stats` format to avoid redundant git subprocess
+- Standardize zero-value display in grouped stats — file-level stats now show `+0`/`-0` consistently with group totals
+
 ## [0.11.1] - 2026-02-25
 
 ### Changed
