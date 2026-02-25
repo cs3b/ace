@@ -187,12 +187,18 @@ ALL work MUST happen in this directory. Before ANY file operations:
 ## Steps
 
 1. `cd <WORKTREE_PATH>`
-2. Read task: `ace-task show 122.01`
-3. Implement changes per task file
-4. Run tests: `ace-test`
-5. Commit on subtask branch
-6. Return: changes made, files modified, test results
+2. Read parent task for context: `ace-task 122`
+3. Read your subtask: `ace-task 122.01`
+4. Implement changes per subtask file
+5. Run tests: `ace-test`
+6. Commit on subtask branch
+7. Return: changes made, files modified, test results
 ```
+
+The parent task provides the why and overall scope boundaries.
+The subtask provides the specific implementation requirements.
+If parent context cannot be loaded, continue with the subtask spec only.
+If your subtask appears to conflict with parent intent, flag it in your return summary instead of guessing.
 
 **Verification:** After subagent returns, check commits are on subtask branch:
 ```bash
