@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.6] - 2026-02-25
+
+### Added
+- Squash repeated directory prefixes in `grouped-stats` file lines — consecutive files in the same directory show the shared prefix once, subsequent files show only the basename indented to align
+- Squash consecutive renames sharing the same from-dir and to-dir — second and later renames show only the indented basenames on each side of the arrow
+- Non-rename file following a rename always shows its full path (rename dir is not a real filesystem directory for comparison purposes)
+
+### Changed
+- Update `update-pr-desc` workflow: `## File Changes` must use the complete, untruncated `grouped-stats` output — trimming or abbreviating is explicitly forbidden
+
 ## [0.11.5] - 2026-02-25
 
 ### Fixed

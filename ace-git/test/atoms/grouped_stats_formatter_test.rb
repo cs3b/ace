@@ -68,4 +68,72 @@ class GroupedStatsFormatterTest < AceGitTestCase
     assert_match(/<summary>ace-git\//, output)
     assert_match(/```text/, output)
   end
+
+  def test_squashes_consecutive_renames_in_same_directory
+    data = {
+      groups: [{
+        name: "pkg/", additions: 10, deletions: 5, file_count: 3,
+        layers: [{
+          name: "lib/", additions: 10, deletions: 5, file_count: 3,
+          files: [
+            { display_path: "pkg/atoms/old_parser.rb -> pkg/atoms/new_parser.rb",   additions: 5, deletions: 3, binary: false },
+            { display_path: "pkg/atoms/old_grouper.rb -> pkg/atoms/new_grouper.rb", additions: 5, deletions: 2, binary: false },
+            { display_path: "pkg/cli/old_cmd.rb -> pkg/cli/new_cmd.rb",             additions: 0, deletions: 0, binary: false }
+          ]
+        }]
+      }],
+      total: { additions: 10, deletions: 5, files: 3 }
+    }
+    output = @formatter.format(data)
+
+    # First rename: full path
+    assert_match(/pkg\/atoms\/old_parser\.rb -> pkg\/atoms\/new_parser\.rb/, output)
+    # Second rename in same dir: squashed (no repeated dir prefix)
+    refute_match(/pkg\/atoms\/old_grouper\.rb/, output)
+    assert_match(/old_grouper\.rb -> .*new_grouper\.rb/, output)
+    # Third rename in different dir: full path again
+    assert_match(/pkg\/cli\/old_cmd\.rb -> pkg\/cli\/new_cmd\.rb/, output)
+  end
+
+  def test_non_rename_after_rename_shows_full_path
+    data = {
+      groups: [{
+        name: "pkg/", additions: 8, deletions: 2, file_count: 2,
+        layers: [{
+          name: "lib/", additions: 8, deletions: 2, file_count: 2,
+          files: [
+            { display_path: "pkg/atoms/old.rb -> pkg/atoms/new.rb", additions: 5, deletions: 2, binary: false },
+            { display_path: "pkg/atoms/other.rb",                   additions: 3, deletions: 0, binary: false }
+          ]
+        }]
+      }],
+      total: { additions: 8, deletions: 2, files: 2 }
+    }
+    output = @formatter.format(data)
+
+    assert_match(/pkg\/atoms\/other\.rb/, output)
+  end
+
+  def test_squashes_repeated_directory_prefix
+    data = {
+      groups: [{
+        name: "pkg/", additions: 10, deletions: 0, file_count: 3,
+        layers: [{
+          name: "lib/", additions: 10, deletions: 0, file_count: 3,
+          files: [
+            { display_path: "pkg/atoms/parser.rb",  additions: 3, deletions: 0, binary: false },
+            { display_path: "pkg/atoms/grouper.rb", additions: 4, deletions: 0, binary: false },
+            { display_path: "pkg/cli/command.rb",   additions: 3, deletions: 0, binary: false }
+          ]
+        }]
+      }],
+      total: { additions: 10, deletions: 0, files: 3 }
+    }
+    output = @formatter.format(data)
+
+    assert_match(/pkg\/atoms\/parser\.rb/, output)       # first: full path
+    assert_match(/^\s+\+4.*grouper\.rb/, output)        # second: basename only
+    refute_match(/pkg\/atoms\/grouper\.rb/, output)      # no repeated prefix
+    assert_match(/pkg\/cli\/command\.rb/, output)        # different dir: full path
+  end
 end

@@ -90,7 +90,7 @@ Section sourcing rules:
 |---|---|---|
 | Summary | Behavioral change in diff + commit intent | Task spec objective text |
 | Changes | Concern-grouped diff changes, traced to commits | Raw commit list dump |
-| File Changes | `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` | Manual hand-written file listing |
+| File Changes | `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` output, pasted verbatim and in full | Manual hand-written file listing, trimming or abbreviating the grouped-stats output |
 | Test Evidence | Test names mapped to behaviors + suite totals | Raw unstructured test output paste |
 | Releases | CHANGELOG entries from diff | Repeating content already in Changes |
 
@@ -135,7 +135,7 @@ gh pr view $pr_number --json url,title -q '.url + "\n" + .title'
 
 - Description uses: `Summary -> Changes -> File Changes -> Test Evidence -> Releases`
 - Summary leads with user impact and does not restate task specs
-- File Changes sourced from grouped-stats (or explicit fallback)
+- File Changes contains the complete, untruncated grouped-stats output (never trimmed, summarised, or selectively omitted)
 - Test Evidence maps tests to behavior and includes totals
 - Releases derived from changelog evidence only
 - Empty/no-evidence sections are omitted
