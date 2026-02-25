@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.8] - 2026-02-25
+
+### Changed
+- Update `perform-delivery` workflow task lookup guidance to use `ace-task show <ref>` for explicit task selection.
+
 ## [0.9.7] - 2026-02-22
 
 ### Technical

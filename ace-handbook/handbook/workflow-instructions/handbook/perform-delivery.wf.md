@@ -13,7 +13,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 
 ## Project Context Loading
 
-* Load task context via `ace-task <ref>` if task reference provided
+* Load task context via `ace-task show <ref>` if task reference provided
 * Load git status: `git status`
 * Load PR status: `gh pr view` (if PR exists)
 
