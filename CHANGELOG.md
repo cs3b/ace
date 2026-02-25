@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.631] - 2026-02-25
+
+### Fixed
+- **ace-taskflow v0.42.1**: Add self-demotion guard and subtask number guard in `demote_to_subtask` to prevent state corruption and ensure correct numbering after auto-conversion
+
 ## [0.9.630] - 2026-02-25
 
 ### Added
