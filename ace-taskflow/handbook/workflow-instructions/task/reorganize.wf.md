@@ -184,7 +184,6 @@ ace-task move 019 backlog
 | Error | Cause | Solution |
 |-------|-------|----------|
 | "not a subtask" | Trying to promote non-subtask | Only subtasks can be promoted |
-| "not an orchestrator" | Trying to demote to non-orchestrator | Convert target to orchestrator first |
 | "already a subtask" | Task is already a child | Already in correct structure |
 | "already an orchestrator" | Task already has subtasks | Already in correct structure |
 | "subtask limit reached" | 99 subtasks already exist | Promote some subtasks first |

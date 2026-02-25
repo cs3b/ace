@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Auto-convert non-orchestrator parents when running `ace-taskflow task create --child-of` or `ace-taskflow task move --child-of`, and report both the conversion and child creation/demotion in the command output so manual `--child-of self` conversions are no longer required.
+
 ## [0.41.3] - 2026-02-24
 
 ### Added

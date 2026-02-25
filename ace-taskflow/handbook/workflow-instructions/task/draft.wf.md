@@ -110,7 +110,7 @@ Create high-level behavioral specifications that define WHAT the system should d
    ace-task create "Phase 2: ..." --status draft --child-of NNN
    ace-task create "Phase 3: ..." --status draft --child-of NNN
    ```
-   ⚠️ Do NOT use `task move --child-of self` first — `--child-of` on `task create` handles conversion automatically.
+   ⚠️ Do NOT use `task move --child-of self` first — `--child-of` on both `task create` and `task move` now auto-converts the parent orchestrator.
 
    For each created task/subtask:
    * Create task file with proper ID sequencing
