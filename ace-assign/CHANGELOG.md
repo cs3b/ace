@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.21] - 2026-02-25
+
+### Changed
+- Document adaptive failed-subtree recovery policy in `assign/drive` with minimal-safe replay rules, replay-depth decision guidance, and recovery phase placement for both mid-subtree and end-subtree failures.
+- Extend fork context guide with explicit failed-subtree recovery model (context refresh + report review + verification before retry/resume).
+
+### Technical
+- Update split subtree root catalog instructions to include adaptive recovery guidance and stepped scoped polling language.
+
 ## [0.12.20] - 2026-02-25
 
 ### Added
