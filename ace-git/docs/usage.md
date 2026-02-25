@@ -57,12 +57,15 @@ ace-git diff HEAD~5..HEAD --output /tmp/my-changes.diff
 # Summary format (human-readable)
 ace-git diff --format summary
 
+# Grouped stats format (package/layer grouped)
+ace-git diff --format grouped-stats
+
 # Raw unfiltered diff
 ace-git diff --raw
 ```
 
 **Options:**
-- `--format, -f` - Output format: `diff` (default), `summary`
+- `--format, -f` - Output format: `diff` (default), `summary`, `grouped-stats`
 - `--since, -s` - Changes since date/duration (e.g., "7d", "1 week ago")
 - `--paths, -p` - Include only these glob patterns
 - `--exclude, -e` - Exclude these glob patterns
@@ -191,6 +194,10 @@ diff:
 | `exclude_moves` | Boolean | `false` | Exclude moved files from diff |
 | `max_lines` | Integer | `10000` | Maximum lines in diff output |
 | `timeout` | Integer | `30` | Command timeout in seconds |
+| `grouped_stats.layers` | Array | `["lib","test","handbook"]` | Preferred layer grouping order |
+| `grouped_stats.collapse_above` | Integer | `5` | Collapse markdown groups above this file count |
+| `grouped_stats.show_full_tree` | String | `collapsible` | Tree rendering strategy hint |
+| `grouped_stats.dotfile_groups` | Array | `[".ace-taskflow",".ace"]` | Dot-directories to prioritize in grouping |
 
 **Default exclude_patterns** (from `.ace-defaults/git/config.yml`):
 - Lock files: `**/*.lock`, `package-lock.json`, `yarn.lock`, `Gemfile.lock`

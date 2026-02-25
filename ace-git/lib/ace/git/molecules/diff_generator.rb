@@ -27,6 +27,18 @@ module Ace
             handle_result(result, cmd_parts)
           end
 
+          # Generate `git diff --numstat` output for structured file statistics.
+          # Uses the same range/path/flags logic as the main diff generation path.
+          # @param config [Models::DiffConfig] Diff configuration
+          # @param executor [Module] Command executor (default: Atoms::CommandExecutor)
+          # @return [String] Numstat output
+          def generate_numstat(config, executor: Atoms::CommandExecutor)
+            range = determine_range(config, executor)
+            cmd_parts = build_numstat_command(range, config)
+            result = executor.execute(*cmd_parts, timeout: config.timeout)
+            handle_result(result, cmd_parts)
+          end
+
           # Generate diff for a specific range
           # @param range [String] Git range (e.g., "HEAD~5..HEAD", "origin/main...HEAD")
           # @param config [Models::DiffConfig] Configuration options
@@ -119,15 +131,19 @@ module Ace
 
           # Build git diff command with configuration options
           def build_command(range, config)
+            build_git_diff_command(range, config)
+          end
+
+          def build_numstat_command(range, config)
+            build_git_diff_command(range, config, "--numstat")
+          end
+
+          def build_git_diff_command(range, config, *extra_flags)
             cmd_parts = ["git", "diff"]
-
-            # Add flags from config
+            cmd_parts.concat(extra_flags)
             cmd_parts.concat(config.git_flags)
-
-            # Add range if specified
             cmd_parts << range if range
 
-            # Add path filters if specified
             if config.paths.any?
               cmd_parts << "--"
               cmd_parts.concat(config.paths)

@@ -65,7 +65,7 @@ module Ace
 
             # First, collect any top-level diff keys (flattened defaults)
             diff_keys = %w[exclude_patterns exclude_whitespace exclude_renames
-                           exclude_moves max_lines ranges paths since format timeout]
+                           exclude_moves max_lines ranges paths since format timeout grouped_stats]
             diff_sym_keys = diff_keys.map(&:to_sym)
 
             top_level_diff = {}

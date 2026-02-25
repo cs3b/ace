@@ -17,7 +17,7 @@ module Ace
         desc "Generate git diff with filtering (default command)"
 
         option :format, type: :string, aliases: ["f"], default: "diff",
-                       desc: "Output format: diff, summary"
+                       desc: "Output format: diff, summary, grouped-stats"
         option :since, type: :string, aliases: ["s"],
                       desc: "Changes since date/duration (e.g., '7d', '1 week ago')"
         option :paths, type: :array, aliases: ["p"],
@@ -86,7 +86,7 @@ module Ace
           options[:exclude_patterns] = cli_options[:exclude] if cli_options[:exclude]
 
           # Add format
-          options[:format] = cli_options[:format]&.to_sym || :diff
+          options[:format] = normalized_format(cli_options[:format])
 
           options
         end
@@ -127,9 +127,11 @@ module Ace
             return "(no changes)"
           end
 
-          case options[:format]&.to_sym
+          case normalized_format(options[:format])
           when :summary
             format_summary(result)
+          when :grouped_stats
+            format_grouped_stats(result, output_path: options[:output])
           else
             result.content
           end
@@ -206,6 +208,21 @@ module Ace
           end
 
           summary.join("\n")
+        end
+
+        def format_grouped_stats(result, output_path: nil)
+          grouped_data = result.metadata[:grouped_stats] || result.metadata["grouped_stats"]
+          return result.content unless grouped_data
+
+          collapse_above = grouped_data[:collapse_above] || grouped_data["collapse_above"] || 5
+          markdown = output_path && File.extname(output_path) == ".md"
+          Atoms::GroupedStatsFormatter.format(grouped_data, markdown: markdown, collapse_above: collapse_above)
+        end
+
+        def normalized_format(value)
+          return :diff if value.nil?
+
+          value.to_s.tr("-", "_").to_sym
         end
 
         protected
