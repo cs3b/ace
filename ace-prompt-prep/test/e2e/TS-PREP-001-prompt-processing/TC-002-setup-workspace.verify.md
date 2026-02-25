@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Artifacts exist** — At least one file exists in `results/tc/02/` containing directory listing or setup evidence.
 2. **Zero exit code** — The captured exit code is `0` (setup succeeded).
 3. **Workspace directory created** — Evidence shows a prompt workspace directory was created (e.g., `.cache/ace-prompt-prep/prompts/` or similar path visible in the directory listing).
