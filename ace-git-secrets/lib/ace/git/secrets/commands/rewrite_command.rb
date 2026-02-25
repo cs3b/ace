@@ -28,6 +28,7 @@ module Ace
 
             # Load tokens from scan file if provided
             tokens = load_tokens_from_file if @options[:scan_file]
+            return 1 if @options[:scan_file] && tokens.nil?
 
             # First pass - get confirmation requirements
             result = cleaner.clean(
