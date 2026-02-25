@@ -108,6 +108,25 @@ class PlainMarkdownLoadTest < AceTestCase
     assert_equal temp_file, result.metadata[:source]
   end
 
+  def test_loads_workflow_without_frontmatter
+    temp_file = File.join(@temp_dir, "selfimprove.wf.md")
+    content = <<~MARKDOWN
+      # Self-Improve Workflow
+
+      ## Goal
+
+      Improve the workflow after incidents.
+    MARKDOWN
+    File.write(temp_file, content)
+
+    result = Ace::Bundle.load_file(temp_file)
+
+    refute_nil result.content, "Expected content for non-frontmatter workflow"
+    assert_includes result.content, "# Self-Improve Workflow"
+    assert_equal temp_file, result.metadata[:source]
+    refute result.metadata[:error], "Expected no loader error"
+  end
+
   def test_context_config_still_works
     # Files with context: key should still be processed as templates
     temp_file = File.join(@temp_dir, "test-context-config.md")

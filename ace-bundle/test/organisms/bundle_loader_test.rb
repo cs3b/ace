@@ -64,8 +64,9 @@ class BundleLoaderTest < AceTestCase
       loader = Ace::Bundle::Organisms::BundleLoader.new
       context = loader.load_file(path)
 
-      assert_equal 1, context.file_count
-      assert_equal "Test content", context.files.first[:content]
+      assert_equal "Test content", context.content
+      assert_equal path, context.metadata[:source]
+      refute context.metadata[:error]
     end
   end
 
