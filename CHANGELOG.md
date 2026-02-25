@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.643] - 2026-02-25
+
+### Fixed
+- **ace-git v0.11.5**: Remove spurious blank lines within groups in `grouped-stats` plain output
+- **ace-git v0.11.5**: Wire positional `range` argument in `ace-git diff` so explicit ranges (e.g. `origin/main..HEAD`) reach the diff generator
+
+### Changed
+- **ace-git v0.11.5**: Align stats and name columns in `grouped-stats` output — fixed-width `%5s, %5s` stats block and right-padded file-count field so all names start at a consistent column
+- **ace-git v0.11.5**: Update `update-pr-desc` workflow to use merge-base range for `grouped-stats` diff
+
 ## [0.9.642] - 2026-02-25
 
 ### Fixed
