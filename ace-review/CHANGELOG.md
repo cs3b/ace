@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.3] - 2026-02-25
+
+### Added
+- Automatically include the task behavioral spec (`.s.md`) in PR review context when a task can be discovered from PR branch metadata or PR text references.
+- Add `PrTaskSpecResolver` to map PR metadata to a single primary task spec file with graceful fallback.
+
+### Changed
+- Extend task resolution metadata with `spec_path` for direct behavioral spec selection.
+- Extend PR metadata fetch fields to include PR `body` for task reference fallback detection.
+
 ## [0.42.2] - 2026-02-24
 
 ### Technical

@@ -50,6 +50,7 @@ require_relative "review/molecules/feedback_directory_manager"
 require_relative "review/molecules/feedback_synthesizer"
 require_relative "review/molecules/subject_filter"
 require_relative "review/molecules/subject_strategy"
+require_relative "review/molecules/pr_task_spec_resolver"
 
 require_relative "review/organisms/review_manager"
 require_relative "review/organisms/feedback_manager"
