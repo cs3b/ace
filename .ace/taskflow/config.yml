@@ -36,6 +36,10 @@ taskflow:
     # Note: Legacy "retro" (singular) is automatically interpreted as "retros"
     retros: "retros"
 
+  # Default behaviors for item creation
+  defaults:
+    llm_model: "pi:glm"
+
   # Task file naming
   naming:
     # Task file pattern
