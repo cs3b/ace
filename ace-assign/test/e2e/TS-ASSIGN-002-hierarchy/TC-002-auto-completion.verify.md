@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 ### Single-Level
 1. **Children created** — Two children (010.01, 010.02) exist under parent 010.
 2. **Parent protection** — Parent completion blocked while children incomplete.

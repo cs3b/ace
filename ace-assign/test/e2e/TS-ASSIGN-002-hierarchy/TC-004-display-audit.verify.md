@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 ### Tree Display
 1. **All phases shown** — `status-tree.stdout` contains feature-a, a-subtask-1, a-subtask-2, feature-b, b-subtask-1.
 2. **Hierarchy indicators** — Status uses tree characters (pipe |, tee, elbow, or similar hierarchy markers).
