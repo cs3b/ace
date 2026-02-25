@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.629] - 2026-02-25
+
+### Changed
+- **ace-test-e2e v0.20.4**: Standardize handbook runner/verifier contract to execution-only runner plus impact-first verifier, clarify setup ownership in `scenario.yml` + fixtures, and add non-autonomous E2E execution guardrails across workflows.
+
 ## [0.9.628] - 2026-02-25
 
 ### Fixed
