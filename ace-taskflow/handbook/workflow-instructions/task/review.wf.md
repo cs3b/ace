@@ -94,6 +94,9 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **No Contradictory Directives**: Scan spec for conflicting instructions (e.g., "replace X" and "preserve X" for same entity; "add" and "remove" same dependency). Flag any contradictions as HIGH priority questions
    - [ ] **Consumer Packages Listed**: When interfaces change (CLI flags, config keys, protocol URIs), spec identifies which packages consume the interface and will need updates
    - [ ] **Deliverables Match Scope**: Number of deliverables is proportional to scope — flag if spec lists 3 deliverables but scope implies 15+ file changes
+   - [ ] **Operating Modes Covered**: Spec addresses relevant operating modes (dry-run, force, verbose, quiet) or explicitly marks them out-of-scope
+   - [ ] **Degenerate Inputs Covered**: Spec considers identity operations (X=Y), empty inputs, and self-referential calls where the same entity appears in both argument positions
+   - [ ] **Per-Path Variations Covered**: If spec says "same behavior for X and Y", it enumerates edge cases unique to each path (guard logic, error handling, parameter differences)
    - [ ] **End-State Coherence** (orchestrator subtasks only): Concepts introduced by this subtask
          (new fields, modes, formats) are expected to exist in the final deliverable —
          not be removed by a later subtask. If this subtask adds a concept that a later
