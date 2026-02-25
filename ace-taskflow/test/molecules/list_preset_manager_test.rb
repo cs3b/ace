@@ -117,6 +117,13 @@ describe Ace::Taskflow::Molecules::ListPresetManager do
       assert_equal "current", result[:release]
       assert_equal 14, result[:filters][:days]
     end
+
+    it "applies maybe preset with _maybe and legacy maybe globs for ideas" do
+      result = @manager.apply_preset("maybe", {}, :ideas)
+
+      assert_includes result[:glob], "ideas/_maybe/**/*.s.md"
+      assert_includes result[:glob], "ideas/maybe/**/*.s.md"
+    end
   end
 
   describe "type compatibility" do
