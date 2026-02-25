@@ -64,7 +64,7 @@ module Ace
           timeout = options[:timeout] || 30
 
           # Fetch metadata as JSON
-          fields = "number,state,isDraft,title,author,headRefName,baseRefName,url"
+          fields = "number,state,isDraft,title,body,author,headRefName,baseRefName,url"
 
           result = Ace::Review::Atoms::RetryWithBackoff.execute(options) do
             Ace::Review::Molecules::GhCliExecutor.execute("pr", ["view", gh_format, "--json", fields], timeout: timeout)

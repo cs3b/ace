@@ -873,6 +873,90 @@ class ReviewManagerTest < AceReviewTest
     assert result[:typed_subject_config], "Should have typed_subject_config"
   end
 
+  def test_build_pr_context_with_task_spec_adds_spec_to_string_context
+    context_config = "project"
+    metadata = { "headRefName" => "281.05-review-spec-context" }
+
+    resolved_spec = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
+    Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, resolved_spec) do
+      result = @manager.send(
+        :build_pr_context_with_task_spec,
+        context_config: context_config,
+        pr_metadata: metadata
+      )
+
+      assert_equal ["project"], result["presets"]
+      assert_equal [resolved_spec], result["files"]
+    end
+  end
+
+  def test_build_pr_context_with_task_spec_adds_spec_when_context_none
+    context_config = "none"
+    metadata = { "headRefName" => "281.05-review-spec-context" }
+    resolved_spec = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
+
+    Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, resolved_spec) do
+      result = @manager.send(
+        :build_pr_context_with_task_spec,
+        context_config: context_config,
+        pr_metadata: metadata
+      )
+
+      assert_equal [resolved_spec], result["files"]
+    end
+  end
+
+  def test_build_pr_context_with_task_spec_returns_original_when_spec_not_found
+    context_config = { "presets" => ["project"] }
+    metadata = { "headRefName" => "non-task-branch" }
+
+    Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, nil) do
+      result = @manager.send(
+        :build_pr_context_with_task_spec,
+        context_config: context_config,
+        pr_metadata: metadata
+      )
+
+      assert_equal context_config, result
+    end
+  end
+
+  def test_extract_pr_content_uses_spec_aware_context
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "pr",
+      pr: "123",
+      pr_comments: false
+    )
+    config = { context: "project" }
+
+    fetch_result = {
+      success: true,
+      diff: "diff --git a/file.rb b/file.rb",
+      metadata: {
+        "number" => 123,
+        "state" => "OPEN",
+        "title" => "Add feature",
+        "headRefName" => "281.05-review-spec-context",
+        "baseRefName" => "main",
+        "url" => "https://example.com/pr/123"
+      }
+    }
+    spec_path = ".ace-taskflow/v.0.9.0/tasks/281-task-pipeline-structured/281.05-review-spec-context.s.md"
+    captured_context_config = nil
+
+    Ace::Review::Molecules::GhPrFetcher.stub(:fetch_pr, fetch_result) do
+      Ace::Review::Molecules::PrTaskSpecResolver.stub(:resolve_spec_path, spec_path) do
+        @manager.stub(:extract_context, ->(ctx, _cache_dir) { captured_context_config = ctx; "context" }) do
+          result = @manager.send(:extract_pr_content, "123", config, options)
+
+          assert result[:success], "Expected PR extraction to succeed"
+          assert_equal [spec_path], captured_context_config["files"]
+          assert_equal ["project"], captured_context_config["presets"]
+        end
+      end
+    end
+  end
+
   def test_resolve_subject_config_with_typed_subject_config
     # Test that resolve_subject_config passes through typed_subject_config directly
     session_dir = File.join(@temp_dir, "resolve_test")

@@ -31,6 +31,7 @@ module Ace
 
           {
             path: task_dir,
+            spec_path: task_file_path,
             task_number: task[:task_number],
             release: task[:release],
             task_id: task[:id]
