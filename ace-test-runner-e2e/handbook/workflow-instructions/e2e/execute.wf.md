@@ -43,6 +43,15 @@ Tag filtering happens at discovery time (before `SetupExecutor` runs). By the ti
 - TC artifacts: `results/tc/{NN}/`
 - Summary counters: `tcs-passed`, `tcs-failed`, `tcs-total`, `failed[].tc`
 
+## Execution Contract
+
+- Runner is execution-only: execute declared TC actions and capture evidence.
+- Verifier is verification-only: determine PASS/FAIL using impact-first ordering:
+  1. sandbox/project state impact
+  2. explicit artifacts
+  3. debug captures (`stdout`/`stderr`/exit) as fallback
+- Do not interpret setup ownership in runner TC files; setup is owned by `scenario.yml` + fixtures.
+
 ## Dual-Agent Verifier
 
 When `--verify` is passed (or always-on for CLI pipeline runs), execution follows a dual-agent pattern:

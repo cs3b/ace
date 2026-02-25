@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.4] - 2026-02-25
+
+### Changed
+- Standardize handbook runner/verifier contract across E2E guides, templates, and workflows: runner is execution-only, verifier is impact-first (sandbox impact → artifacts → debug fallback).
+- Add explicit setup ownership guidance (`scenario.yml` + fixtures) and remove runner-side setup anti-patterns from handbook instructions.
+- Extend E2E workflow guardrails to avoid autonomous `ace-test-e2e` / `ace-test-e2e-suite` execution in constrained or uncertain environments.
+
 ## [0.20.3] - 2026-02-24
 
 ### Added

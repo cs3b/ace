@@ -35,6 +35,11 @@ This workflow is a lightweight orchestrator that chains the 3-stage E2E test pip
 - `--tags TAG,...` (optional) - Include only scenarios matching any specified tag (OR semantics)
 - `--exclude-tags TAG,...` (optional) - Exclude scenarios matching any specified tag (OR semantics)
 
+## Guardrail
+
+- Do not execute `ace-test-e2e` / `ace-test-e2e-suite` autonomously in constrained or uncertain environments.
+- When verification is requested, provide exact commands for user execution unless the user explicitly requests local execution and confirms environment fidelity.
+
 ## Workflow Steps
 
 ### 1. Invoke Stage 1: Review
