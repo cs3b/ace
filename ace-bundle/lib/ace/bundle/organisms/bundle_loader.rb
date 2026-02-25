@@ -118,7 +118,10 @@ module Ace
 
             bundle = Models::BundleData.new
             if result[:success]
-              bundle.add_file(path, result[:content])
+              # Plain file inputs should emit readable content to stdout.
+              # Keep content as primary payload and record source metadata.
+              bundle.content = result[:content]
+              bundle.metadata[:source] = path
             else
               bundle.metadata[:error] = result[:error]
             end

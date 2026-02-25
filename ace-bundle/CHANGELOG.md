@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.4] - 2026-02-25
+
+### Fixed
+- Ensure plain workflow files without YAML frontmatter load as bundle content instead of returning empty output (`ace-bundle wfi://...`).
+
+### Technical
+- Add regression coverage for non-frontmatter workflow loading and align loader tests with content-first behavior.
+
 ## [0.31.3] - 2026-02-24
 
 ### Technical
