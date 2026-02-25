@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.5] - 2026-02-25
+
+### Technical
+- Add test case for `nil` return from `extract_task_reference` when PR metadata contains no task reference
+
+## [0.42.4] - 2026-02-25
+
+### Fixed
+- Safely extract task reference from PR text using safe navigation to avoid NoMethodError when regex match returns nil
+
 ## [0.42.3] - 2026-02-25
 
 ### Added

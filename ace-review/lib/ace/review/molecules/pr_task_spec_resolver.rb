@@ -46,7 +46,7 @@ module Ace
           return full_ref[1] if full_ref
 
           task_ref = text.match(/\btask[.\s:#-]+(\d+(?:\.\d+)?)\b/i)
-          task_ref[1]
+          task_ref&.[](1)
         end
       end
     end
