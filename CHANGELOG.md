@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.628] - 2026-02-25
+
+### Fixed
+- **ace-bundle v0.31.4**: Fix plain workflow loading so `ace-bundle wfi://...` returns file content for workflow files without YAML frontmatter.
+
+### Technical
+- **ace-bundle v0.31.4**: Add regression tests covering non-frontmatter workflow loading path and update loader direct-file expectations.
+
 ## [0.9.627] - 2026-02-24
 
 ### Fixed
