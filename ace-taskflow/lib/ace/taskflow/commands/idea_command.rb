@@ -194,7 +194,8 @@ module Ace
           # Scopes (GTD-inspired): next (top-level), maybe/, anyday/, done/
           # Note: Scope is separate from status (draft/pending/in-progress/done/obsolete)
           if options[:subdirectory]
-            config["directory"] = File.join(config["directory"], options[:subdirectory])
+            scope_dir = resolve_scope_directory(options[:subdirectory])
+            config["directory"] = File.join(config["directory"], scope_dir)
           end
 
           # Capture the idea with options
@@ -240,6 +241,19 @@ module Ace
             end
           end
           "current"
+        end
+
+        # Map logical scope flags to configured directory names.
+        # Example: --maybe should resolve to _maybe by default.
+        def resolve_scope_directory(scope)
+          case scope
+          when "maybe"
+            Ace::Taskflow.configuration.maybe_dir
+          when "anyday"
+            Ace::Taskflow.configuration.anyday_dir
+          else
+            scope
+          end
         end
 
         def release_name(release)
