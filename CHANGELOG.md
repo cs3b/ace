@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.647] - 2026-02-25
+
+### Changed
+- **ace-git v0.11.7**: Update `create-pr` and `update-pr-desc` workflows with emoji section headers and bold key-term bullet formatting rules for improved PR description readability
+
 ## [0.9.646] - 2026-02-25
 
 ### Fixed
