@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Artifacts exist** — Files exist in `results/tc/03/` showing archive evidence.
 2. **Zero exit code** — The captured exit code is `0` (processing succeeded).
 3. **Archive file created** — Evidence shows at least one file in the archive directory with a Base36 ID filename (lowercase alphanumeric characters, typically 6 characters).
