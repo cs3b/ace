@@ -176,7 +176,7 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
-  def test_status_auto_scopes_to_fork_root_env
+  def test_status_ignores_fork_root_env_and_uses_explicit_targeting_only
     with_temp_cache do |cache_dir|
       phases = [
         {
@@ -198,17 +198,16 @@ class StatusCommandTest < AceAssignTestCase
         Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
       end
 
-      # Should only show subtree phases, not post-step
-      assert_includes output.first, "010"
+      # Env var is ignored; without explicit scope full assignment status is shown.
       assert_includes output.first, "010.01"
-      refute_includes output.first, "020-post-step.ph.md"
+      assert_includes output.first, "post-step"
     ensure
       ENV.delete("ACE_ASSIGN_FORK_ROOT")
       Ace::Assign.reset_config!
     end
   end
 
-  def test_status_explicit_scope_takes_priority_over_fork_root_env
+  def test_status_with_explicit_scope_remains_scoped_even_if_env_is_set
     with_temp_cache do |cache_dir|
       phases = [
         {
@@ -225,13 +224,11 @@ class StatusCommandTest < AceAssignTestCase
       executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
       result = executor.start(config_path)
 
-      # Set fork root to 010, but explicitly scope to 020
       ENV["ACE_ASSIGN_FORK_ROOT"] = "010"
       output = capture_io do
         Ace::Assign::CLI::Commands::Status.new.call(assignment: "#{result[:assignment].id}@020")
       end
 
-      # Explicit scope @020 should win over env var
       assert_includes output.first, "020-post-step.ph.md"
       assert_includes output.first, "Current Phase: 020 - post-step"
       refute_includes output.first, "010.01"

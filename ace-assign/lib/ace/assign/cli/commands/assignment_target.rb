@@ -15,7 +15,7 @@ module Ace
           private
 
           def resolve_assignment_target(options)
-            raw = options[:assignment] || ENV["ACE_ASSIGN_ID"]
+            raw = options[:assignment]
             return Target.new(assignment_id: nil, scope: nil) if raw.nil?
 
             parse_assignment_target(raw)
