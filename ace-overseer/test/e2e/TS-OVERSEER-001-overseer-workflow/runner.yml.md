@@ -24,9 +24,11 @@ build on what you learn there. Do not re-run --help after Goal 1.
 
 ## Rules
 
+- Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
 - Execute each goal in order (1 through 5)
-- Use only ace-overseer, ace-git-worktree, git, tmux, and standard shell utilities
+- Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
+- Do not assign PASS/FAIL verdicts in runner output
 - Define `SANDBOX_ROOT="$(pwd)"` once at start; if you must `cd` into a worktree, return outputs to `${SANDBOX_ROOT}/results/...`
 - Use `ACE_TMUX_SESSION` for all explicit tmux queries (for example `tmux list-windows -t "$ACE_TMUX_SESSION"`); do not rely on implicit/default tmux session.
 - Do not fabricate output — all artifacts must come from real tool execution
