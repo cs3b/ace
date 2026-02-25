@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.636] - 2026-02-25
+
+### Changed
+- **ace-taskflow v0.42.6**: Strengthen task review and planning workflows with explicit behavioral-spec coverage for operating modes, degenerate inputs, and per-path differences, plus `Behavioral Gaps` reporting guidance
+- **ace-assign v0.12.20**: Strengthen generated `plan-task` assignment instructions to require section-by-section behavioral-spec planning and explicit gap reporting when specs omit implementation-critical details
+
 ## [0.9.635] - 2026-02-25
 
 ### Changed
