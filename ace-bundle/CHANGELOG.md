@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.5] - 2026-02-25
+
+### Technical
+- Bump runtime dependency constraint from `ace-git ~> 0.10` to `ace-git ~> 0.11`.
+
 ## [0.31.4] - 2026-02-25
 
 ### Fixed
