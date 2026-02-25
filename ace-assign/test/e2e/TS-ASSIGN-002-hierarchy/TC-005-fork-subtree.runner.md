@@ -15,13 +15,6 @@ Save all output to `results/tc/05/`. Capture:
 - `results/tc/05/phase-states-before.stdout` — phase states before scoped inspection
 - `results/tc/05/phase-states-after.stdout` — phase states after scoped inspection
 
-## Setup
-
-Environment provides:
-- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
-- `PROJECT_ROOT_PATH=.`
-- Fixture: `fixtures/subtree/job.yaml`
-
 ## Constraints
 
 - Create assignment from `fixtures/subtree/job.yaml`. Capture assignment ID.

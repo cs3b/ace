@@ -24,9 +24,11 @@ ace-assign's hierarchical phase management.
 
 ## Rules
 
+- Setup ownership belongs to `scenario.yml` and fixtures; do not re-implement setup in TC runners
 - Execute each goal in order (1 through 5)
-- Use only ace-assign and standard shell utilities
+- Use only declared scenario tools (`ace-*` and explicit exceptions from `requires.tools`)
 - Save all artifacts to results/tc/{NN}/ directories as specified
+- Do not assign PASS/FAIL verdicts in runner output
 - Do not fabricate output — all artifacts must come from real tool execution
 - If a goal fails, note the failure and continue to the next goal
 - Clean up assignment cache between goals when specified to avoid state bleed
