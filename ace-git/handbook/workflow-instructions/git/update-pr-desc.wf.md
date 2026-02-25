@@ -77,11 +77,11 @@ Title guidance:
 Use this section order exactly:
 
 ```markdown
-## Summary
-## Changes
-## File Changes
-## Test Evidence
-## Releases
+## 📋 Summary
+## ✏️ Changes
+## 📁 File Changes
+## 🧪 Test Evidence
+## 📦 Releases
 ```
 
 Section sourcing rules:
@@ -93,6 +93,11 @@ Section sourcing rules:
 | File Changes | `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` output, pasted verbatim and in full | Manual hand-written file listing, trimming or abbreviating the grouped-stats output |
 | Test Evidence | Test names mapped to behaviors + suite totals | Raw unstructured test output paste |
 | Releases | CHANGELOG entries from diff | Repeating content already in Changes |
+
+Bullet formatting rules:
+- **Bold the first key term** in each bullet (feature name, class name, CLI flag, or config key) so it serves as a visual anchor before the explanation. Example: `- Add **\`GroupedStatsFormatter\`**: formats numstat output into...`
+- In Test Evidence, bold the test class name: `- **GroupedStatsFormatterTest** (6 tests) — validates...`
+- In Releases, bold the package+version: `- **ace-git v0.11.0–v0.11.6** — Add grouped-stats format...`
 
 ### 6. Summary Writing Rules
 
@@ -108,9 +113,9 @@ Constraints:
 
 ### 7. Omission and Fallback Rules
 
-- If no changelog evidence: omit `## Releases`
-- If no test-file evidence: keep `## Test Evidence` with suite totals only
-- If `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` is unavailable: use flat file list fallback under `## File Changes`
+- If no changelog evidence: omit `## 📦 Releases`
+- If no test-file evidence: keep `## 🧪 Test Evidence` with suite totals only
+- If `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` is unavailable: use flat file list fallback under `## 📁 File Changes`
 - Omit sections with no supporting evidence instead of leaving placeholders
 
 ### 8. Update PR
@@ -119,7 +124,7 @@ Constraints:
 gh pr edit $pr_number \
   --title "Generated title" \
   --body "$(cat <<'BODY'
-## Summary
+## 📋 Summary
 ...
 BODY
 )"
@@ -133,7 +138,7 @@ gh pr view $pr_number --json url,title -q '.url + "\n" + .title'
 
 ## Success Criteria
 
-- Description uses: `Summary -> Changes -> File Changes -> Test Evidence -> Releases`
+- Description uses: `📋 Summary -> ✏️ Changes -> 📁 File Changes -> 🧪 Test Evidence -> 📦 Releases`
 - Summary leads with user impact and does not restate task specs
 - File Changes contains the complete, untruncated grouped-stats output (never trimmed, summarised, or selectively omitted)
 - Test Evidence maps tests to behavior and includes totals

@@ -74,11 +74,11 @@ And collect:
 Use this order:
 
 ```markdown
-## Summary
-## Changes
-## File Changes
-## Test Evidence
-## Releases
+## 📋 Summary
+## ✏️ Changes
+## 📁 File Changes
+## 🧪 Test Evidence
+## 📦 Releases
 ```
 
 Section sourcing rules:
@@ -97,10 +97,15 @@ Summary writing rules:
 - Do not lead with method/class names
 - Do not use task-spec text as prose source
 
+Bullet formatting rules:
+- **Bold the first key term** in each bullet (feature name, class name, CLI flag, or config key) so it serves as a visual anchor before the explanation. Example: `- Add **\`GroupedStatsFormatter\`**: formats numstat output into...`
+- In Test Evidence, bold the test class name: `- **GroupedStatsFormatterTest** (6 tests) — validates...`
+- In Releases, bold the package+version: `- **ace-git v0.11.0–v0.11.6** — Add grouped-stats format...`
+
 Omission/fallback rules:
-- No changelog evidence -> omit `## Releases`
-- No test-file evidence -> `## Test Evidence` may include totals-only validation
-- grouped-stats unavailable -> fallback to flat file list in `## File Changes`
+- No changelog evidence -> omit `## 📦 Releases`
+- No test-file evidence -> `## 🧪 Test Evidence` may include totals-only validation
+- grouped-stats unavailable -> fallback to flat file list in `## 📁 File Changes`
 - Omit any section lacking evidence; never leave empty placeholders
 
 ### 6. Create PR
@@ -151,77 +156,77 @@ gh pr checks
 
 <documents>
 <template path="ace-git/handbook/templates/pr/feature.template.md">
-## Summary
+## 📋 Summary
 
 [What is easier now for users/reviewers]
 [What pain/manual step/error existed before]
 
-## Changes
+## ✏️ Changes
 
-- [Concern 1] ([commit-sha])
-- [Concern 2] ([commit-sha])
+- Add **`[FeatureName]`**: [what it does]
+- Add **`[ClassName]`** to [what it enables]
 
-## File Changes
+## 📁 File Changes
 
 - [Use `ace-git diff --format grouped-stats` output]
 - [Fallback: flat file list if grouped-stats unavailable]
 
-## Test Evidence
+## 🧪 Test Evidence
 
-- [test_file_or_test_name] -> [behavior validated]
+- **[TestClassName]** ([N] tests) — [behavior validated]
 - Suite totals: [passed]/[total]
 
-## Releases
+## 📦 Releases
 
-- [CHANGELOG entry from diff]
+- **[package vX.Y.Z]** — [CHANGELOG entry from diff]
 </template>
 
 <template path="ace-git/handbook/templates/pr/bugfix.template.md">
-## Summary
+## 📋 Summary
 
 [What broke and what is now fixed]
 
-## Changes
+## ✏️ Changes
 
-- [Root cause and fix] ([commit-sha])
-- [Guardrails/regression protection] ([commit-sha])
+- Fix **`[ErrorType]`** when [condition] ([commit-sha])
+- Add **`[TestName]`** to guard against regression ([commit-sha])
 
-## File Changes
+## 📁 File Changes
 
 - [Use `ace-git diff --format grouped-stats` output]
 
-## Test Evidence
+## 🧪 Test Evidence
 
-- [test name] -> [regression behavior covered]
+- **[TestClassName]** ([N] tests) — [regression behavior covered]
 - Suite totals: [passed]/[total]
 
-## Releases
+## 📦 Releases
 
-- [CHANGELOG fix entry from diff]
+- **[package vX.Y.Z]** — [CHANGELOG fix entry from diff]
 </template>
 
 <template path="ace-git/handbook/templates/pr/default.template.md">
-## Summary
+## 📋 Summary
 
 [What is easier now]
 [What changed from user/reviewer perspective]
 
-## Changes
+## ✏️ Changes
 
-- [Primary change] ([commit-sha])
-- [Secondary change] ([commit-sha])
+- Add **`[PrimaryChange]`**: [description] ([commit-sha])
+- Update **`[SecondaryChange]`**: [description] ([commit-sha])
 
-## File Changes
+## 📁 File Changes
 
 - [Use `ace-git diff --format grouped-stats` output]
 
-## Test Evidence
+## 🧪 Test Evidence
 
-- [test name] -> [behavior validated]
+- **[TestClassName]** ([N] tests) — [behavior validated]
 - Suite totals: [passed]/[total]
 
-## Releases
+## 📦 Releases
 
-- [CHANGELOG entry from diff, if any]
+- **[package vX.Y.Z]** — [CHANGELOG entry from diff, if any]
 </template>
 </documents>
