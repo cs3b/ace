@@ -10,7 +10,7 @@ Validation order (impact-first):
 1. `results/tc/02/` contains command captures.
 2. Exit code is recorded.
 3. Evidence indicates selected model handling (success or explicit rejection).
-4. Output format behavior (`json`) is reflected in artifact content.
+4. Output format behavior (`json`) is reflected in artifact content when the command succeeds; if execution fails before inference (for example credential/provider error), artifacts must still show explicit early-failure evidence tied to the model-selection command.
 
 ## Verdict
 
