@@ -1,8 +1,14 @@
 ---
 id: v.0.9.0+task.281
-status: draft
+status: in-progress
 priority: medium
 estimate: TBD
+worktree:
+  branch: 281-structured-intent-flow-through-the-ace-pipeline
+  path: "../ace-task.281"
+  created_at: '2026-02-25 19:04:48'
+  updated_at: '2026-02-25 19:04:48'
+  target_branch: main
 ---
 
 # Structured Intent Flow Through the ACE Pipeline
