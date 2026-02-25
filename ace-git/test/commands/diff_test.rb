@@ -225,4 +225,46 @@ class DiffTest < AceGitTestCase
       end
     end
   end
+
+  def test_grouped_stats_format_uses_grouped_metadata
+    Ace::Git::Atoms::CommandExecutor.stub :in_git_repo?, true do
+      grouped_data = {
+        groups: [
+          {
+            name: "ace-git/",
+            additions: 5,
+            deletions: 2,
+            file_count: 1,
+            layers: [
+              {
+                name: "lib/",
+                additions: 5,
+                deletions: 2,
+                file_count: 1,
+                files: [{ display_path: "cli/commands/diff.rb", additions: 5, deletions: 2, binary: false }]
+              }
+            ]
+          }
+        ],
+        total: { additions: 5, deletions: 2, files: 1 },
+        collapse_above: 5
+      }
+
+      mock_result = Ace::Git::Models::DiffResult.new(
+        content: "placeholder",
+        files: ["ace-git/lib/ace/git/cli/commands/diff.rb"],
+        stats: { additions: 5, deletions: 2, total_changes: 7 },
+        metadata: { grouped_stats: grouped_data }
+      )
+
+      Ace::Git::Organisms::DiffOrchestrator.stub :generate, mock_result do
+        output = capture_io do
+          result = @command.call(format: "grouped-stats")
+          assert_equal 0, result
+        end
+        assert_match(/ace-git\//, output.first)
+        assert_match(/\+5,\s+-2/, output.first)
+      end
+    end
+  end
 end
