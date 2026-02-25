@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.646] - 2026-02-25
+
+### Fixed
+- **ace-taskflow v0.42.7**: Make `ace-idea create --maybe` honor configured scope directory names (default `_maybe`) instead of writing to hardcoded `ideas/maybe/`
+
+### Changed
+- **ace-taskflow v0.42.7**: Align maybe preset globs to prefer `_maybe` with compatibility for legacy `maybe/` paths
+
+### Technical
+- **ace-taskflow v0.42.7**: Add regression coverage for `ace-idea create --maybe` directory resolution and maybe preset glob handling
+
 ## [0.9.645] - 2026-02-25
 
 ### Added
