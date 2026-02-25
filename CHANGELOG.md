@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.635] - 2026-02-25
+
+### Changed
+- **ace-taskflow v0.42.5**: Update subtask delegation workflow to read parent-task context before subtask execution, clarify context-vs-requirement responsibilities, and preserve graceful fallback when parent context cannot be loaded
+
 ## [0.9.634] - 2026-02-25
 
 ### Changed
