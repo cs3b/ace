@@ -62,6 +62,7 @@ module Ace
               return ["#{prefix}#{from_inner}#{suffix}", "#{prefix}#{to_inner}#{suffix}"]
             end
 
+            # Fallback for unbraced exact renames: old.rb => new.rb (no common prefix/suffix)
             split = path.split(" => ", 2)
             [split[0], split[1]]
           end

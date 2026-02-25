@@ -90,7 +90,7 @@ module Ace
           end
 
           def stat_label(value, prefix)
-            return nil if value.nil? || value.to_i.zero?
+            return nil if value.nil?
 
             "#{prefix}#{value}"
           end
