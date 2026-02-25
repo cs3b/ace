@@ -58,22 +58,20 @@ module Ace
 
           def render_group_plain(group)
             lines = []
-            lines << "#{stats_block(group[:additions], group[:deletions])}   #{group[:file_count]} files   #{group[:name]}"
-            lines << ""
+            lines << "#{stats_block(group[:additions], group[:deletions])}#{files_label(group[:file_count])}#{group[:name]}"
 
             Array(group[:layers]).each do |layer|
-              lines << "#{stats_block(layer[:additions], layer[:deletions])}   #{layer[:file_count]} files   #{layer[:name]}"
+              lines << "#{stats_block(layer[:additions], layer[:deletions])}#{files_label(layer[:file_count])}#{layer[:name]}"
               Array(layer[:files]).each do |file|
-                lines << "#{stats_block(file[:additions], file[:deletions], binary: file[:binary])}     #{file_line(file)}"
+                lines << "#{stats_block(file[:additions], file[:deletions], binary: file[:binary])}#{FILE_INDENT}#{file_line(file)}"
               end
-              lines << ""
             end
 
             trim_trailing_blank(lines)
           end
 
           def total_line(total)
-            "#{stats_block(total[:additions], total[:deletions])}   #{total[:files]} files   total"
+            "#{stats_block(total[:additions], total[:deletions])}#{files_label(total[:files])}total"
           end
 
           def file_line(file)
@@ -81,12 +79,22 @@ module Ace
             "#{file[:display_path]}#{suffix}"
           end
 
+          # Width of a rendered stats block: "%5s, %5s" = 12 chars
+          STATS_WIDTH = 12
+          # Separator replacing "   N files   " on file lines (= 3 + 2 + 9 = 14 chars)
+          FILE_INDENT = " " * 14
+
           def stats_block(additions, deletions, binary: false)
-            return " " * 10 if binary
+            return " " * STATS_WIDTH if binary
 
             plus = stat_label(additions, "+")
             minus = stat_label(deletions, "-")
-            Kernel.format("%4s, %4s", plus.to_s, minus.to_s)
+            Kernel.format("%5s, %5s", plus.to_s, minus.to_s)
+          end
+
+          # "   NN files   " — always 14 chars (3 + %2d + 9), aligns name column
+          def files_label(count)
+            Kernel.format("   %2d files   ", count.to_i)
           end
 
           def stat_label(value, prefix)

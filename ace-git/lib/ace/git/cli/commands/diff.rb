@@ -16,6 +16,8 @@ module Ace
 
         desc "Generate git diff with filtering (default command)"
 
+        argument :range, required: false, desc: "Git range (e.g., HEAD~5..HEAD, origin/main..HEAD)"
+
         option :format, type: :string, aliases: ["f"], default: "diff",
                        desc: "Output format: diff, summary, grouped-stats"
         option :since, type: :string, aliases: ["s"],
