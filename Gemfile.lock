@@ -20,8 +20,8 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.31.4)
-      ace-git (~> 0.10)
+    ace-bundle (0.31.5)
+      ace-git (~> 0.11)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
       ace-support-fs (~> 0.2)
@@ -47,8 +47,8 @@ PATH
 PATH
   remote: ace-git-commit
   specs:
-    ace-git-commit (0.18.5)
-      ace-git (~> 0.10)
+    ace-git-commit (0.18.6)
+      ace-git (~> 0.11)
       ace-llm (~> 0.23)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -68,8 +68,8 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.13.16)
-      ace-git (~> 0.10)
+    ace-git-worktree (0.13.17)
+      ace-git (~> 0.11)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
       ace-taskflow (~> 0.41)
@@ -139,10 +139,10 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.16.7)
+    ace-prompt-prep (0.16.8)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
-      ace-git (~> 0.10)
+      ace-git (~> 0.11)
       ace-llm (~> 0.23)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -153,10 +153,10 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.42.5)
+    ace-review (0.42.6)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
-      ace-git (~> 0.10)
+      ace-git (~> 0.11)
       ace-llm (~> 0.23)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
