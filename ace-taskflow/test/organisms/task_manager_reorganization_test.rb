@@ -206,6 +206,53 @@ dependencies: []
     end
   end
 
+  def test_demote_to_subtask_self_demotion_prevented
+    with_standalone_task_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.demote_to_subtask("125", "125")
+
+        refute result[:success], "Should fail when demoting task under itself"
+        assert_match(/cannot be demoted under itself/, result[:message])
+      end
+    end
+  end
+
+  def test_demote_to_subtask_dry_run_with_auto_conversion
+    with_standalone_task_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+        release_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t")
+
+        # Create a regular (non-orchestrator) parent task 126
+        task_dir_126 = File.join(release_dir, "126-regular-task")
+        FileUtils.mkdir_p(task_dir_126)
+        regular_content = <<~CONTENT
+---
+id: v.0.9.0+task.126
+status: in-progress
+priority: medium
+estimate: 4h
+dependencies: []
+---
+
+# 126 - Regular Task (not orchestrator)
+        CONTENT
+        File.write(File.join(task_dir_126, "126-regular-task.s.md"), regular_content)
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.demote_to_subtask("125", "126", dry_run: true)
+
+        assert result[:success], "Dry-run should succeed: #{result[:message]}"
+        assert result[:dry_run], "Should be a dry-run result"
+        assert_match(/\.02/, result[:new_reference], "Dry-run should report .02 (not .01)")
+        assert result[:operations].is_a?(Array), "Should include operations list"
+      end
+    end
+  end
+
   def test_demote_to_subtask_parent_not_found
     with_standalone_task_project do |dir|
       Dir.chdir(dir) do

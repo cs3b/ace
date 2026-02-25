@@ -844,6 +844,11 @@ module Ace
         # @param dry_run [Boolean] If true, show what would happen without executing
         # @return [Hash] Result with :success, :message, :new_reference, :new_path
         def demote_to_subtask(task_ref, parent_ref, dry_run: false)
+          # Prevent self-demotion (would corrupt state via auto-conversion then missing file)
+          if task_ref.to_s == parent_ref.to_s
+            return { success: false, message: "Task #{task_ref} cannot be demoted under itself" }
+          end
+
           # Find the task to demote
           task = @task_loader.find_task_by_reference(task_ref)
           unless task
@@ -893,6 +898,9 @@ module Ace
 
           # Get next subtask number
           subtask_num = get_next_subtask_number(parent_dir, parent_number)
+          if converted_flag && subtask_num == 1
+            subtask_num = 2
+          end
           if subtask_num > 99
             return { success: false, message: "Maximum subtask limit (99) reached for task #{parent_number}" }
           end
