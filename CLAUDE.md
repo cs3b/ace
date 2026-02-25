@@ -26,7 +26,7 @@ Examples:
 
 Examples:
 ```bash
-ace-task 148       # Show task details
+ace-task show 148  # Show task details
 ace-git-commit --staged     # Generate commit message
 ace-review --preset pr      # Run code review preset
 ace-test atoms              # Run atom tests
@@ -37,7 +37,7 @@ ace-test atoms              # Run atom tests
 | Type | Environment | Prefix | Example |
 |------|-------------|--------|---------|
 | Claude Command | Chat | `/ace-` | `/ace-task-work 121` |
-| CLI Tool | Terminal | `ace-` | `ace-task 121` |
+| CLI Tool | Terminal | `ace-` | `ace-task show 121` |
 
 ## Command Recognition
 
