@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **All four capture sets exist** — results/tc/05/ contains captures for circular, missing-ref, nonexistent, and invalid-model.
 2. **All non-zero exit codes** — Every error case returns a non-zero exit code.
 3. **Informative messages** — Each stderr or stdout contains a relevant error message (circular dependency, not found, invalid model, etc.).
