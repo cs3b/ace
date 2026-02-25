@@ -1,286 +1,141 @@
 ---
-name: git/update-pr-desc
+name: git-update-pr-desc
 allowed-tools: Bash, Read, Grep
-description: Update PR title and description based on current work
+description: Update PR title and description from code evidence
 argument-hint: "[pr-number]"
 doc-type: workflow
-purpose: automated PR documentation from commits and changes
+purpose: evidence-based PR documentation
 update:
   frequency: on-change
-  last-updated: '2025-11-15'
+  last-updated: '2026-02-25'
 ---
 
 # Update PR Description Workflow
 
 ## Purpose
 
-Automatically generate comprehensive PR titles and descriptions based on the actual work done, extracting information from commits, changelog entries, and task files.
-
-## Context
-
-Quality PR descriptions require:
-- Accurate title reflecting all changes
-- Summary of what was done and why
-- Breakdown of changes by category
-- Test results and validation
-- Links to related tasks
-
-This workflow automates PR documentation by:
-- Analyzing git diff for changelog and task file changes
-- Extracting task IDs, titles, and metadata
-- Examining commit messages for change patterns
-- Generating structured, comprehensive descriptions
+Generate PR titles and descriptions from code evidence in the PR (diff, commits, tests, and changelog entries), not from task specification text.
 
 ## Variables
 
-- `$pr_number`: PR number to update (optional - auto-detects from current branch)
+- `$pr_number`: PR number to update (optional - auto-detect from current branch)
 
 ## Instructions
 
-### 1. Get PR Number
-
-If not provided as argument, detect from current branch:
+### 1. Resolve PR Number
 
 ```bash
-# Auto-detect PR number from branch
 gh pr view --json number -q .number
 ```
 
-If no PR exists for current branch, ask user for PR number.
+If no PR exists for current branch, ask the user for the target PR number.
 
 ### 2. Verify Target Branch
 
-Check if PR target is correct based on task hierarchy:
-
 ```bash
-# Get current PR info
 gh pr view $pr_number --json baseRefName,headRefName,title
-
-# Check task hierarchy
 ace-taskflow status
 ```
 
-**Validation Rules:**
+If taskflow context indicates a subtask and the PR targets `main`, retarget to the parent task branch before continuing.
 
-| Task Context | Current Target | Correct Target | Action |
-|--------------|----------------|----------------|--------|
-| Has "Parent Task" | `main` | Parent branch | Fix target |
-| Has "Parent Task" | Parent branch | ✓ Correct | No action |
-| No parent | `main` | ✓ Correct | No action |
+### 3. Collect Evidence Inputs
 
-**Auto-fix target if subtask targeting main:**
-
-If `ace-taskflow status` shows "Parent Task" section but PR targets `main`:
+Collect the evidence used to write the PR:
 
 ```bash
-current_base=$(gh pr view $pr_number --json baseRefName -q .baseRefName)
-
-# Check for parent task
-parent_info=$(ace-taskflow status | grep -A1 "Parent Task")
-if [[ -n "$parent_info" && "$current_base" == "main" ]]; then
-  # Extract parent task ID from context
-  parent_id=$(echo "$parent_info" | grep -oE 'task\.[0-9]+' | head -1 | sed 's/task\.//')
-  correct_base=$(git branch -r | grep -E "origin/${parent_id}-" | head -1 | sed 's/origin\///' | xargs)
-
-  if [[ -n "$correct_base" ]]; then
-    echo "⚠️  Subtask targeting main instead of parent branch"
-    echo "   Correcting: main → $correct_base"
-    gh pr edit $pr_number --base "$correct_base"
-  fi
-fi
-```
-
-### 3. Extract Change Information
-
-Analyze the PR diff to gather information:
-
-```bash
-# Get PR diff with file names
+# Changed files
 gh pr diff $pr_number --name-only
 
-# Focus on these files for metadata:
-# - CHANGELOG.md or */CHANGELOG.md
-# - .ace-taskflow/*/tasks/**/*.md (task files)
-# - .ace-taskflow/*/tasks/done/**/*.md (completed tasks)
-```
+# Full diff for behavior and error-message changes
+gh pr diff $pr_number
 
-### 4. Read Changelog Entries
-
-If CHANGELOG files in diff:
-
-```bash
-# Get recent changelog additions
-gh pr diff $pr_number | grep "^+"
-```
-
-Extract:
-- Version numbers
-- Change types (feat, fix, chore, refactor, etc.)
-- Change descriptions
-- Breaking changes markers
-
-### 5. Read Task Files
-
-If task files in diff:
-
-Use Read tool to examine task files found in diff.
-
-Extract from task frontmatter:
-- `task-id`: Task identifier
-- `title`: Task title
-- `type`: Task type (feature, bugfix, chore, etc.)
-- `status`: Task status
-- Acceptance criteria
-
-### 6. Analyze Commits
-
-Get all commits in the PR:
-
-```bash
+# Commit headlines
 gh pr view $pr_number --json commits -q '.commits[].messageHeadline'
+
+# File-change grouping (preferred)
+ace-git diff --format grouped-stats
 ```
 
-Identify patterns:
-- Conventional commit types (feat, fix, chore, etc.)
-- Common themes across commits
-- Scope of changes (which packages/modules)
+Also gather test evidence and release evidence:
+- Test evidence: test files changed in diff + relevant test outputs/suite totals
+- Release evidence: CHANGELOG entries present in diff
 
-### 7. Generate PR Title
+### 4. Generate Evidence-Based Title
 
-**Title Format Rules:**
+Title format:
+- If task ID available from `ace-git status --no-pr`: `<task-id>: <description>`
+- Otherwise: `<type>(<scope>): <description>`
 
-| Context | Format | Example |
-|---------|--------|---------|
-| Has task ID (from `ace-git status`) | `<task-id>: <description>` | `140.10: Add PR activity awareness` |
-| No task ID | `<type>(<scope>): <description>` | `feat(auth): Add OAuth support` |
-
-**Get task ID from status:**
-```bash
-# Check ace-git status for task pattern
-ace-git status --no-pr | grep "Position (task:"
-```
-
-**Guidelines:**
-- If task ID present, use `<task-id>: <description>` format
-- Keep description concise (< 60 chars after task ID)
+Title guidance:
 - Focus on user-facing impact
+- Keep concise (target < 60 chars after task-id)
+- Do not lead with class/method names unless unavoidable
 
-**Examples with task ID:**
-- `140.10: Add PR activity awareness to status command`
-- `140.02: Update ace-taskflow to use ace-git`
-- `135.03: Fix validation error in form submission`
+### 5. Generate PR Description
 
-**Examples without task ID:**
-- `feat(ace-taskflow): enforce folder structure for ideas`
-- `fix(ace-git): resolve merge conflict in rebase workflow`
-
-### 8. Generate PR Description
-
-Create structured markdown description:
+Use this section order exactly:
 
 ```markdown
 ## Summary
-
-[1-2 sentences describing what was done and why]
-
 ## Changes
-
-### 1. [Main Feature/Fix Name]
-- Key point 1
-- Key point 2
-- Key point 3
-
-### 2. [Secondary Changes]
-- Change 1
-- Change 2
-
-[Continue for each major change category]
-
-## Breaking Changes
-
-[If any breaking changes, list them with ⚠️ marker]
-[If none, omit this section]
-
-## Test Results
-
-```
-[Include test output if available]
+## File Changes
+## Test Evidence
+## Releases
 ```
 
-## Related Tasks
+Section sourcing rules:
 
-- Task #XXX: [Task title]
-[List all related tasks from task files]
+| Section | Required Source | Avoid |
+|---|---|---|
+| Summary | Behavioral change in diff + commit intent | Task spec objective text |
+| Changes | Concern-grouped diff changes, traced to commits | Raw commit list dump |
+| File Changes | `ace-git diff --format grouped-stats` | Manual hand-written file listing |
+| Test Evidence | Test names mapped to behaviors + suite totals | Raw unstructured test output paste |
+| Releases | CHANGELOG entries from diff | Repeating content already in Changes |
 
----
+### 6. Summary Writing Rules
 
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
+Write Summary in this sequence:
+1. What is easier now for users/reviewers
+2. What pain/manual step/error state existed before
+3. What changed to remove that pain
 
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
+Constraints:
+- Do not copy wording from task specs
+- Do not start with method/class names
+- Prefer behavior language over implementation language
 
-### 9. Update PR
+### 7. Omission and Fallback Rules
 
-Use GitHub CLI to update:
+- If no changelog evidence: omit `## Releases`
+- If no test-file evidence: keep `## Test Evidence` with suite totals only
+- If `ace-git diff --format grouped-stats` is unavailable: use flat file list fallback under `## File Changes`
+- Omit sections with no supporting evidence instead of leaving placeholders
+
+### 8. Update PR
 
 ```bash
 gh pr edit $pr_number \
-  --title "Generated title here" \
-  --body "Generated description here"
-```
-
-**Note:** Use heredoc for multi-line body:
-
-```bash
-gh pr edit $pr_number \
-  --title "feat(scope): description" \
-  --body "$(cat <<'EOF'
+  --title "Generated title" \
+  --body "$(cat <<'BODY'
 ## Summary
 ...
-EOF
+BODY
 )"
 ```
 
-### 10. Confirm Update
-
-Show updated PR URL:
+### 9. Confirm Update
 
 ```bash
-gh pr view $pr_number --json url -q .url
+gh pr view $pr_number --json url,title -q '.url + "\n" + .title'
 ```
 
-## Best Practices
+## Success Criteria
 
-1. **Be Comprehensive**: Include all significant changes, not just the main feature
-2. **Use Concrete Examples**: Show actual command outputs, test results
-3. **Highlight Breaking Changes**: Always call out breaking changes with ⚠️
-4. **Link Everything**: Reference related tasks, issues, commits
-5. **Keep It Structured**: Use consistent markdown formatting
-6. **Focus on Impact**: Explain what changed from user perspective
-
-## Example Usage
-
-```bash
-# Auto-detect PR from current branch
-/ace-git-update-pr-desc
-
-# Specify PR number
-/ace-git-update-pr-desc 35
-```
-
-## Output Example
-
-```
-✅ PR #35 updated successfully
-
-Title: feat(ace-taskflow): enforce folder structure for ideas with validation
-
-Description: Updated with:
-- Summary of 3 main changes
-- 6 detailed change sections
-- Breaking changes warning
-- Test results (26 tests passing)
-- 2 related tasks
-
-View: https://github.com/org/repo/pull/35
-```
+- Description uses: `Summary -> Changes -> File Changes -> Test Evidence -> Releases`
+- Summary leads with user impact and does not restate task specs
+- File Changes sourced from grouped-stats (or explicit fallback)
+- Test Evidence maps tests to behavior and includes totals
+- Releases derived from changelog evidence only
+- Empty/no-evidence sections are omitted
