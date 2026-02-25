@@ -246,9 +246,13 @@ module Ace
           # Create cache directory
           cache_dir = options.session_dir || create_cache_directory
 
-          # Extract context (background info)
+          # Extract context (background info) and enrich with task behavioral spec when available.
           context_config = options.context || config[:context]
-          context = extract_context(context_config, cache_dir)
+          spec_aware_context = build_pr_context_with_task_spec(
+            context_config: context_config,
+            pr_metadata: result[:metadata]
+          )
+          context = extract_context(spec_aware_context, cache_dir)
 
           # Add PR metadata to context
           pr_info = format_pr_metadata(result[:metadata])
@@ -260,6 +264,23 @@ module Ace
             cache_dir: cache_dir,
             pr_metadata: result[:metadata]
           }
+        end
+
+        # Add task behavioral spec file to PR context when task can be detected.
+        def build_pr_context_with_task_spec(context_config:, pr_metadata:)
+          spec_path = Molecules::PrTaskSpecResolver.resolve_spec_path(pr_metadata)
+          return context_config unless spec_path
+
+          case context_config
+          when nil, false, "none"
+            { "files" => [spec_path] }
+          when String
+            { "presets" => [context_config], "files" => [spec_path] }
+          when Hash
+            deep_merge_context(context_config, { "files" => [spec_path] })
+          else
+            { "files" => [spec_path] }
+          end
         end
 
         # Format PR metadata for context

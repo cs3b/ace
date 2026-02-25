@@ -46,6 +46,7 @@ class TaskResolverTest < Minitest::Test
 
       assert_kind_of Hash, result
       assert_equal "/path/to/task/114-test-task", result[:path]
+      assert_equal "/path/to/task/114-test-task/task.114.s.md", result[:spec_path]
       assert_equal 114, result[:task_number]
       assert_equal "v.0.9.0", result[:release]
       assert_equal "v.0.9.0+task.114", result[:task_id]
