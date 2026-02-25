@@ -240,7 +240,7 @@ git commit -m "Add taskflow structure" --quiet
 export PROJECT_ROOT_PATH="$REPO_DIR"
 
 # Now ace-taskflow commands will use this isolated structure
-# ace-task 001  # Should find the test task
+# ace-task show 001  # Should find the test task
 ```
 
 ## YAML Frontmatter Reference
@@ -276,11 +276,11 @@ export PROJECT_ROOT_PATH="$REPO_DIR"
 
 ```bash
 # Verify ace-taskflow can find the task
-ace-task 001
+ace-task show 001
 # Should output task details
 
 # Verify task file path
-ace-task 001 --path
+ace-task show 001 --path
 # Should output: .ace-taskflow/v.test/tasks/001-feature/001-test-task.s.md
 ```
 
