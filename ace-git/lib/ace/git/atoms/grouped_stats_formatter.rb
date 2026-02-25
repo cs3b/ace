@@ -62,8 +62,9 @@ module Ace
 
             Array(group[:layers]).each do |layer|
               lines << "#{stats_block(layer[:additions], layer[:deletions])}#{files_label(layer[:file_count])}#{layer[:name]}"
-              Array(layer[:files]).each do |file|
-                lines << "#{stats_block(file[:additions], file[:deletions], binary: file[:binary])}#{FILE_INDENT}#{file_line(file)}"
+              Array(layer[:files]).each_with_index do |file, idx|
+                prev_file = layer[:files][idx - 1] if idx > 0
+                lines << "#{stats_block(file[:additions], file[:deletions], binary: file[:binary])}#{FILE_INDENT}#{file_line(file, prev_file: prev_file)}"
               end
             end
 
@@ -74,9 +75,43 @@ module Ace
             "#{stats_block(total[:additions], total[:deletions])}#{files_label(total[:files])}total"
           end
 
-          def file_line(file)
+          def file_line(file, prev_file: nil)
             suffix = file[:binary] ? " (binary)" : ""
-            "#{file[:display_path]}#{suffix}"
+            path = squashed_path(file[:display_path], prev_file&.dig(:display_path))
+            "#{path}#{suffix}"
+          end
+
+          def squashed_path(path, prev_path)
+            return path unless prev_path
+
+            return squashed_rename_path(path, prev_path) if path.include?(" -> ")
+
+            # Don't compare directory of a rename path — it's not a real filesystem dir
+            return path if prev_path.include?(" -> ")
+
+            curr_dir = File.dirname(path)
+            prev_dir = File.dirname(prev_path)
+
+            return path if curr_dir == "." || curr_dir != prev_dir
+
+            " " * (curr_dir.length + 1) + File.basename(path)
+          end
+
+          # Squash consecutive renames that share from_dir and to_dir.
+          # "atoms/old.rb -> atoms/new.rb" becomes "      old.rb ->       new.rb"
+          def squashed_rename_path(path, prev_path)
+            return path unless prev_path.include?(" -> ")
+
+            from,      to      = path.split(" -> ", 2)
+            prev_from, prev_to = prev_path.split(" -> ", 2)
+
+            from_dir = File.dirname(from)
+            to_dir   = File.dirname(to)
+
+            return path unless from_dir == File.dirname(prev_from) && to_dir == File.dirname(prev_to)
+            return path if from_dir == "." || to_dir == "."
+
+            "#{" " * (from_dir.length + 1)}#{File.basename(from)} -> #{" " * (to_dir.length + 1)}#{File.basename(to)}"
           end
 
           # Width of a rendered stats block: "%5s, %5s" = 12 chars
