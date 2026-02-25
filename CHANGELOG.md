@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.642] - 2026-02-25
+
+### Fixed
+- **ace-git v0.11.4**: Classify single-segment root dotfiles (e.g. `.gitignore`) as "Project root" instead of isolated per-file groups
+
+### Technical
+- **ace-review v0.42.5**: Add nil-path test case for `PrTaskSpecResolver#extract_task_reference`
+- **ace-git v0.11.4**: Add inline comment explaining unbraced exact-rename fallback in diff numstat parser
+
+## [0.9.641] - 2026-02-25
+
+### Fixed
+- **ace-git v0.11.3**: Filter exclude patterns against both rename_from and rename_to paths; consolidate duplicate file classification branches
+
+## [0.9.640] - 2026-02-25
+
+### Fixed
+- **ace-review v0.42.4**: Guard against NoMethodError when PR text contains no task reference (safe navigation on regex match)
+- **ace-git v0.11.2**: Skip redundant full diff for `grouped-stats` format; standardize zero-value display between file and group levels
+
 ## [0.9.639] - 2026-02-25
 
 ### Changed
