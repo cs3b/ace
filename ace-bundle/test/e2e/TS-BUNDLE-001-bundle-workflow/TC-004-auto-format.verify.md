@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Both capture sets exist** — results/tc/04/ contains stdout/exit for both small and large presets.
 2. **Both exit codes zero** — Both presets processed successfully.
 3. **Small preset to stdio** — Small stdout contains actual content (e.g., "Small Test Content") and does NOT contain "Bundle saved" or "output file:".

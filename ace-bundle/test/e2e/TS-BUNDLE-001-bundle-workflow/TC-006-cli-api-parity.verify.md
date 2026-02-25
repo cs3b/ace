@@ -6,16 +6,19 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
-1. **All capture sets exist** — results/tc/06/ contains stdout/exit for CLI, API, and error tests.
-2. **Valid input: both exit 0** — Both CLI and API exit code is 0 for valid input.
-3. **Output equivalence** — The comparison file or direct inspection shows outputs are either:
-   - identical, or
-   - functionally equivalent by design (CLI may preserve frontmatter while API renders equivalent bundle sections/content).
-4. **Error handling: both non-zero** — Both CLI and API return non-zero exit code for nonexistent file input.
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
+1. **All capture sets exist** — results/tc/06/ contains stdout/exit for both success-mode CLI runs and the error-path run.
+2. **Success path exits are zero** — `cli-valid.exit` and `cli-valid-cache.exit` are `0`.
+3. **Success behavior comparison exists** — `comparison.md` classifies behavior as `consistent` or `divergent` with evidence.
+4. **Error handling is non-zero** — `cli-error.exit` is non-zero for nonexistent file input and has informative stderr/stdout evidence.
 
 ## Verdict
 
-- **PASS**: Exit codes and error handling are consistent, and output is identical or explicitly functionally equivalent by design.
-- **FAIL**: Exit/error behavior diverges, or output is neither identical nor semantically equivalent.
+- **PASS**: Success-mode CLI runs pass, comparison evidence is present, and error-path handling is non-zero with useful diagnostics.
+- **FAIL**: Missing artifacts, wrong exit behavior, or missing comparison/error evidence.
 
 Report: `PASS` or `FAIL` with evidence (exit codes, output match status, error behavior).
