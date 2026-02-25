@@ -10,14 +10,15 @@ class IdeaEnhancerTest < AceTaskflowTestCase
 
   def test_enhance_with_llm_success
     enhanced_desc = <<~DESC
-      ## Problem
-      Tests currently make real LLM API calls which is slow and expensive.
+      ## What I Hope to Accomplish
+      Keep test execution deterministic and affordable.
 
-      ## Solution
-      Implement global mocking strategy using define_singleton_method pattern.
+      ## What "Complete" Looks Like
+      Test suite runs without real LLM API calls.
 
-      ## Implementation Approach
-      Create LlmMockHelper module in test/support directory.
+      ## Success Criteria
+      - No tests call external LLM APIs
+      - Mock responses are used consistently
     DESC
 
     mock_response = mock_enhancement_response(
@@ -33,7 +34,7 @@ class IdeaEnhancerTest < AceTaskflowTestCase
       assert result[:content].include?("---")
       assert result[:content].include?("title: Implement LLM Mocking Strategy")
       assert result[:content].include?("# Implement LLM Mocking Strategy")
-      assert result[:content].include?("## Problem")
+      assert result[:content].include?("## What I Hope to Accomplish")
       assert_equal "feat-test-llm-mock", result[:filename]
       assert_equal "Implement LLM Mocking Strategy", result[:title]
     end
@@ -45,8 +46,9 @@ class IdeaEnhancerTest < AceTaskflowTestCase
 
       assert_equal true, result[:success]
       assert result[:content].include?("Some idea content")
-      assert result[:content].include?("## Implementation Approach")
-      assert result[:content].include?("## Technical Considerations")
+      assert result[:content].include?("## What I Hope to Accomplish")
+      assert result[:content].include?("## What \"Complete\" Looks Like")
+      assert result[:content].include?("## Success Criteria")
     end
   end
 
@@ -57,7 +59,7 @@ class IdeaEnhancerTest < AceTaskflowTestCase
       assert_equal true, result[:success]
       assert result[:content].include?("Test idea")
       # Should use stub fallback
-      assert result[:content].include?("Implementation Approach")
+      assert result[:content].include?("What I Hope to Accomplish")
     end
   end
 
@@ -84,7 +86,7 @@ class IdeaEnhancerTest < AceTaskflowTestCase
   end
 
   def test_enhance_with_markdown_code_blocks_strips_them
-    enhanced_desc = "## Problem\nTest problem"
+    enhanced_desc = "## What I Hope to Accomplish\nImprove reliability"
     mock_response = "```json\n#{mock_enhancement_response(
       title: "Test",
       filename: "test",
@@ -101,7 +103,7 @@ class IdeaEnhancerTest < AceTaskflowTestCase
 
   def test_enhance_with_incomplete_markdown_blocks_strips_them
     # Simulates truncated response with opening ``` but no closing
-    enhanced_desc = "## Problem\nTest problem"
+    enhanced_desc = "## What I Hope to Accomplish\nImprove reliability"
     mock_response = "```json\n#{mock_enhancement_response(
       title: "Test",
       filename: "test",
@@ -122,7 +124,7 @@ class IdeaEnhancerTest < AceTaskflowTestCase
       llm_model: "gflash"
     }
 
-    enhanced_desc = "## Problem\nTest"
+    enhanced_desc = "## What I Hope to Accomplish\nImprove reliability"
     mock_response = mock_enhancement_response(
       title: "Test",
       filename: "test",
@@ -139,7 +141,7 @@ class IdeaEnhancerTest < AceTaskflowTestCase
   end
 
   def test_enhance_includes_original_idea_section
-    enhanced_desc = "## Problem\nTest"
+    enhanced_desc = "## What I Hope to Accomplish\nImprove reliability"
     mock_response = mock_enhancement_response(
       title: "Test",
       filename: "test",

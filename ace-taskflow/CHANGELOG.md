@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.42.3] - 2026-02-25
 
 ### Changed
-- Update task-detail CLI references to `ace-task show <ref>` across task workflows and handbook command examples.
+- Replace LLM-enhanced idea output structure with the 3-Question Delegation Brief sections (`What I Hope to Accomplish`, `What "Complete" Looks Like`, `Success Criteria`)
+- Update idea enhancement fallback stub and inline system prompt to use the same 3-section structure with clarifying gap prompts
 
 ### Technical
-- Sync E2E taskflow fixture template examples to use `ace-task show`.
+- Update idea enhancer and idea command tests to assert the new section headings
 
 ## [0.42.2] - 2026-02-25
 

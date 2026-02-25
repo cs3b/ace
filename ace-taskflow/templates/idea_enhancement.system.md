@@ -26,7 +26,7 @@ Provide your response as valid JSON without any markdown formatting, code blocks
 {
   "filename": "type-context-keywords",
   "title": "Full Descriptive Title",
-  "enhanced_description": "## Problem\n[describe specific problem in context of ACE project]\n\n## Solution\n[describe solution using ACE patterns and components]\n\n## Implementation Approach\n[reference relevant ACE gems, ATOM architecture, etc.]\n\n## Considerations\n- Integration with existing ace-* gems\n- Configuration cascade implications\n- CLI interface design\n\n## Benefits\n[list benefits to the ACE ecosystem]"
+  "enhanced_description": "## What I Hope to Accomplish\n[describe the intended impact and why it matters]\n\n## What \"Complete\" Looks Like\n[describe the concrete end state that defines done]\n\n## Success Criteria\n- [verifiable criterion 1]\n- [verifiable criterion 2]"
 }
 
 ### Filename Rules:
@@ -44,6 +44,10 @@ Provide your response as valid JSON without any markdown formatting, code blocks
 - "Refactor config loading" → "refactor-core-config"
 
 ## Guidelines
+
+- Output exactly these 3 sections in `enhanced_description` with the exact headings above
+- Do not output additional sections (such as Problem/Solution/Benefits)
+- If input lacks details, use italicized clarifying prompts instead of inventing specifics
 
 - Reference specific ACE components (ace-taskflow, ace-bundle, etc.) when relevant
 - Consider ATOM architecture (Atoms, Molecules, Organisms) for implementation
