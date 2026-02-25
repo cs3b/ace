@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Artifacts exist** — results/tc/03/ contains stdout/exit and count evidence.
 2. **Zero exit code** — Re-run succeeded.
 3. **No duplicates** — Exactly 1 worktree for task 001, exactly 1 tmux window.
