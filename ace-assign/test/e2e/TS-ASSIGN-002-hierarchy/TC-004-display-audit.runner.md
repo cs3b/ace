@@ -40,9 +40,18 @@ Environment provides:
   - child: `010.01-*.ph.md`
   - injected sibling: `010.02-*.ph.md` immediately after sibling injection
   - renumbered target: `010.03-*.ph.md` after renumbering
+- Artifact mapping is strict and must not be swapped:
+  - `child-of-metadata.stdout` must contain metadata from `010.01-*.ph.md`
+  - `injected-after-metadata.stdout` must contain metadata from `010.02-*.ph.md` after sibling injection
+  - `renumbered-metadata.stdout` must contain metadata from `010.03-*.ph.md` and include `renumbered_from`/`renumbered_at`
+  - `dynamic-metadata.stdout` must contain metadata from dynamic phase file (`011-*.ph.md` in this fixture flow) and include `added_by: dynamic`
+- Capture renumbered metadata before marking parent done / adding dynamic phase. Do not overwrite `renumbered-metadata.stdout` afterward.
 - Add child under 010 (`add --after 010 --child`). Verify `added_by: child_of:010` and `parent: "010"`.
 - Add another child, then inject sibling after first child. Verify `added_by: injected_after:010.01`.
 - Verify renumbered phase has `renumbered_from` and `renumbered_at` (ISO8601 format).
-- Mark parent done, add dynamic phase. Verify `added_by: dynamic`.
+- Mark parent done, then add dynamic phase using plain add (NO `--after`, NO `--child`):
+  - `ace-assign add "dynamic-phase" --assignment "<assignment-id>"`
+  - This step must create a top-level dynamic phase (e.g., `011-*.ph.md`) with `added_by: dynamic`.
+- If `--after` is used for this step, the phase is injection (`added_by: injected_after:*`) and does not satisfy dynamic audit.
 - If expected metadata is missing, first verify file path/extension/assignment-id correctness before concluding failure.
 - All artifacts must come from real tool execution.

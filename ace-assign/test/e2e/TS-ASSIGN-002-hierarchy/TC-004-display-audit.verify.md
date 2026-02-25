@@ -15,7 +15,8 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 4. **Child audit** — `child-of-metadata.stdout` shows `added_by: child_of:010` and `parent: "010"` from real phase `.ph.md` content.
 5. **Injection audit** — `injected-after-metadata.stdout` shows `added_by: injected_after:010.01` from injected phase `.ph.md`.
 6. **Renumbering audit** — `renumbered-metadata.stdout` shows `renumbered_from` with old number and `renumbered_at` with ISO8601 timestamp from renumbered phase `.ph.md`.
-7. **Dynamic audit** — `dynamic-metadata.stdout` shows `added_by: dynamic`.
+7. **Dynamic audit** — `dynamic-metadata.stdout` shows `added_by: dynamic` (not `injected_after:*`).
+8. **Artifact integrity** — `renumbered-metadata.stdout` and `dynamic-metadata.stdout` represent different phases (renumbered vs dynamic) and are not swapped.
 
 Path discipline for verdict:
 - Missing `.yaml` files is not failure evidence by itself; phase artifacts are `.ph.md`.
