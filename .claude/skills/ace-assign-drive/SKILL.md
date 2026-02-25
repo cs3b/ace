@@ -11,7 +11,7 @@ allowed-tools:
   - Write
   - AskUserQuestion
   - Skill
-argument-hint: ""
+argument-hint: "[assignment[@scope]]"
 last_modified: 2026-02-11
 source: ace-assign
 ---
