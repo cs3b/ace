@@ -36,6 +36,17 @@ class PrTaskSpecResolverTest < AceReviewTest
     assert_equal "v.0.9.0+task.281.05", result
   end
 
+  def test_extract_task_reference_returns_nil_when_no_match
+    metadata = {
+      "headRefName" => "feature/no-task-ref",
+      "title" => "Improvement without task",
+      "body" => "No task reference here."
+    }
+
+    result = Ace::Review::Molecules::PrTaskSpecResolver.extract_task_reference(metadata)
+    assert_nil result
+  end
+
   def test_resolve_spec_path_returns_nil_when_spec_missing
     metadata = { "headRefName" => "281.05-review-spec-context" }
     task_info = { spec_path: "/tmp/does-not-exist.s.md" }
