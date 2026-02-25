@@ -24,6 +24,7 @@ Each subtask below addresses one handoff point where intent is currently lost.
 - `ace-taskflow` (idea enhancement, task draft workflow, work-subtasks workflow, review + plan workflows)
 - `ace-assign` (planning phase instruction in assignment executor)
 - `ace-review` (review session context loading for spec inclusion)
+- `ace-git` (grouped diff stats format, PR description workflow and templates)
 
 ## Subtasks
 
@@ -32,6 +33,8 @@ Each subtask below addresses one handoff point where intent is currently lost.
 - **03**: Parent Task as Subtask Context — update the work-subtasks delegation prompt to include parent task as context
 - **04**: Spec-Aware Planning at the Spec-to-Agent Handoff — teach planning agents to plan against the behavioral spec structure; add operating-modes, degenerate-inputs, and per-path-variations checklists to review
 - **05**: Review Agents Get Spec Context — include behavioral spec in review session context so reviewers validate code against spec decisions
+- **06**: Grouped Diff Stats Format — add `ace-git diff --format grouped-stats` for package-grouped, column-aligned file change summaries
+- **07**: Evidence-Based PR Descriptions — rewrite PR description workflow to derive every section from code evidence (diff, tests, CHANGELOGs) not task specs
 
 ### Concept Inventory
 
@@ -48,6 +51,12 @@ Each subtask below addresses one handoff point where intent is currently lost.
 | "Behavioral Gaps" section in planning output | 281.04 | — | NEW |
 | Per-path enumeration in planning workflow | 281.04 | — | NEW |
 | Behavioral spec as review session context | 281.05 | — | NEW |
+| `--format grouped-stats` for ace-git diff | 281.06 | — | NEW |
+| Package→layer file grouping with aligned columns | 281.06 | — | NEW |
+| Configurable collapse threshold for markdown mode | 281.06 | — | NEW |
+| Evidence-based PR description sourcing rules | 281.07 | — | NEW |
+| Summary-leads-with-intent writing guidance | 281.07 | — | NEW |
+| Test Evidence section (test names → behaviors) | 281.07 | — | NEW |
 
 ## References
 
