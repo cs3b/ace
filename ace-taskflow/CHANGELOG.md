@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.1] - 2026-02-25
+
+### Fixed
+- Add self-demotion guard to prevent state corruption when `demote_to_subtask` is called with task equal to parent
+- Add subtask number guard in `demote_to_subtask` to ensure correct .02 numbering after auto-conversion (matching `create_subtask` behavior)
+
 ## [0.42.0] - 2026-02-25
 
 ### Added
