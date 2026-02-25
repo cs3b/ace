@@ -1,0 +1,2 @@
+# Allow agent to read cache files
+! .cache/
