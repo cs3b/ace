@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.7] - 2026-02-25
+
+### Changed
+- Update `create-pr` and `update-pr-desc` workflows to use emoji section headers (`📋 Summary`, `✏️ Changes`, `📁 File Changes`, `🧪 Test Evidence`, `📦 Releases`) for visual section separation
+- Add bullet formatting rules requiring the first key term (feature name, class name, CLI flag) to be bolded in Changes, Test Evidence, and Releases bullets
+
 ## [0.11.6] - 2026-02-25
 
 ### Added
