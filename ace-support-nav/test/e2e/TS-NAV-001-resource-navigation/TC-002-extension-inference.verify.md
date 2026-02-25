@@ -6,6 +6,11 @@ The verifier receives the `results/` directory tree and access to the sandbox pa
 
 ## Expectations
 
+
+Validation order (impact-first):
+1. Confirm sandbox/project state impact first.
+2. Confirm explicit artifacts under `results/tc/{NN}/`.
+3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Three resolution sets exist** — `results/tc/02/` contains stdout/stderr/exit captures for shorthand, full, and generic resolution attempts.
 2. **All exit codes zero** — All three resolutions succeeded (exit code `0`).
 3. **Shorthand resolves to .g.md** — The shorthand stdout contains a path ending in `.g.md`.
