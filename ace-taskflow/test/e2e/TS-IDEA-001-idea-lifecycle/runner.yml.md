@@ -13,4 +13,23 @@ bundle:
 
 # E2E Test Runner: ace-idea Lifecycle
 
-Execute goals in order and preserve raw command artifacts in `results/tc/{NN}/`.
+Tool under test: ace-idea
+Required tools: ace-idea
+Workspace root: (current directory)
+
+Execute each goal in order.
+
+## Rules
+
+- Execute each goal in order (1 through 3)
+- Use only ace-idea and standard shell utilities
+- Save all artifacts to results/tc/{NN}/ directories as specified
+- Do not fabricate output; all artifacts must come from real command execution
+- For each command capture stdout, stderr, and exit code
+- If a goal fails, continue to the next goal
+
+## Artifact conventions
+
+- Save stdout to `{name}.stdout`, stderr to `{name}.stderr`, exit code to `{name}.exit`
+- The `.exit` file must contain only a numeric exit code
+- Keep optional summaries in `.md` files, but raw command captures are the primary evidence
