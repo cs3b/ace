@@ -1,0 +1,30 @@
+test-id: TS-SEARCH-001
+title: "ace-search Core Search Workflow"
+area: search
+package: ace-search
+priority: medium
+cost-tier: smoke
+tags: [smoke, "use-case:search"]
+tool-under-test: ace-search
+
+sandbox-layout:
+  results/tc/01/: "Content-search artifacts"
+  results/tc/02/: "File-search artifacts"
+  results/tc/03/: "Count-mode artifacts"
+
+e2e-justification: >
+  Requires real ripgrep-backed execution across content, file, and count modes
+  through the CLI with filesystem traversal and auto-detection behavior.
+
+unit-coverage-reviewed:
+  - test/integration/cli_integration_test.rb
+  - test/molecules/search_option_builder_test.rb
+  - test/organisms/result_formatter_test.rb
+
+requires:
+  tools: [ace-search, rg]
+  ruby: ">= 3.0"
+
+setup:
+  - git-init
+  - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"

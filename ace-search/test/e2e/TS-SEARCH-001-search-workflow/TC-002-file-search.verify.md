@@ -1,0 +1,12 @@
+# Goal 2 — File Search Verification
+
+## Expectations
+
+1. `results/tc/02/` has file-search command captures.
+2. Exit code is `0`.
+3. Output is file-oriented and includes `.rb` paths.
+
+## Verdict
+
+- **PASS**: File-search mode returns expected path list.
+- **FAIL**: Output missing path evidence or command failed.
