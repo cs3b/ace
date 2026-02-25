@@ -34,7 +34,7 @@ assign:
 For experienced users, here's the condensed workflow:
 
 1. **Read linked documents** - Load project context and workflow instructions
-2. **Select task** - Use `ace-task` (next) or `ace-task <ref>` (specific)
+2. **Select task** - Use `ace-task` (next) or `ace-task show <ref>` (specific)
 3. **Mark in-progress** - Update task status to `in-progress`
 4. **Execute plan** - Work through planning and execution steps autonomously
 5. **Validate completion** - Verify all subtasks and acceptance criteria are done
@@ -50,9 +50,9 @@ For experienced users, here's the condensed workflow:
      ace-task
 
      # Or specify task by any reference format:
-     ace-task 071           # Task number
-     ace-task task.071      # Task ID format
-     ace-task v.0.9.0+071   # Full task reference
+     ace-task show 071           # Task number
+     ace-task show task.071      # Task ID format
+     ace-task show v.0.9.0+071   # Full task reference
      ```
 
    * The command automatically:
@@ -300,7 +300,7 @@ When working with temporary files:
 
    ```bash
    # Check specific dependency task (listed in task metadata)
-   ace-task <dependency-task-ref>
+   ace-task show <dependency-task-ref>
    ```
 
 2. Verify required tools are available:
@@ -629,7 +629,7 @@ When errors occur during task execution:
 ## Usage Example
 >
 > "Work on next task: ace-task"
-> "Work on specific task: ace-task 071" or "ace-task task.071" or "ace-task v.0.9.0+071"
+> "Work on specific task: ace-task show 071" or "ace-task show task.071" or "ace-task show v.0.9.0+071"
 
 ---
 

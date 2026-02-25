@@ -84,7 +84,7 @@ Expected output:
 After planning succeeds:
 ```bash
 # Verify task status changed
-ace-task [task-id] | grep -q "status:pending" || echo "WARNING: Status not updated"
+ace-task show [task-id] | grep -q "status:pending" || echo "WARNING: Status not updated"
 ```
 
 **2.4 Error Handling:**

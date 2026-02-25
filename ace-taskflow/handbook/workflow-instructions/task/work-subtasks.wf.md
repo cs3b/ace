@@ -111,9 +111,9 @@ For experienced users, here's the condensed workflow:
 
 ```bash
 # Get orchestrator task details
-ace-task <orchestrator-id>
+ace-task show <orchestrator-id>
 
-# Example: ace-task 122
+# Example: ace-task show 122
 # Returns: orchestrator path, subtasks list
 ```
 
@@ -187,7 +187,7 @@ ALL work MUST happen in this directory. Before ANY file operations:
 ## Steps
 
 1. `cd <WORKTREE_PATH>`
-2. Read task: `ace-task 122.01`
+2. Read task: `ace-task show 122.01`
 3. Implement changes per task file
 4. Run tests: `ace-test`
 5. Commit on subtask branch
@@ -288,7 +288,7 @@ After review approval, prompt user:
 **Subtask 122.01 implementation is complete.**
 
 Please validate manually:
-1. Test the CLI: `ace-task 121.01`
+1. Test the CLI: `ace-task show 121.01`
 2. Verify new functionality works as expected
 3. Run: `ace-test test/atoms/task_reference_parser_test.rb`
 

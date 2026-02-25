@@ -120,7 +120,7 @@ I can have consistent content loading across all ACE tools."
 
 - [ ] Draft task created with complete behavioral specification (`status: draft`)
 - [ ] Changes committed to git with proper message and co-authorship
-- [ ] Task discoverable via `ace-task XXX`
+- [ ] Task discoverable via `ace-task show XXX`
 - [ ] Task file contains proper YAML frontmatter with task ID
 - [ ] Task ready for review via `ace-review-run-task`
 
