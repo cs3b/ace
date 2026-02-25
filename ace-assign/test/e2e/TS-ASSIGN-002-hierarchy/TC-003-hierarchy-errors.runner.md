@@ -12,13 +12,6 @@ Save all output to `results/tc/03/`. Capture:
 - `results/tc/03/advance-parent.stdout`, `.stderr`, `.exit` — attempt to advance parent
 - `results/tc/03/invalid-after.stdout`, `.stderr`, `.exit` — invalid --after reference
 
-## Setup
-
-Environment provides:
-- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
-- `PROJECT_ROOT_PATH=.`
-- Fixtures: `fixtures/errors/job.yaml`, `fixtures/errors/parent-report.md`
-
 ## Constraints
 
 ### Error 1: Advance Parent with Incomplete Children

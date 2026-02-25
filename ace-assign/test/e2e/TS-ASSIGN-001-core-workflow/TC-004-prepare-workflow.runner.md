@@ -13,17 +13,6 @@ Save all output to `results/tc/04/`. Capture:
 - `results/tc/04/multi-task-expansion.stdout` — expansion output
 - `results/tc/04/analysis.md` — analysis of both expansions
 
-## Setup
-
-Environment provides:
-- `PROJECT_ROOT_PATH=.`
-- Fixtures: `fixtures/prepare/work-on-task.yml`, `fixtures/prepare/work-on-tasks.yml`
-- Minimal taskflow structure (created during setup):
-  ```
-  .ace-taskflow/v.0.1.0/t/001-test-task/001-test-task.s.md
-  .ace-taskflow/v.0.1.0/t/002-test-task/002-test-task.s.md
-  ```
-
 ## Constraints
 
 - Use Ruby to expand presets via `Ace::Assign::Atoms::PresetExpander.expand`.

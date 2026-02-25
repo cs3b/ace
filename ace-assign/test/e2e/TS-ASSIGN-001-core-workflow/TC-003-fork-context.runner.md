@@ -14,13 +14,6 @@ Save all output to `results/tc/03/`. Capture:
 - `results/tc/03/status-second-fork.stdout` — second fork phase (document)
 - `results/tc/03/status-final.stdout` — assignment completion
 
-## Setup
-
-Environment provides:
-- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
-- `PROJECT_ROOT_PATH=.`
-- Fixtures: `fixtures/fork/job.yaml`, `fixtures/fork/prepare-report.md`, `fixtures/fork/implement-report.md`, `fixtures/fork/verify-report.md`, `fixtures/fork/document-report.md`
-
 ## Constraints
 
 - Create assignment from `fixtures/fork/job.yaml`.

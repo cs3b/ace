@@ -17,13 +17,6 @@ Save all output to `results/tc/01/`. Capture:
 - `results/tc/01/phase-listing-post.stdout` — phase files after renumbering
 - `results/tc/01/phase-metadata.stdout` — renumbered_from/renumbered_at metadata
 
-## Setup
-
-Environment provides:
-- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
-- `PROJECT_ROOT_PATH=.`
-- Fixture: `fixtures/injection/job.yml` (copy to `job.yaml` before use)
-
 ## Constraints
 
 - Create assignment from the fixture job file.

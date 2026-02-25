@@ -18,13 +18,6 @@ Save all output to `results/tc/02/`. Capture:
 - `results/tc/02/complete-grandchild.stdout`, `.exit` — grandchild completion
 - `results/tc/02/cascade-auto-complete.stdout` — evidence of multi-level cascade
 
-## Setup
-
-Environment provides:
-- `CACHE_BASE=.cache/ace-assign` (create it: `mkdir -p .cache/ace-assign`)
-- `PROJECT_ROOT_PATH=.`
-- Fixtures: `fixtures/completion/job-single-level.yaml`, `fixtures/completion/job-multi-level.yaml`, `fixtures/completion/child1-report.md`, `fixtures/completion/child2-report.md`, `fixtures/completion/grandchild-report.md`
-
 ## Constraints
 
 ### Command Discipline (required)
