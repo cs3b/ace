@@ -243,7 +243,7 @@ ace-task create "Hotfix" --release v.0.10.0
 # List and navigate tasks
 ace-task list
 ace-task          # Get next task
-ace-task 035      # Navigate to specific task
+ace-task show 035 # Navigate to specific task
 ace-task complete 035
 
 # Migrate existing tasks to new descriptive format

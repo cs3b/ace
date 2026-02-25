@@ -37,8 +37,8 @@ The workflows have been updated to use ace-taskflow commands:
 ```bash
 # Get next task or navigate to specific task
 ace-task                      # Get next pending task
-ace-task 024                  # Navigate to task 024
-ace-task v.0.9.0+024         # Navigate to specific version+task
+ace-task show 024            # Navigate to task 024
+ace-task show v.0.9.0+024    # Navigate to specific version+task
 
 # Create new tasks
 ace-task create "Task Title"  # Create new task
