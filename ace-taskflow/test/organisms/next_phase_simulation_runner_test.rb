@@ -3,6 +3,7 @@
 require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/organisms/next_phase_simulation_runner"
 require_relative "../../lib/ace/taskflow/molecules/simulation_session_store"
+require_relative "../../lib/ace/taskflow/molecules/next_phase_trigger_policy"
 require "fileutils"
 require "securerandom"
 require "yaml"
@@ -26,6 +27,31 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       assert File.exist?(File.join(session_dir, "writeback-preview.md"))
       assert File.exist?(File.join(session_dir, "run-summary.md"))
       refute File.exist?(File.join(session_dir, "run-failure.yml"))
+    end
+  end
+
+  def test_run_task_source_writes_back_simulation_review_section
+    with_real_tmpdir do |dir|
+      source_path = File.join(dir, "task-source.s.md")
+      File.write(source_path, "# Task\n")
+
+      runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(
+        stage_executor: lambda { |mode:, run_id:, **_args|
+          {
+            run_id: run_id,
+            mode: mode,
+            questions: ["Task question #{mode}"],
+            refinements: ["Task refinement #{mode}"]
+          }
+        }
+      )
+      result = runner.run(source: source_path, modes: ["plan"], no_writeback: false)
+
+      assert_equal "done", result.dig(:session, :status)
+      content = File.read(source_path)
+      assert_includes content, "## Simulation Review (Next-Phase)"
+      assert_includes content, "Task question plan"
+      assert_includes content, "Task refinement plan"
     end
   end
 
@@ -142,6 +168,80 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       end
 
       assert_includes error.message, "not found"
+    end
+  end
+
+  def test_run_can_skip_when_auto_trigger_disabled
+    with_real_tmpdir do |dir|
+      source_path = File.join(dir, "task-source.s.md")
+      File.write(source_path, "# Task\n")
+
+      trigger_policy = Ace::Taskflow::Molecules::NextPhaseTriggerPolicy.new(
+        config: {
+          "review" => {
+            "next_phase" => {
+              "enabled" => false,
+              "auto" => { "idea" => false, "task" => false }
+            }
+          }
+        }
+      )
+
+      runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(trigger_policy: trigger_policy)
+      result = runner.run(source: source_path, modes: ["plan"], no_writeback: true, manual: false)
+
+      assert_equal true, result[:skipped]
+      assert_includes result[:reason], "disabled"
+      refute result[:run_id]
+    end
+  end
+
+  def test_work_mode_requires_plan_prerequisite_for_task_source
+    with_real_tmpdir do |dir|
+      source_path = File.join(dir, "task-source.s.md")
+      File.write(source_path, "# Task\n")
+
+      runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new
+      error = assert_raises(ArgumentError) do
+        runner.run(source: source_path, modes: ["work"], no_writeback: true)
+      end
+
+      assert_includes error.message, "Work mode requires prerequisite plan context"
+    end
+  end
+
+  def test_run_preserves_partial_artifacts_when_work_stage_fails_for_task_source
+    with_real_tmpdir do |dir|
+      source_path = File.join(dir, "task-source.s.md")
+      File.write(source_path, "# Task\n")
+
+      runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(
+        stage_executor: lambda { |mode:, **_args|
+          raise "synthetic work failure" if mode == "work"
+
+          { mode: mode, questions: ["plan question"], refinements: ["plan refinement"] }
+        }
+      )
+
+      result = runner.run(source: source_path, modes: ["plan", "work"], no_writeback: false)
+
+      assert_equal "partial", result.dig(:session, :status)
+      assert_equal "work", result.dig(:session, :failed_stage)
+      assert_includes result.dig(:session, :artifacts, :stages), "stage-task-plan.yml"
+      refute_includes result.dig(:session, :artifacts, :stages), "stage-task-work.yml"
+
+      synthesis_path = File.join(result[:session_dir], "synthesis.yml")
+      synthesis = YAML.safe_load_file(synthesis_path, permitted_classes: [Symbol], aliases: true)
+      assert_equal "partial", synthesis["status"] || synthesis[:status]
+      unresolved = synthesis["unresolved_gaps"] || synthesis[:unresolved_gaps]
+      assert_includes unresolved.join("\n"), "synthetic work failure"
+
+      summary_path = File.join(result[:session_dir], "run-summary.md")
+      summary = File.read(summary_path)
+      assert_includes summary, "Status: `partial`"
+
+      task_content = File.read(source_path)
+      refute_includes task_content, "## Simulation Review (Next-Phase)"
     end
   end
 end

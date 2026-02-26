@@ -6,6 +6,8 @@ require_relative "../models/simulation_session"
 require_relative "../molecules/simulation_session_store"
 require_relative "../molecules/simulation_synthesis_builder"
 require_relative "../molecules/idea_simulation_writeback"
+require_relative "../molecules/task_simulation_writeback"
+require_relative "../molecules/next_phase_trigger_policy"
 require_relative "task_manager"
 require_relative "../molecules/idea_loader"
 
@@ -17,7 +19,7 @@ module Ace
         VALID_MODES = %w[draft plan work].freeze
 
         def initialize(session_store: nil, task_manager: nil, idea_loader: nil, time_provider: Time, stage_executor: nil,
-                       synthesis_builder: nil, idea_writeback: nil)
+                       synthesis_builder: nil, idea_writeback: nil, task_writeback: nil, trigger_policy: nil)
           @session_store = session_store || Molecules::SimulationSessionStore.new
           @task_manager = task_manager || Organisms::TaskManager.new
           @idea_loader = idea_loader || Molecules::IdeaLoader.new
@@ -25,11 +27,22 @@ module Ace
           @stage_executor = stage_executor
           @synthesis_builder = synthesis_builder || Molecules::SimulationSynthesisBuilder.new
           @idea_writeback = idea_writeback || Molecules::IdeaSimulationWriteback.new
+          @task_writeback = task_writeback || Molecules::TaskSimulationWriteback.new
+          @trigger_policy = trigger_policy || Molecules::NextPhaseTriggerPolicy.new
         end
 
-        def run(source:, modes:, no_writeback: false)
+        def run(source:, modes:, no_writeback: false, manual: true, cli_enable: false, cli_disable: false)
           resolved_source = resolve_source!(source)
-          normalized_modes = normalize_modes(modes, source_type: resolved_source[:type])
+          trigger = @trigger_policy.resolve(
+            source_type: resolved_source[:type],
+            manual: manual,
+            cli_enable: cli_enable,
+            cli_disable: cli_disable,
+            cli_modes: modes
+          )
+          return build_skipped_result(source: resolved_source, trigger: trigger) unless trigger[:enabled]
+
+          normalized_modes = normalize_modes(trigger[:modes], source_type: resolved_source[:type])
           run_id = Ace::B36ts.encode(@time_provider.now.utc)
           run_started_at = @time_provider.now.utc
           session_dir = @session_store.create_session_dir!(run_id)
@@ -57,7 +70,7 @@ module Ace
           stage_outputs = []
           stage_payloads = {}
           current_stage = nil
-          plan_failure = nil
+          stage_failure = nil
 
           normalized_modes.each do |mode|
             current_stage = mode
@@ -73,8 +86,8 @@ module Ace
               stage_outputs << { mode: mode, file: File.basename(stage_path), status: "ok" }
               stage_payloads[mode] = stage_payload
             rescue StandardError => e
-              if plan_stage_partial?(resolved_source: resolved_source, mode: mode, stage_payloads: stage_payloads)
-                plan_failure = e
+              if partial_failure_for_mode?(resolved_source: resolved_source, mode: mode, stage_payloads: stage_payloads)
+                stage_failure = { mode: mode, error: e }
                 stage_outputs << { mode: mode, status: "failed", error: e.message }
                 break
               end
@@ -88,9 +101,9 @@ module Ace
             source: resolved_source,
             stage_outputs: stage_outputs,
             stage_payloads: stage_payloads,
-            partial: !plan_failure.nil?,
-            failed_stage: plan_failure ? "plan" : nil,
-            error: plan_failure&.message
+            partial: !stage_failure.nil?,
+            failed_stage: stage_failure&.dig(:mode),
+            error: stage_failure&.dig(:error)&.message
           )
 
           synthesis_path = @session_store.write_yaml_artifact(
@@ -115,7 +128,7 @@ module Ace
           writeback_status = apply_writeback_if_needed(
             resolved_source: resolved_source,
             no_writeback: no_writeback,
-            plan_failure: plan_failure,
+            stage_failure: stage_failure,
             run_id: run_id,
             modes: normalized_modes,
             synthesis: synthesis_payload,
@@ -131,14 +144,14 @@ module Ace
               modes: normalized_modes,
               stage_outputs: stage_outputs,
               no_writeback: no_writeback,
-              partial: !plan_failure.nil?,
+              partial: !stage_failure.nil?,
               writeback_status: writeback_status
             )
           )
 
           finished_at = @time_provider.now.utc
           session = session.with_updates(
-            status: plan_failure ? "partial" : "done",
+            status: stage_failure ? "partial" : "done",
             finished_at: finished_at,
             artifacts: {
               request: File.basename(request_path),
@@ -147,8 +160,8 @@ module Ace
               writeback_preview: File.basename(preview_path),
               summary: File.basename(summary_path)
             },
-            failed_stage: plan_failure ? "plan" : nil,
-            error: plan_failure&.message
+            failed_stage: stage_failure&.dig(:mode),
+            error: stage_failure&.dig(:error)&.message
           )
 
           {
@@ -187,6 +200,10 @@ module Ace
               raise ArgumentError, "Idea source requires modes draft,plan"
             end
             parsed = %w[draft plan]
+          end
+
+          if source_type == "task" && parsed.include?("work") && !parsed.include?("plan")
+            raise ArgumentError, "Work mode requires prerequisite plan context. Use modes plan,work."
           end
 
           parsed
@@ -268,6 +285,8 @@ module Ace
         def build_writeback_preview(resolved_source:, modes:, no_writeback:, synthesis:, run_id:)
           section_preview = if resolved_source[:type] == "idea"
             @idea_writeback.build_section(run_id: run_id, modes: modes, synthesis: synthesis)
+          elsif resolved_source[:type] == "task"
+            @task_writeback.build_section(run_id: run_id, modes: modes, synthesis: synthesis)
           else
             "No write-back section generated (source type: #{resolved_source[:type]})."
           end
@@ -306,25 +325,37 @@ module Ace
           MARKDOWN
         end
 
-        def apply_writeback_if_needed(resolved_source:, no_writeback:, plan_failure:, run_id:, modes:, synthesis:, preview_path:)
+        def apply_writeback_if_needed(resolved_source:, no_writeback:, stage_failure:, run_id:, modes:, synthesis:, preview_path:)
           return "disabled" if no_writeback
-          return "skipped (non-idea source)" unless resolved_source[:type] == "idea"
-          return "skipped (partial synthesis)" if plan_failure
+          return "skipped (unsupported source)" unless %w[idea task].include?(resolved_source[:type])
+          return "skipped (partial synthesis)" if stage_failure
 
-          @idea_writeback.apply(
-            path: resolved_source[:path],
-            run_id: run_id,
-            modes: modes,
-            synthesis: synthesis
-          )
+          if resolved_source[:type] == "idea"
+            @idea_writeback.apply(
+              path: resolved_source[:path],
+              run_id: run_id,
+              modes: modes,
+              synthesis: synthesis
+            )
+          else
+            @task_writeback.apply(
+              path: resolved_source[:path],
+              run_id: run_id,
+              modes: modes,
+              synthesis: synthesis
+            )
+          end
           "applied"
         rescue StandardError => e
           raise "Write-back failed for '#{resolved_source[:path]}': #{e.message}. " \
                 "Apply changes manually using preview at '#{preview_path}'."
         end
 
-        def plan_stage_partial?(resolved_source:, mode:, stage_payloads:)
-          resolved_source[:type] == "idea" && mode == "plan" && stage_payloads.key?("draft")
+        def partial_failure_for_mode?(resolved_source:, mode:, stage_payloads:)
+          return true if resolved_source[:type] == "idea" && mode == "plan" && stage_payloads.key?("draft")
+          return true if resolved_source[:type] == "task" && mode == "work" && stage_payloads.key?("plan")
+
+          false
         end
 
         def default_questions_for(mode)
@@ -392,6 +423,15 @@ module Ace
             id: resolved_source[:id],
             path: resolved_source[:path]
           }.compact
+        end
+
+        def build_skipped_result(source:, trigger:)
+          {
+            skipped: true,
+            reason: "Next-phase simulation disabled by trigger policy",
+            source: source,
+            trigger: trigger
+          }
         end
       end
     end

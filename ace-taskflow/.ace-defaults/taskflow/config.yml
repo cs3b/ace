@@ -75,6 +75,7 @@ taskflow:
   review:
     next_phase:
       enabled: true
+      include_work_simulation: false
       auto:
         idea: true
         task: true

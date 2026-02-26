@@ -183,6 +183,27 @@ module Ace
         config.dig("doctor", "agent_model") || "claude:sonnet"
       end
 
+      # Next-phase simulation controls
+      def next_phase_review_enabled?
+        config.dig("review", "next_phase", "enabled") != false
+      end
+
+      def next_phase_auto_idea_enabled?
+        config.dig("review", "next_phase", "auto", "idea") != false
+      end
+
+      def next_phase_auto_task_enabled?
+        config.dig("review", "next_phase", "auto", "task") != false
+      end
+
+      def next_phase_cache_dir
+        config.dig("review", "next_phase", "cache_dir") || ".cache/ace-taskflow/simulations"
+      end
+
+      def next_phase_include_work_simulation?
+        config.dig("review", "next_phase", "include_work_simulation") == true
+      end
+
       # Get idea-specific configuration
       # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def idea_config

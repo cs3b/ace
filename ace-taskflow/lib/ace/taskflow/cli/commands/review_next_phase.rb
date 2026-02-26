@@ -25,6 +25,10 @@ module Ace
 
           option :source, type: :string, desc: "Source idea/task reference or artifact path"
           option :modes, type: :string, desc: "Comma-separated simulation modes (draft, plan, work)"
+          option :next_phase_modes, type: :string, desc: "Override next-phase modes (draft,plan,work)"
+          option :next_phase_review, type: :boolean, desc: "Force-enable next-phase simulation"
+          option :no_next_phase_review, type: :boolean, desc: "Force-disable next-phase simulation"
+          option :auto_trigger, type: :boolean, desc: "Apply auto-trigger policy instead of manual execution"
           option :no_writeback, type: :boolean, desc: "Disable write-back and generate preview only"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
@@ -36,8 +40,15 @@ module Ace
               raise Ace::Core::CLI::Error.new("Missing required option: --source")
             end
 
-            modes = parse_modes(options[:modes])
-            result = runner.run(source: source, modes: modes, no_writeback: !!options[:no_writeback])
+            modes = modes_option(options)
+            result = runner.run(
+              source: source,
+              modes: modes,
+              no_writeback: !!options[:no_writeback],
+              manual: !options[:auto_trigger],
+              cli_enable: !!options[:next_phase_review],
+              cli_disable: !!options[:no_next_phase_review]
+            )
 
             output_result(result, quiet: !!options[:quiet], verbose: !!options[:verbose])
           rescue ArgumentError => e
@@ -52,13 +63,22 @@ module Ace
             @runner ||= Organisms::NextPhaseSimulationRunner.new
           end
 
-          def parse_modes(raw_modes)
-            return %w[draft plan] if raw_modes.nil? || raw_modes.strip.empty?
-
-            raw_modes.split(",").map(&:strip).reject(&:empty?)
+          def modes_option(options)
+            options[:next_phase_modes] || options[:modes]
           end
 
           def output_result(result, quiet:, verbose:)
+            if result[:skipped]
+              if quiet
+                puts "skipped"
+                return
+              end
+
+              puts "Simulation skipped"
+              puts "Reason: #{result[:reason]}"
+              return
+            end
+
             if quiet
               puts result[:run_id]
               return

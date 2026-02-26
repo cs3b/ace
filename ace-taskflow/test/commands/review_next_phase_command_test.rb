@@ -45,7 +45,12 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
       assert_includes output, "Session directory: /tmp/session"
     end
 
-    assert_equal({ source: "285.01", modes: ["plan"], no_writeback: true }, runner.received)
+    assert_equal "285.01", runner.received[:source]
+    assert_equal "plan", runner.received[:modes]
+    assert_equal true, runner.received[:no_writeback]
+    assert_equal true, runner.received[:manual]
+    assert_equal false, runner.received[:cli_enable]
+    assert_equal false, runner.received[:cli_disable]
   end
 
   def test_call_raises_error_when_source_missing
@@ -72,6 +77,68 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
       end
 
       assert_equal "i50jj3\n", output
+    end
+  end
+
+  def test_call_supports_next_phase_override_flags
+    runner = FakeRunner.new(
+      {
+        run_id: "i50jj3",
+        session_dir: "/tmp/session",
+        summary_path: "/tmp/session/run-summary.md",
+        session: { artifacts: {} }
+      }
+    )
+
+    @command.stub :runner, runner do
+      capture_io do
+        @command.call(
+          source: "285.01",
+          modes: nil,
+          next_phase_modes: "plan,work",
+          next_phase_review: true,
+          no_next_phase_review: false,
+          auto_trigger: true,
+          no_writeback: true,
+          quiet: false,
+          verbose: false,
+          debug: false
+        )
+      end
+    end
+
+    assert_equal false, runner.received[:manual]
+    assert_equal true, runner.received[:cli_enable]
+    assert_equal false, runner.received[:cli_disable]
+    assert_equal "plan,work", runner.received[:modes]
+  end
+
+  def test_skipped_result_prints_skip_summary
+    runner = FakeRunner.new(
+      {
+        skipped: true,
+        reason: "Next-phase simulation disabled by trigger policy"
+      }
+    )
+
+    @command.stub :runner, runner do
+      output, = capture_io do
+        @command.call(
+          source: "285.01",
+          modes: "plan",
+          next_phase_modes: nil,
+          next_phase_review: false,
+          no_next_phase_review: true,
+          auto_trigger: true,
+          no_writeback: true,
+          quiet: false,
+          verbose: false,
+          debug: false
+        )
+      end
+
+      assert_includes output, "Simulation skipped"
+      assert_includes output, "disabled by trigger policy"
     end
   end
 end

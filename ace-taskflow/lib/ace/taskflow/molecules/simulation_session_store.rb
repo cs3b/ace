@@ -45,9 +45,7 @@ module Ace
         end
 
         def configured_cache_dir
-          config = Ace::Taskflow.configuration.config
-          config.dig("review", "next_phase", "cache_dir") ||
-            config.dig("taskflow", "review", "next_phase", "cache_dir")
+          Ace::Taskflow.configuration.next_phase_cache_dir
         end
 
         def validate_run_id!(run_id)

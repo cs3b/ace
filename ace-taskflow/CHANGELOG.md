@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.13] - 2026-02-26
+
+### Added
+- Add `review.next_phase.include_work_simulation` extension flag (default `false`) to keep work-stage simulation opt-in
+- Add coverage for task-mode extension defaults and work-stage prerequisite/partial-failure handling
+
+### Changed
+- Allow task-source default modes to become `plan,work` only when work simulation extension is explicitly enabled
+
+### Fixed
+- Preserve earlier stage artifacts and synthesis when mixed-mode `plan,work` runs fail at the work stage
+- Reject `work`-only task simulations with explicit prerequisite guidance to run `plan,work`
+
+## [0.42.12] - 2026-02-26
+
+### Added
+- Add task-source simulation write-back helper that upserts `Simulation Review (Next-Phase)` into task artifacts
+- Add next-phase trigger policy resolver with deterministic manual/auto and CLI override precedence
+
+### Changed
+- Extend `review-next-phase` CLI with trigger controls: `--next-phase-review`, `--no-next-phase-review`, `--next-phase-modes`, and `--auto-trigger`
+- Apply write-back previews and persisted write-back for task sources in addition to idea sources
+- Resolve simulation cache directory through configuration helper methods
+
 ## [0.42.11] - 2026-02-26
 
 ### Added
