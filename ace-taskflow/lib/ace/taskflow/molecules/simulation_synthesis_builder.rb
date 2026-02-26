@@ -17,6 +17,7 @@ module Ace
           questions = collect_list(stage_payloads, "questions", order: list_orders[:questions])
           refinements = collect_list(stage_payloads, "refinements", order: list_orders[:refinements])
           unresolved_gaps = collect_list(stage_payloads, "unresolved_gaps", order: list_orders[:unresolved_gaps])
+          artifacts = collect_artifacts(stage_payloads)
 
           if source[:type] == "idea"
             questions = DEFAULT_IDEA_QUESTIONS if questions.empty?
@@ -34,7 +35,8 @@ module Ace
             stages: stage_outputs,
             questions: questions.uniq,
             refinements: refinements.uniq,
-            unresolved_gaps: unresolved_gaps.uniq
+            unresolved_gaps: unresolved_gaps.uniq,
+            artifacts: artifacts
           }
         end
 
@@ -47,6 +49,14 @@ module Ace
           stage_entries.flat_map do |_stage_name, payload|
             value = payload[key.to_sym] || payload[key.to_s]
             Array(value).map(&:to_s).map(&:strip).reject(&:empty?)
+          end
+        end
+
+        def collect_artifacts(stage_payloads)
+          stage_payloads.to_a.each_with_object({}) do |(stage_name, payload), acc|
+            artifact = payload[:artifact] || payload["artifact"]
+            content = artifact.to_s
+            acc[stage_name.to_s] = content unless content.strip.empty?
           end
         end
 

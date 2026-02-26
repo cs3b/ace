@@ -81,6 +81,17 @@ taskflow:
         idea: true
         task: true
       cache_dir: ".cache/ace-taskflow/simulations"
+      # Per-source-type phase configuration.
+      # Override workflow: to point to a custom wfi:// or file path.
+      phases:
+        idea:
+          - mode: draft
+            workflow: "wfi://task/simulate-next-phase-draft"
+          - mode: plan
+            workflow: "wfi://task/simulate-next-phase-plan"
+        task:
+          - mode: plan
+            workflow: "wfi://task/simulate-next-phase-plan"
 
   # Idea configuration
   idea:

@@ -50,4 +50,48 @@ class SimulationSynthesisBuilderTest < AceTaskflowTestCase
     assert_equal ["Q-shared", "Q-plan", "Q-draft"], synthesis[:questions]
     assert_equal ["R-shared", "R-plan", "R-draft"], synthesis[:refinements]
   end
+
+  def test_build_collects_artifacts_from_stage_payloads
+    builder = Ace::Taskflow::Molecules::SimulationSynthesisBuilder.new
+    draft_artifact = "# Task: My Draft\n\n## Description\nDo the thing.\n"
+    plan_artifact = "# Plan: My Plan\n\n## Steps\n1. First step\n"
+    synthesis = builder.build(
+      run_id: "i50jj3",
+      source: { type: "idea" },
+      stage_outputs: [{ mode: "draft", status: "ok" }, { mode: "plan", status: "ok" }],
+      stage_payloads: {
+        "draft" => { status: "ok", artifact: draft_artifact, questions: [] },
+        "plan" => { status: "ok", artifact: plan_artifact, questions: [] }
+      }
+    )
+
+    assert_equal "ok", synthesis[:status]
+    assert synthesis[:artifacts], "synthesis should have artifacts key"
+    assert_equal draft_artifact, synthesis[:artifacts]["draft"]
+    assert_equal plan_artifact, synthesis[:artifacts]["plan"]
+  end
+
+  def test_build_artifacts_omits_empty_artifact_content
+    builder = Ace::Taskflow::Molecules::SimulationSynthesisBuilder.new
+    synthesis = builder.build(
+      run_id: "i50jj3",
+      source: { type: "task" },
+      stage_outputs: [{ mode: "plan", status: "ok" }],
+      stage_payloads: { "plan" => { status: "ok", artifact: "", questions: ["Q1"] } }
+    )
+
+    assert_equal({}, synthesis[:artifacts])
+  end
+
+  def test_build_artifacts_is_empty_hash_when_no_artifacts_present
+    builder = Ace::Taskflow::Molecules::SimulationSynthesisBuilder.new
+    synthesis = builder.build(
+      run_id: "i50jj3",
+      source: { type: "task" },
+      stage_outputs: [{ mode: "plan", status: "ok" }],
+      stage_payloads: { "plan" => { status: "ok", questions: ["Q1"] } }
+    )
+
+    assert_equal({}, synthesis[:artifacts])
+  end
 end

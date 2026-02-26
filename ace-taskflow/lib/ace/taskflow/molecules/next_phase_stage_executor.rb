@@ -26,7 +26,7 @@ module Ace
           source_path = resolved_source[:path]
           raise ArgumentError, "Missing source path for stage execution" if source_path.nil? || source_path.strip.empty?
 
-          workflow_body = load_workflow_content(mode)
+          workflow_body = load_workflow_content(mode, source_type: resolved_source[:type])
           source_body = @file_reader.call(source_path)
           prompt = build_prompt(
             source: resolved_source,
@@ -41,7 +41,7 @@ module Ace
             prompt,
             sandbox: { mode: "read-only", intent: "taskflow-next-phase-simulation" },
             temperature: 0.2,
-            max_tokens: 3_000
+            max_tokens: 6_000
           )
 
           normalize_payload(response[:text], mode: mode)
@@ -51,11 +51,44 @@ module Ace
 
         private
 
-        def load_workflow_content(mode)
+        def load_workflow_content(mode, source_type: nil)
+          # Check config-defined phases first (allows per-source-type workflow override)
+          if source_type
+            config_path = workflow_path_from_config(mode, source_type)
+            if config_path
+              full_path = config_path.start_with?("/") ? config_path : File.join(gem_root, config_path)
+              return @file_reader.call(full_path)
+            end
+          end
+
           rel_path = WORKFLOW_PATHS[mode]
           raise ArgumentError, "Unsupported simulation mode '#{mode}'" unless rel_path
 
           @file_reader.call(File.join(gem_root, rel_path))
+        end
+
+        def workflow_path_from_config(mode, source_type)
+          phases = Ace::Taskflow.configuration.phases_for(source_type)
+          return nil unless phases
+
+          phase = phases.find { |p| p["mode"] == mode.to_s }
+          return nil unless phase
+
+          workflow_ref = phase["workflow"]
+          return nil unless workflow_ref
+
+          resolve_workflow_ref(workflow_ref)
+        end
+
+        def resolve_workflow_ref(workflow_ref)
+          return workflow_ref unless workflow_ref.start_with?("wfi://")
+
+          # Convert wfi://namespace/name to gem-relative handbook path
+          without_scheme = workflow_ref.sub("wfi://", "")
+          parts = without_scheme.split("/", 2)
+          namespace = parts[0]
+          name = parts[1]
+          "handbook/workflow-instructions/#{namespace}/#{name}.wf.md"
         end
 
         def gem_root
@@ -66,16 +99,11 @@ module Ace
         end
 
         def build_prompt(source:, mode:, workflow_body:, source_body:, previous_stage_output:)
-          previous_context = previous_stage_output.nil? ? "null" : JSON.pretty_generate(previous_stage_output)
+          previous_context = build_previous_context(previous_stage_output)
 
           <<~PROMPT
             You are running a read-only simulation stage for ace-taskflow.
-            Return ONLY one JSON or YAML object matching this schema:
-            status: ok|partial|failed
-            findings: string[]
-            questions: string[]
-            refinements: string[]
-            unresolved_gaps: string[] (optional)
+            Return YAML matching the output contract defined in the workflow instruction below.
 
             Stage mode: #{mode}
             Source type: #{source[:type]}
@@ -92,6 +120,16 @@ module Ace
           PROMPT
         end
 
+        def build_previous_context(previous_stage_output)
+          return "null" if previous_stage_output.nil?
+
+          # Pass the artifact as readable text when available (plan stage gets the draft spec)
+          artifact = previous_stage_output[:artifact] || previous_stage_output["artifact"]
+          return artifact.to_s.strip if artifact && !artifact.to_s.strip.empty?
+
+          JSON.pretty_generate(previous_stage_output)
+        end
+
         def normalize_payload(raw_text, mode:)
           text = raw_text.to_s.strip
           raise ArgumentError, "LLM returned empty response for mode '#{mode}'" if text.empty?
@@ -100,13 +138,14 @@ module Ace
           status = parsed["status"].to_s.strip.downcase
           status = "partial" unless VALID_STATUSES.include?(status)
 
+          artifact = parsed["artifact"].to_s.strip
           findings = normalize_list(parsed["findings"])
           questions = normalize_list(parsed["questions"])
           refinements = normalize_list(parsed["refinements"])
           unresolved_gaps = normalize_list(parsed["unresolved_gaps"])
 
-          if findings.empty? && questions.empty? && refinements.empty?
-            unresolved_gaps << "Model output omitted expected fields (findings/questions/refinements)."
+          if artifact.empty? && findings.empty? && questions.empty? && refinements.empty?
+            unresolved_gaps << "Model output omitted expected fields."
           end
 
           payload = {
@@ -115,6 +154,7 @@ module Ace
             questions: questions,
             refinements: refinements
           }
+          payload[:artifact] = artifact unless artifact.empty?
           payload[:unresolved_gaps] = unresolved_gaps.uniq unless unresolved_gaps.empty?
           payload
         end
@@ -174,6 +214,7 @@ module Ace
 
           {
             "status" => sections["status"]&.first || "partial",
+            "artifact" => sections["artifact"]&.join("\n") || "",
             "findings" => sections["findings"] || [],
             "questions" => sections["questions"] || [],
             "refinements" => sections["refinements"] || [],
@@ -182,7 +223,7 @@ module Ace
         end
 
         def parse_inline_header(line)
-          match = line.match(/\A(status|findings|questions|refinements|unresolved[_ ]gaps)\s*:\s*(.*)\z/i)
+          match = line.match(/\A(status|artifact|findings|questions|refinements|unresolved[_ ]gaps)\s*:\s*(.*)\z/i)
           return [nil, nil] unless match
 
           key = extract_header(match[1])
@@ -193,6 +234,7 @@ module Ace
         def extract_header(line)
           normalized = line.downcase.sub(/:\z/, "")
           return "status" if normalized.start_with?("status")
+          return "artifact" if normalized.start_with?("artifact")
           return "findings" if normalized.start_with?("findings")
           return "questions" if normalized.start_with?("questions")
           return "refinements" if normalized.start_with?("refinements")

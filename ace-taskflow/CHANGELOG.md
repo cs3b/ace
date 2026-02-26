@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.8] - 2026-02-26
+
+### Added
+- Next-phase simulation stages now produce real artifacts (draft spec, implementation plan) saved to `.cache/ace-taskflow/simulations/<run_id>/stage-*-artifact.md`
+- `build_full_preview` method in writeback mixin to generate complete preview including artifact sections
+- Per-source-type phase configuration via `review.next_phase.phases` in config.yml with customizable workflows
+
+### Changed
+- Rename `--no-writeback` CLI flag to `--dry-run` with clearer semantics (generate artifacts in cache only, don't modify source file)
+- Update `writeback-preview.md` to show full writeback content including artifact sections with HTML markers
+- Increase `max_tokens` from 3000 to 6000 in stage executor to accommodate full artifact generation
+- Workflow instructions now defer output schema to the workflow file instead of hard-coding in prompt
+
+### Fixed
+- Pass `previous_stage_output[:artifact]` as readable text block instead of JSON for plan stage
+- Extract `artifact` field in `normalize_payload` for stage executor
+- Update `upsert_section` pattern to stop before artifact markers to prevent consuming them during review section upsert
+
 ## [0.44.7] - 2026-02-26
 
 ### Technical

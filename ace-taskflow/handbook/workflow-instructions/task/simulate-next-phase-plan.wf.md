@@ -8,68 +8,107 @@ update:
 
 ## Goal
 
-Produce deterministic, read-only LLM analysis for the plan stage of `ace-taskflow review-next-phase`, using prior draft-stage context.
+Generate a complete implementation plan from the draft task spec produced by the
+preceding draft stage. Produce a real, usable plan under `artifact:`.
 
 ## Read-Only Guardrails
 
 - Simulation only: do not create or modify downstream draft/plan/work artifacts.
-- Return structured analysis payload only.
-- This workflow informs synthesis/write-back layers but does not persist implementation outputs.
+- Return structured output only; do not persist stage artifacts from this workflow.
 
 ## Input Contract
 
-- Source content from `--source <idea-ref|task-ref|path>`.
-- Prior draft-stage context from the preceding simulation stage.
-- Prior context should include draft findings/questions/refinements and status.
+- Source content from `--source <idea-ref|task-ref|path>` (the original idea or task).
+- Prior draft stage artifact from `previous_stage_output.artifact` — this is the
+  generated draft task spec. Use it as the **primary** input for planning.
+- When running against a task source (no prior draft stage), use the task spec directly.
 
 ## Output Contract
 
-Return a single structured payload with this exact shape:
+Return a single structured YAML payload with this exact shape:
 
 ```yaml
 status: ok|partial|failed
-findings:
-  - "..."
+artifact: |                   # The full implementation plan (markdown)
+  # Plan: [task title]
+
+  ## Overview
+  ...
+
+  ## Implementation Steps
+  ...
+
+  ## Files to Change
+  ...
+
+  ## Verification
+  ...
 questions:
-  - "..."
-refinements:
-  - "..."
-unresolved_gaps:
-  - "..."   # optional; include when context is incomplete
+  - "..."                     # Only unresolved blockers that prevent planning
 ```
 
-## Plan-Stage Analysis Requirements
+- `artifact`: The complete implementation plan in markdown. Include: Overview,
+  Implementation Steps (ordered), Files to Change, and Verification steps.
+- `questions`: Only list items that genuinely block planning. Omit if none.
+- `status`: Set to `ok` for a solid plan, `partial` when the plan is usable but
+  incomplete context forced guesses, `failed` when input is too incomplete to plan.
 
-- Use prior draft-stage output as required context, not optional reference.
-- Convert draft insights into implementation-oriented checks and sequencing guidance.
-- Preserve unresolved constraints from draft and add plan-specific risks/questions.
-- Ensure refinements are concrete enough for deterministic downstream synthesis.
+## Plan Generation Requirements
+
+- Use `previous_stage_output.artifact` (the draft spec) as the primary planning input.
+  If it is null or empty, use the source content directly.
+- Write the plan as if you are the agent that would produce the real implementation plan.
+- Be specific: name actual files, describe concrete steps, list test commands.
+- Do NOT produce a meta-analysis or bullet list of findings — produce the actual plan.
 
 ## Failure Guidance
 
-### Missing Prior Draft Context
+### Missing or Malformed Draft Input
 
-When draft-stage context is unavailable or malformed:
-- Set `status: failed`.
-- Describe contract mismatch in `findings`.
-- Add remediation in `questions` or `refinements`.
+When prior draft artifact is unavailable or too incomplete to plan from:
+- Set `status: partial`.
+- Still produce the best plan possible from the source content.
+- List the missing context as `questions`.
 
 ### Insufficient Combined Context
 
-When source and draft context exist but remain insufficient for a reliable plan simulation:
-- Set `status: partial`.
-- Populate `unresolved_gaps` with concrete missing inputs.
-- Keep `findings`, `questions`, and `refinements` actionable.
+When neither source nor draft context is sufficient for a reliable plan:
+- Set `status: failed`.
+- Describe the blocker in `questions`.
 
 ## Example Output
 
 ```yaml
 status: ok
-findings:
-  - "Draft-stage constraints are clear enough to produce a sequenced plan."
-questions:
-  - "Should verification run only targeted tests or include full suite validation?"
-refinements:
-  - "Add a rollback note for each high-risk file modification."
-unresolved_gaps: []
+artifact: |
+  # Plan: Add configurable retry policy to HTTP client
+
+  ## Overview
+  Introduce a `RetryPolicy` struct and wrap `HttpClient#request` to support
+  configurable exponential-backoff retries.
+
+  ## Implementation Steps
+  1. Create `lib/http/retry_policy.rb` with `RetryPolicy` struct
+     - Fields: `attempts` (default 3), `base_delay_ms` (default 500),
+       `retryable_codes` (default [429, 500, 502, 503, 504])
+  2. Update `HttpClient#request` in `lib/http/client.rb`
+     - Accept optional `retry_policy:` keyword arg
+     - Wrap request loop with `RetryPolicy#with_retry`
+  3. Add `RetryPolicy#with_retry` method with exponential backoff + jitter
+  4. Add unit tests in `test/http/retry_policy_test.rb`
+  5. Add integration smoke test in `test/http/client_test.rb`
+
+  ## Files to Change
+  | File | Change |
+  |------|--------|
+  | `lib/http/retry_policy.rb` | New file |
+  | `lib/http/client.rb` | Add retry_policy: param |
+  | `test/http/retry_policy_test.rb` | New test file |
+
+  ## Verification
+  ```bash
+  ace-test test/http/retry_policy_test.rb
+  ace-test test/http/client_test.rb
+  ```
+questions: []
 ```

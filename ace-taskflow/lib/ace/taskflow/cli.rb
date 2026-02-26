@@ -34,7 +34,7 @@ module Ace
         "ace-taskflow status                   # Current task and release overview",
         "ace-taskflow doctor --auto-fix        # Fix safe issues automatically",
         "ace-taskflow config                   # Show resolved configuration",
-        "ace-taskflow review-next-phase --source 285.01 --modes plan --no-writeback"
+        "ace-taskflow review-next-phase --source 285.01 --modes plan --dry-run"
       ].freeze
 
       # Register utility commands

@@ -166,9 +166,16 @@ module Ace
           )
           synthesis_path = @session_store.write_yaml_artifact(session_dir, "synthesis.yml", synthesis_payload)
 
+          artifact_paths = write_stage_artifact_files(
+            session_dir: session_dir,
+            resolved_source: resolved_source,
+            artifacts: synthesis_payload[:artifacts] || {}
+          )
+
           writeback_preview_body = build_writeback_preview(
             resolved_source: resolved_source, modes: normalized_modes,
-            no_writeback: no_writeback, synthesis: synthesis_payload, run_id: run_id
+            no_writeback: no_writeback, synthesis: synthesis_payload, run_id: run_id,
+            artifact_paths: artifact_paths
           )
           preview_path = @session_store.write_markdown_artifact(
             session_dir, "writeback-preview.md", writeback_preview_body
@@ -186,7 +193,8 @@ module Ace
             build_success_summary(
               run_id: run_id, resolved_source: resolved_source, modes: normalized_modes,
               stage_outputs: stage_outputs, no_writeback: no_writeback,
-              partial: !stage_failure.nil?, writeback_status: writeback_status
+              partial: !stage_failure.nil?, writeback_status: writeback_status,
+              artifact_paths: artifact_paths
             )
           )
 
@@ -197,6 +205,7 @@ module Ace
               request: File.basename(request_path),
               stages: stage_outputs.map { |s| s[:file] }.compact,
               synthesis: File.basename(synthesis_path),
+              stage_artifacts: artifact_paths.map { |p| File.basename(p) },
               writeback_preview: File.basename(preview_path),
               summary: File.basename(summary_path)
             },
@@ -295,13 +304,20 @@ module Ace
           "stage-#{source_type}-#{mode}.yml"
         end
 
-        def build_writeback_preview(resolved_source:, modes:, no_writeback:, synthesis:, run_id:)
-          section_preview = if resolved_source[:type] == "idea"
-            @idea_writeback.build_section(run_id: run_id, modes: modes, synthesis: synthesis)
+        def build_writeback_preview(resolved_source:, modes:, no_writeback:, synthesis:, run_id:, artifact_paths: [])
+          full_preview = if resolved_source[:type] == "idea"
+            @idea_writeback.build_full_preview(run_id: run_id, modes: modes, synthesis: synthesis)
           elsif resolved_source[:type] == "task"
-            @task_writeback.build_section(run_id: run_id, modes: modes, synthesis: synthesis)
+            @task_writeback.build_full_preview(run_id: run_id, modes: modes, synthesis: synthesis)
           else
             "No write-back section generated (source type: #{resolved_source[:type]})."
+          end
+
+          artifact_section = if artifact_paths.any?
+            artifact_lines = artifact_paths.map { |p| "- `#{File.basename(p)}`" }.join("\n")
+            "\n## Generated Artifact Files\n\n#{artifact_lines}\n"
+          else
+            ""
           end
 
           <<~MARKDOWN
@@ -310,18 +326,24 @@ module Ace
             - Source: `#{resolved_source[:input]}`
             - Source type: `#{resolved_source[:type]}`
             - Modes: `#{modes.join(',')}`
-            - Write-back mode: `#{no_writeback ? 'disabled (--no-writeback)' : 'enabled'}`
-
-            No downstream task/plan artifacts were created by this simulation run.
-
+            - Write-back mode: `#{no_writeback ? 'disabled (--dry-run)' : 'enabled'}`
+            #{artifact_section}
             ## Preview Content
 
-            #{section_preview}
+            #{full_preview}
           MARKDOWN
         end
 
-        def build_success_summary(run_id:, resolved_source:, modes:, stage_outputs:, no_writeback:, partial:, writeback_status:)
+        def build_success_summary(run_id:, resolved_source:, modes:, stage_outputs:, no_writeback:, partial:,
+                                  writeback_status:, artifact_paths: [])
           stage_lines = stage_outputs.map { |stage| "- `#{stage[:file]}` (#{stage[:status]})" }.join("\n")
+
+          artifact_section = if artifact_paths.any?
+            artifact_lines = artifact_paths.map { |p| "- `#{File.basename(p)}`" }.join("\n")
+            "\n## Generated Artifacts\n#{artifact_lines}"
+          else
+            ""
+          end
 
           <<~MARKDOWN
             # Run Summary
@@ -334,8 +356,18 @@ module Ace
             - Status: `#{partial ? 'partial' : 'done'}`
 
             ## Stage Artifacts
-            #{stage_lines}
+            #{stage_lines}#{artifact_section}
           MARKDOWN
+        end
+
+        def write_stage_artifact_files(session_dir:, resolved_source:, artifacts:)
+          source_type = resolved_source[:type]
+          artifacts.filter_map do |mode_name, artifact_content|
+            next if artifact_content.to_s.strip.empty?
+
+            filename = "stage-#{source_type}-#{mode_name}-artifact.md"
+            @session_store.write_markdown_artifact(session_dir, filename, artifact_content.to_s)
+          end
         end
 
         def apply_writeback_if_needed(resolved_source:, no_writeback:, stage_failure:, run_id:, modes:, synthesis:, preview_path:)

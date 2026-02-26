@@ -37,7 +37,7 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
 
     @command.stub :runner, runner do
       output, = capture_io do
-        @command.call(source: "285.01", modes: "plan", no_writeback: true, quiet: false, verbose: false, debug: false)
+        @command.call(source: "285.01", modes: "plan", dry_run: true, quiet: false, verbose: false, debug: false)
       end
 
       assert_includes output, "Simulation run complete"
@@ -55,7 +55,7 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
 
   def test_call_raises_error_when_source_missing
     error = assert_raises(Ace::Core::CLI::Error) do
-      @command.call(source: nil, modes: "plan", no_writeback: true, quiet: false, verbose: false, debug: false)
+      @command.call(source: nil, modes: "plan", dry_run: true, quiet: false, verbose: false, debug: false)
     end
 
     assert_includes error.message, "Missing required option: --source"
@@ -73,7 +73,7 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
 
     @command.stub :runner, runner do
       output, = capture_io do
-        @command.call(source: "285.01", modes: "plan", no_writeback: true, quiet: true, verbose: false, debug: false)
+        @command.call(source: "285.01", modes: "plan", dry_run: true, quiet: true, verbose: false, debug: false)
       end
 
       assert_equal "i50jj3\n", output
@@ -99,7 +99,7 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
           next_phase_review: true,
           no_next_phase_review: false,
           auto_trigger: true,
-          no_writeback: true,
+          dry_run: true,
           quiet: false,
           verbose: false,
           debug: false
@@ -133,7 +133,7 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
 
     @command.stub :runner, runner do
       output, = capture_io do
-        @command.call(source: "285.01", modes: "plan", no_writeback: true, quiet: false, verbose: true, debug: false)
+        @command.call(source: "285.01", modes: "plan", dry_run: true, quiet: false, verbose: true, debug: false)
       end
 
       assert_includes output, "Artifacts:"
@@ -161,7 +161,7 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
           next_phase_review: false,
           no_next_phase_review: true,
           auto_trigger: true,
-          no_writeback: true,
+          dry_run: true,
           quiet: false,
           verbose: false,
           debug: false

@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.680] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.44.8**: Next-phase simulation stages now produce real artifacts (draft spec, implementation plan) saved as markdown files in simulation cache; add per-source-type phase configuration; add `build_full_preview` for complete writeback preview
+
+### Changed
+- **ace-taskflow v0.44.8**: Rename `--no-writeback` to `--dry-run` with clearer semantics; update writeback preview to show full artifact content; defer output schema to workflow files instead of hard-coding in prompt
+
+### Fixed
+- **ace-taskflow v0.44.8**: Pass previous artifact as readable text for plan stage; fix upsert pattern to preserve artifact markers during review section update
+
 ## [0.9.679] - 2026-02-26
 
 ### Technical

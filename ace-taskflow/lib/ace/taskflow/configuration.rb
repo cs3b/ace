@@ -209,6 +209,16 @@ module Ace
           config.dig("taskflow", "review", "next_phase", "model")
       end
 
+      # Get phase configuration for a given source type.
+      # Returns an array of phase hashes like [{ "mode" => "draft", "workflow" => "wfi://..." }]
+      # or nil if no phases are configured for that source type.
+      def phases_for(source_type)
+        phases = config.dig("review", "next_phase", "phases")
+        return nil unless phases
+
+        phases[source_type.to_s]
+      end
+
       # Get idea-specific configuration
       # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def idea_config

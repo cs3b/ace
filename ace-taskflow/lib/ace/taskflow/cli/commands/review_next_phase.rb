@@ -16,10 +16,10 @@ module Ace
             Run next-phase simulation and persist cache artifacts
 
             SYNTAX:
-              ace-taskflow review-next-phase --source <idea|task-ref|path> [--modes draft,plan] [--no-writeback]
+              ace-taskflow review-next-phase --source <idea|task-ref|path> [--modes draft,plan] [--dry-run]
 
             EXAMPLES:
-              $ ace-taskflow review-next-phase --source 285.01 --modes plan --no-writeback
+              $ ace-taskflow review-next-phase --source 285.01 --modes plan --dry-run
               $ ace-taskflow review-next-phase --source 8poz4f --modes draft,plan
           DESC
 
@@ -29,7 +29,7 @@ module Ace
           option :next_phase_review, type: :boolean, desc: "Force-enable next-phase simulation"
           option :no_next_phase_review, type: :boolean, desc: "Force-disable next-phase simulation"
           option :auto_trigger, type: :boolean, desc: "Apply auto-trigger policy instead of manual execution"
-          option :no_writeback, type: :boolean, desc: "Disable write-back and generate preview only"
+          option :dry_run, type: :boolean, desc: "Dry-run: generate artifacts in cache only, don't modify source file"
           option :quiet, type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug, type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -44,7 +44,7 @@ module Ace
             result = runner.run(
               source: source,
               modes: modes,
-              no_writeback: !!options[:no_writeback],
+              no_writeback: !!options[:dry_run],
               manual: !options[:auto_trigger],
               cli_enable: !!options[:next_phase_review],
               cli_disable: !!options[:no_next_phase_review]
