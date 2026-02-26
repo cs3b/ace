@@ -64,12 +64,24 @@ module Ace
 
           def render_group_plain(group)
             lines = []
-            lines << "#{stats_block(group[:additions], group[:deletions])}#{files_label(group[:file_count])}#{group[:name]}"
+            lines << header_line(
+              additions: group[:additions],
+              deletions: group[:deletions],
+              file_count: group[:file_count],
+              icon: nil,
+              label: group[:name]
+            )
 
             Array(group[:layers]).each do |layer|
               unless skip_layer_header?(group, layer)
                 icon, label = layer_header_parts(layer[:name], group_name: group[:name])
-                lines << "#{stats_block(layer[:additions], layer[:deletions])}#{files_label(layer[:file_count])}#{icon_column(icon)}#{label}"
+                lines << header_line(
+                  additions: layer[:additions],
+                  deletions: layer[:deletions],
+                  file_count: layer[:file_count],
+                  icon: icon,
+                  label: label
+                )
               end
               Array(layer[:files]).each_with_index do |file, idx|
                 prev_file = layer[:files][idx - 1] if idx > 0
@@ -154,7 +166,9 @@ module Ace
           # Width of a rendered stats block: "%5s, %5s" = 12 chars
           STATS_WIDTH = 12
           # Separator replacing "   N files   " on file lines (= 3 + 2 + 9 = 14 chars)
-          FILE_INDENT = " " * 14
+          FILES_COLUMN_WIDTH = 14
+          ICON_COLUMN = 3
+          FILE_INDENT = " " * (FILES_COLUMN_WIDTH + ICON_COLUMN)
 
           def stats_block(additions, deletions, binary: false)
             return " " * STATS_WIDTH if binary
@@ -188,9 +202,13 @@ module Ace
           end
 
           def icon_column(icon)
-            return "  " if icon.nil?
+            return " " * ICON_COLUMN if icon.nil?
 
             "#{icon} "
+          end
+
+          def header_line(additions:, deletions:, file_count:, icon:, label:)
+            "#{stats_block(additions, deletions)}#{files_label(file_count)}#{icon_column(icon)}#{label}"
           end
 
           def skip_layer_header?(group, layer)
