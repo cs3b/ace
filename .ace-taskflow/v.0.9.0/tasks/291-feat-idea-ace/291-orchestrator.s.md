@@ -88,8 +88,11 @@ ace-idea update q7w --remove tags=wip
 ## Scope of Work
 
 - **Gem**: `ace-idea` — idea-specific atoms/molecules/organisms/models + CLI
+- **Handbook migration**: Idea workflows (3 files: `capture`, `capture-features`, `prioritize`) — move to ace-idea
 - **Depends on**: ace-support-items (from task 290.01), ace-b36ts, ace-support-markdown, ace-llm
-- **Out of scope**: Migration from ace-taskflow, ace-task gem (task 290), retrospectives
+- **Out of scope**: Migration from ace-taskflow, ace-task gem (task 290), retrospectives, data migration
+
+**Note**: ace-taskflow will be **deleted** after all domain extractions complete. ace-idea must be fully independent — own doctor, own config, own filtering. Shared utilities from ace-taskflow are duplicated rather than centralized.
 
 ## References
 
