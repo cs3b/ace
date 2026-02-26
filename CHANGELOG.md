@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.656] - 2026-02-26
+
+### Added
+- **ace-git v0.11.8**: Add emoji-prefixed grouped-stats layer headers for faster scanning of `lib/`, `test/`, and `handbook/` sections
+
 ## [0.9.655] - 2026-02-26
 
 ### Fixed
