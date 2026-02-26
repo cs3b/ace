@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.664] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.42.13**: Add opt-in `review.next_phase.include_work_simulation` extension control and focused regression coverage for work-extension trigger/default behavior
+
+### Changed
+- **ace-taskflow v0.42.13**: Allow task-source default next-phase modes to include `work` only when extension mode is explicitly enabled
+
+### Fixed
+- **ace-taskflow v0.42.13**: Preserve partial synthesis artifacts when mixed `plan,work` runs fail in work stage, and reject task `work`-only runs with prerequisite guidance
+
+## [0.9.663] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.42.12**: Add task-source simulation write-back section upsert for next-phase review output and add deterministic next-phase trigger-policy resolution for manual/auto execution modes
+
+### Changed
+- **ace-taskflow v0.42.12**: Extend `review-next-phase` with `--next-phase-review`, `--no-next-phase-review`, `--next-phase-modes`, and `--auto-trigger`, and apply write-back previews/cache-dir resolution through configuration helpers
+
 ## [0.9.662] - 2026-02-26
 
 ### Added
