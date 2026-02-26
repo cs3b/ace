@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.9] - 2026-02-26
+
+### Fixed
+- Parse brace renames with an empty side (for example `{ => _archive}`) in numstat output so grouped-stats keeps move entries in the correct group
+
+### Changed
+- Compact shared rename prefixes in grouped-stats file lines to surface only the changed destination tail on the first rename line
+- Normalize project-root group labeling to `./`, hide redundant layer headers when layer totals match the group totals, and suppress anonymous `other/` summary rows
+- Switch repeated path-prefix squashing from space padding to explicit `.../basename` formatting for clearer relative context
+
 ## [0.11.8] - 2026-02-26
 
 ### Added

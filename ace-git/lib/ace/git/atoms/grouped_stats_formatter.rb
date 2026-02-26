@@ -67,7 +67,10 @@ module Ace
             lines << "#{stats_block(group[:additions], group[:deletions])}#{files_label(group[:file_count])}#{group[:name]}"
 
             Array(group[:layers]).each do |layer|
-              lines << "#{stats_block(layer[:additions], layer[:deletions])}#{files_label(layer[:file_count])}#{display_layer_name(layer[:name])}"
+              unless skip_layer_header?(group, layer)
+                icon, label = layer_header_parts(layer[:name], group_name: group[:name])
+                lines << "#{stats_block(layer[:additions], layer[:deletions])}#{files_label(layer[:file_count])}#{icon_column(icon)}#{label}"
+              end
               Array(layer[:files]).each_with_index do |file, idx|
                 prev_file = layer[:files][idx - 1] if idx > 0
                 lines << "#{stats_block(file[:additions], file[:deletions], binary: file[:binary])}#{FILE_INDENT}#{file_line(file, prev_file: prev_file)}"
@@ -88,9 +91,13 @@ module Ace
           end
 
           def squashed_path(path, prev_path)
-            return path unless prev_path
+            if path.include?(" -> ")
+              return compact_rename_path(path) if prev_path.nil? || !prev_path.include?(" -> ")
 
-            return squashed_rename_path(path, prev_path) if path.include?(" -> ")
+              return squashed_rename_path(path, prev_path)
+            end
+
+            return path unless prev_path
 
             # Don't compare directory of a rename path — it's not a real filesystem dir
             return path if prev_path.include?(" -> ")
@@ -100,7 +107,7 @@ module Ace
 
             return path if curr_dir == "." || curr_dir != prev_dir
 
-            " " * (curr_dir.length + 1) + File.basename(path)
+            ".../#{File.basename(path)}"
           end
 
           # Squash consecutive renames that share from_dir and to_dir.
@@ -118,6 +125,30 @@ module Ace
             return path if from_dir == "." || to_dir == "."
 
             "#{" " * (from_dir.length + 1)}#{File.basename(from)} -> #{" " * (to_dir.length + 1)}#{File.basename(to)}"
+          end
+
+          # Compact shared leading path in a single rename:
+          # "a/b/old.rb -> a/b/new.rb" => "a/b/old.rb -> new.rb"
+          # "a/b/file -> a/b/_archive/file" => "a/b/file -> _archive/file"
+          def compact_rename_path(path)
+            from, to = path.split(" -> ", 2)
+            return path if from.nil? || to.nil?
+
+            from_segments = from.split("/")
+            to_segments = to.split("/")
+            common_segments = []
+
+            while !from_segments.empty? && !to_segments.empty? && from_segments.first == to_segments.first
+              common_segments << from_segments.shift
+              to_segments.shift
+            end
+
+            return path if common_segments.empty?
+
+            common_prefix = common_segments.join("/") + "/"
+            from_tail = from.delete_prefix(common_prefix)
+            to_tail = to.delete_prefix(common_prefix)
+            "#{common_prefix}#{from_tail} -> #{to_tail}"
           end
 
           # Width of a rendered stats block: "%5s, %5s" = 12 chars
@@ -150,11 +181,27 @@ module Ace
             "#{add}, #{del}"
           end
 
-          def display_layer_name(name)
-            icon = LAYER_ICONS[name.to_s]
-            return name.to_s if icon.nil?
+          def layer_header_parts(name, group_name:)
+            layer = name.to_s
+            label = layer == "other/" && group_name.to_s != "./" ? "" : layer
+            [LAYER_ICONS[layer], label]
+          end
 
-            "#{icon} #{name}"
+          def icon_column(icon)
+            return "  " if icon.nil?
+
+            "#{icon} "
+          end
+
+          def skip_layer_header?(group, layer)
+            group_name = group[:name].to_s
+            layer_name = layer[:name].to_s
+
+            return true if group_name == "./" && layer_name == "root/"
+
+            group[:additions].to_i == layer[:additions].to_i &&
+              group[:deletions].to_i == layer[:deletions].to_i &&
+              group[:file_count].to_i == layer[:file_count].to_i
           end
 
           def trim_trailing_blank(lines)

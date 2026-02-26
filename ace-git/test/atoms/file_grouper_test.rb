@@ -25,7 +25,7 @@ class FileGrouperTest < AceGitTestCase
     names = result[:groups].map { |g| g[:name] }
     assert_includes names, "ace-git/"
     assert_includes names, ".ace-taskflow/"
-    assert_includes names, "Project root"
+    assert_includes names, "./"
   end
 
   def test_group_relativizes_rename_display_path
