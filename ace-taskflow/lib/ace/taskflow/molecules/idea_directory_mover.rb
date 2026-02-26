@@ -24,27 +24,39 @@ module Ace
             idea_folder = File.dirname(idea_path)
             idea_name = File.basename(idea_folder)
             ideas_dir = File.dirname(idea_folder)
-            is_directory = true  # We're moving the folder, not the file
           else
             idea_folder = idea_path
             idea_name = File.basename(idea_folder)
             ideas_dir = File.dirname(idea_folder)
-            is_directory = true
+          end
+
+          archive_dir_name = Ace::Taskflow.configuration.done_dir
+
+          # Idempotent: already in archive directory
+          if path_in_directory_component?(idea_path, archive_dir_name)
+            metadata_result = update_completion_metadata_in_place(idea_folder, timestamp)
+            message = "Idea already in #{archive_dir_name}/"
+            message = "#{message} (warning: #{metadata_result[:warning]})" if metadata_result[:warning]
+            return {
+              success: true,
+              new_path: idea_folder,
+              message: message
+            }
           end
 
           # Create archive directory at ideas level (sibling to idea folders)
-          archive_dir_name = Ace::Taskflow.configuration.done_dir
           archive_dir = File.join(ideas_dir, archive_dir_name)
           FileUtils.mkdir_p(archive_dir) unless File.directory?(archive_dir)
 
           # Target path in archive directory
           target_path = File.join(archive_dir, idea_name)
 
-          # Check if target already exists
+          # Target already exists means operation is already effectively complete.
           if File.exist?(target_path) || Dir.exist?(target_path)
             return {
-              success: false,
-              message: "Target already exists in #{archive_dir_name}/: #{target_path}"
+              success: true,
+              new_path: target_path,
+              message: "Idea already in #{archive_dir_name}/"
             }
           end
 
@@ -171,19 +183,30 @@ module Ace
             ideas_dir = File.dirname(idea_folder)
           end
 
-          # Create parked directory at ideas level (sibling to idea folders)
           maybe_dir_name = Ace::Taskflow.configuration.maybe_dir
+
+          # Idempotent: already in maybe directory
+          if path_in_directory_component?(idea_path, maybe_dir_name)
+            return {
+              success: true,
+              new_path: idea_folder,
+              message: "Idea already in #{maybe_dir_name}/"
+            }
+          end
+
+          # Create parked directory at ideas level (sibling to idea folders)
           maybe_dir = File.join(ideas_dir, maybe_dir_name)
           FileUtils.mkdir_p(maybe_dir) unless File.directory?(maybe_dir)
 
           # Target path in parked directory
           target_path = File.join(maybe_dir, idea_name)
 
-          # Check if target already exists
+          # Target already exists means operation is already effectively complete.
           if File.exist?(target_path) || Dir.exist?(target_path)
             return {
-              success: false,
-              message: "Target already exists in #{maybe_dir_name}/: #{target_path}"
+              success: true,
+              new_path: target_path,
+              message: "Idea already in #{maybe_dir_name}/"
             }
           end
 
@@ -276,6 +299,29 @@ module Ace
         end
 
         private
+
+        # Check if a path contains the directory name as a full path component.
+        def path_in_directory_component?(path, dir_name)
+          path.match?(%r{(^|/)#{Regexp.escape(dir_name)}(/|$)})
+        end
+
+        # Update completion metadata inside an already-archived idea folder.
+        # Returns warning instead of raising to keep idempotent archive operation successful.
+        def update_completion_metadata_in_place(idea_folder, timestamp)
+          idea_file = File.join(idea_folder, "idea.md")
+          idea_file = Dir.glob(File.join(idea_folder, "*.md")).first unless File.exist?(idea_file)
+
+          unless idea_file
+            return {
+              warning: "No markdown file found to update completion metadata"
+            }
+          end
+
+          update_idea_completion_metadata(idea_file, timestamp)
+          { warning: nil }
+        rescue StandardError => e
+          { warning: "Failed to update completion metadata: #{e.message}" }
+        end
 
         # Update idea completion metadata in frontmatter
         def update_idea_completion_metadata(idea_path, timestamp)
