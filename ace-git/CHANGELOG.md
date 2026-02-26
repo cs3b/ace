@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.8] - 2026-02-26
+
+### Added
+- Add emoji-prefixed grouped-stats layer headers for faster visual scanning: `🧱 lib/`, `🧪 test/`, and `📚 handbook/`
+
 ## [0.11.7] - 2026-02-25
 
 ### Changed
