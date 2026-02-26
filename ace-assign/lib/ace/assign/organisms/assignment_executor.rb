@@ -229,6 +229,21 @@ module Ace
         # @return [Hash] Result with updated state
         def advance(report_path, fork_root: nil)
           raise Error, "Report file not found: #{report_path}" unless File.exist?(report_path)
+
+          # When fork_root is specified and no phase is in_progress in the subtree,
+          # auto-start the next workable phase to preserve fork-run entry behavior.
+          fork_root_str = fork_root&.strip
+          if fork_root_str && !fork_root_str.empty?
+            assignment = assignment_manager.find_active
+            if assignment
+              state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+              if state.current_in_subtree(fork_root_str).nil?
+                next_workable = state.next_workable_in_subtree(fork_root_str)
+                phase_writer.mark_in_progress(next_workable.file_path) if next_workable
+              end
+            end
+          end
+
           finish_phase(report_content: File.read(report_path), fork_root: fork_root)
         end
 
