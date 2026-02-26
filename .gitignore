@@ -46,3 +46,15 @@ _current
 /helper.rb
 /to_delete.rb
 /to_move.rb
+
+# Environment/debug files that should never be committed
+# These capture environment state and should use /tmp or .cache/ instead
+/env_output.txt
+/ls_*.txt
+/*_test.txt
+/*_output.txt
+/*_version.txt
+/which_*.txt
+/ace_bundle_output.md
+/project_context.md
+/bundle_version.txt
