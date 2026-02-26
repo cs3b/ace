@@ -499,18 +499,21 @@ class TasksCommandTest < AceTaskflowTestCase
         # Stub manager to return nil for parent (simulating missing task)
         manager = command.task_manager
         manager.stub :show_task, nil do
-          # Should produce no output when parent is missing
+          # Should display subtask with missing parent indicator
           output = capture_stdout do
             command.send(:display_orphan_subtasks_with_context, tasks, [])
           end
-          assert_empty output.strip, "Should produce no output when parent is missing"
+          refute_empty output.strip, "Should produce output when parent is missing"
+          assert_includes output, "[missing parent: 888]", "Should show missing parent indicator"
+          assert_includes output, "v.0.9.0+task.999", "Orphan subtask reference should be shown"
+          assert_includes output, "└─", "Subtask should have tree connector"
 
           # In verbose mode, should log debug message to stderr
           command.instance_variable_set(:@options, { verbose: true })
           stdout_output, stderr_output = capture_subprocess_io do
             command.send(:display_orphan_subtasks_with_context, tasks, [])
           end
-          assert_empty stdout_output.strip, "Should produce no stdout output"
+          refute_empty stdout_output.strip, "Should produce stdout output"
           assert_includes stderr_output, "[DEBUG]", "Should output debug log to stderr"
           assert_includes stderr_output, "Parent task 888 not found", "Should mention missing parent ID"
         end
