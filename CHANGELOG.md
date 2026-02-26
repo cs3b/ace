@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.661] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.42.10**: Add `ace-taskflow review-next-phase` command and framework-level simulation session contract with deterministic run cache artifacts under `.cache/ace-taskflow/simulations/<b36ts-id>/`
+
+### Changed
+- **ace-taskflow v0.42.10**: Add default `review.next_phase` configuration keys for enablement, auto-trigger defaults, and cache directory contract
+
+### Fixed
+- **ace-taskflow v0.42.10**: Persist explicit simulation failure artifact (`run-failure.yml`) and failed-stage metadata when stage execution fails
+
 ## [0.9.660] - 2026-02-26
 
 ### Fixed
