@@ -5,6 +5,7 @@ require_relative "../error"
 require_relative "help_formatter"
 require_relative "help_concise"
 require_relative "usage_formatter"
+require_relative "argv_coalescer"
 require_relative "command_groups"
 require_relative "standard_options"
 
