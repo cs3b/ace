@@ -5,6 +5,12 @@ module Ace
     module Atoms
       # Render grouped numstat data to aligned plain text or markdown.
       module GroupedStatsFormatter
+        LAYER_ICONS = {
+          "lib/" => "🧱",
+          "test/" => "🧪",
+          "handbook/" => "📚"
+        }.freeze
+
         class << self
           def format(grouped_data, markdown: false, collapse_above: 5)
             groups = grouped_data[:groups] || []
@@ -61,7 +67,7 @@ module Ace
             lines << "#{stats_block(group[:additions], group[:deletions])}#{files_label(group[:file_count])}#{group[:name]}"
 
             Array(group[:layers]).each do |layer|
-              lines << "#{stats_block(layer[:additions], layer[:deletions])}#{files_label(layer[:file_count])}#{layer[:name]}"
+              lines << "#{stats_block(layer[:additions], layer[:deletions])}#{files_label(layer[:file_count])}#{display_layer_name(layer[:name])}"
               Array(layer[:files]).each_with_index do |file, idx|
                 prev_file = layer[:files][idx - 1] if idx > 0
                 lines << "#{stats_block(file[:additions], file[:deletions], binary: file[:binary])}#{FILE_INDENT}#{file_line(file, prev_file: prev_file)}"
@@ -142,6 +148,13 @@ module Ace
             add = group[:additions].to_i.positive? ? "+#{group[:additions]}" : "+0"
             del = group[:deletions].to_i.positive? ? "-#{group[:deletions]}" : "-0"
             "#{add}, #{del}"
+          end
+
+          def display_layer_name(name)
+            icon = LAYER_ICONS[name.to_s]
+            return name.to_s if icon.nil?
+
+            "#{icon} #{name}"
           end
 
           def trim_trailing_blank(lines)
