@@ -47,6 +47,7 @@ module Ace
           COL_NUMBER = 12
           COL_STATUS = 12
           COL_NAME = 30
+          COL_FORK = 6
 
           desc "Display current workflow queue status"
 
@@ -201,8 +202,8 @@ module Ace
 
           def print_hierarchical_status(state, root_number: nil)
             # Header
-            puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %s", "NUMBER", "STATUS", "NAME", "CHILDREN")
-            puts "-" * 70
+            puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %-#{COL_FORK}s %s", "NUMBER", "STATUS", "NAME", "FORK", "CHILDREN")
+            puts "-" * 78
 
             # Print hierarchy with tree structure
             nodes = root_hierarchy_nodes(state, root_number)
@@ -247,7 +248,10 @@ module Ace
               # Status with icon
               status_icon = STATUS_ICONS[phase.status] || phase.status.to_s.capitalize
 
-              # Children count
+              # Fork indicator - explicit signal that this phase must be delegated
+              fork_info = children.any? ? "yes" : ""
+
+              # Children count (progress visibility)
               child_info = if children.any?
                              incomplete = children.count { |c| c[:step].status != :done }
                              if incomplete > 0
@@ -268,8 +272,8 @@ module Ace
                              else
                                phase.name
                              end
-              puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %s%s",
-                          number_display, status_icon, display_name, child_info, error_suffix)
+              puts format("%-#{COL_NUMBER}s %-#{COL_STATUS}s %-#{COL_NAME}s %-#{COL_FORK}s %s%s",
+                          number_display, status_icon, display_name, fork_info, child_info, error_suffix)
 
               # Recurse for children
               print_hierarchy_level(children, state, depth: depth + 1) if children.any?

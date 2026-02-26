@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.22] - 2026-02-26
+
+### Added
+- Add explicit FORK column to status output showing "yes" for phases with children, making delegation signal unmissable
+- Introduce adaptive recovery for failed subtrees with retry/fail-children strategies
+- Introduce fork PID telemetry and scoped status filtering for subprocess tracking
+
+### Changed
+- Decouple assignment targeting from environment variables; rely on explicit `--assignment <id>` flags
+- Enhance plan-task instructions for behavioral spec adherence
+- Update `assign/drive` workflow to reference FORK column instead of subtle "Fork subtree detected" message
+
+### Technical
+- Add validation order to E2E test expectations
+- Update E2E test runner and verifier configurations
+- Add test for FORK column in status output
+
 ## [0.12.21] - 2026-02-25
 
 ### Changed
