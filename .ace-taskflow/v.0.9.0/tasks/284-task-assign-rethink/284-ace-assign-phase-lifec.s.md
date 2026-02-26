@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.284
-status: pending
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 284-rethink-ace-assign-phase-lifecycle-cli-startfinish-piped-reports
+  path: "../ace-task.284"
+  created_at: '2026-02-26 02:13:44'
+  updated_at: '2026-02-26 02:13:44'
+  target_branch: main
 ---
 
 # Rethink ace-assign phase lifecycle CLI (start/finish + piped reports)
