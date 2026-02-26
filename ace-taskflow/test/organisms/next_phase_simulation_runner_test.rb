@@ -4,6 +4,7 @@ require_relative "../test_helper"
 require_relative "../../lib/ace/taskflow/organisms/next_phase_simulation_runner"
 require_relative "../../lib/ace/taskflow/molecules/simulation_session_store"
 require "fileutils"
+require "securerandom"
 require "yaml"
 
 class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
@@ -12,7 +13,8 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       source_path = File.join(dir, "tmp-task-source.s.md")
       File.write(source_path, "# Temporary source\n")
 
-      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: ".cache/ace-taskflow/simulations")
+      cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations", SecureRandom.hex(4))
+      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
       runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(session_store: store)
       result = runner.run(source: source_path, modes: ["plan"], no_writeback: true)
 
@@ -68,26 +70,33 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       source_path = File.join(ideas_dir, "failing-draft.idea.s.md")
       File.write(source_path, "# Idea\n")
 
-      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: ".cache/ace-taskflow/simulations")
+      cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations", SecureRandom.hex(4))
+      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
+      failure_token = "synthetic stage failure #{SecureRandom.hex(4)}"
       runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(
         session_store: store,
         stage_executor: lambda { |mode:, **_args|
-          raise "synthetic stage failure" if mode == "draft"
+          raise failure_token if mode == "draft"
 
           { mode: mode }
         }
       )
-
       assert_raises(RuntimeError) { runner.run(source: source_path, modes: ["draft", "plan"], no_writeback: true) }
 
-      run_dirs = Dir.glob(File.join(store.cache_root, "*")).sort
-      refute_empty run_dirs, "at least one run directory should exist after failure"
+      matching_dirs = Dir.glob(File.join(store.cache_root, "*")).sort.select do |candidate|
+        failure_path = File.join(candidate, "run-failure.yml")
+        next false unless File.exist?(failure_path)
 
-      session_dir = run_dirs.last
-      failure_data = YAML.safe_load_file(File.join(session_dir, "run-failure.yml"), permitted_classes: [Symbol], aliases: true)
-      assert_equal "failed", failure_data["status"] || failure_data[:status]
-      assert_equal "draft", failure_data["failed_stage"] || failure_data[:failed_stage]
-      refute File.exist?(File.join(session_dir, "stage-idea-plan.yml"))
+        failure_data = YAML.safe_load_file(failure_path, permitted_classes: [Symbol], aliases: true)
+        failed_stage = failure_data["failed_stage"] || failure_data[:failed_stage]
+        error_message = failure_data["error"] || failure_data[:error]
+        failed_stage == "draft" && error_message == failure_token
+      end
+      refute_empty matching_dirs, "expected at least one failure artifact with failed_stage=draft"
+
+      matching_dirs.each do |session_dir|
+        refute File.exist?(File.join(session_dir, "stage-idea-plan.yml"))
+      end
     end
   end
 
