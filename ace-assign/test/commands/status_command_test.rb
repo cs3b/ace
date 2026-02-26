@@ -356,4 +356,42 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_shows_fork_column_for_phases_with_children
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task implement]
+        },
+        { "name" => "finalize", "instructions" => "Finalize work" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(assignment: result[:assignment].id)
+      end
+
+      # Header should include FORK column
+      assert_includes output.first, "FORK"
+
+      # Phase with children (010) should show "yes" in FORK column
+      # Match pattern: 010 followed by whitespace, then status, then "work-on-task", then "yes"
+      assert_match(/010\s+.*work-on-task\s+yes\s+\(0\/3 done\)/, output.first)
+
+      # Child phases (010.01, 010.02, 010.03) should have empty FORK column (no "yes" after their names)
+      refute_match(/010\.01\s+.*onboard\s+yes/, output.first)
+
+      # Phase without children (020) should not show "yes" in FORK column
+      refute_match(/020\s+.*finalize\s+yes/, output.first)
+
+      Ace::Assign.reset_config!
+    end
+  end
+
 end
