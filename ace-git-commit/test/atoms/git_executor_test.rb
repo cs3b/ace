@@ -62,19 +62,7 @@ class GitExecutorTest < TestCase
   def test_has_changes_returns_true_when_changes_exist
     @cmd_executor.stub :has_unstaged_changes?, true do
       @cmd_executor.stub :has_staged_changes?, false do
-        @cmd_executor.stub :has_untracked_changes?, false do
-          assert @git.has_changes?
-        end
-      end
-    end
-  end
-
-  def test_has_changes_returns_true_when_untracked_files_exist
-    @cmd_executor.stub :has_unstaged_changes?, false do
-      @cmd_executor.stub :has_staged_changes?, false do
-        @cmd_executor.stub :has_untracked_changes?, true do
-          assert @git.has_changes?
-        end
+        assert @git.has_changes?
       end
     end
   end
@@ -84,6 +72,16 @@ class GitExecutorTest < TestCase
       @cmd_executor.stub :has_staged_changes?, false do
         @cmd_executor.stub :has_untracked_changes?, false do
           refute @git.has_changes?
+        end
+      end
+    end
+  end
+
+  def test_has_changes_returns_true_when_only_untracked_files_exist
+    @cmd_executor.stub :has_unstaged_changes?, false do
+      @cmd_executor.stub :has_staged_changes?, false do
+        @cmd_executor.stub :has_untracked_changes?, true do
+          assert @git.has_changes?
         end
       end
     end

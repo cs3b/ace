@@ -7,12 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.10] - 2026-02-26
+
+### Technical
+- Add `has_untracked_changes?` stub to `test_handles_no_changes_in_repository` edge test to prevent environment-dependent test flakes
+
+## [0.18.9] - 2026-02-26
+
+### Technical
+- Add explicit test for untracked-only `has_changes?` path covering all three condition branches
+
 ## [0.18.8] - 2026-02-26
 
 ### Fixed
-- Run normal stage-all flow before deciding no-op, instead of short-circuiting at the top of execution.
-- Correct change detection to include untracked files via `ace-git` command executor helpers.
-- Preserve single-line no-op output: `No changes to commit` is printed only after staging confirms nothing is staged.
+- Restore `has_untracked_changes?` in `has_changes?` so `--stage-all` no longer silently skips repos containing only untracked files
 
 ## [0.18.7] - 2026-02-26
 
