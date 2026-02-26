@@ -113,6 +113,27 @@ bundle install
 
 This ensures Gemfile.lock reflects the new version for mono-repo workspace dependencies.
 
+### 5.1 Check Dependent Gemspec Constraints (MINOR/MAJOR bumps only)
+
+When the bump is MINOR or MAJOR, the new version may exceed `~>` constraints in other packages.
+
+**Skip this step for PATCH bumps** — `~>` constraints allow patch-level variation by design.
+
+```bash
+# Find all gemspecs that depend on this package
+grep -rl "\"ace-[package]\"" ace-*/ace-*.gemspec
+```
+
+For each match, check if the constraint still covers the new version:
+- `~> 0.10` allows `0.10.x` but rejects `0.11.0`
+- After a MINOR bump: `"~> 0.10"` → `"~> 0.11"` (bump the minor, drop the patch)
+- After a MAJOR bump: `"~> 0.x"` → `"~> 1.0"` (bump the major)
+
+For each stale constraint:
+1. Update the gemspec constraint to match the new MINOR (or MAJOR)
+2. Run `bundle install` in that dependent package directory
+3. Include the updated gemspecs and lockfiles in the same release commit
+
 ### 6. Update Changelog
 
 **Categorize commits by type:**
