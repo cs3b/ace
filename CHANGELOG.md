@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.665] - 2026-02-26
+
+### Added
+- **ace-support-core v0.25.0**: `ArgvCoalescer` utility for coalescing repeated CLI flags into comma-separated values, working around dry-cli's `type: :array` limitation
+
+### Fixed
+- **ace-overseer v0.4.16**: Fix repeated `--task` flags (`--task 288 --task 287`) being silently dropped by dry-cli; values are now coalesced before parsing
+
+## [0.9.664] - 2026-02-26
+
+### Fixed
+- **ace-overseer v0.4.15**: Raise descriptive error when no valid task references are provided, preventing `NoMethodError` on empty input.
+
+## [0.9.663] - 2026-02-26
+
+### Added
+- **ace-overseer v0.4.14**: Accept ordered multi-task `--task` input for `work-on` via repeated flags, comma-separated values, and mixed forms.
+
+### Fixed
+- **ace-overseer v0.4.14**: Validate all task refs before provisioning side effects and fail early when multi-task input is used with single-task presets.
+
+### Changed
+- **ace-overseer v0.4.14**: Preserve input order while expanding orchestrator refs into in-place subtask sequences for `taskrefs` presets.
+
 ## [0.9.662] - 2026-02-26
 
 ### Fixed
