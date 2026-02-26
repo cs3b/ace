@@ -66,8 +66,12 @@ module Ace
               end
 
               maybe_dir = Ace::Taskflow.configuration.maybe_dir
-              puts "Idea '#{reference}' parked (moved to #{maybe_dir}/)"
-              puts "Good idea but not now - restore with 'idea unpark #{reference}'"
+              if result[:message].include?("already in")
+                puts result[:message]
+              else
+                puts "Idea '#{reference}' parked (moved to #{maybe_dir}/)"
+                puts "Good idea but not now - restore with 'idea unpark #{reference}'"
+              end
             end
 
             private

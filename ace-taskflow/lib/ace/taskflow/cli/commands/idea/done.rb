@@ -63,7 +63,11 @@ module Ace
                 raise Ace::Core::CLI::Error.new(result[:message])
               end
 
-              puts "Idea '#{reference}' marked as done and moved to _archive/"
+              if result[:message].include?("already in")
+                puts result[:message]
+              else
+                puts "Idea '#{reference}' marked as done and moved to _archive/"
+              end
               puts "Completed at: #{Time.now.strftime('%Y-%m-%d %H:%M:%S')}"
             end
 
