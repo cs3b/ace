@@ -39,6 +39,7 @@ class GroupedStatsFormatterTest < AceGitTestCase
 
     assert_match(/\+10,\s+-3\s+2 files\s+total/, output)
     assert_match(/ace-git\//, output)
+    assert_match(/🧱 lib\//, output)
     assert_match(/assets\/logo\.bin \(binary\)/, output)
   end
 
@@ -55,7 +56,7 @@ class GroupedStatsFormatterTest < AceGitTestCase
                  "expected no blank line after group header"
 
     # No blank line between layer header and file lines
-    layer_idx = lines.index { |l| l.include?("lib/") }
+    layer_idx = lines.index { |l| l.include?("🧱 lib/") }
     refute_nil layer_idx, "expected layer header line"
     refute_equal "", lines[layer_idx + 1],
                  "expected no blank line after layer header"
@@ -67,6 +68,24 @@ class GroupedStatsFormatterTest < AceGitTestCase
     assert_match(/<details>/, output)
     assert_match(/<summary>ace-git\//, output)
     assert_match(/```text/, output)
+    assert_match(/🧱 lib\//, output)
+  end
+
+  def test_non_mapped_layer_name_remains_plain
+    data = {
+      groups: [{
+        name: "pkg/", additions: 2, deletions: 1, file_count: 1,
+        layers: [{
+          name: "other/", additions: 2, deletions: 1, file_count: 1,
+          files: [{ display_path: "pkg/docs/readme.md", additions: 2, deletions: 1, binary: false }]
+        }]
+      }],
+      total: { additions: 2, deletions: 1, files: 1 }
+    }
+
+    output = @formatter.format(data)
+    assert_match(/other\//, output)
+    refute_match(/📚|🧪|🧱/, output)
   end
 
   def test_squashes_consecutive_renames_in_same_directory
