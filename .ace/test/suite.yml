@@ -39,6 +39,11 @@ test_suite:
       group: tools
       priority: 1
 
+    - name: ace-assign
+      path: ace-assign
+      group: tools
+      priority: 2
+
     - name: ace-b36ts
       path: ace-b36ts
       group: foundation
