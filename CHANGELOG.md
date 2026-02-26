@@ -4,40 +4,160 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.679] - 2026-02-26
+
+### Technical
+- **ace-git v0.11.12**: Restore direct unit tests for `has_untracked_changes?` to maintain direct coverage for the atom method
+- **ace-git-commit v0.18.10**: Add `has_untracked_changes?` stub to edge test to prevent environment-dependent flakes
+- **ace-taskflow v0.44.7**: Remove dead `stages_result = nil` assignment in simulation runner
+
+## [0.9.678] - 2026-02-26
+
+### Technical
+- **ace-git-commit v0.18.9**: Add explicit test for untracked-only `has_changes?` detection covering all three condition branches
+- **ace-taskflow v0.44.6**: Add debug-level warning in `persist_failure_artifacts` rescue to aid diagnosing when failure artifact persistence itself fails
+
+## [0.9.677] - 2026-02-26
+
+### Fixed
+- **ace-git v0.11.11**: Restore `has_untracked_changes?` method so untracked files are detected by `has_changes?`
+- **ace-git-commit v0.18.8**: Restore `has_untracked_changes?` in `has_changes?` so `--stage-all` no longer silently exits on repos with only untracked files
+- **ace-taskflow v0.44.5**: Enrich LLM failure error message with stage payload findings; fix writeback error misattribution by staging `current_stage = "writeback"` before artifact persistence; narrow `rescue StandardError` in `resolve_source!`; fix writeback regex to protect H1 headings
+
+## [0.9.676] - 2026-02-26
+
+### Changed
+- **ace-taskflow v0.44.4**: Harden `task/review` readiness checks to explicitly detect scaffold-vs-runnable mismatches, enforce runnable-claim classification, and require claim-to-evidence mapping
+- **ace-taskflow v0.44.4**: Standardize blocked review output with deterministic missing-evidence categories and actionable remediation steps
+
+### Technical
+- **ace-taskflow v0.44.4**: Finalize task `285.10` policy decisions and checklist completion for runnable-evidence gate hardening
+
+## [0.9.675] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.44.3**: Add `Verification Evidence` contract to task drafting templates for runnable claims, requiring command proof, artifact references, expected-vs-observed results, and failure classification
+
+### Changed
+- **ace-taskflow v0.44.3**: Update task draft/review workflow guidance and readiness checks so runnable claims are explicitly gated on evidence completeness and provider-vs-implementation failure classification
+
+### Technical
+- **ace-taskflow v0.44.3**: Apply verification-evidence reference blocks to task-285 simulation subtasks and finalize contract policy notes in task `285.09`
+
+## [0.9.674] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.44.2**: Add completion-gate validation for `ace-task done` with checklist analysis for `Success Criteria` and `Validation Questions`
+
+### Changed
+- **ace-taskflow v0.44.2**: Add configurable completion-gate policy defaults and expose `--allow-incomplete` override behavior in `ace-task done`
+
+### Fixed
+- **ace-taskflow v0.44.2**: Prevent task completion when required success criteria remain unresolved, keeping task status/location unchanged on block
+
+## [0.9.673] - 2026-02-26
+
+### Fixed
+- **ace-taskflow v0.44.1**: Propagate LLM-reported stage status in simulation runner so `status: failed` payloads correctly mark runs as partial
+
+## [0.9.672] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.44.0**: LLM-driven next-phase simulation — workflow contracts for draft/plan stages, `NextPhaseStageExecutor` molecule with response normalization pipeline, and runner integration with configurable model support (`review.next_phase.model`)
+
+### Changed
+- **ace-taskflow v0.44.0**: Reverse synthesis ordering for multi-stage idea runs so plan-stage `questions` and `refinements` are prioritized over draft-stage entries in write-back output
+
+### Fixed
+- **ace-taskflow v0.44.0**: Remove placeholder stage payload fallback so LLM execution failures surface explicitly
+
+## [0.9.671] - 2026-02-26
+
+### Changed
+- **ace-taskflow v0.43.6**: Prioritize plan-stage synthesis guidance over draft-stage output for idea `draft,plan` simulation runs while preserving deterministic stage execution order and de-dup semantics
+
+### Technical
+- **ace-taskflow v0.43.6**: Add regression coverage for reverse synthesis/writeback ordering and document demo artifact verification for `review-next-phase --modes draft,plan`
+
+## [0.9.670] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.43.5**: Add LLM-backed next-phase stage executor with deterministic output normalization and executor-level regression tests
+
+### Changed
+- **ace-taskflow v0.43.5**: Wire `NextPhaseSimulationRunner` to the new default stage executor and add `review.next_phase.model` configuration support
+
+### Fixed
+- **ace-taskflow v0.43.5**: Remove placeholder stage fallback so stage failures surface explicitly while preserving partial/failure artifact handling
+
+## [0.9.669] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.43.4**: Add simulation workflow instructions for next-phase draft and plan analysis with read-only contracts, aligned schema, and failure handling guidance
+
+## [0.9.668] - 2026-02-26
+
+### Fixed
+- **ace-taskflow v0.43.3**: Fix misleading write-back mode label in preview output; guard nil artifacts in verbose CLI output
+
+## [0.9.667] - 2026-02-26
+
+### Changed
+- **ace-taskflow v0.43.2**: Refactor `NextPhaseSimulationRunner#run` into named orchestration steps; harden source lookup fallthrough; expose exception class in debug error output
+
+## [0.9.666] - 2026-02-26
+
+### Changed
+- **ace-taskflow v0.43.1**: Extract `SimulationWritebackMixin` from idea/task writeback classes to eliminate DRY violation
+
+### Fixed
+- **ace-taskflow v0.43.1**: Remove misleading `defined?` guards in simulation runner failure path; preserve original exception class and backtrace on write-back failure
+
 ## [0.9.665] - 2026-02-26
 
 ### Added
-- **ace-support-core v0.25.0**: `ArgvCoalescer` utility for coalescing repeated CLI flags into comma-separated values, working around dry-cli's `type: :array` limitation
-
-### Fixed
-- **ace-overseer v0.4.16**: Fix repeated `--task` flags (`--task 288 --task 287`) being silently dropped by dry-cli; values are now coalesced before parsing
+- **ace-taskflow v0.43.0**: Release Iterative Review with Next-Phase Dry Runs feature — `review-next-phase` CLI command, simulation session framework, synthesis builder, idea/task write-back, trigger policy resolver, and opt-in work-simulation extension
 
 ## [0.9.664] - 2026-02-26
 
+### Added
+- **ace-taskflow v0.42.13**: Add opt-in `review.next_phase.include_work_simulation` extension control and focused regression coverage for work-extension trigger/default behavior
+
+### Changed
+- **ace-taskflow v0.42.13**: Allow task-source default next-phase modes to include `work` only when extension mode is explicitly enabled
+
 ### Fixed
-- **ace-overseer v0.4.15**: Raise descriptive error when no valid task references are provided, preventing `NoMethodError` on empty input.
+- **ace-taskflow v0.42.13**: Preserve partial synthesis artifacts when mixed `plan,work` runs fail in work stage, and reject task `work`-only runs with prerequisite guidance
 
 ## [0.9.663] - 2026-02-26
 
 ### Added
-- **ace-overseer v0.4.14**: Accept ordered multi-task `--task` input for `work-on` via repeated flags, comma-separated values, and mixed forms.
-
-### Fixed
-- **ace-overseer v0.4.14**: Validate all task refs before provisioning side effects and fail early when multi-task input is used with single-task presets.
+- **ace-taskflow v0.42.12**: Add task-source simulation write-back section upsert for next-phase review output and add deterministic next-phase trigger-policy resolution for manual/auto execution modes
 
 ### Changed
-- **ace-overseer v0.4.14**: Preserve input order while expanding orchestrator refs into in-place subtask sequences for `taskrefs` presets.
+- **ace-taskflow v0.42.12**: Extend `review-next-phase` with `--next-phase-review`, `--no-next-phase-review`, `--next-phase-modes`, and `--auto-trigger`, and apply write-back previews/cache-dir resolution through configuration helpers
 
 ## [0.9.662] - 2026-02-26
 
+### Added
+- **ace-taskflow v0.42.11**: Add deterministic simulation synthesis builder and idea write-back section upsert for next-phase review runs
+
+### Changed
+- **ace-taskflow v0.42.11**: Enforce idea simulation mode contract to `draft,plan`, include stage chaining, and surface generated write-back preview content
+
 ### Fixed
-- **ace-git-commit v0.18.8**: Remove top-level no-op short-circuit and run stage-all flow first; preserve single-line no-op output only after staging confirms no staged changes
-- **ace-git-commit v0.18.8**: Detect untracked-only repos as changed by including untracked-file checks in underlying git change detection
+- **ace-taskflow v0.42.11**: Treat idea plan-stage failures as partial synthesis runs with preserved draft context and unresolved gap reporting
 
 ## [0.9.661] - 2026-02-26
 
+### Added
+- **ace-taskflow v0.42.10**: Add `ace-taskflow review-next-phase` command and framework-level simulation session contract with deterministic run cache artifacts under `.cache/ace-taskflow/simulations/<b36ts-id>/`
+
+### Changed
+- **ace-taskflow v0.42.10**: Add default `review.next_phase` configuration keys for enablement, auto-trigger defaults, and cache directory contract
+
 ### Fixed
-- **ace-git v0.11.11**: Add untracked-file detection helper so consumers can correctly detect change state in untracked-only repositories
+- **ace-taskflow v0.42.10**: Persist explicit simulation failure artifact (`run-failure.yml`) and failed-stage metadata when stage execution fails
 
 ## [0.9.660] - 2026-02-26
 
