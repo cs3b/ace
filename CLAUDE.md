@@ -85,9 +85,14 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 
 ### ace-* CLI Tools: Output Handling (Terminal)
 
-**IMPORTANT**: Do NOT use shell output manipulation with ace-* tools:
+**CRITICAL**: `ace-*` output handling is a hard contract, not a suggestion.
 
-- **Avoid**: `tail -f`, `head`, `grep`, pipes on long output, redirects
+- **Required invocation**: run directly as `ace-*` (or `mise exec -- ace-*` where required by local repo rules)
+- **Never use shell manipulation** on `ace-*` invocations:
+  - pipes: `|`, `|&`
+  - redirects: `>`, `>>`, `2>`, `&>`
+  - post-processing: `head`, `tail`, `grep`, `awk`, `sed`, `tee`, `xargs`
+  - command substitution/backgrounding: `$()`, backticks, trailing `&`
 - **Allowed**: Using `Read` tool on file paths referenced in command output
 - **Why**: ace-* tools produce concise output by design and provide file paths for detailed content
 - **Pattern**: Run the command directly, then use `Read` tool on any referenced file paths
@@ -96,11 +101,16 @@ The following are CLI tools that run in your terminal (bash/fish). See also: [do
 ❌ `ace-review --pr 90 | tail -20`
 ❌ `tail -f /tmp/claude/.../output`
 ❌ `ace-bundle project | head -100`
+❌ `ace-bundle project > /tmp/ace_bundle_project.txt`
+❌ `ace-task list | grep done`
 
 **Correct patterns**:
 ✅ `ace-review --pr 90` → then `Read` the synthesis report path from output
 ✅ `ace-bundle project` → output is already concise; read referenced files as needed
 ✅ `ace-bundle wfi://namespace/action` → returns workflow content (may include embedded context)
+✅ `ace-task list` → consume native output directly (no shell filtering)
+
+If this rule is violated, rerun the same `ace-*` command in compliant form immediately and treat that rerun as source of truth.
 
 Never reset or discard changes you didn't make - use `ace-git-commit $paths` to commit only your changes.
 
