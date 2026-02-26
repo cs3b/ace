@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.649] - 2026-02-26
+
+### Fixed
+- **ace-taskflow v0.42.8**: Make idea archive/maybe moves idempotent when the idea is already in the target scope, preventing nested `_archive/_archive/` and `_maybe/_maybe/` paths
+- **ace-taskflow v0.42.8**: Treat pre-existing target folders in archive/maybe moves as idempotent success instead of failure, aligning mover behavior with task archiving semantics
+
+### Changed
+- **ace-taskflow v0.42.8**: Update `ace-idea done` and `ace-idea park` messaging to surface idempotent `already in` outcomes from mover operations
+
+### Technical
+- **ace-taskflow v0.42.8**: Add regression tests for already-archived/already-parked flows, target-exists idempotence, in-place metadata refresh, and archive-substring guard behavior
+
 ## [0.9.648] - 2026-02-26
 
 ### Added
