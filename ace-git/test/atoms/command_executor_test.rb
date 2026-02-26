@@ -83,11 +83,11 @@ class CommandExecutorTest < AceGitTestCase
   end
 
   def test_has_untracked_changes_returns_true_when_untracked_files_exist
-    mock_result = { success: true, output: "new_file.txt\n", error: "", exit_code: 0 }
+    mock_result = { success: true, output: "new_file.rb\n", error: "", exit_code: 0 }
 
     @executor.stub :execute, mock_result do
       result = @executor.has_untracked_changes?
-      assert result, "Should return true when untracked files are present"
+      assert result, "Should return true when untracked files exist"
     end
   end
 
@@ -96,7 +96,7 @@ class CommandExecutorTest < AceGitTestCase
 
     @executor.stub :execute, mock_result do
       result = @executor.has_untracked_changes?
-      refute result, "Should return false when no untracked files are present"
+      refute result, "Should return false when no untracked files exist"
     end
   end
 

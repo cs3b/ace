@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.12] - 2026-02-26
+
+### Technical
+- Restore direct unit tests for `has_untracked_changes?` covering both true/false branches
+
 ## [0.11.11] - 2026-02-26
 
 ### Fixed
-- Add untracked-file detection helper in command execution so callers can correctly treat untracked-only repositories as having changes.
-
-### Technical
-- Add regression tests for untracked change detection helper behavior.
+- Restore `has_untracked_changes?` method to detect new untracked files so `ace-git-commit --stage-all` correctly stages repos containing only new files
 
 ## [0.11.10] - 2026-02-26
 
