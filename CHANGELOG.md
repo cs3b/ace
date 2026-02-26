@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.660] - 2026-02-26
+
+### Fixed
+- **ace-git-commit v0.18.7**: Treat "no changes to commit" as a successful no-op (exit 0) and simplify no-op output to a single clear line without staging progress or generic failure messaging
+
 ## [0.9.659] - 2026-02-26
 
 ### Fixed
