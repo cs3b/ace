@@ -7,9 +7,9 @@ dependencies: []
 worktree:
   branch: 287-global-llm-fallback-chain-with-quotaoverload-failover
   path: "../ace-task.287"
-  created_at: '2026-02-26 18:10:33'
-  updated_at: '2026-02-26 18:10:33'
-  target_branch: main
+  created_at: '2026-02-26 19:53:04'
+  updated_at: '2026-02-26 19:53:04'
+  target_branch: 289-allow-ace-overseer-work-on-to-accept-ordered-multi-task-task-lists
 ---
 
 # Global LLM fallback chain with quota/overload failover
