@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.289
-status: draft
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 289-allow-ace-overseer-work-on-to-accept-ordered-multi-task-task-lists
+  path: "../ace-task.289"
+  created_at: '2026-02-26 18:46:16'
+  updated_at: '2026-02-26 18:46:16'
+  target_branch: main
 ---
 
 # Allow ace-overseer work-on to accept ordered multi-task --task lists
