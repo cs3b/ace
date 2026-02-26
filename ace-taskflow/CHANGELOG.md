@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.9] - 2026-02-26
+
+### Fixed
+- Display orphan subtasks with missing parent tasks instead of silently skipping them in `ace-task list` output
+- Show `[missing parent: <parent_id>]` indicator for subtasks whose parent task doesn't exist
+
 ## [0.42.8] - 2026-02-26
 
 ### Fixed
