@@ -170,7 +170,7 @@ ace-assign fork-run --assignment <id>@020
 #### Example
 
 ```bash
-FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/^\([0-9.]*\)\s.*\syes\s.*/\1/p' | head -1)
+FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/^\([0-9.]*\).*yes\s*(.*/\1/p' | head -1)
 if [ -n "$FORK_ROOT" ]; then
   ASSIGNMENT_ID=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} --format json | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
   ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
