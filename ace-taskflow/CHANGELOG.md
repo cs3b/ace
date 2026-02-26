@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-02-26
+
+### Added
+- Project context to next-phase simulation via ace-bundle presets (simulation-draft, simulation-plan)
+- Prompt storage in `.prompts/` directory within simulation session for introspection
+- Separate system and user prompts for better LLM context handling in stage executor
+- ace-bundle sections for system/user prompt separation in simulation presets
+
+### Changed
+- NextPhaseStageExecutor now loads context from ace-bundle presets with template interpolation
+- Prompt templates are now defined in presets (versionable, overridable) instead of hard-coded in Ruby
+
+### Fixed
+- Correct prompt architecture: project context + workflow instruction is now the SYSTEM prompt
+- User prompt now contains only source content (idea/task) and previous artifact
+
 ## [0.44.8] - 2026-02-26
 
 ### Added

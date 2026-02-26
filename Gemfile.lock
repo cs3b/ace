@@ -132,7 +132,7 @@ PATH
       ace-git-worktree (~> 0.13)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
-      ace-taskflow (~> 0.41)
+      ace-taskflow (~> 0.45)
       ace-tmux (~> 0.6)
       dry-cli (~> 1.0)
 
@@ -233,7 +233,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.44.8)
+    ace-taskflow (0.45.0)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.23)
