@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.11] - 2026-02-26
+
+### Added
+- Add deterministic synthesis builder for review-next-phase runs with structured `questions`, `refinements`, and `unresolved_gaps`
+- Add idea simulation write-back helper that upserts a dedicated `Simulation Review (Next-Phase)` section without duplicating prior content
+
+### Changed
+- Enforce idea-origin simulation mode contract to `draft,plan` with deterministic stage ordering and stage-to-stage context chaining
+- Extend writeback preview to include generated simulation review content and explicit write-back status reporting
+
+### Fixed
+- Handle idea-stage `plan` failures as partial synthesis runs that preserve draft artifacts and unresolved gaps instead of dropping context
+- Preserve manual-apply fallback guidance when write-back fails after artifacts are generated
+
 ## [0.42.10] - 2026-02-26
 
 ### Added
