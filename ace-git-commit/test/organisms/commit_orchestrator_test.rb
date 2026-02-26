@@ -43,17 +43,20 @@ class CommitOrchestratorTest < TestCase
 
   def test_returns_true_when_no_changes
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, false
+    @mock_file_stager.expect :stage_all, true
+    @mock_git.expect :has_staged_changes?, false
 
     result = @orchestrator.execute(create_options(message: "test", quiet: true))
 
     assert result, "Should return true when no changes to commit"
     @mock_git.verify
+    @mock_file_stager.verify
   end
 
   def test_no_change_output_omits_staging_messages
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, false
+    @mock_file_stager.expect :stage_all, true
+    @mock_git.expect :has_staged_changes?, false
 
     original_stdout = $stdout
     $stdout = StringIO.new
@@ -68,11 +71,11 @@ class CommitOrchestratorTest < TestCase
     refute_match(/Staging all changes\.\.\./, output)
     refute_match(/Changes staged successfully/, output)
     @mock_git.verify
+    @mock_file_stager.verify
   end
 
   def test_commits_with_direct_message
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["file.rb"])
@@ -137,7 +140,6 @@ class CommitOrchestratorTest < TestCase
 
   def test_stages_all_changes
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["file1.rb", "file2.rb"])
@@ -166,7 +168,6 @@ class CommitOrchestratorTest < TestCase
 
   def test_dry_run_does_not_commit
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["test.txt"])
@@ -197,7 +198,6 @@ class CommitOrchestratorTest < TestCase
 
   def test_handles_commit_failure_gracefully
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     expect_single_group(["file.rb"])
@@ -220,7 +220,6 @@ class CommitOrchestratorTest < TestCase
 
   def test_generates_message_with_llm_when_intention_provided
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, true
     @mock_file_stager.expect :stage_all, true  # Now returns boolean
     @mock_git.expect :has_staged_changes?, true
     @mock_diff_analyzer.expect :get_staged_diff, "diff content"
@@ -258,7 +257,6 @@ class CommitOrchestratorTest < TestCase
 
   def test_split_commit_executes_split_executor
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, true
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, true
     @mock_file_stager.expect :staged_files, ["a.md", "b.md"]
@@ -299,7 +297,6 @@ class CommitOrchestratorTest < TestCase
 
   def test_no_split_ignores_split_executor
     @mock_git.expect :in_repository?, true
-    @mock_git.expect :has_changes?, true
     @mock_file_stager.expect :stage_all, true
     @mock_git.expect :has_staged_changes?, true
     @mock_file_stager.expect :staged_files, ["a.md", "b.md"]
