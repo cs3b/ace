@@ -71,8 +71,10 @@ module Ace
               file_content = File.read(report_path)
             end
 
+            return file_content if file_content
+
             stdin_content = read_stdin_if_piped
-            content = file_content || stdin_content
+            content = stdin_content
 
             raise Error, "Missing report input: provide --report <file> or pipe stdin." if content.nil? || content.strip.empty?
 
@@ -84,7 +86,7 @@ module Ace
             return nil unless stdin.respond_to?(:tty?) && !stdin.tty?
 
             stdin.read
-          rescue StandardError
+          rescue IOError, Errno::EBADF
             nil
           end
         end
