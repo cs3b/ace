@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.654] - 2026-02-26
+
+### Added
+- **ace-assign v0.13.3**: Document `advance()` legacy bridge behavior; add `start` and stdin examples to CLI help; add "Starting Work" docs section
+
+### Changed
+- **ace-assign v0.13.3**: Use standard Keep a Changelog section headers (replace `Technical` with `Changed`)
+
+## [0.9.653] - 2026-02-26
+
+### Fixed
+- **ace-assign v0.13.2**: Short-circuit stdin read when `--report` file content already present; narrow `rescue` to `IOError, Errno::EBADF`; consistent `fork_root` existence validation in `start_phase`
+
+### Added
+- **ace-assign v0.13.2**: Integration test for sequential finish auto-advance lifecycle; stdin vs `--report` precedence test
+
+## [0.9.652] - 2026-02-26
+
+### Fixed
+- **ace-assign v0.13.1**: Fail fast with `PhaseNotFoundError` when `--assignment <id@scope>` specifies a non-existent subtree root instead of silently falling back to global queue
+- **ace-assign v0.13.1**: `advance()` now raises `ConfigNotFoundError` (exit 3) for missing report files, consistent with `finish` command
+
+### Added
+- **ace-assign v0.13.1**: Positive test coverage for `start` and `finish` commands with explicit `step` argument
+
 ## [0.9.651] - 2026-02-26
 
 ### Added
