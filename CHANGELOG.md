@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.665] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.43.0**: Release Iterative Review with Next-Phase Dry Runs feature — `review-next-phase` CLI command, simulation session framework, synthesis builder, idea/task write-back, trigger policy resolver, and opt-in work-simulation extension
+
 ## [0.9.664] - 2026-02-26
 
 ### Added
