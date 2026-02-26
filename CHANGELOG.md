@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.661] - 2026-02-26
+
+### Fixed
+- **ace-git v0.11.11**: Add untracked-file detection helper so consumers can correctly detect change state in untracked-only repositories
+
 ## [0.9.660] - 2026-02-26
 
 ### Fixed
