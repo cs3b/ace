@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.283
-status: draft
+status: in-progress
 priority: high
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 283-archive-idempotency-for-idea-directory-mover
+  path: "../ace-task.283"
+  created_at: '2026-02-26 00:32:22'
+  updated_at: '2026-02-26 00:32:22'
+  target_branch: main
 ---
 
 # Archive Idempotency for Idea Directory Mover
