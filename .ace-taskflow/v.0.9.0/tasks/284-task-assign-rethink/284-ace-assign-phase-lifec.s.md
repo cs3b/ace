@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.284
-status: draft
+status: pending
 priority: medium
 estimate: TBD
 dependencies: []
@@ -11,7 +11,7 @@ dependencies: []
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Operators run explicit lifecycle commands (`ace-assign start`, `ace-assign finish`) with optional phase targeting (`STEP` or `ASSIGNMENT@STEP`), and provide report content by `--report <file>` or stdin pipe.
+- **Input**: Operators run explicit lifecycle commands (`ace-assign start`, `ace-assign finish`) with optional step targeting (`STEP`) for active assignment and `--assignment <id>` / `--assignment <id@root>` for cross-assignment or subtree scope, and provide report content by `--report <file>` or stdin pipe.
 - **Process**: The CLI validates phase state and hierarchy, applies deterministic transitions, and prints clear progression/error output without requiring manual phase file edits.
 - **Output**: Queue state advances through command-driven transitions, report artifacts are written for finished phases, and users can complete work without creating temporary report files.
 
@@ -19,10 +19,11 @@ dependencies: []
 `ace-assign` must provide explicit phase lifecycle control through CLI commands rather than direct cache file mutation.
 
 The workflow must support:
-- Starting the next workable pending phase, or starting a specific targeted phase.
-- Finishing the current/targeted in-progress phase with required report content.
+- Starting the next workable pending phase, or starting a specific targeted phase in the active assignment.
+- Finishing the current/targeted in-progress phase with required report content, including scoped operations via `--assignment <id@root>`.
 - Reading report content from either `--report` file input or piped stdin.
 - Advancing queue state with existing hierarchy and auto-completion semantics preserved.
+- Using deterministic report input precedence: when both file and stdin are present, `--report` takes precedence and stdin is ignored.
 
 The workflow must prevent ambiguous transitions:
 - `start` fails when another phase is already in progress (strict mode).
@@ -35,27 +36,29 @@ The workflow must prevent ambiguous transitions:
 # Phase start
 ace-assign start
 ace-assign start 010
-ace-assign start 8pp0t6@020.01
+ace-assign start 020.01 --assignment 8pp0t6
 
 # Phase finish with file input
 ace-assign finish --report /tmp/onboard-report.md
 ace-assign finish 020.01 --report ./report.md
-ace-assign finish 8pp0t6@020.01 --report ./report.md
+ace-assign finish --report ./report.md --assignment 8pp0t6
+ace-assign finish --report ./report.md --assignment 8pp0t6@020.01
 
 # Phase finish with piped stdin
 cat ./report.md | ace-assign finish
-printf "Done: onboard complete\n" | ace-assign finish 8pp0t6@020.01
+printf "Done: onboard complete\n" | ace-assign finish --assignment 8pp0t6@020.01
 ```
 
 **Error Handling:**
 - Active conflict on start: return non-zero with message indicating an in-progress phase already exists and must be finished/failed first.
-- Missing phase target: return non-zero when targeted step/assignment cannot be resolved.
+- Missing phase target: return non-zero when targeted step or assignment scope cannot be resolved.
 - Missing report input: return non-zero when `finish` has neither `--report` nor piped stdin.
 - Invalid finish state: return non-zero when target is not `in_progress`.
+- Dual report sources: when both `--report` and stdin are present, use the file content from `--report` and continue successfully.
 
 **Edge Cases:**
 - Hierarchical parent phases with incomplete children remain non-finishable according to current hierarchy rules.
-- Targeted assignment operations (`ASSIGNMENT@STEP`) must mutate only the specified assignment.
+- Targeted assignment operations (`--assignment <id>` and `--assignment <id@root>`) must mutate only the specified assignment/scope.
 
 ### Success Criteria
 
@@ -64,12 +67,13 @@ printf "Done: onboard complete\n" | ace-assign finish 8pp0t6@020.01
 - [ ] **Behavioral Consistency**: Existing hierarchy semantics (workable phase selection, parent auto-complete, subtree behavior) remain intact after command redesign.
 - [ ] **Command Surface Clarity**: `ace-assign report` is removed and docs/help consistently instruct users to use `finish`.
 
-### Validation Questions
+### Validation Decisions
 
-- [ ] **Target Parsing Scope**: Should `STEP` positional targeting be accepted for active assignment only, while `ASSIGNMENT@STEP` is required for cross-assignment targeting?
-- [ ] **Create Behavior Coupling**: Should assignment creation continue auto-starting first phase, or should that behavior move to explicit `start` in a follow-up task?
-- [ ] **Error Compatibility**: Which existing error strings/exit codes must remain stable for downstream automation?
-- [ ] **Fork Lifecycle UX**: Should `finish` expose additional messaging for fork-root subtree completion parity with current `report` output?
+- [x] **Target Parsing Scope**: Positional `STEP` targeting is accepted for active assignment only. Cross-assignment and scoped targeting use `--assignment <id>` and `--assignment <id@root>`.
+- [x] **Create Behavior Coupling**: Assignment creation continues auto-starting first workable phase in this task. Any create/start decoupling is deferred to follow-up work.
+- [x] **Error Compatibility**: Exit code categories remain stable for downstream automation compatibility; error message wording may be improved.
+- [x] **Fork Lifecycle UX**: `finish` keeps subtree completion messaging parity with current `report` behavior for fork-root workflows.
+- [x] **Report Migration Policy**: `ace-assign report` is removed in this task with immediate consumer updates (no compatibility alias period).
 
 ## Objective
 
@@ -86,12 +90,30 @@ Provide a command-line lifecycle model for `ace-assign` where phase state transi
 #### Behavioral Specifications
 - CLI lifecycle behavior for `start` and `finish` (target resolution, transition preconditions, output expectations).
 - Report input behavior contract (`--report` and stdin) with deterministic precedence.
-- Removal policy for `report` command and updated user guidance.
+- Removal policy for `report` command and updated user guidance (`report` removed immediately in this task).
 
 #### Validation Artifacts
 - Behavioral test scenarios for start/finish transitions, targeting, and report input modes.
 - Error-case scenarios for active conflicts, missing targets, and missing report content.
 - Documentation acceptance checks confirming no `report`-based instructions remain.
+
+### Consumer Packages Listed
+
+- `ace-assign`:
+  - CLI registry/help output (`start`, `finish`, remove `report`)
+  - command implementations and shared target parsing
+  - docs (`README.md`, `docs/usage.md`, `docs/exit-codes.md`)
+  - handbook workflows (`assign/create.wf.md`, `assign/drive.wf.md`, related examples)
+  - unit and e2e tests currently asserting `report` usage
+- `ace-overseer`:
+  - e2e scenarios referencing `ace-assign report` in workflow/prune tests
+- `.claude` skill and workflow surfaces that contain literal `ace-assign report` examples
+
+### Compatibility Contract
+
+- Preserve exit-code category semantics used by current automation (success/general/no-active/file-not-found equivalents).
+- Preserve queue/hierarchy behavior semantics (next workable selection, parent auto-complete, subtree completion).
+- Allow message text improvements as long as behavior and exit-code categories remain stable.
 
 ## Out of Scope
 
@@ -104,3 +126,10 @@ Provide a command-line lifecycle model for `ace-assign` where phase state transi
 
 - Planning conversation for ace-assign lifecycle redesign (Feb 26, 2026)
 - Existing `ace-assign` command contracts and lifecycle behavior docs
+
+## Review Summary
+
+**Readiness Checklist:** Passed after locking targeting, input precedence, migration policy, compatibility, and consumer scope.  
+**Blocking Questions:** None remain.  
+**Decision:** Promoted to `pending`.  
+**Implementation Readiness:** Decision-complete for execution via ace-assign planning/workflow stages.
