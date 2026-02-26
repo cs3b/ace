@@ -321,6 +321,38 @@ class StatusCommandTest < AceAssignTestCase
     end
   end
 
+  def test_status_prefers_assignment_target_over_filter
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        },
+        { "name" => "post-step", "instructions" => "Run post-step" }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Status.new.call(
+          assignment: "#{result[:assignment].id}@020",
+          filter: "010.01"
+        )
+      end
+
+      assert_includes output.first, "020-post-step.ph.md"
+      assert_includes output.first, "Current Phase: 020 - post-step"
+      refute_includes output.first, "Current Phase: 010.01 - onboard"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_status_shows_fork_pid_info_when_available
     with_temp_cache do |cache_dir|
       phases = [
