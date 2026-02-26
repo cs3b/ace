@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-02-26
+
+### Added
+- Document `advance()` legacy bridge behavior with explanatory comment
+- Add `start` and piped stdin examples to CLI `--help` output
+- Add "Starting Work" section to `docs/usage.md` documenting sequential auto-advance, explicit `start`, and piped stdin
+
+### Changed
+- Use standard Keep a Changelog section headers (replace non-standard `Technical` with `Changed`)
+
+## [0.13.2] - 2026-02-26
+
+### Fixed
+- Short-circuit stdin read in `finish` when `--report` file content is already present, preventing unnecessary I/O or blocking
+- Narrow `rescue` in `read_stdin_if_piped` to `IOError, Errno::EBADF` instead of broad `StandardError`
+- Validate `fork_root` existence in `find_target_phase_for_start` consistently regardless of `phase_number` presence
+
+### Added
+- Integration test for `finish` auto-advance and `start` conflict detection across sequential phases
+- Test for `--report` file precedence over piped stdin when both are present
+
+## [0.13.1] - 2026-02-26
+
+### Fixed
+- Raise `PhaseNotFoundError` in `start_phase` and `finish_phase` when `--assignment <id@root>` specifies a non-existent subtree root, preventing silent fallback to the global queue
+- Use `ConfigNotFoundError` (exit 3) in `advance()` for missing report files, consistent with `finish` command behavior
+
+### Added
+- Add positive test cases for `start` and `finish` commands with explicit `step` argument targeting
+
 ## [0.13.0] - 2026-02-26
 
 ### Added
@@ -25,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Remove `report` command from CLI surface (replaced by `finish`)
 
-### Technical
+### Changed
 - Replace `report_command_test.rb` with `finish_command_test.rb` and `start_command_test.rb`
 - Update e2e test runner docs in `ace-assign` and `ace-overseer` to use `finish` pattern
 

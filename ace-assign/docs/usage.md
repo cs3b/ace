@@ -52,9 +52,35 @@ ace-assign add hotfix --after 010 -i "Apply hotfix"
 # If 011 existed, it gets renumbered to 012, etc.
 ```
 
+### Starting Work
+
+After an assignment is created, the first workable phase is started automatically. In sequential workflows, `finish` auto-advances to the next phase — no `start` call is needed between phases:
+
+```bash
+# Normal sequential flow
+ace-assign finish --report done.md   # completes 010, auto-starts 020
+ace-assign finish --report done.md   # completes 020, auto-starts 030
+```
+
+Use `ace-assign start` explicitly for recovery or subtree entry:
+
+```bash
+ace-assign start            # start next workable phase (after fail/retry)
+ace-assign start 030        # start a specific pending phase
+```
+
+Providing report content via piped stdin avoids creating temporary files:
+
+```bash
+printf "Done: implemented feature\n" | ace-assign finish
+cat report.md | ace-assign finish
+```
+
+When both `--report` and stdin are provided, `--report` file content takes precedence.
+
 ### Completion Semantics
 
-1. **Leaf phases** (no children): Complete via `ace-assign finish --report <file>`
+1. **Leaf phases** (no children): Complete via `ace-assign finish --report <file>` or piped stdin
 2. **Parent phases**: Auto-complete when ALL children are done
 3. **Multi-level**: Completion cascades up the tree
 

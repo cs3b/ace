@@ -136,7 +136,8 @@ module Ace
           fork_root = fork_root&.strip
           target_phase = if phase_number && !phase_number.to_s.strip.empty?
                            find_target_phase_for_start(state, phase_number, fork_root)
-                         elsif fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+                         elsif fork_root && !fork_root.empty?
+                           raise PhaseNotFoundError, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
                            state.next_workable_in_subtree(fork_root)
                          else
                            state.next_workable
@@ -219,19 +220,20 @@ module Ace
 
         # Complete current phase with report and advance
         #
-        # Uses hierarchical completion rules:
-        # - A phase with children cannot complete until all children are done
-        # - After completing a child phase, the next phase is another pending child or sibling
-        # - Parent phases auto-complete when all children are done
+        # Legacy bridge: preserves single-call semantics for fork-run callers.
+        # Previously, advance() auto-started the next phase as a side effect.
+        # The new start/finish split makes this explicit, but advance() retains
+        # the auto-start behavior for subtree entry so fork-run workflows
+        # (which call advance() with fork_root) continue to work unchanged.
         #
         # @param report_path [String] Path to report file
         # @param fork_root [String, nil] Optional subtree root to constrain advancement
         # @return [Hash] Result with updated state
         def advance(report_path, fork_root: nil)
-          raise Error, "Report file not found: #{report_path}" unless File.exist?(report_path)
+          raise ConfigNotFoundError, "Report file not found: #{report_path}" unless File.exist?(report_path)
 
-          # When fork_root is specified and no phase is in_progress in the subtree,
-          # auto-start the next workable phase to preserve fork-run entry behavior.
+          # Auto-start the next workable subtree phase when fork_root is given but
+          # no phase in the subtree is yet in_progress (subtree entry case).
           fork_root_str = fork_root&.strip
           if fork_root_str && !fork_root_str.empty?
             assignment = assignment_manager.find_active
@@ -833,8 +835,9 @@ module Ace
           target = state.find_by_number(phase_number)
           raise PhaseNotFoundError, "Phase #{phase_number} not found in queue" unless target
 
-          if fork_root && !fork_root.empty? && !state.in_subtree?(fork_root, target.number)
-            raise InvalidPhaseStateError, "Phase #{target.number} is outside scoped subtree #{fork_root}."
+          if fork_root && !fork_root.empty?
+            raise PhaseNotFoundError, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+            raise InvalidPhaseStateError, "Phase #{target.number} is outside scoped subtree #{fork_root}." unless state.in_subtree?(fork_root, target.number)
           end
           raise InvalidPhaseStateError, "Cannot start phase #{target.number}: status is #{target.status}, expected pending." unless target.status == :pending
           if state.has_incomplete_children?(target.number)
@@ -858,7 +861,8 @@ module Ace
           end
 
           current = state.current
-          if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+          if fork_root && !fork_root.empty?
+            raise PhaseNotFoundError, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
             if current.nil? || !state.in_subtree?(fork_root, current.number)
               current = state.current_in_subtree(fork_root)
             end
