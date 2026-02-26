@@ -41,7 +41,7 @@ steps:
   - name: init
     instructions: |
       Set up the project structure.
-      Report when done: ace-assign report init.md
+      Report when done: ace-assign finish --report init.md
 ```
 
 Required elements:
@@ -109,18 +109,18 @@ steps:
   - name: init
     instructions: |
       Set up the project structure.
-      Report when done: ace-assign report init.md
+      Report when done: ace-assign finish --report init.md
 
   - name: implement
     skill: ace-task-work      # Optional skill reference
     instructions: |
       Implement the feature.
-      Report when done: ace-assign report impl.md
+      Report when done: ace-assign finish --report impl.md
 
   - name: test
     instructions: |
       Run tests and verify.
-      Report when done: ace-assign report test.md
+      Report when done: ace-assign finish --report test.md
 ```
 
 ### Skill-Aware Phases

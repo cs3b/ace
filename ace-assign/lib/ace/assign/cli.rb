@@ -37,7 +37,8 @@ require_relative "organisms/assignment_executor"
 require_relative "cli/commands/create"
 require_relative "cli/commands/assignment_target"
 require_relative "cli/commands/status"
-require_relative "cli/commands/report"
+require_relative "cli/commands/start"
+require_relative "cli/commands/finish"
 require_relative "cli/commands/fail"
 require_relative "cli/commands/add"
 require_relative "cli/commands/retry_cmd"
@@ -57,7 +58,8 @@ module Ace
       REGISTERED_COMMANDS = [
         ["create", "Create assignment from preset or YAML"],
         ["status", "Show assignment status"],
-        ["report", "Report phase completion"],
+        ["start", "Start next workable phase"],
+        ["finish", "Complete current phase with report"],
         ["fail", "Mark phase as failed"],
         ["add", "Add phase to assignment"],
         ["retry", "Retry failed phase"],
@@ -69,6 +71,7 @@ module Ace
       HELP_EXAMPLES = [
         "ace-assign create --preset review     # Start review assignment",
         "ace-assign status                     # Current phase progress",
+        "ace-assign finish --report done.md    # Complete active phase",
         "ace-assign fork-run 010.01            # Run subtree in subprocess"
       ].freeze
 
@@ -107,7 +110,8 @@ module Ace
       # Register commands (wrapped to capture exit codes)
       register "create", wrap_command(Commands::Create)
       register "status", wrap_command(Commands::Status)
-      register "report", wrap_command(Commands::Report)
+      register "start", wrap_command(Commands::Start)
+      register "finish", wrap_command(Commands::Finish)
       register "fail", wrap_command(Commands::Fail)
       register "add", wrap_command(Commands::Add)
       register "retry", wrap_command(Commands::RetryCmd)
