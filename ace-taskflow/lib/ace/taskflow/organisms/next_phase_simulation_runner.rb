@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "fileutils"
 require "time"
 require "ace/b36ts"
 require_relative "../models/simulation_session"
@@ -121,6 +122,10 @@ module Ace
                 run_id: run_id,
                 previous_stage_output: stage_payloads[stage_outputs.last&.dig(:mode)]
               )
+
+              # Save prompts if returned (for introspection)
+              save_stage_prompts(session_dir, mode, stage_payload)
+
               stage_path = @session_store.write_yaml_artifact(session_dir, stage_filename, stage_payload)
               stage_status = stage_payload[:status] || stage_payload["status"] || "ok"
               stage_outputs << { mode: mode, file: File.basename(stage_path), status: stage_status }
@@ -146,6 +151,26 @@ module Ace
 
           { stage_outputs: stage_outputs, stage_payloads: stage_payloads,
             current_stage: current_stage, stage_failure: stage_failure }
+        end
+
+        def save_stage_prompts(session_dir, mode, stage_payload)
+          prompts_dir = File.join(session_dir, ".prompts")
+          FileUtils.mkdir_p(prompts_dir)
+
+          if stage_payload[:user_prompt]
+            @session_store.write_markdown_artifact(
+              session_dir,
+              ".prompts/#{mode}-user.md",
+              stage_payload[:user_prompt]
+            )
+          end
+          if stage_payload[:system_prompt]
+            @session_store.write_markdown_artifact(
+              session_dir,
+              ".prompts/#{mode}-system.md",
+              stage_payload[:system_prompt]
+            )
+          end
         end
 
         def persist_run_artifacts(session:, session_dir:, run_id:, resolved_source:, normalized_modes:,

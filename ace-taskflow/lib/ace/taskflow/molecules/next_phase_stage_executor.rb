@@ -16,40 +16,72 @@ module Ace
 
         VALID_STATUSES = %w[ok partial failed].freeze
 
-        def initialize(llm_query: nil, file_reader: nil, model_resolver: nil)
+        def initialize(llm_query: nil, file_reader: nil, model_resolver: nil, bundle_loader: nil)
           @llm_query = llm_query || method(:default_llm_query)
           @file_reader = file_reader || method(:default_file_reader)
           @model_resolver = model_resolver || method(:default_model)
+          @bundle_loader = bundle_loader || method(:default_bundle_loader)
         end
 
         def call(resolved_source:, mode:, run_id:, previous_stage_output: nil)
           source_path = resolved_source[:path]
           raise ArgumentError, "Missing source path for stage execution" if source_path.nil? || source_path.strip.empty?
 
-          workflow_body = load_workflow_content(mode, source_type: resolved_source[:type])
           source_body = @file_reader.call(source_path)
-          prompt = build_prompt(
-            source: resolved_source,
+          context = load_simulation_context(mode, source_type: resolved_source[:type])
+          previous_context = build_previous_context(previous_stage_output)
+
+          user_prompt = build_user_prompt(
             mode: mode,
-            workflow_body: workflow_body,
+            source: resolved_source,
+            context: context,
             source_body: source_body,
-            previous_stage_output: previous_stage_output
+            previous_context: previous_context
           )
+          system_prompt = build_system_prompt(mode)
 
           response = @llm_query.call(
             @model_resolver.call,
-            prompt,
+            user_prompt,
+            system: system_prompt,
             sandbox: { mode: "read-only", intent: "taskflow-next-phase-simulation" },
             temperature: 0.2,
             max_tokens: 6_000
           )
 
-          normalize_payload(response[:text], mode: mode)
+          payload = normalize_payload(response[:text], mode: mode)
+          # Include prompts for storage by runner
+          payload[:system_prompt] = system_prompt
+          payload[:user_prompt] = user_prompt
+          payload
         rescue StandardError => e
           raise e.class, "Next-phase stage '#{mode}' execution failed: #{e.message}", e.backtrace
         end
 
         private
+
+        def load_simulation_context(mode, source_type: nil)
+          # Try ace-bundle preset first
+          preset_name = "simulation-#{mode}"
+          begin
+            bundle = @bundle_loader.call(preset_name)
+            return bundle.content if bundle && bundle.content && !bundle.content.strip.empty?
+          rescue StandardError => e
+            # Fall through to legacy workflow loading if preset not found
+          end
+
+          # Fallback to legacy workflow-only content
+          workflow_body = load_workflow_content(mode, source_type: source_type)
+          <<~CONTEXT
+            --- Stage Workflow Instruction ---
+            #{workflow_body}
+          CONTEXT
+        end
+
+        def default_bundle_loader(preset_name)
+          require "ace/bundle"
+          Ace::Bundle.load_preset(preset_name)
+        end
 
         def load_workflow_content(mode, source_type: nil)
           # Check config-defined phases first (allows per-source-type workflow override)
@@ -98,19 +130,21 @@ module Ace
           end
         end
 
-        def build_prompt(source:, mode:, workflow_body:, source_body:, previous_stage_output:)
-          previous_context = build_previous_context(previous_stage_output)
-
+        def build_system_prompt(mode)
           <<~PROMPT
             You are running a read-only simulation stage for ace-taskflow.
+          PROMPT
+        end
+
+        def build_user_prompt(mode:, source:, context:, source_body:, previous_context:)
+          <<~PROMPT
             Return YAML matching the output contract defined in the workflow instruction below.
 
             Stage mode: #{mode}
             Source type: #{source[:type]}
             Source reference: #{source[:input]}
 
-            --- Stage Workflow Instruction ---
-            #{workflow_body}
+            #{context}
 
             --- Source Content ---
             #{source_body}
