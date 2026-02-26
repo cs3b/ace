@@ -34,11 +34,6 @@ module Ace
             options.to_h.each { |k, v| puts "  #{k}: #{v.inspect}" }
           end
 
-          if options.stage_all? && !@git.has_changes?
-            puts "No changes to commit" unless options.quiet
-            return true
-          end
-
           # Stage files if needed
           staging_result = stage_changes(options)
 
@@ -49,10 +44,12 @@ module Ace
           end
 
           # Ensure we have changes to commit
-          unless @git.has_staged_changes?
+          has_staged_changes = @git.has_staged_changes?
+          unless has_staged_changes
             puts "No changes to commit" unless options.quiet
             return true
           end
+          puts "✓ Changes staged successfully" if options.stage_all? && !options.quiet
 
           staged_files = @file_stager.staged_files
           groups = @commit_grouper.group(staged_files, project_root: @git.repository_root)
@@ -205,12 +202,9 @@ module Ace
         # @param options [Models::CommitOptions] Options
         # @return [Boolean] True if successful
         def stage_all_changes(options)
-          puts "Staging all changes..." unless options.quiet
-
           result = @file_stager.stage_all
 
           if result
-            puts "✓ Changes staged successfully" unless options.quiet
             true
           else
             # Always show errors, even in quiet mode

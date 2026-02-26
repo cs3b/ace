@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.8] - 2026-02-26
+
+### Fixed
+- Run normal stage-all flow before deciding no-op, instead of short-circuiting at the top of execution.
+- Correct change detection to include untracked files via `ace-git` command executor helpers.
+- Preserve single-line no-op output: `No changes to commit` is printed only after staging confirms nothing is staged.
+
 ## [0.18.7] - 2026-02-26
 
 ### Fixed
