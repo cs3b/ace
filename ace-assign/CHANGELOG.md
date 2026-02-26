@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.23] - 2026-02-26
+
+### Fixed
+- Anchor FORK column detection regex to CHILDREN pattern in `assign/drive` workflow, preventing false matches on phase names containing 'yes'
+
 ## [0.12.22] - 2026-02-26
 
 ### Added

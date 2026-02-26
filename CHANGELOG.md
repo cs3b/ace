@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.650] - 2026-02-26
+
+### Fixed
+- **ace-assign v0.12.23**: Anchor FORK column detection regex to CHILDREN pattern in `assign/drive` workflow, preventing false matches on phase names containing 'yes'
+
 ## [0.9.649] - 2026-02-26
 
 ### Fixed
