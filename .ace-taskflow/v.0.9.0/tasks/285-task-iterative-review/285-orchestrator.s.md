@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.285
-status: in-progress
+status: done
 priority: medium
 estimate: TBD
 dependencies: []
@@ -50,6 +50,12 @@ and decision gaps, then write final questions/refinements back to the artifact b
 - **02**: Idea-State Next-Phase Simulation (Draft + Plan) and Write-Back
 - **03**: Task-State Plan Simulation + Auto/Manual Trigger Controls
 - **04**: Work-On Simulation Extension Subtask
+- **05**: Add LLM simulation workflows for next-phase draft and plan (read-only)
+- **06**: Implement next-phase LLM stage executor and runner integration
+- **07**: Implement reverse synthesis ordering and simulation demo coverage
+- **08**: Enforce task completion gate for unresolved Success Criteria
+- **09**: Add verification evidence contract for simulation claims
+- **10**: Harden review gate to detect scaffold-vs-runnable gaps
 
 ### Concept Inventory
 
@@ -63,6 +69,12 @@ and decision gaps, then write final questions/refinements back to the artifact b
 | Write-back contract: final questions only to source artifact | 285.02/285.03 | — | NEW |
 | Auto-trigger defaults enabled for idea and task reviews | 285.03 | — | NEW |
 | Optional future work-on simulation mode | 285.04 | — | NEW |
+| Read-only simulation workflows for draft and plan stages | 285.05 | — | NEW |
+| LLM-backed stage executor wired into runner default path | 285.06 | — | NEW |
+| Reverse synthesis ordering (plan-first) and demo verification | 285.07 | — | NEW |
+| Completion gate for unresolved required criteria | 285.08 | — | NEW |
+| Verification evidence contract for executable claims | 285.09 | — | NEW |
+| Review gate check for scaffold-vs-runnable divergence | 285.10 | — | NEW |
 
 ## Success Criteria
 
@@ -71,8 +83,11 @@ and decision gaps, then write final questions/refinements back to the artifact b
 - [ ] Idea and task review flows define deterministic stage order and outputs
 - [ ] Work-on simulation remains isolated as extension scope
 - [ ] Spec is ready for review-task gating (draft -> pending)
+- [ ] Process guardrails prevent future scaffold-only completion of runnable simulation features
 
 ## References
 
 - `.ace-taskflow/v.0.9.0/ideas/_maybe/_archive/8poz4f-taskflow-add/idea.idea.s.md`
 - `.ace-taskflow/v.0.9.0/ideas/_maybe/_archive/8pp43s-taskflow-add/idea.idea.s.md`
+- `.ace-taskflow/v.0.9.0/retros/8pppak-task-285-next-phase-dry-runs.md`
+- `.ace-taskflow/v.0.9.0/retros/8pps6l-task-285-scope-gap-completeness-guardrails.md`

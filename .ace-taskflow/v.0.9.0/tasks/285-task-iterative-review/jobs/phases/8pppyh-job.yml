@@ -1,0 +1,144 @@
+---
+session:
+  name: work-on-tasks-285-llm-sim
+  description: Work on task 285 LLM simulation gap subtasks with PR, review cycles, release, and clean history
+steps:
+- number: '010'
+  name: batch-tasks
+  instructions: |
+    Batch container for multiple task implementations.
+    This step auto-completes when all child tasks are done.
+
+    Tasks to implement: 285.05, 285.06, 285.07
+- name: work-on-285.05
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: '285.05'
+  instructions: |
+    First: onboard yourself using /ace-onboard skill to load project context.
+    Implement task 285.05.
+    When complete, mark the task as done: run `ace-taskflow task done 285.05`
+  number: '010.01'
+- name: work-on-285.06
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: '285.06'
+  instructions: |
+    First: onboard yourself using /ace-onboard skill to load project context.
+    Implement task 285.06.
+    When complete, mark the task as done: run `ace-taskflow task done 285.06`
+  number: '010.02'
+- name: work-on-285.07
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: '285.07'
+  instructions: |
+    First: onboard yourself using /ace-onboard skill to load project context.
+    Implement task 285.07.
+    When complete, mark the task as done: run `ace-taskflow task done 285.07`
+  number: '010.03'
+- name: onboard
+  number: '000'
+  skill: ace-onboard
+  instructions:
+  - Load project context.
+  - Review task queue and priorities.
+- name: release-minor
+  number: '020'
+  skill: ace-release
+  instructions:
+  - Bump version (minor or patch, usually minor) and update CHANGELOGs.
+  - This is the initial release for new functionality.
+  - Follow semantic versioning conventions.
+- name: create-pr
+  number: '030'
+  skill: ace-git-create-pr
+  instructions:
+  - Create a pull request for the changes.
+  - Include summary of all implemented tasks.
+  - Capture the PR number for subsequent review steps.
+- name: review-valid-1
+  number: '040'
+  skill: ace-review-pr
+  context: fork
+  instructions:
+  - 'First: onboard yourself using /ace-onboard skill to load project context.'
+  - Review the code for correctness.
+  - Use preset code-valid.
+  - 'Focus: correctness - bugs, logic errors, missing functionality, broken contracts.'
+- name: apply-valid-1
+  number: '050'
+  skill: ace-review-apply-feedback
+  instructions:
+  - Apply feedback from valid review (medium+ priority).
+  - Commit changes with descriptive messages.
+- name: release-valid-1
+  number: '060'
+  skill: ace-release
+  instructions:
+  - Bump patch version and update CHANGELOGs.
+  - This captures valid review fixes.
+- name: review-fit-1
+  number: '070'
+  skill: ace-review-pr
+  context: fork
+  instructions:
+  - 'First: onboard yourself using /ace-onboard skill to load project context.'
+  - Review the code for quality.
+  - Use preset code-fit.
+  - 'Focus: quality - performance, architecture, standards, test coverage.'
+- name: apply-fit-1
+  number: '080'
+  skill: ace-review-apply-feedback
+  instructions:
+  - Apply feedback from fit review.
+  - Commit changes with descriptive messages.
+- name: release-fit-1
+  number: '090'
+  skill: ace-release
+  instructions:
+  - Bump patch version and update CHANGELOGs.
+  - This captures fit review fixes.
+- name: review-shine-1
+  number: '100'
+  skill: ace-review-pr
+  context: fork
+  instructions:
+  - 'First: onboard yourself using /ace-onboard skill to load project context.'
+  - Review the code for polish.
+  - Use preset code-shine.
+  - 'Focus: polish - simplification, naming, documentation (non-blocking suggestions).'
+- name: apply-shine-1
+  number: '110'
+  skill: ace-review-apply-feedback
+  instructions:
+  - Apply feedback from shine review (worthwhile improvements only).
+  - Commit changes with descriptive messages.
+- name: release-shine-1
+  number: '120'
+  skill: ace-release
+  instructions:
+  - Bump patch version and update CHANGELOGs.
+  - This captures shine review fixes.
+- name: reorganize-commits
+  number: '130'
+  skill: ace-git-reorganize-commits
+  instructions:
+  - Reorganize commits into logical groups.
+  - Group by concern (structure, implementation, tests, release).
+- name: push-to-remote
+  number: '140'
+  instructions:
+  - Push all changes to the remote repository.
+  - 'Run: git push --force-with-lease origin HEAD'
+  - Force-with-lease needed because reorganize-commits rewrites history.
+- name: update-pr-desc
+  number: '150'
+  skill: ace-git-update-pr-desc
+  instructions:
+  - Update PR description with final implementation summary.
+  - Include released version numbers and key components.
+  - Ensure PR is ready for human review.
