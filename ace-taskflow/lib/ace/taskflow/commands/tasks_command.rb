@@ -653,9 +653,15 @@ module Ace
                 display_subtask_line(subtask, connector)
               end
             else
-              # Parent task missing - log warning in debug mode
-              debug_log "Parent task #{parent_id} not found for orphan subtask group (#{children.size} subtask(s) skipped)"
-              next
+              # Parent task missing - display subtasks with warning indicator
+              debug_log "Parent task #{parent_id} not found for orphan subtask group (#{children.size} subtask(s) displayed with warning)"
+
+              # Display subtasks with missing parent indicator
+              puts "  [missing parent: #{parent_id}]"
+              children.sort_by { |s| s[:id] || "" }.each_with_index do |subtask, idx|
+                connector = idx == children.length - 1 ? "└─" : "├─"
+                display_subtask_line(subtask, connector)
+              end
             end
           end
         end
