@@ -12,8 +12,8 @@ class WorkOnCommandTest < AceOverseerTestCase
       @calls = []
     end
 
-    def call(task_ref:, cli_preset:, on_progress: nil)
-      @calls << { task_ref: task_ref, cli_preset: cli_preset }
+    def call(task_ref:, task_refs: nil, cli_preset:, on_progress: nil)
+      @calls << { task_ref: task_ref, task_refs: task_refs, cli_preset: cli_preset }
       raise @error if @error
 
       @result
@@ -36,11 +36,23 @@ class WorkOnCommandTest < AceOverseerTestCase
     orchestrator = FakeWorkOnOrchestrator.new(result: build_result)
     command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator)
 
-    command.call(task: "230", preset: "fix-bug", quiet: true)
+    command.call(task: ["230"], preset: "fix-bug", quiet: true)
 
     assert_equal 1, orchestrator.calls.length
     assert_equal "230", orchestrator.calls.first[:task_ref]
+    assert_equal ["230"], orchestrator.calls.first[:task_refs]
     assert_equal "fix-bug", orchestrator.calls.first[:cli_preset]
+  end
+
+  def test_parses_comma_and_repeated_task_inputs_in_order
+    orchestrator = FakeWorkOnOrchestrator.new(result: build_result)
+    command = Ace::Overseer::CLI::Commands::WorkOn.new(orchestrator: orchestrator)
+
+    command.call(task: ["288,287.01", "300"], quiet: true)
+
+    assert_equal 1, orchestrator.calls.length
+    assert_equal "288", orchestrator.calls.first[:task_ref]
+    assert_equal %w[288 287.01 300], orchestrator.calls.first[:task_refs]
   end
 
   def test_progress_output_displayed_when_not_quiet
