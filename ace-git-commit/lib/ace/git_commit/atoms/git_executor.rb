@@ -47,7 +47,8 @@ module Ace
         # @return [Boolean] True if there are changes
         def has_changes?
           Ace::Git::Atoms::CommandExecutor.has_unstaged_changes? ||
-            Ace::Git::Atoms::CommandExecutor.has_staged_changes?
+            Ace::Git::Atoms::CommandExecutor.has_staged_changes? ||
+            Ace::Git::Atoms::CommandExecutor.has_untracked_changes?
         end
 
         # Check if there are staged changes

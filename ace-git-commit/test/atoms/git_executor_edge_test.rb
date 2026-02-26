@@ -33,15 +33,19 @@ class GitExecutorEdgeTest < TestCase
 
     @cmd_executor.stub :has_unstaged_changes?, false do
       @cmd_executor.stub :has_staged_changes?, false do
-        refute @git.has_changes?
+        @cmd_executor.stub :has_untracked_changes?, false do
+          refute @git.has_changes?
+        end
       end
     end
   end
 
   def test_handles_repository_with_untracked_files
-    @cmd_executor.stub :has_unstaged_changes?, true do
+    @cmd_executor.stub :has_unstaged_changes?, false do
       @cmd_executor.stub :has_staged_changes?, false do
-        assert @git.has_changes?
+        @cmd_executor.stub :has_untracked_changes?, true do
+          assert @git.has_changes?
+        end
       end
     end
   end
@@ -55,7 +59,9 @@ class GitExecutorEdgeTest < TestCase
   def test_handles_repository_with_modified_files
     @cmd_executor.stub :has_unstaged_changes?, true do
       @cmd_executor.stub :has_staged_changes?, false do
-        assert @git.has_changes?
+        @cmd_executor.stub :has_untracked_changes?, false do
+          assert @git.has_changes?
+        end
       end
     end
   end
@@ -112,7 +118,9 @@ class GitExecutorEdgeTest < TestCase
   def test_handles_very_large_repository
     @cmd_executor.stub :has_unstaged_changes?, true do
       @cmd_executor.stub :has_staged_changes?, false do
-        assert @git.has_changes?
+        @cmd_executor.stub :has_untracked_changes?, false do
+          assert @git.has_changes?
+        end
       end
     end
   end
@@ -149,6 +157,22 @@ class GitExecutorEdgeTest < TestCase
 
         assert git.has_changes?
         assert git.has_staged_changes?
+      end
+    end
+  end
+
+  def test_integration_reports_changes_for_untracked_file
+    Dir.mktmpdir do |tmpdir|
+      Dir.chdir(tmpdir) do
+        system("git init -q")
+        system("git config user.name 'Test'")
+        system("git config user.email 'test@test.com'")
+
+        git = Ace::GitCommit::Atoms::GitExecutor.new
+        File.write("untracked.txt", "content")
+
+        assert git.has_changes?
+        refute git.has_staged_changes?
       end
     end
   end
