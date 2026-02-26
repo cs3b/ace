@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.16] - 2026-02-26
+
+### Fixed
+- Fix repeated `--task` flags (`--task 288 --task 287`) being silently dropped by dry-cli; values are now coalesced before parsing
+
+## [0.4.15] - 2026-02-26
+
+### Fixed
+- Raise descriptive error when no valid task references are provided to `WorkOnOrchestrator`, preventing `NoMethodError` on empty input.
+
+## [0.4.14] - 2026-02-26
+
+### Added
+- Support ordered multi-task input for `ace-overseer work-on --task` using repeated flags, comma-separated values, or mixed forms.
+- Add explicit `task_refs` launch parameter support in `AssignmentLauncher` for multi-task presets using `taskrefs`.
+
+### Fixed
+- Validate all provided task references before worktree/tmux/assignment side effects.
+- Fail early with actionable guidance when multiple task refs are provided to a single-task (`taskref`) preset.
+
+### Changed
+- Preserve left-to-right task execution order while expanding orchestrator refs in-place to subtask sequences.
+
 ## [0.4.13] - 2026-02-24
 
 ### Fixed

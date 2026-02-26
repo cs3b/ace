@@ -9,7 +9,8 @@ module Ace
 
           desc "Create worktree, open tmux window, and prepare assignment"
 
-          option :task, aliases: ["-t"], required: true, desc: "Task reference (e.g., 230)"
+          option :task, aliases: ["-t"], type: :array, required: true,
+                        desc: "Task reference(s), repeatable and comma-separated (e.g., 230 --task 231,232)"
           option :preset, aliases: ["-p"], desc: "Assignment preset name"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
@@ -20,12 +21,18 @@ module Ace
           end
 
           def call(task: nil, preset: nil, **options)
-            if task.to_s.strip.empty?
+            task_refs = normalize_task_refs(task)
+            if task_refs.empty?
               raise Ace::Core::CLI::Error.new("--task is required. Usage: ace-overseer work-on --task <ref>")
             end
 
             progress = options[:quiet] ? nil : ->(msg) { puts msg }
-            result = @orchestrator.call(task_ref: task, cli_preset: preset, on_progress: progress)
+            result = @orchestrator.call(
+              task_ref: task_refs.first,
+              task_refs: task_refs,
+              cli_preset: preset,
+              on_progress: progress
+            )
 
             return if options[:quiet]
 
@@ -34,6 +41,15 @@ module Ace
             raise
           rescue StandardError => e
             raise Ace::Core::CLI::Error.new(e.message)
+          end
+
+          private
+
+          def normalize_task_refs(raw_task)
+            Array(raw_task)
+              .flat_map { |entry| entry.to_s.split(",") }
+              .map(&:strip)
+              .reject(&:empty?)
           end
         end
       end
