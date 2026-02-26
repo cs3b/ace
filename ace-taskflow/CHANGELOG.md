@@ -7,6 +7,210 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.7] - 2026-02-26
+
+### Technical
+- Remove unused `stages_result = nil` dead assignment in `NextPhaseSimulationRunner#run`
+
+## [0.44.6] - 2026-02-26
+
+### Technical
+- Add debug-level warning in `persist_failure_artifacts` rescue to aid debugging when failure artifact persistence itself fails
+
+## [0.44.5] - 2026-02-26
+
+### Fixed
+- Enrich LLM-reported stage failure error message with first finding from stage payload instead of generic text
+- Set `current_stage = "writeback"` before `persist_run_artifacts` so IO errors are not misattributed to the last simulation stage
+- Narrow `rescue StandardError` in `resolve_source!` to `Ace::Core::CLI::Error, ArgumentError, KeyError` to avoid swallowing unexpected errors
+- Update `SimulationWritebackMixin` upsert regex lookahead from `(?=\n## |\z)` to `(?=\n\#{1,2} |\z)` to protect H1 headings from being consumed
+
+## [0.44.4] - 2026-02-26
+
+### Changed
+- Harden `task/review` readiness guidance to detect scaffold-vs-runnable gaps with explicit runnable-claim classification and test/evidence mapping checks
+- Standardize blocked review output for runnable-proof gaps with deterministic missing-evidence categories and remediation steps
+
+### Technical
+- Complete task `285.10` review-gate policy decisions and success criteria updates for runnable-evidence enforcement
+
+## [0.44.3] - 2026-02-26
+
+### Added
+- Add `Verification Evidence` behavioral contract to task drafting template and embedded draft workflow template for runnable claims (command, artifacts, expected-vs-observed, failure classification)
+
+### Changed
+- Extend task draft/review guidance to require deterministic runnable-evidence fields when simulation/automation/runtime behavior is claimed
+- Add review readiness checks to distinguish provider-unavailable outcomes from implementation failures for runnable claims
+
+### Technical
+- Apply `Verification Evidence` reference blocks to task-285 simulation subtasks (`285.06`, `285.07`) and finalize task-285 contract policy notes (`285.09`)
+
+## [0.44.2] - 2026-02-26
+
+### Added
+- Add `TaskCompletionGate` molecule to evaluate unresolved checklist items in `Success Criteria` and `Validation Questions`
+
+### Changed
+- Add task completion gate configuration defaults (`task.completion_gate`) and configuration accessors
+- Extend `ace-task done` with `--allow-incomplete` override support and warning output
+
+### Fixed
+- Block `ace-task done` when required `Success Criteria` checklist items are unresolved while preserving task status and location
+
+### Technical
+- Add molecule, command, and organism tests for completion-gate block and override scenarios
+
+## [0.44.1] - 2026-02-26
+
+### Fixed
+- Propagate LLM-reported stage status in simulation runner so `status: failed` payloads correctly mark runs as partial
+
+## [0.44.0] - 2026-02-26
+
+### Added
+- Add `task/simulate-next-phase-draft` and `task/simulate-next-phase-plan` workflow instructions with deterministic read-only stage contracts, output schemas, and failure guidance (task 285.05)
+- Add `NextPhaseStageExecutor` molecule to execute next-phase stages via `Ace::LLM::QueryInterface` with read-only sandbox metadata, response normalization pipeline, and empty-response failure behavior (task 285.06)
+- Add `review.next_phase.model` configuration support defaulting to `glite` for the LLM-backed simulation executor (task 285.06)
+
+### Changed
+- Wire `NextPhaseSimulationRunner` to use the new LLM-backed stage executor by default while preserving injectable `stage_executor` override for tests (task 285.06)
+- Reverse multi-stage idea synthesis aggregation for `questions` and `refinements` so `plan` guidance is prioritized before `draft` while preserving stage execution order and first-seen uniqueness semantics (task 285.07)
+
+### Fixed
+- Remove scaffold placeholder stage payload fallback from simulation runner so LLM execution failures surface explicitly (task 285.06)
+
+### Technical
+- Add focused executor tests covering structured normalization, previous-stage context propagation, and empty-response failure behavior
+- Add molecule and runner regression coverage for reverse synthesis/writeback ordering behavior
+
+## [0.43.6] - 2026-02-26
+
+### Changed
+- Reverse multi-stage idea synthesis aggregation for `questions` and `refinements` so `plan` guidance is prioritized before `draft` while preserving stage execution order and first-seen uniqueness semantics
+
+### Technical
+- Add molecule and runner regression coverage for reverse synthesis/writeback ordering behavior
+- Add task-level demo verification notes for `review-next-phase --modes draft,plan` artifact checks
+
+## [0.43.5] - 2026-02-26
+
+### Added
+- Add `NextPhaseStageExecutor` molecule to execute next-phase stages through `Ace::LLM::QueryInterface` with read-only sandbox metadata
+- Add stage executor normalization pipeline for JSON/YAML/fenced/semantic outputs into deterministic `status/findings/questions/refinements/unresolved_gaps` schema
+- Add focused executor tests covering structured normalization, previous-stage context propagation, and empty-response failure behavior
+
+### Changed
+- Wire `NextPhaseSimulationRunner` to use the new LLM-backed stage executor by default while preserving injected `stage_executor` override for tests
+- Add `review.next_phase.model` configuration support and default it to `glite`
+
+### Fixed
+- Remove scaffold placeholder stage payload fallback from simulation runner so LLM execution failures surface explicitly and preserve existing failure artifact semantics
+
+## [0.43.4] - 2026-02-26
+
+### Added
+- Add `task/simulate-next-phase-draft` workflow instruction with deterministic read-only stage contract and failure guidance
+- Add `task/simulate-next-phase-plan` workflow instruction with prior-draft-context input contract and aligned output schema
+
+## [0.43.3] - 2026-02-26
+
+### Fixed
+- Correct misleading `preview-only` write-back mode label in run preview to `enabled` when write-back is active
+- Guard nil artifact values in verbose CLI output to prevent blank artifact lines
+
+## [0.43.2] - 2026-02-26
+
+### Changed
+- Extract `init_run_session`, `execute_stages`, and `persist_run_artifacts` from `NextPhaseSimulationRunner#run` to improve readability
+- Harden `resolve_source!` task lookup with rescue to ensure graceful fallthrough to idea lookup on unexpected exceptions
+- Show original exception class in debug mode when CLI `ReviewNextPhase` catches `StandardError`
+
+## [0.43.1] - 2026-02-26
+
+### Changed
+- Extract shared `SimulationWritebackMixin` from `IdeaSimulationWriteback` and `TaskSimulationWriteback` to eliminate duplicate implementation
+
+### Fixed
+- Remove misleading `defined?` guards in `NextPhaseSimulationRunner` failure rescue — nil checks are sufficient
+- Preserve original exception class and backtrace when write-back raises (no longer wraps in generic `RuntimeError`)
+
+### Technical
+- Add test for upsert edge case when non-`##` content follows simulation review section
+- Add test for verbose output path in `ReviewNextPhase` command
+
+## [0.43.0] - 2026-02-26
+
+### Added
+- Add `ace-taskflow review-next-phase` CLI command for deterministic next-phase simulation
+- Add simulation session model with b36ts run IDs and artifact manifest
+- Add simulation session store with atomic artifact persistence under `.cache/ace-taskflow/simulations/<run_id>/`
+- Add next-phase simulation runner organism supporting idea and task source modes
+- Add simulation synthesis builder for structured output with questions, refinements, and gap reporting
+- Add idea write-back helper that upserts `Simulation Review (Next-Phase)` sections without duplication
+- Add task write-back helper for task-source simulation results
+- Add next-phase trigger policy resolver with deterministic manual/auto and CLI override precedence
+- Add `review.next_phase.include_work_simulation` extension flag for opt-in work-stage simulation
+
+### Changed
+- Extend simulation runner to enforce idea mode contract (`draft,plan`) and pass prior stage output downstream
+- Allow task-source default next-phase modes to include `work` only when extension mode is explicitly enabled
+
+### Fixed
+- Preserve partial synthesis artifacts when mixed `plan,work` runs fail in work stage
+- Reject task `work`-only simulations with explicit prerequisite guidance
+
+## [0.42.13] - 2026-02-26
+
+### Added
+- Add `review.next_phase.include_work_simulation` extension flag (default `false`) to keep work-stage simulation opt-in
+- Add coverage for task-mode extension defaults and work-stage prerequisite/partial-failure handling
+
+### Changed
+- Allow task-source default modes to become `plan,work` only when work simulation extension is explicitly enabled
+
+### Fixed
+- Preserve earlier stage artifacts and synthesis when mixed-mode `plan,work` runs fail at the work stage
+- Reject `work`-only task simulations with explicit prerequisite guidance to run `plan,work`
+
+## [0.42.12] - 2026-02-26
+
+### Added
+- Add task-source simulation write-back helper that upserts `Simulation Review (Next-Phase)` into task artifacts
+- Add next-phase trigger policy resolver with deterministic manual/auto and CLI override precedence
+
+### Changed
+- Extend `review-next-phase` CLI with trigger controls: `--next-phase-review`, `--no-next-phase-review`, `--next-phase-modes`, and `--auto-trigger`
+- Apply write-back previews and persisted write-back for task sources in addition to idea sources
+- Resolve simulation cache directory through configuration helper methods
+
+## [0.42.11] - 2026-02-26
+
+### Added
+- Add deterministic synthesis builder for review-next-phase runs with structured `questions`, `refinements`, and `unresolved_gaps`
+- Add idea simulation write-back helper that upserts a dedicated `Simulation Review (Next-Phase)` section without duplicating prior content
+
+### Changed
+- Enforce idea-origin simulation mode contract to `draft,plan` with deterministic stage ordering and stage-to-stage context chaining
+- Extend writeback preview to include generated simulation review content and explicit write-back status reporting
+
+### Fixed
+- Handle idea-stage `plan` failures as partial synthesis runs that preserve draft artifacts and unresolved gaps instead of dropping context
+- Preserve manual-apply fallback guidance when write-back fails after artifacts are generated
+
+## [0.42.10] - 2026-02-26
+
+### Added
+- Add `ace-taskflow review-next-phase` command for deterministic next-phase simulation sessions
+- Add simulation session framework with b36ts run IDs and deterministic cache directory contract at `.cache/ace-taskflow/simulations/<run_id>/`
+- Add persisted simulation artifacts: `request.yml`, stage outputs, `synthesis.yml`, `writeback-preview.md`, and `run-summary.md`
+
+### Changed
+- Extend taskflow default configuration with `review.next_phase` keys for enablement, auto trigger defaults, and cache path
+
+### Fixed
+- Persist explicit failure metadata (`run-failure.yml`) and failed stage details when simulation stage execution errors
+
 ## [0.42.9] - 2026-02-26
 
 ### Fixed

@@ -115,6 +115,31 @@ class TaskManagerIdempotentTest < AceTaskflowTestCase
     end
   end
 
+  def test_complete_already_done_task_bypasses_completion_gate
+    with_real_test_project do |dir|
+      Ace::Taskflow.reset_configuration!
+
+      task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "003", "task.003.s.md")
+      content = File.read(task_file)
+      content = content.gsub(/status: \w+/, "status: done")
+      content += <<~SECTIONS
+
+        ## Success Criteria
+
+        - [ ] Criterion one unresolved
+      SECTIONS
+      File.write(task_file, content)
+
+      manager = Ace::Taskflow::Organisms::TaskManager.new
+      result = manager.complete_task("003")
+
+      assert result[:success], "Completing already-done task should succeed"
+      assert_match(/already/, result[:message])
+      refute_match(/Completion blocked/, result[:message])
+      assert_nil result[:warning]
+    end
+  end
+
   # Test strict mode (opt-in via configuration)
 
   def test_strict_mode_enforces_rigid_validation

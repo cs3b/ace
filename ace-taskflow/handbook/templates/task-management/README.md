@@ -27,6 +27,7 @@ The task management system uses a two-template approach that mirrors the specifi
 - **User Experience**: Input/Process/Output flow
 - **Expected Behavior**: Observable system behavior (not implementation)
 - **Interface Contract**: APIs, CLIs, UI interactions with error handling
+- **Verification Evidence**: Required for runnable claims (command, artifact, expected vs observed, failure class)
 - **Success Criteria**: Measurable behavioral outcomes
 - **Validation Questions**: Requirements clarification
 
@@ -162,6 +163,7 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 ### Draft Template Quality
 - [ ] Expected Behavior written from user perspective
 - [ ] Interface Contract specifies inputs/outputs clearly
+- [ ] Runnable claims include Verification Evidence (command + artifacts + expected vs observed + failure classification)
 - [ ] Success Criteria are measurable and behavioral
 - [ ] No implementation details present
 - [ ] All validation questions addressed

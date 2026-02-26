@@ -183,6 +183,32 @@ module Ace
         config.dig("doctor", "agent_model") || "claude:sonnet"
       end
 
+      # Next-phase simulation controls
+      def next_phase_review_enabled?
+        config.dig("review", "next_phase", "enabled") != false
+      end
+
+      def next_phase_auto_idea_enabled?
+        config.dig("review", "next_phase", "auto", "idea") != false
+      end
+
+      def next_phase_auto_task_enabled?
+        config.dig("review", "next_phase", "auto", "task") != false
+      end
+
+      def next_phase_cache_dir
+        config.dig("review", "next_phase", "cache_dir") || ".cache/ace-taskflow/simulations"
+      end
+
+      def next_phase_include_work_simulation?
+        config.dig("review", "next_phase", "include_work_simulation") == true
+      end
+
+      def next_phase_review_model
+        config.dig("review", "next_phase", "model") ||
+          config.dig("taskflow", "review", "next_phase", "model")
+      end
+
       # Get idea-specific configuration
       # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def idea_config
@@ -193,6 +219,17 @@ module Ace
       # Defaults come from .ace-defaults/taskflow/config.yml via ConfigLoader
       def task_config
         config["task"] || {}
+      end
+
+      # Completion gate policy for ace-task done
+      def completion_gate_require_success_criteria?
+        value = task_config.dig("completion_gate", "require_success_criteria")
+        value.nil? ? true : value
+      end
+
+      def completion_gate_require_validation_questions?
+        value = task_config.dig("completion_gate", "require_validation_questions")
+        value.nil? ? false : value
       end
 
       # Get release-specific configuration

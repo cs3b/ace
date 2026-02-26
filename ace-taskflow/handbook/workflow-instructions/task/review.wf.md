@@ -1,4 +1,7 @@
 ---
+name: task-review
+description: Validate draft task specs and gate promotion based on readiness evidence
+allowed-tools: Bash, Read, Write, AskUserQuestion
 update:
   update_frequency: on-change
   auto_generate:
@@ -37,6 +40,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
        - User Experience (input, process, output)
        - Expected Behavior
        - Interface Contract
+       - Verification Evidence (when runnable claims are present)
        - Success Criteria
        - Validation Questions
      - Identify gaps, ambiguities, or assumptions that need clarification
@@ -93,12 +97,17 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **Validation Questions Addressed**: All validation questions either answered or documented as blocking
    - [ ] **No Contradictory Directives**: Scan spec for conflicting instructions (e.g., "replace X" and "preserve X" for same entity; "add" and "remove" same dependency). Flag any contradictions as HIGH priority questions
    - [ ] **Consumer Packages Listed**: When interfaces change (CLI flags, config keys, protocol URIs), spec identifies which packages consume the interface and will need updates
-   - [ ] **Deliverables Match Scope**: Number of deliverables is proportional to scope — flag if spec lists 3 deliverables but scope implies 15+ file changes
+   - [ ] **Deliverables Match Scope**: Number of deliverables is proportional to scope -- flag if spec lists 3 deliverables but scope implies 15+ file changes
    - [ ] **Operating Modes Covered**: Spec addresses relevant operating modes (dry-run, force, verbose, quiet) or explicitly marks them out-of-scope
+   - [ ] **Runnable Claim Classification Explicit**: Spec explicitly classifies whether runnable behavior is claimed (`runnable-claim` vs `non-runnable`) using metadata or clear section-level wording
+   - [ ] **Scaffold-vs-Runnable Gap Check**: Runnable claims are backed by concrete execution proof, not scaffold placeholders or aspirational text
+   - [ ] **Runnable Claims Include Evidence**: If task claims executable behavior (simulation/automation/runtime), `Verification Evidence` includes command(s), artifact path(s), expected vs observed summary, and failure classification
+   - [ ] **Test/Evidence Mapping Present**: Runnable claims map each claimed behavior to at least one verifiable proof path (test output and/or runtime artifact) with no unmapped claims
+   - [ ] **Provider vs Implementation Classified**: Evidence/result text explicitly distinguishes provider-unavailable outcomes from implementation failures
    - [ ] **Degenerate Inputs Covered**: Spec considers identity operations (X=Y), empty inputs, and self-referential calls where the same entity appears in both argument positions
    - [ ] **Per-Path Variations Covered**: If spec says "same behavior for X and Y", it enumerates edge cases unique to each path (guard logic, error handling, parameter differences)
    - [ ] **End-State Coherence** (orchestrator subtasks only): Concepts introduced by this subtask
-         (new fields, modes, formats) are expected to exist in the final deliverable —
+         (new fields, modes, formats) are expected to exist in the final deliverable --
          not be removed by a later subtask. If this subtask adds a concept that a later
          subtask will consolidate away, flag as SCOPE RISK and consider merging subtasks.
    - [ ] **No Blocking Questions Remain**: All HIGH priority questions resolved or have acceptable defaults
@@ -112,23 +121,43 @@ Validate draft behavioral specifications and promote to pending when ready. This
    **If Ready (all readiness criteria met):**
    - Promote the task status and clear any existing `needs_review` flag:
      ```bash
-     ace-task update <ref> --field status=pending
-     ace-task update <ref> --field needs_review=false
+     ace-task update {task-ref} --field status=pending
+     ace-task update {task-ref} --field needs_review=false
      ```
    - Report promotion:
      ```
-     Task <ref> promoted from draft to pending.
+     Task {task-ref} promoted from draft to pending.
      Readiness: All behavioral specs validated, no blocking questions.
+     Runnable proof: complete (if runnable claims exist).
      Ready for implementation via ace-assign.
      ```
 
    **If Not Ready (blocking questions or gaps remain):**
    - Add `needs_review: true` to task metadata
    - Keep status as `draft`
+   - Use explicit blocking categories for runnable-proof gaps:
+     - missing command proof
+     - missing artifact proof
+     - missing expected-vs-observed proof
+     - missing failure classification
+     - missing test/evidence mapping
    - Report blocking status:
      ```
-     Task <ref> remains draft.
-     needs_review: true — N HIGH priority questions require human input.
+     Task {task-ref} remains draft.
+     needs_review: true -- N HIGH priority questions require human input.
+     Outcome: blocked
+     Missing Evidence:
+     - command: (present|missing)
+     - artifacts: (present|missing)
+     - expected_vs_observed: (present|missing)
+     - failure_classification: (present|missing)
+     - test_evidence_mapping: (present|missing)
+     Remediation:
+     1) Add exact command(s) executed
+     2) Add artifact path(s) inspected
+     3) Add expected vs observed result summary
+     4) Classify failure mode (implementation failure | provider unavailable | environment issue)
+     5) Map each runnable claim to test and/or artifact evidence
      See Review Questions section in task file.
      ```
 
@@ -175,10 +204,11 @@ Validate draft behavioral specifications and promote to pending when ready. This
      ```markdown
      ## Review Summary
 
-     **Readiness Checklist:** X/7 criteria met
+     **Readiness Checklist:** X/N criteria met
      **Questions Generated:** X total (Y high, Z medium)
      **Critical Blockers:** [List HIGH priority questions]
-     **Decision:** Promoted to pending / Remains draft (needs_review: true)
+     **Decision:** Ready / Blocked (needs_review: true)
+     **Runnable Evidence Status:** complete / incomplete / not-applicable
      **Recommended Next Steps:** Based on current state...
      ```
 

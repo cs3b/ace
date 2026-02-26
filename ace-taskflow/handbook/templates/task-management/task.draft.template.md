@@ -73,6 +73,15 @@ GET/POST/PUT/DELETE /endpoint
 - Failure: [Expected cleanup - no orphan temp files]
 - Interruption: [Expected cleanup on SIGINT]
 
+### Verification Evidence (Required for Runnable Claims)
+<!-- Required when the task claims executable behavior (simulation/automation/runtime execution) -->
+<!-- Provide concrete evidence that reviewers and completion gates can verify without inference -->
+
+- **Command(s)**: `[Exact command(s) executed]`
+- **Artifacts**: `[Artifact path(s) inspected for proof]`
+- **Expected vs Observed**: `[pass/fail + short rationale]`
+- **Failure Classification**: `[implementation failure | provider unavailable | environment issue]`
+
 ### Success Criteria
 <!-- Define measurable, observable criteria that indicate successful completion -->
 <!-- Focus on behavioral outcomes and user experience, not implementation artifacts -->

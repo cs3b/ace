@@ -370,6 +370,69 @@ class TaskManagerTest < AceTaskflowTestCase
     end
   end
 
+  def test_complete_task_blocks_when_success_criteria_unresolved
+    with_regular_task_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "123-regular-task", "123-regular-task.s.md")
+        content = File.read(task_file)
+        content += <<~SECTIONS
+
+          ## Success Criteria
+
+          - [ ] Criterion one unresolved
+          - [x] Criterion two done
+        SECTIONS
+        File.write(task_file, content)
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.complete_task("123")
+
+        refute result[:success], "Expected completion gate to block unresolved checklist items"
+        assert_match(/Completion blocked/, result[:message])
+        assert_match(/Success Criteria/, result[:message])
+        assert_match(/--allow-incomplete/, result[:message])
+
+        content_after = File.read(task_file)
+        assert_match(/status: pending/, content_after)
+
+        archive_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "_archive")
+        task_in_archive = Dir.glob(File.join(archive_dir, "*123*")).first
+        refute task_in_archive, "Task should not move to archive when gate blocks completion"
+      end
+    end
+  end
+
+  def test_complete_task_allow_incomplete_bypasses_gate
+    with_regular_task_project do |dir|
+      Dir.chdir(dir) do
+        Ace::Taskflow.reset_configuration!
+
+        task_file = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "123-regular-task", "123-regular-task.s.md")
+        content = File.read(task_file)
+        content += <<~SECTIONS
+
+          ## Success Criteria
+
+          - [ ] Criterion one unresolved
+        SECTIONS
+        File.write(task_file, content)
+
+        manager = Ace::Taskflow::Organisms::TaskManager.new
+        result = manager.complete_task("123", allow_incomplete: true)
+
+        assert result[:success], "Expected override to bypass completion gate"
+        assert_match(/moved to _archive/, result[:message])
+        assert_match(/Bypassed completion gate/, result[:warning])
+
+        archive_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "t", "_archive")
+        task_in_archive = Dir.glob(File.join(archive_dir, "*123*")).first
+        assert task_in_archive, "Task should move to archive when override is used"
+      end
+    end
+  end
+
   def test_all_subtasks_terminal_returns_true_when_all_done
     with_orchestrator_project do |dir|
       Dir.chdir(dir) do

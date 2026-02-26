@@ -146,6 +146,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
    * For each created draft task, populate with:
      * Behavioral Specification section with embedded template
      * Interface Contract definitions with examples
+     * Verification Evidence section for runnable claims (commands, artifacts, expected vs observed, failure classification)
      * Success Criteria as mandatory requirements
      * Validation Questions highlighting unknowns
      * Integration with ace-idea if applicable
@@ -203,6 +204,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
 
 * **What over How**: Define user experience before implementation
 * **Interface Contracts**: Specify CLI/API/UI behaviors clearly
+* **Verification Evidence**: For runnable claims, require explicit command/artifact/result proof
 * **Success Criteria**: Measurable outcomes that define completion
 * **Validation Questions**: Highlight unknowns and assumptions
 
@@ -325,6 +327,15 @@ GET/POST/PUT/DELETE /endpoint
 **Edge Cases:**
 - [Edge case 1]: [Expected behavior]
 - [Edge case 2]: [Expected behavior]
+
+### Verification Evidence (Required for Runnable Claims)
+<!-- Required when the task claims executable behavior (simulation/automation/runtime execution) -->
+<!-- Provide concrete evidence that reviewers and completion gates can verify without inference -->
+
+- **Command(s)**: `[Exact command(s) executed]`
+- **Artifacts**: `[Artifact path(s) inspected for proof]`
+- **Expected vs Observed**: `[pass/fail + short rationale]`
+- **Failure Classification**: `[implementation failure | provider unavailable | environment issue]`
 
 ### Success Criteria
 <!-- Define measurable, observable criteria that indicate successful completion -->

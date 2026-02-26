@@ -11,6 +11,7 @@ require_relative "../molecules/dependency_resolver"
 require_relative "../molecules/task_selector"
 require_relative "../molecules/task_statistics"
 require_relative "../molecules/status_validator"
+require_relative "../molecules/task_completion_gate"
 require_relative "../atoms/task_reference_parser"
 require_relative "../atoms/path_builder"
 require_relative "../atoms/frontmatter_parser"
@@ -277,25 +278,43 @@ module Ace
         # For single tasks: move folder as usual
         # @param reference [String] Task reference
         # @return [Hash] Result with :success and :message
-        def complete_task(reference)
+        def complete_task(reference, allow_incomplete: false)
           task = @task_loader.find_task_by_reference(reference)
           return { success: false, message: "Task #{reference} not found" } unless task
 
-          # Update status first
+          gate_warning = nil
+          was_already_done = task[:status].to_s.downcase == "done"
+
+          unless was_already_done
+            gate_result = evaluate_completion_gate(task)
+            if gate_result[:blocked] && !allow_incomplete
+              return {
+                success: false,
+                message: format_completion_gate_block_message(reference, task, gate_result)
+              }
+            end
+
+            gate_warning = build_completion_gate_warning(reference, gate_result, allow_incomplete: allow_incomplete)
+          end
+
+          # Update status after gate check for non-idempotent completion
           status_result = update_task_status(reference, "done")
           return status_result unless status_result[:success]
 
           # Check if status update was idempotent (already done)
-          was_already_done = status_result[:message].include?("already has status")
+          was_already_done ||= status_result[:message].include?("already has status")
 
           # Handle completion based on task type
-          if task[:parent_id]
+          completion_result = if task[:parent_id]
             handle_subtask_completion(task, reference)
           elsif task[:is_orchestrator]
             handle_orchestrator_completion(task, reference, was_already_done)
           else
             handle_single_task_completion(task, reference, was_already_done)
           end
+
+          completion_result[:warning] = gate_warning if gate_warning
+          completion_result
         end
 
         # Reopen a completed task (move from _archive/ and update status)
@@ -486,6 +505,39 @@ module Ace
             subtask = @task_loader.find_task_by_reference(subtask_id)
             !subtask || !terminal_statuses.include?(subtask[:status]&.downcase)
           end
+        end
+
+        def evaluate_completion_gate(task)
+          Molecules::TaskCompletionGate.evaluate(
+            content: task[:content],
+            require_success_criteria: Ace::Taskflow.configuration.completion_gate_require_success_criteria?,
+            require_validation_questions: Ace::Taskflow.configuration.completion_gate_require_validation_questions?
+          )
+        end
+
+        def format_completion_gate_block_message(reference, task, gate_result)
+          issues = gate_result[:violations].map do |issue|
+            "- #{issue[:section]}: #{issue[:unresolved_count]} unresolved item(s)"
+          end
+
+          [
+            "Completion blocked for task #{reference}",
+            "Task path: #{task[:path]}",
+            "Unresolved required checklist items:",
+            issues.join("\n"),
+            "Override hint: ace-task done #{reference} --allow-incomplete"
+          ].join("\n")
+        end
+
+        def build_completion_gate_warning(reference, gate_result, allow_incomplete:)
+          return nil unless allow_incomplete
+          return nil unless gate_result[:has_issues]
+
+          summaries = (gate_result[:violations] + gate_result[:warnings]).map do |issue|
+            "#{issue[:section]}: #{issue[:unresolved_count]} unresolved"
+          end
+
+          "Bypassed completion gate for #{reference} with --allow-incomplete (#{summaries.join('; ')})"
         end
 
         # Check if orchestrator should auto-complete when all subtasks are done

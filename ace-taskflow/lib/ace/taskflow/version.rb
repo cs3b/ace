@@ -2,6 +2,6 @@
 
 module Ace
   module Taskflow
-    VERSION = "0.42.9"
+    VERSION = "0.44.7"
   end
 end
