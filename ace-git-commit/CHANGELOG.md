@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.7] - 2026-02-26
+
+### Fixed
+- Treat "no changes to commit" as a successful no-op (exit 0) instead of a failure.
+- Simplify no-op output to a single clear line: `No changes to commit` (without staging progress or generic failure messaging).
+
 ## [0.18.6] - 2026-02-25
 
 ### Technical
