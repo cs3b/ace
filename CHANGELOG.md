@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.659] - 2026-02-26
+
+### Fixed
+- **ace-taskflow v0.42.9**: Display orphan subtasks with missing parent tasks instead of silently skipping them in `ace-task list` output, showing `[missing parent: <parent_id>]` indicator
+
 ## [0.9.658] - 2026-02-26
 
 ### Changed
