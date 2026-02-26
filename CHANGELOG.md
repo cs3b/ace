@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.657] - 2026-02-26
+
+### Fixed
+- **ace-git v0.11.9**: Parse brace renames with empty-side segments (for example `{ => _archive}`) so grouped-stats keeps moved files in the correct package/group
+
+### Changed
+- **ace-git v0.11.9**: Compact grouped-stats headers when layer and package summaries match, normalize root labeling to `./`, suppress anonymous `other/` summary rows, and compact rename/path display for clearer output
+
 ## [0.9.656] - 2026-02-26
 
 ### Added
