@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.651] - 2026-02-26
+
+### Added
+- **ace-assign v0.13.0**: Add `start` command for explicit phase lifecycle control (`ace-assign start [STEP]`)
+- **ace-assign v0.13.0**: Add `finish` command replacing `report`: supports `--report <file>` or piped stdin, eliminating mandatory temp-file creation
+- **ace-assign v0.13.0**: Enforce strict `start` conflict detection — fails when another phase is already `in_progress`
+
+### Removed
+- **ace-assign v0.13.0**: Remove `report` command from CLI surface (replaced by `finish --report`)
+
+### Changed
+- **ace-assign v0.13.0**: Deterministic report input precedence — `--report` file wins over stdin when both are present
+- **ace-assign v0.13.0**: Update `assign/drive.wf.md` and `assign/create.wf.md` to use `finish` command pattern
+
 ## [0.9.650] - 2026-02-26
 
 ### Fixed

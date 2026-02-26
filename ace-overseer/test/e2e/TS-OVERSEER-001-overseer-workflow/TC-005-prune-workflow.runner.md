@@ -19,7 +19,7 @@ Save all output to `results/tc/05/`. Capture:
 - `results/tc/05/sandbox-root-path.txt` — absolute sandbox root path used for overseer prune commands
 - Assignment completion evidence for task 001:
   - `results/tc/05/task-001-assign-status-before.stdout`, `.stderr`, `.exit`
-  - `results/tc/05/task-001-phase-report.md` (report file passed to `ace-assign report`)
+  - `results/tc/05/task-001-phase-report.md` (report file passed to `ace-assign finish --report`)
   - `results/tc/05/task-001-assign-report.stdout`, `.stderr`, `.exit`
   - `results/tc/05/task-001-assign-status-after.stdout`, `.stderr`, `.exit`
 - Prune invocation guardrails:
@@ -41,7 +41,7 @@ Save all output to `results/tc/05/`. Capture:
 - Resolve task 001 worktree path first (for example from `ace-git-worktree list`); save it to `results/tc/05/task-001-worktree-path.txt`.
 - Complete task 001 assignment before prune checks:
   - Run `ace-assign status --format json` in task 001 worktree (before), for example via `(cd "$TASK001_WORKTREE" && ...)`.
-  - Run `ace-assign report <report-file>` in task 001 worktree.
+  - Run `ace-assign finish --report <report-file>` in task 001 worktree.
   - Re-check `ace-assign status --format json` (after), expecting assignment state `completed`.
   - Keep report and all captures under sandbox root `results/tc/05/` even while executing commands from inside the worktree.
 - Task 002 should remain pending/active (so prune preserves it).
