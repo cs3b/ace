@@ -56,6 +56,7 @@ module Ace
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
           option :debug, aliases: ["-d"], type: :boolean, default: false, desc: "Show debug output"
           option :assignment, desc: "Show status for specific assignment ID"
+          option :filter, desc: "Filter by scope (e.g., 010.01 or (assignment@)010.01)"
           option :all, aliases: ["-a"], type: :boolean, default: false, desc: "Include completed assignments in other assignments section"
 
           def call(**options)
@@ -80,6 +81,7 @@ module Ace
 
               if current_for_display
                 fork_root = fork_scope_root(state, current_for_display)
+                scoped_fork_phase = scoped_fork_metadata_phase(state, current_for_display, target.scope, scope_root)
 
                 puts
                 puts "Current Phase: #{current_for_display.number} - #{current_for_display.name}"
@@ -91,6 +93,7 @@ module Ace
                   puts "Context: #{current_for_display.context}"
                 end
                 puts
+                print_scoped_fork_pid_info(scoped_fork_phase)
 
                 if current_for_display.fork?
                   # Fork context: output Task tool instructions
@@ -316,6 +319,30 @@ module Ace
             return current_phase if current_phase.fork?
 
             state.nearest_fork_ancestor(current_phase.number)
+          end
+
+          def scoped_fork_metadata_phase(state, current_phase, scope, scope_root)
+            return nil unless current_phase
+
+            if scope && !scope.strip.empty?
+              return state.find_by_number(scope_root || scope.strip)
+            end
+
+            fork_scope_root(state, current_phase)
+          end
+
+          def print_scoped_fork_pid_info(phase)
+            return unless phase
+
+            has_pid = phase.fork_launch_pid
+            has_tree = phase.fork_tracked_pids && !phase.fork_tracked_pids.empty?
+            has_file = phase.fork_pid_file && !phase.fork_pid_file.empty?
+            return unless has_pid || has_tree || has_file
+
+            puts "Scoped Fork PID: #{phase.fork_launch_pid}" if has_pid
+            puts "Scoped Fork PID Tree: #{phase.fork_tracked_pids.join(', ')}" if has_tree
+            puts "Scoped Fork PID File: #{phase.fork_pid_file}" if has_file
+            puts
           end
 
           # Print other assignments section
