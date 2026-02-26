@@ -1,3 +1,8 @@
+---
+status: done
+completed_at: 2026-02-26T16:24:41+00:00
+---
+
 # Idea
 
 rename the repo on github form ace-meta -> agentic-coding-environment
