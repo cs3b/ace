@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.648] - 2026-02-26
+
+### Added
+- **ace-assign v0.12.22**: Add explicit FORK column to status output showing "yes" for phases with children, making delegation signal unmissable
+- **ace-assign v0.12.22**: Introduce adaptive recovery for failed subtrees with retry/fail-children strategies
+- **ace-assign v0.12.22**: Introduce fork PID telemetry and scoped status filtering for subprocess tracking
+
+### Changed
+- **ace-assign v0.12.22**: Decouple assignment targeting from environment variables; rely on explicit `--assignment <id>` flags
+- **ace-assign v0.12.22**: Enhance plan-task instructions for behavioral spec adherence
+- **ace-assign v0.12.22**: Update `assign/drive` workflow to reference FORK column instead of subtle "Fork subtree detected" message
+
+### Technical
+- **ace-assign v0.12.22**: Add validation order to E2E test expectations
+- **ace-assign v0.12.22**: Update E2E test runner and verifier configurations
+- **ace-assign v0.12.22**: Add test for FORK column in status output
+
 ## [0.9.647] - 2026-02-25
 
 ### Changed
