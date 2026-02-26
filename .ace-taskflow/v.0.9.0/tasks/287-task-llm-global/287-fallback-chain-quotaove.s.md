@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.287
-status: draft
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 287-global-llm-fallback-chain-with-quotaoverload-failover
+  path: "../ace-task.287"
+  created_at: '2026-02-26 18:10:33'
+  updated_at: '2026-02-26 18:10:33'
+  target_branch: main
 ---
 
 # Global LLM fallback chain with quota/overload failover
