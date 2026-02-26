@@ -96,6 +96,9 @@ For experienced users, here's the condensed workflow:
      ```
 
    * If structure is invalid, STOP and report the issue
+   * **Status Gate:** If task status is `draft`, the spec has not been reviewed:
+     * If invoked standalone: STOP. Inform the user — "Task {id} is in `draft` status. Run `/ace-task-review` to promote it to `pending` before working on it. Proceed anyway?"  — and require explicit confirmation.
+     * If invoked via ace-assign: Log a warning in the phase report ("Spec is draft — proceeding under assignment authority") and continue.
    * Review the task's Objective to ensure understanding
 
    **Use Behavioral Spec to Guide Implementation:**
