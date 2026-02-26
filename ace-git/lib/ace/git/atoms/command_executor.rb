@@ -224,6 +224,13 @@ module Ace
           def has_staged_changes?
             !staged_diff.strip.empty?
           end
+
+          # Check if there are untracked changes
+          # @return [Boolean] True if there are untracked files
+          def has_untracked_changes?
+            result = execute("git", "ls-files", "--others", "--exclude-standard")
+            result[:success] && !result[:output].strip.empty?
+          end
         end
       end
     end
