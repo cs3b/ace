@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-02-26
+
+### Fixed
+- Restore scoped status filter compatibility by honoring legacy `filter` formats (`010.01` and `(assignment@)010.01`) while preserving explicit `--assignment` targeting precedence
+- Restore scoped fork PID telemetry lines in `status` output (`Scoped Fork PID`, PID tree, and PID file path) when fork metadata exists
+
+### Added
+- Re-add explicit `--filter` option to `status` command for CLI-level backward compatibility
+- Add regression coverage ensuring `assignment` target overrides `filter` when both are provided
+
 ## [0.13.3] - 2026-02-26
 
 ### Added
