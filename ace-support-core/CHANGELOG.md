@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-02-26
+
+### Added
+- `ArgvCoalescer` utility for coalescing repeated CLI flags into comma-separated values, working around dry-cli's `type: :array` limitation
+
 ## [0.24.1] - 2026-02-23
 
 ### Removed
