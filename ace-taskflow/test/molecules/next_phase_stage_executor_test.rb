@@ -182,12 +182,33 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
   end
 
   def test_call_prompt_does_not_hard_code_schema
-    captured_prompt = nil
+    captured_system = nil
+    captured_user = nil
+
+    # Create a simple mock bundle object
+    mock_bundle = Class.new do
+      def content
+        "Project context"
+      end
+
+      def get_section(name)
+        if name == "system"
+          { content: "System context with workflow instruction including output contract" }
+        elsif name == "user"
+          { content: "Source Reference: {{source_reference}}\nSource Type: {{source_type}}\n\n--- Source Content ---\n{{source_content}}\n\n--- Previous Stage Output ---\n{{previous_artifact}}" }
+        else
+          nil
+        end
+      end
+    end.new
+
     executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: ->(_path) { "workflow text" },
+      file_reader: ->(_path) { "source content text" },
       model_resolver: -> { "glite" },
-      llm_query: lambda { |_model, prompt, **_kwargs|
-        captured_prompt = prompt
+      bundle_loader: ->(_preset) { mock_bundle },
+      llm_query: lambda { |_model, user_prompt, **kwargs|
+        captured_user = user_prompt
+        captured_system = kwargs[:system]
         { text: "status: ok\nquestions: []\n" }
       }
     )
@@ -198,9 +219,14 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
       run_id: "abc123"
     )
 
-    # New prompt defers to the workflow for the output contract, not a hard-coded schema
-    refute_includes captured_prompt, "findings: string[]"
-    refute_includes captured_prompt, "refinements: string[]"
-    assert_includes captured_prompt, "output contract defined in the workflow instruction"
+    # System prompt should contain the workflow instruction with output contract
+    assert_includes captured_system, "workflow instruction"
+    assert_includes captured_system, "output contract"
+
+    # User prompt should NOT hard-code schema - it's just source content
+    refute_includes captured_user, "findings: string[]"
+    refute_includes captured_user, "refinements: string[]"
+    assert_includes captured_user, "Source Reference: 285.06"
+    assert_includes captured_user, "source content text"
   end
 end

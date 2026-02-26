@@ -28,17 +28,22 @@ module Ace
           raise ArgumentError, "Missing source path for stage execution" if source_path.nil? || source_path.strip.empty?
 
           source_body = @file_reader.call(source_path)
-          context = load_simulation_context(mode, source_type: resolved_source[:type])
-          previous_context = build_previous_context(previous_stage_output)
+          previous_artifact = build_previous_context(previous_stage_output)
 
-          user_prompt = build_user_prompt(
-            mode: mode,
-            source: resolved_source,
-            context: context,
-            source_body: source_body,
-            previous_context: previous_context
+          # Load prompt structure from ace-bundle
+          bundle = load_simulation_bundle(mode)
+
+          # System prompt is the "system" section from bundle
+          system_prompt = extract_section_content(bundle, "system")
+
+          # User prompt is the "user" section template, interpolated
+          user_template = extract_section_content(bundle, "user")
+          user_prompt = interpolate_template(user_template,
+            source_reference: resolved_source[:input],
+            source_type: resolved_source[:type],
+            source_content: source_body,
+            previous_artifact: previous_artifact
           )
-          system_prompt = build_system_prompt(mode)
 
           response = @llm_query.call(
             @model_resolver.call,
@@ -60,22 +65,56 @@ module Ace
 
         private
 
-        def load_simulation_context(mode, source_type: nil)
-          # Try ace-bundle preset first
+        def load_simulation_bundle(mode)
           preset_name = "simulation-#{mode}"
-          begin
-            bundle = @bundle_loader.call(preset_name)
-            return bundle.content if bundle && bundle.content && !bundle.content.strip.empty?
-          rescue StandardError => e
-            # Fall through to legacy workflow loading if preset not found
+          @bundle_loader.call(preset_name)
+        end
+
+        def extract_section_content(bundle, section_name)
+          section = bundle.get_section(section_name)
+
+          if section.nil?
+            # Fallback: if no sections, use full bundle content for system
+            return bundle.content if section_name == "system" && bundle.content
+            return ""
           end
 
-          # Fallback to legacy workflow-only content
-          workflow_body = load_workflow_content(mode, source_type: source_type)
-          <<~CONTEXT
-            --- Stage Workflow Instruction ---
-            #{workflow_body}
-          CONTEXT
+          # Check for inline content first (user section template)
+          inline_content = section[:content] || section["content"]
+          return inline_content if inline_content && !inline_content.empty?
+
+          # Check for processed files (system section)
+          processed_files = section[:_processed_files] || section["_processed_files"]
+          if processed_files && !processed_files.empty?
+            return format_files_content(processed_files)
+          end
+
+          # Fallback to bundle content for system section
+          return bundle.content if section_name == "system" && bundle.content
+
+          ""
+        end
+
+        def format_files_content(files)
+          files.map do |file_info|
+            path = file_info[:path] || file_info["path"]
+            content = file_info[:content] || file_info["content"]
+            <<~FILE
+              ### #{path}
+              ```
+              #{content}
+              ```
+            FILE
+          end.join("\n")
+        end
+
+        def interpolate_template(template, variables)
+          return "" if template.nil? || template.empty?
+
+          template.gsub(/\{\{(\w+)\}\}/) do
+            key = $1.to_sym
+            variables.key?(key) ? variables[key].to_s : ""
+          end
         end
 
         def default_bundle_loader(preset_name)
@@ -128,30 +167,6 @@ module Ace
             spec_root = ::Gem.loaded_specs["ace-taskflow"]&.gem_dir
             spec_root || File.expand_path("../../../..", __dir__)
           end
-        end
-
-        def build_system_prompt(mode)
-          <<~PROMPT
-            You are running a read-only simulation stage for ace-taskflow.
-          PROMPT
-        end
-
-        def build_user_prompt(mode:, source:, context:, source_body:, previous_context:)
-          <<~PROMPT
-            Return YAML matching the output contract defined in the workflow instruction below.
-
-            Stage mode: #{mode}
-            Source type: #{source[:type]}
-            Source reference: #{source[:input]}
-
-            #{context}
-
-            --- Source Content ---
-            #{source_body}
-
-            --- Previous Stage Output ---
-            #{previous_context}
-          PROMPT
         end
 
         def build_previous_context(previous_stage_output)

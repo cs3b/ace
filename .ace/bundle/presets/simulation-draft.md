@@ -3,12 +3,29 @@ description: Context for draft stage simulation
 bundle:
   params:
     output: cache
-  files:
-    - ace-taskflow/handbook/workflow-instructions/task/simulate-next-phase-draft.wf.md
-  presets:
-    - project
+    format: markdown-xml
+  sections:
+    system:
+      title: "System Context"
+      description: "Project context and workflow instruction for draft stage"
+      presets:
+        - project
+      files:
+        - ace-taskflow/handbook/workflow-instructions/task/simulate-next-phase-draft.wf.md
+    user:
+      title: "User Input"
+      description: "The source content to process"
+      content: |
+        Source Reference: {{source_reference}}
+        Source Type: {{source_type}}
+
+        --- Source Content ---
+        {{source_content}}
+
+        --- Previous Stage Output ---
+        {{previous_artifact}}
 ---
 
-# Draft Stage Context
+# Draft Stage Simulation
 
-Project context and workflow instruction for generating draft task specs.
+This preset provides project context and workflow instruction for generating draft task specs.
