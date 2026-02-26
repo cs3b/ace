@@ -54,7 +54,7 @@ ace-assign add hotfix --after 010 -i "Apply hotfix"
 
 ### Completion Semantics
 
-1. **Leaf phases** (no children): Complete via `ace-assign report`
+1. **Leaf phases** (no children): Complete via `ace-assign finish --report <file>`
 2. **Parent phases**: Auto-complete when ALL children are done
 3. **Multi-level**: Completion cascades up the tree
 
@@ -145,7 +145,7 @@ Suppress output for scripting:
 
 ```bash
 ace-assign add task -i "..." --quiet
-ace-assign report report.md --quiet
+ace-assign finish --report report.md --quiet
 ```
 
 ## Workflow Patterns
@@ -159,7 +159,7 @@ phases:
   - name: implement
     instructions: |
       Implement the feature.
-      When done, run: ace-assign report impl.md
+      When done, run: ace-assign finish --report impl.md
 ```
 
 Then dynamically add verification:

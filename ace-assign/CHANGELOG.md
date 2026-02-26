@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-02-26
+
+### Added
+- Add `start` command for explicit phase lifecycle control: `ace-assign start [STEP]`
+- Add `finish` command replacing `report`: `ace-assign finish [STEP] --report <file>` or via piped stdin
+- Support piped stdin as report source in `finish`, eliminating mandatory temp-file creation
+- Enforce strict `start` conflict detection: fails when another phase is already `in_progress`
+- Add `start_phase` and `finish_phase` APIs to assignment executor for programmatic lifecycle control
+
+### Changed
+- Replace `ace-assign report` with `ace-assign finish --report <file>` across all docs and workflows
+- Update `assign/create.wf.md` and `assign/drive.wf.md` to use `finish` command pattern
+- Update `README.md`, `docs/usage.md`, and `docs/exit-codes.md` to reflect new command surface
+- Deterministic report input precedence: `--report` file wins over stdin when both are present
+
+### Removed
+- Remove `report` command from CLI surface (replaced by `finish`)
+
+### Technical
+- Replace `report_command_test.rb` with `finish_command_test.rb` and `start_command_test.rb`
+- Update e2e test runner docs in `ace-assign` and `ace-overseer` to use `finish` pattern
+
 ## [0.12.23] - 2026-02-26
 
 ### Fixed
