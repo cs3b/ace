@@ -1,3 +1,0 @@
-ace-meta
-test_subdir
-xterm-ghostty.terminfo
