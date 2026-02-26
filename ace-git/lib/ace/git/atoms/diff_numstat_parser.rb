@@ -53,18 +53,27 @@ module Ace
 
           # Handles brace syntax: foo/{old.rb => new.rb}
           def expand_brace_rename(path)
-            brace_match = path.match(/\A(.*)\{(.+) => (.+)\}(.*)\z/)
+            # Supports empty side of brace rename, e.g.:
+            #   tasks/{ => _archive}/file.md
+            brace_match = path.match(/\A(.*)\{(.*) => (.*)\}(.*)\z/)
             if brace_match
               prefix = brace_match[1]
               from_inner = brace_match[2]
               to_inner = brace_match[3]
               suffix = brace_match[4]
-              return ["#{prefix}#{from_inner}#{suffix}", "#{prefix}#{to_inner}#{suffix}"]
+              return [
+                build_renamed_path(prefix, from_inner, suffix),
+                build_renamed_path(prefix, to_inner, suffix)
+              ]
             end
 
             # Fallback for unbraced exact renames: old.rb => new.rb (no common prefix/suffix)
             split = path.split(" => ", 2)
             [split[0], split[1]]
+          end
+
+          def build_renamed_path(prefix, inner, suffix)
+            "#{prefix}#{inner}#{suffix}".gsub(%r{/+}, "/")
           end
         end
       end

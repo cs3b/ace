@@ -42,4 +42,16 @@ class DiffNumstatParserTest < AceGitTestCase
     assert_equal "ace-git/lib/old_name.rb", result[0][:rename_from]
     assert_equal "ace-git/lib/new_name.rb", result[0][:rename_to]
   end
+
+  def test_parse_brace_rename_with_empty_left_side
+    output = "1\t1\t.ace-taskflow/v.0.9.0/tasks/{ => _archive}/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md"
+
+    result = @parser.parse(output)
+
+    assert_equal 1, result.length
+    assert_equal ".ace-taskflow/v.0.9.0/tasks/_archive/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md", result[0][:path]
+    assert_equal ".ace-taskflow/v.0.9.0/tasks/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md -> .ace-taskflow/v.0.9.0/tasks/_archive/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md", result[0][:display_path]
+    assert_equal ".ace-taskflow/v.0.9.0/tasks/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md", result[0][:rename_from]
+    assert_equal ".ace-taskflow/v.0.9.0/tasks/_archive/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md", result[0][:rename_to]
+  end
 end

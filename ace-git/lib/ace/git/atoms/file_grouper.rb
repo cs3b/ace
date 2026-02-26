@@ -83,7 +83,7 @@ module Ace
               prefix = layer == "other/" || layer == "root/" ? top : [top, layer.delete_suffix("/")].join("/")
               [group_name, layer, relativize_entry(entry, prefix)]
             else
-              ["Project root", "root/", entry[:display_path]]
+              ["./", "root/", entry[:display_path]]
             end
           end
 
@@ -117,7 +117,7 @@ module Ace
 
             groups.sort_by do |group|
               name = group[:name]
-              if name == "Project root"
+              if name == "./"
                 [2, 0, name]
               elsif name.start_with?("ace-")
                 [0, 0, name]
