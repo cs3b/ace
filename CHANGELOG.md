@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.662] - 2026-02-26
+
+### Fixed
+- **ace-git-commit v0.18.8**: Remove top-level no-op short-circuit and run stage-all flow first; preserve single-line no-op output only after staging confirms no staged changes
+- **ace-git-commit v0.18.8**: Detect untracked-only repos as changed by including untracked-file checks in underlying git change detection
+
 ## [0.9.661] - 2026-02-26
 
 ### Fixed
