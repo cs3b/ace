@@ -116,6 +116,107 @@ module Ace
           }
         end
 
+        # Start a pending phase.
+        #
+        # Rules:
+        # - Fails if any phase is already in progress (strict mode)
+        # - Starts an explicit pending target when provided
+        # - Otherwise starts the next workable pending phase
+        #
+        # @param phase_number [String, nil] Optional target phase number
+        # @param fork_root [String, nil] Optional subtree root scope
+        # @return [Hash] Result with started phase and updated state
+        def start_phase(phase_number: nil, fork_root: nil)
+          assignment = assignment_manager.find_active
+          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+
+          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          raise InvalidPhaseStateError, "Cannot start: phase #{state.current.number} is already in progress. Finish or fail it first." if state.current
+
+          fork_root = fork_root&.strip
+          target_phase = if phase_number && !phase_number.to_s.strip.empty?
+                           find_target_phase_for_start(state, phase_number, fork_root)
+                         elsif fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+                           state.next_workable_in_subtree(fork_root)
+                         else
+                           state.next_workable
+                         end
+
+          unless target_phase
+            if fork_root && !fork_root.empty?
+              raise InvalidPhaseStateError, "No pending workable phase found in subtree #{fork_root}."
+            end
+            raise InvalidPhaseStateError, "No pending workable phase found."
+          end
+
+          phase_writer.mark_in_progress(target_phase.file_path)
+          assignment_manager.update(assignment)
+
+          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          {
+            assignment: assignment,
+            state: new_state,
+            started: new_state.find_by_number(target_phase.number),
+            current: new_state.current
+          }
+        end
+
+        # Finish an in-progress phase and advance queue state.
+        #
+        # @param report_content [String] Completion report content
+        # @param phase_number [String, nil] Optional in-progress phase number to finish
+        # @param fork_root [String, nil] Optional subtree root to constrain advancement
+        # @return [Hash] Result with completed phase and updated state
+        def finish_phase(report_content:, phase_number: nil, fork_root: nil)
+          assignment = assignment_manager.find_active
+          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
+
+          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          current = find_target_phase_for_finish(state, phase_number, fork_root)
+          raise Error, "No phase currently in progress. Try 'ace-assign start' or 'ace-assign retry'." unless current
+
+          # Enforce hierarchy: cannot mark parent as done with incomplete children
+          if state.has_incomplete_children?(current.number)
+            incomplete = state.children_of(current.number).reject { |c| c.status == :done }
+            incomplete_nums = incomplete.map(&:number).join(", ")
+            raise Error, "Cannot complete phase #{current.number}: has incomplete children (#{incomplete_nums}). Complete children first or use 'ace-assign fail' to mark as failed."
+          end
+
+          # Mark current phase as done
+          phase_writer.mark_done(current.file_path, report_content: report_content, reports_dir: assignment.reports_dir)
+
+          # Rescan to get updated state after marking done
+          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+
+          # Auto-complete parent phases if all their children are done
+          auto_complete_parents(state, assignment)
+
+          # Re-scan to get fresh state after auto-completions
+          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+
+          fork_root = fork_root&.strip
+          # Find next phase to work on using hierarchical rules.
+          # When fork_root is provided, keep advancement inside that subtree.
+          next_phase = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+                         find_next_phase_in_subtree(state, current.number, fork_root)
+                       else
+                         find_next_phase(state, current.number)
+                       end
+          if next_phase
+            phase_writer.mark_in_progress(next_phase.file_path)
+          end
+
+          assignment_manager.update(assignment)
+
+          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
+          {
+            assignment: assignment,
+            state: new_state,
+            completed: current,
+            current: new_state.current
+          }
+        end
+
         # Complete current phase with report and advance
         #
         # Uses hierarchical completion rules:
@@ -128,71 +229,7 @@ module Ace
         # @return [Hash] Result with updated state
         def advance(report_path, fork_root: nil)
           raise Error, "Report file not found: #{report_path}" unless File.exist?(report_path)
-
-          assignment = assignment_manager.find_active
-          raise NoActiveAssignmentError, "No active assignment. Use 'ace-assign create <job.yaml>' to begin." unless assignment
-
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          current = state.current
-          fork_root = fork_root&.strip
-          if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
-            if current.nil? || !state.in_subtree?(fork_root, current.number)
-              current = state.current_in_subtree(fork_root) || state.next_workable_in_subtree(fork_root)
-            end
-            # Subtree exhausted (all phases done or failed) — return gracefully
-            if current.nil?
-              fresh_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-              return { assignment: assignment, state: fresh_state, completed: nil, current: nil }
-            end
-          end
-          raise Error, "No phase currently in progress. Try 'ace-assign add' to add a new phase or 'ace-assign retry' to retry a failed phase." unless current
-
-          # Enforce hierarchy: cannot mark parent as done with incomplete children
-          if state.has_incomplete_children?(current.number)
-            incomplete = state.children_of(current.number).reject { |c| c.status == :done }
-            incomplete_nums = incomplete.map(&:number).join(", ")
-            raise Error, "Cannot complete phase #{current.number}: has incomplete children (#{incomplete_nums}). Complete children first or use 'ace-assign fail' to mark as failed."
-          end
-
-          # Read report content
-          report_content = File.read(report_path)
-
-          # Mark current phase as done
-          phase_writer.mark_done(current.file_path, report_content: report_content, reports_dir: assignment.reports_dir)
-
-          # Rescan to get updated state after marking done
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-
-          # Auto-complete parent phases if all their children are done
-          auto_complete_parents(state, assignment)
-
-          # Re-scan to get fresh state after auto-completions
-          # (auto_complete_parents modifies files, so state is stale)
-          state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-
-          # Find next phase to work on using hierarchical rules.
-          # When fork_root is provided, keep advancement inside that subtree.
-          next_phase = if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
-                         find_next_phase_in_subtree(state, current.number, fork_root)
-                       else
-                         # Uses next_workable to respect hierarchy (skip parents with incomplete children)
-                         find_next_phase(state, current.number)
-                       end
-          if next_phase
-            phase_writer.mark_in_progress(next_phase.file_path)
-          end
-
-          # Update assignment timestamp
-          assignment_manager.update(assignment)
-
-          # Return updated state
-          new_state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-          {
-            assignment: assignment,
-            state: new_state,
-            completed: current,
-            current: new_state.current
-          }
+          finish_phase(report_content: File.read(report_path), fork_root: fork_root)
         end
 
         # Mark current phase as failed
@@ -775,6 +812,45 @@ module Ace
           return "" if instructions.nil?
 
           instructions.is_a?(Array) ? instructions.join("\n") : instructions.to_s
+        end
+
+        def find_target_phase_for_start(state, phase_number, fork_root)
+          target = state.find_by_number(phase_number)
+          raise PhaseNotFoundError, "Phase #{phase_number} not found in queue" unless target
+
+          if fork_root && !fork_root.empty? && !state.in_subtree?(fork_root, target.number)
+            raise InvalidPhaseStateError, "Phase #{target.number} is outside scoped subtree #{fork_root}."
+          end
+          raise InvalidPhaseStateError, "Cannot start phase #{target.number}: status is #{target.status}, expected pending." unless target.status == :pending
+          if state.has_incomplete_children?(target.number)
+            raise InvalidPhaseStateError, "Cannot start phase #{target.number}: has incomplete children."
+          end
+
+          target
+        end
+
+        def find_target_phase_for_finish(state, phase_number, fork_root)
+          fork_root = fork_root&.strip
+          if phase_number && !phase_number.to_s.strip.empty?
+            target = state.find_by_number(phase_number)
+            raise PhaseNotFoundError, "Phase #{phase_number} not found in queue" unless target
+            if fork_root && !fork_root.empty? && !state.in_subtree?(fork_root, target.number)
+              raise InvalidPhaseStateError, "Phase #{target.number} is outside scoped subtree #{fork_root}."
+            end
+            raise InvalidPhaseStateError, "Cannot finish phase #{target.number}: status is #{target.status}, expected in_progress." unless target.status == :in_progress
+
+            return target
+          end
+
+          current = state.current
+          if fork_root && !fork_root.empty? && state.find_by_number(fork_root)
+            if current.nil? || !state.in_subtree?(fork_root, current.number)
+              current = state.current_in_subtree(fork_root)
+            end
+            return nil if current.nil?
+          end
+
+          current
         end
 
         # Auto-complete parent phases when all their children are done.
