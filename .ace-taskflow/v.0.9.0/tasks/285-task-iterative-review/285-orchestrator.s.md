@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.285
-status: pending
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 285-iterative-review-with-next-phase-dry-runs
+  path: "../ace-task.285"
+  created_at: '2026-02-26 15:44:11'
+  updated_at: '2026-02-26 15:44:11'
+  target_branch: main
 ---
 
 # Iterative Review with Next-Phase Dry Runs
