@@ -142,14 +142,35 @@ Before executing the current phase inline, check whether the active phase is ins
 
 #### Delegation Rule
 
-- If status output contains `Fork subtree detected (root: <phase-number> - <phase-name>).`
-  delegate the subtree via `fork-run` and restart the loop.
+**FORK SIGNAL**: If a phase row shows `yes` in the FORK column, it has children and MUST be delegated via `fork-run`.
+
+| Column | Meaning | Action |
+|--------|---------|--------|
+| `FORK: yes` | Phase has child phases | Delegate via `fork-run` |
+| `FORK: ` (empty) | No children | Execute inline |
+
+**Example status output:**
+```
+NUMBER       STATUS       NAME                           FORK   CHILDREN
+------------------------------------------------------------------------------
+010          ✓ Done       onboard
+020          ○ Pending    work-on-task                   yes    (0/5 done)
+```
+
+Phase 020 shows `FORK: yes` → you MUST run:
+```bash
+ace-assign fork-run --assignment <id>@020
+```
+
+**Do NOT execute child phases (020.01, 020.02, etc.) inline.**
+
 - If status output is already scoped to `Current Phase: <root>.*` based on explicit `--assignment <id>@<root>`, continue inline.
+- If the current phase is a top-level phase with `FORK: yes`, delegate immediately.
 
 #### Example
 
 ```bash
-FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/.*Fork subtree detected (root: \([0-9.]*\) -.*/\1/p' | head -1)
+FORK_ROOT=$(echo "$STATUS_OUTPUT" | sed -n 's/^\([0-9.]*\)\s.*\syes\s.*/\1/p' | head -1)
 if [ -n "$FORK_ROOT" ]; then
   ASSIGNMENT_ID=$(ace-assign status ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"} --format json | ruby -rjson -e 'puts JSON.parse(STDIN.read).dig("assignment", "id")')
   ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${FORK_ROOT}"
