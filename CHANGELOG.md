@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.668] - 2026-02-26
+
+### Fixed
+- **ace-taskflow v0.43.3**: Fix misleading write-back mode label in preview output; guard nil artifacts in verbose CLI output
+
+## [0.9.667] - 2026-02-26
+
+### Changed
+- **ace-taskflow v0.43.2**: Refactor `NextPhaseSimulationRunner#run` into named orchestration steps; harden source lookup fallthrough; expose exception class in debug error output
+
+## [0.9.666] - 2026-02-26
+
+### Changed
+- **ace-taskflow v0.43.1**: Extract `SimulationWritebackMixin` from idea/task writeback classes to eliminate DRY violation
+
+### Fixed
+- **ace-taskflow v0.43.1**: Remove misleading `defined?` guards in simulation runner failure path; preserve original exception class and backtrace on write-back failure
+
 ## [0.9.665] - 2026-02-26
 
 ### Added
