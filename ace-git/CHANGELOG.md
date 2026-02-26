@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.10] - 2026-02-26
+
+### Changed
+- Refine grouped-stats header rendering so icon and label are displayed as separate columns with consistent spacing and no extra icon-side padding
+- Keep file rows aligned to the same name column as package/layer headers while preserving explicit icon-column separation
+
 ## [0.11.9] - 2026-02-26
 
 ### Fixed
