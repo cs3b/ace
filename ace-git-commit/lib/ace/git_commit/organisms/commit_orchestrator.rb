@@ -34,6 +34,11 @@ module Ace
             options.to_h.each { |k, v| puts "  #{k}: #{v.inspect}" }
           end
 
+          if options.stage_all? && !@git.has_changes?
+            puts "No changes to commit" unless options.quiet
+            return true
+          end
+
           # Stage files if needed
           staging_result = stage_changes(options)
 
@@ -46,7 +51,7 @@ module Ace
           # Ensure we have changes to commit
           unless @git.has_staged_changes?
             puts "No changes to commit" unless options.quiet
-            return false
+            return true
           end
 
           staged_files = @file_stager.staged_files
@@ -111,8 +116,6 @@ module Ace
           elsif options.stage_all?
             stage_all_changes(options)
           else
-            # Using currently staged changes
-            puts "Using currently staged changes" if options.verbose && !options.quiet
             true
           end
         end
