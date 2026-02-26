@@ -14,21 +14,29 @@ module Ace
           @assignment_detector = assignment_detector
         end
 
-        def call(task_ref:, cli_preset: nil, on_progress: nil)
+        def call(task_ref:, task_refs: nil, cli_preset: nil, on_progress: nil)
           progress = on_progress || ->(_msg) {}
 
-          progress.call("Loading task #{task_ref}...")
-          task = @task_loader.find_task_by_reference(task_ref.to_s)
-          raise Error, "Task not found: #{task_ref}" unless task
+          requested_refs = normalize_requested_refs(task_ref, task_refs)
+          raise Error, "No valid task references provided" if requested_refs.empty?
+
+          progress.call("Loading task #{requested_refs.join(', ')}...")
+          resolved_refs = resolve_requested_refs(requested_refs)
+          primary_ref = requested_refs.first
+          primary_task = resolved_refs.first[:task]
 
           preset_name = Atoms::PresetResolver.resolve(
-            task_frontmatter: task[:metadata] || {},
+            task_frontmatter: primary_task[:metadata] || {},
             cli_preset: cli_preset,
             default: @config["default_assign_preset"] || "work-on-task"
           )
+          guard_multi_task_preset!(preset_name, requested_refs.length)
+
+          expanded_taskrefs = expand_task_refs_in_order(resolved_refs)
+          primary_subtask_refs = extract_subtask_refs(primary_task)
 
           progress.call("Provisioning worktree...")
-          worktree = @worktree_provisioner.provision(task_ref)
+          worktree = @worktree_provisioner.provision(primary_ref)
           if worktree[:created]
             progress.call("Worktree created at #{worktree[:worktree_path]}")
           else
@@ -53,18 +61,19 @@ module Ace
                                 }
                               else
                                 progress.call("Launching assignment (preset: #{preset_name})...")
-                                subtask_refs = extract_subtask_refs(task)
                                 launched = @assignment_launcher.launch(
                                   worktree_path: worktree[:worktree_path],
                                   preset_name: preset_name,
-                                  task_ref: task_ref.to_s,
-                                  subtask_refs: subtask_refs
+                                  task_ref: primary_ref.to_s,
+                                  subtask_refs: primary_subtask_refs,
+                                  task_refs: expanded_taskrefs
                                 )
                                 launched.merge(created: true)
                               end
 
           {
-            task_ref: task_ref.to_s,
+            task_ref: primary_ref.to_s,
+            task_refs: expanded_taskrefs,
             preset: preset_name,
             worktree_path: worktree[:worktree_path],
             branch: worktree[:branch],
@@ -87,6 +96,60 @@ module Ace
           return nil unless task[:is_orchestrator] && task[:subtask_ids]&.any?
 
           task[:subtask_ids].filter_map { |id| Ace::Taskflow::Atoms::TaskReferenceParser.extract_number(id) }
+        end
+
+        def normalize_requested_refs(task_ref, task_refs)
+          raw = task_refs && !task_refs.empty? ? task_refs : [task_ref]
+          raw
+            .flat_map { |entry| entry.to_s.split(",") }
+            .map(&:strip)
+            .reject(&:empty?)
+        end
+
+        def resolve_requested_refs(requested_refs)
+          requested_refs.map do |ref|
+            parsed = parse_task_ref!(ref)
+            task = @task_loader.find_task_by_reference(ref.to_s)
+            raise Error, "Task not found: #{ref}" unless task
+
+            { ref: ref.to_s, task: task, parsed: parsed }
+          end
+        end
+
+        def parse_task_ref!(ref)
+          parsed = Ace::Taskflow::Atoms::TaskReferenceParser.parse(ref.to_s)
+          raise Error, "Invalid task reference token: #{ref}" unless parsed
+
+          parsed
+        rescue ArgumentError => e
+          raise Error, e.message
+        end
+
+        def expand_task_refs_in_order(resolved_refs)
+          resolved_refs.flat_map do |entry|
+            ref = entry[:ref]
+            task = entry[:task]
+            parsed = entry[:parsed]
+
+            if parsed[:subtask]
+              [ref]
+            elsif task[:is_orchestrator] && task[:subtask_ids]&.any?
+              extract_subtask_refs(task)
+            else
+              [ref]
+            end
+          end
+        end
+
+        def guard_multi_task_preset!(preset_name, input_count)
+          return unless input_count > 1
+
+          supports_taskrefs = @assignment_launcher.preset_supports_taskrefs?(preset_name: preset_name)
+          return if supports_taskrefs
+
+          raise Error,
+                "Preset '#{preset_name}' accepts only single taskref. " \
+                "Use a preset with `taskrefs` (e.g., --preset work-on-tasks)."
         end
 
         def existing_assignment(worktree_path)

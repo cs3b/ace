@@ -5,6 +5,7 @@ require_relative "../lib/ace/overseer"
 require "dry/cli"
 
 args = ARGV.empty? ? ["--help"] : ARGV
+args = Ace::Core::CLI::DryCli::ArgvCoalescer.call(args, flags: { "--task" => ["-t"] })
 
 begin
   Dry::CLI.new(Ace::Overseer::CLI).call(arguments: args)
