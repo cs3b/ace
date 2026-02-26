@@ -26,6 +26,27 @@ class FinishCommandTest < AceAssignTestCase
     end
   end
 
+  def test_finish_with_explicit_step_completes_targeted_phase
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      report_path = create_report(cache_dir, "Phase done!")
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path) # 010 in_progress
+
+      output = capture_io do
+        Ace::Assign::CLI::Commands::Finish.new.call(step: "010", report: report_path)
+      end
+
+      assert_includes output.first, "Phase 010 (init) completed"
+      assert_includes output.first, "Advancing to phase 020"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_finish_with_missing_file
     with_temp_cache do |cache_dir|
       config_path = create_test_config(cache_dir)
@@ -189,6 +210,72 @@ class FinishCommandTest < AceAssignTestCase
       assert_includes error.message, "Missing report input"
     ensure
       $stdin = original_stdin
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_finish_file_report_takes_precedence_over_stdin
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      report_path = create_report(cache_dir, "file report content")
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      cmd = Ace::Assign::CLI::Commands::Finish.new
+      stdin = StringIO.new("stdin report content")
+      stdin.define_singleton_method(:tty?) { false }
+      original_stdin = $stdin
+      $stdin = stdin
+
+      output = capture_io do
+        cmd.call(report: report_path)
+      end
+
+      assert_includes output.first, "Phase 010 (init) completed"
+
+      # Verify file content was used (report file path recorded, not stdin)
+      assignment_cache = Dir.glob(File.join(cache_dir, "*/reports/010-init.r.md")).first
+      report_saved = File.read(assignment_cache)
+      assert_includes report_saved, "file report content"
+      refute_includes report_saved, "stdin report content"
+    ensure
+      $stdin = original_stdin
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_lifecycle_finish_auto_advances_and_start_fails_until_free
+    with_temp_cache do |cache_dir|
+      config_path = create_test_config(cache_dir)
+      report_path = create_report(cache_dir, "Phase done!")
+      Ace::Assign.config["cache_dir"] = cache_dir
+
+      # Create assignment via executor — 010 is in_progress
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      executor.start(config_path)
+
+      # Finish 010 via CLI — auto-advances to 020
+      finish_output = capture_io do
+        Ace::Assign::CLI::Commands::Finish.new.call(report: report_path)
+      end
+      assert_includes finish_output.first, "Phase 010 (init) completed"
+      assert_includes finish_output.first, "Advancing to phase 020"
+
+      # start fails — 020 is already in_progress after auto-advance
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::Start.new.call
+      end
+      assert_includes error.message, "already in progress"
+
+      # Finish 020 via CLI — auto-advances to 030
+      finish_output2 = capture_io do
+        Ace::Assign::CLI::Commands::Finish.new.call(report: report_path)
+      end
+      assert_includes finish_output2.first, "Phase 020 (build) completed"
+      assert_includes finish_output2.first, "Advancing to phase 030"
+    ensure
       Ace::Assign.reset_config!
     end
   end
