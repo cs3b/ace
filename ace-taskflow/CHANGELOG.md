@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.3] - 2026-02-26
+
+### Fixed
+- Correct misleading `preview-only` write-back mode label in run preview to `enabled` when write-back is active
+- Guard nil artifact values in verbose CLI output to prevent blank artifact lines
+
+## [0.43.2] - 2026-02-26
+
+### Changed
+- Extract `init_run_session`, `execute_stages`, and `persist_run_artifacts` from `NextPhaseSimulationRunner#run` to improve readability
+- Harden `resolve_source!` task lookup with rescue to ensure graceful fallthrough to idea lookup on unexpected exceptions
+- Show original exception class in debug mode when CLI `ReviewNextPhase` catches `StandardError`
+
+## [0.43.1] - 2026-02-26
+
+### Changed
+- Extract shared `SimulationWritebackMixin` from `IdeaSimulationWriteback` and `TaskSimulationWriteback` to eliminate duplicate implementation
+
+### Fixed
+- Remove misleading `defined?` guards in `NextPhaseSimulationRunner` failure rescue — nil checks are sufficient
+- Preserve original exception class and backtrace when write-back raises (no longer wraps in generic `RuntimeError`)
+
+### Technical
+- Add test for upsert edge case when non-`##` content follows simulation review section
+- Add test for verbose output path in `ReviewNextPhase` command
+
 ## [0.43.0] - 2026-02-26
 
 ### Added

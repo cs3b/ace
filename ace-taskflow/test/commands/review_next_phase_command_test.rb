@@ -113,6 +113,37 @@ class ReviewNextPhaseCommandTest < AceTaskflowTestCase
     assert_equal "plan,work", runner.received[:modes]
   end
 
+  def test_verbose_mode_prints_artifact_details
+    runner = FakeRunner.new(
+      {
+        run_id: "i50jj3",
+        session_dir: "/tmp/session",
+        summary_path: "/tmp/session/run-summary.md",
+        session: {
+          artifacts: {
+            request: "request.yml",
+            stages: ["stage-task-plan.yml"],
+            synthesis: "synthesis.yml",
+            writeback_preview: "writeback-preview.md",
+            summary: "run-summary.md"
+          }
+        }
+      }
+    )
+
+    @command.stub :runner, runner do
+      output, = capture_io do
+        @command.call(source: "285.01", modes: "plan", no_writeback: true, quiet: false, verbose: true, debug: false)
+      end
+
+      assert_includes output, "Artifacts:"
+      assert_includes output, "stage-task-plan.yml"
+      assert_includes output, "synthesis.yml"
+      assert_includes output, "writeback-preview.md"
+      assert_includes output, "run-summary.md"
+    end
+  end
+
   def test_skipped_result_prints_skip_summary
     runner = FakeRunner.new(
       {

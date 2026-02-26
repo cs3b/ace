@@ -54,7 +54,9 @@ module Ace
           rescue ArgumentError => e
             raise Ace::Core::CLI::Error.new(e.message)
           rescue StandardError => e
-            raise Ace::Core::CLI::Error.new("Next-phase simulation failed: #{e.message}")
+            msg = "Next-phase simulation failed: #{e.message}"
+            msg += " (#{e.class})" if options[:debug]
+            raise Ace::Core::CLI::Error.new(msg)
           end
 
           private
@@ -92,10 +94,12 @@ module Ace
             if verbose
               puts "Artifacts:"
               Array(result.dig(:session, :artifacts, :stages)).each { |stage| puts "  - #{stage}" }
-              puts "  - #{result.dig(:session, :artifacts, :request)}"
-              puts "  - #{result.dig(:session, :artifacts, :synthesis)}"
-              puts "  - #{result.dig(:session, :artifacts, :writeback_preview)}"
-              puts "  - #{result.dig(:session, :artifacts, :summary)}"
+              [
+                result.dig(:session, :artifacts, :request),
+                result.dig(:session, :artifacts, :synthesis),
+                result.dig(:session, :artifacts, :writeback_preview),
+                result.dig(:session, :artifacts, :summary)
+              ].compact.each { |artifact| puts "  - #{artifact}" }
             end
           end
         end

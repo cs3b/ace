@@ -43,10 +43,44 @@ module Ace
           return build_skipped_result(source: resolved_source, trigger: trigger) unless trigger[:enabled]
 
           normalized_modes = normalize_modes(trigger[:modes], source_type: resolved_source[:type])
+          run_id, run_started_at, session_dir, session, request_path = init_run_session(
+            normalized_modes: normalized_modes, resolved_source: resolved_source, no_writeback: no_writeback
+          )
+          stages_result = nil
+          current_stage = nil
+
+          stages_result = execute_stages(
+            normalized_modes: normalized_modes, resolved_source: resolved_source,
+            run_id: run_id, session_dir: session_dir,
+            on_stage_start: ->(stage) { current_stage = stage }
+          )
+
+          session, summary_path = persist_run_artifacts(
+            session: session, session_dir: session_dir, run_id: run_id,
+            resolved_source: resolved_source, normalized_modes: normalized_modes,
+            stages_result: stages_result, no_writeback: no_writeback, request_path: request_path
+          )
+
+          { run_id: run_id, session_dir: session_dir, summary_path: summary_path, session: session.to_h }
+        rescue StandardError => e
+          persist_failure_artifacts(
+            run_id: run_id,
+            session_dir: session_dir,
+            source: source,
+            modes: modes,
+            failed_stage: current_stage,
+            error: e
+          ) if run_id && session_dir
+
+          raise
+        end
+
+        private
+
+        def init_run_session(normalized_modes:, resolved_source:, no_writeback:)
           run_id = Ace::B36ts.encode(@time_provider.now.utc)
           run_started_at = @time_provider.now.utc
           session_dir = @session_store.create_session_dir!(run_id)
-
           session = Models::SimulationSession.new(
             run_id: run_id,
             source: resolved_source,
@@ -54,7 +88,6 @@ module Ace
             status: "in_progress",
             started_at: run_started_at
           )
-
           request_path = @session_store.write_yaml_artifact(
             session_dir,
             "request.yml",
@@ -66,7 +99,10 @@ module Ace
               started_at: run_started_at.iso8601
             }
           )
+          [run_id, run_started_at, session_dir, session, request_path]
+        end
 
+        def execute_stages(normalized_modes:, resolved_source:, run_id:, session_dir:, on_stage_start: nil)
           stage_outputs = []
           stage_payloads = {}
           current_stage = nil
@@ -74,6 +110,7 @@ module Ace
 
           normalized_modes.each do |mode|
             current_stage = mode
+            on_stage_start&.call(mode)
             begin
               stage_filename = stage_filename_for(resolved_source[:type], mode)
               stage_payload = execute_stage(
@@ -96,6 +133,16 @@ module Ace
             end
           end
 
+          { stage_outputs: stage_outputs, stage_payloads: stage_payloads,
+            current_stage: current_stage, stage_failure: stage_failure }
+        end
+
+        def persist_run_artifacts(session:, session_dir:, run_id:, resolved_source:, normalized_modes:,
+                                  stages_result:, no_writeback:, request_path:)
+          stage_outputs = stages_result[:stage_outputs]
+          stage_payloads = stages_result[:stage_payloads]
+          stage_failure  = stages_result[:stage_failure]
+
           synthesis_payload = @synthesis_builder.build(
             run_id: run_id,
             source: resolved_source,
@@ -105,57 +152,38 @@ module Ace
             failed_stage: stage_failure&.dig(:mode),
             error: stage_failure&.dig(:error)&.message
           )
-
-          synthesis_path = @session_store.write_yaml_artifact(
-            session_dir,
-            "synthesis.yml",
-            synthesis_payload
-          )
+          synthesis_path = @session_store.write_yaml_artifact(session_dir, "synthesis.yml", synthesis_payload)
 
           writeback_preview_body = build_writeback_preview(
-            resolved_source: resolved_source,
-            modes: normalized_modes,
-            no_writeback: no_writeback,
-            synthesis: synthesis_payload,
-            run_id: run_id
+            resolved_source: resolved_source, modes: normalized_modes,
+            no_writeback: no_writeback, synthesis: synthesis_payload, run_id: run_id
           )
           preview_path = @session_store.write_markdown_artifact(
-            session_dir,
-            "writeback-preview.md",
-            writeback_preview_body
+            session_dir, "writeback-preview.md", writeback_preview_body
           )
 
           writeback_status = apply_writeback_if_needed(
-            resolved_source: resolved_source,
-            no_writeback: no_writeback,
-            stage_failure: stage_failure,
-            run_id: run_id,
-            modes: normalized_modes,
-            synthesis: synthesis_payload,
-            preview_path: preview_path
+            resolved_source: resolved_source, no_writeback: no_writeback,
+            stage_failure: stage_failure, run_id: run_id,
+            modes: normalized_modes, synthesis: synthesis_payload, preview_path: preview_path
           )
 
           summary_path = @session_store.write_markdown_artifact(
             session_dir,
             "run-summary.md",
             build_success_summary(
-              run_id: run_id,
-              resolved_source: resolved_source,
-              modes: normalized_modes,
-              stage_outputs: stage_outputs,
-              no_writeback: no_writeback,
-              partial: !stage_failure.nil?,
-              writeback_status: writeback_status
+              run_id: run_id, resolved_source: resolved_source, modes: normalized_modes,
+              stage_outputs: stage_outputs, no_writeback: no_writeback,
+              partial: !stage_failure.nil?, writeback_status: writeback_status
             )
           )
 
-          finished_at = @time_provider.now.utc
           session = session.with_updates(
             status: stage_failure ? "partial" : "done",
-            finished_at: finished_at,
+            finished_at: @time_provider.now.utc,
             artifacts: {
               request: File.basename(request_path),
-              stages: stage_outputs.map { |stage| stage[:file] }.compact,
+              stages: stage_outputs.map { |s| s[:file] }.compact,
               synthesis: File.basename(synthesis_path),
               writeback_preview: File.basename(preview_path),
               summary: File.basename(summary_path)
@@ -164,26 +192,8 @@ module Ace
             error: stage_failure&.dig(:error)&.message
           )
 
-          {
-            run_id: run_id,
-            session_dir: session_dir,
-            summary_path: summary_path,
-            session: session.to_h
-          }
-        rescue StandardError => e
-          persist_failure_artifacts(
-            run_id: run_id,
-            session_dir: session_dir,
-            source: source,
-            modes: modes,
-            failed_stage: current_stage,
-            error: e
-          ) if defined?(run_id) && run_id && defined?(session_dir) && session_dir
-
-          raise
+          [session, summary_path]
         end
-
-        private
 
         def normalize_modes(modes, source_type:)
           parsed = Array(modes).flat_map { |value| value.to_s.split(",") }.map(&:strip).reject(&:empty?)
@@ -225,7 +235,11 @@ module Ace
             }
           end
 
-          task = @task_manager.show_task(normalized)
+          task = begin
+            @task_manager.show_task(normalized)
+          rescue StandardError
+            nil
+          end
           if task
             return {
               input: normalized,
@@ -297,7 +311,7 @@ module Ace
             - Source: `#{resolved_source[:input]}`
             - Source type: `#{resolved_source[:type]}`
             - Modes: `#{modes.join(',')}`
-            - Write-back mode: `#{no_writeback ? 'disabled (--no-writeback)' : 'preview-only'}`
+            - Write-back mode: `#{no_writeback ? 'disabled (--no-writeback)' : 'enabled'}`
 
             No downstream task/plan artifacts were created by this simulation run.
 
@@ -347,8 +361,10 @@ module Ace
           end
           "applied"
         rescue StandardError => e
-          raise "Write-back failed for '#{resolved_source[:path]}': #{e.message}. " \
-                "Apply changes manually using preview at '#{preview_path}'."
+          raise e.class,
+                "Write-back failed for '#{resolved_source[:path]}': #{e.message}. " \
+                "Apply changes manually using preview at '#{preview_path}'.",
+                e.backtrace
         end
 
         def partial_failure_for_mode?(resolved_source:, mode:, stage_payloads:)
