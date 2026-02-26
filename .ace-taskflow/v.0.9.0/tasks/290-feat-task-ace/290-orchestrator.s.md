@@ -107,7 +107,10 @@ ace-task update q7w --set worktree.branch=my-branch    # Nested via dot notation
 
 - **Gem 1**: `ace-support-items` — shared ID formatting, directory scanning, shortcut resolution, field updates, folder moves
 - **Gem 2**: `ace-task` — task-specific atoms/molecules/organisms/models + CLI
+- **Handbook migration**: Task workflows (16 files), bug workflows (2 files), task templates (9 files), guides (3 files) — all move to ace-task
 - **Out of scope**: Migration from ace-taskflow, ace-idea gem (separate task 291), retrospectives, reviews
+
+**Note**: ace-taskflow will be **deleted** after all domain extractions complete (tasks 290, 291, 292). Each extracted gem must be fully independent — own doctor, own config loading, own filtering. Shared utilities from ace-taskflow are duplicated into each gem rather than centralized.
 
 ## References
 
