@@ -12,6 +12,10 @@ update:
 
 Quick reference for `ace-*` CLI tools. Detailed usage in each gem's `docs/usage.md`.
 
+## Command Integrity Rule
+
+Run `ace-*` commands directly. Do not pipe, redirect, or post-process their output in shell (`|`, `>`, `head`, `tail`, `grep`, `awk`, `sed`, `tee`, etc.). When a tool prints a file path, read that file directly.
+
 ## Task Management
 
 | Tool | Purpose |
