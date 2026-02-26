@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.658] - 2026-02-26
+
+### Changed
+- **ace-git v0.11.10**: Refine grouped-stats icon/name column separation and spacing, and preserve aligned name-column start across package, layer, and file rows
+
 ## [0.9.657] - 2026-02-26
 
 ### Fixed
