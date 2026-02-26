@@ -39,7 +39,7 @@ class GroupedStatsFormatterTest < AceGitTestCase
 
     assert_match(/\+10,\s+-3\s+2 files\s+total/, output)
     assert_match(/ace-git\//, output)
-    assert_match(/🧱 lib\//, output)
+    refute_match(/🧱 lib\//, output)
     assert_match(/assets\/logo\.bin \(binary\)/, output)
   end
 
@@ -54,12 +54,6 @@ class GroupedStatsFormatterTest < AceGitTestCase
     # No blank line immediately after group header
     refute_equal "", lines[group_header_idx + 1],
                  "expected no blank line after group header"
-
-    # No blank line between layer header and file lines
-    layer_idx = lines.index { |l| l.include?("🧱 lib/") }
-    refute_nil layer_idx, "expected layer header line"
-    refute_equal "", lines[layer_idx + 1],
-                 "expected no blank line after layer header"
   end
 
   def test_format_markdown_wraps_large_groups_in_details
@@ -68,7 +62,7 @@ class GroupedStatsFormatterTest < AceGitTestCase
     assert_match(/<details>/, output)
     assert_match(/<summary>ace-git\//, output)
     assert_match(/```text/, output)
-    assert_match(/🧱 lib\//, output)
+    refute_match(/🧱 lib\//, output)
   end
 
   def test_non_mapped_layer_name_remains_plain
@@ -84,7 +78,9 @@ class GroupedStatsFormatterTest < AceGitTestCase
     }
 
     output = @formatter.format(data)
-    assert_match(/other\//, output)
+    refute_match(/other\//, output)
+    refute_match(/misc\//, output)
+    assert_match(/pkg\/docs\/readme\.md/, output)
     refute_match(/📚|🧪|🧱/, output)
   end
 
@@ -105,13 +101,32 @@ class GroupedStatsFormatterTest < AceGitTestCase
     }
     output = @formatter.format(data)
 
-    # First rename: full path
-    assert_match(/pkg\/atoms\/old_parser\.rb -> pkg\/atoms\/new_parser\.rb/, output)
+    # First rename: compact shared prefix once
+    assert_match(/pkg\/atoms\/old_parser\.rb -> new_parser\.rb/, output)
     # Second rename in same dir: squashed (no repeated dir prefix)
     refute_match(/pkg\/atoms\/old_grouper\.rb/, output)
     assert_match(/old_grouper\.rb -> .*new_grouper\.rb/, output)
     # Third rename in different dir: full path again
     assert_match(/pkg\/cli\/old_cmd\.rb -> pkg\/cli\/new_cmd\.rb/, output)
+  end
+
+  def test_compacts_single_rename_with_shared_prefix
+    data = {
+      groups: [{
+        name: ".ace-taskflow/", additions: 1, deletions: 1, file_count: 1,
+        layers: [{
+          name: "other/", additions: 1, deletions: 1, file_count: 1,
+          files: [{
+            display_path: "v.0.9.0/tasks/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md -> v.0.9.0/tasks/_archive/284-task-assign-rethink/284-ace-assign-phase-lifec.s.md",
+            additions: 1, deletions: 1, binary: false
+          }]
+        }]
+      }],
+      total: { additions: 1, deletions: 1, files: 1 }
+    }
+
+    output = @formatter.format(data)
+    assert_match(/v\.0\.9\.0\/tasks\/284-task-assign-rethink\/284-ace-assign-phase-lifec\.s\.md -> _archive\/284-task-assign-rethink\/284-ace-assign-phase-lifec\.s\.md/, output)
   end
 
   def test_non_rename_after_rename_shows_full_path
@@ -154,5 +169,43 @@ class GroupedStatsFormatterTest < AceGitTestCase
     assert_match(/^\s+\+4.*grouper\.rb/, output)        # second: basename only
     refute_match(/pkg\/atoms\/grouper\.rb/, output)      # no repeated prefix
     assert_match(/pkg\/cli\/command\.rb/, output)        # different dir: full path
+  end
+
+  def test_project_root_renders_single_header_with_dot_slash
+    data = {
+      groups: [{
+        name: "./", additions: 6, deletions: 1, file_count: 2,
+        layers: [{
+          name: "root/", additions: 6, deletions: 1, file_count: 2,
+          files: [
+            { display_path: "CHANGELOG.md", additions: 5, deletions: 1, binary: false },
+            { display_path: "README.md", additions: 1, deletions: 0, binary: false }
+          ]
+        }]
+      }],
+      total: { additions: 6, deletions: 1, files: 2 }
+    }
+
+    output = @formatter.format(data)
+    assert_match(/\.\/$/, output.lines[2].strip)
+    refute_match(/root\//, output)
+  end
+
+  def test_compacts_layer_header_when_summary_matches_group
+    data = {
+      groups: [{
+        name: ".ace/", additions: 5, deletions: 0, file_count: 1,
+        layers: [{
+          name: "test/", additions: 5, deletions: 0, file_count: 1,
+          files: [{ display_path: "suite.yml", additions: 5, deletions: 0, binary: false }]
+        }]
+      }],
+      total: { additions: 5, deletions: 0, files: 1 }
+    }
+
+    output = @formatter.format(data)
+    assert_match(/\.ace\//, output)
+    refute_match(/🧪 test\//, output)
+    assert_match(/suite\.yml/, output)
   end
 end
