@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-02-26
+
+### Added
+- Add `ace-taskflow review-next-phase` CLI command for deterministic next-phase simulation
+- Add simulation session model with b36ts run IDs and artifact manifest
+- Add simulation session store with atomic artifact persistence under `.cache/ace-taskflow/simulations/<run_id>/`
+- Add next-phase simulation runner organism supporting idea and task source modes
+- Add simulation synthesis builder for structured output with questions, refinements, and gap reporting
+- Add idea write-back helper that upserts `Simulation Review (Next-Phase)` sections without duplication
+- Add task write-back helper for task-source simulation results
+- Add next-phase trigger policy resolver with deterministic manual/auto and CLI override precedence
+- Add `review.next_phase.include_work_simulation` extension flag for opt-in work-stage simulation
+
+### Changed
+- Extend simulation runner to enforce idea mode contract (`draft,plan`) and pass prior stage output downstream
+- Allow task-source default next-phase modes to include `work` only when extension mode is explicitly enabled
+
+### Fixed
+- Preserve partial synthesis artifacts when mixed `plan,work` runs fail in work stage
+- Reject task `work`-only simulations with explicit prerequisite guidance
+
 ## [0.42.13] - 2026-02-26
 
 ### Added
