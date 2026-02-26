@@ -261,4 +261,119 @@ class IdeaDirectoryMoverTest < AceTaskflowTestCase
       end
     end
   end
+
+  def test_move_to_archive_idempotent_when_already_archived
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        archive_dir = File.join(ideas_dir, "_archive")
+        idea_folder = File.join(archive_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "---\nstatus: pending\n---\n# Test Idea")
+
+        result = @mover.move_to_archive(idea_folder, Time.new(2025, 2, 25, 15, 10, 40))
+
+        assert result[:success], "Should be idempotent success: #{result[:message]}"
+        assert_equal idea_folder, result[:new_path]
+        assert_match(/already in _archive/i, result[:message])
+
+        content = File.read(File.join(idea_folder, "idea.md"))
+        assert_match(/status: done/, content)
+        assert_match(/completed_at: 2025-02-25T15:10:40/, content)
+      end
+    end
+  end
+
+  def test_move_to_archive_idempotent_adds_frontmatter_when_missing
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        archive_dir = File.join(ideas_dir, "_archive")
+        idea_folder = File.join(archive_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "# Test Idea Without Frontmatter")
+
+        result = @mover.move_to_archive(idea_folder, Time.new(2025, 2, 25, 15, 10, 40))
+
+        assert result[:success], "Should be idempotent success: #{result[:message]}"
+        content = File.read(File.join(idea_folder, "idea.md"))
+        assert_match(/\A---\nstatus: done\ncompleted_at: 2025-02-25T15:10:40/, content)
+      end
+    end
+  end
+
+  def test_move_to_archive_target_exists_returns_idempotent_success
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        source_folder = File.join(ideas_dir, "20250101-120000-test-idea")
+        target_folder = File.join(ideas_dir, "_archive", "20250101-120000-test-idea")
+        FileUtils.mkdir_p(source_folder)
+        FileUtils.mkdir_p(target_folder)
+        File.write(File.join(source_folder, "idea.md"), "---\nstatus: pending\n---\n# Source Idea")
+        File.write(File.join(target_folder, "idea.md"), "---\nstatus: done\n---\n# Target Idea")
+
+        result = @mover.move_to_archive(source_folder)
+
+        assert result[:success], "Target-exists should be treated as idempotent success"
+        assert_equal target_folder, result[:new_path]
+        assert_match(/already in _archive/i, result[:message])
+      end
+    end
+  end
+
+  def test_move_to_maybe_idempotent_when_already_in_maybe
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        maybe_dir = File.join(ideas_dir, "_maybe")
+        idea_folder = File.join(maybe_dir, "20250101-120000-test-idea")
+        FileUtils.mkdir_p(idea_folder)
+        File.write(File.join(idea_folder, "idea.md"), "---\nstatus: parked\n---\n# Test Idea")
+
+        result = @mover.move_to_maybe(idea_folder)
+
+        assert result[:success], "Should be idempotent success: #{result[:message]}"
+        assert_equal idea_folder, result[:new_path]
+        assert_match(/already in _maybe/i, result[:message])
+      end
+    end
+  end
+
+  def test_move_to_maybe_target_exists_returns_idempotent_success
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        source_folder = File.join(ideas_dir, "20250101-120000-test-idea")
+        target_folder = File.join(ideas_dir, "_maybe", "20250101-120000-test-idea")
+        FileUtils.mkdir_p(source_folder)
+        FileUtils.mkdir_p(target_folder)
+        File.write(File.join(source_folder, "idea.md"), "---\nstatus: pending\n---\n# Source Idea")
+        File.write(File.join(target_folder, "idea.md"), "---\nstatus: parked\n---\n# Target Idea")
+
+        result = @mover.move_to_maybe(source_folder)
+
+        assert result[:success], "Target-exists should be treated as idempotent success"
+        assert_equal target_folder, result[:new_path]
+        assert_match(/already in _maybe/i, result[:message])
+      end
+    end
+  end
+
+  def test_move_to_archive_does_not_treat_archive_substring_as_idempotent
+    with_test_project do |dir|
+      Dir.chdir(dir) do
+        ideas_dir = File.join(dir, ".ace-taskflow", "v.0.9.0", "ideas")
+        source_folder = File.join(ideas_dir, "my_archive_backup-idea")
+        FileUtils.mkdir_p(source_folder)
+        File.write(File.join(source_folder, "idea.md"), "---\nstatus: pending\n---\n# Test Idea")
+
+        result = @mover.move_to_archive(source_folder)
+
+        assert result[:success], "Should perform normal move, not idempotent shortcut"
+        assert_match(%r{/_archive/}, result[:new_path])
+        refute_equal source_folder, result[:new_path]
+      end
+    end
+  end
 end

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.8] - 2026-02-26
+
+### Fixed
+- Make `IdeaDirectoryMover#move_to_archive` and `#move_to_maybe` idempotent when ideas are already in `_archive/` or `_maybe/`, preventing nested move targets like `_archive/_archive/`
+- Treat existing archive/maybe destination folders as idempotent success instead of hard failure, matching task mover semantics
+
+### Changed
+- Update `ace-idea done` and `ace-idea park` output to report idempotent `already in` results from mover operations
+
+### Technical
+- Add mover coverage for already-archived/already-parked flows, target-exists idempotent behavior, metadata refresh in-place, and archive-substring false-positive guard
 ## [0.42.7] - 2026-02-25
 
 ### Fixed
