@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.11] - 2026-02-26
+
+### Fixed
+- Add untracked-file detection helper in command execution so callers can correctly treat untracked-only repositories as having changes.
+
+### Technical
+- Add regression tests for untracked change detection helper behavior.
+
 ## [0.11.10] - 2026-02-26
 
 ### Changed
