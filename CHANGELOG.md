@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.655] - 2026-02-26
+
+### Fixed
+- **ace-assign v0.13.4**: Restore scoped status filter compatibility for legacy filter forms (`010.01`, `(assignment@)010.01`) and restore scoped fork PID telemetry output lines
+
+### Added
+- **ace-assign v0.13.4**: Re-add explicit `status --filter` CLI option and add regression coverage for assignment-target precedence over filter
+
+### Changed
+- Test suite package list now includes `ace-assign`, so monorepo suite runs surface package regressions directly
+
 ## [0.9.654] - 2026-02-26
 
 ### Added
