@@ -208,4 +208,55 @@ class GroupedStatsFormatterTest < AceGitTestCase
     refute_match(/🧪 test\//, output)
     assert_match(/suite\.yml/, output)
   end
+
+  def test_header_icon_uses_dedicated_column_for_group_and_layer
+    data = {
+      groups: [{
+        name: "ace-overseer/", additions: 4, deletions: 4, file_count: 3,
+        layers: [{
+          name: "test/", additions: 3, deletions: 3, file_count: 2,
+          files: [
+            { display_path: "e2e/TC-005-prune-workflow.runner.md", additions: 2, deletions: 2, binary: false },
+            { display_path: "e2e/TC-005-prune-workflow.verify.md", additions: 1, deletions: 1, binary: false }
+          ]
+        }]
+      }],
+      total: { additions: 4, deletions: 4, files: 3 }
+    }
+
+    output = @formatter.format(data)
+    lines = output.split("\n")
+    group_line = lines.find { |line| line.include?("ace-overseer/") }
+    layer_line = lines.find { |line| line.include?("🧪 test/") }
+
+    refute_nil group_line
+    refute_nil layer_line
+    assert_match(/files\s{6}ace-overseer\//, group_line)
+    assert_match(/files\s{3}🧪 test\//, layer_line)
+  end
+
+  def test_file_name_uses_same_name_column_as_headers
+    data = {
+      groups: [{
+        name: "ace-overseer/", additions: 4, deletions: 4, file_count: 3,
+        layers: [{
+          name: "test/", additions: 3, deletions: 3, file_count: 2,
+          files: [
+            { display_path: "e2e/TC-005-prune-workflow.runner.md", additions: 2, deletions: 2, binary: false },
+            { display_path: "e2e/TC-005-prune-workflow.verify.md", additions: 1, deletions: 1, binary: false }
+          ]
+        }]
+      }],
+      total: { additions: 4, deletions: 4, files: 3 }
+    }
+
+    output = @formatter.format(data)
+    lines = output.split("\n")
+    group_line = lines.find { |line| line.include?("ace-overseer/") }
+    file_line = lines.find { |line| line.include?("e2e/TC-005-prune-workflow.runner.md") }
+
+    refute_nil group_line
+    refute_nil file_line
+    assert_equal group_line.index("ace-overseer/"), file_line.index("e2e/TC-005-prune-workflow.runner.md")
+  end
 end
