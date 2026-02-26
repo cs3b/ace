@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.662] - 2026-02-26
+
+### Added
+- **ace-taskflow v0.42.11**: Add deterministic simulation synthesis builder and idea write-back section upsert for next-phase review runs
+
+### Changed
+- **ace-taskflow v0.42.11**: Enforce idea simulation mode contract to `draft,plan`, include stage chaining, and surface generated write-back preview content
+
+### Fixed
+- **ace-taskflow v0.42.11**: Treat idea plan-stage failures as partial synthesis runs with preserved draft context and unresolved gap reporting
+
 ## [0.9.661] - 2026-02-26
 
 ### Added
