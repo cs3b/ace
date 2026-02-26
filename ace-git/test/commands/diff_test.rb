@@ -264,6 +264,7 @@ class DiffTest < AceGitTestCase
         end
         assert_match(/ace-git\//, output.first)
         assert_match(/\+5,\s+-2/, output.first)
+        assert_match(/🧱 lib\//, output.first)
       end
     end
   end
