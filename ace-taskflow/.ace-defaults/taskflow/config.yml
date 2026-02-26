@@ -71,6 +71,15 @@ taskflow:
       up_next_limit: 3           # Max upcoming tasks to show (default: 3)
       include_drafts: false      # Include draft tasks in "Up Next" (default: false)
 
+  # Next-phase simulation defaults
+  review:
+    next_phase:
+      enabled: true
+      auto:
+        idea: true
+        task: true
+      cache_dir: ".cache/ace-taskflow/simulations"
+
   # Idea configuration
   idea:
     directory: "ideas"           # Where to save ideas locally

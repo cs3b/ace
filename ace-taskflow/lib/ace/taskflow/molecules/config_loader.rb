@@ -203,6 +203,7 @@ module Ace
           config["task"] = taskflow_section["task"] if taskflow_section["task"]
           config["tasks"] = taskflow_section["tasks"] if taskflow_section["tasks"]
           config["release"] = taskflow_section["release"] if taskflow_section["release"]
+          config["review"] = taskflow_section["review"] if taskflow_section["review"]
           config["params"] = taskflow_section["params"] if taskflow_section["params"]
           config["status"] = taskflow_section["status"] if taskflow_section["status"]
           config["terminal_statuses"] = taskflow_section["terminal_statuses"] if taskflow_section["terminal_statuses"]

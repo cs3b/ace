@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.10] - 2026-02-26
+
+### Added
+- Add `ace-taskflow review-next-phase` command for deterministic next-phase simulation sessions
+- Add simulation session framework with b36ts run IDs and deterministic cache directory contract at `.cache/ace-taskflow/simulations/<run_id>/`
+- Add persisted simulation artifacts: `request.yml`, stage outputs, `synthesis.yml`, `writeback-preview.md`, and `run-summary.md`
+
+### Changed
+- Extend taskflow default configuration with `review.next_phase` keys for enablement, auto trigger defaults, and cache path
+
+### Fixed
+- Persist explicit failure metadata (`run-failure.yml`) and failed stage details when simulation stage execution errors
+
 ## [0.42.9] - 2026-02-26
 
 ### Fixed

@@ -8,6 +8,7 @@ require_relative "../taskflow"
 require_relative "cli/commands/status"
 require_relative "cli/commands/doctor"
 require_relative "cli/commands/config"
+require_relative "cli/commands/review_next_phase"
 
 module Ace
   module Taskflow
@@ -25,19 +26,22 @@ module Ace
       REGISTERED_COMMANDS = [
         ["status", "Show taskflow status"],
         ["doctor", "Run health checks"],
-        ["config", "Show configuration"]
+        ["config", "Show configuration"],
+        ["review-next-phase", "Run next-phase simulation and persist cache artifacts"]
       ].freeze
 
       HELP_EXAMPLES = [
         "ace-taskflow status                   # Current task and release overview",
         "ace-taskflow doctor --auto-fix        # Fix safe issues automatically",
-        "ace-taskflow config                   # Show resolved configuration"
+        "ace-taskflow config                   # Show resolved configuration",
+        "ace-taskflow review-next-phase --source 285.01 --modes plan --no-writeback"
       ].freeze
 
       # Register utility commands
       register "status", CLI::Commands::Status, aliases: ["context"]
       register "doctor", CLI::Commands::Doctor
       register "config", CLI::Commands::Config
+      register "review-next-phase", CLI::Commands::ReviewNextPhase
 
       # Register version command
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

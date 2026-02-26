@@ -12,7 +12,12 @@ class CliRoutingIntegrationTest < AceTaskflowTestCase
   # === ace-taskflow (utility commands only) ===
 
   def test_registered_commands_constant_matches_expected
-    expected = [%w[status "Show taskflow status"], %w[doctor "Run health checks"], %w[config "Show configuration"]]
+    expected = [
+      %w[status "Show taskflow status"],
+      %w[doctor "Run health checks"],
+      %w[config "Show configuration"],
+      %w[review-next-phase "Run next-phase simulation and persist cache artifacts"]
+    ]
     expected_commands = expected.map(&:first)
 
     actual_commands = Ace::Taskflow::CLI::REGISTERED_COMMANDS.map(&:first)
