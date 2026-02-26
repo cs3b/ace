@@ -86,8 +86,11 @@ ace-retro update q7w --remove tags=wip
 ## Scope of Work
 
 - **Gem**: `ace-retro` — retro-specific atoms/molecules/organisms/models + CLI
+- **Handbook migration**: Retro workflows (2 files: `create`, `synthesize`), retro templates (3 files: `retro.template.md`, `synthesis-analytics.template.md`, `synthsize.system.prompt.md`)
 - **Depends on**: ace-support-items (from task 290.01), ace-b36ts, ace-support-markdown, ace-support-config, ace-support-core
-- **Out of scope**: Migration from ace-taskflow, ace-task gem (task 290), ace-idea gem (task 291)
+- **Out of scope**: Migration from ace-taskflow, ace-task gem (task 290), ace-idea gem (task 291), data migration
+
+**Note**: ace-taskflow will be **deleted** after all domain extractions complete. ace-retro must be fully independent — own doctor, own config, own filtering. Shared utilities from ace-taskflow are duplicated rather than centralized.
 
 ## References
 
