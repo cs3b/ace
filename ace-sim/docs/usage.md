@@ -23,6 +23,20 @@ ace-sim run \
   --repeat 2
 ```
 
+## Final Suggestions Synthesis (Optional)
+
+```bash
+ace-sim run \
+  --preset validate-idea \
+  --source path/to/source.md \
+  --provider glite \
+  --synthesis-workflow wfi://task/review-work \
+  --synthesis-provider claude:haiku
+```
+
+- `--synthesis-workflow` enables a final run-level synthesis stage.
+- `--synthesis-provider` is optional; when omitted, the first run provider is used.
+
 ## Precedence
 
 1. Explicit CLI flag
@@ -40,6 +54,7 @@ ace-sim run \
 Top-level:
 - `.cache/ace-sim/simulations/<run-id>/session.yml`
 - `.cache/ace-sim/simulations/<run-id>/synthesis.yml`
+- `.cache/ace-sim/simulations/<run-id>/final/suggestions.report.md` (when synthesis enabled)
 
 Per chain (`provider x repeat`):
 - `.cache/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/input.md`
@@ -55,3 +70,4 @@ Per chain (`provider x repeat`):
 - Step success is minimal: `output.md` exists and is non-empty.
 - If one chain fails, only that chain stops; other chains continue.
 - `--dry-run` never mutates source ideas/tasks.
+- If synthesis is enabled, final run status also depends on final suggestions generation.

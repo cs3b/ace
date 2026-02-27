@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-27
+
+### Added
+- Add optional final synthesis stage with `--synthesis-workflow` and `--synthesis-provider` run flags.
+- Add `final/suggestions.report.md` run artifact generation with deterministic bundle/prompt/report files.
+- Add `FinalSynthesisExecutor` molecule and unit tests for success/failure paths.
+
+### Changed
+- Extend simulation session/synthesis metadata with `synthesis_workflow`, `synthesis_provider`, and `final_stage`.
+- Mark run as failed when final synthesis is enabled and fails.
+- Update docs and CLI examples for final suggestions synthesis usage.
+
 ## [0.3.3] - 2026-02-27
 
 ### Changed

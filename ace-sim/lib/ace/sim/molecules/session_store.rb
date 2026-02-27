@@ -32,6 +32,10 @@ module Ace
           File.join(run_dir, "chains", "#{provider_slug}-#{iteration}")
         end
 
+        def final_dir(run_dir)
+          File.join(run_dir, "final")
+        end
+
         def prepare_step_dir(run_dir, provider, iteration, step_index, step_name)
           dirname = format("%02d-%s", step_index, step_name)
           dir = File.join(chain_dir(run_dir, provider, iteration), dirname)
