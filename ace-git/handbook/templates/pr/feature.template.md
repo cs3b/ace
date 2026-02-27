@@ -24,3 +24,9 @@ What pain/manual step/error existed before:
 ## Releases
 
 - <changelog-entry-from-diff>
+
+## Demo
+
+- <runnable-command-demonstrating-the-feature>
+- <expected-output-and-artifact-locations>
+- Omit this section if no user-facing CLI or runnable entry point
