@@ -7,82 +7,97 @@ dependencies: []
 needs_review: true
 ---
 
-# ace-sim rebuild from task-285 postmortem (usage-first)
+# Build ace-sim: General-Purpose Step-Based Simulation Tool
 
 ## Overview
 
-Replace the failed task-285 implementation path with a usage-first, proof-before-code
-specification for a standalone `ace-sim` package.
+Build a standalone `ace-sim` tool that runs ordered simulation pipelines. Each step is defined by a workflow (ace-bundle URI) and executed by an LLM provider (via ace-llm). Multiple providers can run the same step for comparison.
 
-This orchestrator enforces a two-phase sequence:
+This orchestrator enforces a two-phase sequence learned from the task-285 failure (7 hours, 6 sessions, killed):
 
-1. Prove runnable simulation behavior with workflows/prompts/examples only.
-2. Build `ace-sim` package implementation from those proven contracts.
+1. **Prove the approach with workflows only** — no Ruby code. Validate multi-step simulation using existing tools (ace-bundle + ace-llm CLI + shell scripting).
+2. **Build the ace-sim Ruby gem** — wrap proven workflows into a proper gem. Does NOT redesign them.
 
-The objective is to prevent scaffold-only completion by requiring explicit happy-path
-usage, runnable evidence, and review-gate checks before package implementation.
+**Kill checkpoint**: If Subtask 1 fails after 2 sessions, kill the approach entirely.
 
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Maintainer runs the draft/review lifecycle for this orchestrator and its subtasks.
-- **Process**: Subtask 296.01 defines and proves simulation behavior. Subtask 296.02 builds package code from that proof.
-- **Output**: Decision-complete specs with usage docs, evidence contracts, and review questions.
+- **Input**: Maintainer runs `ace-sim run` with a config name and source file
+- **Process**: Pipeline executes steps sequentially, each step's output feeds into the next. Multiple providers can run the same step for comparison.
+- **Output**: Cached artifacts in `.cache/ace-sim/simulations/<run-id>/` with step-level subdirs and synthesis report
 
 ### Expected Behavior
-- The orchestrator remains `draft` until both subtasks pass review readiness checks.
-- The first subtask is mandatory proof-first scope and must not create package source code.
-- The second subtask must not redefine behavior contracts; it implements proven phase-1 contracts.
-- The public ace-sim CLI contract for package scope is `ace-sim run` (generic scenario runner).
-- Every runnable claim in both subtasks includes `Verification Evidence`.
+- Simulations are ordered pipelines of steps defined in YAML config
+- Each step: name, workflow URI/preset, provider(s), output format
+- Multi-provider: same step on google:flash AND anthropic:haiku to compare
+- General-purpose: NOT hardcoded to "next-phase review"
+- Ecosystem-native: ace-bundle for context, ace-llm for invocation, ace-support-config for cascade
+- Standalone: NO dependency on ace-task, ace-idea, or ace-taskflow
 
 ### Interface Contract
 
 ```bash
-# Review workflow actions on this orchestrator lineage
-mise exec -- ace-task show 296
-mise exec -- ace-task show 296.01
-mise exec -- ace-task show 296.02
+# Run a simulation
+ace-sim run --config review-next-phase --source path/to/input.md
+
+# Dry run (show plan without LLM calls)
+ace-sim run --config review-next-phase --source input.md --dry-run
+
+# Run single step with specific provider
+ace-sim run --config review-next-phase --source input.md --step draft --provider google:flash
+
+# List available configs
+ace-sim list
+
+# Show run summary
+ace-sim show <run-id>
 ```
 
 ### Success Criteria
-- [ ] Two-subtask sequence is explicit and dependency-ordered (`296.01` -> `296.02`)
-- [ ] Phase-1 spec includes a concrete happy-path usage document path and evidence contract
-- [ ] Phase-2 spec includes a concrete package usage document path and evidence contract
-- [ ] Orchestrator and subtasks contain review questions with proposed defaults
-- [ ] Scaffold-vs-runnable gaps are explicitly blocked by review checklist expectations
+- [ ] Two-subtask sequence enforced: 296.01 (workflows only) -> 296.02 (gem implementation)
+- [ ] Phase 1 proves approach WITHOUT any Ruby code
+- [ ] Phase 2 wraps proven workflows, does NOT redesign them
+- [ ] Both subtasks have concrete happy-path usage examples
+- [ ] All ecosystem tools used (ace-bundle, ace-llm, ace-support-config)
+- [ ] No hardcoded values that should be config-driven
+- [ ] Kill-or-continue checkpoint between subtasks
 
 ## Subtasks
 
-- **01**: Phase 1: prove simulation workflows/prompts/examples without package code
-- **02**: Phase 2: implement ace-sim package from proven phase-1 contracts
+- **296.01**: Prove Simulation Pipeline with Workflows Only (No Code)
+- **296.02**: Build the ace-sim Ruby Gem (blocked by 296.01)
 
 ### Concept Inventory
 
 | Concept | Introduced by | Removed by | Status |
 |---------|---------------|------------|--------|
-| Proof-before-code gating | 296.01 | — | KEPT |
-| Task-local usage docs for runnable intent | 296.01 | — | KEPT |
-| Generic `ace-sim run` CLI contract | 296.02 | — | KEPT |
-| Multi-provider + repeat-run simulation matrix | 296.01 | — | KEPT |
-| Standalone `ace-sim` gem package | 296.02 | — | KEPT |
+| Step-based simulation pipeline | 296.01 | — | KEPT |
+| YAML simulation config format | 296.01 | — | KEPT |
+| ace-bundle presets for sim context | 296.01 | — | KEPT |
+| Multi-provider comparison | 296.01 | — | KEPT |
+| Synthesis from step outputs | 296.01 | — | KEPT |
+| Standalone ace-sim gem | 296.02 | — | KEPT |
+| ATOM gem structure | 296.02 | — | KEPT |
+| Config cascade (.ace-defaults -> .ace -> CLI) | 296.02 | — | KEPT |
 
 ## Review Questions (Pending Human Input)
 
-### [HIGH] CLI compatibility path
-- [ ] Should `ace-taskflow review-next-phase` be supported as a compatibility wrapper in v1 of `ace-sim`?
-  - Proposed default: no wrapper in v1; provide migration notes and focus on `ace-sim run`.
+### [HIGH] Kill checkpoint enforcement
+- [ ] After how many failed sessions on Subtask 1 should we kill the approach?
+  - Proposed default: 2 failed sessions.
 
-### [HIGH] Writeback default policy
-- [ ] Should writeback be disabled by default for v1 simulations?
-  - Proposed default: yes, writeback opt-in via explicit flag.
+### [HIGH] Scope of v1 simulation configs
+- [ ] Should v1 ship only `review-next-phase` config, or also include other use cases?
+  - Proposed default: `review-next-phase` only; generic runner interface supports future configs.
 
-### [MEDIUM] Scenario expansion timing
-- [ ] Should non-next-phase scenarios be included in v1 scope?
-  - Proposed default: no; ship next-phase scenario only in v1 and keep generic runner interface ready.
+### [MEDIUM] Provider defaults
+- [ ] Which providers should be the default comparison pair?
+  - Proposed default: `google:flash` and `anthropic:haiku`.
 
 ## References
 
-- `.ace-taskflow/v.0.9.0/retros/8pq3qi-task-285-postmortem-kill-implementation.md`
-- `.ace-taskflow/v.0.9.0/retros/8pq3jr-task-285-usage-example-gap.md`
-- `.ace-taskflow/v.0.9.0/tasks/295-task-sim-extract/295-ace-sim-gem-285-worktr.s.md`
+- Source idea: `.ace-taskflow/v.0.9.0/ideas/8pqjdu-taskflow-enhance/ace-sim-general-purpose-step-based-simulation-t.idea.s.md`
+- Retros: `.ace-taskflow/v.0.9.0/retros/8pq3qi-task-285-postmortem-kill-implementation.md`
+- Prior draft 295: `.ace-taskflow/v.0.9.0/tasks/295-task-sim-extract/295-ace-sim-gem-285-worktr.s.md`
+- Failed executor (anti-patterns): `ace-taskflow/lib/ace/taskflow/molecules/next_phase_stage_executor.rb`
