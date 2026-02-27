@@ -12,9 +12,9 @@ models:
 aliases:
   model:
     flash: gemini-2.5-flash
-    pro: gemini-2.5-pro
+    pro: gemini-2.5
     flash-latest: gemini-3-flash-preview
-    pro-latest: gemini-3-pro-preview
+    pro-latest: gemini-3.1-pro-preview
 capabilities:
   - text_generation
   - code_generation
