@@ -68,6 +68,7 @@ The task management system uses a two-template approach that mirrors the specifi
 - Focus on user experience and observable outcomes
 - Defer technical decisions until behavioral requirements are clear
 - Maintain clear separation between specification and implementation
+- Prefer **better, not more**: improve clarity and defaults rather than adding specialized template sections
 
 #### Template Markers
 - **Draft Template**: Pure behavioral focus, no implementation details
@@ -163,6 +164,9 @@ When a user runs `task-manager list --filter status:draft`, the system should:
 - [ ] Expected Behavior written from user perspective
 - [ ] Interface Contract specifies inputs/outputs clearly
 - [ ] Success Criteria are measurable and behavioral
+- [ ] At least one failure or invalid-input path is specified
+- [ ] Defaults are explicit where behavior could be ambiguous
+- [ ] Spec is decision-complete for implementers
 - [ ] No implementation details present
 - [ ] All validation questions addressed
 
