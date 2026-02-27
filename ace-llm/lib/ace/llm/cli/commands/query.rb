@@ -194,117 +194,40 @@ module Ace
         # @param options [Hash] Command options
         # @return [Integer] Exit code (0 for success, 1 for failure)
         def execute_query(options)
-          # Parse provider and model
-          parser = Ace::LLM::Molecules::ProviderModelParser.new
-          parse_result = parser.parse(@provider_model)
-
-          unless parse_result.valid?
-            raise Ace::Core::CLI::Error.new(parse_result.error)
-          end
-
-          # Resolve final model: --model flag > positional :MODEL > provider default
-          # If model was used as provider_model (no positional args), don't use it again
-          final_model = if @model_from_option
-                          parse_result.model
-                        else
-                          options[:model] || parse_result.model
-                        end
-
-          # Validate that we have a model from some source
-          if final_model.nil? || final_model.empty?
-            raise Ace::Core::CLI::Error.new("No model specified and no default available for #{parse_result.provider}\nUse --model MODEL or PROVIDER:MODEL syntax")
-          end
-
-          # Load prompt content
           file_handler = Ace::LLM::Molecules::FileIoHandler.new
           prompt_text = file_handler.read_content(@prompt)
+          system_text = options[:system] ? file_handler.read_content(options[:system]) : nil
+          system_append_text = options[:system_append] ? file_handler.read_content(options[:system_append]) : nil
 
-          # Build messages
-          messages = build_messages(prompt_text, options)
-
-          # Create client and generate response
-          registry = Ace::LLM::Molecules::ClientRegistry.new
-          client = create_client(registry, parse_result.provider, final_model, options)
-          response = client.generate(messages, **generation_options(options))
+          # If --model was used as provider_model fallback (no positional provider), avoid passing it twice.
+          resolved_model_override = @model_from_option ? nil : options[:model]
+          response = Ace::LLM::QueryInterface.query(
+            @provider_model,
+            prompt_text,
+            temperature: options[:temperature],
+            max_tokens: options[:max_tokens],
+            system: system_text,
+            timeout: options[:timeout],
+            debug: options[:debug],
+            model: resolved_model_override,
+            cli_args: options[:cli_args],
+            system_append: system_append_text
+          )
 
           # Format and output response
           output_response(response, options)
-        end
-
-        # Build message array from prompt and system instructions
-        #
-        # @param prompt_text [String] User prompt text
-        # @param options [Hash] Command options
-        # @return [Array<Hash>] Message array
-        def build_messages(prompt_text, options)
-          messages = []
-
-          # Add system message if provided
-          if options[:system]
-            file_handler = Ace::LLM::Molecules::FileIoHandler.new
-            system_text = file_handler.read_content(options[:system])
-            messages << { role: "system", content: system_text }
-          end
-
-          # Add user message
-          messages << { role: "user", content: prompt_text }
-          messages
-        end
-
-        # Create an LLM client
-        #
-        # @param registry [Molecules::ClientRegistry] Client registry
-        # @param provider [String] Provider name
-        # @param model [String] Model name
-        # @param options [Hash] Command options
-        # @return [Object] LLM client instance
-        def create_client(registry, provider, model, options)
-          timeout_value = if options.key?(:timeout)
-            options[:timeout].nil? ? nil : options[:timeout].to_i
-          end
-
-          registry.get_client(
-            provider,
-            model: model,
-            timeout: timeout_value || Ace::LLM::Molecules::ConfigLoader.get("llm.timeout") || 120
-          )
         rescue Ace::LLM::ProviderError => e
-          error_output(e.message)
-          error_output("Available providers: #{registry.available_providers.join(', ')}")
-          raise
-        rescue LoadError => e
-          error_output("Provider '#{provider}' requires missing gem: #{e.message}")
-          error_output("Please install the required gem and try again")
-          raise
-        end
-
-        # Build generation options from command options
-        #
-        # @param options [Hash] Command options
-        # @return [Hash] Generation options
-        def generation_options(options)
-          opts = {}
-          # Type-convert numeric options (dry-cli returns strings, Thor converted to floats/ints)
-          opts[:temperature] = options[:temperature].to_f if options[:temperature]
-          opts[:max_tokens] = options[:max_tokens].to_i if options[:max_tokens]
-
-          # Pass system_append for providers that support it
-          if options[:system_append] && !options[:system_append].empty?
-            file_handler = Ace::LLM::Molecules::FileIoHandler.new
-            append_content = file_handler.read_content(options[:system_append])
-            opts[:system_append] = append_content unless append_content.nil? || append_content.empty?
+          # Surface actionable guidance for common CLI errors
+          if e.message.include?("not found") || e.message.include?("not registered")
+            available = Ace::LLM::ClientRegistry.available_providers rescue []
+            raise Ace::Core::CLI::Error, "#{e.message}\nAvailable providers: #{available.join(", ")}"
           end
-
-          if options[:cli_args] && !options[:cli_args].empty?
-            opts[:cli_args] = options[:cli_args]
-          end
-
-          opts
+          raise
         end
 
         # Format and output the response
         #
-        # @param response [String] LLM response text
+        # @param response [Hash] LLM response hash
         # @param options [Hash] Command options
         # @return [nil]
         def output_response(response, options)
