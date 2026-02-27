@@ -91,6 +91,11 @@ Section sourcing rules:
 | Test Evidence | Test names mapped to behaviors + totals | Raw command output paste |
 | Releases | CHANGELOG diff entries | Duplicating Changes section |
 
+**Grouped-stats formatting rule:**
+- The `## 📁 File Changes` section must wrap grouped-stats output inside a fenced code block (```)
+- Paste the output exactly as produced — preserve all column alignment, tree indentation, and emoji markers
+- Never convert grouped-stats output into bullet lists, tables, or prose
+
 Summary writing rules:
 - Start with what is easier now
 - Mention what users/reviewers had to do before
@@ -107,6 +112,31 @@ Omission/fallback rules:
 - No test-file evidence -> `## 🧪 Test Evidence` may include totals-only validation
 - grouped-stats unavailable -> fallback to flat file list in `## 📁 File Changes`
 - Omit any section lacking evidence; never leave empty placeholders
+
+#### Grouped-stats example
+
+Correct — output wrapped in a fenced code block preserving all formatting:
+
+````
+## 📁 File Changes
+
+```
+ +762,   -54   34 files   total
+
+  +358,   -35   10 files      ace-overseer/
+  +117,   -18    4 files   🧱 lib/
+   +19,    -3                 ace/overseer/cli/commands/work_on.rb
+```
+````
+
+Incorrect — reformatted into bullet list (loses tree structure and alignment):
+
+```
+## 📁 File Changes
+
+- ace-overseer/lib/ace/overseer/cli/commands/work_on.rb (+19, -3)
+- ace-overseer/lib/ace/overseer/molecules/assignment_launcher.rb (+42, -8)
+```
 
 ### 6. Create PR
 
@@ -168,8 +198,8 @@ gh pr checks
 
 ## 📁 File Changes
 
-- [Use `ace-git diff --format grouped-stats` output]
-- [Fallback: flat file list if grouped-stats unavailable]
+[Paste `ace-git diff --format grouped-stats` output verbatim inside a fenced code block — preserve all spacing and tree structure]
+[Fallback: flat file list if grouped-stats unavailable]
 
 ## 🧪 Test Evidence
 
@@ -193,7 +223,7 @@ gh pr checks
 
 ## 📁 File Changes
 
-- [Use `ace-git diff --format grouped-stats` output]
+[Paste `ace-git diff --format grouped-stats` output verbatim inside a fenced code block — preserve all spacing and tree structure]
 
 ## 🧪 Test Evidence
 
@@ -218,7 +248,7 @@ gh pr checks
 
 ## 📁 File Changes
 
-- [Use `ace-git diff --format grouped-stats` output]
+[Paste `ace-git diff --format grouped-stats` output verbatim inside a fenced code block — preserve all spacing and tree structure]
 
 ## 🧪 Test Evidence
 
