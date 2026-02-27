@@ -7,9 +7,9 @@ dependencies: []
 worktree:
   branch: 288-add-native-zai-api-provider-to-ace-llm-and-run-ace-git-commit-trial
   path: "../ace-task.288"
-  created_at: '2026-02-26 20:02:22'
-  updated_at: '2026-02-26 20:02:22'
-  target_branch: 289-allow-ace-overseer-work-on-to-accept-ordered-multi-task-task-lists
+  created_at: '2026-02-27 14:41:47'
+  updated_at: '2026-02-27 14:41:47'
+  target_branch: main
 ---
 
 # Add native Z.AI API provider to ace-llm and run ace-git-commit trial
