@@ -48,6 +48,7 @@ module Ace
       assert_kind_of Class, ::Ace::LLM::Organisms::TogetherAIClient
       assert_kind_of Class, ::Ace::LLM::Organisms::LMStudioClient
       assert_kind_of Class, ::Ace::LLM::Organisms::XAIClient
+      assert_kind_of Class, ::Ace::LLM::Organisms::ZaiClient
     end
   end
 end

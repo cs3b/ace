@@ -7,6 +7,14 @@ llm:
   # due to subprocess overhead and "thinking" phases
   timeout: 120
 
+  # Global fallback policy shared by QueryInterface and ace-llm CLI query.
+  fallback:
+    enabled: true
+    retry_count: 3
+    retry_delay: 1.0
+    max_total_timeout: 30.0
+    providers: []
+
   # Default context limit for unknown models (in tokens)
   # Provider-specific limits are defined in providers/*.yml
   context_limit:

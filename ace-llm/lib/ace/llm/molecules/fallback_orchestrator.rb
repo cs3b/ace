@@ -104,7 +104,12 @@ module Ace
             report_status("⚠ #{provider_name} authentication failed, skipping...")
             :stop_and_fallback
           when Atoms::ErrorClassifier::FALLBACK_IMMEDIATELY
-            report_status("⚠ #{provider_name} timeout, trying next provider...")
+            reason = if Atoms::ErrorClassifier.quota_or_credit_limited?(error)
+                       "quota/credit/window limit reached"
+                     else
+                       "timeout"
+                     end
+            report_status("⚠ #{provider_name} #{reason}, trying next provider...")
             :stop_and_fallback
           when Atoms::ErrorClassifier::RETRYABLE_WITH_BACKOFF
             if attempts < @config.retry_count && !timeout_exceeded?
