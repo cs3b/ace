@@ -94,6 +94,11 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-sim
+      path: ace-sim
+      group: tools
+      priority: 2
+
     - name: ace-git
       path: ace-git
       group: tools
