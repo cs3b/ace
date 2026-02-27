@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.296
-status: in-progress
+status: done
 priority: high
 estimate: TBD
 dependencies: []
@@ -20,10 +20,11 @@ worktree:
 Replace the failed task-285 implementation path with a usage-first, proof-before-code
 specification for a standalone `ace-sim` package.
 
-This orchestrator enforces a two-phase sequence:
+This orchestrator delivered a three-phase sequence:
 
 1. Prove runnable simulation behavior with workflows/prompts/examples only.
 2. Build `ace-sim` package implementation from those proven contracts.
+3. Finalize markdown-first artifact-chain runtime and close contract drift as unplanned completion work.
 
 The objective is to prevent scaffold-only completion by requiring explicit happy-path
 usage, runnable evidence, and review-gate checks before package implementation.
@@ -32,7 +33,7 @@ usage, runnable evidence, and review-gate checks before package implementation.
 
 ### User Experience
 - **Input**: Maintainer runs the draft/review lifecycle for this orchestrator and its subtasks.
-- **Process**: Subtask 296.01 defines and proves simulation behavior. Subtask 296.02 builds package code from that proof.
+- **Process**: Subtask 296.01 defines and proves simulation behavior. Subtask 296.02 builds package code from that proof. Subtask 296.03 records and completes markdown-first runtime finalization.
 - **Output**: Decision-complete specs with usage docs, evidence contracts, and review questions.
 
 ### Expected Behavior
@@ -66,6 +67,7 @@ mise exec -- ace-task show 296.02
 
 - **01**: Phase 1: prove simulation workflows/prompts/examples without package code
 - **02**: Phase 2: implement ace-sim package from proven phase-1 contracts
+- **03**: Phase 3: markdown-first artifact chain finalization (unplanned)
 
 ### Concept Inventory
 
@@ -74,6 +76,7 @@ mise exec -- ace-task show 296.02
 | Proof-before-code gating | 296.01 | — | KEPT |
 | Task-local usage docs for runnable intent | 296.01 | — | KEPT |
 | Generic `ace-sim run` CLI contract | 296.02 | — | KEPT |
+| Markdown-first step artifact chain (`input.md -> user.bundle.md -> user.prompt.md -> output.md`) | 296.03 | — | KEPT |
 | Multi-provider + repeat-run proof evidence | 296.01 | — | KEPT |
 | Standalone `ace-sim` gem package | 296.02 | — | KEPT |
 
