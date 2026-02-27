@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.666] - 2026-02-27
+
+### Changed
+- **ace-git v0.11.12**: Add explicit code-block formatting rule and correct/incorrect example for grouped-stats output in PR creation and update workflows
+
 ## [0.9.665] - 2026-02-26
 
 ### Added
