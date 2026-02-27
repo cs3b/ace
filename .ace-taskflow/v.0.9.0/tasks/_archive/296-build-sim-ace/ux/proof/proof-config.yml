@@ -1,0 +1,13 @@
+scenario: next-phase
+steps:
+  - draft
+  - plan
+input:
+  type: taskflow_ref
+  value: "<ref>"
+providers:
+  - google:gflash
+  - codex:mini
+repeat: 2
+writeback: false
+cache_root: .cache/ace-sim/proof

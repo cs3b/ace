@@ -17,7 +17,11 @@ Prove runnable step-chained simulation behavior and evidence capture before crea
 # 1) Generate run-id (copy output value as <run-id>)
 mise exec -- ace-b36ts encode now
 
-# 2) Render draft prompt from source input
+# 1b) Export run-id and source ref for proof-bundle rendering
+export ACE_SIM_RUN_ID=<run-id>
+export ACE_SIM_SOURCE_REF=<ref>
+
+# 2) Render prompts from source input (writes draft/plan/synthesis/comparison prompts)
 mise exec -- ace-bundle -f .ace-taskflow/v.0.9.0/tasks/296-build-sim-ace/ux/proof/proof-bundle.yml --output cache
 
 # 3) Execute draft stage
@@ -25,6 +29,9 @@ mise exec -- ace-llm google:gflash --system .ace-taskflow/v.0.9.0/tasks/296-buil
 
 # 4) Re-render bundle after draft output exists to build chained plan prompt
 mise exec -- ace-bundle -f .ace-taskflow/v.0.9.0/tasks/296-build-sim-ace/ux/proof/proof-bundle.yml --output cache
+
+# 4b) Verify plan prompt includes same-run draft output
+rg -n "Draft Output \(same run-id\)|objective_summary|acceptance_targets" .cache/ace-sim/proof/<run-id>/plan.prompt.md
 
 # 5) Execute plan stage with provider B
 mise exec -- ace-llm codex:mini --system .ace-taskflow/v.0.9.0/tasks/296-build-sim-ace/ux/proof/plan.system.md --prompt .cache/ace-sim/proof/<run-id>/plan.prompt.md --output .cache/ace-sim/proof/<run-id>/plan-output.yml
@@ -42,7 +49,7 @@ mise exec -- ace-llm codex:mini --system .ace-taskflow/v.0.9.0/tasks/296-build-s
 ## Step-Chaining Proof Requirement
 
 - `plan.prompt.md` must include content derived from `.cache/ace-sim/proof/<run-id>/draft-output.yml`.
-- Reviewers verify this by checking that draft-generated fields are present in the plan prompt for the same `<run-id>`.
+- Reviewers verify this by checking draft-generated fields are present in the plan prompt for the same `<run-id>`.
 
 ## Expected Artifacts
 
@@ -51,7 +58,9 @@ mise exec -- ace-llm codex:mini --system .ace-taskflow/v.0.9.0/tasks/296-build-s
 - `.cache/ace-sim/proof/<run-id>/plan.prompt.md`
 - `.cache/ace-sim/proof/<run-id>/plan-output.yml`
 - `.cache/ace-sim/proof/<run-id>/plan-repeat-output.yml`
+- `.cache/ace-sim/proof/<run-id>/synthesis.prompt.md`
 - `.cache/ace-sim/proof/<run-id>/synthesis.yml`
+- `.cache/ace-sim/proof/<run-id>/comparison.prompt.md`
 - `.cache/ace-sim/proof/<run-id>/comparison.yml`
 
 ## Evidence Matrix
@@ -61,6 +70,26 @@ mise exec -- ace-llm codex:mini --system .ace-taskflow/v.0.9.0/tasks/296-build-s
 | google:gflash | draft | 1 | `.cache/ace-sim/proof/<run-id>/draft-output.yml` | required |
 | codex:mini | plan | 1 | `.cache/ace-sim/proof/<run-id>/plan-output.yml` | required |
 | google:gflash | plan | 2 | `.cache/ace-sim/proof/<run-id>/plan-repeat-output.yml` | required |
+| codex:mini | synthesis | 1 | `.cache/ace-sim/proof/<run-id>/synthesis.yml` | required |
+| codex:mini | comparison | 1 | `.cache/ace-sim/proof/<run-id>/comparison.yml` | required |
+
+## Latest Sample Run
+
+- Run ID: `8pqmbl`
+- Source reference: `v.0.9.0+task.296.01`
+- Chain proof check:
+  - `rg -n "Draft Output \\(same run-id\\)|objective_summary|acceptance_targets" .cache/ace-sim/proof/8pqmbl/plan.prompt.md`
+  - Observed fields from draft output in plan prompt: `objective_summary`, `acceptance_targets`
+- Produced artifacts:
+  - `.cache/ace-sim/proof/8pqmbl/draft-output.yml`
+  - `.cache/ace-sim/proof/8pqmbl/plan-output.yml`
+  - `.cache/ace-sim/proof/8pqmbl/plan-repeat-output.yml`
+  - `.cache/ace-sim/proof/8pqmbl/synthesis.yml`
+  - `.cache/ace-sim/proof/8pqmbl/comparison.yml`
+- Provider classification notes:
+  - `google:gflash` failed in this environment (`provider unavailable`: model alias `gflash` resolved to unsupported model)
+  - Fallback command used for Google provider evidence:
+    - `mise exec -- ace-llm google --model gemini-2.5-flash --system ... --prompt ... --output ...`
 
 ## Pass Criteria
 

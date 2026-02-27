@@ -1,0 +1,90 @@
+---
+description: "Phase-1 proof prompt renderer for task 296.01"
+bundle:
+  params:
+    output: cache
+    format: markdown-xml
+  commands:
+    - |
+      set -eu
+      if [ -z "${ACE_SIM_RUN_ID:-}" ]; then
+        echo "ERROR: ACE_SIM_RUN_ID is required"
+        echo "Generate one with: mise exec -- ace-b36ts encode now"
+        exit 1
+      fi
+
+      RUN_ID="${ACE_SIM_RUN_ID}"
+      SOURCE_REF="${ACE_SIM_SOURCE_REF:-v.0.9.0+task.296.01}"
+      RUN_DIR=".cache/ace-sim/proof/${RUN_ID}"
+
+      mkdir -p "${RUN_DIR}"
+
+      {
+        printf '%s\n' "# Next-Phase Simulation - Draft Step"
+        printf '%s\n' ""
+        printf '%s\n' "Run ID: ${RUN_ID}"
+        printf '%s\n' "Source Reference: ${SOURCE_REF}"
+        printf '%s\n' ""
+        printf '%s\n' "Objective:"
+        printf '%s\n' "- Produce structured draft-stage output only."
+        printf '%s\n' "- Do not execute plan-stage reasoning yet."
+        printf '%s\n' ""
+        printf '%s\n' "Return YAML that follows the schema requested by draft.system.md."
+      } > "${RUN_DIR}/draft.prompt.md"
+
+      {
+        printf '%s\n' "# Next-Phase Simulation - Plan Step"
+        printf '%s\n' ""
+        printf '%s\n' "Run ID: ${RUN_ID}"
+        printf '%s\n' "Source Reference: ${SOURCE_REF}"
+        printf '%s\n' ""
+        printf '%s\n' "Objective:"
+        printf '%s\n' "- Produce structured plan-stage output based on draft output from the same run-id."
+        printf '%s\n' ""
+        printf '%s\n' "## Draft Output (same run-id)"
+        if [ -f "${RUN_DIR}/draft-output.yml" ]; then
+          cat "${RUN_DIR}/draft-output.yml"
+        else
+          printf '%s\n' "step: draft"
+          printf '%s\n' "status: missing"
+          printf '%s\n' "note: draft-output.yml not found yet for this run-id"
+        fi
+        printf '%s\n' ""
+        printf '%s\n' "Return YAML that follows the schema requested by plan.system.md."
+      } > "${RUN_DIR}/plan.prompt.md"
+
+      {
+        printf '%s\n' "# Next-Phase Simulation - Synthesis"
+        printf '%s\n' ""
+        printf '%s\n' "Run ID: ${RUN_ID}"
+        printf '%s\n' ""
+        printf '%s\n' "Inputs to synthesize:"
+        printf '%s\n' "- ${RUN_DIR}/draft-output.yml"
+        printf '%s\n' "- ${RUN_DIR}/plan-output.yml"
+        printf '%s\n' "- ${RUN_DIR}/plan-repeat-output.yml"
+        printf '%s\n' ""
+        printf '%s\n' "Produce YAML that follows synthesis.system.md."
+      } > "${RUN_DIR}/synthesis.prompt.md"
+
+      {
+        printf '%s\n' "# Next-Phase Simulation - Comparison"
+        printf '%s\n' ""
+        printf '%s\n' "Run ID: ${RUN_ID}"
+        printf '%s\n' ""
+        printf '%s\n' "Compare provider/repeat differences using:"
+        printf '%s\n' "- ${RUN_DIR}/plan-output.yml"
+        printf '%s\n' "- ${RUN_DIR}/plan-repeat-output.yml"
+        printf '%s\n' ""
+        printf '%s\n' "Produce YAML that follows comparison.system.md."
+      } > "${RUN_DIR}/comparison.prompt.md"
+
+      echo "Rendered prompts to ${RUN_DIR}"
+      echo "- draft.prompt.md"
+      echo "- plan.prompt.md"
+      echo "- synthesis.prompt.md"
+      echo "- comparison.prompt.md"
+---
+
+# Proof Bundle Config
+
+This file is intentionally frontmatter-first so `ace-bundle -f` treats it as executable bundle configuration.
