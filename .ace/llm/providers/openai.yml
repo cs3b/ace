@@ -12,6 +12,7 @@ models:
   - gpt-5.2
   - gpt-5.2-chat-latest
   - gpt-5.2-pro
+  - gpt-5-nano
 aliases:
   global:
     oagpt: openai:gpt
@@ -22,6 +23,7 @@ aliases:
     codex: gpt-5.1-codex
     max: gpt-5.1-codex-max
     mini: gpt-5.1-codex-mini
+    nano: gpt-5-nano
 api_key:
   env: OPENAI_API_KEY
   required: true
