@@ -55,6 +55,11 @@ If subtask context exists and current target is `main`, switch target to parent 
 git push -u origin "$(git branch --show-current)"
 ```
 
+**If push is rejected (non-fast-forward)**:
+- For feature branches with worktree-based divergence, prefer `git push --force-with-lease`
+- For shared branches or uncertain divergence, ask the user before force-pushing or rebasing
+- Do NOT silently rebase — this is a potentially destructive operation requiring user consent
+
 ### 4. Build Evidence Inputs
 
 Before writing the body, collect evidence:
