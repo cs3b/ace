@@ -1,0 +1,57 @@
+# ace-sim Usage
+
+## Preset-Driven Run (Canonical)
+
+```bash
+ace-sim run \
+  --preset validate-idea \
+  --source path/to/source.md \
+  --provider codex:mini
+```
+
+`--source` must be an existing readable file path.
+
+## Override Preset Defaults with CLI
+
+```bash
+ace-sim run \
+  --preset validate-idea \
+  --source path/to/source.md \
+  --steps draft,plan,work \
+  --provider codex:mini \
+  --provider google:gflash \
+  --repeat 2
+```
+
+## Precedence
+
+1. Explicit CLI flag
+2. Preset file (`.ace/sim/presets/*.yml`, fallback `.ace-defaults/sim/presets/*.yml`)
+3. Global sim defaults (`.ace-defaults/sim/config.yml`)
+
+## Step Configs
+
+- Step configs are markdown bundle configs at `.ace/sim/steps/*.md` (fallback `.ace-defaults/sim/steps/*.md`).
+- Default step configs use strict sections (`project_context`, step workflow, `input`) and instruction/report headings.
+- Default preset `validate-idea` runs `draft -> plan -> work`.
+
+## Artifacts
+
+Top-level:
+- `.cache/ace-sim/simulations/<run-id>/session.yml`
+- `.cache/ace-sim/simulations/<run-id>/synthesis.yml`
+
+Per chain (`provider x repeat`):
+- `.cache/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/input.md`
+- `.cache/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.bundle.md`
+- `.cache/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.prompt.md`
+- `.cache/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/output.md`
+
+## Behavior Notes
+
+- One independent full chain runs per provider x repeat.
+- Step 1 copies `--source` into `input.md`.
+- Step N copies previous `output.md` into next `input.md`.
+- Step success is minimal: `output.md` exists and is non-empty.
+- If one chain fails, only that chain stops; other chains continue.
+- `--dry-run` never mutates source ideas/tasks.

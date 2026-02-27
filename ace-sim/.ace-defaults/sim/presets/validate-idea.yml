@@ -1,0 +1,5 @@
+name: validate-idea
+steps:
+  - draft
+  - plan
+  - work
