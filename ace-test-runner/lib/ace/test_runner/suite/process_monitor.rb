@@ -28,8 +28,13 @@ module Ace
           cmd = build_command(package, test_options)
 
           # Start the process
+          # Strip assignment context vars to prevent tests from resolving to wrong assignments
+          env = ENV.to_h.merge({
+            "ACE_ASSIGN_ID" => nil,
+            "ACE_ASSIGN_FORK_ROOT" => nil
+          })
           start_time = Time.now
-          stdin, stdout, stderr, thread = Open3.popen3(cmd, chdir: package["path"])
+          stdin, stdout, stderr, thread = Open3.popen3(env, cmd, chdir: package["path"])
 
           @processes[package["name"]] = {
             package: package,

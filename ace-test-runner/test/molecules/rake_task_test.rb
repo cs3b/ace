@@ -161,4 +161,28 @@ class Ace::TestRunner::RakeTaskTest < Minitest::Test
     task.loader = :direct
     assert_equal :direct, task.loader
   end
+
+  def test_strips_assignment_context_vars_from_environment
+    ENV["ACE_ASSIGN_ID"] = "test-assignment"
+    ENV["ACE_ASSIGN_FORK_ROOT"] = "010"
+
+    task = Ace::TestRunner::RakeTask.new
+
+    # Track the env hash passed to system
+    system_env = nil
+    task.define_singleton_method(:system) do |*args|
+      if args.first.is_a?(Hash)
+        system_env = args.first
+        true
+      else
+        true
+      end
+    end
+
+    Rake::Task[:test].invoke
+
+    # Verify assignment context vars are stripped (set to nil)
+    assert_nil system_env["ACE_ASSIGN_ID"], "ACE_ASSIGN_ID should be nil in subprocess env"
+    assert_nil system_env["ACE_ASSIGN_FORK_ROOT"], "ACE_ASSIGN_FORK_ROOT should be nil in subprocess env"
+  end
 end
