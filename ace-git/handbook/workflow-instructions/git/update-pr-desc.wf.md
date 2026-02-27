@@ -94,6 +94,11 @@ Section sourcing rules:
 | Test Evidence | Test names mapped to behaviors + suite totals | Raw unstructured test output paste |
 | Releases | CHANGELOG entries from diff | Repeating content already in Changes |
 
+**Grouped-stats formatting rule:**
+- The `## 📁 File Changes` section must wrap grouped-stats output inside a fenced code block (```)
+- Paste the output exactly as produced — preserve all column alignment, tree indentation, and emoji markers
+- Never convert grouped-stats output into bullet lists, tables, or prose
+
 Bullet formatting rules:
 - **Bold the first key term** in each bullet (feature name, class name, CLI flag, or config key) so it serves as a visual anchor before the explanation. Example: `- Add **\`GroupedStatsFormatter\`**: formats numstat output into...`
 - In Test Evidence, bold the test class name: `- **GroupedStatsFormatterTest** (6 tests) — validates...`
@@ -117,6 +122,31 @@ Constraints:
 - If no test-file evidence: keep `## 🧪 Test Evidence` with suite totals only
 - If `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` is unavailable: use flat file list fallback under `## 📁 File Changes`
 - Omit sections with no supporting evidence instead of leaving placeholders
+
+#### Grouped-stats example
+
+Correct — output wrapped in a fenced code block preserving all formatting:
+
+````
+## 📁 File Changes
+
+```
+ +762,   -54   34 files   total
+
+  +358,   -35   10 files      ace-overseer/
+  +117,   -18    4 files   🧱 lib/
+   +19,    -3                 ace/overseer/cli/commands/work_on.rb
+```
+````
+
+Incorrect — reformatted into bullet list (loses tree structure and alignment):
+
+```
+## 📁 File Changes
+
+- ace-overseer/lib/ace/overseer/cli/commands/work_on.rb (+19, -3)
+- ace-overseer/lib/ace/overseer/molecules/assignment_launcher.rb (+42, -8)
+```
 
 ### 8. Update PR
 
