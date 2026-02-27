@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.681] - 2026-02-27
+
+### Changed
+- **ace-taskflow v0.45.1**: Simulation bundle config uses ace-bundle sections to separate project context (`<project_context>`) from workflow instruction (`<workflow>`) in system prompt
+- **ace-taskflow v0.45.1**: Removed standalone simulation presets (simulation-draft, simulation-plan) in favor of inline sections config
+
 ## [0.9.680] - 2026-02-26
 
 ### Added
