@@ -7,24 +7,17 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
   def test_call_normalizes_json_payload
     source_body = "# Source content\n"
     llm_calls = []
-    executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: lambda { |path|
-        path.include?("simulate-next-phase-") ? "workflow text" : source_body
-      },
-      model_resolver: -> { "glite" },
-      llm_query: lambda { |model, prompt, **kwargs|
-        llm_calls << { model: model, prompt: prompt, kwargs: kwargs }
+    executor = build_executor(
+      source_body: source_body,
+      llm_response: <<~JSON,
         {
-          text: <<~JSON
-            {
-              "status": "ok",
-              "findings": ["F1"],
-              "questions": ["Q1"],
-              "refinements": ["R1"]
-            }
-          JSON
+          "status": "ok",
+          "findings": ["F1"],
+          "questions": ["Q1"],
+          "refinements": ["R1"]
         }
-      }
+      JSON
+      llm_calls: llm_calls
     )
 
     payload = executor.call(
@@ -44,25 +37,20 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
   end
 
   def test_call_extracts_artifact_from_yaml_response
-    executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: ->(_path) { "workflow text" },
-      model_resolver: -> { "glite" },
-      llm_query: lambda { |_model, _prompt, **_kwargs|
-        {
-          text: <<~YAML
-            status: ok
-            artifact: |
-              # Task: Add retry policy
+    executor = build_executor(
+      source_body: "idea content",
+      llm_response: <<~YAML
+        status: ok
+        artifact: |
+          # Task: Add retry policy
 
-              ## Description
-              Add configurable retry logic to the HTTP client.
+          ## Description
+          Add configurable retry logic to the HTTP client.
 
-              ## Acceptance Criteria
-              - Configurable retry count and backoff
-            questions: []
-          YAML
-        }
-      }
+          ## Acceptance Criteria
+          - Configurable retry count and backoff
+        questions: []
+      YAML
     )
 
     payload = executor.call(
@@ -80,13 +68,10 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
 
   def test_call_passes_previous_artifact_as_readable_text_in_prompt
     captured_prompt = nil
-    executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: ->(_path) { "workflow text" },
-      model_resolver: -> { "glite" },
-      llm_query: lambda { |_model, prompt, **_kwargs|
-        captured_prompt = prompt
-        { text: "status: ok\nquestions: []\n" }
-      }
+    executor = build_executor(
+      source_body: "source content",
+      llm_response: "status: ok\nquestions: []\n",
+      capture_prompt: ->(prompt) { captured_prompt = prompt }
     )
 
     draft_artifact = "# Task: My Draft Spec\n\n## Description\nDo the thing.\n"
@@ -110,13 +95,10 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
 
   def test_call_falls_back_to_json_when_no_artifact_in_previous_output
     captured_prompt = nil
-    executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: ->(_path) { "workflow text" },
-      model_resolver: -> { "glite" },
-      llm_query: lambda { |_model, prompt, **_kwargs|
-        captured_prompt = prompt
-        { text: "status: ok\nquestions: []\n" }
-      }
+    executor = build_executor(
+      source_body: "source content",
+      llm_response: "status: ok\nquestions: []\n",
+      capture_prompt: ->(prompt) { captured_prompt = prompt }
     )
 
     executor.call(
@@ -130,24 +112,19 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
   end
 
   def test_call_parses_semantic_text_response
-    executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: ->(_path) { "workflow and source" },
-      model_resolver: -> { "glite" },
-      llm_query: lambda { |_model, _prompt, **_kwargs|
-        {
-          text: <<~TEXT
-            Status: partial
-            Findings:
-            - Missing acceptance check
-            Questions:
-            - Which test command proves completion?
-            Refinements:
-            - Add deterministic validation command.
-            Unresolved gaps:
-            - No rollback detail provided.
-          TEXT
-        }
-      }
+    executor = build_executor(
+      source_body: "source content",
+      llm_response: <<~TEXT
+        Status: partial
+        Findings:
+        - Missing acceptance check
+        Questions:
+        - Which test command proves completion?
+        Refinements:
+        - Add deterministic validation command.
+        Unresolved gaps:
+        - No rollback detail provided.
+      TEXT
     )
 
     payload = executor.call(
@@ -164,9 +141,9 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
   end
 
   def test_call_raises_when_llm_response_is_empty
-    executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: ->(_path) { "workflow and source" },
-      llm_query: ->(_model, _prompt, **_kwargs) { { text: "   " } }
+    executor = build_executor(
+      source_body: "source content",
+      llm_response: "   "
     )
 
     error = assert_raises(ArgumentError) do
@@ -181,52 +158,127 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
     assert_includes error.message, "empty response"
   end
 
-  def test_call_prompt_does_not_hard_code_schema
-    captured_system = nil
-    captured_user = nil
+  def test_call_generates_bundle_config_with_project_preset_and_workflow
+    captured_config_path = nil
+    executor = build_executor(
+      source_body: "source content",
+      llm_response: "status: ok\nquestions: []\n",
+      capture_config_path: ->(path) { captured_config_path = path }
+    )
 
-    # Create a simple mock bundle object
-    mock_bundle = Class.new do
-      def content
-        "Project context"
-      end
+    payload = executor.call(
+      resolved_source: { input: "285.06", type: "task", path: "/tmp/source.s.md" },
+      mode: "draft",
+      run_id: "abc123"
+    )
 
-      def get_section(name)
-        if name == "system"
-          { content: "System context with workflow instruction including output contract" }
-        elsif name == "user"
-          { content: "Source Reference: {{source_reference}}\nSource Type: {{source_type}}\n\n--- Source Content ---\n{{source_content}}\n\n--- Previous Stage Output ---\n{{previous_artifact}}" }
-        else
-          nil
-        end
-      end
-    end.new
+    # Verify bundle config content
+    config = payload[:bundle_config]
+    assert config, "should include bundle_config in payload"
+    assert_includes config, "presets:"
+    assert_includes config, "- project"
+    assert_includes config, "ace-taskflow/handbook/workflow-instructions/task/simulate-next-phase-draft.wf.md"
+    assert_includes config, "embed_document_source: true"
+    assert_includes config, "format: markdown-xml"
+    assert_includes config, "sections:"
+  end
 
-    executor = Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
-      file_reader: ->(_path) { "source content text" },
-      model_resolver: -> { "glite" },
-      bundle_loader: ->(_preset) { mock_bundle },
-      llm_query: lambda { |_model, user_prompt, **kwargs|
-        captured_user = user_prompt
-        captured_system = kwargs[:system]
-        { text: "status: ok\nquestions: []\n" }
-      }
+  def test_call_user_prompt_is_pure_source_content_for_draft
+    captured_prompt = nil
+    executor = build_executor(
+      source_body: "# My Idea\n\nSome great idea content.",
+      llm_response: "status: ok\nquestions: []\n",
+      capture_prompt: ->(prompt) { captured_prompt = prompt }
+    )
+
+    payload = executor.call(
+      resolved_source: { input: "idea-ref", type: "idea", path: "/tmp/idea.idea.s.md" },
+      mode: "draft",
+      run_id: "abc123"
+    )
+
+    # User prompt should be raw source content, no template wrapping
+    assert_equal "# My Idea\n\nSome great idea content.", captured_prompt
+    # Should not contain template markers
+    refute_includes captured_prompt, "{{source_content}}"
+    refute_includes captured_prompt, "Source Reference:"
+    refute_includes captured_prompt, "Source Type:"
+  end
+
+  def test_call_user_prompt_includes_previous_artifact_for_plan
+    captured_prompt = nil
+    executor = build_executor(
+      source_body: "# My Idea",
+      llm_response: "status: ok\nquestions: []\n",
+      capture_prompt: ->(prompt) { captured_prompt = prompt }
     )
 
     executor.call(
+      resolved_source: { input: "idea-ref", type: "idea", path: "/tmp/idea.idea.s.md" },
+      mode: "plan",
+      run_id: "abc123",
+      previous_stage_output: { status: "ok", artifact: "# Draft Spec\n\nThe draft." }
+    )
+
+    assert_includes captured_prompt, "# My Idea"
+    assert_includes captured_prompt, "---"
+    assert_includes captured_prompt, "# Draft Spec"
+  end
+
+  def test_call_system_prompt_comes_from_bundle_content
+    captured_system = nil
+    bundle_content = "Formatted project context and workflow instructions"
+    executor = build_executor(
+      source_body: "source",
+      llm_response: "status: ok\nquestions: []\n",
+      bundle_content: bundle_content,
+      capture_system: ->(system) { captured_system = system }
+    )
+
+    executor.call(
+      resolved_source: { input: "285.06", type: "task", path: "/tmp/source.s.md" },
+      mode: "draft",
+      run_id: "abc123"
+    )
+
+    assert_equal bundle_content, captured_system
+  end
+
+  def test_call_uses_plan_workflow_for_plan_mode
+    executor = build_executor(
+      source_body: "source",
+      llm_response: "status: ok\nquestions: []\n"
+    )
+
+    payload = executor.call(
       resolved_source: { input: "285.06", type: "task", path: "/tmp/source.s.md" },
       mode: "plan",
       run_id: "abc123"
     )
 
-    # System prompt should contain the workflow instruction with output contract
-    assert_includes captured_system, "workflow instruction"
-    assert_includes captured_system, "output contract"
+    config = payload[:bundle_config]
+    assert_includes config, "simulate-next-phase-plan.wf.md"
+  end
 
-    # User prompt should NOT hard-code schema - it's just source content
-    refute_includes captured_user, "findings: string[]"
-    refute_includes captured_user, "refinements: string[]"
-    assert_includes captured_user, "Source Reference: 285.06"
-    assert_includes captured_user, "source content text"
+  private
+
+  def build_executor(source_body:, llm_response:, llm_calls: nil, capture_prompt: nil,
+                     capture_system: nil, capture_config_path: nil, bundle_content: "bundle content")
+    mock_bundle = Struct.new(:content).new(bundle_content)
+
+    Ace::Taskflow::Molecules::NextPhaseStageExecutor.new(
+      file_reader: ->(_path) { source_body },
+      model_resolver: -> { "glite" },
+      bundle_load_file: lambda { |path|
+        capture_config_path&.call(path)
+        mock_bundle
+      },
+      llm_query: lambda { |model, prompt, **kwargs|
+        llm_calls&.push({ model: model, prompt: prompt, kwargs: kwargs })
+        capture_prompt&.call(prompt)
+        capture_system&.call(kwargs[:system])
+        { text: llm_response }
+      }
+    )
   end
 end

@@ -2,6 +2,7 @@
 
 require "json"
 require "yaml"
+require "tempfile"
 
 module Ace
   module Taskflow
@@ -16,11 +17,11 @@ module Ace
 
         VALID_STATUSES = %w[ok partial failed].freeze
 
-        def initialize(llm_query: nil, file_reader: nil, model_resolver: nil, bundle_loader: nil)
+        def initialize(llm_query: nil, file_reader: nil, model_resolver: nil, bundle_load_file: nil)
           @llm_query = llm_query || method(:default_llm_query)
           @file_reader = file_reader || method(:default_file_reader)
           @model_resolver = model_resolver || method(:default_model)
-          @bundle_loader = bundle_loader || method(:default_bundle_loader)
+          @bundle_load_file = bundle_load_file || method(:default_bundle_load_file)
         end
 
         def call(resolved_source:, mode:, run_id:, previous_stage_output: nil)
@@ -30,21 +31,19 @@ module Ace
           source_body = @file_reader.call(source_path)
           previous_artifact = build_previous_context(previous_stage_output)
 
-          # Load prompt structure from ace-bundle
-          bundle = load_simulation_bundle(mode)
+          # 1. Generate ace-bundle config file
+          config_content = build_bundle_config(mode)
 
-          # System prompt is the "system" section from bundle
-          system_prompt = extract_section_content(bundle, "system")
+          # 2. Write config to temp file and load via ace-bundle
+          bundle = load_bundle_from_config(config_content)
 
-          # User prompt is the "user" section template, interpolated
-          user_template = extract_section_content(bundle, "user")
-          user_prompt = interpolate_template(user_template,
-            source_reference: resolved_source[:input],
-            source_type: resolved_source[:type],
-            source_content: source_body,
-            previous_artifact: previous_artifact
-          )
+          # 3. System prompt = ace-bundle formatted output (project context + workflow in XML)
+          system_prompt = bundle.content
 
+          # 4. User prompt = pure idea content (+ previous artifact for plan stage)
+          user_prompt = build_user_prompt(source_body, previous_artifact)
+
+          # 5. Call LLM
           response = @llm_query.call(
             @model_resolver.call,
             user_prompt,
@@ -54,10 +53,11 @@ module Ace
             max_tokens: 6_000
           )
 
+          # 6. Return payload with prompts + config for saving
           payload = normalize_payload(response[:text], mode: mode)
-          # Include prompts for storage by runner
           payload[:system_prompt] = system_prompt
           payload[:user_prompt] = user_prompt
+          payload[:bundle_config] = config_content
           payload
         rescue StandardError => e
           raise e.class, "Next-phase stage '#{mode}' execution failed: #{e.message}", e.backtrace
@@ -65,107 +65,60 @@ module Ace
 
         private
 
-        def load_simulation_bundle(mode)
-          preset_name = "simulation-#{mode}"
-          @bundle_loader.call(preset_name)
+        def build_bundle_config(mode)
+          workflow_rel_path = resolve_workflow_path(mode)
+
+          <<~MARKDOWN
+            ---
+            bundle:
+              params:
+                format: markdown-xml
+              sections:
+                project_context:
+                  title: "Project Context"
+                  description: "Architecture, conventions, and tooling docs from the project preset."
+                  priority: 1
+                  presets:
+                    - project
+                workflow:
+                  title: "Workflow Instruction"
+                  description: "The simulation workflow. Follow its instructions, input contract, and output format exactly."
+                  priority: 2
+                  files:
+                    - #{workflow_rel_path}
+              embed_document_source: true
+            ---
+
+            # Simulation Context
+
+            Two sections follow:
+
+            1. `<project_context>` — Architecture, conventions, and tooling docs. Use to ground your response in real project patterns.
+            2. `<workflow>` — The simulation workflow for this stage. Follow its instructions, input contract, and output format exactly.
+          MARKDOWN
         end
 
-        def extract_section_content(bundle, section_name)
-          section = bundle.get_section(section_name)
-
-          if section.nil?
-            # Fallback: if no sections, use full bundle content for system
-            return bundle.content if section_name == "system" && bundle.content
-            return ""
-          end
-
-          # Check for inline content first (user section template)
-          inline_content = section[:content] || section["content"]
-          return inline_content if inline_content && !inline_content.empty?
-
-          # Check for processed files (system section)
-          processed_files = section[:_processed_files] || section["_processed_files"]
-          if processed_files && !processed_files.empty?
-            return format_files_content(processed_files)
-          end
-
-          # Fallback to bundle content for system section
-          return bundle.content if section_name == "system" && bundle.content
-
-          ""
-        end
-
-        def format_files_content(files)
-          files.map do |file_info|
-            path = file_info[:path] || file_info["path"]
-            content = file_info[:content] || file_info["content"]
-            <<~FILE
-              ### #{path}
-              ```
-              #{content}
-              ```
-            FILE
-          end.join("\n")
-        end
-
-        def interpolate_template(template, variables)
-          return "" if template.nil? || template.empty?
-
-          template.gsub(/\{\{(\w+)\}\}/) do
-            key = $1.to_sym
-            variables.key?(key) ? variables[key].to_s : ""
-          end
-        end
-
-        def default_bundle_loader(preset_name)
-          require "ace/bundle"
-          Ace::Bundle.load_preset(preset_name)
-        end
-
-        def load_workflow_content(mode, source_type: nil)
-          # Check config-defined phases first (allows per-source-type workflow override)
-          if source_type
-            config_path = workflow_path_from_config(mode, source_type)
-            if config_path
-              full_path = config_path.start_with?("/") ? config_path : File.join(gem_root, config_path)
-              return @file_reader.call(full_path)
-            end
-          end
-
+        def resolve_workflow_path(mode)
           rel_path = WORKFLOW_PATHS[mode]
           raise ArgumentError, "Unsupported simulation mode '#{mode}'" unless rel_path
 
-          @file_reader.call(File.join(gem_root, rel_path))
+          # Return gem-relative path (ace-taskflow/handbook/...)
+          "ace-taskflow/#{rel_path}"
         end
 
-        def workflow_path_from_config(mode, source_type)
-          phases = Ace::Taskflow.configuration.phases_for(source_type)
-          return nil unless phases
-
-          phase = phases.find { |p| p["mode"] == mode.to_s }
-          return nil unless phase
-
-          workflow_ref = phase["workflow"]
-          return nil unless workflow_ref
-
-          resolve_workflow_ref(workflow_ref)
+        def load_bundle_from_config(config_content)
+          Tempfile.create(["simulation-bundle-", ".md"]) do |tmpfile|
+            tmpfile.write(config_content)
+            tmpfile.flush
+            @bundle_load_file.call(tmpfile.path)
+          end
         end
 
-        def resolve_workflow_ref(workflow_ref)
-          return workflow_ref unless workflow_ref.start_with?("wfi://")
-
-          # Convert wfi://namespace/name to gem-relative handbook path
-          without_scheme = workflow_ref.sub("wfi://", "")
-          parts = without_scheme.split("/", 2)
-          namespace = parts[0]
-          name = parts[1]
-          "handbook/workflow-instructions/#{namespace}/#{name}.wf.md"
-        end
-
-        def gem_root
-          @gem_root ||= begin
-            spec_root = ::Gem.loaded_specs["ace-taskflow"]&.gem_dir
-            spec_root || File.expand_path("../../../..", __dir__)
+        def build_user_prompt(source_body, previous_artifact)
+          if previous_artifact == "null"
+            source_body
+          else
+            "#{source_body}\n\n---\n\n#{previous_artifact}"
           end
         end
 
@@ -317,6 +270,11 @@ module Ace
           require "ace/llm/molecules/llm_alias_resolver"
 
           Ace::LLM::QueryInterface.query(model, prompt, **kwargs)
+        end
+
+        def default_bundle_load_file(path)
+          require "ace/bundle"
+          Ace::Bundle.load_file(path)
         end
 
         def default_file_reader(path)

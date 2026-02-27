@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.1] - 2026-02-27
+
+### Changed
+- Simulation bundle config uses ace-bundle sections to separate project context from workflow instruction
+- System prompt now renders as named XML sections (`<project_context>`, `<workflow>`) instead of a flat `<files>` block
+- Removed standalone simulation presets (simulation-draft, simulation-plan) in favor of inline sections config
+
+### Technical
+- Added minimal project preset fixture to integration test for section processor compatibility
+
 ## [0.45.0] - 2026-02-26
 
 ### Added

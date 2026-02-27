@@ -14,6 +14,11 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       source_path = File.join(dir, "tmp-task-source.s.md")
       File.write(source_path, "# Temporary source\n")
 
+      # Create minimal project preset so ace-bundle section processor can resolve it
+      preset_dir = File.join(dir, ".ace", "bundle", "presets")
+      FileUtils.mkdir_p(preset_dir)
+      File.write(File.join(preset_dir, "project.md"), "---\nbundle:\n  files: []\n---\n")
+
       cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations", SecureRandom.hex(4))
       store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
       runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(session_store: store)
@@ -35,7 +40,10 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       source_path = File.join(dir, "task-source.s.md")
       File.write(source_path, "# Task\n")
 
+      cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations")
+      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
       runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(
+        session_store: store,
         stage_executor: lambda { |mode:, run_id:, **_args|
           {
             run_id: run_id,
@@ -74,7 +82,9 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
         }
       end
 
-      runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(stage_executor: stage_executor)
+      cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations")
+      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
+      runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(session_store: store, stage_executor: stage_executor)
       result = runner.run(source: source_path, modes: ["plan", "draft"], no_writeback: false)
 
       assert_equal "done", result.dig(:session, :status)
@@ -134,7 +144,10 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       source_path = File.join(ideas_dir, "partial-plan.idea.s.md")
       File.write(source_path, "# Idea\n")
 
+      cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations")
+      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
       runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(
+        session_store: store,
         stage_executor: lambda { |mode:, **_args|
           if mode == "plan"
             raise "synthetic plan failure"
@@ -216,7 +229,10 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       source_path = File.join(dir, "task-source.s.md")
       File.write(source_path, "# Task\n")
 
+      cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations")
+      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
       runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(
+        session_store: store,
         stage_executor: lambda { |mode:, **_args|
           raise "synthetic work failure" if mode == "work"
 
@@ -251,7 +267,10 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       source_path = File.join(dir, "task-source.s.md")
       File.write(source_path, "# Task\n")
 
+      cache_root = File.join(dir, ".cache", "ace-taskflow", "simulations")
+      store = Ace::Taskflow::Molecules::SimulationSessionStore.new(cache_root: cache_root)
       runner = Ace::Taskflow::Organisms::NextPhaseSimulationRunner.new(
+        session_store: store,
         stage_executor: lambda { |mode:, **_args|
           # LLM returns failed status for draft mode
           if mode == "draft"

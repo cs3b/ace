@@ -171,6 +171,13 @@ module Ace
               stage_payload[:system_prompt]
             )
           end
+          if stage_payload[:bundle_config]
+            @session_store.write_markdown_artifact(
+              session_dir,
+              ".prompts/#{mode}-bundle-config.md",
+              stage_payload[:bundle_config]
+            )
+          end
         end
 
         def persist_run_artifacts(session:, session_dir:, run_id:, resolved_source:, normalized_modes:,
