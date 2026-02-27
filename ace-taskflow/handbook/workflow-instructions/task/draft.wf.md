@@ -188,8 +188,18 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * [ ] Behavioral specifications are complete
      * [ ] Interface contracts are defined
      * [ ] Success criteria are measurable
+     * [ ] Draft is decision-complete: no unresolved behavior choices left for implementer
+     * [ ] Defaults are explicit where behavior could otherwise be ambiguous
 
-10. **Provide Behavioral Summary**
+10. **Run Quality Pass (Better, Not More)**
+   * Perform one concise quality pass before finalizing:
+     * Happy path is concrete and observable
+     * At least one invalid/failure path is specified
+     * Unspecified behavior has explicit defaults
+     * Success criteria are directly verifiable
+   * Improve clarity and precision without adding specialized sections
+
+11. **Provide Behavioral Summary**
    * List all created draft tasks with their:
      * IDs and titles
      * User experience summaries
