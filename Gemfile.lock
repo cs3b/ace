@@ -3,7 +3,7 @@ PATH
   specs:
     ace-assign (0.13.4)
       ace-b36ts (~> 0.7)
-      ace-llm (~> 0.23)
+      ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-markdown (~> 0.2)
@@ -34,7 +34,7 @@ PATH
     ace-docs (0.21.1)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
-      ace-llm (~> 0.23)
+      ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-markdown (~> 0.2)
@@ -109,12 +109,12 @@ PATH
   remote: ace-llm-providers-cli
   specs:
     ace-llm-providers-cli (0.19.3)
-      ace-llm (~> 0.23)
+      ace-llm (~> 0.24)
 
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.23.1)
+    ace-llm (0.24.3)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       addressable (~> 2.8)
@@ -236,7 +236,7 @@ PATH
     ace-taskflow (0.42.9)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
-      ace-llm (~> 0.23)
+      ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-mac-clipboard (~> 0.2)
@@ -249,7 +249,7 @@ PATH
   specs:
     ace-test-runner-e2e (0.20.5)
       ace-b36ts (~> 0.7)
-      ace-llm (~> 0.23)
+      ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       dry-cli (~> 1.0)
