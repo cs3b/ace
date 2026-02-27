@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.8] - 2026-02-27
+
+### Fixed
+- Strip `ACE_ASSIGN_ID` and `ACE_ASSIGN_FORK_ROOT` from subprocess environments in `test_executor`, `process_monitor`, and rake-task invocation paths to prevent assignment context leakage into test runs
+- Add regression coverage in `rake_task_test` verifying assignment context variables are unset for spawned test processes
+
 ## [0.15.7] - 2026-02-24
 
 ### Technical

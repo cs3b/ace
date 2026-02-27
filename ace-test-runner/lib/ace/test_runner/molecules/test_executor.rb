@@ -33,7 +33,13 @@ module Ace
           status = nil
 
           # Set environment to prevent Minitest autorun at_exit hook
-          env = { "MT_NO_AUTORUN" => "1" }
+          # Also strip assignment context vars to prevent tests from resolving to wrong assignments
+          # Inherit parent environment and override specific vars (nil unsets at exec time)
+          env = ENV.to_h.merge({
+            "MT_NO_AUTORUN" => "1",
+            "ACE_ASSIGN_ID" => nil,
+            "ACE_ASSIGN_FORK_ROOT" => nil
+          })
 
           # Remove MT_NO_AUTORUN=1 from command if it's there
           command = command.sub(/^MT_NO_AUTORUN=1\s+/, '')
