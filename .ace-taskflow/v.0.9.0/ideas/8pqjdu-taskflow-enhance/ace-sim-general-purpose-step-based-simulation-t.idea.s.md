@@ -1,8 +1,3 @@
----
-status: done
-completed_at: 2026-02-27T13:04:04+00:00
----
-
 # Idea
 
 # ace-sim: General-purpose step-based simulation too...
