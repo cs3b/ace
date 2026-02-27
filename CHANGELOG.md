@@ -4,6 +4,54 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.672] - 2026-02-27
+
+### Technical
+- **ace-llm v0.24.3**: Document `ZAI_API_KEY` in README
+
+## [0.9.671] - 2026-02-27
+
+### Fixed
+- **ace-llm v0.24.2**: Add project-level fallback providers, restore CLI error diagnostics, tighten window-limit pattern
+
+## [0.9.670] - 2026-02-27
+
+### Fixed
+- **ace-llm v0.24.1**: Narrow quota-detection patterns to avoid false positives on "credit"-containing error messages
+
+## [0.9.669] - 2026-02-27
+
+### Added
+- **ace-llm v0.24.0**: Native `zai` API provider with direct HTTP calls and bearer auth, supporting `glm-4.7-flashx`, `glm-4.7`, and `glm-5` models
+- **ace-llm v0.24.0**: Centralized `llm.fallback` config for shared fallback policy across QueryInterface and CLI callers
+
+### Fixed
+- **ace-llm v0.24.0**: Quota/credit/window-limit exhaustion triggers immediate provider fallback; fallback chains normalize and deduplicate entries
+
+### Changed
+- **ace-llm v0.24.0**: CLI query execution routes through `Ace::LLM::QueryInterface` for consistent fallback behavior
+- Updated `ace-llm` dependency constraints to `~> 0.24` across dependent gems (ace-taskflow, ace-docs, ace-assign, ace-test-runner-e2e, ace-llm-providers-cli)
+
+## [0.9.668] - 2026-02-27
+
+### Added
+- **ace-llm v0.23.3**: Add centralized `llm.fallback` defaults in package config to define shared fallback policy for QueryInterface callers and CLI usage
+
+### Fixed
+- **ace-llm v0.23.3**: Treat quota/credit/window-limit exhaustion as immediate provider fallback and normalize/deduplicate configured fallback chains (including aliases)
+
+### Changed
+- **ace-llm v0.23.3**: Route `ace-llm` CLI query execution through `Ace::LLM::QueryInterface` to align fallback behavior across CLI and Ruby API callers
+- **ace-llm v0.23.3**: Update fallback documentation to use `.ace/llm/config.yml` (`llm.fallback`) as the primary contract with legacy env compatibility
+
+## [0.9.667] - 2026-02-27
+
+### Added
+- **ace-llm v0.23.2**: Add native `zai` API provider with direct HTTP query path and registered model set (`glm-4.7-flashx`, `glm-4.7`, `glm-5`)
+
+### Fixed
+- **ace-llm v0.23.2**: Improve Z.AI provider error diagnostics for upstream HTTP and non-JSON failure responses
+
 ## [0.9.666] - 2026-02-27
 
 ### Changed
