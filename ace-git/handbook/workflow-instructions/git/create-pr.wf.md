@@ -84,6 +84,7 @@ Use this order:
 ## 📁 File Changes
 ## 🧪 Test Evidence
 ## 📦 Releases
+## 🎮 Demo
 ```
 
 Section sourcing rules:
@@ -95,6 +96,7 @@ Section sourcing rules:
 | File Changes | `ace-git diff --format grouped-stats` | Manual unstructured file list |
 | Test Evidence | Test names mapped to behaviors + totals | Raw command output paste |
 | Releases | CHANGELOG diff entries | Duplicating Changes section |
+| Demo | Runnable commands from README/usage.md + observed output | Screenshots, prose-only descriptions without commands |
 
 **Grouped-stats formatting rule:**
 - The `## 📁 File Changes` section must wrap grouped-stats output inside a fenced code block (```)
@@ -112,10 +114,16 @@ Bullet formatting rules:
 - In Test Evidence, bold the test class name: `- **GroupedStatsFormatterTest** (6 tests) — validates...`
 - In Releases, bold the package+version: `- **ace-git v0.11.0–v0.11.6** — Add grouped-stats format...`
 
+Demo section rules:
+- Include `## 🎮 Demo` when the PR introduces a user-facing CLI or runnable entry point
+- Structure: `### Run` (exact command), `### Expected Output`, `### Artifacts` (where to find results)
+- Omit when: no user-facing CLI, no runnable entry point, or purely internal refactoring
+
 Omission/fallback rules:
 - No changelog evidence -> omit `## 📦 Releases`
 - No test-file evidence -> `## 🧪 Test Evidence` may include totals-only validation
 - grouped-stats unavailable -> fallback to flat file list in `## 📁 File Changes`
+- No user-facing CLI or runnable entry point -> omit `## 🎮 Demo`
 - Omit any section lacking evidence; never leave empty placeholders
 
 #### Grouped-stats example
@@ -214,6 +222,11 @@ gh pr checks
 ## 📦 Releases
 
 - **[package vX.Y.Z]** — [CHANGELOG entry from diff]
+
+## 🎮 Demo
+
+[Runnable command(s) demonstrating the feature — omit section if no user-facing CLI]
+[Expected output and artifact locations]
 </template>
 
 <template path="ace-git/handbook/templates/pr/bugfix.template.md">
@@ -263,5 +276,10 @@ gh pr checks
 ## 📦 Releases
 
 - **[package vX.Y.Z]** — [CHANGELOG entry from diff, if any]
+
+## 🎮 Demo
+
+[Runnable command(s) demonstrating the change — omit section if no user-facing CLI]
+[Expected output and artifact locations]
 </template>
 </documents>
