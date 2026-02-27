@@ -4,6 +4,10 @@ llm:
     retry_count: 2
     retry_delay: 1.0
     max_total_timeout: 60.0
+    chains:
+      glite: [zai:glm-4.7-flashx, codex]
+      zai: [glite, codex]
+      codex: [glite, zai:glm-4.7-flashx]
     providers:
       - glite
       - codex

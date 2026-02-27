@@ -308,6 +308,54 @@ module Ace
           end
         end
 
+        def test_uses_per_provider_chain_for_matching_primary
+          config = Models::FallbackConfig.new(
+            retry_count: 0,
+            chains: { "google" => ["anthropic"] },
+            providers: ["openai"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback
+          )
+
+          registry = MockRegistry.new
+          registry.add_client("google", MockClient.new(errors: [mock_server_error(503)]))
+          registry.add_client("anthropic", MockClient.new(response: "chain success"))
+          registry.add_client("openai", MockClient.new(response: "default success"))
+
+          result = orchestrator.execute(primary_provider: "google", registry: registry) do |client|
+            client.call
+          end
+
+          assert_equal "chain success", result
+          assert_includes @status_messages.join, "Trying fallback provider anthropic"
+          refute_includes @status_messages.join, "openai"
+        end
+
+        def test_uses_default_providers_when_primary_not_in_chains
+          config = Models::FallbackConfig.new(
+            retry_count: 0,
+            chains: { "google" => ["anthropic"] },
+            providers: ["openai"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback
+          )
+
+          registry = MockRegistry.new
+          registry.add_client("mistral", MockClient.new(errors: [mock_server_error(503)]))
+          registry.add_client("openai", MockClient.new(response: "default success"))
+
+          result = orchestrator.execute(primary_provider: "mistral", registry: registry) do |client|
+            client.call
+          end
+
+          assert_equal "default success", result
+          assert_includes @status_messages.join, "Trying fallback provider openai"
+        end
+
         def test_reports_status_for_different_error_types
           config = Models::FallbackConfig.new(
             retry_count: 1,
