@@ -148,6 +148,7 @@ export TOGETHER_API_KEY="your-key"    # or TOGETHERAI_API_KEY
 export XAI_API_KEY="your-key"         # x.ai / Grok
 export GROQ_API_KEY="your-key"        # Groq ultra-fast inference
 export OPENROUTER_API_KEY="your-key"  # OpenRouter unified API
+export ZAI_API_KEY="your-key"         # Z.AI / GLM models
 ```
 
 ### Aliases Configuration
@@ -201,44 +202,39 @@ First configuration found wins if there are duplicates.
 
 ace-llm supports automatic provider fallback with retry logic for improved reliability. When a provider fails due to transient errors (503, 429, timeouts), the system will automatically retry with exponential backoff and fall back to alternative providers.
 
-#### Environment Variables
+#### Primary YAML Configuration
 
-Configure fallback behavior via environment variables:
-
-```bash
-# Enable/disable fallback (default: true)
-export ACE_LLM_FALLBACK_ENABLED=true
-
-# Number of retries before fallback (default: 3)
-export ACE_LLM_FALLBACK_RETRY_COUNT=3
-
-# Initial retry delay in seconds (default: 1.0)
-export ACE_LLM_FALLBACK_RETRY_DELAY=1.0
-
-# Maximum total timeout for all retries and fallbacks in seconds (default: 30.0)
-export ACE_LLM_FALLBACK_MAX_TOTAL_TIMEOUT=30.0
-
-# Fallback provider chain (comma-separated)
-export ACE_LLM_FALLBACK_PROVIDERS="anthropic:claude-3-5-sonnet,openai:gpt-4o"
-```
-
-#### YAML Configuration
-
-Create `.ace/llm/fallback.yml` for project-specific fallback settings:
+Configure fallback centrally in `.ace/llm/config.yml`:
 
 ```yaml
-# .ace/llm/fallback.yml
-enabled: true
-retry_count: 3
-retry_delay: 1.0
-max_total_timeout: 30.0
-providers:
-  - anthropic:claude-3-5-sonnet
-  - openai:gpt-4o
-  - google:gemini-2.5-flash
+# .ace/llm/config.yml
+llm:
+  fallback:
+    enabled: true
+    retry_count: 3
+    retry_delay: 1.0
+    max_total_timeout: 30.0
+    providers:
+      - anthropic:claude-3-5-sonnet
+      - openai:gpt-4o
+      - google:gemini-2.5-flash
 ```
 
-Or configure in `~/.config/ace-llm/fallback.yml` for user-wide settings.
+This shared `llm.fallback` policy is used by both `Ace::LLM::QueryInterface` callers (for example `ace-git-commit`) and `ace-llm query`.
+
+#### Legacy Environment Overrides
+
+Environment variables are still supported for compatibility and temporary overrides:
+
+```bash
+export ACE_LLM_FALLBACK_ENABLED=true
+export ACE_LLM_FALLBACK_RETRY_COUNT=3
+export ACE_LLM_FALLBACK_RETRY_DELAY=1.0
+export ACE_LLM_FALLBACK_MAX_TOTAL_TIMEOUT=30.0
+# Backward-compatible alias still accepted:
+export ACE_LLM_FALLBACK_MAX_TIMEOUT=30.0
+export ACE_LLM_FALLBACK_PROVIDERS="anthropic:claude-3-5-sonnet,openai:gpt-4o"
+```
 
 #### Provider Chain Examples
 
@@ -282,8 +278,8 @@ providers:
 4. **All providers fail** → Return error with helpful diagnostics
 
 **Error Classification**:
-- **Retry with backoff**: 429 (rate limit), 500/502/503 (server errors), 504 (timeout)
-- **Skip to next immediately**: 401/403 (auth errors), timeouts, network failures
+- **Retry with backoff**: overload/unavailable/rate-limit style failures (including HTTP 429/500/502/503/504)
+- **Skip to next immediately**: auth failures, quota/credit/window-limit exhaustion, and timeouts
 - **Terminal**: Invalid requests, unsupported operations
 
 **User Feedback**:

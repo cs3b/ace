@@ -24,6 +24,23 @@ module Ace
           504 => RETRYABLE_WITH_BACKOFF  # Gateway Timeout - retry
         }.freeze
 
+        QUOTA_LIMIT_PATTERNS = [
+          "insufficient_quota",
+          "insufficient quota",
+          "quota exceeded",
+          "quota has been exceeded",
+          "quota limit",
+          "quota exhausted",
+          "out of credit",
+          "credits exhausted",
+          "insufficient credit",
+          "billing hard limit",
+          "spending limit",
+          "usage limit reached",
+          "rate window limit",
+          "window limit reached"
+        ].freeze
+
         # Classify an error for retry/fallback decisions
         # @param error [Exception] The error to classify
         # @return [Symbol] Classification type (RETRYABLE_WITH_BACKOFF, FALLBACK_IMMEDIATELY, SKIP_TO_NEXT, TERMINAL)
@@ -71,6 +88,14 @@ module Ace
           classification == SKIP_TO_NEXT
         end
 
+        # Determine if an error indicates quota/credit/window exhaustion
+        # and should move immediately to the next provider.
+        # @param error [Exception] The error to check
+        # @return [Boolean] True if this is a quota/credit/window-limit condition
+        def self.quota_or_credit_limited?(error)
+          quota_like_message?(error.message.to_s)
+        end
+
         # Extract HTTP status code from various error types
         # @param error [Exception] The error
         # @return [Integer, nil] HTTP status code if available
@@ -112,6 +137,10 @@ module Ace
         # @return [Symbol] Classification type
         def self.classify_faraday_error(error)
           status = extract_status_code(error)
+          if status == 429 && quota_like_message?(error.message.to_s)
+            return FALLBACK_IMMEDIATELY
+          end
+
           STATUS_CLASSIFICATIONS.fetch(status, TERMINAL)
         end
         private_class_method :classify_faraday_error
@@ -120,11 +149,13 @@ module Ace
         # @param error [Ace::LLM::ProviderError] The error
         # @return [Symbol] Classification type
         def self.classify_provider_error(error)
+          message = error.message.downcase
+          return FALLBACK_IMMEDIATELY if quota_like_message?(message)
+
           status = extract_status_code(error)
           return STATUS_CLASSIFICATIONS.fetch(status, TERMINAL) if status
 
           # Check error message patterns
-          message = error.message.downcase
           if message.include?("timeout")
             FALLBACK_IMMEDIATELY
           elsif message.include?("rate limit")
@@ -138,6 +169,12 @@ module Ace
           end
         end
         private_class_method :classify_provider_error
+
+        def self.quota_like_message?(message)
+          normalized = message.to_s.downcase
+          QUOTA_LIMIT_PATTERNS.any? { |pattern| normalized.include?(pattern) }
+        end
+        private_class_method :quota_like_message?
 
         # Parse retry-after header value
         # @param value [String] Header value (seconds or HTTP date)

@@ -31,6 +31,7 @@ module Ace
       # @param system_file [String, nil] Path to system prompt file (for file-based providers)
       # @param prompt_file [String, nil] Path to user prompt file (for file-based providers)
       # @param cli_args [String, Array<String>, nil] Extra args for CLI providers (auto-prefixed with --)
+      # @param system_append [String, nil] Additional system content appended by compatible providers
       #
       # @return [Hash] Response with :text, :model, :provider, and other metadata
       # @raise [Error] If provider/model invalid or request fails
@@ -50,6 +51,7 @@ module Ace
                     system_file: nil,
                     prompt_file: nil,
                     cli_args: nil,
+                    system_append: nil,
                     sandbox: nil,
                     subprocess_env: nil)
 
@@ -89,6 +91,7 @@ module Ace
         generation_opts[:system_file] = system_file if system_file
         generation_opts[:prompt_file] = prompt_file if prompt_file
         generation_opts[:cli_args] = cli_args if cli_args && !(cli_args.respond_to?(:empty?) && cli_args.empty?)
+        generation_opts[:system_append] = system_append if system_append && !system_append.empty?
         generation_opts[:sandbox] = sandbox if sandbox
         generation_opts[:subprocess_env] = subprocess_env if subprocess_env
 
@@ -101,7 +104,7 @@ module Ace
         end
 
         # Load fallback configuration
-        fallback_config = load_fallback_config(fallback, fallback_providers)
+        fallback_config = load_fallback_config(fallback, fallback_providers, parser: parser)
 
         # Execute with or without fallback
         # Resolve timeout from config cascade if not provided
@@ -161,37 +164,34 @@ module Ace
       # Load fallback configuration from parameters and environment
       # @param fallback [Boolean, nil] Explicit fallback enable/disable
       # @param fallback_providers [Array<String>, nil] Custom provider list
+      # @param parser [Molecules::ProviderModelParser, nil] Parser for alias/provider normalization
       # @return [Models::FallbackConfig] Fallback configuration
-      def self.load_fallback_config(fallback, fallback_providers)
-        # Check environment variable for enabled status
-        env_enabled = ENV["ACE_LLM_FALLBACK_ENABLED"]
-        enabled = if fallback.nil?
-                   env_enabled.nil? ? true : env_enabled.downcase == "true"
-                 else
-                   fallback
-                 end
+      def self.load_fallback_config(fallback, fallback_providers, parser: nil)
+        parser ||= Molecules::ProviderModelParser.new
 
-        # Check environment variable for provider list
-        env_providers = ENV["ACE_LLM_FALLBACK_PROVIDERS"]
-        providers = if fallback_providers
-                     fallback_providers
-                   elsif env_providers
-                     env_providers.split(",").map(&:strip)
-                   else
-                     []
-                   end
+        # Normalize at each merge layer to prevent FallbackConfig#validate_providers!
+        # from rejecting duplicates during intermediate merges (e.g., config + env both
+        # specifying the same provider). Final normalization deduplicates the merged result.
 
-        # Load other settings from environment
-        retry_count = ENV["ACE_LLM_FALLBACK_RETRY_COUNT"]&.to_i || 3
-        retry_delay = ENV["ACE_LLM_FALLBACK_RETRY_DELAY"]&.to_f || 1.0
-        max_total_timeout = ENV["ACE_LLM_FALLBACK_MAX_TIMEOUT"]&.to_f || 30.0
+        # Baseline from config cascade (project/user/defaults)
+        config_fallback = Molecules::ConfigLoader.get("llm.fallback")
+        normalized_config_fallback = normalize_fallback_provider_hash(config_fallback, parser)
+        config = Models::FallbackConfig.from_hash(normalized_config_fallback)
 
-        Models::FallbackConfig.new(
-          enabled: enabled,
-          retry_count: retry_count,
-          retry_delay: retry_delay,
-          providers: providers,
-          max_total_timeout: max_total_timeout
+        # Keep legacy env overrides for backward compatibility
+        env_overrides = load_fallback_env_overrides
+        env_overrides = normalize_fallback_provider_hash(env_overrides, parser)
+        config = config.merge(env_overrides) unless env_overrides.empty?
+
+        # Explicit call-site values always win
+        explicit_overrides = {}
+        explicit_overrides[:enabled] = fallback unless fallback.nil?
+        explicit_overrides[:providers] = fallback_providers if fallback_providers
+        explicit_overrides = normalize_fallback_provider_hash(explicit_overrides, parser)
+        config = config.merge(explicit_overrides) unless explicit_overrides.empty?
+
+        config.merge(
+          providers: normalize_fallback_providers(config.providers, parser)
         )
       end
 
@@ -265,6 +265,98 @@ module Ace
           response.to_s
         end
       end
+
+      # Load fallback-related environment variables as overrides.
+      # Keeps compatibility with the previous fallback configuration contract.
+      def self.load_fallback_env_overrides
+        overrides = {}
+
+        env_enabled = ENV["ACE_LLM_FALLBACK_ENABLED"]
+        overrides[:enabled] = parse_env_boolean(env_enabled) unless env_enabled.nil?
+
+        env_providers = ENV["ACE_LLM_FALLBACK_PROVIDERS"]
+        if env_providers && !env_providers.strip.empty?
+          overrides[:providers] = env_providers.split(",").map(&:strip)
+        end
+
+        retry_count = parse_env_integer(ENV["ACE_LLM_FALLBACK_RETRY_COUNT"])
+        overrides[:retry_count] = retry_count unless retry_count.nil?
+
+        retry_delay = parse_env_float(ENV["ACE_LLM_FALLBACK_RETRY_DELAY"])
+        overrides[:retry_delay] = retry_delay unless retry_delay.nil?
+
+        max_timeout = ENV["ACE_LLM_FALLBACK_MAX_TOTAL_TIMEOUT"] || ENV["ACE_LLM_FALLBACK_MAX_TIMEOUT"]
+        parsed_max_timeout = parse_env_float(max_timeout)
+        overrides[:max_total_timeout] = parsed_max_timeout unless parsed_max_timeout.nil?
+
+        overrides
+      end
+      private_class_method :load_fallback_env_overrides
+
+      def self.normalize_fallback_providers(providers, parser)
+        seen = {}
+        normalized = []
+
+        Array(providers).each do |raw_provider|
+          provider = raw_provider.to_s.strip
+          next if provider.empty?
+
+          parse_result = parser.parse(provider)
+          canonical_provider = if parse_result.valid?
+                                 "#{parse_result.provider}:#{parse_result.model}"
+                               else
+                                 provider
+                               end
+
+          next if seen[canonical_provider]
+
+          seen[canonical_provider] = true
+          normalized << canonical_provider
+        end
+
+        normalized
+      end
+      private_class_method :normalize_fallback_providers
+
+      def self.normalize_fallback_provider_hash(hash, parser)
+        return {} unless hash
+
+        normalized = hash.dup
+        providers = normalized[:providers] || normalized["providers"]
+        return normalized unless providers
+
+        normalized_providers = normalize_fallback_providers(providers, parser)
+        normalized[:providers] = normalized_providers
+        normalized["providers"] = normalized_providers if normalized.key?("providers")
+        normalized
+      end
+      private_class_method :normalize_fallback_provider_hash
+
+      def self.parse_env_boolean(value)
+        return true if value.to_s.strip.downcase == "true"
+        return false if value.to_s.strip.downcase == "false"
+
+        nil
+      end
+      private_class_method :parse_env_boolean
+
+      def self.parse_env_integer(value)
+        return nil if value.nil? || value.strip.empty?
+
+        Integer(value)
+      rescue ArgumentError
+        nil
+      end
+      private_class_method :parse_env_integer
+
+      def self.parse_env_float(value)
+        return nil if value.nil? || value.strip.empty?
+
+        Float(value)
+      rescue ArgumentError
+        nil
+      end
+      private_class_method :parse_env_float
     end
   end
 end

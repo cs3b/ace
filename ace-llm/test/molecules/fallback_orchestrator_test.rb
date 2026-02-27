@@ -157,6 +157,30 @@ module Ace
           assert_includes @status_messages.join, "timeout"
         end
 
+        def test_skips_to_next_immediately_on_quota_error
+          config = Models::FallbackConfig.new(
+            retry_count: 3,
+            providers: ["anthropic"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback
+          )
+
+          registry = MockRegistry.new
+          quota_error = Ace::LLM::ProviderError.new("insufficient_quota: exhausted credits")
+          registry.add_client("google", MockClient.new(errors: [quota_error]))
+          registry.add_client("anthropic", MockClient.new(response: "fallback success"))
+
+          result = orchestrator.execute(primary_provider: "google", registry: registry) do |client|
+            client.call
+          end
+
+          assert_equal "fallback success", result
+          assert_includes @status_messages.join, "quota/credit/window limit reached"
+          refute_includes @status_messages.join, "retrying"
+        end
+
         def test_tries_multiple_fallback_providers
           config = Models::FallbackConfig.new(
             retry_count: 0,
