@@ -9,8 +9,8 @@ tool-under-test: ace-sim
 
 sandbox-layout:
   results/tc/01/: "Help survey observations"
-  results/tc/02/: "Preset and step config contract evidence"
-  results/tc/03/: "Preset run and chained artifact evidence"
+  results/tc/02/: "Default preset behavioral run evidence"
+  results/tc/03/: "Explicit CLI override behavioral run evidence"
 
 e2e-justification: >
   This scenario validates end-to-end CLI execution and file-chained artifact
@@ -18,11 +18,10 @@ e2e-justification: >
   verifies real binary behavior.
 
 requires:
-  tools: [ace-sim, ace-llm]
+  tools: [ace-sim, ace-llm, ace-bundle]
 
 setup:
   - git-init
   - run: "cp $PROJECT_ROOT_PATH/mise.toml mise.toml && mise trust mise.toml"
-  - copy-fixtures
   - agent-env:
       PROJECT_ROOT_PATH: .
