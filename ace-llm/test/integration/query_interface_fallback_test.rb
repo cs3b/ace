@@ -133,6 +133,32 @@ module Ace
         ENV.delete("ACE_LLM_FALLBACK_PROVIDERS")
       end
 
+      def test_chains_loaded_from_config_and_aliases_normalized
+        parser = FakeParser.new(
+          "glite" => FakeParseResult.new("google", "gemini-2.0-flash-lite", true),
+          "codex" => FakeParseResult.new("openai", "codex-mini", true),
+          "zai:glm-4.7-flashx" => FakeParseResult.new("zai", "glm-4.7-flashx", true)
+        )
+
+        config = with_config_fallback(
+          "chains" => {
+            "glite" => ["zai:glm-4.7-flashx", "codex"],
+            "zai" => ["glite", "codex"]
+          },
+          "providers" => ["glite", "codex"]
+        ) do
+          QueryInterface.send(:load_fallback_config, nil, nil, parser: parser)
+        end
+
+        # Chains should be normalized
+        assert_equal ["zai:glm-4.7-flashx", "openai:codex-mini"], config.providers_for("glite")
+        assert_equal ["google:gemini-2.0-flash-lite", "openai:codex-mini"], config.providers_for("zai")
+        # Default providers also normalized
+        assert_equal ["google:gemini-2.0-flash-lite", "openai:codex-mini"], config.providers
+        # Unknown primary gets default providers
+        assert_equal config.providers, config.providers_for("unknown")
+      end
+
       def test_fallback_providers_are_deduplicated_preserving_order
         parser = FakeParser.new(
           "glite" => FakeParseResult.new("google", "gemini-2.0-flash-lite", true),

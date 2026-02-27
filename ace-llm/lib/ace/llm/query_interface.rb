@@ -190,8 +190,13 @@ module Ace
         explicit_overrides = normalize_fallback_provider_hash(explicit_overrides, parser)
         config = config.merge(explicit_overrides) unless explicit_overrides.empty?
 
+        normalized_chains = config.chains.transform_values do |chain|
+          normalize_fallback_providers(chain, parser)
+        end
+
         config.merge(
-          providers: normalize_fallback_providers(config.providers, parser)
+          providers: normalize_fallback_providers(config.providers, parser),
+          chains: normalized_chains
         )
       end
 
@@ -323,11 +328,21 @@ module Ace
 
         normalized = hash.dup
         providers = normalized[:providers] || normalized["providers"]
-        return normalized unless providers
+        if providers
+          normalized_providers = normalize_fallback_providers(providers, parser)
+          normalized[:providers] = normalized_providers
+          normalized["providers"] = normalized_providers if normalized.key?("providers")
+        end
 
-        normalized_providers = normalize_fallback_providers(providers, parser)
-        normalized[:providers] = normalized_providers
-        normalized["providers"] = normalized_providers if normalized.key?("providers")
+        chains = normalized[:chains] || normalized["chains"]
+        if chains.is_a?(Hash)
+          normalized_chains = chains.transform_values do |chain|
+            normalize_fallback_providers(Array(chain), parser)
+          end
+          normalized[:chains] = normalized_chains
+          normalized["chains"] = normalized_chains if normalized.key?("chains")
+        end
+
         normalized
       end
       private_class_method :normalize_fallback_provider_hash

@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.673] - 2026-02-27
+
+### Added
+- **ace-llm v0.24.4**: Per-provider fallback chains — each primary provider gets its own contextual fallback order via `chains` config map
+
 ## [0.9.672] - 2026-02-27
 
 ### Technical
