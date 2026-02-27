@@ -38,8 +38,8 @@ module Ace
           result = try_provider_with_retry(primary_provider, registry) { |client| yield client }
           return result if result
 
-          # Try fallback providers in order
-          @config.providers.each do |fallback_provider|
+          # Try fallback providers in order (per-provider chain or default)
+          @config.providers_for(primary_provider).each do |fallback_provider|
             # Skip if we've already tried this provider
             next if @visited_providers.include?(fallback_provider)
 
