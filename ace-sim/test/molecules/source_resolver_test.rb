@@ -16,9 +16,8 @@ class SourceResolverTest < AceSimTestCase
 
       result = @resolver.resolve(file)
 
-      assert_equal file, result["normalized"]
       assert_equal File.expand_path(file), result["path"]
-      assert_equal "file", result["kind"]
+      assert_equal ["path"], result.keys
     end
   end
 

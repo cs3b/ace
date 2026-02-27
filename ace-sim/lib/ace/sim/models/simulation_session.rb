@@ -11,8 +11,8 @@ module Ace
                        run_id: nil, step_bundles: {})
           @preset = preset.to_s.strip
           @source = source.to_s.strip
-          @steps = Array(steps).map(&:to_s).map(&:strip).reject(&:empty?)
-          @providers = Array(providers).map(&:to_s).map(&:strip).reject(&:empty?)
+          @steps = Ace::Sim.normalize_list(steps)
+          @providers = Ace::Sim.normalize_list(providers)
           @repeat = Integer(repeat)
           @dry_run = !!dry_run
           @writeback = !!writeback
@@ -25,10 +25,6 @@ module Ace
 
         def dry_run?
           dry_run
-        end
-
-        def writeback?
-          writeback
         end
 
         def regenerate_run_id!
@@ -55,11 +51,10 @@ module Ace
         private
 
         def validate!
-          raise Ace::Sim::ValidationError, "source cannot be empty" if source.empty?
           raise Ace::Sim::ValidationError, "steps cannot be empty" if steps.empty?
           raise Ace::Sim::ValidationError, "providers cannot be empty" if providers.empty?
           raise Ace::Sim::ValidationError, "repeat must be >= 1" if repeat < 1
-          raise Ace::Sim::ValidationError, "writeback cannot be enabled with --dry-run" if dry_run? && writeback?
+          raise Ace::Sim::ValidationError, "writeback cannot be enabled with --dry-run" if dry_run && writeback
 
           missing_bundles = steps.reject { |step| step_bundles.key?(step) && !step_bundles[step].to_s.strip.empty? }
           return if missing_bundles.empty?

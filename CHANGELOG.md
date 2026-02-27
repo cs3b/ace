@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.677] - 2026-02-27
+
+### Changed
+- **ace-sim v0.3.3**: Refactor list normalization, source resolution, and predicate methods for cleaner internal APIs; restore `dry_run?` predicate on `SimulationSession`
+
 ## [0.9.676] - 2026-02-27
 
 ### Fixed

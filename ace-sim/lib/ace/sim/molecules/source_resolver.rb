@@ -12,12 +12,7 @@ module Ace
           raise Ace::Sim::ValidationError, "source file not found: #{normalized}" unless File.file?(expanded)
           raise Ace::Sim::ValidationError, "source file is not readable: #{normalized}" unless File.readable?(expanded)
 
-          {
-            "raw" => source,
-            "normalized" => normalized,
-            "path" => expanded,
-            "kind" => "file"
-          }
+          {"path" => expanded}
         end
       end
     end
