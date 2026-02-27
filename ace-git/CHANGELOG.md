@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.12] - 2026-02-27
+
+### Changed
+- Add explicit code-block formatting rule and correct/incorrect example for grouped-stats output in PR creation and update workflows
+- Update embedded PR templates (feature, bugfix, default) to instruct verbatim code-block pasting of grouped-stats output
+
 ## [0.11.11] - 2026-02-26
 
 ### Fixed
