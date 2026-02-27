@@ -30,7 +30,10 @@ class RunCommandTest < AceSimTestCase
     @source = File.join(Dir.pwd, ".ace", "sim", "source.md")
     FileUtils.mkdir_p(File.dirname(@preset))
     FileUtils.mkdir_p(@steps_dir)
-    File.write(@preset, "steps:\n  - draft\n  - plan\nprovider:\n  - codex:mini\nrepeat: 1\n")
+    File.write(
+      @preset,
+      "steps:\n  - draft\n  - plan\nprovider:\n  - codex:mini\nrepeat: 1\nsynthesis_workflow: wfi://task/review-work\n"
+    )
     File.write(File.join(@steps_dir, "draft.md"), "---\nbundle:\n  embed_document_source: true\n---\n")
     File.write(File.join(@steps_dir, "plan.md"), "---\nbundle:\n  embed_document_source: true\n---\n")
     File.write(@source, "source content")
@@ -72,6 +75,23 @@ class RunCommandTest < AceSimTestCase
     assert fake.seen_session.dry_run?
   end
 
+  def test_cli_can_override_synthesis_options
+    fake = FakeRunner.new
+    cmd = Ace::Sim::CLI::Commands::Run.new(runner: fake)
+
+    cmd.call(
+      preset: "validate-idea",
+      source: @source,
+      provider: ["google:gflash"],
+      synthesis_workflow: "wfi://task/review-plan",
+      synthesis_provider: "claude:haiku",
+      quiet: true
+    )
+
+    assert_equal "wfi://task/review-plan", fake.seen_session.synthesis_workflow
+    assert_equal "claude:haiku", fake.seen_session.synthesis_provider
+  end
+
   def test_rejects_unknown_preset
     cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new)
 
@@ -90,5 +110,22 @@ class RunCommandTest < AceSimTestCase
     end
 
     assert_match(/boom/, err.message)
+  end
+
+  def test_rejects_synthesis_provider_without_workflow
+    cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new)
+
+    err = assert_raises(Ace::Core::CLI::Error) do
+      cmd.call(
+        preset: "validate-idea",
+        source: @source,
+        provider: ["codex:mini"],
+        synthesis_workflow: "",
+        synthesis_provider: "glite",
+        quiet: true
+      )
+    end
+
+    assert_match(/synthesis_provider requires synthesis_workflow/, err.message)
   end
 end

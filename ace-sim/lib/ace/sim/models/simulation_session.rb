@@ -5,10 +5,10 @@ module Ace
     module Models
       class SimulationSession
         attr_reader :preset, :source, :steps, :providers, :repeat, :dry_run, :writeback, :run_id, :verbose,
-                    :step_bundles
+                    :step_bundles, :synthesis_workflow, :synthesis_provider
 
         def initialize(preset:, source:, steps:, providers:, repeat:, dry_run:, writeback:, verbose: false,
-                       run_id: nil, step_bundles: {})
+                       run_id: nil, step_bundles: {}, synthesis_workflow: nil, synthesis_provider: nil)
           @preset = preset.to_s.strip
           @source = source.to_s.strip
           @steps = Ace::Sim.normalize_list(steps)
@@ -18,6 +18,8 @@ module Ace
           @writeback = !!writeback
           @verbose = !!verbose
           @step_bundles = stringify_step_bundles(step_bundles)
+          @synthesis_workflow = synthesis_workflow.to_s.strip
+          @synthesis_provider = synthesis_provider.to_s.strip
           @run_id = run_id || Ace::Sim.next_run_id
 
           validate!
@@ -35,6 +37,10 @@ module Ace
           step_bundles[step.to_s]
         end
 
+        def synthesis_enabled?
+          !synthesis_workflow.empty?
+        end
+
         def to_h
           {
             "run_id" => run_id,
@@ -44,7 +50,9 @@ module Ace
             "providers" => providers,
             "repeat" => repeat,
             "dry_run" => dry_run,
-            "writeback" => writeback
+            "writeback" => writeback,
+            "synthesis_workflow" => synthesis_workflow,
+            "synthesis_provider" => synthesis_provider
           }
         end
 
@@ -55,6 +63,9 @@ module Ace
           raise Ace::Sim::ValidationError, "providers cannot be empty" if providers.empty?
           raise Ace::Sim::ValidationError, "repeat must be >= 1" if repeat < 1
           raise Ace::Sim::ValidationError, "writeback cannot be enabled with --dry-run" if dry_run && writeback
+          if !synthesis_provider.empty? && synthesis_workflow.empty?
+            raise Ace::Sim::ValidationError, "synthesis_provider requires synthesis_workflow"
+          end
 
           missing_bundles = steps.reject { |step| step_bundles.key?(step) && !step_bundles[step].to_s.strip.empty? }
           return if missing_bundles.empty?
