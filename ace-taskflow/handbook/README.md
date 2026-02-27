@@ -8,7 +8,7 @@ The ace-taskflow gem provides integrated workflow management capabilities, combi
 
 ## Workflow Instructions
 
-The `workflow-instructions/` directory contains 11 core workflows for task and release management:
+The `workflow-instructions/` directory contains core workflows for task and release management:
 
 ### Task Workflows
 - **work-on-task.wf.md** - Execute tasks with embedded implementation plans
@@ -16,7 +16,6 @@ The `workflow-instructions/` directory contains 11 core workflows for task and r
 - **plan-task.wf.md** - Add detailed implementation plans to tasks
 - **review-task.wf.md** - Review and validate task completion
 - **replan-cascade-task.wf.md** - Cascade planning for dependent tasks
-- **create-task-based-on-plan.wf.md** - Generate tasks from existing plans
 
 ### Release Workflows
 - **draft-release.wf.md** - Create new release structures

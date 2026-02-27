@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.11] - 2026-02-27
+
+### Removed
+- Remove `task/create` workflow instruction in favor of draft-first task authoring (`task/draft`) and review-gated promotion
+
+### Changed
+- Tighten draft/review quality gates with general-purpose checks: decision-complete behavior, explicit defaults, and verifiable success criteria
+- Keep draft template lean and general-purpose by removing specialized simulation-style contract sections
+
+## [0.42.10] - 2026-02-27
+
+### Added
+- Add `review-plan` workflow instruction (`wfi://task/review-plan`) for adversarial plan critique with six evaluation dimensions
+- Add `review-work` workflow instruction (`wfi://task/review-work`) for adversarial work output critique with six evaluation dimensions
+
 ## [0.42.9] - 2026-02-26
 
 ### Fixed
