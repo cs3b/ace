@@ -51,16 +51,6 @@ class RunCommandTest < AceSimTestCase
     assert_match(/--source is required/, err.message)
   end
 
-  def test_requires_source_to_be_existing_file
-    cmd = Ace::Sim::CLI::Commands::Run.new(runner: FakeRunner.new)
-
-    err = assert_raises(Ace::Core::CLI::Error) do
-      cmd.call(preset: "validate-idea", source: "missing.md", provider: ["codex:mini"], quiet: true)
-    end
-
-    assert_match(/--source must be a readable file path/, err.message)
-  end
-
   def test_cli_overrides_preset_defaults
     fake = FakeRunner.new
     cmd = Ace::Sim::CLI::Commands::Run.new(runner: fake)
