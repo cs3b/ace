@@ -1,7 +1,7 @@
 # Project-specific configuration for ace-git-commit
 git:
   # Default model - uses alias from ace-llm configuration
-  model: glite
+  model: zai:glm-4.7-flashx
 
   # Commit scope definitions - each key is a scope name
   # Scopes define file groupings for commit splitting
