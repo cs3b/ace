@@ -40,9 +40,14 @@ module Ace
         # Build ace-test command
         command = build_command
 
-        # Execute ace-test
+        # Execute ace-test with sanitized environment
+        # Strip assignment context vars to prevent tests from resolving to wrong assignments
         puts command if verbose
-        success = system(command)
+        env = ENV.to_h.merge({
+          "ACE_ASSIGN_ID" => nil,
+          "ACE_ASSIGN_FORK_ROOT" => nil
+        })
+        success = system(env, command)
 
         # Exit with proper code for CI/CD
         exit(1) unless success
