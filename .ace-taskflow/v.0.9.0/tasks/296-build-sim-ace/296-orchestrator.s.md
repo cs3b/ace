@@ -1,10 +1,16 @@
 ---
 id: v.0.9.0+task.296
-status: draft
+status: in-progress
 priority: high
 estimate: TBD
 dependencies: []
 needs_review: true
+worktree:
+  branch: 296-ace-sim-rebuild-from-task-285-postmortem-usage-first
+  path: "../ace-task.296"
+  created_at: '2026-02-27 14:44:31'
+  updated_at: '2026-02-27 14:44:31'
+  target_branch: main
 ---
 
 # ace-sim rebuild from task-285 postmortem (usage-first)
