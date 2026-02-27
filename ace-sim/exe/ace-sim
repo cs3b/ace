@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "ace/sim"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+begin
+  exit_code = Ace::Sim::CLI.start(args)
+  exit(exit_code) if exit_code.is_a?(Integer) && exit_code.nonzero?
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end
