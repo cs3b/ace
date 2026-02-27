@@ -29,7 +29,7 @@ class SimulationSessionTest < AceSimTestCase
     assert_equal ["codex:mini"], session.providers
     assert_equal 2, session.repeat
     assert session.dry_run?
-    refute session.writeback?
+    refute session.writeback
     refute_empty session.run_id
   end
 

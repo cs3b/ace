@@ -12,10 +12,14 @@ module Ace
             "providers" => session.providers,
             "repeat" => session.repeat,
             "dry_run" => session.dry_run?,
-            "writeback" => session.writeback?,
+            "writeback" => session.writeback,
             "chains" => chains,
             "status" => overall_status(chains)
           }
+        end
+
+        def chain_status(step_results)
+          step_results.any? { |step| step["status"] == "failed" } ? "failed" : "ok"
         end
 
         private

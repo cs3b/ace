@@ -105,7 +105,7 @@ module Ace
           {
             "provider" => provider,
             "iteration" => iteration,
-            "status" => step_results.any? { |step| step["status"] == "failed" } ? "failed" : "ok",
+            "status" => synthesis_builder.chain_status(step_results),
             "steps" => step_results
           }
         end
