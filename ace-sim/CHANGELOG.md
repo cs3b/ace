@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-02-27
+
+### Fixed
+- Handle unhandled runtime exceptions in `SimulationRunner#run` by rescuing `StandardError` and returning structured failure result
+
 ## [0.3.1] - 2026-02-27
 
 ### Changed
