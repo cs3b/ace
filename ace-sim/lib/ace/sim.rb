@@ -22,6 +22,10 @@ module Ace
 
     module_function
 
+    def normalize_list(raw)
+      Array(raw).flatten.compact.map(&:to_s).map(&:strip).reject(&:empty?)
+    end
+
     def config
       @config ||= begin
         defaults = load_defaults
@@ -65,10 +69,16 @@ module Ace
         "sim/presets/#{preset_name}.yml",
         "sim/presets/#{preset_name}.yaml"
       ]).data
-      return nil if data.nil? || data.empty?
 
-      preset = data["preset"] || data
-      steps = Array(preset["steps"]).map(&:to_s).map(&:strip).reject(&:empty?)
+      preset = if data.nil? || data.empty?
+        return nil unless preset_names.include?(preset_name)
+
+        {"steps" => normalize_list(get("sim", "default_steps"))}
+      else
+        data["preset"] || data
+      end
+
+      steps = normalize_list(preset["steps"])
       raise ValidationError, "Preset '#{preset_name}' has no steps" if steps.empty?
 
       normalized = preset.to_h.each_with_object({}) { |(k, v), acc| acc[k.to_s] = v }

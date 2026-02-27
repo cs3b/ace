@@ -42,42 +42,26 @@ module Ace
           private
 
           def build_session(options)
-            preset_name = value_from(options[:preset], Ace::Sim.default_preset_name)
+            preset_name = pick_value(options[:preset], Ace::Sim.default_preset_name)
             preset_data = Ace::Sim.load_preset(preset_name)
-            if preset_data.nil? && Ace::Sim.preset_names.include?(preset_name)
-              preset_data = {
-                "name" => preset_name,
-                "steps" => Array(Ace::Sim.get("sim", "default_steps")).map(&:to_s)
-              }
-            end
             if preset_data.nil?
               raise Ace::Core::CLI::Error.new("Unknown preset '#{preset_name}'. Known presets: #{Ace::Sim.preset_names.join(', ')}")
             end
 
-            source = value_from(options[:source], preset_data["source"])
+            source = pick_value(options[:source], preset_data["source"])
             raise Ace::Core::CLI::Error.new("--source is required") if source.to_s.strip.empty?
 
-            expanded_source = File.expand_path(source.to_s)
-            unless File.file?(expanded_source)
-              raise Ace::Core::CLI::Error.new("--source must be a readable file path: #{source}")
-            end
-            unless File.readable?(expanded_source)
-              raise Ace::Core::CLI::Error.new("--source file is not readable: #{source}")
-            end
-
-            source = expanded_source
-
-            steps = if present?(options[:steps])
+            steps = if options[:steps] && !options[:steps].to_s.strip.empty?
               parse_steps(options[:steps])
             else
-              Array(preset_data["steps"] || Ace::Sim.get("sim", "default_steps")).map(&:to_s)
+              Ace::Sim.normalize_list(preset_data["steps"] || Ace::Sim.get("sim", "default_steps"))
             end
             raise Ace::Core::CLI::Error.new("At least one step is required") if steps.empty?
 
             providers = if options[:provider].nil?
-              normalized_providers(preset_data["provider"] || preset_data["providers"] || Ace::Sim.get("sim", "default_providers"))
+              Ace::Sim.normalize_list(preset_data["provider"] || preset_data["providers"] || Ace::Sim.get("sim", "default_providers"))
             else
-              normalized_providers(options[:provider])
+              Ace::Sim.normalize_list(options[:provider])
             end
             raise Ace::Core::CLI::Error.new("At least one --provider is required") if providers.empty?
 
@@ -120,18 +104,6 @@ module Ace
 
               configs[step] = config_path
             end
-          end
-
-          def normalized_providers(raw)
-            Array(raw).flatten.compact.map(&:to_s).map(&:strip).reject(&:empty?)
-          end
-
-          def present?(value)
-            !value.nil? && !value.to_s.strip.empty?
-          end
-
-          def value_from(primary, fallback)
-            present?(primary) ? primary : fallback
           end
 
           def pick_value(*values)

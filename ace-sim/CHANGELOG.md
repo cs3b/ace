@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-02-27
+
+### Changed
+- Extract `normalize_list` helper to `Ace::Sim` module, replacing inline array normalization in CLI commands and session model
+- Simplify `SourceResolver#resolve` to return minimal `{"path" => expanded}` hash
+- Extract `chain_status` method from `SimulationRunner` to `SynthesisBuilder`
+- Replace `value_from`/`present?`/`normalized_providers` helpers with `pick_value` and `normalize_list`
+- Restore `dry_run?` predicate on `SimulationSession` and update all callers
+- Remove `writeback?` predicate (use `writeback` attribute directly)
+- Remove source-empty validation from `SimulationSession#validate!` (validated upstream)
+
 ## [0.3.2] - 2026-02-27
 
 ### Fixed
