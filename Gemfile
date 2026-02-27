@@ -26,6 +26,7 @@ gem 'ace-tmux', path: 'ace-tmux'
 gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-overseer', path: 'ace-overseer'
 gem 'ace-test-runner', path: 'ace-test-runner'
+gem 'ace-sim', path: 'ace-sim'
 
 # Shared dev/test tools for all gems
 group :development, :test do

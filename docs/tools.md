@@ -100,6 +100,13 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 | `ace-search "pattern"` | Search content (regex) |
 | `ace-search "*.rb" --files` | Search files (glob) |
 
+## Simulation
+
+| Tool | Purpose |
+|------|---------|
+| `ace-sim run` | Run scenario simulation with provider comparison |
+| `ace-sim run --dry-run` | Non-mutating simulation run |
+
 ## Security
 
 | Tool | Purpose |
