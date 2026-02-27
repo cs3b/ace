@@ -266,6 +266,130 @@ module Ace
           config = FallbackConfig.new(retry_delay: 2)
           assert_equal 2, config.retry_delay
         end
+
+        # --- chains / providers_for tests ---
+
+        def test_initializes_with_default_empty_chains
+          config = FallbackConfig.new
+          assert_equal({}, config.chains)
+        end
+
+        def test_providers_for_returns_chain_when_primary_matches
+          config = FallbackConfig.new(
+            chains: { "glite" => ["zai", "codex"] },
+            providers: ["fallback_default"]
+          )
+
+          assert_equal ["zai", "codex"], config.providers_for("glite")
+        end
+
+        def test_providers_for_returns_default_providers_when_primary_not_in_chains
+          config = FallbackConfig.new(
+            chains: { "glite" => ["zai", "codex"] },
+            providers: ["fallback_default"]
+          )
+
+          assert_equal ["fallback_default"], config.providers_for("unknown")
+        end
+
+        def test_providers_for_with_symbol_key_in_constructor
+          config = FallbackConfig.new(
+            chains: { glite: ["zai"] },
+            providers: ["default"]
+          )
+
+          # Symbol keys are normalized to strings
+          assert_equal ["zai"], config.providers_for("glite")
+        end
+
+        def test_from_hash_with_chains_symbol_keys
+          hash = {
+            chains: { glite: ["zai", "codex"] },
+            providers: ["default"]
+          }
+
+          config = FallbackConfig.from_hash(hash)
+
+          assert_equal ["zai", "codex"], config.providers_for("glite")
+          assert_equal ["default"], config.providers_for("other")
+        end
+
+        def test_from_hash_with_chains_string_keys
+          hash = {
+            "chains" => { "glite" => ["zai", "codex"] },
+            "providers" => ["default"]
+          }
+
+          config = FallbackConfig.from_hash(hash)
+
+          assert_equal ["zai", "codex"], config.providers_for("glite")
+        end
+
+        def test_to_h_includes_chains
+          config = FallbackConfig.new(
+            chains: { "glite" => ["zai"] },
+            providers: ["default"]
+          )
+
+          hash = config.to_h
+          assert_equal({ "glite" => ["zai"] }, hash[:chains])
+        end
+
+        def test_to_h_chains_are_independent_copies
+          config = FallbackConfig.new(chains: { "glite" => ["zai"] })
+          hash = config.to_h
+          hash[:chains]["glite"] << "codex"
+
+          assert_equal ["zai"], config.chains["glite"]
+        end
+
+        def test_merge_combines_chains
+          base = FallbackConfig.new(chains: { "glite" => ["zai"] })
+          other = FallbackConfig.new(chains: { "codex" => ["glite"] })
+
+          merged = base.merge(other)
+
+          assert_equal ["zai"], merged.chains["glite"]
+          assert_equal ["glite"], merged.chains["codex"]
+        end
+
+        def test_merge_other_chains_override_base_for_same_key
+          base = FallbackConfig.new(chains: { "glite" => ["zai"] })
+          other_hash = { chains: { "glite" => ["codex", "zai"] } }
+
+          merged = base.merge(other_hash)
+
+          assert_equal ["codex", "zai"], merged.chains["glite"]
+        end
+
+        def test_chains_are_frozen
+          config = FallbackConfig.new(chains: { "glite" => ["zai"] })
+          assert config.chains.frozen?
+        end
+
+        def test_validates_chains_must_be_hash
+          error = assert_raises(Ace::LLM::ConfigurationError) do
+            FallbackConfig.new(chains: "invalid")
+          end
+
+          assert_match(/chains must be a hash/, error.message)
+        end
+
+        def test_validates_chains_values_must_be_arrays
+          error = assert_raises(Ace::LLM::ConfigurationError) do
+            FallbackConfig.new(chains: { "glite" => "zai" })
+          end
+
+          assert_match(/chains value for 'glite' must be an array/, error.message)
+        end
+
+        def test_validates_chains_entries_must_be_non_empty_strings
+          error = assert_raises(Ace::LLM::ConfigurationError) do
+            FallbackConfig.new(chains: { "glite" => [""] })
+          end
+
+          assert_match(/each provider in chains\['glite'\] must be a non-empty string/, error.message)
+        end
       end
     end
   end

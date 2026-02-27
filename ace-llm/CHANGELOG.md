@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.4] - 2026-02-27
+
+### Added
+- Per-provider fallback chains: `chains` map in config allows each primary provider to have its own contextual fallback order
+- `FallbackConfig#providers_for(primary)` returns chain-specific fallback list or default `providers`
+
 ## [0.24.3] - 2026-02-27
 
 ### Technical
