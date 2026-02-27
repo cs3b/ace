@@ -67,6 +67,16 @@ module Ace
           assert_equal ErrorClassifier::RETRYABLE_WITH_BACKOFF, ErrorClassifier.classify(error)
         end
 
+        def test_classify_provider_error_quota_message_as_immediate_fallback
+          error = Ace::LLM::ProviderError.new("insufficient_quota: You exceeded your current quota")
+          assert_equal ErrorClassifier::FALLBACK_IMMEDIATELY, ErrorClassifier.classify(error)
+        end
+
+        def test_classify_provider_error_credit_message_as_immediate_fallback
+          error = Ace::LLM::ProviderError.new("Out of credits for this billing period")
+          assert_equal ErrorClassifier::FALLBACK_IMMEDIATELY, ErrorClassifier.classify(error)
+        end
+
         def test_classify_provider_error_unavailable_message
           error = Ace::LLM::ProviderError.new("Service unavailable")
           assert_equal ErrorClassifier::RETRYABLE_WITH_BACKOFF, ErrorClassifier.classify(error)
@@ -95,6 +105,16 @@ module Ace
         def test_fallback_immediately_false_for_503
           error = mock_faraday_error(status: 503)
           refute ErrorClassifier.fallback_immediately?(error)
+        end
+
+        def test_quota_or_credit_limited_detects_quota_strings
+          error = Ace::LLM::ProviderError.new("insufficient quota")
+          assert ErrorClassifier.quota_or_credit_limited?(error)
+        end
+
+        def test_quota_or_credit_limited_false_for_generic_rate_limit
+          error = Ace::LLM::ProviderError.new("rate limit exceeded")
+          refute ErrorClassifier.quota_or_credit_limited?(error)
         end
 
         def test_skip_to_next_true_for_auth_error

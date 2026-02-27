@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.3] - 2026-02-27
+
+### Technical
+- Document `ZAI_API_KEY` in README API key section
+
+## [0.24.2] - 2026-02-27
+
+### Fixed
+- Add project-level fallback providers so `ace-git-commit` works without `ZAI_API_KEY`
+- Re-add CLI-specific error diagnostics listing available providers when provider not found
+- Tighten "window limit" quota-detection pattern to avoid matching "context window limit"
+
+### Technical
+- Add inline comment documenting per-layer normalization rationale in fallback config loading
+
+## [0.24.1] - 2026-02-27
+
+### Fixed
+- Narrowed quota-detection patterns to avoid false positives on unrelated error messages containing "credit" (e.g., "credentials invalid")
+
+## [0.24.0] - 2026-02-27
+
+### Added
+- Native `zai` API provider with direct HTTP calls and bearer auth (`ZAI_API_KEY`), supporting models `glm-4.7-flashx`, `glm-4.7`, and `glm-5`
+- Centralized `llm.fallback` config in `.ace-defaults/llm/config.yml` for shared fallback policy across QueryInterface and CLI callers
+
+### Fixed
+- Quota/credit/window-limit exhaustion classified as immediate fallback (no retry), while overload/unavailable/rate-limit conditions remain retryable
+- Fallback provider chains normalize and deduplicate entries (including aliases) while preserving order
+- Z.AI provider error surfacing includes actionable HTTP status and non-JSON response snippets
+
+### Changed
+- `ace-llm` CLI query command routes through `Ace::LLM::QueryInterface` for consistent fallback behavior across CLI and Ruby API
+- Fallback documentation updated to use `.ace/llm/config.yml` (`llm.fallback`) as primary configuration contract
+
 ## [0.23.1] - 2026-02-23
 
 ### Technical

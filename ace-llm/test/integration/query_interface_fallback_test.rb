@@ -27,46 +27,83 @@ module Ace
         ENV["ACE_LLM_FALLBACK_PROVIDERS"] = "anthropic,openai"
         ENV["ACE_LLM_FALLBACK_RETRY_COUNT"] = "5"
         ENV["ACE_LLM_FALLBACK_RETRY_DELAY"] = "2.0"
+        ENV["ACE_LLM_FALLBACK_MAX_TOTAL_TIMEOUT"] = "45.0"
 
-        config = QueryInterface.send(:load_fallback_config, nil, nil)
+        config = with_config_fallback(nil) do
+          QueryInterface.send(:load_fallback_config, nil, nil)
+        end
 
         assert_equal true, config.enabled
-        assert_equal ["anthropic", "openai"], config.providers
+        assert_equal 2, config.providers.length
+        assert_match(/\Aanthropic:/, config.providers[0])
+        assert_match(/\Aopenai:/, config.providers[1])
         assert_equal 5, config.retry_count
         assert_equal 2.0, config.retry_delay
+        assert_equal 45.0, config.max_total_timeout
       ensure
         ENV.delete("ACE_LLM_FALLBACK_ENABLED")
         ENV.delete("ACE_LLM_FALLBACK_PROVIDERS")
         ENV.delete("ACE_LLM_FALLBACK_RETRY_COUNT")
         ENV.delete("ACE_LLM_FALLBACK_RETRY_DELAY")
+        ENV.delete("ACE_LLM_FALLBACK_MAX_TOTAL_TIMEOUT")
       end
 
       def test_load_fallback_config_with_explicit_parameters
-        config = QueryInterface.send(
-          :load_fallback_config,
-          false,
-          ["claude", "gpt"]
-        )
+        config = with_config_fallback({ "enabled" => true }) do
+          QueryInterface.send(
+            :load_fallback_config,
+            false,
+            ["claude", "gpt"]
+          )
+        end
 
         assert_equal false, config.enabled
-        assert_equal ["claude", "gpt"], config.providers
+        assert_equal 2, config.providers.length
+        assert_match(/\A(anthropic|claude):/, config.providers[0])
+        assert_match(/\A(openai:|gpt)\b/, config.providers[1])
       end
 
       def test_load_fallback_config_defaults
-        config = QueryInterface.send(:load_fallback_config, nil, nil)
+        config = with_config_fallback(nil) do
+          QueryInterface.send(:load_fallback_config, nil, nil)
+        end
 
         assert_equal true, config.enabled
         assert_equal 3, config.retry_count
         assert_equal 1.0, config.retry_delay
         assert_equal [], config.providers
+        assert_equal 30.0, config.max_total_timeout
+      end
+
+      def test_load_fallback_config_from_configuration
+        config = with_config_fallback(
+          "enabled" => false,
+          "retry_count" => 2,
+          "retry_delay" => 0.75,
+          "max_total_timeout" => 15.0,
+          "providers" => ["openai:gpt-5"]
+        ) do
+          QueryInterface.send(:load_fallback_config, nil, nil)
+        end
+
+        assert_equal false, config.enabled
+        assert_equal 2, config.retry_count
+        assert_equal 0.75, config.retry_delay
+        assert_equal 15.0, config.max_total_timeout
+        assert_equal ["openai:gpt-5"], config.providers
       end
 
       def test_fallback_providers_from_env_are_split_and_trimmed
         ENV["ACE_LLM_FALLBACK_PROVIDERS"] = " anthropic , openai , mistral "
 
-        config = QueryInterface.send(:load_fallback_config, nil, nil)
+        config = with_config_fallback(nil) do
+          QueryInterface.send(:load_fallback_config, nil, nil)
+        end
 
-        assert_equal ["anthropic", "openai", "mistral"], config.providers
+        assert_equal 3, config.providers.length
+        assert_match(/\Aanthropic:/, config.providers[0])
+        assert_match(/\Aopenai:/, config.providers[1])
+        assert_match(/\Amistral:/, config.providers[2])
       ensure
         ENV.delete("ACE_LLM_FALLBACK_PROVIDERS")
       end
@@ -74,7 +111,9 @@ module Ace
       def test_explicit_fallback_param_overrides_environment
         ENV["ACE_LLM_FALLBACK_ENABLED"] = "true"
 
-        config = QueryInterface.send(:load_fallback_config, false, nil)
+        config = with_config_fallback({ "enabled" => true }) do
+          QueryInterface.send(:load_fallback_config, false, nil)
+        end
 
         assert_equal false, config.enabled
       ensure
@@ -84,11 +123,59 @@ module Ace
       def test_explicit_providers_override_environment
         ENV["ACE_LLM_FALLBACK_PROVIDERS"] = "anthropic,openai"
 
-        config = QueryInterface.send(:load_fallback_config, nil, ["claude"])
+        config = with_config_fallback(nil) do
+          QueryInterface.send(:load_fallback_config, nil, ["claude"])
+        end
 
-        assert_equal ["claude"], config.providers
+        assert_equal 1, config.providers.length
+        assert_match(/\A(anthropic|claude):/, config.providers.first)
       ensure
         ENV.delete("ACE_LLM_FALLBACK_PROVIDERS")
+      end
+
+      def test_fallback_providers_are_deduplicated_preserving_order
+        parser = FakeParser.new(
+          "glite" => FakeParseResult.new("google", "gemini-2.0-flash-lite", true),
+          "google:gemini-2.0-flash-lite" => FakeParseResult.new("google", "gemini-2.0-flash-lite", true),
+          "openai:gpt-5" => FakeParseResult.new("openai", "gpt-5", true)
+        )
+
+        config = with_config_fallback(
+          "providers" => [
+            "glite",
+            "google:gemini-2.0-flash-lite",
+            "openai:gpt-5",
+            "openai:gpt-5"
+          ]
+        ) do
+          QueryInterface.send(:load_fallback_config, nil, nil, parser: parser)
+        end
+
+        assert_equal ["google:gemini-2.0-flash-lite", "openai:gpt-5"], config.providers
+      end
+
+      private
+
+      FakeParseResult = Struct.new(:provider, :model, :valid) do
+        def valid?
+          valid
+        end
+      end
+
+      class FakeParser
+        def initialize(results)
+          @results = results
+        end
+
+        def parse(input)
+          @results.fetch(input.to_s.strip, FakeParseResult.new(nil, nil, false))
+        end
+      end
+
+      def with_config_fallback(config_hash)
+        Ace::LLM::Molecules::ConfigLoader.stub(:get, ->(path) { path == "llm.fallback" ? config_hash : nil }) do
+          yield
+        end
       end
     end
   end
