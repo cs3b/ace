@@ -23,3 +23,9 @@ What changed from user/reviewer perspective:
 ## Releases
 
 - <changelog-entry-from-diff-if-any>
+
+## Demo
+
+- <runnable-command-demonstrating-the-change>
+- <expected-output-and-artifact-locations>
+- Omit this section if no user-facing CLI or runnable entry point

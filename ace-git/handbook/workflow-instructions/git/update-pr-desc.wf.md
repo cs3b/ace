@@ -82,6 +82,7 @@ Use this section order exactly:
 ## 📁 File Changes
 ## 🧪 Test Evidence
 ## 📦 Releases
+## 🎮 Demo
 ```
 
 Section sourcing rules:
@@ -93,6 +94,7 @@ Section sourcing rules:
 | File Changes | `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` output, pasted verbatim and in full | Manual hand-written file listing, trimming or abbreviating the grouped-stats output |
 | Test Evidence | Test names mapped to behaviors + suite totals | Raw unstructured test output paste |
 | Releases | CHANGELOG entries from diff | Repeating content already in Changes |
+| Demo | Runnable commands from README/usage.md + observed output | Screenshots, prose-only descriptions without commands |
 
 **Grouped-stats formatting rule:**
 - The `## 📁 File Changes` section must wrap grouped-stats output inside a fenced code block (```)
@@ -116,11 +118,35 @@ Constraints:
 - Do not start with method/class names
 - Prefer behavior language over implementation language
 
-### 7. Omission and Fallback Rules
+### 7. Demo Section Rules
+
+Include `## 🎮 Demo` when the PR introduces a user-facing CLI command or runnable entry point that a reviewer can try.
+
+Structure:
+
+```markdown
+## 🎮 Demo
+
+### Run
+\`\`\`bash
+[exact command to copy-paste]
+\`\`\`
+
+### Expected Output
+[what the reviewer should see]
+
+### Artifacts
+[where to find generated files]
+```
+
+Omit when: the PR has no user-facing CLI, no runnable entry point, or is purely internal refactoring.
+
+### 8. Omission and Fallback Rules
 
 - If no changelog evidence: omit `## 📦 Releases`
 - If no test-file evidence: keep `## 🧪 Test Evidence` with suite totals only
 - If `ace-git diff $(git merge-base HEAD origin/main)..HEAD --format grouped-stats` is unavailable: use flat file list fallback under `## 📁 File Changes`
+- If no user-facing CLI or runnable entry point: omit `## 🎮 Demo`
 - Omit sections with no supporting evidence instead of leaving placeholders
 
 #### Grouped-stats example
@@ -148,7 +174,7 @@ Incorrect — reformatted into bullet list (loses tree structure and alignment):
 - ace-overseer/lib/ace/overseer/molecules/assignment_launcher.rb (+42, -8)
 ```
 
-### 8. Update PR
+### 9. Update PR
 
 ```bash
 gh pr edit $pr_number \
@@ -160,7 +186,7 @@ BODY
 )"
 ```
 
-### 9. Confirm Update
+### 10. Confirm Update
 
 ```bash
 gh pr view $pr_number --json url,title -q '.url + "\n" + .title'
@@ -168,7 +194,7 @@ gh pr view $pr_number --json url,title -q '.url + "\n" + .title'
 
 ## Success Criteria
 
-- Description uses: `📋 Summary -> ✏️ Changes -> 📁 File Changes -> 🧪 Test Evidence -> 📦 Releases`
+- Description uses: `📋 Summary -> ✏️ Changes -> 📁 File Changes -> 🧪 Test Evidence -> 📦 Releases -> 🎮 Demo`
 - Summary leads with user impact and does not restate task specs
 - File Changes contains the complete, untruncated grouped-stats output (never trimmed, summarised, or selectively omitted)
 - Test Evidence maps tests to behavior and includes totals
