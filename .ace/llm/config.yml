@@ -1,0 +1,9 @@
+llm:
+  fallback:
+    enabled: true
+    retry_count: 2
+    retry_delay: 1.0
+    max_total_timeout: 60.0
+    providers:
+      - glite
+      - codex
