@@ -118,6 +118,38 @@ class IdeaSimulationWritebackTest < AceTaskflowTestCase
     end
   end
 
+  def test_apply_writes_draft_review_artifact_section
+    with_real_tmpdir do |dir|
+      path = File.join(dir, "idea.idea.s.md")
+      File.write(path, "# Idea\n\n## Description\nCapture the idea.\n")
+
+      draft_artifact = "# Task: Implement Feature\n\n## Description\nDo the feature.\n"
+      review_artifact = "## Readiness Review\n\n- [x] Has description\n- [ ] Missing AC\n"
+
+      writeback = Ace::Taskflow::Molecules::IdeaSimulationWriteback.new
+      writeback.apply(
+        path: path,
+        run_id: "i50jj3",
+        modes: %w[draft plan],
+        synthesis: {
+          questions: ["Q1"],
+          refinements: [],
+          artifacts: { "draft" => draft_artifact, "draft_review" => review_artifact }
+        }
+      )
+
+      content = File.read(path)
+      assert_includes content, "<!-- sim-artifact:draft_review -->"
+      assert_includes content, "<!-- /sim-artifact:draft_review -->"
+      assert_includes content, "## Simulated Draft Review"
+      assert_includes content, "## Readiness Review"
+      assert_includes content, "- [x] Has description"
+      # Also verify draft artifact is still present
+      assert_includes content, "<!-- sim-artifact:draft -->"
+      assert_includes content, "## Simulated Draft"
+    end
+  end
+
   def test_artifact_section_upsert_replaces_old_content
     with_real_tmpdir do |dir|
       path = File.join(dir, "idea.idea.s.md")

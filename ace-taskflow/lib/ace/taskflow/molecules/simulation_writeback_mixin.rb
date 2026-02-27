@@ -10,6 +10,7 @@ module Ace
 
         ARTIFACT_HEADINGS = {
           "draft" => "## Simulated Draft",
+          "draft_review" => "## Simulated Draft Review",
           "plan" => "## Simulated Plan"
         }.freeze
 
@@ -31,14 +32,20 @@ module Ace
             SECTION_HEADING,
             "",
             "- Last run: `#{run_id}`",
-            "- Modes: `#{Array(modes).join(',')}`",
-            "",
-            "### Questions",
-            format_list(questions),
-            "",
-            "### Refinements",
-            format_list(refinements)
+            "- Modes: `#{Array(modes).join(',')}`"
           ]
+
+          unless questions.empty?
+            parts << ""
+            parts << "### Questions"
+            parts << format_list(questions)
+          end
+
+          unless refinements.empty?
+            parts << ""
+            parts << "### Refinements"
+            parts << format_list(refinements)
+          end
 
           unless unresolved_gaps.empty?
             parts << ""

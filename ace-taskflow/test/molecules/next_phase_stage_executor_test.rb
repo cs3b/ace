@@ -172,15 +172,22 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
       run_id: "abc123"
     )
 
-    # Verify bundle config content
+    # Verify bundle config content — draft mode gets separate draft + review sections with preamble
     config = payload[:bundle_config]
     assert config, "should include bundle_config in payload"
     assert_includes config, "presets:"
     assert_includes config, "- project"
-    assert_includes config, "ace-taskflow/handbook/workflow-instructions/task/simulate-next-phase-draft.wf.md"
+    assert_includes config, "wfi://task/draft"
+    assert_includes config, "wfi://task/review"
     assert_includes config, "embed_document_source: true"
     assert_includes config, "format: markdown-xml"
     assert_includes config, "sections:"
+    assert_includes config, "draft_workflow:"
+    assert_includes config, "review_workflow:"
+    assert_includes config, "review_artifact"
+    # No adapter section — output contract is in the preamble
+    refute_includes config, "simulation_adapter:"
+    refute_includes config, "wfi://task/simulate-next-phase-adapter"
   end
 
   def test_call_user_prompt_is_pure_source_content_for_draft
@@ -257,7 +264,70 @@ class NextPhaseStageExecutorTest < AceTaskflowTestCase
     )
 
     config = payload[:bundle_config]
-    assert_includes config, "simulate-next-phase-plan.wf.md"
+    assert_includes config, "wfi://task/plan"
+    assert_includes config, "workflow:"
+    # Single-workflow mode: no review workflow, no review_artifact, no adapter
+    refute_includes config, "wfi://task/review"
+    refute_includes config, "review_workflow:"
+    refute_includes config, "review_artifact"
+    refute_includes config, "wfi://task/simulate-next-phase-adapter"
+  end
+
+  def test_call_extracts_review_artifact_from_yaml_response
+    executor = build_executor(
+      source_body: "idea content",
+      llm_response: <<~YAML
+        status: ok
+        artifact: |
+          # Task: Add retry policy
+
+          ## Description
+          Add configurable retry logic.
+        review_artifact: |
+          ## Readiness Review
+
+          - [x] Has description
+          - [ ] Missing acceptance criteria
+
+          Status: needs-revision
+        questions:
+          - "Should retry be exponential?"
+      YAML
+    )
+
+    payload = executor.call(
+      resolved_source: { input: "idea-ref", type: "idea", path: "/tmp/idea.idea.s.md" },
+      mode: "draft",
+      run_id: "abc123"
+    )
+
+    assert_equal "ok", payload[:status]
+    assert payload[:review_artifact], "should have review_artifact field"
+    assert_includes payload[:review_artifact], "## Readiness Review"
+    assert_includes payload[:review_artifact], "needs-revision"
+    assert payload[:artifact], "should still have artifact field"
+    assert_includes payload[:artifact], "# Task: Add retry policy"
+  end
+
+  def test_call_omits_review_artifact_when_absent
+    executor = build_executor(
+      source_body: "source content",
+      llm_response: <<~YAML
+        status: ok
+        artifact: |
+          # Plan: Implementation
+        questions: []
+      YAML
+    )
+
+    payload = executor.call(
+      resolved_source: { input: "285.06", type: "task", path: "/tmp/source.s.md" },
+      mode: "plan",
+      run_id: "abc123"
+    )
+
+    assert_equal "ok", payload[:status]
+    refute payload.key?(:review_artifact), "should not have review_artifact when absent"
   end
 
   private

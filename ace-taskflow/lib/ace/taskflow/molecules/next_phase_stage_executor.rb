@@ -9,10 +9,10 @@ module Ace
     module Molecules
       # Default LLM-backed executor for next-phase simulation stages.
       class NextPhaseStageExecutor
-        WORKFLOW_PATHS = {
-          "draft" => "handbook/workflow-instructions/task/simulate-next-phase-draft.wf.md",
-          "plan" => "handbook/workflow-instructions/task/simulate-next-phase-plan.wf.md",
-          "work" => "handbook/workflow-instructions/task/work.wf.md"
+        WORKFLOW_URIS = {
+          "draft" => "wfi://task/draft",
+          "plan" => "wfi://task/plan",
+          "work" => "wfi://task/work"
         }.freeze
 
         VALID_STATUSES = %w[ok partial failed].freeze
@@ -50,7 +50,7 @@ module Ace
             system: system_prompt,
             sandbox: { mode: "read-only", intent: "taskflow-next-phase-simulation" },
             temperature: 0.2,
-            max_tokens: 6_000
+            max_tokens: 32_000
           )
 
           # 6. Return payload with prompts + config for saving
@@ -66,7 +66,77 @@ module Ace
         private
 
         def build_bundle_config(mode)
-          workflow_rel_path = resolve_workflow_path(mode)
+          workflow_uri = WORKFLOW_URIS[mode]
+          raise ArgumentError, "Unsupported simulation mode '#{mode}'" unless workflow_uri
+
+          mode == "draft" ? build_draft_bundle_config(workflow_uri) : build_single_workflow_bundle_config(workflow_uri)
+        end
+
+        def build_draft_bundle_config(workflow_uri)
+          <<~MARKDOWN
+            ---
+            bundle:
+              params:
+                format: markdown-xml
+              sections:
+                project_context:
+                  title: "Project Context"
+                  description: "Architecture, conventions, and tooling docs from the project preset."
+                  priority: 1
+                  presets:
+                    - project
+                draft_workflow:
+                  title: "Draft Workflow"
+                  description: "The real draft workflow for this stage. Follow its quality guidance completely."
+                  priority: 2
+                  files:
+                    - #{workflow_uri}
+                review_workflow:
+                  title: "Review Workflow"
+                  description: "The real review workflow with readiness criteria. Use to evaluate the draft."
+                  priority: 3
+                  files:
+                    - wfi://task/review
+              embed_document_source: true
+            ---
+
+            # Simulation: Draft + Review
+
+            Return a single YAML payload — nothing else:
+
+            ```yaml
+            status: ok|partial|failed
+            artifact: |
+              [Complete draft spec following <draft_workflow>]
+            review_artifact: |
+              [Readiness review following <review_workflow> checklist]
+            questions:
+              - "Questions from the review"
+            refinements:
+              - "Input improvements from the review"
+            ```
+
+            ## Process
+
+            1. **Draft**: Generate `artifact` following `<draft_workflow>`. Use `<project_context>` for grounding.
+            2. **Review**: Evaluate that artifact against `<review_workflow>` readiness criteria. Produce `review_artifact`.
+            3. **Extract** questions and refinements from the review.
+
+            ## Guardrails
+
+            - Simulation only — do not create or modify files.
+            - `review_artifact` follows the review workflow's structure: checklist results, gaps, readiness status.
+
+            ## Reference Sections
+
+            1. `<project_context>` — Project architecture and conventions
+            2. `<draft_workflow>` — Full draft quality guidance
+            3. `<review_workflow>` — Full readiness checklist
+          MARKDOWN
+        end
+
+        def build_single_workflow_bundle_config(workflow_uri)
+          mode_label = WORKFLOW_URIS.key(workflow_uri) || "stage"
 
           <<~MARKDOWN
             ---
@@ -82,28 +152,37 @@ module Ace
                     - project
                 workflow:
                   title: "Workflow Instruction"
-                  description: "The simulation workflow. Follow its instructions, input contract, and output format exactly."
+                  description: "The real workflow for this stage. Follow its quality guidance completely."
                   priority: 2
                   files:
-                    - #{workflow_rel_path}
+                    - #{workflow_uri}
               embed_document_source: true
             ---
 
-            # Simulation Context
+            # Simulation: #{mode_label.capitalize} Stage
 
-            Two sections follow:
+            Return a single YAML payload — nothing else:
 
-            1. `<project_context>` — Architecture, conventions, and tooling docs. Use to ground your response in real project patterns.
-            2. `<workflow>` — The simulation workflow for this stage. Follow its instructions, input contract, and output format exactly.
+            ```yaml
+            status: ok|partial|failed
+            artifact: |
+              [Complete artifact following <workflow>]
+            questions:
+              - "Assumptions made"
+            refinements:
+              - "Input improvements"
+            ```
+
+            ## Guardrails
+
+            - Simulation only — do not create or modify files.
+            - After generating the artifact, audit it against the source input for assumptions and ambiguities.
+
+            ## Reference Sections
+
+            1. `<project_context>` — Project architecture and conventions
+            2. `<workflow>` — Full workflow quality guidance
           MARKDOWN
-        end
-
-        def resolve_workflow_path(mode)
-          rel_path = WORKFLOW_PATHS[mode]
-          raise ArgumentError, "Unsupported simulation mode '#{mode}'" unless rel_path
-
-          # Return gem-relative path (ace-taskflow/handbook/...)
-          "ace-taskflow/#{rel_path}"
         end
 
         def load_bundle_from_config(config_content)
@@ -141,6 +220,7 @@ module Ace
           status = "partial" unless VALID_STATUSES.include?(status)
 
           artifact = parsed["artifact"].to_s.strip
+          review_artifact = parsed["review_artifact"].to_s.strip
           findings = normalize_list(parsed["findings"])
           questions = normalize_list(parsed["questions"])
           refinements = normalize_list(parsed["refinements"])
@@ -157,6 +237,7 @@ module Ace
             refinements: refinements
           }
           payload[:artifact] = artifact unless artifact.empty?
+          payload[:review_artifact] = review_artifact unless review_artifact.empty?
           payload[:unresolved_gaps] = unresolved_gaps.uniq unless unresolved_gaps.empty?
           payload
         end
@@ -217,6 +298,7 @@ module Ace
           {
             "status" => sections["status"]&.first || "partial",
             "artifact" => sections["artifact"]&.join("\n") || "",
+            "review_artifact" => sections["review_artifact"]&.join("\n") || "",
             "findings" => sections["findings"] || [],
             "questions" => sections["questions"] || [],
             "refinements" => sections["refinements"] || [],
@@ -225,7 +307,7 @@ module Ace
         end
 
         def parse_inline_header(line)
-          match = line.match(/\A(status|artifact|findings|questions|refinements|unresolved[_ ]gaps)\s*:\s*(.*)\z/i)
+          match = line.match(/\A(status|review[_ ]artifact|artifact|findings|questions|refinements|unresolved[_ ]gaps)\s*:\s*(.*)\z/i)
           return [nil, nil] unless match
 
           key = extract_header(match[1])
@@ -236,6 +318,8 @@ module Ace
         def extract_header(line)
           normalized = line.downcase.sub(/:\z/, "")
           return "status" if normalized.start_with?("status")
+          return "review_artifact" if normalized.start_with?("review artifact")
+          return "review_artifact" if normalized.start_with?("review_artifact")
           return "artifact" if normalized.start_with?("artifact")
           return "findings" if normalized.start_with?("findings")
           return "questions" if normalized.start_with?("questions")
