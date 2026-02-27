@@ -17,7 +17,8 @@ module Ace
 
       HELP_EXAMPLES = [
         "ace-sim run --preset validate-idea --source path/to/source.md --provider codex:mini --dry-run",
-        "ace-sim run --preset validate-idea --source path/to/source.md --provider codex:mini --provider google:gflash --repeat 2"
+        "ace-sim run --preset validate-idea --source path/to/source.md --provider codex:mini --provider google:gflash --repeat 2",
+        "ace-sim run --preset validate-idea --source path/to/source.md --provider glite --synthesis-workflow wfi://task/review-work --synthesis-provider claude:haiku"
       ].freeze
 
       def self.start(args)

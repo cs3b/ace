@@ -4,11 +4,13 @@ module Ace
   module Sim
     module Organisms
       class SimulationRunner
-        def initialize(source_resolver: nil, session_store: nil, stage_executor: nil, synthesis_builder: nil)
+        def initialize(source_resolver: nil, session_store: nil, stage_executor: nil, synthesis_builder: nil,
+                       final_synthesis_executor: nil)
           @source_resolver = source_resolver || Molecules::SourceResolver.new
           @session_store = session_store || Molecules::SessionStore.new
           @stage_executor = stage_executor || Molecules::StageExecutor.new
           @synthesis_builder = synthesis_builder || Molecules::SynthesisBuilder.new
+          @final_synthesis_executor = final_synthesis_executor || Molecules::FinalSynthesisExecutor.new
         end
 
         def run(session)
@@ -28,10 +30,20 @@ module Ace
             end
           end
 
+          final_stage = nil
+          if session.synthesis_enabled?
+            final_stage = final_synthesis_executor.execute(
+              run_dir: run_dir,
+              session: session,
+              chains: chains
+            )
+          end
+
           synthesis = synthesis_builder.build(
             session: session,
             resolved_source: resolved_source,
-            chains: chains
+            chains: chains,
+            final_stage: final_stage
           )
           session_store.write_synthesis(run_dir, synthesis)
 
@@ -42,7 +54,8 @@ module Ace
               "resolved_source" => resolved_source,
               "status" => synthesis["status"],
               "chain_count" => chains.length,
-              "writeback_applied" => false
+              "writeback_applied" => false,
+              "synthesis_report_path" => final_stage && final_stage["output_path"]
             )
           )
 
@@ -52,8 +65,9 @@ module Ace
             run_id: run_id,
             run_dir: run_dir,
             chains: chains,
+            final_stage: final_stage,
             synthesis: synthesis,
-            error: synthesis["status"] == "failed" ? "All chains failed" : nil
+            error: synthesis["status"] == "failed" ? failure_reason(chains, final_stage) : nil
           }
         rescue Ace::Sim::ValidationError => e
           {
@@ -79,7 +93,7 @@ module Ace
 
         private
 
-        attr_reader :source_resolver, :session_store, :stage_executor, :synthesis_builder
+        attr_reader :source_resolver, :session_store, :stage_executor, :synthesis_builder, :final_synthesis_executor
 
         def run_chain(session:, run_dir:, provider:, iteration:, resolved_source:)
           current_input_path = resolved_source.fetch("path")
@@ -122,6 +136,13 @@ module Ace
             session.regenerate_run_id!
             retry
           end
+        end
+
+        def failure_reason(chains, final_stage)
+          return "Final synthesis failed" if final_stage && final_stage["status"] == "failed"
+          return "All chains failed" if chains.all? { |chain| chain["status"] == "failed" }
+
+          "Simulation failed"
         end
       end
     end

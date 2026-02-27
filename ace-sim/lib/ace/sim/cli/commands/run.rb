@@ -14,6 +14,8 @@ module Ace
           option :steps, type: :string, desc: "Comma-separated step names"
           option :provider, type: :array, desc: "Provider:model (repeatable, e.g. --provider codex:mini)"
           option :repeat, type: :integer, desc: "Repeat count for each provider"
+          option :synthesis_workflow, type: :string, desc: "Workflow/file reference for final suggestions synthesis"
+          option :synthesis_provider, type: :string, desc: "Provider:model for final suggestions synthesis"
           option :dry_run, type: :boolean, desc: "Enable non-mutating run"
           option :writeback, type: :boolean, desc: "Enable writeback"
           option :quiet, aliases: ["-q"], type: :boolean, default: false, desc: "Suppress non-essential output"
@@ -69,6 +71,17 @@ module Ace
             repeat = Integer(repeat)
             raise Ace::Core::CLI::Error.new("--repeat must be >= 1") if repeat < 1
 
+            synthesis_workflow = pick_value(
+              options[:synthesis_workflow],
+              preset_data["synthesis_workflow"],
+              Ace::Sim.get("sim", "synthesis_workflow")
+            ).to_s.strip
+            synthesis_provider = pick_value(
+              options[:synthesis_provider],
+              preset_data["synthesis_provider"],
+              Ace::Sim.get("sim", "synthesis_provider")
+            ).to_s.strip
+
             dry_run = pick_value(options[:dry_run], preset_data["dry_run"], false)
             writeback = pick_value(options[:writeback], preset_data["writeback"], Ace::Sim.get("sim", "writeback") || false)
 
@@ -83,7 +96,9 @@ module Ace
               dry_run: dry_run,
               writeback: writeback,
               verbose: options[:verbose],
-              step_bundles: step_bundles
+              step_bundles: step_bundles,
+              synthesis_workflow: synthesis_workflow,
+              synthesis_provider: synthesis_provider
             )
           rescue ArgumentError => e
             raise Ace::Core::CLI::Error.new(e.message)
