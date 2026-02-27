@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.676] - 2026-02-27
+
+### Fixed
+- **ace-sim v0.3.2**: Handle unhandled runtime exceptions in `SimulationRunner#run` by rescuing `StandardError` and returning structured failure results instead of crashing the CLI
+
 ## [0.9.675] - 2026-02-27
 
 ### Removed

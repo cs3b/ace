@@ -65,6 +65,16 @@ module Ace
             synthesis: nil,
             error: e.message
           }
+        rescue StandardError => e
+          {
+            success: false,
+            status: "failed",
+            run_id: session.run_id,
+            run_dir: nil,
+            chains: [],
+            synthesis: nil,
+            error: "#{e.class}: #{e.message}"
+          }
         end
 
         private
