@@ -24,7 +24,7 @@ module Ace
           @bundle_load_file = bundle_load_file || method(:default_bundle_load_file)
         end
 
-        def call(resolved_source:, mode:, run_id:, previous_stage_output: nil)
+        def call(resolved_source:, mode:, run_id:, previous_stage_output: nil, model: nil)
           source_path = resolved_source[:path]
           raise ArgumentError, "Missing source path for stage execution" if source_path.nil? || source_path.strip.empty?
 
@@ -45,7 +45,7 @@ module Ace
 
           # 5. Call LLM
           response = @llm_query.call(
-            @model_resolver.call,
+            model || @model_resolver.call,
             user_prompt,
             system: system_prompt,
             sandbox: { mode: "read-only", intent: "taskflow-next-phase-simulation" },

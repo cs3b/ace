@@ -71,7 +71,7 @@ class NextPhaseSimulationRunnerTest < AceTaskflowTestCase
       File.write(source_path, "# Idea\n")
 
       stage_calls = []
-      stage_executor = lambda do |resolved_source:, mode:, run_id:, previous_stage_output: nil|
+      stage_executor = lambda do |resolved_source:, mode:, run_id:, previous_stage_output: nil, **_args|
         stage_calls << [mode, previous_stage_output&.dig(:mode)]
         {
           run_id: run_id,

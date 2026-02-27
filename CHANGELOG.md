@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.682] - 2026-02-27
+
+### Added
+- **ace-taskflow v0.46.0**: `--model` / `-m` CLI flag for `review-next-phase` to override LLM model at runtime
+
+### Fixed
+- **ace-llm config**: Correct Google provider model alias `pro` from `gemini-3.0-pro` to `gemini-3-pro`
+
 ## [0.9.681] - 2026-02-27
 
 ### Changed

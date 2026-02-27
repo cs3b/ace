@@ -33,7 +33,7 @@ module Ace
           @trigger_policy = trigger_policy || Molecules::NextPhaseTriggerPolicy.new
         end
 
-        def run(source:, modes:, no_writeback: false, manual: true, cli_enable: false, cli_disable: false)
+        def run(source:, modes:, no_writeback: false, manual: true, cli_enable: false, cli_disable: false, model: nil)
           resolved_source = resolve_source!(source)
           trigger = @trigger_policy.resolve(
             source_type: resolved_source[:type],
@@ -52,7 +52,7 @@ module Ace
 
           stages_result = execute_stages(
             normalized_modes: normalized_modes, resolved_source: resolved_source,
-            run_id: run_id, session_dir: session_dir,
+            run_id: run_id, session_dir: session_dir, model: model,
             on_stage_start: ->(stage) { current_stage = stage }
           )
 
@@ -105,7 +105,7 @@ module Ace
           [run_id, run_started_at, session_dir, session, request_path]
         end
 
-        def execute_stages(normalized_modes:, resolved_source:, run_id:, session_dir:, on_stage_start: nil)
+        def execute_stages(normalized_modes:, resolved_source:, run_id:, session_dir:, model: nil, on_stage_start: nil)
           stage_outputs = []
           stage_payloads = {}
           current_stage = nil
@@ -120,7 +120,8 @@ module Ace
                 resolved_source: resolved_source,
                 mode: mode,
                 run_id: run_id,
-                previous_stage_output: stage_payloads[stage_outputs.last&.dig(:mode)]
+                previous_stage_output: stage_payloads[stage_outputs.last&.dig(:mode)],
+                model: model
               )
 
               # Save prompts if returned (for introspection)
@@ -323,12 +324,13 @@ module Ace
           "task"
         end
 
-        def execute_stage(resolved_source:, mode:, run_id:, previous_stage_output: nil)
+        def execute_stage(resolved_source:, mode:, run_id:, previous_stage_output: nil, model: nil)
           @stage_executor.call(
             resolved_source: resolved_source,
             mode: mode,
             run_id: run_id,
-            previous_stage_output: previous_stage_output
+            previous_stage_output: previous_stage_output,
+            model: model
           )
         end
 

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2026-02-27
+
+### Added
+- `--model` / `-m` CLI flag for `review-next-phase` command to override LLM model at runtime
+
 ## [0.45.1] - 2026-02-27
 
 ### Changed
