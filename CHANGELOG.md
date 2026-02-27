@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.678] - 2026-02-27
+
+### Added
+- **ace-sim v0.4.0**: Add optional final synthesis stage with `--synthesis-workflow` and `--synthesis-provider`, producing `final/suggestions.report.md` from chained step outputs.
+
+### Changed
+- **ace-sim v0.4.0**: Extend run/session synthesis metadata with final-stage status and fail overall run when requested final synthesis fails.
+
 ## [0.9.677] - 2026-02-27
 
 ### Changed
