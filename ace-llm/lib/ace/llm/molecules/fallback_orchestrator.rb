@@ -13,9 +13,11 @@ module Ace
 
         # @param config [Models::FallbackConfig] Fallback configuration
         # @param status_callback [Proc, nil] Optional callback for status messages
-        def initialize(config:, status_callback: nil)
+        # @param timeout [Integer, nil] Request timeout in seconds to forward to each client
+        def initialize(config:, status_callback: nil, timeout: nil)
           @config = config
           @status_callback = status_callback
+          @timeout = timeout
           @visited_providers = Set.new
           @start_time = nil
         end
@@ -136,12 +138,15 @@ module Ace
         # @param registry [Molecules::ClientRegistry] Client registry
         # @return [Object] Provider client
         def get_client(provider_name, registry)
+          opts = {}
+          opts[:timeout] = @timeout if @timeout
+
           # Parse provider:model format if present
           if provider_name.include?(":")
             provider, model = provider_name.split(":", 2)
-            registry.get_client(provider, model: model)
+            registry.get_client(provider, model: model, **opts)
           else
-            registry.get_client(provider_name)
+            registry.get_client(provider_name, **opts)
           end
         end
 

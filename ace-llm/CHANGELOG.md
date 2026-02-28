@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.5] - 2026-02-28
+
+### Fixed
+- Thread `--timeout` through fallback path: `FallbackOrchestrator` now accepts and forwards `timeout` to each `registry.get_client()` call, so `--timeout 300` is no longer silently dropped when fallback is enabled
+- Raise `max_tokens` defaults from 4096–8192 to 16384 across all gem providers (anthropic, openai, google, zai, groq, xai, mistral, togetherai, openrouter, lmstudio) and all project-level provider overrides in `.ace/llm/providers/`
+
 ## [0.24.4] - 2026-02-27
 
 ### Added
