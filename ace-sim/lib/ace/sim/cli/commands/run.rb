@@ -10,11 +10,11 @@ module Ace
           desc "Run preset simulation"
 
           option :preset, type: :string, desc: "Preset name (configured in .ace/sim/presets/*.yml)"
-          option :source, type: :string, desc: "Source reference (task/idea reference)"
+          option :source, type: :string, desc: "Source markdown file path"
           option :steps, type: :string, desc: "Comma-separated step names"
           option :provider, type: :array, desc: "Provider:model (repeatable, e.g. --provider codex:mini)"
           option :repeat, type: :integer, desc: "Repeat count for each provider"
-          option :synthesis_workflow, type: :string, desc: "Workflow/file reference for final suggestions synthesis"
+          option :synthesis_workflow, type: :string, desc: "Workflow/file reference for final synthesis (e.g. wfi://task/review, wfi://idea/review)"
           option :synthesis_provider, type: :string, desc: "Provider:model for final suggestions synthesis"
           option :dry_run, type: :boolean, desc: "Enable non-mutating run"
           option :writeback, type: :boolean, desc: "Enable writeback"
