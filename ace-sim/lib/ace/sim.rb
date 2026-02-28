@@ -8,7 +8,7 @@ require "ace/b36ts"
 
 require_relative "sim/version"
 require_relative "sim/models/simulation_session"
-require_relative "sim/molecules/source_resolver"
+require_relative "sim/molecules/source_bundler"
 require_relative "sim/molecules/stage_executor"
 require_relative "sim/molecules/final_synthesis_executor"
 require_relative "sim/molecules/session_store"

@@ -26,7 +26,7 @@ class SimulationSessionTest < AceSimTestCase
     session = Ace::Sim::Models::SimulationSession.new(**base_args)
 
     assert_equal "validate-idea", session.preset
-    assert_equal "296.02", session.source
+    assert_equal ["296.02"], session.source
     assert_equal %w[draft plan work], session.steps
     assert_equal ["codex:mini"], session.providers
     assert_equal 2, session.repeat

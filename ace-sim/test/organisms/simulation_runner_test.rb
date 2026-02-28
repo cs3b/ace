@@ -54,15 +54,15 @@ class SimulationRunnerTest < AceSimTestCase
   end
 
   def build_session(source:, run_id: "runtest", providers: ["codex:mini"], repeat: 1,
-                    synthesis_workflow: "", synthesis_provider: "")
+                    synthesis_workflow: "", synthesis_provider: "", writeback: false, dry_run: true)
     Ace::Sim::Models::SimulationSession.new(
       preset: "validate-idea",
       source: source,
       steps: %w[draft plan],
       providers: providers,
       repeat: repeat,
-      dry_run: true,
-      writeback: false,
+      dry_run: dry_run,
+      writeback: writeback,
       synthesis_workflow: synthesis_workflow,
       synthesis_provider: synthesis_provider,
       run_id: run_id,
@@ -73,13 +73,21 @@ class SimulationRunnerTest < AceSimTestCase
     )
   end
 
+  def build_runner(store:, stage_runner:, final_runner: stage_runner)
+    Ace::Sim::Organisms::SimulationRunner.new(
+      session_store: store,
+      stage_executor: Ace::Sim::Molecules::StageExecutor.new(command_runner: stage_runner),
+      final_synthesis_executor: Ace::Sim::Molecules::FinalSynthesisExecutor.new(command_runner: final_runner),
+      source_bundler: Ace::Sim::Molecules::SourceBundler.new(command_runner: stage_runner)
+    )
+  end
+
   def test_runs_file_chained_artifacts
     Dir.mktmpdir do |dir|
       source = File.join(dir, "source.md")
       File.write(source, "initial")
       store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
-      executor = Ace::Sim::Molecules::StageExecutor.new(command_runner: SelectiveRunner.new)
-      runner = Ace::Sim::Organisms::SimulationRunner.new(session_store: store, stage_executor: executor)
+      runner = build_runner(store: store, stage_runner: SelectiveRunner.new)
 
       result = runner.run(build_session(source: source))
 
@@ -91,6 +99,8 @@ class SimulationRunnerTest < AceSimTestCase
       assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "01-draft", "output.md"))
       assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "02-plan", "input.md"))
       assert File.exist?(File.join(run_dir, "chains", "codex-mini-1", "02-plan", "output.md"))
+      assert File.exist?(File.join(run_dir, "input.md"))
+      assert File.exist?(File.join(run_dir, "input.bundle.md"))
     end
   end
 
@@ -99,10 +109,10 @@ class SimulationRunnerTest < AceSimTestCase
       source = File.join(dir, "source.md")
       File.write(source, "initial")
       store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
-      executor = Ace::Sim::Molecules::StageExecutor.new(
-        command_runner: SelectiveRunner.new(fail_provider: "google:gflash", fail_step: "plan")
+      runner = build_runner(
+        store: store,
+        stage_runner: SelectiveRunner.new(fail_provider: "google:gflash", fail_step: "plan")
       )
-      runner = Ace::Sim::Organisms::SimulationRunner.new(session_store: store, stage_executor: executor)
 
       result = runner.run(build_session(source: source, providers: ["codex:mini", "google:gflash"]))
 
@@ -120,8 +130,7 @@ class SimulationRunnerTest < AceSimTestCase
       source = File.join(dir, "source.md")
       File.write(source, "initial")
       store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
-      executor = Ace::Sim::Molecules::StageExecutor.new(command_runner: SelectiveRunner.new)
-      runner = Ace::Sim::Organisms::SimulationRunner.new(session_store: store, stage_executor: executor)
+      runner = build_runner(store: store, stage_runner: SelectiveRunner.new)
 
       result = runner.run(build_session(source: source, repeat: 2))
 
@@ -137,13 +146,7 @@ class SimulationRunnerTest < AceSimTestCase
       source = File.join(dir, "source.md")
       File.write(source, "initial")
       store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
-      executor = Ace::Sim::Molecules::StageExecutor.new(command_runner: SelectiveRunner.new)
-      final_executor = Ace::Sim::Molecules::FinalSynthesisExecutor.new(command_runner: SelectiveRunner.new)
-      runner = Ace::Sim::Organisms::SimulationRunner.new(
-        session_store: store,
-        stage_executor: executor,
-        final_synthesis_executor: final_executor
-      )
+      runner = build_runner(store: store, stage_runner: SelectiveRunner.new)
 
       session = build_session(
         source: source,
@@ -170,12 +173,10 @@ class SimulationRunnerTest < AceSimTestCase
       source = File.join(dir, "source.md")
       File.write(source, "initial")
       store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
-      runner_executor = SelectiveRunner.new
-      final_runner = SelectiveRunner.new(fail_final: true)
-      runner = Ace::Sim::Organisms::SimulationRunner.new(
-        session_store: store,
-        stage_executor: Ace::Sim::Molecules::StageExecutor.new(command_runner: runner_executor),
-        final_synthesis_executor: Ace::Sim::Molecules::FinalSynthesisExecutor.new(command_runner: final_runner)
+      runner = build_runner(
+        store: store,
+        stage_runner: SelectiveRunner.new,
+        final_runner: SelectiveRunner.new(fail_final: true)
       )
 
       session = build_session(
@@ -188,6 +189,23 @@ class SimulationRunnerTest < AceSimTestCase
       assert_equal "failed", result[:status]
       assert_equal "Final synthesis failed", result[:error]
       assert_equal "failed", result[:final_stage]["status"]
+    end
+  end
+
+  def test_rejects_writeback_when_multiple_sources
+    Dir.mktmpdir do |dir|
+      source_a = File.join(dir, "source-a.md")
+      source_b = File.join(dir, "source-b.md")
+      File.write(source_a, "a")
+      File.write(source_b, "b")
+      store = Ace::Sim::Molecules::SessionStore.new(cache_root: dir)
+      runner = build_runner(store: store, stage_runner: SelectiveRunner.new)
+
+      session = build_session(source: [source_a, source_b], writeback: true, dry_run: false)
+      result = runner.run(session)
+
+      assert_equal "failed", result[:status]
+      assert_match(/writeback requires a single source file/, result[:error])
     end
   end
 end

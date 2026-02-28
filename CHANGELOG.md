@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.687] - 2026-02-28
+
+### Changed
+- **ace-sim v0.6.0**: `--source` now accepts multiple values via repeatable flag (not CSV)
+- **ace-sim v0.6.0**: Source values passed directly to `ace-bundle` without Ruby preprocessing
+- **ace-sim v0.6.0**: Deleted `SourceResolver` molecule (ace-bundle handles glob/file resolution)
+
+## [0.9.686] - 2026-02-28
+
+### Fixed
+- **ace-llm v0.24.6**: Resolve `provider:provider` alias format (e.g., `codex:codex`) to provider's default model instead of passing literal provider name, which caused API rejection
+
+## [0.9.685] - 2026-02-28
+
+### Fixed
+- **ace-sim v0.5.1**: Simplify nil guard in `FinalSynthesisExecutor#copy_source` to use `||` operator
+- **ace-sim v0.5.1**: Filter directories from glob resolution results to prevent confusing errors
+
+## [0.9.684] - 2026-02-28
+
+### Added
+- **ace-sim v0.5.0**: Multi-file input support via `--source` flag — accept comma-separated paths and glob patterns, routed through ace-bundle to produce unified `input.bundle.md`
+- **ace-sim v0.5.0**: New `SourceBundler` molecule for ace-bundle CLI integration
+- **ace-sim v0.5.0**: Writeback guard rejects multi-file `--source` with clear error before LLM call
+
+### Changed
+- **ace-sim v0.5.0**: `SourceResolver` returns rich metadata (`paths`, `multi_file`, `source_spec`) for multi-file awareness
+- **ace-sim v0.5.0**: `FinalSynthesisExecutor` copies bundled input as `source.original.md` instead of raw source path
+
 ## [0.9.683] - 2026-02-28
 
 ### Added
