@@ -151,7 +151,22 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * Integration with ace-idea if applicable
    * Avoid adding implementation details
 
-8. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
+8. **Create Draft Usage Documentation (When Interfaces Change)**
+   * **Applicability check** — does this task change any external API surface?
+     * CLI commands (new commands, changed flags, changed output format)
+     * Developer API (new/changed modules, classes, methods)
+     * Agent API (new/changed workflows, protocols, slash commands)
+     * Configuration (new/changed config keys, env vars)
+   * If YES to any:
+     * Create `ux/usage.md` in the task directory using the embedded draft-usage template
+     * Populate with 2-3 concrete scenarios from the Interface Contract section
+     * Each scenario: goal + command/call + expected output
+     * This is the behavioral acceptance contract the implementer must satisfy
+     * The full usage doc gets completed during work-on-task using `wfi://docs/update-usage`
+   * If NO (internal refactoring, docs-only, test-only):
+     * Skip — no `ux/usage.md` needed
+
+9. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
    * **IMPORTANT**: When task is created from idea files, ALWAYS mark them as done:
    * Track all source idea files used for this draft task:
      * List all idea files referenced during behavioral specification
@@ -177,7 +192,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * Report each file movement: "Idea marked as done: [idea-reference]"
      * Confirm all source ideas organized: "All X idea files marked as done"
 
-9. **Ensure Draft Creation Completion**
+10. **Ensure Draft Creation Completion**
    * Verify all behavioral specifications are captured:
      * Cross-reference against initial requirements
      * Confirm each draft file exists with correct status
@@ -190,8 +205,9 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * [ ] Success criteria are measurable
      * [ ] Draft is decision-complete: no unresolved behavior choices left for implementer
      * [ ] Defaults are explicit where behavior could otherwise be ambiguous
+     * [ ] Usage documentation created in `ux/usage.md` (when task changes any API surface)
 
-10. **Run Quality Pass (Better, Not More)**
+11. **Run Quality Pass (Better, Not More)**
    * Perform one concise quality pass before finalizing:
      * Happy path is concrete and observable
      * At least one invalid/failure path is specified
@@ -199,7 +215,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * Success criteria are directly verifiable
    * Improve clarity and precision without adding specialized sections
 
-11. **Provide Behavioral Summary**
+12. **Provide Behavioral Summary**
    * List all created draft tasks with their:
      * IDs and titles
      * User experience summaries
@@ -400,9 +416,46 @@ the decomposition was premature. Consider consolidating remaining subtasks.
 
 ## References
 
+- Usage documentation: `ux/usage.md` (draft usage scenarios)
 - Related ace-idea output (if applicable)
 - User experience requirements
 - Interface specification examples
 ```
+</template>
+<template path="tmpl://task-management/draft-usage">
+# [Feature/Change Name] - Draft Usage
+
+## API Surface
+- [ ] CLI (user-facing commands)
+- [ ] Developer API (modules, classes)
+- [ ] Agent API (workflows, protocols, slash commands)
+- [ ] Configuration (config keys, env vars)
+
+## Usage Scenarios
+
+### Scenario 1: [Primary Use Case]
+
+**Goal**: [What the user/developer/agent achieves]
+
+```bash
+[command or API call]
+
+# Expected output:
+[output]
+```
+
+### Scenario 2: [Error / Edge Case]
+
+**Goal**: [What happens on invalid input or boundary condition]
+
+```bash
+[command or API call]
+
+# Expected output:
+[error message or behavior]
+```
+
+## Notes for Implementer
+- Full usage documentation to be completed during work-on-task phase using `wfi://docs/update-usage`
 </template>
 </documents>

@@ -74,6 +74,9 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
        - Behavioral specification (User Experience, Interface Contract, Success Criteria)
        - Existing scope and deliverables
        - Any existing implementation notes
+   - **Load Usage Context (if present):**
+     - Check for `ux/usage.md` in the task directory
+     - If it exists, read it as additional behavioral context — usage scenarios serve as acceptance criteria for the implementation plan
    - **Plan Against Behavioral Spec Structure:**
      - Treat the behavioral spec as the planning checklist, not background context
      - Explicitly cover each section in the plan: Interface Contract, Error Handling, Edge Cases, Success Criteria
@@ -228,8 +231,8 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
 
    This output is delivered to stdout or the ace-assign phase report.
 
-   **Optional: UX/Usage Documentation Note**
-   For user-facing features (commands, CLI tools, APIs, workflows), note that usage documentation should be created during implementation (work-on-task phase), not during planning.
+   **UX/Usage Documentation Note**
+   For user-facing features (commands, CLI tools, APIs, workflows), draft usage documentation (`ux/usage.md`) with key scenarios is created during the draft phase. The full usage documentation is completed during implementation (work-on-task phase) using `wfi://docs/update-usage`.
 
 ## Implementation Planning Templates
 
