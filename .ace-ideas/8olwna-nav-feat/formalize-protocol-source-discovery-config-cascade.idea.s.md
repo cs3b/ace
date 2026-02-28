@@ -1,10 +1,13 @@
 ---
+
 title: Formalize ace-nav Protocol Source Discovery via Configuration Cascade
 filename_suggestion: feat-nav-config-protocol-discovery
 enhanced_at: 2026-01-22 21:45:52
 location: backlog
 llm_model: gflash
+source: "taskflow:v.0.9.0"
 ---
+
 
 # Formalize ace-nav Protocol Source Discovery via Configuration Cascade
 
