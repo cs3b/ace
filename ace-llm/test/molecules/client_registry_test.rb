@@ -271,6 +271,43 @@ module Ace
         assert_match(/symbol keys not permitted/, err, "Should mention symbol keys are not permitted")
       end
 
+      def test_resolve_alias_provider_as_model_uses_default
+        provider_dir = File.join(@temp_dir, "providers")
+        Dir.mkdir(provider_dir)
+
+        codex_config = {
+          "name" => "codex",
+          "class" => "TestProviders::CodexClient",
+          "gem" => "test-gem",
+          "models" => ["gpt-5", "gpt-5-mini"],
+          "aliases" => {
+            "model" => {"mini" => "gpt-5-mini", "5" => "gpt-5"}
+          }
+        }
+
+        claude_config = {
+          "name" => "claude",
+          "class" => "TestProviders::ClaudeClient",
+          "gem" => "test-gem",
+          "models" => ["claude-opus-4-1", "claude-sonnet-4-5"]
+        }
+
+        File.write(File.join(provider_dir, "codex.yml"), codex_config.to_yaml)
+        File.write(File.join(provider_dir, "claude.yml"), claude_config.to_yaml)
+
+        registry = Molecules::ClientRegistry.new(config_paths: [provider_dir])
+
+        # provider:provider auto-resolves to provider:default_model
+        assert_equal "codex:gpt-5", registry.resolve_alias("codex:codex")
+        assert_equal "claude:claude-opus-4-1", registry.resolve_alias("claude:claude")
+
+        # Existing model aliases still work
+        assert_equal "codex:gpt-5-mini", registry.resolve_alias("codex:mini")
+
+        # Non-matching alias passes through unchanged
+        assert_equal "codex:unknown", registry.resolve_alias("codex:unknown")
+      end
+
       def test_yaml_config_date_fields_supported
         # Verify that Date fields in YAML are handled correctly
         # Date class is permitted for timestamp fields like last_synced
