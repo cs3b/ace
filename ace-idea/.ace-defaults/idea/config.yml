@@ -7,7 +7,7 @@ idea:
   default_status: pending
 
   # LLM model for idea enhancement
-  llm_model: gemini:flash-preview
+  llm_model: gemini:flash-latest
 
   # LLM model for doctor --auto-fix-with-agent
   doctor_agent_model: gemini:flash-latest
