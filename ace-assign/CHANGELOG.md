@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-02-28
+
+### Added
+- Add `verify-test-suite` step to `work-on-task` preset between `mark-task-done` and `verify-e2e` with profiling and performance budget enforcement
+- Add `verify-test-suite` step (number 012) to `work-on-tasks` preset between batch-parent and `verify-e2e`
+- Enrich `verify-test-suite` phase catalog with structured steps: `run-package-tests`, `check-performance-budgets`, `fix-violations`, `run-suite`
+- Add performance budget thresholds to phase definition: atoms <50ms, molecules <100ms, integration <1s, full package <30s
+- Move `verify-test-suite` from Optional to Core in compose workflow for "Implement + PR" and "Batch tasks" intents
+- Add `verify-test-suite` inclusion guidance note to compose workflow Phase Selection Guidelines
+
+### Changed
+- Strengthen `verify-test-suite` composition rule from `recommended` to `required` when assignment includes `work-on-task` or `fix-bug`
+
+## [0.14.0] - 2026-02-28
+
+### Added
+- Add `verify-e2e` phase to catalog: E2E coverage review and targeted scenario execution for modified packages
+- Add `update-docs` phase to catalog: public-facing documentation updates when CLI contracts or public APIs change
+- Add `verify-e2e` and `update-docs` steps to `work-on-task` preset (between `mark-task-done` and `release-minor`, and between `release-minor` and `create-pr`)
+- Add batch-level `verify-e2e` (step 015) and `update-docs` (step 025) to `work-on-tasks` preset
+- Add ordering rules to `composition-rules.yml`: `e2e-before-release`, `update-docs-after-release`, `update-docs-before-pr`, `e2e-after-verify`
+- Add conditional rule to suggest `verify-e2e` and `update-docs` when assignment touches CLI commands or public API
+- Add `e2e-review-run-pair` and `docs-update-validate-pair` to composition pairs
+- Update `compose.wf.md` Phase Selection Guidelines table to include `verify-e2e` and `update-docs` in all relevant workflow intents with skip guidance
+
 ## [0.13.4] - 2026-02-26
 
 ### Fixed

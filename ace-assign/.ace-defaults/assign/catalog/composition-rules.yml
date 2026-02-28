@@ -73,6 +73,26 @@ ordering:
     after: create-retro
     note: "Findings report feeds into retrospective as structured input"
 
+  - rule: e2e-before-release
+    before: verify-e2e
+    after: release
+    note: "E2E must pass before bumping version — catch failures early"
+
+  - rule: update-docs-after-release
+    before: release
+    after: update-docs
+    note: "Docs should reference the new version number"
+
+  - rule: update-docs-before-pr
+    before: update-docs
+    after: create-pr
+    note: "Updated docs should be visible to PR reviewers"
+
+  - rule: e2e-after-verify
+    before: verify-test-suite
+    after: verify-e2e
+    note: "Unit tests should pass before E2E runs"
+
 pairs:
   - name: review-apply-cycle
     phases: [review-pr, apply-feedback]
@@ -112,6 +132,16 @@ pairs:
     cap: 1
     note: "Re-plan produces 1-2 sub-tasks, then reflect runs once more (no further re-plan)"
 
+  - name: e2e-review-run-pair
+    phases: [verify-e2e]
+    pattern: sequential
+    note: "E2E review (coverage matrix) and targeted run are a single phase with two steps"
+
+  - name: docs-update-validate-pair
+    phases: [update-docs]
+    pattern: sequential
+    note: "Doc update followed by validation in same phase"
+
 conditional:
   - when: "assignment includes work-on-task"
     suggest: [plan-task, mark-task-done, reflect-and-refactor]
@@ -122,7 +152,13 @@ conditional:
 
   - when: "assignment includes work-on-task or fix-bug"
     suggest: [verify-test-suite]
+    strength: required
+    note: "Test suite verification with profiling catches slow tests and regressions before release"
+
+  - when: "assignment includes work-on-task and touches CLI commands or public API"
+    suggest: [verify-e2e, update-docs]
     strength: recommended
+    note: "Public contract changes require E2E verification and doc updates"
 
   - when: "task involves auth, security, or data handling"
     suggest: [security-audit]

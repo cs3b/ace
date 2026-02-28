@@ -1,0 +1,40 @@
+name: verify-e2e
+skill: ace-e2e-review
+description: Review E2E coverage for modified packages and run targeted scenarios
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Must have implementation to test"
+  - name: verify-test-suite
+    strength: recommended
+    reason: "Unit tests should pass before running E2E"
+
+produces: [e2e-results, coverage-matrix]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "E2E review and execution run in the project environment"
+
+when_to_skip:
+  - "No public CLI API changes (internal-only refactoring)"
+  - "Package has no E2E test scenarios and no coverage gaps identified"
+
+effort: medium
+tags: [testing, e2e, verification]
+
+steps:
+  - name: review-coverage
+    description: "Run /ace-e2e-review for each heavily modified package to get coverage matrix"
+    tool: "ace-e2e-review <package>"
+    note: "Identify gaps, overlaps, and which TCs need updating before running"
+
+  - name: update-if-needed
+    description: "If coverage matrix shows gaps or stale TCs, update or create E2E tests"
+    conditional: "coverage-matrix shows gaps or outdated TCs"
+
+  - name: run-targeted
+    description: "Run ace-test-e2e-suite for each heavily modified package (not full suite)"
+    tool: "ace-test-e2e-suite <package>"
+    note: "Pass package name(s) of heavily modified packages only"
