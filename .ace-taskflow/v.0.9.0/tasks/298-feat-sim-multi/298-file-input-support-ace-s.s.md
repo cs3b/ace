@@ -108,6 +108,7 @@ Carried forward from idea `8pr2vt-taskflow-add`.
 
 ## References
 
+- Usage documentation: `ux/usage.md` (draft usage scenarios)
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/done/8pr2vt-taskflow-add/idea.idea.s.md`
 - ace-sim source resolver: `ace-sim/lib/ace/sim/molecules/source_resolver.rb`
 - ace-sim stage executor: `ace-sim/lib/ace/sim/molecules/stage_executor.rb`
