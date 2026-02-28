@@ -18,6 +18,19 @@ Examples:
 - `/ace-review-pr 90` - Review a pull request with AI analysis
 - `/ace-task-draft` - Draft a new task specification
 
+
+### Special Shortcut conventions
+
+#### ">" use ace-bundle to load content
+
+">project" -> read content from Bash(ace-bundle project)
+">guide://markdown-style" -> load content from Bash(ace-bundle guide://markdown-style) 
+
+
+#### ">>" read content from ace-bundle command and run instructions 
+
+">>git/commit" -> read and run instructions from Bash(ace-bundle wfi://git/commit)
+
 ### CLI Tools (Terminal Commands)
 
 **Run from:** Terminal (bash/fish shell)
@@ -156,3 +169,15 @@ For comprehensive project details, run: `ace-bundle project`
 This provides architecture, tools, conventions, and structure (1371 lines).
 
 **Key Point**: Do not duplicate project context in responses - reference ace-bundle output.
+
+### Special Shortcut conventions (repeated)
+
+#### ">" use ace-bundle to load content
+
+">project" -> read content from Bash(ace-bundle project)
+">guide://markdown-style" -> load content from Bash(ace-bundle guide://markdown-style) 
+
+
+#### ">>" read content from ace-bundle command and run instructions 
+
+">>git/commit" -> read and run instructions from Bash(ace-bundle wfi://git/commit)
