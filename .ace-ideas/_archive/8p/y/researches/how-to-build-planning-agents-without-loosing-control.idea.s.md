@@ -1,3 +1,11 @@
+---
+id: resear
+status: done
+title: Researches
+tags: []
+created_at: '2026-02-28 20:24:51'
+---
+
 🔑 Key Summary (3–5 Sentences):
 Yogendra Miraje from FactSet outlines a practical approach to building agentic workflows—AI agents capable of dynamic, goal-driven task execution—without sacrificing control. He distinguishes between static workflow agents and dynamic agentic workflows, advocating for the latter in complex enterprise environments. Central to his methodology are blueprints, subgoal planning, modular tool design based on microservices, and strong eval frameworks to ensure reliability and interpretability. The core message: enterprises can achieve scalable autonomy by balancing planning, feedback, and control through thoughtful architecture and tooling.
 

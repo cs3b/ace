@@ -1,3 +1,11 @@
+---
+id: improv
+status: done
+title: 'Workflow Enhancement: Explicit Commit Instructions'
+tags: []
+created_at: '2026-02-28 20:24:51'
+---
+
 # Workflow Enhancement: Explicit Commit Instructions
 
 ## Issue Identified
