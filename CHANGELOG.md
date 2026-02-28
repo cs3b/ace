@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.682] - 2026-02-28
+
+### Fixed
+- **ace-sim v0.4.3**: `sim/run` workflow was missing a writeback step — simulation refinements were applied only inside the `.cache/ace-sim/` run directory and not propagated back to the original source files. New Step 4 "Apply Validated Changes" closes this gap.
+
+### Technical
+- **ace-sim v0.4.3**: Update model providers in `validate-task` preset
+- Increase Google provider `max_tokens` from 16384 to 65536 in `.ace/llm/providers/google.yml` to prevent synthesis output truncation
+
 ## [0.9.681] - 2026-02-28
 
 ### Fixed
