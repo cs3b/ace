@@ -172,10 +172,10 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * List all idea files referenced during behavioral specification
      * Note: Multiple idea files may be combined into one task
    * For EACH source idea file:
-     * Mark idea as done using ace-taskflow: `ace-idea done <idea-folder-reference>`
-       * Use the idea folder name (e.g., `20251128-224153-my-idea`), not a file path
-       * This moves the entire idea folder to `ideas/done/<idea-folder>/`
-       * Updates idea frontmatter with completion status and timestamp
+     * Mark idea as done using ace-idea: `ace-idea move <id> --to archive` then `ace-idea update <id> --set status=done`
+       * Use the idea ID (e.g., `8ppq7w`), not a file path
+       * This moves the idea to the `_archive/` folder
+       * Updates idea frontmatter with completion status
    * Update task references:
      * Update the task file's References section with new idea file locations
      * Ensure all moved files are properly tracked
@@ -183,13 +183,13 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * Use `ace-git-commit` to commit all idea file movements together
      * Clear commit message: "Mark source ideas as done after creating task"
    * **Validation Requirements:**
-     * [ ] All source idea files marked as done and moved to ideas/done/
+     * [ ] All source idea files marked as done and moved to _archive/
      * [ ] Task references updated to new locations
      * [ ] Git movements committed
    * Error handling:
-     * If ace-idea done fails: Report error and manual intervention needed
+     * If ace-idea move or update fails: Report error and manual intervention needed
    * Success indicators:
-     * Report each file movement: "Idea marked as done: [idea-reference]"
+     * Report each file movement: "Idea marked as done: [idea-id]"
      * Confirm all source ideas organized: "All X idea files marked as done"
 
 10. **Ensure Draft Creation Completion**
