@@ -4,18 +4,26 @@ module Ace
   module Sim
     module Organisms
       class SimulationRunner
-        def initialize(source_resolver: nil, session_store: nil, stage_executor: nil, synthesis_builder: nil,
-                       final_synthesis_executor: nil)
-          @source_resolver = source_resolver || Molecules::SourceResolver.new
+        def initialize(session_store: nil, stage_executor: nil, synthesis_builder: nil,
+                       final_synthesis_executor: nil, source_bundler: nil)
           @session_store = session_store || Molecules::SessionStore.new
           @stage_executor = stage_executor || Molecules::StageExecutor.new
           @synthesis_builder = synthesis_builder || Molecules::SynthesisBuilder.new
           @final_synthesis_executor = final_synthesis_executor || Molecules::FinalSynthesisExecutor.new
+          @source_bundler = source_bundler || Molecules::SourceBundler.new
         end
 
         def run(session)
-          resolved_source = source_resolver.resolve(session.source)
+          sources = session.source
+          if session.writeback && sources.length > 1
+            raise Ace::Sim::ValidationError, "writeback requires a single source file"
+          end
+
           run_id, run_dir = prepare_unique_run(session)
+          bundled_input_path = source_bundler.bundle(
+            sources: sources,
+            output_path: File.join(run_dir, "input.md")
+          )
 
           chains = []
           session.providers.each do |provider|
@@ -25,7 +33,7 @@ module Ace
                 run_dir: run_dir,
                 provider: provider,
                 iteration: iteration,
-                resolved_source: resolved_source
+                bundled_input_path: bundled_input_path
               )
             end
           end
@@ -35,13 +43,14 @@ module Ace
             final_stage = final_synthesis_executor.execute(
               run_dir: run_dir,
               session: session,
-              chains: chains
+              chains: chains,
+              source_original_input_path: bundled_input_path
             )
           end
 
           synthesis = synthesis_builder.build(
             session: session,
-            resolved_source: resolved_source,
+            sources: sources,
             chains: chains,
             final_stage: final_stage
           )
@@ -51,7 +60,7 @@ module Ace
             run_dir,
             session.to_h.merge(
               "run_id" => run_id,
-              "resolved_source" => resolved_source,
+              "sources" => sources,
               "status" => synthesis["status"],
               "chain_count" => chains.length,
               "writeback_applied" => false,
@@ -94,10 +103,11 @@ module Ace
 
         private
 
-        attr_reader :source_resolver, :session_store, :stage_executor, :synthesis_builder, :final_synthesis_executor
+        attr_reader :session_store, :stage_executor, :synthesis_builder, :final_synthesis_executor,
+                    :source_bundler
 
-        def run_chain(session:, run_dir:, provider:, iteration:, resolved_source:)
-          current_input_path = resolved_source.fetch("path")
+        def run_chain(session:, run_dir:, provider:, iteration:, bundled_input_path:)
+          current_input_path = bundled_input_path
           step_results = []
 
           session.steps.each_with_index do |step, index|

@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-28
+
+### Changed
+- **BREAKING**: `--source` now accepts multiple values via repeatable flag (not CSV parsing)
+- `--source` values passed directly to `ace-bundle` without Ruby preprocessing
+- `SourceResolver` deleted - ace-bundle handles glob expansion and file resolution
+- `SimulationSession.source` is now an array instead of string
+
+### Removed
+- CSV parsing for comma-separated sources (use multiple `--source` flags)
+- Ruby glob expansion (ace-bundle handles this)
+- `SourceResolver` molecule (171 lines removed)
+
+## [0.5.1] - 2026-02-28
+
+### Fixed
+- Simplify nil guard in `FinalSynthesisExecutor#copy_source` to use `||` operator
+
+## [0.5.0] - 2026-02-28
+
+### Added
+- Multi-file input support via `--source` flag (repeatable)
+- `SourceBundler` molecule creates bundle YAML and invokes `ace-bundle`
+- Writeback guard: error when `--writeback` used with multiple sources
+
+### Fixed
+- Update preset provider assertions in command tests
+
 ## [0.4.4] - 2026-02-28
 
 ### Changed

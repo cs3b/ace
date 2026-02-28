@@ -82,6 +82,8 @@ class FinalSynthesisExecutorTest < AceSimTestCase
     Dir.mktmpdir do |dir|
       source = File.join(dir, "source.md")
       File.write(source, "# Original source\n")
+      bundled_input = File.join(dir, "input.bundle.md")
+      File.write(bundled_input, "# Bundled source\n")
       run_dir = File.join(dir, "simulations", "run1")
       FileUtils.mkdir_p(run_dir)
       chain_output = File.join(run_dir, "chains", "codex-mini-1", "01-draft", "output.md")
@@ -99,7 +101,8 @@ class FinalSynthesisExecutorTest < AceSimTestCase
       result = Ace::Sim::Molecules::FinalSynthesisExecutor.new(command_runner: HappyRunner.new).execute(
         run_dir: run_dir,
         session: session,
-        chains: chains
+        chains: chains,
+        source_original_input_path: bundled_input
       )
 
       assert_equal "ok", result["status"]
@@ -114,8 +117,10 @@ class FinalSynthesisExecutorTest < AceSimTestCase
 
       report = File.read(File.join(run_dir, "final", "suggestions.report.md"))
       revised = File.read(File.join(run_dir, "final", "source.revised.md"))
+      original = File.read(File.join(run_dir, "final", "source.original.md"))
       assert_includes report, "# Suggestions"
       assert_includes revised, "# Revised Source"
+      assert_equal "# Bundled source\n", original
     end
   end
 

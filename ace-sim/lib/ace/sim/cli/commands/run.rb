@@ -10,7 +10,7 @@ module Ace
           desc "Run preset simulation"
 
           option :preset, type: :string, desc: "Preset name (configured in .ace/sim/presets/*.yml)"
-          option :source, type: :string, desc: "Source markdown file path"
+          option :source, type: :array, desc: "Source file(s) - repeatable, supports globs"
           option :steps, type: :string, desc: "Comma-separated step names"
           option :provider, type: :array, desc: "Provider:model (repeatable, e.g. --provider codex:mini)"
           option :repeat, type: :integer, desc: "Repeat count for each provider"
@@ -50,8 +50,8 @@ module Ace
               raise Ace::Core::CLI::Error.new("Unknown preset '#{preset_name}'. Known presets: #{Ace::Sim.preset_names.join(', ')}")
             end
 
-            source = pick_value(options[:source], preset_data["source"])
-            raise Ace::Core::CLI::Error.new("--source is required") if source.to_s.strip.empty?
+            sources = options[:source] || Array(preset_data["source"])
+            raise Ace::Core::CLI::Error.new("--source is required") if sources.empty?
 
             steps = if options[:steps] && !options[:steps].to_s.strip.empty?
               parse_steps(options[:steps])
@@ -89,7 +89,7 @@ module Ace
 
             Models::SimulationSession.new(
               preset: preset_name,
-              source: source,
+              source: sources,
               steps: steps,
               providers: providers,
               repeat: repeat,
