@@ -1,10 +1,13 @@
 ---
-title: Refactor ace-taskflow: Simplify Release Model and Archive Structure
+id: 8ppq7w
+title: "Refactor ace-taskflow: Simplify Release Model and Archive Structure"
+status: done
+tags: []
+created_at: '2026-02-26 17:28:46'
 filename_suggestion: refactor-taskflow-simplify-archive
 enhanced_at: 2026-02-26 17:28:46
 location: active
 llm_model: pi:glm
-status: done
 completed_at: 2026-02-26T20:34:02+00:00
 ---
 # Refactor ace-taskflow: Simplify Release Model and Archive Structure
