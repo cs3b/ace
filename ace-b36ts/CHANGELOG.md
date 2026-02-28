@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-02-28
+
+### Fixed
+- `encode_split` week token now uses ISO Thursday-based attribution (`iso_week_month_and_number`) instead of naive day-based calculation (`simple_week_in_month`)
+- `encode_split` week token now correctly encodes values 31-35 (base36 `v`–`z`) instead of raw week numbers 1-5, matching `encode_week` output
+- `encode_split` month component now uses the ISO week's month when `:week` is in levels, ensuring boundary dates (e.g., Sunday Mar 1 whose Thursday is Feb 26) partition to the correct month
+
 ## [0.7.4] - 2026-02-24
 
 ### Changed

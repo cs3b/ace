@@ -201,12 +201,16 @@ module Ace
               precision: full_compact[4..5]
             }
 
-            week_value = simple_week_in_month(time)
-            week_token = encode_value(week_value, 1, alphabet)
+            if levels.include?(:week)
+              iso_year, iso_month, week_in_month = iso_week_month_and_number(time)
+              iso_months_offset = calculate_months_offset_ym(iso_year, iso_month, year_zero)
+              components[:month] = encode_value(iso_months_offset, 2, alphabet)
+              week_token = encode_value(week_in_month + 30, 1, alphabet)
+            end
 
             output = {}
             levels.each do |level|
-              output[level] = level == :week ? week_token : components[level]
+              output[level] = (level == :week) ? week_token : components[level]
             end
 
             rest = split_rest_for(levels, full_compact)
