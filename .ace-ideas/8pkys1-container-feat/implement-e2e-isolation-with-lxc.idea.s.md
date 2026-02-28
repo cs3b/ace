@@ -1,6 +1,12 @@
 ---
-source: "taskflow:v.0.9.0"
+source: taskflow:v.0.9.0
+id: 8pkys1
+status: pending
+title: Idea
+tags: []
+created_at: '2026-02-21 23:11:08'
 ---
+
 # Idea
 
 e2e container isolation on vm - linux 

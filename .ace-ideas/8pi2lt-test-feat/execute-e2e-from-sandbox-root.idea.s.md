@@ -1,13 +1,15 @@
 ---
-
 title: Sandbox-Root Execution for E2E Test Runner
 filename_suggestion: feat-test-sandbox-root-exec
-enhanced_at: 2026-02-19 01:44:12
+enhanced_at: 2026-02-19 01:44:12.000000000 +00:00
 location: backlog
 llm_model: gflash
-source: "taskflow:v.0.9.0"
+source: taskflow:v.0.9.0
+id: 8pi2lt
+status: pending
+tags: []
+created_at: '2026-02-19 01:44:13'
 ---
-
 
 # Sandbox-Root Execution for E2E Test Runner
 

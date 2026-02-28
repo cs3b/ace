@@ -1,6 +1,12 @@
 ---
-source: "taskflow:v.0.9.0"
+source: taskflow:v.0.9.0
+id: 8pmnxi
+status: pending
+title: Idea
+tags: []
+created_at: '2026-02-23 15:57:13'
 ---
+
 # Idea
 
 # ace-llm provider whitelisting: Allow configuring w...

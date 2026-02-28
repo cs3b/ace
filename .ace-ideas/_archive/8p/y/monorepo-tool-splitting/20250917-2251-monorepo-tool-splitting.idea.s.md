@@ -18,6 +18,11 @@
   :cache_read: 0.0
   :total: 0.007784
   :currency: USD
+id: monore
+status: done
+title: Splitting Tools into Smaller Gems with Monorepo Support
+tags: []
+created_at: '2068-01-24 16:30:25'
 ---
 
 # Splitting Tools into Smaller Gems with Monorepo Support
