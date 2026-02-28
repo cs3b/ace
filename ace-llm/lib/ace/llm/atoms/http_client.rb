@@ -15,11 +15,11 @@ module Ace
         # @option options [Array<Integer>] :retry_statuses ([429, 500, 502, 503, 504]) Status codes to retry
         # @option options [Float] :retry_delay (1.0) Initial retry delay in seconds
         def initialize(options = {})
-          @timeout = options.fetch(:timeout, 30)
-          @open_timeout = options.fetch(:open_timeout, 10)
-          @max_retries = options.fetch(:max_retries, 3)
+          @timeout = options.fetch(:timeout, 30).to_i
+          @open_timeout = options.fetch(:open_timeout, 10).to_i
+          @max_retries = options.fetch(:max_retries, 3).to_i
           @retry_statuses = options.fetch(:retry_statuses, [429, 500, 502, 503, 504])
-          @retry_delay = options.fetch(:retry_delay, 1.0)
+          @retry_delay = options.fetch(:retry_delay, 1.0).to_f
         end
 
         # Perform a GET request
