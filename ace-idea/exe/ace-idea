@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/idea"
+require_relative "../lib/ace/idea/cli"
+
+# No args → show help
+args = ARGV.empty? ? ["--help"] : ARGV
+
+# Handle SIGINT with exit code 130
+trap("INT") { exit 130 }
+
+# Start dry-cli with exception-based exit code handling (per ADR-023)
+begin
+  Ace::Idea::IdeaCLI.start(args)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+rescue ArgumentError => e
+  warn "Error: #{e.message}"
+  exit(1)
+end

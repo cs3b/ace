@@ -21,7 +21,7 @@ A blueprint is a navigation guide - not architecture documentation. It tells AI 
 ace-*/          # Ruby gems following ATOM architecture (25+ production gems)
                 # Each gem includes handbook/ for workflows, guides, templates
                 # Workflow files use namespaced paths: handbook/workflow-instructions/<namespace>/<action>.wf.md
-                # Key gems: ace-handbook, ace-taskflow, ace-bundle, ace-nav,
+                # Key gems: ace-handbook, ace-taskflow, ace-idea, ace-bundle, ace-nav,
                 # ace-git, ace-git-commit, ace-review, ace-docs, ace-lint,
                 # ace-search, ace-llm, ace-test (documentation), ace-test-runner (CLI)
 .ace-taskflow/  # Task and release management
