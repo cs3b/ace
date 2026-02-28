@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.679] - 2026-02-28
+
+### Added
+- **ace-sim v0.4.1**: Add source-only preset defaults for `validate-idea` and `validate-task`, including default provider and synthesis workflow/provider mappings.
+
+### Changed
+- **ace-sim v0.4.1**: Update usage docs and tests for source-only preset execution and default synthesis workflow behavior.
+
 ## [0.9.678] - 2026-02-27
 
 ### Added
