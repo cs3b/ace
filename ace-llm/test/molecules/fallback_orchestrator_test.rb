@@ -356,6 +356,31 @@ module Ace
           assert_includes @status_messages.join, "Trying fallback provider openai"
         end
 
+        def test_timeout_forwarded_to_registry_during_fallback
+          config = Models::FallbackConfig.new(
+            retry_count: 0,
+            providers: ["anthropic"]
+          )
+          orchestrator = FallbackOrchestrator.new(
+            config: config,
+            status_callback: @status_callback,
+            timeout: 300
+          )
+
+          received_timeouts = []
+          registry = MockRegistryWithOptions.new
+          registry.add_client("google", MockClient.new(errors: [mock_server_error(503)]))
+          registry.add_client("anthropic", MockClient.new(response: "fallback success"))
+          registry.on_get_client { |_provider, **opts| received_timeouts << opts[:timeout] }
+
+          result = orchestrator.execute(primary_provider: "google", registry: registry) do |client|
+            client.call
+          end
+
+          assert_equal "fallback success", result
+          assert_equal [300, 300], received_timeouts, "timeout should be forwarded on every get_client call"
+        end
+
         def test_reports_status_for_different_error_types
           config = Models::FallbackConfig.new(
             retry_count: 1,
@@ -415,9 +440,21 @@ module Ace
             @clients[key] = client
           end
 
-          def get_client(provider, model: nil)
+          def get_client(provider, model: nil, **_options)
             key = model ? "#{provider}:#{model}" : provider
             @clients[key] || raise("No client for #{key}")
+          end
+        end
+
+        # Mock registry that captures options passed to get_client
+        class MockRegistryWithOptions < MockRegistry
+          def on_get_client(&block)
+            @callback = block
+          end
+
+          def get_client(provider, model: nil, **options)
+            @callback&.call(provider, **options)
+            super
           end
         end
 
