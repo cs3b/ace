@@ -224,7 +224,8 @@ module Ace
         # Create orchestrator
         orchestrator = Molecules::FallbackOrchestrator.new(
           config: fallback_config,
-          status_callback: status_callback
+          status_callback: status_callback,
+          timeout: timeout
         )
 
         # Build provider string with model if specified

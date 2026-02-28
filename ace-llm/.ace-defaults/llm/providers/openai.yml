@@ -30,4 +30,4 @@ capabilities:
   - embeddings
 default_options:
   temperature: 0.7
-  max_tokens: 4096
+  max_tokens: 16384
