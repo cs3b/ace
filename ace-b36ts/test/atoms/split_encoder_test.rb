@@ -92,19 +92,21 @@ module Ace
           # Edge case tests for boundary conditions and malformed input
 
           def test_encode_split_month_boundaries
-            # First day of year
+            # First day of year (Jan 1 2025 = Wednesday, Thursday = Jan 2 → same month)
             jan_1 = Time.utc(2025, 1, 1, 0, 0, 0)
             result_jan = @encoder.encode_split(jan_1, levels: [:month, :week, :day])
             decoded_jan = @encoder.decode_path(result_jan[:path])
             assert_in_delta jan_1.to_i, decoded_jan.to_i, 3
 
-            # Last day of year
+            # Last day of year (Dec 31 2025 = Wednesday, Thursday = Jan 1 2026 → year crossing)
+            # ISO attribution puts Dec 31 in January 2026, so decode_path will not roundtrip.
+            # Verify the path encodes successfully and the month reflects January 2026.
             dec_31 = Time.utc(2025, 12, 31, 23, 59, 59)
             result_dec = @encoder.encode_split(dec_31, levels: [:month, :week, :day])
-            decoded_dec = @encoder.decode_path(result_dec[:path])
-            assert_in_delta dec_31.to_i, decoded_dec.to_i, 3
+            jan_2026_token = @encoder.encode_with_format(Time.utc(2026, 1, 1), format: :month)
+            assert_equal jan_2026_token, result_dec[:month], "Dec 31 (Wed) ISO week is in Jan 2026"
 
-            # February boundary (week 5 edge case)
+            # February boundary (Feb 28 2025 = Friday, Thursday = Feb 27 → same month)
             feb_28 = Time.utc(2025, 2, 28, 12, 0, 0)
             result_feb = @encoder.encode_split(feb_28, levels: [:month, :week, :day])
             decoded_feb = @encoder.decode_path(result_feb[:path])
@@ -139,6 +141,33 @@ module Ace
             path_with_leading = "/#{result[:path]}"
             decoded = @encoder.decode_path(path_with_leading)
             assert_in_delta @time.to_i, decoded.to_i, 3
+          end
+
+          def test_split_week_token_matches_encode_week_3rd_char
+            result = @encoder.encode_split(@time, levels: [:month, :week])
+            week_token = result[:week]
+            week_id = @encoder.encode_with_format(@time, format: :week)
+            assert_equal week_id[2], week_token,
+              "encode_split week token #{week_token.inspect} should match 3rd char of encode_week #{week_id.inspect}"
+          end
+
+          def test_split_week_token_is_in_valid_range
+            result = @encoder.encode_split(@time, levels: [:month, :week])
+            week_value = @encoder.send(:decode_value, result[:week], CompactIdEncoder::DEFAULT_ALPHABET)
+            assert_includes FormatSpecs::WEEK_FORMAT_MIN..FormatSpecs::WEEK_FORMAT_MAX, week_value,
+              "week token value #{week_value} should be in #{FormatSpecs::WEEK_FORMAT_MIN}..#{FormatSpecs::WEEK_FORMAT_MAX}"
+          end
+
+          def test_split_month_uses_iso_attribution_at_boundary
+            # March 1, 2026 is a Sunday. Its Thursday is Feb 26, so ISO week is in February.
+            boundary_time = Time.utc(2026, 3, 1, 12, 0, 0)
+            result = @encoder.encode_split(boundary_time, levels: [:month, :week])
+
+            feb_time = Time.utc(2026, 2, 1)
+            feb_month_token = @encoder.encode_with_format(feb_time, format: :month)
+
+            assert_equal feb_month_token, result[:month],
+              "March 1 (Sunday) should partition to February (ISO Thursday is Feb 26), got month=#{result[:month].inspect}"
           end
         end
       end
