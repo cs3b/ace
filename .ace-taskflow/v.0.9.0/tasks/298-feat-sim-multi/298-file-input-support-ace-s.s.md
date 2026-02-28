@@ -1,9 +1,15 @@
 ---
 id: v.0.9.0+task.298
-status: pending
+status: in-progress
 priority: medium
 estimate: TBD
 dependencies: []
+worktree:
+  branch: 298-add-multi-file-input-support-to-ace-sim-via-ace-bundle-integration
+  path: "../ace-task.298"
+  created_at: '2026-02-28 15:36:43'
+  updated_at: '2026-02-28 15:36:43'
+  target_branch: main
 ---
 
 # Add Multi-File Input Support to ace-sim via ace-bundle Integration
