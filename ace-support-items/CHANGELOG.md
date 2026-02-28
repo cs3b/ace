@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-02-28
+
+### Added
+- `DatePartitionPath` atom: computes a B36TS month/week partition path (e.g. `"8p/4"`) from a `Time` object for use in archive directory structures
+- Runtime dependency on `ace-b36ts ~> 0.7`
+
 ## [0.2.0] - 2026-02-28
 
 ### Added
