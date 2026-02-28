@@ -85,143 +85,62 @@ retros/
 
 ### Capture Ideas
 
-Quickly capture ideas with automatic timestamping and organization:
+Idea management is provided by the standalone `ace-idea` gem. Quickly capture ideas with
+automatic timestamping and organization:
 
 ```bash
 # Capture text idea
 ace-idea create "Add dark mode support to the application"
 
-# Capture from clipboard (macOS with rich content support)
+# Capture from clipboard
 ace-idea create --clipboard "Design review findings"
-# Automatically detects and saves images, files, HTML, RTF from clipboard
-
-# Capture with clipboard merge
-ace-idea create -gc --clipboard "Meeting notes"
-# Merges typed content with clipboard content
 ```
 
-Ideas are saved to the configured directory with timestamped filenames:
-- **Simple ideas**: Single `.md` file (e.g., `20251007-125830-dark-mode-support.md`)
-- **Rich ideas**: Directory with `idea.md` + attachments (e.g., `20251007-125830-design-review/`)
-
-#### Clipboard Support (macOS)
-
-When using `--clipboard` on macOS, ace-taskflow automatically detects and saves:
-- **Text**: Plain and rich text
-- **Images**: PNG, JPEG, TIFF formats
-- **Files**: Finder file copies (preserves original filenames)
-- **HTML/RTF**: Web content and formatted text
-
-Non-macOS platforms fall back to text-only clipboard support.
-
-### Validate Idea Structure
-
-Ensure all ideas follow the proper directory organization:
-
-```bash
-# Validate that all ideas are in folders within ideas/ subdirectory
-ace-idea validate-structure
-```
-
-**Success case:**
-```
-✓ All ideas properly organized in ideas/ subfolders
-
-Total ideas checked: 218
-Properly placed: 218
-```
-
-**Failure case with suggestions:**
-```
-✗ Found 1 misplaced idea(s):
-
-  .ace-taskflow/v.0.9.0/misplaced-idea.s.md
-    Reason: File is at release root level, should be in ideas/folder/ subdirectory
-    Suggested: .ace-taskflow/v.0.9.0/ideas/misplaced-idea/misplaced-idea.s.md
-
-Total ideas checked: 219
-Properly placed: 218
-Misplaced: 1
-```
-
-**Required Structure:**
-
-All ideas must be in folders within the `ideas/` subdirectory:
-- ✅ `{release}/ideas/folder-name/file.md` - Properly organized
-- ✅ `{release}/ideas/done/folder-name/file.md` - Archived ideas
-- ❌ `{release}/ideas/file.md` - Flat file (misplaced)
-- ❌ `{release}/file.md` - Outside ideas/ (misplaced)
-
-**Folder Naming:** Folders are typically named with timestamp-slug pattern (e.g., `20251115-1200-feature-name`) or descriptive names (e.g., `bug-fix-authentication`)
+Ideas are saved to `.ace-ideas/` with subfolders for lifecycle stages:
+- `_next/` — High-priority ideas queued for action
+- `_maybe/` — Ideas parked for later consideration
+- `_anytime/` — Good ideas with no urgency
+- `_archive/` — Completed or skipped ideas
 
 ### List Ideas
 
-Browse and filter ideas with flexible display options:
+Browse and filter ideas with flexible options:
 
 ```bash
-# List pending ideas (default - optimized for LLMs with paths)
+# List all ideas (default)
 ace-idea list
-ace-idea list next
 
-# Human-friendly list (no paths, shows IDs for reference)
-ace-idea list --short
+# List ideas in a specific folder
+ace-idea list --in next
+ace-idea list --in maybe
 
-# JSON output for programmatic use
-ace-idea list --format json
-
-# List all ideas including completed
-ace-idea list all
-
-# List only completed ideas
-ace-idea list done
-
-# Recent ideas (last 7 days)
-ace-idea list recent
-ace-idea list recent --days 3
-
-# Limit results
-ace-idea list --limit 10
+# Filter by status
+ace-idea list --status done
+ace-idea list --status pending
 ```
 
-**Note**: The `ideas` command automatically checks for misplaced ideas and shows a warning if any are found. Use `validate-structure` for detailed information.
-
-#### Display Formats
-
-**Default (LLM-optimized)**: Shows file paths for direct access
+**Output format:**
 ```
-• add documentation for new llm features
-  .ace-taskflow/v.0.9.0/ideas/20250925-005011-add-documentation-for-new-llm-features.md
-• design review findings 📎 3
-  .ace-taskflow/v.0.9.0/ideas/20251007-125830-design-review/idea.md
+⚪ 8ppq7w Add dark mode support [ux enhancement] (_next)
+⚪ 3kx9mz Design review findings [design] (_maybe)
 ```
 
-**--short (Human-friendly)**: Shows IDs without paths
-```
-• [20250925-005011] add documentation for new llm features
-• [20251007-125830] design review findings 📎 3
-```
+### Move and Update Ideas
 
-**--format json**: Structured output with metadata
-```json
-{
-  "release": "v.0.9.0",
-  "summary": {
-    "ideas": {"total": 31, "active": 23, "completed": 8}
-  },
-  "ideas": [
-    {
-      "id": "20251007-125830",
-      "title": "design review findings",
-      "type": "rich",
-      "path": ".ace-taskflow/v.0.9.0/ideas/20251007-125830-design-review/idea.md",
-      "attachments": 3,
-      "attachment_types": [".png", ".pdf"]
-    }
-  ]
-}
-```
+```bash
+# Mark idea as done and archive it
+ace-idea move <id> --to archive
+ace-idea update <id> --set status=done
 
-**Rich ideas**: Ideas with attachments are marked with 📎 icon and attachment count.
+# Park an idea for later
+ace-idea move <id> --to maybe
+
+# Promote parked idea to next queue
+ace-idea move <id> --to next
+
+# Move to anytime folder
+ace-idea move <id> --to anytime
+```
 
 ### Task Management
 

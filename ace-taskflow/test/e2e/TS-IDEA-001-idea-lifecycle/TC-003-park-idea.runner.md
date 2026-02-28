@@ -2,8 +2,8 @@
 
 ## Goal
 
-Park the created idea with `ace-idea park {id}` and then inspect it with
-`ace-idea show {id}` (or listing output) to confirm parked state.
+Move the created idea to maybe folder with `ace-idea move {id} --to maybe` and then inspect it with
+`ace-idea show {id}` (or listing output) to confirm it was moved to the `_maybe/` folder.
 
 ## Workspace
 
