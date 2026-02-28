@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require "ace/core"
+require "ace/llm"
 require_relative "../../organisms/idea_doctor"
 require_relative "../../molecules/idea_doctor_fixer"
 require_relative "../../molecules/idea_doctor_reporter"
@@ -151,8 +152,6 @@ module Ace
           end
 
           def handle_agent_fix(root_dir, doctor_opts, options, config)
-            require "ace/llm"
-            require "ace/llm/query_interface"
 
             results = run_diagnosis(root_dir, doctor_opts)
             remaining = results[:issues]&.reject { |i| i[:type] == :info }
@@ -168,7 +167,8 @@ module Ace
             }.join("\n")
 
             provider_model = options[:model] || config.dig("idea", "doctor_agent_model") || "gflash"
-
+            cli_args_map = config.dig("idea", "doctor_cli_args") || {}
+            
             prompt = <<~PROMPT
               The following #{remaining.size} idea issues could NOT be auto-fixed and need manual intervention:
 
@@ -191,17 +191,28 @@ module Ace
             PROMPT
 
             puts "\nLaunching agent to fix #{remaining.size} remaining issues..."
-
-            response = Ace::LLM::QueryInterface.query(
-              provider_model,
-              prompt,
+            query_options = {
               system: nil,
-              cli_args: "dangerously-skip-permissions",
               timeout: 600,
               fallback: false
-            )
+            }
+
+            cli_args = provider_cli_args(provider_model, cli_args_map)
+            query_options[:cli_args] = cli_args if cli_args
+
+            response = Ace::LLM::QueryInterface.query(provider_model, prompt, **query_options)
 
             puts response[:text]
+          end
+
+          def provider_cli_args(provider_model, cli_args_map)
+            return nil if cli_args_map.nil? || cli_args_map.empty?
+            parser = Ace::LLM::Molecules::ProviderModelParser.new
+            result = parser.parse(provider_model)
+            return nil unless result.valid?
+            cli_args_map[result.provider]
+          rescue StandardError
+            nil
           end
         end
       end

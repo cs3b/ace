@@ -127,10 +127,20 @@ class IdeaDoctorCliTest < AceIdeaTestCase
       File.write(File.join(dir, "abc123-bad.idea.s.md"), "---\nstatus: invalid\n---\n")
 
       with_cli_root(root) do
-        result = run_cli(["doctor", "--quiet"])
-        assert_equal 1, result[:exit_code]
-      end
+      result = run_cli(["doctor", "--quiet"])
+      assert_equal 1, result[:exit_code]
     end
+  end
+
+  def test_provider_cli_args_map
+    command = Ace::Idea::CLI::Commands::Doctor.new
+    cli_args_map = { "gemini" => "yolo" }
+
+    assert_equal "yolo", command.send(:provider_cli_args, "gemini:flash-preview", cli_args_map)
+    assert_equal "yolo", command.send(:provider_cli_args, "gflash", cli_args_map)
+    assert_nil command.send(:provider_cli_args, "claude:sonnet", cli_args_map)
+    assert_nil command.send(:provider_cli_args, nil, cli_args_map)
+  end
   end
 
   # ---------------------------------------------------------------------------

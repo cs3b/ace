@@ -12,6 +12,10 @@ idea:
   # LLM model for doctor --auto-fix-with-agent
   doctor_agent_model: gemini:flash-preview
 
+  # Provider-specific CLI args for doctor agent runs (e.g., Gemini uses YOLO)
+  doctor_cli_args:
+    gemini: "yolo"
+
   # Special folder mappings (short name => actual folder name)
   special_folders:
     archive: _archive

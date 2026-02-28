@@ -91,7 +91,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.4.1)
+    ace-idea (0.4.2)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.2)
