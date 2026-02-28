@@ -103,6 +103,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
          (new fields, modes, formats) are expected to exist in the final deliverable —
          not be removed by a later subtask. If this subtask adds a concept that a later
          subtask will consolidate away, flag as SCOPE RISK and consider merging subtasks.
+   - [ ] **Usage Documentation Present**: If task changes CLI/API/workflow/config interfaces, `ux/usage.md` exists with concrete usage scenarios
    - [ ] **No Blocking Questions Remain**: All HIGH priority questions resolved or have acceptable defaults
 
    **Assessment:**

@@ -122,6 +122,7 @@ module Ace
             FileUtils.mkdir_p(task_dir)
             FileUtils.mkdir_p(File.join(task_dir, "docs"))
             FileUtils.mkdir_p(File.join(task_dir, "qa"))
+            FileUtils.mkdir_p(File.join(task_dir, "ux"))
 
             # Generate task content
             content = generate_task_template(task_id, title, metadata)

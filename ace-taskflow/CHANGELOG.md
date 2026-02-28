@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-02-28
+
+### Added
+- Add `ux/` directory scaffolding to `ace-task create` — task directories now include `docs/`, `qa/`, and `ux/` subdirectories
+- Add step 8 "Create Draft Usage Documentation" to `task/draft` workflow — when tasks change CLI/API/workflow/config interfaces, create `ux/usage.md` with concrete scenarios during the draft phase
+- Embed `tmpl://task-management/draft-usage` template in `task/draft` workflow for consistent usage doc structure
+- Add "Usage Documentation Present" readiness checklist item to `task/review` workflow
+- Add "Load Usage Context" input step to `task/plan` workflow — reads `ux/usage.md` as behavioral acceptance criteria when present
+
+### Changed
+- Update `task/plan` workflow: usage documentation (`ux/usage.md`) is now created during the draft phase, not the work-on-task phase
+- Update `task.draft` template References section to include `ux/usage.md` as standard reference
+
 ## [0.42.11] - 2026-02-27
 
 ### Removed
