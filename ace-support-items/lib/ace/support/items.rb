@@ -10,6 +10,7 @@ require_relative "items/atoms/frontmatter_parser"
 require_relative "items/atoms/frontmatter_serializer"
 require_relative "items/atoms/filter_parser"
 require_relative "items/atoms/title_extractor"
+require_relative "items/atoms/date_partition_path"
 
 # Models
 require_relative "items/models/scan_result"
