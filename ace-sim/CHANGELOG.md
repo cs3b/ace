@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-02-28
+
+### Added
+- Add `sim/run` workflow instruction (`handbook/workflow-instructions/sim/run.wf.md`) for codified simulation execution
+- Add `ace-sim-run` Claude skill for `/ace-sim-run` invocation
+- Add WFI sources registration for `wfi://sim/*` protocol discovery
+
 ## [0.4.1] - 2026-02-28
 
 ### Added
