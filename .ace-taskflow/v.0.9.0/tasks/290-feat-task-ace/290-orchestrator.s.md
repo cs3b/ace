@@ -1,6 +1,6 @@
 ---
 id: v.0.9.0+task.290
-status: draft
+status: pending
 priority: high
 estimate: TBD
 dependencies: []
@@ -29,10 +29,10 @@ Origin: idea `8ppq7w-taskflow-add` — "Refactor ace-taskflow: Simplify Release 
 
 Users manage tasks through 5 commands — create, show, list, move, update — with no release scoping:
 
-1. **Create**: Generates a 6-char b36ts ID, splits into `xxx.t.yyy` format, creates `{id}-{slug}/` folder with `.s.md` spec file. Subtasks created with `--child-of` get IDs like `xxx.t.yyy.a`.
-2. **Show**: Resolves shortcut references by scanning all directories, picking the most recent match, and warning about ambiguities.
+1. **Create**: Generates a 6-char b36ts ID, splits into `xxx.t.yyy` format, creates `{id}-{slug}/` folder with `.s.md` spec file. Subtasks created with `--child-of` get IDs like `xxx.t.yyy.a` (maximum of 36 subtasks per level: a-z, then 0-9).
+2. **Show**: Resolves shortcut references by scanning all directories, picking the most recent match (by `mtime`), and warning about ambiguities via `stderr`.
 3. **List**: Recursively scans `.ace-tasks/` treating all nested structures as a flat list. Filters by `--status`, `--priority`, `--tags`, `--in` (special folder), `--root` (subpath).
-4. **Move**: Physically relocates task folder between special folders (`_archive`, `_maybe`, `_anytime`, `_next`) or any path. Short names auto-map to `_` prefixed folders.
+4. **Move**: Physically relocates task folder between special folders (`_archive`, `_maybe`, `_anytime`, `_next`) or any path. Short names auto-map to `_` prefixed folders. Automatically creates the target directory if it does not exist.
 5. **Update**: Modifies frontmatter with `--set key=value` (replace), `--add key=value` (append to array), `--remove key=value` (remove from array). Supports nested keys via dot notation.
 
 No more: done, undone, start, defer, park, unpark, reschedule, or --release flag.
@@ -67,9 +67,10 @@ ace-task update q7w --set worktree.branch=my-branch    # Nested via dot notation
 
 **Error Handling:**
 - Unknown reference: `Error: No task matching 'xyz'. Run 'ace-task list' to see available tasks.`
-- Ambiguous reference: Show all matches, use most recent, proceed with warning
-- Move target doesn't exist: Create `_target/` folder automatically
+- Ambiguous reference: Show all matches, use most recent by `mtime`, proceed with warning to `stderr`
+- Move target doesn't exist: Create target folder automatically
 - Invalid field update: `Error: Cannot --remove from non-array field 'status'`
+- Subtask limit exceeded: `Error: Maximum of 36 subtasks reached for this parent. Cannot allocate beyond '9'.`
 
 **Edge Cases:**
 - Empty `.ace-tasks/`: `ace-task list` returns empty, `ace-task create` creates root dir
@@ -81,9 +82,10 @@ ace-task update q7w --set worktree.branch=my-branch    # Nested via dot notation
 - [ ] `ace-task create` generates valid b36ts split ID (`xxx.t.yyy`) and creates correct folder/file structure
 - [ ] `ace-task show` resolves all shortcut forms: full ID, `t.yyy`, suffix `yyy`
 - [ ] `ace-task list` recursively scans all nesting depths as flat list with correct filtering
-- [ ] `ace-task move` physically relocates folders and auto-maps short names to `_` prefixed folders
+- [ ] `ace-task move` physically relocates folders, auto-maps short names to `_` prefixed folders, and creates missing dirs
 - [ ] `ace-task update` correctly handles `--set` (scalar), `--add` (array append), `--remove` (array remove), and nested dot keys
-- [ ] Subtask creation (`--child-of`) allocates single base36 char (a-z then 0-9) and places file in parent folder
+- [ ] Subtask creation (`--child-of`) allocates single base36 char (a-z then 0-9, max 36) and places file in parent folder
+- [ ] Subtask limit enforced: error raised on 37th subtask attempt
 - [ ] All tests pass: `ace-test ace-support-items && ace-test ace-task`
 - [ ] No dependency on ace-taskflow — fully standalone
 
