@@ -34,11 +34,16 @@ If the source is a task number or multiple files, use `ace-bundle` to merge into
 # Single task
 ace-bundle task:148 --output /tmp/sim-source.md
 
+# Task spec with usage context (recommended for validate-task)
+ace-sim run --preset validate-task --source "path/to/task.s.md,path/to/ux/usage.md"
+
 # Already a single file — use directly
 # --source path/to/spec.md
 ```
 
 If `--source` points to an existing file, use it directly.
+
+If the source is a task with usage documentation (`ux/usage.md`), include both spec and usage files to give the simulation behavioral acceptance context.
 
 ### Step 2: Run Simulation
 

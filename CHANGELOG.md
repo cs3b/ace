@@ -4,6 +4,25 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.683] - 2026-02-28
+
+### Added
+- **ace-taskflow v0.43.0**: `ace-task create` now scaffolds a `ux/` subdirectory alongside `docs/` and `qa/` in each new task directory
+- **ace-taskflow v0.43.0**: `task/draft` workflow gains step 8 "Create Draft Usage Documentation" — when a task changes CLI/API/workflow/config interfaces, `ux/usage.md` with concrete usage scenarios is created during the draft phase as a behavioral acceptance contract
+- **ace-taskflow v0.43.0**: Embed `tmpl://task-management/draft-usage` template in `task/draft` workflow for consistent usage doc structure
+
+### Changed
+- **ace-taskflow v0.43.0**: `task/plan` workflow now loads `ux/usage.md` as behavioral acceptance criteria when present; usage documentation note updated to reflect draft-phase creation
+- **ace-taskflow v0.43.0**: `task/review` readiness checklist gains "Usage Documentation Present" check for interface-changing tasks
+- **ace-taskflow v0.43.0**: `task.draft` template References section updated to include `ux/usage.md` as standard reference
+- **ace-sim v0.4.4**: `sim/run` workflow updated to recommend including `ux/usage.md` alongside task spec when running `validate-task` simulations
+
+### Technical
+- Task 298 (`multi-file --source` support): create `ux/usage.md` with five concrete scenarios and add reference in task spec
+- Promote task 298 spec to pending with refined multi-file source behavioral specification
+- Archive idea `8pr2vt-taskflow-add` to `ideas/done/` after draft task creation
+- Update model providers in `validate-task` and `validate-idea` sim presets
+
 ## [0.9.682] - 2026-02-28
 
 ### Fixed
