@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.694] - 2026-02-28
+
+### Fixed
+- **ace-b36ts v0.7.5**: `encode_split` week token now uses ISO Thursday-based attribution (`iso_week_month_and_number`) instead of naive day-based calculation, matching `encode_week` output
+- **ace-b36ts v0.7.5**: `encode_split` week token now correctly encodes values 31-35 (base36 `v`–`z`) instead of raw week numbers 1-5; boundary dates (e.g., Sunday Mar 1 whose Thursday is Feb 26) now partition to the correct ISO week month
+
 ## [0.9.693] - 2026-02-28
 
 ### Added
