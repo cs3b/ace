@@ -184,7 +184,7 @@ class CompositionRulesTest < AceAssignTestCase
 
     test_suggestion = suggestions.find { |s| s[:phase] == "verify-test-suite" }
     refute_nil test_suggestion
-    assert_equal "recommended", test_suggestion[:strength]
+    assert_equal "required", test_suggestion[:strength]
   end
 
   def test_suggest_additions_conditional_fix_bug_suggests_test_suite

@@ -106,11 +106,17 @@ Select phases from the catalog based on intent:
 
 | Intent | Core Phases | Optional Phases |
 |--------|------------|-----------------|
-| Implement + PR | onboard, work-on-task, release, create-pr, review-pr, apply-feedback, release, reorganize-commits, push-to-remote, update-pr-desc | lint, verify-test-suite, security-audit |
-| Quick implement | onboard, work-on-task, commit | verify-test-suite |
-| Fix bug + PR | onboard, work-on-task, verify-test-suite, create-pr, review-pr, apply-feedback | fix-tests |
+| Implement + PR | onboard, work-on-task, **verify-test-suite**, **verify-e2e**, release, **update-docs**, create-pr, review-pr, apply-feedback, release, reorganize-commits, push-to-remote, update-pr-desc | lint, security-audit |
+| Quick implement | onboard, work-on-task, commit | verify-test-suite, **verify-e2e** |
+| Fix bug + PR | onboard, work-on-task, verify-test-suite, **verify-e2e**, create-pr, review-pr, apply-feedback | fix-tests, **update-docs** |
 | Research | onboard, research | create-retro |
-| Batch tasks | onboard, batch-parent(work-on-task), release, create-pr, review-pr, apply-feedback, release, reorganize-commits, push-to-remote, update-pr-desc | verify-test-suite |
+| Batch tasks | onboard, batch-parent(work-on-task), **verify-test-suite**, **verify-e2e**, release, **update-docs**, create-pr, review-pr, apply-feedback, release, reorganize-commits, push-to-remote, update-pr-desc | |
+
+> **When to include `verify-test-suite`**: Include for any task that modifies `.rb` files. The step profiles tests and enforces performance budgets to catch slow tests (network calls, unstubbed I/O) before they ship. Skip only for documentation-only or config-only changes.
+>
+> **When to include `verify-e2e`**: Include when the task modifies CLI commands, public APIs, or user-facing behavior. Skip for internal-only refactoring, documentation-only changes, or packages with no E2E test scenarios.
+>
+> **When to include `update-docs`**: Include when CLI commands, flags, options, or public contracts change. Skip for internal refactoring, private method changes, or when docs were already updated inline during `work-on-task`.
 
 #### Fork Context Onboarding
 
