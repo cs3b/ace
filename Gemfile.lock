@@ -176,7 +176,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.4.0)
+    ace-sim (0.4.1)
       ace-b36ts (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)

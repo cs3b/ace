@@ -5,11 +5,11 @@
 ```bash
 ace-sim run \
   --preset validate-idea \
-  --source path/to/source.md \
-  --provider codex:mini
+  --source path/to/source.md
 ```
 
 `--source` must be an existing readable file path.
+Built-in presets include provider/synthesis defaults, so `--source` is enough.
 
 ## Override Preset Defaults with CLI
 
@@ -27,11 +27,8 @@ ace-sim run \
 
 ```bash
 ace-sim run \
-  --preset validate-idea \
-  --source path/to/source.md \
-  --provider glite \
-  --synthesis-workflow wfi://task/review \
-  --synthesis-provider claude:haiku
+  --preset validate-task \
+  --source path/to/source.md
 ```
 
 - `--synthesis-workflow` enables a final run-level synthesis stage.
@@ -50,7 +47,8 @@ ace-sim run \
 
 - Step configs are markdown bundle configs at `.ace/sim/steps/*.md` (fallback `.ace-defaults/sim/steps/*.md`).
 - Default step configs use strict sections (`project_context`, step workflow, `input`) and instruction/report headings.
-- Default preset `validate-idea` runs `draft -> plan -> work`.
+- Default preset `validate-idea` runs `draft -> plan -> work` with synthesis workflow `wfi://idea/review`.
+- Default preset `validate-task` runs `plan -> work` with synthesis workflow `wfi://task/review`.
 
 ## Artifacts
 

@@ -8,7 +8,6 @@ Standalone file-chained simulation runner for ACE.
 ace-sim run \
   --preset validate-idea \
   --source path/to/source.md \
-  --provider codex:mini \
   --dry-run
 ```
 
@@ -18,13 +17,12 @@ Optional final synthesis can generate a last-mile report:
 
 ```bash
 ace-sim run \
-  --preset validate-idea \
-  --source path/to/source.md \
-  --provider glite \
-  --synthesis-workflow wfi://task/review \
-  --synthesis-provider claude:haiku
+  --preset validate-task \
+  --source path/to/source.md
 ```
 
-For idea-oriented synthesis, use `--synthesis-workflow wfi://idea/review`.
+Built-in defaults:
+- `validate-idea` uses `wfi://idea/review`
+- `validate-task` uses `wfi://task/review`
 
 See `docs/usage.md` for full usage.
