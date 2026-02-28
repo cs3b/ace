@@ -138,7 +138,8 @@ module Ace
           new_path = if to == "root" || to == "/"
             mover.move_to_root(idea)
           else
-            mover.move(idea, to: to)
+            archive_date = parse_archive_date(idea)
+            mover.move(idea, to: to, date: archive_date)
           end
 
           # Detect new special folder
@@ -216,6 +217,18 @@ module Ace
           File.rename(tmp_path, idea.file_path)
         ensure
           File.unlink(tmp_path) if tmp_path && File.exist?(tmp_path) rescue nil
+        end
+
+        # Extract archive date from idea frontmatter, falling back to Time.now
+        def parse_archive_date(idea)
+          raw = idea.metadata["completed_at"] || idea.metadata["created_at"]
+          return nil unless raw
+
+          case raw
+          when Time then raw
+          when DateTime then raw.to_time
+          else Time.parse(raw.to_s) rescue nil
+          end
         end
 
         # Value accessor for FilterApplier — reads from Idea model attributes and metadata
