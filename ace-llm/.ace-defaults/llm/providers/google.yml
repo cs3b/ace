@@ -1,5 +1,5 @@
 name: google
-last_synced: 2025-12-05
+last_synced: 2026-02-27
 class: Ace::LLM::Organisms::GoogleClient
 gem: ace-llm
 context_limit: 1000000  # Gemini models have 1M+ context window
@@ -7,7 +7,8 @@ models:
   - gemini-2.5-flash
   - gemini-2.5-flash-lite
   - gemini-2.5-pro
-  - gemini-3-pro-preview
+  - gemini-3.1-pro-preview
+  - gemini-3-flash-preview
   - gemini-flash-latest
   - gemini-flash-lite-latest
 aliases:
@@ -19,7 +20,8 @@ aliases:
     flash: gemini-flash-latest
     lite: gemini-flash-latest
     pro: gemini-2.5-pro
-    pro-preview: gemini-3-pro-preview
+    pro-preview: gemini-3.1-pro-preview
+    flash-preview: gemini-3-flash-preview
 api_key:
   env: GEMINI_API_KEY
   required: true
