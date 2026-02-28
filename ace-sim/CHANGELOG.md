@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-02-28
+
+### Changed
+- Update `sim/run` workflow: when source is a task with usage documentation (`ux/usage.md`), include both spec and usage files via comma-separated `--source` to provide behavioral acceptance context
+
 ## [0.4.3] - 2026-02-28
 
 ### Fixed

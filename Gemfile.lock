@@ -176,7 +176,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.4.3)
+    ace-sim (0.4.4)
       ace-b36ts (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -242,7 +242,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.42.11)
+    ace-taskflow (0.43.0)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.24)
