@@ -3,7 +3,7 @@ steps:
   - plan
   - work
 provider:
-  - glite
+  - google:flash-preview
 repeat: 1
 synthesis_workflow: wfi://task/review
-synthesis_provider: claude:haiku
+synthesis_provider: google:gemini-preview
