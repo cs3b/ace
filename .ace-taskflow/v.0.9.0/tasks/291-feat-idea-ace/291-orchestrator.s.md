@@ -1,12 +1,18 @@
 ---
 id: v.0.9.0+task.291
-status: pending
+status: in-progress
 priority: high
 estimate: TBD
 subtasks:
-  - v.0.9.0+task.291.01
-  - v.0.9.0+task.291.02
-  - v.0.9.0+task.291.03
+- v.0.9.0+task.291.01
+- v.0.9.0+task.291.02
+- v.0.9.0+task.291.03
+worktree:
+  branch: 291-create-ace-idea-gem-with-b36ts-based-idea-management
+  path: "../ace-task.291"
+  created_at: '2026-02-28 01:42:21'
+  updated_at: '2026-02-28 01:42:21'
+  target_branch: main
 ---
 
 # Create ace-idea Gem with B36TS-Based Idea Management
