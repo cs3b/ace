@@ -7,11 +7,13 @@ require "pathname"
 # Find the ace-meta root directory
 ace_meta_root = Pathname.new(__FILE__).dirname.parent.realpath
 
+$LOAD_PATH.unshift ace_meta_root.join("ace-idea/lib").to_s
+
 # Set the Gemfile location
-ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
+ENV["BUNDLE_GEMFILE"] ||= ace_meta_root.join("Gemfile").to_s
 
 # Load bundler
 require "bundler/setup"
 
 # Now require and run the actual ace-idea executable
-load ace_meta_root.join("ace-taskflow/exe/ace-idea").to_s
+load ace_meta_root.join("ace-idea/exe/ace-idea").to_s

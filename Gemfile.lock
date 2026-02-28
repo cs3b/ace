@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.13.4)
+    ace-assign (0.15.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
@@ -89,6 +89,15 @@ PATH
     ace-handbook (0.9.8)
 
 PATH
+  remote: ace-idea
+  specs:
+    ace-idea (0.4.1)
+      ace-b36ts (~> 0.7)
+      ace-support-core (~> 0.25)
+      ace-support-items (~> 0.2)
+      dry-cli (~> 1.0)
+
+PATH
   remote: ace-integration-claude
   specs:
     ace-integration-claude (0.3.5)
@@ -114,7 +123,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.24.6)
+    ace-llm (0.24.5)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       addressable (~> 2.8)
@@ -127,7 +136,7 @@ PATH
   remote: ace-overseer
   specs:
     ace-overseer (0.4.16)
-      ace-assign (~> 0.13)
+      ace-assign (~> 0.15)
       ace-git (~> 0.10)
       ace-git-worktree (~> 0.13)
       ace-support-config (~> 0.7)
@@ -176,7 +185,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.6.0)
+    ace-sim (0.4.2)
       ace-b36ts (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -200,6 +209,12 @@ PATH
   remote: ace-support-fs
   specs:
     ace-support-fs (0.2.0)
+
+PATH
+  remote: ace-support-items
+  specs:
+    ace-support-items (0.2.0)
+      ace-support-core (~> 0.25)
 
 PATH
   remote: ace-support-mac-clipboard
@@ -242,7 +257,7 @@ PATH
 PATH
   remote: ace-taskflow
   specs:
-    ace-taskflow (0.43.0)
+    ace-taskflow (0.42.12)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.24)
@@ -409,6 +424,7 @@ DEPENDENCIES
   ace-git-secrets!
   ace-git-worktree!
   ace-handbook!
+  ace-idea!
   ace-integration-claude!
   ace-lint!
   ace-llm!
@@ -421,6 +437,7 @@ DEPENDENCIES
   ace-support-config!
   ace-support-core!
   ace-support-fs!
+  ace-support-items!
   ace-support-mac-clipboard!
   ace-support-markdown!
   ace-support-models!
