@@ -1,10 +1,13 @@
 ---
+
 id: 8pozex
 status: pending
 title: Idea
 tags: []
 created_at: "2026-02-28 17:37:36"
+source: "user"
 ---
+
 # Idea
 
 test

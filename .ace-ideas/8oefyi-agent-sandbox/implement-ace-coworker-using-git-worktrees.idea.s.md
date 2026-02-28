@@ -1,10 +1,13 @@
 ---
+
 title: Implement ace-coworker for Isolated, Agentic Sandboxing via Git Worktrees
 filename_suggestion: feat-coworker-sandbox-sync
 enhanced_at: 2026-01-15 10:38:19
 location: active
 llm_model: gflash
+source: "taskflow:v.0.9.0"
 ---
+
 
 # Implement ace-coworker for Isolated, Agentic Sandboxing via Git Worktrees
 
