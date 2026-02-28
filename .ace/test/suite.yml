@@ -49,6 +49,11 @@ test_suite:
       group: foundation
       priority: 2
 
+    - name: ace-support-items
+      path: ace-support-items
+      group: foundation
+      priority: 2
+
     - name: ace-git-commit
       path: ace-git-commit
       group: tools
@@ -146,6 +151,11 @@ test_suite:
 
     - name: ace-overseer
       path: ace-overseer
+      group: tools
+      priority: 2
+
+    - name: ace-idea
+      path: ace-idea
       group: tools
       priority: 2
 
