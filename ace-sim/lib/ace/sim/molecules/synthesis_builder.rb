@@ -4,11 +4,11 @@ module Ace
   module Sim
     module Molecules
       class SynthesisBuilder
-        def build(session:, resolved_source:, chains:, final_stage: nil)
+        def build(session:, sources:, chains:, final_stage: nil)
           {
             "run_id" => session.run_id,
             "preset" => session.preset,
-            "source" => resolved_source,
+            "sources" => sources,
             "providers" => session.providers,
             "repeat" => session.repeat,
             "dry_run" => session.dry_run?,
