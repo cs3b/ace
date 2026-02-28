@@ -1,0 +1,19 @@
+---
+# WFI Sources Protocol Configuration for ace-sim gem
+# This enables workflow discovery from the installed ace-sim gem
+
+name: ace-sim
+type: gem
+description: Simulation workflow instructions from ace-sim gem
+priority: 10
+
+# Configuration for workflow discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/workflow-instructions)
+  relative_path: handbook/workflow-instructions
+
+  # Pattern for finding workflow files (default: *.wf.md)
+  pattern: "*.wf.md"
+
+  # Enable discovery
+  enabled: true
