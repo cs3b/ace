@@ -21,10 +21,21 @@ class SimulationRunnerTest < AceSimTestCase
       when "ace-llm"
         provider = args[1]
         output_path = args[args.index("--output") + 1]
-        if output_path.end_with?("suggestions.report.md")
+        if output_path.end_with?("output.sequence.md")
           return { success: false, stdout: "", stderr: "forced final failure", exit_code: 1 } if @fail_final
 
-          File.write(output_path, "# Suggestions\n")
+          File.write(
+            output_path,
+            <<~MD
+              <suggestions-report>
+              # Suggestions
+              </suggestions-report>
+
+              <source-revised>
+              # Revised Source
+              </source-revised>
+            MD
+          )
           return { success: true, stdout: "", stderr: "", exit_code: 0 }
         end
 
@@ -136,7 +147,7 @@ class SimulationRunnerTest < AceSimTestCase
 
       session = build_session(
         source: source,
-        synthesis_workflow: "wfi://task/review-work",
+        synthesis_workflow: "wfi://task/review",
         synthesis_provider: "glite"
       )
       result = runner.run(session)
@@ -144,8 +155,13 @@ class SimulationRunnerTest < AceSimTestCase
       assert result[:success]
       assert_equal "ok", result[:status]
       run_dir = File.join(dir, "simulations", session.run_id)
+      assert File.exist?(File.join(run_dir, "final", "source.original.md"))
+      assert File.exist?(File.join(run_dir, "final", "output.sequence.md"))
       assert File.exist?(File.join(run_dir, "final", "suggestions.report.md"))
+      assert File.exist?(File.join(run_dir, "final", "source.revised.md"))
       assert_equal "ok", result[:final_stage]["status"]
+      assert result[:final_stage]["report_path"].end_with?("/final/suggestions.report.md")
+      assert result[:final_stage]["revised_source_path"].end_with?("/final/source.revised.md")
     end
   end
 
@@ -164,7 +180,7 @@ class SimulationRunnerTest < AceSimTestCase
 
       session = build_session(
         source: source,
-        synthesis_workflow: "wfi://task/review-work",
+        synthesis_workflow: "wfi://task/review",
         synthesis_provider: "glite"
       )
       result = runner.run(session)
