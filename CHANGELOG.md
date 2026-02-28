@@ -4,11 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-### Added
-- **ace-idea v0.4.2**: `doctor_cli_args` configuration map lets `doctor --auto-fix-with-agent` supply any required CLI flags per provider (default maps `gemini` to `yolo` so the CLI runs headless).
+## [0.9.693] - 2026-02-28
 
-### Fixed
-- **ace-idea v0.4.2**: Agent sessions only forward CLI args when the map contains an entry, so Gemini no longer receives `dangerously-skip-permissions` and the agent launch succeeds while other providers keep their existing flags.
+### Added
+- **ace-support-items v0.3.0**: `DatePartitionPath` atom computes a B36TS month/week partition path (e.g. `"8p/4"`) from a `Time` for use in date-organised archive directory structures; adds `ace-b36ts ~> 0.7` runtime dependency
+- **ace-idea v0.5.0**: `IdeaMover#move` places archived ideas under `_archive/{month}/{week}/{folder}/` using B36TS partitions instead of a flat `_archive/`; `IdeaManager#move` automatically extracts `completed_at`/`created_at` from frontmatter as the partition date
+- Three codemod scripts for migrating existing ideas to the new partition layout: `reorganize_archive.rb`, `migrate_release_archives.rb`, `migrate_backlog_ideas.rb` (all support `--dry-run`)
 
 ## [0.9.692] - 2026-02-28
 

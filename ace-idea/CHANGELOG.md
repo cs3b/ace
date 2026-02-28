@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-28
+
+### Changed
+- `IdeaMover#move` now accepts an optional `date:` keyword argument; when moving to `_archive`, the idea is placed under a B36TS month/week partition (e.g. `_archive/8p/4/{folder}/`) instead of a flat `_archive/` directory
+- `IdeaManager#move` automatically extracts `completed_at` or `created_at` from idea frontmatter and passes it as the archive date, falling back to `Time.now`
+
 ## [0.4.2] - 2026-02-28
 
 ### Added
