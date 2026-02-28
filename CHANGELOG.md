@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.681] - 2026-02-28
+
+### Fixed
+- **ace-llm v0.24.5**: Thread `--timeout` through fallback path — `FallbackOrchestrator` now forwards timeout to every `registry.get_client()` call, so `--timeout N` is no longer silently dropped when fallback is enabled
+- **ace-llm v0.24.5**: Raise `max_tokens` defaults from 4096–8192 to 16384 across all gem providers and project-level `.ace/llm/providers/` overrides (16 files total)
+
 ## [0.9.680] - 2026-02-28
 
 ### Added
