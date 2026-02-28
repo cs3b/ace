@@ -27,12 +27,12 @@ class RunCommandTest < AceSimTestCase
     super
     @preset = File.join(Dir.pwd, ".ace", "sim", "presets", "validate-idea.yml")
     @steps_dir = File.join(Dir.pwd, ".ace", "sim", "steps")
-    @source = File.join(Dir.pwd, ".ace", "sim", "source.md")
+    @source = File.join(Dir.pwd, "tmp-run-command-source.md")
     FileUtils.mkdir_p(File.dirname(@preset))
     FileUtils.mkdir_p(@steps_dir)
     File.write(
       @preset,
-      "steps:\n  - draft\n  - plan\nprovider:\n  - codex:mini\nrepeat: 1\nsynthesis_workflow: wfi://task/review-work\n"
+      "steps:\n  - draft\n  - plan\nprovider:\n  - codex:mini\nrepeat: 1\nsynthesis_workflow: wfi://idea/review\nsynthesis_provider: claude:haiku\n"
     )
     File.write(File.join(@steps_dir, "draft.md"), "---\nbundle:\n  embed_document_source: true\n---\n")
     File.write(File.join(@steps_dir, "plan.md"), "---\nbundle:\n  embed_document_source: true\n---\n")
@@ -41,6 +41,7 @@ class RunCommandTest < AceSimTestCase
 
   def teardown
     FileUtils.rm_rf(File.join(Dir.pwd, ".ace"))
+    FileUtils.rm_f(@source)
     super
   end
 
@@ -90,6 +91,23 @@ class RunCommandTest < AceSimTestCase
 
     assert_equal "wfi://task/review-plan", fake.seen_session.synthesis_workflow
     assert_equal "claude:haiku", fake.seen_session.synthesis_provider
+  end
+
+  def test_default_presets_define_provider_and_synthesis_defaults
+    idea_preset = YAML.safe_load_file(
+      File.expand_path("../../.ace-defaults/sim/presets/validate-idea.yml", __dir__)
+    )
+    task_preset = YAML.safe_load_file(
+      File.expand_path("../../.ace-defaults/sim/presets/validate-task.yml", __dir__)
+    )
+
+    assert_equal ["glite"], idea_preset["provider"]
+    assert_equal "wfi://idea/review", idea_preset["synthesis_workflow"]
+    assert_equal "claude:haiku", idea_preset["synthesis_provider"]
+
+    assert_equal ["glite"], task_preset["provider"]
+    assert_equal "wfi://task/review", task_preset["synthesis_workflow"]
+    assert_equal "claude:haiku", task_preset["synthesis_provider"]
   end
 
   def test_rejects_unknown_preset

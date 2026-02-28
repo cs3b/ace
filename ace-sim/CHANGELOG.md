@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-02-28
+
+### Added
+- Add built-in preset defaults so `validate-idea` and `validate-task` can run with only `--source`.
+- Add default synthesis workflow/provider mappings in preset files:
+  - `validate-idea` -> `wfi://idea/review` + `claude:haiku`
+  - `validate-task` -> `wfi://task/review` + `claude:haiku`
+
+### Changed
+- Update README and usage docs to show source-only preset invocations.
+- Update run command tests to assert default preset contract values for provider and synthesis settings.
+
 ## [0.4.0] - 2026-02-27
 
 ### Added
