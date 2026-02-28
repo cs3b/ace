@@ -7,7 +7,7 @@ allowed-tools:
   - Bash(ace-bundle:*)
   - Read
   - TodoWrite
-argument-hint: [--preset NAME] [--source PATH]
+argument-hint: "[--preset NAME] [--source PATH]"
 last_modified: 2026-02-28
 source: ace-sim
 ---
