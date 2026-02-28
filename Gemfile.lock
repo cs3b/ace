@@ -114,7 +114,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.24.4)
+    ace-llm (0.24.5)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       addressable (~> 2.8)
