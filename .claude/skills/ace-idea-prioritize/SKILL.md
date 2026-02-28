@@ -6,6 +6,7 @@ description: Prioritize and align development ideas with project goals and roadm
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
+  - Bash(ace-idea:*)
   - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Read

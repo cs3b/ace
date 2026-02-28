@@ -6,6 +6,7 @@ description: Capture development idea to structured idea file with tags
 user-invocable: true
 allowed-tools:
   - Bash(ace-taskflow:*)
+  - Bash(ace-idea:*)
   - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Write
