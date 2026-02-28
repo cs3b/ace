@@ -91,10 +91,10 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.4.2)
+    ace-idea (0.5.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
-      ace-support-items (~> 0.2)
+      ace-support-items (~> 0.3)
       dry-cli (~> 1.0)
 
 PATH
@@ -213,7 +213,8 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.2.0)
+    ace-support-items (0.3.0)
+      ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
 
 PATH

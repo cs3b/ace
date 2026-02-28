@@ -17,15 +17,22 @@ module Ace
         # Move an idea folder to a target location
         # @param idea [Idea] Idea to move
         # @param to [String] Target folder name (short or full, e.g., "maybe", "_archive")
+        # @param date [Time, nil] Date used to compute archive partition (default: Time.now)
         # @return [String] New path of the idea directory
-        def move(idea, to:)
+        def move(idea, to:, date: nil)
           normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(to)
-          candidate = File.expand_path(File.join(@root_dir, normalized))
+
+          target_parent = if normalized == "_archive"
+            partition = Ace::Support::Items::Atoms::DatePartitionPath.compute(date || Time.now)
+            File.expand_path(File.join(@root_dir, normalized, partition))
+          else
+            File.expand_path(File.join(@root_dir, normalized))
+          end
+
           root_real = File.expand_path(@root_dir)
-          unless candidate.start_with?(root_real + File::SEPARATOR) || candidate == root_real
+          unless target_parent.start_with?(root_real + File::SEPARATOR)
             raise ArgumentError, "Path traversal detected in --to option"
           end
-          target_parent = candidate
           FileUtils.mkdir_p(target_parent)
 
           folder_name = File.basename(idea.path)
