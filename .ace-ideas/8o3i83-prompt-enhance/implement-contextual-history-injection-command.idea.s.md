@@ -1,10 +1,13 @@
 ---
+
 title: Implement ace-prompt push for Contextual History Injection
 filename_suggestion: feat-prompt-context-push
 enhanced_at: 2026-01-04 12:09:32
 location: backlog
 llm_model: gflash
+source: "taskflow:v.0.9.0"
 ---
+
 
 # Implement ace-prompt push for Contextual History Injection
 

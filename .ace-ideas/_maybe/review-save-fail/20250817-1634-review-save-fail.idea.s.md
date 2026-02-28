@@ -1,3 +1,6 @@
+---
+source: "legacy"
+---
 # Raw Idea (Enhanced Version Failed)
 
 **Enhancement Error:** LLM enhancement failed after 4 attempts. Last error: Error: Failed to query google: Retryable response: 429
