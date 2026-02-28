@@ -4,27 +4,42 @@ filename_suggestion: feat-sim-multi-input-bundle
 enhanced_at: 2026-02-28 01:55:21
 location: active
 llm_model: pi:glm
+simulation_verdict: READY_TO_DRAFT
 ---
 
 # Add Multi-File Input Support to ace-sim via ace-bundle Integration
 
 ## What I Hope to Accomplish
-Enable ace-sim to process multiple input files as a single simulation context, allowing users to run simulations against task hierarchies (parent + subtasks), entire directories, or glob patterns. This leverages ace-bundle's existing glob handling and context-packing capabilities to provide unified multi-file input support.
+Enable `ace-sim` to accept multiple files or glob patterns via the existing `--source` flag. When multiple files are detected, `ace-bundle` is invoked to merge them into a single `input.bundle.md` — the rest of the simulation pipeline runs unchanged. No new flags or variadic args: just extend `--source` to handle commas and globs.
 
 ## What "Complete" Looks Like
-- ace-sim CLI accepts multiple input paths: `ace-sim path/to/task.md path/to/subtasks/*.md`
-- ace-sim supports glob patterns directly: `ace-sim .ace-taskflow/v.0.9.0/291/**`
-- `--bundle` flag or similar option packs folder contents via ace-bundle before simulation
-- Task hierarchies are processed with parent context inherited by subtasks
-- Output clearly distinguishes results per input file or presents unified synthesis for batch mode
-- ATOM architecture: new Organism orchestrates ace-bundle molecule calls + existing simulation pipeline
+
+```bash
+# Single file (unchanged)
+ace-sim run --preset validate-task --source path/to/task.md
+
+# Comma-separated files
+ace-sim run --preset validate-task --source "path/to/parent.md,path/to/subtask.md"
+
+# Glob pattern
+ace-sim run --preset validate-task --source "tasks/291/**/*.md"
+```
+
+When `--source` resolves to more than one file, `ace-bundle` is called to merge them into `input.bundle.md`. That bundle file becomes the single input to the simulation chain — identical to the single-file path from that point on.
+
+## Technical Decisions & Constraints
+- **No new CLI flags**: `--source` is the only entry point; it accepts a single path, comma-separated paths, or a glob string.
+- **Always bundle via ace-bundle**: Every `--source` value — single file, comma list, or glob — is passed to `ace-bundle` to produce `<run-dir>/input.bundle.md`. No special-casing for single files.
+- **ace-bundle handles relative paths**: Paths are passed as-is (relative to project root); ace-bundle resolves them correctly.
+- **`input.bundle.md` is the step-1 contract**: The simulation runtime always reads `input.bundle.md` as its first-step input — uniform regardless of how many source files were given.
+- **Fail-fast**: If a glob matches zero files or any listed file is missing, ace-bundle will error; halt before the LLM is called.
 
 ## Success Criteria
-- `ace-sim .ace-taskflow/v.0.9.0/291/*.md` processes all matching task files
-- `ace-sim --bundle .ace-taskflow/v.0.9.0/291/` packs folder via ace-bundle then simulates
-- Subtask simulations have access to parent task context without manual specification
-- Existing single-file simulation behavior unchanged (backward compatible)
-- E2E test covers multi-file scenario with task + subtasks
+- [ ] `--source "tasks/291/**/*.md"` bundles all matching files into `input.bundle.md` and runs as one simulation.
+- [ ] `--source "parent.md,subtask.md"` bundles both files into `input.bundle.md` and runs as one simulation.
+- [ ] `--source single.md` also goes through ace-bundle — `input.bundle.md` is always the step-1 input.
+- [ ] Empty glob or missing file exits with non-zero status and clear error before LLM call.
+- [ ] Frontmatter is stripped by ace-bundle; simulation chain receives clean markdown.
 
 ---
 
