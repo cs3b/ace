@@ -166,7 +166,7 @@ module Ace
               "- [#{prefix}] #{i[:message]}#{i[:location] ? " (#{i[:location]})" : ""}"
             }.join("\n")
 
-            provider_model = options[:model] || config.dig("idea", "doctor_agent_model") || "gflash"
+            provider_model = options[:model] || config.dig("idea", "doctor_agent_model") || "gemini:flash-latest"
             cli_args_map = config.dig("idea", "doctor_cli_args") || {}
             
             prompt = <<~PROMPT

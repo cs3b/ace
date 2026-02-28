@@ -10,7 +10,7 @@ idea:
   llm_model: gemini:flash-preview
 
   # LLM model for doctor --auto-fix-with-agent
-  doctor_agent_model: gemini:flash-preview
+  doctor_agent_model: gemini:flash-latest
 
   # Provider-specific CLI args for doctor agent runs (e.g., Gemini uses YOLO)
   doctor_cli_args:
