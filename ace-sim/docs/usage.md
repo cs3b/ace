@@ -30,11 +30,14 @@ ace-sim run \
   --preset validate-idea \
   --source path/to/source.md \
   --provider glite \
-  --synthesis-workflow wfi://task/review-work \
+  --synthesis-workflow wfi://task/review \
   --synthesis-provider claude:haiku
 ```
 
 - `--synthesis-workflow` enables a final run-level synthesis stage.
+- Common choices:
+  - `wfi://task/review` for task-focused synthesis
+  - `wfi://idea/review` for idea-focused synthesis
 - `--synthesis-provider` is optional; when omitted, the first run provider is used.
 
 ## Precedence
@@ -54,7 +57,11 @@ ace-sim run \
 Top-level:
 - `.cache/ace-sim/simulations/<run-id>/session.yml`
 - `.cache/ace-sim/simulations/<run-id>/synthesis.yml`
+- `.cache/ace-sim/simulations/<run-id>/final/source.original.md` (when synthesis enabled)
+- `.cache/ace-sim/simulations/<run-id>/final/input.md` (when synthesis enabled)
+- `.cache/ace-sim/simulations/<run-id>/final/output.sequence.md` (when synthesis enabled)
 - `.cache/ace-sim/simulations/<run-id>/final/suggestions.report.md` (when synthesis enabled)
+- `.cache/ace-sim/simulations/<run-id>/final/source.revised.md` (when synthesis enabled)
 
 Per chain (`provider x repeat`):
 - `.cache/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/input.md`
@@ -71,3 +78,4 @@ Per chain (`provider x repeat`):
 - If one chain fails, only that chain stops; other chains continue.
 - `--dry-run` never mutates source ideas/tasks.
 - If synthesis is enabled, final run status also depends on final suggestions generation.
+- Synthesis input is an aggregate of executed steps only. If you run `--steps draft`, only draft appears in `final/input.md`.

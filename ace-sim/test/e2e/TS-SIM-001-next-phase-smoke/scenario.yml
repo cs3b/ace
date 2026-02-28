@@ -10,7 +10,8 @@ tool-under-test: ace-sim
 sandbox-layout:
   results/tc/01/: "Help survey observations"
   results/tc/02/: "Default preset behavioral run evidence"
-  results/tc/03/: "Explicit CLI override + final suggestions synthesis evidence"
+  results/tc/03/: "Explicit CLI override + one-step synthesis evidence"
+  results/tc/04/: "Full-chain synthesis evidence with dual final artifacts"
 
 e2e-justification: >
   This scenario validates end-to-end CLI execution and file-chained artifact

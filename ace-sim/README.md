@@ -21,8 +21,10 @@ ace-sim run \
   --preset validate-idea \
   --source path/to/source.md \
   --provider glite \
-  --synthesis-workflow wfi://task/review-work \
+  --synthesis-workflow wfi://task/review \
   --synthesis-provider claude:haiku
 ```
+
+For idea-oriented synthesis, use `--synthesis-workflow wfi://idea/review`.
 
 See `docs/usage.md` for full usage.

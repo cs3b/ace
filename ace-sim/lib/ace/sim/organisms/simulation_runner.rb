@@ -55,7 +55,8 @@ module Ace
               "status" => synthesis["status"],
               "chain_count" => chains.length,
               "writeback_applied" => false,
-              "synthesis_report_path" => final_stage && final_stage["output_path"]
+              "synthesis_report_path" => final_stage && final_stage["report_path"],
+              "synthesis_revised_source_path" => final_stage && final_stage["revised_source_path"]
             )
           )
 
