@@ -5,7 +5,6 @@ priority: medium
 estimate: TBD
 dependencies:
   - v.0.9.0+task.290
-  - v.0.9.0+task.291
   - v.0.9.0+task.292
 ---
 
@@ -18,9 +17,9 @@ Move existing task, idea, and retro data from the ace-taskflow release-scoped di
 ## Behavioral Specification
 
 ### User Experience
-- **Input**: Existing `.ace-taskflow/v.0.9.0/{tasks,ideas,retros}/` directories
-- **Process**: Migration script reads existing items, assigns b36ts IDs (or preserves existing ones), rewrites frontmatter to new schema, moves folders to new root directories
-- **Output**: Populated `.ace-tasks/`, `.ace-ideas/`, `.ace-retros/` with all migrated data
+- **Input**: Existing `.ace-taskflow/v.0.9.0/{tasks,retros}/` directories
+- **Process**: Migration script reads existing items, assigns b36ts IDs, rewrites frontmatter to new schema, moves folders to new root directories
+- **Output**: Populated `.ace-tasks/`, `.ace-retros/` with all migrated data
 
 ### Expected Behavior
 
@@ -30,12 +29,7 @@ Move existing task, idea, and retro data from the ace-taskflow release-scoped di
    - `_archive/` tasks migrated with archive structure preserved
    - Frontmatter rewritten to new schema (remove release-scoped fields)
 
-2. **Idea migration**: `.ace-taskflow/v.0.9.0/ideas/` → `.ace-ideas/`
-   - Existing b36ts IDs preserved where present
-   - `_maybe/`, `_archive/` folders preserved
-   - Frontmatter adapted to new schema
-
-3. **Retro migration**: `.ace-taskflow/v.0.9.0/retros/` → `.ace-retros/`
+2. **Retro migration**: `.ace-taskflow/v.0.9.0/retros/` → `.ace-retros/`
    - Existing flat retro files → retro folders with `.retro.md` files
    - Assign b36ts IDs based on existing timestamps or creation date
    - Completed retros go to `_archive/` with chronological sub-paths
@@ -47,9 +41,6 @@ Move existing task, idea, and retro data from the ace-taskflow release-scoped di
 ace-task migrate --from .ace-taskflow/v.0.9.0/tasks --dry-run
 ace-task migrate --from .ace-taskflow/v.0.9.0/tasks
 
-ace-idea migrate --from .ace-taskflow/v.0.9.0/ideas --dry-run
-ace-idea migrate --from .ace-taskflow/v.0.9.0/ideas
-
 ace-retro migrate --from .ace-taskflow/v.0.9.0/retros --dry-run
 ace-retro migrate --from .ace-taskflow/v.0.9.0/retros
 ```
@@ -57,25 +48,25 @@ ace-retro migrate --from .ace-taskflow/v.0.9.0/retros
 ### Success Criteria
 
 - [ ] All tasks migrated with correct b36ts IDs
-- [ ] All ideas migrated with IDs preserved
 - [ ] All retros migrated from flat files to folders
 - [ ] Orchestrator/subtask relationships preserved in task migration
 - [ ] `_archive/` items correctly placed
 - [ ] `--dry-run` shows what would happen without writing
 - [ ] No data loss — all frontmatter fields and body content preserved
-- [ ] New `ace-task list`, `ace-idea list`, `ace-retro list` show all migrated items
+- [ ] New `ace-task list`, `ace-retro list` show all migrated items
 - [ ] Original `.ace-taskflow/` data untouched (can be deleted separately in task 294)
 
 ## Scope of Work
 
-- Add `migrate` command to each gem (ace-task, ace-idea, ace-retro)
-- ID mapping logic: sequential → b36ts for tasks; preserve existing for ideas; generate for retros
+- Add `migrate` command to each gem (ace-task, ace-retro)
+- ID mapping logic: sequential → b36ts for tasks; generate b36ts for retros
 - Frontmatter schema translation
 - Folder structure transformation (flat files → folders for retros)
 - Dry-run support
 
 ## Out of Scope
 
+- Idea migration (extracted to task 291.04 — already done)
 - Deleting ace-taskflow (task 294)
 - Modifying the original ace-taskflow data
 
@@ -83,5 +74,5 @@ ace-retro migrate --from .ace-taskflow/v.0.9.0/retros
 
 - Existing data: `.ace-taskflow/v.0.9.0/tasks/` (341 tasks), `.ace-taskflow/v.0.9.0/ideas/` (133 ideas), `.ace-taskflow/v.0.9.0/retros/` (4 retros)
 - Task 290 — ace-task gem (must be complete)
-- Task 291 — ace-idea gem (must be complete)
+- Task 291.04 — idea migration (already done, extracted from this task)
 - Task 292 — ace-retro gem (must be complete)
