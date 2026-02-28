@@ -1,4 +1,5 @@
 ---
+
 :input_tokens: 45991
 :output_tokens: 1142
 :total_tokens: 47133
@@ -18,7 +19,9 @@
   :cache_read: 0.0
   :total: 0.005056
   :currency: USD
+source: "legacy"
 ---
+
 
 # Limit CLI Output to 100 Lines
 

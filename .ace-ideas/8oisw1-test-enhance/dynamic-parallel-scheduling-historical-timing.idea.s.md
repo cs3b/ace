@@ -1,10 +1,13 @@
 ---
+
 title: Dynamic Parallel Test Scheduling based on Historical Timing
 filename_suggestion: feat-test-parallel-timing
 enhanced_at: 2026-01-19 19:15:36
 location: active
 llm_model: gflash
+source: "taskflow:v.0.9.0"
 ---
+
 
 # Dynamic Parallel Test Scheduling based on Historical Timing
 

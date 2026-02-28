@@ -1,4 +1,5 @@
 ---
+
 title: Integrate Native Client Review for ace-assign Subtree Pre-Commit
 filename_suggestion: feat-assign-subtree-review
 enhanced_at: 2026-02-26 03:59:07.000000000 +00:00
@@ -8,7 +9,9 @@ id: 8pp5z7
 status: pending
 tags: []
 created_at: '2026-02-26 03:59:06'
+source: "user"
 ---
+
 
 # Integrate Native Client Review for ace-assign Subtree Pre-Commit
 
