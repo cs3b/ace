@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added
+- **ace-idea v0.4.2**: `doctor_cli_args` configuration map lets `doctor --auto-fix-with-agent` supply any required CLI flags per provider (default maps `gemini` to `yolo` so the CLI runs headless).
+
+### Fixed
+- **ace-idea v0.4.2**: Agent sessions only forward CLI args when the map contains an entry, so Gemini no longer receives `dangerously-skip-permissions` and the agent launch succeeds while other providers keep their existing flags.
+
 ## [0.9.692] - 2026-02-28
 
 ### Added
