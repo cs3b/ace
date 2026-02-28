@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-02-28
+
+### Fixed
+- Add missing "Apply Validated Changes" step (Step 4) to `sim/run` workflow so simulation refinements are written back to original source files, not left only in the simulation cache folder
+
+### Technical
+- Update model providers in `validate-task` preset
+
 ## [0.4.2] - 2026-02-28
 
 ### Added
