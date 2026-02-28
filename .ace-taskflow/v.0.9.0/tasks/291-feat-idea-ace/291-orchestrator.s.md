@@ -3,8 +3,6 @@ id: v.0.9.0+task.291
 status: pending
 priority: high
 estimate: TBD
-dependencies:
-  - v.0.9.0+task.290.01
 subtasks:
   - v.0.9.0+task.291.01
   - v.0.9.0+task.291.02
