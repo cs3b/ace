@@ -29,12 +29,39 @@ steps:
       - "Mark task {{taskref}} as done."
       - "Run: ace-taskflow task done {{taskref}}"
 
+  - name: verify-test-suite
+    skill: ace-test-verify-suite
+    instructions:
+      - "Identify packages modified in this task."
+      - "For each modified package, run: cd <package> && ace-test --profile 6"
+      - "Check profile output against performance budgets: atoms <50ms, molecules <100ms, integration <1s, full package suite <30s."
+      - "If any test exceeds thresholds, investigate and fix (stub I/O, mock network calls)."
+      - "Then run ace-test-suite to verify no cross-package regressions."
+      - "Skip if changes are documentation-only (no .rb files modified)."
+
+  - name: verify-e2e
+    skill: ace-e2e-review
+    instructions:
+      - "For each package heavily modified in this task, run /ace-e2e-review <package>."
+      - "Review the coverage matrix — identify gaps and stale TCs."
+      - "If TCs need updating, update them before running."
+      - "Run ace-test-e2e-suite <package> for each heavily modified package (not full suite)."
+      - "Skip if no public CLI API was changed (internal refactoring only)."
+
   - name: release-minor
     skill: ace-release
     instructions:
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
+
+  - name: update-docs
+    skill: ace-docs-update
+    instructions:
+      - "Identify packages where CLI commands, flags, or public contracts changed."
+      - "Run /ace-docs-update-usage for each affected package."
+      - "Verify updated docs with ace-docs validate."
+      - "Skip if no public API/CLI changes (internal-only work)."
 
   - name: create-pr
     skill: ace-git-create-pr

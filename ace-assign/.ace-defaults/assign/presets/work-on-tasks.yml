@@ -20,6 +20,28 @@ steps:
       - Load project context.
       - Review task queue and priorities.
 
+  - name: verify-test-suite
+    number: "012"
+    skill: ace-test-verify-suite
+    instructions:
+      - "Identify all packages modified across the batch of tasks."
+      - "For each modified package, run: cd <package> && ace-test --profile 6"
+      - "Check profile output against performance budgets: atoms <50ms, molecules <100ms, integration <1s, full package suite <30s."
+      - "If any test exceeds thresholds, investigate and fix (stub I/O, mock network calls)."
+      - "Then run ace-test-suite to verify no cross-package regressions."
+      - "Skip if changes are documentation-only (no .rb files modified)."
+
+  - name: verify-e2e
+    number: "015"
+    skill: ace-e2e-review
+    instructions:
+      - "Identify all packages modified across the batch of tasks."
+      - "For each heavily modified package, run /ace-e2e-review <package>."
+      - "Review the coverage matrix — identify gaps and stale TCs."
+      - "If TCs need updating, update them before running."
+      - "Run ace-test-e2e-suite <package> for each affected package (not full suite)."
+      - "Skip if no public CLI API was changed across any of the batch tasks."
+
   - name: release-minor
     number: "020"
     skill: ace-release
@@ -27,6 +49,15 @@ steps:
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
+
+  - name: update-docs
+    number: "025"
+    skill: ace-docs-update
+    instructions:
+      - "Identify packages across all batch tasks where CLI commands, flags, or public contracts changed."
+      - "Run /ace-docs-update-usage for each affected package."
+      - "Verify updated docs with ace-docs validate."
+      - "Skip if no public API/CLI changes across any of the batch tasks."
 
   - name: create-pr
     number: "030"

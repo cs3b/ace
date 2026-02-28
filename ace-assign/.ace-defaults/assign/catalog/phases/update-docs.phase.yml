@@ -1,0 +1,38 @@
+name: update-docs
+skill: ace-docs-update
+description: Update public-facing documentation when CLI contracts or public APIs change
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Must know what changed to update docs accurately"
+  - name: release
+    strength: recommended
+    reason: "Version number should be known before updating docs"
+
+produces: [updated-docs]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "Documentation updates run inline (lightweight, no fork needed)"
+
+when_to_skip:
+  - "No public CLI contract changes (internal refactoring, private methods only)"
+  - "Documentation was already updated as part of work-on-task"
+  - "Task is documentation-only (no new code changes to document)"
+
+effort: light
+tags: [documentation, quality]
+
+steps:
+  - name: identify-scope
+    description: "Identify which packages had CLI/API contract changes by reviewing the diff"
+
+  - name: update-usage-docs
+    description: "Run /ace-docs-update-usage for each affected package"
+    tool: "ace-docs-update-usage <package>"
+
+  - name: verify-docs
+    description: "Run ace-docs validate on updated files to confirm format is correct"
+    tool: "ace-docs validate <files>"
