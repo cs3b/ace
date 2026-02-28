@@ -68,7 +68,7 @@ You can apply additional filters on top of presets:
 ace-task list urgent --days 3
 
 # Add status filter to preset
-ace-idea list recent --status pending
+ace-idea list --status pending
 
 # Get statistics for a preset
 ace-task list urgent --stats

@@ -18,7 +18,7 @@ Process multiple idea files and create draft tasks for each one in sequence, wit
 
 ## Prerequisites
 
-- Idea files exist in backlog (discoverable via `ace-idea list --backlog`)
+- Idea files exist in maybe folder (discoverable via `ace-idea list --in maybe`)
 - Access to `draft-task` singular workflow via `ace-bundle wfi://task/draft`
 - Understanding of ace-taskflow commands
 
@@ -52,8 +52,8 @@ Proceed to Step 1 and create one standalone task per idea.
 
 **If no idea pattern provided:**
 ```bash
-# Discover all backlog ideas
-ace-idea list --backlog
+# Discover all ideas in maybe folder
+ace-idea list --in maybe
 ```
 
 **If idea pattern provided:**
@@ -104,13 +104,14 @@ After task creation succeeds:
 # Extract task number from created task path
 TASK_NUM=$(echo "$TASK_PATH" | grep -oE '[0-9]+' | tail -1)
 
-# Move idea file using ace-taskflow
-ace-idea done [idea-reference]
+# Move idea file to archive and mark as done
+ace-idea move [idea-id] --to archive
+ace-idea update [idea-id] --set status=done
 ```
 
-**Note:** `ace-idea done` automatically:
-- Moves idea file to ideas/done/ subdirectory in its current location
-- Updates idea frontmatter with completion status and timestamp
+**Note:** These commands:
+- Move the idea file to the `_archive/` folder
+- Update idea frontmatter with completion status
 
 **2.4 Error Handling:**
 
@@ -171,15 +172,15 @@ Provide comprehensive summary including:
 ## Error Handling Strategies
 
 ### Idea Discovery Failure
-- **Symptom:** `ace-idea list --backlog` returns no results or errors
-- **Action:** Report issue, check if backlog directory exists, exit gracefully
+- **Symptom:** `ace-idea list --in maybe` returns no results or errors
+- **Action:** Report issue, check if maybe directory exists, exit gracefully
 
 ### Task Creation Failure
 - **Symptom:** Draft task workflow fails or returns error
 - **Action:** Log failure, skip to next idea, include in final summary
 
 ### Idea Cleanup Failure
-- **Symptom:** `ace-idea done` fails
+- **Symptom:** `ace-idea move` or `ace-idea update` fails
 - **Action:** Warn user, task still created, manual cleanup may be needed
 
 ### Validation Failure
@@ -190,7 +191,7 @@ Provide comprehensive summary including:
 
 - All idea files processed (or failures documented)
 - Draft tasks created with `status: draft`
-- Idea files marked as done and moved to ideas/done/ (or warnings issued)
+- Idea files marked as done and moved to _archive/ (or warnings issued)
 - Comprehensive summary report generated
 - Documentation validation passes (or issues reported)
 - Clear next steps provided
@@ -217,4 +218,4 @@ Provide comprehensive summary including:
 - Maintain detailed progress logs
 - Continue on failure (collect all results)
 - Always provide comprehensive final summary
-- Use `ace-idea done` for idea cleanup (not manual git mv)
+- Use `ace-idea move <id> --to archive` + `ace-idea update <id> --set status=done` for idea cleanup (not manual git mv)
