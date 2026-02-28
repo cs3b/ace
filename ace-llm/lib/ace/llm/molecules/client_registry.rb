@@ -151,6 +151,13 @@ module Ace
               return "#{provider_name}:#{@model_aliases[normalized_provider][model_alias]}"
             end
 
+            # Auto-resolve: provider:provider → provider:default_model
+            normalized_alias = normalize_provider_name(model_alias)
+            if normalized_alias == normalized_provider
+              default_model = @providers[normalized_provider]&.dig("models")&.first
+              return "#{provider_name}:#{default_model}" if default_model
+            end
+
             # Return as-is if no model alias found
             return input
           end

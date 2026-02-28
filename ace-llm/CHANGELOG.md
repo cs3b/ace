@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.6] - 2026-02-28
+
+### Fixed
+- Resolve `provider:provider` format (e.g., `codex:codex`) to provider's default model instead of passing literal provider name as model; adds fallback in `ClientRegistry#resolve_alias` when model alias matches provider name
+
 ## [0.24.5] - 2026-02-28
 
 ### Fixed
