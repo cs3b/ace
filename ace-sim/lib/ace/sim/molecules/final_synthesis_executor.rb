@@ -23,7 +23,7 @@ module Ace
           @command_runner = command_runner || CommandRunner.new
         end
 
-        def execute(run_dir:, session:, chains:)
+        def execute(run_dir:, session:, chains:, source_original_input_path: nil)
           final_dir = File.join(run_dir, "final")
           FileUtils.mkdir_p(final_dir)
 
@@ -35,7 +35,7 @@ module Ace
           report_path = File.join(final_dir, "suggestions.report.md")
           revised_source_path = File.join(final_dir, "source.revised.md")
 
-          copy_source(source_original_path, session: session)
+          copy_source(source_original_path, session: session, source_original_input_path: source_original_input_path)
           write_input(input_path, session: session, chains: chains)
           write_bundle(bundle_path, workflow_ref: session.synthesis_workflow)
 
@@ -99,13 +99,15 @@ module Ace
 
         attr_reader :command_runner
 
-        def copy_source(path, session:)
-          FileUtils.cp(session.source, path)
+        def copy_source(path, session:, source_original_input_path:)
+          origin_path = source_original_input_path || session.source.first
+          FileUtils.cp(origin_path, path)
         end
 
         def write_input(path, session:, chains:)
+          sources_display = session.source.is_a?(Array) ? session.source.join(", ") : session.source.to_s
           content = +"# ace-sim final synthesis input\n\n"
-          content << "Source file: #{session.source}\n\n"
+          content << "Source file(s): #{sources_display}\n\n"
           content << "## Chain outputs\n\n"
 
           chains.each do |chain|

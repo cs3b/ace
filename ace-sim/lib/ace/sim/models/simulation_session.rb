@@ -10,7 +10,7 @@ module Ace
         def initialize(preset:, source:, steps:, providers:, repeat:, dry_run:, writeback:, verbose: false,
                        run_id: nil, step_bundles: {}, synthesis_workflow: nil, synthesis_provider: nil)
           @preset = preset.to_s.strip
-          @source = source.to_s.strip
+          @source = Array(source).map(&:to_s).map(&:strip).reject(&:empty?)
           @steps = Ace::Sim.normalize_list(steps)
           @providers = Ace::Sim.normalize_list(providers)
           @repeat = Integer(repeat)
@@ -59,6 +59,7 @@ module Ace
         private
 
         def validate!
+          raise Ace::Sim::ValidationError, "source cannot be empty" if source.empty?
           raise Ace::Sim::ValidationError, "steps cannot be empty" if steps.empty?
           raise Ace::Sim::ValidationError, "providers cannot be empty" if providers.empty?
           raise Ace::Sim::ValidationError, "repeat must be >= 1" if repeat < 1
