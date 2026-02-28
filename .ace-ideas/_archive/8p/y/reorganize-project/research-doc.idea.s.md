@@ -1,3 +1,11 @@
+---
+id: reorga
+status: done
+title: Reorganize project
+tags: []
+created_at: '2026-02-28 20:24:51'
+---
+
 Migration Plan: ACE Monorepo
 
 🎯 Purpose
@@ -150,4 +158,3 @@ Phase 6 – Release & Adoption (Ongoing)
 	•	Versioning: one version for all gems vs independent?
 → Independent versions recommended, but tag repo releases for alignment.
 	•	Array merging: default append, allow per-key override.
-

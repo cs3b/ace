@@ -1,10 +1,12 @@
 ---
-
 status: pending
 priority: anyday
-source: "taskflow:v.0.9.0"
+source: taskflow:v.0.9.0
+id: 8l6hrw
+title: Idea
+tags: []
+created_at: '2025-10-07 11:50:59'
 ---
-
 
 # Idea
 
@@ -13,4 +15,3 @@ It should have access to read tools (not write tools) and ensure that at the end
 
 ---
 Captured: 2025-10-07 12:51:17
-

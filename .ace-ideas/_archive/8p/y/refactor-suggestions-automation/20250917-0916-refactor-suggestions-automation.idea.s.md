@@ -1,3 +1,11 @@
+---
+id: refact
+status: done
+title: Raw Idea (Enhanced Version Failed)
+tags: []
+created_at: '2026-02-28 20:24:51'
+---
+
 # Raw Idea (Enhanced Version Failed)
 
 **Enhancement Error:** LLM enhancement failed after 4 attempts. Last error: Error: Unknown provider: invalid_model_name. Supported providers: anthropic, cc, codex, codexoss, google, lmstudio, mistral, oc, openai, together_ai

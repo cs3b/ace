@@ -18,6 +18,11 @@
   :cache_read: 0.0
   :total: 0.005121
   :currency: USD
+id: projec
+status: done
+title: Introduce `prun` CLI Tool for Flexible Script Execution
+tags: []
+created_at: '2077-04-25 12:55:55'
 ---
 
 ```markdown
