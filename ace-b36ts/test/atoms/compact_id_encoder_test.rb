@@ -507,15 +507,20 @@ module Ace
           assert_equal 34, third_char_value, "Feb 27 2025 should be week 4 (value 34)"
         end
 
-        def test_split_encoder_uses_simple_weeks
-          # Split encoder should still use simple day-based weeks (not ISO)
-          time = Time.utc(2025, 2, 1, 12, 0, 0)  # Feb 1 is Sat
+        def test_split_encoder_uses_iso_weeks
+          # Split encoder uses ISO Thursday-based week attribution (same as encode_week)
+          # Feb 1 2025 is Saturday → Thursday is Jan 30 → ISO week is January week 5
+          time = Time.utc(2025, 2, 1, 12, 0, 0)
           result = @encoder.encode_split(time, levels: [:month, :week])
 
-          # Simple formula: (1-1)/7 + 1 = 1 → week value 1
           week_token = result[:week]
           week_value = CompactIdEncoder::DEFAULT_ALPHABET.index(week_token.downcase)
-          assert_equal 1, week_value, "Split should use simple week (day 1 = week 1)"
+          # ISO week 5 → encoded as 5+30=35 (base36 'z')
+          assert_equal 35, week_value, "Split should use ISO Thursday week (Feb 1 Sat → Jan week 5 → value 35)"
+
+          # Month should also reflect ISO week's month (January, not February)
+          jan_token = @encoder.encode_with_format(Time.utc(2025, 1, 1), format: :month)
+          assert_equal jan_token, result[:month], "Split month for Feb 1 (Sat) should be January (ISO)"
         end
 
         def test_year_zero_boundary_with_iso_thursday_before_year_zero
