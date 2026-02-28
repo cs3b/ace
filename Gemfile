@@ -27,6 +27,8 @@ gem 'ace-taskflow', path: 'ace-taskflow'
 gem 'ace-overseer', path: 'ace-overseer'
 gem 'ace-test-runner', path: 'ace-test-runner'
 gem 'ace-sim', path: 'ace-sim'
+gem 'ace-support-items', path: 'ace-support-items'
+gem 'ace-idea', path: 'ace-idea'
 
 # Shared dev/test tools for all gems
 group :development, :test do

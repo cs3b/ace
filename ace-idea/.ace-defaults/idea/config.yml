@@ -1,0 +1,20 @@
+# ace-idea default configuration
+idea:
+  # Root directory for ideas storage
+  root_dir: .ace-ideas
+
+  # Default status for new ideas
+  default_status: pending
+
+  # LLM model for idea enhancement
+  llm_model: gemini:flash-preview
+
+  # LLM model for doctor --auto-fix-with-agent
+  doctor_agent_model: gemini:flash-preview
+
+  # Special folder mappings (short name => actual folder name)
+  special_folders:
+    archive: _archive
+    maybe: _maybe
+    anytime: _anytime
+    next: _next

@@ -4,62 +4,119 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.687] - 2026-02-28
+## [0.9.692] - 2026-02-28
+
+### Added
+- **ace-idea v0.4.1**: Extended `doctor --auto-fix` for additional issue types
+  - Auto-fix for missing opening `---` delimiter (extracts ID/title, prepends frontmatter)
+  - Auto-fix for legacy folder naming (generates new b36ts ID, renames folder and spec file)
+  - Category folder detection (skips folders with only subdirectories, no files)
+  - 16 fixable patterns (up from 14)
+
+### Technical
+- **ace-idea v0.4.1**: 13 new tests for extended auto-fix functionality (230 total tests)
+
+## [0.9.691] - 2026-02-28
+
+### Added
+- **ace-idea v0.4.0**: `doctor` command — comprehensive health checks for ideas with auto-fix and agent support
+  - Structure validation: folder naming (`{id}-{slug}`), spec file presence, stale backups, empty directories
+  - Frontmatter validation: delimiters, YAML syntax, required fields (`id`, `status`, `title`), recommended fields (`tags`, `created_at`)
+  - Scope/status consistency: terminal status in `_archive/`, non-terminal in archive, `_maybe/` with terminal
+  - Health score (0-100) with errors weighted 10× and warnings 2×
+  - `--auto-fix` for 14 safe automatic fixes (missing fields, stale backups, empty dirs, scope moves)
+  - `--auto-fix-with-agent` to launch LLM agent for unfixable issues
+  - Output formats: `--json`, `--quiet`, `--verbose`, terminal (default)
+  - Filters: `--check (frontmatter|structure|scope)`, `--errors-only`
+  - Options: `--no-color`, `--dry-run`, `--model`
+- **ace-idea v0.4.0**: New atoms/molecules/organism for doctor feature — `IdeaValidationRules`, `IdeaFrontmatterValidator`, `IdeaStructureValidator`, `IdeaDoctorFixer`, `IdeaDoctorReporter`, `IdeaDoctor`
+
+### Technical
+- **ace-idea v0.4.0**: 108 new tests covering all doctor components (217 total tests)
+
+## [0.9.690] - 2026-02-28
+
+### Added
+- **ace-assign v0.15.0**: Add `verify-test-suite` step to `work-on-task` and `work-on-tasks` presets with profiling and performance budget enforcement
+- **ace-assign v0.15.0**: Enrich `verify-test-suite` phase catalog with structured steps (`run-package-tests`, `check-performance-budgets`, `fix-violations`, `run-suite`) and budget thresholds
+- **ace-assign v0.15.0**: Move `verify-test-suite` from Optional to Core in compose workflow for "Implement + PR" and "Batch tasks" intents
 
 ### Changed
-- **ace-sim v0.6.0**: `--source` now accepts multiple values via repeatable flag (not CSV)
-- **ace-sim v0.6.0**: Source values passed directly to `ace-bundle` without Ruby preprocessing
-- **ace-sim v0.6.0**: Deleted `SourceResolver` molecule (ace-bundle handles glob/file resolution)
+- **ace-assign v0.15.0**: Strengthen `verify-test-suite` composition rule from `recommended` to `required` when assignment includes `work-on-task` or `fix-bug`
+
+## [0.9.689] - 2026-02-28
+
+### Fixed
+- **ace-idea v0.3.1**: Stub `llm_available?` in LLM-related tests to prevent real API calls during test runs (43s → <0.2s)
+
+## [0.9.688] - 2026-02-28
+
+### Added
+- **ace-support-items v0.2.0**: `FrontmatterParser` atom for parsing YAML frontmatter (returns `[Hash, String]` tuple)
+- **ace-support-items v0.2.0**: `FrontmatterSerializer` atom for YAML serialization with inline arrays and value quoting
+- **ace-support-items v0.2.0**: `FilterParser` atom for `--filter key:value` syntax with OR (`|`) and negation (`!`)
+- **ace-support-items v0.2.0**: `TitleExtractor` atom for extracting first H1 heading from markdown
+- **ace-support-items v0.2.0**: `LoadedDocument` model, `DocumentLoader`, `FilterApplier`, `ItemSorter`, `BaseFormatter` molecules
+- **ace-idea v0.3.0**: `--filter` option on `list` command with generic `key:value` filter syntax
+
+### Changed
+- **ace-idea v0.3.0**: Refactored `IdeaLoader`, `IdeaFrontmatterDefaults`, and `IdeaManager` to use shared atoms/molecules from `ace-support-items`
+- **ace-idea v0.3.0**: Updated dependency `ace-support-items ~> 0.2` (was `~> 0.1`)
+
+## [0.9.687] - 2026-02-28
+
+### Added
+- **ace-assign v0.14.0**: Add `verify-e2e` and `update-docs` phase catalog files with prerequisites, skip conditions, effort, and step definitions
+- **ace-assign v0.14.0**: Add `verify-e2e` and `update-docs` steps to `work-on-task` and `work-on-tasks` presets (between mark-done → release and release → create-pr)
+- **ace-assign v0.14.0**: Add ordering rules (`e2e-before-release`, `update-docs-after-release`, `update-docs-before-pr`, `e2e-after-verify`), conditional suggestion for CLI/API changes, and pairs to `composition-rules.yml`
+- **ace-assign v0.14.0**: Update `compose.wf.md` Phase Selection Guidelines to include `verify-e2e` and `update-docs` in all relevant intents with skip guidance
 
 ## [0.9.686] - 2026-02-28
 
 ### Fixed
-- **ace-llm v0.24.6**: Resolve `provider:provider` alias format (e.g., `codex:codex`) to provider's default model instead of passing literal provider name, which caused API rejection
+- **bin/ace-idea**: Wrapper now loads from `ace-idea/exe/ace-idea` (was incorrectly loading from `ace-taskflow/exe/ace-idea`)
+
+### Added
+- **ace-idea v0.2.4**: E2E test scenario `TS-IDEA-001-idea-lifecycle` — TC-001 (create), TC-002 (list with filters), TC-003 (move to folder)
+
+### Changed
+- **ace-taskflow v0.42.12**: Updated `task/draft` and `task/draft-batch` workflow instructions to use `ace-idea move/update` commands instead of legacy `ace-idea done/reschedule`
+- **ace-taskflow v0.42.12**: Updated README to reflect ace-idea extraction as standalone gem; fixed preset README example syntax
+
+### Technical
+- Updated `docs/architecture.md` and `docs/blueprint.md` to list `ace-idea` as a distinct standalone gem
+- **ace-idea v0.2.4**: Updated `idea/capture` and `idea/prioritize` handbook workflows to use current `ace-idea move/update` CLI syntax
+- **ace-taskflow v0.42.12**: Corrected E2E TC-003 to use `ace-idea move --to maybe` (replaced legacy `ace-idea park`)
 
 ## [0.9.685] - 2026-02-28
 
-### Fixed
-- **ace-sim v0.5.1**: Simplify nil guard in `FinalSynthesisExecutor#copy_source` to use `||` operator
-- **ace-sim v0.5.1**: Filter directories from glob resolution results to prevent confusing errors
+### Technical
+- **ace-idea v0.2.3**: Add explicit `require "json"`; remove unused constants; clean up redundant requires
+- **ace-support-items v0.1.1**: Move `require "pathname"` to top-level in `SpecialFolderDetector`
 
 ## [0.9.684] - 2026-02-28
 
-### Added
-- **ace-sim v0.5.0**: Multi-file input support via `--source` flag — accept comma-separated paths and glob patterns, routed through ace-bundle to produce unified `input.bundle.md`
-- **ace-sim v0.5.0**: New `SourceBundler` molecule for ace-bundle CLI integration
-- **ace-sim v0.5.0**: Writeback guard rejects multi-file `--source` with clear error before LLM call
+### Fixed
+- **ace-idea v0.2.2**: Path traversal guards for `--to`/`--move-to`; YAML-ambiguous value quoting; consistent inline-array format in `rebuild_file`; LLM JSON preamble handling; hidden file filter in attachments
 
-### Changed
-- **ace-sim v0.5.0**: `SourceResolver` returns rich metadata (`paths`, `multi_file`, `source_spec`) for multi-file awareness
-- **ace-sim v0.5.0**: `FinalSynthesisExecutor` copies bundled input as `source.original.md` instead of raw source path
+### Added
+- **ace-idea v0.2.2**: `spec.executables` added to gemspec — `ace-idea` binary installs correctly
 
 ## [0.9.683] - 2026-02-28
 
-### Added
-- **ace-taskflow v0.43.0**: `ace-task create` now scaffolds a `ux/` subdirectory alongside `docs/` and `qa/` in each new task directory
-- **ace-taskflow v0.43.0**: `task/draft` workflow gains step 8 "Create Draft Usage Documentation" — when a task changes CLI/API/workflow/config interfaces, `ux/usage.md` with concrete usage scenarios is created during the draft phase as a behavioral acceptance contract
-- **ace-taskflow v0.43.0**: Embed `tmpl://task-management/draft-usage` template in `task/draft` workflow for consistent usage doc structure
-
-### Changed
-- **ace-taskflow v0.43.0**: `task/plan` workflow now loads `ux/usage.md` as behavioral acceptance criteria when present; usage documentation note updated to reflect draft-phase creation
-- **ace-taskflow v0.43.0**: `task/review` readiness checklist gains "Usage Documentation Present" check for interface-changing tasks
-- **ace-taskflow v0.43.0**: `task.draft` template References section updated to include `ux/usage.md` as standard reference
-- **ace-sim v0.4.4**: `sim/run` workflow updated to recommend including `ux/usage.md` alongside task spec when running `validate-task` simulations
-
-### Technical
-- Task 298 (`multi-file --source` support): create `ux/usage.md` with five concrete scenarios and add reference in task spec
-- Promote task 298 spec to pending with refined multi-file source behavioral specification
-- Archive idea `8pr2vt-taskflow-add` to `ideas/done/` after draft task creation
-- Update model providers in `validate-task` and `validate-idea` sim presets
+### Fixed
+- **ace-idea v0.2.1**: Security fixes — attachment path traversal, `--root` boundary check; atomic file writes; gem_root path; ArgumentError handling; YAML serializer special chars; formatting drift prevention; FieldArgumentParser for update command type inference
 
 ## [0.9.682] - 2026-02-28
 
-### Fixed
-- **ace-sim v0.4.3**: `sim/run` workflow was missing a writeback step — simulation refinements were applied only inside the `.cache/ace-sim/` run directory and not propagated back to the original source files. New Step 4 "Apply Validated Changes" closes this gap.
+### Added
+- **ace-idea v0.2.0**: `ace-idea` CLI executable with 5 commands — `create`, `show`, `list`, `move`, `update` — wired to `IdeaManager` via dry-cli Registry pattern
+- **ace-idea v0.2.0**: `create` supports `--title`, `--tags`, `--move-to`, `--clipboard`, `--llm-enhance`, `--dry-run`; `list` supports `--status`, `--tags`, `--in FOLDER`, `--root`; `update` supports `--set/--add/--remove K=V`
+- **ace-idea v0.1.0/v0.1.1**: Initial release — `IdeaManager` organism, `IdeaCreator`/`IdeaScanner`/`IdeaResolver`/`IdeaLoader`/`IdeaMover`/`IdeaDisplayFormatter` molecules, `IdeaLlmEnhancer` with 3-Question Brief, clipboard capture, b36ts IDs, `.ace-ideas/` storage
+- **ace-support-items**: Shared item management infrastructure used by ace-idea
 
-### Technical
-- **ace-sim v0.4.3**: Update model providers in `validate-task` preset
-- Increase Google provider `max_tokens` from 16384 to 65536 in `.ace/llm/providers/google.yml` to prevent synthesis output truncation
+### Changed
+- **ace-idea**: Handbook workflow instructions (`idea/capture.wf.md`, `capture-features.wf.md`, `prioritize.wf.md`) moved from `ace-taskflow` to `ace-idea` package
 
 ## [0.9.681] - 2026-02-28
 
