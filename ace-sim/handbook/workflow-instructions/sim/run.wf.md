@@ -90,14 +90,37 @@ The run directory structure:
     source.revised.md       # Revised source incorporating suggestions
 ```
 
-### Step 4: Present Summary
+### Step 4: Apply Validated Changes
+
+After reviewing `source.revised.md`, apply the validated refinements back to the
+original source files. The simulation output is only useful if it feeds back into
+the actual specs.
+
+**When the source was a single file** — apply diffs directly using the Edit tool,
+comparing `source.revised.md` against the original.
+
+**When the source was bundled from multiple files** (e.g. merged task specs):
+- Compare `source.revised.md` section by section against each original file
+- Apply each relevant change to its correct source file using the Edit tool
+- Common changes to propagate: status promotions, spec refinements, new error
+  messages, updated success criteria, clarified edge cases
+
+**Skip or flag for human decision:**
+- Changes marked `[PENDING DECISION]` in the revised source
+- Structural additions that don't have a clear home in the originals
+- Questions from the suggestions report — surface these to the user instead
+
+Do not commit yet — let the commit workflow handle that after review.
+
+### Step 5: Present Summary
 
 Summarize the simulation findings to the user:
 
 1. **Run metadata** — preset, providers, step count, run directory
-2. **Key findings** — top suggestions from the synthesis report
-3. **Revised source highlights** — notable changes in the revised document
-4. **Recommended actions** — what to do with the results (apply changes, re-run with different providers, etc.)
+2. **Key findings** — top suggestions from the suggestions report
+3. **Changes applied** — which original files were updated and what changed
+4. **Pending decisions** — any `[PENDING DECISION]` items needing human input
+5. **Recommended actions** — next steps (commit, re-run with different providers, etc.)
 
 ## Quick Reference
 
@@ -123,4 +146,6 @@ ace-sim run --preset validate-task --source spec.md --dry-run
 - [ ] Simulation completed without errors
 - [ ] Synthesis report reviewed (`final/suggestions.report.md`)
 - [ ] Revised source reviewed (`final/source.revised.md`)
+- [ ] Validated changes applied back to original source files
+- [ ] Pending decisions surfaced to user
 - [ ] Key findings summarized to user
