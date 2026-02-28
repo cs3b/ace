@@ -1,3 +1,11 @@
+---
+id: resear
+status: done
+title: 'Research: Post v.0.6.0 Improvements for Coding Agent Toolkit'
+tags: []
+created_at: '2026-02-28 20:24:51'
+---
+
 # Research: Post v.0.6.0 Improvements for Coding Agent Toolkit
 
 **Date**: 2025-08-05 21:30

@@ -1,10 +1,12 @@
 ---
-
 status: pending
 priority: anyday
-source: "taskflow:v.0.9.0"
+source: taskflow:v.0.9.0
+id: 8ktby7
+title: Idea
+tags: []
+created_at: '2025-09-30 07:57:59'
 ---
-
 
 # Idea
 
@@ -60,4 +62,3 @@ each command in ace-* framework should have option -C (current working directory
 
 ---
 Captured: 2025-09-30 08:57:56
-
