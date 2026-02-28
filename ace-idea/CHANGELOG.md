@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-02-28
+
+### Added
+- `doctor_cli_args` configuration map for the `doctor --auto-fix-with-agent` workflow so each provider can define any required CLI args (default maps `gemini` to `yolo`).
+### Fixed
+- `ace-idea doctor --auto-fix-with-agent` now only passes CLI args when the configured map contains an entry, preventing Gemini CLI from receiving unsupported flags while still honoring other providers (tests cover the CLI map lookup).
+
 ## [0.4.1] - 2026-02-28
 
 ### Added
