@@ -3,11 +3,12 @@ id: v.0.9.0+task.292
 status: draft
 priority: high
 estimate: TBD
-dependencies:
-  - v.0.9.0+task.290.01
+dependencies: []
 subtasks:
   - v.0.9.0+task.292.01
   - v.0.9.0+task.292.02
+  - v.0.9.0+task.292.03
+  - v.0.9.0+task.292.04
 ---
 
 # Create ace-retro Gem with B36TS-Based Retro Management
@@ -66,6 +67,8 @@ ace-retro update q7w --remove tags=wip
 - [ ] `ace-retro list` flat recursive scan with correct filtering including `--type`
 - [ ] `ace-retro move/update` work identically to ace-task/ace-idea equivalents
 - [ ] `_archive` with chronological grouping (`_archive/2026-02/`)
+- [ ] `ace-retro doctor` runs health checks and computes health score
+- [ ] `ace-retro doctor --auto-fix` auto-fixes safe issues
 - [ ] No dependency on ace-taskflow — fully standalone
 - [ ] All tests pass: `ace-test ace-retro`
 
@@ -77,25 +80,51 @@ ace-retro update q7w --remove tags=wip
 | Retro folders (not flat files) | 292.01 | — | KEPT |
 | RetroScanner/Resolver/Loader | 292.01 | — | KEPT |
 | RetroCreator | 292.01 | — | KEPT |
+| RetroMover (self-contained) | 292.01 | — | KEPT |
 | 5 CLI commands | 292.02 | — | KEPT |
 | Only `_archive` special folder | 292.01 | — | KEPT |
 | Retro types (standard, conversation-analysis, self-review) | 292.01 | — | KEPT |
+| Doctor command (health checks) | 292.03 | — | KEPT |
+| Data migration from ace-taskflow | 292.04 | — | KEPT |
 | Release-scoped retros | — | 292.01 | REMOVED |
 | Release directory resolution | — | 292.01 | REMOVED |
 
 ## Scope of Work
 
 - **Gem**: `ace-retro` — retro-specific atoms/molecules/organisms/models + CLI
-- **Handbook migration**: Retro workflows (2 files: `create`, `synthesize`), retro templates (3 files: `retro.template.md`, `synthesis-analytics.template.md`, `synthsize.system.prompt.md`)
-- **Depends on**: ace-support-items (from task 290.01), ace-b36ts, ace-support-markdown, ace-support-config, ace-support-core
-- **Out of scope**: Migration from ace-taskflow, ace-task gem (task 290), ace-idea gem (task 291), data migration
+- **Handbook migration**: Retro workflows (2 files: `create`, `synthesize`), retro templates (3 files: `retro.template.md`, `synthesis-analytics.template.md`, `synthesize.system.prompt.md`)
+- **Depends on**: ace-support-items `~> 0.5` (current), ace-b36ts, ace-support-markdown, ace-support-config, ace-support-core — same dependency set as ace-idea
+- **Doctor command**: Health checks for retro system integrity (subtask 292.03)
+- **Data migration**: One-time codemod to move retros from `.ace-taskflow/v.0.9.0/retros/` to `.ace-retros/` (subtask 292.04)
+- **Out of scope**: ace-task gem (task 290), ace-idea gem (task 291)
 
 **Note**: ace-taskflow will be **deleted** after all domain extractions complete. ace-retro must be fully independent — own doctor, own config, own filtering. Shared utilities from ace-taskflow are duplicated rather than centralized.
+
+## Retro Lessons Applied
+
+This task incorporates learnings from two retrospectives produced during ace-idea (task 291):
+
+1. **Task 291 retro** (`8prlzl-task-291-ace-idea-gem.md`):
+   - Cross-platform `File.rename` — handle `Errno::EXDEV` for cross-filesystem moves
+   - `FieldArgumentParser.parse` expects array — use `parse([arg])` not `parse(arg)`
+   - `gem_root` depth calculation needs inline comment showing path breakdown
+
+2. **ace-idea polish retro** (`8prv7e-ace-idea-polish-post-migration.md`):
+   - Tag origin metadata (`source:`, `migrated_from:`) at migration time — not as follow-up pass
+   - B36TS discriminator pattern: `\A[0-9][0-9a-z]{5}-` for identifying valid IDs vs legacy names
+   - Container folders break flat-scan assumptions — handle explicitly
+   - Dry-run support from the start for all codemods
 
 ## References
 
 - Source idea: `.ace-taskflow/v.0.9.0/ideas/_maybe/8ppq7w-taskflow-add/idea.idea.s.md`
-- Depends on: task 290.01 (ace-support-items must exist first)
-- Existing retro code: `ace-taskflow/lib/ace/taskflow/organisms/retro_manager.rb` (heavy rewrite needed)
-- Existing retro code: `ace-taskflow/lib/ace/taskflow/molecules/retro_loader.rb` (simplify — remove release resolution)
+- **Primary pattern**: ace-idea gem (task 291) — proven, shipped, same architecture
+  - `ace-idea/lib/ace/idea/` — full ATOM layer structure
+  - `ace-idea/lib/ace/idea/cli.rb` — CLI registry pattern
+  - `ace-idea/lib/ace/idea/molecules/idea_mover.rb` — self-contained mover with cross-platform safety
+  - `ace-idea/lib/ace/idea/organisms/idea_doctor.rb` — doctor pattern
+- Legacy code (reference only, being deleted):
+  - `ace-taskflow/lib/ace/taskflow/organisms/retro_manager.rb` — retro management patterns
+  - `ace-taskflow/lib/ace/taskflow/molecules/retro_loader.rb` — retro loading patterns
 - Workflow instructions: `ace-taskflow/handbook/workflow-instructions/retro/{create,synthesize}.wf.md`
+- Retro lessons: `8prlzl-task-291-ace-idea-gem.md`, `8prv7e-ace-idea-polish-post-migration.md`
