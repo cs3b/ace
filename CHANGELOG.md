@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.701] - 2026-03-01
+
+### Removed
+- **ace-taskflow v0.43.1**: Remove retro workflow instructions (`retro/create.wf.md`, `retro/synthesize.wf.md`) migrated to ace-retro
+
 ## [0.9.700] - 2026-03-01
 
 ### Changed
