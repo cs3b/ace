@@ -4,10 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.702] - 2026-03-01
+
+### Changed
+- **ace-task v0.4.3**: Remove dead conditional branch in show command
+
 ## [0.9.701] - 2026-03-01
 
 ### Removed
 - **ace-taskflow v0.43.1**: Remove retro workflow instructions (`retro/create.wf.md`, `retro/synthesize.wf.md`) migrated to ace-retro
+
+### Fixed
+- **ace-task v0.4.2**: Add ace-support-markdown dependency, log fixer exceptions, guard backup file deletion
 
 ## [0.9.700] - 2026-03-01
 
@@ -20,12 +28,21 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - **ace-retro v0.2.3**: Delete obsolete `synthesis-analytics.template.md` and `synthesize.system.prompt.md`
 
+### Fixed
+- **ace-task v0.4.1**: Soft-require ace/llm in doctor command, add missing TaskScanner require in fixer, include handbook in gemspec
+
 ## [0.9.699] - 2026-03-01
+
+### Added
+- **ace-assign v0.15.1**: Fork-run crash recovery protocol in drive workflow for partial completion scenarios
 
 ### Fixed
 - **ace-retro v0.2.2**: Doctor flags invalid archive partitions (e.g., `2025-09/`) and fixer relocates retros to b36ts partitions via RetroMover
 
 ## [0.9.698] - 2026-03-01
+
+### Added
+- **ace-task v0.4.0**: `doctor` CLI command with comprehensive health checks — structure validation (folder naming, spec files, stale backups, empty dirs), frontmatter validation (delimiters, YAML, required fields, field values), scope/status consistency; auto-fix for 15+ issue patterns with dry-run support; agent-assisted fix via LLM; JSON/terminal/summary output with health scoring; all flags (--auto-fix, --check, --json, --verbose, --quiet, --dry-run, --errors-only, --no-color, --model, --auto-fix-with-agent)
 
 ### Fixed
 - **ace-retro v0.2.1**: Wire `--root` option in list command, use date-partitioned archive paths in doctor auto-fix
@@ -41,6 +58,10 @@ All notable changes to this project will be documented in this file.
   - CLI options: `--auto-fix`, `--check`, `--verbose`, `--json`, `--dry-run`, `--quiet`
   - Health scoring (100 minus weighted deductions for errors/warnings)
   - 183 total tests, 440 assertions
+- **ace-task v0.3.0**: `list`, `move`, `update` CLI commands; enhanced `create` with --priority/--tags/--child-of/--in; enhanced `show` with --tree and TaskDisplayFormatter output; handbook migration from ace-taskflow (17 task wfi, 2 bug wfi, 9 templates, 3 guides)
+
+### Fixed
+- **ace-task v0.3.0**: `TaskManager#list` now normalizes folder names before filtering
 
 ## [0.9.696] - 2026-03-01
 
@@ -54,6 +75,14 @@ All notable changes to this project will be documented in this file.
   - `--set`, `--add`, `--remove` field operations on update
   - Handbook: workflow instructions and templates moved from ace-taskflow
   - 26 CLI integration tests (117 total, 327 assertions)
+- **ace-task v0.2.0**: `TaskManager` organism with full CRUD API (create, show, list, update, move, create_subtask); `TaskDisplayFormatter` molecule for terminal output with status symbols, priority indicators, and subtask tree rendering; `SubtaskCreator` molecule with sequential char allocation (a-z then 0-9); `TaskFilePattern` and `TaskFrontmatterDefaults` atoms
+- **ace-support-items v0.5.0**: `FieldUpdater` molecule for --set/--add/--remove frontmatter field updates with nested dot-key support; `FolderMover` molecule for generic folder moves with special folder normalization and archive partitioning; `LlmSlugGenerator` molecule for LLM-powered slug generation with fallback
+
+### Changed
+- **ace-task v0.2.0**: `Task` model expanded with priority, estimate, dependencies, tags, subtasks, parent_id; `TaskScanner`, `TaskResolver`, `TaskLoader`, `TaskCreator` expanded with subtask support and full field handling
+
+### Fixed
+- **ace-support-items v0.5.0**: `FrontmatterSerializer` now correctly serializes nested Hash values with proper YAML indentation
 
 ## [0.9.695] - 2026-03-01
 
@@ -65,6 +94,8 @@ All notable changes to this project will be documented in this file.
   - Archive with chronological B36TS partitioning
   - Cross-filesystem move support (Errno::EXDEV handling)
   - 91 tests, 206 assertions
+- **ace-task v0.1.0**: New gem with B36TS-based task management — type-marked IDs (`xxx.t.yyy`), `create` and `show` CLI commands, TaskCreator/TaskLoader/TaskScanner/TaskResolver molecules
+- **ace-support-items v0.4.0**: `ItemIdFormatter` atom for splitting/reconstructing type-marked IDs, `ItemIdParser` for parsing all reference forms, `ItemId` value model; configurable `id_extractor:` on DirectoryScanner and `full_id_length:` on ShortcutResolver
 
 ## [0.9.694] - 2026-02-28
 

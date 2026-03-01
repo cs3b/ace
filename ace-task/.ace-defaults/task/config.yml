@@ -1,0 +1,24 @@
+# ace-task default configuration
+task:
+  # Root directory for task storage
+  root_dir: .ace-tasks
+
+  # Default status for new tasks
+  default_status: pending
+
+  # File pattern for task spec files
+  file_pattern: "*.s.md"
+
+  # Special folder mappings (short name => actual folder name)
+  special_folders:
+    archive: _archive
+    maybe: _maybe
+    anytime: _anytime
+    next: _next
+
+  # Doctor command: LLM model for agent-assisted fix
+  doctor_agent_model: "gemini:flash-latest"
+
+  # Doctor command: CLI args per provider for agent sessions
+  doctor_cli_args:
+    gemini: "yolo"

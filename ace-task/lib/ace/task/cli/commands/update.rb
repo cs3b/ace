@@ -1,0 +1,91 @@
+# frozen_string_literal: true
+
+require "dry/cli"
+require "ace/support/items"
+
+module Ace
+  module Task
+    module CLI
+      module Commands
+        # dry-cli Command class for ace-task update
+        class Update < Dry::CLI::Command
+          include Ace::Core::CLI::DryCli::Base
+
+          desc <<~DESC.strip
+            Update task metadata
+
+            Updates frontmatter fields using set, add, or remove operations.
+            Use --set for scalar fields, --add/--remove for array fields like tags.
+          DESC
+
+          example [
+            'q7w --set status=done',
+            'q7w --set status=done,priority=high',
+            'q7w --add tags=shipped --remove tags=pending-review',
+            'q7w --set worktree.branch=my-branch'
+          ]
+
+          argument :ref, required: true, desc: "Task reference (full ID, short ref, or suffix)"
+
+          option :set,    type: :array, desc: "Set field: key=value (comma-separated for multiple)"
+          option :add,    type: :array, desc: "Add to array field: key=value (comma-separated for multiple)"
+          option :remove, type: :array, desc: "Remove from array field: key=value (comma-separated for multiple)"
+
+          option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
+          option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
+          option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
+
+          def call(ref:, **options)
+            set_args    = Array(options[:set])
+            add_args    = Array(options[:add])
+            remove_args = Array(options[:remove])
+
+            if set_args.empty? && add_args.empty? && remove_args.empty?
+              warn "Error: at least one of --set, --add, or --remove is required"
+              warn ""
+              warn "Usage: ace-task update REF [--set K=V]... [--add K=V]... [--remove K=V]..."
+              raise Ace::Core::CLI::Error.new("No update operations specified")
+            end
+
+            set_hash    = parse_kv_pairs(set_args)
+            add_hash    = parse_kv_pairs(add_args)
+            remove_hash = parse_kv_pairs(remove_args)
+
+            manager = Ace::Task::Organisms::TaskManager.new
+            task = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash)
+
+            unless task
+              raise Ace::Core::CLI::Error.new("Task '#{ref}' not found")
+            end
+
+            puts "Task updated: #{task.id} #{task.title}"
+          end
+
+          private
+
+          # Parse ["key=value", "key=value2"] into {"key" => typed_value, ...}
+          def parse_kv_pairs(args)
+            result = {}
+            args.each do |arg|
+              unless arg.include?("=")
+                raise Ace::Core::CLI::Error.new("Invalid format '#{arg}': expected key=value")
+              end
+
+              parsed = Ace::Support::Items::Atoms::FieldArgumentParser.parse([arg])
+              parsed.each do |key, value|
+                if result.key?(key)
+                  result[key] = Array(result[key]) + Array(value)
+                else
+                  result[key] = value
+                end
+              end
+            rescue Ace::Support::Items::Atoms::FieldArgumentParser::ParseError => e
+              raise Ace::Core::CLI::Error.new("Invalid argument '#{arg}': #{e.message}")
+            end
+            result
+          end
+        end
+      end
+    end
+  end
+end
