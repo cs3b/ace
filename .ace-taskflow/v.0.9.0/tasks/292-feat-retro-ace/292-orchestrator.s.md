@@ -1,14 +1,20 @@
 ---
 id: v.0.9.0+task.292
-status: pending
+status: in-progress
 priority: high
 estimate: TBD
 dependencies: []
 subtasks:
-  - v.0.9.0+task.292.01
-  - v.0.9.0+task.292.02
-  - v.0.9.0+task.292.03
-  - v.0.9.0+task.292.04
+- v.0.9.0+task.292.01
+- v.0.9.0+task.292.02
+- v.0.9.0+task.292.03
+- v.0.9.0+task.292.04
+worktree:
+  branch: 292-create-ace-retro-gem-with-b36ts-based-retro-management
+  path: "../ace-task.292"
+  created_at: '2026-03-01 15:54:35'
+  updated_at: '2026-03-01 15:54:35'
+  target_branch: main
 ---
 
 # Create ace-retro Gem with B36TS-Based Retro Management
