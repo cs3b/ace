@@ -27,7 +27,7 @@ workflow_source_paths:
 execution:
   # provider: "codex:mini"
   provider: "codex:codex"
-  # provider: "claude:sonnet"
+  provider: "claude:opus"
   timeout: 1800
 
 # Provider-level defaults for CLI invocation
