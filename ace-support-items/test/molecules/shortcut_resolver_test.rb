@@ -83,4 +83,29 @@ class ShortcutResolverTest < AceSupportItemsTestCase
     found = resolver.resolve("Q7W")
     assert_equal "8ppq7w", found.id
   end
+
+  # Tests for full_id_length parameter (task-format IDs)
+  def test_resolves_full_task_id_with_custom_length
+    results = [make_result("8pp.t.q7w"), make_result("9xz.t.r1k")]
+    resolver = Ace::Support::Items::Molecules::ShortcutResolver.new(results, full_id_length: 9)
+
+    found = resolver.resolve("8pp.t.q7w")
+    assert_equal "8pp.t.q7w", found.id
+  end
+
+  def test_resolves_task_suffix_shortcut_with_custom_length
+    results = [make_result("8pp.t.q7w"), make_result("9xz.t.r1k")]
+    resolver = Ace::Support::Items::Molecules::ShortcutResolver.new(results, full_id_length: 9)
+
+    found = resolver.resolve("q7w")
+    assert_equal "8pp.t.q7w", found.id
+  end
+
+  def test_ambiguous_with_custom_length
+    results = [make_result("8pp.t.q7w"), make_result("zzz.t.q7w")]
+    resolver = Ace::Support::Items::Molecules::ShortcutResolver.new(results, full_id_length: 9)
+
+    assert resolver.ambiguous?("q7w")
+    refute resolver.ambiguous?("8pp.t.q7w")
+  end
 end

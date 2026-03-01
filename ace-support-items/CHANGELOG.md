@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-01
+
+### Added
+- `FieldUpdater` molecule for orchestrating --set/--add/--remove frontmatter field updates with nested dot-key support
+- `FolderMover` molecule for generic folder moves with special folder normalization, archive partitioning, and cross-fs atomic moves
+- `LlmSlugGenerator` molecule for LLM-powered slug generation with graceful fallback (moved from ace-taskflow)
+
+### Fixed
+- `FrontmatterSerializer` now correctly serializes nested Hash values with proper YAML indentation (previously produced Ruby Hash#to_s)
+
+## [0.4.0] - 2026-03-01
+
+### Added
+- `ItemIdFormatter` atom: splits 6-char b36ts IDs into type-marked format (`prefix.marker.suffix`) and reconstructs
+- `ItemIdParser` atom: parses all reference forms (full, short, suffix, subtask, raw) into `ItemId` model
+- `ItemId` model: value object with `raw_b36ts`, `prefix`, `type_marker`, `suffix`, `subtask_char`
+
+### Changed
+- `DirectoryScanner`: added configurable `id_extractor:` proc parameter (default preserves existing 6-char behavior)
+- `ShortcutResolver`: added `full_id_length:` parameter (default 6, set to 9 for type-marked IDs)
+
 ## [0.3.0] - 2026-02-28
 
 ### Added
