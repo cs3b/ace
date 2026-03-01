@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "time"
 require "yaml"
 require_relative "../atoms/retro_file_pattern"
 require_relative "../atoms/retro_frontmatter_defaults"
