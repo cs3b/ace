@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.700] - 2026-03-01
+
+### Changed
+- **ace-retro v0.2.3**: Rewrite workflow instructions to use `ace-retro` CLI and `ace-nav` protocol paths
+  - `create.wf.md`: Simplify from 486 to ~90 lines, reference `tmpl://retro/retro` instead of embedding template
+  - `selfimprove.wf.md`: Broaden input sources (session/retros/user), add retro creation and archive steps
+  - `synthesize.wf.md`: Reduce to N retros → 1 retro pattern, remove `reflection-synthesize` references
+
+### Removed
+- **ace-retro v0.2.3**: Delete obsolete `synthesis-analytics.template.md` and `synthesize.system.prompt.md`
+
 ## [0.9.699] - 2026-03-01
 
 ### Fixed
