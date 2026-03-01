@@ -10,7 +10,7 @@ allowed-tools:
   - Grep
   - Glob
 argument-hint: [description of what went wrong]
-source: ace-handbook
+source: ace-retro
 ---
 
-read and run `ace-bundle wfi://handbook/selfimprove`
+read and run `ace-bundle wfi://retro/selfimprove`
