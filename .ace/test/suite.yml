@@ -159,6 +159,16 @@ test_suite:
       group: tools
       priority: 2
 
+    - name: ace-retro
+      path: ace-retro
+      group: tools
+      priority: 2
+
+    - name: ace-task
+      path: ace-task
+      group: tools
+      priority: 2
+
   # Test command options
   test_options:
     format: compact
