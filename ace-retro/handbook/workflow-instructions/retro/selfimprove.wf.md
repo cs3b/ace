@@ -2,60 +2,54 @@
 
 ## Goal
 
-Transform mistakes into system improvements. Fix the process first, then fix the immediate issue.
+Transform mistakes and recurring issues into system improvements. Fix the process first, then fix the immediate issue.
 
 ## Anti-Pattern
 
-❌ User points out mistake → Agent re-runs instruction → Same mistake can happen again
+❌ Mistake happens → Agent re-runs instruction → Same mistake can happen again
 
 ## Correct Pattern
 
-✅ User points out mistake → Analyze root cause → Update process → Fix immediate issue
+✅ Mistake identified → Analyze root cause → Update process → Fix immediate issue → Record retro
 
-## Prerequisites
+## Input Sources
 
-- User has identified an agent mistake or suboptimal behavior
-- Access to workflow instructions, guides, and skills that may need updates
-- Willingness to pause immediate work to improve the system
+Self-improvement is always a consequence of retrospective. Input can come from:
 
-## High-Level Execution Plan
-
-### Analysis Phase
-- [ ] Capture the incident details
-- [ ] Identify the root cause category
-- [ ] Find the source file(s) that need updates
-
-### Proposal Phase
-- [ ] Draft specific changes to prevent recurrence
-- [ ] Present analysis and proposal to user
-- [ ] Get user approval before implementing
-
-### Implementation Phase
-- [ ] Apply process improvements
-- [ ] Fix the immediate issue (or defer to user)
+- **Session context** — analyze current conversation for mistakes or suboptimal patterns
+- **Existing retros** — load retros via `ace-retro list`/`ace-retro show` to find recurring issues
+- **User input** — user describes what went wrong
 
 ## Process Steps
 
-### Step 1: Capture the Incident
+### Step 1: Gather Input
 
-Document exactly what happened:
+Determine the source and capture incident details:
+
+**From session context:**
+- Review the current conversation for mistakes, repeated attempts, or corrections
+- Identify what went wrong and what should have happened
+
+**From existing retros:**
+```bash
+# Find retros with relevant issues
+ace-retro list --status active
+
+# Load specific retro content
+ace-retro show REF --content
+```
+
+**From user input:**
+- Capture the user's description of the problem
+
+Document the incident:
 
 | Question | Details |
 |----------|---------|
-| **Original request** | What did the user ask for? |
-| **Agent action** | What did the agent do? |
+| **What happened** | What action was taken? |
 | **Actual result** | What was the output? |
 | **Expected result** | What should have happened? |
-| **User correction** | How did the user describe the problem? |
-
-**Example:**
-```
-Original request: Reorganize commits into logical groups
-Agent action: Reorganized only 5 commits (mentioned in plan)
-Actual result: Only 5 of 12+ commits were reorganized
-Expected result: All commits on the branch should be reorganized
-User correction: Provided full commit list showing 12+ commits
-```
+| **Source** | Session / retro REF / user description |
 
 ### Step 2: Identify Root Cause Category
 
@@ -69,11 +63,11 @@ Ask: "Why did this happen?" Categorize the root cause:
 | **Scope narrowing** | Agent under-scoped the task | Followed plan literally instead of understanding intent |
 | **Scope creep** | Agent over-scoped the task | Made changes beyond what was requested |
 | **Missing example** | No example of correct behavior | Workflow lacks example showing full scope discovery |
-| **Redundant computation** | Multiple agents/computations derive same value independently, causing divergence | Orchestrator computes report directory via Ruby `short_id`, but LLM agent re-derives via different logic and gets wrong path |
+| **Redundant computation** | Multiple agents derive same value independently, causing divergence | Orchestrator computes path one way, agent re-derives differently |
 
 ### Step 3: Find the Source
 
-Search for the relevant process files:
+Search for the relevant process files that need updating:
 
 ```bash
 # Search workflow instructions
@@ -84,99 +78,53 @@ ace-bundle guide://{relevant-guide}
 
 # Search skills
 ace-bundle skill://{relevant-skill}
+
+# Discover available resources
+ace-nav --sources
 ```
 
 **Search targets (in preference order):**
 
-1. **Workflow instructions** (`ace-handbook/handbook/workflow-instructions/*.wf.md`) - Preferred for process improvements
-2. **Guides** (`ace-handbook/handbook/guides/*.g.md`) - Preferred for best practices and conventions
-3. **Skills** (`.claude/skills/*/SKILL.md`) - Only when workflow/guide doesn't exist for the topic
-4. **CLAUDE.md files** - Project-level overrides only
-
-**Why prefer workflows/guides over skills?**
-- Workflows and guides are versioned with the handbook package
-- Skills are local to the Claude integration and harder to share/version
-- Workflows support embedding and protocol references (`wfi://`, `guide://`)
-- When a skill exists without a backing workflow, consider creating the workflow first
+1. **Workflow instructions** (`wfi://namespace/action`) — preferred for process improvements
+2. **Guides** (`guide://topic`) — preferred for best practices and conventions
+3. **Skills** (`.claude/skills/*/SKILL.md`) — only when workflow/guide doesn't exist
+4. **CLAUDE.md files** — project-level overrides only
 
 ### Step 4: Draft the Fix
 
 Propose specific edits. The fix should:
 
-1. **Address the root cause** - Not just the symptom
-2. **Be minimal** - Only change what's necessary
-3. **Include validation** - Add checkpoints where missing
-4. **Add examples** - Show correct behavior if unclear
+1. **Address the root cause** — not just the symptom
+2. **Be minimal** — only change what's necessary
+3. **Include validation** — add checkpoints where missing
+4. **Add examples** — show correct behavior if unclear
 
 **Fix templates by category:**
 
 **For ambiguous instructions:**
 ```markdown
-## Before
-Reorganize the commits into logical groups.
-
 ## After
-Reorganize the commits into logical groups.
-
-**Scope Discovery**: Before reorganizing, always query the actual commit list:
-- Run `git log --oneline main..HEAD` to get the full commit list
-- Do NOT rely on plan estimates - query the actual state
-- Confirm scope with user if the actual count differs significantly from expectations
+**Scope Discovery**: Before executing, always query the actual state:
+- Run the relevant query command to get the full scope
+- Do NOT rely on estimates — query actual state
+- Confirm scope with user if actual differs from expectations
 ```
 
 **For missing validation:**
 ```markdown
-## Before
-### Step 3: Execute Reorganization
-- [ ] Perform interactive rebase
-
 ## After
-### Step 3: Validate Scope
-- [ ] Query actual commits: `git log --oneline main..HEAD`
+### Validate Before Executing
+- [ ] Query actual state
 - [ ] Compare to expected scope
 - [ ] If mismatch, confirm with user before proceeding
-
-### Step 4: Execute Reorganization
-- [ ] Perform interactive rebase
-```
-
-**For missing examples:**
-```markdown
-## Add Example Section
-
-### Example: Scope Discovery
-
-**Incorrect approach** (using stale plan data):
-> Plan says "5 commits ahead" → reorganize 5 commits
-
-**Correct approach** (query actual state):
-> Run `git log --oneline main..HEAD` → shows 12 commits → reorganize 12 commits
 ```
 
 **For redundant computation:**
 ```markdown
-## Before
-The orchestrator computes a value, and the subagent independently derives it:
-
-```yaml
-# Orchestrator computes report_dir from task_id
-report_dir: ".cache/ace-test-e2e/#{short_id}-reports/"
-# But subagent re-derives via:
-report_dir = ".cache/ace-test-e2e/#{timestamp}-reports/"  # Wrong!
-```
-
 ## After
 Pass computed values explicitly; don't re-derive:
-
-```yaml
-# Orchestrator computes once and passes to subagent
-- phase: run-test
-  params:
-    report_dir: "{{computed_report_dir}}"  # Passed explicitly
-```
-
-# In subagent instructions
-**Use the provided `report_dir` variable.** Do not compute or derive this value — it is passed from the orchestrator to ensure consistency.
+- Orchestrator computes once and passes to subagent
+- Subagent uses the provided value, never re-derives
 ```
 
 ### Step 5: Present to User
@@ -187,26 +135,23 @@ Before making any changes, present:
 ## Root Cause Analysis
 
 **What happened**: [Concise description]
-
 **Why it happened**: [Root cause category and explanation]
-
-**Systemic issue found in**: [File path(s)]
+**Source file**: [File path(s) to update]
 
 ## Proposed Process Changes
 
 **File**: `{path/to/file}`
-
-**Change**: [Description of what will be added/modified]
+**Change**: [Description]
 
 **Diff preview**:
-```diff
+` ``diff
 - [old content]
 + [new content]
-```
+` ``
 
 ## Questions
 
-1. Does this analysis match your understanding of the issue?
+1. Does this analysis match your understanding?
 2. Should I proceed with these process changes?
 3. After updating the process, should I also fix the immediate issue?
 ```
@@ -215,17 +160,23 @@ Before making any changes, present:
 
 After user approval:
 
-1. **Update the process file(s)**
-   - Apply the proposed edits
-   - Verify the changes are valid markdown/yaml
-
+1. **Update the process file(s)** — apply the proposed edits
 2. **Fix the immediate issue** (if requested)
-   - Apply the correct behavior this time
-   - Reference the updated process
+3. **Record a retro** documenting the improvement:
 
-3. **Commit the process improvement**
-   - Use a commit message that references the improvement
-   - Example: `docs(workflow): Add scope validation to reorganize-commits`
+```bash
+ace-retro create "selfimprove-TOPIC" --type self-improvement --tags process-fix
+```
+
+Populate the retro with the root cause analysis, the fix applied, and the expected impact.
+
+### Step 7: Archive Consumed Retros
+
+If the input source was an existing retro, archive it after the improvement has been applied — the retro has been "consumed":
+
+```bash
+ace-retro move REF --to archive
+```
 
 ## Success Criteria
 
@@ -233,9 +184,5 @@ After user approval:
 - Process fix prevents recurrence
 - User approves changes before implementation
 - Both process and immediate issue are addressed
-
-## Related Resources
-
-- [Manage Workflow Instructions](wfi://handbook/manage-workflows) - Creating and updating workflows
-- [Manage Guides](wfi://handbook/manage-guides) - Creating and updating guides
-- [Create Retro](skill://ace-create-retro) - Documenting learnings from incidents
+- Improvement is recorded as a retro via `ace-retro create`
+- Source retros (if any) are archived after processing
