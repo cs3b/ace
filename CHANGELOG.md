@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.697] - 2026-03-01
+
+### Added
+- **ace-retro v0.2.0**: Doctor command for retro health checks and auto-fixing
+  - `ace-retro doctor` with structure, frontmatter, and scope/status validation
+  - RetroValidationRules atom, RetroFrontmatterValidator and RetroStructureValidator molecules
+  - RetroDoctorFixer with 15 auto-fixable patterns and dry-run mode
+  - RetroDoctorReporter with terminal, JSON, and summary output formats
+  - CLI options: `--auto-fix`, `--check`, `--verbose`, `--json`, `--dry-run`, `--quiet`
+  - Health scoring (100 minus weighted deductions for errors/warnings)
+  - 183 total tests, 440 assertions
+
 ## [0.9.696] - 2026-03-01
 
 ### Added
