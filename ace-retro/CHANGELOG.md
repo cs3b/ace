@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-03-01
+
+### Added
+
+- `doctor` command for comprehensive retro health checks
+- RetroValidationRules atom with status validation, scope consistency, required/recommended field checks
+- RetroFrontmatterValidator molecule for per-file frontmatter validation
+- RetroStructureValidator molecule for directory structure checks (folder naming, retro files, backups, empty dirs)
+- RetroDoctorFixer molecule with auto-fix support for 15 fixable patterns and dry-run mode
+- RetroDoctorReporter molecule with terminal, JSON, and summary output formats
+- RetroDoctor organism orchestrating structure, frontmatter, and scope checks with health scoring
+- CLI options: `--auto-fix`, `--check`, `--verbose`, `--json`, `--errors-only`, `--no-color`, `--dry-run`, `--quiet`
+- Exit code 0 when healthy, non-zero when errors found
+
 ## [0.1.0] - 2026-03-01
 
 ### Added
