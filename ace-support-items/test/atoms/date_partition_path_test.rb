@@ -16,8 +16,10 @@ class DatePartitionPathTest < AceSupportItemsTestCase
   end
 
   def test_different_times_may_yield_same_month
-    t1 = Time.utc(2026, 2, 1, 0, 0, 0)
-    t2 = Time.utc(2026, 2, 28, 23, 59, 59)
+    # Use times close together (same day) to guarantee same b36ts month
+    # B36ts months don't align with calendar months
+    t1 = Time.utc(2026, 2, 15, 0, 0, 0)
+    t2 = Time.utc(2026, 2, 15, 23, 59, 59)
     r1 = Ace::Support::Items::Atoms::DatePartitionPath.compute(t1)
     r2 = Ace::Support::Items::Atoms::DatePartitionPath.compute(t2)
     # Both share the same month prefix
