@@ -87,6 +87,32 @@ class RetroDoctorFixerTest < AceRetroTestCase
     assert result[:dry_run]
   end
 
+  def test_fix_invalid_archive_partition
+    with_retros_dir do |root|
+      # Create a retro in an invalid calendar-month partition
+      create_retro_fixture(root, id: "abc123", slug: "old-retro", status: "done",
+                           special_folder: "_archive/2025-09")
+
+      fixer = Fixer.new(root_dir: root)
+      issue = {
+        type: :error,
+        message: "Invalid archive partition '2025-09' (expected b36ts like '8o')",
+        location: File.join(root, "_archive", "2025-09")
+      }
+      fixer.fix_issue(issue)
+
+      # Retro should have moved to a b36ts partition (may be multi-level like 8p/y)
+      b36_entries = Dir.glob(File.join(root, "_archive", "**", "abc123-old-retro"))
+        .reject { |p| p.include?("2025-09") }
+      assert_equal 1, b36_entries.size, "Expected retro in b36ts partition, found: #{b36_entries.inspect}"
+      assert_equal 1, fixer.fixed_count
+
+      # Old partition dir should be gone
+      refute Dir.exist?(File.join(root, "_archive", "2025-09")),
+        "Invalid partition directory should have been removed"
+    end
+  end
+
   def test_fix_move_to_archive
     with_retros_dir do |root|
       dir = create_retro_fixture(root, id: "abc123", slug: "done-retro", status: "done")

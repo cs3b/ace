@@ -26,6 +26,7 @@ module Ace
 
           check_folder_naming(root_dir, issues)
           check_retro_files(root_dir, issues)
+          check_archive_partitions(root_dir, issues)
           check_stale_backups(root_dir, issues)
           check_empty_directories(root_dir, issues)
 
@@ -112,9 +113,35 @@ module Ace
           end
         end
 
+        # Check that _archive/ partition directories use valid b36ts names
+        def check_archive_partitions(root_dir, issues)
+          archive_dir = File.join(root_dir, "_archive")
+          return unless Dir.exist?(archive_dir)
+
+          Dir.glob(File.join(archive_dir, "*")).each do |path|
+            next unless File.directory?(path)
+            next unless category_folder?(path)
+
+            partition_name = File.basename(path)
+            unless valid_b36ts_partition?(partition_name)
+              issues << {
+                type: :error,
+                message: "Invalid archive partition '#{partition_name}' (expected b36ts like '8o')",
+                location: path
+              }
+            end
+          end
+        end
+
+        # Valid b36ts month partitions are 1-3 char lowercase base36 strings
+        def valid_b36ts_partition?(name)
+          name.match?(/\A[0-9a-z]{1,3}\z/)
+        end
+
         # Find all immediate subdirectories that look like retro folders
         # (excludes special folders which are containers, includes their children)
         # Also excludes category folders (folders containing only subdirectories)
+        # For _archive/, recurses into partition dirs (category folders) to find retros inside them
         def retro_dirs(root_dir)
           dirs = []
 
@@ -122,7 +149,20 @@ module Ace
             next unless File.directory?(path)
 
             folder_name = File.basename(path)
-            if folder_name.start_with?("_")
+            if folder_name == "_archive"
+              Dir.glob(File.join(path, "*")).each do |subpath|
+                next unless File.directory?(subpath)
+
+                if category_folder?(subpath)
+                  # Partition dir — recurse into it to find retro folders
+                  Dir.glob(File.join(subpath, "*")).each do |retro_path|
+                    dirs << retro_path if File.directory?(retro_path)
+                  end
+                else
+                  dirs << subpath
+                end
+              end
+            elsif folder_name.start_with?("_")
               Dir.glob(File.join(path, "*")).each do |subpath|
                 dirs << subpath if File.directory?(subpath) && !category_folder?(subpath)
               end

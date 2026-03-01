@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Doctor skips partition directories (e.g., `_archive/2025-09/`, `_archive/8o/`) via `category_folder?` pattern from ace-idea
+- Doctor flags invalid archive partitions (e.g., `_archive/2025-09/`) and fixer relocates retros to correct b36ts partitions via RetroMover
+- Doctor accepts valid b36ts archive partitions (e.g., `_archive/8o/`)
 
 ## [0.2.1] - 2026-03-01
 
