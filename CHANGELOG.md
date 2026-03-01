@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.699] - 2026-03-01
+
+### Fixed
+- **ace-retro v0.2.2**: Doctor skips partition directories in `_archive/` via `category_folder?` pattern
+
 ## [0.9.698] - 2026-03-01
 
 ### Fixed
