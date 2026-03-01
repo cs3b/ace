@@ -227,11 +227,12 @@ module Ace
 
           retro_dir = File.directory?(file_path) ? file_path : File.dirname(file_path)
           folder_name = File.basename(retro_dir)
-          archive_dir = File.join(@root_dir, "_archive")
+          partition = Ace::Support::Items::Atoms::DatePartitionPath.compute(Time.now, levels: [:month])
+          archive_dir = File.join(@root_dir, "_archive", partition)
           target = File.join(archive_dir, folder_name)
 
           if @dry_run
-            log_fix(retro_dir, "Would move to _archive/")
+            log_fix(retro_dir, "Would move to _archive/#{partition}/")
             @fixed_count += 1
             return true
           end
@@ -240,7 +241,7 @@ module Ace
           return (@skipped_count += 1; false) if File.exist?(target)
 
           FileUtils.mv(retro_dir, target)
-          log_fix(retro_dir, "Moved to _archive/")
+          log_fix(retro_dir, "Moved to _archive/#{partition}/")
           @fixed_count += 1
           true
         rescue StandardError

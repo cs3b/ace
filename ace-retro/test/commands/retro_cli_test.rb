@@ -389,4 +389,14 @@ class RetroCliTest < AceRetroTestCase
     assert_match(/move/, result[:stdout])
     assert_match(/update/, result[:stdout])
   end
+
+  def test_list_with_root_option
+    with_retros_dir do |root|
+      create_retro_fixture(root, id: "aaa111", slug: "root-test")
+      # Use --root to point at the tmp directory without monkey-patching
+      result = run_cli(["list", "--root", root])
+      assert_equal 0, result[:exit_code], result[:stderr]
+      assert_match(/Root test/, result[:stdout])
+    end
+  end
 end
