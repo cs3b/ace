@@ -96,7 +96,9 @@ class RetroDoctorFixerTest < AceRetroTestCase
       issue = { type: :warning, message: "Retro with terminal status 'done' not in _archive/", location: file }
       fixer.fix_issue(issue)
 
-      assert Dir.exist?(File.join(root, "_archive", "abc123-done-retro"))
+      # Should be in _archive/{partition}/abc123-done-retro (date-partitioned)
+      archive_entries = Dir.glob(File.join(root, "_archive", "**", "abc123-done-retro"))
+      assert_equal 1, archive_entries.size, "Expected retro in _archive with date partition"
       assert_equal 1, fixer.fixed_count
     end
   end
