@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-03-01
+
+### Added
+- Fork-run crash recovery protocol in drive workflow — detection, commit partial work, progress report, inject recovery phases, re-fork pattern for partial completion scenarios
+
 ## [0.15.0] - 2026-02-28
 
 ### Added

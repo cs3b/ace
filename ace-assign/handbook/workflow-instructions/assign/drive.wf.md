@@ -224,6 +224,54 @@ After fork-run returns and completion is verified, the driver acts as the **guar
 
 > The driver is the only entity with cross-subtree visibility. Skipping report review means errors in one subtree propagate silently to the next.
 
+#### Fork-Run Crash Recovery (Partial Completion)
+
+When `fork-run` exits non-zero but has made partial progress (uncommitted files, some phases done, some in-progress):
+
+**Detection**: fork-run exit code != 0 AND (`git status --short` shows changes OR some child phases are done while others are still active).
+
+**Recovery protocol**:
+
+1. **Commit partial work** — Stage and commit any uncommitted changes from the crashed fork:
+   ```bash
+   git add -A
+   ace-git-commit -i "partial: save fork progress for {subtree}"
+   ```
+
+2. **Write a progress report for the active phase** — Document what was accomplished and what remains:
+   ```bash
+   cat > /tmp/partial-report.md << 'EOF'
+   ## Partial Completion (fork crashed)
+
+   ### Completed
+   - [list of files created/modified]
+   - [tests passing: X tests, Y assertions]
+
+   ### Remaining
+   - [list of components not yet implemented]
+   - [tests not yet written]
+   EOF
+   ace-assign finish --report /tmp/partial-report.md --assignment ${ASSIGNMENT_ID}@${active_phase}
+   ```
+
+3. **Inject recovery phases** — Add new child phases for the remaining work:
+   ```bash
+   # Recovery onboard: re-read the plan and progress reports
+   ace-assign add "recovery-onboard" --after ${last_done_phase} --child \
+     -i "Read reports from plan-task and work-on-task phases to understand progress. Continue implementation from where it stopped."
+
+   # Continue work phase
+   ace-assign add "continue-work" --after recovery-onboard --child \
+     -i "Complete remaining implementation. Check git log and existing files to avoid redoing work."
+   ```
+
+4. **Re-fork** — The injected phases are pending, so fork-run will pick them up:
+   ```bash
+   ace-assign fork-run --root ${FORK_ROOT} --assignment ${ASSIGNMENT_ID}
+   ```
+
+**Key principle**: Never execute fork work inline. The fork boundary exists for context isolation. If a fork crashes, recover and re-fork — don't absorb the work into the driver.
+
 ### 3. Execute Current Phase
 
 Based on the phase configuration:
