@@ -194,7 +194,7 @@ module Ace
 
         # Extract archive date from retro frontmatter, falling back to Time.now
         def parse_archive_date(retro)
-          raw = retro.metadata["completed_at"] || retro.metadata["created_at"]
+          raw = retro.metadata["completed_at"] || retro.created_at
           return nil unless raw
 
           case raw
