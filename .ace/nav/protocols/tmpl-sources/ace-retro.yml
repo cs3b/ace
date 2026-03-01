@@ -1,0 +1,19 @@
+---
+# Template Sources Protocol Configuration for ace-retro gem
+# This enables template discovery from the installed ace-retro gem
+
+name: ace-retro
+type: gem
+description: Retrospective templates from ace-retro gem
+priority: 10
+
+# Configuration for template discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/templates)
+  relative_path: handbook/templates
+
+  # Pattern for finding template files
+  pattern: "*.template.md"
+
+  # Enable discovery
+  enabled: true
