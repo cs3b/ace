@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.696] - 2026-03-01
+
+### Added
+- **ace-retro v0.1.0**: CLI commands and polish
+  - dry-cli registry with 5 commands: create, show, list, move, update
+  - `exe/ace-retro` executable with SIGINT handling (exit 130)
+  - `--type`, `--tags`, `--task-ref`, `--move-to`, `--dry-run` options on create
+  - `--path`, `--content` display modes on show
+  - `--status`, `--type`, `--tags`, `--in` filters on list
+  - `--set`, `--add`, `--remove` field operations on update
+  - Handbook: workflow instructions and templates moved from ace-taskflow
+  - 26 CLI integration tests (117 total, 327 assertions)
+
+## [0.9.695] - 2026-03-01
+
+### Added
+- **ace-retro v0.1.0**: New gem for retrospective management with B36TS-based IDs
+  - Core operations: create, show, list, update, move retros in `.ace-retros/`
+  - 3 retro types with templates: standard, conversation-analysis, self-review
+  - Task linking via `task_ref` field
+  - Archive with chronological B36TS partitioning
+  - Cross-filesystem move support (Errno::EXDEV handling)
+  - 91 tests, 206 assertions
+
 ## [0.9.694] - 2026-02-28
 
 ### Fixed
