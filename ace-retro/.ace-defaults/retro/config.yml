@@ -1,0 +1,14 @@
+# ace-retro default configuration
+retro:
+  # Root directory for retros storage
+  root_dir: .ace-retros
+
+  # Default status for new retros
+  default_status: active
+
+  # Default retro type
+  default_type: standard
+
+  # Special folder mappings (short name => actual folder name)
+  special_folders:
+    archive: _archive
