@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.698] - 2026-03-01
+
+### Fixed
+- **ace-retro v0.2.1**: Wire `--root` option in list command, use date-partitioned archive paths in doctor auto-fix
+
 ## [0.9.697] - 2026-03-01
 
 ### Added
