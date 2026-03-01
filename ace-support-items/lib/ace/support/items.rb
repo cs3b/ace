@@ -11,10 +11,13 @@ require_relative "items/atoms/frontmatter_serializer"
 require_relative "items/atoms/filter_parser"
 require_relative "items/atoms/title_extractor"
 require_relative "items/atoms/date_partition_path"
+require_relative "items/atoms/item_id_formatter"
+require_relative "items/atoms/item_id_parser"
 
 # Models
 require_relative "items/models/scan_result"
 require_relative "items/models/loaded_document"
+require_relative "items/models/item_id"
 
 # Molecules
 require_relative "items/molecules/directory_scanner"
@@ -23,6 +26,9 @@ require_relative "items/molecules/document_loader"
 require_relative "items/molecules/filter_applier"
 require_relative "items/molecules/item_sorter"
 require_relative "items/molecules/base_formatter"
+require_relative "items/molecules/field_updater"
+require_relative "items/molecules/folder_mover"
+require_relative "items/molecules/llm_slug_generator"
 
 module Ace
   module Support

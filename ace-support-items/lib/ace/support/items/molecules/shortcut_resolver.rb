@@ -6,19 +6,22 @@ module Ace
       module Molecules
         # Resolves shortcut references to item ScanResult objects.
         #
-        # Shortcuts are the last 3 characters of a 6-char b36ts ID.
-        # Example: ID "8ppq7w" => shortcut "q7w"
+        # Shortcuts are the last N characters of an item ID.
+        # For ideas (6-char IDs): "8ppq7w" => shortcut "q7w"
+        # For tasks (9-char formatted IDs): "8pp.t.q7w" => shortcut "q7w"
         # Full IDs are also accepted directly.
         #
         # Warns (via callback or STDERR) when multiple matches are found.
         class ShortcutResolver
           # @param scan_results [Array<ScanResult>] Scan results to resolve against
-          def initialize(scan_results)
+          # @param full_id_length [Integer] Length of a full ID (6 for raw b36ts, 9 for type-marked)
+          def initialize(scan_results, full_id_length: 6)
             @scan_results = scan_results
+            @full_id_length = full_id_length
           end
 
           # Resolve a reference to a single ScanResult
-          # @param ref [String] Full ID (6 chars) or suffix shortcut (3 chars)
+          # @param ref [String] Full ID or suffix shortcut
           # @param on_ambiguity [Proc, nil] Called with array of matches on ambiguity
           # @return [ScanResult, nil] The resolved result, or nil if not found
           def resolve(ref, on_ambiguity: nil)
@@ -26,7 +29,7 @@ module Ace
 
             ref = ref.strip.downcase
 
-            if ref.length == 6
+            if ref.length == @full_id_length
               # Full ID match
               exact = @scan_results.find { |r| r.id == ref }
               return exact
@@ -56,7 +59,7 @@ module Ace
           # @param ref [String] Reference to check
           # @return [Boolean] True if multiple matches exist
           def ambiguous?(ref)
-            return false if ref.nil? || ref.length == 6
+            return false if ref.nil? || ref.length == @full_id_length
 
             ref = ref.strip.downcase
             matches = @scan_results.select { |r| r.id.end_with?(ref) }
@@ -71,7 +74,7 @@ module Ace
 
             ref = ref.strip.downcase
 
-            if ref.length == 6
+            if ref.length == @full_id_length
               @scan_results.select { |r| r.id == ref }
             else
               @scan_results.select { |r| r.id.end_with?(ref) }
