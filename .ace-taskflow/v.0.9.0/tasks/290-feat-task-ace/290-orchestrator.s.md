@@ -8,6 +8,7 @@ subtasks:
   - v.0.9.0+task.290.01
   - v.0.9.0+task.290.02
   - v.0.9.0+task.290.03
+  - v.0.9.0+task.290.04
 ---
 
 # Create ace-task Gem with B36TS-Based Task Management
@@ -101,6 +102,7 @@ ace-task update q7w --set worktree.branch=my-branch    # Nested via dot notation
 | FolderMover | 290.02 | — | KEPT |
 | TaskManager organism | 290.02 | — | KEPT |
 | 5 CLI commands | 290.03 | — | KEPT |
+| TaskDoctor (health checks + auto-fix) | 290.04 | — | KEPT |
 | Sequential numeric IDs | — | 290.01 | REMOVED (from ace-taskflow) |
 | Release-scoped directories | — | 290.01 | REMOVED |
 | done/undone/start/defer commands | — | 290.03 | REMOVED |
@@ -113,6 +115,14 @@ ace-task update q7w --set worktree.branch=my-branch    # Nested via dot notation
 - **Out of scope**: Migration from ace-taskflow, ace-idea gem (separate task 291), retrospectives, reviews
 
 **Note**: ace-taskflow will be **deleted** after all domain extractions complete (tasks 290, 291, 292). Each extracted gem must be fully independent — own doctor, own config loading, own filtering. Shared utilities from ace-taskflow are duplicated into each gem rather than centralized.
+
+## Implementation Guidance (from task 291 retro)
+
+### Pre-implementation validation
+Run `ace-sim validate-task` on 290.01 before starting implementation. If simulation surfaces upstream bugs, fix first and document in retro. (Lesson from 291: ace-sim session found ace-llm coercion bug that blocked progress.)
+
+### Migration warning
+From 291.04 retro: migration is always more complex than expected. Task migration (future task 293) will face 625+ files, ID format conversion, and orchestrator/subtask relationship re-encoding. Do NOT design TaskManager API to accommodate migration — migration is 293's problem as a codemod script.
 
 ## References
 
