@@ -43,7 +43,9 @@ module Ace
             tags_str  = options[:tags]
             tags      = tags_str ? tags_str.split(",").map(&:strip).reject(&:empty?) : []
 
-            manager = Ace::Retro::Organisms::RetroManager.new
+            manager_opts = {}
+            manager_opts[:root_dir] = options[:root] if options[:root]
+            manager = Ace::Retro::Organisms::RetroManager.new(**manager_opts)
             retros = manager.list(
               status: status,
               type: type,
