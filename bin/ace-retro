@@ -14,4 +14,4 @@ ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
 require "bundler/setup"
 
 # Now require and run the actual ace-retro executable
-load ace_meta_root.join("ace-taskflow/exe/ace-retro").to_s
+load ace_meta_root.join("ace-retro/exe/ace-retro").to_s
