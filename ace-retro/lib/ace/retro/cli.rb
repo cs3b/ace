@@ -8,6 +8,7 @@ require_relative "cli/commands/show"
 require_relative "cli/commands/list"
 require_relative "cli/commands/move"
 require_relative "cli/commands/update"
+require_relative "cli/commands/doctor"
 
 module Ace
   module Retro
@@ -24,7 +25,8 @@ module Ace
         ["show",   "Show retro details"],
         ["list",   "List retros"],
         ["move",   "Move retro to a different folder"],
-        ["update", "Update retro metadata"]
+        ["update", "Update retro metadata"],
+        ["doctor", "Run health checks on retros"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -32,7 +34,8 @@ module Ace
         "ace-retro show q7w",
         "ace-retro list --in archive --status active",
         "ace-retro move q7w --to archive",
-        "ace-retro update q7w --set status=done --add tags=reviewed"
+        "ace-retro update q7w --set status=done --add tags=reviewed",
+        "ace-retro doctor --verbose"
       ].freeze
 
       register "create", CLI::Commands::Create
@@ -40,6 +43,7 @@ module Ace
       register "list",   CLI::Commands::List
       register "move",   CLI::Commands::Move
       register "update", CLI::Commands::Update
+      register "doctor", CLI::Commands::Doctor
 
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
         gem_name: "ace-retro",
