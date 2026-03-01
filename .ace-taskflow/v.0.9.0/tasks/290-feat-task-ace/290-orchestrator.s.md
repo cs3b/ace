@@ -1,14 +1,20 @@
 ---
 id: v.0.9.0+task.290
-status: pending
+status: in-progress
 priority: high
 estimate: TBD
 dependencies: []
 subtasks:
-  - v.0.9.0+task.290.01
-  - v.0.9.0+task.290.02
-  - v.0.9.0+task.290.03
-  - v.0.9.0+task.290.04
+- v.0.9.0+task.290.01
+- v.0.9.0+task.290.02
+- v.0.9.0+task.290.03
+- v.0.9.0+task.290.04
+worktree:
+  branch: 290-create-ace-task-gem-with-b36ts-based-task-management
+  path: "../ace-task.290"
+  created_at: '2026-03-01 14:25:56'
+  updated_at: '2026-03-01 14:25:56'
+  target_branch: main
 ---
 
 # Create ace-task Gem with B36TS-Based Task Management
