@@ -160,6 +160,15 @@ PATH
       dry-cli (~> 1.0)
 
 PATH
+  remote: ace-retro
+  specs:
+    ace-retro (0.1.0)
+      ace-b36ts (~> 0.7)
+      ace-support-core (~> 0.25)
+      ace-support-items (~> 0.3)
+      dry-cli (~> 1.0)
+
+PATH
   remote: ace-review
   specs:
     ace-review (0.42.6)
@@ -432,6 +441,7 @@ DEPENDENCIES
   ace-llm-providers-cli!
   ace-overseer!
   ace-prompt-prep!
+  ace-retro!
   ace-review!
   ace-search!
   ace-sim!
