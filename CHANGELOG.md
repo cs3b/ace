@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [0.9.699] - 2026-03-01
 
 ### Fixed
-- **ace-retro v0.2.2**: Doctor skips partition directories in `_archive/` via `category_folder?` pattern
+- **ace-retro v0.2.2**: Doctor flags invalid archive partitions (e.g., `2025-09/`) and fixer relocates retros to b36ts partitions via RetroMover
 
 ## [0.9.698] - 2026-03-01
 
