@@ -1,0 +1,92 @@
+# frozen_string_literal: true
+
+require "yaml"
+
+module Ace
+  module Task
+    module Molecules
+      # Loads and merges configuration for ace-task from the cascade:
+      # .ace-defaults/task/config.yml (gem) -> ~/.ace/task/config.yml (user) -> .ace/task/config.yml (project)
+      class TaskConfigLoader
+        DEFAULT_ROOT_DIR = ".ace-tasks"
+
+        # Load configuration with cascade merge
+        # @param gem_root [String] Path to the ace-task gem root
+        # @return [Hash] Merged configuration
+        def self.load(gem_root: nil)
+          gem_root ||= File.expand_path("../../../..", __dir__)
+          new(gem_root: gem_root).load
+        end
+
+        def initialize(gem_root:)
+          @gem_root = gem_root
+        end
+
+        # Load and merge configuration
+        # @return [Hash] Merged configuration
+        def load
+          config = load_defaults
+          config = deep_merge(config, load_user_config)
+          config = deep_merge(config, load_project_config)
+          config
+        end
+
+        # Get the root directory for tasks
+        # @param config [Hash] Configuration hash
+        # @return [String] Absolute path to tasks root directory
+        def self.root_dir(config = nil)
+          config ||= load
+          dir = config.dig("task", "root_dir") || DEFAULT_ROOT_DIR
+
+          if dir.start_with?("/")
+            dir
+          else
+            File.join(Dir.pwd, dir)
+          end
+        end
+
+        private
+
+        def load_defaults
+          path = File.join(@gem_root, ".ace-defaults", "task", "config.yml")
+          load_yaml(path) || {}
+        end
+
+        def load_user_config
+          path = File.join(Dir.home, ".ace", "task", "config.yml")
+          load_yaml(path) || {}
+        end
+
+        def load_project_config
+          path = File.join(Dir.pwd, ".ace", "task", "config.yml")
+          load_yaml(path) || {}
+        end
+
+        def load_yaml(path)
+          return nil unless File.exist?(path)
+
+          YAML.safe_load_file(path, permitted_classes: [Date, Time, Symbol])
+        rescue Errno::ENOENT
+          nil
+        rescue Psych::SyntaxError => e
+          warn "Warning: ace-task config parse error in #{path}: #{e.message}"
+          nil
+        end
+
+        def deep_merge(base, override)
+          return base unless override.is_a?(Hash)
+
+          result = base.dup
+          override.each do |key, value|
+            if result[key].is_a?(Hash) && value.is_a?(Hash)
+              result[key] = deep_merge(result[key], value)
+            else
+              result[key] = value
+            end
+          end
+          result
+        end
+      end
+    end
+  end
+end

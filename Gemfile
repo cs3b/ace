@@ -30,6 +30,7 @@ gem 'ace-sim', path: 'ace-sim'
 gem 'ace-support-items', path: 'ace-support-items'
 gem 'ace-idea', path: 'ace-idea'
 gem 'ace-retro', path: 'ace-retro'
+gem 'ace-task', path: 'ace-task'
 
 # Shared dev/test tools for all gems
 group :development, :test do
