@@ -95,22 +95,26 @@ class RetroStructureValidatorTest < AceRetroTestCase
     end
   end
 
-  def test_skips_partition_directories_in_archive
+  def test_accepts_valid_b36ts_archive_partition
     with_retros_dir do |root|
-      # Create _archive/2025-09/{id}-{slug}/ structure (calendar-month partition)
-      partition = File.join(root, "_archive", "2025-09")
-      FileUtils.mkdir_p(partition)
-      create_retro_fixture(root, id: "abc123", slug: "archived-retro", special_folder: "_archive/2025-09")
-
-      # Also test b36ts partition like _archive/8o/
-      b36_partition = File.join(root, "_archive", "8o")
-      FileUtils.mkdir_p(b36_partition)
       create_retro_fixture(root, id: "def456", slug: "b36-archived", special_folder: "_archive/8o")
 
       validator = Validator.new(root)
       issues = validator.validate
       errors = issues.select { |i| i[:type] == :error }
-      assert_empty errors, "Partition directories should not cause errors: #{errors.inspect}"
+      assert_empty errors, "Valid b36ts partition should not cause errors: #{errors.inspect}"
+    end
+  end
+
+  def test_flags_invalid_archive_partition
+    with_retros_dir do |root|
+      create_retro_fixture(root, id: "abc123", slug: "archived-retro", special_folder: "_archive/2025-09")
+
+      validator = Validator.new(root)
+      issues = validator.validate
+      errors = issues.select { |i| i[:type] == :error }
+      assert errors.any? { |i| i[:message].include?("Invalid archive partition") },
+        "Expected invalid archive partition error, got: #{errors.inspect}"
     end
   end
 end

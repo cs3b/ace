@@ -6,6 +6,8 @@ require "ace/support/items"
 require_relative "../atoms/retro_id_formatter"
 require_relative "../atoms/retro_validation_rules"
 require_relative "../atoms/retro_frontmatter_defaults"
+require_relative "retro_loader"
+require_relative "retro_mover"
 
 module Ace
   module Retro
@@ -70,6 +72,8 @@ module Ace
             fix_move_to_archive(issue[:location])
           when /in _archive\/ but status is/
             fix_archive_status(issue[:location])
+          when /Invalid archive partition/
+            fix_invalid_archive_partition(issue[:location])
           when /Stale backup file/
             fix_stale_backup(issue[:location])
           when /Empty directory/
@@ -103,6 +107,7 @@ module Ace
           /Field 'tags' is not an array/,
           /terminal status.*not in _archive/,
           /in _archive\/ but status is/,
+          /Invalid archive partition/,
           /Stale backup file/,
           /Empty directory/
         ].freeze
@@ -251,6 +256,49 @@ module Ace
 
         def fix_archive_status(file_path)
           update_frontmatter_field(file_path, "status", "done", "Updated status to 'done' (in _archive/)")
+        end
+
+        def fix_invalid_archive_partition(partition_dir)
+          return false unless partition_dir && Dir.exist?(partition_dir) && @root_dir
+
+          loader = RetroLoader.new
+          mover = RetroMover.new(@root_dir)
+          moved = 0
+
+          Dir.glob(File.join(partition_dir, "*")).each do |retro_path|
+            next unless File.directory?(retro_path)
+
+            retro = loader.load(retro_path, special_folder: "_archive")
+            next unless retro
+
+            if @dry_run
+              partition = Ace::Support::Items::Atoms::DatePartitionPath.compute(retro.created_at || Time.now)
+              log_fix(retro_path, "Would move to _archive/#{partition}/")
+            else
+              mover.move(retro, to: "archive", date: retro.created_at)
+            end
+            moved += 1
+          end
+
+          # Remove empty partition dir
+          unless @dry_run
+            remaining = Dir.glob(File.join(partition_dir, "*"))
+            FileUtils.rmdir(partition_dir) if remaining.empty?
+          end
+
+          if moved > 0
+            unless @dry_run
+              log_fix(partition_dir, "Relocated #{moved} retro(s) to b36ts partition(s)")
+            end
+            @fixed_count += 1
+            true
+          else
+            @skipped_count += 1
+            false
+          end
+        rescue StandardError
+          @skipped_count += 1
+          false
         end
 
         def fix_stale_backup(file_path)
