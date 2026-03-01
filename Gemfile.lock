@@ -162,7 +162,7 @@ PATH
 PATH
   remote: ace-retro
   specs:
-    ace-retro (0.2.1)
+    ace-retro (0.2.2)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
