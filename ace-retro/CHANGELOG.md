@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2026-03-01
 
+Extracted from ace-taskflow into standalone gem with b36ts-based retro management.
+
 ### Added
 
 - Initial release of ace-retro gem
