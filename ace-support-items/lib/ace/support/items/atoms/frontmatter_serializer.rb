@@ -16,22 +16,7 @@ module Ace
           def self.serialize(frontmatter)
             lines = ["---"]
             frontmatter.each do |key, value|
-              case value
-              when Array
-                if value.empty?
-                  lines << "#{key}: []"
-                else
-                  lines << "#{key}: [#{value.join(", ")}]"
-                end
-              when String
-                if needs_quoting?(value)
-                  lines << "#{key}: \"#{escape_yaml_string(value)}\""
-                else
-                  lines << "#{key}: #{value}"
-                end
-              else
-                lines << "#{key}: #{value}"
-              end
+              serialize_entry(lines, key, value, indent: 0)
             end
             lines << "---"
             lines.join("\n")
@@ -44,6 +29,34 @@ module Ace
           def self.rebuild(frontmatter, body)
             "#{serialize(frontmatter)}\n\n#{body}"
           end
+
+          # Serialize a single key-value entry with indentation support.
+          def self.serialize_entry(lines, key, value, indent:)
+            prefix = "  " * indent
+            case value
+            when Hash
+              lines << "#{prefix}#{key}:"
+              value.each do |k, v|
+                serialize_entry(lines, k, v, indent: indent + 1)
+              end
+            when Array
+              if value.empty?
+                lines << "#{prefix}#{key}: []"
+              else
+                lines << "#{prefix}#{key}: [#{value.join(", ")}]"
+              end
+            when String
+              if needs_quoting?(value)
+                lines << "#{prefix}#{key}: \"#{escape_yaml_string(value)}\""
+              else
+                lines << "#{prefix}#{key}: #{value}"
+              end
+            else
+              lines << "#{prefix}#{key}: #{value}"
+            end
+          end
+
+          private_class_method :serialize_entry
 
           # Check if a string value needs YAML quoting
           # @param value [String] Value to check

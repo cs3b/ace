@@ -13,12 +13,29 @@ module Ace
         #
         # Item directories follow the convention: {id}-{slug}/
         # Item spec files match a configurable glob pattern within those directories.
+        #
+        # The id_extractor proc allows customizing how IDs are extracted from folder names.
+        # Default: matches 6-char b36ts IDs (e.g., "8ppq7w-dark-mode")
+        # Custom: can match type-marked IDs (e.g., "8pp.t.q7w-fix-login")
         class DirectoryScanner
+          # Default extractor for 6-char raw b36ts IDs
+          DEFAULT_ID_EXTRACTOR = ->(folder_name) {
+            match = folder_name.match(/^([0-9a-z]{6})-?(.*)$/)
+            return nil unless match
+
+            id = match[1]
+            slug = match[2].empty? ? folder_name : match[2]
+            [id, slug]
+          }
+
           # @param root_dir [String] Root directory to scan
           # @param file_pattern [String] Glob pattern for spec files (e.g., "*.idea.s.md")
-          def initialize(root_dir, file_pattern:)
+          # @param id_extractor [Proc, nil] Custom proc to extract [id, slug] from folder name.
+          #   Receives folder_name string, returns [id, slug] array or nil if no match.
+          def initialize(root_dir, file_pattern:, id_extractor: nil)
             @root_dir = root_dir
             @file_pattern = file_pattern
+            @id_extractor = id_extractor || DEFAULT_ID_EXTRACTOR
           end
 
           # Scan root directory recursively for items
@@ -72,18 +89,10 @@ module Ace
             )
           end
 
-          # Extract raw ID and slug from folder name
-          # Pattern: {6-char-id}-{slug} (e.g., "8ppq7w-dark-mode-support")
+          # Extract ID and slug from folder name using the configured extractor
           # @return [Array<String, String>, nil] [id, slug] or nil if pattern doesn't match
           def extract_id_and_slug(folder_name)
-            # Match 6-char base36 ID at start of folder name
-            match = folder_name.match(/^([0-9a-z]{6})-?(.*)$/)
-            return nil unless match
-
-            id = match[1]
-            slug = match[2].empty? ? folder_name : match[2]
-
-            [id, slug]
+            @id_extractor.call(folder_name)
           end
         end
       end
