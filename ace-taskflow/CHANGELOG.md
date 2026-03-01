@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.1] - 2026-03-01
+
+### Removed
+
+- Remove retro workflow instructions (`retro/create.wf.md`, `retro/synthesize.wf.md`) that were migrated to ace-retro gem
+
 ## [0.43.0] - 2026-02-28
 
 ### Added
