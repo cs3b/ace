@@ -113,6 +113,8 @@ module Ace
         end
 
         # Find all immediate subdirectories that look like retro folders
+        # (excludes special folders which are containers, includes their children)
+        # Also excludes category folders (folders containing only subdirectories)
         def retro_dirs(root_dir)
           dirs = []
 
@@ -122,14 +124,28 @@ module Ace
             folder_name = File.basename(path)
             if folder_name.start_with?("_")
               Dir.glob(File.join(path, "*")).each do |subpath|
-                dirs << subpath if File.directory?(subpath)
+                dirs << subpath if File.directory?(subpath) && !category_folder?(subpath)
               end
             else
-              dirs << path
+              dirs << path unless category_folder?(path)
             end
           end
 
           dirs
+        end
+
+        # Check if a folder is a category folder (only contains subdirectories, no files)
+        # These are organizational folders and not individual retros
+        def category_folder?(dir_path)
+          return false unless Dir.exist?(dir_path)
+
+          # Check if folder has any files
+          files = Dir.glob(File.join(dir_path, "*")).select { |f| File.file?(f) }
+          return false if files.any?
+
+          # Check if folder has any subdirectories
+          subdirs = Dir.glob(File.join(dir_path, "*")).select { |f| File.directory?(f) }
+          subdirs.any?
         end
       end
     end

@@ -94,4 +94,23 @@ class RetroStructureValidatorTest < AceRetroTestCase
       assert issues.any? { |i| i[:message].include?("Folder name") }
     end
   end
+
+  def test_skips_partition_directories_in_archive
+    with_retros_dir do |root|
+      # Create _archive/2025-09/{id}-{slug}/ structure (calendar-month partition)
+      partition = File.join(root, "_archive", "2025-09")
+      FileUtils.mkdir_p(partition)
+      create_retro_fixture(root, id: "abc123", slug: "archived-retro", special_folder: "_archive/2025-09")
+
+      # Also test b36ts partition like _archive/8o/
+      b36_partition = File.join(root, "_archive", "8o")
+      FileUtils.mkdir_p(b36_partition)
+      create_retro_fixture(root, id: "def456", slug: "b36-archived", special_folder: "_archive/8o")
+
+      validator = Validator.new(root)
+      issues = validator.validate
+      errors = issues.select { |i| i[:type] == :error }
+      assert_empty errors, "Partition directories should not cause errors: #{errors.inspect}"
+    end
+  end
 end
