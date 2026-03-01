@@ -14,4 +14,4 @@ ENV["BUNDLE_GEMFILE"] = ace_meta_root.join("Gemfile").to_s
 require "bundler/setup"
 
 # Now require and run the actual ace-task executable
-load ace_meta_root.join("ace-taskflow/exe/ace-task").to_s
+load ace_meta_root.join("ace-task/exe/ace-task").to_s
