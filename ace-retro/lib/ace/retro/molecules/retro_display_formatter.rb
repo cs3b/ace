@@ -49,7 +49,24 @@ module Ace
         def self.format_list(retros)
           return "No retros found." if retros.empty?
 
-          retros.map { |retro| format(retro) }.join("\n")
+          lines = retros.map { |retro| format(retro) }.join("\n")
+          "#{lines}\n\n#{format_stats_line(retros)}"
+        end
+
+        STATUS_ORDER = %w[active done].freeze
+
+        # Format a stats summary line for a list of retros.
+        # @param retros [Array<Retro>] Retros to summarize
+        # @return [String] e.g. "Retros: 🟡 2 | 🟢 5 • 7 total • 71% complete"
+        def self.format_stats_line(retros)
+          stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(retros, :status)
+          Ace::Support::Items::Atoms::StatsLineFormatter.format(
+            label: "Retros",
+            stats: stats,
+            status_order: STATUS_ORDER,
+            status_icons: STATUS_SYMBOLS,
+            completion_values: ["done"]
+          )
         end
       end
     end

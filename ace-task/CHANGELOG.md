@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.6.0] - 2026-03-02
+
+### Added
+- `TaskDisplayFormatter.format_stats_line` for generating stats summary (e.g., "Tasks: ○ 2 | ▶ 1 | ✓ 5 • 8 total • 63% complete")
+- `format_list` now appends a stats summary line after the item list (omitted for empty lists)
+
 ## [0.5.0] - 2026-03-02
 
 ### Added

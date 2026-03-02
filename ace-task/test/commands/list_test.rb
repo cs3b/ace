@@ -93,6 +93,22 @@ class ListCommandTest < AceTaskTestCase
     assert_match(/No tasks found/, output)
   end
 
+  def test_list_shows_stats_line
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["list"])
+    end.first
+
+    assert_match(/Tasks:.*total/, output)
+  end
+
+  def test_list_stats_reflects_filtered_items
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["list", "--status", "pending"])
+    end.first
+
+    assert_match(/Tasks: ○ 1 • 1 total/, output)
+  end
+
   private
 
   def create_fixture_task(id, title, status: "pending", priority: "medium", tags: [], root: nil)
