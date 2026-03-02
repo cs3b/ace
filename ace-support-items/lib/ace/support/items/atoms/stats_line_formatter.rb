@@ -5,15 +5,16 @@ module Ace
     module Items
       module Atoms
         # Generic stats line builder for item lists.
-        # Produces a summary like: "Tasks: ○ 3 | ▶ 1 | ✓ 5 • 9 total • 56% complete"
+        # Produces a summary like: "Tasks: ○ 3 | ▶ 1 | ✓ 5 • 3 of 660"
         class StatsLineFormatter
           # @param label [String] e.g. "Tasks", "Ideas", "Retros"
-          # @param stats [Hash] Output of ItemStatistics.count_by
+          # @param stats [Hash] Output of ItemStatistics.count_by (by :status)
           # @param status_order [Array<String>] Ordered status keys to display
           # @param status_icons [Hash<String,String>] Status → icon mapping
-          # @param completion_values [Array<String>, nil] If set, append "N% complete"
-          # @return [String] e.g. "Tasks: ○ 3 | ▶ 1 | ✓ 5 • 9 total • 56% complete"
-          def self.format(label:, stats:, status_order:, status_icons:, completion_values: nil)
+          # @param folder_stats [Hash, nil] Output of ItemStatistics.count_by (by :special_folder)
+          # @param total_count [Integer, nil] Total items before folder filtering (enables "X of Y" display)
+          # @return [String] e.g. "Tasks: ○ 3 | ▶ 1 | ✓ 5 • 3 of 660"
+          def self.format(label:, stats:, status_order:, status_icons:, folder_stats: nil, total_count: nil)
             parts = []
             status_order.each do |status|
               count = stats[:by_field][status] || 0
@@ -23,16 +24,43 @@ module Ace
               parts << "#{icon} #{count}"
             end
 
-            line = "#{label}: #{parts.join(" | ")}"
-            line += " \u2022 #{stats[:total]} total"
+            # Catch any statuses not in status_order (unknown/unexpected)
+            stats[:by_field].each do |status, count|
+              next if count == 0 || status_order.include?(status)
 
-            if completion_values
-              rate = ItemStatistics.completion_rate(stats, done_values: completion_values)
-              line += " \u2022 #{rate}% complete"
+              icon = status_icons[status] || status
+              parts << "#{icon} #{count}"
+            end
+
+            line = "#{label}: #{parts.join(" | ")}"
+
+            shown = stats[:total]
+            total = total_count || shown
+
+            if shown < total
+              # Filtered view: show ratio, skip folder breakdown
+              line += " \u2022 #{shown} of #{total}"
+            else
+              # Full view: show total + folder breakdown when multi-folder
+              line += " \u2022 #{shown} total"
+              if folder_stats && folder_stats[:by_field].size > 1
+                folder_parts = folder_stats[:by_field]
+                  .sort_by { |_, count| -count }
+                  .map { |folder, count| "#{folder_label(folder)} #{count}" }
+                line += " \u2014 #{folder_parts.join(" | ")}"
+              end
             end
 
             line
           end
+
+          # Map special_folder values to display labels.
+          # nil (root items) renders as "next".
+          def self.folder_label(folder)
+            folder.nil? || folder.empty? || folder == "" ? "next" : folder
+          end
+
+          private_class_method :folder_label
         end
       end
     end
