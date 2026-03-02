@@ -26,7 +26,7 @@ module Ace
       #
       class SubjectExtractor
         # @param options [Hash] Configuration options
-        # @option options [Integer] :taskflow_timeout Timeout for ace-taskflow subprocess (default: 10s)
+        # @option options [Integer] :taskflow_timeout Timeout for ace-task subprocess (default: 10s)
         def initialize(options = {})
           @taskflow_timeout = options[:taskflow_timeout] || TASKFLOW_TIMEOUT
         end
@@ -241,7 +241,7 @@ module Ace
           end
         end
 
-        # Default timeout for ace-taskflow subprocess (in seconds)
+        # Default timeout for ace-task subprocess (in seconds)
         # Can be overridden via options for environments with slow I/O
         TASKFLOW_TIMEOUT = 10
 
@@ -265,19 +265,19 @@ module Ace
             raise Errors::TaskPathNotFoundError, ref
           end
 
-          # ace-taskflow 'task REF --path' returns the path to the main task file
-          # (e.g., .ace-taskflow/v.0.9.0/tasks/145-feature/145.s.md).
+          # ace-task 'task REF --path' returns the path to the main task file
+          # (e.g., .ace-task/v.0.9.0/tasks/145-feature/145.s.md).
           # We use File.dirname to get the task's directory and glob for all
           # solution files (*.s.md) within it - this includes the main task
           # and any subtasks (145.01.s.md, 145.02.s.md, etc.)
           { "bundle" => { "files" => ["#{File.dirname(task_path)}/**/*.s.md"] } }
         end
 
-        # Execute ace-taskflow with timeout and proper process cleanup
+        # Execute ace-task with timeout and proper process cleanup
         # @param ref [String] Task reference
         # @param timeout_seconds [Integer] Timeout in seconds
         # @return [Array] stdout, status
-        # @raise [Errors::MissingDependencyError] if ace-taskflow not installed
+        # @raise [Errors::MissingDependencyError] if ace-task not installed
         # @raise [Errors::CommandTimeoutError] if command exceeds timeout
         def execute_taskflow_with_timeout(ref, timeout_seconds)
           pid = nil
@@ -289,17 +289,17 @@ module Ace
               stdout_str, _stderr, status, pid = run_taskflow_command(ref)
             end
           rescue Errno::ENOENT
-            raise Errors::MissingDependencyError.new("ace-taskflow", install_command: "gem install ace-taskflow")
+            raise Errors::MissingDependencyError.new("ace-task", install_command: "gem install ace-task")
           rescue Timeout::Error
             # Ensure child process is terminated on timeout
             Ace::Core::Atoms::ProcessTerminator.terminate(pid) if pid
-            raise Errors::CommandTimeoutError.new("ace-taskflow task #{ref} --path", timeout_seconds)
+            raise Errors::CommandTimeoutError.new("ace-task show #{ref} --path", timeout_seconds)
           end
 
           [stdout_str, status]
         end
 
-        # Run ace-taskflow command - can be stubbed in tests
+        # Run ace-task command - can be stubbed in tests
         # Uses Open3.popen3 with PID tracking for proper process cleanup on timeout
         # @param ref [String] Task reference
         # @return [Array] [stdout, stderr, status, pid]
@@ -309,7 +309,7 @@ module Ace
           status = nil
           pid = nil
 
-          Open3.popen3("ace-taskflow", "task", ref, "--path") do |_stdin, stdout, stderr, wait_thr|
+          Open3.popen3("ace-task", "show", ref, "--path") do |_stdin, stdout, stderr, wait_thr|
             pid = wait_thr.pid
             stdout_str = stdout.read
             stderr_str = stderr.read

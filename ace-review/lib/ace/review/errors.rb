@@ -87,14 +87,14 @@ module Ace
       # Raised when gh CLI encounters a network error
       class GhNetworkError < Error; end
 
-      # Raised when ace-taskflow cannot find task
+      # Raised when ace-task cannot find task
       class TaskNotFoundError < Error
         attr_reader :task_ref
 
         def initialize(task_ref)
           @task_ref = task_ref
           message = "Task '#{task_ref}' not found.\n"
-          message += "Run 'ace-taskflow task #{task_ref}' for details."
+          message += "Run 'ace-task show #{task_ref}' for details."
           super(message)
         end
       end
@@ -106,7 +106,7 @@ module Ace
         def initialize(task_ref)
           @task_ref = task_ref
           message = "Task '#{task_ref}' exists but has no path.\n"
-          message += "Check task status with: ace-taskflow task #{task_ref}"
+          message += "Check task status with: ace-task show #{task_ref}"
           super(message)
         end
       end

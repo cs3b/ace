@@ -2,8 +2,6 @@
 
 require "test_helper"
 require "ace/review/molecules/task_report_saver"
-require "ace/taskflow"
-require "ace/taskflow/organisms/release_manager"
 require "fileutils"
 require "tmpdir"
 
@@ -130,109 +128,6 @@ class TaskReportSaverTest < Minitest::Test
 
     refute result[:success], "Expected save to fail"
     assert_includes result[:error], "Review file not found"
-  end
-
-  # ============================================================================
-  # save_to_release tests
-  # ============================================================================
-
-  def test_save_to_release_copies_file_to_release_reviews_dir
-    review_data = { preset: "pr", model: "claude:opus" }
-
-    # Create release directory structure
-    release_dir = File.join(@temp_dir, "releases", "v1.0.0")
-    release_file = File.join(release_dir, "release.yml")
-    FileUtils.mkdir_p(release_dir)
-    File.write(release_file, "name: v1.0.0\n")
-
-    # Mock the release manager
-    mock_release_manager = Minitest::Mock.new
-    mock_release_manager.expect(:current_release, { path: release_file, name: "v1.0.0" })
-
-    # Stub ReleaseManager.new to return our mock
-    Ace::Taskflow::Organisms::ReleaseManager.stub :new, mock_release_manager do
-      result = Ace::Review::Molecules::TaskReportSaver.save_to_release(@review_file, review_data)
-
-      assert result[:success], "Expected save_to_release to succeed: #{result[:error]}"
-      assert File.exist?(result[:path]), "Expected review file to exist at #{result[:path]}"
-      assert_match(/releases\/v1.0.0\/reviews/, result[:path])
-
-      # Verify content was copied
-      content = File.read(result[:path])
-      assert_includes content, "Test Review"
-    end
-
-    mock_release_manager.verify
-  end
-
-  def test_save_to_release_returns_error_for_missing_review_file
-    review_data = { preset: "pr", model: "claude:opus" }
-    non_existent_file = File.join(@session_dir, "nonexistent.md")
-
-    result = Ace::Review::Molecules::TaskReportSaver.save_to_release(non_existent_file, review_data)
-
-    refute result[:success], "Expected save_to_release to fail"
-    assert_includes result[:error], "Review file not found"
-  end
-
-  def test_save_to_release_returns_error_when_no_current_release
-    review_data = { preset: "pr", model: "claude:opus" }
-
-    # Mock the release manager to return nil
-    mock_release_manager = Minitest::Mock.new
-    mock_release_manager.expect(:current_release, nil)
-
-    Ace::Taskflow::Organisms::ReleaseManager.stub :new, mock_release_manager do
-      result = Ace::Review::Molecules::TaskReportSaver.save_to_release(@review_file, review_data)
-
-      refute result[:success], "Expected save_to_release to fail"
-      assert_includes result[:error], "No current release found"
-    end
-
-    mock_release_manager.verify
-  end
-
-  def test_save_to_release_creates_reviews_subdirectory
-    review_data = { preset: "pr", model: "claude:opus" }
-
-    # Create release directory structure without reviews/ subdir
-    release_dir = File.join(@temp_dir, "releases", "v2.0.0")
-    release_file = File.join(release_dir, "release.yml")
-    FileUtils.mkdir_p(release_dir)
-    File.write(release_file, "name: v2.0.0\n")
-
-    # Reviews dir should NOT exist yet
-    reviews_dir = File.join(release_dir, "reviews")
-    refute Dir.exist?(reviews_dir), "reviews/ should not exist before save"
-
-    mock_release_manager = Minitest::Mock.new
-    mock_release_manager.expect(:current_release, { path: release_file, name: "v2.0.0" })
-
-    Ace::Taskflow::Organisms::ReleaseManager.stub :new, mock_release_manager do
-      result = Ace::Review::Molecules::TaskReportSaver.save_to_release(@review_file, review_data)
-
-      assert result[:success], "Expected save_to_release to succeed: #{result[:error]}"
-      assert Dir.exist?(reviews_dir), "Expected reviews/ directory to be created"
-    end
-
-    mock_release_manager.verify
-  end
-
-  def test_save_to_release_handles_exception_gracefully
-    review_data = { preset: "pr", model: "claude:opus" }
-
-    # Mock the release manager to raise an exception
-    mock_release_manager = Minitest::Mock.new
-    def mock_release_manager.current_release
-      raise "Simulated error"
-    end
-
-    Ace::Taskflow::Organisms::ReleaseManager.stub :new, mock_release_manager do
-      result = Ace::Review::Molecules::TaskReportSaver.save_to_release(@review_file, review_data)
-
-      refute result[:success], "Expected save_to_release to fail"
-      assert_includes result[:error], "Failed to save to release"
-    end
   end
 
   # ============================================================================

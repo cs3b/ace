@@ -44,7 +44,7 @@ Gem::Specification.new do |spec|
   # Note: ace-git-diff dependency removed in v0.26.0 - functionality migrated to ace-git
   spec.add_dependency 'ace-support-nav', '~> 0.17'
   spec.add_dependency 'ace-llm', '~> 0.23'
-  spec.add_dependency 'ace-taskflow', '~> 0.41'
+  spec.add_dependency 'ace-task', '~> 0.11'
 
   # Development dependencies
   spec.add_development_dependency 'ace-support-test-helpers', '~> 0.12'

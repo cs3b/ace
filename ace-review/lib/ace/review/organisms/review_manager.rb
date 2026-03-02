@@ -837,7 +837,7 @@ module Ace
 
             link_session_to_task(session_dir, task_info[:path])
           rescue LoadError
-            warn "Warning: Cannot link to task (ace-taskflow gem not available)"
+            warn "Warning: Cannot link to task (ace-task gem not available)"
             nil
           rescue => e
             warn "Warning: Failed to link session to task: #{e.message}"
