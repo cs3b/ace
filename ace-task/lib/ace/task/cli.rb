@@ -9,6 +9,7 @@ require_relative "cli/commands/list"
 require_relative "cli/commands/move"
 require_relative "cli/commands/update"
 require_relative "cli/commands/doctor"
+require_relative "cli/commands/status"
 
 module Ace
   module Task
@@ -24,7 +25,8 @@ module Ace
         ["list",   "List tasks"],
         ["move",   "Move a task to a different folder"],
         ["update", "Update task metadata"],
-        ["doctor", "Run health checks on tasks"]
+        ["doctor", "Run health checks on tasks"],
+        ["status", "Show task status overview"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -37,7 +39,9 @@ module Ace
         "ace-task move q7w --to archive",
         "ace-task update q7w --set status=done --set priority=high",
         "ace-task doctor",
-        "ace-task doctor --auto-fix --dry-run"
+        "ace-task doctor --auto-fix --dry-run",
+        "ace-task status",
+        "ace-task status --up-next-limit 5"
       ].freeze
 
       register "create", CLI::Commands::Create
@@ -46,6 +50,7 @@ module Ace
       register "move",   CLI::Commands::Move
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
+      register "status", CLI::Commands::Status
 
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
         gem_name: "ace-task",

@@ -16,6 +16,11 @@ idea:
   doctor_cli_args:
     gemini: "yolo"
 
+  # Status command: default limits
+  status:
+    up_next_limit: 7
+    recently_done_limit: 7
+
   # Special folder mappings (short name => actual folder name)
   special_folders:
     archive: _archive

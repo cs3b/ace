@@ -50,6 +50,33 @@ module Ace
 
         STATUS_ORDER = %w[pending in-progress done obsolete].freeze
 
+        # Format a status overview with up-next, stats, and recently-done sections.
+        # @param categorized [Hash] Output of StatusCategorizer.categorize
+        # @param all_ideas [Array<Idea>] All ideas for stats computation
+        # @return [String] Formatted status output
+        def self.format_status(categorized, all_ideas:)
+          sections = []
+
+          # Up Next
+          sections << format_up_next_section(categorized[:up_next])
+
+          # Stats summary
+          sections << format_stats_line(all_ideas)
+
+          # Recently Done
+          sections << format_recently_done_section(categorized[:recently_done])
+
+          sections.join("\n\n")
+        end
+
+        # Format a single idea as a compact status line (id + title only).
+        # @param idea [Idea] Idea to format
+        # @return [String] e.g. "  ⚪ 8ppq7w  Dark mode support"
+        def self.format_status_line(idea)
+          status_sym = STATUS_SYMBOLS[idea.status] || "⚪"
+          "  #{status_sym} #{idea.id}  #{idea.title}"
+        end
+
         # Format a stats summary line for a list of ideas.
         # @param ideas [Array<Idea>] Ideas to summarize
         # @param total_count [Integer, nil] Total items before folder filtering
@@ -66,6 +93,28 @@ module Ace
             total_count: total_count
           )
         end
+
+        # Format the "Up Next" section.
+        def self.format_up_next_section(up_next)
+          return "Up Next:\n  (none)" if up_next.empty?
+
+          lines = up_next.map { |idea| format_status_line(idea) }
+          "Up Next:\n#{lines.join("\n")}"
+        end
+
+        # Format the "Recently Done" section.
+        def self.format_recently_done_section(recently_done)
+          return "Recently Done:\n  (none)" if recently_done.empty?
+
+          lines = recently_done.map do |entry|
+            idea = entry[:item]
+            time_str = Ace::Support::Items::Atoms::RelativeTimeFormatter.format(entry[:completed_at])
+            "  #{format_status_line(idea).strip}  (#{time_str})"
+          end
+          "Recently Done:\n#{lines.join("\n")}"
+        end
+
+        private_class_method :format_up_next_section, :format_recently_done_section
       end
     end
   end
