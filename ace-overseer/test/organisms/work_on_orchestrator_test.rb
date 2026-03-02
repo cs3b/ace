@@ -4,7 +4,7 @@ require "tmpdir"
 require_relative "../test_helper"
 
 class WorkOnOrchestratorTest < AceOverseerTestCase
-  class FakeTaskLoader
+  class FakeTaskManager
     attr_reader :calls
 
     def initialize(tasks)
@@ -12,11 +12,34 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       @calls = []
     end
 
-    def find_task_by_reference(ref)
+    def show(ref)
       @calls << ref
-      return @tasks[ref] if @tasks.is_a?(Hash)
+      data = @tasks.is_a?(Hash) ? @tasks[ref] : @tasks
+      return nil unless data
 
-      @tasks
+      FakeTask.new(data)
+    end
+  end
+
+  class FakeTask
+    attr_reader :metadata, :subtasks, :status
+
+    def initialize(data)
+      @metadata = data[:metadata] || {}
+      @status = data[:status]
+      @subtasks = if data[:subtasks]
+                    data[:subtasks].map { |s| FakeTask.new(s) }
+                  elsif data[:is_orchestrator] && data[:subtask_ids]&.any?
+                    data[:subtask_ids].map { |id| FakeSubtaskRef.new(id) }
+                  end
+    end
+  end
+
+  class FakeSubtaskRef
+    attr_reader :id
+
+    def initialize(id)
+      @id = id
     end
   end
 
@@ -67,7 +90,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   def test_resolves_preset_from_task_frontmatter
     Dir.mktmpdir("task.230") do |worktree|
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new("230" => { metadata: { "assign" => { "preset" => "fix-bug" } } }),
+        task_loader: FakeTaskManager.new("230" => { metadata: { "assign" => { "preset" => "fix-bug" } } }),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           { worktree_path: worktree, branch: "230-feature", created: true }
         ),
@@ -90,7 +113,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.232") do |worktree|
       messages = []
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new("232" => { metadata: {} }),
+        task_loader: FakeTaskManager.new("232" => { metadata: {} }),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           { worktree_path: worktree, branch: "232-feature", created: true }
         ),
@@ -117,7 +140,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.233") do |worktree|
       messages = []
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new("233" => { metadata: {} }),
+        task_loader: FakeTaskManager.new("233" => { metadata: {} }),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           { worktree_path: worktree, branch: "233-feature", created: false }
         ),
@@ -143,7 +166,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         "current_phase" => { "number" => "020-implement" }
       }
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new("234" => { metadata: {} }),
+        task_loader: FakeTaskManager.new("234" => { metadata: {} }),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           { worktree_path: worktree, branch: "234-feature", created: true }
         ),
@@ -167,14 +190,14 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
         metadata: { "assign" => { "preset" => "work-on-tasks" } },
         is_orchestrator: true,
         subtask_ids: [
-          "v0.14+task.272.01",
-          "v0.14+task.272.02",
-          "v0.14+task.272.03"
+          "8pp.t.q7w.a",
+          "8pp.t.q7w.b",
+          "8pp.t.q7w.c"
         ]
       }
       launcher = FakeAssignmentLauncher.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new("272" => task),
+        task_loader: FakeTaskManager.new("272" => task),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           { worktree_path: worktree, branch: "272-orchestrator", created: true }
         ),
@@ -190,7 +213,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
       assert_equal 1, launcher.calls.length
       call = launcher.calls.first
-      assert_equal %w[272.01 272.02 272.03], call[:subtask_refs]
+      assert_equal %w[8pp.t.q7w.a 8pp.t.q7w.b 8pp.t.q7w.c], call[:subtask_refs]
     end
   end
 
@@ -199,7 +222,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       task = { metadata: {}, is_orchestrator: false }
       launcher = FakeAssignmentLauncher.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new("150" => task),
+        task_loader: FakeTaskManager.new("150" => task),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           { worktree_path: worktree, branch: "150-feature", created: true }
         ),
@@ -221,7 +244,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
   def test_falls_back_to_cli_preset
     Dir.mktmpdir("task.231") do |worktree|
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new("231" => { metadata: {} }),
+        task_loader: FakeTaskManager.new("231" => { metadata: {} }),
         worktree_provisioner: FakeWorktreeProvisioner.new(
           { worktree_path: worktree, branch: "231-feature", created: false }
         ),
@@ -243,11 +266,11 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
     Dir.mktmpdir("task.288") do |worktree|
       launcher = FakeAssignmentLauncher.new
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new(
+        task_loader: FakeTaskManager.new(
           "288" => {
             metadata: {},
             is_orchestrator: true,
-            subtask_ids: ["v0.14+task.288.01", "v0.14+task.288.02"]
+            subtask_ids: ["8pp.t.q7w.a", "8pp.t.q7w.b"]
           },
           "287.01" => { metadata: {}, is_orchestrator: false },
           "300" => { metadata: {}, is_orchestrator: false }
@@ -267,7 +290,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
 
       assert_equal 1, launcher.calls.length
       call = launcher.calls.first
-      assert_equal %w[288.01 288.02 287.01 300], call[:task_refs]
+      assert_equal %w[8pp.t.q7w.a 8pp.t.q7w.b 287.01 300], call[:task_refs]
       assert_equal "288", call[:task_ref]
     end
   end
@@ -281,7 +304,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new(supports_taskrefs: false)
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new(
+        task_loader: FakeTaskManager.new(
           "288" => { metadata: {}, is_orchestrator: false },
           "287" => { metadata: {}, is_orchestrator: false }
         ),
@@ -314,7 +337,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new(
+        task_loader: FakeTaskManager.new(
           "288" => { metadata: {}, is_orchestrator: false },
           "999" => nil
         ),
@@ -347,7 +370,7 @@ class WorkOnOrchestratorTest < AceOverseerTestCase
       launcher = FakeAssignmentLauncher.new
 
       orchestrator = Ace::Overseer::Organisms::WorkOnOrchestrator.new(
-        task_loader: FakeTaskLoader.new({}),
+        task_loader: FakeTaskManager.new({}),
         worktree_provisioner: worktree_provisioner,
         tmux_window_opener: tmux,
         assignment_launcher: launcher,

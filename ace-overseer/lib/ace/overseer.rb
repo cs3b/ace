@@ -5,7 +5,7 @@ require "ace/support/config"
 require "ace/assign"
 require "ace/git"
 require "ace/git/worktree"
-require "ace/taskflow"
+require "ace/task"
 require "ace/tmux"
 
 require_relative "overseer/version"

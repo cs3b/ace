@@ -14,15 +14,19 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
     end
   end
 
-  class FakeTaskLoader
-    def initialize(task)
-      @task = task
+  class FakeTaskManager
+    def initialize(task_data)
+      @task_data = task_data
     end
 
-    def find_task_by_reference(_task_ref)
-      @task
+    def show(_task_ref)
+      return nil unless @task_data
+
+      FakeTask.new(@task_data[:status])
     end
   end
+
+  FakeTask = Struct.new(:status)
 
   def test_marks_candidate_safe_when_all_conditions_pass
     context = Ace::Overseer::Models::WorkContext.new(
@@ -36,7 +40,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
     Dir.mktmpdir("task.230") do |worktree|
       checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
         context_collector: FakeCollector.new(context),
-        task_loader_factory: -> { FakeTaskLoader.new({ status: "done" }) }
+        task_loader_factory: -> { FakeTaskManager.new({ status: "done" }) }
       )
 
       candidate = checker.check(worktree_path: worktree, task_ref: "230")
@@ -58,7 +62,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
     Dir.mktmpdir("task.231") do |worktree|
       checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
         context_collector: FakeCollector.new(context),
-        task_loader_factory: -> { FakeTaskLoader.new({ status: "in-progress" }) }
+        task_loader_factory: -> { FakeTaskManager.new({ status: "in-progress" }) }
       )
 
       candidate = checker.check(worktree_path: worktree, task_ref: "231")
@@ -87,7 +91,7 @@ class PruneSafetyCheckerTest < AceOverseerTestCase
 
       checker = Ace::Overseer::Molecules::PruneSafetyChecker.new(
         context_collector: FakeCollector.new(context),
-        task_loader_factory: -> { FakeTaskLoader.new({ status: "done" }) }
+        task_loader_factory: -> { FakeTaskManager.new({ status: "done" }) }
       )
 
       candidate = checker.check(worktree_path: worktree, task_ref: "232")

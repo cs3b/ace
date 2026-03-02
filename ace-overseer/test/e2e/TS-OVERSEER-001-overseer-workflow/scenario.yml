@@ -22,7 +22,7 @@ e2e-justification: >
   None testable with mocks.
 
 requires:
-  tools: [ace-overseer, ace-git-worktree, ace-tmux, ace-assign, ace-taskflow, git, tmux]
+  tools: [ace-overseer, ace-git-worktree, ace-tmux, ace-assign, ace-task, git, tmux]
   ruby: ">= 3.0"
 
 setup:
