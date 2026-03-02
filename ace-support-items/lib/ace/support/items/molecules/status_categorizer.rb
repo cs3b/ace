@@ -14,13 +14,20 @@ module Ace
           # @param pending_statuses [Array<String>] Statuses considered "up next"
           # @param done_statuses [Array<String>] Statuses considered "recently done"
           # @return [Hash] { up_next: [...], recently_done: [{ item:, completed_at: }] }
+          # @param up_next_sorter [Proc, nil] Custom sorter for up-next items.
+          #   Receives array of items, returns sorted array. Default: sort by id.
           def self.categorize(items, up_next_limit:, recently_done_limit:,
-                              pending_statuses: ["pending"], done_statuses: ["done"])
+                              pending_statuses: ["pending"], done_statuses: ["done"],
+                              up_next_sorter: nil)
             up_next = if up_next_limit > 0
-              items
+              candidates = items
                 .select { |i| pending_statuses.include?(i.status) && i.special_folder.nil? }
-                .sort_by(&:id)
-                .first(up_next_limit)
+              sorted = if up_next_sorter
+                up_next_sorter.call(candidates)
+              else
+                candidates.sort_by(&:id)
+              end
+              sorted.first(up_next_limit)
             else
               []
             end
