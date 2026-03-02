@@ -100,4 +100,4 @@ ignore:
   - "**/tmp/**"  # Project-relative tmp/ directories (not system /tmp/)
   - "**/coverage/**"
   - "**/_legacy/**"
-  - "**/.ace-taskflow/done/**"
+  - "**/.ace-tasks/done/**"

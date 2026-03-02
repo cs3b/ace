@@ -19,8 +19,8 @@ git:
       type_hint: chore
       description: "Project configuration files (nav protocols, git settings, bundle presets)"
 
-    taskflow:
-      glob: ".ace-taskflow/**"
+    task-specs:
+      glob: ".ace-tasks/**"
       type_hint: spec
       description: "Task specifications, retrospectives, session notes, and workflow documentation - NOT code features"
 
@@ -78,8 +78,8 @@ git:
     ace-search:
       glob: "ace-search/**"
 
-    ace-taskflow:
-      glob: "ace-taskflow/**"
+    ace-task:
+      glob: "ace-task/**"
 
     ace-test:
       glob: "ace-test/**"

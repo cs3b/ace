@@ -34,11 +34,6 @@ test_suite:
       group: tools
       priority: 2
 
-    - name: ace-taskflow
-      path: ace-taskflow
-      group: tools
-      priority: 1
-
     - name: ace-assign
       path: ace-assign
       group: tools

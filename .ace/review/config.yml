@@ -21,10 +21,10 @@ defaults:
 # storage:
 #   # Where to store review outputs
 #   # Detection order (if not specified):
-#   #   1. Try: $(ace-taskflow release --path reviews)
+#   #   1. Try: $(ace-task release --path reviews)
 #   #   2. Fallback: .cache/ace-review/sessions/
 #   # You can override with custom path (supports %{release} placeholder):
-#   base_path: ".ace-taskflow/%{release}/reviews"
+#   base_path: ".ace-tasks/%{release}/reviews"
 #   auto_organize: true
 
 # Feedback extraction configuration
