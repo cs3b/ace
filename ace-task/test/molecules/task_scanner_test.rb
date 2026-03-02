@@ -89,6 +89,57 @@ class TaskScannerTest < AceTaskTestCase
     assert_equal "_maybe", results.first.special_folder
   end
 
+  def test_scan_in_folder_next_returns_root_items_only
+    create_task_folder("8pp.t.q7w-fix-login")
+    maybe_dir = File.join(@tmpdir, "_maybe")
+    FileUtils.mkdir_p(maybe_dir)
+    create_task_in_dir(maybe_dir, "8pp.t.r8x-maybe-task")
+
+    scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
+    results = scanner.scan_in_folder("next")
+
+    assert_equal 1, results.length
+    assert_equal "8pp.t.q7w", results.first.id
+    assert_nil results.first.special_folder
+  end
+
+  def test_scan_in_folder_all_returns_everything
+    create_task_folder("8pp.t.q7w-fix-login")
+    maybe_dir = File.join(@tmpdir, "_maybe")
+    FileUtils.mkdir_p(maybe_dir)
+    create_task_in_dir(maybe_dir, "8pp.t.r8x-maybe-task")
+
+    scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
+    results = scanner.scan_in_folder("all")
+
+    assert_equal 2, results.length
+  end
+
+  def test_scan_in_folder_physical_folder
+    create_task_folder("8pp.t.q7w-fix-login")
+    maybe_dir = File.join(@tmpdir, "_maybe")
+    FileUtils.mkdir_p(maybe_dir)
+    create_task_in_dir(maybe_dir, "8pp.t.r8x-maybe-task")
+
+    scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
+    results = scanner.scan_in_folder("maybe")
+
+    assert_equal 1, results.length
+    assert_equal "_maybe", results.first.special_folder
+  end
+
+  def test_scan_in_folder_nil_returns_all
+    create_task_folder("8pp.t.q7w-fix-login")
+    maybe_dir = File.join(@tmpdir, "_maybe")
+    FileUtils.mkdir_p(maybe_dir)
+    create_task_in_dir(maybe_dir, "8pp.t.r8x-maybe-task")
+
+    scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
+    results = scanner.scan_in_folder(nil)
+
+    assert_equal 2, results.length
+  end
+
   def test_root_exists_returns_false_for_missing_dir
     scanner = Ace::Task::Molecules::TaskScanner.new("/nonexistent/dir")
     refute scanner.root_exists?

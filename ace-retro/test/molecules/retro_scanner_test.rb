@@ -80,4 +80,30 @@ class RetroScannerTest < AceRetroTestCase
       assert_equal "9xzr1k", results.first.id
     end
   end
+
+  def test_scan_in_folder_next_returns_root_items_only
+    with_retros_dir do |root|
+      create_retro_fixture(root, id: "8ppq7w", slug: "active-retro")
+      create_retro_fixture(root, id: "9xzr1k", slug: "archived-retro", special_folder: "_archive")
+
+      scanner = Ace::Retro::Molecules::RetroScanner.new(root)
+      results = scanner.scan_in_folder("next")
+
+      assert_equal 1, results.length
+      assert_equal "8ppq7w", results.first.id
+      assert_nil results.first.special_folder
+    end
+  end
+
+  def test_scan_in_folder_all_returns_everything
+    with_retros_dir do |root|
+      create_retro_fixture(root, id: "8ppq7w", slug: "active-retro")
+      create_retro_fixture(root, id: "9xzr1k", slug: "archived-retro", special_folder: "_archive")
+
+      scanner = Ace::Retro::Molecules::RetroScanner.new(root)
+      results = scanner.scan_in_folder("all")
+
+      assert_equal 2, results.length
+    end
+  end
 end

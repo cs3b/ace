@@ -17,7 +17,8 @@ module Ace
           DESC
 
           example [
-            '                           # All tasks',
+            '                           # Active tasks (root only, default)',
+            '--in all                   # All tasks including archived/maybe',
             '--in maybe                 # Tasks in _maybe/',
             '--status pending           # Filter by status',
             '--tags ux,design           # Tasks matching any tag',
@@ -27,7 +28,7 @@ module Ace
 
           option :status, type: :string,  aliases: %w[-s], desc: "Filter by status (pending, in-progress, done, blocked)"
           option :tags,   type: :string,  aliases: %w[-T], desc: "Filter by tags (comma-separated, any match)"
-          option :in,     type: :string,  aliases: %w[-i], desc: "Filter by folder (e.g. maybe, archive, next)"
+          option :in,     type: :string,  aliases: %w[-i], desc: "Filter by folder (next=root only [default], all=everything, maybe, archive)"
           option :root,   type: :string,  aliases: %w[-r], desc: "Override root path (subpath within tasks root)"
           option :filter, type: :array,   aliases: %w[-f], desc: "Filter by key:value (repeatable, supports key:a|b and key:!value)"
 
@@ -49,12 +50,9 @@ module Ace
               Ace::Task::Organisms::TaskManager.new
             end
 
-            tasks = manager.list(
-              status: status,
-              in_folder: in_folder,
-              tags: tags,
-              filters: filters
-            )
+            list_opts = { status: status, tags: tags, filters: filters }
+            list_opts[:in_folder] = in_folder if in_folder
+            tasks = manager.list(**list_opts)
 
             puts Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks)
           end

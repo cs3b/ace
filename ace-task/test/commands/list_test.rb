@@ -23,13 +23,32 @@ class ListCommandTest < AceTaskTestCase
     FileUtils.rm_rf(@tmpdir)
   end
 
-  def test_list_all_tasks
+  def test_list_defaults_to_root_tasks_only
+    # Create a task in _maybe/ — should NOT appear in default list
+    maybe_dir = File.join(@tasks_dir, "_maybe")
+    create_fixture_task("8pp.t.s9y", "Maybe Task", status: "pending", root: maybe_dir)
+
     output = capture_io do
       Ace::Task::TaskCLI.start(["list"])
     end.first
 
     assert_match(/Fix Login Bug/, output)
     assert_match(/Add Dark Mode/, output)
+    refute_match(/Maybe Task/, output)
+  end
+
+  def test_list_in_all_shows_everything
+    # Create a task in _maybe/
+    maybe_dir = File.join(@tasks_dir, "_maybe")
+    create_fixture_task("8pp.t.s9y", "Maybe Task", status: "pending", root: maybe_dir)
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["list", "--in", "all"])
+    end.first
+
+    assert_match(/Fix Login Bug/, output)
+    assert_match(/Add Dark Mode/, output)
+    assert_match(/Maybe Task/, output)
   end
 
   def test_list_filter_by_status

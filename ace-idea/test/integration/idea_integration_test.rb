@@ -56,7 +56,7 @@ class IdeaIntegrationTest < AceIdeaTestCase
       assert_equal "in-progress", moved.status
 
       # Step 7: List all ideas - should appear in archive
-      all_ideas = manager.list
+      all_ideas = manager.list(in_folder: "all")
       assert_equal 1, all_ideas.length
       assert_equal id, all_ideas.first.id
 
@@ -66,9 +66,8 @@ class IdeaIntegrationTest < AceIdeaTestCase
       assert_equal id, archived.first.id
 
       # Step 9: Verify root is now empty (idea moved out)
-      root_ideas = manager.list
-      root_only = root_ideas.select { |i| i.special_folder.nil? }
-      assert_equal 0, root_only.length
+      root_ideas = manager.list(in_folder: "next")
+      assert_equal 0, root_ideas.length
 
       # Step 10: Move back to root
       back_at_root = manager.move(id, to: "root")
@@ -276,7 +275,7 @@ class IdeaIntegrationTest < AceIdeaTestCase
       manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
 
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      ideas = manager.list
+      ideas = manager.list(in_folder: "all")
       elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
 
       assert_equal idea_count, ideas.length, "Should find all #{idea_count} ideas"
@@ -298,7 +297,7 @@ class IdeaIntegrationTest < AceIdeaTestCase
       manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
 
       start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
-      ideas = manager.list
+      ideas = manager.list(in_folder: "all")
       elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
 
       assert_equal 100, ideas.length

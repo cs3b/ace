@@ -20,13 +20,13 @@ module Ace
           example [
             'q7w --to archive       # Move to _archive/',
             'q7w --to maybe         # Move to _maybe/',
-            'q7w --to next          # Move to _next/',
+            'q7w --to anytime       # Move to _anytime/',
             'q7w --to root          # Move back to root (no special folder)'
           ]
 
           argument :ref, required: true, desc: "Idea reference (6-char ID or 3-char shortcut)"
 
-          option :to, type: :string, required: true, aliases: %w[-t], desc: "Target folder (archive, maybe, next, root)"
+          option :to, type: :string, required: true, aliases: %w[-t], desc: "Target folder (archive, maybe, anytime, root)"
 
           option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"

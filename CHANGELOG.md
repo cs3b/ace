@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.703] - 2026-03-02
+
+### Added
+- **ace-support-items v0.6.0**: Virtual filter concept in `SpecialFolderDetector` — `virtual_filter?` method resolves "next" and "all" to symbols for list filtering without physical folders
+- **ace-task v0.5.0**: `TaskScanner#scan_in_folder` method with virtual filter support
+
+### Changed
+- **ace-support-items v0.6.0**: Remove `_next` from physical special folders — "next" is now a virtual filter meaning "root items only"
+- **ace-task v0.5.0**: `list` defaults to `--in next` (root tasks only); use `--in all` for previous behavior
+- **ace-idea v0.6.0**: `list` defaults to `--in next` (root ideas only); use `--in all` for previous behavior
+- **ace-retro v0.3.0**: `list` defaults to `--in next` (root retros only); use `--in all` for previous behavior
+
 ## [0.9.702] - 2026-03-01
 
 ### Changed

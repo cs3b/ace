@@ -18,7 +18,8 @@ module Ace
           DESC
 
           example [
-            '                           # All retros',
+            '                           # Active retros (root only, default)',
+            '--in all                   # All retros including archived',
             '--in archive               # Retros in _archive/',
             '--status active            # Filter by status',
             '--type standard            # Filter by type',
@@ -29,7 +30,7 @@ module Ace
           option :status, type: :string,  aliases: %w[-s], desc: "Filter by status (active, done)"
           option :type,   type: :string,  aliases: %w[-t], desc: "Filter by type (standard, conversation-analysis, self-review)"
           option :tags,   type: :string,  aliases: %w[-T], desc: "Filter by tags (comma-separated, any match)"
-          option :in,     type: :string,  aliases: %w[-i], desc: "Filter by folder (e.g. archive)"
+          option :in,     type: :string,  aliases: %w[-i], desc: "Filter by folder (next=root only [default], all=everything, archive)"
           option :root,   type: :string,  aliases: %w[-r], desc: "Override root path"
 
           option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
@@ -46,12 +47,9 @@ module Ace
             manager_opts = {}
             manager_opts[:root_dir] = options[:root] if options[:root]
             manager = Ace::Retro::Organisms::RetroManager.new(**manager_opts)
-            retros = manager.list(
-              status: status,
-              type: type,
-              in_folder: in_folder,
-              tags: tags
-            )
+            list_opts = { status: status, type: type, tags: tags }
+            list_opts[:in_folder] = in_folder if in_folder
+            retros = manager.list(**list_opts)
 
             puts Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros)
           end

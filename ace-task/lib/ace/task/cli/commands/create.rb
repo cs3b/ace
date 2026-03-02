@@ -20,7 +20,7 @@ module Ace
             '"Fix login bug"                              # Create task with title',
             '"Fix auth" --priority high --tags auth,security  # With priority and tags',
             '"Setup DB" --child-of q7w                    # Create as subtask',
-            '"Quick task" --in next                       # Create in _next/ folder',
+            '"Quick task" --in maybe                      # Create in _maybe/ folder',
             '"Preview only" --dry-run                     # Show what would be created'
           ]
 

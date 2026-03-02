@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-02
+
+### Added
+- `TaskScanner#scan_in_folder` method with virtual filter support ("next" for root-only, "all" for everything)
+
+### Changed
+- `TaskManager#list` defaults to `in_folder: "next"` — shows only root tasks by default (excludes _archive, _maybe, etc.)
+- Use `--in all` to see all tasks including special folders (previous default behavior)
+- Remove `next: _next` from default config special folder mappings
+
 ## [0.4.3] - 2026-03-01
 
 ### Changed

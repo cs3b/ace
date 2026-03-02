@@ -172,6 +172,9 @@ module Ace
 
         def determine_target_dir(move_to)
           if move_to
+            if Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(move_to)
+              raise ArgumentError, "Cannot move to virtual filter '#{move_to}' — it is not a physical folder"
+            end
             normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to)
             candidate = File.expand_path(File.join(@root_dir, normalized))
             root_real = File.expand_path(@root_dir)

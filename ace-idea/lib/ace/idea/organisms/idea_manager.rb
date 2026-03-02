@@ -62,12 +62,12 @@ module Ace
 
         # List ideas with optional filtering
         # @param status [String, nil] Filter by status
-        # @param in_folder [String, nil] Filter by special folder
+        # @param in_folder [String, nil] Filter by special folder (default: "next" = root items only)
         # @param tags [Array<String>] Filter by tags (any match)
         # @param root [String, nil] Override root path (subpath within root_dir)
         # @param filters [Array<String>, nil] Generic filter strings (e.g., ["status:pending", "tags:ux|design"])
         # @return [Array<Idea>] List of ideas
-        def list(status: nil, in_folder: nil, tags: [], root: nil, filters: nil)
+        def list(status: nil, in_folder: "next", tags: [], root: nil, filters: nil)
           scan_root = if root
             candidate = File.expand_path(File.join(@root_dir, root))
             root_real = File.expand_path(@root_dir)
@@ -79,7 +79,7 @@ module Ace
             @root_dir
           end
           scanner = Molecules::IdeaScanner.new(scan_root)
-          scan_results = in_folder ? scanner.scan_in_folder(in_folder) : scanner.scan
+          scan_results = scanner.scan_in_folder(in_folder)
 
           loader = Molecules::IdeaLoader.new
           ideas = scan_results.filter_map do |sr|
