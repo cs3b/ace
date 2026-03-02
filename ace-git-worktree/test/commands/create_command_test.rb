@@ -94,7 +94,7 @@ class CreateCommandTest < Minitest::Test
   end
 
   def test_run_with_invalid_task_id
-    # Mock ace-taskflow availability and task fetch
+    # Mock ace-task availability and task fetch
     mock_worktree_manager = Minitest::Mock.new
     mock_worktree_manager.expect(:create_task, {
       success: false,

@@ -14,7 +14,7 @@ module Ace
         #
         # @example Create symlink to task directory
         #   linker = CurrentTaskLinker.new(project_root: "/project")
-        #   result = linker.link("/project/.ace-taskflow/v.0.9.0/tasks/145-feat/")
+        #   result = linker.link("/project/.ace-task/v.0.9.0/tasks/145-feat/")
         #   # => { success: true, symlink_path: "/project/_current", target: "..." }
         #
         # @example Remove symlink

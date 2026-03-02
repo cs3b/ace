@@ -2,11 +2,11 @@
 
 require_relative "../atoms/task_id_extractor"
 
-# Try to require ace-taskflow API for direct integration (organism level only)
+# Try to require ace-task API for direct integration (organism level only)
 begin
-  require "ace/taskflow/organisms/task_manager"
+  require "ace/task/organisms/task_manager"
 rescue LoadError
-  # ace-taskflow not available
+  # ace-task not available
 end
 
 module Ace
@@ -15,17 +15,13 @@ module Ace
       module Molecules
         # Task fetcher molecule
         #
-        # Fetches task data from ace-taskflow by delegating to its TaskManager.
+        # Fetches task data from ace-task by delegating to its TaskManager.
         # Uses organism-level API which handles all path resolution internally.
         #
         # @example Fetch task data
         #   fetcher = TaskFetcher.new
-        #   task = fetcher.fetch("081")
+        #   task = fetcher.fetch("8pp.t.q7w")
         #   task[:title] # => "Fix authentication bug"
-        #
-        # @example Fetch subtask data
-        #   task = fetcher.fetch("121.01")
-        #   task[:id] # => "v.0.9.0+task.121.01"
         #
         # @example Handle non-existent task
         #   task = fetcher.fetch("999")
@@ -40,15 +36,8 @@ module Ace
 
           # Fetch task data by reference
           #
-          # @param task_ref [String] Task reference (081, 121.01, task.081, v.0.9.0+task.121.01)
+          # @param task_ref [String] Task reference (e.g., "8pp.t.q7w", "081")
           # @return [Hash, nil] Task data hash or nil if not found
-          #
-          # @example
-          #   fetcher = TaskFetcher.new
-          #   task = fetcher.fetch("081")
-          #   task = fetcher.fetch("121.01")  # subtask
-          #   task = fetcher.fetch("task.121.01")
-          #   task = fetcher.fetch("v.0.9.0+task.121.01")
           def fetch(task_ref)
             return nil if task_ref.nil? || task_ref.empty?
 
@@ -56,12 +45,12 @@ module Ace
             return nil unless valid_task_reference?(task_ref)
 
             # Try organism-level API first (preferred)
-            if ace_taskflow_available?
+            if ace_task_available?
               begin
-                manager = Ace::Taskflow::Organisms::TaskManager.new
-                result = manager.show_task(task_ref)
+                manager = Ace::Task::Organisms::TaskManager.new
+                result = manager.show(task_ref)
                 puts "DEBUG: TaskManager result: #{result.inspect}" if ENV["DEBUG"]
-                return result if result
+                return task_to_hash(result) if result
               rescue StandardError => e
                 puts "DEBUG: TaskManager exception: #{e.message}" if ENV["DEBUG"]
                 puts "DEBUG: Backtrace: #{e.backtrace.first(3).join(', ')}" if ENV["DEBUG"]
@@ -74,31 +63,49 @@ module Ace
             fetch_via_cli(task_ref)
           end
 
-          # Check if ace-taskflow is available
+          # Check if ace-task is available
           #
-          # @return [Boolean] true if ace-taskflow API is available
-          def ace_taskflow_available?
-            defined?(Ace::Taskflow::Organisms::TaskManager)
+          # @return [Boolean] true if ace-task API is available
+          def ace_task_available?
+            defined?(Ace::Task::Organisms::TaskManager)
           end
 
-          # Get helpful error message when ace-taskflow is unavailable
+          # Legacy alias for backwards compatibility
+          alias_method :ace_taskflow_available?, :ace_task_available?
+
+          # Get helpful error message when ace-task is unavailable
           #
           # @return [String] User-friendly error message with installation guidance
-          def ace_taskflow_unavailable_message
+          def ace_task_unavailable_message
             <<~MESSAGE
-              ace-taskflow is not available.
+              ace-task is not available.
 
               Required for task-aware worktree operations.
 
-              In a mono-repo environment, ensure ace-taskflow is in your Gemfile.
+              In a mono-repo environment, ensure ace-task is in your Gemfile.
               For standalone installation:
-              1. Install ace-taskflow gem: gem install ace-taskflow
+              1. Install ace-task gem: gem install ace-task
 
               For more information: https://github.com/cs3b/ace-meta
             MESSAGE
           end
 
           private
+
+          # Convert a Task struct to a hash for backwards compatibility
+          #
+          # @param task [Ace::Task::Models::Task] Task struct
+          # @return [Hash] Task data hash
+          def task_to_hash(task)
+            {
+              id: task.id,
+              title: task.title,
+              status: task.status,
+              path: task.file_path,
+              task_number: Atoms::TaskIDExtractor.extract({ id: task.id }),
+              metadata: task.respond_to?(:metadata) ? (task.metadata || {}) : {}
+            }
+          end
 
           # Basic validation for task references
           #
@@ -130,8 +137,8 @@ module Ace
             require "open3"
 
             begin
-              # Use ace-taskflow CLI to get task data (runs in current directory)
-              cmd = ["bundle", "exec", "ace-taskflow", "task", "show", task_ref.to_s, "--content"]
+              # Use ace-task CLI to get task data (runs in current directory)
+              cmd = ["bundle", "exec", "ace-task", "show", task_ref.to_s]
               stdout, stderr, status = Open3.capture3(*cmd)
 
               return nil unless status.success?
@@ -146,7 +153,7 @@ module Ace
 
           # Parse CLI output to extract task data
           #
-          # @param output [String] CLI output from ace-taskflow
+          # @param output [String] CLI output from ace-task
           # @return [Hash, nil] Task data hash or nil
           def parse_cli_output(output)
             lines = output.split("\n")
@@ -157,7 +164,6 @@ module Ace
               status: nil,
               id: nil,
               task_number: nil,
-              release: nil,
               path: nil,
               metadata: {}
             }
@@ -171,10 +177,6 @@ module Ace
               # Parse header information
               if line.start_with?("Task: ")
                 task_data[:id] = line.sub(/^Task:\s+/, "")
-                # Extract release from ID (task_number derived later via TaskIDExtractor)
-                if match = task_data[:id].match(/^(v\.[\d.]+)\+task\./)
-                  task_data[:release] = match[1]
-                end
               elsif line.start_with?("Title: ")
                 task_data[:title] = line.sub(/^Title:\s+/, "")
               elsif line.start_with?("Status: ")
@@ -211,18 +213,18 @@ module Ace
 
         public
 
-        # Get helpful error message when ace-taskflow is unavailable
+        # Get helpful error message when ace-task is unavailable
         #
         # @return [String] User-friendly error message with installation guidance
-        def ace_taskflow_unavailable_message
+        def ace_task_unavailable_message
           <<~MESSAGE
-            ace-taskflow is not available.
+            ace-task is not available.
 
             Required for task-aware worktree operations.
 
-            In a mono-repo environment, ensure ace-taskflow is in your Gemfile.
+            In a mono-repo environment, ensure ace-task is in your Gemfile.
             For standalone installation:
-            1. Install ace-taskflow gem: gem install ace-taskflow
+            1. Install ace-task gem: gem install ace-task
 
             For more information: https://github.com/cs3b/ace-meta
           MESSAGE
@@ -232,11 +234,11 @@ module Ace
         #
         # @return [Hash] { available: boolean, message: string }
         def check_availability_with_message
-          if ace_taskflow_available?
+          if ace_task_available?
             # API is available - this is the preferred method in mono-repo
-            { available: true, message: "ace-taskflow API is available" }
+            { available: true, message: "ace-task API is available" }
           else
-            { available: false, message: ace_taskflow_unavailable_message }
+            { available: false, message: ace_task_unavailable_message }
           end
         end
       end

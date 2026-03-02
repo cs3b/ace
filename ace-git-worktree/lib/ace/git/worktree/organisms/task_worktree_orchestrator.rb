@@ -529,7 +529,7 @@ module Ace
           # Uses CLI-provided target_branch if present, otherwise auto-detects from parent task.
           # For subtasks, returns parent's worktree branch. For orchestrators, returns "main".
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param options [Hash] Options hash (may contain :target_branch)
           # @return [String] Target branch name
           def resolve_target_branch(task_data, options)
@@ -555,7 +555,7 @@ module Ace
 
           # Create worktree metadata
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param target_branch [String, nil] PR target branch (for subtasks)
           # @return [WorktreeMetadata] Worktree metadata
           def create_worktree_metadata(task_data, target_branch: nil)
@@ -574,7 +574,7 @@ module Ace
 
           # Commit task changes
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param status [String] Task status
           # @return [Boolean] true if successful
           def commit_task_changes(task_data, status)
@@ -595,7 +595,7 @@ module Ace
 
           # Create worktree for task
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param worktree_metadata [WorktreeMetadata] Worktree metadata
           # @param source [String, nil] Git ref to use as branch start-point
           # @return [Hash] Worktree creation result
@@ -610,11 +610,11 @@ module Ace
 
           # Add worktree metadata to task
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param worktree_metadata [WorktreeMetadata] Worktree metadata
           # @return [Boolean] true if successful
           def add_worktree_metadata_to_task(task_data, worktree_metadata)
-            # Try to use ace-taskflow update command first
+            # Try to use ace-task update command first
             task_id = extract_task_id(task_data)
             if @task_status_updater.add_worktree_metadata(task_id, worktree_metadata)
               return true
@@ -627,7 +627,7 @@ module Ace
 
           # Find worktree for task
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [WorktreeInfo, nil] Worktree info or nil
           def find_worktree_for_task_data(task_data)
             task_id = extract_task_id(task_data)
@@ -636,7 +636,7 @@ module Ace
 
           # Remove worktree metadata from task
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [Boolean] true if successful
           def remove_worktree_metadata_from_task(task_data)
             # This would need implementation to find and update the task file
@@ -719,7 +719,7 @@ module Ace
           # Creates a draft PR targeting the source branch (start_point) from which
           # the worktree branch was created.
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param worktree_result [Hash] Worktree creation result with :branch, :start_point
           # @param options [Hash] Options (may include :source for base branch override)
           # @return [Hash] Result with :success, :pr_number, :pr_url, :existing, :error
@@ -783,7 +783,7 @@ module Ace
 
           # Save PR metadata to task file
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param pr_result [Hash] PR creation result with :pr_number, :pr_url
           # @return [Boolean] true if successful
           def save_pr_to_task(task_data, pr_result)
@@ -803,7 +803,7 @@ module Ace
           # This creates an initial commit in the worktree branch, enabling PR creation
           # (GitHub requires at least one commit difference between branches for a PR).
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param worktree_result [Hash] Worktree creation result with :worktree_path
           # @param options [Hash] Options (may include :push_remote)
           # @return [Hash] Result with :success, :error
@@ -881,7 +881,7 @@ module Ace
           # Get relative task path from absolute path
           #
           # Extracts the relative path portion from an absolute task path.
-          # E.g., "/project/.ace-taskflow/v.0.9.0/tasks/145-feat/" -> ".ace-taskflow/v.0.9.0/tasks/145-feat/"
+          # E.g., "/project/.ace-task/v.0.9.0/tasks/145-feat/" -> ".ace-task/v.0.9.0/tasks/145-feat/"
           #
           # @param absolute_path [String] Absolute path to task directory
           # @return [String] Relative path from project root

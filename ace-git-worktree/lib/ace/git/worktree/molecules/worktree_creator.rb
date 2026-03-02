@@ -34,7 +34,7 @@ module Ace
 
           # Create a worktree for a specific task
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param config [WorktreeConfig] Worktree configuration
           # @param counter [Integer, nil] Counter for multiple worktrees of same task
           # @param git_root [String, nil] Git repository root (auto-detected if nil)
@@ -259,7 +259,7 @@ module Ace
 
           # Check if a worktree already exists for the given criteria
           #
-          # @param task_data [Hash, nil] Task data hash from ace-taskflow
+          # @param task_data [Hash, nil] Task data hash from ace-task
           # @param branch_name [String, nil] Branch name
           # @param worktree_path [String, nil] Worktree path
           # @return [WorktreeInfo, nil] Existing worktree info or nil
@@ -297,7 +297,7 @@ module Ace
 
           # Generate a unique worktree path for a task (handles conflicts)
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param config [WorktreeConfig] Worktree configuration
           # @param git_root [String] Git repository root
           # @return [String] Unique worktree path
@@ -498,7 +498,7 @@ module Ace
 
           # Extract task ID from task data
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [String] Task ID (e.g., "094")
           def extract_task_id_from_data(task_data)
             # Use shared extractor that preserves subtask IDs (e.g., "121.01")

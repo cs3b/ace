@@ -65,7 +65,7 @@ class CliTest < Minitest::Test
     system("git", "config", "user.name", "Test User", out: File::NULL)
     system("git", "config", "user.email", "test@example.com", out: File::NULL)
 
-    # Mock ace-taskflow output
+    # Mock ace-task output
     task_output = <<~TASK
       # Task 081: Fix authentication bug
 
@@ -82,7 +82,7 @@ class CliTest < Minitest::Test
       - [ ] Add unit tests
     TASK
 
-    # Stub the ace-taskflow command and execute CLI inside the stub block
+    # Stub the ace-task command and execute CLI inside the stub block
     Open3.stub(:capture3, [task_output, "", 0]) do
       output = run_cli(["create", "081", "--dry-run"])
       # Check output for successful dry-run message
@@ -188,14 +188,14 @@ class CliTest < Minitest::Test
   end
 
   # Test error handling for missing dependencies
-  def test_handles_missing_ace_taskflow_gracefully
-    # Mock ace-taskflow as unavailable
-    Open3.stub(:capture3, ["", "command not found: ace-taskflow", 1]) do
+  def test_handles_missing_ace_task_gracefully
+    # Mock ace-task as unavailable
+    Open3.stub(:capture3, ["", "command not found: ace-task", 1]) do
       output = run_cli(["create", "081"])
 
       # Should handle gracefully - check for error message
       combined_output = output.join
-      assert_match(/Error:|Failed to create|ace-taskflow/i, combined_output)
+      assert_match(/Error:|Failed to create|ace-task/i, combined_output)
     end
   end
 
