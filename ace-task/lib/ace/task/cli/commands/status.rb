@@ -32,12 +32,28 @@ module Ace
             config = Ace::Task::Molecules::TaskConfigLoader.load
             limits = resolve_limits(config, options)
 
+            score_fn = ->(task) do
+              ssc = Ace::Support::Items::Atoms::SortScoreCalculator
+              weight = ssc.priority_weight(task.priority)
+              age = task.created_at ? [(Time.now - task.created_at) / 86_400.0, 0].max : 0
+              ssc.compute(priority_weight: weight, age_days: age, status: task.status)
+            end
+
+            smart_sorter = ->(items) do
+              Ace::Support::Items::Molecules::SmartSorter.sort(
+                items,
+                score_fn: score_fn,
+                pin_accessor: ->(t) { t.metadata&.dig("position") }
+              )
+            end
+
             categorized = Ace::Support::Items::Molecules::StatusCategorizer.categorize(
               all_tasks,
               up_next_limit: limits[:up_next],
               recently_done_limit: limits[:recently_done],
               pending_statuses: %w[pending],
-              done_statuses: %w[done]
+              done_statuses: %w[done],
+              up_next_sorter: smart_sorter
             )
 
             puts Ace::Task::Molecules::TaskDisplayFormatter.format_status(

@@ -28,7 +28,11 @@ module Ace
             'q7w --move-to next',
             'q7w.a --move-as-child-of none    # Promote subtask to standalone',
             'q7w --move-as-child-of self      # Convert to orchestrator',
-            'q7w --move-as-child-of abc       # Demote to subtask of abc'
+            'q7w --move-as-child-of abc       # Demote to subtask of abc',
+            'q7w --position first             # Pin to sort before all tasks',
+            'q7w --position last              # Pin to sort after existing tasks',
+            'q7w --position after:abc         # Pin to sort after task abc',
+            'q7w --remove position            # Remove pin, return to auto-sort'
           ]
 
           argument :ref, required: true, desc: "Task reference (full ID, short ref, or suffix)"
@@ -38,6 +42,7 @@ module Ace
           option :remove, type: :array, desc: "Remove from array field: key=value (comma-separated for multiple)"
           option :move_to, type: :string, aliases: %w[-m], desc: "Move to folder (archive, maybe, anytime, next)"
           option :move_as_child_of, type: :string, desc: "Reparent: <parent_ref>, 'none' (promote), 'self' (orchestrator)"
+          option :position, type: :string, aliases: %w[-p], desc: "Set position: first, last, after:<ref>, before:<ref>"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
@@ -51,11 +56,14 @@ module Ace
             remove_args     = Array(options[:remove])
             move_to         = options[:move_to]
             move_as_child   = options[:move_as_child_of]
+            position_arg    = options[:position]
 
-            if set_args.empty? && add_args.empty? && remove_args.empty? && move_to.nil? && move_as_child.nil?
-              warn "Error: at least one of --set, --add, --remove, --move-to, or --move-as-child-of is required"
+            has_any_op = !set_args.empty? || !add_args.empty? || !remove_args.empty? ||
+                         move_to || move_as_child || position_arg
+            unless has_any_op
+              warn "Error: at least one of --set, --add, --remove, --move-to, --move-as-child-of, or --position is required"
               warn ""
-              warn "Usage: ace-task update REF [--set K=V]... [--move-to FOLDER] [--move-as-child-of REF]"
+              warn "Usage: ace-task update REF [--set K=V]... [--move-to FOLDER] [--position first|last|after:REF|before:REF]"
               raise Ace::Core::CLI::Error.new("No update operations specified")
             end
 
@@ -68,6 +76,13 @@ module Ace
             remove_hash = parse_kv_pairs(remove_args)
 
             manager = Ace::Task::Organisms::TaskManager.new
+
+            # Resolve --position into a set or remove operation
+            if position_arg
+              pos_value = resolve_position(position_arg, manager)
+              set_hash["position"] = pos_value
+            end
+
             task = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash,
                                   move_to: move_to, move_as_child_of: move_as_child)
 
@@ -101,6 +116,43 @@ module Ace
           end
 
           private
+
+          # Resolve a --position argument into a B36TS value.
+          # Supports: first, last, after:<ref>, before:<ref>
+          def resolve_position(arg, manager)
+            pg = Ace::Support::Items::Atoms::PositionGenerator
+
+            case arg
+            when "first"
+              pg.first
+            when "last"
+              pg.last
+            when /\Aafter:(.+)\z/
+              target = manager.show($1)
+              raise Ace::Core::CLI::Error.new("Task '#{$1}' not found for position reference") unless target
+
+              target_pos = target.metadata&.dig("position")
+              if target_pos
+                pg.after(target_pos)
+              else
+                # Target has no position — generate a current timestamp
+                pg.last
+              end
+            when /\Abefore:(.+)\z/
+              target = manager.show($1)
+              raise Ace::Core::CLI::Error.new("Task '#{$1}' not found for position reference") unless target
+
+              target_pos = target.metadata&.dig("position")
+              if target_pos
+                pg.before(target_pos)
+              else
+                # Target has no position — generate a very early timestamp
+                pg.first
+              end
+            else
+              raise Ace::Core::CLI::Error.new("Invalid --position value '#{arg}': expected first, last, after:<ref>, or before:<ref>")
+            end
+          end
 
           # Parse ["key=value", "key=value2"] into {"key" => typed_value, ...}
           def parse_kv_pairs(args)
