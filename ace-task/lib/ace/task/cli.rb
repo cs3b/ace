@@ -6,7 +6,6 @@ require_relative "version"
 require_relative "cli/commands/create"
 require_relative "cli/commands/show"
 require_relative "cli/commands/list"
-require_relative "cli/commands/move"
 require_relative "cli/commands/update"
 require_relative "cli/commands/doctor"
 require_relative "cli/commands/status"
@@ -23,8 +22,7 @@ module Ace
         ["create", "Create a new task"],
         ["show",   "Show task details"],
         ["list",   "List tasks"],
-        ["move",   "Move a task to a different folder"],
-        ["update", "Update task metadata"],
+        ["update", "Update task metadata (fields, move, reparent)"],
         ["doctor", "Run health checks on tasks"],
         ["status", "Show task status overview"]
       ].freeze
@@ -36,8 +34,9 @@ module Ace
         "ace-task show q7w --tree",
         "ace-task list --status pending",
         "ace-task list --in maybe",
-        "ace-task move q7w --to archive",
+        "ace-task update q7w --set status=done --move-to archive",
         "ace-task update q7w --set status=done --set priority=high",
+        "ace-task update q7w --move-to next",
         "ace-task doctor",
         "ace-task doctor --auto-fix --dry-run",
         "ace-task status",
@@ -47,7 +46,6 @@ module Ace
       register "create", CLI::Commands::Create
       register "show",   CLI::Commands::Show
       register "list",   CLI::Commands::List
-      register "move",   CLI::Commands::Move
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status

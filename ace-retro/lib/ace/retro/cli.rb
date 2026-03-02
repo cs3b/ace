@@ -6,7 +6,6 @@ require_relative "../retro/version"
 require_relative "cli/commands/create"
 require_relative "cli/commands/show"
 require_relative "cli/commands/list"
-require_relative "cli/commands/move"
 require_relative "cli/commands/update"
 require_relative "cli/commands/doctor"
 
@@ -24,8 +23,7 @@ module Ace
         ["create", "Create a new retro"],
         ["show",   "Show retro details"],
         ["list",   "List retros"],
-        ["move",   "Move retro to a different folder"],
-        ["update", "Update retro metadata"],
+        ["update", "Update retro metadata (fields and move)"],
         ["doctor", "Run health checks on retros"]
       ].freeze
 
@@ -33,15 +31,15 @@ module Ace
         'ace-retro create "Sprint Review" --type standard --tags sprint,team',
         "ace-retro show q7w",
         "ace-retro list --in archive --status active",
-        "ace-retro move q7w --to archive",
+        "ace-retro update q7w --set status=done --move-to archive",
         "ace-retro update q7w --set status=done --add tags=reviewed",
+        "ace-retro update q7w --move-to next",
         "ace-retro doctor --verbose"
       ].freeze
 
       register "create", CLI::Commands::Create
       register "show",   CLI::Commands::Show
       register "list",   CLI::Commands::List
-      register "move",   CLI::Commands::Move
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
 

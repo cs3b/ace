@@ -239,58 +239,6 @@ class IdeaCliTest < AceIdeaTestCase
   end
 
   # ---------------------------------------------------------------------------
-  # move command
-  # ---------------------------------------------------------------------------
-
-  def test_move_to_special_folder
-    with_ideas_dir do |root|
-      id = "8ppq7w"
-      create_idea_fixture(root, id: id, slug: "moveable-idea")
-      with_cli_root(root) do
-        result = run_cli(["move", id, "--to", "archive"])
-        assert_equal 0, result[:exit_code], result[:stderr]
-        assert_match(/Idea moved:/, result[:stdout])
-        assert_match(/_archive/, result[:stdout])
-      end
-    end
-  end
-
-  def test_move_to_root
-    with_ideas_dir do |root|
-      id = "8ppq7w"
-      create_idea_fixture(root, id: id, slug: "moveable-idea", special_folder: "_maybe")
-      with_cli_root(root) do
-        result = run_cli(["move", id, "--to", "root"])
-        assert_equal 0, result[:exit_code], result[:stderr]
-        assert_match(/Idea moved:/, result[:stdout])
-        assert_match(/root/, result[:stdout])
-      end
-    end
-  end
-
-  def test_move_requires_to_option
-    with_ideas_dir do |root|
-      id = "8ppq7w"
-      create_idea_fixture(root, id: id, slug: "moveable-idea")
-      with_cli_root(root) do
-        result = run_cli(["move", id])
-        # dry-cli will show error about missing required option
-        refute_equal 0, result[:exit_code]
-      end
-    end
-  end
-
-  def test_move_not_found
-    with_ideas_dir do |root|
-      with_cli_root(root) do
-        result = run_cli(["move", "zzz", "--to", "archive"])
-        assert_equal 1, result[:exit_code]
-        assert_match(/not found/, result[:stderr])
-      end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # update command
   # ---------------------------------------------------------------------------
 
@@ -339,6 +287,48 @@ class IdeaCliTest < AceIdeaTestCase
         updated = manager.show(id)
         assert_includes updated.tags, "keep"
         refute_includes updated.tags, "remove-me"
+      end
+    end
+  end
+
+  def test_update_move_to_archive
+    with_ideas_dir do |root|
+      id = "8ppq7w"
+      create_idea_fixture(root, id: id, slug: "moveable-idea")
+      with_cli_root(root) do
+        result = run_cli(["update", id, "--move-to", "archive"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/Idea updated:/, result[:stdout])
+        assert_match(/_archive/, result[:stdout])
+      end
+    end
+  end
+
+  def test_update_set_and_move_to
+    with_ideas_dir do |root|
+      id = "8ppq7w"
+      create_idea_fixture(root, id: id, slug: "combo-idea", status: "pending")
+      with_cli_root(root) do
+        result = run_cli(["update", id, "--set", "status=done", "--move-to", "archive"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/_archive/, result[:stdout])
+
+        # Verify status was updated
+        manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
+        updated = manager.show(id)
+        assert_equal "done", updated.status
+      end
+    end
+  end
+
+  def test_update_move_to_next
+    with_ideas_dir do |root|
+      id = "8ppq7w"
+      create_idea_fixture(root, id: id, slug: "moveable-idea", special_folder: "_maybe")
+      with_cli_root(root) do
+        result = run_cli(["update", id, "--move-to", "next"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/root/, result[:stdout])
       end
     end
   end
@@ -427,19 +417,19 @@ class IdeaCliTest < AceIdeaTestCase
     end
   end
 
-  def test_move_with_git_commit_calls_committer
+  def test_update_move_to_with_git_commit_calls_committer
     with_ideas_dir do |root|
       id = "8ppq7w"
       create_idea_fixture(root, id: id, slug: "gc-idea")
       with_cli_root(root) do
         commit_args = nil
         Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
-          result = run_cli(["move", id, "--to", "archive", "--git-commit"])
+          result = run_cli(["update", id, "--move-to", "archive", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end
 
         refute_nil commit_args, "Expected GitCommitter.commit to be called"
-        assert_match(/move idea/, commit_args[:intention])
+        assert_match(/update idea.*move/, commit_args[:intention])
       end
     end
   end
@@ -462,7 +452,6 @@ class IdeaCliTest < AceIdeaTestCase
     assert_match(/create/, result[:stdout])
     assert_match(/show/, result[:stdout])
     assert_match(/list/, result[:stdout])
-    assert_match(/move/, result[:stdout])
     assert_match(/update/, result[:stdout])
   end
 end

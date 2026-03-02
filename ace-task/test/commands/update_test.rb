@@ -81,6 +81,42 @@ class UpdateCommandTest < AceTaskTestCase
     refute_match(/- auth/, content)
   end
 
+  def test_update_move_to_archive
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["update", "q7w", "--move-to", "archive"])
+    end.first
+
+    assert_match(/Task updated.*archive/, output)
+    assert Dir.exist?(File.join(@tasks_dir, "_archive"))
+  end
+
+  def test_update_set_and_move_to
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=done", "--move-to", "archive"])
+    end.first
+
+    assert_match(/Task updated.*archive/, output)
+    # Verify status was updated
+    spec_files = Dir.glob(File.join(@tasks_dir, "_archive", "**", "*.s.md"))
+    assert_equal 1, spec_files.length
+    content = File.read(spec_files.first)
+    assert_match(/status: done/, content)
+  end
+
+  def test_update_move_to_next
+    # First move to maybe
+    capture_io do
+      Ace::Task::TaskCLI.start(["update", "q7w", "--move-to", "maybe"])
+    end
+
+    # Then move back to root via "next"
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["update", "q7w", "--move-to", "next"])
+    end.first
+
+    assert_match(/Task updated.*root/, output)
+  end
+
   def test_update_no_operations_raises_error
     assert_raises(Ace::Core::CLI::Error) do
       capture_io do

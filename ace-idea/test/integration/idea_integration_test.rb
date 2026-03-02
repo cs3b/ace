@@ -49,8 +49,8 @@ class IdeaIntegrationTest < AceIdeaTestCase
       refute_includes after_remove.tags, "integration"
       assert_includes after_remove.tags, "test"
 
-      # Step 6: Move to archive
-      moved = manager.move(id, to: "archive")
+      # Step 6: Move to archive via update --move-to
+      moved = manager.update(id, move_to: "archive")
       refute_nil moved
       assert_equal "_archive", moved.special_folder
       assert_equal "in-progress", moved.status
@@ -69,8 +69,8 @@ class IdeaIntegrationTest < AceIdeaTestCase
       root_ideas = manager.list(in_folder: "next")
       assert_equal 0, root_ideas.length
 
-      # Step 10: Move back to root
-      back_at_root = manager.move(id, to: "root")
+      # Step 10: Move back to root via update --move-to
+      back_at_root = manager.update(id, move_to: "root")
       refute_nil back_at_root
       assert_nil back_at_root.special_folder
     end
