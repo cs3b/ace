@@ -28,7 +28,6 @@ jobs:
           - ace-test-runner
           - ace-bundle
           - ace-support-nav
-          - ace-taskflow
           - ace-git-commit
           - ace-llm
           - ace-llm-providers-cli
