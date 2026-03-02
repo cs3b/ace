@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 require "test_helper"
-require "ace/taskflow"
-require "ace/taskflow/organisms/task_manager"
+require "ace/task"
+require "ace/task/organisms/task_manager"
 
 class TaskPathResolverTest < Minitest::Test
   def setup
@@ -14,68 +14,71 @@ class TaskPathResolverTest < Minitest::Test
   end
 
   # ============================================
-  # Tests for resolve() - delegating to ace-taskflow
+  # Tests for resolve() - delegating to ace-task
   # ============================================
 
   def test_resolve_with_valid_task_id_returns_task_directory
-    task_data = {
-      path: "/project/.ace-taskflow/v.0.9.0/tasks/117-feature-name/task.117.s.md",
-      id: "v.0.9.0+task.117",
+    mock_task = mock_task_struct(
+      path: "/project/.ace-tasks/8pp/t/8pp.t.q7w-feature-name",
+      file_path: "/project/.ace-tasks/8pp/t/8pp.t.q7w-feature-name/8pp.t.q7w-feature-name.s.md",
+      id: "8pp.t.q7w",
       title: "Feature Name"
-    }
+    )
 
-    @mock_manager.expect(:show_task, task_data, ["117"])
+    @mock_manager.expect(:show, mock_task, ["117"])
 
-    Ace::Taskflow::Organisms::TaskManager.stub :new, @mock_manager do
+    Ace::Task::Organisms::TaskManager.stub :new, @mock_manager do
       result = Ace::PromptPrep::Atoms::TaskPathResolver.resolve("117")
 
       assert result[:found]
-      assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/117-feature-name", result[:path]
-      assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/117-feature-name/prompts", result[:prompts_path]
+      assert_equal "/project/.ace-tasks/8pp/t/8pp.t.q7w-feature-name", result[:path]
+      assert_equal "/project/.ace-tasks/8pp/t/8pp.t.q7w-feature-name/prompts", result[:prompts_path]
       assert_nil result[:error]
     end
   end
 
   def test_resolve_with_subtask_id_returns_subtask_directory
-    task_data = {
-      path: "/project/.ace-taskflow/v.0.9.0/tasks/121-ace-prep/121.01-archive.s.md",
-      id: "v.0.9.0+task.121.01",
+    mock_task = mock_task_struct(
+      path: "/project/.ace-tasks/8pp/t/8pp.t.q7w-ace-prep",
+      file_path: "/project/.ace-tasks/8pp/t/8pp.t.q7w-ace-prep/8pp.t.q7w-ace-prep.s.md",
+      id: "8pp.t.q7w",
       title: "Archive Feature"
-    }
+    )
 
-    @mock_manager.expect(:show_task, task_data, ["121.01"])
+    @mock_manager.expect(:show, mock_task, ["121.01"])
 
-    Ace::Taskflow::Organisms::TaskManager.stub :new, @mock_manager do
+    Ace::Task::Organisms::TaskManager.stub :new, @mock_manager do
       result = Ace::PromptPrep::Atoms::TaskPathResolver.resolve("121.01")
 
       assert result[:found]
-      assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/121-ace-prep", result[:path]
-      assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/121-ace-prep/prompts", result[:prompts_path]
+      assert_equal "/project/.ace-tasks/8pp/t/8pp.t.q7w-ace-prep", result[:path]
+      assert_equal "/project/.ace-tasks/8pp/t/8pp.t.q7w-ace-prep/prompts", result[:prompts_path]
       assert_nil result[:error]
     end
   end
 
   def test_resolve_with_qualified_id_returns_task_directory
-    task_data = {
-      path: "/project/.ace-taskflow/v.0.9.0/tasks/117-feature/task.117.s.md",
-      id: "v.0.9.0+task.117",
+    mock_task = mock_task_struct(
+      path: "/project/.ace-tasks/8pp/t/8pp.t.q7w-feature",
+      file_path: "/project/.ace-tasks/8pp/t/8pp.t.q7w-feature/8pp.t.q7w-feature.s.md",
+      id: "8pp.t.q7w",
       title: "Feature"
-    }
+    )
 
-    @mock_manager.expect(:show_task, task_data, ["v.0.9.0+task.117"])
+    @mock_manager.expect(:show, mock_task, ["8pp.t.q7w"])
 
-    Ace::Taskflow::Organisms::TaskManager.stub :new, @mock_manager do
-      result = Ace::PromptPrep::Atoms::TaskPathResolver.resolve("v.0.9.0+task.117")
+    Ace::Task::Organisms::TaskManager.stub :new, @mock_manager do
+      result = Ace::PromptPrep::Atoms::TaskPathResolver.resolve("8pp.t.q7w")
 
       assert result[:found]
-      assert_equal "/project/.ace-taskflow/v.0.9.0/tasks/117-feature", result[:path]
+      assert_equal "/project/.ace-tasks/8pp/t/8pp.t.q7w-feature", result[:path]
     end
   end
 
   def test_resolve_with_non_existent_task_returns_error
-    @mock_manager.expect(:show_task, nil, ["999"])
+    @mock_manager.expect(:show, nil, ["999"])
 
-    Ace::Taskflow::Organisms::TaskManager.stub :new, @mock_manager do
+    Ace::Task::Organisms::TaskManager.stub :new, @mock_manager do
       result = Ace::PromptPrep::Atoms::TaskPathResolver.resolve("999")
 
       refute result[:found]
@@ -86,11 +89,11 @@ class TaskPathResolverTest < Minitest::Test
   end
 
   def test_resolve_with_exception_returns_error
-    def @mock_manager.show_task(_)
+    def @mock_manager.show(_)
       raise StandardError, "Connection failed"
     end
 
-    Ace::Taskflow::Organisms::TaskManager.stub :new, @mock_manager do
+    Ace::Task::Organisms::TaskManager.stub :new, @mock_manager do
       result = Ace::PromptPrep::Atoms::TaskPathResolver.resolve("117")
 
       refute result[:found]
@@ -203,4 +206,15 @@ class TaskPathResolverTest < Minitest::Test
     assert_equal "121", result
   end
 
+  private
+
+  def mock_task_struct(path:, file_path:, id:, title:, status: "pending")
+    task = Object.new
+    task.define_singleton_method(:path) { path }
+    task.define_singleton_method(:file_path) { file_path }
+    task.define_singleton_method(:id) { id }
+    task.define_singleton_method(:title) { title }
+    task.define_singleton_method(:status) { status }
+    task
+  end
 end

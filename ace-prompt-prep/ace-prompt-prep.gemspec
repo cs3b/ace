@@ -45,7 +45,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-llm', '~> 0.23'
   spec.add_dependency 'ace-support-nav', '~> 0.17'
   spec.add_dependency 'ace-support-core', '~> 0.24' # dry-cli infrastructure (task 179.01)
-  spec.add_dependency 'ace-taskflow', '~> 0.41'
+  spec.add_dependency 'ace-task', '~> 0.11'
   spec.add_dependency 'ace-b36ts', '~> 0.7' # Base36 compact IDs (task 149, renamed 202.03)
   spec.add_dependency 'dry-cli', '~> 1.0'
 

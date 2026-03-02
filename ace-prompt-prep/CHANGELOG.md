@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.9] - 2026-03-02
+
+### Changed
+- Replace `ace-taskflow` dependency with `ace-task` — migrate `TaskPathResolver` to use `Ace::Task::Organisms::TaskManager.show()` API (returns struct with `.path` instead of hash with `:path`)
+
 ## [0.16.8] - 2026-02-25
 
 ### Technical
