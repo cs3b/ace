@@ -15,6 +15,7 @@ require_relative "items/atoms/item_id_formatter"
 require_relative "items/atoms/item_id_parser"
 require_relative "items/atoms/item_statistics"
 require_relative "items/atoms/stats_line_formatter"
+require_relative "items/atoms/relative_time_formatter"
 
 # Models
 require_relative "items/models/scan_result"
@@ -31,6 +32,7 @@ require_relative "items/molecules/base_formatter"
 require_relative "items/molecules/field_updater"
 require_relative "items/molecules/folder_mover"
 require_relative "items/molecules/llm_slug_generator"
+require_relative "items/molecules/status_categorizer"
 
 module Ace
   module Support
