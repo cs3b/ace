@@ -96,4 +96,29 @@ class UpdateCommandTest < AceTaskTestCase
       end
     end
   end
+
+  def test_update_with_git_commit_calls_committer
+    commit_args = nil
+    Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=done", "--git-commit"])
+      end
+    end
+
+    refute_nil commit_args, "Expected GitCommitter.commit to be called"
+    assert_equal 1, commit_args[:paths].length
+    assert_match(/\.ace-tasks/, commit_args[:paths].first)
+    assert_match(/update task/, commit_args[:intention])
+  end
+
+  def test_update_without_git_commit_does_not_call_committer
+    commit_called = false
+    Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**_kwargs) { commit_called = true }) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["update", "q7w", "--set", "status=done"])
+      end
+    end
+
+    refute commit_called, "Expected GitCommitter.commit NOT to be called"
+  end
 end

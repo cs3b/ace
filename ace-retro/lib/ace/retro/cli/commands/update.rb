@@ -32,6 +32,8 @@ module Ace
           option :add,    type: :string, repeat: true, desc: "Add to array field: key=value (can repeat)"
           option :remove, type: :string, repeat: true, desc: "Remove from array field: key=value (can repeat)"
 
+          option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
+
           option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -60,6 +62,13 @@ module Ace
             end
 
             puts "Retro updated: #{retro.id} #{retro.title}"
+
+            if options[:git_commit]
+              Ace::Support::Items::Molecules::GitCommitter.commit(
+                paths: [retro.path],
+                intention: "update retro #{retro.id}"
+              )
+            end
           end
 
           private
