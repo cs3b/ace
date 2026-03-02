@@ -51,13 +51,14 @@ module Ace
             special_folder: scan_result.special_folder)
         end
 
-        # List tasks with optional filtering.
+        # List tasks with optional filtering and sorting.
         # @param status [String, nil] Filter by status
         # @param in_folder [String, nil] Filter by special folder (default: "next" = root items only)
         # @param tags [Array<String>] Filter by tags (any match)
         # @param filters [Array<String>, nil] Generic filter strings
+        # @param sort [String] Sort order: "smart", "id", "priority", "created" (default: "smart")
         # @return [Array<Models::Task>] List of tasks
-        def list(status: nil, in_folder: "next", tags: [], filters: nil)
+        def list(status: nil, in_folder: "next", tags: [], filters: nil, sort: "smart")
           scanner = Molecules::TaskScanner.new(@root_dir)
           scan_results = scanner.scan_in_folder(in_folder)
           @last_list_total = scanner.last_scan_total
@@ -79,7 +80,7 @@ module Ace
             )
           end
 
-          tasks
+          apply_sort(tasks, sort)
         end
 
         # Update a task's frontmatter fields and optionally move to a folder.
@@ -185,6 +186,44 @@ module Ace
           scan_results = scanner.scan
           resolver = Molecules::TaskResolver.new(scan_results)
           resolver.resolve(ref)
+        end
+
+        def apply_sort(tasks, sort_mode)
+          case sort_mode
+          when "smart"
+            smart_sort(tasks)
+          when "id"
+            tasks.sort_by(&:id)
+          when "priority"
+            priority_order = { "critical" => 0, "high" => 1, "medium" => 2, "low" => 3 }
+            tasks.sort_by { |t| priority_order[t.priority] || 99 }
+          when "created"
+            tasks.sort_by { |t| t.created_at || Time.at(0) }
+          else
+            tasks
+          end
+        end
+
+        def smart_sort(tasks)
+          Ace::Support::Items::Molecules::SmartSorter.sort(
+            tasks,
+            score_fn: method(:compute_task_score),
+            pin_accessor: ->(t) { t.metadata&.dig("position") }
+          )
+        end
+
+        def compute_task_score(task)
+          weight = Ace::Support::Items::Atoms::SortScoreCalculator.priority_weight(task.priority)
+          age = if task.created_at
+            [(Time.now - task.created_at) / 86_400.0, 0].max
+          else
+            0
+          end
+          Ace::Support::Items::Atoms::SortScoreCalculator.compute(
+            priority_weight: weight,
+            age_days: age,
+            status: task.status
+          )
         end
 
         def filter_by_tags(tasks, tags)
