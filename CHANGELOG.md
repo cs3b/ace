@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.710] - 2026-03-02
+
+### Added
+- **ace-support-items v0.12.0**: `SortScoreCalculator` atom for computing sort scores (priority × 100 + age with in-progress boost and blocked penalty)
+- **ace-support-items v0.12.0**: `PositionGenerator` atom for generating B36TS position values (first, last, after, before, between)
+- **ace-support-items v0.12.0**: `SmartSorter` molecule for pinned-first + score-descending sort logic
+- **ace-support-items v0.12.0**: `StatusCategorizer` now accepts optional `up_next_sorter:` proc for custom sort order
+- **ace-task v0.11.0**: Smart auto-sort as default for `list` command (priority × age scoring with status modifiers)
+- **ace-task v0.11.0**: `--sort` option on `list` command (smart, id, priority, created)
+- **ace-task v0.11.0**: `--position` option on `update` command for B36TS-based sort pinning (first, last, after:ref, before:ref)
+- **ace-task v0.11.0**: `status` command up-next section now uses smart sort
+
 ## [0.9.709] - 2026-03-02
 
 ### Added
