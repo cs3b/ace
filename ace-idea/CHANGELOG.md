@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-03-02
+
+### Added
+- `status` CLI command showing up-next ideas, summary stats, and recently completed ideas
+- `--up-next-limit` and `--recently-done-limit` options for status command (configurable via config.yml)
+- `IdeaDisplayFormatter.format_status` and `format_status_line` class methods for status overview rendering
+- Config defaults: `status: { up_next_limit: 7, recently_done_limit: 7 }`
+
 ## [0.8.0] - 2026-03-02
 
 ### Added
