@@ -21,8 +21,8 @@ module Ace
           example [
             '"Dark mode for night coding"                          # Basic capture',
             '"Dark mode" --title "Dark mode" --tags ux,design      # With metadata',
-            '"raw thought" --move-to next                          # Place in _next/',
-            '--clipboard --llm-enhance --move-to next              # From clipboard with LLM',
+            '"raw thought" --move-to maybe                         # Place in _maybe/',
+            '--clipboard --llm-enhance --move-to maybe             # From clipboard with LLM',
             '"rough idea" --dry-run                                # Preview without writing'
           ]
 

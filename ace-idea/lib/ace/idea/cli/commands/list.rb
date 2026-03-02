@@ -18,7 +18,8 @@ module Ace
           DESC
 
           example [
-            '                           # All ideas',
+            '                           # Active ideas (root only, default)',
+            '--in all                   # All ideas including archived/maybe',
             '--in maybe                 # Ideas in _maybe/',
             '--status pending           # Filter by status',
             '--tags ux,design           # Ideas matching any tag',
@@ -28,7 +29,7 @@ module Ace
 
           option :status, type: :string,  aliases: %w[-s], desc: "Filter by status (pending, in-progress, done, obsolete)"
           option :tags,   type: :string,  aliases: %w[-T], desc: "Filter by tags (comma-separated, any match)"
-          option :in,     type: :string,  aliases: %w[-i], desc: "Filter by folder (e.g. maybe, archive, next)"
+          option :in,     type: :string,  aliases: %w[-i], desc: "Filter by folder (next=root only [default], all=everything, maybe, archive)"
           option :root,   type: :string,  aliases: %w[-r], desc: "Override root path (subpath within ideas root)"
           option :filter, type: :array,   aliases: %w[-f], desc: "Filter by key:value (repeatable, supports key:a|b and key:!value)"
 
@@ -45,13 +46,9 @@ module Ace
             filters   = options[:filter]
 
             manager = Ace::Idea::Organisms::IdeaManager.new
-            ideas = manager.list(
-              status: status,
-              in_folder: in_folder,
-              tags: tags,
-              root: root,
-              filters: filters
-            )
+            list_opts = { status: status, tags: tags, root: root, filters: filters }
+            list_opts[:in_folder] = in_folder if in_folder
+            ideas = manager.list(**list_opts)
 
             puts Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(ideas)
           end

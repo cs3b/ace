@@ -47,6 +47,23 @@ module Ace
           @scanner.scan.reject { |sr| subtask_folder?(sr.folder_name) }
         end
 
+        # Scan and filter by special folder or virtual filter
+        # @param folder [String, nil] Folder name, virtual filter ("next", "all"), or nil for all
+        # @return [Array<ScanResult>] Filtered scan results
+        def scan_in_folder(folder)
+          results = scan
+          return results if folder.nil?
+
+          virtual = Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(folder)
+          case virtual
+          when :all  then results
+          when :next then results.select { |r| r.special_folder.nil? }
+          else
+            normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(folder)
+            results.select { |r| r.special_folder == normalized }
+          end
+        end
+
         # Scan for all items including subtask folders.
         # @return [Array<ScanResult>] Sorted scan results
         def scan_all

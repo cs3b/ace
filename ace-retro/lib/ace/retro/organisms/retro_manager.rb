@@ -52,12 +52,12 @@ module Ace
         # List retros with optional filtering
         # @param status [String, nil] Filter by status
         # @param type [String, nil] Filter by type
-        # @param in_folder [String, nil] Filter by special folder
+        # @param in_folder [String, nil] Filter by special folder (default: "next" = root items only)
         # @param tags [Array<String>] Filter by tags (any match)
         # @return [Array<Retro>] List of retros
-        def list(status: nil, type: nil, in_folder: nil, tags: [])
+        def list(status: nil, type: nil, in_folder: "next", tags: [])
           scanner = Molecules::RetroScanner.new(@root_dir)
-          scan_results = in_folder ? scanner.scan_in_folder(in_folder) : scanner.scan
+          scan_results = scanner.scan_in_folder(in_folder)
 
           loader = Molecules::RetroLoader.new
           retros = scan_results.filter_map do |sr|
