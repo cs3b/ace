@@ -1,6 +1,6 @@
 name: mark-task-done
 skill: null
-description: Mark task as done in ace-taskflow after successful implementation
+description: Mark task as done in ace-task after successful implementation
 
 prerequisites:
   - name: work-on-task
@@ -12,26 +12,26 @@ consumes: [code-changes]
 
 context:
   default: null
-  reason: "Needs access to ace-taskflow CLI in main context"
+  reason: "Needs access to ace-task CLI in main context"
 
 instructions: |
   After completing implementation work, mark the task as done:
 
   1. Run the status update command:
      ```bash
-     ace-taskflow task done {{taskref}}
+     ace-task manage-status done {{taskref}}
      ```
 
   2. **VERIFY the status change** (do not skip):
      ```bash
-     ace-taskflow task {{taskref}}
+     ace-task show {{taskref}}
      ```
      Confirm the output shows `status: done`. If it shows `in-progress` or another status, the update did not persist — investigate and retry.
 
-  **Why verification matters:** Skipping this step causes status drift where the orchestrator progress no longer matches ace-taskflow's record. This creates confusion in future sessions and breaks progress reporting.
+  **Why verification matters:** Skipping this step causes status drift where the orchestrator progress no longer matches ace-task's record. This creates confusion in future sessions and breaks progress reporting.
 
 when_to_skip:
-  - "Task was already marked done (verified via ace-taskflow task)"
+  - "Task was already marked done (verified via ace-task show)"
   - "Implementation was not completed"
 
 effort: trivial

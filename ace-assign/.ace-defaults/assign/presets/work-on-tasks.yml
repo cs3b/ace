@@ -181,4 +181,4 @@ expansion:
     instructions: |
       First: onboard yourself using /ace-onboard skill to load project context.
       Implement task {{item}}.
-      When complete, mark the task as done: run `ace-taskflow task done {{item}}`
+      When complete, mark the task as done: run `ace-task manage-status done {{item}}`
