@@ -1,0 +1,124 @@
+# Job: Task 256 all subtasks — ace-scheduler package + configuration
+# Sequential: 256.01 → 256.02 → release minor → PR → (review + apply + patch) ×2 → reorganize → push → update-pr
+# Generated: 2026-02-13
+
+session:
+  name: task-256-all-subtasks
+  description: |
+    Implement all Task 256 subtasks (Local Task Scheduler) one by one.
+    Flow: implement → release minor → create PR → (review + apply + patch) ×2
+    → reorganize commits → push → update PR description.
+
+    Subtasks (sequential):
+    - 256.01: ace-scheduler Package (8h) — new gem with ATOM architecture
+    - 256.02: Scheduler Configuration and Integration (4h, depends on 256.01 + task 255)
+
+steps:
+  - name: onboard
+    skill: onboard
+    instructions:
+      - Onboard yourself to the codebase.
+      - Run `ace-bundle project` to load project context.
+      - Run `ace-taskflow task 256` to understand the parent task and all subtasks.
+      - Review existing ace-* gem structures for ATOM architecture patterns.
+
+  - name: work-on-256.01
+    context: fork
+    skill: ace:work-on-task
+    instructions:
+      - "First: onboard yourself using /onboard skill to load project context."
+      - Work on task 256.01 (ace-scheduler Package).
+      - Create the ace-scheduler gem with full ATOM architecture.
+      - Implement CLI commands (list, run, emit, status, cron install/uninstall).
+      - Add fugit dependency for cron parsing.
+      - Ensure LLM-friendly markdown table output.
+      - Run ace-test to verify all tests pass before completing.
+
+  - name: work-on-256.02
+    context: fork
+    skill: ace:work-on-task
+    instructions:
+      - "First: onboard yourself using /onboard skill to load project context."
+      - Work on task 256.02 (Scheduler Configuration and Integration).
+      - Depends on 256.01 (ace-scheduler gem must exist) and task 255.
+      - Configure default scheduled tasks (.ace/scheduler/config.yml).
+      - Integrate with release workflows (draft-release.wf.md, publish-release.wf.md).
+      - Create Claude skill for scheduler, update docs/tools.md.
+      - Run ace-test to verify changes before completing.
+
+  - name: release-minor
+    skill: ace-release
+    instructions:
+      - Bump version (minor or patch, usually minor) and update CHANGELOGs for ace-scheduler.
+      - This is the initial release for new scheduler functionality.
+      - Follow semantic versioning conventions.
+
+  - name: create-pr
+    skill: ace:create-pr
+    instructions:
+      - Create a pull request for the scheduler implementation.
+      - Include summary of both subtasks (256.01 and 256.02).
+      - Capture the PR number for subsequent review steps.
+
+  - name: review-cycle-1
+    skill: ace:review-pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /onboard skill to load project context."
+      - "Review the code (iteration 1 of 2)."
+      - Use preset code-deep for thorough analysis.
+      - "Focus: correctness, ATOM architecture compliance, gem structure."
+
+  - name: apply-feedback-1
+    skill: ace:apply-feedback
+    instructions:
+      - Apply feedback from review cycle 1 (medium+ priority).
+      - Commit changes with descriptive messages.
+
+  - name: release-patch-1
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs for ace-scheduler.
+      - This captures review cycle 1 fixes.
+      - Follow semantic versioning conventions.
+
+  - name: review-cycle-2
+    skill: ace:review-pr
+    context: fork
+    instructions:
+      - "First: onboard yourself using /onboard skill to load project context."
+      - "Review the code (iteration 2 of 2)."
+      - Use preset code-deep for thorough analysis.
+      - "Focus: edge cases, error handling, test coverage."
+
+  - name: apply-feedback-2
+    skill: ace:apply-feedback
+    instructions:
+      - Apply final feedback from review cycle 2.
+      - Commit changes with descriptive messages.
+
+  - name: release-patch-2
+    skill: ace-release
+    instructions:
+      - Bump patch version and update CHANGELOGs for ace-scheduler.
+      - This captures review cycle 2 fixes.
+      - Follow semantic versioning conventions.
+
+  - name: reorganize-commits
+    skill: ace:reorganize-commits
+    instructions:
+      - Reorganize commits into logical groups.
+      - Group by concern (gem structure, implementation, config, tests, release).
+
+  - name: push-to-remote
+    instructions:
+      - Push all changes to the remote repository.
+      - "Run: git push --force-with-lease origin HEAD"
+      - Force-with-lease needed because reorganize-commits rewrites history.
+
+  - name: update-pr-desc
+    skill: ace:update-pr-desc
+    instructions:
+      - Update PR description with final implementation summary.
+      - Include released version number and key components.
+      - Ensure PR is ready for human review.
