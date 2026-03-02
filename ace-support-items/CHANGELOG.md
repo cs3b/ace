@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-03-02
+
+### Added
+- `FolderCompletionDetector` atom: checks if all spec files in a directory have terminal status (done/skipped/blocked), with `recursive:` option for subtask subdirectories
+- `SpecialFolderDetector.move_to_root?` method: recognizes "next", "root", and "/" as move-to-root aliases (case-insensitive)
+
 ## [0.10.0] - 2026-03-02
 
 ### Added
