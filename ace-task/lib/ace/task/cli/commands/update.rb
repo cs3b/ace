@@ -12,17 +12,23 @@ module Ace
           include Ace::Core::CLI::DryCli::Base
 
           desc <<~DESC.strip
-            Update task metadata
+            Update task metadata and/or move to a folder
 
             Updates frontmatter fields using set, add, or remove operations.
             Use --set for scalar fields, --add/--remove for array fields like tags.
+            Use --move-to to relocate to a special folder or back to root.
           DESC
 
           example [
             'q7w --set status=done',
             'q7w --set status=done,priority=high',
             'q7w --add tags=shipped --remove tags=pending-review',
-            'q7w --set worktree.branch=my-branch'
+            'q7w --set worktree.branch=my-branch',
+            'q7w --set status=done --move-to archive',
+            'q7w --move-to next',
+            'q7w.a --move-as-child-of none    # Promote subtask to standalone',
+            'q7w --move-as-child-of self      # Convert to orchestrator',
+            'q7w --move-as-child-of abc       # Demote to subtask of abc'
           ]
 
           argument :ref, required: true, desc: "Task reference (full ID, short ref, or suffix)"
@@ -30,6 +36,8 @@ module Ace
           option :set,    type: :array, desc: "Set field: key=value (comma-separated for multiple)"
           option :add,    type: :array, desc: "Add to array field: key=value (comma-separated for multiple)"
           option :remove, type: :array, desc: "Remove from array field: key=value (comma-separated for multiple)"
+          option :move_to, type: :string, aliases: %w[-m], desc: "Move to folder (archive, maybe, anytime, next)"
+          option :move_as_child_of, type: :string, desc: "Reparent: <parent_ref>, 'none' (promote), 'self' (orchestrator)"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
@@ -38,15 +46,21 @@ module Ace
           option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
 
           def call(ref:, **options)
-            set_args    = Array(options[:set])
-            add_args    = Array(options[:add])
-            remove_args = Array(options[:remove])
+            set_args        = Array(options[:set])
+            add_args        = Array(options[:add])
+            remove_args     = Array(options[:remove])
+            move_to         = options[:move_to]
+            move_as_child   = options[:move_as_child_of]
 
-            if set_args.empty? && add_args.empty? && remove_args.empty?
-              warn "Error: at least one of --set, --add, or --remove is required"
+            if set_args.empty? && add_args.empty? && remove_args.empty? && move_to.nil? && move_as_child.nil?
+              warn "Error: at least one of --set, --add, --remove, --move-to, or --move-as-child-of is required"
               warn ""
-              warn "Usage: ace-task update REF [--set K=V]... [--add K=V]... [--remove K=V]..."
+              warn "Usage: ace-task update REF [--set K=V]... [--move-to FOLDER] [--move-as-child-of REF]"
               raise Ace::Core::CLI::Error.new("No update operations specified")
+            end
+
+            if move_to && move_as_child
+              raise Ace::Core::CLI::Error.new("Cannot use --move-to and --move-as-child-of together")
             end
 
             set_hash    = parse_kv_pairs(set_args)
@@ -54,18 +68,34 @@ module Ace
             remove_hash = parse_kv_pairs(remove_args)
 
             manager = Ace::Task::Organisms::TaskManager.new
-            task = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash)
+            task = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash,
+                                  move_to: move_to, move_as_child_of: move_as_child)
 
             unless task
               raise Ace::Core::CLI::Error.new("Task '#{ref}' not found")
             end
 
-            puts "Task updated: #{task.id} #{task.title}"
+            if move_as_child
+              puts "Task reparented: #{task.id} #{task.title}"
+            elsif move_to
+              folder_info = task.special_folder || "root"
+              puts "Task updated: #{task.id} #{task.title} → #{folder_info}"
+            else
+              puts "Task updated: #{task.id} #{task.title}"
+            end
 
             if options[:git_commit]
+              commit_paths = (move_to || move_as_child) ? [manager.root_dir] : [task.path]
+              intention = if move_as_child
+                "reparent task #{task.id}"
+              elsif move_to
+                "update task #{task.id} and move to #{task.special_folder || "root"}"
+              else
+                "update task #{task.id}"
+              end
               Ace::Support::Items::Molecules::GitCommitter.commit(
-                paths: [task.path],
-                intention: "update task #{task.id}"
+                paths: commit_paths,
+                intention: intention
               )
             end
           end

@@ -104,12 +104,12 @@ class IdeaManagerTest < AceIdeaTestCase
     end
   end
 
-  def test_move_to_special_folder
+  def test_update_move_to_special_folder
     with_ideas_dir do |root|
       create_idea_fixture(root, id: "8ppq7w", slug: "dark-mode")
 
       manager = Ace::Idea::Organisms::IdeaManager.new(root_dir: root)
-      moved = manager.move("q7w", to: "archive")
+      moved = manager.update("q7w", move_to: "archive")
 
       refute_nil moved
       assert_equal "_archive", moved.special_folder

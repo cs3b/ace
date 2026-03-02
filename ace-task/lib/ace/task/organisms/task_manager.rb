@@ -6,6 +6,7 @@ require_relative "../molecules/task_resolver"
 require_relative "../molecules/task_loader"
 require_relative "../molecules/task_creator"
 require_relative "../molecules/subtask_creator"
+require_relative "../molecules/task_reparenter"
 
 module Ace
   module Task
@@ -81,13 +82,15 @@ module Ace
           tasks
         end
 
-        # Update a task's frontmatter fields.
+        # Update a task's frontmatter fields and optionally move to a folder.
         # @param ref [String] Task reference
         # @param set [Hash] Fields to set (supports dot-notation for nested keys)
         # @param add [Hash] Fields to add to arrays
         # @param remove [Hash] Fields to remove from arrays
+        # @param move_to [String, nil] Target folder to move to (archive, maybe, anytime, next/root//)
+        # @param move_as_child_of [String, nil] Reparent: parent ref, "none" (promote), "self" (orchestrator)
         # @return [Models::Task, nil] Updated task or nil if not found
-        def update(ref, set: {}, add: {}, remove: {})
+        def update(ref, set: {}, add: {}, remove: {}, move_to: nil, move_as_child_of: nil)
           scan_result = resolve_scan_result(ref)
           return nil unless scan_result
 
@@ -97,40 +100,48 @@ module Ace
             special_folder: scan_result.special_folder)
           return nil unless task
 
-          Ace::Support::Items::Molecules::FieldUpdater.update(
-            task.file_path, set: set, add: add, remove: remove
-          )
-
-          # Reload and return updated task
-          loader.load(task.path, id: task.id, special_folder: task.special_folder)
-        end
-
-        # Move a task to a different folder.
-        # @param ref [String] Task reference
-        # @param to [String] Target folder name
-        # @return [Models::Task, nil] Moved task or nil if not found
-        def move(ref, to:)
-          scan_result = resolve_scan_result(ref)
-          return nil unless scan_result
-
-          loader = Molecules::TaskLoader.new
-          task = loader.load(scan_result.dir_path,
-            id: scan_result.id,
-            special_folder: scan_result.special_folder)
-          return nil unless task
-
-          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
-          new_path = if to == "root" || to == "/"
-            mover.move_to_root(task)
-          else
-            archive_date = parse_archive_date(task)
-            mover.move(task, to: to, date: archive_date)
+          # Apply field updates if any
+          has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
+          if has_field_updates
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              task.file_path, set: set, add: add, remove: remove
+            )
           end
 
-          new_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
-            new_path, root: @root_dir
-          )
-          loader.load(new_path, id: task.id, special_folder: new_special)
+          # Apply move if requested
+          current_path = task.path
+          current_special = task.special_folder
+          if move_to
+            mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+            new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
+              mover.move_to_root(task)
+            else
+              archive_date = parse_archive_date(task)
+              mover.move(task, to: move_to, date: archive_date)
+            end
+            current_path = new_path
+            current_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
+              new_path, root: @root_dir
+            )
+          end
+
+          # Reparent if requested (mutually exclusive with move_to)
+          if move_as_child_of
+            reparenter = Molecules::TaskReparenter.new(root_dir: @root_dir, config: @config)
+            resolve_fn = ->(r) { show(r) }
+            # Reload task from current path before reparenting (may have been field-updated)
+            task_for_reparent = loader.load(current_path, id: task.id, special_folder: current_special)
+            return reparenter.reparent(task_for_reparent, target: move_as_child_of, resolve_ref: resolve_fn)
+          end
+
+          # Auto-archive hook: if a subtask status was set to terminal,
+          # check if all siblings are terminal and auto-move parent to archive
+          if set && set.key?("status")
+            check_auto_archive(task, set["status"], loader)
+          end
+
+          # Reload and return updated task
+          loader.load(current_path, id: task.id, special_folder: current_special)
         end
 
         # Create a subtask within a parent task.
@@ -182,6 +193,27 @@ module Ace
           tasks.select do |task|
             tags.any? { |tag| task.tags.include?(tag) }
           end
+        end
+
+        # Auto-archive: if a subtask reaches terminal status and all siblings
+        # in the parent directory are also terminal, move the parent to archive.
+        def check_auto_archive(task, new_status, loader)
+          terminal = Ace::Support::Items::Atoms::FolderCompletionDetector::TERMINAL_STATUSES
+          return unless terminal.include?(new_status.to_s.downcase)
+
+          # Only applies to subtasks (task dir is nested inside a parent dir)
+          parent_dir = File.dirname(task.path)
+          return if File.expand_path(parent_dir) == File.expand_path(@root_dir)
+
+          # Check if all specs in the parent dir (recursive for subtask subdirs) are terminal
+          return unless Ace::Support::Items::Atoms::FolderCompletionDetector.all_terminal?(
+            parent_dir, recursive: true
+          )
+
+          # Auto-move the parent folder to archive
+          parent_stub = Struct.new(:path).new(parent_dir)
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+          mover.move(parent_stub, to: "archive")
         end
 
         def parse_archive_date(task)
