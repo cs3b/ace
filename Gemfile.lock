@@ -68,11 +68,11 @@ PATH
 PATH
   remote: ace-git-worktree
   specs:
-    ace-git-worktree (0.13.17)
+    ace-git-worktree (0.13.18)
       ace-git (~> 0.11)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
-      ace-taskflow (~> 0.41)
+      ace-task (~> 0.11)
       dry-cli (~> 1.0)
 
 PATH
@@ -135,20 +135,20 @@ PATH
 PATH
   remote: ace-overseer
   specs:
-    ace-overseer (0.4.16)
+    ace-overseer (0.4.17)
       ace-assign (~> 0.15)
       ace-git (~> 0.10)
       ace-git-worktree (~> 0.13)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
-      ace-taskflow (~> 0.41)
+      ace-task (~> 0.11)
       ace-tmux (~> 0.6)
       dry-cli (~> 1.0)
 
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.16.8)
+    ace-prompt-prep (0.16.9)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -156,7 +156,7 @@ PATH
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
       ace-support-nav (~> 0.17)
-      ace-taskflow (~> 0.41)
+      ace-task (~> 0.11)
       dry-cli (~> 1.0)
 
 PATH
@@ -171,7 +171,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.42.6)
+    ace-review (0.42.7)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -179,7 +179,7 @@ PATH
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
       ace-support-nav (~> 0.17)
-      ace-taskflow (~> 0.41)
+      ace-task (~> 0.11)
       dry-cli (~> 1.0)
 
 PATH
@@ -275,20 +275,6 @@ PATH
       dry-cli (~> 1.0)
 
 PATH
-  remote: ace-taskflow
-  specs:
-    ace-taskflow (0.43.1)
-      ace-b36ts (~> 0.7)
-      ace-git (~> 0.10)
-      ace-llm (~> 0.24)
-      ace-support-config (~> 0.7)
-      ace-support-core (~> 0.25)
-      ace-support-mac-clipboard (~> 0.2)
-      ace-support-markdown (~> 0.2)
-      clipboard (~> 1.3)
-      dry-cli (~> 1.0)
-
-PATH
   remote: ace-test-runner-e2e
   specs:
     ace-test-runner-e2e (0.20.5)
@@ -334,7 +320,6 @@ GEM
     ast (2.4.3)
     bigdecimal (4.0.1)
     builder (3.3.0)
-    clipboard (1.4.1)
     colorize (1.1.0)
     crack (1.0.1)
       bigdecimal
@@ -465,7 +450,6 @@ DEPENDENCIES
   ace-support-nav!
   ace-support-test-helpers!
   ace-task!
-  ace-taskflow!
   ace-test!
   ace-test-runner!
   ace-test-runner-e2e!

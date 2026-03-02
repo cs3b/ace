@@ -8,7 +8,7 @@ module Ace
       class PruneSafetyChecker
         def initialize(context_collector: nil, task_loader_factory: nil)
           @context_collector = context_collector || WorktreeContextCollector.new
-          @task_loader_factory = task_loader_factory || -> { Ace::Taskflow::Molecules::TaskLoader.new }
+          @task_loader_factory = task_loader_factory || -> { Ace::Task::Organisms::TaskManager.new }
         end
 
         def check(worktree_path:, task_ref:)
@@ -70,9 +70,9 @@ module Ace
 
         def task_done_in_context?(path, task_ref)
           Dir.chdir(path) do
-            loader = @task_loader_factory.call
-            task = loader.find_task_by_reference(task_ref.to_s)
-            task && task[:status] == "done"
+            manager = @task_loader_factory.call
+            task = manager.show(task_ref.to_s)
+            task && task.status == "done"
           end
         rescue StandardError
           false

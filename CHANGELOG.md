@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.711] - 2026-03-02
+
+### Changed
+- **ace-overseer v0.4.17**: Replace `ace-taskflow` dependency with `ace-task` — migrate orchestrator and prune checker to `Ace::Task::Organisms::TaskManager` API
+- **ace-prompt-prep v0.16.9**: Replace `ace-taskflow` dependency with `ace-task` — migrate `TaskPathResolver` to `TaskManager.show()` struct API
+- **ace-review v0.42.7**: Replace `ace-taskflow` dependency with `ace-task` — migrate task resolver, subject extractor, and preset manager; remove dead `save_to_release` method
+- **ace-git-worktree v0.13.18**: Replace `ace-taskflow` dependency with `ace-task` — migrate task fetcher, status updater, and ID extractor
+
+### Removed
+- **ace-taskflow**: Deleted gem directory, data directory (`.ace-taskflow/`), and binstub — superseded by ace-task, ace-idea, and ace-retro
+
 ## [0.9.710] - 2026-03-02
 
 ### Added
