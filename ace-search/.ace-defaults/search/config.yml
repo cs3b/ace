@@ -24,7 +24,7 @@ ace:
 
     # Exclusions (default excludes for done/archived tasks)
     exclude:
-      - ".ace-taskflow/done/**/*"
+      - ".ace-tasks/done/**/*"
       - "dev-taskflow/done/**/*"
       - "dev-taskflow/current/*/tasks/x/*"
       - "vendor/**/*"
