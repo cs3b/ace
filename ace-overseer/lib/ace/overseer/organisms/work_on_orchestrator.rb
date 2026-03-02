@@ -4,12 +4,15 @@ module Ace
   module Overseer
     module Organisms
       class WorkOnOrchestrator
+        # B36TS subtask pattern: "8pp.t.q7w.a" (parent 9-char ID + dot + single char)
+        SUBTASK_PATTERN = /^[0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9]$/
+
         def initialize(worktree_provisioner: nil, tmux_window_opener: nil, assignment_launcher: nil,
                        task_loader: nil, config: nil, assignment_detector: nil)
           @worktree_provisioner = worktree_provisioner || Molecules::WorktreeProvisioner.new
           @tmux_window_opener = tmux_window_opener || Molecules::TmuxWindowOpener.new
           @assignment_launcher = assignment_launcher || Molecules::AssignmentLauncher.new
-          @task_loader = task_loader || Ace::Taskflow::Molecules::TaskLoader.new(task_root_path)
+          @task_manager = task_loader || Ace::Task::Organisms::TaskManager.new
           @config = config || Ace::Overseer.config
           @assignment_detector = assignment_detector
         end
@@ -26,7 +29,7 @@ module Ace
           primary_task = resolved_refs.first[:task]
 
           preset_name = Atoms::PresetResolver.resolve(
-            task_frontmatter: primary_task[:metadata] || {},
+            task_frontmatter: primary_task.respond_to?(:metadata) ? (primary_task.metadata || {}) : {},
             cli_preset: cli_preset,
             default: @config["default_assign_preset"] || "work-on-task"
           )
@@ -86,16 +89,11 @@ module Ace
 
         private
 
-        def task_root_path
-          project_root = ENV["PROJECT_ROOT_PATH"]
-          base = project_root ? File.expand_path(project_root) : Dir.pwd
-          File.join(base, ".ace-taskflow")
-        end
-
         def extract_subtask_refs(task)
-          return nil unless task[:is_orchestrator] && task[:subtask_ids]&.any?
+          subtasks = task.respond_to?(:subtasks) ? task.subtasks : nil
+          return nil unless subtasks&.any?
 
-          task[:subtask_ids].filter_map { |id| Ace::Taskflow::Atoms::TaskReferenceParser.extract_number(id) }
+          subtasks.map(&:id)
         end
 
         def normalize_requested_refs(task_ref, task_refs)
@@ -108,33 +106,27 @@ module Ace
 
         def resolve_requested_refs(requested_refs)
           requested_refs.map do |ref|
-            parsed = parse_task_ref!(ref)
-            task = @task_loader.find_task_by_reference(ref.to_s)
+            is_subtask = subtask_ref?(ref)
+            task = @task_manager.show(ref.to_s)
             raise Error, "Task not found: #{ref}" unless task
 
-            { ref: ref.to_s, task: task, parsed: parsed }
+            { ref: ref.to_s, task: task, is_subtask: is_subtask }
           end
         end
 
-        def parse_task_ref!(ref)
-          parsed = Ace::Taskflow::Atoms::TaskReferenceParser.parse(ref.to_s)
-          raise Error, "Invalid task reference token: #{ref}" unless parsed
-
-          parsed
-        rescue ArgumentError => e
-          raise Error, e.message
+        def subtask_ref?(ref)
+          ref.to_s.match?(SUBTASK_PATTERN)
         end
 
         def expand_task_refs_in_order(resolved_refs)
           resolved_refs.flat_map do |entry|
             ref = entry[:ref]
             task = entry[:task]
-            parsed = entry[:parsed]
 
-            if parsed[:subtask]
+            if entry[:is_subtask]
               [ref]
-            elsif task[:is_orchestrator] && task[:subtask_ids]&.any?
-              extract_subtask_refs(task)
+            elsif task.respond_to?(:subtasks) && task.subtasks&.any?
+              task.subtasks.map(&:id)
             else
               [ref]
             end

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.17] - 2026-03-02
+
+### Changed
+- Replace `ace-taskflow` dependency with `ace-task` — migrate `WorkOnOrchestrator` and `PruneSafetyChecker` to use `Ace::Task::Organisms::TaskManager` API
+- Remove bare `require "ace/taskflow"` import, add `require "ace/task"`
+
 ## [0.4.16] - 2026-02-26
 
 ### Fixed
