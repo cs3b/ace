@@ -5,7 +5,7 @@ description: Execute bug fix plan, apply changes, create tests, and verify resol
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Bash(ace-test:*)
   - Read
@@ -15,7 +15,7 @@ allowed-tools:
   - Glob
 argument-hint: [bug-description-or-analysis-file]
 last_modified: 2026-01-10
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://bug/fix`

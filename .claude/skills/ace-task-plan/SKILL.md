@@ -5,13 +5,13 @@ description: Creates JIT implementation plan with ephemeral output, no task file
 # agent: Plan
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Read
   - TodoWrite
 argument-hint: [task-id]
 last_modified: 2026-02-16
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://task/plan`

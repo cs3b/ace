@@ -5,7 +5,7 @@ description: Analyze bugs to identify root cause, reproduction status, and fix p
 # agent: Plan
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Read
   - Write
@@ -14,7 +14,7 @@ allowed-tools:
   - Glob
 argument-hint: [bug-description]
 last_modified: 2025-12-09
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://bug/analyze`

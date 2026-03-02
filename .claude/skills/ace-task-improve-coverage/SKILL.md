@@ -5,7 +5,7 @@ description: Analyze coverage and create targeted test tasks to improve coverage
 # agent: Plan
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Bash(ace-test:*)
   - Read
@@ -15,7 +15,7 @@ allowed-tools:
   - Glob
 argument-hint: "[package-path] [target-percent]"
 last_modified: 2026-01-10
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://task/improve-coverage`

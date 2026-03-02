@@ -5,12 +5,12 @@ description: Draft multiple tasks from idea files with structured specifications
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Read
   - Task
 argument-hint: [idea-pattern]
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://task/draft-batch`

@@ -5,14 +5,14 @@ description: Work On Subtasks (orchestrator task delegation)
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Read
   - Task
   - AskUserQuestion
   - TodoWrite
 argument-hint: [orchestrator-task-id]
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://task/work-subtasks`

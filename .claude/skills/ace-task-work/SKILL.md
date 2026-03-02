@@ -5,7 +5,7 @@ context: fork
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Read
@@ -15,7 +15,7 @@ allowed-tools:
   - Task
 argument-hint: [task-id like 123]
 last_modified: 2026-02-17
-source: ace-taskflow
+source: ace-task
 assign:
   source: wfi://task/work
 ---

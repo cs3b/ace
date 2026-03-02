@@ -5,7 +5,7 @@ description: Fix failing automated tests systematically
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Bash(ace-test:*)
   - Read
@@ -15,7 +15,7 @@ allowed-tools:
   - Glob
 argument-hint: [test-file-pattern]
 last_modified: 2026-02-24
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://test/analyze-failures`

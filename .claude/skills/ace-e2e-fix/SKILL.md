@@ -6,7 +6,7 @@ description: Diagnose and fix failing E2E tests systematically
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Bash(ace-test:*)
   - Bash(ace-test-suite:*)
