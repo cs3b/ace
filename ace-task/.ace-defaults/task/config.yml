@@ -15,6 +15,11 @@ task:
     maybe: _maybe
     anytime: _anytime
 
+  # Status command: default limits
+  status:
+    up_next_limit: 3
+    recently_done_limit: 9
+
   # Doctor command: LLM model for agent-assisted fix
   doctor_agent_model: "gemini:flash-latest"
 
