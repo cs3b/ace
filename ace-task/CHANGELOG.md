@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-02
+
+### Added
+- `--move-to` / `-m` option on `update` command: relocate task to a special folder (archive, maybe, anytime) or back to root (next/root//)
+- `--move-as-child-of` option on `update` command: reparent tasks — "none" promotes subtask to standalone, "self" converts to orchestrator, `<ref>` demotes to subtask of another task
+- `TaskReparenter` molecule: handles promote, orchestrator conversion, and demote operations with ID reassignment and frontmatter updates
+- Auto-archive hook: when all subtasks in a parent directory reach terminal status (done/skipped/blocked), the parent folder auto-moves to archive
+
+### Changed
+- `update` command now accepts `--move-to` alone (no `--set` required), replacing the standalone `move` command
+
+### Removed
+- Standalone `move` command — use `update --move-to` instead
+- `TaskManager#move` method — use `TaskManager#update(move_to:)` instead
+
 ## [0.9.0] - 2026-03-02
 
 ### Added
