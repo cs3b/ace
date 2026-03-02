@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-02
+
+### Added
+- `status` CLI command showing up-next tasks, summary stats, and recently completed tasks
+- `--up-next-limit` and `--recently-done-limit` options for status command (configurable via config.yml)
+- `TaskDisplayFormatter.format_status` and `format_status_line` class methods for status overview rendering
+- Config defaults: `status: { up_next_limit: 3, recently_done_limit: 9 }`
+
 ## [0.7.0] - 2026-03-02
 
 ### Added

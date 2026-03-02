@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.707] - 2026-03-02
+
+### Added
+- **ace-support-items v0.9.0**: `RelativeTimeFormatter` atom for human-readable relative time strings (just now, 5m ago, 2h ago, 3d ago, 2w ago)
+- **ace-support-items v0.9.0**: `StatusCategorizer` molecule for splitting items into up-next and recently-done buckets
+- **ace-task v0.8.0**: `status` CLI command showing up-next tasks, summary stats, and recently completed tasks
+- **ace-idea v0.9.0**: `status` CLI command showing up-next ideas, summary stats, and recently completed ideas
+- Configurable limits via config.yml and CLI options (`--up-next-limit`, `--recently-done-limit`)
+
 ## [0.9.706] - 2026-03-02
 
 ### Fixed
