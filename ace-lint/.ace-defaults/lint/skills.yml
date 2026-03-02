@@ -40,7 +40,7 @@ known_bash_prefixes:
   - ace-prompt-prep
   - ace-review
   - ace-search
-  - ace-taskflow
+  - ace-task
   - ace-test
   - ace-test-suite
   - firebase
