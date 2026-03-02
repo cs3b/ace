@@ -19,16 +19,6 @@ module Ace
             end
             result
           end
-
-          # @param stats [Hash] Output of count_by
-          # @param done_values [Array<String>] Status values that count as "complete"
-          # @return [Integer] Completion percentage (0-100)
-          def self.completion_rate(stats, done_values: ["done"])
-            return 0 if stats[:total] == 0
-
-            done_count = done_values.sum { |v| stats[:by_field][v] || 0 }
-            (done_count.to_f / stats[:total] * 100).round
-          end
         end
       end
     end
