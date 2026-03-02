@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.708] - 2026-03-02
+
+### Added
+- **ace-support-items v0.10.0**: `GitCommitter` molecule for auto-committing after CLI mutations via `ace-git-commit`
+- **ace-task v0.9.0**: `--git-commit` / `--gc` flag on `create`, `update`, and `move` commands
+- **ace-idea v0.10.0**: `--git-commit` / `--gc` flag on `create`, `update`, and `move` commands
+- **ace-retro v0.6.0**: `--git-commit` / `--gc` flag on `create`, `update`, and `move` commands
+
 ## [0.9.707] - 2026-03-02
 
 ### Added
