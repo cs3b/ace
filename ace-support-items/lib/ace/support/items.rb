@@ -33,6 +33,7 @@ require_relative "items/molecules/field_updater"
 require_relative "items/molecules/folder_mover"
 require_relative "items/molecules/llm_slug_generator"
 require_relative "items/molecules/status_categorizer"
+require_relative "items/molecules/git_committer"
 
 module Ace
   module Support
