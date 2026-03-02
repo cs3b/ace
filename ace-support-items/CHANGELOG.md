@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-03-02
+
+### Added
+- `RelativeTimeFormatter` atom: formats a Time into human-readable relative strings (just now, 5m ago, 2h ago, 3d ago, 2w ago, 1mo ago, 1y ago) with injectable reference time
+- `StatusCategorizer` molecule: categorizes items into "up next" (pending, root-only, sorted by ID) and "recently done" (done from all folders, sorted by file mtime desc) buckets for status overview displays
+
 ## [0.8.1] - 2026-03-02
 
 ### Fixed
