@@ -5,7 +5,7 @@ description: Update usage documentation based on feedback or requirements
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Read
   - Write
@@ -14,7 +14,7 @@ allowed-tools:
   - Glob
 argument-hint: [usage-file-path or feedback-description]
 last_modified: 2026-01-10
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://docs/update-usage`

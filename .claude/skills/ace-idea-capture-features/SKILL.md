@@ -5,7 +5,7 @@ description: Capture Application Features
 # agent: Explore
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Read
@@ -14,7 +14,7 @@ allowed-tools:
   - TodoWrite
 argument-hint: [app-path]
 last_modified: 2026-01-10
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://idea/capture-features`
