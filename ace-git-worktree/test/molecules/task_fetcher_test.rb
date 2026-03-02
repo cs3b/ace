@@ -21,11 +21,10 @@ class TaskFetcherTest < Minitest::Test
     mock_status = Object.new
     mock_status.define_singleton_method(:success?) { true }
 
-    @fetcher.stub(:ace_taskflow_available?, false) do
+    @fetcher.stub(:ace_task_available?, false) do
       Open3.stub(:capture3, [task_output, "", mock_status]) do
         task = @fetcher.fetch("081")
         refute_nil task
-        # TaskMetadata parsing would be tested in the model test
       end
     end
   end
@@ -41,9 +40,9 @@ class TaskFetcherTest < Minitest::Test
     mock_status = Object.new
     mock_status.define_singleton_method(:success?) { true }
 
-    valid_formats = ["081", "task.081", "v.0.9.0+081", "v.0.9.0+task.081"]
+    valid_formats = ["081", "8pp.t.q7w"]
 
-    @fetcher.stub(:ace_taskflow_available?, false) do
+    @fetcher.stub(:ace_task_available?, false) do
       Open3.stub(:capture3, [task_output, "", mock_status]) do
         valid_formats.each do |format|
           task = @fetcher.fetch(format)
@@ -87,13 +86,7 @@ class TaskFetcherTest < Minitest::Test
     end
   end
 
-  def test_ace_taskflow_available
-    Open3.stub(:capture3, ["ace-taskflow 0.10.0", "", 0]) do
-      assert @fetcher.ace_taskflow_available?
-    end
-  end
-
-  def test_ace_taskflow_unavailable
-    skip "Cannot test unavailability in mono-repo environment where ace-taskflow is available"
+  def test_ace_task_available
+    assert @fetcher.ace_task_available?
   end
 end

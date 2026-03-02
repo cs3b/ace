@@ -197,7 +197,7 @@ module Ace
 
           # Format a PR title using task data
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [String] Formatted PR title
           #
           # @example
@@ -252,7 +252,7 @@ module Ace
 
           # Format a directory path using task data
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @param counter [Integer, nil] Counter for multiple worktrees of same task
           # @return [String] Formatted directory path
           #
@@ -271,7 +271,7 @@ module Ace
 
           # Format a branch name using task data
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [String] Formatted branch name
           #
           # @example
@@ -283,7 +283,7 @@ module Ace
 
           # Format a commit message for task updates
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [String] Formatted commit message
           #
           # @example
@@ -449,7 +449,7 @@ module Ace
           # Apply template variables to a format string
           #
           # @param template [String] Template string with {variable} placeholders
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [String] Formatted string with variables replaced
           def apply_template_variables(template, task_data)
             formatted = template.dup
