@@ -30,7 +30,7 @@ steps:
   - name: mark-task-done
     instructions:
       - "Mark task {{taskref}} as done."
-      - "Run: ace-taskflow task done {{taskref}}"
+      - "Run: ace-task manage-status done {{taskref}}"
 
   - name: verify-test-suite
     skill: ace-test-verify-suite

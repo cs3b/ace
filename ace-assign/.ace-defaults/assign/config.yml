@@ -20,7 +20,7 @@ skill_source_paths:
 
 # Workflow lookup roots (relative to project root unless absolute)
 workflow_source_paths:
-  - "ace-taskflow/handbook/workflow-instructions"
+  - "ace-task/handbook/workflow-instructions"
   - "ace-assign/handbook/workflow-instructions"
 
 # Fork execution defaults
