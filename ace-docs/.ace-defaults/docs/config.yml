@@ -132,4 +132,4 @@ ignore:
   - "**/tmp/**"
   - "**/coverage/**"
   - "**/_legacy/**"
-  - "**/.ace-taskflow/done/**"
+  - "**/.ace-tasks/done/**"
