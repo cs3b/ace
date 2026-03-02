@@ -1,10 +1,10 @@
 ---
-# WFI Sources Protocol Configuration for ace-taskflow gem
-# This enables workflow discovery from the installed ace-taskflow gem
+# WFI Sources Protocol Configuration for ace-task gem
+# This enables workflow discovery from the installed ace-task gem
 
-name: ace-taskflow
+name: ace-task
 type: gem
-description: Taskflow workflow instructions from ace-taskflow gem
+description: Task management workflow instructions from ace-task gem
 priority: 10
 
 # Configuration for workflow discovery within the gem
