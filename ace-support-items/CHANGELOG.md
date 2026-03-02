@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-02
+
+### Added
+- `ItemStatistics` atom: pure counting logic for grouping items by any field (`count_by`) and computing completion rates (`completion_rate`)
+- `StatsLineFormatter` atom: generic stats summary line builder with configurable label, status icons, ordering, and optional completion percentage
+
 ## [0.6.0] - 2026-03-02
 
 ### Added

@@ -13,6 +13,8 @@ require_relative "items/atoms/title_extractor"
 require_relative "items/atoms/date_partition_path"
 require_relative "items/atoms/item_id_formatter"
 require_relative "items/atoms/item_id_parser"
+require_relative "items/atoms/item_statistics"
+require_relative "items/atoms/stats_line_formatter"
 
 # Models
 require_relative "items/models/scan_result"
