@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-03-02
+
+### Added
+- `SortScoreCalculator` atom: computes sort scores using `priority_weight × 100 + age_days` with in-progress boost (+1000) and blocked penalty (×0.1), configurable weights and caps
+- `PositionGenerator` atom: generates B36TS position values for pinning items in sort order (`first`, `last`, `after`, `before`, `between`)
+- `SmartSorter` molecule: sorts items with pinned-first (by position ascending) + unpinned (by score descending) logic
+- `StatusCategorizer` accepts optional `up_next_sorter:` proc for custom sort order in up-next bucket
+
 ## [0.11.0] - 2026-03-02
 
 ### Added
