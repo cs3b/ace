@@ -1,7 +1,0 @@
-source:
-  name: ace-prompt
-  gem: ace-prompt
-  paths:
-    - handbook/templates
-  templates:
-    base-prompt: "Base template for new prompts with structure"

@@ -1,1 +1,0 @@
-Config: args=now b36ts.alphabet=0123456789abcdefghijklmnopqrstuvwxyz b36ts.default_format=2sec b36ts.year_zero=2000 verbose=true

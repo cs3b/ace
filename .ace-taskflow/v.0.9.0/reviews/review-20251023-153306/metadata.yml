@@ -1,7 +1,0 @@
----
-timestamp: '2025-10-23T15:33:06+01:00'
-preset: ruby-atom
-model: gpro
-has_context: true
-subject_size: 22604
-prompt_size: 28887

@@ -1,7 +1,0 @@
----
-timestamp: '2025-11-04T00:50:03+00:00'
-preset: pr
-model: codex:gpt-5
-has_context: true
-subject_size: 87231
-prompt_size: 113672

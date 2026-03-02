@@ -1,2 +1,0 @@
-# Reflection - oauth-implementation-review
-
