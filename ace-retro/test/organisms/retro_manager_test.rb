@@ -129,33 +129,33 @@ class RetroManagerTest < AceRetroTestCase
     end
   end
 
-  def test_move_to_archive
+  def test_update_move_to_archive
     with_retros_dir do |root|
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
       retro = manager.create("Sprint Review")
 
-      moved = manager.move(retro.id, to: "archive")
+      moved = manager.update(retro.id, move_to: "archive")
       refute_nil moved
       assert_equal "_archive", moved.special_folder
       assert_includes moved.path, "_archive"
     end
   end
 
-  def test_move_to_root
+  def test_update_move_to_root
     with_retros_dir do |root|
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
       retro = manager.create("Sprint Review", move_to: "archive")
 
-      moved = manager.move(retro.id, to: "root")
+      moved = manager.update(retro.id, move_to: "root")
       refute_nil moved
       assert_nil moved.special_folder
     end
   end
 
-  def test_move_returns_nil_for_unknown
+  def test_update_move_to_returns_nil_for_unknown
     with_retros_dir do |root|
       manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
-      assert_nil manager.move("zzz", to: "archive")
+      assert_nil manager.update("zzz", move_to: "archive")
     end
   end
 

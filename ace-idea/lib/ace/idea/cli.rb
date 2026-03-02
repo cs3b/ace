@@ -6,7 +6,6 @@ require_relative "../idea/version"
 require_relative "cli/commands/create"
 require_relative "cli/commands/show"
 require_relative "cli/commands/list"
-require_relative "cli/commands/move"
 require_relative "cli/commands/update"
 require_relative "cli/commands/doctor"
 require_relative "cli/commands/status"
@@ -25,8 +24,7 @@ module Ace
         ["create", "Create a new idea"],
         ["show",   "Show idea details"],
         ["list",   "List ideas"],
-        ["move",   "Move idea to a different folder"],
-        ["update", "Update idea metadata"],
+        ["update", "Update idea metadata (fields and move)"],
         ["doctor", "Run health checks on ideas"],
         ["status", "Show idea status overview"]
       ].freeze
@@ -35,8 +33,9 @@ module Ace
         'ace-idea create "Dark mode" --tags ux,design --move-to next',
         "ace-idea show q7w",
         "ace-idea list --in maybe --status pending",
-        "ace-idea move q7w --to archive",
+        "ace-idea update q7w --set status=done --move-to archive",
         "ace-idea update q7w --set status=done --add tags=shipped",
+        "ace-idea update q7w --move-to next",
         "ace-idea doctor --auto-fix",
         "ace-idea status",
         "ace-idea status --up-next-limit 5"
@@ -45,7 +44,6 @@ module Ace
       register "create", CLI::Commands::Create
       register "show",   CLI::Commands::Show
       register "list",   CLI::Commands::List
-      register "move",   CLI::Commands::Move
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status

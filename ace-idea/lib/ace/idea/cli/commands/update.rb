@@ -12,18 +12,20 @@ module Ace
           include Ace::Core::CLI::DryCli::Base
 
           desc <<~DESC.strip
-            Update idea metadata
+            Update idea metadata and/or move to a folder
 
             Updates frontmatter fields using set, add, or remove operations.
             Use --set for scalar fields, --add/--remove for array fields like tags.
-
+            Use --move-to to relocate to a special folder or back to root.
           DESC
 
           example [
             'q7w --set status=done',
             'q7w --set status=in-progress --set title="Refined title"',
             'q7w --add tags=implemented --remove tags=pending-review',
-            'q7w --set status=done --add tags=shipped'
+            'q7w --set status=done --add tags=shipped',
+            'q7w --set status=done --move-to archive',
+            'q7w --move-to next'
           ]
 
           argument :ref, required: true, desc: "Idea reference (6-char ID or 3-char shortcut)"
@@ -31,6 +33,7 @@ module Ace
           option :set,    type: :string, repeat: true, desc: "Set field: key=value (can repeat)"
           option :add,    type: :string, repeat: true, desc: "Add to array field: key=value (can repeat)"
           option :remove, type: :string, repeat: true, desc: "Remove from array field: key=value (can repeat)"
+          option :move_to, type: :string, aliases: %w[-m], desc: "Move to folder (archive, maybe, anytime, next)"
 
           option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
 
@@ -42,11 +45,12 @@ module Ace
             set_args    = Array(options[:set])
             add_args    = Array(options[:add])
             remove_args = Array(options[:remove])
+            move_to     = options[:move_to]
 
-            if set_args.empty? && add_args.empty? && remove_args.empty?
-              warn "Error: at least one of --set, --add, or --remove is required"
+            if set_args.empty? && add_args.empty? && remove_args.empty? && move_to.nil?
+              warn "Error: at least one of --set, --add, --remove, or --move-to is required"
               warn ""
-              warn "Usage: ace-idea update REF [--set K=V]... [--add K=V]... [--remove K=V]..."
+              warn "Usage: ace-idea update REF [--set K=V]... [--add K=V]... [--remove K=V]... [--move-to FOLDER]"
               raise Ace::Core::CLI::Error.new("No update operations specified")
             end
 
@@ -55,18 +59,29 @@ module Ace
             remove_hash = parse_kv_pairs(remove_args)
 
             manager = Ace::Idea::Organisms::IdeaManager.new
-            idea = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash)
+            idea = manager.update(ref, set: set_hash, add: add_hash, remove: remove_hash, move_to: move_to)
 
             unless idea
               raise Ace::Core::CLI::Error.new("Idea '#{ref}' not found")
             end
 
-            puts "Idea updated: #{idea.id} #{idea.title}"
+            if move_to
+              folder_info = idea.special_folder || "root"
+              puts "Idea updated: #{idea.id} #{idea.title} → #{folder_info}"
+            else
+              puts "Idea updated: #{idea.id} #{idea.title}"
+            end
 
             if options[:git_commit]
+              commit_paths = move_to ? [manager.root_dir] : [idea.path]
+              intention = if move_to
+                "update idea #{idea.id} and move to #{idea.special_folder || "root"}"
+              else
+                "update idea #{idea.id}"
+              end
               Ace::Support::Items::Molecules::GitCommitter.commit(
-                paths: [idea.path],
-                intention: "update idea #{idea.id}"
+                paths: commit_paths,
+                intention: intention
               )
             end
           end

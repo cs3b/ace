@@ -172,30 +172,28 @@ class TaskManagerTest < AceTaskTestCase
     assert_nil result
   end
 
-  # --- move ---
+  # --- move via update --move-to ---
 
-  def test_move_to_special_folder
+  def test_update_move_to_special_folder
     task = @manager.create("Movable task")
 
-    # Create the target folder structure
-    moved = @manager.move(task.id, to: "_backlog")
+    moved = @manager.update(task.id, move_to: "_backlog")
 
     assert_equal "_backlog", moved.special_folder
     assert moved.path.include?("_backlog")
   end
 
-  def test_move_to_root
-    # Create task, move to backlog, then back to root
+  def test_update_move_to_root
     task = @manager.create("Root-bound task")
-    @manager.move(task.id, to: "_backlog")
+    @manager.update(task.id, move_to: "_backlog")
 
-    moved = @manager.move(task.id, to: "root")
+    moved = @manager.update(task.id, move_to: "root")
 
     assert_nil moved.special_folder
   end
 
-  def test_move_returns_nil_for_unknown_ref
-    result = @manager.move("zzz", to: "_backlog")
+  def test_update_move_to_returns_nil_for_unknown_ref
+    result = @manager.update("zzz", move_to: "_backlog")
 
     assert_nil result
   end

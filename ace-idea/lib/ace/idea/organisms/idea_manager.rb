@@ -102,13 +102,14 @@ module Ace
           ideas
         end
 
-        # Update an idea's fields
+        # Update an idea's fields and optionally move to a folder.
         # @param ref [String] Idea reference
         # @param set [Hash] Fields to set (key => value)
         # @param add [Hash] Fields to add to (for arrays like tags)
         # @param remove [Hash] Fields to remove from (for arrays)
+        # @param move_to [String, nil] Target folder to move to (archive, maybe, anytime, next/root//)
         # @return [Idea, nil] Updated idea or nil if not found
-        def update(ref, set: {}, add: {}, remove: {})
+        def update(ref, set: {}, add: {}, remove: {}, move_to: nil)
           scan_result = resolve_scan_result(ref)
           return nil unless scan_result
 
@@ -118,38 +119,29 @@ module Ace
             special_folder: scan_result.special_folder)
           return nil unless idea
 
-          update_idea_file(idea, set: set, add: add, remove: remove)
-          # Reload and return updated idea
-          loader.load(idea.path, id: idea.id, special_folder: idea.special_folder)
-        end
+          # Apply field updates if any
+          has_field_updates = [set, add, remove].any? { |h| h && !h.empty? }
+          update_idea_file(idea, set: set, add: add, remove: remove) if has_field_updates
 
-        # Move an idea to a different folder
-        # @param ref [String] Idea reference
-        # @param to [String] Target folder
-        # @return [Idea, nil] Moved idea or nil if not found
-        def move(ref, to:)
-          scan_result = resolve_scan_result(ref)
-          return nil unless scan_result
-
-          loader = Molecules::IdeaLoader.new
-          idea = loader.load(scan_result.dir_path,
-            id: scan_result.id,
-            special_folder: scan_result.special_folder)
-          return nil unless idea
-
-          mover = Molecules::IdeaMover.new(@root_dir)
-          new_path = if to == "root" || to == "/"
-            mover.move_to_root(idea)
-          else
-            archive_date = parse_archive_date(idea)
-            mover.move(idea, to: to, date: archive_date)
+          # Apply move if requested
+          current_path = idea.path
+          current_special = idea.special_folder
+          if move_to
+            mover = Molecules::IdeaMover.new(@root_dir)
+            new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
+              mover.move_to_root(idea)
+            else
+              archive_date = parse_archive_date(idea)
+              mover.move(idea, to: move_to, date: archive_date)
+            end
+            current_path = new_path
+            current_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
+              new_path, root: @root_dir
+            )
           end
 
-          # Detect new special folder
-          new_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
-            new_path, root: @root_dir
-          )
-          loader.load(new_path, id: idea.id, special_folder: new_special)
+          # Reload and return updated idea
+          loader.load(current_path, id: idea.id, special_folder: current_special)
         end
 
         # Get the root directory

@@ -267,46 +267,6 @@ class RetroCliTest < AceRetroTestCase
   end
 
   # ---------------------------------------------------------------------------
-  # move command
-  # ---------------------------------------------------------------------------
-
-  def test_move_to_archive
-    with_retros_dir do |root|
-      id = "8ppq7w"
-      create_retro_fixture(root, id: id, slug: "moveable-retro")
-      with_cli_root(root) do
-        result = run_cli(["move", id, "--to", "archive"])
-        assert_equal 0, result[:exit_code], result[:stderr]
-        assert_match(/Retro moved:/, result[:stdout])
-        assert_match(/_archive/, result[:stdout])
-      end
-    end
-  end
-
-  def test_move_to_root
-    with_retros_dir do |root|
-      id = "8ppq7w"
-      create_retro_fixture(root, id: id, slug: "moveable-retro", special_folder: "_archive")
-      with_cli_root(root) do
-        result = run_cli(["move", id, "--to", "root"])
-        assert_equal 0, result[:exit_code], result[:stderr]
-        assert_match(/Retro moved:/, result[:stdout])
-        assert_match(/root/, result[:stdout])
-      end
-    end
-  end
-
-  def test_move_not_found
-    with_retros_dir do |root|
-      with_cli_root(root) do
-        result = run_cli(["move", "zzz", "--to", "archive"])
-        assert_equal 1, result[:exit_code]
-        assert_match(/not found/, result[:stderr])
-      end
-    end
-  end
-
-  # ---------------------------------------------------------------------------
   # update command
   # ---------------------------------------------------------------------------
 
@@ -354,6 +314,47 @@ class RetroCliTest < AceRetroTestCase
         updated = manager.show(id)
         assert_includes updated.tags, "keep"
         refute_includes updated.tags, "remove-me"
+      end
+    end
+  end
+
+  def test_update_move_to_archive
+    with_retros_dir do |root|
+      id = "8ppq7w"
+      create_retro_fixture(root, id: id, slug: "moveable-retro")
+      with_cli_root(root) do
+        result = run_cli(["update", id, "--move-to", "archive"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/Retro updated:/, result[:stdout])
+        assert_match(/_archive/, result[:stdout])
+      end
+    end
+  end
+
+  def test_update_set_and_move_to
+    with_retros_dir do |root|
+      id = "8ppq7w"
+      create_retro_fixture(root, id: id, slug: "combo-retro", status: "active")
+      with_cli_root(root) do
+        result = run_cli(["update", id, "--set", "status=done", "--move-to", "archive"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/_archive/, result[:stdout])
+
+        manager = Ace::Retro::Organisms::RetroManager.new(root_dir: root)
+        updated = manager.show(id)
+        assert_equal "done", updated.status
+      end
+    end
+  end
+
+  def test_update_move_to_next
+    with_retros_dir do |root|
+      id = "8ppq7w"
+      create_retro_fixture(root, id: id, slug: "moveable-retro", special_folder: "_archive")
+      with_cli_root(root) do
+        result = run_cli(["update", id, "--move-to", "next"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/root/, result[:stdout])
       end
     end
   end
@@ -442,19 +443,19 @@ class RetroCliTest < AceRetroTestCase
     end
   end
 
-  def test_move_with_git_commit_calls_committer
+  def test_update_move_to_with_git_commit_calls_committer
     with_retros_dir do |root|
       id = "8ppq7w"
       create_retro_fixture(root, id: id, slug: "gc-retro")
       with_cli_root(root) do
         commit_args = nil
         Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
-          result = run_cli(["move", id, "--to", "archive", "--git-commit"])
+          result = run_cli(["update", id, "--move-to", "archive", "--git-commit"])
           assert_equal 0, result[:exit_code], result[:stderr]
         end
 
         refute_nil commit_args, "Expected GitCommitter.commit to be called"
-        assert_match(/move retro/, commit_args[:intention])
+        assert_match(/update retro.*move/, commit_args[:intention])
       end
     end
   end
@@ -477,7 +478,6 @@ class RetroCliTest < AceRetroTestCase
     assert_match(/create/, result[:stdout])
     assert_match(/show/, result[:stdout])
     assert_match(/list/, result[:stdout])
-    assert_match(/move/, result[:stdout])
     assert_match(/update/, result[:stdout])
   end
 
