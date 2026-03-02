@@ -197,7 +197,8 @@ class TaskDisplayFormatterTest < AceTaskTestCase
     ]
     output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks)
 
-    assert_includes output, "Tasks: ○ 1 | ✓ 2 • 3 total • 67% complete"
+    assert_includes output, "Tasks: ○ 1 | ✓ 2 • 3 total"
+    refute_includes output, "% complete"
   end
 
   def test_format_list_stats_line_omits_zero_counts
@@ -231,6 +232,57 @@ class TaskDisplayFormatterTest < AceTaskTestCase
     ]
     line = Ace::Task::Molecules::TaskDisplayFormatter.format_stats_line(tasks)
 
-    assert_equal "Tasks: ○ 1 | ▶ 1 | ✓ 3 • 5 total • 60% complete", line
+    assert_equal "Tasks: ○ 1 | ▶ 1 | ✓ 3 • 5 total", line
+  end
+
+  def test_format_stats_line_shows_draft_status
+    tasks = [
+      build_task(status: "draft"),
+      build_task(status: "draft"),
+      build_task(status: "draft")
+    ]
+    line = Ace::Task::Molecules::TaskDisplayFormatter.format_stats_line(tasks)
+
+    assert_equal "Tasks: ◇ 3 • 3 total", line
+  end
+
+  def test_format_stats_line_shows_skipped_status
+    tasks = [
+      build_task(status: "pending"),
+      build_task(status: "skipped")
+    ]
+    line = Ace::Task::Molecules::TaskDisplayFormatter.format_stats_line(tasks)
+
+    assert_equal "Tasks: ○ 1 | – 1 • 2 total", line
+  end
+
+  def test_format_shows_draft_status_symbol
+    task = build_task(status: "draft")
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format(task)
+
+    assert_includes output, "◇ "
+  end
+
+  # --- total_count threading ---
+
+  def test_format_list_with_total_count_shows_x_of_y
+    tasks = [
+      build_task(status: "draft"),
+      build_task(status: "draft"),
+      build_task(status: "draft")
+    ]
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks, total_count: 660)
+
+    assert_includes output, "Tasks: ◇ 3 • 3 of 660"
+  end
+
+  def test_format_stats_line_with_total_count
+    tasks = [
+      build_task(status: "draft"),
+      build_task(status: "pending")
+    ]
+    line = Ace::Task::Molecules::TaskDisplayFormatter.format_stats_line(tasks, total_count: 100)
+
+    assert_equal "Tasks: ◇ 1 | ○ 1 • 2 of 100", line
   end
 end

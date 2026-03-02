@@ -45,27 +45,31 @@ module Ace
 
         # Format a list of retros for display
         # @param retros [Array<Retro>] Retros to format
+        # @param total_count [Integer, nil] Total items before folder filtering
         # @return [String] Formatted list output
-        def self.format_list(retros)
+        def self.format_list(retros, total_count: nil)
           return "No retros found." if retros.empty?
 
           lines = retros.map { |retro| format(retro) }.join("\n")
-          "#{lines}\n\n#{format_stats_line(retros)}"
+          "#{lines}\n\n#{format_stats_line(retros, total_count: total_count)}"
         end
 
         STATUS_ORDER = %w[active done].freeze
 
         # Format a stats summary line for a list of retros.
         # @param retros [Array<Retro>] Retros to summarize
-        # @return [String] e.g. "Retros: 🟡 2 | 🟢 5 • 7 total • 71% complete"
-        def self.format_stats_line(retros)
+        # @param total_count [Integer, nil] Total items before folder filtering
+        # @return [String] e.g. "Retros: 🟡 2 | 🟢 5 • 2 of 7"
+        def self.format_stats_line(retros, total_count: nil)
           stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(retros, :status)
+          folder_stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(retros, :special_folder)
           Ace::Support::Items::Atoms::StatsLineFormatter.format(
             label: "Retros",
             stats: stats,
             status_order: STATUS_ORDER,
             status_icons: STATUS_SYMBOLS,
-            completion_values: ["done"]
+            folder_stats: folder_stats,
+            total_count: total_count
           )
         end
       end

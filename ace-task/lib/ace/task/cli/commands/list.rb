@@ -54,7 +54,7 @@ module Ace
             list_opts[:in_folder] = in_folder if in_folder
             tasks = manager.list(**list_opts)
 
-            puts Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks)
+            puts Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks, total_count: manager.last_list_total)
           end
         end
       end
