@@ -381,6 +381,85 @@ class RetroCliTest < AceRetroTestCase
   end
 
   # ---------------------------------------------------------------------------
+  # --git-commit / --gc flag
+  # ---------------------------------------------------------------------------
+
+  def test_create_with_git_commit_calls_committer
+    with_retros_dir do |root|
+      with_cli_root(root) do
+        commit_args = nil
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+          result = run_cli(["create", "Retro with gc", "--git-commit"])
+          assert_equal 0, result[:exit_code], result[:stderr]
+        end
+
+        refute_nil commit_args, "Expected GitCommitter.commit to be called"
+        assert_match(/create retro/, commit_args[:intention])
+      end
+    end
+  end
+
+  def test_create_without_git_commit_does_not_call_committer
+    with_retros_dir do |root|
+      with_cli_root(root) do
+        commit_called = false
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**_kwargs) { commit_called = true }) do
+          run_cli(["create", "Retro without gc"])
+        end
+
+        refute commit_called, "Expected GitCommitter.commit NOT to be called"
+      end
+    end
+  end
+
+  def test_create_dry_run_with_git_commit_does_not_call_committer
+    with_retros_dir do |root|
+      with_cli_root(root) do
+        commit_called = false
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**_kwargs) { commit_called = true }) do
+          run_cli(["create", "Dry run gc retro", "--dry-run", "--git-commit"])
+        end
+
+        refute commit_called, "Expected GitCommitter.commit NOT to be called during dry-run"
+      end
+    end
+  end
+
+  def test_update_with_git_commit_calls_committer
+    with_retros_dir do |root|
+      id = "8ppq7w"
+      create_retro_fixture(root, id: id, slug: "gc-retro", status: "active")
+      with_cli_root(root) do
+        commit_args = nil
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+          result = run_cli(["update", id, "--set", "status=done", "--git-commit"])
+          assert_equal 0, result[:exit_code], result[:stderr]
+        end
+
+        refute_nil commit_args, "Expected GitCommitter.commit to be called"
+        assert_match(/update retro/, commit_args[:intention])
+      end
+    end
+  end
+
+  def test_move_with_git_commit_calls_committer
+    with_retros_dir do |root|
+      id = "8ppq7w"
+      create_retro_fixture(root, id: id, slug: "gc-retro")
+      with_cli_root(root) do
+        commit_args = nil
+        Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**kwargs) { commit_args = kwargs; true }) do
+          result = run_cli(["move", id, "--to", "archive", "--git-commit"])
+          assert_equal 0, result[:exit_code], result[:stderr]
+        end
+
+        refute_nil commit_args, "Expected GitCommitter.commit to be called"
+        assert_match(/move retro/, commit_args[:intention])
+      end
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # version and help
   # ---------------------------------------------------------------------------
 

@@ -32,6 +32,8 @@ module Ace
           option :in,         type: :string,  aliases: %w[-i], desc: "Target folder (e.g. next, maybe)"
           option :"dry-run",  type: :boolean, aliases: %w[-n], desc: "Preview without writing"
 
+          option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
+
           option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -74,6 +76,13 @@ module Ace
 
             puts "Created task #{task.id}"
             puts "  Path: #{task.file_path}"
+
+            if options[:git_commit]
+              Ace::Support::Items::Molecules::GitCommitter.commit(
+                paths: [task.path],
+                intention: "create task #{task.id}"
+              )
+            end
           end
         end
       end

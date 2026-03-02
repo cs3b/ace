@@ -35,6 +35,8 @@ module Ace
           option :"llm-enhance", type: :boolean, aliases: %w[-l], desc: "Enhance content with LLM"
           option :"dry-run",   type: :boolean, aliases: %w[-n],   desc: "Preview without writing"
 
+          option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
+
           option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -81,6 +83,13 @@ module Ace
             folder_info = idea.special_folder ? " (#{idea.special_folder})" : ""
             puts "Idea created: #{idea.id} #{idea.title}#{folder_info}"
             puts "  Path: #{idea.file_path}"
+
+            if options[:git_commit]
+              Ace::Support::Items::Molecules::GitCommitter.commit(
+                paths: [idea.path],
+                intention: "create idea #{idea.id}"
+              )
+            end
           end
         end
       end

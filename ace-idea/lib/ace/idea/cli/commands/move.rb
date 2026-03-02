@@ -28,6 +28,8 @@ module Ace
 
           option :to, type: :string, required: true, aliases: %w[-t], desc: "Target folder (archive, maybe, anytime, root)"
 
+          option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
+
           option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -49,6 +51,13 @@ module Ace
             folder_info = idea.special_folder || "root"
             puts "Idea moved: #{idea.id} → #{folder_info}"
             puts "  Path: #{idea.file_path}"
+
+            if options[:git_commit]
+              Ace::Support::Items::Molecules::GitCommitter.commit(
+                paths: [manager.root_dir],
+                intention: "move idea #{idea.id} to #{folder_info}"
+              )
+            end
           end
         end
       end
