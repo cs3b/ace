@@ -130,11 +130,7 @@ module Ace
           configured_path = storage_config["base_path"]
           return expand_path_template(configured_path) if configured_path
 
-          # 2. Try to get from ace-taskflow
-          release_path = get_release_path
-          return release_path if release_path
-
-          # 3. Fallback to cache directory
+          # 2. Fallback to cache directory
           File.join(project_root, ".cache/ace-review/sessions")
         end
 
@@ -474,21 +470,11 @@ module Ace
         end
 
         def current_release
-          # Try to get current release from ace-taskflow
-          if system("which ace-taskflow > /dev/null 2>&1")
-            release = `ace-taskflow release 2>/dev/null`.strip
-            return release unless release.empty?
-          end
-
-          # Fallback to v.0.0.0
           "v.0.0.0"
         end
 
         def get_release_path
-          return nil unless system("which ace-taskflow > /dev/null 2>&1")
-
-          path = `ace-taskflow release --path reviews 2>/dev/null`.strip
-          path.empty? ? nil : path
+          nil
         end
 
         def expand_path_template(template)
