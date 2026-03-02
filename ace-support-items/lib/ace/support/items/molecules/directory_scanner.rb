@@ -61,7 +61,12 @@ module Ace
               spec_files = Dir.glob(File.join(full_path, @file_pattern))
               if spec_files.any?
                 result = build_result(full_path, spec_files.first)
-                results << result if result
+                if result
+                  results << result
+                else
+                  # Folder has spec files but isn't an item (e.g., _maybe with orphan files) — recurse
+                  scan_directory(full_path, results)
+                end
               else
                 # Recurse into subdirectory (for special folders like _maybe/)
                 scan_directory(full_path, results)
