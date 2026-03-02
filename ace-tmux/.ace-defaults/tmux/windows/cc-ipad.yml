@@ -1,0 +1,10 @@
+# Claude Code workspace for small screens (iPad)
+# top: claude (full width) | bottom-left: shell | bottom-right: shell
+direction: vertical
+panes:
+  - preset: claude
+    size: "50%"
+  - direction: horizontal
+    panes:
+      - commands: []
+      - commands: []
