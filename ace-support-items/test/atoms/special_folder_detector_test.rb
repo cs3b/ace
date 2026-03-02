@@ -49,6 +49,24 @@ class SpecialFolderDetectorTest < AceSupportItemsTestCase
     assert_nil Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("")
   end
 
+  def test_move_to_root_recognizes_aliases
+    assert Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("next")
+    assert Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("root")
+    assert Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("/")
+  end
+
+  def test_move_to_root_is_case_insensitive
+    assert Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("Next")
+    assert Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("ROOT")
+  end
+
+  def test_move_to_root_rejects_non_aliases
+    refute Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("archive")
+    refute Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("maybe")
+    refute Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(nil)
+    refute Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?("")
+  end
+
   def test_normalize_already_prefixed
     assert_equal "_archive", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("_archive")
     assert_equal "_custom", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("_custom")

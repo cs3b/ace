@@ -23,6 +23,19 @@ module Ace
           # Virtual filters — not physical folders, used for list filtering
           VIRTUAL_FILTERS = { "next" => :next, "all" => :all }.freeze
 
+          # Aliases that mean "move back to root" (no special folder).
+          # "next" is the primary label; "root" and "/" are convenience aliases.
+          MOVE_TO_ROOT_ALIASES = %w[next root /].freeze
+
+          # Check if a name means "move to root" (out of any special folder).
+          # @param name [String] The name to check
+          # @return [Boolean] True if the name is a move-to-root alias
+          def self.move_to_root?(name)
+            return false if name.nil? || name.empty?
+
+            MOVE_TO_ROOT_ALIASES.include?(name.downcase)
+          end
+
           # Check if a name is a virtual filter
           # @param name [String] The name to check
           # @return [Symbol, nil] :next, :all, or nil
