@@ -131,6 +131,35 @@ class DirectoryScannerTest < AceSupportItemsTestCase
     assert_equal "8pp.t.q7w-fix-login", result.folder_name
   end
 
+  def test_recurses_into_special_folder_with_orphan_spec_files
+    # _maybe/ has orphan spec files at its root AND item subfolders
+    special_dir = File.join(@tmpdir, "_maybe")
+    FileUtils.mkdir_p(special_dir)
+
+    # Orphan spec files directly in _maybe/ (not inside an item subfolder)
+    File.write(File.join(special_dir, "stale-draft.idea.s.md"), "# Orphan 1")
+    File.write(File.join(special_dir, "another-orphan.idea.s.md"), "# Orphan 2")
+
+    # Valid item subfolders inside _maybe/
+    idea1 = File.join(special_dir, "9xzr1k-future-idea")
+    idea2 = File.join(special_dir, "aabbcc-another-idea")
+    FileUtils.mkdir_p(idea1)
+    FileUtils.mkdir_p(idea2)
+    File.write(File.join(idea1, "9xzr1k-future-idea.idea.s.md"), "# Future Idea")
+    File.write(File.join(idea2, "aabbcc-another-idea.idea.s.md"), "# Another Idea")
+
+    scanner = Ace::Support::Items::Molecules::DirectoryScanner.new(
+      @tmpdir,
+      file_pattern: "*.idea.s.md"
+    )
+    results = scanner.scan
+
+    assert_equal 2, results.length
+    assert_equal "9xzr1k", results[0].id
+    assert_equal "aabbcc", results[1].id
+    results.each { |r| assert_equal "_maybe", r.special_folder }
+  end
+
   def test_default_extractor_backward_compatible
     # Default behavior should match existing 6-char b36ts pattern
     idea_dir = File.join(@tmpdir, "8ppq7w-dark-mode")
