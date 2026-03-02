@@ -31,10 +31,18 @@ class FolderMoverTest < AceSupportItemsTestCase
     item = create_item_folder("8pp.t.q7w-fix-login")
     mover = Mover.new(@root_dir)
 
-    new_path = mover.move(item, to: "_next")
+    new_path = mover.move(item, to: "_anytime")
 
     assert File.exist?(new_path)
-    assert_includes new_path, "_next"
+    assert_includes new_path, "_anytime"
+  end
+
+  def test_move_rejects_virtual_filter_target
+    item = create_item_folder("8pp.t.q7w-fix-login")
+    mover = Mover.new(@root_dir)
+
+    assert_raises(ArgumentError) { mover.move(item, to: "next") }
+    assert_raises(ArgumentError) { mover.move(item, to: "all") }
   end
 
   def test_move_to_archive_with_date_partition
