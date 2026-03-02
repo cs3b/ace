@@ -1,7 +1,0 @@
----
-timestamp: '2025-11-02T00:13:17+00:00'
-preset: pr
-model: gpro
-has_context: true
-subject_size: 464557
-prompt_size: 486585

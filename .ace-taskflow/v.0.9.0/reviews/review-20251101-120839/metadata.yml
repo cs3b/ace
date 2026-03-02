@@ -1,7 +1,0 @@
----
-timestamp: '2025-11-01T12:08:39+00:00'
-preset: pr
-model: google:gemini-2.5-flash-lite
-has_context: true
-subject_size: 86893
-prompt_size: 108862
