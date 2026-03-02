@@ -10,5 +10,5 @@ panes:
       - commands:
           - ace-git status
   - commands:
-      - ace-taskflow status
+      - ace-task list
     size: "34%"
