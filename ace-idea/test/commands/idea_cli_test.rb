@@ -77,10 +77,10 @@ class IdeaCliTest < AceIdeaTestCase
   def test_create_with_move_to
     with_ideas_dir do |root|
       with_cli_root(root) do
-        result = run_cli(["create", "Next item idea", "--move-to", "next"])
+        result = run_cli(["create", "Maybe item idea", "--move-to", "maybe"])
         assert_equal 0, result[:exit_code], result[:stderr]
         assert_match(/Idea created:/, result[:stdout])
-        assert_match(/_next/, result[:stdout])
+        assert_match(/_maybe/, result[:stdout])
       end
     end
   end

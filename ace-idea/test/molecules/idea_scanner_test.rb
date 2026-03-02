@@ -68,4 +68,30 @@ class IdeaScannerTest < AceIdeaTestCase
       assert_equal "9xzr1k", results.first.id
     end
   end
+
+  def test_scan_in_folder_next_returns_root_items_only
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "8ppq7w", slug: "active-idea")
+      create_idea_fixture(root, id: "9xzr1k", slug: "maybe-idea", special_folder: "_maybe")
+
+      scanner = Ace::Idea::Molecules::IdeaScanner.new(root)
+      results = scanner.scan_in_folder("next")
+
+      assert_equal 1, results.length
+      assert_equal "8ppq7w", results.first.id
+      assert_nil results.first.special_folder
+    end
+  end
+
+  def test_scan_in_folder_all_returns_everything
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "8ppq7w", slug: "active-idea")
+      create_idea_fixture(root, id: "9xzr1k", slug: "maybe-idea", special_folder: "_maybe")
+
+      scanner = Ace::Idea::Molecules::IdeaScanner.new(root)
+      results = scanner.scan_in_folder("all")
+
+      assert_equal 2, results.length
+    end
+  end
 end

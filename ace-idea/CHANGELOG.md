@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-02
+
+### Changed
+- `IdeaManager#list` defaults to `in_folder: "next"` — shows only root ideas by default (excludes _archive, _maybe, etc.)
+- `IdeaScanner#scan_in_folder` supports virtual filters ("next" for root-only, "all" for everything)
+- `IdeaCreator` rejects virtual filter names ("next", "all") in `--move-to` option
+- Use `--in all` to see all ideas including special folders (previous default behavior)
+- Remove `next: _next` from default config special folder mappings
+
 ## [0.5.0] - 2026-02-28
 
 ### Changed

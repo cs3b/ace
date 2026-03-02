@@ -50,18 +50,13 @@ module Ace
 
         # List tasks with optional filtering.
         # @param status [String, nil] Filter by status
-        # @param in_folder [String, nil] Filter by special folder
+        # @param in_folder [String, nil] Filter by special folder (default: "next" = root items only)
         # @param tags [Array<String>] Filter by tags (any match)
         # @param filters [Array<String>, nil] Generic filter strings
         # @return [Array<Models::Task>] List of tasks
-        def list(status: nil, in_folder: nil, tags: [], filters: nil)
+        def list(status: nil, in_folder: "next", tags: [], filters: nil)
           scanner = Molecules::TaskScanner.new(@root_dir)
-          scan_results = if in_folder
-            normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(in_folder)
-            scanner.scan.select { |sr| sr.special_folder == normalized }
-          else
-            scanner.scan
-          end
+          scan_results = scanner.scan_in_folder(in_folder)
 
           loader = Molecules::TaskLoader.new
           tasks = scan_results.filter_map do |sr|

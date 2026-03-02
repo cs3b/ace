@@ -24,15 +24,21 @@ module Ace
           @scanner.scan
         end
 
-        # Scan and filter by special folder
-        # @param folder [String, nil] Special folder name (e.g., "_archive") or nil for all
+        # Scan and filter by special folder or virtual filter
+        # @param folder [String, nil] Folder name, virtual filter ("next", "all"), or nil for all
         # @return [Array<ScanResult>] Filtered scan results
         def scan_in_folder(folder)
           results = scan
           return results if folder.nil?
 
-          normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(folder)
-          results.select { |r| r.special_folder == normalized }
+          virtual = Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(folder)
+          case virtual
+          when :all  then results
+          when :next then results.select { |r| r.special_folder.nil? }
+          else
+            normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(folder)
+            results.select { |r| r.special_folder == normalized }
+          end
         end
 
         # Check if root directory exists

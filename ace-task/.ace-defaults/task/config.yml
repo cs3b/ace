@@ -14,7 +14,6 @@ task:
     archive: _archive
     maybe: _maybe
     anytime: _anytime
-    next: _next
 
   # Doctor command: LLM model for agent-assisted fix
   doctor_agent_model: "gemini:flash-latest"
