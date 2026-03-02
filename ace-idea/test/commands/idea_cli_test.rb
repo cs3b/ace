@@ -226,6 +226,18 @@ class IdeaCliTest < AceIdeaTestCase
     end
   end
 
+  def test_list_shows_stats_line
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "aaa111", slug: "first-idea", status: "pending")
+      create_idea_fixture(root, id: "bbb222", slug: "second-idea", status: "done")
+      with_cli_root(root) do
+        result = run_cli(["list"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/Ideas:.*total/, result[:stdout])
+      end
+    end
+  end
+
   # ---------------------------------------------------------------------------
   # move command
   # ---------------------------------------------------------------------------

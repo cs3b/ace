@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.704] - 2026-03-02
+
+### Added
+- **ace-support-items v0.7.0**: `ItemStatistics` atom for grouping items by field and computing completion rates
+- **ace-support-items v0.7.0**: `StatsLineFormatter` atom for building stats summary lines with configurable icons, ordering, and completion percentage
+- **ace-task v0.6.0**: Stats summary line appended to `list` output (e.g., "Tasks: ○ 2 | ▶ 1 | ✓ 5 • 8 total • 63% complete")
+- **ace-idea v0.7.0**: Stats summary line appended to `list` output (e.g., "Ideas: ⚪ 3 | 🟡 1 | 🟢 2 • 6 total • 33% complete")
+- **ace-retro v0.4.0**: Stats summary line appended to `list` output (e.g., "Retros: 🟡 2 | 🟢 5 • 7 total • 71% complete")
+
 ## [0.9.703] - 2026-03-02
 
 ### Added
