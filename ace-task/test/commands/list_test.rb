@@ -106,7 +106,7 @@ class ListCommandTest < AceTaskTestCase
       Ace::Task::TaskCLI.start(["list", "--status", "pending"])
     end.first
 
-    assert_match(/Tasks: ○ 1 • 1 total/, output)
+    assert_match(/Tasks: ○ 1 • 1 of 2/, output)
   end
 
   private

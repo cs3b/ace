@@ -50,7 +50,7 @@ module Ace
             list_opts[:in_folder] = in_folder if in_folder
             ideas = manager.list(**list_opts)
 
-            puts Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(ideas)
+            puts Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(ideas, total_count: manager.last_list_total)
           end
         end
       end

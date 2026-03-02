@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-02
+
+### Added
+- `RetroScanner#last_scan_total` exposes total item count before folder filtering
+- `RetroManager#last_list_total` exposes total item count for "X of Y" stats display
+- `RetroDisplayFormatter.format_list` and `format_stats_line` accept `total_count:` parameter
+- CLI list command passes total count through to formatter for contextual stats
+
 ## [0.4.0] - 2026-03-02
 
 ### Added

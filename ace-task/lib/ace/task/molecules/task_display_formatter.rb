@@ -12,6 +12,8 @@ module Ace
           "in-progress" => "▶",
           "done" => "✓",
           "blocked" => "✗",
+          "draft" => "◇",
+          "skipped" => "–",
           "cancelled" => "—"
         }.freeze
 
@@ -83,27 +85,31 @@ module Ace
 
         # Format a list of tasks for compact display (list command).
         # @param tasks [Array<Models::Task>] Tasks to format
+        # @param total_count [Integer, nil] Total items before folder filtering
         # @return [String] Formatted list output
-        def self.format_list(tasks)
+        def self.format_list(tasks, total_count: nil)
           return "No tasks found." if tasks.empty?
 
           lines = tasks.map { |task| format_list_item(task) }.join("\n")
-          "#{lines}\n\n#{format_stats_line(tasks)}"
+          "#{lines}\n\n#{format_stats_line(tasks, total_count: total_count)}"
         end
 
-        STATUS_ORDER = %w[pending in-progress done blocked cancelled].freeze
+        STATUS_ORDER = %w[draft pending in-progress done blocked skipped cancelled].freeze
 
         # Format a stats summary line for a list of tasks.
         # @param tasks [Array<Models::Task>] Tasks to summarize
-        # @return [String] e.g. "Tasks: ○ 2 | ▶ 1 | ✓ 5 • 8 total • 63% complete"
-        def self.format_stats_line(tasks)
+        # @param total_count [Integer, nil] Total items before folder filtering
+        # @return [String] e.g. "Tasks: ○ 2 | ▶ 1 | ✓ 5 • 3 of 660"
+        def self.format_stats_line(tasks, total_count: nil)
           stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(tasks, :status)
+          folder_stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(tasks, :special_folder)
           Ace::Support::Items::Atoms::StatsLineFormatter.format(
             label: "Tasks",
             stats: stats,
             status_order: STATUS_ORDER,
             status_icons: STATUS_SYMBOLS,
-            completion_values: ["done"]
+            folder_stats: folder_stats,
+            total_count: total_count
           )
         end
 

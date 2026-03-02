@@ -51,7 +51,7 @@ module Ace
             list_opts[:in_folder] = in_folder if in_folder
             retros = manager.list(**list_opts)
 
-            puts Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros)
+            puts Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros, total_count: manager.last_list_total)
           end
         end
       end
