@@ -1,7 +1,7 @@
 # Specification review - clarity, completeness, and feasibility
 #
 # Requires --subject parameter to specify files to review:
-#   ace-review --preset spec --subject '.ace-taskflow/v.0.9.0/tasks/150-*/**/*'
+#   ace-review --preset spec --subject '.ace-tasks/v.0.9.0/tasks/150-*/**/*'
 #
 # For auto-detecting all changed .s.md files on branch, use 'spec-branch' preset.
 

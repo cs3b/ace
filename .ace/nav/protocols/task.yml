@@ -2,11 +2,11 @@
 protocol: task
 type: cmd  # Command delegation (not file-based resolution)
 name: "Task Navigation"
-description: "Navigate to tasks via ace-taskflow delegation"
+description: "Navigate to tasks via ace-task delegation"
 enabled: true
 
 # Command delegation configuration
-command_template: "ace-taskflow task %{ref}"
+command_template: "ace-task show %{ref}"
 
 # Options that should be passed through to the delegated command
 pass_through_options:
@@ -18,14 +18,14 @@ pass_through_options:
 capabilities:
   searchable: false     # No search within task:// URIs
   supports_glob: false  # No pattern matching in v1
-  supports_create: false  # Use ace-taskflow task create directly
-  supports_content: true  # Passed through to ace-taskflow
-  supports_list: false   # Requires ace-taskflow tasks enhancement first
-  supports_tree: true    # Passed through to ace-taskflow
+  supports_create: false  # Use ace-task create directly
+  supports_content: true  # Passed through to ace-task
+  supports_list: false   # Requires ace-task list enhancement first
+  supports_tree: true    # Passed through to ace-task
 
 # Notes for users
 notes: |
-  The task:// protocol delegates to ace-taskflow task command.
+  The task:// protocol delegates to ace-task show command.
   All task reference formats are supported:
     - 018, task.018 (current context)
     - v.0.9.0+018 (specific release)
