@@ -1,12 +1,5 @@
 # frozen_string_literal: true
 
-# Try to require ace-taskflow for task reference parsing
-begin
-  require "ace/taskflow/atoms/task_reference_parser"
-rescue LoadError
-  # ace-taskflow not available - will use fallback regex
-end
-
 module Ace
   module Git
     module Worktree
@@ -33,15 +26,7 @@ module Ace
           def self.extract(task_data)
             return "unknown" unless task_data
 
-            # Use TaskReferenceParser if available (preferred)
-            if task_data[:id] && defined?(Ace::Taskflow::Atoms::TaskReferenceParser)
-              parsed = Ace::Taskflow::Atoms::TaskReferenceParser.parse(task_data[:id])
-              if parsed
-                return parsed[:subtask] ? "#{parsed[:number]}.#{parsed[:subtask]}" : parsed[:number]
-              end
-            end
-
-            # Fallback: regex with subtask support
+            # Regex with subtask support
             if task_data[:id]
               # Try subtask pattern first (e.g., "v.0.9.0+task.121.01" -> "121.01")
               if match = task_data[:id].match(/task\.(\d+)\.(\d{2})$/)
@@ -69,15 +54,7 @@ module Ace
             ref = task_ref.to_s.strip
             return nil if ref.empty?
 
-            # Use TaskReferenceParser if available (preferred)
-            if defined?(Ace::Taskflow::Atoms::TaskReferenceParser)
-              parsed = Ace::Taskflow::Atoms::TaskReferenceParser.parse(ref)
-              if parsed
-                return parsed[:subtask] ? "#{parsed[:number]}.#{parsed[:subtask]}" : parsed[:number]
-              end
-            end
-
-            # Fallback: regex patterns for recognized ACE task ID formats
+            # Regex patterns for recognized ACE task ID formats
             # ACE task IDs are 3-digit zero-padded (081, 121, etc.)
             # Try hierarchical pattern first (e.g., "121.01", "task.121.01")
             if match = ref.match(/(\d{3})\.(\d{2})(?:\b|$)/)

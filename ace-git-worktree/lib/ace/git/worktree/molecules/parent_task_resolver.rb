@@ -41,7 +41,7 @@ module Ace
 
           # Resolve target branch for a task
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [String] Parent's worktree branch or DEFAULT_TARGET
           #
           # @example Subtask with parent

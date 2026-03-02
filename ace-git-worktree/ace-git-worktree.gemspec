@@ -15,7 +15,7 @@ Gem::Specification.new do |spec|
 
     Features:
     - Task-aware worktree creation with automatic metadata lookup
-    - Integration with ace-taskflow for task metadata
+    - Integration with ace-task for task metadata
     - Configuration-driven naming conventions
     - Automated environment setup (mise trust)
     - Support for traditional worktree operations
@@ -48,7 +48,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'ace-support-core', '~> 0.24'
   spec.add_dependency 'ace-support-config', '~> 0.7'
   spec.add_dependency 'ace-git', '~> 0.11'
-  spec.add_dependency 'ace-taskflow', '~> 0.41'
+  spec.add_dependency 'ace-task', '~> 0.11'
 
   # Development dependencies are managed in the root Gemfile
   spec.add_development_dependency 'rake'

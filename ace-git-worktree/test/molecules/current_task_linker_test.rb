@@ -14,7 +14,7 @@ class CurrentTaskLinkerTest < Minitest::Test
 
   def test_link_creates_symlink_to_task_directory
     # Create a task directory
-    task_dir = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
+    task_dir = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
     FileUtils.mkdir_p(task_dir)
 
     result = @linker.link(task_dir)
@@ -29,13 +29,13 @@ class CurrentTaskLinkerTest < Minitest::Test
 
     # Verify symlink target is relative
     target = File.readlink(symlink_path)
-    assert_equal ".ace-taskflow/v.0.9.0/tasks/145-feat", target
+    assert_equal ".ace-tasks/v.0.9.0/tasks/145-feat", target
   end
 
   def test_link_replaces_existing_symlink
     # Create task directories
-    task_dir_1 = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
-    task_dir_2 = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "146-fix")
+    task_dir_1 = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
+    task_dir_2 = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "146-fix")
     FileUtils.mkdir_p(task_dir_1)
     FileUtils.mkdir_p(task_dir_2)
 
@@ -50,7 +50,7 @@ class CurrentTaskLinkerTest < Minitest::Test
     # Verify symlink points to second directory
     symlink_path = File.join(@temp_dir, "_current")
     target = File.readlink(symlink_path)
-    assert_equal ".ace-taskflow/v.0.9.0/tasks/146-fix", target
+    assert_equal ".ace-tasks/v.0.9.0/tasks/146-fix", target
   end
 
   def test_link_fails_for_missing_directory
@@ -76,7 +76,7 @@ class CurrentTaskLinkerTest < Minitest::Test
 
   def test_unlink_removes_existing_symlink
     # Create a task directory and symlink
-    task_dir = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
+    task_dir = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
     FileUtils.mkdir_p(task_dir)
     @linker.link(task_dir)
 
@@ -108,7 +108,7 @@ class CurrentTaskLinkerTest < Minitest::Test
   end
 
   def test_exists_returns_true_when_symlink_exists
-    task_dir = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
+    task_dir = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
     FileUtils.mkdir_p(task_dir)
     @linker.link(task_dir)
 
@@ -120,15 +120,15 @@ class CurrentTaskLinkerTest < Minitest::Test
   end
 
   def test_current_target_returns_relative_path
-    task_dir = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
+    task_dir = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
     FileUtils.mkdir_p(task_dir)
     @linker.link(task_dir)
 
-    assert_equal ".ace-taskflow/v.0.9.0/tasks/145-feat", @linker.current_target
+    assert_equal ".ace-tasks/v.0.9.0/tasks/145-feat", @linker.current_target
   end
 
   def test_current_absolute_path_returns_absolute_path
-    task_dir = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
+    task_dir = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
     FileUtils.mkdir_p(task_dir)
     @linker.link(task_dir)
 
@@ -146,7 +146,7 @@ class CurrentTaskLinkerTest < Minitest::Test
       symlink_name: "_active"
     )
 
-    task_dir = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
+    task_dir = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
     FileUtils.mkdir_p(task_dir)
     result = custom_linker.link(task_dir)
 
@@ -156,11 +156,11 @@ class CurrentTaskLinkerTest < Minitest::Test
   end
 
   def test_link_returns_relative_target_in_result
-    task_dir = File.join(@temp_dir, ".ace-taskflow", "v.0.9.0", "tasks", "145-feat")
+    task_dir = File.join(@temp_dir, ".ace-tasks", "v.0.9.0", "tasks", "145-feat")
     FileUtils.mkdir_p(task_dir)
 
     result = @linker.link(task_dir)
 
-    assert_equal ".ace-taskflow/v.0.9.0/tasks/145-feat", result[:relative_target]
+    assert_equal ".ace-tasks/v.0.9.0/tasks/145-feat", result[:relative_target]
   end
 end

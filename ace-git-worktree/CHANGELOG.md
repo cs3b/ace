@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.18] - 2026-03-02
+
+### Changed
+- Replace `ace-taskflow` dependency with `ace-task` — migrate `TaskFetcher`, `TaskStatusUpdater`, and `TaskIDExtractor` to ace-task APIs
+- Update CLI fallback commands from `ace-taskflow` to `ace-task`
+- Update user-facing error messages and help text to reference `ace-task`
+
 ## [0.13.17] - 2026-02-25
 
 ### Technical

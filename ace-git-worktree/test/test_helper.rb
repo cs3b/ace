@@ -39,9 +39,9 @@ module TestHelper
     end
   end
 
-  def stub_ace_taskflow_output(task_id, output)
+  def stub_ace_task_output(task_id, output)
     # Use shared fixtures from ace-support-test-helpers
-    Ace::TestSupport::Fixtures::GitMocks.stub_ace_taskflow_output(task_id, output) do
+    Ace::TestSupport::Fixtures::GitMocks.stub_ace_task_output(task_id, output) do
       yield
     end
   end

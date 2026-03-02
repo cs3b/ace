@@ -24,7 +24,7 @@ module Ace
     #
     # Key features:
     # - Task-aware worktree creation with automatic metadata lookup
-    # - Integration with ace-taskflow for task information
+    # - Integration with ace-task for task information
     # - Configuration-driven naming conventions
     # - Automated environment setup (mise trust)
     # - Support for traditional worktree operations

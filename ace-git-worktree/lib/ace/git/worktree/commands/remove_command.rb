@@ -227,7 +227,7 @@ module Ace
               task_found = true
             else
               # Fallback: Try to find worktree by task reference (for cases where task metadata exists but worktree doesn't)
-              puts "Task not found in ace-taskflow, checking for orphaned worktree..."
+              puts "Task not found in ace-task, checking for orphaned worktree..."
               worktree_info = find_worktree_by_task_reference(options[:task])
               task_found = false
             end
@@ -265,7 +265,7 @@ module Ace
                 puts "Use 'ace-git-worktree list' to see available worktrees"
               else
                 puts "Error: Task not found: #{options[:task]}"
-                puts "Use 'ace-taskflow tasks list' to see available tasks"
+                puts "Use 'ace-task list' to see available tasks"
               end
               return 1
             end
@@ -462,7 +462,7 @@ module Ace
 
           # Find worktree for task (when task data is available)
           #
-          # @param task_data [Hash] Task data hash from ace-taskflow
+          # @param task_data [Hash] Task data hash from ace-task
           # @return [WorktreeInfo, nil] Worktree info or nil if not found
           def find_worktree_for_task(task_data)
             worktree_lister = Ace::Git::Worktree::Molecules::WorktreeLister.new
