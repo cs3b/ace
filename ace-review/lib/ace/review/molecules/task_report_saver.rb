@@ -40,45 +40,6 @@ module Ace
           end
         end
 
-        # Save a review report to release reviews/ directory
-        # @param review_file [String] Path to the review file to copy
-        # @param review_data [Hash] Review metadata (preset, model, etc.)
-        # @return [Hash] Result with :success, :path, or :error
-        def self.save_to_release(review_file, review_data)
-          require "ace/taskflow"
-          require "ace/taskflow/organisms/release_manager"
-
-          # Validate input
-          return { success: false, error: "Review file not found: #{review_file}" } unless File.exist?(review_file)
-
-          begin
-            # Get current release via ace-taskflow
-            release_manager = Ace::Taskflow::Organisms::ReleaseManager.new
-            current_release = release_manager.current_release
-
-            unless current_release
-              return { success: false, error: "No current release found" }
-            end
-
-            # Construct release reviews directory
-            release_dir = File.dirname(current_release[:path])
-            reviews_dir = File.join(release_dir, "reviews")
-
-            # Create reviews/ subdirectory if it doesn't exist
-            FileUtils.mkdir_p(reviews_dir)
-
-            # Generate filename
-            filename = generate_filename(review_data)
-            output_path = File.join(reviews_dir, filename)
-
-            # Copy review to release directory
-            FileUtils.cp(review_file, output_path)
-            { success: true, path: output_path }
-          rescue StandardError => e # Broad: wraps mkdir_p, cp, generate_filename, YAML operations
-            { success: false, error: "Failed to save to release: #{e.message}" }
-          end
-        end
-
         # Generate filename with compact ID for review report
         # @param review_data [Hash] Review metadata (preset, model, etc.)
         # @return [String] Filename with format: {compact_id}-model-preset-review.md

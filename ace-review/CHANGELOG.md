@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.7] - 2026-03-02
+
+### Changed
+- Replace `ace-taskflow` dependency with `ace-task` — migrate `TaskResolver`, `SubjectExtractor`, and `PresetManager` to ace-task APIs
+- Remove dead `save_to_release` method from `TaskReportSaver` (used `ReleaseManager` from ace-taskflow, never called in production)
+- Update CLI subprocess call from `ace-taskflow task REF --path` to `ace-task show REF --path`
+
 ## [0.42.6] - 2026-02-25
 
 ### Technical

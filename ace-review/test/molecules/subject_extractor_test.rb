@@ -178,7 +178,7 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_task_typed_subject
-    # Mock ace-taskflow command
+    # Mock ace-task command
     mock_output = "/path/to/task/145.md\n"
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
@@ -192,7 +192,7 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_task_typed_subject_subtask
-    # Mock ace-taskflow command
+    # Mock ace-task command
     mock_output = "/path/to/task/145.02-subtask.s.md\n"
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
@@ -206,7 +206,7 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_task_not_found_error
-    # Mock ace-taskflow command failure
+    # Mock ace-task command failure
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, false
 
@@ -215,14 +215,14 @@ class SubjectExtractorTest < AceReviewTest
         @extractor.extract("task:999")
       end
       assert_includes error.message, "Task '999' not found"
-      assert_includes error.message, "ace-taskflow task 999"
+      assert_includes error.message, "ace-task show 999"
     end
 
     mock_status.verify
   end
 
   def test_task_no_path_error
-    # Mock ace-taskflow command success but empty path
+    # Mock ace-task command success but empty path
     mock_status = Minitest::Mock.new
     mock_status.expect :success?, true
 
@@ -231,7 +231,7 @@ class SubjectExtractorTest < AceReviewTest
         @extractor.extract("task:145")
       end
       assert_includes error.message, "Task '145' exists but has no path"
-      assert_includes error.message, "ace-taskflow task 145"
+      assert_includes error.message, "ace-task show 145"
     end
 
     mock_status.verify
@@ -259,24 +259,24 @@ class SubjectExtractorTest < AceReviewTest
   end
 
   def test_task_missing_ace_taskflow
-    # Test that missing ace-taskflow raises helpful error
-    @extractor.stub :run_taskflow_command, ->(_ref) { raise Errno::ENOENT, "ace-taskflow" } do
+    # Test that missing ace-task raises helpful error
+    @extractor.stub :run_taskflow_command, ->(_ref) { raise Errno::ENOENT, "ace-task" } do
       error = assert_raises Ace::Review::Errors::MissingDependencyError do
         @extractor.extract("task:145")
       end
-      assert_includes error.message, "ace-taskflow"
+      assert_includes error.message, "ace-task"
     end
   end
 
   def test_task_timeout_raises_command_timeout_error
-    # Test that a hanging ace-taskflow subprocess raises timeout error
+    # Test that a hanging ace-task subprocess raises timeout error
     Timeout.stub :timeout, ->(_seconds) { raise Timeout::Error } do
       error = assert_raises Ace::Review::Errors::CommandTimeoutError do
         @extractor.extract("task:145")
       end
-      assert_includes error.message, "ace-taskflow"
+      assert_includes error.message, "ace-task"
       assert_includes error.message, "timed out"
-      assert_equal "ace-taskflow task 145 --path", error.command
+      assert_equal "ace-task show 145 --path", error.command
       assert_equal Ace::Review::Molecules::SubjectExtractor::TASKFLOW_TIMEOUT, error.timeout_seconds
     end
   end
