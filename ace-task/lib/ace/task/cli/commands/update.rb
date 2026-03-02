@@ -31,6 +31,8 @@ module Ace
           option :add,    type: :array, desc: "Add to array field: key=value (comma-separated for multiple)"
           option :remove, type: :array, desc: "Remove from array field: key=value (comma-separated for multiple)"
 
+          option :git_commit, type: :boolean, aliases: %w[--gc], desc: "Auto-commit changes"
+
           option :quiet,   type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose, type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :debug,   type: :boolean, aliases: %w[-d], desc: "Show debug output"
@@ -59,6 +61,13 @@ module Ace
             end
 
             puts "Task updated: #{task.id} #{task.title}"
+
+            if options[:git_commit]
+              Ace::Support::Items::Molecules::GitCommitter.commit(
+                paths: [task.path],
+                intention: "update task #{task.id}"
+              )
+            end
           end
 
           private
