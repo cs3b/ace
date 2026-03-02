@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.709] - 2026-03-02
+
+### Added
+- **ace-support-items v0.11.0**: `FolderCompletionDetector` atom for checking if all spec files in a directory have terminal status (done/skipped/blocked)
+- **ace-support-items v0.11.0**: `SpecialFolderDetector.move_to_root?` method recognizing "next", "root", "/" as move-to-root aliases
+- **ace-task v0.10.0**: `--move-to` / `-m` option on `update` command to relocate tasks to special folders or back to root
+- **ace-task v0.10.0**: `--move-as-child-of` option on `update` command for reparenting tasks (promote, orchestrator conversion, demote)
+- **ace-task v0.10.0**: `TaskReparenter` molecule for promote/orchestrator/demote operations
+- **ace-task v0.10.0**: Auto-archive hook — when all subtasks reach terminal status, parent auto-moves to archive
+- **ace-idea v0.11.0**: `--move-to` / `-m` option on `update` command to relocate ideas to special folders or back to root
+- **ace-retro v0.7.0**: `--move-to` / `-m` option on `update` command to relocate retros to special folders or back to root
+
+### Removed
+- **ace-task v0.10.0**: Standalone `move` command — use `update --move-to` instead
+- **ace-idea v0.11.0**: Standalone `move` command — use `update --move-to` instead
+- **ace-retro v0.7.0**: Standalone `move` command — use `update --move-to` instead
+
 ## [0.9.708] - 2026-03-02
 
 ### Added
