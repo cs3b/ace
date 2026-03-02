@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-03-02
+
+### Added
+- Smart auto-sort: `list` command now sorts by computed score (priority × 100 + age, with in-progress boost and blocked penalty) by default
+- `--sort` option on `list` command: choose sort order — `smart` (default), `id`, `priority`, `created`
+- `--position` option on `update` command: pin tasks in sort order using B36TS values — `first`, `last`, `after:<ref>`, `before:<ref>`
+- Pinned tasks (with `position` frontmatter field) always sort before auto-sorted tasks
+- `status` command up-next section now uses smart sort instead of chronological ID sort
+- Remove position pin with `--remove position` to return task to auto-sort
+
 ## [0.10.0] - 2026-03-02
 
 ### Added
