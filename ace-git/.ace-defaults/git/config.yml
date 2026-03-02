@@ -53,7 +53,7 @@ git:
       layers: [lib, test, handbook]
       collapse_above: 5
       show_full_tree: collapsible
-      dotfile_groups: [.ace-taskflow, .ace]
+      dotfile_groups: [.ace-tasks, .ace]
 
   # Rebase configuration (optional - workflows have defaults)
   # rebase:
