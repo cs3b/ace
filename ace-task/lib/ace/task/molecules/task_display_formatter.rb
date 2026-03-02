@@ -96,6 +96,25 @@ module Ace
 
         STATUS_ORDER = %w[draft pending in-progress done blocked skipped cancelled].freeze
 
+        # Format a status overview with up-next, stats, and recently-done sections.
+        # @param categorized [Hash] Output of StatusCategorizer.categorize
+        # @param all_tasks [Array<Models::Task>] All tasks for stats computation
+        # @return [String] Formatted status output
+        def self.format_status(categorized, all_tasks:)
+          sections = []
+
+          # Up Next
+          sections << format_up_next_section(categorized[:up_next])
+
+          # Stats summary
+          sections << format_stats_line(all_tasks)
+
+          # Recently Done
+          sections << format_recently_done_section(categorized[:recently_done])
+
+          sections.join("\n\n")
+        end
+
         # Format a stats summary line for a list of tasks.
         # @param tasks [Array<Models::Task>] Tasks to summarize
         # @param total_count [Integer, nil] Total items before folder filtering
@@ -113,7 +132,37 @@ module Ace
           )
         end
 
+        # Format a single task as a compact status line (id + title only).
+        # @param task [Models::Task] Task to format
+        # @return [String] e.g. "  ○ 8pp.t.q7w  Fix login bug"
+        def self.format_status_line(task)
+          status_sym = STATUS_SYMBOLS[task.status] || "○"
+          "  #{status_sym} #{task.id}  #{task.title}"
+        end
+
         private
+
+        # Format the "Up Next" section.
+        def self.format_up_next_section(up_next)
+          return "Up Next:\n  (none)" if up_next.empty?
+
+          lines = up_next.map { |task| format_status_line(task) }
+          "Up Next:\n#{lines.join("\n")}"
+        end
+
+        # Format the "Recently Done" section.
+        def self.format_recently_done_section(recently_done)
+          return "Recently Done:\n  (none)" if recently_done.empty?
+
+          lines = recently_done.map do |entry|
+            task = entry[:item]
+            time_str = Ace::Support::Items::Atoms::RelativeTimeFormatter.format(entry[:completed_at])
+            "  #{format_status_line(task).strip}  (#{time_str})"
+          end
+          "Recently Done:\n#{lines.join("\n")}"
+        end
+
+        private_class_method :format_up_next_section, :format_recently_done_section
 
         # Format a single task as a compact list item.
         def self.format_list_item(task)
