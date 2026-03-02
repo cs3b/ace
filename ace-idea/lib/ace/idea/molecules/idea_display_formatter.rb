@@ -43,7 +43,24 @@ module Ace
         def self.format_list(ideas)
           return "No ideas found." if ideas.empty?
 
-          ideas.map { |idea| format(idea) }.join("\n")
+          lines = ideas.map { |idea| format(idea) }.join("\n")
+          "#{lines}\n\n#{format_stats_line(ideas)}"
+        end
+
+        STATUS_ORDER = %w[pending in-progress done obsolete].freeze
+
+        # Format a stats summary line for a list of ideas.
+        # @param ideas [Array<Idea>] Ideas to summarize
+        # @return [String] e.g. "Ideas: ⚪ 3 | 🟡 1 | 🟢 2 • 6 total • 33% complete"
+        def self.format_stats_line(ideas)
+          stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(ideas, :status)
+          Ace::Support::Items::Atoms::StatsLineFormatter.format(
+            label: "Ideas",
+            stats: stats,
+            status_order: STATUS_ORDER,
+            status_icons: STATUS_SYMBOLS,
+            completion_values: ["done"]
+          )
         end
       end
     end

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-02
+
+### Added
+- `IdeaDisplayFormatter.format_stats_line` for generating stats summary (e.g., "Ideas: ⚪ 3 | 🟡 1 | 🟢 2 • 6 total • 33% complete")
+- `format_list` now appends a stats summary line after the item list (omitted for empty lists)
+
 ## [0.6.0] - 2026-03-02
 
 ### Changed

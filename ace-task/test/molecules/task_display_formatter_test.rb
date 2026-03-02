@@ -186,4 +186,51 @@ class TaskDisplayFormatterTest < AceTaskTestCase
 
     assert_includes output, "○ "
   end
+
+  # --- format_list stats line ---
+
+  def test_format_list_includes_stats_line
+    tasks = [
+      build_task(id: "8pp.t.q7w", title: "First", status: "pending"),
+      build_task(id: "8pp.t.abc", title: "Second", status: "done"),
+      build_task(id: "8pp.t.def", title: "Third", status: "done")
+    ]
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks)
+
+    assert_includes output, "Tasks: ○ 1 | ✓ 2 • 3 total • 67% complete"
+  end
+
+  def test_format_list_stats_line_omits_zero_counts
+    tasks = [
+      build_task(status: "pending"),
+      build_task(status: "pending")
+    ]
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks)
+
+    assert_includes output, "Tasks: ○ 2 • 2 total"
+    refute_includes output, "▶"
+    refute_includes output, "✓ 0"
+  end
+
+  def test_format_list_stats_line_separated_by_blank_line
+    tasks = [build_task(status: "pending")]
+    output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks)
+
+    assert_match(/\n\nTasks:/, output)
+  end
+
+  # --- format_stats_line ---
+
+  def test_format_stats_line
+    tasks = [
+      build_task(status: "pending"),
+      build_task(status: "in-progress"),
+      build_task(status: "done"),
+      build_task(status: "done"),
+      build_task(status: "done")
+    ]
+    line = Ace::Task::Molecules::TaskDisplayFormatter.format_stats_line(tasks)
+
+    assert_equal "Tasks: ○ 1 | ▶ 1 | ✓ 3 • 5 total • 60% complete", line
+  end
 end

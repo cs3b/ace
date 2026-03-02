@@ -87,7 +87,24 @@ module Ace
         def self.format_list(tasks)
           return "No tasks found." if tasks.empty?
 
-          tasks.map { |task| format_list_item(task) }.join("\n")
+          lines = tasks.map { |task| format_list_item(task) }.join("\n")
+          "#{lines}\n\n#{format_stats_line(tasks)}"
+        end
+
+        STATUS_ORDER = %w[pending in-progress done blocked cancelled].freeze
+
+        # Format a stats summary line for a list of tasks.
+        # @param tasks [Array<Models::Task>] Tasks to summarize
+        # @return [String] e.g. "Tasks: ○ 2 | ▶ 1 | ✓ 5 • 8 total • 63% complete"
+        def self.format_stats_line(tasks)
+          stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(tasks, :status)
+          Ace::Support::Items::Atoms::StatsLineFormatter.format(
+            label: "Tasks",
+            stats: stats,
+            status_order: STATUS_ORDER,
+            status_icons: STATUS_SYMBOLS,
+            completion_values: ["done"]
+          )
         end
 
         private
