@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-03-02
+
+### Added
+- `--move-to` / `-m` option on `update` command: relocate idea to a special folder (archive, maybe, anytime) or back to root (next/root//)
+
+### Changed
+- `update` command now accepts `--move-to` alone (no `--set` required), replacing the standalone `move` command
+
+### Removed
+- Standalone `move` command — use `update --move-to` instead
+- `IdeaManager#move` method — use `IdeaManager#update(move_to:)` instead
+
 ## [0.10.0] - 2026-03-02
 
 ### Added
