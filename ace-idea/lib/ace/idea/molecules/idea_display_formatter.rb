@@ -39,27 +39,31 @@ module Ace
 
         # Format a list of ideas for display
         # @param ideas [Array<Idea>] Ideas to format
+        # @param total_count [Integer, nil] Total items before folder filtering
         # @return [String] Formatted list output
-        def self.format_list(ideas)
+        def self.format_list(ideas, total_count: nil)
           return "No ideas found." if ideas.empty?
 
           lines = ideas.map { |idea| format(idea) }.join("\n")
-          "#{lines}\n\n#{format_stats_line(ideas)}"
+          "#{lines}\n\n#{format_stats_line(ideas, total_count: total_count)}"
         end
 
         STATUS_ORDER = %w[pending in-progress done obsolete].freeze
 
         # Format a stats summary line for a list of ideas.
         # @param ideas [Array<Idea>] Ideas to summarize
-        # @return [String] e.g. "Ideas: ⚪ 3 | 🟡 1 | 🟢 2 • 6 total • 33% complete"
-        def self.format_stats_line(ideas)
+        # @param total_count [Integer, nil] Total items before folder filtering
+        # @return [String] e.g. "Ideas: ⚪ 3 | 🟡 1 | 🟢 2 • 3 of 8"
+        def self.format_stats_line(ideas, total_count: nil)
           stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(ideas, :status)
+          folder_stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(ideas, :special_folder)
           Ace::Support::Items::Atoms::StatsLineFormatter.format(
             label: "Ideas",
             stats: stats,
             status_order: STATUS_ORDER,
             status_icons: STATUS_SYMBOLS,
-            completion_values: ["done"]
+            folder_stats: folder_stats,
+            total_count: total_count
           )
         end
       end

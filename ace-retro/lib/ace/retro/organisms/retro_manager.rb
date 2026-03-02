@@ -15,6 +15,8 @@ module Ace
       # Orchestrates all retro CRUD operations.
       # Entry point for retro management with config-driven root directory.
       class RetroManager
+        attr_reader :last_list_total
+
         # @param root_dir [String, nil] Override root directory for retros
         # @param config [Hash, nil] Override configuration
         def initialize(root_dir: nil, config: nil)
@@ -58,6 +60,7 @@ module Ace
         def list(status: nil, type: nil, in_folder: "next", tags: [])
           scanner = Molecules::RetroScanner.new(@root_dir)
           scan_results = scanner.scan_in_folder(in_folder)
+          @last_list_total = scanner.last_scan_total
 
           loader = Molecules::RetroLoader.new
           retros = scan_results.filter_map do |sr|

@@ -90,7 +90,8 @@ class RetroDisplayFormatterTest < AceRetroTestCase
     ]
     output = Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros)
 
-    assert_includes output, "Retros: 🟡 1 | 🟢 2 • 3 total • 67% complete"
+    assert_includes output, "Retros: 🟡 1 | 🟢 2 • 3 total"
+    refute_includes output, "% complete"
   end
 
   def test_format_list_stats_line_omits_zero_counts
@@ -118,6 +119,22 @@ class RetroDisplayFormatterTest < AceRetroTestCase
     ]
     line = Ace::Retro::Molecules::RetroDisplayFormatter.format_stats_line(retros)
 
-    assert_equal "Retros: 🟡 1 | 🟢 2 • 3 total • 67% complete", line
+    assert_equal "Retros: 🟡 1 | 🟢 2 • 3 total", line
+  end
+
+  # --- total_count threading ---
+
+  def test_format_list_with_total_count_shows_x_of_y
+    retros = [make_retro(status: "active")]
+    output = Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros, total_count: 15)
+
+    assert_includes output, "Retros: 🟡 1 • 1 of 15"
+  end
+
+  def test_format_stats_line_with_total_count
+    retros = [make_retro(status: "active"), make_retro(status: "done")]
+    line = Ace::Retro::Molecules::RetroDisplayFormatter.format_stats_line(retros, total_count: 30)
+
+    assert_equal "Retros: 🟡 1 | 🟢 1 • 2 of 30", line
   end
 end

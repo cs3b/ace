@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.705] - 2026-03-02
+
+### Added
+- **ace-support-items v0.8.0**: `StatsLineFormatter` accepts `total_count:` parameter for "X of Y" filtered view display
+- **ace-task v0.7.0**: `TaskScanner#last_scan_total` and `TaskManager#last_list_total` expose total item count for contextual stats
+- **ace-idea v0.8.0**: `IdeaScanner#last_scan_total` and `IdeaManager#last_list_total` expose total item count for contextual stats
+- **ace-retro v0.5.0**: `RetroScanner#last_scan_total` and `RetroManager#last_list_total` expose total item count for contextual stats
+
+### Changed
+- Stats line now shows "X of Y" when viewing a filtered subset (e.g., "3 of 660" instead of redundant "3 total")
+- Stats line shows folder breakdown only in full view with multiple folders (removes single-folder redundancy like "3 total — next 3")
+
 ## [0.9.704] - 2026-03-02
 
 ### Added
