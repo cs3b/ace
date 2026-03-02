@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-02
+
+### Added
+- `StatsLineFormatter.format` accepts `total_count:` parameter for "X of Y" filtered view display
+- Filtered view (shown < total): displays "3 of 660" instead of redundant "3 total"
+- Full view (shown == total): displays "660 total" with folder breakdown only when multi-folder
+
+### Changed
+- Single-folder stats no longer show redundant folder breakdown (e.g., "3 total" instead of "3 total — next 3")
+
 ## [0.7.0] - 2026-03-02
 
 ### Added
