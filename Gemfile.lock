@@ -91,7 +91,7 @@ PATH
 PATH
   remote: ace-idea
   specs:
-    ace-idea (0.10.0)
+    ace-idea (0.11.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
@@ -162,7 +162,7 @@ PATH
 PATH
   remote: ace-retro
   specs:
-    ace-retro (0.6.0)
+    ace-retro (0.7.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
@@ -222,7 +222,7 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.10.0)
+    ace-support-items (0.11.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
 
@@ -267,7 +267,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.9.0)
+    ace-task (0.10.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
