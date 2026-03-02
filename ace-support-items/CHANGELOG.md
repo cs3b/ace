@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-02
+
+### Added
+- `GitCommitter` molecule: shells out to `ace-git-commit` for auto-committing after CLI mutations, used by ace-task, ace-idea, and ace-retro `--git-commit` / `--gc` flag
+
 ## [0.9.0] - 2026-03-02
 
 ### Added
