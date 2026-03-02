@@ -24,6 +24,10 @@ module Ace
           # @param date [Time, nil] Date used to compute archive partition (default: Time.now)
           # @return [String] New path of the item directory
           def move(item, to:, date: nil)
+            if Atoms::SpecialFolderDetector.virtual_filter?(to)
+              raise ArgumentError, "Cannot move to virtual filter '#{to}' — it is not a physical folder"
+            end
+
             normalized = Atoms::SpecialFolderDetector.normalize(to)
 
             target_parent = if normalized == "_archive"

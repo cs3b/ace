@@ -11,15 +11,26 @@ module Ace
         # Short names (without underscore) are auto-expanded: "archive" => "_archive".
         class SpecialFolderDetector
           # Built-in special folders
-          SPECIAL_FOLDERS = %w[_archive _maybe _anytime _next].freeze
+          SPECIAL_FOLDERS = %w[_archive _maybe _anytime].freeze
 
           # Short-name aliases for convenience
           SHORT_ALIASES = {
             "archive" => "_archive",
             "maybe" => "_maybe",
-            "anytime" => "_anytime",
-            "next" => "_next"
+            "anytime" => "_anytime"
           }.freeze
+
+          # Virtual filters — not physical folders, used for list filtering
+          VIRTUAL_FILTERS = { "next" => :next, "all" => :all }.freeze
+
+          # Check if a name is a virtual filter
+          # @param name [String] The name to check
+          # @return [Symbol, nil] :next, :all, or nil
+          def self.virtual_filter?(name)
+            return nil if name.nil? || name.empty?
+
+            VIRTUAL_FILTERS[name.downcase]
+          end
 
           # Detect if a folder name is a special folder
           # @param folder_name [String] The folder name to check

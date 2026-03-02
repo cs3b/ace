@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-03-02
+
+### Added
+- `SpecialFolderDetector.virtual_filter?` method for resolving virtual filter names ("next", "all") to symbols
+- `VIRTUAL_FILTERS` constant mapping virtual filter names to symbols (`:next`, `:all`)
+
+### Changed
+- Remove `_next` from `SPECIAL_FOLDERS` and `SHORT_ALIASES` — "next" is now a virtual filter, not a physical folder
+- `FolderMover#move` raises `ArgumentError` when target is a virtual filter ("next", "all")
+
 ## [0.5.0] - 2026-03-01
 
 ### Added

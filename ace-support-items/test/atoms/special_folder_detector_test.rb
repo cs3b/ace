@@ -7,7 +7,6 @@ class SpecialFolderDetectorTest < AceSupportItemsTestCase
     assert Ace::Support::Items::Atoms::SpecialFolderDetector.special?("_archive")
     assert Ace::Support::Items::Atoms::SpecialFolderDetector.special?("_maybe")
     assert Ace::Support::Items::Atoms::SpecialFolderDetector.special?("_anytime")
-    assert Ace::Support::Items::Atoms::SpecialFolderDetector.special?("_next")
     assert Ace::Support::Items::Atoms::SpecialFolderDetector.special?("_custom")
   end
 
@@ -25,7 +24,29 @@ class SpecialFolderDetectorTest < AceSupportItemsTestCase
     assert_equal "_archive", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("archive")
     assert_equal "_maybe", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("maybe")
     assert_equal "_anytime", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("anytime")
-    assert_equal "_next", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("next")
+  end
+
+  def test_normalize_does_not_expand_virtual_filters
+    # "next" and "all" are virtual filters, not physical folders
+    assert_equal "next", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("next")
+    assert_equal "all", Ace::Support::Items::Atoms::SpecialFolderDetector.normalize("all")
+  end
+
+  def test_virtual_filter_returns_symbol_for_known_filters
+    assert_equal :next, Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("next")
+    assert_equal :all, Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("all")
+  end
+
+  def test_virtual_filter_is_case_insensitive
+    assert_equal :next, Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("Next")
+    assert_equal :all, Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("ALL")
+  end
+
+  def test_virtual_filter_returns_nil_for_non_filters
+    assert_nil Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("maybe")
+    assert_nil Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("archive")
+    assert_nil Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(nil)
+    assert_nil Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?("")
   end
 
   def test_normalize_already_prefixed
