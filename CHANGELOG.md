@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.706] - 2026-03-02
+
+### Fixed
+- **ace-support-items v0.8.1**: `DirectoryScanner` now recurses into special folders that contain orphan spec files (fixes `ace-idea list --in maybe` returning empty when `_maybe/` has stray spec files alongside valid item subfolders)
+
 ## [0.9.705] - 2026-03-02
 
 ### Added
