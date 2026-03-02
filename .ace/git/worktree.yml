@@ -39,7 +39,7 @@ git:
       branch_format: "{id}-{slug}"
 
       # Automatically mark tasks as in-progress when creating worktrees
-      # If true, updates task status to "in-progress" via ace-taskflow
+      # If true, updates task status to "in-progress" via ace-task
       auto_mark_in_progress: true
 
       # Automatically commit task changes before creating worktree
