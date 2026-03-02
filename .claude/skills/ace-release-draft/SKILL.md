@@ -5,7 +5,7 @@ description: Draft new release with version bump and CHANGELOG preparation
 # agent: general-purpose
 user-invocable: true
 allowed-tools:
-  - Bash(ace-taskflow:*)
+  - Bash(ace-task:*)
   - Bash(ace-bundle:*)
   - Bash(ace-git-commit:*)
   - Read
@@ -13,7 +13,7 @@ allowed-tools:
   - TodoWrite
 argument-hint: "[release-version] [codename]"
 last_modified: 2026-01-10
-source: ace-taskflow
+source: ace-task
 ---
 
 read and run `ace-bundle wfi://release/draft`

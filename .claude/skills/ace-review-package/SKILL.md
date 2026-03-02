@@ -158,14 +158,14 @@ For each recommendation, include:
 
 ### 5. Create Taskflow Idea
 
-Create a comprehensive idea file in `.ace-taskflow/v.0.9.0/ideas/`:
+Create a comprehensive idea file in `.ace-ideas/`:
 
 ```bash
 # Generate timestamp
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 
 # Create idea file
-cat > .ace-taskflow/v.0.9.0/ideas/${TIMESTAMP}-[package-name]-comprehensive-review-improvements.s.md <<'EOF'
+cat > .ace-ideas/${TIMESTAMP}-[package-name]-comprehensive-review-improvements.s.md <<'EOF'
 # Idea
 
 # [package-name] - Comprehensive Review Improvements
@@ -243,7 +243,7 @@ Use actual findings from your review to populate the template.
 Commit the idea file with a descriptive message:
 
 ```bash
-git add .ace-taskflow/v.0.9.0/ideas/[TIMESTAMP]-[package-name]-comprehensive-review-improvements.s.md
+git add .ace-ideas/[TIMESTAMP]-[package-name]-comprehensive-review-improvements.s.md
 
 git commit -m "feat(review): Add comprehensive [package-name] package review with improvement recommendations
 
@@ -307,7 +307,7 @@ Provide a summary to the user:
 [Bullet points of main findings]
 
 ### Recommendations Created
-📁 .ace-taskflow/v.0.9.0/ideas/[TIMESTAMP]-[package-name]-comprehensive-review-improvements.s.md
+📁 .ace-ideas/[TIMESTAMP]-[package-name]-comprehensive-review-improvements.s.md
 
 Contains:
 - [X] prioritized improvement recommendations
