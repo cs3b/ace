@@ -9,6 +9,5 @@ retro:
   # Default retro type
   default_type: standard
 
-  # Special folder mappings (short name => actual folder name)
-  special_folders:
-    archive: _archive
+  # Prefix used to identify special folders (e.g., "_archive")
+  special_folder_prefix: "_"
