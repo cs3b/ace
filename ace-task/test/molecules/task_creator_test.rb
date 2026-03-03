@@ -23,12 +23,26 @@ class TaskCreatorTest < AceTaskTestCase
     assert task.file_path.end_with?(".s.md")
   end
 
-  def test_creates_folder_matching_id_and_slug
+  def test_creates_folder_with_folder_slug
     creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
     task = creator.create("Fix login bug", time: Time.utc(2026, 1, 15, 12, 0, 0))
 
     folder_name = File.basename(task.path)
-    assert folder_name.match?(/^[0-9a-z]{3}\.t\.[0-9a-z]{3}-fix-login-bug$/)
+    # Folder uses folder_slug (up to 5 words)
+    assert folder_name.match?(/^[0-9a-z]{3}\.t\.[0-9a-z]{3}-fix-login-bug$/), "folder: #{folder_name}"
+  end
+
+  def test_folder_slug_differs_from_file_slug_for_long_titles
+    creator = Ace::Task::Molecules::TaskCreator.new(root_dir: @tmpdir)
+    task = creator.create("Plan repository naming and metadata updates for branding")
+
+    folder_name = File.basename(task.path)
+    file_name = File.basename(task.file_path)
+
+    # Folder slug: 5 words max
+    assert folder_name.match?(/plan-repository-naming-and-metadata$/), "folder: #{folder_name}"
+    # File slug: 7 words max
+    assert file_name.match?(/plan-repository-naming-and-metadata-updates-for\.s\.md$/), "file: #{file_name}"
   end
 
   def test_spec_file_has_frontmatter

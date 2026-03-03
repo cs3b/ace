@@ -112,8 +112,9 @@ module Ace
 
         def generate_slug(title)
           sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title)
-          sanitized = sanitized[0..39] if sanitized.length > 40
-          sanitized.empty? ? "subtask" : sanitized
+          words = sanitized.split("-")
+          result = words.take(7).join("-")
+          result.empty? ? "subtask" : result
         end
 
         def build_spec_content(frontmatter:, title:)

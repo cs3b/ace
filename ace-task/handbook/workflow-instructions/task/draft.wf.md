@@ -267,6 +267,21 @@ This prevents decomposing into subtasks that add concepts the spike later proves
 
 ## Key Guidelines
 
+### Task Naming Convention
+
+| Element | Word count | Purpose | Example |
+|---------|-----------|---------|---------|
+| Folder slug (all tasks) | 3-5 words | Set the scene/context | `ace-ade-brand-positioning` |
+| File slug (task spec) | 4-7 words | Precise action | `plan-repo-naming-metadata-updates` |
+| Subtask folder+file | 4-7 words | Action, no parent repetition | `inventory-naming-blast-radius` |
+
+**Rules:**
+1. ALL folder slugs: 3-5 words setting the scene/context
+2. Task/subtask file slugs: 4-7 words precisely describing the action
+3. Subtask slugs must not repeat words from parent folder slug
+4. Title: max 80 characters
+5. Folder slug != file slug (folder sets context, file describes action)
+
 ### Behavior-First Focus
 
 * **What over How**: Define user experience before implementation
