@@ -28,6 +28,10 @@ module Ace
 
             # Regex with subtask support
             if task_data[:id]
+              # B36TS full ID: "8pp.t.hy4" -> "hy4", or subtask "8pp.t.hy4.a" -> "hy4.a"
+              if match = task_data[:id].match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3}(?:\.[a-z0-9])?)\z/)
+                return match[1]
+              end
               # Try subtask pattern first (e.g., "v.0.9.0+task.121.01" -> "121.01")
               if match = task_data[:id].match(/task\.(\d+)\.(\d{2})$/)
                 return "#{match[1]}.#{match[2]}"
@@ -55,9 +59,15 @@ module Ace
             return nil if ref.empty?
 
             # Regex patterns for recognized ACE task ID formats
+            # B36TS full ID: "8pp.t.hy4" -> "hy4", or subtask "8pp.t.hy4.a" -> "hy4.a"
+            if match = ref.match(/\A[0-9a-z]{3}\.[a-z]\.([0-9a-z]{3}(?:\.[a-z0-9])?)\z/)
+              match[1]
+            # B36TS short ref: exactly 3 lowercase alphanumeric chars (e.g., "hy4")
+            elsif match = ref.match(/\A([0-9a-z]{3})\z/)
+              match[1]
             # ACE task IDs are 3-digit zero-padded (081, 121, etc.)
             # Try hierarchical pattern first (e.g., "121.01", "task.121.01")
-            if match = ref.match(/(\d{3})\.(\d{2})(?:\b|$)/)
+            elsif match = ref.match(/(\d{3})\.(\d{2})(?:\b|$)/)
               "#{match[1]}.#{match[2]}"
             # Try task. prefix pattern (e.g., "task.121")
             # Use negative lookbehind to avoid matching "ace-task.NNN" in directory names

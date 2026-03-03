@@ -144,4 +144,28 @@ class TaskIDExtractorTest < Minitest::Test
     # Should match task.081, not 261 from ace-task.261
     assert_equal "081", @extractor.normalize("/Users/mc/Ps/ace-task.261/worktrees/task.081")
   end
+
+  # B36TS format tests (regression for ace-overseer work-on failure)
+
+  def test_extract_from_b36ts_full_id
+    task_data = { id: "8pp.t.hy4" }
+    assert_equal "hy4", @extractor.extract(task_data)
+  end
+
+  def test_extract_from_b36ts_subtask_full_id
+    task_data = { id: "8pp.t.hy4.a" }
+    assert_equal "hy4.a", @extractor.extract(task_data)
+  end
+
+  def test_normalize_b36ts_short_ref
+    assert_equal "hy4", @extractor.normalize("hy4")
+  end
+
+  def test_normalize_b36ts_full_id
+    assert_equal "hy4", @extractor.normalize("8pp.t.hy4")
+  end
+
+  def test_normalize_b36ts_subtask_full_id
+    assert_equal "hy4.a", @extractor.normalize("8pp.t.hy4.a")
+  end
 end
