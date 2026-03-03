@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1] - 2026-03-03
+
+### Fixed
+- `SpecialFolderDetector.normalize`: prefix-based expansion so any folder name is auto-expanded (e.g., `backlog` → `_backlog`), fixing `--in backlog` returning no results
+- `StatsLineFormatter.folder_label`: uses `SpecialFolderDetector.short_name` instead of hardcoded `delete_prefix("_")`
+
+### Changed
+- `SpecialFolderDetector`: replaced hardcoded `SPECIAL_FOLDERS` and `SHORT_ALIASES` constants with `DEFAULT_PREFIX = "_"` for deterministic two-way conversion
+- `SpecialFolderDetector.special?`: accepts `prefix:` keyword parameter
+- `SpecialFolderDetector.detect_in_path`: accepts `prefix:` keyword parameter
+
+### Added
+- `SpecialFolderDetector.short_name`: reverse of `normalize`, strips prefix from folder name (e.g., `_archive` → `archive`)
+
 ## [0.14.0] - 2026-03-03
 
 ### Added
