@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.718] - 2026-03-03
+
+### Fixed
+- **ace-git-worktree v0.13.19**: `TaskIDExtractor` now recognises B36TS task ID format (`8pp.t.hy4`), fixing `ace-overseer work-on` failure when updating task status with new ace-task IDs
+
+### Technical
+- Promote skill-migration spec and add plan-first task execution spec set
+
 ## [0.9.717] - 2026-03-03
 
 ### Fixed
