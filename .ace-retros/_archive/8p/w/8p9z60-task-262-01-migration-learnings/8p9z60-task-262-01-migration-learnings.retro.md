@@ -3,11 +3,12 @@ id: 8p9z60
 title: Task 262.01 — First E2E Migration (ace-lint)
 type: standard
 tags: []
-created_at: "2026-02-10 23:26:40"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8p9z60-task-262-01-migration-learnings.md
+created_at: '2026-02-10 23:26:40'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8p9z60-task-262-01-migration-learnings.md"
 ---
+
 # Reflection: Task 262.01 — First E2E Migration (ace-lint)
 
 **Date**: 2026-02-10

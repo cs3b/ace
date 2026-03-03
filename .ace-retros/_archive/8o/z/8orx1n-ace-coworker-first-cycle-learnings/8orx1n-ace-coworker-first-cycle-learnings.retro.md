@@ -1,13 +1,14 @@
 ---
 id: 8orx1n
-title: "Retro: First Full ace-coworker Cycle — Session 8orv8f (Task 229)"
+title: 'Retro: First Full ace-coworker Cycle — Session 8orv8f (Task 229)'
 type: self-review
 tags: []
-created_at: "2026-01-28 22:01:49"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8orx1n-ace-coworker-first-cycle-learnings.md
+created_at: '2026-01-28 22:01:49'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8orx1n-ace-coworker-first-cycle-learnings.md"
 ---
+
 # Retro: First Full ace-coworker Cycle — Session 8orv8f (Task 229)
 
 **Date**: 2026-01-28

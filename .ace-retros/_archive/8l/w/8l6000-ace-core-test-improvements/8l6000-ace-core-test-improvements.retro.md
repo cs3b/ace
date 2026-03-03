@@ -1,13 +1,14 @@
 ---
 id: 8l6000
-title: "Retro: ace-core Test Improvements"
+title: 'Retro: ace-core Test Improvements'
 type: self-review
 tags: []
-created_at: "2025-10-07 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l6000-ace-core-test-improvements.md
+created_at: '2025-10-07 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l6000-ace-core-test-improvements.md"
 ---
+
 # Retro: ace-core Test Improvements
 
 **Date**: 2025-10-07

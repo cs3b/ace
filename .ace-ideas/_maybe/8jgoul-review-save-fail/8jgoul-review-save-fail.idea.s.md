@@ -1,6 +1,12 @@
 ---
-source: "legacy"
+source: legacy
+id: 8jgoul
+status: pending
+title: Raw Idea (Enhanced Version Failed)
+tags: []
+created_at: '2026-03-03 13:41:44'
 ---
+
 # Raw Idea (Enhanced Version Failed)
 
 **Enhancement Error:** LLM enhancement failed after 4 attempts. Last error: Error: Failed to query google: Retryable response: 429

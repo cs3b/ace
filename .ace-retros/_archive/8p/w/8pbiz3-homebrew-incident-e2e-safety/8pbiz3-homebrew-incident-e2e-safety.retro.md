@@ -1,13 +1,14 @@
 ---
 id: 8pbiz3
-title: /opt/homebrew Destroyed During E2E Test Suite
+title: "/opt/homebrew Destroyed During E2E Test Suite"
 type: conversation-analysis
 tags: []
-created_at: "2026-02-12 12:38:58"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pbiz3-homebrew-incident-e2e-safety.md
+created_at: '2026-02-12 12:38:58'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pbiz3-homebrew-incident-e2e-safety.md"
 ---
+
 # Reflection: /opt/homebrew Destroyed During E2E Test Suite
 
 **Date**: 2026-02-12

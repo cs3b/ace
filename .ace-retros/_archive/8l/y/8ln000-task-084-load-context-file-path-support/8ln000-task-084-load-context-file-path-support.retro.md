@@ -1,13 +1,14 @@
 ---
 id: 8ln000
-title: "Task 084 - Enable File Path Arguments for /ace:load-context"
+title: Task 084 - Enable File Path Arguments for /ace:load-context
 type: conversation-analysis
 tags: []
-created_at: "2025-10-24 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ln000-task-084-load-context-file-path-support.md
+created_at: '2025-10-24 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ln000-task-084-load-context-file-path-support.md"
 ---
+
 # Reflection: Task 084 - Enable File Path Arguments for /ace:load-context
 
 **Date**: 2025-10-24

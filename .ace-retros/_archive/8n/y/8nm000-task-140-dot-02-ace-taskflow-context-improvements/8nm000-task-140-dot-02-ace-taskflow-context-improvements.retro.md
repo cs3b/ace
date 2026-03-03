@@ -1,13 +1,14 @@
 ---
 id: 8nm000
-title: "Retro: Task 140.02 - ace-taskflow context improvements"
+title: 'Retro: Task 140.02 - ace-taskflow context improvements'
 type: conversation-analysis
 tags: []
-created_at: "2025-12-23 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8nm000-task-140-dot-02-ace-taskflow-context-improvements.md
+created_at: '2025-12-23 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8nm000-task-140-dot-02-ace-taskflow-context-improvements.md"
 ---
+
 # Retro: Task 140.02 - ace-taskflow context improvements
 
 **Date**: 2025-12-23

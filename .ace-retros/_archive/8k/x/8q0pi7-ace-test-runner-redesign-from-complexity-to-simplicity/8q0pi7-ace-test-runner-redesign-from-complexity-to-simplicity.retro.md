@@ -3,11 +3,12 @@ id: 8q0pi7
 title: ace-test-runner Redesign - From Complexity to Simplicity
 type: conversation-analysis
 tags: []
-created_at: "2025-09-20 00:00:00"
-status: active
+created_at: '2025-09-20 00:00:00'
+status: done
 source: legacy
-migrated_from: .ace-taskflow/v.0.9.0/retros/ace-test-runner-redesign-from-complexity-to-simplicity.md
+migrated_from: ".ace-taskflow/v.0.9.0/retros/ace-test-runner-redesign-from-complexity-to-simplicity.md"
 ---
+
 # Reflection: ace-test-runner Redesign - From Complexity to Simplicity
 
 **Date**: 2025-09-20

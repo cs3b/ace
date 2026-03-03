@@ -1,13 +1,14 @@
 ---
 id: 8lc000
-title: "Retro: ace-docs Batch Analysis Task Creation"
+title: 'Retro: ace-docs Batch Analysis Task Creation'
 type: conversation-analysis
 tags: []
-created_at: "2025-10-13 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8lc000-ace-docs-batch-analysis-task-creation.md
+created_at: '2025-10-13 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8lc000-ace-docs-batch-analysis-task-creation.md"
 ---
+
 # Retro: ace-docs Batch Analysis Task Creation
 
 **Date**: 2025-10-13

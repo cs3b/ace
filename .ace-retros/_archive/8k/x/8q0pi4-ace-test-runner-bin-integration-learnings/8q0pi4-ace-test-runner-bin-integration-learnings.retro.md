@@ -3,11 +3,12 @@ id: 8q0pi4
 title: ace-test-runner Bin Directory Integration with mise Configuration
 type: conversation-analysis
 tags: []
-created_at: "2025-09-20 00:00:00"
-status: active
+created_at: '2025-09-20 00:00:00'
+status: done
 source: legacy
-migrated_from: .ace-taskflow/v.0.9.0/retros/ace-test-runner-bin-integration-learnings.md
+migrated_from: ".ace-taskflow/v.0.9.0/retros/ace-test-runner-bin-integration-learnings.md"
 ---
+
 # Reflection: ace-test-runner Bin Directory Integration with mise Configuration
 
 **Date**: 2025-09-20

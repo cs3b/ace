@@ -1,13 +1,14 @@
 ---
 id: 8mg000
-title: "Retro: Test Performance Optimization - Eliminating Sleep Delays"
+title: 'Retro: Test Performance Optimization - Eliminating Sleep Delays'
 type: self-review
 tags: []
-created_at: "2025-11-17 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mg000-test-performance-optimization-learnings.md
+created_at: '2025-11-17 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mg000-test-performance-optimization-learnings.md"
 ---
+
 # Retro: Test Performance Optimization - Eliminating Sleep Delays
 
 **Date**: 2025-11-17

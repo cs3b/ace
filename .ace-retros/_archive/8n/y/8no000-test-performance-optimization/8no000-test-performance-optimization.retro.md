@@ -1,13 +1,14 @@
 ---
 id: 8no000
-title: "Retro: Test Performance Optimization"
+title: 'Retro: Test Performance Optimization'
 type: standard
 tags: []
-created_at: "2025-12-25 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8no000-test-performance-optimization.md
+created_at: '2025-12-25 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8no000-test-performance-optimization.md"
 ---
+
 # Retro: Test Performance Optimization
 
 **Date**: 2025-12-25

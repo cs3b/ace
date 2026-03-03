@@ -1,13 +1,14 @@
 ---
 id: 8lc000
-title: "Retro: ace-taskflow Doctor Validation and Statistics Fixes"
+title: 'Retro: ace-taskflow Doctor Validation and Statistics Fixes'
 type: self-review
 tags: []
-created_at: "2025-10-13 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8lc000-taskflow-doctor-validation-fixes.md
+created_at: '2025-10-13 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8lc000-taskflow-doctor-validation-fixes.md"
 ---
+
 # Retro: ace-taskflow Doctor Validation and Statistics Fixes
 
 **Date**: 2025-10-13

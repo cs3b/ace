@@ -3,11 +3,12 @@ id: 8q0pi8
 title: Fixing ace-context Test Failures - Timing Issue Resolution
 type: standard
 tags: []
-created_at: "2025-10-13 11:28:43"
-status: active
+created_at: '2025-10-13 11:28:43'
+status: done
 source: legacy
-migrated_from: .ace-taskflow/v.0.9.0/retros/reflection-ace-context-test-timing-fix.md
+migrated_from: ".ace-taskflow/v.0.9.0/retros/reflection-ace-context-test-timing-fix.md"
 ---
+
 # Reflection: Fixing ace-context Test Failures - Timing Issue Resolution
 
 **Date:** 2025-09-20

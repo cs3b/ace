@@ -3,11 +3,12 @@ id: 8ortz8
 title: ace-coworker E2E Test Feedback Fixes
 type: conversation-analysis
 tags: []
-created_at: "2026-01-28 19:59:08"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ortz8-ace-coworker-e2e-test-fixes.md
+created_at: '2026-01-28 19:59:08'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ortz8-ace-coworker-e2e-test-fixes.md"
 ---
+
 # Reflection: ace-coworker E2E Test Feedback Fixes
 
 **Date**: 2026-01-28

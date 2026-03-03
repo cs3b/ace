@@ -3,11 +3,12 @@ id: 8oj009
 title: Task 217 - ace-prompt-prep Rename
 type: standard
 tags: []
-created_at: "2026-01-20 00:00:16"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8oj009-217-prompt-prep-rename.md
+created_at: '2026-01-20 00:00:16'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8oj009-217-prompt-prep-rename.md"
 ---
+
 # Reflection: Task 217 - ace-prompt-prep Rename
 
 **Date**: 2026-01-20

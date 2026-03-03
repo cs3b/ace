@@ -1,13 +1,14 @@
 ---
 id: 8o8vs8
-title: "Retro: Wrapper Pattern Oversight During dry-cli Migration"
+title: 'Retro: Wrapper Pattern Oversight During dry-cli Migration'
 type: self-review
 tags: []
-created_at: "2026-01-09 21:11:21"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o8vs8-dry-cli-wrapper-pattern-oversight.md
+created_at: '2026-01-09 21:11:21'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o8vs8-dry-cli-wrapper-pattern-oversight.md"
 ---
+
 # Retro: Wrapper Pattern Oversight During dry-cli Migration
 
 **Date**: 2026-01-09

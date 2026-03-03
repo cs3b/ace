@@ -3,11 +3,12 @@ id: 8l0000
 title: Draft Task Workflow and ace-taskflow Root Detection Fix
 type: conversation-analysis
 tags: []
-created_at: "2025-10-01 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l0000-draft-task-workflow-improvements.md
+created_at: '2025-10-01 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l0000-draft-task-workflow-improvements.md"
 ---
+
 # Reflection: Draft Task Workflow and ace-taskflow Root Detection Fix
 
 **Date**: 2025-10-01

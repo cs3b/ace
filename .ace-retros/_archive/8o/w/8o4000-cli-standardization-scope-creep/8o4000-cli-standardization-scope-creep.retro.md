@@ -1,13 +1,14 @@
 ---
 id: 8o4000
-title: "CLI Standardization - Why So Much Fixing?"
+title: CLI Standardization - Why So Much Fixing?
 type: conversation-analysis
 tags: []
-created_at: "2026-01-05 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o4000-cli-standardization-scope-creep.md
+created_at: '2026-01-05 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o4000-cli-standardization-scope-creep.md"
 ---
+
 # Reflection: CLI Standardization - Why So Much Fixing?
 
 **Date**: 2026-01-05

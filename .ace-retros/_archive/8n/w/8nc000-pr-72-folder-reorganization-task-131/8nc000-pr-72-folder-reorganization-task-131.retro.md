@@ -1,13 +1,14 @@
 ---
 id: 8nc000
-title: "PR #72 - Folder Reorganization and Task Lifecycle (Task 131)"
+title: 'PR #72 - Folder Reorganization and Task Lifecycle (Task 131)'
 type: conversation-analysis
 tags: []
-created_at: "2025-12-13 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8nc000-pr-72-folder-reorganization-task-131.md
+created_at: '2025-12-13 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8nc000-pr-72-folder-reorganization-task-131.md"
 ---
+
 # Reflection: PR #72 - Folder Reorganization and Task Lifecycle (Task 131)
 
 **Date**: 2025-12-13

@@ -3,11 +3,12 @@ id: 8pqo8o
 title: Task 296 — ace-sim Rebuild
 type: conversation-analysis
 tags: []
-created_at: "2026-02-27 16:09:37"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pqo8o-task-296-ace-sim-rebuild.md
+created_at: '2026-02-27 16:09:37'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pqo8o-task-296-ace-sim-rebuild.md"
 ---
+
 # Reflection: Task 296 — ace-sim Rebuild
 
 **Date**: 2026-02-27

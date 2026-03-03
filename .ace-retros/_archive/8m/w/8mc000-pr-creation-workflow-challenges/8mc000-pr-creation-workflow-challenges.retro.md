@@ -3,11 +3,12 @@ id: 8mc000
 title: PR Creation Workflow - Critical Errors and Recovery
 type: conversation-analysis
 tags: []
-created_at: "2025-11-13 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mc000-pr-creation-workflow-challenges.md
+created_at: '2025-11-13 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mc000-pr-creation-workflow-challenges.md"
 ---
+
 # Reflection: PR Creation Workflow - Critical Errors and Recovery
 
 **Date**: 2025-11-13

@@ -3,11 +3,12 @@ id: 8o5000
 title: Bypassing domain tools causes task renumbering chaos
 type: conversation-analysis
 tags: []
-created_at: "2026-01-06 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o5000-task-renumbering-failure-avoid-domain-tools.md
+created_at: '2026-01-06 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o5000-task-renumbering-failure-avoid-domain-tools.md"
 ---
+
 # Reflection: Bypassing domain tools causes task renumbering chaos
 
 **Date**: 2026-01-06

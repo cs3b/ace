@@ -1,13 +1,14 @@
 ---
 id: 8m8000
-title: "Retro: ace-review Commit Reorganization (20 → 4 commits)"
+title: 'Retro: ace-review Commit Reorganization (20 → 4 commits)'
 type: conversation-analysis
 tags: []
-created_at: "2025-11-09 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8m8000-ace-review-commit-reorganization.md
+created_at: '2025-11-09 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8m8000-ace-review-commit-reorganization.md"
 ---
+
 # Retro: ace-review Commit Reorganization (20 → 4 commits)
 
 **Date**: 2025-11-09
