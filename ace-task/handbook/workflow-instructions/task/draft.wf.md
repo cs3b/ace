@@ -1,10 +1,13 @@
 ---
+name: task-draft
+allowed-tools: Bash, Read
+description: Create behavior-first draft tasks and subtasks with vertical slicing and verification plans
 update:
   update_frequency: on-change
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2026-02-16'
+  last-updated: '2026-03-03'
 ---
 
 # Draft Task - Behavior-First Specification
@@ -93,7 +96,24 @@ Create high-level behavioral specifications that define WHAT the system should d
    * Once behavioral specifications are approved, create draft task files
    * **NOTE**: Tasks are created with `status: draft` to indicate they need implementation planning
 
-6. **Determine Storage Location and Create Draft Tasks**
+6. **Decompose into Vertical Slices (Task/Subtask Model)**
+
+   **Use task/subtask structure to represent vertical slices.**
+
+   * Identify the smallest end-to-end capabilities that deliver observable value
+   * Treat each capability slice as a unit that can be independently verified
+   * Avoid horizontal decomposition (all DB first, all API second, all UI third)
+   * Add an advisory size signal for each slice:
+     * `small` - straightforward, low coordination
+     * `medium` - moderate coordination or risk
+     * `large` - broad scope, elevated risk (advisory only; not an automatic blocker)
+   * Define explicit verification intent for each slice:
+     * Unit test scenarios (or equivalent validation for non-code tasks)
+     * Integration/E2E scenarios when behavior crosses boundaries
+     * At least one invalid/failure-path scenario
+   * Capture required context files per slice for fresh sessions in `bundle.files`
+
+7. **Determine Storage Location and Create Draft Tasks**
 
    **Detect the task structure needed before creating anything:**
 
@@ -102,14 +122,15 @@ Create high-level behavioral specifications that define WHAT the system should d
    | "one task with subtasks" | One orchestrator + N subtasks |
    | "N phases, each as a subtask" | One orchestrator + N subtask children |
    | "one task with one subtask per phase" | One orchestrator + N subtask children |
-   | No structural hint | Single flat task |
+   | No structural hint and single capability slice | Single flat task |
+   | No structural hint and multiple capability slices | One orchestrator + N subtasks |
 
-   **Pattern A — Single flat task (default):**
+   **Pattern A -- Single flat task (default):**
    ```bash
    ace-task create "Task Title" --status draft --estimate "TBD"
    ```
 
-   **Pattern B — Orchestrator with subtasks:**
+   **Pattern B -- Orchestrator with subtasks:**
    ```bash
    # 1. Create the parent task first
    ace-task create "Parent Title" --status draft --estimate "TBD"
@@ -120,11 +141,21 @@ Create high-level behavioral specifications that define WHAT the system should d
    ace-task create "Phase 2: ..." --status draft --child-of NNN
    ace-task create "Phase 3: ..." --status draft --child-of NNN
    ```
-   ⚠️ Do NOT use `task move --child-of self` first — `--child-of` on both `task create` and `task move` now auto-converts the parent orchestrator.
+   ⚠️ Do NOT use `task move --child-of self` first -- `--child-of` on both `task create` and `task move` now auto-converts the parent orchestrator.
 
    For each created task/subtask:
    * Create task file with proper ID sequencing
    * Set status to "draft" automatically
+   * Include canonical frontmatter context bundle in this exact order:
+     * `bundle.presets`
+     * `bundle.files`
+     * `bundle.commands`
+   * Default bundle:
+     * `presets: ["project"]`
+     * `files: []`
+     * `commands: []`
+   * If additional files are required context for implementation, list them in `bundle.files`
+   * For subtasks, list required shared context files explicitly in EACH subtask's bundle (no implicit inheritance)
    * Include behavioral specification template
    * Focus on behavioral content, leave implementation for replan phase
 
@@ -142,17 +173,19 @@ This prevents decomposing into subtasks that add concepts the spike later proves
 **Anti-pattern**: 8 subtasks drafted upfront, each adding features, then a late subtask undoes half.
 **Correct pattern**: 1 spike subtask validates the end-state, then remaining subtasks build toward it.
 
-7. **Complete Behavioral Specifications**
+8. **Complete Behavioral Specifications**
    * For each created draft task, populate with:
      * Behavioral Specification section with embedded template
      * Interface Contract definitions with examples
      * Success Criteria as mandatory requirements
      * Validation Questions highlighting unknowns
+     * Vertical Slice Decomposition section (task/subtask oriented)
+     * Verification Plan section with concrete validation scenarios
      * Integration with ace-idea if applicable
    * Avoid adding implementation details
 
-8. **Create Draft Usage Documentation (When Interfaces Change)**
-   * **Applicability check** — does this task change any external API surface?
+9. **Create Draft Usage Documentation (When Interfaces Change)**
+   * **Applicability check** -- does this task change any external API surface?
      * CLI commands (new commands, changed flags, changed output format)
      * Developer API (new/changed modules, classes, methods)
      * Agent API (new/changed workflows, protocols, slash commands)
@@ -164,9 +197,9 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * This is the behavioral acceptance contract the implementer must satisfy
      * The full usage doc gets completed during work-on-task using `wfi://docs/update-usage`
    * If NO (internal refactoring, docs-only, test-only):
-     * Skip — no `ux/usage.md` needed
+     * Skip -- no `ux/usage.md` needed
 
-9. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
+10. **Organize Source Idea Files (REQUIRED when drafting from ideas)**
    * **IMPORTANT**: When task is created from idea files, ALWAYS mark them as done:
    * Track all source idea files used for this draft task:
      * List all idea files referenced during behavioral specification
@@ -189,10 +222,10 @@ This prevents decomposing into subtasks that add concepts the spike later proves
    * Error handling:
      * If ace-idea move or update fails: Report error and manual intervention needed
    * Success indicators:
-     * Report each file movement: "Idea marked as done: [idea-id]"
+     * Report each file movement: "Idea marked as done: idea-id"
      * Confirm all source ideas organized: "All X idea files marked as done"
 
-10. **Ensure Draft Creation Completion**
+11. **Ensure Draft Creation Completion**
    * Verify all behavioral specifications are captured:
      * Cross-reference against initial requirements
      * Confirm each draft file exists with correct status
@@ -203,23 +236,32 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * [ ] Behavioral specifications are complete
      * [ ] Interface contracts are defined
      * [ ] Success criteria are measurable
+     * [ ] Vertical slices are defined using task/subtask model (no horizontal-only decomposition)
+     * [ ] Verification Plan includes unit/equivalent validation, integration/E2E when needed, and failure path checks
+     * [ ] `bundle` frontmatter exists with canonical key order (`presets`, `files`, `commands`)
+     * [ ] Required context artifacts are explicitly listed in `bundle.files` for each task/subtask
      * [ ] Draft is decision-complete: no unresolved behavior choices left for implementer
      * [ ] Defaults are explicit where behavior could otherwise be ambiguous
      * [ ] Usage documentation created in `ux/usage.md` (when task changes any API surface)
 
-11. **Run Quality Pass (Better, Not More)**
+12. **Run Quality Pass (Better, Not More)**
    * Perform one concise quality pass before finalizing:
      * Happy path is concrete and observable
      * At least one invalid/failure path is specified
      * Unspecified behavior has explicit defaults
      * Success criteria are directly verifiable
+     * Vertical slices are end-to-end and independently verifiable
+     * Slice size signals (`small`/`medium`/`large`) are present for planning visibility
+     * Bundle references include all critical context files needed for a fresh session
    * Improve clarity and precision without adding specialized sections
 
-12. **Provide Behavioral Summary**
+13. **Provide Behavioral Summary**
    * List all created draft tasks with their:
      * IDs and titles
      * User experience summaries
      * Interface contracts
+     * Vertical slice role (standalone task, orchestrator, or subtask)
+     * Verification plan highlights
      * Status (draft - needs planning)
    * Suggest next step: review-task workflow to validate and promote to pending
 
@@ -231,6 +273,8 @@ This prevents decomposing into subtasks that add concepts the spike later proves
 * **Interface Contracts**: Specify CLI/API/UI behaviors clearly
 * **Success Criteria**: Measurable outcomes that define completion
 * **Validation Questions**: Highlight unknowns and assumptions
+* **Vertical Slicing**: Represent end-to-end slices as tasks/subtasks, not horizontal implementation layers
+* **Verification First**: Every drafted task/subtask includes an explicit verification plan
 
 ### Draft Status Integration
 
@@ -238,6 +282,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
 * Draft indicates behavioral specification complete, readiness validation needed
 * Clear handoff to review-task for readiness validation
 * No mixing of behavioral and implementation concerns
+* Every task/subtask includes canonical `bundle` frontmatter for fresh-session context loading
 
 ### Capture-It Integration
 
@@ -270,6 +315,9 @@ All code implementation happens during `/ace-task-work` (status: in-progress).
 * Draft tasks with complete behavioral specifications
 * Clear interface contracts for each requirement
 * Measurable success criteria defined
+* Vertical slicing captured in task/subtask structure
+* Verification Plan included for each drafted task/subtask
+* Canonical `bundle` frontmatter included with explicit context references
 * All tasks have status: draft
 * No implementation details mixed with behavioral requirements
 * Clear handoff to review-task for readiness validation and promotion to pending
@@ -309,6 +357,10 @@ status: draft
 priority: {priority}
 estimate: TBD
 dependencies: {dependencies}
+bundle:
+  presets: ["project"]
+  files: []
+  commands: []
 ---
 
 # {title}
@@ -369,6 +421,31 @@ GET/POST/PUT/DELETE /endpoint
 - [ ] **User Experience**: [Question about user expectations, workflows, or interactions]
 - [ ] **Success Definition**: [Question about how success will be measured or validated]
 
+### Vertical Slice Decomposition (Task/Subtask Model)
+<!-- Describe end-to-end slices using task/subtask structure -->
+<!-- Use orchestrator + subtasks for multiple slices; use standalone task for one slice -->
+
+- **Slice Type**: [Standalone task | Orchestrator | Subtask]
+- **Slice Outcome**: [Observable end-to-end capability delivered by this task/subtask]
+- **Advisory Size**: [small | medium | large]
+- **Context Dependencies**: [Critical files/presets/commands this slice needs in fresh sessions]
+
+### Verification Plan
+<!-- Define verification strategy before implementation -->
+<!-- Include unit/equivalent checks, integration/e2e where applicable, and failure-path validation -->
+
+#### Unit / Component Validation
+- [ ] [Scenario]: [Expected observable result]
+
+#### Integration / E2E Validation (if cross-boundary behavior exists)
+- [ ] [Scenario]: [Expected observable result]
+
+#### Failure / Invalid-Path Validation
+- [ ] [Scenario]: [Expected error handling behavior]
+
+#### Verification Commands
+- [ ] [Command/check]: [Expected outcome]
+
 ## Objective
 
 Why are we doing this? If this task originated from an enhanced idea,
@@ -401,7 +478,7 @@ Track concepts introduced and removed across subtasks to detect churn:
 
 | Concept | Introduced by | Removed by | Status |
 |---------|--------------|------------|--------|
-| _example concept_ | _subtask ref_ | — | KEPT |
+| _example concept_ | _subtask ref_ | -- | KEPT |
 
 **Churn threshold**: If >30% of concepts introduced by subtasks get removed by later subtasks,
 the decomposition was premature. Consider consolidating remaining subtasks.

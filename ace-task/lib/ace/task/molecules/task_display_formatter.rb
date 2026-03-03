@@ -28,10 +28,15 @@ module Ace
         }.freeze
 
         PRIORITY_LABELS = {
-          "critical" => "‼",
-          "high" => "!",
+          "critical" => "▲▲",
+          "high" => "▲",
           "medium" => "",
-          "low" => "↓"
+          "low" => "▼"
+        }.freeze
+
+        PRIORITY_COLORS = {
+          "critical" => Ace::Support::Items::Atoms::AnsiColors::RED,
+          "low" => Ace::Support::Items::Atoms::AnsiColors::DIM
         }.freeze
 
         # Return the status symbol with ANSI color applied.
@@ -190,14 +195,23 @@ module Ace
 
         # Format a single task as a compact list item.
         def self.format_list_item(task)
+          c = Ace::Support::Items::Atoms::AnsiColors
           status_sym = colored_status_sym(task.status)
           priority_sym = PRIORITY_LABELS[task.priority] || ""
-          priority_prefix = priority_sym.empty? ? "" : "#{priority_sym} "
-          tags_str = task.tags && task.tags.any? ? " [#{task.tags.join(", ")}]" : ""
-          folder_str = task.special_folder ? " (#{task.special_folder})" : ""
-          subtask_str = task.has_subtasks? ? " +#{task.subtasks.length}" : ""
+          priority_color = PRIORITY_COLORS[task.priority]
+          priority_prefix = if priority_sym.empty?
+                              "  "
+                            elsif priority_color
+                              "#{c.colorize(priority_sym, priority_color)} "
+                            else
+                              "#{priority_sym} "
+                            end
+          id_str = c.colorize(task.id, c::DIM)
+          subtask_str = task.has_subtasks? ? c.colorize(" \u203a#{task.subtasks.length}", c::DIM) : ""
+          tags_str = task.tags && task.tags.any? ? c.colorize(" [#{task.tags.join(", ")}]", c::DIM) : ""
+          folder_str = task.special_folder ? c.colorize(" (#{task.special_folder})", c::DIM) : ""
 
-          "#{status_sym} #{priority_prefix}#{task.id}  #{task.title}#{tags_str}#{folder_str}#{subtask_str}"
+          "#{status_sym} #{priority_prefix}#{id_str}  #{task.title}#{subtask_str}#{tags_str}#{folder_str}"
         end
 
         private_class_method :format_list_item
