@@ -252,6 +252,34 @@ class WorktreeContextCollectorTest < AceOverseerTestCase
     end
   end
 
+  def test_collect_extracts_b36ts_task_id_from_ace_task_path
+    Dir.mktmpdir("collector-root") do |root|
+      worktree = File.join(root, "ace-task.hy4")
+      Dir.mkdir(worktree)
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        repo_status_loader: -> { FakeRepoStatus.new("hy4-fix-overseer", { "clean" => true }) },
+        assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
+      )
+
+      context = collector.collect(worktree)
+
+      assert_equal "hy4", context.task_id
+    end
+  end
+
+  def test_collect_extracts_b36ts_task_id_from_branch
+    Dir.mktmpdir("some-worktree") do |worktree|
+      collector = Ace::Overseer::Molecules::WorktreeContextCollector.new(
+        repo_status_loader: -> { FakeRepoStatus.new("hy4-fix-overseer", { "clean" => true }) },
+        assignment_discoverer_factory: -> { FakeDiscoverer.new([]) }
+      )
+
+      context = collector.collect(worktree)
+
+      assert_equal "hy4", context.task_id
+    end
+  end
+
   def test_collect_extracts_four_digit_task_ids_from_worktree_path
     Dir.mktmpdir("collector-root") do |root|
       worktree = File.join(root, "task.1234")

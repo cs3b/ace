@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.18] - 2026-03-03
+
+### Added
+- `StatusCollector`: show non-task worktrees in status when they have active assignments
+- `WorktreeContextCollector`: support B36TS task ID extraction from worktree paths and branch names
+
+### Fixed
+- `PruneOrchestrator`: allow pruning non-task worktrees when targeted by path (removes `task_associated` filter)
+
 ## [0.4.17] - 2026-03-02
 
 ### Changed

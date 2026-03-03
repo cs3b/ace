@@ -14,11 +14,18 @@ module Ace
         end
 
         def collect
-          result = @worktree_manager.list_all(show_tasks: true, task_associated: true)
-          raise Error, result[:error] || "Failed to list task worktrees" unless result[:success]
+          result = @worktree_manager.list_all(show_tasks: true)
+          raise Error, result[:error] || "Failed to list worktrees" unless result[:success]
 
-          worktrees = Array(result[:worktrees]).select(&:task_associated?)
-          contexts = collect_contexts_parallel(worktrees)
+          all_worktrees = Array(result[:worktrees]).reject(&:bare)
+          # Exclude main worktree (handled separately via collect_main_context)
+          main_root = @project_root || resolve_project_root
+          non_main = all_worktrees.reject { |wt| main_root && wt.path == main_root }
+
+          contexts = collect_contexts_parallel(non_main)
+
+          # Keep task worktrees always; non-task worktrees only if they have assignments
+          contexts.select! { |ctx| ctx.task_id != "unknown" || ctx.assignments.any? }
 
           main_context = collect_main_context
           contexts.unshift(main_context) if main_context && main_context.assignments.any?

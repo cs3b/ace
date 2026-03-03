@@ -3,9 +3,23 @@
 require_relative "../test_helper"
 
 class StatusCollectorTest < AceOverseerTestCase
-  FakeWorktree = Struct.new(:path, :task_id) do
+  FakeWorktree = Struct.new(:path, :task_id, :bare) do
+    def initialize(path, task_id, bare = false)
+      super(path, task_id, bare)
+    end
+
     def task_associated?
       true
+    end
+  end
+
+  NonTaskWorktree = Struct.new(:path, :task_id, :bare) do
+    def initialize(path, task_id = nil, bare = false)
+      super(path, task_id, bare)
+    end
+
+    def task_associated?
+      false
     end
   end
 
@@ -159,6 +173,48 @@ class StatusCollectorTest < AceOverseerTestCase
     snapshot = collector.collect_quick({ contexts: [] })
 
     assert_equal 1, snapshot[:contexts].length
+  end
+
+  def test_collect_includes_non_task_worktree_with_assignments
+    non_task_context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "unknown",
+      worktree_path: "/wt/ace-e2e-glm",
+      branch: "ace-e2e-glm",
+      assignments: [make_assignment(id: "glm01", state: "running")],
+      git_status: { "clean" => true }
+    )
+
+    collector = Ace::Overseer::Organisms::StatusCollector.new(
+      worktree_manager: FakeWorktreeManager.new([NonTaskWorktree.new("/wt/ace-e2e-glm")]),
+      context_collector: FakeContextCollector.new(non_task_context),
+      project_root: "/project"
+    )
+
+    snapshot = collector.collect
+    paths = snapshot[:contexts].map(&:worktree_path)
+
+    assert_includes paths, "/wt/ace-e2e-glm"
+  end
+
+  def test_collect_excludes_non_task_worktree_without_assignments
+    non_task_context = Ace::Overseer::Models::WorkContext.new(
+      task_id: "unknown",
+      worktree_path: "/wt/ace-e2e-glm",
+      branch: "ace-e2e-glm",
+      assignments: [],
+      git_status: { "clean" => true }
+    )
+
+    collector = Ace::Overseer::Organisms::StatusCollector.new(
+      worktree_manager: FakeWorktreeManager.new([NonTaskWorktree.new("/wt/ace-e2e-glm")]),
+      context_collector: FakeContextCollector.new(non_task_context),
+      project_root: "/project"
+    )
+
+    snapshot = collector.collect
+    paths = snapshot[:contexts].map(&:worktree_path)
+
+    refute_includes paths, "/wt/ace-e2e-glm"
   end
 
   def test_collect_excludes_main_branch_when_no_assignments
