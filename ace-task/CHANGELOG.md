@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-03-03
+
+### Added
+- `SubtaskCreator`: dual-slug naming — folder slug (5 words) and file slug (7 words), matching `TaskCreator` convention
+- `TaskResolver`: short subtask ID resolution — `q7w.a` and `t.q7w.a` patterns now resolve to full subtask IDs
+
+### Fixed
+- `TaskReparenter` test: corrected expected first subtask char from `.a` to `.0` (base36 sequence starts at 0)
+- `TaskManager` tests: corrected expected subtask char assertions to match 0-9 then a-z allocation order
+
 ## [0.13.0] - 2026-03-03
 
 ### Added

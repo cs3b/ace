@@ -205,7 +205,7 @@ class TaskManagerTest < AceTaskTestCase
 
     subtask = @manager.create_subtask(parent.id, "First subtask")
 
-    assert subtask.id.match?(/^[0-9a-z]{3}\.t\.[0-9a-z]{3}\.a$/)
+    assert subtask.id.match?(/^[0-9a-z]{3}\.t\.[0-9a-z]{3}\.0$/)
     assert_equal "First subtask", subtask.title
     assert_equal "pending", subtask.status
   end
@@ -216,8 +216,8 @@ class TaskManagerTest < AceTaskTestCase
     sub_a = @manager.create_subtask(parent.id, "Subtask A")
     sub_b = @manager.create_subtask(parent.id, "Subtask B")
 
-    assert sub_a.id.end_with?(".a")
-    assert sub_b.id.end_with?(".b")
+    assert sub_a.id.end_with?(".0")
+    assert sub_b.id.end_with?(".1")
   end
 
   def test_create_subtask_with_priority_and_tags

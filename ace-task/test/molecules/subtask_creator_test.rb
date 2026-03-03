@@ -84,6 +84,22 @@ class SubtaskCreatorTest < AceTaskTestCase
     end
   end
 
+  def test_dual_slug_folder_shorter_than_file_for_long_titles
+    subtask_creator = Ace::Task::Molecules::SubtaskCreator.new
+    subtask = subtask_creator.create(@parent, "Implement the new authentication flow for users")
+
+    folder_name = File.basename(subtask.path)
+    spec_name = File.basename(subtask.file_path, ".s.md")
+
+    # Folder slug should be 5 words, file slug should be 7 words
+    folder_slug = folder_name.sub(/^[0-9a-z.]+?-/, "")
+    file_slug = spec_name.sub(/^[0-9a-z.]+?-/, "")
+
+    assert folder_slug.split("-").length <= 5, "Folder slug should have at most 5 words: #{folder_slug}"
+    assert file_slug.split("-").length <= 7, "File slug should have at most 7 words: #{file_slug}"
+    assert file_slug.length > folder_slug.length, "File slug should be longer than folder slug for long titles"
+  end
+
   def test_subtask_loadable_by_parent
     subtask_creator = Ace::Task::Molecules::SubtaskCreator.new
     subtask_creator.create(@parent, "Setup database")

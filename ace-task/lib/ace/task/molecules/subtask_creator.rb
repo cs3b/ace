@@ -42,11 +42,12 @@ module Ace
           # Build subtask ID: parent_id + ".{char}"
           subtask_id = "#{parent_task.id}.#{next_char}"
 
-          # Generate slug
-          slug = generate_slug(title)
+          # Generate slugs (folder: 5 words, file: 7 words)
+          folder_slug = generate_folder_slug(title)
+          file_slug = generate_file_slug(title)
 
           # Build folder and file names
-          folder_name = "#{subtask_id}-#{slug}"
+          folder_name = "#{subtask_id}-#{folder_slug}"
           subtask_dir = File.join(parent_task.path, folder_name)
           FileUtils.mkdir_p(subtask_dir)
 
@@ -62,7 +63,7 @@ module Ace
           )
 
           # Write spec file
-          spec_filename = "#{folder_name}.s.md"
+          spec_filename = "#{subtask_id}-#{file_slug}.s.md"
           spec_file = File.join(subtask_dir, spec_filename)
           content = build_spec_content(frontmatter: frontmatter, title: title)
           File.write(spec_file, content)
@@ -110,7 +111,14 @@ module Ace
           raise RangeError, "Maximum number of subtasks (#{MAX_SUBTASKS}) exceeded"
         end
 
-        def generate_slug(title)
+        def generate_folder_slug(title)
+          sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title)
+          words = sanitized.split("-")
+          result = words.take(5).join("-")
+          result.empty? ? "subtask" : result
+        end
+
+        def generate_file_slug(title)
           sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title)
           words = sanitized.split("-")
           result = words.take(7).join("-")
