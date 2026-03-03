@@ -1,6 +1,10 @@
 ---
 status: pending
 priority: maybe
+id: 8lhnbp
+title: Idea
+tags: []
+created_at: '2025-10-18 15:32:59'
 ---
 
 # Idea
@@ -35,4 +39,3 @@ _[This section will be enhanced with LLM integration]_
 
 ---
 Captured: 2025-10-18 16:33:09
-

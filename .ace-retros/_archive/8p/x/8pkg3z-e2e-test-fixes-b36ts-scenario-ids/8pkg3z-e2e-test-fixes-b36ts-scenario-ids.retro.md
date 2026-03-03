@@ -3,11 +3,12 @@ id: 8pkg3z
 title: E2E Test Fixes — ace-b36ts Scenario ID Mismatch
 type: conversation-analysis
 tags: []
-created_at: "2026-02-21 10:44:24"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pkg3z-e2e-test-fixes-b36ts-scenario-ids.md
+created_at: '2026-02-21 10:44:24'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pkg3z-e2e-test-fixes-b36ts-scenario-ids.md"
 ---
+
 # Reflection: E2E Test Fixes — ace-b36ts Scenario ID Mismatch
 
 **Date**: 2026-02-21

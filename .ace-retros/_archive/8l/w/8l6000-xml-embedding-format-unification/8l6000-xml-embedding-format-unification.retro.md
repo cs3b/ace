@@ -1,13 +1,14 @@
 ---
 id: 8l6000
-title: "Retro: XML Embedding Format Unification in ace-context"
+title: 'Retro: XML Embedding Format Unification in ace-context'
 type: conversation-analysis
 tags: []
-created_at: "2025-10-07 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l6000-xml-embedding-format-unification.md
+created_at: '2025-10-07 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l6000-xml-embedding-format-unification.md"
 ---
+
 # Retro: XML Embedding Format Unification in ace-context
 
 **Date**: 2025-10-07

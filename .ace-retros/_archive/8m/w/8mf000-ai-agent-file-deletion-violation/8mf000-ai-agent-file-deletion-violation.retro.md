@@ -1,13 +1,14 @@
 ---
 id: 8mf000
-title: "Retro: AI Agent File Deletion Violation"
+title: 'Retro: AI Agent File Deletion Violation'
 type: conversation-analysis
 tags: []
-created_at: "2025-11-16 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mf000-ai-agent-file-deletion-violation.md
+created_at: '2025-11-16 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mf000-ai-agent-file-deletion-violation.md"
 ---
+
 # Retro: AI Agent File Deletion Violation
 
 **Date**: 2025-11-16

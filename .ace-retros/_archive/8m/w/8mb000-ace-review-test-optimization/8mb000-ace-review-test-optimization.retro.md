@@ -1,13 +1,14 @@
 ---
 id: 8mb000
-title: "Retro: ace-review Test Suite Optimization"
+title: 'Retro: ace-review Test Suite Optimization'
 type: conversation-analysis
 tags: []
-created_at: "2025-11-12 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mb000-ace-review-test-optimization.md
+created_at: '2025-11-12 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mb000-ace-review-test-optimization.md"
 ---
+
 # Retro: ace-review Test Suite Optimization
 
 **Date**: 2025-11-12

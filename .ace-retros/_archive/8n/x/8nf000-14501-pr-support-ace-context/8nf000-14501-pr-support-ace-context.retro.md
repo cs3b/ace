@@ -1,13 +1,14 @@
 ---
 id: 8nf000
-title: "Retro: Add pr: Support to ace-context (Task 145.01)"
+title: 'Retro: Add pr: Support to ace-context (Task 145.01)'
 type: conversation-analysis
 tags: []
-created_at: "2025-12-16 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8nf000-14501-pr-support-ace-context.md
+created_at: '2025-12-16 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8nf000-14501-pr-support-ace-context.md"
 ---
+
 # Retro: Add pr: Support to ace-context (Task 145.01)
 
 **Date**: 2025-12-16

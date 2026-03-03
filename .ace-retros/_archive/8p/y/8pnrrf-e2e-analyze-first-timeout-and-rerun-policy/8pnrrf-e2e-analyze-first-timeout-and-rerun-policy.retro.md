@@ -1,13 +1,14 @@
 ---
 id: 8pnrrf
-title: "E2E Analyze-First, Timeout, and Rerun Policy"
+title: E2E Analyze-First, Timeout, and Rerun Policy
 type: conversation-analysis
 tags: []
-created_at: "2026-02-24 18:30:27"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pnrrf-e2e-analyze-first-timeout-and-rerun-policy.md
+created_at: '2026-02-24 18:30:27'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pnrrf-e2e-analyze-first-timeout-and-rerun-policy.md"
 ---
+
 # Reflection: E2E Analyze-First, Timeout, and Rerun Policy
 
 **Date**: 2026-02-24

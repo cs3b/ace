@@ -1,13 +1,14 @@
 ---
 id: 8pb29b
-title: "Retro: TS-Format E2E Test Migration (Task 261)"
+title: 'Retro: TS-Format E2E Test Migration (Task 261)'
 type: self-review
 tags: []
-created_at: "2026-02-12 01:30:20"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pb29b-261-ts-format-e2e-migration.md
+created_at: '2026-02-12 01:30:20'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pb29b-261-ts-format-e2e-migration.md"
 ---
+
 # Retro: TS-Format E2E Test Migration (Task 261)
 
 **Date**: 2026-02-12

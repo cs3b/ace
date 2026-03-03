@@ -3,11 +3,12 @@ id: 8pknml
 title: Commit Reorganization for Task 273
 type: self-review
 tags: []
-created_at: "2026-02-21 15:45:05"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pknml-commit-reorganization-task-273.md
+created_at: '2026-02-21 15:45:05'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pknml-commit-reorganization-task-273.md"
 ---
+
 # Reflection: Commit Reorganization for Task 273
 
 **Date**: 2026-02-21

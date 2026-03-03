@@ -1,13 +1,14 @@
 ---
 id: 8odvjc
-title: "Retro: Hanami CLI Pattern Migration"
+title: 'Retro: Hanami CLI Pattern Migration'
 type: self-review
 tags: []
-created_at: "2026-01-14 21:01:28"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8odvjc-hanami-cli-pattern-migration.md
+created_at: '2026-01-14 21:01:28'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8odvjc-hanami-cli-pattern-migration.md"
 ---
+
 # Retro: Hanami CLI Pattern Migration
 
 **Date**: 2025-01-14

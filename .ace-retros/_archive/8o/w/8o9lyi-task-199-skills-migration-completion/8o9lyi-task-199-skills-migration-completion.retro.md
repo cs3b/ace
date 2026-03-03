@@ -3,11 +3,12 @@ id: 8o9lyi
 title: Task 199 Skills Migration Completion
 type: standard
 tags: []
-created_at: "2026-01-10 14:38:20"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o9lyi-task-199-skills-migration-completion.md
+created_at: '2026-01-10 14:38:20'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o9lyi-task-199-skills-migration-completion.md"
 ---
+
 # Reflection: Task 199 Skills Migration Completion
 
 **Date**: 2026-01-10

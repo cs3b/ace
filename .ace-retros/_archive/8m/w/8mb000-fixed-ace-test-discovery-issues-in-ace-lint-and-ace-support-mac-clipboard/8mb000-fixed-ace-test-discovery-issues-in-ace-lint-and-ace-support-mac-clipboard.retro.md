@@ -3,11 +3,12 @@ id: 8mb000
 title: Fixed ace-test Discovery Issues in ace-lint and ace-support-mac-clipboard
 type: conversation-analysis
 tags: []
-created_at: "2025-11-12 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mb000-fixed-ace-test-discovery-issues-in-ace-lint-and-ace-support-mac-clipboard.md
+created_at: '2025-11-12 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mb000-fixed-ace-test-discovery-issues-in-ace-lint-and-ace-support-mac-clipboard.md"
 ---
+
 # Reflection: Fixed ace-test Discovery Issues in ace-lint and ace-support-mac-clipboard
 
 **Date**: 2025-11-12

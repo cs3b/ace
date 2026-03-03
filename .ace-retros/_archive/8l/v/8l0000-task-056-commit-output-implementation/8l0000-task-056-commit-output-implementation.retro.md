@@ -3,11 +3,12 @@ id: 8l0000
 title: Task 056 - Add Informative Commit Output
 type: standard
 tags: []
-created_at: "2025-10-01 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l0000-task-056-commit-output-implementation.md
+created_at: '2025-10-01 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l0000-task-056-commit-output-implementation.md"
 ---
+
 # Reflection: Task 056 - Add Informative Commit Output
 
 **Date**: 2025-10-01

@@ -3,11 +3,12 @@ id: 8ohhwc
 title: Multi-Step Workflow Instruction Loss
 type: conversation-analysis
 tags: []
-created_at: "2026-01-18 11:55:55"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ohhwc-multi-step-workflow-instruction-loss.md
+created_at: '2026-01-18 11:55:55'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ohhwc-multi-step-workflow-instruction-loss.md"
 ---
+
 # Reflection: Multi-Step Workflow Instruction Loss
 
 **Date**: 2026-01-18

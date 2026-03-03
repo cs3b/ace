@@ -3,11 +3,12 @@ id: 8pn47m
 title: Task 280 Pilot Direction Correction
 type: conversation-analysis
 tags: []
-created_at: "2026-02-24 02:48:27"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pn47m-280-spec-pilot-direction-correction.md
+created_at: '2026-02-24 02:48:27'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pn47m-280-spec-pilot-direction-correction.md"
 ---
+
 # Reflection: Task 280 Pilot Direction Correction
 
 **Date**: 2026-02-24

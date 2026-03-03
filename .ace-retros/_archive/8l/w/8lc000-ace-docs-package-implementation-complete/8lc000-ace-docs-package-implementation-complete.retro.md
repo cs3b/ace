@@ -3,11 +3,12 @@ id: 8lc000
 title: ace-docs Package Implementation Complete
 type: standard
 tags: []
-created_at: "2025-10-13 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8lc000-ace-docs-package-implementation-complete.md
+created_at: '2025-10-13 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8lc000-ace-docs-package-implementation-complete.md"
 ---
+
 # ace-docs Package Implementation Complete
 
 **Date:** 2025-10-13

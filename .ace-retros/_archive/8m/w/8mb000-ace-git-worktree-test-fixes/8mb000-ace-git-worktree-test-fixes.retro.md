@@ -3,11 +3,12 @@ id: 8mb000
 title: ace-git-worktree Test Suite Modernization
 type: conversation-analysis
 tags: []
-created_at: "2025-11-12 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mb000-ace-git-worktree-test-fixes.md
+created_at: '2025-11-12 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mb000-ace-git-worktree-test-fixes.md"
 ---
+
 # Reflection: ace-git-worktree Test Suite Modernization
 
 **Date**: 2025-11-12

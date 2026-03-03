@@ -1,13 +1,14 @@
 ---
 id: 8mq000
-title: "Retro: Task Definition and Subtask Workflow Improvements"
+title: 'Retro: Task Definition and Subtask Workflow Improvements'
 type: conversation-analysis
 tags: []
-created_at: "2025-11-27 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mq000-subtask-workflow-improvements.md
+created_at: '2025-11-27 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mq000-subtask-workflow-improvements.md"
 ---
+
 # Retro: Task Definition and Subtask Workflow Improvements
 
 **Date**: 2025-11-27

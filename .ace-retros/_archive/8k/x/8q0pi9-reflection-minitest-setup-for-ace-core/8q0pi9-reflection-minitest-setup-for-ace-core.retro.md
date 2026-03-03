@@ -3,11 +3,12 @@ id: 8q0pi9
 title: Setting Up Minitest Infrastructure for ace-core
 type: standard
 tags: []
-created_at: "2025-09-20 00:00:00"
-status: active
+created_at: '2025-09-20 00:00:00'
+status: done
 source: legacy
-migrated_from: .ace-taskflow/v.0.9.0/retros/reflection-minitest-setup-for-ace-core.md
+migrated_from: ".ace-taskflow/v.0.9.0/retros/reflection-minitest-setup-for-ace-core.md"
 ---
+
 # Reflection: Setting Up Minitest Infrastructure for ace-core
 
 **Date**: 2025-09-20

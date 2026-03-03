@@ -3,11 +3,12 @@ id: 8mr000
 title: Subtask 121.01 Workflow Learnings
 type: conversation-analysis
 tags: []
-created_at: "2025-11-28 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mr000-subtask-12101-workflow-learnings.md
+created_at: '2025-11-28 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mr000-subtask-12101-workflow-learnings.md"
 ---
+
 # Reflection: Subtask 121.01 Workflow Learnings
 
 **Date**: 2025-11-28

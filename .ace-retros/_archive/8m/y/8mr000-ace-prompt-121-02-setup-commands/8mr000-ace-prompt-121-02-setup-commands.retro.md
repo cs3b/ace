@@ -1,13 +1,14 @@
 ---
 id: 8mr000
-title: "ace-prompt 121.02 Setup & Reset Commands"
+title: ace-prompt 121.02 Setup & Reset Commands
 type: conversation-analysis
 tags: []
-created_at: "2025-11-28 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mr000-ace-prompt-121-02-setup-commands.md
+created_at: '2025-11-28 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mr000-ace-prompt-121-02-setup-commands.md"
 ---
+
 # Reflection: ace-prompt 121.02 Setup & Reset Commands
 
 **Date**: 2025-11-28

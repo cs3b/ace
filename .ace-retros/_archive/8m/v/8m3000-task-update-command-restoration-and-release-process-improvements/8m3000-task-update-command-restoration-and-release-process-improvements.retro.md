@@ -1,13 +1,14 @@
 ---
 id: 8m3000
-title: "Retro: Task Update Command Restoration and Release Process Improvements"
+title: 'Retro: Task Update Command Restoration and Release Process Improvements'
 type: conversation-analysis
 tags: []
-created_at: "2025-11-04 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8m3000-task-update-command-restoration-and-release-process-improvements.md
+created_at: '2025-11-04 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8m3000-task-update-command-restoration-and-release-process-improvements.md"
 ---
+
 # Retro: Task Update Command Restoration and Release Process Improvements
 
 **Date**: 2025-11-04

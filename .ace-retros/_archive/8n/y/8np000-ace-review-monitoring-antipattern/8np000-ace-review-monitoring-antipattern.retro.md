@@ -3,11 +3,12 @@ id: 8np000
 title: ace-review Monitoring Anti-pattern
 type: conversation-analysis
 tags: []
-created_at: "2025-12-26 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8np000-ace-review-monitoring-antipattern.md
+created_at: '2025-12-26 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8np000-ace-review-monitoring-antipattern.md"
 ---
+
 # Reflection: ace-review Monitoring Anti-pattern
 
 **Date**: 2025-12-26

@@ -3,11 +3,12 @@ id: 8m0000
 title: SlashCommand Execution Delay Issue
 type: conversation-analysis
 tags: []
-created_at: "2025-11-01 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8m0000-slashcommand-execution-delay.md
+created_at: '2025-11-01 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8m0000-slashcommand-execution-delay.md"
 ---
+
 # Reflection: SlashCommand Execution Delay Issue
 
 **Date**: 2025-11-01

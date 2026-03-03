@@ -3,11 +3,12 @@ id: 8l1000
 title: ace-test Line Number Support and Report Location
 type: conversation-analysis
 tags: []
-created_at: "2025-10-02 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l1000-ace-test-line-number-and-report-location.md
+created_at: '2025-10-02 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l1000-ace-test-line-number-and-report-location.md"
 ---
+
 # Reflection: ace-test Line Number Support and Report Location
 
 **Date**: 2025-10-02

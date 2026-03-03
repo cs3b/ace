@@ -1,13 +1,14 @@
 ---
 id: 8ln000
-title: "Retro: Task File Corruption Fix and Prevention"
+title: 'Retro: Task File Corruption Fix and Prevention'
 type: conversation-analysis
 tags: []
-created_at: "2025-10-24 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ln000-task-file-corruption-fix.md
+created_at: '2025-10-24 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ln000-task-file-corruption-fix.md"
 ---
+
 # Retro: Task File Corruption Fix and Prevention
 
 **Date**: 2025-10-24

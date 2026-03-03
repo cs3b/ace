@@ -3,11 +3,12 @@ id: 8ply25
 title: Task 278 — Drop DWIM Default Routing and Standardize CLI Help
 type: conversation-analysis
 tags: []
-created_at: "2026-02-22 22:42:22"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ply25-task-278-cli-help-standardization.md
+created_at: '2026-02-22 22:42:22'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ply25-task-278-cli-help-standardization.md"
 ---
+
 # Reflection: Task 278 — Drop DWIM Default Routing and Standardize CLI Help
 
 **Date**: 2026-02-22

@@ -1,13 +1,14 @@
 ---
 id: 8pke7r
-title: "Retro: E2E Test Fixes — Patch Releases"
+title: 'Retro: E2E Test Fixes — Patch Releases'
 type: standard
 tags: []
-created_at: "2026-02-21 09:28:36"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pke7r-e2e-test-fixes-patch-releases.md
+created_at: '2026-02-21 09:28:36'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pke7r-e2e-test-fixes-patch-releases.md"
 ---
+
 # Retro: E2E Test Fixes — Patch Releases
 
 **Date**: 2026-02-21

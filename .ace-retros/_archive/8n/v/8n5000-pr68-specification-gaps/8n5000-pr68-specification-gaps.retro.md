@@ -1,13 +1,14 @@
 ---
 id: 8n5000
-title: "Retro: PR#68 Specification Gaps Analysis"
+title: 'Retro: PR#68 Specification Gaps Analysis'
 type: self-review
 tags: []
-created_at: "2025-12-06 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8n5000-pr68-specification-gaps.md
+created_at: '2025-12-06 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8n5000-pr68-specification-gaps.md"
 ---
+
 # Retro: PR#68 Specification Gaps Analysis
 
 **Date**: 2025-12-06

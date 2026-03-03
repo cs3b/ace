@@ -3,11 +3,12 @@ id: 8opupa
 title: Path-Based Commit Splitting Implementation
 type: conversation-analysis
 tags: []
-created_at: "2026-01-26 20:28:05"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8opupa-path-based-commit-splitting-session.md
+created_at: '2026-01-26 20:28:05'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8opupa-path-based-commit-splitting-session.md"
 ---
+
 # Reflection: Path-Based Commit Splitting Implementation
 
 **Date**: 2026-01-26

@@ -3,11 +3,12 @@ id: 8o2000
 title: Task 153 - ace-nav to ace-context Migration
 type: conversation-analysis
 tags: []
-created_at: "2026-01-03 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o2000-task-153-ace-context-wfi-migration.md
+created_at: '2026-01-03 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o2000-task-153-ace-context-wfi-migration.md"
 ---
+
 # Reflection: Task 153 - ace-nav to ace-context Migration
 
 **Date**: 2026-01-03

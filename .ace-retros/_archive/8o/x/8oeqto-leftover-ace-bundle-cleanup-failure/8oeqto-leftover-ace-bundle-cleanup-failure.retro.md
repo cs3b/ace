@@ -3,11 +3,12 @@ id: 8oeqto
 title: Leftover ace-bundle Directory After Incomplete Cleanup
 type: standard
 tags: []
-created_at: "2026-01-15 17:52:57"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8oeqto-leftover-ace-bundle-cleanup-failure.md
+created_at: '2026-01-15 17:52:57'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8oeqto-leftover-ace-bundle-cleanup-failure.md"
 ---
+
 # Reflection: Leftover ace-bundle Directory After Incomplete Cleanup
 
 **Date**: 2026-01-15

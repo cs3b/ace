@@ -1,13 +1,14 @@
 ---
 id: 8lh000
-title: "Retro: ace-context File Configuration Support"
+title: 'Retro: ace-context File Configuration Support'
 type: standard
 tags: []
-created_at: "2025-10-18 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8lh000-ace-context-file-config.md
+created_at: '2025-10-18 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8lh000-ace-context-file-config.md"
 ---
+
 # Retro: ace-context File Configuration Support
 
 **Date**: 2025-10-18

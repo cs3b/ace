@@ -3,11 +3,12 @@ id: 8kn000
 title: ace-nav Gem Type Source Resolution Implementation
 type: conversation-analysis
 tags: []
-created_at: "2025-09-24 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8kn000-ace-nav-gem-resolution.md
+created_at: '2025-09-24 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8kn000-ace-nav-gem-resolution.md"
 ---
+
 # Reflection: ace-nav Gem Type Source Resolution Implementation
 
 **Date**: 2025-09-24

@@ -3,11 +3,12 @@ id: 8ng000
 title: ace-test Output Interpretation
 type: conversation-analysis
 tags: []
-created_at: "2025-12-17 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ng000-ace-test-output-interpretation.md
+created_at: '2025-12-17 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ng000-ace-test-output-interpretation.md"
 ---
+
 # Reflection: ace-test Output Interpretation
 
 **Date**: 2025-12-17

@@ -3,11 +3,12 @@ id: 8ot1ve
 title: Task 221 - Spec vs Build Analysis
 type: self-review
 tags: []
-created_at: "2026-01-30 01:14:52"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ot1ve-task-221-spec-vs-build.md
+created_at: '2026-01-30 01:14:52'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ot1ve-task-221-spec-vs-build.md"
 ---
+
 # Reflection: Task 221 - Spec vs Build Analysis
 
 **Date**: 2026-01-30

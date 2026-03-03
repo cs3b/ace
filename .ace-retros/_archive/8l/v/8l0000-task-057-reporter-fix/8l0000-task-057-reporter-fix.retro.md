@@ -3,11 +3,12 @@ id: 8l0000
 title: Task 057 - ace-test-runner Reporter Fix
 type: self-review
 tags: []
-created_at: "2025-10-01 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l0000-task-057-reporter-fix.md
+created_at: '2025-10-01 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l0000-task-057-reporter-fix.md"
 ---
+
 # Reflection: Task 057 - ace-test-runner Reporter Fix
 
 **Date**: 2025-10-01

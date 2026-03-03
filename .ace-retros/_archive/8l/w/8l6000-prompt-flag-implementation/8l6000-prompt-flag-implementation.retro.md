@@ -1,13 +1,14 @@
 ---
 id: 8l6000
-title: "Retro: --prompt Flag Implementation for ace-llm-query"
+title: 'Retro: --prompt Flag Implementation for ace-llm-query'
 type: standard
 tags: []
-created_at: "2025-10-07 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l6000-prompt-flag-implementation.md
+created_at: '2025-10-07 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l6000-prompt-flag-implementation.md"
 ---
+
 # Retro: --prompt Flag Implementation for ace-llm-query
 
 **Date**: 2025-10-07

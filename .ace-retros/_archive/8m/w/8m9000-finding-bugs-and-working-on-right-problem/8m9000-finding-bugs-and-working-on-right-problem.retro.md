@@ -3,11 +3,12 @@ id: 8m9000
 title: Finding Bugs and Working on the Right Problem
 type: conversation-analysis
 tags: []
-created_at: "2025-11-10 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8m9000-finding-bugs-and-working-on-right-problem.md
+created_at: '2025-11-10 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8m9000-finding-bugs-and-working-on-right-problem.md"
 ---
+
 # Reflection: Finding Bugs and Working on the Right Problem
 
 **Date**: 2025-11-10

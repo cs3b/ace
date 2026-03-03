@@ -3,11 +3,12 @@ id: 8lk000
 title: Writing Fast Unit Tests
 type: conversation-analysis
 tags: []
-created_at: "2025-10-21 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8lk000-fast-unit-tests-practices.md
+created_at: '2025-10-21 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8lk000-fast-unit-tests-practices.md"
 ---
+
 # Reflection: Writing Fast Unit Tests
 
 **Date**: 2025-10-21

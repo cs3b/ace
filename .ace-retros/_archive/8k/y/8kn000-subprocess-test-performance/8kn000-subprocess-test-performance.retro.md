@@ -3,11 +3,12 @@ id: 8kn000
 title: Test Performance Optimization - Parser and Subprocess Issues
 type: standard
 tags: []
-created_at: "2025-09-24 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8kn000-subprocess-test-performance.md
+created_at: '2025-09-24 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8kn000-subprocess-test-performance.md"
 ---
+
 # Reflection: Test Performance Optimization - Parser and Subprocess Issues
 
 ## Date: 2025-09-24

@@ -3,11 +3,12 @@ id: 8nj000
 title: Task 140 Planning Session
 type: conversation-analysis
 tags: []
-created_at: "2025-12-20 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8nj000-task-140-planning-session.md
+created_at: '2025-12-20 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8nj000-task-140-planning-session.md"
 ---
+
 # Reflection: Task 140 Planning Session
 
 **Date**: 2025-12-20

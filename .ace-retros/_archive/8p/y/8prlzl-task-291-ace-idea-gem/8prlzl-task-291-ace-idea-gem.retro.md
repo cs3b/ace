@@ -3,11 +3,12 @@ id: 8prlzl
 title: Task 291 — ace-idea gem with B36TS-based idea management
 type: conversation-analysis
 tags: []
-created_at: "2026-02-28 14:39:32"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8prlzl-task-291-ace-idea-gem.md
+created_at: '2026-02-28 14:39:32'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8prlzl-task-291-ace-idea-gem.md"
 ---
+
 # Reflection: Task 291 — ace-idea gem with B36TS-based idea management
 
 **Date**: 2026-02-28

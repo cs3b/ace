@@ -1,13 +1,14 @@
 ---
 id: 8prv7e
-title: "Retro: ace-idea Polish After Initial Migration"
+title: 'Retro: ace-idea Polish After Initial Migration'
 type: self-review
 tags: []
-created_at: "2026-02-28 20:48:12"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8prv7e-ace-idea-polish-post-migration.md
+created_at: '2026-02-28 20:48:12'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8prv7e-ace-idea-polish-post-migration.md"
 ---
+
 # Retro: ace-idea Polish After Initial Migration
 
 **Date**: 2026-02-28

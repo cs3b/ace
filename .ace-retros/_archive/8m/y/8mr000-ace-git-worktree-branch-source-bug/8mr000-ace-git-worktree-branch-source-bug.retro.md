@@ -3,11 +3,12 @@ id: 8mr000
 title: ace-git-worktree Branch Source Bug
 type: standard
 tags: []
-created_at: "2025-11-28 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8mr000-ace-git-worktree-branch-source-bug.md
+created_at: '2025-11-28 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8mr000-ace-git-worktree-branch-source-bug.md"
 ---
+
 # Reflection: ace-git-worktree Branch Source Bug
 
 **Date**: 2025-11-28
