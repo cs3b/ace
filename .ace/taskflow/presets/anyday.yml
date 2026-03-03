@@ -1,9 +1,0 @@
-description: "Items with no urgency (anyday priority)"
-# Universal preset - works for both ideas and tasks
-release: "current"
-filters:
-  glob: ["anyday/**/*.s.md"]  # Items in anyday subdirectory (folder prefix added by PresetManager)
-sort:
-  by: "created_at"
-  ascending: false
-display: {}
