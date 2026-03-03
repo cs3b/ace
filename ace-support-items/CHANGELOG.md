@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-03-03
+
+### Changed
+- `StatsLineFormatter`: folder breakdown section (after em dash) is now dimmed via `AnsiColors` for visual distinction between current-view stats and system-wide totals
+- `StatsLineFormatter`: folder names strip `_` prefix for display (`_archive` → `archive`, `_maybe` → `maybe`)
+
 ## [0.13.0] - 2026-03-03
 
 ### Added
