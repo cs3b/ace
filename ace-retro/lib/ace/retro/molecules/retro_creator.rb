@@ -33,16 +33,17 @@ module Ace
 
           effective_type = type || @config.dig("retro", "default_type") || "standard"
 
-          # Generate ID and slug
+          # Generate ID and slugs
           id = Atoms::RetroIdFormatter.generate(time)
-          slug = generate_slug(title)
+          folder_slug = generate_folder_slug(title)
+          file_slug = generate_file_slug(title)
 
           # Determine target directory
           target_dir = determine_target_dir(move_to)
           FileUtils.mkdir_p(target_dir)
 
           # Create retro folder (ensure unique name if ID collision occurs)
-          folder_name, slug = unique_folder_name(id, slug, target_dir)
+          folder_name, folder_slug = unique_folder_name(id, folder_slug, target_dir)
           retro_dir = File.join(target_dir, folder_name)
           FileUtils.mkdir_p(retro_dir)
 
@@ -59,7 +60,7 @@ module Ace
 
           # Write retro file
           file_content = build_file_content(frontmatter, title, effective_type)
-          retro_filename = Atoms::RetroFilePattern.retro_filename(id, slug)
+          retro_filename = Atoms::RetroFilePattern.retro_filename(id, file_slug)
           retro_file = File.join(retro_dir, retro_filename)
           File.write(retro_file, file_content)
 
@@ -94,10 +95,16 @@ module Ace
           end
         end
 
-        def generate_slug(title)
+        def generate_folder_slug(title)
           sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title.to_s)
-          sanitized = sanitized[0..39] if sanitized.length > 40
-          sanitized.empty? ? "retro" : sanitized
+          words = sanitized.split("-")
+          words.take(5).join("-").then { |s| s.empty? ? "retro" : s }
+        end
+
+        def generate_file_slug(title)
+          sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title.to_s)
+          words = sanitized.split("-")
+          words.take(7).join("-").then { |s| s.empty? ? "retro" : s }
         end
 
         def determine_target_dir(move_to)
