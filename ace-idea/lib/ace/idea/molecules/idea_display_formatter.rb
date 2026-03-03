@@ -45,7 +45,7 @@ module Ace
             lines << idea.content
           end
 
-          if idea.attachments.any?
+          if show_content && idea.attachments.any?
             lines << ""
             lines << "Attachments: #{idea.attachments.join(", ")}"
           end
