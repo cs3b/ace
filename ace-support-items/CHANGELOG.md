@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-03
+
+### Added
+- `AnsiColors` atom: TTY-aware ANSI color helpers with `colorize(text, color_code)` class method and color constants (RED, GREEN, YELLOW, CYAN, DIM, BOLD, RESET)
+- `StatsLineFormatter`: new `global_folder_stats:` parameter that always appends folder breakdown to the stats line regardless of filtered/unfiltered state
+
 ## [0.12.0] - 2026-03-02
 
 ### Added
