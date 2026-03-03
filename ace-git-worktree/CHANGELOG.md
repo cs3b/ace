@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.19] - 2026-03-03
+
+### Fixed
+- `TaskIDExtractor`: support B36TS task ID format (`8pp.t.hy4`) in `extract` and `normalize` methods, fixing `ace-overseer work-on` failure when updating task status with new ace-task IDs
+
 ## [0.13.18] - 2026-03-02
 
 ### Changed
