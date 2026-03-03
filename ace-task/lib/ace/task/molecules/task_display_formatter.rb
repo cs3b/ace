@@ -28,7 +28,7 @@ module Ace
         }.freeze
 
         PRIORITY_LABELS = {
-          "critical" => "▲▲",
+          "critical" => "▲",
           "high" => "▲",
           "medium" => "",
           "low" => "▼"

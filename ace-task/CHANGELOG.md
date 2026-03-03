@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-03-03
+
+### Changed
+- Critical priority uses single `▲` glyph (same as high), distinguished only by red color — consistent column alignment
+
 ## [0.12.1] - 2026-03-03
 
 ### Changed
