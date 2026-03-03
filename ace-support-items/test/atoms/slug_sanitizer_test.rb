@@ -43,4 +43,35 @@ class SlugSanitizerTest < AceSupportItemsTestCase
   def test_preserves_numbers
     assert_equal "idea-123", Ace::Support::Items::Atoms::SlugSanitizer.sanitize("idea-123")
   end
+
+  def test_truncates_at_word_boundary
+    long_title = "position ace as an ade while planning repository naming updates"
+    result = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(long_title, max_length: 40)
+    assert result.length <= 40
+    refute result.end_with?("-")
+    assert_equal "position-ace-as-an-ade-while-planning", result
+  end
+
+  def test_respects_custom_max_length
+    result = Ace::Support::Items::Atoms::SlugSanitizer.sanitize("one two three four five six", max_length: 15)
+    assert result.length <= 15
+    assert_equal "one-two-three", result
+  end
+
+  def test_default_max_length_is_55
+    long_slug = "a" + "-word" * 20 # way longer than 55
+    result = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(long_slug)
+    assert result.length <= 55
+  end
+
+  def test_short_slug_unchanged_by_max_length
+    result = Ace::Support::Items::Atoms::SlugSanitizer.sanitize("short-slug", max_length: 55)
+    assert_equal "short-slug", result
+  end
+
+  def test_truncate_with_no_hyphens_uses_hard_cut
+    # A single long word with no hyphens falls back to hard truncation
+    result = Ace::Support::Items::Atoms::SlugSanitizer.sanitize("abcdefghijklmnop", max_length: 10)
+    assert_equal "abcdefghij", result
+  end
 end

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-03-03
+
+### Added
+- `SlugSanitizer`: optional `max_length:` parameter (default: 55) for controlling slug length
+- `SlugSanitizer`: word-boundary truncation via `truncate_at_word_boundary` — cuts at last hyphen instead of mid-word
+
 ## [0.13.1] - 2026-03-03
 
 ### Changed
