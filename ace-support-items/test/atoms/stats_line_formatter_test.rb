@@ -124,7 +124,7 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
 
   def test_format_with_folder_stats_multiple_folders
     stats = { total: 660, by_field: { "done" => 620, "draft" => 21, "pending" => 7, "in-progress" => 1 } }
-    folder_stats = { total: 660, by_field: { "_archive" => 620, "" => 28, "_maybe" => 12 } }
+    folder_stats = { total: 660, by_field: { "archive" => 620, "" => 28, "maybe" => 12 } }
 
     line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
       label: "Tasks",
@@ -134,12 +134,12 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
       folder_stats: folder_stats
     )
 
-    assert_equal "Tasks: ◇ 21 | ○ 7 | ▶ 1 | ✓ 620 • 660 total — _archive 620 | next 28 | _maybe 12", line
+    assert_equal "Tasks: ◇ 21 | ○ 7 | ▶ 1 | ✓ 620 • 660 total — archive 620 | next 28 | maybe 12", line
   end
 
   def test_format_with_folder_stats_nil_folder_renders_as_next
     stats = { total: 5, by_field: { "pending" => 3, "done" => 2 } }
-    folder_stats = { total: 5, by_field: { nil => 3, "_archive" => 2 } }
+    folder_stats = { total: 5, by_field: { nil => 3, "archive" => 2 } }
 
     line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
       label: "Tasks",
@@ -150,12 +150,12 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
     )
 
     assert_includes line, "next 3"
-    assert_includes line, "_archive 2"
+    assert_includes line, "archive 2"
   end
 
   def test_format_folder_stats_sorted_by_count_descending
     stats = { total: 10, by_field: { "pending" => 10 } }
-    folder_stats = { total: 10, by_field: { "_maybe" => 2, nil => 5, "_archive" => 3 } }
+    folder_stats = { total: 10, by_field: { "maybe" => 2, nil => 5, "archive" => 3 } }
 
     line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
       label: "Tasks",
@@ -165,8 +165,8 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
       folder_stats: folder_stats
     )
 
-    # Should be sorted: next 5 | _archive 3 | _maybe 2
-    assert_includes line, "— next 5 | _archive 3 | _maybe 2"
+    # Should be sorted: next 5 | archive 3 | maybe 2
+    assert_includes line, "— next 5 | archive 3 | maybe 2"
   end
 
   # --- total_count: "X of Y" tests ---
@@ -201,7 +201,7 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
 
   def test_format_with_total_count_filtered_skips_folder_breakdown
     stats = { total: 20, by_field: { "draft" => 9, "pending" => 11 } }
-    folder_stats = { total: 20, by_field: { "_maybe" => 20 } }
+    folder_stats = { total: 20, by_field: { "maybe" => 20 } }
 
     line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
       label: "Tasks",
@@ -226,11 +226,11 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
       status_order: %w[pending done],
       status_icons: { "pending" => "○", "done" => "✓" },
       total_count: 280,
-      global_folder_stats: { nil => 5, "_maybe" => 5, "_archive" => 270 }
+      global_folder_stats: { nil => 5, "maybe" => 5, "archive" => 270 }
     )
 
     assert_includes line, "2 of 280"
-    assert_includes line, "— _archive 270 | next 5 | _maybe 5"
+    assert_includes line, "— archive 270 | next 5 | maybe 5"
   end
 
   def test_format_with_global_folder_stats_single_folder_no_breakdown
@@ -249,7 +249,7 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
 
   def test_format_with_global_folder_stats_replaces_folder_stats_in_full_view
     stats = { total: 10, by_field: { "pending" => 10 } }
-    folder_stats = { total: 10, by_field: { nil => 7, "_maybe" => 3 } }
+    folder_stats = { total: 10, by_field: { nil => 7, "maybe" => 3 } }
 
     line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
       label: "Tasks",
@@ -257,7 +257,7 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
       status_order: %w[pending],
       status_icons: { "pending" => "○" },
       folder_stats: folder_stats,
-      global_folder_stats: { nil => 7, "_maybe" => 3 }
+      global_folder_stats: { nil => 7, "maybe" => 3 }
     )
 
     # Should only have one "—" section (global), not two

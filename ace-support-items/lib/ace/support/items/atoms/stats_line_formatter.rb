@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "ansi_colors"
+
 module Ace
   module Support
     module Items
@@ -50,7 +52,8 @@ module Ace
                 folder_parts = folder_stats[:by_field]
                   .sort_by { |_, count| -count }
                   .map { |folder, count| "#{folder_label(folder)} #{count}" }
-                line += " \u2014 #{folder_parts.join(" | ")}"
+                suffix = " \u2014 #{folder_parts.join(" | ")}"
+                line += AnsiColors.colorize(suffix, AnsiColors::DIM)
               end
             end
 
@@ -59,7 +62,8 @@ module Ace
               global_parts = global_folder_stats
                 .sort_by { |_, count| -count }
                 .map { |folder, count| "#{folder_label(folder)} #{count}" }
-              line += " \u2014 #{global_parts.join(" | ")}"
+              suffix = " \u2014 #{global_parts.join(" | ")}"
+              line += AnsiColors.colorize(suffix, AnsiColors::DIM)
             end
 
             line
@@ -68,7 +72,9 @@ module Ace
           # Map special_folder values to display labels.
           # nil (root items) renders as "next".
           def self.folder_label(folder)
-            folder.nil? || folder.empty? || folder == "" ? "next" : folder
+            return "next" if folder.nil? || folder.empty? || folder == ""
+
+            folder.delete_prefix("_")
           end
 
           private_class_method :folder_label
