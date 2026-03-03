@@ -10,11 +10,13 @@ module Ace
         class List < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
 
-          desc <<~DESC.strip
-            List tasks
-
-            Lists all tasks with optional filtering by status, tags, or folder.
-          DESC
+          C = Ace::Support::Items::Atoms::AnsiColors
+          desc "List tasks\n\n" \
+            "Lists all tasks with optional filtering by status, tags, or folder.\n\n" \
+            "Status legend:\n" \
+            "  #{C::CYAN}◇ draft#{C::RESET}    #{C::RESET}○ pending    #{C::YELLOW}▶ in-progress#{C::RESET}    #{C::GREEN}✓ done#{C::RESET}\n" \
+            "  #{C::RED}✗ blocked#{C::RESET}    #{C::DIM}– skipped  — cancelled#{C::RESET}"
+          remove_const(:C)
 
           example [
             '                           # Active tasks (root only, default)',
@@ -58,7 +60,10 @@ module Ace
             list_opts[:in_folder] = in_folder if in_folder
             tasks = manager.list(**list_opts)
 
-            puts Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks, total_count: manager.last_list_total)
+            puts Ace::Task::Molecules::TaskDisplayFormatter.format_list(
+              tasks, total_count: manager.last_list_total,
+              global_folder_stats: manager.last_folder_counts
+            )
           end
         end
       end
