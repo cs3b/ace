@@ -47,7 +47,7 @@ module Ace
           file_slug = generate_file_slug(title)
 
           # Build folder and file names
-          folder_name = "#{subtask_id}-#{folder_slug}"
+          folder_name = "#{next_char}-#{folder_slug}"
           subtask_dir = File.join(parent_task.path, folder_name)
           FileUtils.mkdir_p(subtask_dir)
 
@@ -76,6 +76,7 @@ module Ace
         private
 
         # Scan parent directory for existing subtask folders and extract their chars.
+        # Supports both new short format ("0-slug") and legacy format ("8pp.t.q7w.0-slug").
         def scan_existing_subtask_chars(parent_dir, parent_id)
           chars = []
           return chars unless Dir.exist?(parent_dir)
@@ -87,15 +88,18 @@ module Ace
             full_path = File.join(parent_dir, entry)
             next unless File.directory?(full_path)
 
-            # Match subtask folder pattern
-            match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])/)
-            next unless match
+            # New short format: "0-slug" or "a-slug"
+            if (short_match = entry.match(/^([a-z0-9])-/))
+              chars << short_match[1]
+              next
+            end
 
-            subtask_full_id = match[1]
-            next unless subtask_full_id.start_with?(prefix)
-
-            # Extract the subtask char (last char of the ID)
-            chars << subtask_full_id[-1]
+            # Legacy format: "8pp.t.q7w.0-slug"
+            if (legacy_match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])/))
+              subtask_full_id = legacy_match[1]
+              next unless subtask_full_id.start_with?(prefix)
+              chars << subtask_full_id[-1]
+            end
           end
 
           chars

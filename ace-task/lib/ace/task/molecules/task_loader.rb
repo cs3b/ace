@@ -90,6 +90,7 @@ module Ace
 
         # Find all subtask directories within a parent directory.
         # Returns array of [subtask_id, dir_path] pairs.
+        # Supports both new short format ("0-slug") and legacy format ("8pp.t.q7w.0-slug").
         def find_subtask_dirs(parent_dir, parent_id)
           results = []
           return results unless Dir.exist?(parent_dir)
@@ -100,14 +101,19 @@ module Ace
             full_path = File.join(parent_dir, entry)
             next unless File.directory?(full_path)
 
-            # Match subtask folder pattern: "8pp.t.q7w.a-slug"
-            match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])-?/)
-            next unless match
+            # New short format: "0-slug" or "a-slug"
+            if (short_match = entry.match(/^([a-z0-9])-/))
+              subtask_id = "#{parent_id}.#{short_match[1]}"
+              results << [subtask_id, full_path]
+              next
+            end
 
-            subtask_id = match[1]
-            next unless subtask_id.start_with?(parent_id + ".")
-
-            results << [subtask_id, full_path]
+            # Legacy format: "8pp.t.q7w.0-slug"
+            if (legacy_match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])-?/))
+              subtask_id = legacy_match[1]
+              next unless subtask_id.start_with?(parent_id + ".")
+              results << [subtask_id, full_path]
+            end
           end
 
           results

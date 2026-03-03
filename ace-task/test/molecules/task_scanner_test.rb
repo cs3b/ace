@@ -44,8 +44,8 @@ class TaskScannerTest < AceTaskTestCase
 
   def test_scan_subtasks_finds_children
     parent_dir = create_task_folder("8pp.t.q7w-fix-login")
-    create_subtask_folder(parent_dir, "8pp.t.q7w.a-setup-db")
-    create_subtask_folder(parent_dir, "8pp.t.q7w.b-run-tests")
+    create_subtask_folder(parent_dir, "a-setup-db", id: "8pp.t.q7w.a")
+    create_subtask_folder(parent_dir, "b-run-tests", id: "8pp.t.q7w.b")
 
     scanner = Ace::Task::Molecules::TaskScanner.new(@tmpdir)
     results = scanner.scan_subtasks(parent_dir, parent_id: "8pp.t.q7w")
@@ -57,7 +57,7 @@ class TaskScannerTest < AceTaskTestCase
 
   def test_scan_subtasks_ignores_unrelated_folders
     parent_dir = create_task_folder("8pp.t.q7w-fix-login")
-    create_subtask_folder(parent_dir, "8pp.t.q7w.a-setup-db")
+    create_subtask_folder(parent_dir, "a-setup-db", id: "8pp.t.q7w.a")
     # Create an unrelated folder inside parent
     other = File.join(parent_dir, "notes")
     FileUtils.mkdir_p(other)
@@ -161,10 +161,12 @@ class TaskScannerTest < AceTaskTestCase
     path
   end
 
-  def create_subtask_folder(parent_dir, folder_name)
+  def create_subtask_folder(parent_dir, folder_name, id: nil)
     path = File.join(parent_dir, folder_name)
     FileUtils.mkdir_p(path)
-    File.write(File.join(path, "#{folder_name}.s.md"), "---\nid: #{folder_name.split("-").first}\nstatus: pending\n---\n")
+    spec_id = id || folder_name.split("-").first
+    spec_name = id ? "#{id}-#{folder_name.sub(/^[a-z0-9]-/, "")}" : folder_name
+    File.write(File.join(path, "#{spec_name}.s.md"), "---\nid: #{spec_id}\nstatus: pending\n---\n")
     path
   end
 end

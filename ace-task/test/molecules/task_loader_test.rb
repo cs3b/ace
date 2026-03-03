@@ -144,8 +144,8 @@ class TaskLoaderTest < AceTaskTestCase
       # Fix Login
     CONTENT
 
-    # Create subtask directory inside parent
-    subtask_dir = File.join(task_dir, "8pp.t.q7w.a-setup-db")
+    # Create subtask directory inside parent (short folder format)
+    subtask_dir = File.join(task_dir, "a-setup-db")
     FileUtils.mkdir_p(subtask_dir)
     File.write(File.join(subtask_dir, "8pp.t.q7w.a-setup-db.s.md"), <<~CONTENT)
       ---
@@ -178,7 +178,7 @@ class TaskLoaderTest < AceTaskTestCase
       # Fix Login
     CONTENT
 
-    subtask_dir = File.join(task_dir, "8pp.t.q7w.a-setup-db")
+    subtask_dir = File.join(task_dir, "a-setup-db")
     FileUtils.mkdir_p(subtask_dir)
     File.write(File.join(subtask_dir, "8pp.t.q7w.a-setup-db.s.md"), <<~CONTENT)
       ---
