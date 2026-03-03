@@ -1,8 +1,0 @@
-description: "All tasks in current release (all statuses)"
-type:  # Universal preset
-release: "current"
-filters: {}
-sort:
-  by: "sort"
-  ascending: true
-display: {}

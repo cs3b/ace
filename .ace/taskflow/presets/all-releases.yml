@@ -1,9 +1,0 @@
-description: "All tasks across all releases"
-type:  # Universal preset
-release: "all"
-filters: {}
-sort:
-  by: "release"
-  ascending: true
-display:
-  group_by: "release"
