@@ -36,15 +36,17 @@ module Ace
           item_id = Atoms::TaskIdFormatter.generate(time)
           formatted_id = item_id.formatted_id
 
-          # Generate slug
-          slug = if use_llm_slug
-            generate_llm_slug(title) || generate_slug(title)
+          # Generate slugs
+          slugs = if use_llm_slug
+            generate_llm_slugs(title) || generate_slugs(title)
           else
-            generate_slug(title)
+            generate_slugs(title)
           end
+          folder_slug = slugs[:folder]
+          file_slug = slugs[:file]
 
-          # Create folder
-          folder_name = Atoms::TaskIdFormatter.folder_name(formatted_id, slug)
+          # Create folder with folder_slug
+          folder_name = Atoms::TaskIdFormatter.folder_name(formatted_id, folder_slug)
           task_dir = File.join(@root_dir, folder_name)
           FileUtils.mkdir_p(task_dir)
 
@@ -59,8 +61,8 @@ module Ace
             created_at: time
           )
 
-          # Write spec file
-          spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, slug)
+          # Write spec file with file_slug
+          spec_filename = Atoms::TaskIdFormatter.spec_filename(formatted_id, file_slug)
           spec_file = File.join(task_dir, spec_filename)
           content = build_spec_content(frontmatter: frontmatter, title: title)
           File.write(spec_file, content)
@@ -72,21 +74,32 @@ module Ace
 
         private
 
-        def generate_slug(title)
+        def generate_folder_slug(title)
           sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title)
-          sanitized = sanitized[0..39] if sanitized.length > 40
-          sanitized.empty? ? "task" : sanitized
+          words = sanitized.split("-")
+          result = words.take(5).join("-")
+          result.empty? ? "task" : result
         end
 
-        def generate_llm_slug(title)
+        def generate_file_slug(title)
+          sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title)
+          words = sanitized.split("-")
+          result = words.take(7).join("-")
+          result.empty? ? "task" : result
+        end
+
+        def generate_slugs(title)
+          { folder: generate_folder_slug(title), file: generate_file_slug(title) }
+        end
+
+        def generate_llm_slugs(title)
           generator = Ace::Support::Items::Molecules::LlmSlugGenerator.new
           result = generator.generate_task_slugs(title)
           return nil unless result[:success]
 
-          # Use file_slug for flat folder structure (task folders are not hierarchical)
-          slug = result[:file_slug]
-          slug = slug[0..39] if slug && slug.length > 40
-          slug
+          folder_slug = result[:folder_slug] || generate_folder_slug(title)
+          file_slug = result[:file_slug] || generate_file_slug(title)
+          { folder: folder_slug, file: file_slug }
         rescue StandardError
           nil
         end

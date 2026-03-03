@@ -8,6 +8,7 @@ module Ace
         TERMINAL_STATUSES = %w[done skipped cancelled].freeze
         REQUIRED_FIELDS = %w[id status title].freeze
         RECOMMENDED_FIELDS = %w[tags created_at].freeze
+        MAX_TITLE_LENGTH = 80
 
         def self.valid_status?(status)
           VALID_STATUSES.include?(status.to_s)
