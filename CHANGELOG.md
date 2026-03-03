@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.714] - 2026-03-03
+
+### Changed
+- **ace-support-items v0.13.1**: Stats line folder breakdown is now dimmed for visual distinction between current-view stats and system-wide totals; folder names strip `_` prefix (`_archive` → `archive`, `_maybe` → `maybe`)
+
 ## [0.9.713] - 2026-03-03
 
 ### Fixed
