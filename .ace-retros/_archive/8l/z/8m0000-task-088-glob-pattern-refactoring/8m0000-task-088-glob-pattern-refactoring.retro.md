@@ -1,13 +1,14 @@
 ---
 id: 8m0000
-title: "Retro: Task 088 - Glob Pattern Refactoring"
+title: 'Retro: Task 088 - Glob Pattern Refactoring'
 type: conversation-analysis
 tags: []
-created_at: "2025-11-01 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8m0000-task-088-glob-pattern-refactoring.md
+created_at: '2025-11-01 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8m0000-task-088-glob-pattern-refactoring.md"
 ---
+
 # Retro: Task 088 - Glob Pattern Refactoring
 
 **Date**: 2025-11-01

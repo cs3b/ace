@@ -3,11 +3,12 @@ id: 8ld000
 title: ADR Lifecycle Workflows Creation
 type: self-review
 tags: []
-created_at: "2025-10-14 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ld000-adr-lifecycle-workflows-creation.md
+created_at: '2025-10-14 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ld000-adr-lifecycle-workflows-creation.md"
 ---
+
 # Reflection: ADR Lifecycle Workflows Creation
 
 **Date**: 2025-10-14

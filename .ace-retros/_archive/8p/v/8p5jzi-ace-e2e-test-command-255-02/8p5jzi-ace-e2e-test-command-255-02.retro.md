@@ -3,11 +3,12 @@ id: 8p5jzi
 title: ace-e2e-test Command (Task 255.02)
 type: self-review
 tags: []
-created_at: "2026-02-06 13:19:26"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8p5jzi-ace-e2e-test-command-255-02.md
+created_at: '2026-02-06 13:19:26'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8p5jzi-ace-e2e-test-command-255-02.md"
 ---
+
 # Reflection: ace-e2e-test Command (Task 255.02)
 
 **Date**: 2026-02-06

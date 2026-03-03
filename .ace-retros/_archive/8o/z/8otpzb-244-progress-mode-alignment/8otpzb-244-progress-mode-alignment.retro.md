@@ -3,11 +3,12 @@ id: 8otpzb
 title: Progress Mode Display Alignment
 type: standard
 tags: []
-created_at: "2026-01-30 17:19:13"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8otpzb-244-progress-mode-alignment.md
+created_at: '2026-01-30 17:19:13'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8otpzb-244-progress-mode-alignment.md"
 ---
+
 # Reflection: Progress Mode Display Alignment
 
 **Date**: 2026-01-30

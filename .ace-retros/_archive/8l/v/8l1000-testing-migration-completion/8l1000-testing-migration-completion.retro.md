@@ -3,11 +3,12 @@ id: 8l1000
 title: Testing Migration Completion
 type: self-review
 tags: []
-created_at: "2025-10-02 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l1000-testing-migration-completion.md
+created_at: '2025-10-02 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l1000-testing-migration-completion.md"
 ---
+
 # Reflection: Testing Migration Completion
 
 **Date**: 2025-10-02

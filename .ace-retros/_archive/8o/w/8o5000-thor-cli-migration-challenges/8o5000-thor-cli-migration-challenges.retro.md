@@ -3,11 +3,12 @@ id: 8o5000
 title: Thor CLI Migration - Challenges and Alternatives
 type: standard
 tags: []
-created_at: "2026-01-06 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o5000-thor-cli-migration-challenges.md
+created_at: '2026-01-06 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o5000-thor-cli-migration-challenges.md"
 ---
+
 # Reflection: Thor CLI Migration - Challenges and Alternatives
 
 **Date**: 2026-01-06

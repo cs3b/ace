@@ -3,11 +3,12 @@ id: 8l1000
 title: Workflow Migration from dev-handbook to ace-taskflow
 type: self-review
 tags: []
-created_at: "2025-10-02 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l1000-workflow-migration-session.md
+created_at: '2025-10-02 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l1000-workflow-migration-session.md"
 ---
+
 # Reflection: Workflow Migration from dev-handbook to ace-taskflow
 
 **Date**: 2025-10-02

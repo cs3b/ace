@@ -1,6 +1,10 @@
 ---
 status: pending
 priority: maybe
+id: 8ldj00
+title: Idea
+tags: []
+created_at: '2025-10-14 12:40:00'
 ---
 
 # Idea

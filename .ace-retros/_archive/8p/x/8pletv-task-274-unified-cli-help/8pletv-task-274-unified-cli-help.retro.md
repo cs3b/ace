@@ -3,11 +3,12 @@ id: 8pletv
 title: Task 274 - Unified CLI Help Core Formatter
 type: conversation-analysis
 tags: []
-created_at: "2026-02-22 09:53:10"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pletv-task-274-unified-cli-help.md
+created_at: '2026-02-22 09:53:10'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pletv-task-274-unified-cli-help.md"
 ---
+
 # Reflection: Task 274 - Unified CLI Help Core Formatter
 
 **Date**: 2026-02-22

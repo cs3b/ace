@@ -1,13 +1,14 @@
 ---
 id: 8os0p5
-title: "Retro: Cherry-Pick Rebase Recovery"
+title: 'Retro: Cherry-Pick Rebase Recovery'
 type: standard
 tags: []
-created_at: "2026-01-29 00:27:55"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8os0p5-cherry-pick-rebase-recovery.md
+created_at: '2026-01-29 00:27:55'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8os0p5-cherry-pick-rebase-recovery.md"
 ---
+
 # Retro: Cherry-Pick Rebase Recovery
 
 **Date**: 2026-01-29

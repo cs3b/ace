@@ -1,13 +1,14 @@
 ---
 id: 8o2000
-title: "Retro: Workflow Context Embedding - Reducing Tool Calls with Embedded Context"
+title: 'Retro: Workflow Context Embedding - Reducing Tool Calls with Embedded Context'
 type: conversation-analysis
 tags: []
-created_at: "2026-01-03 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o2000-workflow-context-embedding.md
+created_at: '2026-01-03 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o2000-workflow-context-embedding.md"
 ---
+
 # Retro: Workflow Context Embedding - Reducing Tool Calls with Embedded Context
 
 **Date**: 2026-01-03

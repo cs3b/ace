@@ -3,11 +3,12 @@ id: 8q0pi2
 title: Test Fix Path Resolution ace-core
 type: standard
 tags: []
-created_at: "2025-01-01 00:00:00"
-status: active
+created_at: '2025-01-01 00:00:00'
+status: done
 source: legacy
-migrated_from: .ace-taskflow/v.0.9.0/retros/2025-01-test-fix-path-resolution-ace-core.md
+migrated_from: ".ace-taskflow/v.0.9.0/retros/2025-01-test-fix-path-resolution-ace-core.md"
 ---
+
 # Test Fix Path Resolution ace-core
 
 ## Date

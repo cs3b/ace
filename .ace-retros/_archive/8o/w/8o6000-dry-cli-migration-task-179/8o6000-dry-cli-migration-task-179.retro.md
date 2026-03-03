@@ -1,13 +1,14 @@
 ---
 id: 8o6000
-title: "Retro: dry-cli Migration - Task 179"
+title: 'Retro: dry-cli Migration - Task 179'
 type: self-review
 tags: []
-created_at: "2026-01-07 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o6000-dry-cli-migration-task-179.md
+created_at: '2026-01-07 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o6000-dry-cli-migration-task-179.md"
 ---
+
 # Retro: dry-cli Migration - Task 179
 
 **Date**: 2026-01-07

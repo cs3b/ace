@@ -3,11 +3,12 @@ id: 8kt000
 title: ACE Test Runner Configuration and Path Loading Fixes
 type: conversation-analysis
 tags: []
-created_at: "2025-09-30 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8kt000-ace-test-runner-fixes.md
+created_at: '2025-09-30 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8kt000-ace-test-runner-fixes.md"
 ---
+
 # Reflection: ACE Test Runner Configuration and Path Loading Fixes
 
 **Date**: 2025-09-30

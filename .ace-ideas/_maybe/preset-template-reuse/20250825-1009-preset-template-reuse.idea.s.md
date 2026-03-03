@@ -1,5 +1,4 @@
 ---
-
 :input_tokens: 115031
 :output_tokens: 1028
 :total_tokens: 116059
@@ -19,9 +18,13 @@
   :cache_read: 0.0
   :total: 0.011914
   :currency: USD
-source: "legacy"
+source: legacy
+id: preset
+status: pending
+title: Simplify Context Presets with Dynamic Template Loading
+tags: []
+created_at: '2077-04-15 18:56:27'
 ---
-
 
 # Simplify Context Presets with Dynamic Template Loading
 

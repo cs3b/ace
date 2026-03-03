@@ -1,13 +1,14 @@
 ---
 id: 8pne61
-title: "Task 280 Post-Delivery — Experiment Validated, Pipeline Not Implemented"
+title: Task 280 Post-Delivery — Experiment Validated, Pipeline Not Implemented
 type: standard
 tags: []
-created_at: "2026-02-24 09:26:41"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pne61-280-post-delivery-pipeline-gap.md
+created_at: '2026-02-24 09:26:41'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pne61-280-post-delivery-pipeline-gap.md"
 ---
+
 # Reflection: Task 280 Post-Delivery — Experiment Validated, Pipeline Not Implemented
 
 **Date**: 2026-02-24

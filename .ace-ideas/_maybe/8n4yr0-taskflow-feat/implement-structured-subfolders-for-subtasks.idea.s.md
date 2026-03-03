@@ -1,9 +1,13 @@
 ---
 title: Implement structured subfolders for ace-taskflow subtasks
 filename_suggestion: feat-taskflow-subtask-structure
-enhanced_at: 2025-12-05 23:10:55
+enhanced_at: 2025-12-05 23:10:55.000000000 +00:00
 location: active
 llm_model: gflash
+id: 8n4yr0
+status: pending
+tags: []
+created_at: '2025-12-05 23:10:00'
 ---
 
 # Implement structured subfolders for ace-taskflow subtasks

@@ -3,11 +3,12 @@ id: 8pknmg
 title: E2E Report Directory Mismatch Fix
 type: standard
 tags: []
-created_at: "2026-02-21 15:44:56"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pknmg-e2e-report-dir-mismatch-fix.md
+created_at: '2026-02-21 15:44:56'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pknmg-e2e-report-dir-mismatch-fix.md"
 ---
+
 # Reflection: E2E Report Directory Mismatch Fix
 
 **Date**: 2026-02-21

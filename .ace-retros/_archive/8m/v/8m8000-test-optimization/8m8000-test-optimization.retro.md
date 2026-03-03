@@ -1,13 +1,14 @@
 ---
 id: 8m8000
-title: "Retro: Ace-Context Test Optimization"
+title: 'Retro: Ace-Context Test Optimization'
 type: self-review
 tags: []
-created_at: "2025-11-09 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8m8000-test-optimization.md
+created_at: '2025-11-09 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8m8000-test-optimization.md"
 ---
+
 # Retro: Ace-Context Test Optimization
 
 **Date**: 2025-11-09

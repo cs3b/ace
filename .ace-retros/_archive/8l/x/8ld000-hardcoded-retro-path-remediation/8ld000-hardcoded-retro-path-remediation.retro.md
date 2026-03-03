@@ -3,11 +3,12 @@ id: 8ld000
 title: Hardcoded Retro Path Remediation
 type: standard
 tags: []
-created_at: "2025-10-14 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ld000-hardcoded-retro-path-remediation.md
+created_at: '2025-10-14 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ld000-hardcoded-retro-path-remediation.md"
 ---
+
 # Reflection: Hardcoded Retro Path Remediation
 
 **Date**: 2025-10-14

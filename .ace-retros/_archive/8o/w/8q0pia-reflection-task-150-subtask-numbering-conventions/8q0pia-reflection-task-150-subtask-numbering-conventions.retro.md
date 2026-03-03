@@ -3,11 +3,12 @@ id: 8q0pia
 title: Task 150 Subtask Numbering Convention Issue
 type: standard
 tags: []
-created_at: "2026-01-05 16:31:17"
-status: active
+created_at: '2026-01-05 16:31:17'
+status: done
 source: legacy
-migrated_from: .ace-taskflow/v.0.9.0/retros/reflection-task-150-subtask-numbering-conventions.md
+migrated_from: ".ace-taskflow/v.0.9.0/retros/reflection-task-150-subtask-numbering-conventions.md"
 ---
+
 # Reflection: Task 150 Subtask Numbering Convention Issue
 
 **Date:** 2026-01-04

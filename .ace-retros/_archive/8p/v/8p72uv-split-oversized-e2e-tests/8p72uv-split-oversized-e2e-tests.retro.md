@@ -1,13 +1,14 @@
 ---
 id: 8p72uv
-title: "Splitting Oversized E2E Tests (MT-COWORKER-003, MT-COMMIT-004)"
+title: Splitting Oversized E2E Tests (MT-COWORKER-003, MT-COMMIT-004)
 type: standard
 tags: []
-created_at: "2026-02-08 01:54:17"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8p72uv-split-oversized-e2e-tests.md
+created_at: '2026-02-08 01:54:17'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8p72uv-split-oversized-e2e-tests.md"
 ---
+
 # Reflection: Splitting Oversized E2E Tests (MT-COWORKER-003, MT-COMMIT-004)
 
 **Date**: 2026-02-08

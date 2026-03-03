@@ -1,13 +1,14 @@
 ---
 id: 8pr2h1
-title: "Retro: ace-sim Task 291 Validation Session"
+title: 'Retro: ace-sim Task 291 Validation Session'
 type: conversation-analysis
 tags: []
-created_at: "2026-02-28 01:38:55"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8pr2h1-ace-sim-task-291-validation.md
+created_at: '2026-02-28 01:38:55'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8pr2h1-ace-sim-task-291-validation.md"
 ---
+
 # Retro: ace-sim Task 291 Validation Session
 
 **Date**: 2026-02-28

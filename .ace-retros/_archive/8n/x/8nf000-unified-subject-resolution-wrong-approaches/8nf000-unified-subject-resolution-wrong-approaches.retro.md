@@ -3,11 +3,12 @@ id: 8nf000
 title: Unified Subject Resolution - Wrong Approaches Analysis
 type: conversation-analysis
 tags: []
-created_at: "2025-12-16 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8nf000-unified-subject-resolution-wrong-approaches.md
+created_at: '2025-12-16 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8nf000-unified-subject-resolution-wrong-approaches.md"
 ---
+
 # Reflection: Unified Subject Resolution - Wrong Approaches Analysis
 
 **Date**: 2025-12-16

@@ -3,11 +3,12 @@ id: 8ocnmm
 title: ace-llm Query Command Argument Parsing Fix
 type: standard
 tags: []
-created_at: "2026-01-13 15:45:07"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ocnmm-ace-llm-query-argument-parsing-fix.md
+created_at: '2026-01-13 15:45:07'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ocnmm-ace-llm-query-argument-parsing-fix.md"
 ---
+
 # Reflection: ace-llm Query Command Argument Parsing Fix
 
 **Date**: 2026-01-13

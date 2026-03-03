@@ -3,11 +3,12 @@ id: 8kp000
 title: ACE Taskflow Command Improvements - Unified Preset System and Enhanced Statistics
 type: self-review
 tags: []
-created_at: "2025-09-26 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8kp000-ace-taskflow-command-improvements.md
+created_at: '2025-09-26 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8kp000-ace-taskflow-command-improvements.md"
 ---
+
 # Reflection: ACE Taskflow Command Improvements - Unified Preset System and Enhanced Statistics
 
 **Date**: 2025-09-26

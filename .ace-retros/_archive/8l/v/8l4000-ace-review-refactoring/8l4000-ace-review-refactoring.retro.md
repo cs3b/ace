@@ -1,13 +1,14 @@
 ---
 id: 8l4000
-title: "Retro: ace-review Refactoring Session"
+title: 'Retro: ace-review Refactoring Session'
 type: standard
 tags: []
-created_at: "2025-10-05 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l4000-ace-review-refactoring.md
+created_at: '2025-10-05 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l4000-ace-review-refactoring.md"
 ---
+
 # Retro: ace-review Refactoring Session
 
 **Date:** 2025-10-05

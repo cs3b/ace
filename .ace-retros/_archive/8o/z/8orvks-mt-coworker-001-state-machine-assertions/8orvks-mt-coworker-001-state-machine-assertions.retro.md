@@ -3,11 +3,12 @@ id: 8orvks
 title: MT-COWORKER-001 State Machine Assertion Gaps
 type: conversation-analysis
 tags: []
-created_at: "2026-01-28 21:03:05"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8orvks-mt-coworker-001-state-machine-assertions.md
+created_at: '2026-01-28 21:03:05'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8orvks-mt-coworker-001-state-machine-assertions.md"
 ---
+
 # Reflection: MT-COWORKER-001 State Machine Assertion Gaps
 
 **Date**: 2026-01-28

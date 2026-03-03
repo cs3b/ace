@@ -3,11 +3,12 @@ id: 8n2000
 title: Synthesis Prompt Loading and Model Selection
 type: conversation-analysis
 tags: []
-created_at: "2025-12-03 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8n2000-synthesis-prompt-and-embed-source-fix.md
+created_at: '2025-12-03 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8n2000-synthesis-prompt-and-embed-source-fix.md"
 ---
+
 # Reflection: Synthesis Prompt Loading and Model Selection
 
 **Date**: 2025-12-03

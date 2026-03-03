@@ -1,13 +1,14 @@
 ---
 id: 8ouo8f
-title: "Performant Unit Tests - Cache Management & Random Slowness"
+title: Performant Unit Tests - Cache Management & Random Slowness
 type: standard
 tags: []
-created_at: "2026-01-31 16:09:21"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ouo8f-performant-unit-tests-cache-management.md
+created_at: '2026-01-31 16:09:21'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ouo8f-performant-unit-tests-cache-management.md"
 ---
+
 # Reflection: Performant Unit Tests - Cache Management & Random Slowness
 
 **Date**: 2026-01-31

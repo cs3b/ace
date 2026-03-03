@@ -3,11 +3,12 @@ id: 8po3x0
 title: E2E Failure Analysis and Runner Hardening
 type: conversation-analysis
 tags: []
-created_at: "2026-02-25 02:36:40"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8po3x0-e2e-failure-analysis-runner-hardening.md
+created_at: '2026-02-25 02:36:40'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8po3x0-e2e-failure-analysis-runner-hardening.md"
 ---
+
 # Reflection: E2E Failure Analysis and Runner Hardening
 
 **Date**: 2026-02-25

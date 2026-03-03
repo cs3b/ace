@@ -3,11 +3,12 @@ id: 8o90e2
 title: Dry-CLI Test Compatibility Fixes
 type: conversation-analysis
 tags: []
-created_at: "2026-01-10 00:15:37"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o90e2-dry-cli-test-compatibility-fixes.md
+created_at: '2026-01-10 00:15:37'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o90e2-dry-cli-test-compatibility-fixes.md"
 ---
+
 # Reflection: Dry-CLI Test Compatibility Fixes
 
 **Date**: 2026-01-10

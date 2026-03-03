@@ -1,13 +1,14 @@
 ---
 id: 8ocvll
-title: "PR #154 Squash and Rebase - CHANGELOG Preservation"
+title: 'PR #154 Squash and Rebase - CHANGELOG Preservation'
 type: conversation-analysis
 tags: []
-created_at: "2026-01-13 21:03:58"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8ocvll-pr-154-squash-rebase-changelog-preservation.md
+created_at: '2026-01-13 21:03:58'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8ocvll-pr-154-squash-rebase-changelog-preservation.md"
 ---
+
 # Reflection: PR #154 Squash and Rebase - CHANGELOG Preservation
 
 **Date**: 2026-01-13

@@ -3,11 +3,12 @@ id: 8o0000
 title: ace-config Migration Gaps
 type: self-review
 tags: []
-created_at: "2026-01-01 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8o0000-ace-config-migration-gaps.md
+created_at: '2026-01-01 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8o0000-ace-config-migration-gaps.md"
 ---
+
 # Reflection: ace-config Migration Gaps
 
 **Date**: 2026-01-01

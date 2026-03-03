@@ -1,13 +1,14 @@
 ---
 id: 8oq0kc
-title: "Retro: Reorganize-Commits Bug Fix Session"
+title: 'Retro: Reorganize-Commits Bug Fix Session'
 type: conversation-analysis
 tags: []
-created_at: "2026-01-27 00:22:35"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8oq0kc-reorganize-commits-bug-fix.md
+created_at: '2026-01-27 00:22:35'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8oq0kc-reorganize-commits-bug-fix.md"
 ---
+
 # Retro: Reorganize-Commits Bug Fix Session
 
 **Date**: 2026-01-27

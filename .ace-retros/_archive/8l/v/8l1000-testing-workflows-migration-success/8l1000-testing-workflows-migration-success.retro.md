@@ -3,11 +3,12 @@ id: 8l1000
 title: Testing Workflows Migration to ace-taskflow
 type: standard
 tags: []
-created_at: "2025-10-02 00:00:00"
-status: active
-source: "taskflow:v.0.9.0"
-migrated_from: .ace-taskflow/v.0.9.0/retros/8l1000-testing-workflows-migration-success.md
+created_at: '2025-10-02 00:00:00'
+status: done
+source: taskflow:v.0.9.0
+migrated_from: ".ace-taskflow/v.0.9.0/retros/8l1000-testing-workflows-migration-success.md"
 ---
+
 # Reflection: Testing Workflows Migration to ace-taskflow
 
 **Date**: 2025-10-02
