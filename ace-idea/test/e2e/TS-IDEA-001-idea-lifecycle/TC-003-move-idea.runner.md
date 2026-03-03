@@ -2,7 +2,7 @@
 
 ## Goal
 
-Move the created idea to `_next/` with `ace-idea move {id} --to next`.
+Move the created idea to `_next/` with `ace-idea update {id} --move-to next`.
 Then verify filesystem relocation by confirming the file now exists under
 `.ace-ideas/_next/` and no longer in the root `.ace-ideas/` folder.
 Also run `ace-idea list --in next` to confirm the moved idea appears in
