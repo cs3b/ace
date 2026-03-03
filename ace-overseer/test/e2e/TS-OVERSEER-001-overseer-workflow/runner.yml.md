@@ -16,7 +16,7 @@ bundle:
 # E2E Test Runner: ace-overseer
 
 Tool under test: ace-overseer
-Required tools: ace-overseer, ace-git-worktree, ace-tmux, ace-assign, ace-taskflow, git, tmux
+Required tools: ace-overseer, ace-git-worktree, ace-tmux, ace-assign, ace-task, git, tmux
 Workspace root: (current directory)
 
 Execute each goal sequentially. Goal 1 is discovery — all later goals

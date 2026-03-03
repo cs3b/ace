@@ -9,7 +9,7 @@ Validation order (impact-first):
 
 1. `.ace-ideas/_next/` directory exists and contains the idea file (filesystem relocation confirmed).
 2. The idea file no longer exists at its original root path under `.ace-ideas/` (not duplicated).
-3. `ace-idea move` exit code is `0` and `stdout` includes `Idea moved:` with the ID and `next` folder reference.
+3. `ace-idea update` exit code is `0` and `stdout` includes `Idea updated:` with the ID and `next` folder reference.
 4. `ace-idea list --in next` includes the moved idea.
 
 ## Verdict
