@@ -70,10 +70,10 @@ class SubtaskCreatorTest < AceTaskTestCase
   def test_raises_range_error_at_37th_subtask
     subtask_creator = Ace::Task::Molecules::SubtaskCreator.new
 
-    # Create 36 subtask directories manually (a-z, 0-9)
+    # Create 36 subtask directories manually (a-z, 0-9) using short folder format
     chars = ("a".."z").to_a + ("0".."9").to_a
     chars.each do |char|
-      folder = File.join(@parent.path, "#{@parent.id}.#{char}-sub-#{char}")
+      folder = File.join(@parent.path, "#{char}-sub-#{char}")
       FileUtils.mkdir_p(folder)
       File.write(File.join(folder, "#{@parent.id}.#{char}-sub-#{char}.s.md"),
         "---\nid: #{@parent.id}.#{char}\nstatus: pending\nparent: #{@parent.id}\n---\n")

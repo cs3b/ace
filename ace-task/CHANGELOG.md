@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-03-03
+
+### Added
+- Short subtask folder names: subtask folders now use `{char}-{slug}` format (e.g., `0-setup-db`) instead of `{full_id}-{slug}` (e.g., `8pp.t.q7w.0-setup-db`), reducing path duplication while preserving full ID in spec filenames
+- Backward-compatible dual-format scanning: all scanning code (`SubtaskCreator`, `TaskLoader`, `TaskScanner`, `TaskResolver`, `TaskReparenter`) recognizes both new and legacy subtask folder formats
+
+### Fixed
+- `TaskReparenter#convert_to_orchestrator`: fixed hardcoded `.a` subtask char to use `SUBTASK_CHARS[0]` (`"0"`), matching the 0-9 then a-z allocation order
+
 ## [0.14.1] - 2026-03-03
 
 ### Changed

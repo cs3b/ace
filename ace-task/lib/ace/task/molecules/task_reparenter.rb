@@ -88,9 +88,10 @@ module Ace
 
           slug = extract_slug(task.path, task.id)
 
-          # Create subtask ID: parent_id + ".a"
-          subtask_id = "#{task.id}.a"
-          subtask_folder_name = "#{subtask_id}-#{slug}"
+          # Create subtask ID using first subtask char (0)
+          next_char = SubtaskCreator::SUBTASK_CHARS[0]
+          subtask_id = "#{task.id}.#{next_char}"
+          subtask_folder_name = "#{next_char}-#{slug}"
           subtask_dir = File.join(task.path, subtask_folder_name)
 
           raise ArgumentError, "Subtask directory already exists: #{subtask_dir}" if File.exist?(subtask_dir)
@@ -98,7 +99,7 @@ module Ace
           FileUtils.mkdir_p(subtask_dir)
 
           # Move current spec file into subtask dir with renamed filename
-          subtask_spec_name = "#{subtask_folder_name}.s.md"
+          subtask_spec_name = "#{subtask_id}-#{slug}.s.md"
           subtask_spec_path = File.join(subtask_dir, subtask_spec_name)
           FileUtils.mv(task.file_path, subtask_spec_path)
 
@@ -141,7 +142,7 @@ module Ace
           # Build new subtask ID
           new_id = "#{parent_task.id}.#{next_char}"
           slug = extract_slug(task.path, task.id)
-          new_folder_name = "#{new_id}-#{slug}"
+          new_folder_name = "#{next_char}-#{slug}"
           new_dir = File.join(parent_task.path, new_folder_name)
 
           raise ArgumentError, "Destination already exists: #{new_dir}" if File.exist?(new_dir)
@@ -151,7 +152,7 @@ module Ace
 
           # Rename spec file
           old_spec_basename = File.basename(task.file_path)
-          new_spec_basename = "#{new_folder_name}.s.md"
+          new_spec_basename = "#{new_id}-#{slug}.s.md"
           old_spec_in_new_dir = File.join(new_dir, old_spec_basename)
           new_spec_path = File.join(new_dir, new_spec_basename)
 
@@ -178,11 +179,23 @@ module Ace
           end
         end
 
-        # Extract slug from folder path and task ID
+        # Extract slug from folder path and task ID.
+        # Supports both new short format ("0-slug") and legacy format ("8pp.t.q7w.0-slug").
         def extract_slug(path, id)
           folder = File.basename(path)
+
+          # Try full ID prefix first: "8pp.t.q7w.0-slug" or "8pp.t.q7w-slug"
           prefix = "#{id}-"
-          folder.start_with?(prefix) ? folder[prefix.length..] : folder
+          return folder[prefix.length..] if folder.start_with?(prefix)
+
+          # Try short format: "0-slug" (subtask char + dash + slug)
+          parts = id.split(".")
+          if parts.length > 3
+            char_prefix = "#{parts.last}-"
+            return folder[char_prefix.length..] if folder.start_with?(char_prefix)
+          end
+
+          folder
         end
 
         # Update frontmatter in a spec file, yielding the hash for modification.
@@ -202,7 +215,8 @@ module Ace
           raise
         end
 
-        # Reuse subtask char allocation logic from SubtaskCreator
+        # Reuse subtask char allocation logic from SubtaskCreator.
+        # Supports both new short format ("0-slug") and legacy format ("8pp.t.q7w.0-slug").
         def scan_existing_subtask_chars(parent_dir, parent_id)
           chars = []
           return chars unless Dir.exist?(parent_dir)
@@ -214,13 +228,18 @@ module Ace
             full_path = File.join(parent_dir, entry)
             next unless File.directory?(full_path)
 
-            match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])/)
-            next unless match
+            # New short format: "0-slug" or "a-slug"
+            if (short_match = entry.match(/^([a-z0-9])-/))
+              chars << short_match[1]
+              next
+            end
 
-            subtask_full_id = match[1]
-            next unless subtask_full_id.start_with?(prefix)
-
-            chars << subtask_full_id[-1]
+            # Legacy format: "8pp.t.q7w.0-slug"
+            if (legacy_match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])/))
+              subtask_full_id = legacy_match[1]
+              next unless subtask_full_id.start_with?(prefix)
+              chars << subtask_full_id[-1]
+            end
           end
 
           chars
