@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.715] - 2026-03-03
+
+### Changed
+- **ace-task v0.12.1**: Priority labels replaced with arrow glyphs (`▲▲` critical/red, `▲` high, `▼` low/dim); subtask indicator changed to `›N` and moved after title; list item metadata (ID, tags, folder) dimmed
+- **ace-idea v0.12.2**, **ace-retro v0.8.1**: List item metadata (ID, tags, folder, type) dimmed for visual contrast with title
+- **ace-idea v0.12.2**: Attachments only shown in `show` output, not in list items
+
 ## [0.9.714] - 2026-03-03
 
 ### Changed
