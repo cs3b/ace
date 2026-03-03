@@ -16,7 +16,7 @@ module Ace
             "Status legend:\n" \
             "  #{C::CYAN}◇ draft#{C::RESET}    #{C::RESET}○ pending    #{C::YELLOW}▶ in-progress#{C::RESET}    #{C::GREEN}✓ done#{C::RESET}\n" \
             "  #{C::RED}✗ blocked#{C::RESET}    #{C::DIM}– skipped  — cancelled#{C::RESET}\n\n" \
-            "Priority: #{C::RED}▲▲#{C::RESET} critical  ▲ high  #{C::DIM}▼ low#{C::RESET}    Subtasks: ›N"
+            "Priority: #{C::RED}▲ critical#{C::RESET}  ▲ high  #{C::DIM}▼ low#{C::RESET}    Subtasks: ›N"
           remove_const(:C)
 
           example [
