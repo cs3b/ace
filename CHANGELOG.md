@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.716] - 2026-03-03
+
+### Changed
+- **ace-task v0.12.2**: Critical priority uses single `▲` glyph (same as high, red color only) for consistent column alignment
+
 ## [0.9.715] - 2026-03-03
 
 ### Changed
