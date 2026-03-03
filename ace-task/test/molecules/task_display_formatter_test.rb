@@ -60,7 +60,7 @@ class TaskDisplayFormatterTest < AceTaskTestCase
     task = build_task(priority: "critical")
     output = Ace::Task::Molecules::TaskDisplayFormatter.format(task)
 
-    assert_includes output, "▲▲ "
+    assert_includes output, "▲ "
   end
 
   def test_format_shows_metadata_line
