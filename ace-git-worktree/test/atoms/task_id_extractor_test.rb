@@ -168,4 +168,22 @@ class TaskIDExtractorTest < Minitest::Test
   def test_normalize_b36ts_subtask_full_id
     assert_equal "hy4.a", @extractor.normalize("8pp.t.hy4.a")
   end
+
+  # B36TS path extraction tests (ace-task.hy4 directory naming)
+
+  def test_normalize_from_ace_task_b36ts_path
+    assert_equal "hy4", @extractor.normalize("/home/mc/ace-task.hy4")
+  end
+
+  def test_normalize_from_ace_task_b36ts_path_with_trailing_slash
+    assert_equal "hy4", @extractor.normalize("/home/mc/ace-task.hy4/")
+  end
+
+  def test_normalize_from_task_b36ts_path
+    assert_equal "hy4", @extractor.normalize("/home/mc/task.hy4")
+  end
+
+  def test_normalize_from_ace_task_numeric_path
+    assert_equal "261", @extractor.normalize("ace-task.261")
+  end
 end

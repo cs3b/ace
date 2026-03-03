@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.20] - 2026-03-03
+
+### Fixed
+- `TaskIDExtractor`: support B36TS directory naming (`ace-task.hy4`, `task.hy4`) in path-based extraction, fixing task ID resolution for new-format worktree paths
+
 ## [0.13.19] - 2026-03-03
 
 ### Fixed
