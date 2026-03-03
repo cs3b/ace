@@ -1,10 +1,13 @@
 ---
+name: task-review
+allowed-tools: Bash, Read
+description: Review draft tasks for readiness, vertical slice quality, verification plans, and promotion to pending
 update:
   update_frequency: on-change
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2026-02-16'
+  last-updated: '2026-03-03'
 ---
 
 # Review Task Workflow Instruction
@@ -39,6 +42,9 @@ Validate draft behavioral specifications and promote to pending when ready. This
        - Interface Contract
        - Success Criteria
        - Validation Questions
+       - Vertical Slice Decomposition (Task/Subtask Model)
+       - Verification Plan
+       - Frontmatter `bundle` block (`presets`, `files`, `commands`)
      - Identify gaps, ambiguities, or assumptions that need clarification
 
 2. **Autonomous Research Phase:**
@@ -91,16 +97,25 @@ Validate draft behavioral specifications and promote to pending when ready. This
    - [ ] **Success Criteria Measurable**: Observable, testable outcomes defined
    - [ ] **Scope Boundaries Clear**: In-scope and out-of-scope explicitly stated
    - [ ] **Validation Questions Addressed**: All validation questions either answered or documented as blocking
+   - [ ] **Vertical Slice Quality (Task/Subtask)**: Scope is decomposed into end-to-end capability slices (standalone task or orchestrator+subtasks), not horizontal layer-only work
+   - [ ] **Subtask Slice Clarity**: Each subtask has a distinct observable outcome and does not duplicate sibling scope
+   - [ ] **Tracer-First for Uncertain Architecture**: For uncertain/novel execution paths, first subtask is a tracer slice validating viability
+   - [ ] **Slice Size Signal Present**: Each slice includes advisory size (`small|medium|large`) for planning visibility
    - [ ] **Decision-Complete Spec**: Implementer can execute without inventing missing behavioral decisions
    - [ ] **Defaults Declared**: Ambiguous/unspecified behavior has explicit defaults
+   - [ ] **Verification Plan Present**: Spec includes explicit verification plan with concrete scenarios and commands/checks
+   - [ ] **Verification Coverage**: Verification includes unit/equivalent checks, integration/E2E checks when needed, and at least one failure/invalid-path check
+   - [ ] **Success Criteria ↔ Verification Mapping**: Each success criterion has corresponding verification evidence path
+   - [ ] **Bundle Frontmatter Present**: Task frontmatter includes `bundle` with keys `presets`, `files`, `commands` in canonical order
+   - [ ] **Bundle Context Completeness**: `bundle.files` includes all critical context artifacts required for fresh-session execution
    - [ ] **No Contradictory Directives**: Scan spec for conflicting instructions (e.g., "replace X" and "preserve X" for same entity; "add" and "remove" same dependency). Flag any contradictions as HIGH priority questions
    - [ ] **Consumer Packages Listed**: When interfaces change (CLI flags, config keys, protocol URIs), spec identifies which packages consume the interface and will need updates
-   - [ ] **Deliverables Match Scope**: Number of deliverables is proportional to scope — flag if spec lists 3 deliverables but scope implies 15+ file changes
+   - [ ] **Deliverables Match Scope**: Number of deliverables is proportional to scope -- flag if spec lists 3 deliverables but scope implies 15+ file changes
    - [ ] **Operating Modes Covered**: Spec addresses relevant operating modes (dry-run, force, verbose, quiet) or explicitly marks them out-of-scope
    - [ ] **Degenerate Inputs Covered**: Spec considers identity operations (X=Y), empty inputs, and self-referential calls where the same entity appears in both argument positions
    - [ ] **Per-Path Variations Covered**: If spec says "same behavior for X and Y", it enumerates edge cases unique to each path (guard logic, error handling, parameter differences)
    - [ ] **End-State Coherence** (orchestrator subtasks only): Concepts introduced by this subtask
-         (new fields, modes, formats) are expected to exist in the final deliverable —
+         (new fields, modes, formats) are expected to exist in the final deliverable --
          not be removed by a later subtask. If this subtask adds a concept that a later
          subtask will consolidate away, flag as SCOPE RISK and consider merging subtasks.
    - [ ] **Usage Documentation Present**: If task changes CLI/API/workflow/config interfaces, `ux/usage.md` exists with concrete usage scenarios
@@ -109,14 +124,15 @@ Validate draft behavioral specifications and promote to pending when ready. This
    **Assessment:**
    - If ALL checklist items pass: Task is ready for promotion
    - If ANY checklist item fails: Task needs work, document what's missing
+   - `large` slice signal alone is advisory and does not block promotion
 
 5. **Promote or Block:**
 
    **If Ready (all readiness criteria met):**
    - Promote the task status and clear any existing `needs_review` flag:
      ```bash
-     ace-task update <ref> --field status=pending
-     ace-task update <ref> --field needs_review=false
+     ace-task update <ref> --set status=pending
+     ace-task update <ref> --set needs_review=false
      ```
    - Report promotion:
      ```
@@ -126,12 +142,12 @@ Validate draft behavioral specifications and promote to pending when ready. This
      ```
 
    **If Not Ready (blocking questions or gaps remain):**
-   - Add `needs_review: true` to task metadata
+   - Add `needs_review: true` to task metadata (`ace-task update <ref> --set needs_review=true`)
    - Keep status as `draft`
    - Report blocking status:
      ```
      Task <ref> remains draft.
-     needs_review: true — N HIGH priority questions require human input.
+     needs_review: true -- N HIGH priority questions require human input.
      See Review Questions section in task file.
      ```
 
@@ -181,6 +197,7 @@ Validate draft behavioral specifications and promote to pending when ready. This
      **Readiness Checklist:** X/N criteria met
      **Questions Generated:** X total (Y high, Z medium)
      **Critical Blockers:** [List HIGH priority questions]
+     **Advisories:** [List non-blocking advisories such as large slice size]
      **Decision:** Promoted to pending / Remains draft (needs_review: true)
      **Recommended Next Steps:** Based on current state...
      ```
@@ -217,6 +234,9 @@ For non-draft tasks, skip the Readiness Checklist and Promote/Block steps. Focus
 - Critical questions generated and documented with research context
 - Questions prioritized by implementation impact
 - Default assumptions provided for all questions
+- Vertical slice quality validated using task/subtask model
+- Verification Plan quality validated against success criteria
+- Bundle frontmatter (`presets`, `files`, `commands`) validated for completeness
 - Task promoted to pending if ready, or blocked with `needs_review: true`
 - Structure and formatting preserved
 - No loss of existing information

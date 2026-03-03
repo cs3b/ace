@@ -53,14 +53,14 @@ class TaskDisplayFormatterTest < AceTaskTestCase
     task = build_task(priority: "high")
     output = Ace::Task::Molecules::TaskDisplayFormatter.format(task)
 
-    assert_includes output, "! "
+    assert_includes output, "▲ "
   end
 
   def test_format_shows_priority_symbol_for_critical
     task = build_task(priority: "critical")
     output = Ace::Task::Molecules::TaskDisplayFormatter.format(task)
 
-    assert_includes output, "‼ "
+    assert_includes output, "▲▲ "
   end
 
   def test_format_shows_metadata_line
@@ -177,7 +177,7 @@ class TaskDisplayFormatterTest < AceTaskTestCase
     tasks = [build_task(subtasks: [subtask])]
     output = Ace::Task::Molecules::TaskDisplayFormatter.format_list(tasks)
 
-    assert_includes output, "+1"
+    assert_includes output, "›1"
   end
 
   def test_format_unknown_status_defaults_to_circle
