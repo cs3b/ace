@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.713] - 2026-03-03
+
+### Fixed
+- **ace-idea v0.12.1**: `ace-idea list` returned "No ideas found." — `IdeaScanner` was filtering root items with `special_folder == "next"` instead of `special_folder.nil?`
+
 ## [0.9.712] - 2026-03-03
 
 ### Added
