@@ -69,8 +69,11 @@ module Ace
             # Try hierarchical pattern first (e.g., "121.01", "task.121.01")
             elsif match = ref.match(/(\d{3})\.(\d{2})(?:\b|$)/)
               "#{match[1]}.#{match[2]}"
-            # Try task. prefix pattern (e.g., "task.121")
-            # Use negative lookbehind to avoid matching "ace-task.NNN" in directory names
+            # Try ace-task or task directory at end of path (e.g., "ace-task.hy4", "/path/to/task.121")
+            elsif match = ref.match(/(?:ace-)?task\.([0-9a-z]{3})\/?$/)
+              match[1]
+            # Try task. prefix in middle of path (e.g., ".cache/test/task.121")
+            # Use negative lookbehind to skip ace-task.NNN parent directories
             elsif match = ref.match(/(?<!ace-)task\.(\d{3})(?:\b|$)/)
               match[1]
             # Try bare 3-digit task ID (e.g., "121", "081")
