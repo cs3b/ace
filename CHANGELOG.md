@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.717] - 2026-03-03
+
+### Fixed
+- **ace-task v0.12.3**: Subtask character allocation now follows base36 order (0-9 before a-z) matching Ruby's `to_s(36)`, ensuring correct lexicographic sorting
+
 ## [0.9.716] - 2026-03-03
 
 ### Changed
