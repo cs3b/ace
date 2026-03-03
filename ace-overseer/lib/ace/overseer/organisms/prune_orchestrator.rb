@@ -24,11 +24,11 @@ module Ace
 
           progress = on_progress || ->(_msg) {}
 
-          progress.call("Scanning task worktrees...")
-          result = @worktree_manager.list_all(show_tasks: true, task_associated: true)
-          raise Error, result[:error] || "Failed to list task worktrees" unless result[:success]
+          progress.call("Scanning worktrees...")
+          result = @worktree_manager.list_all(show_tasks: true)
+          raise Error, result[:error] || "Failed to list worktrees" unless result[:success]
 
-          worktrees = Array(result[:worktrees]).select(&:task_associated?)
+          worktrees = Array(result[:worktrees]).reject(&:bare)
           worktrees = filter_by_targets(worktrees, targets) if targets.any?
 
           progress.call("Checking #{worktrees.length} worktree(s)...")

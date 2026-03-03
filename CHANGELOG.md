@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.726] - 2026-03-03
+
+### Added
+- **ace-overseer v0.4.18**: `StatusCollector` shows non-task worktrees in status when they have active assignments
+- **ace-overseer v0.4.18**: `WorktreeContextCollector` supports B36TS task ID extraction from worktree paths and branch names
+
+### Fixed
+- **ace-overseer v0.4.18**: `PruneOrchestrator` allows pruning non-task worktrees when targeted by path
+- **ace-git-worktree v0.13.20**: `TaskIDExtractor` supports B36TS directory naming (`ace-task.hy4`) in path-based extraction
+
 ## [0.9.725] - 2026-03-03
 
 ### Added
