@@ -74,7 +74,7 @@ module Ace
           def self.folder_label(folder)
             return "next" if folder.nil? || folder.empty? || folder == ""
 
-            folder.delete_prefix("_")
+            SpecialFolderDetector.short_name(folder)
           end
 
           private_class_method :folder_label
