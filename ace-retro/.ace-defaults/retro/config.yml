@@ -11,3 +11,10 @@ retro:
 
   # Prefix used to identify special folders (e.g., "_archive")
   special_folder_prefix: "_"
+
+  # LLM model for doctor --auto-fix-with-agent
+  doctor_agent_model: gemini:flash-latest
+
+  # Provider-specific CLI args for doctor agent runs
+  doctor_cli_args:
+    gemini: "yolo"

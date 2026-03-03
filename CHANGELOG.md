@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.725] - 2026-03-03
+
+### Added
+- **ace-retro v0.9.0**: Doctor `--auto-fix-with-agent` option — runs deterministic auto-fixes first, then launches an LLM agent to handle remaining issues
+- **ace-retro v0.9.0**: Doctor `--model` option for configuring provider:model in agent sessions
+- **ace-retro v0.9.0**: Default `doctor_agent_model` and `doctor_cli_args` config entries
+
 ## [0.9.724] - 2026-03-03
 
 ### Added

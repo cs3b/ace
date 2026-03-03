@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-03-03
+
+### Added
+- Doctor `--auto-fix-with-agent` option: runs deterministic auto-fixes first, then launches an LLM agent to handle remaining issues
+- Doctor `--model` option: configure provider:model for agent sessions
+- Default `doctor_agent_model` and `doctor_cli_args` config entries
+
 ## [0.8.3] - 2026-03-03
 
 ### Changed

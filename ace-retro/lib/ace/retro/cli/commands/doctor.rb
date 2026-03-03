@@ -2,6 +2,7 @@
 
 require "dry/cli"
 require "ace/core"
+require "ace/llm"
 require_relative "../../organisms/retro_doctor"
 require_relative "../../molecules/retro_doctor_fixer"
 require_relative "../../molecules/retro_doctor_reporter"
@@ -29,6 +30,7 @@ module Ace
             '                          # Run all health checks',
             '--auto-fix                # Auto-fix safe issues',
             '--auto-fix --dry-run      # Preview fixes without applying',
+            '--auto-fix-with-agent     # Auto-fix then launch agent for remaining',
             '--check frontmatter       # Run specific check (frontmatter|structure|scope)',
             '--json                    # Output as JSON',
             '--verbose                 # Show all warnings'
@@ -37,6 +39,8 @@ module Ace
           option :quiet,    type: :boolean, aliases: %w[-q], desc: "Suppress non-essential output"
           option :verbose,  type: :boolean, aliases: %w[-v], desc: "Show verbose output"
           option :auto_fix, type: :boolean, aliases: %w[-f], desc: "Auto-fix safe issues"
+          option :auto_fix_with_agent, type: :boolean, desc: "Auto-fix then launch agent for remaining"
+          option :model,    type: :string, desc: "Provider:model for agent session"
           option :errors_only, type: :boolean, desc: "Show only errors, not warnings"
           option :no_color, type: :boolean, desc: "Disable colored output"
           option :json,     type: :boolean, desc: "Output in JSON format"
@@ -59,7 +63,7 @@ module Ace
             end
 
             format = options[:json] ? :json : :terminal
-            fix = options[:auto_fix]
+            fix = options[:auto_fix] || options[:auto_fix_with_agent]
             colors = !options[:no_color]
             colors = false if format == :json
 
@@ -88,6 +92,10 @@ module Ace
 
             if fix && results[:issues]&.any?
               handle_auto_fix(results, root_dir, doctor_opts, options, colors)
+            end
+
+            if options[:auto_fix_with_agent]
+              handle_agent_fix(root_dir, doctor_opts, options, config)
             end
 
             raise Ace::Core::CLI::Error.new("Health check failed") unless results[:valid]
@@ -139,6 +147,70 @@ module Ace
               )
               puts output
             end
+          end
+
+          def handle_agent_fix(root_dir, doctor_opts, options, config)
+
+            results = run_diagnosis(root_dir, doctor_opts)
+            remaining = results[:issues]&.reject { |i| i[:type] == :info }
+
+            if remaining.nil? || remaining.empty?
+              puts "\nNo remaining issues for agent to fix."
+              return
+            end
+
+            issue_list = remaining.map { |i|
+              prefix = i[:type] == :error ? "ERROR" : "WARNING"
+              "- [#{prefix}] #{i[:message]}#{i[:location] ? " (#{i[:location]})" : ""}"
+            }.join("\n")
+
+            provider_model = options[:model] || config.dig("retro", "doctor_agent_model") || "gemini:flash-latest"
+            cli_args_map = config.dig("retro", "doctor_cli_args") || {}
+
+            prompt = <<~PROMPT
+              The following #{remaining.size} retro issues could NOT be auto-fixed and need manual intervention:
+
+              #{issue_list}
+
+              ---
+
+              Fix each issue listed above in the .ace-retros/ directory.
+
+              IMPORTANT RULES:
+              - For invalid ID format issues, inspect the folder name and fix the frontmatter ID to match
+              - For YAML syntax errors, read the file and fix the YAML
+              - For missing opening delimiter, add '---' at the start of the file
+              - Do NOT delete content files — prefer fixing in place
+              - For folder naming issues, rename the folder to match {id}-{slug} convention
+
+              ---
+
+              Run `ace-retro doctor --verbose` to verify all issues are fixed.
+            PROMPT
+
+            puts "\nLaunching agent to fix #{remaining.size} remaining issues..."
+            query_options = {
+              system: nil,
+              timeout: 600,
+              fallback: false
+            }
+
+            cli_args = provider_cli_args(provider_model, cli_args_map)
+            query_options[:cli_args] = cli_args if cli_args
+
+            response = Ace::LLM::QueryInterface.query(provider_model, prompt, **query_options)
+
+            puts response[:text]
+          end
+
+          def provider_cli_args(provider_model, cli_args_map)
+            return nil if cli_args_map.nil? || cli_args_map.empty?
+            parser = Ace::LLM::Molecules::ProviderModelParser.new
+            result = parser.parse(provider_model)
+            return nil unless result.valid?
+            cli_args_map[result.provider]
+          rescue StandardError
+            nil
           end
         end
       end
