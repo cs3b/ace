@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.720] - 2026-03-03
+
+### Added
+- **ace-git-commit v0.19.0**: Group all `.ace/` config files into a single "ace-config" commit scope instead of creating separate per-package commits
+
 ## [0.9.719] - 2026-03-03
 
 ### Added
