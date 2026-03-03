@@ -9,13 +9,13 @@ module Ace
   module Task
     module Molecules
       # Creates subtasks within a parent task's folder.
-      # Allocates subtask characters sequentially: a-z then 0-9 (max 36 subtasks).
+      # Allocates subtask characters sequentially: 0-9 then a-z (max 36 subtasks).
       class SubtaskCreator
-        # Maximum number of subtasks per parent (a-z = 26, 0-9 = 10)
+        # Maximum number of subtasks per parent (0-9 = 10, a-z = 26)
         MAX_SUBTASKS = 36
 
         # Ordered sequence of subtask characters
-        SUBTASK_CHARS = (("a".."z").to_a + ("0".."9").to_a).freeze
+        SUBTASK_CHARS = (0..35).map { |i| i.to_s(36) }.freeze
 
         # @param config [Hash] Configuration hash
         def initialize(config: {})
