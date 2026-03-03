@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.722] - 2026-03-03
+
+### Added
+- **ace-task v0.14.0**: `SubtaskCreator` dual-slug naming — folder slug (5 words) and file slug (7 words), matching `TaskCreator` convention
+- **ace-task v0.14.0**: `TaskResolver` short subtask ID resolution — `q7w.a` and `t.q7w.a` patterns now resolve without requiring full parent ID
+
+### Fixed
+- **ace-task v0.14.0**: Subtask test assertions corrected to match base36 allocation order (0-9 before a-z)
+
+### Changed
+- Renamed 10 active subtask folders/files to follow two-tier naming convention (5-word folder, 7-word file)
+
 ## [0.9.721] - 2026-03-03
 
 ### Changed
