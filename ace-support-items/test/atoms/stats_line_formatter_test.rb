@@ -215,6 +215,55 @@ class StatsLineFormatterTest < AceSupportItemsTestCase
     assert_equal "Tasks: ◇ 9 | ○ 11 • 20 of 660", line
   end
 
+  # --- global_folder_stats tests ---
+
+  def test_format_with_global_folder_stats_always_shows_breakdown
+    stats = { total: 2, by_field: { "pending" => 2 } }
+
+    line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
+      label: "Tasks",
+      stats: stats,
+      status_order: %w[pending done],
+      status_icons: { "pending" => "○", "done" => "✓" },
+      total_count: 280,
+      global_folder_stats: { nil => 5, "_maybe" => 5, "_archive" => 270 }
+    )
+
+    assert_includes line, "2 of 280"
+    assert_includes line, "— _archive 270 | next 5 | _maybe 5"
+  end
+
+  def test_format_with_global_folder_stats_single_folder_no_breakdown
+    stats = { total: 3, by_field: { "pending" => 3 } }
+
+    line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
+      label: "Tasks",
+      stats: stats,
+      status_order: %w[pending],
+      status_icons: { "pending" => "○" },
+      global_folder_stats: { nil => 3 }
+    )
+
+    assert_equal "Tasks: ○ 3 • 3 total", line
+  end
+
+  def test_format_with_global_folder_stats_replaces_folder_stats_in_full_view
+    stats = { total: 10, by_field: { "pending" => 10 } }
+    folder_stats = { total: 10, by_field: { nil => 7, "_maybe" => 3 } }
+
+    line = Ace::Support::Items::Atoms::StatsLineFormatter.format(
+      label: "Tasks",
+      stats: stats,
+      status_order: %w[pending],
+      status_icons: { "pending" => "○" },
+      folder_stats: folder_stats,
+      global_folder_stats: { nil => 7, "_maybe" => 3 }
+    )
+
+    # Should only have one "—" section (global), not two
+    assert_equal 1, line.scan("—").size
+  end
+
   def test_format_with_total_count_nil_falls_back_to_shown
     stats = { total: 8, by_field: { "pending" => 8 } }
 

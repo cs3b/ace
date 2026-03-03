@@ -3,6 +3,7 @@
 require_relative "items/version"
 
 # Atoms
+require_relative "items/atoms/ansi_colors"
 require_relative "items/atoms/slug_sanitizer"
 require_relative "items/atoms/field_argument_parser"
 require_relative "items/atoms/special_folder_detector"
