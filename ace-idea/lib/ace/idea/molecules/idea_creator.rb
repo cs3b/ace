@@ -48,16 +48,18 @@ module Ace
             body
           end
 
-          # Step 3: Generate ID and slug
+          # Step 3: Generate ID and slugs
           id = Atoms::IdeaIdFormatter.generate(time)
-          slug = generate_slug(title || extract_title(enhanced_body))
+          slug_title = title || extract_title(enhanced_body)
+          folder_slug = generate_folder_slug(slug_title)
+          file_slug = generate_file_slug(slug_title)
 
           # Step 4: Determine target directory
           target_dir = determine_target_dir(move_to)
           FileUtils.mkdir_p(target_dir)
 
           # Step 5: Create idea folder (ensure unique name if ID collision occurs)
-          folder_name, slug = unique_folder_name(id, slug, target_dir)
+          folder_name, folder_slug = unique_folder_name(id, folder_slug, target_dir)
           idea_dir = File.join(target_dir, folder_name)
           FileUtils.mkdir_p(idea_dir)
 
@@ -77,7 +79,7 @@ module Ace
           )
 
           file_content = build_file_content(frontmatter, enhanced_body, effective_title)
-          spec_filename = Atoms::IdeaFilePattern.spec_filename(id, slug)
+          spec_filename = Atoms::IdeaFilePattern.spec_filename(id, file_slug)
           spec_file = File.join(idea_dir, spec_filename)
           File.write(spec_file, file_content)
 
@@ -149,11 +151,16 @@ module Ace
           end
         end
 
-        def generate_slug(title)
+        def generate_folder_slug(title)
           sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title.to_s)
-          # Truncate slug to max 40 chars
-          sanitized = sanitized[0..39] if sanitized.length > 40
-          sanitized.empty? ? "idea" : sanitized
+          words = sanitized.split("-")
+          words.take(5).join("-").then { |s| s.empty? ? "idea" : s }
+        end
+
+        def generate_file_slug(title)
+          sanitized = Ace::Support::Items::Atoms::SlugSanitizer.sanitize(title.to_s)
+          words = sanitized.split("-")
+          words.take(7).join("-").then { |s| s.empty? ? "idea" : s }
         end
 
         def extract_title(content)

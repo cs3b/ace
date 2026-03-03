@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.721] - 2026-03-03
+
+### Changed
+- **ace-idea v0.12.3**: IdeaCreator uses two-tier naming — folder slug (5 words) and file slug (7 words)
+- **ace-retro v0.8.2**: RetroCreator uses two-tier naming — folder slug (5 words) and file slug (7 words)
+- Rename 31 active ideas and 8 active retros to follow two-tier folder/file naming convention
+
 ## [0.9.720] - 2026-03-03
 
 ### Added
