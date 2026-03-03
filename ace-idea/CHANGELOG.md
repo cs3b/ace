@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-03-03
+
+### Fixed
+- `IdeaScanner#scan_in_folder("next")` returned no results — root items have `special_folder: nil`, not `"next"`; corrected filter to `r.special_folder.nil?` matching TaskScanner and RetroScanner
+
 ## [0.12.0] - 2026-03-03
 
 ### Added
