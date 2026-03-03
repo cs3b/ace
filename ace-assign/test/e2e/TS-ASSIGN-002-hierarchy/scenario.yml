@@ -1,5 +1,6 @@
 test-id: TS-ASSIGN-002
 title: "ace-assign Hierarchy and Injection Goal-Based E2E"
+timeout: 900
 area: assign
 package: ace-assign
 priority: high
