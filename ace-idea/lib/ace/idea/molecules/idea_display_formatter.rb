@@ -33,12 +33,14 @@ module Ace
         # @param show_content [Boolean] Whether to include full content
         # @return [String] Formatted output
         def self.format(idea, show_content: false)
+          c = Ace::Support::Items::Atoms::AnsiColors
           status_sym = colored_status_sym(idea.status)
-          tags_str = idea.tags.any? ? " [#{idea.tags.join(", ")}]" : ""
-          folder_str = idea.special_folder ? " (#{idea.special_folder})" : ""
+          id_str = show_content ? idea.id : c.colorize(idea.id, c::DIM)
+          tags_str = idea.tags.any? ? c.colorize(" [#{idea.tags.join(", ")}]", c::DIM) : ""
+          folder_str = idea.special_folder ? c.colorize(" (#{idea.special_folder})", c::DIM) : ""
 
           lines = []
-          lines << "#{status_sym} #{idea.id} #{idea.title}#{tags_str}#{folder_str}"
+          lines << "#{status_sym} #{id_str} #{idea.title}#{tags_str}#{folder_str}"
 
           if show_content && idea.content && !idea.content.strip.empty?
             lines << ""

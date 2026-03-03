@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2026-03-03
+
+### Changed
+- List items: ID, tags, and folder are dimmed for visual contrast with title
+- Attachments only shown in `show` output, no longer in list items
+
 ## [0.12.1] - 2026-03-03
 
 ### Fixed
