@@ -53,8 +53,8 @@ class TaskResolverTest < AceTaskTestCase
   end
 
   def test_resolve_subtask_reference
-    # Create subtask folder inside parent
-    subtask_dir = File.join(@task_dir, "8pp.t.q7w.a-setup-db")
+    # Create subtask folder inside parent (short folder format)
+    subtask_dir = File.join(@task_dir, "a-setup-db")
     FileUtils.mkdir_p(subtask_dir)
     File.write(File.join(subtask_dir, "8pp.t.q7w.a-setup-db.s.md"),
       "---\nid: 8pp.t.q7w.a\nstatus: pending\nparent: 8pp.t.q7w\n---\n\n# Setup Database\n")
@@ -64,12 +64,12 @@ class TaskResolverTest < AceTaskTestCase
 
     assert_equal "8pp.t.q7w.a", result.id
     assert_equal "setup-db", result.slug
-    assert_includes result.dir_path, "8pp.t.q7w.a-setup-db"
+    assert_includes result.dir_path, "a-setup-db"
   end
 
   def test_resolve_short_subtask_by_suffix
-    # Create subtask folder inside parent
-    subtask_dir = File.join(@task_dir, "8pp.t.q7w.a-setup-db")
+    # Create subtask folder inside parent (short folder format)
+    subtask_dir = File.join(@task_dir, "a-setup-db")
     FileUtils.mkdir_p(subtask_dir)
     File.write(File.join(subtask_dir, "8pp.t.q7w.a-setup-db.s.md"),
       "---\nid: 8pp.t.q7w.a\nstatus: pending\nparent: 8pp.t.q7w\n---\n\n# Setup Database\n")
@@ -81,8 +81,8 @@ class TaskResolverTest < AceTaskTestCase
   end
 
   def test_resolve_short_subtask_with_marker_prefix
-    # Create subtask folder inside parent
-    subtask_dir = File.join(@task_dir, "8pp.t.q7w.a-setup-db")
+    # Create subtask folder inside parent (short folder format)
+    subtask_dir = File.join(@task_dir, "a-setup-db")
     FileUtils.mkdir_p(subtask_dir)
     File.write(File.join(subtask_dir, "8pp.t.q7w.a-setup-db.s.md"),
       "---\nid: 8pp.t.q7w.a\nstatus: pending\nparent: 8pp.t.q7w\n---\n\n# Setup Database\n")

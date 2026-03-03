@@ -75,6 +75,7 @@ module Ace
 
         # Resolve a subtask reference by finding the parent's scan result,
         # then looking for the subtask folder within that parent's directory.
+        # Supports both new short format ("0-slug") and legacy format ("8pp.t.q7w.0-slug").
         def resolve_subtask(parent_id, subtask_char)
           parent_result = @scan_results.find { |sr| sr.id == parent_id }
           return nil unless parent_result
@@ -87,14 +88,23 @@ module Ace
             full_path = File.join(parent_result.dir_path, entry)
             next unless File.directory?(full_path)
 
-            match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])-?(.*)$/)
-            next unless match
-            next unless match[1] == subtask_id
+            slug = nil
+
+            # New short format: "0-slug" or "a-slug"
+            if (short_match = entry.match(/^([a-z0-9])-(.+)$/))
+              next unless short_match[1] == subtask_char
+              slug = short_match[2]
+            # Legacy format: "8pp.t.q7w.0-slug"
+            elsif (legacy_match = entry.match(/^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3}\.[a-z0-9])-?(.*)$/))
+              next unless legacy_match[1] == subtask_id
+              slug = legacy_match[2].empty? ? entry : legacy_match[2]
+            else
+              next
+            end
 
             spec_files = Dir.glob(File.join(full_path, "*.s.md"))
             next if spec_files.empty?
 
-            slug = match[2].empty? ? entry : match[2]
             return Ace::Support::Items::Models::ScanResult.new(
               id: subtask_id,
               slug: slug,

@@ -20,7 +20,7 @@ class TaskReparenterTest < AceTaskTestCase
     parent_dir = create_task_dir("8pp.t.q7w", "parent-task")
     create_spec(parent_dir, "8pp.t.q7w-parent-task", status: "in-progress")
 
-    subtask_dir = File.join(parent_dir, "8pp.t.q7w.a-child-task")
+    subtask_dir = File.join(parent_dir, "a-child-task")
     FileUtils.mkdir_p(subtask_dir)
     create_spec(subtask_dir, "8pp.t.q7w.a-child-task", id: "8pp.t.q7w.a", status: "pending", parent: "8pp.t.q7w")
 
@@ -70,15 +70,15 @@ class TaskReparenterTest < AceTaskTestCase
     orch_spec = File.join(task_dir, "8pp.t.q7w-my-task.s.md")
     assert File.exist?(orch_spec), "Orchestrator spec should exist"
 
-    # Subtask spec should exist
-    subtask_dir = File.join(task_dir, "8pp.t.q7w.a-my-task")
+    # Subtask spec should exist (short folder format, full ID in spec filename)
+    subtask_dir = File.join(task_dir, "0-my-task")
     assert Dir.exist?(subtask_dir), "Subtask directory should exist"
 
-    subtask_spec = File.join(subtask_dir, "8pp.t.q7w.a-my-task.s.md")
+    subtask_spec = File.join(subtask_dir, "8pp.t.q7w.0-my-task.s.md")
     assert File.exist?(subtask_spec), "Subtask spec should exist"
 
     subtask_content = File.read(subtask_spec)
-    assert_match(/id: 8pp\.t\.q7w\.a/, subtask_content)
+    assert_match(/id: 8pp\.t\.q7w\.0/, subtask_content)
     assert_match(/parent: 8pp\.t\.q7w/, subtask_content)
   end
 
@@ -86,7 +86,7 @@ class TaskReparenterTest < AceTaskTestCase
     parent_dir = create_task_dir("8pp.t.q7w", "parent")
     create_spec(parent_dir, "8pp.t.q7w-parent", status: "pending")
 
-    subtask_dir = File.join(parent_dir, "8pp.t.q7w.a-child")
+    subtask_dir = File.join(parent_dir, "a-child")
     FileUtils.mkdir_p(subtask_dir)
     create_spec(subtask_dir, "8pp.t.q7w.a-child", id: "8pp.t.q7w.a", parent: "8pp.t.q7w")
 
