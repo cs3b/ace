@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.723] - 2026-03-03
+
+### Fixed
+- **ace-support-items v0.14.1**: `SpecialFolderDetector.normalize` uses prefix-based expansion — `--in backlog` now correctly finds items in `_backlog/` (and any custom special folder)
+
+### Changed
+- **ace-support-items v0.14.1**: Replaced hardcoded `SPECIAL_FOLDERS`/`SHORT_ALIASES` with `DEFAULT_PREFIX = "_"` for deterministic two-way folder name conversion
+- **ace-task v0.14.1**, **ace-idea v0.12.4**, **ace-retro v0.8.3**: Config `special_folders` map replaced with `special_folder_prefix: "_"`
+
+### Added
+- **ace-support-items v0.14.1**: `SpecialFolderDetector.short_name` method for reverse prefix stripping
+
 ## [0.9.722] - 2026-03-03
 
 ### Added

@@ -21,8 +21,5 @@ idea:
     up_next_limit: 7
     recently_done_limit: 7
 
-  # Special folder mappings (short name => actual folder name)
-  special_folders:
-    archive: _archive
-    maybe: _maybe
-    anytime: _anytime
+  # Prefix used to identify special folders (e.g., "_archive", "_maybe")
+  special_folder_prefix: "_"
