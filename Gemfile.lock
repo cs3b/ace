@@ -141,7 +141,7 @@ PATH
       ace-git-worktree (~> 0.13)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
-      ace-task (~> 0.11)
+      ace-task (~> 0.13)
       ace-tmux (~> 0.6)
       dry-cli (~> 1.0)
 
@@ -222,7 +222,7 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.13.1)
+    ace-support-items (0.14.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
 
@@ -267,7 +267,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.12.3)
+    ace-task (0.13.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
