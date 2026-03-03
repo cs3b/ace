@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.724] - 2026-03-03
+
+### Added
+- **ace-task v0.15.0**: Short subtask folder names — subtask folders use `{char}-{slug}` format instead of `{full_id}-{slug}`, reducing path duplication while preserving full ID in spec filenames
+- **ace-task v0.15.0**: Backward-compatible dual-format scanning across all subtask-aware modules (`SubtaskCreator`, `TaskLoader`, `TaskScanner`, `TaskResolver`, `TaskReparenter`)
+
+### Fixed
+- **ace-task v0.15.0**: `TaskReparenter#convert_to_orchestrator` used hardcoded `.a` subtask char instead of `SUBTASK_CHARS[0]` (`"0"`)
+
+### Changed
+- Renamed 13 active subtask folders from legacy long format to new short format
+
 ## [0.9.723] - 2026-03-03
 
 ### Fixed
