@@ -76,8 +76,8 @@ class RetroDisplayFormatterTest < AceRetroTestCase
   def test_status_symbols
     active = make_retro(status: "active")
     done = make_retro(status: "done")
-    assert_includes Ace::Retro::Molecules::RetroDisplayFormatter.format(active), "🟡"
-    assert_includes Ace::Retro::Molecules::RetroDisplayFormatter.format(done), "🟢"
+    assert_includes Ace::Retro::Molecules::RetroDisplayFormatter.format(active), "○"
+    assert_includes Ace::Retro::Molecules::RetroDisplayFormatter.format(done), "✓"
   end
 
   # --- format_list stats line ---
@@ -90,7 +90,7 @@ class RetroDisplayFormatterTest < AceRetroTestCase
     ]
     output = Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros)
 
-    assert_includes output, "Retros: 🟡 1 | 🟢 2 • 3 total"
+    assert_includes output, "Retros: ○ 1 | ✓ 2 • 3 total"
     refute_includes output, "% complete"
   end
 
@@ -98,8 +98,8 @@ class RetroDisplayFormatterTest < AceRetroTestCase
     retros = [make_retro(status: "active"), make_retro(status: "active")]
     output = Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros)
 
-    assert_includes output, "Retros: 🟡 2 • 2 total"
-    refute_includes output, "🟢 0"
+    assert_includes output, "Retros: ○ 2 • 2 total"
+    refute_includes output, "✓ 0"
   end
 
   def test_format_list_stats_separated_by_blank_line
@@ -119,7 +119,7 @@ class RetroDisplayFormatterTest < AceRetroTestCase
     ]
     line = Ace::Retro::Molecules::RetroDisplayFormatter.format_stats_line(retros)
 
-    assert_equal "Retros: 🟡 1 | 🟢 2 • 3 total", line
+    assert_equal "Retros: ○ 1 | ✓ 2 • 3 total", line
   end
 
   # --- total_count threading ---
@@ -128,13 +128,13 @@ class RetroDisplayFormatterTest < AceRetroTestCase
     retros = [make_retro(status: "active")]
     output = Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros, total_count: 15)
 
-    assert_includes output, "Retros: 🟡 1 • 1 of 15"
+    assert_includes output, "Retros: ○ 1 • 1 of 15"
   end
 
   def test_format_stats_line_with_total_count
     retros = [make_retro(status: "active"), make_retro(status: "done")]
     line = Ace::Retro::Molecules::RetroDisplayFormatter.format_stats_line(retros, total_count: 30)
 
-    assert_equal "Retros: 🟡 1 | 🟢 1 • 2 of 30", line
+    assert_equal "Retros: ○ 1 | ✓ 1 • 2 of 30", line
   end
 end

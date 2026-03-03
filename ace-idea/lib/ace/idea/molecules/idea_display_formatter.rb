@@ -6,18 +6,34 @@ module Ace
       # Formats idea objects for terminal display.
       class IdeaDisplayFormatter
         STATUS_SYMBOLS = {
-          "pending" => "⚪",
-          "in-progress" => "🟡",
-          "done" => "🟢",
-          "obsolete" => "⚫"
+          "pending" => "○",
+          "in-progress" => "▶",
+          "done" => "✓",
+          "obsolete" => "✗"
         }.freeze
+
+        STATUS_COLORS = {
+          "pending" => nil,
+          "in-progress" => Ace::Support::Items::Atoms::AnsiColors::YELLOW,
+          "done" => Ace::Support::Items::Atoms::AnsiColors::GREEN,
+          "obsolete" => Ace::Support::Items::Atoms::AnsiColors::DIM
+        }.freeze
+
+        # Return the status symbol with ANSI color applied.
+        def self.colored_status_sym(status)
+          sym = STATUS_SYMBOLS[status] || "○"
+          color = STATUS_COLORS[status]
+          color ? Ace::Support::Items::Atoms::AnsiColors.colorize(sym, color) : sym
+        end
+
+        private_class_method :colored_status_sym
 
         # Format a single idea for display
         # @param idea [Idea] Idea to format
         # @param show_content [Boolean] Whether to include full content
         # @return [String] Formatted output
         def self.format(idea, show_content: false)
-          status_sym = STATUS_SYMBOLS[idea.status] || "⚪"
+          status_sym = colored_status_sym(idea.status)
           tags_str = idea.tags.any? ? " [#{idea.tags.join(", ")}]" : ""
           folder_str = idea.special_folder ? " (#{idea.special_folder})" : ""
 
@@ -40,12 +56,13 @@ module Ace
         # Format a list of ideas for display
         # @param ideas [Array<Idea>] Ideas to format
         # @param total_count [Integer, nil] Total items before folder filtering
+        # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
         # @return [String] Formatted list output
-        def self.format_list(ideas, total_count: nil)
+        def self.format_list(ideas, total_count: nil, global_folder_stats: nil)
           return "No ideas found." if ideas.empty?
 
           lines = ideas.map { |idea| format(idea) }.join("\n")
-          "#{lines}\n\n#{format_stats_line(ideas, total_count: total_count)}"
+          "#{lines}\n\n#{format_stats_line(ideas, total_count: total_count, global_folder_stats: global_folder_stats)}"
         end
 
         STATUS_ORDER = %w[pending in-progress done obsolete].freeze
@@ -73,15 +90,16 @@ module Ace
         # @param idea [Idea] Idea to format
         # @return [String] e.g. "  ⚪ 8ppq7w  Dark mode support"
         def self.format_status_line(idea)
-          status_sym = STATUS_SYMBOLS[idea.status] || "⚪"
+          status_sym = colored_status_sym(idea.status)
           "  #{status_sym} #{idea.id}  #{idea.title}"
         end
 
         # Format a stats summary line for a list of ideas.
         # @param ideas [Array<Idea>] Ideas to summarize
         # @param total_count [Integer, nil] Total items before folder filtering
-        # @return [String] e.g. "Ideas: ⚪ 3 | 🟡 1 | 🟢 2 • 3 of 8"
-        def self.format_stats_line(ideas, total_count: nil)
+        # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
+        # @return [String] e.g. "Ideas: ○ 3 | ▶ 1 | ✓ 2 • 3 of 8"
+        def self.format_stats_line(ideas, total_count: nil, global_folder_stats: nil)
           stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(ideas, :status)
           folder_stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(ideas, :special_folder)
           Ace::Support::Items::Atoms::StatsLineFormatter.format(
@@ -90,7 +108,8 @@ module Ace
             status_order: STATUS_ORDER,
             status_icons: STATUS_SYMBOLS,
             folder_stats: folder_stats,
-            total_count: total_count
+            total_count: total_count,
+            global_folder_stats: global_folder_stats
           )
         end
 

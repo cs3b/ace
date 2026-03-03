@@ -10,12 +10,12 @@ module Ace
         class List < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
 
-          desc <<~DESC.strip
-            List ideas
-
-            Lists all ideas with optional filtering by status, tags, or folder.
-
-          DESC
+          C = Ace::Support::Items::Atoms::AnsiColors
+          desc "List ideas\n\n" \
+            "Lists all ideas with optional filtering by status, tags, or folder.\n\n" \
+            "Status legend:\n" \
+            "  #{C::RESET}○ pending    #{C::YELLOW}▶ in-progress#{C::RESET}    #{C::GREEN}✓ done#{C::RESET}    #{C::DIM}✗ obsolete#{C::RESET}"
+          remove_const(:C)
 
           example [
             '                           # Active ideas (root only, default)',
@@ -50,7 +50,10 @@ module Ace
             list_opts[:in_folder] = in_folder if in_folder
             ideas = manager.list(**list_opts)
 
-            puts Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(ideas, total_count: manager.last_list_total)
+            puts Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(
+              ideas, total_count: manager.last_list_total,
+              global_folder_stats: manager.last_folder_counts
+            )
           end
         end
       end

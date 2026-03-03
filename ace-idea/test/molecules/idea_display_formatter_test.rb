@@ -31,7 +31,7 @@ class IdeaDisplayFormatterTest < AceIdeaTestCase
     ]
     output = Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(ideas)
 
-    assert_includes output, "Ideas: ⚪ 1 | 🟡 1 | 🟢 1 • 3 total"
+    assert_includes output, "Ideas: ○ 1 | ▶ 1 | ✓ 1 • 3 total"
     refute_includes output, "% complete"
   end
 
@@ -39,9 +39,9 @@ class IdeaDisplayFormatterTest < AceIdeaTestCase
     ideas = [make_idea(status: "pending"), make_idea(status: "pending")]
     output = Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(ideas)
 
-    assert_includes output, "Ideas: ⚪ 2 • 2 total"
-    refute_includes output, "🟡 0"
-    refute_includes output, "🟢 0"
+    assert_includes output, "Ideas: ○ 2 • 2 total"
+    refute_includes output, "▶ 0"
+    refute_includes output, "✓ 0"
   end
 
   def test_format_list_stats_separated_by_blank_line
@@ -68,7 +68,7 @@ class IdeaDisplayFormatterTest < AceIdeaTestCase
     ]
     line = Ace::Idea::Molecules::IdeaDisplayFormatter.format_stats_line(ideas)
 
-    assert_equal "Ideas: ⚪ 1 | 🟡 1 | 🟢 2 • 4 total", line
+    assert_equal "Ideas: ○ 1 | ▶ 1 | ✓ 2 • 4 total", line
   end
 
   # --- total_count threading ---
@@ -77,13 +77,13 @@ class IdeaDisplayFormatterTest < AceIdeaTestCase
     ideas = [make_idea(status: "pending"), make_idea(status: "pending")]
     output = Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(ideas, total_count: 20)
 
-    assert_includes output, "Ideas: ⚪ 2 • 2 of 20"
+    assert_includes output, "Ideas: ○ 2 • 2 of 20"
   end
 
   def test_format_stats_line_with_total_count
     ideas = [make_idea(status: "pending")]
     line = Ace::Idea::Molecules::IdeaDisplayFormatter.format_stats_line(ideas, total_count: 50)
 
-    assert_equal "Ideas: ⚪ 1 • 1 of 50", line
+    assert_equal "Ideas: ○ 1 • 1 of 50", line
   end
 end
