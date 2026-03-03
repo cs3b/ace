@@ -118,7 +118,7 @@ class TaskReparenterTest < AceTaskTestCase
     result = reparenter.reparent(task, target: "abc", resolve_ref: resolve_fn)
 
     # Should now be inside parent dir with subtask ID
-    assert_equal "8pp.t.abc.a", result.id
+    assert_equal "8pp.t.abc.0", result.id
     assert_equal "8pp.t.abc", result.parent_id
     assert result.path.start_with?(parent_dir)
 

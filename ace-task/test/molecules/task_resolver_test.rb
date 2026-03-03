@@ -67,6 +67,39 @@ class TaskResolverTest < AceTaskTestCase
     assert_includes result.dir_path, "8pp.t.q7w.a-setup-db"
   end
 
+  def test_resolve_short_subtask_by_suffix
+    # Create subtask folder inside parent
+    subtask_dir = File.join(@task_dir, "8pp.t.q7w.a-setup-db")
+    FileUtils.mkdir_p(subtask_dir)
+    File.write(File.join(subtask_dir, "8pp.t.q7w.a-setup-db.s.md"),
+      "---\nid: 8pp.t.q7w.a\nstatus: pending\nparent: 8pp.t.q7w\n---\n\n# Setup Database\n")
+
+    resolver = Ace::Task::Molecules::TaskResolver.new(@scan_results)
+    result = resolver.resolve("q7w.a")
+
+    assert_equal "8pp.t.q7w.a", result.id
+  end
+
+  def test_resolve_short_subtask_with_marker_prefix
+    # Create subtask folder inside parent
+    subtask_dir = File.join(@task_dir, "8pp.t.q7w.a-setup-db")
+    FileUtils.mkdir_p(subtask_dir)
+    File.write(File.join(subtask_dir, "8pp.t.q7w.a-setup-db.s.md"),
+      "---\nid: 8pp.t.q7w.a\nstatus: pending\nparent: 8pp.t.q7w\n---\n\n# Setup Database\n")
+
+    resolver = Ace::Task::Molecules::TaskResolver.new(@scan_results)
+    result = resolver.resolve("t.q7w.a")
+
+    assert_equal "8pp.t.q7w.a", result.id
+  end
+
+  def test_resolve_short_subtask_returns_nil_for_unknown_parent
+    resolver = Ace::Task::Molecules::TaskResolver.new(@scan_results)
+    result = resolver.resolve("zzz.a")
+
+    assert_nil result
+  end
+
   def test_resolve_subtask_returns_nil_for_missing_subtask
     resolver = Ace::Task::Molecules::TaskResolver.new(@scan_results)
     result = resolver.resolve("8pp.t.q7w.z")
