@@ -18,7 +18,7 @@ class SubtaskCreatorTest < AceTaskTestCase
     subtask_creator = Ace::Task::Molecules::SubtaskCreator.new
     subtask = subtask_creator.create(@parent, "Setup database")
 
-    assert_equal "#{@parent.id}.a", subtask.id
+    assert_equal "#{@parent.id}.0", subtask.id
   end
 
   def test_creates_subtask_with_parent_id
@@ -44,9 +44,9 @@ class SubtaskCreatorTest < AceTaskTestCase
     second = subtask_creator.create(@parent, "Second subtask")
     third = subtask_creator.create(@parent, "Third subtask")
 
-    assert_equal "#{@parent.id}.a", first.id
-    assert_equal "#{@parent.id}.b", second.id
-    assert_equal "#{@parent.id}.c", third.id
+    assert_equal "#{@parent.id}.0", first.id
+    assert_equal "#{@parent.id}.1", second.id
+    assert_equal "#{@parent.id}.2", third.id
   end
 
   def test_subtask_has_spec_file_with_frontmatter

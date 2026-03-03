@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-03-03
+
+### Fixed
+- Subtask character allocation now follows base36 order (0-9 before a-z) matching Ruby's `to_s(36)`, ensuring correct lexicographic sorting
+
 ## [0.12.2] - 2026-03-03
 
 ### Changed
