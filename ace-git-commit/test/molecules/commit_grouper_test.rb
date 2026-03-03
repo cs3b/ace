@@ -170,6 +170,149 @@ class CommitGrouperTest < TestCase
     assert_equal "project default", scope
   end
 
+  # ===== ace_config_file? tests =====
+
+  def test_ace_config_file_detects_package_ace_path
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new
+    assert grouper.ace_config_file?("ace-bundle/.ace/git/commit.yml")
+  end
+
+  def test_ace_config_file_detects_root_ace_path
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new
+    assert grouper.ace_config_file?(".ace/git/commit.yml")
+  end
+
+  def test_ace_config_file_detects_deeply_nested_ace_path
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new
+    assert grouper.ace_config_file?("pkg/sub/.ace/config.yml")
+  end
+
+  def test_ace_config_file_rejects_regular_file
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new
+    refute grouper.ace_config_file?("ace-bundle/lib/foo.rb")
+  end
+
+  def test_ace_config_file_rejects_ace_defaults
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new
+    refute grouper.ace_config_file?(".ace-defaults/git/commit.yml")
+    refute grouper.ace_config_file?("ace-bundle/.ace-defaults/git/commit.yml")
+  end
+
+  # ===== ace-config grouping integration tests =====
+
+  def test_groups_all_ace_files_into_single_ace_config_scope
+    config = { "model" => "glite" }
+
+    group_bundle = Ace::Support::Config::Models::ConfigGroup.new(
+      name: "project default",
+      source: "#{@project_root}/ace-bundle/.ace/git/commit.yml",
+      config: config,
+      files: []
+    )
+    group_docs = Ace::Support::Config::Models::ConfigGroup.new(
+      name: "project default",
+      source: "#{@project_root}/ace-docs/.ace/git/commit.yml",
+      config: config,
+      files: []
+    )
+    group_lint = Ace::Support::Config::Models::ConfigGroup.new(
+      name: "project default",
+      source: "#{@project_root}/ace-lint/.ace/git/commit.yml",
+      config: config,
+      files: []
+    )
+
+    resolver = FakeResolver.new(
+      "ace-bundle/.ace/git/commit.yml" => group_bundle,
+      "ace-docs/.ace/git/commit.yml" => group_docs,
+      "ace-lint/.ace/git/commit.yml" => group_lint
+    )
+
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new(file_config_resolver: resolver)
+    groups = grouper.group(
+      ["ace-bundle/.ace/git/commit.yml", "ace-docs/.ace/git/commit.yml", "ace-lint/.ace/git/commit.yml"],
+      project_root: @project_root
+    )
+
+    assert_equal 1, groups.length
+    assert_equal "ace-config", groups.first.scope_name
+    assert_equal 3, groups.first.files.length
+  end
+
+  def test_groups_root_ace_files_into_ace_config_scope
+    config = { "model" => "glite" }
+
+    group = Ace::Support::Config::Models::ConfigGroup.new(
+      name: "project default",
+      source: "#{@project_root}/.ace/git/commit.yml",
+      config: config,
+      files: []
+    )
+
+    resolver = FakeResolver.new(".ace/git/commit.yml" => group)
+
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new(file_config_resolver: resolver)
+    groups = grouper.group([".ace/git/commit.yml"], project_root: @project_root)
+
+    assert_equal 1, groups.length
+    assert_equal "ace-config", groups.first.scope_name
+  end
+
+  def test_groups_mixed_ace_and_regular_files_separately
+    config = { "model" => "glite" }
+
+    ace_group = Ace::Support::Config::Models::ConfigGroup.new(
+      name: "project default",
+      source: "#{@project_root}/ace-bundle/.ace/git/commit.yml",
+      config: config,
+      files: []
+    )
+    regular_group = Ace::Support::Config::Models::ConfigGroup.new(
+      name: "project default",
+      source: "#{@project_root}/ace-bundle/.ace/git/commit.yml",
+      config: config,
+      files: []
+    )
+
+    resolver = FakeResolver.new(
+      "ace-bundle/.ace/git/commit.yml" => ace_group,
+      "ace-bundle/lib/foo.rb" => regular_group
+    )
+
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new(file_config_resolver: resolver)
+    groups = grouper.group(
+      ["ace-bundle/.ace/git/commit.yml", "ace-bundle/lib/foo.rb"],
+      project_root: @project_root
+    )
+
+    assert_equal 2, groups.length
+    ace_config_group = groups.find { |g| g.scope_name == "ace-config" }
+    regular_file_group = groups.find { |g| g.scope_name == "ace-bundle" }
+    assert_equal ["ace-bundle/.ace/git/commit.yml"], ace_config_group.files
+    assert_equal ["ace-bundle/lib/foo.rb"], regular_file_group.files
+  end
+
+  def test_no_ace_files_produces_no_ace_config_group
+    config = { "model" => "glite" }
+
+    group = Ace::Support::Config::Models::ConfigGroup.new(
+      name: "project default",
+      source: "#{@project_root}/ace-bundle/.ace/git/commit.yml",
+      config: config,
+      files: []
+    )
+
+    resolver = FakeResolver.new(
+      "ace-bundle/lib/foo.rb" => group,
+      "docs/README.md" => group
+    )
+
+    grouper = Ace::GitCommit::Molecules::CommitGrouper.new(file_config_resolver: resolver)
+    groups = grouper.group(["ace-bundle/lib/foo.rb", "docs/README.md"], project_root: @project_root)
+
+    refute groups.any? { |g| g.scope_name == "ace-config" }
+  end
+
   # ===== Grouping behavior tests =====
 
   def test_groups_project_default_files_with_different_configs_into_one_group
