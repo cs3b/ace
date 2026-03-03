@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.719] - 2026-03-03
+
+### Added
+- **ace-support-items v0.14.0**: `SlugSanitizer` gains `max_length:` parameter and word-boundary truncation
+- **ace-task v0.13.0**: Dual-slug task creation — folder slug (3-5 words, context) and file slug (4-7 words, action)
+- **ace-task v0.13.0**: Title length validation (warning when >80 chars) in `TaskFrontmatterValidator`
+- **ace-task v0.13.0**: Task naming convention guidelines in draft and review workflows
+
+### Changed
+- **ace-task v0.13.0**: `SubtaskCreator` uses 7-word limit instead of 40-char truncation
+- Renamed all active and _maybe task folders/files to follow new two-tier naming convention
+
 ## [0.9.718] - 2026-03-03
 
 ### Fixed
