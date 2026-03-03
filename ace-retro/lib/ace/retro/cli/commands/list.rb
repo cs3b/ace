@@ -10,12 +10,12 @@ module Ace
         class List < Dry::CLI::Command
           include Ace::Core::CLI::DryCli::Base
 
-          desc <<~DESC.strip
-            List retros
-
-            Lists all retros with optional filtering by status, type, tags, or folder.
-
-          DESC
+          C = Ace::Support::Items::Atoms::AnsiColors
+          desc "List retros\n\n" \
+            "Lists all retros with optional filtering by status, type, tags, or folder.\n\n" \
+            "Status legend:\n" \
+            "  #{C::YELLOW}○ active#{C::RESET}    #{C::GREEN}✓ done#{C::RESET}"
+          remove_const(:C)
 
           example [
             '                           # Active retros (root only, default)',
@@ -51,7 +51,10 @@ module Ace
             list_opts[:in_folder] = in_folder if in_folder
             retros = manager.list(**list_opts)
 
-            puts Ace::Retro::Molecules::RetroDisplayFormatter.format_list(retros, total_count: manager.last_list_total)
+            puts Ace::Retro::Molecules::RetroDisplayFormatter.format_list(
+              retros, total_count: manager.last_list_total,
+              global_folder_stats: manager.last_folder_counts
+            )
           end
         end
       end

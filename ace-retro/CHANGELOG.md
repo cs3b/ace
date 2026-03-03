@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-03
+
+### Added
+- Colored status symbols in list output: active (yellow), done (green) — TTY-aware, no color when piped
+- `last_folder_counts` on `RetroScanner` and `RetroManager`: exposes per-folder item counts from the full scan for use in stats line
+- `list --help` status legend with ANSI colors matching list output
+
+### Changed
+- Status symbols replaced from emoji (🟡🟢) to Unicode shapes (○✓) for consistent terminal rendering and colorization support
+- `format_list` and `format_stats_line` accept `global_folder_stats:` parameter, always showing folder breakdown in stats line even when viewing a filtered subset
+
 ## [0.7.0] - 2026-03-02
 
 ### Added

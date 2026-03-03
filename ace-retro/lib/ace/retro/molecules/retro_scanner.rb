@@ -9,7 +9,7 @@ module Ace
       # Wraps DirectoryScanner for .retro.md files.
       # Returns scan results with raw b36ts IDs (no type markers).
       class RetroScanner
-        attr_reader :last_scan_total
+        attr_reader :last_scan_total, :last_folder_counts
 
         # @param root_dir [String] Root directory containing retros (e.g., ".ace-retros")
         def initialize(root_dir)
@@ -32,6 +32,7 @@ module Ace
         def scan_in_folder(folder)
           results = scan
           @last_scan_total = results.size
+          @last_folder_counts = results.group_by(&:special_folder).transform_values(&:size)
           return results if folder.nil?
 
           virtual = Ace::Support::Items::Atoms::SpecialFolderDetector.virtual_filter?(folder)

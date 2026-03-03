@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.712] - 2026-03-03
+
+### Added
+- **ace-support-items v0.13.0**: `AnsiColors` atom with TTY-aware colorize helper and ANSI constants (RED, GREEN, YELLOW, CYAN, DIM, BOLD, RESET)
+- **ace-support-items v0.13.0**: `StatsLineFormatter` `global_folder_stats:` parameter — always shows folder breakdown in stats line even when viewing filtered subsets
+- **ace-task v0.12.0**, **ace-idea v0.12.0**, **ace-retro v0.8.0**: Colored status symbols in `list` output (TTY-aware); `last_folder_counts` on scanners and managers for global folder stats; colored status legend in `list --help`
+
+### Changed
+- **ace-idea v0.12.0**, **ace-retro v0.8.0**: Status symbols replaced from emoji (⚪🟡🟢⚫ / 🟡🟢) to Unicode shapes (○▶✓✗ / ○✓) for consistent colorization support
+- **ace-task v0.12.0**: Status legend order in `list --help` reflects task lifecycle: draft → pending → in-progress → done
+
 ## [0.9.711] - 2026-03-02
 
 ### Changed
