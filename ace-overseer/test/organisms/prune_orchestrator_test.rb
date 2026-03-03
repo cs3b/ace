@@ -4,9 +4,23 @@ require "stringio"
 require_relative "../test_helper"
 
 class PruneOrchestratorTest < AceOverseerTestCase
-  FakeWorktree = Struct.new(:path, :task_id) do
+  FakeWorktree = Struct.new(:path, :task_id, :bare) do
+    def initialize(path, task_id, bare = false)
+      super(path, task_id, bare)
+    end
+
     def task_associated?
       true
+    end
+  end
+
+  NonTaskWorktree = Struct.new(:path, :task_id, :bare) do
+    def initialize(path, task_id = nil, bare = false)
+      super(path, task_id, bare)
+    end
+
+    def task_associated?
+      false
     end
   end
 
@@ -505,6 +519,37 @@ class PruneOrchestratorTest < AceOverseerTestCase
 
     assert_equal true, result[:aborted]
     assert_empty mgr.delete_calls
+  end
+
+  def test_non_task_worktree_can_be_pruned_when_targeted_by_path
+    manager = FakeManager.new([
+      FakeWorktree.new("/wt/task.230", "230"),
+      NonTaskWorktree.new("/home/mc/ace-e2e-glm")
+    ])
+    non_task_candidate = Ace::Overseer::Models::PruneCandidate.new(
+      task_id: "unknown",
+      worktree_path: "/home/mc/ace-e2e-glm",
+      assignment_complete: true,
+      task_done: true,
+      git_clean: true,
+      reasons: []
+    )
+    checker = FakeChecker.new([non_task_candidate])
+
+    orchestrator = Ace::Overseer::Organisms::PruneOrchestrator.new(
+      worktree_manager: manager,
+      prune_checker: checker,
+      tmux_executor: FakeTmuxExecutor.new,
+      config: {}
+    )
+
+    result = orchestrator.call(
+      dry_run: false, yes: true, force: true, targets: ["ace-e2e-glm"],
+      input: StringIO.new(""), output: StringIO.new
+    )
+
+    assert_equal 1, result[:pruned].length
+    assert_equal "/home/mc/ace-e2e-glm", manager.remove_calls.first[:path]
   end
 
   def test_prompt_can_abort

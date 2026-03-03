@@ -73,11 +73,12 @@ module Ace
         end
 
         def extract_task_id(worktree_path, branch)
-          # Match "task.NNN" or "ace-task.NNN" in path (directory naming convention)
-          from_path = worktree_path.to_s[/(?:^|\/)(?:ace-)?task\.(\d+(?:\.\d+)?)(?:\/|$)/, 1]
+          # Match "task.NNN" or "ace-task.xxx" in path (numeric or B36TS directory naming)
+          from_path = worktree_path.to_s[/(?:^|\/)(?:ace-)?task\.([0-9a-z]+(?:\.[0-9a-z]+)?)(?:\/|$)/, 1]
           return from_path if from_path
 
-          branch.to_s[/^(\d+(?:\.\d+)?)/, 1] || "unknown"
+          # Try B36TS prefix from branch (e.g., "hy4-description") then numeric
+          branch.to_s[/^([0-9a-z]{3})(?:-|\b)/, 1] || branch.to_s[/^(\d+(?:\.\d+)?)/, 1] || "unknown"
         end
 
         def with_worktree_context(worktree_path)
