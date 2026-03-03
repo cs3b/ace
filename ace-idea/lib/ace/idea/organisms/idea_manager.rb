@@ -15,7 +15,7 @@ module Ace
       # Orchestrates all idea CRUD operations.
       # Entry point for idea management with config-driven root directory.
       class IdeaManager
-        attr_reader :last_list_total
+        attr_reader :last_list_total, :last_folder_counts
 
         # @param root_dir [String, nil] Override root directory for ideas
         # @param config [Hash, nil] Override configuration
@@ -83,6 +83,7 @@ module Ace
           scanner = Molecules::IdeaScanner.new(scan_root)
           scan_results = scanner.scan_in_folder(in_folder)
           @last_list_total = scanner.last_scan_total
+          @last_folder_counts = scanner.last_folder_counts
 
           loader = Molecules::IdeaLoader.new
           ideas = scan_results.filter_map do |sr|
