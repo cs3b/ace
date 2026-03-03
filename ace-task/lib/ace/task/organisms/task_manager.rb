@@ -14,7 +14,7 @@ module Ace
       # Orchestrates all task CRUD operations.
       # Entry point for task management with config-driven root directory.
       class TaskManager
-        attr_reader :last_list_total
+        attr_reader :last_list_total, :last_folder_counts
 
         # @param root_dir [String, nil] Override root directory for tasks
         # @param config [Hash, nil] Override configuration
@@ -62,6 +62,7 @@ module Ace
           scanner = Molecules::TaskScanner.new(@root_dir)
           scan_results = scanner.scan_in_folder(in_folder)
           @last_list_total = scanner.last_scan_total
+          @last_folder_counts = scanner.last_folder_counts
 
           loader = Molecules::TaskLoader.new
           tasks = scan_results.filter_map do |sr|

@@ -17,12 +17,33 @@ module Ace
           "cancelled" => "—"
         }.freeze
 
+        STATUS_COLORS = {
+          "pending" => nil,
+          "in-progress" => Ace::Support::Items::Atoms::AnsiColors::YELLOW,
+          "done" => Ace::Support::Items::Atoms::AnsiColors::GREEN,
+          "blocked" => Ace::Support::Items::Atoms::AnsiColors::RED,
+          "draft" => Ace::Support::Items::Atoms::AnsiColors::CYAN,
+          "skipped" => Ace::Support::Items::Atoms::AnsiColors::DIM,
+          "cancelled" => Ace::Support::Items::Atoms::AnsiColors::DIM
+        }.freeze
+
         PRIORITY_LABELS = {
           "critical" => "‼",
           "high" => "!",
           "medium" => "",
           "low" => "↓"
         }.freeze
+
+        # Return the status symbol with ANSI color applied.
+        # @param status [String] Status string
+        # @return [String] Colored status symbol
+        def self.colored_status_sym(status)
+          sym = STATUS_SYMBOLS[status] || "○"
+          color = STATUS_COLORS[status]
+          color ? Ace::Support::Items::Atoms::AnsiColors.colorize(sym, color) : sym
+        end
+
+        private_class_method :colored_status_sym
 
         # Format a single task for detailed display (show command).
         # @param task [Models::Task] Task to format
@@ -32,7 +53,7 @@ module Ace
           lines = []
 
           # Header line: status symbol, ID, title
-          status_sym = STATUS_SYMBOLS[task.status] || "○"
+          status_sym = colored_status_sym(task.status)
           priority_sym = PRIORITY_LABELS[task.priority] || ""
           priority_prefix = priority_sym.empty? ? "" : "#{priority_sym} "
           lines << "#{status_sym} #{priority_prefix}#{task.id}  #{task.title}"
@@ -69,7 +90,7 @@ module Ace
             lines << ""
             lines << "  Subtasks:"
             task.subtasks.each do |st|
-              st_sym = STATUS_SYMBOLS[st.status] || "○"
+              st_sym = colored_status_sym(st.status)
               lines << "    #{st_sym} #{st.id}  #{st.title}"
             end
           end
@@ -86,12 +107,13 @@ module Ace
         # Format a list of tasks for compact display (list command).
         # @param tasks [Array<Models::Task>] Tasks to format
         # @param total_count [Integer, nil] Total items before folder filtering
+        # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
         # @return [String] Formatted list output
-        def self.format_list(tasks, total_count: nil)
+        def self.format_list(tasks, total_count: nil, global_folder_stats: nil)
           return "No tasks found." if tasks.empty?
 
           lines = tasks.map { |task| format_list_item(task) }.join("\n")
-          "#{lines}\n\n#{format_stats_line(tasks, total_count: total_count)}"
+          "#{lines}\n\n#{format_stats_line(tasks, total_count: total_count, global_folder_stats: global_folder_stats)}"
         end
 
         STATUS_ORDER = %w[draft pending in-progress done blocked skipped cancelled].freeze
@@ -118,8 +140,9 @@ module Ace
         # Format a stats summary line for a list of tasks.
         # @param tasks [Array<Models::Task>] Tasks to summarize
         # @param total_count [Integer, nil] Total items before folder filtering
+        # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
         # @return [String] e.g. "Tasks: ○ 2 | ▶ 1 | ✓ 5 • 3 of 660"
-        def self.format_stats_line(tasks, total_count: nil)
+        def self.format_stats_line(tasks, total_count: nil, global_folder_stats: nil)
           stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(tasks, :status)
           folder_stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(tasks, :special_folder)
           Ace::Support::Items::Atoms::StatsLineFormatter.format(
@@ -128,7 +151,8 @@ module Ace
             status_order: STATUS_ORDER,
             status_icons: STATUS_SYMBOLS,
             folder_stats: folder_stats,
-            total_count: total_count
+            total_count: total_count,
+            global_folder_stats: global_folder_stats
           )
         end
 
@@ -136,7 +160,7 @@ module Ace
         # @param task [Models::Task] Task to format
         # @return [String] e.g. "  ○ 8pp.t.q7w  Fix login bug"
         def self.format_status_line(task)
-          status_sym = STATUS_SYMBOLS[task.status] || "○"
+          status_sym = colored_status_sym(task.status)
           "  #{status_sym} #{task.id}  #{task.title}"
         end
 
@@ -166,7 +190,7 @@ module Ace
 
         # Format a single task as a compact list item.
         def self.format_list_item(task)
-          status_sym = STATUS_SYMBOLS[task.status] || "○"
+          status_sym = colored_status_sym(task.status)
           priority_sym = PRIORITY_LABELS[task.priority] || ""
           priority_prefix = priority_sym.empty? ? "" : "#{priority_sym} "
           tags_str = task.tags && task.tags.any? ? " [#{task.tags.join(", ")}]" : ""
