@@ -1,5 +1,6 @@
 test-id: TS-SEARCH-001
 title: "ace-search Core Search Workflow"
+timeout: 900
 area: search
 package: ace-search
 priority: medium
