@@ -15,7 +15,8 @@ module Ace
             "Lists all tasks with optional filtering by status, tags, or folder.\n\n" \
             "Status legend:\n" \
             "  #{C::CYAN}◇ draft#{C::RESET}    #{C::RESET}○ pending    #{C::YELLOW}▶ in-progress#{C::RESET}    #{C::GREEN}✓ done#{C::RESET}\n" \
-            "  #{C::RED}✗ blocked#{C::RESET}    #{C::DIM}– skipped  — cancelled#{C::RESET}"
+            "  #{C::RED}✗ blocked#{C::RESET}    #{C::DIM}– skipped  — cancelled#{C::RESET}\n\n" \
+            "Priority: #{C::RED}▲▲#{C::RESET} critical  ▲ high  #{C::DIM}▼ low#{C::RESET}    Subtasks: ›N"
           remove_const(:C)
 
           example [

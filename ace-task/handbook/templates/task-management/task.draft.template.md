@@ -4,6 +4,10 @@ status: draft
 priority: {priority}
 estimate: TBD
 dependencies: {dependencies}
+bundle:
+  presets: ["project"]
+  files: []
+  commands: []
 ---
 
 # {title}
@@ -89,6 +93,31 @@ GET/POST/PUT/DELETE /endpoint
 - [ ] **Edge Case Handling**: [Question about boundary conditions or unusual scenarios]  
 - [ ] **User Experience**: [Question about user expectations, workflows, or interactions]
 - [ ] **Success Definition**: [Question about how success will be measured or validated]
+
+### Vertical Slice Decomposition (Task/Subtask Model)
+<!-- Describe end-to-end slices using task/subtask structure -->
+<!-- Use orchestrator + subtasks for multiple slices; use standalone task for one slice -->
+
+- **Slice Type**: [Standalone task | Orchestrator | Subtask]
+- **Slice Outcome**: [Observable end-to-end capability delivered by this task/subtask]
+- **Advisory Size**: [small | medium | large]
+- **Context Dependencies**: [Critical files/presets/commands this slice needs in fresh sessions]
+
+### Verification Plan
+<!-- Define verification strategy before implementation -->
+<!-- Include unit/equivalent checks, integration/e2e where applicable, and failure-path validation -->
+
+#### Unit / Component Validation
+- [ ] [Scenario]: [Expected observable result]
+
+#### Integration / E2E Validation (if cross-boundary behavior exists)
+- [ ] [Scenario]: [Expected observable result]
+
+#### Failure / Invalid-Path Validation
+- [ ] [Scenario]: [Expected error handling behavior]
+
+#### Verification Commands
+- [ ] [Command/check]: [Expected outcome]
 
 ## Objective
 
