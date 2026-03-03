@@ -103,6 +103,12 @@ module Ace
             if frontmatter.key?("tags") && !frontmatter["tags"].is_a?(Array)
               issues << { type: :warning, message: "Field 'tags' is not an array", location: file_path }
             end
+
+            # Validate title length
+            title = frontmatter["title"].to_s
+            if title.length > Atoms::TaskValidationRules::MAX_TITLE_LENGTH
+              issues << { type: :warning, message: "Title exceeds #{Atoms::TaskValidationRules::MAX_TITLE_LENGTH} characters (#{title.length} chars)", location: file_path }
+            end
           end
 
           def validate_recommended_fields(frontmatter, file_path, issues)

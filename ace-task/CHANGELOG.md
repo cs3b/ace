@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-03
+
+### Added
+- `TaskCreator`: dual-slug support — folder slug (3-5 words, context) and file slug (4-7 words, action)
+- `TaskValidationRules`: `MAX_TITLE_LENGTH = 80` constant
+- `TaskFrontmatterValidator`: warning when title exceeds 80 characters
+- Draft workflow: task naming convention guidelines (folder vs file slug rules)
+- Review workflow: title length, folder slug, file slug, and slug repetition checklist items
+
+### Changed
+- `TaskCreator`: replaced `generate_slug` with `generate_folder_slug` (5-word limit) and `generate_file_slug` (7-word limit)
+- `TaskCreator`: `generate_llm_slugs` now returns both folder and file slugs
+- `SubtaskCreator`: slug generation uses 7-word limit instead of 40-char truncation
+
 ## [0.12.3] - 2026-03-03
 
 ### Fixed

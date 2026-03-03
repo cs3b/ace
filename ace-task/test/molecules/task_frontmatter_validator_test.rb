@@ -217,6 +217,43 @@ class TaskFrontmatterValidatorTest < AceTaskTestCase
     end
   end
 
+  # --- title length ---
+
+  def test_warns_on_long_title
+    with_tasks_dir do |root|
+      long_title = "A" * 81
+      file = write_task_file(root, "long-title", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: #{long_title}
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:type] == :warning && i[:message].include?("Title exceeds 80 characters") }
+    end
+  end
+
+  def test_no_warning_for_short_title
+    with_tasks_dir do |root|
+      file = write_task_file(root, "ok-title", <<~CONTENT)
+        ---
+        id: 8pp.t.q7w
+        status: pending
+        title: Short title
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      refute issues.any? { |i| i[:message].include?("Title exceeds") }
+    end
+  end
+
   # --- nonexistent file ---
 
   def test_nonexistent_file
