@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-03-03
+
+### Added
+- Group all `.ace/` config files into a single "ace-config" commit scope instead of creating separate per-package commits.
+
 ## [0.18.8] - 2026-02-26
 
 ### Fixed

@@ -21,9 +21,14 @@ module Ace
 
           Array(files).each do |file|
             resolved = @file_config_resolver.resolve(file, namespace: "git", filename: "commit", project_root: project_root)
-            # Derive scope name: use path-based derivation for distributed configs,
-            # otherwise keep the resolved name (path rule name or DEFAULT_SCOPE_NAME)
-            scope_name = derive_scope_name(resolved.source, resolved.name, project_root)
+            # .ace/ config files always group into "ace-config" scope
+            scope_name = if ace_config_file?(file)
+                           "ace-config"
+                         else
+                           # Derive scope name: use path-based derivation for distributed configs,
+                           # otherwise keep the resolved name (path rule name or DEFAULT_SCOPE_NAME)
+                           derive_scope_name(resolved.source, resolved.name, project_root)
+                         end
             # Group by scope_name AND config signature to prevent merging scopes with different configs
             # Exception: DEFAULT_SCOPE_NAME always groups together regardless of config (to avoid duplicates)
             # For path rules: use rule_config for grouping (ignores cascade differences like per-package model)
@@ -84,6 +89,11 @@ module Ace
 
           # This is a distributed config - derive scope from package path
           package_name
+        end
+
+        # Check if a file path is inside a .ace/ directory
+        def ace_config_file?(file)
+          file.include?("/.ace/") || file.start_with?(".ace/")
         end
 
         private
