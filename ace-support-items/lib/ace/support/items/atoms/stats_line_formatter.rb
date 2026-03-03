@@ -13,8 +13,9 @@ module Ace
           # @param status_icons [Hash<String,String>] Status → icon mapping
           # @param folder_stats [Hash, nil] Output of ItemStatistics.count_by (by :special_folder)
           # @param total_count [Integer, nil] Total items before folder filtering (enables "X of Y" display)
+          # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan (always shown)
           # @return [String] e.g. "Tasks: ○ 3 | ▶ 1 | ✓ 5 • 3 of 660"
-          def self.format(label:, stats:, status_order:, status_icons:, folder_stats: nil, total_count: nil)
+          def self.format(label:, stats:, status_order:, status_icons:, folder_stats: nil, total_count: nil, global_folder_stats: nil)
             parts = []
             status_order.each do |status|
               count = stats[:by_field][status] || 0
@@ -38,17 +39,27 @@ module Ace
             total = total_count || shown
 
             if shown < total
-              # Filtered view: show ratio, skip folder breakdown
+              # Filtered view: show ratio
               line += " \u2022 #{shown} of #{total}"
             else
-              # Full view: show total + folder breakdown when multi-folder
+              # Full view: show total
               line += " \u2022 #{shown} total"
-              if folder_stats && folder_stats[:by_field].size > 1
+              # Inline folder breakdown from current results (only when unfiltered
+              # and global_folder_stats not provided — global takes precedence)
+              if !global_folder_stats && folder_stats && folder_stats[:by_field].size > 1
                 folder_parts = folder_stats[:by_field]
                   .sort_by { |_, count| -count }
                   .map { |folder, count| "#{folder_label(folder)} #{count}" }
                 line += " \u2014 #{folder_parts.join(" | ")}"
               end
+            end
+
+            # Global folder breakdown (always shown when provided and multi-folder)
+            if global_folder_stats && global_folder_stats.size > 1
+              global_parts = global_folder_stats
+                .sort_by { |_, count| -count }
+                .map { |folder, count| "#{folder_label(folder)} #{count}" }
+              line += " \u2014 #{global_parts.join(" | ")}"
             end
 
             line
