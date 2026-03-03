@@ -35,14 +35,16 @@ module Ace
         # @param show_content [Boolean] Whether to include full content
         # @return [String] Formatted output
         def self.format(retro, show_content: false)
+          c = Ace::Support::Items::Atoms::AnsiColors
           status_sym = colored_status_sym(retro.status)
-          tags_str = retro.tags.any? ? " [#{retro.tags.join(", ")}]" : ""
-          folder_str = retro.special_folder ? " (#{retro.special_folder})" : ""
-          type_str = " <#{TYPE_LABELS[retro.type] || retro.type}>"
-          task_str = retro.task_ref ? " → #{retro.task_ref}" : ""
+          id_str = show_content ? retro.id : c.colorize(retro.id, c::DIM)
+          tags_str = retro.tags.any? ? c.colorize(" [#{retro.tags.join(", ")}]", c::DIM) : ""
+          folder_str = retro.special_folder ? c.colorize(" (#{retro.special_folder})", c::DIM) : ""
+          type_str = c.colorize(" <#{TYPE_LABELS[retro.type] || retro.type}>", c::DIM)
+          task_str = retro.task_ref ? c.colorize(" \u2192 #{retro.task_ref}", c::DIM) : ""
 
           lines = []
-          lines << "#{status_sym} #{retro.id} #{retro.title}#{type_str}#{tags_str}#{task_str}#{folder_str}"
+          lines << "#{status_sym} #{id_str} #{retro.title}#{type_str}#{tags_str}#{task_str}#{folder_str}"
 
           if show_content && retro.content && !retro.content.strip.empty?
             lines << ""
