@@ -22,6 +22,9 @@ module Ace
         # Subtask reference pattern: "8pp.t.q7w.a" (parent ID + dot + single char)
         SUBTASK_REF_PATTERN = /^([0-9a-z]{3}\.[a-z]\.[0-9a-z]{3})\.([a-z0-9])$/
 
+        # Short subtask reference: "q7w.a" or "t.q7w.a" (suffix + subtask char)
+        SHORT_SUBTASK_REF_PATTERN = /^(?:[a-z]\.)?([0-9a-z]{3})\.([a-z0-9])$/
+
         # @param scan_results [Array<ScanResult>] Scan results to resolve against
         def initialize(scan_results)
           @scan_results = scan_results
@@ -42,9 +45,17 @@ module Ace
 
           cleaned = ref.strip.downcase
 
-          # Check for subtask reference first: "8pp.t.q7w.a"
+          # Check for full subtask reference first: "8pp.t.q7w.a"
           if (subtask_match = cleaned.match(SUBTASK_REF_PATTERN))
             return resolve_subtask(subtask_match[1], subtask_match[2])
+          end
+
+          # Check for short subtask reference: "q7w.a" or "t.q7w.a"
+          if (short_sub = cleaned.match(SHORT_SUBTASK_REF_PATTERN))
+            suffix = short_sub[1]
+            subtask_char = short_sub[2]
+            parent_result = @resolver.resolve(suffix)
+            return resolve_subtask(parent_result.id, subtask_char) if parent_result
           end
 
           normalized = normalize_ref(cleaned)
