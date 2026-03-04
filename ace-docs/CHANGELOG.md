@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.4] - 2026-03-04
+
+### Changed
+- Default docs cache directory now uses `.ace-local/docs`.
+
+
 ## [0.22.3] - 2026-03-04
 
 ### Fixed

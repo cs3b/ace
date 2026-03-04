@@ -8,7 +8,7 @@
 # Individual documents can specify paths/filters in their frontmatter
 
 # Cache directory for analysis reports
-cache_dir: .cache/ace-docs
+cache_dir: .ace-local/docs
 
 # Analysis settings for LLM integration
 llm_temperature: 0.3  # Lower for deterministic compaction
