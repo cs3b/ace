@@ -37,7 +37,7 @@ steps:
       - Follow semantic versioning conventions.
 
   - name: create-pr
-    skill: ace-git-create-pr
+    skill: ace-github-pr-create
     instructions:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review steps.
@@ -118,7 +118,7 @@ steps:
       - Force-with-lease needed because reorganize-commits rewrites history.
 
   - name: update-pr-desc
-    skill: ace-git-update-pr-desc
+    skill: ace-github-pr-update
     instructions:
       - Update PR description with final implementation summary.
       - Include released version numbers and key components.
