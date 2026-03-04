@@ -78,7 +78,7 @@ global_rules:
 
 # Cache configuration
 cache:
-  directory: ".cache/ace-docs"
+  directory: ".ace-local/docs"
   diff_retention_days: 30
   analysis_retention_days: 7
 

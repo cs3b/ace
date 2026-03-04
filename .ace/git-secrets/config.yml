@@ -45,4 +45,4 @@ whitelist:
     reason: "Test fixture - Stripe test token"
 
 output:
-  directory: .cache/ace-git-secrets
+  directory: .ace-local/git-secrets
