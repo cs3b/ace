@@ -28,7 +28,7 @@ session_dir = Ace::Core::Molecules::PromptCacheManager.create_session(
   "ace-my-gem",
   "my-operation"
 )
-# Returns: .ace-local/ace-my-gem/sessions/my-operation-20261116-143022/
+# Returns: .ace-local/my-gem/sessions/my-operation-20261116-143022/
 
 # Save prompts
 Ace::Core::Molecules::PromptCacheManager.save_system_prompt(
