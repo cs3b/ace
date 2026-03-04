@@ -166,7 +166,7 @@ module Ace
             }.join("\n")
 
             provider_model = options[:model] || config.dig("task", "doctor_agent_model") || "gemini:flash-latest"
-            cli_args_map = config.dig("task", "doctor_cli_args") || {}
+            cli_args_map = config.dig("task", "doctor", "cli_args") || {}
 
             prompt = <<~PROMPT
               The following #{remaining.size} task issues could NOT be auto-fixed and need manual intervention:
