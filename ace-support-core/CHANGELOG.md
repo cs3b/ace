@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.2] - 2026-03-04
+
+### Changed
+- PromptCacheManager session paths now use `.ace-local/<short-name>/sessions`.
+
+
 ## [0.25.1] - 2026-03-04
 
 ### Changed
