@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.14] - 2026-03-04
+
+### Fixed
+- Rebase workflow session path corrected to short-name convention (`.ace-local/git/` not `.ace-local/ace-git/`)
+
 ## [0.11.13] - 2026-03-04
 
 ### Changed
