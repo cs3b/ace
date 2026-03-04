@@ -1,0 +1,34 @@
+# ace-task default configuration
+task:
+  # Root directory for task storage
+  root_dir: .ace-tasks
+
+  # Default status for new tasks
+  default_status: pending
+
+  # File pattern for task spec files
+  file_pattern: "*.s.md"
+
+  # Prefix used to identify special folders (e.g., "_archive", "_backlog")
+  special_folder_prefix: "_"
+
+  # Status command: default limits
+  status:
+    up_next_limit: 3
+    recently_done_limit: 9
+
+  # Doctor command: LLM model for agent-assisted fix
+  doctor_agent_model: "gemini:flash-latest"
+
+  # Doctor command: CLI args per provider for agent sessions
+  doctor_cli_args:
+    gemini: "yolo"
+
+  # Plan command defaults
+  plan:
+    model: "codex:spark"
+    # Required CLI args per provider for plan generation sessions
+    cli_args:
+      claude: "--permission-mode plan"
+      codex: "--sandbox read-only"
+      gemini: "--approval-mode plan"
