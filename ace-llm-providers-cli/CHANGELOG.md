@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.4] - 2026-03-04
+
+### Fixed
+- Normalize timeout input in CLI provider capture so numeric and numeric-string values are accepted consistently for dry-run provider execution.
+
 ## [0.19.3] - 2026-02-23
 
 ### Changed
