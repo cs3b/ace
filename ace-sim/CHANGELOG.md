@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-03-04
+
+### Fixed
+- Usage docs artifact paths corrected to short-name convention (`.ace-local/sim/` not `.ace-local/ace-sim/`)
+
 ## [0.7.0] - 2026-03-04
 
 ### Changed
