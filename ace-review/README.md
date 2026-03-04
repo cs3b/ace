@@ -254,7 +254,7 @@ defaults:
 Multi-model reviews save separate files per model:
 
 ```
-.cache/ace-review/sessions/review-20251202-104235/
+.ace-local/ace-review/sessions/review-20251202-104235/
 ├── system.prompt.md
 ├── user.prompt.md
 ├── metadata.yml
@@ -368,7 +368,7 @@ The `--pr` option accepts multiple formats:
 1. **Fetches PR diff** via `gh pr diff` command
 2. **Extracts metadata** (title, state, author, etc.)
 3. **Analyzes with LLM** using your selected preset
-4. **Saves locally** to `.cache/ace-review/sessions/pr-review-{timestamp}/`
+4. **Saves locally** to `.ace-local/ace-review/sessions/pr-review-{timestamp}/`
 5. **Optionally posts** formatted review as PR comment (with `--post-comment`)
 
 ### Error Handling
@@ -385,7 +385,7 @@ PR reviews are cached locally for debugging and reference:
 
 ```bash
 # Review structure
-.cache/ace-review/sessions/pr-review-20251116-140530/
+.ace-local/ace-review/sessions/pr-review-20251116-140530/
 ├── system.prompt.md          # System prompt used
 ├── user.prompt.md            # User prompt with PR diff
 ├── metadata.yml              # Review metadata

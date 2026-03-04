@@ -27,7 +27,7 @@ module Ace
             example [
               'abc123                     # Show by full ID (latest session)',
               'abc                        # Show by partial ID (min 3 chars)',
-              'abc123 --session .cache/ace-review/sessions/review-xyz  # From specific session'
+              'abc123 --session .ace-local/review/sessions/review-xyz  # From specific session'
             ]
 
             argument :id, required: true, desc: "Feedback ID (minimum 3 characters for partial match)"
