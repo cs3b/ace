@@ -30,7 +30,7 @@ steps:
 
   - name: create-pr
     number: "030"
-    skill: ace-git-create-pr
+    skill: ace-github-pr-create
     instructions:
       - Create a pull request for the changes.
       - Include summary of all implemented tasks.
@@ -124,7 +124,7 @@ steps:
 
   - name: update-pr-desc
     number: "150"
-    skill: ace-git-update-pr-desc
+    skill: ace-github-pr-update
     instructions:
       - Update PR description with final implementation summary.
       - Include released version numbers and key components.
