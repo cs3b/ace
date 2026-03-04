@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-03-04
+
+### Technical
+- Updated cache cleanup guidance comments to reference `.ace-local/`.
+
+
 ## [0.17.0] - 2026-03-04
 
 ### Changed

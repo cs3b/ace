@@ -20,7 +20,7 @@ module Ace
       #     rm -rf .ace-local/lint/
       #   Or selectively remove reports older than N days:
       #     find .ace-local/lint -type d -mtime +7 -exec rm -rf {} +
-      #   The .cache/ directory is typically gitignored and safe to delete.
+      #   The .ace-local/ directory is typically gitignored and safe to delete.
       class ReportGenerator
         # Expected cache directory pattern for validation
         EXPECTED_CACHE_PATTERN = File.join("", ".ace-local", "lint", "").freeze
