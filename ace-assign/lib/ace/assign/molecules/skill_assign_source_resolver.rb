@@ -15,7 +15,7 @@ module Ace
       # 3) Resolve workflow file from URI
       # 4) Parse workflow assign frontmatter (sub-phases/context)
       class SkillAssignSourceResolver
-        DEFAULT_SKILL_SOURCE_PATHS = [".agents/skills", ".claude/skills"].freeze
+        DEFAULT_SKILL_SOURCE_PATHS = [".agent/skills", ".claude/skills"].freeze
         DEFAULT_WORKFLOW_SOURCE_PATHS = [
           "ace-taskflow/handbook/workflow-instructions",
           "ace-assign/handbook/workflow-instructions"

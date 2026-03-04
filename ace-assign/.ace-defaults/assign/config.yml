@@ -15,7 +15,7 @@ max_subtask_depth: 3
 
 # Skill metadata lookup roots (relative to project root unless absolute)
 skill_source_paths:
-  - ".agents/skills"
+  - ".agent/skills"
   - ".claude/skills"
 
 # Workflow lookup roots (relative to project root unless absolute)
