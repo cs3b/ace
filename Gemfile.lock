@@ -57,7 +57,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.8.1)
+    ace-git-secrets (0.8.2)
       ace-b36ts (~> 0.7)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -171,7 +171,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.43.1)
+    ace-review (0.43.2)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
