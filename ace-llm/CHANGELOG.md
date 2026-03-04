@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Plan-mode template at `tmpl://agent/plan-mode` (`ace-llm/handbook/templates/agent/plan-mode.template.md`) for reusable planning-only instruction composition.
+
 ## [0.24.6] - 2026-02-28
 
 ### Fixed
