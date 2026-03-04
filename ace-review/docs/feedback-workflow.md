@@ -96,7 +96,7 @@ ace-review-feedback list --archived
 ace-review-feedback list --format json
 
 # Use specific session
-ace-review-feedback list --session .ace-local/ace-review/sessions/review-8p2h11
+ace-review-feedback list --session .ace-local/review/sessions/review-8p2h11
 ```
 
 **Options:**
@@ -118,7 +118,7 @@ ace-review-feedback show abc123
 ace-review-feedback show abc
 
 # Use specific session
-ace-review-feedback show abc123 --session .ace-local/ace-review/sessions/review-8p2h11
+ace-review-feedback show abc123 --session .ace-local/review/sessions/review-8p2h11
 ```
 
 **Output includes:**
@@ -257,7 +257,7 @@ feedback:
 
 Feedback is stored within session directories and discovered via:
 
-1. **`--session` flag** (explicit): `ace-review-feedback list --session .ace-local/ace-review/sessions/review-8p2h11`
+1. **`--session` flag** (explicit): `ace-review-feedback list --session .ace-local/review/sessions/review-8p2h11`
 2. **`.ace-review-session` cache file**: Auto-created after reviews, remembers the latest session
 3. **Current working directory**: Fallback to pwd
 
@@ -315,7 +315,7 @@ Review sessions are stored in a cache directory and symlinked into task director
 
 ```
 # Cache directory (gitignored)
-.ace-local/ace-review/sessions/
+.ace-local/review/sessions/
   review-8p2h11/              # Session directory
     review.md                  # Review output
     review-report-*.md         # Multi-model outputs
@@ -335,8 +335,8 @@ Review sessions are stored in a cache directory and symlinked into task director
 # Task directory (tracked in git)
 task-dir/
   reviews/
-    review-8p2h11 → ../../../../../.ace-local/ace-review/sessions/review-8p2h11
-    review-8p2fo1 → ../../../../../.ace-local/ace-review/sessions/review-8p2fo1
+    review-8p2h11 → ../../../../../.ace-local/review/sessions/review-8p2h11
+    review-8p2fo1 → ../../../../../.ace-local/review/sessions/review-8p2fo1
 ```
 
 Multiple review sessions can be linked to the same task, allowing for iterative reviews across PR cycles.
@@ -350,8 +350,8 @@ Within `.ace-taskflow` task directories:
       227-feedback-architecture/
         227.s.md                    # Task spec
         reviews/                    # Symlinks to session directories
-          review-8p2h11 → ../../../../../../.ace-local/ace-review/sessions/review-8p2h11
-          review-8p2fo1 → ../../../../../../.ace-local/ace-review/sessions/review-8p2fo1
+          review-8p2h11 → ../../../../../../.ace-local/review/sessions/review-8p2h11
+          review-8p2fo1 → ../../../../../../.ace-local/review/sessions/review-8p2fo1
 ```
 
 Each symlinked session contains:
@@ -404,8 +404,8 @@ Possible causes:
 
 Solutions:
 - Run a review first to create a session
-- Specify session explicitly with `--session .ace-local/ace-review/sessions/review-xyz`
-- Ensure .ace-local/ace-review/sessions/ exists and is writable
+- Specify session explicitly with `--session .ace-local/review/sessions/review-xyz`
+- Ensure .ace-local/review/sessions/ exists and is writable
 
 Note: Feedback is stored in each session's `feedback/` directory.
 
@@ -446,12 +446,12 @@ ace-review --pr 189 --preset code-pr
 ace-review --pr 190 --preset code-pr
 
 # List all sessions
-ls -la .ace-local/ace-review/sessions/
+ls -la .ace-local/review/sessions/
 # review-8p2h11/
 # review-8p2xyz/
 
 # Work with a specific session
-ace-review-feedback list --session .ace-local/ace-review/sessions/review-8p2h11
+ace-review-feedback list --session .ace-local/review/sessions/review-8p2h11
 ```
 
 This enables:
