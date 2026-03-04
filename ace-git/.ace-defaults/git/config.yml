@@ -34,7 +34,7 @@ git:
       - "coverage/**/*"
       - "dist/**/*"
       - "build/**/*"
-      - ".cache/**/*"
+      - ".ace-local/**/*"
       # Test fixtures (static test data, not tests themselves)
       - "**/fixtures/**/*"
       - "**/testdata/**/*"
