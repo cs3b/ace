@@ -107,7 +107,7 @@ Show the user:
 
 ```
 Assignment: work-on-task-123 (8or5kx)
-Created: .ace-local/ace-assign/8or5kx/
+Created: .ace-local/assign/8or5kx/
 
 Phases: 10 total
   010: onboard [in_progress]
