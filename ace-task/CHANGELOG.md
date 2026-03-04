@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `TaskPlanPromptBuilder` now composes system prompts via section-based `ace-bundle` config using `base: tmpl://agent/plan-mode`, `workflow` (`wfi://task/plan`), `project_context` (`presets: [project]`), and repeated `repeat_instruction` guard section.
+
 ## [0.18.2] - 2026-03-04
 
 ### Fixed
