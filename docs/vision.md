@@ -92,7 +92,7 @@ ace-git-commit/
 
 🤖 **Agent integration** - a few lines wrap each CLI tool for an agent:
 
-- [`.claude/skills/ace-git-commit/SKILL.md`](../.claude/skills/ace-git-commit/SKILL.md) - only ~10 lines
+- [`.agent/skills/ace-git-commit/SKILL.md`](../.agent/skills/ace-git-commit/SKILL.md) - only ~10 lines
 
 This is the simplest ACE tool. The pattern scales to code review, task management, and documentation workflows.
 
