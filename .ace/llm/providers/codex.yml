@@ -14,11 +14,13 @@ models:
   - gpt-5.2-chat-latest
   - gpt-5.2-pro
   - gpt-5.3-codex
+  - gpt-5.3-codex-spark
 aliases:
   model:
     gpt: gpt-5.2
     max: gpt-5.1-codex-max
     codex: gpt-5.3-codex
+    spark: gpt-5.3-codex-spark
     mini: gpt-5.1-codex-mini
 capabilities:
   - text_generation
