@@ -90,7 +90,7 @@ If you were previously using `ace-prep`, update your configurations:
 2. **Update cache references** (optional - old cache will be orphaned):
    ```bash
    # In your scripts or code
-   .ace-local/ace-prep  # Old
+   .cache/ace-prep  # Old
    .ace-local/prompt-prep  # New
    ```
 
