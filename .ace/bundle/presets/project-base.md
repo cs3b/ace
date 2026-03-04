@@ -28,13 +28,10 @@ bundle:
       description: How do we organize files
       files:
         - docs/blueprint.md
-      commands:
-        - eza -T -L 3 --git-ignore
 
   commands:
     - date
     - ace-git status
-    - ace-taskflow status
 ---
 
 # Project Context
