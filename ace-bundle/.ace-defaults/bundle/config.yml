@@ -6,8 +6,8 @@
 
 bundle:
   # Cache directory for context output files
-  # Default: .cache/ace-bundle (relative to project root)
-  cache_dir: ".cache/ace-bundle"
+  # Default: .ace-local/bundle (relative to project root)
+  cache_dir: ".ace-local/bundle"
 
   # Maximum lines per chunk before splitting output into multiple files
   # Default: 2000 lines

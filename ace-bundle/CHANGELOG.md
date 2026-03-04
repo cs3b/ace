@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.11] - 2026-03-04
+
+### Changed
+- Bundle cache output now defaults to `.ace-local/bundle`; cache writes respect configured `cache_dir`.
+
+
 ## [0.31.10] - 2026-03-04
 
 ### Fixed
