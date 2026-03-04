@@ -123,7 +123,7 @@ PATH
 PATH
   remote: ace-llm
   specs:
-    ace-llm (0.24.7)
+    ace-llm (0.24.8)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
       addressable (~> 2.8)
