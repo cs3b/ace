@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.760] - 2026-03-04
+
+### Changed
+- **ace-test-runner v0.15.9**: Centralized `ace-test` report storage to `.ace-local/test/reports/<short-package>/<runid>/`, updated suite/report discovery to use configurable report roots, and retained legacy `test-reports` read fallback.
+
 ## [0.9.759] - 2026-03-04
 
 ### Fixed
