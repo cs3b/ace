@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-03-04
+
+### Added
+- New `Ace::Support::Items::Atoms::TmpWorkspace` atom for creating project-local, B36TS time-partitioned workspace directories under `.ace-local/tmp/`
+
 ## [0.14.1] - 2026-03-03
 
 ### Fixed
