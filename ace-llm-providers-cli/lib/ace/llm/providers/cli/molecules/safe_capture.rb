@@ -26,8 +26,9 @@ module Ace
             # @param cleanup_group_on_exit [Boolean] Best-effort cleanup of descendants on success
             # @return [Array(String, String, Process::Status)] [stdout, stderr, status]
             # @raise [Ace::LLM::ProviderError] on timeout
-            def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, env: nil, provider_name: "CLI",
+        def self.call(cmd, timeout:, stdin_data: nil, chdir: nil, env: nil, provider_name: "CLI",
                           isolate_process_group: true, cleanup_group_on_exit: true)
+              normalized_timeout = normalize_timeout(timeout)
               opts = {}
               opts[:chdir] = chdir if chdir
               opts[:pgroup] = true if isolate_process_group
@@ -44,17 +45,24 @@ module Ace
                 end
                 stdin.close
 
-                out_reader = Thread.new { stdout.read }
-                err_reader = Thread.new { stderr.read }
+                out_reader = Thread.new { safe_read_stream(stdout) }
+                err_reader = Thread.new { safe_read_stream(stderr) }
+                out_reader.report_on_exception = false
+                err_reader.report_on_exception = false
 
-                unless wait_thr.join(timeout)
+                unless wait_thr.join(normalized_timeout)
                   # Timeout: kill subprocess group (and descendants), then clean up
                   terminate_subprocess_tree(pid: pid, pgid: pgid, provider_name: provider_name)
                   wait_thr.join(5)
-                  out_reader.kill
-                  err_reader.kill
+
+                  stdout.close unless stdout.closed?
+                  stderr.close unless stderr.closed?
+                  out_reader.join(1)
+                  err_reader.join(1)
+                  out_reader.kill if out_reader.alive?
+                  err_reader.kill if err_reader.alive?
                   raise Ace::LLM::ProviderError,
-                    "#{provider_name} CLI execution timed out after #{timeout} seconds"
+                    "#{provider_name} CLI execution timed out after #{normalized_timeout} seconds"
                 end
 
                 status = wait_thr.value
@@ -68,6 +76,24 @@ module Ace
 
             class << self
               private
+
+              def safe_read_stream(io)
+                io.read
+              rescue IOError
+                ""
+              end
+
+              def normalize_timeout(value)
+                return value if value.is_a?(Numeric) && value.finite?
+
+                normalized = value.to_s.strip
+                normalized_timeout = Float(normalized)
+                raise ArgumentError, "timeout must be positive" unless normalized_timeout.positive?
+
+                normalized_timeout
+              rescue ArgumentError, TypeError
+                raise ArgumentError, "timeout must be a positive numeric value, got #{value.inspect}"
+              end
 
               def terminate_subprocess_tree(pid:, pgid:, provider_name:)
                 debug_log(provider_name, "timeout cleanup pid=#{pid} pgid=#{pgid || "n/a"}")

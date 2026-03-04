@@ -126,10 +126,10 @@ module Ace
               end
             end
 
-            def test_timeout_cleanup_terminates_background_descendants
-              Dir.mktmpdir do |dir|
-                pid_file = File.join(dir, "child.pid")
-                escaped = Shellwords.escape(pid_file)
+    def test_timeout_cleanup_terminates_background_descendants
+      Dir.mktmpdir do |dir|
+        pid_file = File.join(dir, "child.pid")
+        escaped = Shellwords.escape(pid_file)
 
                 error = assert_raises(Ace::LLM::ProviderError) do
                   SafeCapture.call(
@@ -149,6 +149,20 @@ module Ace
               end
             end
 
+            def test_timeout_accepts_numeric_string
+              error = assert_raises(Ace::LLM::ProviderError) do
+                SafeCapture.call(["sleep", "60"], timeout: "1", provider_name: "Test")
+              end
+
+              assert_match(/Test CLI execution timed out after 1(\.0+)? seconds/, error.message)
+            end
+
+            def test_timeout_rejects_non_numeric_string
+              assert_raises(ArgumentError) do
+                SafeCapture.call(["sleep", "60"], timeout: "bad", provider_name: "Test")
+              end
+            end
+
             def test_debug_logging_emits_lifecycle_markers
               old_env = ENV["ACE_LLM_DEBUG_SUBPROCESS"]
               old_stderr = $stderr
@@ -162,6 +176,25 @@ module Ace
               assert_includes output, "[SafeCapture][DebugProvider] spawn"
             ensure
               ENV["ACE_LLM_DEBUG_SUBPROCESS"] = old_env
+              $stderr = old_stderr
+            end
+
+            def test_timeout_does_not_emit_closed_stream_errors
+              old_stderr = $stderr
+              stderr_io = StringIO.new
+              $stderr = stderr_io
+
+              error = assert_raises(Ace::LLM::ProviderError) do
+                SafeCapture.call(
+                  ["ruby", "-e", "STDOUT.puts('stdout'); STDERR.puts('stderr'); sleep 10"],
+                  timeout: 1,
+                  provider_name: "Test"
+                )
+              end
+
+              assert_match(/Test CLI execution timed out after 1 seconds/, error.message)
+              assert_empty stderr_io.string
+            ensure
               $stderr = old_stderr
             end
 
