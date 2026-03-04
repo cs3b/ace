@@ -64,7 +64,7 @@ get_target_branch() {
 # Helper: Recover session variables (for multi-shell workflows)
 recover_session() {
   if [ -n "$cache_dir" ]; then return; fi
-  sessions=($(ls -td .cache/ace-git/*-rebase 2>/dev/null))
+  sessions=($(ls -td .ace-local/ace-git/*-rebase 2>/dev/null))
   if [ ${#sessions[@]} -eq 0 ]; then
     echo "ERROR: No rebase sessions found"; exit 1
   elif [ ${#sessions[@]} -eq 1 ]; then
@@ -104,7 +104,7 @@ target_branch="${target_branch:-$(get_target_branch)}"
 
 # Generate session ID and cache directory
 session_id=$(ace-b36ts encode now)
-cache_dir=".cache/ace-git/${session_id}-rebase"
+cache_dir=".ace-local/ace-git/${session_id}-rebase"
 mkdir -p "$cache_dir"
 export cache_dir session_id target_branch
 
@@ -302,10 +302,10 @@ git push --force-with-lease origin "HEAD:refs/heads/$(git branch --show-current)
 
 ```bash
 # Find session
-ls -td .cache/ace-git/*-rebase/ | head -5
+ls -td .ace-local/ace-git/*-rebase/ | head -5
 
 # Set variables
-cache_dir=$(ls -td .cache/ace-git/*-rebase 2>/dev/null | head -1)
+cache_dir=$(ls -td .ace-local/ace-git/*-rebase 2>/dev/null | head -1)
 cat "$cache_dir/metadata.yml"
 
 # Reset to original HEAD
@@ -320,7 +320,7 @@ git reset --hard "$original_head"
 rm -rf "$cache_dir"
 
 # Clean sessions older than 7 days
-find .cache/ace-git -name "*-rebase" -type d -mtime +7 -exec rm -rf {} +
+find .ace-local/ace-git -name "*-rebase" -type d -mtime +7 -exec rm -rf {} +
 ```
 
 ---
@@ -357,7 +357,7 @@ git rebase -i "$target_branch"
 
 ## Success Criteria
 
-- State captured to `.cache/ace-git/{id}-rebase/`
+- State captured to `.ace-local/ace-git/{id}-rebase/`
 - Branch rebased on target (simple or cherry-pick)
 - Stats verified (or --no-verify)
 - Tests pass
