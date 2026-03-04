@@ -9,6 +9,7 @@ require_relative "cli/commands/list"
 require_relative "cli/commands/update"
 require_relative "cli/commands/doctor"
 require_relative "cli/commands/status"
+require_relative "cli/commands/plan"
 
 module Ace
   module Task
@@ -24,7 +25,8 @@ module Ace
         ["list",   "List tasks"],
         ["update", "Update task metadata (fields, move, reparent)"],
         ["doctor", "Run health checks on tasks"],
-        ["status", "Show task status overview"]
+        ["status", "Show task status overview"],
+        ["plan",   "Resolve or generate implementation plan"]
       ].freeze
 
       HELP_EXAMPLES = [
@@ -40,7 +42,10 @@ module Ace
         "ace-task doctor",
         "ace-task doctor --auto-fix --dry-run",
         "ace-task status",
-        "ace-task status --up-next-limit 5"
+        "ace-task status --up-next-limit 5",
+        "ace-task plan q7w",
+        "ace-task plan q7w --refresh",
+        "ace-task plan q7w --content"
       ].freeze
 
       register "create", CLI::Commands::Create
@@ -49,6 +54,7 @@ module Ace
       register "update", CLI::Commands::Update
       register "doctor", CLI::Commands::Doctor
       register "status", CLI::Commands::Status
+      register "plan",   CLI::Commands::Plan
 
       version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(
         gem_name: "ace-task",

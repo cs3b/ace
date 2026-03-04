@@ -337,7 +337,7 @@ All code implementation happens during `/ace-task-work` (status: in-progress).
 * No implementation details mixed with behavioral requirements
 * Clear handoff to review-task for readiness validation and promotion to pending
 * **REQUIRED when drafting from ideas:**
-  * All source idea files marked as done and moved to ideas/done/ directory
+  * All source idea files marked as done via `ace-idea move <id> --to archive`
   * Task references updated to new idea file locations
   * Git movements properly committed
 
