@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.754] - 2026-03-04
+
+### Fixed
+- **ace-task v0.20.1**: Restored backward-compatible legacy `doctor_cli_args` fallback behavior while using nested `task.doctor.cli_args`.
+- **ace-idea v0.13.1**: Restored backward-compatible legacy `doctor_cli_args` fallback behavior while using nested `idea.doctor.cli_args`.
+- **ace-retro v0.10.1**: Restored backward-compatible legacy `doctor_cli_args` fallback behavior while using nested `retro.doctor.cli_args`.
+- **ace-test-runner-e2e v0.21.1**: Preserved external `required_cli_args` string contract and introduced `required_cli_args_list` normalization for internal execution.
+
+### Changed
+- **ace-task v0.20.1**: Preserved codex shorthand default compatibility (`full-auto` and `dangerously-bypass-approvals-and-sandbox`) and consolidated related changelog sectioning.
+
 ## [0.9.753] - 2026-03-04
 
 ### Changed
