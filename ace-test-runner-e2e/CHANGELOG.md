@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-03-04
+
+### Changed
+- Preserved `required_cli_args` string compatibility for external callers and added array-normalized internal usage via `required_cli_args_list`.
+
 ## [0.21.0] - 2026-03-04
 
 ### Changed

@@ -10,6 +10,13 @@ module Ace
         # deterministic runner/verifier pipeline.
         # Provider lists and CLI args are configurable via config.yml.
         class CliProviderAdapter
+          # Legacy shorthand values that still appear in existing configs and should map
+          # to explicit flags for deterministic command behavior.
+          CLI_ARG_ALIAS = {
+            "full-auto" => ["--sandbox danger-full-access", "--ask-for-approval never"],
+            "dangerously-bypass-approvals-and-sandbox" => ["--sandbox danger-full-access", "--ask-for-approval never"]
+          }.freeze
+
           # @param config [Hash] Configuration hash (string keys) with providers section
           def initialize(config = {})
             @cli_providers = config.dig("providers", "cli") || %w[claude gemini codex codexoss opencode pi]
@@ -38,7 +45,7 @@ module Ace
           # Get required CLI args for a provider
           #
           # @param provider_string [String] Provider:model string
-          # @return [String, nil] Required CLI args or nil
+          # @return [String, nil] Required CLI args as a legacy string
           def self.required_cli_args(provider_string)
             default_instance.required_cli_args(provider_string)
           end
@@ -55,11 +62,53 @@ module Ace
           # Instance method: get required CLI args for a provider
           #
           # @param provider_string [String] Provider:model string
-          # @return [Array<String>, nil] Required CLI args or nil
+          # @return [String, nil] Required CLI args as a legacy string
           def required_cli_args(provider_string)
             name = self.class.provider_name(provider_string)
-            value = @cli_args_map[name]
-            value.nil? ? nil : Array(value).map(&:to_s)
+            args = required_cli_args_list_from(name)
+            return nil if args.nil?
+
+            args.join(" ")
+          end
+
+          # @return [Array<String>, nil] Required CLI args as an array
+          def required_cli_args_list(provider_string)
+            name = self.class.provider_name(provider_string)
+            required_cli_args_list_from(name)
+          end
+
+          private
+
+          def required_cli_args_list_from(provider_name)
+            value = @cli_args_map[provider_name]
+            return nil if value.nil?
+
+            args = Array(value).map(&:to_s).map(&:strip).reject(&:empty?)
+            return nil if args.empty?
+
+            return CLI_ARG_ALIAS[args.first] if args.length == 1 && CLI_ARG_ALIAS.key?(args.first)
+
+            args
+          end
+
+          def build_execution_prompt(command:, tc_mode:)
+            return_contract = if tc_mode
+              "- **Test ID**: ...\n- **TC ID**: ...\n- **Status**: pass | fail\n- **Report Paths**: ...\n- **Issues**: ..."
+            else
+              "- **Test ID**: ...\n- **Status**: pass | fail | partial\n- **Passed**: ...\n- **Failed**: ...\n- **Total**: ...\n- **Report Paths**: ...\n- **Issues**: ..."
+            end
+
+            <<~PROMPT.strip
+              Run this as a slash command in the agent chat interface (not in bash):
+              #{command}
+
+              Execution requirements:
+              - Do not run `/ace-...` inside a shell command.
+              - If slash commands are unavailable, stop and report that limitation in `Issues`.
+              - Write reports under `.cache/ace-test-e2e/*-reports/`.
+              - Return only this structured summary:
+              #{return_contract}
+            PROMPT
           end
 
           # Build a skill invocation prompt for scenario-level execution
@@ -159,25 +208,6 @@ module Ace
 
           private
 
-          def build_execution_prompt(command:, tc_mode:)
-            return_contract = if tc_mode
-              "- **Test ID**: ...\n- **TC ID**: ...\n- **Status**: pass | fail\n- **Report Paths**: ...\n- **Issues**: ..."
-            else
-              "- **Test ID**: ...\n- **Status**: pass | fail | partial\n- **Passed**: ...\n- **Failed**: ...\n- **Total**: ...\n- **Report Paths**: ...\n- **Issues**: ..."
-            end
-
-            <<~PROMPT.strip
-              Run this as a slash command in the agent chat interface (not in bash):
-              #{command}
-
-              Execution requirements:
-              - Do not run `/ace-...` inside a shell command.
-              - If slash commands are unavailable, stop and report that limitation in `Issues`.
-              - Write reports under `.cache/ace-test-e2e/*-reports/`.
-              - Return only this structured summary:
-              #{return_contract}
-            PROMPT
-          end
         end
 
         # Backward-compatible alias while callers migrate off the legacy name.

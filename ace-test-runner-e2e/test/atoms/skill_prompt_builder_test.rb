@@ -66,11 +66,11 @@ class SkillPromptBuilderTest < Minitest::Test
   # --- Required CLI Args ---
 
   def test_required_cli_args_for_claude
-    assert_equal ["dangerously-skip-permissions"], SkillPromptBuilder.required_cli_args("claude:sonnet")
+    assert_equal "dangerously-skip-permissions", SkillPromptBuilder.required_cli_args("claude:sonnet")
   end
 
   def test_required_cli_args_for_codex
-    assert_equal ["--sandbox danger-full-access", "--ask-for-approval never"], SkillPromptBuilder.required_cli_args("codex:latest")
+    assert_equal "--sandbox danger-full-access --ask-for-approval never", SkillPromptBuilder.required_cli_args("codex:latest")
   end
 
   def test_required_cli_args_nil_for_gemini
@@ -94,14 +94,14 @@ class SkillPromptBuilderTest < Minitest::Test
 
     assert builder.cli_provider?("custom-cli:model")
     refute builder.cli_provider?("claude:sonnet")
-    assert_equal ["auto-mode"], builder.required_cli_args("custom-cli:model")
+    assert_equal "auto-mode", builder.required_cli_args("custom-cli:model")
   end
 
   def test_empty_config_uses_defaults
     builder = SkillPromptBuilder.new({})
 
     assert builder.cli_provider?("claude:sonnet")
-    assert_equal ["dangerously-skip-permissions"], builder.required_cli_args("claude:sonnet")
+    assert_equal "dangerously-skip-permissions", builder.required_cli_args("claude:sonnet")
   end
 
   def test_required_cli_args_supports_array_and_string_config_values
@@ -114,8 +114,22 @@ class SkillPromptBuilderTest < Minitest::Test
       }
     )
 
-    assert_equal ["--sandbox danger-full-access", "--ask-for-approval never"], builder.required_cli_args("codex:latest")
-    assert_equal ["dangerously-skip-permissions"], builder.required_cli_args("claude:sonnet")
+    assert_equal "--sandbox danger-full-access --ask-for-approval never", builder.required_cli_args("codex:latest")
+    assert_equal "dangerously-skip-permissions", builder.required_cli_args("claude:sonnet")
+  end
+
+  def test_required_cli_args_list_supports_array_and_string_config_values
+    builder = SkillPromptBuilder.new(
+      "providers" => {
+        "cli_args" => {
+          "codex" => ["--sandbox danger-full-access", "--ask-for-approval never"],
+          "claude" => "dangerously-skip-permissions"
+        }
+      }
+    )
+
+    assert_equal ["--sandbox danger-full-access", "--ask-for-approval never"], builder.required_cli_args_list("codex:latest")
+    assert_equal ["dangerously-skip-permissions"], builder.required_cli_args_list("claude:sonnet")
   end
 
   # --- Skill Name Coupling (guards against rename drift) ---
