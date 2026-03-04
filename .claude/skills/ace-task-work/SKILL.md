@@ -20,20 +20,6 @@ assign:
   source: wfi://task/work
 ---
 
-## Load Project Info
+## Instructions
 
-- read and run `ace-bundle project`
-
-## Do the Work
-
-- read and run `ace-bundle wfi://task/work` with earlier defined task
-
-## Report
-
-Return a structured summary to the parent agent:
-
-- **Task**: task ID and title
-- **Status**: completed | partial | blocked
-- **Changes**: list of files modified and what changed
-- **Commits**: commit hashes and messages created during this session
-- **Issues**: any problems encountered or deferred decisions
+- read and run `ace-bundle wfi://task/work`
