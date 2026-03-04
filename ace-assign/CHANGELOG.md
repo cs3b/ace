@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-03-04
+
+### Fixed
+- Workflow instructions (create, drive, start) corrected to use `.ace-local/assign/` path (not `.ace-local/ace-assign/`)
+
 ## [0.17.1] - 2026-03-04
 
 ### Fixed
