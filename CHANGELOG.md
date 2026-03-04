@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Changed
+- **ace-task v0.20.0**: Renamed doctor CLI config to nested `task.doctor.cli_args` and switched provider args to arrays in `task`/`idea`/`retro` docs and runtime paths.
+- **ace-idea v0.13.0**: Renamed doctor CLI config to nested `idea.doctor.cli_args` and switched provider args to arrays.
+- **ace-retro v0.10.0**: Renamed doctor CLI config to nested `retro.doctor.cli_args` and switched provider args to arrays.
+
 ## [0.9.752] - 2026-03-04
 
 ### Changed
