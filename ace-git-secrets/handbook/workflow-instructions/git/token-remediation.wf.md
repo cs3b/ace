@@ -41,7 +41,7 @@ ace-git-secrets provides:
 
 1. **Scan Git history for tokens:**
    ```bash
-   # Full history scan (saves report to .ace-local/ace-git-secrets/)
+   # Full history scan (saves report to .ace-local/git-secrets/)
    ace-git-secrets scan
 
    # Scan with verbose table output
@@ -55,7 +55,7 @@ ace-git-secrets provides:
    ```
 
    The scan automatically saves a JSON report with raw token values to
-   `.ace-local/ace-git-secrets/<timestamp>-report.json`. This report can be
+   `.ace-local/git-secrets/<timestamp>-report.json`. This report can be
    reused for revocation and history rewriting without rescanning.
 
 2. **Review scan results:**
@@ -140,7 +140,7 @@ ace-git-secrets provides:
    ace-git-secrets revoke
 
    # Revoke from saved scan file (faster, no rescan needed)
-   ace-git-secrets revoke --scan-file .ace-local/ace-git-secrets/<timestamp>-report.json
+   ace-git-secrets revoke --scan-file .ace-local/git-secrets/<timestamp>-report.json
 
    # Revoke specific service only
    ace-git-secrets revoke --service github
@@ -180,7 +180,7 @@ ace-git-secrets provides:
    ace-git-secrets rewrite-history
 
    # From saved scan file (faster, consistent with revocation)
-   ace-git-secrets rewrite-history --scan-file .ace-local/ace-git-secrets/<timestamp>-report.json
+   ace-git-secrets rewrite-history --scan-file .ace-local/git-secrets/<timestamp>-report.json
 
    # Force mode (skip confirmation - use with caution)
    ace-git-secrets rewrite-history --force
