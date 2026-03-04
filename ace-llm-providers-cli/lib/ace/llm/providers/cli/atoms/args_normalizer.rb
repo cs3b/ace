@@ -15,7 +15,7 @@ module Ace
                 if cli_args.is_a?(String)
                   Shellwords.split(cli_args)
                 else
-                  Array(cli_args)
+                  Array(cli_args).flat_map { |a| Shellwords.split(a.to_s) }
                 end
               rescue ArgumentError => e
                 raise ArgumentError, "Malformed --cli-args '#{cli_args}': #{e.message}"
