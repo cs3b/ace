@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.1] - 2026-03-04
+
+### Changed
+- Remove dependency on `ace-b36ts` and `ace-support-items` (no longer needed after moving `TmpWorkspace` to `ace-support-items`)
+
 ## [0.25.0] - 2026-02-26
 
 ### Added
