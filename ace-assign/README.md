@@ -74,10 +74,10 @@ phases:
 
 ## Assignment Storage
 
-Assignments are stored in `.cache/ace-assign/<assignment-id>/`:
+Assignments are stored in `.ace-local/ace-assign/<assignment-id>/`:
 
 ```
-.cache/ace-assign/8or5kx/
+.ace-local/ace-assign/8or5kx/
 ├── assignment.yaml               # Assignment metadata
 ├── phases/                       # Phase files (.ph.md extension)
 │   ├── 010-init.ph.md           # done
