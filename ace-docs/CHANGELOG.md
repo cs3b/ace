@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.3] - 2026-03-04
+
+### Fixed
+- `docs/update.wf.md` workflow instruction corrected to short-name path convention (`.ace-local/docs/` not `.ace-local/ace-docs/`)
+
 ## [0.22.2] - 2026-03-04
 
 ### Fixed
