@@ -26,7 +26,7 @@ ace-prompt-prep setup --force            # Alias for --no-archive
 ```
 
 **Behavior:**
-- Creates `{project_root}/.cache/ace-prompt-prep/prompts/the-prompt.md`
+- Creates `{project_root}/.ace-local/ace-prompt-prep/prompts/the-prompt.md`
 - Archives existing prompt by default (to `archive/{base36_id}.md`)
 - Resolves templates via ace-nav `tmpl://` protocol
 
@@ -83,7 +83,7 @@ ace-prompt-prep -v
 All files relative to project root:
 
 ```
-{project_root}/.cache/ace-prompt-prep/prompts/
+{project_root}/.ace-local/ace-prompt-prep/prompts/
 ├── the-prompt.md           # Active prompt
 ├── _previous.md            # Symlink to latest archive
 └── archive/

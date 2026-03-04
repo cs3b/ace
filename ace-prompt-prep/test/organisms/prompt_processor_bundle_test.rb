@@ -56,7 +56,7 @@ class PromptProcessorBundleTest < Minitest::Test
 
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       # Read the prompt
-      prompt_path = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts', 'the-prompt.md')
+      prompt_path = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts', 'the-prompt.md')
       content = File.read(prompt_path)
 
       # Extract frontmatter
@@ -179,7 +179,7 @@ class PromptProcessorBundleTest < Minitest::Test
   private
 
   def create_prompt_with_frontmatter
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -194,7 +194,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_prompt_without_frontmatter
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -202,7 +202,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_complex_frontmatter_prompt
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -225,7 +225,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_prompt_with_invalid_bundle
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -242,7 +242,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_prompt_with_nonexistent_file_bundle
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -258,7 +258,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_prompt_with_bundle_disabled
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -274,7 +274,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_prompt_with_empty_bundle
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -289,7 +289,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_prompt_with_malformed_frontmatter
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')
@@ -305,7 +305,7 @@ class PromptProcessorBundleTest < Minitest::Test
   end
 
   def create_prompt_with_command_bundle
-    prompt_dir = File.join(@tmpdir, '.cache', 'ace-prompt-prep', 'prompts')
+    prompt_dir = File.join(@tmpdir, '.ace-local', 'prompt-prep', 'prompts')
     FileUtils.mkdir_p(prompt_dir)
 
     prompt_path = File.join(prompt_dir, 'the-prompt.md')

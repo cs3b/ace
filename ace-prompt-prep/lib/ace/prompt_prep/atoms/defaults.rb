@@ -4,7 +4,7 @@ module Ace
   module PromptPrep
     # Shared default constants for ace-prompt-prep
     module Defaults
-      DEFAULT_CACHE_DIR = ".cache/ace-prompt-prep"
+      DEFAULT_CACHE_DIR = ".ace-local/prompt-prep"
     end
   end
 end

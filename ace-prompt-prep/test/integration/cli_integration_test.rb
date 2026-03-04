@@ -9,8 +9,8 @@ require "ace/git"
 class CLIIntegrationTest < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir
-    @prompt_dir = File.join(@tmpdir, ".cache/ace-prompt-prep/prompts")
-    @archive_dir = File.join(@tmpdir, ".cache/ace-prompt-prep/prompts/archive")
+    @prompt_dir = File.join(@tmpdir, ".ace-local/prompt-prep/prompts")
+    @archive_dir = File.join(@tmpdir, ".ace-local/prompt-prep/prompts/archive")
     FileUtils.mkdir_p(@prompt_dir)
     @prompt_file = File.join(@prompt_dir, "the-prompt.md")
     @prompt_content = "Review this code for security issues"
