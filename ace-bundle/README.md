@@ -318,7 +318,7 @@ presets.each { |p| puts p[:name] }
 The `--output` flag controls where context is written:
 
 - `stdio` - Output to terminal (default for most presets)
-- `cache` - Save to `.cache/ace-bundle/[preset].md`
+- `cache` - Save to `.ace-local/ace-bundle/[preset].md`
 - `/path/to/file.md` - Save to specific file
 
 Each preset can define its default output mode in the `params.output` field.
