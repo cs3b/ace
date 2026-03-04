@@ -75,6 +75,36 @@ module Ace
         assert_equal 30.0, config.max_total_timeout
       end
 
+      def test_normalizes_numeric_timeout_string_for_query
+        captured_timeout = nil
+
+        QueryInterface.stub(
+          :execute_with_fallback,
+          ->(**kwargs) do
+            captured_timeout = kwargs[:timeout]
+            {}
+          end
+        ) do
+          Molecules::ConfigLoader.stub(:get, ->(path) { path == "llm.timeout" ? "600" : {} }) do
+            QueryInterface.query("google:gemini-2.5-flash", "test prompt", timeout: "600")
+          end
+        end
+
+        assert_equal 600.0, captured_timeout
+      end
+
+      def test_invalid_timeout_string_raises_argument_error
+        assert_raises(ArgumentError) do
+          with_config_fallback(nil) do
+            QueryInterface.query(
+              "google:gemini-2.5-flash",
+              "test prompt",
+              timeout: "invalid"
+            )
+          end
+        end
+      end
+
       def test_load_fallback_config_from_configuration
         config = with_config_fallback(
           "enabled" => false,

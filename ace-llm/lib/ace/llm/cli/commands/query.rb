@@ -198,6 +198,7 @@ module Ace
           prompt_text = file_handler.read_content(@prompt)
           system_text = options[:system] ? file_handler.read_content(options[:system]) : nil
           system_append_text = options[:system_append] ? file_handler.read_content(options[:system_append]) : nil
+          normalized_timeout = normalize_timeout(options[:timeout])
 
           # If --model was used as provider_model fallback (no positional provider), avoid passing it twice.
           resolved_model_override = @model_from_option ? nil : options[:model]
@@ -207,7 +208,7 @@ module Ace
             temperature: options[:temperature],
             max_tokens: options[:max_tokens],
             system: system_text,
-            timeout: options[:timeout],
+            timeout: normalized_timeout,
             debug: options[:debug],
             model: resolved_model_override,
             cli_args: options[:cli_args],
@@ -292,6 +293,16 @@ module Ace
         # @return [nil]
         def error_output(message)
           $stderr.puts "Error: #{message}"
+        end
+
+        def normalize_timeout(value)
+          return nil if value.nil?
+          return value if value.is_a?(Numeric)
+
+          normalized = value.to_s.strip
+          Float(normalized)
+        rescue ArgumentError
+          raise ArgumentError, "timeout must be numeric, got #{value.inspect}"
         end
       end
     end
