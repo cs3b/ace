@@ -149,7 +149,7 @@ whitelist:
 output:
   format: table
   mask_tokens: true
-  directory: .ace-local/ace-git-secrets
+  directory: .ace-local/git-secrets
 
 # GitHub Enterprise support
 github:
