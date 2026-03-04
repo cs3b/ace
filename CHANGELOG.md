@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.741] - 2026-03-04
+
+### Added
+- **ace-task v0.18.3**: Add `task.plan.cli_args` for strict per-provider CLI argument passthrough during `ace-task plan`.
+- **ace-llm v0.24.7**: Add reusable `tmpl://agent/plan-mode` template for planning-only prompt composition.
+
+### Changed
+- **ace-task v0.18.3**: Compose plan system prompts via section-based `ace-bundle` config (`base` + `workflow` + `project_context` + repeated guard section).
+- **ace-task v0.18.3**: Pass provider-specific CLI args from config to `ace-llm` and harden planning contracts against permission/escalation or status-only output.
+- **ace-llm v0.24.7**: Strengthen plan-mode template contract with explicit required headings and stricter output prohibitions.
+
 ## [0.9.740] - 2026-03-04
 
 ### Added
