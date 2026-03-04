@@ -9,7 +9,7 @@ defaults:
   reporter: progress
 
   # Directory to save test reports (relative to project root)
-  report_dir: test-reports
+  report_dir: .ace-local/test/reports
 
   # Whether to save detailed reports to disk
   save_reports: true

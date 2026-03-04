@@ -168,6 +168,7 @@ test_suite:
   test_options:
     format: compact
     save_reports: true
+    report_dir: .ace-local/test/reports
     fail_fast: false
 
   # Display options
