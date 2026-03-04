@@ -2,6 +2,6 @@
 
 module Ace
   module Git
-    VERSION = "0.11.13"
+    VERSION = "0.11.14"
   end
 end
