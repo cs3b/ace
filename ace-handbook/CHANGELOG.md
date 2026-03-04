@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.9] - 2026-03-04
+
+### Changed
+- Update `perform-delivery` workflow PR skill references from `/ace-git-create-pr` to `/ace-github-pr-create`
+
 ## [0.9.8] - 2026-02-25
 
 ### Changed
