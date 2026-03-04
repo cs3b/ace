@@ -59,4 +59,4 @@ subject:
         files:
           - "lib/**/*.rb"
 
-model: "google:gemini-2.5-flash"
+model: "codex:codex"
