@@ -206,6 +206,12 @@ module Ace
 
           def provider_cli_args(provider_model, cli_args_map)
             return nil if cli_args_map.nil? || cli_args_map.empty?
+            return nil if provider_model.nil? || provider_model.strip.empty?
+
+            raw_provider = provider_model.split(":", 2).first
+            direct_match = cli_args_map[raw_provider]
+            return direct_match if direct_match
+
             require "ace/llm"
             parser = Ace::LLM::Molecules::ProviderModelParser.new
             result = parser.parse(provider_model)
