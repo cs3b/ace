@@ -90,6 +90,32 @@ module Ace
             config_loader.protocol_type(protocol_name) == "cmd"
           end
 
+          # Resolve a cmd-type protocol URI by running its command and capturing stdout
+          # Used by tools that need to programmatically obtain the resolved path
+          # @param uri_string [String] e.g., "task://8c0.t.05p"
+          # @return [String, nil] captured stdout (path), or nil on failure
+          def resolve_cmd_to_path(uri_string)
+            protocol, reference = uri_string.split("://", 2)
+            return nil unless cmd_protocol?(protocol)
+
+            protocol_config = config_loader.load_protocol_config(protocol)
+            command_template = protocol_config["command_template"]
+            return nil unless command_template
+
+            require "open3"
+            require "shellwords"
+            require "timeout"
+            args = Shellwords.split(command_template.gsub("%{ref}", Shellwords.escape(reference)))
+            stdout, status = Timeout.timeout(10) { Open3.capture2(*args) }
+            return nil unless status.success?
+
+            result = stdout.strip
+            result.empty? ? nil : result
+          rescue Timeout::Error
+            warn "Warning: cmd protocol timed out for '#{uri_string}'"
+            nil
+          end
+
           private
 
           def format_as_list(resources)
