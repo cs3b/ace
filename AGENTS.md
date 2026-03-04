@@ -15,7 +15,7 @@ Always run `ace-*` commands via `mise exec --` so the repo PATH/env is applied.
   - redirects: `>`, `>>`, `2>`, `&>`
   - post-processors: `head`, `tail`, `grep`, `awk`, `sed`, `tee`, `xargs`
   - command substitution/backgrounding: `$()`, backticks, trailing `&`
-- **MUST** read referenced output files directly when an `ace-*` command prints a path (for example `.ace-local/ace-bundle/project.md`)
+- **MUST** read referenced output files directly when an `ace-*` command prints a path (for example `.ace-local/bundle/project.md`)
 - **MUST NOT** create extra temp capture files for `ace-*` output (including in `/tmp` or `.cache`) unless user explicitly asks for export/logging
 - If a violation happens, rerun the command in compliant form immediately and continue from the canonical output
 
@@ -73,6 +73,6 @@ When creating temporary files (debugging output, environment captures, test arti
 - **Do NOT** write temporary files to the project root directory
 - **DO** use one of these locations:
   - `/tmp/` - For system temporary files
-  - `.cache/<subfolder>/` - For project-specific cached data (e.g., `.ace-local/ace-test-e2e/`)
+  - `.ace-local/<subfolder>/` - For project-specific cached data (e.g., `.ace-local/test-e2e/`)
 
 This prevents accidental commits and keeps the repository clean.
