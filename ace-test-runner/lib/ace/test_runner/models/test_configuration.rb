@@ -13,7 +13,7 @@ module Ace
 
         def initialize(attributes = {})
           @format = attributes[:format] || "progress"  # Default to per-test progress
-          @report_dir = attributes[:report_dir] || "test-reports"
+          @report_dir = attributes[:report_dir] || ".ace-local/test/reports"
           @save_reports = attributes.fetch(:save_reports, true)
           @fail_fast = attributes[:fail_fast] || false
           @verbose = attributes[:verbose] || false
@@ -147,8 +147,16 @@ module Ace
           if Dir.exist?(dir)
             File.writable?(dir)
           else
-            parent_dir = File.dirname(dir)
-            Dir.exist?(parent_dir) && File.writable?(parent_dir)
+            nearest_existing = dir
+            loop do
+              parent = File.dirname(nearest_existing)
+              break if parent == nearest_existing
+
+              nearest_existing = parent
+              break if Dir.exist?(nearest_existing)
+            end
+
+            Dir.exist?(nearest_existing) && File.writable?(nearest_existing)
           end
         end
       end

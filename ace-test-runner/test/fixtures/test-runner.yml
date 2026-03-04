@@ -17,4 +17,4 @@ defaults:
   color: auto
   fail_fast: false
   save_reports: true
-  report_dir: test-reports
+  report_dir: .ace-local/test/reports

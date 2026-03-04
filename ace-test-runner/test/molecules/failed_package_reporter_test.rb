@@ -11,9 +11,11 @@ module Ace
         def setup
           @temp_dir = Dir.mktmpdir
           @package_path = File.join(@temp_dir, "my-package")
-          @reports_dir = File.join(@package_path, "test-reports", "latest")
+          FileUtils.mkdir_p(@package_path)
+          @report_root = File.join(@temp_dir, ".ace-local", "test", "reports")
+          @reports_dir = File.join(@report_root, "my-package", "latest")
           FileUtils.mkdir_p(@reports_dir)
-          @package = { path: @package_path }
+          @package = { path: @package_path, name: "ace-my-package", report_root: @report_root }
         end
 
         def teardown
@@ -34,7 +36,7 @@ module Ace
           
           output = FailedPackageReporter.format_for_display(@package)
           
-          assert_match(/→ Check .*test-reports\/ for details/, output)
+          assert_match(/→ Check .*\.ace-local\/test\/reports\/my-package\/ for details/, output)
         end
 
         def test_format_for_markdown_with_existing_report
@@ -48,7 +50,7 @@ module Ace
         def test_format_for_markdown_fallback
           output = FailedPackageReporter.format_for_markdown(@package)
           
-          assert_match(/- Report: Check `.*test-reports\/` for details/, output)
+          assert_match(/- Report: Check `.*\.ace-local\/test\/reports\/my-package\/` for details/, output)
         end
 
         def test_format_for_display_handles_relative_path_error

@@ -7,6 +7,7 @@
 /spec/reports/
 /tmp/
 /test-reports/
+/.ace-local/
 
 # rspec failure tracking
 .rspec_status
