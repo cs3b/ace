@@ -158,7 +158,7 @@ module Ace
             end
 
             # Create session directory for analysis
-            cache_dir = Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
+            cache_dir = Ace::Docs.config["cache_dir"] || ".ace-local/docs"
             compact_id = Ace::B36ts.encode(Time.now)
             session_dir = File.join(cache_dir, "analyze-#{compact_id}")
             FileUtils.mkdir_p(session_dir)
