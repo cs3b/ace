@@ -167,7 +167,7 @@ module Ace
             }.join("\n")
 
             provider_model = options[:model] || config.dig("idea", "doctor_agent_model") || "gemini:flash-latest"
-            cli_args_map = config.dig("idea", "doctor_cli_args") || {}
+            cli_args_map = config.dig("idea", "doctor", "cli_args") || {}
             
             prompt = <<~PROMPT
               The following #{remaining.size} idea issues could NOT be auto-fixed and need manual intervention:

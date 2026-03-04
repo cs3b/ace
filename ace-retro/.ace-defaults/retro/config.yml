@@ -16,5 +16,7 @@ retro:
   doctor_agent_model: gemini:flash-latest
 
   # Provider-specific CLI args for doctor agent runs
-  doctor_cli_args:
-    gemini: "yolo"
+  doctor:
+    cli_args:
+      gemini:
+        - "yolo"

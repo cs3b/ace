@@ -134,10 +134,10 @@ class IdeaDoctorCliTest < AceIdeaTestCase
 
   def test_provider_cli_args_map
     command = Ace::Idea::CLI::Commands::Doctor.new
-    cli_args_map = { "gemini" => "yolo" }
+    cli_args_map = { "gemini" => ["yolo"] }
 
-    assert_equal "yolo", command.send(:provider_cli_args, "gemini:flash-preview", cli_args_map)
-    assert_equal "yolo", command.send(:provider_cli_args, "gflash", cli_args_map)
+    assert_equal ["yolo"], command.send(:provider_cli_args, "gemini:flash-preview", cli_args_map)
+    assert_equal ["yolo"], command.send(:provider_cli_args, "gflash", cli_args_map)
     assert_nil command.send(:provider_cli_args, "claude:sonnet", cli_args_map)
     assert_nil command.send(:provider_cli_args, nil, cli_args_map)
   end
