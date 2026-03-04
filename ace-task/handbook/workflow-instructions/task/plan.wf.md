@@ -1,29 +1,39 @@
 ---
+name: task-plan
+allowed-tools: Bash, Read
+description: Create a cache-backed implementation plan artifact with freshness checks and anchored execution checklist output
 update:
   update_frequency: on-change
   auto_generate:
   - template-refs: from-embedded
   frequency: on-change
-  last-updated: '2026-02-16'
+  last-updated: '2026-03-03'
 ---
 
 # Plan Task Workflow Instruction
 
 ## Goal
 
-Create a JIT (just-in-time) implementation plan for a pending task. This workflow produces ephemeral planning output to stdout or ace-assign phase reports. It does NOT modify task spec files or change task status. Focus exclusively on the HOW (technical implementation approach) rather than the WHAT (behavioral requirements).
+Create a JIT (just-in-time) implementation plan for a pending task. The plan is returned as inline output. The calling system handles caching and persistence. It does NOT modify task spec files or change task status. Focus exclusively on the HOW (technical implementation approach) rather than the WHAT (behavioral requirements).
 
 ## Planning Phase Context
 
-**This workflow produces ephemeral planning output ONLY.**
+**This workflow produces a complete implementation plan as inline output.**
 
-- Output goes to stdout or ace-assign phase reports
+- The calling system handles persistence (cache artifacts, pointers, freshness)
 - Does NOT modify task specification files
 - Does NOT change task status
-- No files are written to the task directory
-- All output is consumed by the next phase (work-on-task) or by the developer
+- Plan is consumed by the next phase (work-on-task) or by the developer
 
 This workflow can be invoked standalone for ad-hoc planning or as a phase within ace-assign.
+
+## Output Contract
+
+Output the complete plan as your response. Do NOT write files, use Bash, or attempt cache operations.
+
+The plan will be consumed by a separate execution agent that has no access to this system prompt or project context. Therefore the plan must be:
+- **Complete**: Fill out ALL applicable templates (Technical Approach, File Modifications, Anchored Checklist)
+- **Self-contained**: Include all file paths, code references, and context needed for execution
 
 ## Prerequisites
 
@@ -74,6 +84,11 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
        - Behavioral specification (User Experience, Interface Contract, Success Criteria)
        - Existing scope and deliverables
        - Any existing implementation notes
+   - **Capture Freshness Inputs:**
+     - Build the freshness input set from the task file and loaded context files (`bundle.files`, plus optional usage/docs/research files read during planning)
+     - If any freshness input is missing, flag the plan as stale with an explicit gap note
+     - If any freshness input mtime is newer than the candidate plan, treat the plan as stale
+     - Default stale behavior: automatically regenerate (no interactive prompt)
    - **Load Usage Context (if present):**
      - Check for `ux/usage.md` in the task directory
      - If it exists, read it as additional behavioral context — usage scenarios serve as acceptance criteria for the implementation plan
@@ -114,12 +129,12 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
 
    **Cross-Package Reference Audit:**
    - For rename/namespace/migration tasks that change URIs, paths, or identifiers:
-    - Run `ace-search "old-pattern" --content --hidden` for each pattern being changed (e.g., `wfi://lint`, `skill://ace-lint-run`, file paths)
+     - Run `ace-search "old-pattern" --content --hidden` for each pattern being changed (e.g., `wfi://lint`, `skill://ace-lint-run`, file paths)
      - Group results by package to understand cross-package impact
      - Count total references: flag as **HIGH RISK** if >20 references across >3 packages
      - Include all reference-update work in subtask decomposition — do not treat as follow-up
    - For interface changes (CLI flags, config keys, method signatures):
-    - Search for all consumers: `ace-search "method_or_key_name" --content --hidden`
+     - Search for all consumers: `ace-search "method_or_key_name" --content --hidden`
      - List consumer packages that will need coordinated updates
    - Document the full downstream scope before implementation begins
 
@@ -229,7 +244,14 @@ This workflow can be invoked standalone for ad-hoc planning or as a phase within
    - Risk assessment with mitigation
    - Test strategy (for code tasks)
 
-   This output is delivered to stdout or the ace-assign phase report.
+   Output the assembled plan following the REPORT section format below.
+
+   **Plan Output Schema (Anchored Checklist)**
+   - Each step has a stable ID (for example: `STEP-01`)
+   - Each step includes at least one `path:line` anchor back to the behavioral spec
+   - Each step includes explicit dependencies (`depends_on: []` when none)
+   - Each step includes one or more verification commands
+   - Include a freshness summary that lists tracked input files and stale/fresh determination
 
    **UX/Usage Documentation Note**
    For user-facing features (commands, CLI tools, APIs, workflows), draft usage documentation (`ux/usage.md`) with key scenarios is created during the draft phase. The full usage documentation is completed during implementation (work-on-task phase) using `wfi://docs/update-usage`.
@@ -309,7 +331,7 @@ When planning from a behavioral spec:
 
 ## Output / Success Criteria
 
-- Ephemeral planning output delivered to stdout or ace-assign phase report
+- Complete plan is returned as inline response following the REPORT format
 - NO task file modifications
 - NO status changes
 - Complete technical implementation plan with specific steps
@@ -318,6 +340,8 @@ When planning from a behavioral spec:
 - Risk assessment with mitigation strategies
 - Embedded tests for critical operations
 - Clear integration with existing architecture
+- Anchored checklist format includes step IDs, `path:line` anchors, dependencies, and verification commands
+- Freshness metadata includes task file + loaded context files
 
 ## Common Patterns
 
@@ -346,11 +370,47 @@ When planning from a behavioral spec:
 
 **Process:** Technical research, tool selection, implementation planning
 
-**Output:** Ephemeral implementation plan to stdout (no task file changes)
+**Output:** Complete implementation plan as inline response (no file writes)
 
 ---
 
-This workflow creates JIT implementation plans that guide the work-on-task phase, producing ephemeral output without modifying task specifications or changing task status.
+This workflow creates JIT implementation plans that guide the work-on-task phase, returning complete inline plans without modifying task specifications or changing task status.
+
+## REPORT
+
+Your response IS the plan artifact. Output it directly — do not write files or use tools.
+
+This plan will be passed to a separate execution agent that has NO access to:
+- This system prompt
+- The project context
+- The task specification (unless you include relevant parts)
+
+Therefore the plan MUST be **complete and self-contained**:
+
+### Required sections
+
+1. **Task Summary** — what is being implemented and why (brief, from the spec)
+2. **Execution Context** — minimum project context the work agent needs:
+   - Key conventions and patterns relevant to THIS task
+   - Relevant architectural constraints
+   - Package/gem boundaries crossed
+   - Non-obvious project rules affecting this work
+3. **Technical Approach** — fill out the Technical Approach template (architecture, stack, strategy)
+4. **File Modifications** — fill out the File Modification template (Create/Modify/Delete with paths, purpose, impact)
+5. **Implementation Steps** — anchored checklist (STEP-01, STEP-02...) with:
+   - `path:line` anchors to relevant source files
+   - Explicit dependencies (`depends_on: []`)
+   - Verification commands per step
+6. **Test Plan** — test scenarios and files (for code tasks; skip for docs/workflow tasks)
+7. **Risk Assessment** — primary risk, mitigation, rollback
+8. **Freshness Summary** — tracked input files and their state
+
+### Format rules
+
+- Use the embedded templates from `<documents>` section to structure each part
+- Every implementation step must be actionable without additional context
+- Include exact file paths, method names, and line references where applicable
+- Do not summarize or abbreviate — the execution agent needs full detail
 
 <documents>
     <template path="tmpl://task-management/task.technical-approach">## Technical Approach
@@ -402,6 +462,23 @@ This workflow creates JIT implementation plans that guide the work-on-task phase
     - Module/class names: `OldName` → `NewName`
   - Import updates: [number of files with require/import statements]
   - Documentation updates: [number of markdown files with references]
+</template>
+
+    <template path="tmpl://task-management/task.plan-anchored-checklist">## Plan Checklist
+
+### STEP-01
+- **Anchor**: path/to/task.s.md:42
+- **Depends On**: []
+- **Action**: [what to implement]
+- **Verification**:
+  - `ace-lint path/to/file`
+
+### STEP-02
+- **Anchor**: path/to/task.s.md:58
+- **Depends On**: [STEP-01]
+- **Action**: [next implementation action]
+- **Verification**:
+  - `ace-test path/to/test_file.rb`
 </template>
 
 </documents>

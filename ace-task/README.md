@@ -27,6 +27,12 @@ ace-task show q7w --path         # Print file path only
 ace-task show q7w --content      # Raw markdown
 ace-task show q7w --tree         # With subtask tree
 
+# Resolve/generate an implementation plan
+ace-task plan q7w                            # Reuse fresh plan or generate
+ace-task plan q7w --refresh                  # Force regeneration
+ace-task plan q7w --content                  # Print plan content
+ace-task plan q7w --model gemini:flash-latest # Override model
+
 # List tasks
 ace-task list                    # All tasks
 ace-task list --status pending   # Filter by status
@@ -74,6 +80,8 @@ task:
   root_dir: .ace-tasks
   default_status: pending
   file_pattern: "*.s.md"
+  plan:
+    model: "gemini:flash-latest"
   special_folders:
     archive: _archive
     maybe: _maybe
