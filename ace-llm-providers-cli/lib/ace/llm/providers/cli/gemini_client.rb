@@ -199,7 +199,7 @@ module Ace
           end
 
           def build_command_with_file_references(prompt, system_prompt, options)
-            # Use project .cache directory so Gemini CLI can access the files
+            # Use project .ace-local directory so Gemini CLI can access the files
             # (system temp /var/folders is outside Gemini's workspace)
             cache_dir = create_prompt_cache_dir
             timestamp = Time.now.strftime("%Y%m%d-%H%M%S-%L")
@@ -243,7 +243,7 @@ module Ace
           end
 
           def create_prompt_cache_dir
-            cache_dir = File.join(find_project_root, ".cache", "ace-llm", "prompts")
+            cache_dir = File.join(find_project_root, ".ace-local", "llm", "prompts")
             FileUtils.mkdir_p(cache_dir) unless Dir.exist?(cache_dir)
             cache_dir
           end
