@@ -12,6 +12,7 @@ node_modules
 *.bak
 *.backup
 *.backup.*
+.ace-local/
 tmp
 tmp/
 **/test-reports
