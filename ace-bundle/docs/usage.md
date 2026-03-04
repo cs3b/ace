@@ -345,6 +345,121 @@ ace-bundle --preset docs --format markdown-xml --output docs-context.md
 ace-bundle wfi://documentation-workflow --format markdown
 ```
 
+### ace-llm Prompt Composition Workflow
+
+Use this pattern when a tool needs a composed system prompt that users can override without code edits.
+
+#### Quick Start (5 minutes)
+
+Create a small config that composes template + workflow + project context:
+
+```yaml
+---
+bundle:
+  params:
+    format: markdown-xml
+  base: tmpl://agent/plan-mode
+  sections:
+    workflow:
+      title: Planning Workflow
+      files:
+        - wfi://task/plan
+    project_context:
+      title: Project Context
+      presets:
+        - project
+---
+```
+
+Run:
+
+```bash
+ace-bundle --file plan-system.config.md --output plan-system.md
+```
+
+Expected output:
+
+```text
+Bundle saved (...), output file:
+.../plan-system.md
+```
+
+Success criteria:
+- `plan-system.md` exists
+- output contains both base template content and workflow/project sections
+
+#### Common Scenarios
+
+Scenario 1: Build a reusable system prompt artifact
+
+```bash
+ace-bundle --file plan-system.config.md --format markdown-xml --output plan-system.md
+```
+
+Expected output:
+
+```text
+Bundle saved (...), output file:
+.../plan-system.md
+```
+
+Scenario 2: Override behavior by swapping resource source
+
+```yaml
+bundle:
+  base: tmpl://agent/my-custom-plan-mode
+  sections:
+    workflow:
+      files:
+        - wfi://task/plan
+```
+
+Expected output:
+- generated prompt now starts from custom template resource
+- no Ruby code changes required
+
+Scenario 3: Add project-specific constraints via section composition
+
+```yaml
+bundle:
+  sections:
+    project_context:
+      presets: [project]
+    policy:
+      files:
+        - prompt://team/planning-policy
+```
+
+Expected output:
+- composed prompt includes project preset context and team policy section
+
+#### Complete Reference
+
+- For full schema and field semantics (`base`, `sections`, `presets`, params), see [configuration.md](configuration.md).
+- For runtime integration with `ace-llm`, pass composed artifacts as prompt/system inputs in your calling tool.
+
+#### Troubleshooting
+
+Problem: Protocol path is not resolved.
+
+Solution:
+
+```bash
+ace-bundle tmpl://agent/plan-mode
+ace-bundle wfi://task/plan
+```
+
+If one fails, verify protocol source registration under `.ace/nav/protocols/*-sources/`.
+
+Problem: Prompt composition is hardcoded in code.
+
+Solution:
+- Move content to protocol/file resources.
+- Compose via `ace-bundle` config (`base`, `sections`, `presets`).
+
+Anti-pattern to avoid:
+- Embedding large multiline system prompts directly in Ruby classes for multi-source workflows.
+
 ### Troubleshooting Workflow
 
 ```bash
