@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.751] - 2026-03-04
+
+### Fixed
+- **ace-docs v0.22.3**: `docs/update.wf.md` corrected to `.ace-local/docs/` (not `.ace-local/ace-docs/`)
+- **ace-git v0.11.15**: Rebase workflow cleanup command corrected (final missed occurrence of `.ace-local/ace-git/`)
+- **ace-prompt-prep v0.17.3**: README migration note old path corrected to `.cache/ace-prep` (not `.ace-local/ace-prep`)
+- **ace-review v0.43.4**: Review workflow instructions (apply-feedback, pr, run) corrected to `.ace-local/review/`
+- **ace-support-items**: VERSION constant indentation restored to match module nesting
+- **ace-support-models**: Migration note old path corrected to `.cache/ace-llm-models-dev`; new path updated to `.ace-local/models` per short-name convention
+
 ## [0.9.750] - 2026-03-04
 
 ### Fixed
