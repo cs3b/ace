@@ -27,7 +27,7 @@ When user requests a scoped commit/release:
 
 ## Skill First Execution (Hard Rule)
 
-If a user names a skill (for example `$ace-git-create-pr`) or the task clearly matches an available skill, the skill is mandatory and takes precedence over manual command execution.
+If a user names a skill (for example `$ace-github-pr-create`) or the task clearly matches an available skill, the skill is mandatory and takes precedence over manual command execution.
 
 Execution order:
 1. Match named or clearly relevant skill(s)
