@@ -8,7 +8,7 @@ matches:
 
 parameters:
   taskref: { required: true }
-  review_cycles: { required: false, default: 2 }
+  review_cycles: { required: false, default: 3 }
 
 phases:
   - name: onboard
@@ -31,6 +31,7 @@ phases:
     required: true
   - name: review-cycle
     repeat: "{{review_cycles}}"
+    context: fork
     sub_phases: [review-pr, apply-feedback, release]
     note: "Each cycle uses preset_progression from composition rules (1: code-valid, 2: code-fit, 3: code-shine)"
   - name: reorganize-commits

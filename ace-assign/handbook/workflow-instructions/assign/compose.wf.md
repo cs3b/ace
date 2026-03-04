@@ -129,9 +129,9 @@ This ensures forked agents have project context loaded before executing their pr
 
 #### Review Cycle Expansion
 
-When review cycles are needed, expand them inline:
-- Default: 2 cycles (from composition rules `review_cycles.default_count`)
-- Each cycle = review-pr + apply-feedback
+When review cycles are needed, expand them as forked cycle parent phases:
+- Default: 3 cycles (from composition rules `review_cycles.default_count`)
+- Each cycle parent has `context: fork` and `sub_phases: [review-pr, apply-feedback, release]`
 - Use `preset_progression` from composition rules for review preset per cycle:
   - Cycle 1: preset `code-valid`
   - Cycle 2: preset `code-fit`
@@ -140,8 +140,8 @@ When review cycles are needed, expand them inline:
   - Cycle 1: "Correctness: bugs, logic errors, missing functionality, broken contracts"
   - Cycle 2: "Quality: performance, architecture, standards, test coverage"
   - Cycle 3: "Polish: simplification, naming, documentation (non-blocking suggestions)"
-- Each review step instruction should include both the preset and focus, e.g.:
-  - "Use preset code-valid."
+- Each cycle parent instruction should include both the preset and focus for its `review-pr` child, e.g.:
+  - "Child review-pr: use preset code-valid."
   - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
 
 #### Prerequisite Checking
@@ -189,15 +189,12 @@ Phases:
   020: work-on-task — Implement task 148 (fork)
   030: release — Initial version bump (minor)
   040: create-pr — Create pull request
-  050: review-pr — Review cycle 1/2: code-valid preset (fork)
-  060: apply-feedback — Apply cycle 1 feedback
-  070: release — Patch release for cycle 1 fixes
-  080: review-pr — Review cycle 2/2: code-fit preset (fork)
-  090: apply-feedback — Apply cycle 2 feedback
-  100: release — Patch release for cycle 2 fixes
-  110: reorganize-commits — Clean up commit history
-  120: push-to-remote — Push to remote
-  130: update-pr-desc — Finalize PR description
+  050: review-valid-1 — Forked cycle root (children: review-pr, apply-feedback, release)
+  080: review-fit-1 — Forked cycle root (children: review-pr, apply-feedback, release)
+  110: review-shine-1 — Forked cycle root (children: review-pr, apply-feedback, release)
+  140: reorganize-commits — Clean up commit history
+  150: push-to-remote — Push to remote
+  160: update-pr-desc — Finalize PR description
 
 Suggestions:
   [optional] Add verify-test-suite before create-pr
@@ -252,6 +249,7 @@ steps:
 
 For each selected phase, generate a step entry:
 - `name`: From catalog phase name (with suffix for repeated phases like review-cycle-1)
+- `name`: From catalog phase name (with cycle suffixes like `review-valid-1`, `review-fit-1`, `review-shine-1`)
 - `skill`: From catalog `skill` field (if present)
 - `context`: From catalog `context.default` (if set)
 - `instructions`: Built from catalog description + task-specific context

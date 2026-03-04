@@ -177,42 +177,30 @@ When parsing informal instructions, identify:
 
 ### Loop Expansion
 
-Loops must be fully expanded into separate phases:
+Review loops expand into forked cycle parent phases with standard child sub-phases:
 
 ```yaml
 # "do 3 review cycles" becomes:
-- name: review-cycle-1
-  skill: ace-review-pr
+- name: review-valid-1
+  context: fork
+  sub_phases: [review-pr, apply-feedback, release]
   instructions:
-    - "Review the code (iteration 1 of 3)."
-    - Focus on correctness and architecture.
+    - "Child review-pr: use preset code-valid."
+    - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
 
-- name: apply-feedback-1
+- name: review-fit-1
+  context: fork
+  sub_phases: [review-pr, apply-feedback, release]
   instructions:
-    - Apply feedback from review cycle 1.
-    - Commit changes after applying fixes.
+    - "Child review-pr: use preset code-fit."
+    - "Focus: quality — performance, architecture, standards, test coverage."
 
-- name: review-cycle-2
-  skill: ace-review-pr
+- name: review-shine-1
+  context: fork
+  sub_phases: [review-pr, apply-feedback, release]
   instructions:
-    - "Review the code (iteration 2 of 3)."
-    - Focus on edge cases and test coverage.
-
-- name: apply-feedback-2
-  instructions:
-    - Apply feedback from review cycle 2.
-    - Commit changes after applying fixes.
-
-- name: review-cycle-3
-  skill: ace-review-pr
-  instructions:
-    - "Review the code (iteration 3 of 3)."
-    - Final review for polish and completeness.
-
-- name: apply-feedback-3
-  instructions:
-    - Apply final feedback from review cycle 3.
-    - Commit changes after applying fixes.
+    - "Child review-pr: use preset code-shine."
+    - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
 ```
 
 ## Process Steps
@@ -412,8 +400,8 @@ Parses instructions and creates job with:
 - onboard
 - work-on-task (148)
 - create-pr
-- review-cycle-1, apply-feedback-1
-- review-cycle-2, apply-feedback-2
+- review-valid-1 (fork subtree: review-pr → apply-feedback → release)
+- review-fit-1 (fork subtree: review-pr → apply-feedback → release)
 - finalize
 
 ### Example 3: Custom Output Path
