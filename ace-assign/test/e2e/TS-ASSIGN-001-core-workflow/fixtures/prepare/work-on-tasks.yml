@@ -38,75 +38,39 @@ steps:
 
   - name: review-valid-1
     number: "040"
-    skill: ace-review-pr
     context: fork
+    sub_phases: [review-pr, apply-feedback, release]
     instructions:
       - "First: onboard yourself using /ace-onboard skill to load project context."
-      - Review the code for correctness.
-      - Use preset code-valid.
+      - Execute the valid review cycle via child phases.
+      - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
-
-  - name: apply-valid-1
-    number: "050"
-    skill: ace-review-apply-feedback
-    instructions:
-      - Apply feedback from valid review (medium+ priority).
-      - Commit changes with descriptive messages.
-
-  - name: release-valid-1
-    number: "060"
-    skill: ace-release
-    instructions:
-      - Bump patch version and update CHANGELOGs.
-      - This captures valid review fixes.
+      - "Child apply-feedback: apply medium+ priority review findings and commit."
+      - "Child release: bump patch version and update CHANGELOGs to capture valid-cycle fixes."
 
   - name: review-fit-1
     number: "070"
-    skill: ace-review-pr
     context: fork
+    sub_phases: [review-pr, apply-feedback, release]
     instructions:
       - "First: onboard yourself using /ace-onboard skill to load project context."
-      - Review the code for quality.
-      - Use preset code-fit.
+      - Execute the fit review cycle via child phases.
+      - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
-
-  - name: apply-fit-1
-    number: "080"
-    skill: ace-review-apply-feedback
-    instructions:
-      - Apply feedback from fit review.
-      - Commit changes with descriptive messages.
-
-  - name: release-fit-1
-    number: "090"
-    skill: ace-release
-    instructions:
-      - Bump patch version and update CHANGELOGs.
-      - This captures fit review fixes.
+      - "Child apply-feedback: apply fit-cycle findings and commit."
+      - "Child release: bump patch version and update CHANGELOGs to capture fit-cycle fixes."
 
   - name: review-shine-1
     number: "100"
-    skill: ace-review-pr
     context: fork
+    sub_phases: [review-pr, apply-feedback, release]
     instructions:
       - "First: onboard yourself using /ace-onboard skill to load project context."
-      - Review the code for polish.
-      - Use preset code-shine.
+      - Execute the shine review cycle via child phases.
+      - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
-
-  - name: apply-shine-1
-    number: "110"
-    skill: ace-review-apply-feedback
-    instructions:
-      - Apply feedback from shine review (worthwhile improvements only).
-      - Commit changes with descriptive messages.
-
-  - name: release-shine-1
-    number: "120"
-    skill: ace-release
-    instructions:
-      - Bump patch version and update CHANGELOGs.
-      - This captures shine review fixes.
+      - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
+      - "Child release: bump patch version and update CHANGELOGs to capture shine-cycle fixes."
 
   - name: reorganize-commits
     number: "130"
