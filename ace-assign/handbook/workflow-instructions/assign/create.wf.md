@@ -58,10 +58,10 @@ Run the create command:
 ace-assign create <path-to-job.yaml>
 ```
 
-This creates the assignment directory at `.ace-local/ace-assign/<session-id>/` with:
+This creates the assignment directory at `.ace-local/assign/<session-id>/` with:
 
 ```
-.ace-local/ace-assign/<session-id>/
+.ace-local/assign/<session-id>/
 ├── assignment.yaml               # Assignment metadata
 ├── phases/                       # Phase files (.ph.md extension)
 │   ├── 010-init.ph.md           # pending
@@ -82,7 +82,7 @@ Show the user:
 Example output:
 ```
 Assignment: work-on-task-123 (8or5kx)
-Created: .ace-local/ace-assign/8or5kx/
+Created: .ace-local/assign/8or5kx/
 
 Phases: 3 total
   010: onboard [in_progress]
