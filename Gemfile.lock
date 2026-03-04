@@ -31,7 +31,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.22.2)
+    ace-docs (0.22.3)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.24)
@@ -78,7 +78,7 @@ PATH
 PATH
   remote: ace-git
   specs:
-    ace-git (0.11.14)
+    ace-git (0.11.15)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
       dry-cli (~> 1.0)
@@ -148,7 +148,7 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.17.2)
+    ace-prompt-prep (0.17.3)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -171,7 +171,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.43.3)
+    ace-review (0.43.4)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
