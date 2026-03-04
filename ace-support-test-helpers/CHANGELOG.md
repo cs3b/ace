@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-03-04
+
+### Fixed
+- `with_cascade_configs` now isolates HOME into a temporary directory when creating home-level config fixtures, preventing permission errors in sandboxed environments.
+
 ## [0.12.2] - 2026-01-31
 
 ### Fixed
