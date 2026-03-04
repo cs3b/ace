@@ -13,7 +13,7 @@ This workflow guides an agent through executing test cases in a **pre-populated 
 ## SetupExecutor Contract
 
 Before this workflow is invoked, `SetupExecutor` has already:
-- Created an isolated sandbox directory under `.cache/ace-test-e2e/`
+- Created an isolated sandbox directory under `.ace-local/ace-test-e2e/`
 - Initialized git (`git init`, user config, `.gitignore`)
 - Installed `mise.toml` for tool version management
 - Created `.ace` symlinks for configuration access
@@ -239,7 +239,7 @@ Reports written:
 |-----------|-------------|--------|
 | TC-001    | ...         | Pass   |
 
-Reports: `.cache/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/`
+Reports: `.ace-local/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/`
 ```
 
 ## Error Handling
