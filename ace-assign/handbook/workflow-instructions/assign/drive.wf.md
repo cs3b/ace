@@ -233,10 +233,10 @@ After a fork subtree completes (work-on-task finishes successfully):
 
 After fork-run returns and completion is verified, the driver acts as the **guard** for the subtree. Before continuing to the next phase:
 
-1. **Read all subtree report files** from `.cache/ace-assign/<assignment-id>/reports/`:
+1. **Read all subtree report files** from `.ace-local/ace-assign/<assignment-id>/reports/`:
    ```bash
    # List and read all reports for the completed subtree
-   ls .cache/ace-assign/${ASSIGNMENT_ID}/reports/${FORK_ROOT}.*
+   ls .ace-local/ace-assign/${ASSIGNMENT_ID}/reports/${FORK_ROOT}.*
    # Read each report file to review the forked agent's work
    ```
 2. **Verify quality**: Check that reports indicate successful completion, not just phase advancement.
@@ -494,7 +494,7 @@ When executing a phase with a `skill:` field:
 ### Assignment Directory Structure
 
 ```
-.cache/ace-assign/
+.ace-local/ace-assign/
 ├── .latest → abc123/             # Auto-updated on any activity
 ├── .current → def456/            # Explicit user selection (optional)
 ├── abc123/
