@@ -220,7 +220,12 @@ module Ace
 
           def write_to_cache(context, input, options)
             project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-            cache_dir = File.join(project_root, ".cache/ace-bundle")
+            configured_cache_dir = Ace::Bundle.cache_dir
+            cache_dir = if configured_cache_dir.start_with?("/")
+                          configured_cache_dir
+                        else
+                          File.join(project_root, configured_cache_dir)
+                        end
             FileUtils.mkdir_p(cache_dir)
 
             # Generate cache filename from input (preset name, protocol, or sanitized file path)

@@ -124,7 +124,7 @@ module Ace
       # @return [Hash] merged configuration hash
       # @example Get current configuration
       #   config = Ace::Bundle.config
-      #   puts config["cache_dir"]  # => ".cache/ace-bundle"
+      #   puts config["cache_dir"]  # => ".ace-local/bundle"
       def config
         # Fast path: return cached config if already initialized
         return @config if defined?(@config) && @config
@@ -147,9 +147,9 @@ module Ace
       # These read from config instead of using hardcoded constants
 
       # Cache directory for bundle output files
-      # @return [String] Cache directory path (default: ".cache/ace-bundle")
+      # @return [String] Cache directory path (default: ".ace-local/bundle")
       def cache_dir
-        config["cache_dir"] || ".cache/ace-bundle"
+        config["cache_dir"] || ".ace-local/bundle"
       end
 
       # Maximum lines per chunk before splitting output into multiple files
