@@ -30,8 +30,7 @@ module Ace
           if @report_path
             lines << "Details: #{@report_path}/"
           elsif @configuration && @configuration[:save_reports]
-            timestamp = Time.now.strftime("%Y%m%d-%H%M%S")
-            lines << "Details: #{@configuration[:report_dir] || 'test-reports'}/#{timestamp}/"
+            lines << "Details: #{@configuration[:report_dir] || '.ace-local/test/reports'}/latest/"
           end
 
           # Compact single-line summary with emoji status
@@ -65,7 +64,7 @@ module Ace
 
             # Show failure count header with reference to full report if needed
             if total_failures > @max_failures_to_display
-              report_path = @report_path || "test-reports/latest"
+              report_path = @report_path || "#{@configuration[:report_dir] || '.ace-local/test/reports'}/latest"
               lines << "#{label} (#{failures_to_show.size}/#{total_failures}) → #{report_path}/failures.json:"
             else
               lines << "#{label} (#{total_failures}):"
@@ -101,7 +100,7 @@ module Ace
             # If there are more failures than displayed
             if result.failures_detail.size > @max_failures_to_display
               remaining = result.failures_detail.size - @max_failures_to_display
-              report_path = @report_path || "test-reports/latest"
+              report_path = @report_path || "#{@configuration[:report_dir] || '.ace-local/test/reports'}/latest"
               lines << "  ... and #{remaining} more #{remaining == 1 ? 'failure' : 'failures'}. See full report: #{report_path}/failures.json"
             end
           end

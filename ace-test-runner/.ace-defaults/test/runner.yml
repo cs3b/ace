@@ -6,7 +6,7 @@ test:
   format: progress
 
   # Test reports directory
-  report_dir: test-reports
+  report_dir: .ace-local/test/reports
   save_reports: true
 
   # Test execution options

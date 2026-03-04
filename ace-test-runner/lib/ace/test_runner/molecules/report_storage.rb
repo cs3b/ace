@@ -5,7 +5,7 @@ module Ace
     module Molecules
       # Handles storage of test reports to filesystem
       class ReportStorage
-        def initialize(base_dir: "test-reports", timestamp_generator: nil)
+        def initialize(base_dir: ".ace-local/test/reports", timestamp_generator: nil)
           @base_dir = base_dir
           @timestamp_generator = timestamp_generator || Atoms::TimestampGenerator.new
         end
@@ -104,8 +104,7 @@ module Ace
         def list_reports(limit: 10)
           ensure_base_directory
 
-          reports = Dir.glob(File.join(@base_dir, "*"))
-                       .select { |d| File.directory?(d) && !File.symlink?(d) }
+          reports = report_directories
                        .map { |d| report_info(d) }
                        .compact
                        .sort_by { |r| r[:timestamp] }
@@ -146,28 +145,28 @@ module Ace
         def cleanup_old_reports(keep: 10, max_age_days: 30)
           ensure_base_directory
 
-          reports = Dir.glob(File.join(@base_dir, "*"))
-                       .select { |d| File.directory?(d) && !File.symlink?(d) }
-                       .map { |d| report_info(d) }
-                       .compact
-                       .sort_by { |r| r[:timestamp] }
-                       .reverse
-
-          # Keep the most recent N reports
-          to_keep = reports.take(keep)
-
-          # Also keep reports newer than max_age_days
           cutoff_time = Time.now - (max_age_days * 24 * 60 * 60)
-          to_keep += reports.select { |r| r[:timestamp] > cutoff_time }
-
-          to_keep_paths = to_keep.map { |r| r[:path] }.uniq
-
           deleted = []
-          reports.each do |report|
-            next if to_keep_paths.include?(report[:path])
 
-            FileUtils.rm_rf(report[:path])
-            deleted << report[:path]
+          # In centralized mode, base_dir contains package subfolders; in legacy mode it may contain reports directly.
+          reports_by_scope = report_directories
+            .map { |d| report_info(d) }
+            .compact
+            .group_by { |r| File.dirname(r[:path]) }
+
+          reports_by_scope.each_value do |reports|
+            sorted = reports.sort_by { |r| r[:timestamp] }.reverse
+
+            to_keep = sorted.take(keep)
+            to_keep += sorted.select { |r| r[:timestamp] > cutoff_time }
+            to_keep_paths = to_keep.map { |r| r[:path] }.uniq
+
+            sorted.each do |report|
+              next if to_keep_paths.include?(report[:path])
+
+              FileUtils.rm_rf(report[:path])
+              deleted << report[:path]
+            end
           end
 
           deleted
@@ -277,6 +276,26 @@ module Ace
           }
         rescue JSON::ParserError, ArgumentError
           nil
+        end
+
+        def report_directories
+          top_level = Dir.glob(File.join(@base_dir, "*"))
+            .select { |d| File.directory?(d) && !File.symlink?(d) }
+
+          dirs = []
+          top_level.each do |entry|
+            if File.exist?(File.join(entry, "summary.json"))
+              dirs << entry
+              next
+            end
+
+            nested = Dir.glob(File.join(entry, "*"))
+              .select { |d| File.directory?(d) && !File.symlink?(d) }
+              .select { |d| File.exist?(File.join(d, "summary.json")) }
+            dirs.concat(nested)
+          end
+
+          dirs
         end
       end
     end

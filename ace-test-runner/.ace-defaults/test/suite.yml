@@ -21,7 +21,8 @@ test_suite:
   # Test execution options
   test_options:
     format: compact        # Output format: compact, verbose, json
-    save_reports: true     # Save test reports to .ace/test-reports/
+    save_reports: true     # Save test reports to .ace-local/test/reports/
+    report_dir: .ace-local/test/reports
     fail_fast: false       # Stop on first failure
 
   # Display settings (optional)

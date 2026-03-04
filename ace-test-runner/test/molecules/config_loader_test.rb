@@ -154,7 +154,7 @@ class ConfigLoaderTest < Minitest::Test
     assert_equal "auto", defaults[:defaults][:color]
     assert_equal false, defaults[:defaults][:fail_fast]
     assert_equal true, defaults[:defaults][:save_reports]
-    assert_equal "test-reports", defaults[:defaults][:report_dir]
+    assert_equal ".ace-local/test/reports", defaults[:defaults][:report_dir]
   end
 
   def test_gem_defaults_include_failure_limits

@@ -113,7 +113,7 @@ ace-test [package] [target] [options] [file-paths]
 **Options:**
 ```bash
   --format FORMAT        # Output format: progress (default), progress-file, json
-  --report-dir DIR      # Report storage directory (default: test-reports/)
+  --report-dir DIR      # Report root directory (default: .ace-local/test/reports)
   --no-save             # Skip saving detailed reports
   --fail-fast           # Stop execution on first failure
   --stop-threshold N    # Stop tests after N failures (default: 21)
@@ -174,7 +174,7 @@ defaults:
   color: auto
   fail_fast: false
   save_reports: true
-  report_dir: test-reports
+  report_dir: .ace-local/test/reports
 ```
 
 Command-line options override configuration file settings.
@@ -207,7 +207,7 @@ Finished in 0.45s
     "duration": 0.45
   },
   "failures": [],
-  "report_path": "test-reports/2025-01-20-14-30-45/"
+  "report_path": ".ace-local/test/reports/task/i50jj3/"
 }
 ```
 
@@ -237,16 +237,17 @@ ace-test all          # All tests (default)
 
 ### Report Structure
 
-Reports are saved to timestamped directories:
+Reports are saved under package-specific timestamped directories:
 
 ```
-test-reports/
-├── 2025-01-20-14-30-45/
-│   ├── summary.json       # Test run summary
-│   ├── failures.json      # Detailed failure information
-│   ├── report.md          # Human-readable markdown report
-│   └── raw_output.txt     # Raw test output
-└── latest -> 2025-01-20-14-30-45/  # Symlink to most recent run
+.ace-local/test/reports/
+└── test-runner/
+    ├── i50jj3/
+    │   ├── summary.json       # Test run summary
+    │   ├── failures.json      # Detailed failure information
+    │   ├── report.md          # Human-readable markdown report
+    │   └── raw_output.txt     # Raw test output
+    └── latest -> i50jj3/      # Symlink to most recent run
 ```
 
 ## Architecture
