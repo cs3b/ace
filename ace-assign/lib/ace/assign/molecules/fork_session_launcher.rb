@@ -50,8 +50,11 @@ module Ace
           config.dig("providers", "cli_args", provider)
         end
 
+        # @param required [String, Array<String>, nil] Provider-required args
+        # @param user_provided [String, Array<String>, nil] User-provided args
+        # @return [String, nil] Merged args string
         def merge_cli_args(required, user_provided)
-          parts = [required, user_provided].compact.map(&:to_s).map(&:strip).reject(&:empty?)
+          parts = [required, user_provided].flat_map { |value| Array(value) }.map(&:to_s).map(&:strip).reject(&:empty?)
           return nil if parts.empty?
 
           parts.join(" ")
