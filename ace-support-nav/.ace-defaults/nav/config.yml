@@ -10,7 +10,7 @@
 # Cache settings for protocol resolution
 cache:
   enabled: false  # Enable caching of protocol lookups
-  directory: ".cache/ace-nav"  # Cache directory path
+  directory: ".ace-local/nav"  # Cache directory path
   ttl: 3600  # Cache TTL in seconds (1 hour)
 
 # Fuzzy matching settings for resource names
