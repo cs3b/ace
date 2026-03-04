@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.746] - 2026-03-04
+
+### Fixed
+- **ace-assign v0.17.1**: README assignment storage path corrected to short-name convention (`.ace-local/assign/` not `.ace-local/ace-assign/`)
+- **ace-bundle v0.31.10**: README cache output path example corrected to short-name convention (`.ace-local/bundle/` not `.ace-local/ace-bundle/`)
+- **ace-docs v0.22.1**: README `cache_dir` example corrected to short-name convention (`.ace-local/docs` not `.ace-local/ace-docs`)
+- **ace-git-secrets v0.8.1**: README and usage docs updated to short-name path convention (`.ace-local/git-secrets` not `.ace-local/ace-git-secrets`)
+- **ace-prompt-prep v0.17.1**: README and usage docs updated to short-name path convention (`.ace-local/prompt-prep` not `.ace-local/ace-prompt-prep`)
+- **ace-review v0.43.1**: README session storage path examples corrected to short-name convention (`.ace-local/review/` not `.ace-local/ace-review/`)
+- **ace-sim v0.7.1**: Usage docs artifact paths corrected to short-name convention (`.ace-local/sim/` not `.ace-local/ace-sim/`)
+- **ace-task v0.19.1**: Bug workflow instructions corrected to short-name path convention (`.ace-local/task/bug-analysis/` not `.ace-local/ace-task/bug-analysis/`)
+- **AGENTS.md**: Temp file location guideline corrected to `.ace-local/<subfolder>/` (was `.cache/<subfolder>/`) with accurate example
+
 ## [0.9.745] - 2026-03-04
 
 ### Added
