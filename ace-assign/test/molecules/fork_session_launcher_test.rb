@@ -24,7 +24,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     fake = FakeQueryInterface.new
     config = {
       "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 },
-      "providers" => { "cli_args" => { "codex" => "full-auto" } }
+      "providers" => { "cli_args" => { "codex" => ["full-auto"] } }
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
@@ -42,7 +42,7 @@ class ForkSessionLauncherTest < AceAssignTestCase
     fake = FakeQueryInterface.new
     config = {
       "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 },
-      "providers" => { "cli_args" => { "claude" => "dangerously-skip-permissions" } }
+      "providers" => { "cli_args" => { "claude" => ["dangerously-skip-permissions"] } }
     }
     launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
 
@@ -54,5 +54,26 @@ class ForkSessionLauncherTest < AceAssignTestCase
 
     call = fake.calls.last
     assert_equal "dangerously-skip-permissions --model-settings x", call[:options][:cli_args]
+  end
+
+  def test_launch_merges_array_and_string_cli_args
+    fake = FakeQueryInterface.new
+    config = {
+      "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 },
+      "providers" => { "cli_args" => { "codex" => ["--sandbox danger-full-access", "--ask-for-approval never"] } }
+    }
+    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+
+    launcher.launch(
+      assignment_id: "abc123",
+      fork_root: "010",
+      cli_args: "--model-settings x"
+    )
+
+    call = fake.calls.last
+    assert_equal(
+      "--sandbox danger-full-access --ask-for-approval never --model-settings x",
+      call[:options][:cli_args]
+    )
   end
 end
