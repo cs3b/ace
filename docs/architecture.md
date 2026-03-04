@@ -117,7 +117,7 @@ Each gem includes `handbook/` with `agents/`, `guides/`, `templates/`, and `work
 
 ## AI Integration
 
-* **Skills**: `.claude/skills/` maps workflows to slash commands
+* **Skills**: `.agent/skills/` is the canonical provider-neutral location; provider dirs (`.claude/`, `.codex/`, `.gemini/`, `.pi/`) symlink to it
 * **Agents**: `.claude/agents/` provides agent access via frontmatter-defined capabilities
 * **Deterministic CLI**: Predictable, parseable output for autonomous execution
 * **wfi:// Protocol**: Direct workflow access via ace-nav
