@@ -82,7 +82,7 @@ task:
   file_pattern: "*.s.md"
   special_folder_prefix: "_"
   plan:
-    model: "claude:opus"
+    model: "gemini:pro-latest"
     cli_args:
       claude: "--permission-mode plan"
       codex: "--sandbox read-only"
