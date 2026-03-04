@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.8] - 2026-03-04
+
+### Fixed
+- Normalize timeout inputs across `--timeout` flows in CLI query and fallback paths so string values are safely coerced to numeric before use.
+
 ## [0.24.7] - 2026-03-04
 
 ### Added

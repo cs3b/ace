@@ -69,6 +69,24 @@ class QueryCommandTest < AceLlmTestCase
     end
   end
 
+  def test_timeout_option_is_normalized_before_query
+    captured_timeout = nil
+
+    Ace::LLM::QueryInterface.stub(
+      :query,
+      ->(*_args, **kwargs) do
+        captured_timeout = kwargs[:timeout]
+        { text: "ok", usage: {}, metadata: {} }
+      end
+    ) do
+      with_real_config do
+        invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?", "--timeout", "600"])
+      end
+    end
+
+    assert_equal 600.0, captured_timeout
+  end
+
   def test_model_flag_with_invalid_provider_shows_error
     with_real_config do
       # When positional arg "test" is present, it's interpreted as provider_model

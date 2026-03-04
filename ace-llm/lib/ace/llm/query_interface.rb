@@ -108,7 +108,7 @@ module Ace
 
         # Execute with or without fallback
         # Resolve timeout from config cascade if not provided
-        resolved_timeout = timeout || Molecules::ConfigLoader.get("llm.timeout") || 120
+        resolved_timeout = normalize_timeout(timeout || Molecules::ConfigLoader.get("llm.timeout") || 120)
 
         response = execute_with_fallback(
           provider: parse_result.provider,
@@ -373,6 +373,20 @@ module Ace
         nil
       end
       private_class_method :parse_env_float
+
+      def self.normalize_timeout(value)
+        return nil if value.nil?
+        return value if value.is_a?(Numeric) && value.finite?
+
+        normalized = value.to_s.strip
+        normalized_timeout = Float(normalized)
+        raise ArgumentError, "timeout must be positive" unless normalized_timeout.positive?
+
+        normalized_timeout
+      rescue ArgumentError, TypeError
+        raise ArgumentError, "timeout must be a positive numeric value, got #{value.inspect}"
+      end
+      private_class_method :normalize_timeout
     end
   end
 end
