@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.742] - 2026-03-04
+
+### Fixed
+- **ace-task v0.18.4**: Ensure file-based plan prompt tests can resolve `project` section preset in tmp test workspaces by creating a minimal local preset fixture.
+- **ace-task v0.18.4**: Restore direct provider-prefix CLI arg mapping in `doctor` command before parser fallback, fixing provider alias handling.
+
 ## [0.9.741] - 2026-03-04
 
 ### Added
