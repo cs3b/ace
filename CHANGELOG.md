@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.758] - 2026-03-04
+
+### Fixed
+- **ace-support-test-helpers v0.12.3**: `with_cascade_configs` now isolates HOME to a temporary directory for home-config fixtures, fixing sandbox permission failures.
+
 ## [0.9.757] - 2026-03-04
 
 ### Fixed
