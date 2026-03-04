@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.750] - 2026-03-04
+
+### Fixed
+- **ace-assign v0.17.2**: Workflow instructions (create, drive, start) corrected to use `.ace-local/assign/` (not `.ace-local/ace-assign/`)
+- **ace-docs v0.22.2**: Usage docs corrected to `.ace-local/docs/` (not `.ace-local/ace-docs/`)
+- **ace-git v0.11.14**: Rebase workflow session path corrected to `.ace-local/git/` (not `.ace-local/ace-git/`)
+- **ace-git-secrets v0.8.3**: Usage docs and token-remediation workflow corrected to `.ace-local/git-secrets/` (not `.ace-local/ace-git-secrets/`)
+- **ace-prompt-prep v0.17.2**: Usage docs corrected to `.ace-local/prompt-prep/` (not `.ace-local/ace-prompt-prep/`)
+- **ace-review v0.43.3**: `feedback-workflow.md` session path examples corrected to `.ace-local/review/` (not `.ace-local/ace-review/`)
+- **docs/ace-gems.g.md**: Cache directory convention updated to `.ace-local/<short-name>` (drop `ace-` prefix)
+- **docs/blueprint.md**: Agent ignore pattern updated to `.ace-local/**/*`
+
 ## [0.9.749] - 2026-03-04
 
 ### Fixed
