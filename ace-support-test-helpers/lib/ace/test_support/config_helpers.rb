@@ -2,6 +2,7 @@
 
 require "yaml"
 require "fileutils"
+require "tmpdir"
 
 module Ace
   module TestSupport
@@ -114,6 +115,8 @@ module Ace
       # Create multi-level config setup for any ace-* gem
       def with_cascade_configs(gem_name = "core", configs = {})
         paths = []
+        old_home = ENV["HOME"]
+        temp_home = nil
 
         begin
           # Create project config
@@ -126,7 +129,9 @@ module Ace
 
           # Create home config
           if configs[:home]
-            home_path = File.expand_path("~/.ace/#{gem_name}/config.yml")
+            temp_home = Dir.mktmpdir("ace-test-home")
+            ENV["HOME"] = temp_home
+            home_path = File.join(temp_home, ".ace", gem_name, "config.yml")
             FileUtils.mkdir_p(File.dirname(home_path))
             File.write(home_path, configs[:home].to_yaml)
             paths << home_path
@@ -134,6 +139,8 @@ module Ace
 
           yield
         ensure
+          ENV["HOME"] = old_home
+          FileUtils.rm_rf(temp_home) if temp_home && Dir.exist?(temp_home)
           paths.each { |path| FileUtils.rm_f(path) if File.exist?(path) }
         end
       end
