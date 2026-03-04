@@ -56,7 +56,7 @@ class TaskPlanCommandTest < AceTaskTestCase
     result = run_cli(%w[plan q7w])
 
     assert_equal 0, result[:exit_code], result[:stderr]
-    assert_match(%r{/.cache/ace-task/8pp\.t\.q7w/.+-plan\.md$}, result[:stdout].strip)
+    assert_match(%r{/.ace-local/task/8pp\.t\.q7w/.+-plan\.md$}, result[:stdout].strip)
     assert File.exist?(result[:stdout].strip)
   end
 
