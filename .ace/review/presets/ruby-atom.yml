@@ -46,4 +46,4 @@ subject:
       - "*.rb"
       - "lib/**/*.rb"
 
-model: "gemini:flash-latest"
+model: "codex:codex"
