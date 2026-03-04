@@ -143,10 +143,10 @@ When executing this phase, invoke `/ace-task-work 123` then follow the skill wor
 |-------|-----------|---------|
 | `ace-onboard` | `/ace-onboard` | Load project context |
 | `ace-task-work` | `/ace-task-work <taskref>` | Implement task changes |
-| `ace-git-create-pr` | `/ace-git-create-pr` | Create pull request |
+| `ace-github-pr-create` | `/ace-github-pr-create` | Create pull request |
 | `ace-review-pr` | `/ace-review-pr [pr#]` | Review code changes |
 | `ace-git-commit` | `/ace-git-commit` | Generate commit message |
-| `ace-git-update-pr-desc` | `/ace-git-update-pr-desc` | Update PR description |
+| `ace-github-pr-update` | `/ace-github-pr-update` | Update PR description |
 
 ### Parameter Passing
 
@@ -168,7 +168,7 @@ Some phases need parameters from previous phases (e.g., PR number):
 
 ```yaml
 - name: create-pr
-  skill: ace-git-create-pr
+  skill: ace-github-pr-create
   instructions: |
     Create a pull request.
     Capture the PR number for subsequent review phases.

@@ -39,7 +39,7 @@ steps:
       - Ensure all tests pass.
 
   - name: create-pr
-    skill: ace-git-create-pr
+    skill: ace-github-pr-create
     instructions:
       - Create a pull request for the bug fix.
       - Include reference to the bug/task in the PR description.
