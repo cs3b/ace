@@ -320,7 +320,7 @@ git reset --hard "$original_head"
 rm -rf "$cache_dir"
 
 # Clean sessions older than 7 days
-find .ace-local/ace-git -name "*-rebase" -type d -mtime +7 -exec rm -rf {} +
+find .ace-local/git -name "*-rebase" -type d -mtime +7 -exec rm -rf {} +
 ```
 
 ---
