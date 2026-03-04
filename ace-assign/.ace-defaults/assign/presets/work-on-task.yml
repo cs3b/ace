@@ -27,7 +27,7 @@ steps:
   - name: mark-task-done
     instructions:
       - "Mark task {{taskref}} as done."
-      - "Run: ace-task manage-status done {{taskref}}"
+      - "Run: ace-task update {{taskref}} --set status=done --move-to archive"
 
   - name: verify-test-suite
     skill: ace-test-verify-suite

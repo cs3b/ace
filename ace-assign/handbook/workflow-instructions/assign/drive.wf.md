@@ -167,6 +167,27 @@ ace-assign fork-run --assignment <id>@020
 - If status output is already scoped to `Current Phase: <root>.*` based on explicit `--assignment <id>@<root>`, continue inline.
 - If the current phase is a top-level phase with `FORK: yes`, delegate immediately.
 
+#### Nested Batch Containers (Container → Fork Children)
+
+A batch container (e.g., `010`) may show `FORK: yes` because it has fork-enabled children, even though the container itself is **not** fork-enabled (no `context: fork`). In this case, do **not** fork-run the container — iterate its children instead.
+
+**How to distinguish:**
+- **Direct fork target**: Phase has `context: fork` in its definition → fork-run the phase directly.
+- **Batch container with fork children**: Phase has `FORK: yes` but its children (e.g., `010.01`, `010.02`) are the ones with `context: fork` → iterate children sequentially, fork-running each pending child.
+
+**Pattern for batch containers:**
+```bash
+# Container 010 has FORK: yes but is itself a batch container
+# Its children 010.01, 010.02, etc. are the fork targets
+for CHILD in $(ace-assign status --assignment ${ASSIGNMENT_ID} --format json | \
+  ruby -rjson -e 'JSON.parse(STDIN.read)["phases"].select { |p| p["number"].start_with?("010.") && p["status"] == "pending" }.each { |p| puts p["number"] }'); do
+  ace-assign fork-run --assignment "${ASSIGNMENT_ID}@${CHILD}"
+  # Check status after each child completes before forking the next
+done
+```
+
+**Key rule**: Fork-run should target the first pending child with `context: fork`, not the container itself. After each child fork completes, check status and fork the next pending child.
+
 #### Example
 
 ```bash
@@ -223,6 +244,16 @@ After fork-run returns and completion is verified, the driver acts as the **guar
 4. **Only then continue** the main drive loop to the next phase.
 
 > The driver is the only entity with cross-subtree visibility. Skipping report review means errors in one subtree propagate silently to the next.
+
+#### Queue Advancement After Batch Container Completion
+
+After all fork subtrees within a batch container complete, the container auto-marks as Done. However, the queue pointer may not automatically advance to the next top-level phase.
+
+**After verifying all fork subtree reports**, if `ace-assign status` shows no Active phase (all completed phases but no new in-progress phase), run:
+```bash
+ace-assign start ${ASSIGNMENT_TARGET:+--assignment "$ASSIGNMENT_TARGET"}
+```
+This advances the queue to the next pending top-level phase.
 
 #### Fork-Run Crash Recovery (Partial Completion)
 

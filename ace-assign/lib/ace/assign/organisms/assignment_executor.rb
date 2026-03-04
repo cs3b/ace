@@ -651,6 +651,7 @@ module Ace
         def build_child_instructions(sub_name, parent_instructions, phase_def, task_ref: nil)
           parent_text = normalize_instructions(parent_instructions).strip
           focus = phase_def && phase_def["description"] ? phase_def["description"] : "Execute #{sub_name} sub-phase."
+          focus = focus.gsub("<taskref>", task_ref) if task_ref && !task_ref.empty?
           context = compact_task_context(parent_text, task_ref: task_ref)
           action = child_action_instructions(sub_name, parent_text, task_ref: task_ref)
           verification = verification_checklist(parent_text)
