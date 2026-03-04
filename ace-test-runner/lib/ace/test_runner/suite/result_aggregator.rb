@@ -8,8 +8,9 @@ module Ace
       class ResultAggregator
         attr_reader :packages
 
-        def initialize(packages)
+        def initialize(packages, report_root: nil)
           @packages = packages
+          @report_root = report_root
         end
 
         def aggregate
@@ -45,17 +46,23 @@ module Ace
 
         def collect_results
           @packages.map do |package|
-            summary_path = File.join(package["path"], "test-reports", "latest", "summary.json")
+            reports_dir = Atoms::ReportPathResolver.report_directory(
+              package["path"],
+              report_root: @report_root,
+              package_name: package["name"]
+            )
+            summary_path = reports_dir ? File.join(reports_dir, "summary.json") : nil
 
-            if File.exist?(summary_path)
+            if summary_path && File.exist?(summary_path)
               begin
                 data = JSON.parse(File.read(summary_path), symbolize_names: true)
                 data[:package] = package["name"]
                 data[:path] = package["path"]
+                data[:report_root] = @report_root
 
                 # Try to get assertions from report.json if not in summary
                 if !data[:assertions] || data[:assertions] == 0
-                  report_path = File.join(package["path"], "test-reports", "latest", "report.json")
+                  report_path = File.join(reports_dir, "report.json")
                   if File.exist?(report_path)
                     begin
                       report_data = JSON.parse(File.read(report_path), symbolize_names: true)
@@ -73,6 +80,7 @@ module Ace
                 {
                   package: package["name"],
                   path: package["path"],
+                  report_root: @report_root,
                   success: false,
                   error: "Failed to parse summary.json: #{e.message}",
                   total: 0,
@@ -86,6 +94,7 @@ module Ace
               {
                 package: package["name"],
                 path: package["path"],
+                report_root: @report_root,
                 success: false,
                 error: "No test results found (summary.json missing)",
                 total: 0,
@@ -102,6 +111,7 @@ module Ace
             {
               name: result[:package],
               path: result[:path],
+              report_root: result[:report_root] || @report_root,
               failures: result[:failed] || 0,
               errors: result[:errors] || 0,
               error_message: result[:error]

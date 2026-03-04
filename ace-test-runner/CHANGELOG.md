@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.9] - 2026-03-04
+
+### Changed
+- Default `ace-test` report storage now uses centralized `.ace-local/test/reports/<short-package>/<runid>/` paths
+- Suite report discovery and subprocess report routing now use configured report roots instead of package-local `test-reports/`
+
+### Fixed
+- Report cleanup now handles nested centralized layouts (`<root>/<package>/<runid>/`) in addition to legacy flat layouts
+- Report path resolution and failed-package hints now prioritize centralized report roots with legacy `test-reports` fallback
+- Test configuration writable-directory validation now accepts nested report paths when an ancestor directory is writable
+
+### Technical
+- Added centralized report directory resolver atom and focused regression coverage for suite aggregation/duration fallback behavior
+- Updated defaults, fixtures, and documentation to `.ace-local/test/reports` conventions
+
 ## [0.15.8] - 2026-02-27
 
 ### Fixed

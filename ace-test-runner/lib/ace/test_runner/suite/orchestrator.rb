@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "open3"
+require "pathname"
 
 module Ace
   module TestRunner
@@ -27,12 +28,15 @@ module Ace
 
         def run
           validate_packages!
+          test_options = (@config.dig("test_suite", "test_options") || {}).dup
+          report_root = normalize_report_root(test_options["report_dir"])
+          test_options["report_dir"] = report_root if report_root
 
           display_manager = create_display_manager
           process_monitor = ProcessMonitor.new(@config.dig("test_suite", "max_parallel") || 10)
 
           # Enrich packages with historical duration data for scheduling
-          estimator = DurationEstimator.new
+          estimator = DurationEstimator.new(report_root: report_root)
           estimator.enrich_packages(@packages)
 
           # Sort by expected duration (descending), then priority (ascending)
@@ -44,7 +48,7 @@ module Ace
 
           # Start processes
           sorted_packages.each do |package|
-            process_monitor.start_package(package, @config.dig("test_suite", "test_options") || {}) do |pkg, status, output|
+            process_monitor.start_package(package, test_options) do |pkg, status, output|
               display_manager.update_package(pkg, status, output)
 
               if status[:completed]
@@ -65,7 +69,7 @@ module Ace
           display_manager.show_final_results
 
           # Aggregate results
-          aggregator = ResultAggregator.new(@packages)
+          aggregator = ResultAggregator.new(@packages, report_root: report_root)
           summary = aggregator.aggregate
 
           display_manager.show_summary(summary)
@@ -102,6 +106,13 @@ module Ace
           else
             SimpleDisplayManager.new(@packages, @config)
           end
+        end
+
+        def normalize_report_root(report_root)
+          return nil if report_root.nil? || report_root.to_s.empty?
+          return report_root if Pathname.new(report_root).absolute?
+
+          File.expand_path(report_root, @project_root || Dir.pwd)
         end
       end
     end

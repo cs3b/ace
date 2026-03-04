@@ -46,7 +46,7 @@ module Ace
           OUTPUT:
             By default, shows progress bar with summary
             Use --format json for structured output
-            Reports saved to test-reports/ by default
+            Reports saved to .ace-local/test/reports/<package>/ by default
             Exit codes: 0 (pass), 1 (fail), 2 (error)
 
           TEST HIERARCHY:
@@ -72,7 +72,7 @@ module Ace
 
         # Output format options
         option :format, type: :string, aliases: %w[-f], desc: "Output format: progress (default), progress-file, json"
-        option :report_dir, type: :string, aliases: %w[-d], desc: "Report storage directory (default: test-reports/)"
+        option :report_dir, type: :string, aliases: %w[-d], desc: "Report root directory (default: .ace-local/test/reports)"
         option :save_reports, type: :boolean, desc: "Skip saving detailed reports"
 
         # Test execution options
@@ -214,7 +214,7 @@ module Ace
 
           timestamp_generator = Atoms::TimestampGenerator.new
           storage = Molecules::ReportStorage.new(
-            base_dir: config[:defaults][:report_dir] || "test-reports",
+            base_dir: config[:defaults][:report_dir] || ".ace-local/test/reports",
             timestamp_generator: timestamp_generator
           )
 

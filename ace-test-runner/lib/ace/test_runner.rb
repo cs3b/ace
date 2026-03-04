@@ -31,6 +31,7 @@ require_relative "test_runner/atoms/result_parser"
 require_relative "test_runner/atoms/timestamp_generator"
 require_relative "test_runner/atoms/lazy_loader"
 require_relative "test_runner/atoms/report_path_resolver"
+require_relative "test_runner/atoms/report_directory_resolver"
 
 # Molecules - Core operations (always needed for basic test running)
 require_relative "test_runner/molecules/test_executor"

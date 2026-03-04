@@ -3,7 +3,7 @@
 require_relative "../formatters/base_formatter"
 require_relative "../molecules/config_loader"
 require_relative "../molecules/pattern_resolver"
-require_relative "../atoms/test_folder_detector"
+require_relative "../atoms/report_directory_resolver"
 require_relative "sequential_group_executor"
 
 module Ace
@@ -76,9 +76,7 @@ module Ace
             return handle_no_tests
           end
 
-          # Detect and set report directory based on test file location
-          # This ensures test-reports is created at the same level as the test folder
-          detect_and_set_report_dir(test_files)
+          resolve_and_set_report_dir_context(test_files)
 
           # Count total available test files (before filtering)
           total_available = count_total_test_files
@@ -213,8 +211,7 @@ module Ace
           # Count total files
           all_files = groups.flat_map { |g| g[:files] }
 
-          # Detect and set report directory based on test file location
-          detect_and_set_report_dir(all_files)
+          resolve_and_set_report_dir_context(all_files)
 
           total_available = count_total_test_files
 
@@ -539,18 +536,25 @@ module Ace
           aggregated
         end
 
-        def detect_and_set_report_dir(test_files)
-          # Only auto-detect if not explicitly configured by user via --report-dir option
-          # We track this to avoid overriding user's explicit choice
-          return if @report_dir_override == :user_specified
+        def resolve_and_set_report_dir_context(test_files)
+          explicit_cli_override = @report_dir_override == :user_specified
 
-          detected_dir = Atoms::TestFolderDetector.detect_report_dir(test_files)
+          report_root = Atoms::ReportDirectoryResolver.resolve_report_root(
+            @configuration.report_dir,
+            explicit_cli_override: explicit_cli_override,
+            start_path: Dir.pwd
+          )
 
-          if detected_dir
-            # Override the configuration's report_dir with detected location
-            @configuration.report_dir = detected_dir
-            @report_dir_override = :auto_detected
-          end
+          package_name = Atoms::ReportDirectoryResolver.infer_package_name(
+            package_dir: @package_dir,
+            test_files: test_files,
+            cwd: Dir.pwd
+          )
+
+          @configuration.report_dir = Atoms::ReportDirectoryResolver.resolve_package_report_dir(
+            report_root: report_root,
+            package_name: package_name
+          )
         end
 
         def save_reports(report)

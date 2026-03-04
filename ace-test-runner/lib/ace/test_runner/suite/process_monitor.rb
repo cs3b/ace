@@ -45,6 +45,7 @@ module Ace
             start_time: start_time,
             callback: callback,
             output: +"",
+            report_root: test_options["report_dir"],
             test_count: 0,
             tests_run: 0,
             dots: +""
@@ -96,8 +97,13 @@ module Ace
 
               # Try to get accurate results from summary.json first
               results = nil
-              summary_file = File.join(package["path"], "test-reports", "latest", "summary.json")
-              if File.exist?(summary_file)
+              reports_dir = Atoms::ReportPathResolver.report_directory(
+                package["path"],
+                report_root: process_info[:report_root],
+                package_name: package["name"]
+              )
+              summary_file = reports_dir ? File.join(reports_dir, "summary.json") : nil
+              if summary_file && File.exist?(summary_file)
                 begin
                   json_data = JSON.parse(File.read(summary_file))
                   results = {
@@ -111,7 +117,7 @@ module Ace
 
                   # Also try to get assertions from report.json if not in summary
                   if results[:assertions] == 0
-                    report_file = File.join(package["path"], "test-reports", "latest", "report.json")
+                    report_file = File.join(reports_dir, "report.json")
                     if File.exist?(report_file)
                       report_data = JSON.parse(File.read(report_file))
                       results[:assertions] = report_data.dig("result", "assertions") || 0
@@ -191,6 +197,7 @@ module Ace
           cmd_parts << "--no-save" unless options["save_reports"]
           cmd_parts << "--fail-fast" if options["fail_fast"]
           cmd_parts << "--no-color" unless options.fetch("color", true)
+          cmd_parts << "--report-dir" << options["report_dir"] if options["report_dir"]
 
           # Build command string
           # Note: Do NOT set CI=true here - respect the existing environment
