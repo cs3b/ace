@@ -9,7 +9,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 * Task reference (e.g., `215.03`) OR detailed inline instructions
 * Clean git working directory (or staged changes ready for commit)
 * Understanding of the standard delivery workflow steps
-* Access to required skills (`/ace-task-work`, `/ace-git-commit`, `/ace-git-create-pr`, `/ace-review-pr`)
+* Access to required skills (`/ace-task-work`, `/ace-git-commit`, `/ace-github-pr-create`, `/ace-review-pr`)
 
 ## Project Context Loading
 
@@ -35,7 +35,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 
 ### Phase 2: PR & Initial Review
 
-* [ ] Create or update PR (`/ace-git-create-pr`)
+* [ ] Create or update PR (`/ace-github-pr-create`)
 * [ ] Run initial review (`/ace-review-pr`)
 * [ ] Implement HIGH/CRITICAL feedback immediately
 
@@ -68,7 +68,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    2. Commit all changes (/ace-git-commit)
    3. Release modified packages (/ace-release)
    4. Mark task done and push to remote
-   5. Create/update PR (/ace-git-create-pr)
+   5. Create/update PR (/ace-github-pr-create)
    6. Initial review (/ace-review-pr)
    7. Implement HIGH/CRITICAL feedback
    8. Deep review (/ace-review-pr preset: code-deep)
@@ -109,7 +109,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 2: PR & Initial Review
 
 1. **Create or Update PR:**
-   * Run `/ace-git-create-pr` to create pull request
+   * Run `/ace-github-pr-create` to create pull request
    * Include task reference and summary
 
 2. **Run Initial Review:**
