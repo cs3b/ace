@@ -582,7 +582,7 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_equal "ace-task-plan", plan_phase.skill
         assert_equal "ace-task-work", work_phase.skill
         assert_nil verify_phase.skill
-        assert_equal "ace-release", release_phase.skill
+        assert_nil release_phase.skill
 
         # Parent is fork context: children remain non-fork and execute in same delegated subtree process
         assert_nil onboard_phase.context
@@ -595,6 +595,11 @@ class AssignmentExecutorTest < AceAssignTestCase
         # Child instructions include parent task context for parameter extraction
         assert_includes work_phase.instructions, "Task context:"
         assert_includes work_phase.instructions, "Do work"
+        assert_includes verify_phase.instructions, "Action:"
+        assert_includes verify_phase.instructions, "Identify modified packages"
+        assert_includes verify_phase.instructions, "ace-test --profile 6"
+        assert_includes release_phase.instructions, "Action:"
+        assert_includes release_phase.instructions, "Run /ace-release"
       ensure
         Ace::Assign.reset_config!
       end

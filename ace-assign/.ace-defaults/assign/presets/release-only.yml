@@ -18,8 +18,8 @@ steps:
       - This step is optional if already in context.
 
   - name: release
-    skill: ace-release
     instructions:
+      - Run /ace-release.
       - "Bump {{version_type}} version and update CHANGELOGs."
       - Follow semantic versioning conventions.
       - Update both gem version files and CHANGELOGs.

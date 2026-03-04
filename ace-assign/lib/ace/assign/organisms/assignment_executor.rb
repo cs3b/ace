@@ -707,6 +707,10 @@ module Ace
             "- Analyze requirements#{task_hint}.\n- Plan against the behavioral spec structure: cover Interface Contract, Error Handling, Edge Cases, and operating modes (dry-run, force, verbose, quiet) where relevant.\n- If the spec is missing details needed for implementation, include them in a \"Behavioral Gaps\" section instead of silently working around omissions.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"
             "- Implement the required changes#{task_hint}.\n- Verify behavior with relevant checks/tests before reporting completion."
+          when "verify-test"
+            "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this phase skipped with a clear reason."
+          when "release", "release-minor"
+            "- Run /ace-release to bump version and update both package and root changelogs."
           else
             "- Execute the #{sub_name} step."
           end

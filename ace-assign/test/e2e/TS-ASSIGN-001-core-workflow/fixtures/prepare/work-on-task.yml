@@ -30,8 +30,8 @@ steps:
       - "Run: ace-taskflow task done {{taskref}}"
 
   - name: release-minor
-    skill: ace-release
     instructions:
+      - Run /ace-release.
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.

@@ -44,8 +44,8 @@ steps:
 
   - name: release-minor
     number: "020"
-    skill: ace-release
     instructions:
+      - Run /ace-release.
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
