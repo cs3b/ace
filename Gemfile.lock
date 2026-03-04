@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.17.0)
+    ace-assign (0.17.1)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
@@ -20,7 +20,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.31.9)
+    ace-bundle (0.31.10)
       ace-git (~> 0.11)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -31,7 +31,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.22.0)
+    ace-docs (0.22.1)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.24)
@@ -57,7 +57,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.8.0)
+    ace-git-secrets (0.8.1)
       ace-b36ts (~> 0.7)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -148,7 +148,7 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.17.0)
+    ace-prompt-prep (0.17.1)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -171,7 +171,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.43.0)
+    ace-review (0.43.1)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -194,7 +194,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.7.0)
+    ace-sim (0.7.1)
       ace-b36ts (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -267,7 +267,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.19.0)
+    ace-task (0.19.1)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)
