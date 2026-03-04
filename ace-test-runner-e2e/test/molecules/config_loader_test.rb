@@ -29,8 +29,8 @@ class ConfigLoaderTest < Minitest::Test
 
   def test_load_includes_cli_args
     config = ConfigLoader.load
-    assert_equal "dangerously-skip-permissions", config.dig("providers", "cli_args", "claude")
-    assert_equal "full-auto", config.dig("providers", "cli_args", "codex")
+    assert_equal ["dangerously-skip-permissions"], config.dig("providers", "cli_args", "claude")
+    assert_equal ["--sandbox danger-full-access", "--ask-for-approval never"], config.dig("providers", "cli_args", "codex")
   end
 
   def test_load_includes_existing_config_sections
@@ -64,11 +64,11 @@ class ConfigLoaderTest < Minitest::Test
   end
 
   def test_cli_args_for_claude
-    assert_equal "dangerously-skip-permissions", ConfigLoader.cli_args_for("claude")
+    assert_equal ["dangerously-skip-permissions"], ConfigLoader.cli_args_for("claude")
   end
 
   def test_cli_args_for_codex
-    assert_equal "full-auto", ConfigLoader.cli_args_for("codex")
+    assert_equal ["--sandbox danger-full-access", "--ask-for-approval never"], ConfigLoader.cli_args_for("codex")
   end
 
   def test_cli_args_for_unknown_provider

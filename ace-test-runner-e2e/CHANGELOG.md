@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Normalize `providers.cli_args` config values to arrays and support merged string/array CLI args in adapter and executor.
+
 ## [0.20.5] - 2026-02-25
 
 ### Technical
