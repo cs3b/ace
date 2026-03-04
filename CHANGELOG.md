@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.757] - 2026-03-04
+
+### Fixed
+- **ace-support-nav v0.18.2**: Test suite now uses sandbox-safe HOME isolation for user-source/user-protocol discovery tests, avoiding permission errors against real `~/.ace` paths.
+
 ## [0.9.756] - 2026-03-04
 
 ### Fixed
