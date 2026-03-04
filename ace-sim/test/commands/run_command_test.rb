@@ -17,7 +17,7 @@ class RunCommandTest < AceSimTestCase
         success: @success,
         status: @success ? "ok" : "failed",
         run_id: session.run_id,
-        run_dir: ".cache/ace-sim/simulations/#{session.run_id}",
+        run_dir: ".ace-local/sim/simulations/#{session.run_id}",
         error: @success ? nil : "boom"
       }
     end
