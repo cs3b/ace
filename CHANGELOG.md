@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.759] - 2026-03-04
+
+### Fixed
+- **ace-task v0.20.2**: Updated doctor CLI unit tests for `provider_cli_args` three-argument signature, resolving suite failures from stale test invocation.
+
 ## [0.9.758] - 2026-03-04
 
 ### Fixed
