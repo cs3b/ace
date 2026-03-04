@@ -25,35 +25,46 @@ When user requests a scoped commit/release:
 - Use path-scoped commit commands, e.g. `mise exec -- ace-git-commit <path1> <path2> ...`.
 - Treat unrelated modified files as acceptable background state unless user explicitly asks to clean/revert them.
 
-## Skill First Execution (Hard Rule)
+## Skill-First Planning and Execution (Hard Rule)
 
-If a user names a skill (for example `$ace-github-pr-create`) or the task clearly matches an available skill, the skill is mandatory and takes precedence over manual command execution.
+If a user names a skill (for example `$ace-github-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
 
-Execution order:
+### Planning phase (mandatory load, optional run)
+
+Before drafting or finalizing any substantial plan:
+
 1. Match named or clearly relevant skill(s)
-2. Load each selected skill's `SKILL.md` instructions
-3. Run the skill workflow instruction(s)
-4. Use manual commands only when no applicable skill exists or the skill is unavailable
+2. Load each selected skill's `SKILL.md`
+3. Load referenced workflow/guidance resources (`wfi://`, `guide://`, `tmpl://`) when available
+4. Decide per skill:
+   - **Load-only mode**: use skill/workflow knowledge to shape the plan without running the full workflow
+   - **Run mode**: execute the full skill workflow when that produces better planning artifacts or validates assumptions
+5. Include a short `Skills Applied` section in the plan:
+   - `Loaded:` skills/resources read for planning
+   - `Executed:` workflows actually run (or `none`)
+   - `Why not executed:` brief reason when a relevant skill stayed load-only
 
-Before any non-read command, perform a quick skill check:
-- List candidate skills for the task
-- Select the chosen skill (or state "no applicable skill found")
-- Proceed only after this check
+Planning fail-closed rule:
+- A substantial plan is incomplete if a clearly relevant skill was not loaded.
+- If discovered later, stop and re-plan from skill-informed context.
 
-Planning-time requirement:
-- Planning is execution of process knowledge. Before drafting or finalizing any plan, run the same skill check used for execution.
-- For each chosen skill, load workflow instructions (`mise exec -- ace-bundle wfi://...`) when available.
-- If protocol lookup fails, read the referenced workflow file directly and continue with that as the source of truth.
-- Every substantial plan must include a short `Skills Applied` section listing which skills/workflows were loaded.
+### Execution phase (skill workflow first)
 
-Fail-closed rule:
-- A plan is incomplete if a clearly relevant skill was not loaded.
-- If this is discovered later, stop and restart planning from the applicable skill outputs.
+Before any non-read command:
 
-Violation recovery:
-- If manual execution starts and a matching skill is identified later, stop manual flow
-- Run the matching skill workflow
-- Continue from skill outputs as the source of truth
+1. Run a quick skill check and list candidate skills
+2. Load selected `SKILL.md` instructions
+3. Run selected skill workflow(s) as primary path
+4. Use manual commands only when:
+   - no applicable skill exists, or
+   - a skill is unavailable/blocked
+5. If manual fallback is used, state the reason briefly in status updates.
+
+Execution violation recovery:
+- If manual execution starts and a matching skill is identified later:
+  - stop manual flow
+  - run the matching skill workflow
+  - continue from skill outputs as source of truth
 
 ## Temporary Files
 
