@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-03-04
+
+### Fixed
+- Sandbox-safe HOME isolation in user-source and user-protocol tests to avoid permission errors when writing under real `~/.ace`.
+
 ## [0.18.1] - 2026-03-04
 
 ### Changed

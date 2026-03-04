@@ -70,8 +70,12 @@ module Ace
           end
 
           def test_protocol_priority_project_overrides_user
+            old_home = ENV["HOME"]
+            temp_home = Dir.mktmpdir("ace_nav_home")
+            ENV["HOME"] = temp_home
+
             # Create user protocol
-            user_protocols_dir = File.expand_path("~/.ace/protocols")
+            user_protocols_dir = File.join(temp_home, ".ace", "protocols")
             FileUtils.mkdir_p(user_protocols_dir)
 
             user_protocol = {
@@ -95,6 +99,8 @@ module Ace
             assert_equal "Project Override", protocols["override"]["name"]
             assert_equal [".project.md"], protocols["override"]["extensions"]
           ensure
+            ENV["HOME"] = old_home
+            FileUtils.rm_rf(temp_home) if temp_home && Dir.exist?(temp_home)
             # Cleanup user directory
             FileUtils.rm_rf(user_protocols_dir) if Dir.exist?(user_protocols_dir)
           end
