@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.756] - 2026-03-04
+
+### Fixed
+- **ace-assign v0.18.2**: Enforced single-active subtree invariants in fork execution (`fork-run` and scoped `advance`/`finish`) to prevent concurrent active sibling phases in the same fork subtree.
+
 ## [0.9.755] - 2026-03-04
 
 ### Fixed
