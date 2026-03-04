@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-03-04
+
+### Fixed
+- Prompt builder now fails fast on `ace-bundle` errors instead of silently degrading
+- `fresh_context_files?` now returns true for empty context files, preventing unnecessary plan regeneration
+- `build_unique_plan_path` uses current timestamp with collision suffix instead of future timestamps
+- Squashed phantom intermediate CHANGELOG versions (0.15.1–0.18.0) into single 0.18.1 entry
+
+## [0.18.1] - 2026-03-04
+
+### Added
+- `plan` CLI command: `ace-task plan <ref>` resolves a cached implementation plan or generates one when missing/stale
+- `TaskPlanCache` molecule for plan artifact management under `.cache/ace-task/{task-id}/`, with latest-pointer fallback and freshness checks
+- `TaskPlanGenerator` molecule for LLM-backed plan generation with `--model` override support
+- `TaskPlanPromptBuilder` with file-based debugging and config file generation for prompt introspection
+- Cache artifact contract for plan output (`{b36ts}-plan.md`, `latest-plan.md`, `latest-plan.meta.yml`)
+- Anchored checklist template with stable step IDs, `path:line` anchors, dependencies, and verification commands
+- New defaults key `task.plan.model` in `.ace-defaults/task/config.yml`
+- Vertical slicing specs and modernized priority indicators (single glyph for critical)
+- Dual-slug naming (folder context slug + file action slug) and short ID resolution
+- Colored status symbols and global folder statistics to list output
+- Execution Context as required section in plan output
+
+### Changed
+- Work workflow rewritten: plan-first execution with sub-phases `onboard-base → onboard → task-load → plan-task → work-on-task`
+- Planning workflow transitioned to inline reporting contract (no file writes)
+- Default plan model set to claude:opus
+- Cache directory renamed from `.cache/task/` to `.cache/ace-task/` for consistency
+- Narrowed exception rescue in `TaskPlanGenerator` to specific runtime/IO exceptions
+- Extracted shared `PathUtils.relative_path` module from duplicated code
+- Plan template verification commands use bare `ace-test`/`ace-lint` (removed `mise exec --` prefix)
+
+### Fixed
+- Draft workflow: corrected stale idea archive reference to use `ace-idea move` command
+- Work workflow: clarified checkbox tracking with `path:line` anchor mapping to Success Criteria / Deliverables
+- Bounded `build_unique_plan_path` loop with MAX_UNIQUE_ATTEMPTS guard to prevent infinite spin
+
+### Removed
+- Batch workflow instructions (consolidated into main workflows)
+
 ## [0.15.0] - 2026-03-03
 
 ### Added

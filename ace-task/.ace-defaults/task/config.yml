@@ -23,3 +23,7 @@ task:
   # Doctor command: CLI args per provider for agent sessions
   doctor_cli_args:
     gemini: "yolo"
+
+  # Plan command defaults
+  plan:
+    model: "claude:opus"

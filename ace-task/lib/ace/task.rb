@@ -22,6 +22,9 @@ require_relative "task/molecules/task_loader"
 require_relative "task/molecules/task_creator"
 require_relative "task/molecules/subtask_creator"
 require_relative "task/molecules/task_display_formatter"
+require_relative "task/molecules/path_utils"
+require_relative "task/molecules/task_plan_cache"
+require_relative "task/molecules/task_plan_generator"
 
 # Organisms
 require_relative "task/organisms/task_manager"
