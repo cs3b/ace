@@ -76,3 +76,8 @@ When creating temporary files (debugging output, environment captures, test arti
   - `.ace-local/<subfolder>/` - For project-specific cached data (e.g., `.ace-local/test-e2e/`)
 
 This prevents accidental commits and keeps the repository clean.
+
+## Test Execution Policy
+
+- `mise exec -- ace-test` and `mise exec -- ace-test-suite` are allowed by default when applicable.
+- Do **not** run `ace-test-e2e`, `ace-test-e2e-suite`, or other E2E runners unless the user explicitly asks.
