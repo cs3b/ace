@@ -1,0 +1,11 @@
+---
+# Template Sources Protocol Configuration for ace-llm gem
+name: ace-llm
+type: gem
+description: Plan-mode and LLM templates from ace-llm gem
+priority: 10
+
+config:
+  relative_path: handbook/templates
+  pattern: "**/*.template.md"
+  enabled: true
