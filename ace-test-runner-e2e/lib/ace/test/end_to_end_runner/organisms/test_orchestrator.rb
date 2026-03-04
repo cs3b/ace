@@ -107,7 +107,7 @@ module Ace
           def setup_sandbox_if_ts(scenario, timestamp, output)
             return [nil, nil, nil] unless cli_provider? && scenario.setup_steps.any?
 
-            sandbox_dir = File.join(@base_dir, ".cache", "ace-test-e2e", scenario.dir_name(timestamp))
+            sandbox_dir = File.join(@base_dir, ".ace-local", "test-e2e", scenario.dir_name(timestamp))
             setup_executor = Molecules::SetupExecutor.new
             result = setup_executor.execute(
               setup_steps: scenario.setup_steps,
@@ -318,7 +318,7 @@ module Ace
           # Build report directory path for a scenario
           # @return [String] Absolute path to reports directory
           def report_dir_for(scenario, timestamp)
-            cache_dir = File.join(@base_dir, ".cache", "ace-test-e2e")
+            cache_dir = File.join(@base_dir, ".ace-local", "test-e2e")
             File.join(cache_dir, "#{scenario.dir_name(timestamp)}-reports")
           end
 

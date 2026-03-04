@@ -19,7 +19,7 @@ if ARGV.first && %w[--help -h].include?(ARGV.first)
       ace-test-e2e-sh <test-dir> [command...]
 
     ARGUMENTS
-      test-dir                          Sandbox directory path (must be under .cache/ace-test-e2e/)
+      test-dir                          Sandbox directory path (must be under .ace-local/test-e2e/)
       command                           Command to execute inside the sandbox
 
     OPTIONS
@@ -47,7 +47,7 @@ end
 
 test_dir = File.expand_path(test_dir)
 
-unless test_dir.include?("/.cache/ace-test-e2e/")
+unless test_dir.include?("/.ace-local/test-e2e/")
   warn "FATAL: Not a sandbox path: #{test_dir}"
   exit 1
 end

@@ -31,7 +31,7 @@ This workflow determines whether each failure is caused by:
 ## Prerequisites
 
 - E2E tests have already run and produced cache artifacts
-- Reports are available under `.ace-local/ace-test-e2e/*-reports/`
+- Reports are available under `.ace-local/test-e2e/*-reports/`
 
 ## Project Context Loading
 
@@ -64,7 +64,7 @@ Use these files as primary evidence:
 
 1. Locate latest failing report directories
 ```bash
-ls -lt .ace-local/ace-test-e2e/*-reports/ 2>/dev/null | head -20
+ls -lt .ace-local/test-e2e/*-reports/ 2>/dev/null | head -20
 ```
 
 2. For each failing scenario, extract:

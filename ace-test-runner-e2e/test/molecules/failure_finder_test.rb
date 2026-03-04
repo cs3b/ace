@@ -17,7 +17,7 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_with_empty_cache_directory
     Dir.mktmpdir do |tmpdir|
-      FileUtils.mkdir_p(File.join(tmpdir, ".cache", "ace-test-e2e"))
+      FileUtils.mkdir_p(File.join(tmpdir, ".ace-local", "test-e2e"))
       result = @finder.find_failures(package: "ace-lint", base_dir: tmpdir)
       assert_empty result, "Should return empty array when cache is empty"
     end
@@ -246,7 +246,7 @@ class FailureFinderTest < Minitest::Test
 
   def test_find_failures_skips_malformed_yaml
     Dir.mktmpdir do |tmpdir|
-      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "8p0001-lint-ts001-reports")
+      cache_dir = File.join(tmpdir, ".ace-local", "test-e2e", "8p0001-lint-ts001-reports")
       FileUtils.mkdir_p(cache_dir)
       File.write(File.join(cache_dir, "metadata.yml"), "not: valid: yaml: [}")
 
@@ -581,7 +581,7 @@ class FailureFinderTest < Minitest::Test
 
   # Helper to create a metadata.yml file in a report directory
   def create_metadata(base_dir, dir_name, data)
-    report_dir = File.join(base_dir, ".cache", "ace-test-e2e", dir_name)
+    report_dir = File.join(base_dir, ".ace-local", "test-e2e", dir_name)
     FileUtils.mkdir_p(report_dir)
     File.write(File.join(report_dir, "metadata.yml"), YAML.dump(data))
   end

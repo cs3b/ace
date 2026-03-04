@@ -239,7 +239,7 @@ Present the execution summary:
 
 **Execute a pre-approved plan:**
 ```
-/ace-e2e-rewrite ace-lint --plan .ace-local/ace-test-e2e/plan-ace-lint.md
+/ace-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md
 ```
 
 **Run full pipeline (review → plan → rewrite):**
@@ -249,7 +249,7 @@ Present the execution summary:
 
 **Dry-run to preview changes:**
 ```
-/ace-e2e-rewrite ace-lint --plan .ace-local/ace-test-e2e/plan-ace-lint.md --dry-run
+/ace-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md --dry-run
 ```
 
 ## Error Handling

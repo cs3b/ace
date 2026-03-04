@@ -19,7 +19,7 @@ class SuiteReportWriterTest < Minitest::Test
       path = @writer.write(results, scenarios,
                            package: "ace-lint", timestamp: "abc123", base_dir: tmpdir)
 
-      assert_equal File.join(tmpdir, ".cache", "ace-test-e2e", "abc123-final-report.md"), path
+      assert_equal File.join(tmpdir, ".ace-local", "test-e2e", "abc123-final-report.md"), path
       assert File.exist?(path), "Report file should exist"
     end
   end
@@ -169,7 +169,7 @@ class SuiteReportWriterTest < Minitest::Test
   def test_reads_summary_and_experience_from_report_dirs
     Dir.mktmpdir do |tmpdir|
       # Create report dirs with summary and experience files
-      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
+      report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-ts001-reports")
       FileUtils.mkdir_p(report_dir)
       File.write(File.join(report_dir, "summary.r.md"), "## Summary\nTest passed cleanly.")
       File.write(File.join(report_dir, "experience.r.md"), "## Experience\nSmooth run.")
@@ -204,7 +204,7 @@ class SuiteReportWriterTest < Minitest::Test
   def test_handles_missing_report_files_gracefully
     Dir.mktmpdir do |tmpdir|
       # Report dir exists but no files inside
-      report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
+      report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-ts001-reports")
       FileUtils.mkdir_p(report_dir)
 
       results = [
@@ -309,7 +309,7 @@ class SuiteReportWriterTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       results, scenarios = build_all_passing(tmpdir)
       stub_llm_query("# Report")
-      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      cache_dir = File.join(tmpdir, ".ace-local", "test-e2e")
       refute Dir.exist?(cache_dir), "Cache dir should not exist before write"
 
       @writer.write(results, scenarios,
@@ -368,7 +368,7 @@ class SuiteReportWriterTest < Minitest::Test
           { id: "TC-002", description: "Second check", status: "pass" }
         ],
         summary: "All passed",
-        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
+        report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-ts001-reports")
       ),
       TestResult.new(
         test_id: "TS-TEST-002",
@@ -378,7 +378,7 @@ class SuiteReportWriterTest < Minitest::Test
           { id: "TC-002", description: "Second check", status: "fail" }
         ],
         summary: "One failed",
-        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-mt002-reports")
+        report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-mt002-reports")
       )
     ]
 
@@ -399,7 +399,7 @@ class SuiteReportWriterTest < Minitest::Test
           { id: "TC-001", description: "First check", status: "pass" }
         ],
         summary: "Passed",
-        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-ts001-reports")
+        report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-ts001-reports")
       ),
       TestResult.new(
         test_id: "TS-TEST-002",
@@ -408,7 +408,7 @@ class SuiteReportWriterTest < Minitest::Test
           { id: "TC-001", description: "First check", status: "pass" }
         ],
         summary: "Passed",
-        report_dir: File.join(tmpdir, ".cache", "ace-test-e2e", "ts1234-lint-mt002-reports")
+        report_dir: File.join(tmpdir, ".ace-local", "test-e2e", "ts1234-lint-mt002-reports")
       )
     ]
 
