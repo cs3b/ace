@@ -67,7 +67,7 @@ defaults:
 #   # Where to store review outputs
 #   # Detection order (if not specified):
 #   #   1. Try: $(ace-task release --path reviews)
-#   #   2. Fallback: .cache/ace-review/sessions/
+#   #   2. Fallback: .ace-local/review/sessions/
 #   # You can override with custom path (supports %{release} placeholder):
 #   base_path: ".ace-tasks/%{release}/reviews"
 #   auto_organize: true

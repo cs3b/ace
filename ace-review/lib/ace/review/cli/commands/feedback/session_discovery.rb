@@ -54,7 +54,8 @@ module Ace
             # @return [Array<String>] All session directory paths, sorted by mtime (newest first)
             def find_all_sessions
               root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-              cache_dir = File.join(root, ".cache", "ace-review", "sessions")
+              cache_dir = File.join(root, ".ace-local", "review", "sessions")
+              cache_dir = File.join(root, ".cache", "ace-review", "sessions") unless Dir.exist?(cache_dir)
               return [] unless Dir.exist?(cache_dir)
 
               Dir.glob(File.join(cache_dir, "review-*"))
