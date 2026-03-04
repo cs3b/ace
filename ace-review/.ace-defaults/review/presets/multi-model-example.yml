@@ -5,7 +5,7 @@ description: "Multi-model code review example"
 
 # Use models array for multi-model execution
 models:
-  - google:gemini-2.5-flash  # Fast, good for quick feedback
+  - codex:codex              # Strong code-focused reviewer
   - openai:gpt-4             # Deep analysis (if available)
   - anthropic:claude-sonnet  # Code understanding (if available)
 
