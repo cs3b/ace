@@ -26,6 +26,7 @@ Run `ace-*` commands directly. Do not pipe, redirect, or post-process their outp
 | `ace-task list` | List tasks in current release |
 | `ace-task move 047 --to archive` | Move task to special folder |
 | `ace-task update 047 --set status=done` | Update task frontmatter fields |
+| `ace-task plan 047` | Resolve or generate implementation plan |
 | `ace-task doctor` | Run health checks and auto-fix |
 | `ace-task done 047` | Mark task complete |
 | `ace-taskflow doctor` | Run health checks and auto-fix (legacy) |
