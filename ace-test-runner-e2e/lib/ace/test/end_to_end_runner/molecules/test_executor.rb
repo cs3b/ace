@@ -89,7 +89,7 @@ module Ace
             end
 
             merged_args = merge_cli_args(
-              Atoms::CliProviderAdapter.required_cli_args(@provider),
+              Atoms::CliProviderAdapter.required_cli_args_list(@provider),
               cli_args
             )
 
@@ -201,7 +201,7 @@ module Ace
               )
 
               merged_args = merge_cli_args(
-                Atoms::CliProviderAdapter.required_cli_args(@provider),
+                Atoms::CliProviderAdapter.required_cli_args_list(@provider),
                 cli_args
               )
 
