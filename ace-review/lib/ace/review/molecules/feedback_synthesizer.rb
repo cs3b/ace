@@ -2,7 +2,7 @@
 
 require "json"
 require "fileutils"
-require "ace/support/items/atoms/tmp_workspace"
+require "tmpdir"
 
 module Ace
   module Review
@@ -435,7 +435,7 @@ module Ace
         #
         # @return [String] Temp directory path
         def create_temp_session_dir
-          Ace::Support::Items::Atoms::TmpWorkspace.create("feedback-synthesis")
+          Dir.mktmpdir("feedback-synthesis")
         end
 
         # Display synthesis start message
