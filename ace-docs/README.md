@@ -300,7 +300,7 @@ global_rules:
   require_toc: true
 
 # Analysis settings
-cache_dir: ".ace-local/ace-docs"
+cache_dir: ".ace-local/docs"
 llm_timeout: 120  # Seconds for LLM queries
 ```
 
