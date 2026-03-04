@@ -182,6 +182,56 @@ class TaskPlanPromptBuilderTest < AceTaskTestCase
     assert_match(/\A[0-9a-z]{6}-user\.md\z/, prompt_basename)
   end
 
+  def test_plan_mode_template_contains_all_required_headings
+    template_path = File.expand_path(
+      "../../../ace-llm/handbook/templates/agent/plan-mode.template.md",
+      __dir__
+    )
+    skip "plan-mode.template.md not found" unless File.exist?(template_path)
+    content = File.read(template_path)
+
+    required_headings = %w[
+      Task\ Summary
+      Execution\ Context
+      Technical\ Approach
+      File\ Modifications
+      Plan\ Checklist
+      Test\ Plan
+      Risk\ Assessment
+      Freshness\ Summary
+    ]
+
+    required_headings.each do |heading|
+      assert_includes content, "## #{heading}",
+        "plan-mode.template.md missing required heading: ## #{heading}"
+    end
+  end
+
+  def test_plan_wf_contains_all_required_headings
+    wf_path = File.expand_path(
+      "../../handbook/workflow-instructions/task/plan.wf.md",
+      __dir__
+    )
+    skip "task/plan.wf.md not found" unless File.exist?(wf_path)
+    content = File.read(wf_path)
+
+    required_headings = %w[
+      Task\ Summary
+      Execution\ Context
+      Technical\ Approach
+      File\ Modifications
+      Plan\ Checklist
+      Test\ Plan
+      Risk\ Assessment
+      Freshness\ Summary
+    ]
+
+    required_headings.each do |heading|
+      assert_includes content, "## #{heading}",
+        "task/plan.wf.md missing required heading: ## #{heading}"
+    end
+  end
+
   private
 
   def build_builder

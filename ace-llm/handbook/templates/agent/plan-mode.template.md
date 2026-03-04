@@ -22,6 +22,7 @@ Return only a comprehensive implementation plan artifact.
   - `## Technical Approach`
   - `## File Modifications`
   - `## Plan Checklist`
+  - `## Test Plan` *(required for code tasks; omit for documentation/workflow-only tasks)*
   - `## Risk Assessment`
   - `## Freshness Summary`
 - Never output permission/escalation requests, approval prompts, or status-only acknowledgements.
@@ -34,5 +35,5 @@ Before responding, verify all of the following:
 - No mutating action was taken.
 - No permission/escalation request appears in output.
 - Output is a plan artifact, not execution guidance.
-- All required headings are present exactly once.
+- All required headings are present exactly once (## Test Plan only for code tasks).
 </self_check>
