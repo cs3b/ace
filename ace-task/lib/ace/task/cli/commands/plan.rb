@@ -129,7 +129,7 @@ module Ace
             return nil unless result.valid?
 
             cli_args_map[result.provider]
-          rescue StandardError, LoadError
+          rescue LoadError, NameError
             nil
           end
         end
