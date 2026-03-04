@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2026-03-04
+
+### Fixed
+- Removed `Ace::Support::Items::Atoms::TmpWorkspace` and reverted to standard system temporary artifact handling.
+
 ## [0.15.0] - 2026-03-04
 
 ### Added
