@@ -51,7 +51,7 @@ whitelist: []
 output:
   format: table  # Verbose output format: table, json, yaml
   mask_tokens: true  # Always mask token values in output
-  directory: .cache/ace-git-secrets  # Directory for report files
+  directory: .ace-local/git-secrets  # Directory for report files
 
 # GitHub Enterprise support (optional)
 # Uncomment and set your GitHub Enterprise API URL for token revocation
