@@ -14,10 +14,11 @@ module Ace
         # After generate(), contains { system_file:, prompt_file: } if file-based prompts were used
         attr_reader :prompt_paths
 
-        def initialize(model:, timeout: DEFAULT_TIMEOUT, client: nil)
+        def initialize(model:, timeout: DEFAULT_TIMEOUT, client: nil, cli_args: nil)
           @model = model
           @timeout = timeout
           @client = client
+          @cli_args = cli_args
           @prompt_paths = nil
         end
 
@@ -55,7 +56,8 @@ module Ace
             File.read(paths[:prompt_file]),
             system: File.read(paths[:system_file]),
             timeout: @timeout,
-            fallback: false
+            fallback: false,
+            cli_args: @cli_args
           )
 
           extract_text(response)
@@ -68,7 +70,8 @@ module Ace
             prompt,
             system: nil,
             timeout: @timeout,
-            fallback: false
+            fallback: false,
+            cli_args: @cli_args
           )
 
           extract_text(response)

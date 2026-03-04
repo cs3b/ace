@@ -70,6 +70,20 @@ class TaskPlanGeneratorTest < AceTaskTestCase
     refute_nil @client.last_kwargs[:system], "System content should be read from file"
   end
 
+  def test_generate_threads_cli_args_to_file_based_query
+    @client.next_response = { text: "# Plan from files\n" }
+    generator = Ace::Task::Molecules::TaskPlanGenerator.new(
+      model: "gemini:flash-latest",
+      client: @client,
+      cli_args: "--approval-mode plan"
+    )
+    cache_dir = File.join(@tmpdir, ".cache", "ace-task", "8pp.t.q7w")
+
+    generator.generate(task: @task, context_files: [], cache_dir: cache_dir)
+
+    assert_equal "--approval-mode plan", @client.last_kwargs[:cli_args]
+  end
+
   def test_generate_with_cache_dir_stores_prompt_paths
     @client.next_response = { text: "# Plan\n" }
     cache_dir = File.join(@tmpdir, ".cache", "ace-task", "8pp.t.q7w")
@@ -91,6 +105,19 @@ class TaskPlanGeneratorTest < AceTaskTestCase
     assert_nil @client.last_kwargs[:system_file]
     assert_nil @client.last_kwargs[:prompt_file]
     refute_nil @client.last_args[1], "Inline prompt string should be passed"
+  end
+
+  def test_generate_threads_cli_args_to_inline_query
+    @client.next_response = { text: "# Inline plan\n" }
+    generator = Ace::Task::Molecules::TaskPlanGenerator.new(
+      model: "gemini:flash-latest",
+      client: @client,
+      cli_args: "--approval-mode plan"
+    )
+
+    generator.generate(task: @task, context_files: [])
+
+    assert_equal "--approval-mode plan", @client.last_kwargs[:cli_args]
   end
 
   def test_prompt_files_written_to_prompts_subdirectory

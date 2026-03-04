@@ -389,21 +389,25 @@ Therefore the plan MUST be **complete and self-contained**:
 
 ### Required sections
 
-1. **Task Summary** — what is being implemented and why (brief, from the spec)
-2. **Execution Context** — minimum project context the work agent needs:
+Use these exact markdown headings in this order:
+
+1. **`## Task Summary`** — what is being implemented and why (brief, from the spec)
+2. **`## Execution Context`** — minimum project context the work agent needs:
    - Key conventions and patterns relevant to THIS task
    - Relevant architectural constraints
    - Package/gem boundaries crossed
    - Non-obvious project rules affecting this work
-3. **Technical Approach** — fill out the Technical Approach template (architecture, stack, strategy)
-4. **File Modifications** — fill out the File Modification template (Create/Modify/Delete with paths, purpose, impact)
-5. **Implementation Steps** — anchored checklist (STEP-01, STEP-02...) with:
+3. **`## Technical Approach`** — fill out the Technical Approach template (architecture, stack, strategy)
+4. **`## File Modifications`** — fill out the File Modification template (Create/Modify/Delete with paths, purpose, impact)
+5. **`## Plan Checklist`** — anchored checklist (STEP-01, STEP-02...) with:
    - `path:line` anchors to relevant source files
    - Explicit dependencies (`depends_on: []`)
    - Verification commands per step
-6. **Test Plan** — test scenarios and files (for code tasks; skip for docs/workflow tasks)
-7. **Risk Assessment** — primary risk, mitigation, rollback
-8. **Freshness Summary** — tracked input files and their state
+6. **`## Test Plan`** — test scenarios and files (for code tasks; skip for docs/workflow tasks)
+7. **`## Risk Assessment`** — primary risk, mitigation, rollback
+8. **`## Freshness Summary`** — tracked input files and their state
+
+If needed, add **`## Behavioral Gaps`** only after `## Freshness Summary`.
 
 ### Format rules
 
@@ -411,6 +415,8 @@ Therefore the plan MUST be **complete and self-contained**:
 - Every implementation step must be actionable without additional context
 - Include exact file paths, method names, and line references where applicable
 - Do not summarize or abbreviate — the execution agent needs full detail
+- Never ask for permissions/approvals or output escalation requests
+- Never return status-only text such as "plan delivered" without the required sections
 
 <documents>
     <template path="tmpl://task-management/task.technical-approach">## Technical Approach
