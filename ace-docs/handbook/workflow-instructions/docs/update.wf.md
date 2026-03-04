@@ -31,7 +31,7 @@ When updating a specific document, go straight to analysis:
 ace-docs analyze docs/api.md
 
 # Review the analysis report
-cat .ace-local/ace-docs/analyze-*/analysis.md
+cat .ace-local/docs/analyze-*/analysis.md
 
 # Update document based on recommendations
 ace-docs update docs/api.md --set last-updated=today
@@ -49,7 +49,7 @@ ace-docs status --needs-update
 ace-docs analyze --needs-update
 
 # Review analysis report and update documents
-cat .ace-local/ace-docs/analyze-*/analysis.md
+cat .ace-local/docs/analyze-*/analysis.md
 ace-docs update [file] --set last-updated=today
 
 # Or filter by type
@@ -122,7 +122,7 @@ Options:
 - `--exclude-renames`: Skip renamed files
 - `--exclude-moves`: Skip moved files
 
-The analysis is saved to `.ace-local/ace-docs/analyze-{timestamp}/analysis.md`
+The analysis is saved to `.ace-local/docs/analyze-{timestamp}/analysis.md`
 
 **Note**: The analyze directory contains additional files (context.md, *.diff, prompts) for debugging purposes only. The workflow uses `analysis.md` as the primary output.
 
@@ -133,7 +133,7 @@ The analysis is saved to `.ace-local/ace-docs/analyze-{timestamp}/analysis.md`
 Read the generated analysis report:
 
 ```bash
-cat .ace-local/ace-docs/analyze-*/analysis.md
+cat .ace-local/docs/analyze-*/analysis.md
 ```
 
 The report contains:
@@ -351,7 +351,7 @@ Workflow exits when:
 ace-docs analyze ace-docs/README.md
 
 # Review the analysis report
-cat .ace-local/ace-docs/analyze-*/analysis.md
+cat .ace-local/docs/analyze-*/analysis.md
 
 # Update document based on recommendations
 # [Review analysis.md and update content]
@@ -367,7 +367,7 @@ ace-docs status --type guide --freshness stale
 ace-docs analyze --type guide --freshness stale
 
 # Review the analysis report
-cat .ace-local/ace-docs/analyze-*/analysis.md
+cat .ace-local/docs/analyze-*/analysis.md
 
 # Update each document based on recommendations
 # [Review analysis.md and update content]
@@ -392,7 +392,7 @@ ace-docs validate $(git diff --name-only -- '*.md')
 ```bash
 # Direct analysis when you know the file
 ace-docs analyze docs/architecture.md
-cat .ace-local/ace-docs/analyze-*/analysis.md
+cat .ace-local/docs/analyze-*/analysis.md
 # Review recommendations and update document
 ace-docs update docs/architecture.md --set last-updated=today
 ```
@@ -402,7 +402,7 @@ ace-docs update docs/architecture.md --set last-updated=today
 # Check what needs updating first
 ace-docs status --needs-update
 ace-docs analyze --needs-update
-cat .ace-local/ace-docs/analyze-*/analysis.md
+cat .ace-local/docs/analyze-*/analysis.md
 # Review recommendations and update documents
 ace-docs update [file] --set last-updated=today
 ```
