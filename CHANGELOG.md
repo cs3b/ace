@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.739] - 2026-03-04
+
+### Fixed
+- **ace-assign v0.16.1**: Correct `.agents/skills` typo to `.agent/skills` in default config and `SkillAssignSourceResolver`
+
+### Changed
+- **docs/architecture.md**: Update skills path reference to `.agent/skills/` (canonical provider-neutral location)
+- **docs/vision.md**: Update skill link to reference `.agent/skills/ace-git-commit/SKILL.md`
+
 ## [0.9.738] - 2026-03-04
 
 ### Added
