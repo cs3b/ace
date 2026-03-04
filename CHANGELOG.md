@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.744] - 2026-03-04
+
+### Fixed
+- **ace-llm v0.24.8**: Normalize `timeout` values before forwarding through query and fallback paths so `--timeout 600` no longer propagates as a string.
+
 ## [0.9.743] - 2026-03-04
 
 ### Fixed
