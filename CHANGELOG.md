@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.743] - 2026-03-04
+
+### Fixed
+- **ace-llm-providers-cli v0.19.4**: Normalize timeout input to numeric values in `SafeCapture` to avoid `no implicit conversion to float from string` on `--timeout` for CLI provider execution.
+
 ## [0.9.742] - 2026-03-04
 
 ### Fixed
