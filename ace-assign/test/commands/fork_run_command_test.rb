@@ -212,6 +212,103 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
+  def test_fork_run_reuses_existing_active_phase_in_subtree
+    with_temp_cache do |cache_dir|
+      phases = [
+        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assignment = result[:assignment]
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      writer = Ace::Assign::Molecules::PhaseWriter.new
+      state_before = scanner.scan(assignment.phases_dir, assignment: assignment)
+      writer.mark_in_progress(state_before.find_by_number("020.01").file_path)
+
+      launch_snapshot = {}
+      spy_launcher = Class.new do
+        define_method(:initialize) do |cache_base:, snapshot:|
+          @cache_base = cache_base
+          @snapshot = snapshot
+        end
+
+        define_method(:launch) do |assignment_id:, fork_root:, **_kwargs|
+          manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
+          scanner = Ace::Assign::Molecules::QueueScanner.new
+          writer = Ace::Assign::Molecules::PhaseWriter.new
+
+          assignment = manager.load(assignment_id)
+          state = scanner.scan(assignment.phases_dir, assignment: assignment)
+          @snapshot[:child_a] = state.find_by_number("020.01")&.status
+          @snapshot[:child_b] = state.find_by_number("020.02")&.status
+
+          state.subtree_phases(fork_root).each do |phase|
+            next if phase.status == :done
+
+            writer.mark_done(phase.file_path, report_content: "Done", reports_dir: assignment.reports_dir)
+          end
+        end
+      end
+
+      capture_io do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: spy_launcher.new(cache_base: cache_dir, snapshot: launch_snapshot)
+        ).call(root: "020", assignment: assignment.id)
+      end
+
+      assert_equal :in_progress, launch_snapshot[:child_a]
+      assert_equal :pending, launch_snapshot[:child_b]
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_fork_run_fails_when_multiple_phases_are_already_in_progress_in_subtree
+    with_temp_cache do |cache_dir|
+      phases = [
+        { "name" => "pre-step", "instructions" => "Run pre-step" },
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assignment = result[:assignment]
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      writer = Ace::Assign::Molecules::PhaseWriter.new
+      state_before = scanner.scan(assignment.phases_dir, assignment: assignment)
+      writer.mark_in_progress(state_before.find_by_number("020.01").file_path)
+      writer.mark_in_progress(state_before.find_by_number("020.02").file_path)
+
+      error = assert_raises(Ace::Assign::InvalidPhaseStateError) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "020", assignment: assignment.id, quiet: true)
+      end
+
+      assert_includes error.message, "multiple phases are already in progress"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_fork_run_accepts_assignment_scope_without_root_and_without_current_in_scope
     with_temp_cache do |cache_dir|
       phases = [

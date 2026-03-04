@@ -52,11 +52,19 @@ module Ace
               puts "Next phase: #{next_phase.number} - #{next_phase.name}" if next_phase
             end
 
-            # Mark first workable child as in_progress (analogous to start())
-            first_workable = state.next_workable_in_subtree(root_phase.number)
-            if first_workable && first_workable.number != root_phase.number
-              phase_writer = Molecules::PhaseWriter.new
-              phase_writer.mark_in_progress(first_workable.file_path)
+            active_in_subtree = state.in_progress_in_subtree(root_phase.number)
+            if active_in_subtree.size > 1
+              active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
+              raise InvalidPhaseStateError, "Cannot fork-run subtree #{root_phase.number}: multiple phases are already in progress (#{active_refs})."
+            end
+
+            # Mark first workable child as in_progress only when no subtree phase is active.
+            if active_in_subtree.empty?
+              first_workable = state.next_workable_in_subtree(root_phase.number)
+              if first_workable && first_workable.number != root_phase.number
+                phase_writer = Molecules::PhaseWriter.new
+                phase_writer.mark_in_progress(first_workable.file_path)
+              end
             end
 
             launch_result = launcher.launch(

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2] - 2026-03-04
+
+### Fixed
+- Enforced single-active subtree invariants in fork execution paths: `fork-run` and scoped `advance` now reject multiple in-progress phases in the same subtree and reuse existing active subtree work instead of activating sibling phases.
+
+### Changed
+- QueueState now exposes `in_progress_phases` and `in_progress_in_subtree` helpers used by fork/scoped execution guards.
+
 ## [0.18.1] - 2026-03-04
 
 ### Changed
