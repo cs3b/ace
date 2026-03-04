@@ -14,7 +14,7 @@ module Ace
       class TaskPlanCache
         LATEST_POINTER = "latest-plan.md"
 
-        def initialize(task_id:, cache_root: ".cache/ace-task")
+        def initialize(task_id:, cache_root: ".ace-local/task")
           @task_id = task_id
           @cache_root = cache_root
         end
@@ -181,7 +181,7 @@ module Ace
 
           raise Ace::Core::CLI::Error.new(
             "Failed to generate unique plan path after #{MAX_UNIQUE_ATTEMPTS} attempts. " \
-            "Clear .cache/ace-task/#{@task_id}/ and retry."
+            "Clear .ace-local/task/#{@task_id}/ and retry."
           )
         end
       end

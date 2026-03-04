@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.18.5] - 2026-03-04
+## [0.19.0] - 2026-03-04
 
 ### Changed
-- Remove duplicate `onboard` sub-phase from work-on workflow children; each child subtree now runs `onboard-base`, `task-load`, `plan-task`, and `work-on-task`.
+- Default plan cache directory migrated from `.cache/ace-task` to `.ace-local/task`
 
 ## [0.18.4] - 2026-03-04
 

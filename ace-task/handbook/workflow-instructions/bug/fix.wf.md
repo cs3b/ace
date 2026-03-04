@@ -60,7 +60,7 @@ Execute a bug fix based on analysis from the analyze-bug workflow (or user-provi
 
 ```bash
 # Check for cached analysis
-ls .cache/ace-task/bug-analysis/
+ls .ace-local/ace-task/bug-analysis/
 ```
 
 **If analysis exists:**
@@ -238,8 +238,8 @@ git checkout -b fix/[bug-description]
 
 ```bash
 # Optionally archive the analysis
-mv .cache/ace-task/bug-analysis/{session} \
-   .cache/ace-task/bug-analysis/archive/
+mv .ace-local/ace-task/bug-analysis/{session} \
+   .ace-local/ace-task/bug-analysis/archive/
 ```
 
 ## Common Fix Patterns
@@ -452,7 +452,7 @@ The fix is ready for code review and merge.
 
 **Response Process:**
 
-1. Load the cached analysis from `.cache/ace-task/bug-analysis/`
+1. Load the cached analysis from `.ace-local/ace-task/bug-analysis/`
 2. Review the fix plan and confirm with user
 3. Implement the fix in affected files
 4. Create regression tests as proposed
