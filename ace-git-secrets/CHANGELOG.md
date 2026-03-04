@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-03-04
+
+### Fixed
+- Usage docs and token-remediation workflow corrected to short-name path convention (`.ace-local/git-secrets/` not `.ace-local/ace-git-secrets/`)
+
 ## [0.8.2] - 2026-03-04
 
 ### Fixed
