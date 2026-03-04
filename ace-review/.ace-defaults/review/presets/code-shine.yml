@@ -42,4 +42,3 @@ bundle: "project"
 models:
   - claude:opus
   - codex:max
-  - gemini:pro-latest
