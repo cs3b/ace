@@ -6,7 +6,7 @@ Fork context enables phase files to run in isolated agent contexts using the Tas
 
 For hierarchical split workflows, use **parent-only** fork markers:
 - Split parent phase: `context: fork`
-- Child phases (`onboard`, `plan-task`, `work-on-task`): no `context: fork`
+- Child phases (`onboard-base`, `task-load`, `plan-task`, `work-on-task`, `verify-test`, `release-minor`): no `context: fork`
 - Runtime execution scope is controlled explicitly with `--assignment <id>@<root>`
 
 ## When to Use Fork Context
@@ -114,7 +114,7 @@ Typical recovery shape:
 ```
 failed phase
   -> recovery onboarding/report review
-  -> verify-test-suite
+  -> verify-test
   -> retry failed or nearest affected phase
   -> resume remaining subtree phases
 ```

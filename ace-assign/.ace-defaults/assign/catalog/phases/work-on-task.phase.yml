@@ -2,13 +2,8 @@ name: work-on-task
 skill: ace-task-work
 description: Implement task changes following project conventions
 
-prerequisites:
-  - name: onboard
-    strength: recommended
-    reason: "Needs project context loaded first"
-
 produces: [code-changes, commits]
-consumes: [project-context, task-spec]
+consumes: [project-base-context, task-spec]
 
 context:
   default: fork

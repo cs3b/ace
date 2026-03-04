@@ -1,0 +1,22 @@
+name: release-minor
+skill: ace-release
+description: Bump package version and update CHANGELOGs following semver
+
+prerequisites:
+  - name: verify-test
+    strength: recommended
+    reason: "Verify changes are stable before releasing subtree output"
+
+produces: [version-bump, changelog-entries, commits]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "Version bump needs access to git state and changelog/version files"
+
+when_to_skip:
+  - "No version-worthy changes since last release"
+  - "Release is handled externally"
+
+effort: light
+tags: [git, versioning, release]

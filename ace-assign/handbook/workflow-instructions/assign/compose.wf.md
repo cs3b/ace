@@ -112,6 +112,8 @@ Select phases from the catalog based on intent:
 | Research | onboard, research | create-retro |
 | Batch tasks | onboard, batch-parent(work-on-task), **verify-test-suite**, **verify-e2e**, release, **update-docs**, create-pr, review-pr, apply-feedback, release, reorganize-commits, push-to-remote, update-pr-desc | |
 
+> For forked `work-on-task` child trees generated from `wfi://task/work`, each subtree runs `verify-test` (package-only, profile-based, no full suite). Full-suite behavior is expected at assignment level via `verify-test-suite` where preset rules require it.
+>
 > **When to include `verify-test-suite`**: Include for any task that modifies `.rb` files. The step profiles tests and enforces performance budgets to catch slow tests (network calls, unstubbed I/O) before they ship. Skip only for documentation-only or config-only changes.
 >
 > **When to include `verify-e2e`**: Include when the task modifies CLI commands, public APIs, or user-facing behavior. Skip for internal-only refactoring, documentation-only changes, or packages with no E2E test scenarios.

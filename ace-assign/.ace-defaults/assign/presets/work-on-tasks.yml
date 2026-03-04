@@ -179,6 +179,6 @@ expansion:
     skill: ace-task-work
     taskref: "{{item}}"
     instructions: |
-      First: onboard yourself using /ace-onboard skill to load project context.
+      Use existing base and task context loaded by the batch workflow.
       Implement task {{item}}.
       When complete, mark the task as done: run `ace-task update {{item}} --set status=done --move-to archive`

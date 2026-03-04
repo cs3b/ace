@@ -1,0 +1,36 @@
+name: verify-test
+skill: null
+description: Run profile-guided tests for modified packages only; no full-suite run in subtree
+
+prerequisites:
+  - name: work-on-task
+    strength: required
+    reason: "Implementation should be complete before verification"
+
+produces: [test-results]
+consumes: [code-changes]
+
+context:
+  default: null
+  reason: "Test execution needs access to the project working tree and package contexts"
+
+when_to_skip:
+  - "No code changes in test-relevant files"
+  - "Tests were already profiled for the same subtree run"
+
+effort: light
+tags: [testing, verification, performance]
+
+steps:
+  - name: run-package-tests
+    description: "Run ace-test --profile 6 for each modified package in this subtree"
+    tool: "ace-test --profile 6"
+    note: "Execute per-package; do not run full-stack suite here"
+
+  - name: check-performance-budgets
+    description: "Verify no test exceeds documented thresholds"
+    note: "Atoms <50ms, molecules <100ms, integration <1s, full package suite <30s. Tests must not make real network calls or unnecessary filesystem I/O."
+
+  - name: fix-violations
+    description: "Fix slow or environment-coupled tests when violations are detected"
+    conditional: "performance budgets are exceeded"
