@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.752] - 2026-03-04
+
+### Changed
+- **ace-assign v0.17.3**: Convert valid/fit/shine review cycles to forked parent phases with `review-pr`/`apply-feedback`/`release` sub-phases, align compose defaults and recipes to 3-cycle forked expansion, and update assignment workflow docs plus E2E prepare fixtures accordingly.
+
 ## [0.9.751] - 2026-03-04
 
 ### Fixed
