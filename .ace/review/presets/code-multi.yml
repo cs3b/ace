@@ -4,12 +4,11 @@
 presets:
   - code
 
-description: "Multi-model PR review - concurrent execution across claude:opus, codex, and gpro"
+description: "Multi-model PR review - concurrent execution across claude:sonnet and codex"
 
 models:
   - claude:sonnet              # Deep reasoning, architecture analysis
   - codex:mini  # Code-focused, implementation details
-  - gemini:flash-latest
   # - xai:fast
   # - openrouter:minimax
   # - togetherai:qwen-coder

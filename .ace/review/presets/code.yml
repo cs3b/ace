@@ -37,4 +37,4 @@ instructions:
         presets:
           - "project"
 
-model: gemini:flash-latest
+model: codex:codex
