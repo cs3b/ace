@@ -121,8 +121,8 @@ class CatalogLoaderTest < AceAssignTestCase
     selected = ["onboard", "work-on-task", "create-pr"]
     issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites(selected, @phases)
 
-    # onboard has no prerequisites, work-on-task recommends onboard (present),
-    # create-pr requires work-on-task (present)
+    # onboard has no prerequisites, work-on-task has no explicit prerequisite
+    # entries, create-pr requires work-on-task (present)
     assert_empty issues
   end
 
@@ -135,13 +135,11 @@ class CatalogLoaderTest < AceAssignTestCase
     assert_includes prereq_names, "work-on-task"
   end
 
-  def test_validate_prerequisites_missing_recommended
+  def test_validate_prerequisites_no_recommended_missing
     selected = ["work-on-task"]
     issues = Ace::Assign::Atoms::CatalogLoader.validate_prerequisites(selected, @phases)
 
-    onboard_issue = issues.find { |i| i[:prerequisite] == "onboard" }
-    refute_nil onboard_issue
-    assert_equal "recommended", onboard_issue[:strength]
+    assert_empty issues
   end
 
   def test_validate_prerequisites_empty_selection
