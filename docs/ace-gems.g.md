@@ -45,7 +45,7 @@ See [cli-dry-cli.g.md](../ace-handbook/handbook/guides/cli-dry-cli.g.md) for com
 - Module namespace: `Ace::Support::*` (e.g., `Ace::Support::Nav`)
 - Binary name: `ace-<name>` (drop `ace-support-` prefix)
 - Config folder: `.ace/<name>/` (not `.ace/support-<name>/`)
-- Cache directory: `.cache/ace-<name>` (use binary name)
+- Cache directory: `.ace-local/ace-<name>` (use binary name)
 
 ## Standard Structure
 

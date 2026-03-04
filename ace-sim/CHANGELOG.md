@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-03-04
+
+### Changed
+- Default session store directory migrated from `.cache/ace-sim` to `.ace-local/sim`
+
 ## [0.6.0] - 2026-02-28
 
 ### Changed
