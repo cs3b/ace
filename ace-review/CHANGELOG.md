@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.1] - 2026-03-04
+
+### Fixed
+- README session storage path examples corrected to short-name convention (`.ace-local/review/` not `.ace-local/ace-review/`)
+
 ## [0.43.0] - 2026-03-04
 
 ### Changed
