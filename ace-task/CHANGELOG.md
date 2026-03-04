@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-03-04
+
+### Fixed
+- Bug workflow instructions corrected to short-name path convention (`.ace-local/task/bug-analysis/` not `.ace-local/ace-task/bug-analysis/`)
+
 ## [0.19.0] - 2026-03-04
 
 ### Changed
