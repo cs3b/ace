@@ -82,7 +82,7 @@ module Ace
             "steps" => steps
           }
 
-          dir = File.join(Dir.pwd, ".cache", "ace-overseer")
+          dir = File.join(Dir.pwd, ".ace-local", "overseer")
           FileUtils.mkdir_p(dir)
           path = File.join(dir, "#{session_name}-job.yml")
           payload = YAML.dump(job)

@@ -1,5 +1,5 @@
 sim:
-  cache_root: ".cache/ace-sim"
+  cache_root: ".ace-local/sim"
   default_preset: "validate-idea"
   default_repeat: 1
   default_steps:
