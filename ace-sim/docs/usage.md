@@ -53,19 +53,19 @@ ace-sim run \
 ## Artifacts
 
 Top-level:
-- `.ace-local/ace-sim/simulations/<run-id>/session.yml`
-- `.ace-local/ace-sim/simulations/<run-id>/synthesis.yml`
-- `.ace-local/ace-sim/simulations/<run-id>/final/source.original.md` (when synthesis enabled)
-- `.ace-local/ace-sim/simulations/<run-id>/final/input.md` (when synthesis enabled)
-- `.ace-local/ace-sim/simulations/<run-id>/final/output.sequence.md` (when synthesis enabled)
-- `.ace-local/ace-sim/simulations/<run-id>/final/suggestions.report.md` (when synthesis enabled)
-- `.ace-local/ace-sim/simulations/<run-id>/final/source.revised.md` (when synthesis enabled)
+- `.ace-local/sim/simulations/<run-id>/session.yml`
+- `.ace-local/sim/simulations/<run-id>/synthesis.yml`
+- `.ace-local/sim/simulations/<run-id>/final/source.original.md` (when synthesis enabled)
+- `.ace-local/sim/simulations/<run-id>/final/input.md` (when synthesis enabled)
+- `.ace-local/sim/simulations/<run-id>/final/output.sequence.md` (when synthesis enabled)
+- `.ace-local/sim/simulations/<run-id>/final/suggestions.report.md` (when synthesis enabled)
+- `.ace-local/sim/simulations/<run-id>/final/source.revised.md` (when synthesis enabled)
 
 Per chain (`provider x repeat`):
-- `.ace-local/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/input.md`
-- `.ace-local/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.bundle.md`
-- `.ace-local/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.prompt.md`
-- `.ace-local/ace-sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/output.md`
+- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/input.md`
+- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.bundle.md`
+- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/user.prompt.md`
+- `.ace-local/sim/simulations/<run-id>/chains/<provider>-<iteration>/<NN-step>/output.md`
 
 ## Behavior Notes
 
