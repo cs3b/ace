@@ -6,13 +6,8 @@ description: "Navigate to tasks via ace-task delegation"
 enabled: true
 
 # Command delegation configuration
-command_template: "ace-task show %{ref}"
+command_template: "ace-task show %{ref} --path"
 
-# Options that should be passed through to the delegated command
-pass_through_options:
-  - "--path"
-  - "--content"
-  - "--tree"
 
 # Protocol capabilities (limited for cmd-type protocols)
 capabilities:
@@ -27,14 +22,8 @@ capabilities:
 notes: |
   The task:// protocol delegates to ace-task show command.
   All task reference formats are supported:
-    - 018, task.018 (current context)
-    - v.0.9.0+018 (specific release)
-    - backlog+025 (backlog context)
-
-  Options like --path, --content, and --tree are passed through.
+    - 0p5, t.0p5, 8c0.t.05p 
 
   Examples:
-    ace-nav task://083              # Show formatted task
-    ace-nav task://083 --path       # Get task file path
-    ace-nav task://083 --content    # Show full task content
-    ace-nav task://v.0.9.0+083      # Specific release
+    ace-nav task://05p            # Short format
+    ace-nav task://8c0.t.05p      # Full Id 

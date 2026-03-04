@@ -26,8 +26,8 @@ workflow_source_paths:
 # Fork execution defaults
 execution:
   # provider: "codex:mini"
-  # provider: "codex:codex"
-  provider: "claude:opus"
+  provider: "codex:codex"
+  # provider: "claude:opus"
   timeout: 1800
 
 # Provider-level defaults for CLI invocation
