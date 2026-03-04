@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-03-04
+
+### Fixed
+- Correct `.agents/skills` typo to `.agent/skills` in default config and `SkillAssignSourceResolver` — skill discovery now uses the canonical provider-neutral path
+
 ## [0.16.0] - 2026-03-04
 
 ### Added
