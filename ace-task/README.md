@@ -31,7 +31,7 @@ ace-task show q7w --tree         # With subtask tree
 ace-task plan q7w                            # Reuse fresh plan or generate
 ace-task plan q7w --refresh                  # Force regeneration
 ace-task plan q7w --content                  # Print plan content
-ace-task plan q7w --model gemini:flash-latest # Override model
+ace-task plan q7w --model codex:codex        # Override model
 
 # List tasks
 ace-task list                    # All tasks
@@ -80,16 +80,18 @@ task:
   root_dir: .ace-tasks
   default_status: pending
   file_pattern: "*.s.md"
+  special_folder_prefix: "_"
   plan:
-    model: "gemini:flash-latest"
-  special_folders:
-    archive: _archive
-    maybe: _maybe
-    anytime: _anytime
-    next: _next
+    model: "claude:opus"
+    cli_args:
+      claude: "--permission-mode plan"
+      codex: "--sandbox read-only"
+      gemini: "--approval-mode plan"
 ```
 
 Override at project level in `.ace/task/config.yml`.
+
+Note: Gemini `--approval-mode plan` requires Gemini CLI `experimental.plan` to be enabled.
 
 ## License
 
