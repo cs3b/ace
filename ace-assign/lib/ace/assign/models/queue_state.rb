@@ -30,7 +30,13 @@ module Ace
         # Get current in-progress phase
         # @return [Phase, nil] Current phase or nil
         def current
-          phases.find { |s| s.status == :in_progress }
+          in_progress_phases.first
+        end
+
+        # Get all in-progress phases
+        # @return [Array<Phase>] In-progress phases
+        def in_progress_phases
+          phases.select { |s| s.status == :in_progress }
         end
 
         # Get all pending phases
@@ -134,7 +140,7 @@ module Ace
           {
             total: size,
             done: done.size,
-            in_progress: current ? 1 : 0,
+            in_progress: in_progress_phases.size,
             pending: pending.size,
             failed: failed.size
           }
@@ -195,8 +201,16 @@ module Ace
         # @param root_number [String] Subtree root phase number
         # @return [Phase, nil] In-progress phase inside subtree, if any
         def current_in_subtree(root_number)
+          in_progress_in_subtree(root_number).first
+        end
+
+        # Get all in-progress phases within a subtree.
+        #
+        # @param root_number [String] Subtree root phase number
+        # @return [Array<Phase>] In-progress phases inside subtree
+        def in_progress_in_subtree(root_number)
           subtree_phases(root_number)
-            .find { |s| s.status == :in_progress }
+            .select { |s| s.status == :in_progress }
         end
 
         # Get next workable phase constrained to a subtree.

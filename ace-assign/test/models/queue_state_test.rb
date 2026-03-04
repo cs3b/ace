@@ -54,6 +54,19 @@ class QueueStateTest < AceAssignTestCase
     assert_nil state.current
   end
 
+  def test_in_progress_phases_returns_all_active_phases
+    phases = [
+      make_phase(number: "010", name: "first", status: :in_progress),
+      make_phase(number: "020", name: "second", status: :in_progress),
+      make_phase(number: "030", name: "third", status: :pending)
+    ]
+
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal %w[010 020], state.in_progress_phases.map(&:number)
+    assert_equal "010", state.current.number
+  end
+
   def test_pending_filters_correctly
     phases = [
       make_phase(number: "010", name: "first", status: :done),
@@ -337,6 +350,19 @@ class QueueStateTest < AceAssignTestCase
     # root has incomplete children, so first workable in subtree should be child
     workable = state.next_workable_in_subtree("010")
     assert_equal "010.01", workable.number
+  end
+
+  def test_in_progress_in_subtree_filters_to_subtree
+    phases = [
+      make_phase(number: "010", name: "root", status: :pending),
+      make_phase(number: "010.01", name: "child-a", status: :in_progress),
+      make_phase(number: "010.02", name: "child-b", status: :in_progress),
+      make_phase(number: "020", name: "other", status: :in_progress)
+    ]
+    state = Ace::Assign::Models::QueueState.new(phases: phases, assignment: @assignment)
+
+    assert_equal %w[010.01 010.02], state.in_progress_in_subtree("010").map(&:number)
+    assert_equal "010.01", state.current_in_subtree("010").number
   end
 
   def test_nearest_fork_ancestor

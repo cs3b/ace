@@ -239,7 +239,13 @@ module Ace
             assignment = assignment_manager.find_active
             if assignment
               state = queue_scanner.scan(assignment.phases_dir, assignment: assignment)
-              if state.current_in_subtree(fork_root_str).nil?
+              active_in_subtree = state.in_progress_in_subtree(fork_root_str)
+              if active_in_subtree.size > 1
+                active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
+                raise InvalidPhaseStateError, "Cannot advance subtree #{fork_root_str}: multiple phases are in progress (#{active_refs})."
+              end
+
+              if active_in_subtree.empty?
                 next_workable = state.next_workable_in_subtree(fork_root_str)
                 phase_writer.mark_in_progress(next_workable.file_path) if next_workable
               end
@@ -868,6 +874,11 @@ module Ace
           current = state.current
           if fork_root && !fork_root.empty?
             raise PhaseNotFoundError, "Subtree root #{fork_root} not found in assignment." unless state.find_by_number(fork_root)
+            active_in_subtree = state.in_progress_in_subtree(fork_root)
+            if active_in_subtree.size > 1
+              active_refs = active_in_subtree.map { |phase| "#{phase.number}(#{phase.name})" }.join(", ")
+              raise InvalidPhaseStateError, "Cannot finish in subtree #{fork_root}: multiple phases are in progress (#{active_refs})."
+            end
             if current.nil? || !state.in_subtree?(fork_root, current.number)
               current = state.current_in_subtree(fork_root)
             end

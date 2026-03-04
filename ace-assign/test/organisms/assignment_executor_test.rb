@@ -805,4 +805,36 @@ class AssignmentExecutorTest < AceAssignTestCase
       assert_equal "010", result[:current]&.number
     end
   end
+
+  def test_advance_with_fork_root_raises_when_multiple_subtree_phases_are_in_progress
+    with_temp_cache do |cache_dir|
+      phases = [
+        { "name" => "precheck", "instructions" => "Run precheck" },
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task 235.01",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      start_result = executor.start(config_path)
+      assignment = start_result[:assignment]
+
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      writer = Ace::Assign::Molecules::PhaseWriter.new
+      state = scanner.scan(assignment.phases_dir, assignment: assignment)
+      writer.mark_in_progress(state.find_by_number("020.01").file_path)
+      writer.mark_in_progress(state.find_by_number("020.02").file_path)
+
+      report_path = create_report(cache_dir, "Scoped progress")
+      error = assert_raises(Ace::Assign::InvalidPhaseStateError) do
+        executor.advance(report_path, fork_root: "020")
+      end
+
+      assert_includes error.message, "multiple phases are in progress"
+    end
+  end
 end
