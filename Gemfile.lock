@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.17.3)
+    ace-assign (0.18.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
@@ -117,7 +117,7 @@ PATH
 PATH
   remote: ace-llm-providers-cli
   specs:
-    ace-llm-providers-cli (0.19.4)
+    ace-llm-providers-cli (0.20.0)
       ace-llm (~> 0.24)
 
 PATH
@@ -277,7 +277,7 @@ PATH
 PATH
   remote: ace-test-runner-e2e
   specs:
-    ace-test-runner-e2e (0.20.5)
+    ace-test-runner-e2e (0.21.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
