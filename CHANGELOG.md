@@ -4,16 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.746] - 2026-03-04
-
-### Changed
-- **ace-assign v0.16.4**: Add package-only `verify-test` phase to forked `work-on-*` subtree workflows, followed by subtree `release-minor`, while keeping assignment-level `verify-test-suite` as the full-suite verification flow.
-
 ## [0.9.745] - 2026-03-04
 
+### Added
+- **ace-support-items v0.15.0**: New `TmpWorkspace` atom for creating project-local, B36TS time-partitioned workspace directories under `.ace-local/tmp/`
+
 ### Changed
-- **ace-assign v0.16.3**: Normalize `work-on` subtree execution to a single base-context phase chain (`onboard-base`, `task-load`, `plan-task`, `work-on-task`) and remove duplicate child `onboard`.
-- **ace-task v0.18.5**: Update task work workflow and phase contracts to consume `project-base-context` and simplify batch child onboarding behavior.
+- **ace-assign v0.17.0**: Default assignment store directory migrated from `.cache/ace-assign` to `.ace-local/assign`
+- **ace-docs v0.22.0**: Default cache directories migrated from `.cache/ace-docs` to `.ace-local/docs`
+- **ace-git-secrets v0.8.0**: Default scan cache directory migrated from `.cache/ace-git-secrets` to `.ace-local/git-secrets`
+- **ace-lint v0.17.0**: Default report directory migrated from `.cache/ace-lint` to `.ace-local/lint`
+- **ace-prompt-prep v0.17.0**: Default cache directory migrated from `.cache/ace-prompt-prep` to `.ace-local/prompt-prep`
+- **ace-review v0.43.0**: Default session cache directory migrated from `.cache/ace-review` to `.ace-local/review`
+- **ace-sim v0.7.0**: Default session store directory migrated from `.cache/ace-sim` to `.ace-local/sim`
+- **ace-task v0.19.0**: Default plan cache directory migrated from `.cache/ace-task` to `.ace-local/task`
+- **ace-support-core v0.25.1**: Removed spurious `ace-support-items` and `ace-b36ts` runtime dependencies introduced during migration
+
+### Technical
+- **ace-bundle v0.31.9**: Update handbook reference to document cache output path as `.ace-local/bundle/`
 
 ## [0.9.744] - 2026-03-04
 

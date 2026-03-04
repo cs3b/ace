@@ -1,7 +1,7 @@
 PATH
   remote: ace-assign
   specs:
-    ace-assign (0.16.4)
+    ace-assign (0.17.0)
       ace-b36ts (~> 0.7)
       ace-llm (~> 0.24)
       ace-support-config (~> 0.7)
@@ -20,7 +20,7 @@ PATH
 PATH
   remote: ace-bundle
   specs:
-    ace-bundle (0.31.8)
+    ace-bundle (0.31.9)
       ace-git (~> 0.11)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.24)
@@ -31,7 +31,7 @@ PATH
 PATH
   remote: ace-docs
   specs:
-    ace-docs (0.21.1)
+    ace-docs (0.22.0)
       ace-b36ts (~> 0.7)
       ace-git (~> 0.10)
       ace-llm (~> 0.24)
@@ -57,7 +57,7 @@ PATH
 PATH
   remote: ace-git-secrets
   specs:
-    ace-git-secrets (0.7.11)
+    ace-git-secrets (0.8.0)
       ace-b36ts (~> 0.7)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -105,7 +105,7 @@ PATH
 PATH
   remote: ace-lint
   specs:
-    ace-lint (0.16.1)
+    ace-lint (0.17.0)
       ace-b36ts (~> 0.7)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -148,7 +148,7 @@ PATH
 PATH
   remote: ace-prompt-prep
   specs:
-    ace-prompt-prep (0.16.9)
+    ace-prompt-prep (0.17.0)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -171,7 +171,7 @@ PATH
 PATH
   remote: ace-review
   specs:
-    ace-review (0.42.7)
+    ace-review (0.43.0)
       ace-b36ts (~> 0.7)
       ace-bundle (~> 0.31)
       ace-git (~> 0.11)
@@ -194,7 +194,7 @@ PATH
 PATH
   remote: ace-sim
   specs:
-    ace-sim (0.6.0)
+    ace-sim (0.7.0)
       ace-b36ts (~> 0.6)
       ace-support-config (~> 0.7)
       ace-support-core (~> 0.25)
@@ -209,7 +209,7 @@ PATH
 PATH
   remote: ace-support-core
   specs:
-    ace-support-core (0.25.0)
+    ace-support-core (0.25.1)
       ace-support-config (~> 0.7)
       ace-support-fs (~> 0.2)
       dry-cli (~> 1.0)
@@ -222,7 +222,7 @@ PATH
 PATH
   remote: ace-support-items
   specs:
-    ace-support-items (0.14.1)
+    ace-support-items (0.15.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
 
@@ -267,7 +267,7 @@ PATH
 PATH
   remote: ace-task
   specs:
-    ace-task (0.18.5)
+    ace-task (0.19.0)
       ace-b36ts (~> 0.7)
       ace-support-core (~> 0.25)
       ace-support-items (~> 0.3)

@@ -50,7 +50,7 @@ AI agents should treat these as read-only unless explicitly instructed to modify
 AI agents should ignore these during normal operations:
 
 - `.ace-taskflow/done/**/*` # Completed tasks and releases
-- `.cache/ace-*/**/*` # Cached output from ace tools
+- `.ace-local/ace-*/**/*` # Cached output from ace tools
 - `ace-*/coverage/**/*` # Test coverage reports
 - `**/test-reports/**/*` # Test report files
 - `tmp/**/*` # Temporary files
