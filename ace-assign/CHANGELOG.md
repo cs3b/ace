@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-03-04
+
+### Added
+- New `onboard-base` catalog phase — loads base project context via `ace-bundle project-base`
+- New `task-load` catalog phase — loads task behavioral spec via `ace-bundle task://<taskref>`
+- Taskref placeholder substitution in catalog phase descriptions — `<taskref>` in phase descriptions is replaced with actual task reference during child instruction building
+
+### Changed
+- Default assignment presets updated to use ace-task
+
+### Fixed
+- Apply session 8q2 learnings to workflow and presets
+
+### Technical
+- Increase timeout for hierarchy E2E scenario
+
 ## [0.15.1] - 2026-03-01
 
 ### Added

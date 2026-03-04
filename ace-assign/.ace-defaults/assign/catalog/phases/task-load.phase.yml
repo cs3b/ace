@@ -1,0 +1,21 @@
+name: task-load
+skill: null
+description: "Load task behavioral spec: run `ace-bundle task://<taskref>`"
+
+prerequisites:
+  - name: onboard-base
+    strength: recommended
+    reason: "Needs project context for task interpretation"
+
+produces: [task-spec]
+consumes: [project-base-context]
+
+context:
+  default: null
+  reason: "Task loading needs access to the main conversation context"
+
+when_to_skip:
+  - "Task spec already loaded in context"
+
+effort: light
+tags: [setup, context-loading, task]
