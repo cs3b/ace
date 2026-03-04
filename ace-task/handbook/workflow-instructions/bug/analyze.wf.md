@@ -221,11 +221,11 @@ Create the cache directory and save analysis output:
 
 ```bash
 # Create session directory
-mkdir -p .ace-local/ace-task/bug-analysis/{session}
+mkdir -p .ace-local/task/bug-analysis/{session}
 ```
 
 ```yaml
-# .ace-local/ace-task/bug-analysis/{session}/analysis.yml
+# .ace-local/task/bug-analysis/{session}/analysis.yml
 root_cause: "Description of root cause"
 repro_status: confirmed | not_reproducible | intermittent
 affected_files:
@@ -440,7 +440,7 @@ This workflow provides systematic bug analysis that ensures proper investigation
 </template>
 
 <template id="analysis-yml">
-# .ace-local/ace-task/bug-analysis/{session}/analysis.yml
+# .ace-local/task/bug-analysis/{session}/analysis.yml
 root_cause: "Description of root cause"
 repro_status: confirmed | not_reproducible | intermittent
 affected_files:
