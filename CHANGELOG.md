@@ -4,15 +4,119 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.737] - 2026-03-04
+
+### Fixed
+- **ace-support-nav v0.18.0**: Prevent argument injection in `resolve_cmd_to_path` by escaping reference before command template interpolation; add 10-second timeout to cmd protocol execution
+- **ace-bundle v0.31.8**: Guard against empty `base_content_resolved` replacing document content with nothing when base resolution fails
+- **ace-task v0.18.2**: Prompt builder now fails fast on `ace-bundle` errors instead of silently writing placeholder text
+- **ace-task v0.18.2**: `fresh_context_files?` returns true for empty context files, preventing unnecessary plan regeneration
+- **ace-task v0.18.2**: `build_unique_plan_path` uses current timestamp with collision suffix instead of future timestamps
+
+### Added
+- **ace-support-nav v0.18.0**: `resolve_cmd_to_path` method for programmatic resolution of cmd-type protocol URIs
+
+### Changed
+- Updated `ace-support-nav` dependency constraint to `~> 0.18` in ace-bundle, ace-prompt-prep, and ace-review gemspecs
+
+## [0.9.736] - 2026-03-04
+
+### Added
+- **ace-assign v0.16.0**: New `onboard-base` and `task-load` catalog phases for plan-first task execution workflow
+- **ace-assign v0.16.0**: Taskref placeholder substitution in catalog phase descriptions — `<taskref>` replaced with actual task reference during child instruction building
+
+### Changed
+- **ace-task v0.18.1**: Work workflow sub-phases updated to plan-first sequence (`onboard-base → onboard → task-load → plan-task → work-on-task`)
+- **ace-overseer**: Bumped ace-assign dependency to ~> 0.16
+
+## [0.9.735] - 2026-03-04
+
+### Fixed
+- **ace-bundle v0.31.7**: Resolve `cmd`-type protocol URIs (e.g., `task://`) by capturing command stdout as a file path, enabling `ace-bundle task://...` to load task files instead of failing with "Failed to resolve protocol". Adds `NavigationEngine#resolve_cmd_to_path` in ace-support-nav to support this.
+
+## [0.9.734] - 2026-03-04
+
+### Added
+- **ace-task v0.18.0**: Plan command with cache-backed implementation planning and freshness checks
+- **ace-task v0.18.0**: Vertical slicing specs, dual-slug naming, short subtask folder names
+- **ace-task v0.18.0**: Colored status symbols and global folder statistics to list output
+
+### Changed
+- **ace-task v0.18.0**: Work workflow rewritten to lean execution directives with plan-first context loading
+- **ace-task v0.18.0**: Planning workflow transitioned to inline reporting contract
+- **ace-task v0.18.0**: Plan template verification commands use bare `ace-test`/`ace-lint`
+- **ace-overseer**: Bumped ace-task dependency to ~> 0.18
+
+### Fixed
+- **ace-task v0.18.0**: Draft workflow corrected stale idea archive reference
+- **ace-task v0.18.0**: Work workflow clarified checkbox tracking with anchor mapping
+
+## [0.9.733] - 2026-03-03
+
+### Fixed
+- **ace-bundle v0.31.6**: Preserve resolved `base` content when `embed_document_source` leaks from top-level preset merge
+
+## [0.9.732] - 2026-03-03
+
+### Added
+- **ace-task v0.17.0**: `TaskPlanPromptBuilder` with config file generation and debugging introspection
+- **ace-task v0.17.0**: System prompt composed via ace-bundle (`base: wfi://task/plan` + `presets: [project]`)
+
+### Changed
+- **ace-task v0.17.0**: Plan generation uses `--format markdown-xml` for structured output
+- **ace-task v0.17.0**: Generator passes prompt content directly to ace-llm SDK (no file passthrough)
+
+## [0.9.731] - 2026-03-03
+
+### Changed
+- **ace-task v0.16.4**: Renamed cache directory from `.cache/task/` to `.cache/ace-task/` for consistency with other ace-* packages
+
+## [0.9.730] - 2026-03-03
+
+### Changed
+- **ace-task v0.16.3**: Narrowed exception rescue in plan generator for better development error surfacing
+
+## [0.9.729] - 2026-03-03
+
+### Fixed
+- **ace-task v0.16.2**: Bounded plan path generation loop with MAX_UNIQUE_ATTEMPTS guard
+- **ace-task v0.16.2**: Empty context_files now correctly marks plans as stale
+- **ace-task v0.16.2**: Missing context files emit stderr warnings instead of silent drop
+
+### Changed
+- **ace-task v0.16.2**: Extracted shared `PathUtils.relative_path` module, plan prompt includes anchored checklist schema, `write_plan` creates `latest-plan.meta.yml`
+
+## [0.9.728] - 2026-03-03
+
+### Added
+- **ace-task v0.16.1**: `task/plan.wf.md` now defines explicit cache artifact outputs and an anchored plan checklist template (step IDs, `path:line` anchors, dependencies, verification commands)
+
+### Changed
+- **ace-task v0.16.1**: planning workflow contract is cache-backed (not ephemeral-only) with required freshness-input tracking and automatic stale regeneration guidance
+
+## [0.9.727] - 2026-03-03
+
+### Added
+- **ace-task v0.16.0**: new `ace-task plan <ref>` command with freshness-aware cache reuse, `--refresh` regeneration, `--content` output mode, and `--model` override
+- **ace-task v0.16.0**: plan cache + generation molecules (`TaskPlanCache`, `TaskPlanGenerator`) with tracked task/context mtime validation and latest-plan pointer management
+
+### Changed
+- **ace-task v0.16.0**: CLI help and README updated with plan command usage and option examples
+- **ace-overseer**: gemspec dependency constraint updated from `ace-task ~> 0.15` to `~> 0.16` for compatibility with new minor release
+
 ## [0.9.726] - 2026-03-03
 
 ### Added
 - **ace-overseer v0.4.18**: `StatusCollector` shows non-task worktrees in status when they have active assignments
 - **ace-overseer v0.4.18**: `WorktreeContextCollector` supports B36TS task ID extraction from worktree paths and branch names
 
+### Changed
+- **ace-task v0.15.1**: `task/work.wf.md` is now plan-first with an explicit ensure-plan gate, fallback re-planning behavior, and refreshed command references aligned to `mise exec -- ace-task ...`
+
 ### Fixed
 - **ace-overseer v0.4.18**: `PruneOrchestrator` allows pruning non-task worktrees when targeted by path
 - **ace-git-worktree v0.13.20**: `TaskIDExtractor` supports B36TS directory naming (`ace-task.hy4`) in path-based extraction
+- **ace-task v0.15.1**: corrected stale task/review command references in `task/work.wf.md` and resolved workflow markdown lint issues
 
 ## [0.9.725] - 2026-03-03
 
