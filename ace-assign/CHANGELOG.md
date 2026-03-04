@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-03-04
+
+### Changed
+- Rename PR skill references in assignment defaults from `ace-git-create-pr` / `ace-git-update-pr-desc` to `ace-github-pr-create` / `ace-github-pr-update`
+- Update PR skill references in assign workflows and E2E fixture presets to the new `ace-github-pr-*` naming convention
+
 ## [0.16.1] - 2026-03-04
 
 ### Fixed
