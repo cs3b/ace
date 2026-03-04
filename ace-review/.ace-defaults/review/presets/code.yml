@@ -37,4 +37,4 @@ instructions:
         presets:
           - "project"
 
-model: gpro
+model: codex:codex
