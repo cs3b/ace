@@ -31,13 +31,24 @@ If a user names a skill (for example `$ace-git-create-pr`) or the task clearly m
 
 Execution order:
 1. Match named or clearly relevant skill(s)
-2. Run the skill workflow instruction(s)
-3. Use manual commands only when no applicable skill exists or the skill is unavailable
+2. Load each selected skill's `SKILL.md` instructions
+3. Run the skill workflow instruction(s)
+4. Use manual commands only when no applicable skill exists or the skill is unavailable
 
 Before any non-read command, perform a quick skill check:
 - List candidate skills for the task
 - Select the chosen skill (or state "no applicable skill found")
 - Proceed only after this check
+
+Planning-time requirement:
+- Planning is execution of process knowledge. Before drafting or finalizing any plan, run the same skill check used for execution.
+- For each chosen skill, load workflow instructions (`mise exec -- ace-bundle wfi://...`) when available.
+- If protocol lookup fails, read the referenced workflow file directly and continue with that as the source of truth.
+- Every substantial plan must include a short `Skills Applied` section listing which skills/workflows were loaded.
+
+Fail-closed rule:
+- A plan is incomplete if a clearly relevant skill was not loaded.
+- If this is discovered later, stop and restart planning from the applicable skill outputs.
 
 Violation recovery:
 - If manual execution starts and a matching skill is identified later, stop manual flow
