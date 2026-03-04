@@ -503,6 +503,10 @@ module Ace
               end
             end
 
+            # Track base resolution before metadata reset (metadata gets replaced below)
+            resolved = bundle.metadata[:base_type] ? bundle.content : nil
+            base_content_resolved = resolved.to_s.strip.empty? ? nil : resolved
+
             # Replace metadata with original frontmatter (keep it unmodified)
             # Convert string keys to symbols for consistency
             bundle.metadata = {}
@@ -514,9 +518,8 @@ module Ace
 
             # If embed_document_source is true, store original document and keep embedded files separate
             if config['embed_document_source']
-              # Store original document (with frontmatter) as source content
-              # Use original_content instead of File.read to avoid redundant I/O
-              bundle.content = original_content
+              # base replaces the source document for embedding
+              bundle.content = base_content_resolved || original_content
 
               # bundle.files already has embedded files from process_template_config
               # Don't add source to files array - it will be output as raw content
@@ -1041,18 +1044,23 @@ module Ace
           engine = Ace::Support::Nav::Organisms::NavigationEngine.new
           path = engine.resolve(protocol_ref)
 
-          if path && File.exist?(path)
-            path
-          else
-            if @options[:debug]
-              if path.nil?
-                warn "Warning: ace-nav could not resolve '#{protocol_ref}'"
-              else
-                warn "Warning: ace-nav path does not exist for '#{protocol_ref}': #{path}"
-              end
-            end
-            nil
+          return path if path && File.exist?(path)
+
+          # Fallback: handle cmd-type protocols (e.g., task://) by capturing command output
+          protocol = protocol_ref.split("://", 2).first
+          if engine.cmd_protocol?(protocol)
+            cmd_path = engine.resolve_cmd_to_path(protocol_ref)
+            return cmd_path if cmd_path && File.exist?(cmd_path)
           end
+
+          if @options[:debug]
+            if path.nil?
+              warn "Warning: ace-nav could not resolve '#{protocol_ref}'"
+            else
+              warn "Warning: ace-nav path does not exist for '#{protocol_ref}': #{path}"
+            end
+          end
+          nil
         end
 
         def resolve_file_reference(file_ref)
