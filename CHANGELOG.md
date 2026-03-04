@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.740] - 2026-03-04
+
+### Added
+- **Agent skills**: Add `ace-github-pr-create` and `ace-github-pr-update` skill definitions under `.agent/skills/`
+
+### Changed
+- **ace-git v0.11.13**: Rename PR workflow URIs from `wfi://git/*` to `wfi://github/pr/*` and move workflow files to `handbook/workflow-instructions/github/pr/`
+- **ace-assign v0.16.2**: Update assignment defaults, workflows, and E2E fixtures to use `ace-github-pr-*` skill names
+- **ace-handbook v0.9.9**: Update `perform-delivery` workflow PR command reference to `/ace-github-pr-create`
+
 ## [0.9.739] - 2026-03-04
 
 ### Fixed
