@@ -6,7 +6,7 @@ require "dry/cli"
 class CLITest < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir
-    @prompt_dir = File.join(@tmpdir, ".cache/ace-prompt-prep/prompts")
+    @prompt_dir = File.join(@tmpdir, ".ace-local/prompt-prep/prompts")
     FileUtils.mkdir_p(@prompt_dir)
     @prompt_file = File.join(@prompt_dir, "the-prompt.md")
   end

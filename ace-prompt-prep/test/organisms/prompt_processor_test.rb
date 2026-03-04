@@ -5,7 +5,7 @@ require "test_helper"
 class PromptProcessorTest < Minitest::Test
   def setup
     @tmpdir = Dir.mktmpdir
-    @prompt_dir = File.join(@tmpdir, ".cache/ace-prompt-prep/prompts")
+    @prompt_dir = File.join(@tmpdir, ".ace-local/prompt-prep/prompts")
     @archive_dir = File.join(@prompt_dir, "archive")
     FileUtils.mkdir_p(@prompt_dir)
 
