@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.5] - 2026-03-04
+
+### Fixed
+- Feedback session discovery now prefers `.ace-local/review/sessions` with legacy `.cache` fallback.
+
+
 ## [0.43.4] - 2026-03-04
 
 ### Fixed
