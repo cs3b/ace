@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-03-04
+
+### Changed
+- Convert review cycles in assignment presets and prepare fixtures to forked cycle-parent phases with `sub_phases: [review-pr, apply-feedback, release]` for valid/fit/shine cycles
+- Align compose recipes to the forked review-cycle model and set default `review_cycles` to 3
+- Update assign compose/prepare workflow instructions and examples to document forked review-cycle expansion semantics
+
 ## [0.17.2] - 2026-03-04
 
 ### Fixed
