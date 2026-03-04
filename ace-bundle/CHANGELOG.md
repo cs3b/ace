@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.10] - 2026-03-04
+
+### Fixed
+- README cache output path example corrected to short-name convention (`.ace-local/bundle/` not `.ace-local/ace-bundle/`)
+
 ## [0.31.9] - 2026-03-04
 
 ### Technical
