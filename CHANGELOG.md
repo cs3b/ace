@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.747] - 2026-03-04
+
+### Fixed
+- **ace-support-items v0.15.1**: Reverted project-local temporary workspace usage and restored standard temporary file handling behavior.
+
 ## [0.9.746] - 2026-03-04
 
 ### Fixed
