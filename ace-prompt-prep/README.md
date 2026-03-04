@@ -33,8 +33,8 @@ For more details on the encoding scheme, see the [ace-b36ts README](https://gith
 
 ```bash
 # Create a prompt
-mkdir -p .cache/ace-prompt-prep/prompts
-echo "Review this code for security issues" > .cache/ace-prompt-prep/prompts/the-prompt.md
+mkdir -p .ace-local/ace-prompt-prep/prompts
+echo "Review this code for security issues" > .ace-local/ace-prompt-prep/prompts/the-prompt.md
 
 # Process it (archives and outputs to stdout)
 ace-prompt-prep
@@ -90,8 +90,8 @@ If you were previously using `ace-prep`, update your configurations:
 2. **Update cache references** (optional - old cache will be orphaned):
    ```bash
    # In your scripts or code
-   .cache/ace-prep  # Old
-   .cache/ace-prompt-prep  # New
+   .ace-local/ace-prep  # Old
+   .ace-local/ace-prompt-prep  # New
    ```
 
 3. **Update command references**:
@@ -173,7 +173,7 @@ bundle:
 
 ```bash
 # Create a prompt with frontmatter
-cat > .cache/ace-prompt-prep/prompts/feature-review.md << 'EOF'
+cat > .ace-local/ace-prompt-prep/prompts/feature-review.md << 'EOF'
 ---
 bundle:
   enabled: true
@@ -301,7 +301,7 @@ Task IDs are resolved using ace-taskflow's API, which means:
 
 ## What It Does
 
-1. Reads `.cache/ace-prompt-prep/prompts/the-prompt.md` (or task-specific directory)
+1. Reads `.ace-local/ace-prompt-prep/prompts/the-prompt.md` (or task-specific directory)
 2. Archives it to `archive/BASE36ID.md` (e.g., `i50jj3.md`)
 3. Updates `_previous.md` symlink
 4. Outputs content to stdout (or file with `--output`)

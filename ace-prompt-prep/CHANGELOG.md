@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-03-04
+
+### Changed
+- Default cache directory migrated from `.cache/ace-prompt-prep` to `.ace-local/prompt-prep`
+- `PromptInitializer.default_prompt_dir` now returns path under `.ace-local/prompt-prep/prompts`
+
 ## [0.16.9] - 2026-03-02
 
 ### Changed

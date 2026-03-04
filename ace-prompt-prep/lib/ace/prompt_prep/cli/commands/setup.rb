@@ -17,7 +17,7 @@ module Ace
             Create prompt workspace and initialize with template
 
             By default:
-              - Creates {project_root}/.cache/ace-prompt-prep/prompts/ directory
+              - Creates {project_root}/.ace-local/prompt-prep/prompts/ directory
               - Archives existing the-prompt.md if present
               - Copies template to the-prompt.md
               - Uses tmpl://the-prompt-base template

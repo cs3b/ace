@@ -10,8 +10,8 @@ class PromptArchiverTest < Minitest::Test
     # Mock ProjectRootFinder to return our tmpdir
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @tmpdir do
       # Set up archive directory
-      @archive_dir = File.join(@tmpdir, ".cache/ace-prompt-prep/prompts/archive")
-      @symlink_path = File.join(@tmpdir, ".cache/ace-prompt-prep/prompts/_previous.md")
+      @archive_dir = File.join(@tmpdir, ".ace-local/prompt-prep/prompts/archive")
+      @symlink_path = File.join(@tmpdir, ".ace-local/prompt-prep/prompts/_previous.md")
       FileUtils.mkdir_p(@archive_dir)
     end
   end

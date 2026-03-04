@@ -92,7 +92,7 @@ module Ace
           File.delete(symlink_path) if File.exist?(symlink_path) || File.symlink?(symlink_path)
 
           # Create relative path from symlink to target
-          # Both are in .cache/ace-prompt-prep/prompts/, target is in archive/ subdirectory
+          # Both are in .ace-local/prompt-prep/prompts/, target is in archive/ subdirectory
           target_basename = File.basename(target_path)
           relative_target = "archive/#{target_basename}"
 

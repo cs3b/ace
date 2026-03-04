@@ -123,7 +123,7 @@ class EnhancementTrackerTest < Minitest::Test
 
   def test_next_iteration_returns_1_when_no_enhancement_files
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      archive_dir = File.join(@test_dir, ".cache/ace-prompt-prep/prompts/archive")
+      archive_dir = File.join(@test_dir, ".ace-local/prompt-prep/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
 
       # Create a regular archive file (not enhanced)
@@ -136,7 +136,7 @@ class EnhancementTrackerTest < Minitest::Test
 
   def test_next_iteration_increments_from_existing
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      archive_dir = File.join(@test_dir, ".cache/ace-prompt-prep/prompts/archive")
+      archive_dir = File.join(@test_dir, ".ace-local/prompt-prep/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
 
       # Create some enhancement files
@@ -150,7 +150,7 @@ class EnhancementTrackerTest < Minitest::Test
 
   def test_next_iteration_handles_gaps_in_numbering
     Ace::Support::Fs::Molecules::ProjectRootFinder.stub :find_or_current, @test_dir do
-      archive_dir = File.join(@test_dir, ".cache/ace-prompt-prep/prompts/archive")
+      archive_dir = File.join(@test_dir, ".ace-local/prompt-prep/prompts/archive")
       FileUtils.mkdir_p(archive_dir)
 
       # Create files with gaps
@@ -183,7 +183,7 @@ class EnhancementTrackerTest < Minitest::Test
       hash = Ace::PromptPrep::Molecules::EnhancementTracker.content_hash(content)
 
       # Verify cache directory doesn't exist yet
-      cache_dir = File.join(@test_dir, ".cache/ace-prompt-prep/enhance-cache")
+      cache_dir = File.join(@test_dir, ".ace-local/prompt-prep/enhance-cache")
       refute Dir.exist?(cache_dir)
 
       # Store cache

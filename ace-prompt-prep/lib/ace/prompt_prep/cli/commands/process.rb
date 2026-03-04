@@ -17,8 +17,8 @@ module Ace
             Read prompt file, archive it with Base36 ID, update symlink, and output content
 
             By default:
-            - Reads from .cache/ace-prompt-prep/prompts/the-prompt.md
-            - Archives to .cache/ace-prompt-prep/prompts/archive/{base36-id}.md
+            - Reads from .ace-local/prompt-prep/prompts/the-prompt.md
+            - Archives to .ace-local/prompt-prep/prompts/archive/{base36-id}.md
             - Updates _previous.md symlink
             - Outputs to stdout
           DESC
