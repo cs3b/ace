@@ -777,10 +777,10 @@ module Ace
         end
 
         def create_cache_directory
-          # Create cache directory in .cache/ace-review/sessions/ relative to project root
+          # Create cache directory in .ace-local/review/sessions/ relative to project root
           # Use @project_root if set (e.g., in tests), otherwise use ProjectRootFinder
           root = @project_root || Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-          base_cache_path = File.join(root, ".cache", "ace-review", "sessions")
+          base_cache_path = File.join(root, ".ace-local", "review", "sessions")
           FileUtils.mkdir_p(base_cache_path)
           base_cache_path
         end

@@ -206,7 +206,7 @@ ace-review-feedback resolve <id> --resolution "Fixed in commit abc"
 ace-review-feedback skip <id> --reason "Design: intentional choice"
 
 # If feedback is empty, try specifying session
-ace-review-feedback list --session .cache/ace-review/sessions/review-xxx
+ace-review-feedback list --session .ace-local/ace-review/sessions/review-xxx
 ```
 
 ## Success Criteria

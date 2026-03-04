@@ -45,7 +45,7 @@ module Ace
               'abc123 --skip --research "Design: using polling for simplicity"',
               'abc123 --skip --research "Tracked in task 253"',
               'abc123 --skip --research "Duplicate of abc120"',
-              'abc123 --valid --session .cache/ace-review/sessions/review-xyz'
+              'abc123 --valid --session .ace-local/review/sessions/review-xyz'
             ]
 
             argument :id, required: true, desc: "Feedback ID"

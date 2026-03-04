@@ -91,7 +91,7 @@ Use `ace-review-feedback list --session <session-dir>` to list from a specific s
 
 ```bash
 # List feedback from a specific session (path shown in review output)
-ace-review-feedback list --session .cache/ace-review/sessions/review-8p2pk3
+ace-review-feedback list --session .ace-local/ace-review/sessions/review-8p2pk3
 ```
 
 ### Step 4: Verify Each Feedback Item
