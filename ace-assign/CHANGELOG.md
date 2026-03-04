@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-04
+
 ### Changed
 - Normalize `providers.cli_args` values to arrays and support mixed string/array CLI argument merging in fork launcher.
 
