@@ -63,9 +63,39 @@ class TaskPlanPromptBuilderTest < AceTaskTestCase
     assert_equal 1, config_files.size
 
     content = File.read(config_files.first)
-    assert_includes content, "presets: [project]"
-    assert_includes content, "base: wfi://task/plan"
+    assert_includes content, "base: tmpl://agent/plan-mode"
     assert_includes content, "format: markdown-xml"
+    assert_includes content, "sections:"
+    assert_includes content, "workflow:"
+    assert_includes content, "- wfi://task/plan"
+    assert_includes content, "project_context:"
+    assert_includes content, "presets:"
+    assert_includes content, "- project"
+    assert_includes content, "repeat_instruction:"
+    assert_includes content, "- tmpl://agent/plan-mode"
+  end
+
+  def test_system_config_orders_base_then_sections_with_repeat_instruction_last
+    builder = build_builder
+    stub_ace_bundle(builder) { builder.build }
+
+    prompts_dir = File.join(@cache_dir, "prompts")
+    config_files = Dir.glob(File.join(prompts_dir, "*-system.config.md"))
+    assert_equal 1, config_files.size
+
+    content = File.read(config_files.first)
+    base_pos = content.index("base: tmpl://agent/plan-mode")
+    workflow_pos = content.index("workflow:")
+    project_pos = content.index("project_context:")
+    repeat_pos = content.index("repeat_instruction:")
+
+    refute_nil base_pos
+    refute_nil workflow_pos
+    refute_nil project_pos
+    refute_nil repeat_pos
+    assert_operator base_pos, :<, workflow_pos
+    assert_operator workflow_pos, :<, project_pos
+    assert_operator project_pos, :<, repeat_pos
   end
 
   def test_user_config_file_is_copy_of_task_spec
