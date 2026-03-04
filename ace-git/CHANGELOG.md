@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.15] - 2026-03-04
+
+### Fixed
+- Rebase workflow cleanup `find` command corrected to `.ace-local/git/` (missed one occurrence in previous fix)
+
 ## [0.11.14] - 2026-03-04
 
 ### Fixed
