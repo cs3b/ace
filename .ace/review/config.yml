@@ -4,6 +4,7 @@
 # Default settings applied to all reviews unless overridden
 defaults:
   preset: code-multi
+  model: codex:codex
   output_format: "markdown"
   bundle: "project"
   max_concurrent_models: 5  # Max parallel LLM queries for multi-model execution
@@ -30,7 +31,7 @@ defaults:
 # Feedback extraction configuration
 feedback:
   enabled: true
-  synthesis_model: google:gemini-2.5-flash
+  synthesis_model: codex:codex
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability

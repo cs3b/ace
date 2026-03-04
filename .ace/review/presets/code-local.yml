@@ -35,4 +35,4 @@ subject:
   commands:
     - "git diff origin"
 
-model: gpro
+model: codex:codex
