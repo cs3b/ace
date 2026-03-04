@@ -2,7 +2,7 @@
 
 require "json"
 require "open3"
-require "tempfile"
+require "ace/support/items/atoms/tmp_workspace"
 
 module Ace
   module Git
@@ -117,20 +117,21 @@ module Ace
                 message: "Gitleaks not installed - skipping. Install with: brew install gitleaks",
                 findings: []
               }
-            end
+          end
 
-            # Use temp file for JSON report (gitleaks 8.x doesn't output JSON to stdout)
-            Tempfile.create(["gitleaks-report", ".json"]) do |report_file|
-              cmd = build_command(path: path, no_git: no_git, since: since, verbose: verbose, report_path: report_file.path)
+            # Use project-local temp workspace for deterministic debug artifacts.
+            workspace_dir = Ace::Support::Items::Atoms::TmpWorkspace.create("gitleaks-report")
+            report_path = File.join(workspace_dir, "report.json")
 
-              # Use array form to avoid shell injection - stderr captured separately
-              stdout, stderr, status = Open3.capture3(*cmd)
+            cmd = build_command(path: path, no_git: no_git, since: since, verbose: verbose, report_path: report_path)
 
-              # Read JSON from temp file
-              json_output = File.read(report_file.path) rescue ""
+            # Use array form to avoid shell injection - stderr captured separately
+            stdout, stderr, status = Open3.capture3(*cmd)
 
-              parse_results(json_output, stderr, status)
-            end
+            # Read JSON from workspace file
+            json_output = File.read(report_path) rescue ""
+
+            parse_results(json_output, stderr, status)
           rescue StandardError => e
             {
               success: false,

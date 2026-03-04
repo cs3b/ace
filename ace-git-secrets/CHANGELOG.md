@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-04
+
+### Changed
+- Default session/report directory migrated from `.cache/ace-git-secrets/sessions` to `.ace-local/git-secrets/sessions`
+- Gitleaks workspace now uses `Ace::Support::Items::Atoms::TmpWorkspace` for deterministic `.ace-local/tmp` paths
+
 ## [0.7.11] - 2026-02-24
 
 ### Technical
