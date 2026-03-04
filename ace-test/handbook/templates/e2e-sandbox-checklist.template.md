@@ -44,7 +44,7 @@ update:
 TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="{{short-pkg}}"  # Package name without ace- prefix
 SHORT_ID="ts{{nnn}}"       # Lowercase test number
-TEST_DIR=".ace-local/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+TEST_DIR=".ace-local/test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 REPORTS_DIR="${TEST_DIR}-reports"
 
 mkdir -p "$TEST_DIR"
@@ -272,7 +272,7 @@ TIMESTAMP_ID="$(ace-b36ts encode)"
 SHORT_PKG="${1:-unknown}"
 SHORT_ID="${2:-ts000}"
 
-TEST_DIR=".ace-local/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+TEST_DIR=".ace-local/test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 REPORTS_DIR="${TEST_DIR}-reports"
 
 mkdir -p "$TEST_DIR" "$REPORTS_DIR"
