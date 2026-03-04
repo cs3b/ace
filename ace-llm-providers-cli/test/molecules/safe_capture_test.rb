@@ -12,6 +12,8 @@ module Ace
       module CLI
         module Molecules
           class SafeCaptureTest < Minitest::Test
+            FAST_TIMEOUT = 0.2
+
             def setup
               @tracked_pids = []
             end
@@ -39,10 +41,10 @@ module Ace
 
             def test_timeout_kills_process
               error = assert_raises(Ace::LLM::ProviderError) do
-                SafeCapture.call(["sleep", "60"], timeout: 1, provider_name: "Test")
+                SafeCapture.call(["sleep", "2"], timeout: FAST_TIMEOUT, provider_name: "Test")
               end
 
-              assert_match(/Test CLI execution timed out after 1 seconds/, error.message)
+              assert_match(/Test CLI execution timed out after #{Regexp.escape(FAST_TIMEOUT.to_s)} seconds/, error.message)
             end
 
             def test_stdin_data_passed
@@ -79,7 +81,7 @@ module Ace
 
             def test_provider_name_in_timeout_message
               error = assert_raises(Ace::LLM::ProviderError) do
-                SafeCapture.call(["sleep", "60"], timeout: 1, provider_name: "Gemini")
+                SafeCapture.call(["sleep", "2"], timeout: FAST_TIMEOUT, provider_name: "Gemini")
               end
 
               assert_match(/Gemini CLI execution timed out/, error.message)
@@ -98,7 +100,7 @@ module Ace
 
             def test_default_provider_name
               error = assert_raises(Ace::LLM::ProviderError) do
-                SafeCapture.call(["sleep", "60"], timeout: 1)
+                SafeCapture.call(["sleep", "2"], timeout: FAST_TIMEOUT)
               end
 
               assert_match(/CLI CLI execution timed out/, error.message)
@@ -110,7 +112,7 @@ module Ace
                 escaped = Shellwords.escape(pid_file)
 
                 stdout, _stderr, status = SafeCapture.call(
-                  ["bash", "-lc", "sleep 30 & child=$!; echo \"$child\" > #{escaped}; echo done"],
+                  ["bash", "-lc", "sleep 5 & child=$!; echo \"$child\" > #{escaped}; echo done"],
                   timeout: 5,
                   provider_name: "Test"
                 )
@@ -120,30 +122,30 @@ module Ace
 
                 child_pid = wait_for_pid_file(pid_file)
                 @tracked_pids << child_pid
-                sleep 0.1
+                sleep 0.05
 
                 refute process_alive?(child_pid), "background child PID #{child_pid} should be terminated"
               end
             end
 
-    def test_timeout_cleanup_terminates_background_descendants
+            def test_timeout_cleanup_terminates_background_descendants
       Dir.mktmpdir do |dir|
         pid_file = File.join(dir, "child.pid")
         escaped = Shellwords.escape(pid_file)
 
                 error = assert_raises(Ace::LLM::ProviderError) do
                   SafeCapture.call(
-                    ["bash", "-lc", "sleep 30 & child=$!; echo \"$child\" > #{escaped}; sleep 30"],
-                    timeout: 1,
+                    ["bash", "-lc", "sleep 5 & child=$!; echo \"$child\" > #{escaped}; sleep 5"],
+                    timeout: FAST_TIMEOUT,
                     provider_name: "Test"
                   )
                 end
 
-                assert_match(/Test CLI execution timed out after 1 seconds/, error.message)
+                assert_match(/Test CLI execution timed out after #{Regexp.escape(FAST_TIMEOUT.to_s)} seconds/, error.message)
 
                 child_pid = wait_for_pid_file(pid_file)
                 @tracked_pids << child_pid
-                sleep 0.1
+                sleep 0.05
 
                 refute process_alive?(child_pid), "timed-out child PID #{child_pid} should be terminated"
               end
@@ -151,10 +153,10 @@ module Ace
 
             def test_timeout_accepts_numeric_string
               error = assert_raises(Ace::LLM::ProviderError) do
-                SafeCapture.call(["sleep", "60"], timeout: "1", provider_name: "Test")
+                SafeCapture.call(["sleep", "2"], timeout: "0.2", provider_name: "Test")
               end
 
-              assert_match(/Test CLI execution timed out after 1(\.0+)? seconds/, error.message)
+              assert_match(/Test CLI execution timed out after #{Regexp.escape(FAST_TIMEOUT.to_s)}(\.0+)? seconds/, error.message)
             end
 
             def test_timeout_rejects_non_numeric_string
@@ -186,13 +188,13 @@ module Ace
 
               error = assert_raises(Ace::LLM::ProviderError) do
                 SafeCapture.call(
-                  ["ruby", "-e", "STDOUT.puts('stdout'); STDERR.puts('stderr'); sleep 10"],
-                  timeout: 1,
+                  ["ruby", "-e", "STDOUT.puts('stdout'); STDERR.puts('stderr'); sleep 2"],
+                  timeout: FAST_TIMEOUT,
                   provider_name: "Test"
                 )
               end
 
-              assert_match(/Test CLI execution timed out after 1 seconds/, error.message)
+              assert_match(/Test CLI execution timed out after #{Regexp.escape(FAST_TIMEOUT.to_s)}(\.0+)? seconds/, error.message)
               assert_empty stderr_io.string
             ensure
               $stderr = old_stderr
@@ -200,7 +202,7 @@ module Ace
 
             private
 
-            def wait_for_pid_file(path, retries: 20, interval: 0.05)
+            def wait_for_pid_file(path, retries: 20, interval: 0.01)
               retries.times do
                 if File.exist?(path)
                   content = File.read(path).strip
