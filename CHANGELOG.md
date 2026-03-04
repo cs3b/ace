@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.753] - 2026-03-04
+
 ### Changed
+- **ace-llm-providers-cli v0.20.0**: `ArgsNormalizer` now Shellwords-splits each element when `cli_args` is an array, enabling multi-word entries like `"--sandbox danger-full-access"` to normalize correctly.
+- **ace-assign v0.18.0**: Migrated `providers.cli_args` config values to array format; `fork_session_launcher` now supports mixed string/array arg merging.
+- **ace-test-runner-e2e v0.21.0**: Migrated `providers.cli_args` config values to array format; `CliProviderAdapter` and `TestExecutor` now accept string or array CLI args.
 - **ace-task v0.20.0**: Renamed doctor CLI config to nested `task.doctor.cli_args` and switched provider args to arrays in `task`/`idea`/`retro` docs and runtime paths.
 - **ace-idea v0.13.0**: Renamed doctor CLI config to nested `idea.doctor.cli_args` and switched provider args to arrays.
 - **ace-retro v0.10.0**: Renamed doctor CLI config to nested `retro.doctor.cli_args` and switched provider args to arrays.
