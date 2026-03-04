@@ -25,6 +25,25 @@ When user requests a scoped commit/release:
 - Use path-scoped commit commands, e.g. `mise exec -- ace-git-commit <path1> <path2> ...`.
 - Treat unrelated modified files as acceptable background state unless user explicitly asks to clean/revert them.
 
+## Skill First Execution (Hard Rule)
+
+If a user names a skill (for example `$ace-git-create-pr`) or the task clearly matches an available skill, the skill is mandatory and takes precedence over manual command execution.
+
+Execution order:
+1. Match named or clearly relevant skill(s)
+2. Run the skill workflow instruction(s)
+3. Use manual commands only when no applicable skill exists or the skill is unavailable
+
+Before any non-read command, perform a quick skill check:
+- List candidate skills for the task
+- Select the chosen skill (or state "no applicable skill found")
+- Proceed only after this check
+
+Violation recovery:
+- If manual execution starts and a matching skill is identified later, stop manual flow
+- Run the matching skill workflow
+- Continue from skill outputs as the source of truth
+
 ## Temporary Files
 
 When creating temporary files (debugging output, environment captures, test artifacts):
