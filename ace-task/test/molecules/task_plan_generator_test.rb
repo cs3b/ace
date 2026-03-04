@@ -9,6 +9,7 @@ class TaskPlanGeneratorTest < AceTaskTestCase
     @tmpdir = Dir.mktmpdir("task-plan-generator-test")
     @original_dir = Dir.pwd
     Dir.chdir(@tmpdir)
+    create_minimal_project_preset!
 
     @task_file = File.join(@tmpdir, "task.s.md")
     File.write(@task_file, <<~TASK)
@@ -132,5 +133,19 @@ class TaskPlanGeneratorTest < AceTaskTestCase
     user_files = Dir.glob(File.join(prompts_dir, "*-user.md"))
     assert_equal 1, system_files.length
     assert_equal 1, user_files.length
+  end
+
+  private
+
+  def create_minimal_project_preset!
+    preset_dir = File.join(@tmpdir, ".ace", "bundle", "presets")
+    FileUtils.mkdir_p(preset_dir)
+    File.write(File.join(preset_dir, "project.md"), <<~PRESET)
+      ---
+      description: Test project context
+      bundle:
+        files: []
+      ---
+    PRESET
   end
 end
