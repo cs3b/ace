@@ -1504,7 +1504,7 @@ class SuiteOrchestratorTest < Minitest::Test
       orchestrator.send(:write_failure_stubs, results, package_tests)
 
       # Verify a stub metadata.yml was written
-      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      cache_dir = File.join(tmpdir, ".ace-local", "test-e2e")
       metadata_files = Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml"))
       assert_equal 1, metadata_files.size, "Should write one stub metadata file"
 
@@ -1550,7 +1550,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
       orchestrator.send(:write_failure_stubs, results, package_tests)
 
-      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      cache_dir = File.join(tmpdir, ".ace-local", "test-e2e")
       log_files = Dir.glob(File.join(cache_dir, "*-reports", "subprocess_output.log"))
       assert_equal 1, log_files.size, "Should write subprocess_output.log alongside metadata stub"
       assert_equal raw_output, File.read(log_files.first)
@@ -1587,7 +1587,7 @@ class SuiteOrchestratorTest < Minitest::Test
 
       orchestrator.send(:write_failure_stubs, results, package_tests)
 
-      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      cache_dir = File.join(tmpdir, ".ace-local", "test-e2e")
       metadata_files = Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml"))
       assert_empty metadata_files, "Should not write stubs for passing tests"
     end
@@ -1596,7 +1596,7 @@ class SuiteOrchestratorTest < Minitest::Test
   def test_write_failure_stubs_skips_when_metadata_already_exists
     Dir.mktmpdir do |tmpdir|
       # Create existing metadata on disk
-      existing_report_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "existing-reports")
+      existing_report_dir = File.join(tmpdir, ".ace-local", "test-e2e", "existing-reports")
       FileUtils.mkdir_p(existing_report_dir)
       File.write(File.join(existing_report_dir, "metadata.yml"), YAML.dump({
         "test-id" => "TS-LINT-001",
@@ -1635,7 +1635,7 @@ class SuiteOrchestratorTest < Minitest::Test
       orchestrator.send(:write_failure_stubs, results, package_tests)
 
       # Only the original metadata file should exist, no new stub
-      cache_dir = File.join(tmpdir, ".cache", "ace-test-e2e")
+      cache_dir = File.join(tmpdir, ".ace-local", "test-e2e")
       metadata_files = Dir.glob(File.join(cache_dir, "*-reports", "metadata.yml"))
       assert_equal 1, metadata_files.size, "Should not write additional stub when metadata exists"
       assert_equal existing_report_dir, File.dirname(metadata_files.first)

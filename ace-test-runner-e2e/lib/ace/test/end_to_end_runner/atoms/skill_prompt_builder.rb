@@ -105,7 +105,7 @@ module Ace
               Execution requirements:
               - Do not run `/ace-...` inside a shell command.
               - If slash commands are unavailable, stop and report that limitation in `Issues`.
-              - Write reports under `.cache/ace-test-e2e/*-reports/`.
+              - Write reports under `.ace-local/test-e2e/*-reports/`.
               - Return only this structured summary:
               #{return_contract}
             PROMPT
@@ -150,7 +150,7 @@ module Ace
           # This is intentionally a second invocation to avoid sharing runner context.
           def build_verifier_prompt(scenario, run_id: nil, sandbox_path: nil, test_cases: nil, report_dir: nil)
             report_dir ||= if run_id
-              ".cache/ace-test-e2e/#{scenario.dir_name(run_id)}-reports"
+              ".ace-local/test-e2e/#{scenario.dir_name(run_id)}-reports"
             end
 
             tc_filter = test_cases&.any? ? test_cases.join(", ") : "all discovered test cases"

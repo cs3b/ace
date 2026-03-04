@@ -8,14 +8,14 @@ module Ace
       module Molecules
         # Scans cache for failed test cases from previous E2E test runs
         #
-        # Reads metadata.yml files from .cache/ace-test-e2e/*-reports/ directories
+        # Reads metadata.yml files from .ace-local/test-e2e/*-reports/ directories
         # and extracts failed_test_cases arrays. Used by --only-failures CLI flag
         # to re-run only tests that failed previously.
         #
         # Note: This is a Molecule (not an Atom) because it performs filesystem
         # I/O via Dir.glob and YAML file reading.
         class FailureFinder
-          CACHE_DIR = ".cache/ace-test-e2e"
+          CACHE_DIR = ".ace-local/test-e2e"
           METADATA_FILE = "metadata.yml"
           REPORTS_SUFFIX = "-reports"
 

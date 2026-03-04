@@ -113,7 +113,7 @@ module Ace
           def default_report_dir_for(scenario, run_id)
             return nil unless run_id && !run_id.to_s.empty?
 
-            File.join(Dir.pwd, ".cache", "ace-test-e2e", "#{scenario.dir_name(run_id)}-reports")
+            File.join(Dir.pwd, ".ace-local", "test-e2e", "#{scenario.dir_name(run_id)}-reports")
           end
 
           # Execute via prompt for API providers (original behavior)

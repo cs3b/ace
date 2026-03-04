@@ -59,7 +59,7 @@ SHORT_PKG="${package#ace-}"  # Remove ace- prefix
 SHORT_ID="$(echo "$test_id" | tr '[:upper:]' '[:lower:]' | tr '-' '')"  # ts001
 
 # Create sandbox and reports directories
-TEST_DIR=".ace-local/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+TEST_DIR=".ace-local/test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 REPORTS_DIR="${TEST_DIR}-reports"
 
 mkdir -p "$TEST_DIR"
@@ -116,15 +116,15 @@ fi
 ```bash
 echo "=== SANDBOX ISOLATION CHECK ==="
 
-# Check 1: Current directory must be under .ace-local/ace-test-e2e/
+# Check 1: Current directory must be under .ace-local/test-e2e/
 CURRENT_DIR="$(pwd)"
-if [[ "$CURRENT_DIR" == *".ace-local/ace-test-e2e/"* ]]; then
+if [[ "$CURRENT_DIR" == *".ace-local/test-e2e/"* ]]; then
   echo "PASS: Working directory is inside sandbox"
   echo "  Location: $CURRENT_DIR"
 else
   echo "FAIL: NOT in sandbox!"
   echo "  Current: $CURRENT_DIR"
-  echo "  Expected: Should contain '.ace-local/ace-test-e2e/'"
+  echo "  Expected: Should contain '.ace-local/test-e2e/'"
   echo "  ACTION: STOP - Do not proceed. Re-run Environment Setup."
 fi
 
@@ -362,7 +362,7 @@ SHORT_PKG="${PACKAGE#ace-}"
 SHORT_ID=$(echo "$TEST_ID" | sed 's/TS-[A-Z]*-/ts/' | tr '[:upper:]' '[:lower:]')
 
 # Create sandbox and reports directories
-TEST_DIR="$PROJECT_ROOT/.ace-local/ace-test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
+TEST_DIR="$PROJECT_ROOT/.ace-local/test-e2e/${TIMESTAMP_ID}-${SHORT_PKG}-${SHORT_ID}"
 REPORTS_DIR="${TEST_DIR}-reports"
 
 mkdir -p "$TEST_DIR"
@@ -395,7 +395,7 @@ echo "=== SANDBOX ISOLATION CHECK ==="
 
 # Check 1: Path
 CURRENT_DIR="$(pwd)"
-if [[ "$CURRENT_DIR" == *".ace-local/ace-test-e2e/"* ]]; then
+if [[ "$CURRENT_DIR" == *".ace-local/test-e2e/"* ]]; then
   echo "PASS: Working directory is inside sandbox"
 else
   echo "FAIL: NOT in sandbox! Current: $CURRENT_DIR"

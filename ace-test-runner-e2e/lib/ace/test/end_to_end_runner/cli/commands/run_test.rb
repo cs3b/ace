@@ -26,7 +26,7 @@ module Ace
 
               Output:
                 Exit codes: 0 (all pass), 1 (any fail/error)
-                Reports written to: .cache/ace-test-e2e/{timestamp}-{pkg}-{id}-reports/
+                Reports written to: .ace-local/test-e2e/{timestamp}-{pkg}-{id}-reports/
             DESC
 
             example [

@@ -5,7 +5,7 @@ paths:
   # Where test scenarios are stored in packages
   scenarios: "test/e2e"
   # Directory for test execution artifacts (gitignored)
-  cache_dir: ".cache/ace-test-e2e"
+  cache_dir: ".ace-local/test-e2e"
 
 patterns:
   # Glob pattern for finding test scenarios (TS-format directories)

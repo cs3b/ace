@@ -163,7 +163,7 @@ Report missing prerequisites before proceeding.
 ### 4. Execute Environment Setup
 
 > **CRITICAL: SANDBOX REQUIRED**
-> All E2E tests MUST run in an isolated sandbox under `.ace-local/ace-test-e2e/`.
+> All E2E tests MUST run in an isolated sandbox under `.ace-local/test-e2e/`.
 > NEVER execute test commands in the main repository.
 
 **Reference:** `wfi://e2e/setup-sandbox` for the authoritative sandbox setup pattern.
@@ -176,7 +176,7 @@ Report missing prerequisites before proceeding.
 - `{short-id}` — lowercase prefix + number (e.g., `ts001`)
 
 ```
-.ace-local/ace-test-e2e/
+.ace-local/test-e2e/
 ├── 8osvnh-lint-ts001/          # Sandbox
 ├── 8osvnh-lint-ts001-reports/  # Reports (summary.r.md, experience.r.md, metadata.yml)
 └── 8osynv-final-report.md     # Suite report (sibling)
@@ -195,7 +195,7 @@ Before proceeding, verify sandbox isolation:
 ```bash
 echo "=== SANDBOX ISOLATION CHECK ==="
 CURRENT_DIR="$(pwd)"
-[[ "$CURRENT_DIR" == *".ace-local/ace-test-e2e/"* ]] && echo "PASS: In sandbox" || echo "FAIL: NOT in sandbox"
+[[ "$CURRENT_DIR" == *".ace-local/test-e2e/"* ]] && echo "PASS: In sandbox" || echo "FAIL: NOT in sandbox"
 git rev-parse --git-dir >/dev/null 2>&1 && { [ -z "$(git remote -v 2>/dev/null)" ] && echo "PASS: No remotes" || echo "FAIL: Remotes found"; } || echo "PASS: No git"
 [ -f "CLAUDE.md" ] || [ -f "Gemfile" ] || [ -d ".ace-taskflow" ] && echo "FAIL: Project markers found" || echo "PASS: No markers"
 echo "=== END CHECK ==="
@@ -294,7 +294,7 @@ git:
 
 Controlled by `cleanup.enabled` in `.ace-defaults/e2e-runner/config.yml` (default: disabled).
 
-Sandbox directories in `.ace-local/ace-test-e2e/` are gitignored.
+Sandbox directories in `.ace-local/test-e2e/` are gitignored.
 
 ### 9. Generate Summary
 
@@ -309,7 +309,7 @@ Summarize execution in the response. Reports are persisted to disk.
 |-----------|-------------|--------|
 | TC-001    | ...         | Pass   |
 
-Reports: `.ace-local/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/`
+Reports: `.ace-local/test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/`
 ```
 
 ### 10. Update Test Scenario

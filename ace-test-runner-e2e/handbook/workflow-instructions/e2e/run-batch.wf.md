@@ -35,7 +35,7 @@ This workflow executes multiple E2E tests in parallel using Task tool subagents.
          └──► Task[Subagent 4] → /ace-e2e-run ace-lint TS-LINT-004
                     │
                     ▼
-         Reports in .ace-local/ace-test-e2e/ (parallel-safe via unique timestamps)
+         Reports in .ace-local/test-e2e/ (parallel-safe via unique timestamps)
                     │
                     ▼
          Orchestrator reads reports → Generates suite summary
@@ -109,7 +109,7 @@ Task[subagent_type=general-purpose]:
     - **Passed**: {count}
     - **Failed**: {count}
     - **Total**: {count}
-    - **Report Paths**: (the timestamp-prefixed paths from .ace-local/ace-test-e2e/)
+    - **Report Paths**: (the timestamp-prefixed paths from .ace-local/test-e2e/)
     - **Issues**: Brief description or "None"
 
     Do not include full report contents - just paths and summary counts.
@@ -137,7 +137,7 @@ As each subagent completes, capture its return summary:
 For failed tests or detailed reporting, read the `metadata.yml` files from the reports folder:
 
 ```bash
-cat .ace-local/ace-test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/metadata.yml
+cat .ace-local/test-e2e/{timestamp}-{short-pkg}-{short-id}-reports/metadata.yml
 ```
 
 Extract additional details:
@@ -152,7 +152,7 @@ Write the suite summary report:
 ```bash
 PROJECT_ROOT="$(pwd)"
 FINAL_TS="$(ace-b36ts encode)"
-SUITE_REPORT="$PROJECT_ROOT/.ace-local/ace-test-e2e/${FINAL_TS}-final-report.md"
+SUITE_REPORT="$PROJECT_ROOT/.ace-local/test-e2e/${FINAL_TS}-final-report.md"
 ```
 
 **Report content:**
@@ -194,11 +194,11 @@ agent: {agent-name}
 - TC-003: Expected JSON output to include "errors" key
 - TC-005: Exit code should be 1 for validation failures
 
-**Report:** `.ace-local/ace-test-e2e/{timestamp}-lint-ts002-reports/summary.r.md`
+**Report:** `.ace-local/test-e2e/{timestamp}-lint-ts002-reports/summary.r.md`
 
 ## Reports
 
-All reports persisted to `.ace-local/ace-test-e2e/`:
+All reports persisted to `.ace-local/test-e2e/`:
 
 | Test ID | Sandbox | Reports Folder |
 |---------|---------|----------------|
@@ -265,9 +265,9 @@ Present the execution summary to the user:
 
 ### Reports
 
-Suite report: `.ace-local/ace-test-e2e/{FINAL_TS}-final-report.md`
+Suite report: `.ace-local/test-e2e/{FINAL_TS}-final-report.md`
 
-Individual test reports in `.ace-local/ace-test-e2e/`:
+Individual test reports in `.ace-local/test-e2e/`:
 - {timestamp}-lint-ts001-reports/
 - {timestamp}-lint-ts002-reports/
 ```
