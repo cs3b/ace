@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-03-04
+
+### Added
+- `resolve_cmd_to_path` method for programmatic resolution of cmd-type protocol URIs (e.g., `task://ref`)
+
+### Fixed
+- Prevent argument injection in `resolve_cmd_to_path` by escaping reference before command template interpolation
+- Add 10-second timeout to cmd protocol execution to prevent indefinite hangs
+
 ## [0.17.10] - 2026-02-23
 
 ### Technical

@@ -112,6 +112,60 @@ class TaskProtocolIntegrationTest < Minitest::Test
     end
   end
 
+  def test_resolve_cmd_to_path_returns_captured_output
+    Tempfile.create("task_test") do |f|
+      # Write content so the file exists on disk
+      f.write("task file content")
+      f.flush
+
+      # Update the protocol config to echo the temp file path
+      protocols_dir = File.join(@temp_dir, ".ace", "nav", "protocols")
+      protocol_config = {
+        "protocol" => "task",
+        "type" => "cmd",
+        "name" => "Task Navigation",
+        "description" => "Navigate to tasks via ace-taskflow delegation",
+        "enabled" => true,
+        "command_template" => "echo #{f.path}",
+        "pass_through_options" => ["--path", "--content", "--tree"]
+      }
+      File.write(File.join(protocols_dir, "task.yml"), protocol_config.to_yaml)
+
+      Dir.chdir(@temp_dir) do
+        engine = Ace::Support::Nav::Organisms::NavigationEngine.new
+        result = engine.resolve_cmd_to_path("task://083")
+        assert_equal f.path, result
+      end
+    end
+  end
+
+  def test_resolve_cmd_to_path_returns_nil_for_non_cmd_protocol
+    Dir.chdir(@temp_dir) do
+      engine = Ace::Support::Nav::Organisms::NavigationEngine.new
+      result = engine.resolve_cmd_to_path("wfi://some/workflow")
+      assert_nil result
+    end
+  end
+
+  def test_resolve_cmd_to_path_returns_nil_on_command_failure
+    # Set up a protocol that runs a failing command
+    protocols_dir = File.join(@temp_dir, ".ace", "nav", "protocols")
+    protocol_config = {
+      "protocol" => "task",
+      "type" => "cmd",
+      "name" => "Task Navigation",
+      "enabled" => true,
+      "command_template" => "false"  # always exits with failure
+    }
+    File.write(File.join(protocols_dir, "task.yml"), protocol_config.to_yaml)
+
+    Dir.chdir(@temp_dir) do
+      engine = Ace::Support::Nav::Organisms::NavigationEngine.new
+      result = engine.resolve_cmd_to_path("task://083")
+      assert_nil result
+    end
+  end
+
   def test_cli_help_displays_successfully
     stdout_output = capture_io do
       run_cli(["--help"])
