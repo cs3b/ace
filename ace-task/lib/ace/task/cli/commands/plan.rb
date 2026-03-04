@@ -44,6 +44,7 @@ module Ace
           def call(ref:, **options)
             task = resolve_task(ref)
             cache = Molecules::TaskPlanCache.new(task_id: task.id)
+            config = Molecules::TaskConfigLoader.load
 
             plan_path = cache.resolve_latest_plan
             refresh = options[:refresh]
@@ -56,8 +57,10 @@ module Ace
             end
 
             context_files = capture_context_files(task)
-            model = options[:model] || default_model
-            generator = plan_generator(model)
+            model = options[:model] || default_model(config)
+            cli_args_map = config.dig("task", "plan", "cli_args") || {}
+            cli_args = provider_cli_args(model, cli_args_map)
+            generator = plan_generator(model, cli_args: cli_args)
             content = generator.generate(
               task: task,
               context_files: context_files,
@@ -103,14 +106,31 @@ module Ace
             end
           end
 
-          def plan_generator(model)
+          def plan_generator(model, cli_args: nil)
             klass = self.class.generator_class || Molecules::TaskPlanGenerator
-            klass.new(model: model)
+            klass.new(model: model, cli_args: cli_args)
           end
 
-          def default_model
-            config = Molecules::TaskConfigLoader.load
+          def default_model(config)
             config.dig("task", "plan", "model") || "gemini:flash-latest"
+          end
+
+          def provider_cli_args(provider_model, cli_args_map)
+            return nil if cli_args_map.nil? || cli_args_map.empty?
+            return nil if provider_model.nil? || provider_model.strip.empty?
+
+            raw_provider = provider_model.split(":", 2).first
+            direct_match = cli_args_map[raw_provider]
+            return direct_match if direct_match
+
+            require "ace/llm"
+            parser = Ace::LLM::Molecules::ProviderModelParser.new
+            result = parser.parse(provider_model)
+            return nil unless result.valid?
+
+            cli_args_map[result.provider]
+          rescue StandardError, LoadError
+            nil
           end
         end
       end

@@ -27,3 +27,8 @@ task:
   # Plan command defaults
   plan:
     model: "claude:opus"
+    # Required CLI args per provider for plan generation sessions
+    cli_args:
+      claude: "--permission-mode plan"
+      codex: "--sandbox read-only"
+      gemini: "--approval-mode plan"
