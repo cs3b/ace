@@ -8,7 +8,7 @@ class BundleLoaderSecurityTest < Minitest::Test
     @tmpdir = Dir.mktmpdir
     # Use realpath to get canonical path (handles /var -> /private/var on macOS)
     @project_root = File.realpath(@tmpdir)
-    @prompt_dir = File.join(@project_root, ".cache", "ace-prompt-prep", "prompts")
+    @prompt_dir = File.join(@project_root, ".ace-local", "prompt-prep", "prompts")
     FileUtils.mkdir_p(@prompt_dir)
 
     # Reset config cache and get fresh config from gem defaults

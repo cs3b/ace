@@ -16,7 +16,7 @@ module Ace
           # Get default prompt directory (project-local)
           def default_prompt_dir
             project_root = Ace::Support::Fs::Molecules::ProjectRootFinder.find_or_current
-            File.join(project_root, ".cache", "ace-prompt-prep", "prompts")
+            File.join(project_root, ".ace-local", "prompt-prep", "prompts")
           end
         end
 

@@ -237,6 +237,6 @@ class PromptInitializerTest < Minitest::Test
     # Should use ProjectRootFinder, not Dir.home
     default_dir = Ace::PromptPrep::Organisms::PromptInitializer.default_prompt_dir
     refute_nil default_dir
-    assert default_dir.end_with?(".cache/ace-prompt-prep/prompts")
+    assert default_dir.end_with?(".ace-local/prompt-prep/prompts")
   end
 end

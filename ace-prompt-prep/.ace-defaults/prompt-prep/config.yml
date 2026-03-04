@@ -7,7 +7,7 @@
 # Paths configuration
 # All paths are relative to project root
 paths:
-  cache_dir: ".cache/ace-prompt-prep"           # Base cache directory
+  cache_dir: ".ace-local/prompt-prep"           # Base cache directory
   prompt_file: "prompts/the-prompt.md"     # Main prompt file (relative to cache_dir)
   enhance_cache: "enhance-cache"           # Enhancement cache directory (relative to cache_dir)
   archive_dir: "prompts/archive"           # Archive directory (relative to cache_dir)
