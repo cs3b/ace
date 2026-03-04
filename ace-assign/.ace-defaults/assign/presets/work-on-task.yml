@@ -49,8 +49,8 @@ steps:
       - "Skip if no public CLI API was changed (internal refactoring only)."
 
   - name: release-minor
-    skill: ace-release
     instructions:
+      - Run /ace-release.
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
