@@ -13,7 +13,10 @@ module Ace
           # @param config [Hash] Configuration hash (string keys) with providers section
           def initialize(config = {})
             @cli_providers = config.dig("providers", "cli") || %w[claude gemini codex codexoss opencode pi]
-            @cli_args_map = config.dig("providers", "cli_args") || {"claude" => "dangerously-skip-permissions", "codex" => "full-auto"}
+            @cli_args_map = config.dig("providers", "cli_args") || {
+              "claude" => ["dangerously-skip-permissions"],
+              "codex" => ["--sandbox danger-full-access", "--ask-for-approval never"]
+            }
           end
 
           # Check if a provider string refers to a CLI provider
@@ -52,10 +55,11 @@ module Ace
           # Instance method: get required CLI args for a provider
           #
           # @param provider_string [String] Provider:model string
-          # @return [String, nil] Required CLI args or nil
+          # @return [Array<String>, nil] Required CLI args or nil
           def required_cli_args(provider_string)
             name = self.class.provider_name(provider_string)
-            @cli_args_map[name]
+            value = @cli_args_map[name]
+            value.nil? ? nil : Array(value).map(&:to_s)
           end
 
           # Build a skill invocation prompt for scenario-level execution

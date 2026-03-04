@@ -6,6 +6,19 @@ class TestExecutorTest < Minitest::Test
   TestExecutor = Ace::Test::EndToEndRunner::Molecules::TestExecutor
   TestScenario = Ace::Test::EndToEndRunner::Models::TestScenario
 
+  def test_merge_cli_args_accepts_arrays_and_strings
+    executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
+
+    assert_equal(
+      "--sandbox danger-full-access --ask-for-approval never --model-settings x",
+      executor.send(:merge_cli_args, ["--sandbox danger-full-access", "--ask-for-approval never"], "--model-settings x")
+    )
+    assert_equal(
+      "--model-settings x",
+      executor.send(:merge_cli_args, nil, " --model-settings x ")
+    )
+  end
+
   def test_execute_pipeline_requires_deterministic_paths
     executor = TestExecutor.new(provider: "opencode:glm", timeout: 10)
     scenario = create_scenario
