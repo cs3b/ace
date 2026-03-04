@@ -83,11 +83,11 @@ class TaskPlanCommandTest < AceTaskTestCase
     assert_includes result[:stdout], "# Plan for 8pp.t.q7w"
   end
 
-  def test_default_model_passes_claude_plan_cli_args
+  def test_default_model_passes_gemini_plan_cli_args
     run_cli(%w[plan q7w --refresh])
 
-    assert_equal "claude:opus", FakeGenerator.last_init_kwargs[:model]
-    assert_equal "--permission-mode plan", FakeGenerator.last_init_kwargs[:cli_args]
+    assert_equal "gemini:pro-latest", FakeGenerator.last_init_kwargs[:model]
+    assert_equal "--approval-mode plan", FakeGenerator.last_init_kwargs[:cli_args]
   end
 
   def test_model_override_passes_codex_cli_args
