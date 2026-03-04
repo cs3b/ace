@@ -11,9 +11,9 @@ gem install ace-support-models
 ### Migration from ace-llm-models-dev
 
 If you were using `ace-llm-models-dev`, note that:
-- The cache directory has changed from `~/.ace-local/ace-llm-models-dev` to `~/.ace-local/ace-models`
+- The cache directory has changed from `~/.cache/ace-llm-models-dev` to `~/.ace-local/models`
 - You will need to run `ace-models cache sync` after upgrading to fetch fresh data
-- You can safely delete the old cache directory: `rm -rf ~/.ace-local/ace-llm-models-dev`
+- You can safely delete the old cache directory: `rm -rf ~/.cache/ace-llm-models-dev`
 - All existing functionality remains identical
 
 ## Usage
