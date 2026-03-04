@@ -141,7 +141,7 @@ module Ace
         # @param diff_result [Hash] Diff analysis result
         # @return [String] Path to saved analysis file
         def self.save_diff_to_cache(diff_result)
-          cache_dir = ".cache/ace-docs"
+          cache_dir = ".ace-local/docs"
           compact_id = Ace::B36ts.encode(Time.now)
           session_dir = File.join(cache_dir, "diff-#{compact_id}")
 

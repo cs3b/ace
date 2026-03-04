@@ -38,7 +38,7 @@ module Ace
         # @param cache_dir [String] Cache directory path
         # @return [String] Path to saved file
         def save_to_cache(cache_dir = nil)
-          cache_dir ||= Ace::Docs.config["cache_dir"] || ".cache/ace-docs"
+          cache_dir ||= Ace::Docs.config["cache_dir"] || ".ace-local/docs"
           FileUtils.mkdir_p(cache_dir)
 
           compact_id = Ace::B36ts.encode(Time.now)
