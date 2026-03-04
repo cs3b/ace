@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.749] - 2026-03-04
+
+### Fixed
+- **ace-review v0.43.2**: Reverted feedback synthesis temporary workspace usage to standard `Dir.mktmpdir` handling and removed project-local `.ace-local/tmp` dependence.
+
+## [0.9.748] - 2026-03-04
+
+### Fixed
+- **ace-git-secrets v0.8.2**: Reverted Gitleaks execution temporary workspace handling to standard `Tempfile`/`Dir.mktmpdir` behavior and removed project-local `.ace-local/tmp` usage.
+
 ## [0.9.747] - 2026-03-04
 
 ### Fixed
