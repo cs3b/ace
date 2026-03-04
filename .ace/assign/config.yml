@@ -32,7 +32,7 @@ execution:
 
 # Provider-level defaults for CLI invocation
 providers:
-  cli:
+  cli: 
     - "claude"
     - "claudeoai"
     - "gemini"
@@ -41,7 +41,11 @@ providers:
     - "opencode"
     - "pi"
   cli_args:
-    claude: "dangerously-skip-permissions"
-    claudeoai: "dangerously-skip-permissions"
-    codex: "dangerously-bypass-approvals-and-sandbox"
-    codexoss: "full-auto"
+    claude:
+      - "dangerously-skip-permissions"
+    claudeoai:
+      - "dangerously-skip-permissions"
+    codex:
+      - "dangerously-bypass-approvals-and-sandbox"
+    codexoss:
+      - "full-auto"
