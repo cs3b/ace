@@ -55,10 +55,22 @@ module Ace
           File.write(path, <<~CONFIG)
             ---
             bundle:
-              base: wfi://task/plan
-              presets: [project]
               params:
                 format: markdown-xml
+              base: tmpl://agent/plan-mode
+              sections:
+                workflow:
+                  title: Planning Workflow
+                  files:
+                    - wfi://task/plan
+                project_context:
+                  title: Project Context
+                  presets:
+                    - project
+                repeat_instruction:
+                  title: Plan Mode Reminder
+                  files:
+                    - tmpl://agent/plan-mode
             ---
           CONFIG
         end
