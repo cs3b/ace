@@ -145,7 +145,7 @@ whitelist:
 output:
   format: table
   mask_tokens: true
-  directory: .cache/ace-git-secrets
+  directory: .ace-local/ace-git-secrets
 ```
 
 ### Custom Gitleaks Rules
@@ -174,7 +174,7 @@ For a complete guided workflow, see `wfi://git/token-remediation` (use `ace-nav 
 1. **Scan** - Detect tokens in history
    ```bash
    ace-git-secrets scan
-   # Report saved to .cache/ace-git-secrets/
+   # Report saved to .ace-local/ace-git-secrets/
    ```
 
 2. **Revoke** - Invalidate compromised tokens immediately
