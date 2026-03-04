@@ -107,7 +107,7 @@ This prevents duplicate assertions across test layers.
 
 ## Execution Artifacts
 
-Reports are written under `.cache/ace-test-e2e/`:
+Reports are written under `.ace-local/ace-test-e2e/`:
 - `{run-id}-{pkg}-{scenario}-reports/summary.r.md`
 - `{run-id}-{pkg}-{scenario}-reports/experience.r.md`
 - `{run-id}-{pkg}-{scenario}-reports/metadata.yml`
