@@ -189,12 +189,12 @@ module Ace
 
           # Save report to file in cache directory
           # @param format [Symbol] Output format (:json or :markdown)
-          # @param directory [String, nil] Custom cache directory (defaults to .cache/ace-git-secrets)
+          # @param directory [String, nil] Custom cache directory (defaults to .ace-local/git-secrets)
           # @param include_raw [Boolean] Include raw token values in JSON (default: true for machine-readable)
           # @param quiet [Boolean] Suppress security warning (default: false)
           # @return [String] Path to saved report file
           def save_to_file(format: :json, directory: nil, include_raw: true, quiet: false)
-            cache_dir = directory || File.join(repository_path || ".", ".cache", "ace-git-secrets")
+            cache_dir = directory || File.join(repository_path || ".", ".ace-local", "git-secrets")
             sessions_dir = File.join(cache_dir, "sessions")
             FileUtils.mkdir_p(sessions_dir)
 
