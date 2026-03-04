@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.746] - 2026-03-04
+
+### Changed
+- **ace-assign v0.16.4**: Add package-only `verify-test` phase to forked `work-on-*` subtree workflows, followed by subtree `release-minor`, while keeping assignment-level `verify-test-suite` as the full-suite verification flow.
+
+## [0.9.745] - 2026-03-04
+
+### Changed
+- **ace-assign v0.16.3**: Normalize `work-on` subtree execution to a single base-context phase chain (`onboard-base`, `task-load`, `plan-task`, `work-on-task`) and remove duplicate child `onboard`.
+- **ace-task v0.18.5**: Update task work workflow and phase contracts to consume `project-base-context` and simplify batch child onboarding behavior.
+
 ## [0.9.744] - 2026-03-04
 
 ### Fixed
