@@ -113,7 +113,7 @@ module Ace
         return File.expand_path(cache_base)
       end
 
-      relative_path = config["cache_dir"] || ".cache/ace-assign"
+      relative_path = config["cache_dir"] || ".ace-local/assign"
 
       # If already absolute, return as-is
       return relative_path if Pathname.new(relative_path).absolute?
