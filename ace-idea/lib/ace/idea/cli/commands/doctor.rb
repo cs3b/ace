@@ -197,7 +197,7 @@ module Ace
               fallback: false
             }
 
-            cli_args = provider_cli_args(provider_model, cli_args_map)
+            cli_args = provider_cli_args(provider_model, cli_args_map, config)
             query_options[:cli_args] = cli_args if cli_args
 
             response = Ace::LLM::QueryInterface.query(provider_model, prompt, **query_options)
@@ -205,14 +205,43 @@ module Ace
             puts response[:text]
           end
 
-          def provider_cli_args(provider_model, cli_args_map)
+          def provider_cli_args(provider_model, cli_args_map, config)
             return nil if cli_args_map.nil? || cli_args_map.empty?
+            return nil if provider_model.nil? || provider_model.strip.empty?
+
+            raw_provider = provider_model.split(":", 2).first
+            legacy_cli_args_map = config.dig("idea", "doctor_cli_args") || config.dig("doctor_cli_args") || {}
+
+            direct_match = provider_cli_args_for_provider(raw_provider, cli_args_map, legacy_cli_args_map)
+            return direct_match unless direct_match.nil?
+
             parser = Ace::LLM::Molecules::ProviderModelParser.new
             result = parser.parse(provider_model)
             return nil unless result.valid?
-            cli_args_map[result.provider]
+            provider_cli_args_for_provider(result.provider, cli_args_map, legacy_cli_args_map)
           rescue StandardError
             nil
+          end
+
+          def provider_cli_args_for_provider(provider, cli_args_map, legacy_cli_args_map)
+            source = cli_args_map[provider] || legacy_cli_args_map[provider]
+            normalize_provider_cli_args(source, provider)
+          end
+
+          def normalize_provider_cli_args(raw_value, provider_name)
+            return nil if raw_value.nil?
+
+            values = Array(raw_value).map(&:to_s).map(&:strip).reject(&:empty?)
+            return nil if values.empty?
+
+            return ["--sandbox danger-full-access", "--ask-for-approval never"] if codex_alias_args?(values, provider_name)
+
+            values
+          end
+
+          def codex_alias_args?(values, provider_name)
+            provider_name == "codex" &&
+              (values == ["full-auto"] || values == ["dangerously-bypass-approvals-and-sandbox"])
           end
         end
       end
