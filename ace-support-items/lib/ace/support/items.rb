@@ -20,7 +20,6 @@ require_relative "items/atoms/stats_line_formatter"
 require_relative "items/atoms/relative_time_formatter"
 require_relative "items/atoms/sort_score_calculator"
 require_relative "items/atoms/position_generator"
-require_relative "items/atoms/tmp_workspace"
 
 # Models
 require_relative "items/models/scan_result"
