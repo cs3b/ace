@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.738] - 2026-03-04
+
+### Added
+- **Agent integration**: `.agent/skills/` canonical skill location — provider-neutral home for all 88 ACE skills following the AGENTS.md community standard
+
+### Changed
+- **Agent integration**: `.claude/skills`, `.codex/skills`, `.gemini/skills`, `.pi/skills` all now symlink to `.agent/skills/` instead of referencing `.claude/skills/` directly
+
 ## [0.9.737] - 2026-03-04
 
 ### Fixed
