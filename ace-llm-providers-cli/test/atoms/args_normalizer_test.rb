@@ -25,6 +25,10 @@ module Ace
               assert_equal ["--foo", "--bar"], @normalizer.normalize_cli_args(["foo", "--bar"])
             end
 
+            def test_handles_array_args_with_embedded_spaces
+              assert_equal ["--sandbox", "danger-full-access", "--verbose"], @normalizer.normalize_cli_args(["--sandbox danger-full-access", "verbose"])
+            end
+
             def test_preserves_single_dash_flags
               assert_equal ["-v"], @normalizer.normalize_cli_args("-v")
             end
