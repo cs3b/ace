@@ -131,7 +131,7 @@ module Ace
           return expand_path_template(configured_path) if configured_path
 
           # 2. Fallback to cache directory
-          File.join(project_root, ".cache/ace-review/sessions")
+          File.join(project_root, ".ace-local/review/sessions")
         end
 
         # Load a preset with composition support

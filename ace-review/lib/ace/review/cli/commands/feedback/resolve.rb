@@ -27,7 +27,7 @@ module Ace
               'abc123 --resolution "Fixed in commit def456"',
               'abc123 --resolution "Added input validation in UserController"',
               'abc123 --resolution "Refactored to use parameterized queries"',
-              'abc123 --resolution "Fixed" --session .cache/ace-review/sessions/review-xyz'
+              'abc123 --resolution "Fixed" --session .ace-local/review/sessions/review-xyz'
             ]
 
             argument :id, required: true, desc: "Feedback ID"
