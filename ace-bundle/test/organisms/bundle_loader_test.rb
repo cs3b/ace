@@ -1045,6 +1045,48 @@ class BundleLoaderTest < AceTestCase
     end
   end
 
+  def test_resolve_protocol_handles_cmd_type_protocol_via_fallback
+    require "ace/support/nav"
+    with_temp_dir do |dir|
+      # Create a temp file representing the resolved task file
+      task_file = File.join(dir, "task-083.md")
+      File.write(task_file, "# Task 083\nThis is the task content.")
+
+      # Mock the NavigationEngine to simulate cmd-type protocol resolution
+      mock_engine = Minitest::Mock.new
+      mock_engine.expect(:resolve, nil, [String])
+      mock_engine.expect(:cmd_protocol?, true, [String])
+      mock_engine.expect(:resolve_cmd_to_path, task_file, [String])
+
+      Ace::Support::Nav::Organisms::NavigationEngine.stub(:new, mock_engine) do
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: dir)
+        resolved = loader.send(:resolve_protocol, "task://083")
+        assert_equal task_file, resolved
+      end
+
+      mock_engine.verify
+    end
+  end
+
+  def test_resolve_protocol_returns_nil_when_cmd_protocol_fails
+    require "ace/support/nav"
+    with_temp_dir do |dir|
+      # Mock the NavigationEngine where cmd protocol returns no valid path
+      mock_engine = Minitest::Mock.new
+      mock_engine.expect(:resolve, nil, [String])
+      mock_engine.expect(:cmd_protocol?, true, [String])
+      mock_engine.expect(:resolve_cmd_to_path, nil, [String])
+
+      Ace::Support::Nav::Organisms::NavigationEngine.stub(:new, mock_engine) do
+        loader = Ace::Bundle::Organisms::BundleLoader.new(base_dir: dir)
+        resolved = loader.send(:resolve_protocol, "task://083")
+        assert_nil resolved
+      end
+
+      mock_engine.verify
+    end
+  end
+
   def test_generate_diff_safe_does_not_crash_on_git_error
     with_temp_dir do
       yaml_config = <<~YAML

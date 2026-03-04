@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.31.8] - 2026-03-04
+
+### Fixed
+- Guard against empty `base_content_resolved` replacing document content with nothing when base resolution fails
+
+## [0.31.7] - 2026-03-04
+
+### Fixed
+- Resolve `cmd`-type protocol URIs (e.g., `task://`) in `ace-bundle` by capturing command output as a file path, enabling `ace-bundle task://...` to load task files correctly.
+
+### Technical
+- Add tests for `resolve_protocol` cmd-type fallback in `BundleLoaderTest`.
+
+## [0.31.6] - 2026-03-03
+
+### Fixed
+- Preserve resolved `base` content when `embed_document_source` leaks from top-level preset merge, preventing base workflow content from being overwritten by raw config frontmatter.
+
 ## [0.31.5] - 2026-02-25
 
 ### Technical
