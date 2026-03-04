@@ -2,7 +2,7 @@
 # Override in ~/.ace/assign/config.yml or .ace/assign/config.yml
 
 # Directory where assignments are stored
-cache_dir: ".cache/ace-assign"
+cache_dir: ".ace-local/assign"
 
 # Main phase numbering step (gaps for injection)
 step_increment: 10
