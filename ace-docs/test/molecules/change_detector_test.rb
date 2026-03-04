@@ -108,7 +108,7 @@ module Ace
           filepath = ChangeDetector.save_diff_to_cache(diff_result)
 
           assert File.exist?(filepath)
-          assert filepath.include?(".cache/ace-docs/diff-")
+          assert filepath.include?(".ace-local/docs/diff-")
           assert filepath.end_with?(".md")
 
           content = File.read(filepath)
@@ -443,7 +443,7 @@ module Ace
 
           # The method returns a single file path to the analysis.md report
           assert File.exist?(filepath)
-          assert filepath.include?(".cache/ace-docs/diff-")
+          assert filepath.include?(".ace-local/docs/diff-")
           assert filepath.end_with?("analysis.md")
 
           # Verify the content includes information about both subjects

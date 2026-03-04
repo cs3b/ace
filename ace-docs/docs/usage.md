@@ -114,7 +114,7 @@ Documents can define multiple subjects to generate separate diffs for different 
 - Reduces noise by separating concerns
 
 **Output:**
-- Session directory: `.cache/ace-docs/analyze-{timestamp}/`
+- Session directory: `.ace-local/ace-docs/analyze-{timestamp}/`
 - Files generated:
   - `analysis.md` - LLM-powered analysis report with recommendations
   - Subject diff files (when multi-subject configured):
@@ -182,7 +182,7 @@ ace-docs diff [FILE] [OPTIONS]
 - `--exclude-moves` - Exclude moved files from diff
 
 **Output:**
-- Saves analysis to `.cache/ace-docs/diff-{timestamp}.md`
+- Saves analysis to `.ace-local/ace-docs/diff-{timestamp}.md`
 - Shows summary of documents with changes
 - Full git diff with `-w` flag (ignores whitespace)
 
@@ -314,7 +314,7 @@ Create `.ace/docs/config.yml` in your project:
 
 ```yaml
 # Cache directory for analysis and diff reports
-cache_dir: .cache/ace-docs
+cache_dir: .ace-local/ace-docs
 
 # LLM integration settings for analyze command
 llm_temperature: 0.3        # Lower for deterministic analysis (default: 0.3)
@@ -619,13 +619,13 @@ cat docs/architecture.md
 ace-docs analyze docs/architecture.md
 
 # 3. Review generated diff files
-ls .cache/ace-docs/analyze-*/
+ls .ace-local/ace-docs/analyze-*/
 # code.diff    - Ruby code changes only
 # docs.diff    - Documentation changes only
 # analysis.md  - LLM analysis with recommendations
 
 # 4. Review the targeted analysis
-cat .cache/ace-docs/analyze-*/analysis.md
+cat .ace-local/ace-docs/analyze-*/analysis.md
 
 # 5. Update document based on specific subject changes
 $EDITOR docs/architecture.md
@@ -649,7 +649,7 @@ ace-docs status --needs-update
 ace-docs analyze --needs-update
 
 # 3. Review the analysis report
-cat .cache/ace-docs/analyze-*/analysis.md
+cat .ace-local/ace-docs/analyze-*/analysis.md
 
 # 4. Update document content based on analysis
 $EDITOR docs/guide.md
@@ -694,7 +694,7 @@ ace-docs status | ace-bundle add --tag doc-status
 
 # Analyze changes with context
 ace-docs diff --all
-ace-llm --prompt "Summarize documentation changes" < .cache/ace-docs/diff-*.md
+ace-llm --prompt "Summarize documentation changes" < .ace-local/ace-docs/diff-*.md
 ```
 
 ## Troubleshooting
