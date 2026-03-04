@@ -135,6 +135,11 @@ This document provides actionable decisions from Architecture Decision Records (
 **Impact**: When integrating with LLM providers, first attempt to get context size from API. Maintain static mappings as fallback for providers without API support.
 **Details**: [ADR-014](decisions/ADR-014-LLM-Integration-Architecture.md)
 
+### Protocol-Driven Prompt Composition for ace-llm
+**Decision**: Compose prompts for ace-llm consumers via protocol-addressable resources and `ace-bundle` (`base`, `sections`, `presets`) instead of hardcoded in-code prompt strings.
+**Impact**: When building prompt stacks, use `tmpl://`, `prompt://`, `wfi://` (or file paths) and bundle configuration so users can override behavior through resources/config, not Ruby code edits.
+**Details**: [ADR-026](decisions/ADR-026-protocol-driven-prompt-composition-for-ace-llm-via-ace-bundle.md)
+
 ### Git Secrets Security Model
 **Decision**: ace-git-secrets uses gitleaks as primary detection with Ruby fallback, multiple defense layers, and documented threat model.
 **Impact**: When working with secret detection:
