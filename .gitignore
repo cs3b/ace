@@ -9,6 +9,8 @@ node_modules
 
 # Cache, tmp and backup files
 .cache
+.ace-local
+ace-*/.ace-local
 *.bak
 *.backup
 *.backup.*
