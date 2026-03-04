@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
+## [0.20.0] - 2026-03-04
+
+### Added
 - Split shell-style tokens within array CLI arguments so multi-word entries like `"--sandbox danger-full-access"` normalize to discrete CLI flags/values.
 
 ## [0.19.4] - 2026-03-04
