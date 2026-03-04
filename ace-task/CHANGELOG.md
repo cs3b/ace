@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2] - 2026-03-04
+
+### Fixed
+- Updated doctor CLI tests to match `provider_cli_args` method signature (`provider_model, cli_args_map, config`), resolving test failure after runtime signature expansion.
+
 ## [0.20.1] - 2026-03-04
 
 ### Fixed

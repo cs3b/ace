@@ -231,9 +231,10 @@ class TaskDoctorCliTest < AceTaskTestCase
   def test_provider_cli_args_map
     command = Ace::Task::CLI::Commands::Doctor.new
     cli_args_map = { "gemini" => ["yolo"] }
+    config = {}
 
-    assert_equal ["yolo"], command.send(:provider_cli_args, "gemini:flash-preview", cli_args_map)
-    assert_nil command.send(:provider_cli_args, "claude:sonnet", cli_args_map)
-    assert_nil command.send(:provider_cli_args, nil, cli_args_map)
+    assert_equal ["yolo"], command.send(:provider_cli_args, "gemini:flash-preview", cli_args_map, config)
+    assert_nil command.send(:provider_cli_args, "claude:sonnet", cli_args_map, config)
+    assert_nil command.send(:provider_cli_args, nil, cli_args_map, config)
   end
 end
