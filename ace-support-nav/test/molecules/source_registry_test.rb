@@ -46,8 +46,12 @@ module Ace
           end
 
           def test_discovers_user_sources
+            old_home = ENV["HOME"]
+            temp_home = Dir.mktmpdir("ace_nav_home")
+            ENV["HOME"] = temp_home
+
             # Create user source directory
-            user_sources_dir = File.expand_path("~/.ace/nav/protocols/example-sources")
+            user_sources_dir = File.join(temp_home, ".ace", "nav", "protocols", "example-sources")
             FileUtils.mkdir_p(user_sources_dir)
 
             user_source = {
@@ -59,17 +63,15 @@ module Ace
 
             File.write(File.join(user_sources_dir, "user.yml"), user_source.to_yaml)
 
-            begin
-              sources = @registry.sources_for_protocol("example")
+            sources = @registry.sources_for_protocol("example")
 
-              user_source = sources.find { |s| s.name == "user_source" }
-              assert user_source, "Should find user source"
-              assert_equal "directory", user_source.type
-              assert_equal 30, user_source.priority
-            ensure
-              # Cleanup user directory
-              FileUtils.rm_rf(user_sources_dir)
-            end
+            user_source = sources.find { |s| s.name == "user_source" }
+            assert user_source, "Should find user source"
+            assert_equal "directory", user_source.type
+            assert_equal 30, user_source.priority
+          ensure
+            ENV["HOME"] = old_home
+            FileUtils.rm_rf(temp_home) if temp_home && Dir.exist?(temp_home)
           end
 
           def test_sources_sorted_by_priority
