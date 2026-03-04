@@ -21,14 +21,19 @@ task:
   doctor_agent_model: "gemini:flash-latest"
 
   # Doctor command: CLI args per provider for agent sessions
-  doctor_cli_args:
-    gemini: "yolo"
+  doctor:
+    cli_args:
+      gemini:
+        - "yolo"
 
   # Plan command defaults
   plan:
     model: "gemini:pro-latest"
     # Required CLI args per provider for plan generation sessions
     cli_args:
-      claude: "--permission-mode plan"
-      codex: "--sandbox read-only"
-      gemini: "--approval-mode plan"
+      claude:
+        - "--permission-mode plan"
+      codex:
+        - "--sandbox read-only"
+      gemini:
+        - "--approval-mode plan"
