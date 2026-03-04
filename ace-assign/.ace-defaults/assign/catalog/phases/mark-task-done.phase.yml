@@ -19,7 +19,7 @@ instructions: |
 
   1. Run the status update command:
      ```bash
-     ace-task manage-status done {{taskref}}
+     ace-task update {{taskref}} --set status=done --move-to archive
      ```
 
   2. **VERIFY the status change** (do not skip):

@@ -1,0 +1,19 @@
+name: onboard-base
+skill: null
+description: "Load base project context: run `ace-bundle project-base`"
+
+prerequisites: []
+
+produces: [project-base-context]
+consumes: []
+
+context:
+  default: null
+  reason: "Base onboarding needs access to the main conversation context"
+
+when_to_skip:
+  - "Already onboarded in a previous assignment"
+  - "Working in a context where project-base is already loaded"
+
+effort: light
+tags: [setup, context-loading]
