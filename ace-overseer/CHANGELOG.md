@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.19] - 2026-03-04
+
+### Changed
+- Assignment launcher temporary job files now use `.ace-local/overseer`.
+
+
 ## [0.4.18] - 2026-03-03
 
 ### Added

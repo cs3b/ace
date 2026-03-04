@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.755] - 2026-03-04
+
+### Fixed
+- **ace-review v0.43.5**: Feedback session discovery now prefers `.ace-local/review/sessions` with legacy `.cache` fallback.
+
+### Changed
+- **ace-assign v0.18.1**: Default assignment cache directory now uses `.ace-local/assign`.
+- **ace-bundle v0.31.11**: Cache output now defaults to `.ace-local/bundle`; cache writes now respect configured `cache_dir`.
+- **ace-docs v0.22.4**: Default docs cache directory now uses `.ace-local/docs`.
+- **ace-git v0.11.16**: Default diff ignore artifacts now use `.ace-local/**/*`.
+- **ace-llm-providers-cli v0.20.1**: Gemini CLI prompt staging now uses `.ace-local/llm/prompts`.
+- **ace-overseer v0.4.19**: Assignment launcher temporary job files now use `.ace-local/overseer`.
+- **ace-sim v0.7.2**: Default simulation cache root now uses `.ace-local/sim`.
+- **ace-support-core v0.25.2**: PromptCacheManager session paths now use `.ace-local/<short-name>/sessions`.
+- **ace-support-nav v0.18.1**: Default nav cache directory now uses `.ace-local/nav`.
+- **ace-test v0.2.2**: E2E sandbox checklist template now uses `.ace-local/test-e2e`.
+- **ace-test-runner-e2e v0.21.2**: E2E runtime, wrappers, tests, and workflows now use `.ace-local/test-e2e` and sandbox-local `.ace-local/e2e` paths.
+
+### Technical
+- **ace-lint v0.17.1**: Updated cache cleanup guidance comments to reference `.ace-local/`.
+
 ## [0.9.754] - 2026-03-04
 
 ### Fixed

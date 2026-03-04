@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-03-04
+
+### Changed
+- Default simulation cache root now uses `.ace-local/sim`.
+
+
 ## [0.7.1] - 2026-03-04
 
 ### Fixed
