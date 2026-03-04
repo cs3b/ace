@@ -7,7 +7,7 @@ module Ace
   module Lint
     module Organisms
       # Generates JSON and markdown report files from lint results
-      # Reports are saved to .cache/ace-lint/{compact_id}/
+      # Reports are saved to .ace-local/lint/{compact_id}/
       #
       # Generated files:
       #   report.json - Full JSON data
@@ -16,14 +16,14 @@ module Ace
       #   pending.md  - Files needing manual work (errors/warnings)
       #
       # Cache Cleanup:
-      #   Reports accumulate in .cache/ace-lint/ over time. To clean up old reports:
-      #     rm -rf .cache/ace-lint/
+      #   Reports accumulate in .ace-local/lint/ over time. To clean up old reports:
+      #     rm -rf .ace-local/lint/
       #   Or selectively remove reports older than N days:
-      #     find .cache/ace-lint -type d -mtime +7 -exec rm -rf {} +
+      #     find .ace-local/lint -type d -mtime +7 -exec rm -rf {} +
       #   The .cache/ directory is typically gitignored and safe to delete.
       class ReportGenerator
         # Expected cache directory pattern for validation
-        EXPECTED_CACHE_PATTERN = File.join("", ".cache", "ace-lint", "").freeze
+        EXPECTED_CACHE_PATTERN = File.join("", ".ace-local", "lint", "").freeze
 
         # Generate JSON report and markdown files from lint results
         # @param results [Array<Models::LintResult>] Lint results
@@ -32,10 +32,10 @@ module Ace
         # @return [Hash] Result hash with :success, :dir, and :files keys
         def self.generate(results, project_root:, options: {})
           compact_id = Ace::B36ts.encode(Time.now.utc)
-          report_dir = File.join(project_root, ".cache", "ace-lint", compact_id)
+          report_dir = File.join(project_root, ".ace-local", "lint", compact_id)
 
           # Validate report_dir is within expected cache location
-          expected_cache_root = File.join(project_root, ".cache", "ace-lint")
+          expected_cache_root = File.join(project_root, ".ace-local", "lint")
           unless File.expand_path(report_dir).start_with?(File.expand_path(expected_cache_root))
             return {success: false, error: "Report directory outside expected cache location"}
           end
