@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog][1], and this project adheres to [Seman
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-03-04
+
+### Changed
+- Default report directory migrated from `.cache/ace-lint` to `.ace-local/lint`
+
 ## [0.16.1] - 2026-02-23
 
 ### Changed

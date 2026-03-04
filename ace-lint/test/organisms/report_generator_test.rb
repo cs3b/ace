@@ -24,7 +24,7 @@ class Ace::Lint::Organisms::ReportGeneratorTest < Minitest::Test
 
     assert result[:success]
     assert Dir.exist?(result[:dir])
-    assert result[:dir].include?(".cache/ace-lint/")
+    assert result[:dir].include?(".ace-local/lint/")
   end
 
   def test_generate_creates_json_file
@@ -129,7 +129,7 @@ class Ace::Lint::Organisms::ReportGeneratorTest < Minitest::Test
     )
 
     # Extract compact_id from dir path
-    # Path format: .cache/ace-lint/{compact_id}
+    # Path format: .ace-local/lint/{compact_id}
     compact_id = File.basename(result[:dir])
 
     # Should be 6 character alphanumeric
