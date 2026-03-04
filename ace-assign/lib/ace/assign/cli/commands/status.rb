@@ -290,7 +290,7 @@ module Ace
           # Print Task tool instructions for a fork context phase
           def print_fork_instructions(phase, assignment)
             escaped_name = phase.name.gsub('"', '\\"')
-            # Derive project root from cache_dir: /project/.cache/ace-assign/assignment-id -> /project
+            # Derive project root from cache_dir: /project/.ace-local/assign/assignment-id -> /project
             project_root = assignment.cache_dir ? File.expand_path("../../..", assignment.cache_dir) : Dir.pwd
 
             puts "Execute this phase in a forked context:"
