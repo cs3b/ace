@@ -1,17 +1,18 @@
 ---
 name: task-work
 description: Execute task implementation against behavioral spec using pre-loaded plan
-update:
-  update_frequency: on-change
-  last-updated: '2026-03-04'
 assign:
   sub-phases:
     - onboard-base
-    - onboard
     - task-load
     - plan-task
     - work-on-task
+    - verify-test
+    - release-minor
   context: fork
+update:
+  update_frequency: on-change
+  last-updated: '2026-03-04'
 ---
 
 # Work on Task
@@ -19,9 +20,10 @@ assign:
 ## Start State
 
 You have context sources already loaded from prior sub-phases:
-- **Project** (`project-base` + `project`) — vision, architecture, CLI tools, conventions, repo state
+- **Project** (`project-base`) — vision, architecture, CLI tools, conventions, and repo-level onboarding context
 - **Task** (`ace-bundle task://<ref>`) — behavioral spec, success criteria, interface contract
 - **Plan** (`ace-task plan <ref> --content`) — implementation checklist with steps, file paths, verification commands
+- **Verification** runs in-tree per-package only via `verify-test` before subtree release; no full suite is executed at this level
 
 If the plan is missing or stale: run `ace-task plan <ref> --content` and wait before proceeding.
 
