@@ -7,14 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-03-04
+
+### Fixed
+- Restored backward-compatible `doctor_cli_args` fallback for doctor CLI argument migration from `task.doctor.cli_args`.
+
+### Changed
+- Preserved compatibility alias expansion for codex defaults (`full-auto`, `dangerously-bypass-approvals-and-sandbox`) when normalizing provider CLI args.
+- Retained `required_cli_args` string compatibility while adding normalized array-oriented handling in `CliProviderAdapter`.
+
 ## [0.20.0] - 2026-03-04
 
 ### Changed
 - Renamed doctor agent CLI argument config from `doctor_cli_args` to nested `doctor.cli_args`.
 - Converted provider CLI args in `task.doctor.cli_args` and `task.plan.cli_args` to YAML arrays.
-
-### Changed
-- Renamed doctor agent CLI argument config from `doctor_cli_args` to nested `doctor.cli_args` and migrated values to provider arrays.
 - Updated doctor command reads to use `config.dig("task", "doctor", "cli_args")` and preserved fallback behavior.
 - Updated default plan CLI args to nested array format.
 
