@@ -11,7 +11,7 @@ module Ace
       # System prompt = project context + task/plan workflow (composed via ace-bundle).
       # User prompt = ace-bundle <task.s.md> (task spec + bundle: frontmatter context).
       # Config files saved alongside output for debugging/introspection.
-      # Files stored in .cache/ace-task/<task-id>/prompts/.
+      # Files stored in .ace-local/task/<task-id>/prompts/.
       class TaskPlanPromptBuilder
         def initialize(task:, cache_dir:)
           @task = task
