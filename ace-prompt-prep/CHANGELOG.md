@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-03-04
+
+### Fixed
+- Usage docs corrected to short-name path convention (`.ace-local/prompt-prep/` not `.ace-local/ace-prompt-prep/`)
+
 ## [0.17.1] - 2026-03-04
 
 ### Fixed
