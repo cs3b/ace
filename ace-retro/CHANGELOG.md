@@ -7,15 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-03-04
+
+### Fixed
+- Restored backward-compatible legacy `doctor_cli_args` fallback when using nested `retro.doctor.cli_args`.
+
+### Changed
+- Preserved compatibility for legacy codex default shorthand values when normalizing provider CLI args.
+
 ## [0.10.0] - 2026-03-04
 
 ### Changed
 - Renamed doctor agent CLI argument config from `doctor_cli_args` to nested `doctor.cli_args`.
 - Converted default doctor CLI args for `gemini` to array format.
 
-### Changed
-- Renamed doctor agent CLI argument config from `doctor_cli_args` to nested `doctor.cli_args`.
-- Switched default doctor CLI arg values to provider-array format.
+- Switched default doctor arg values to provider-array format.
 
 ## [0.9.0] - 2026-03-03
 
