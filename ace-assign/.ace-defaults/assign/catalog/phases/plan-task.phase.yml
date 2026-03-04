@@ -2,13 +2,8 @@ name: plan-task
 skill: ace-task-plan
 description: Analyze task requirements and create an implementation plan
 
-prerequisites:
-  - name: onboard
-    strength: recommended
-    reason: "Needs project context for informed planning"
-
 produces: [implementation-plan]
-consumes: [project-context, task-spec]
+consumes: [project-base-context, task-spec]
 
 context:
   default: fork

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.4] - 2026-03-04
+
+### Added
+- Add `verify-test` phase to `wfi://task/work` subtrees to run package-only checks for each forked work-on child.
+
+### Changed
+- Add `release-minor` after `verify-test` in all forked task-work subtrees while keeping top-level full-suite behavior in `verify-test-suite`.
+
+## [0.16.3] - 2026-03-04
+
+### Changed
+- Normalize work-on tree execution by removing duplicate full `onboard` phase from task implementation child workflow.
+- Switch `plan-task` and `work-on-task` phases to consume `project-base-context` and align contracts with subtree onboarding flow.
+- Update batch child instructions to use existing base/task context instead of re-running full onboarding.
+
 ## [0.16.2] - 2026-03-04
 
 ### Changed

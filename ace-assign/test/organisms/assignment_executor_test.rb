@@ -520,8 +520,11 @@ class AssignmentExecutorTest < AceAssignTestCase
         assign:
           sub-phases:
             - onboard
+            - task-load
             - plan-task
             - work-on-task
+            - verify-test
+            - release-minor
           context: fork
         ---
       MD
@@ -545,6 +548,9 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes numbers, "010.01"
         assert_includes numbers, "010.02"
         assert_includes numbers, "010.03"
+        assert_includes numbers, "010.04"
+        assert_includes numbers, "010.05"
+        assert_includes numbers, "010.06"
         assert_includes numbers, "020"
 
         parent_phase = state.find_by_number("010")
@@ -555,12 +561,18 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_includes parent_phase.instructions, "Do work"
 
         onboard_phase = state.find_by_number("010.01")
-        plan_phase = state.find_by_number("010.02")
-        work_phase = state.find_by_number("010.03")
+        task_load_phase = state.find_by_number("010.02")
+        plan_phase = state.find_by_number("010.03")
+        work_phase = state.find_by_number("010.04")
+        verify_phase = state.find_by_number("010.05")
+        release_phase = state.find_by_number("010.06")
 
         assert_equal "onboard", onboard_phase.name
         assert_equal "plan-task", plan_phase.name
         assert_equal "work-on-task", work_phase.name
+        assert_equal "task-load", task_load_phase.name
+        assert_equal "verify-test", verify_phase.name
+        assert_equal "release-minor", release_phase.name
 
         # First actionable child is activated (parent container is skipped)
         assert_equal "010.01", result[:current].number
@@ -569,11 +581,16 @@ class AssignmentExecutorTest < AceAssignTestCase
         assert_equal "ace-onboard", onboard_phase.skill
         assert_equal "ace-task-plan", plan_phase.skill
         assert_equal "ace-task-work", work_phase.skill
+        assert_nil verify_phase.skill
+        assert_equal "ace-release", release_phase.skill
 
         # Parent is fork context: children remain non-fork and execute in same delegated subtree process
         assert_nil onboard_phase.context
         assert_nil plan_phase.context
         assert_nil work_phase.context
+        assert_nil task_load_phase.context
+        assert_nil verify_phase.context
+        assert_nil release_phase.context
 
         # Child instructions include parent task context for parameter extraction
         assert_includes work_phase.instructions, "Task context:"
