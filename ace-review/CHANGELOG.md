@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-03-04
+
+### Changed
+- Default session directory migrated from `.cache/ace-review/sessions` to `.ace-local/review/sessions`
+- Feedback synthesis workspace now uses `Ace::Support::Items::Atoms::TmpWorkspace` for deterministic `.ace-local/tmp` paths
+
 ## [0.42.7] - 2026-03-02
 
 ### Changed

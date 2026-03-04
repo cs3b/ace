@@ -153,7 +153,7 @@ class ReviewManagerTest < AceReviewTest
     cache_dir = @manager.send(:create_cache_directory)
 
     # Cache should be created relative to project_root (uses @test_dir for isolation)
-    expected_cache_dir = File.join(@test_dir, ".cache", "ace-review", "sessions")
+    expected_cache_dir = File.join(@test_dir, ".ace-local", "review", "sessions")
     assert_equal expected_cache_dir, cache_dir
     assert Dir.exist?(cache_dir)
   end
@@ -261,7 +261,7 @@ class ReviewManagerTest < AceReviewTest
     assert result[:session_dir], "Should have session directory"
 
     # Should create cache directory automatically relative to project_root (uses @test_dir for isolation)
-    cache_dir = File.join(@test_dir, ".cache", "ace-review", "sessions")
+    cache_dir = File.join(@test_dir, ".ace-local", "review", "sessions")
     assert Dir.exist?(cache_dir), "Cache directory should be created"
   end
 

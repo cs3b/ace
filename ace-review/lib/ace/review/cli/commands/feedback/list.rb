@@ -31,7 +31,7 @@ module Ace
               '--status pending --priority critical',
               '--archived                 # Include archived items',
               '--format json              # Output as JSON',
-              '--session .cache/ace-review/sessions/review-abc123  # From specific session',
+              '--session .ace-local/review/sessions/review-abc123  # From specific session',
               '--session all              # List from all sessions'
             ]
 

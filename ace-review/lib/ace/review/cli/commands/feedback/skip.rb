@@ -38,7 +38,7 @@ module Ace
               'abc123 --reason "Design: using polling for simplicity"  # Design decision',
               'abc123 --reason "Tracked in task 253"                    # Deferred to separate task',
               'abc123 --reason "Duplicate of abc120"                    # Already covered',
-              'abc123 --session .cache/ace-review/sessions/review-xyz'
+              'abc123 --session .ace-local/review/sessions/review-xyz'
             ]
 
             argument :id, required: true, desc: "Feedback ID"

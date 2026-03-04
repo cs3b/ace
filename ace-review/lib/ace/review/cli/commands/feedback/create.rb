@@ -32,7 +32,7 @@ module Ace
 
             example [
               '                              # Use most recent session (default)',
-              '--session .cache/ace-review/sessions/review-abc123',
+              '--session .ace-local/review/sessions/review-abc123',
               '--model gemini-2.5-flash      # Use specific model for synthesis'
             ]
 
