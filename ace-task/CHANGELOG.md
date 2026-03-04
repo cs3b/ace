@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.3] - 2026-03-04
+
+### Added
+- Plan config key `task.plan.cli_args` for strict per-provider CLI argument passthrough during `ace-task plan` generation.
+
 ### Changed
 - `TaskPlanPromptBuilder` now composes system prompts via section-based `ace-bundle` config using `base: tmpl://agent/plan-mode`, `workflow` (`wfi://task/plan`), `project_context` (`presets: [project]`), and repeated `repeat_instruction` guard section.
+- `ace-task plan` now resolves provider-specific CLI args from `task.plan.cli_args` and passes them to `ace-llm` query calls.
+- Strengthen planning prompt contracts in `tmpl://agent/plan-mode` and `wfi://task/plan` to require structured plan headings and reject permission/status-only output.
 
 ## [0.18.2] - 2026-03-04
 
