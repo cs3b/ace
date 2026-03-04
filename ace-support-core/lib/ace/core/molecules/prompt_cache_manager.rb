@@ -106,9 +106,10 @@ module Ace
           # Get base cache path for a gem
           # @param project_root [String] Project root path
           # @param gem_name [String] Name of the gem
-          # @return [String] Base cache path (.cache/{gem}/sessions/)
+          # @return [String] Base cache path (.ace-local/{short-gem}/sessions/)
           def base_cache_path(project_root, gem_name)
-            cache_path = File.join(project_root, ".cache", gem_name, "sessions")
+            short_name = gem_name.to_s.sub(/\Aace-/, "")
+            cache_path = File.join(project_root, ".ace-local", short_name, "sessions")
             FileUtils.mkdir_p(cache_path) unless Dir.exist?(cache_path)
             cache_path
           end

@@ -32,7 +32,7 @@ class PromptCacheManagerTest < Minitest::Test
       project_root: @test_dir
     )
 
-    expected_base = File.join(@test_dir, ".cache", "ace-test", "sessions")
+    expected_base = File.join(@test_dir, ".ace-local", "test", "sessions")
     assert Dir.exist?(expected_base), "Base cache directory structure should be created"
     assert session_dir.start_with?(expected_base), "Session should be in base cache directory"
   end
@@ -138,7 +138,7 @@ class PromptCacheManagerTest < Minitest::Test
       "op1",
       project_root: @test_dir
     )
-    base_path = File.join(@test_dir, ".cache", "ace-test", "sessions")
+    base_path = File.join(@test_dir, ".ace-local", "test", "sessions")
 
     # Second call should reuse existing base path
     session2 = Ace::Core::Molecules::PromptCacheManager.create_session(

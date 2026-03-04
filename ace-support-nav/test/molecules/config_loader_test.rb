@@ -21,7 +21,7 @@ module Ace
             settings = @config_loader.load_settings
 
             assert_equal false, settings["cache"]["enabled"]
-            assert_equal ".cache/ace-nav", settings["cache"]["directory"]
+            assert_equal ".ace-local/nav", settings["cache"]["directory"]
             assert_equal 3600, settings["cache"]["ttl"]
             assert_equal true, settings["fuzzy"]["enabled"]
             assert_equal 0.6, settings["fuzzy"]["threshold"]
@@ -52,7 +52,7 @@ module Ace
 
             assert_equal true, settings["cache"]["enabled"]
             assert_equal 7200, settings["cache"]["ttl"]
-            assert_equal ".cache/ace-nav", settings["cache"]["directory"] # Default preserved
+            assert_equal ".ace-local/nav", settings["cache"]["directory"] # Default preserved
             assert_equal false, settings["fuzzy"]["enabled"]
             assert_equal 0.6, settings["fuzzy"]["threshold"] # Default preserved
           end
@@ -219,7 +219,7 @@ module Ace
             # Should have merged values
             assert_equal true, settings["cache"]["enabled"] # Overridden
             assert_equal 3600, settings["cache"]["ttl"] # Default preserved
-            assert_equal ".cache/ace-nav", settings["cache"]["directory"] # Default preserved
+            assert_equal ".ace-local/nav", settings["cache"]["directory"] # Default preserved
           end
 
           def test_sources_for_protocol_delegates_to_registry
