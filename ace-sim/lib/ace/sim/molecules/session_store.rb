@@ -12,7 +12,7 @@ module Ace
         attr_reader :cache_root
 
         def initialize(cache_root: nil)
-          @cache_root = cache_root || Ace::Sim.get("sim", "cache_root") || ".cache/ace-sim"
+          @cache_root = cache_root || Ace::Sim.get("sim", "cache_root") || ".ace-local/sim"
         end
 
         def run_dir_for(run_id)
