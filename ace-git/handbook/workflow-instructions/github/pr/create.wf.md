@@ -1,5 +1,5 @@
 ---
-name: git-create-pr
+name: github-pr-create
 allowed-tools: Bash, Read
 description: Create pull requests with evidence-based descriptions
 argument-hint: "[pr-type]"

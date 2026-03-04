@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.13] - 2026-03-04
+
+### Changed
+- Rename PR workflows to domain-namespaced URIs and paths:
+  - `wfi://git/create-pr` -> `wfi://github/pr/create`
+  - `wfi://git/update-pr-desc` -> `wfi://github/pr/update`
+  - `handbook/workflow-instructions/git/{create-pr,update-pr-desc}.wf.md` -> `handbook/workflow-instructions/github/pr/{create,update}.wf.md`
+- Update PR workflow frontmatter names to `github-pr-create` and `github-pr-update`
+- Update README workflow references to the new `wfi://github/pr/create` URI
+
 ## [0.11.12] - 2026-02-27
 
 ### Changed

@@ -1,5 +1,5 @@
 ---
-name: git-update-pr-desc
+name: github-pr-update
 allowed-tools: Bash, Read, Grep
 description: Update PR title and description from code evidence
 argument-hint: "[pr-number]"

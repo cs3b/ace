@@ -14,7 +14,7 @@ ace-git is a workflow-first gem that provides essential git workflows and contex
 
 **Workflows:**
 - **Rebase Workflow** (`wfi://git/rebase`): Changelog-preserving rebase operations
-- **PR Creation Workflow** (`wfi://git/create-pr`): Pull request creation with structured templates
+- **PR Creation Workflow** (`wfi://github/pr/create`): Pull request creation with structured templates
 - **Reorganize Commits Workflow** (`wfi://git/reorganize-commits`): Reorganize commit history into logical groups
 
 ## Installation
@@ -42,7 +42,7 @@ Workflows are accessible via ace-nav protocol:
 ace-nav wfi://git/rebase
 
 # Create pull request with template
-ace-nav wfi://git/create-pr
+ace-nav wfi://github/pr/create
 
 # Squash commits by version
 ace-nav wfi://git/reorganize-commits
@@ -82,7 +82,7 @@ Rebase feature branches while preserving CHANGELOG.md and version files.
 
 Create well-documented pull requests using structured templates.
 
-**Access**: `ace-nav wfi://git/create-pr`
+**Access**: `ace-nav wfi://github/pr/create`
 
 **Use Cases**:
 - Create feature PRs with comprehensive descriptions
