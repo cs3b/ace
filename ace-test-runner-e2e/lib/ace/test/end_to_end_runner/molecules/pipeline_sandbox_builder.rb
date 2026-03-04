@@ -21,7 +21,7 @@ module Ace
           def build(scenario:, sandbox_path:, test_cases: nil)
             sandbox_path = File.expand_path(sandbox_path)
             FileUtils.mkdir_p(sandbox_path)
-            FileUtils.mkdir_p(File.join(sandbox_path, ".cache", "ace-e2e"))
+            FileUtils.mkdir_p(File.join(sandbox_path, ".ace-local", "e2e"))
             FileUtils.mkdir_p(File.join(sandbox_path, "reports"))
 
             initialize_git_repo(sandbox_path)

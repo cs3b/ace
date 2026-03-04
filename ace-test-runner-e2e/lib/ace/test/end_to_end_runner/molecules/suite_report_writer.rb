@@ -31,7 +31,7 @@ module Ace
           # @param base_dir [String] Base directory for cache output
           # @return [String] Path to the written report file
           def write(results, scenarios, package:, timestamp:, base_dir:)
-            cache_dir = File.join(base_dir, ".cache", "ace-test-e2e")
+            cache_dir = File.join(base_dir, ".ace-local", "test-e2e")
             FileUtils.mkdir_p(cache_dir)
 
             report_path = File.join(cache_dir, "#{timestamp}-final-report.md")

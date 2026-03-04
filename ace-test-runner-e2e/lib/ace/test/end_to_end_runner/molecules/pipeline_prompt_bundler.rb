@@ -82,7 +82,7 @@ module Ace
           private
 
           def ensure_cache_dir(sandbox_path)
-            cache_dir = File.join(File.expand_path(sandbox_path), ".cache", "ace-e2e")
+            cache_dir = File.join(File.expand_path(sandbox_path), ".ace-local", "e2e")
             FileUtils.mkdir_p(cache_dir)
             cache_dir
           end

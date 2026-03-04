@@ -214,7 +214,7 @@ class TestOrchestratorTest < Minitest::Test
 
       orchestrator.run(package: "my-pkg", output: @output)
 
-      report_path = File.join(tmpdir, ".cache", "ace-test-e2e", "rpt123-final-report.md")
+      report_path = File.join(tmpdir, ".ace-local", "test-e2e", "rpt123-final-report.md")
       assert File.exist?(report_path), "Suite report should be created"
       assert_match(/Report: .*rpt123-final-report\.md/, @output.string)
     end
@@ -254,7 +254,7 @@ class TestOrchestratorTest < Minitest::Test
 
       report_dir = results.first.report_dir
       assert Dir.exist?(report_dir), "Report directory should be created"
-      assert report_dir.include?(".cache/ace-test-e2e/")
+      assert report_dir.include?(".ace-local/test-e2e/")
     end
   end
 
@@ -325,7 +325,7 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       assert_equal 1, results.size
-      expected_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "cli123-my-pkg-ts001-reports")
+      expected_dir = File.join(tmpdir, ".ace-local", "test-e2e", "cli123-my-pkg-ts001-reports")
       assert_equal "error", results.first.status
       assert_equal expected_dir, results.first.report_dir
       assert_includes results.first.error, "Expected report directory was not created"
@@ -337,7 +337,7 @@ class TestOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
-      stale_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "old111-my-pkg-ts001-reports")
+      stale_dir = File.join(tmpdir, ".ace-local", "test-e2e", "old111-my-pkg-ts001-reports")
       FileUtils.mkdir_p(stale_dir)
       File.write(File.join(stale_dir, "metadata.yml"), <<~YAML)
         status: "pass"
@@ -359,7 +359,7 @@ class TestOrchestratorTest < Minitest::Test
         output: @output
       )
 
-      expected_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "new222-my-pkg-ts001-reports")
+      expected_dir = File.join(tmpdir, ".ace-local", "test-e2e", "new222-my-pkg-ts001-reports")
       assert_equal "error", results.first.status
       assert_equal expected_dir, results.first.report_dir
       refute_equal stale_dir, results.first.report_dir
@@ -393,7 +393,7 @@ class TestOrchestratorTest < Minitest::Test
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       # Simulate agent-written report dir at the expected path (matching timestamp)
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "bbb222-my-pkg-ts001-reports")
+      agent_dir = File.join(tmpdir, ".ace-local", "test-e2e", "bbb222-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "summary.r.md"), "# Report")
 
@@ -418,7 +418,7 @@ class TestOrchestratorTest < Minitest::Test
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       # Simulate agent-written report dir with metadata.yml showing pass
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "meta01-my-pkg-ts001-reports")
+      agent_dir = File.join(tmpdir, ".ace-local", "test-e2e", "meta01-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "metadata.yml"), <<~YAML)
         status: "pass"
@@ -456,7 +456,7 @@ class TestOrchestratorTest < Minitest::Test
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001])
 
       # Simulate agent-written report dir WITHOUT metadata.yml
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "nomta1-my-pkg-ts001-reports")
+      agent_dir = File.join(tmpdir, ".ace-local", "test-e2e", "nomta1-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "summary.r.md"), "# Report")
 
@@ -773,11 +773,11 @@ class TestOrchestratorTest < Minitest::Test
       )
 
       refute_nil received[:sandbox_path], "sandbox_path should be set for CLI provider"
-      assert received[:sandbox_path].include?(".cache/ace-test-e2e/"),
-        "sandbox_path should be under .cache/ace-test-e2e/"
+      assert received[:sandbox_path].include?(".ace-local/test-e2e/"),
+        "sandbox_path should be under .ace-local/test-e2e/"
       assert_instance_of Hash, received[:env_vars]
       # PROJECT_ROOT_PATH should be expanded to absolute sandbox path
-      assert received[:env_vars]["PROJECT_ROOT_PATH"].end_with?(".cache/ace-test-e2e/test00-my-pkg-ts001"),
+      assert received[:env_vars]["PROJECT_ROOT_PATH"].end_with?(".ace-local/test-e2e/test00-my-pkg-ts001"),
         "PROJECT_ROOT_PATH should be expanded to absolute sandbox path"
     end
   end
@@ -903,7 +903,7 @@ class TestOrchestratorTest < Minitest::Test
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002 TC-003])
 
       # Simulate agent-written report with status "fail" but all 3/3 passed
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "rec001-my-pkg-ts001-reports")
+      agent_dir = File.join(tmpdir, ".ace-local", "test-e2e", "rec001-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "metadata.yml"), <<~YAML)
         status: "fail"
@@ -937,7 +937,7 @@ class TestOrchestratorTest < Minitest::Test
     Dir.mktmpdir do |tmpdir|
       create_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001", %w[TC-001 TC-002 TC-003])
 
-      agent_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "rec002-my-pkg-ts001-reports")
+      agent_dir = File.join(tmpdir, ".ace-local", "test-e2e", "rec002-my-pkg-ts001-reports")
       FileUtils.mkdir_p(agent_dir)
       File.write(File.join(agent_dir, "metadata.yml"), <<~YAML)
         status: "fail"
@@ -1011,7 +1011,7 @@ class TestOrchestratorTest < Minitest::Test
   def test_standalone_scenario_does_not_force_verify_when_flag_disabled
     Dir.mktmpdir do |tmpdir|
       create_goal_ts_test_package(tmpdir, "my-pkg", "TS-TEST-001")
-      expected_dir = File.join(tmpdir, ".cache", "ace-test-e2e", "test00-my-pkg-ts001-reports")
+      expected_dir = File.join(tmpdir, ".ace-local", "test-e2e", "test00-my-pkg-ts001-reports")
       FileUtils.mkdir_p(expected_dir)
 
       captured_verify = nil

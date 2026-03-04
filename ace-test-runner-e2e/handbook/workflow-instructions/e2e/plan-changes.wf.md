@@ -214,7 +214,7 @@ TS-{AREA}-002-{slug}/  ({n} TCs)
 
 **Plan changes with a prior review report:**
 ```
-/ace-e2e-plan-changes ace-lint --review-report .ace-local/ace-test-e2e/review-ace-lint.md
+/ace-e2e-plan-changes ace-lint --review-report .ace-local/test-e2e/review-ace-lint.md
 ```
 
 **Plan changes (runs review automatically):**

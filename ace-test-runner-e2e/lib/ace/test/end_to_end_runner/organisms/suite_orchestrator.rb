@@ -367,7 +367,7 @@ module Ace
 
               # Pass explicit report directory so the agent doesn't compute it independently
               scenario = parse_scenario(package, test_file)
-              report_dir = File.join(@base_dir, ".cache", "ace-test-e2e", "#{scenario.dir_name(run_id)}-reports")
+              report_dir = File.join(@base_dir, ".ace-local", "test-e2e", "#{scenario.dir_name(run_id)}-reports")
               cmd_parts.concat(["--report-dir", report_dir])
             end
 
@@ -604,7 +604,7 @@ module Ace
           # @param results [Hash] Accumulated results with :packages hash
           # @param package_tests [Hash] Package to test files mapping
           def write_failure_stubs(results, package_tests)
-            cache_dir = File.join(@base_dir, ".cache", "ace-test-e2e")
+            cache_dir = File.join(@base_dir, ".ace-local", "test-e2e")
 
             results[:packages].each do |package, pkg_results|
               test_files = package_tests[package] || []
