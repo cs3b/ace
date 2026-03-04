@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.3] - 2026-03-04
+
+### Fixed
+- `feedback-workflow.md` session path examples corrected to short-name convention (`.ace-local/review/` not `.ace-local/ace-review/`)
+
 ## [0.43.2] - 2026-03-04
 
 ### Fixed
