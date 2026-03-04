@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.4] - 2026-03-04
+
+### Fixed
+- `TaskPlanGenerator` file-based prompt tests now create a minimal local `project` preset fixture so `ace-bundle` section preset resolution works in temp-directory test environments.
+- `Doctor#provider_cli_args` now checks direct provider prefixes (`provider:model`) before parser fallback, restoring expected CLI-arg mapping behavior for provider aliases in tests and runtime.
+
 ## [0.18.3] - 2026-03-04
 
 ### Added
