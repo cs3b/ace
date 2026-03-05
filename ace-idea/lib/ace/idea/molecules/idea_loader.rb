@@ -58,7 +58,7 @@ module Ace
 
           Models::Idea.new(
             id: id || frontmatter["id"],
-            status: frontmatter["status"] || "pending",
+            status: normalize_status(frontmatter["status"] || "pending"),
             title: title,
             tags: Array(frontmatter["tags"]),
             content: body.to_s.strip,
@@ -110,6 +110,13 @@ module Ace
           Ace::B36ts.decode(id)
         rescue StandardError
           Time.now
+        end
+
+        def normalize_status(status)
+          value = status.to_s
+          return "obsolete" if value == "cancelled"
+
+          value
         end
       end
     end

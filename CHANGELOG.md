@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.770] - 2026-03-05
+
+### Fixed
+- **ace-idea v0.13.4**: `ace-idea list` no longer leaks legacy `cancelled` as a separate status; legacy values are normalized to canonical `obsolete` during load/display.
+
+### Changed
+- **ace-idea v0.13.4**: Frontmatter checks now flag derived `location` metadata as warning-only (non-failing) and keep path-derived scope as source of truth.
+- **ace-idea v0.13.4**: `ace-idea doctor` auto-fix now supports removing `location` from idea frontmatter and migrating legacy `cancelled` values to `obsolete`.
+
+### Technical
+- **ace-idea v0.13.4**: Added regression tests for legacy status normalization and doctor validator/fixer migration paths.
+
 ## [0.9.769] - 2026-03-05
 
 ### Fixed

@@ -86,4 +86,12 @@ class IdeaDisplayFormatterTest < AceIdeaTestCase
 
     assert_equal "Ideas: ○ 1 • 1 of 50", line
   end
+
+  def test_format_stats_line_maps_cancelled_to_obsolete
+    ideas = [make_idea(status: "cancelled")]
+    line = Ace::Idea::Molecules::IdeaDisplayFormatter.format_stats_line(ideas)
+
+    assert_equal "Ideas: ✗ 1 • 1 total", line
+    refute_includes line, "cancelled"
+  end
 end
