@@ -53,7 +53,8 @@ module Ace
                     cli_args: nil,
                     system_append: nil,
                     sandbox: nil,
-                    subprocess_env: nil)
+                    subprocess_env: nil,
+                    last_message_file: nil)
 
         # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
@@ -94,6 +95,7 @@ module Ace
         generation_opts[:system_append] = system_append if system_append && !system_append.empty?
         generation_opts[:sandbox] = sandbox if sandbox
         generation_opts[:subprocess_env] = subprocess_env if subprocess_env
+        generation_opts[:last_message_file] = last_message_file if last_message_file
 
         # Debug output if requested
         if debug
