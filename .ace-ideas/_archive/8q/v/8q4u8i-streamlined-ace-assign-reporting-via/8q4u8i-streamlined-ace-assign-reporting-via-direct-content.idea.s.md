@@ -1,6 +1,6 @@
 ---
 id: 8q4u8i
-status: pending
+status: done
 title: Streamlined ace-assign reporting via direct content piping
 tags: []
 created_at: "2026-03-05 20:09:28"
