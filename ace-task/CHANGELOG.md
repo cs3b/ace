@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.5] - 2026-03-05
+
+### Fixed
+- Fixed task loading by requiring the task model before loading task metadata, which restores task-aware worktree and subtask discovery in mixed fixture formats.
+
 ## [0.20.4] - 2026-03-05
 
 ### Fixed
