@@ -176,8 +176,61 @@ class ForkSessionLauncherTest < AceAssignTestCase
       session_file = File.join(tmp_dir, "sessions", "010-session.yml")
       assert File.exist?(session_file), "Session metadata file should still be created"
       meta = YAML.safe_load_file(session_file)
-      refute meta.key?("session_id"), "session_id should be absent when not provided"
+      # session_id may be nil (if SessionFinder also returns nil) or detected by fallback
       assert_equal "codex", meta["provider"]
+    end
+  end
+
+  def test_launch_uses_session_finder_fallback_when_session_id_nil
+    fake_no_session = Class.new do
+      define_method(:query) do |_provider, _prompt, **_opts|
+        { text: "Done.", provider: "pi", model: "pi-model", metadata: {} }
+      end
+    end.new
+
+    config = { "execution" => { "provider" => "pi:pi-model", "timeout" => 900 }, "providers" => {} }
+    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_no_session)
+
+    # Stub detect_provider_session to return a detected session
+    launcher.define_singleton_method(:detect_provider_session) do |_provider, _prompt|
+      { session_id: "detected-pi-sess-001", session_path: "/fake/path" }
+    end
+
+    Dir.mktmpdir do |tmp_dir|
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir)
+
+      session_file = File.join(tmp_dir, "sessions", "010-session.yml")
+      assert File.exist?(session_file), "Session metadata file should be created"
+      meta = YAML.safe_load_file(session_file)
+      assert_equal "detected-pi-sess-001", meta["session_id"]
+      assert_equal "pi", meta["provider"]
+    end
+  end
+
+  def test_launch_does_not_use_fallback_when_session_id_present
+    fake_with_session = Class.new do
+      define_method(:query) do |_provider, _prompt, **_opts|
+        { text: "Done.", provider: "claude", model: "sonnet", metadata: { session_id: "native-sess" } }
+      end
+    end.new
+
+    config = { "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 }, "providers" => {} }
+    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_session)
+
+    # Stub detect_provider_session — should NOT be called
+    fallback_called = false
+    launcher.define_singleton_method(:detect_provider_session) do |_provider, _prompt|
+      fallback_called = true
+      { session_id: "should-not-use", session_path: "/fake" }
+    end
+
+    Dir.mktmpdir do |tmp_dir|
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir)
+
+      session_file = File.join(tmp_dir, "sessions", "010-session.yml")
+      meta = YAML.safe_load_file(session_file)
+      assert_equal "native-sess", meta["session_id"]
+      refute fallback_called, "Fallback should not be called when native session_id exists"
     end
   end
 
