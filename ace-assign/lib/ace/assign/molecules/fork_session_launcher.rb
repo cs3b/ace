@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ace/llm"
+require "fileutils"
 
 module Ace
   module Assign
@@ -22,21 +23,34 @@ module Ace
         # @param provider [String, nil] Optional provider override
         # @param cli_args [String, nil] Optional provider CLI args
         # @param timeout [Integer, nil] Optional timeout override (seconds)
+        # @param cache_dir [String, nil] Assignment cache directory for last-message capture
         # @return [Hash] QueryInterface response
-        def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil)
+        def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil)
           resolved_provider = provider || config.dig("execution", "provider") || DEFAULT_PROVIDER
           resolved_timeout = timeout || config.dig("execution", "timeout") || DEFAULT_TIMEOUT
           merged_cli_args = merge_cli_args(required_cli_args_for(resolved_provider), cli_args)
           scoped_assignment = "#{assignment_id}@#{fork_root}"
+          last_msg_file = build_last_message_file(cache_dir, fork_root)
 
-          query_interface.query(
+          result = query_interface.query(
             resolved_provider,
             "/ace-assign-drive #{scoped_assignment}",
             system: nil,
             cli_args: merged_cli_args,
             timeout: resolved_timeout,
-            fallback: false
+            fallback: false,
+            last_message_file: last_msg_file
           )
+
+          # Layer 1 write: capture last message for non-Codex providers (or when Codex didn't write).
+          # Safety: `query` blocks until the subprocess exits, so by this point Layer 2 (Codex
+          # --output-last-message) has already finished writing. No other writer exists at this point.
+          if last_msg_file && result[:text] && !result[:text].strip.empty?
+            existing = File.exist?(last_msg_file) ? File.read(last_msg_file).strip : ""
+            File.write(last_msg_file, result[:text]) if existing.empty?
+          end
+
+          result
         rescue Ace::LLM::Error => e
           raise Error, "Fork session execution failed via #{resolved_provider}: #{e.message}"
         end
@@ -44,6 +58,14 @@ module Ace
         private
 
         attr_reader :config, :query_interface
+
+        def build_last_message_file(cache_dir, fork_root)
+          return nil unless cache_dir
+
+          sessions_dir = File.join(cache_dir, "sessions")
+          FileUtils.mkdir_p(sessions_dir)
+          File.join(sessions_dir, "#{fork_root}-last-message.md")
+        end
 
         def required_cli_args_for(provider_model)
           provider = provider_model.to_s.split(":").first

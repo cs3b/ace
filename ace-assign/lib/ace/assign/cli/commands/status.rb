@@ -86,6 +86,11 @@ module Ace
                 puts
                 puts "Current Phase: #{current_for_display.number} - #{current_for_display.name}"
                 puts "Current Status: #{current_for_display.status}"
+                if current_for_display.stall_reason
+                  lines = current_for_display.stall_reason.to_s.strip.lines
+                  puts "Stall Reason: #{lines.first&.chomp}"
+                  lines[1..].each { |l| puts "             #{l.chomp}" } if lines.length > 1
+                end
                 if current_for_display.skill
                   puts "Skill: #{current_for_display.skill}"
                 end

@@ -12,6 +12,8 @@ module Ace
           include Ace::Core::CLI::DryCli::Base
           include AssignmentTarget
 
+          STALL_REASON_MAX = 2000
+
           desc "Prepare fork execution for an entire subtree"
 
           option :root, desc: "Fork subtree root phase number (e.g., 010.01)"
@@ -72,7 +74,8 @@ module Ace
               fork_root: root_phase.number,
               provider: options[:provider],
               cli_args: options[:cli_args],
-              timeout: options[:timeout]
+              timeout: options[:timeout],
+              cache_dir: assignment.cache_dir
             )
             record_fork_pid_info(root_phase, launch_result)
 
@@ -88,7 +91,23 @@ module Ace
             unless refreshed_state.subtree_complete?(root_phase.number)
               active = refreshed_state.current
               active_msg = active ? " Current phase: #{active.number} (#{active.name})." : ""
-              raise Error, "Fork subtree #{root_phase.number} did not complete within spawned session.#{active_msg}"
+              last_msg = read_last_message(assignment.cache_dir, root_phase.number)
+              stall_reason = build_stall_reason(last_msg)
+
+              if stall_reason && active
+                phase_writer = Molecules::PhaseWriter.new
+                phase_writer.update_frontmatter(active.file_path, { "stall_reason" => stall_reason })
+              end
+
+              error_msg = "Fork subtree #{root_phase.number} did not complete within spawned session.#{active_msg}"
+              error_msg += "\n\nAgent's last message:\n#{stall_reason}" if stall_reason
+              raise Error, error_msg
+            end
+
+            # Clear any stale stall_reason left by a previous failed attempt.
+            phase_writer = Molecules::PhaseWriter.new
+            refreshed_state.subtree_phases(root_phase.number).each do |phase|
+              phase_writer.update_frontmatter(phase.file_path, { "stall_reason" => nil })
             end
 
             puts "Fork subtree #{root_phase.number} completed successfully." unless options[:quiet]
@@ -97,6 +116,28 @@ module Ace
           private
 
           attr_reader :launcher
+
+          def read_last_message(cache_dir, fork_root)
+            return nil unless cache_dir
+
+            last_msg_file = File.join(cache_dir, "sessions", "#{fork_root}-last-message.md")
+            return nil unless File.exist?(last_msg_file)
+
+            content = File.read(last_msg_file).strip
+            content.empty? ? nil : content
+          rescue SystemCallError
+            nil
+          end
+
+          def build_stall_reason(last_msg)
+            return nil unless last_msg
+
+            if last_msg.length > STALL_REASON_MAX
+              last_msg[0, STALL_REASON_MAX] + "... (truncated)"
+            else
+              last_msg
+            end
+          end
 
           def resolve_root_phase(state, current, explicit_root, scoped_root)
             if explicit_root && scoped_root && explicit_root.strip != scoped_root.strip
