@@ -77,6 +77,11 @@ module Ace
             required_cli_args_list_from(name)
           end
 
+          # @return [Array<String>, nil] Required CLI args as an array
+          def self.required_cli_args_list(provider_string)
+            default_instance.required_cli_args_list(provider_string)
+          end
+
           private
 
           def required_cli_args_list_from(provider_name)
@@ -110,6 +115,8 @@ module Ace
               #{return_contract}
             PROMPT
           end
+
+          public
 
           # Build a skill invocation prompt for scenario-level execution
           #
