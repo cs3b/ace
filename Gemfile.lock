@@ -203,7 +203,7 @@ PATH
 PATH
   remote: ace-support-config
   specs:
-    ace-support-config (0.8.0)
+    ace-support-config (0.8.3)
       ace-support-fs (~> 0.2)
 
 PATH
