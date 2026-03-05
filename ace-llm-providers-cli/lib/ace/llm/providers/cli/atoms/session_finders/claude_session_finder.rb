@@ -56,6 +56,8 @@ module Ace
                   content = entry.dig("message", "content")
                   content = content.first["text"] if content.is_a?(Array)
 
+                  # Substring match: Claude wraps user input with prefixes (e.g. "User: "),
+                  # so exact equality would miss valid sessions.
                   if content.is_a?(String) && content.include?(prompt.strip)
                     return { session_id: session_id, session_path: path }
                   end

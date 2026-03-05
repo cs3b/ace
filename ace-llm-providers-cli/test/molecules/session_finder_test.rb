@@ -23,23 +23,23 @@ module Ace
                 ]
                 File.write(session_file, lines.join("\n") + "\n")
 
-                # Temporarily override the Claude finder's default base
-                original_finder = SessionFinder::FINDERS["claude"]
-                wrapper = Class.new do
-                  define_method(:call) do |working_dir:, prompt:, **_opts|
-                    original_finder.call(working_dir: working_dir, prompt: prompt, base_path: base)
-                  end
-                end.new
+                # Stub the finder's DEFAULT_BASE to use temp dir, then call through the dispatcher
+                finder = Atoms::SessionFinders::ClaudeSessionFinder
+                original_base = finder::DEFAULT_BASE
+                finder.send(:remove_const, :DEFAULT_BASE)
+                finder.const_set(:DEFAULT_BASE, base)
 
-                # Use a mock approach: call the finder directly with base_path
-                result = Atoms::SessionFinders::ClaudeSessionFinder.call(
+                result = SessionFinder.call(
+                  provider: "claude",
                   working_dir: "/home/mc/project",
-                  prompt: PROMPT,
-                  base_path: base
+                  prompt: PROMPT
                 )
 
-                assert result
+                assert result, "Expected dispatcher to route to Claude finder and return a result"
                 assert_equal "sess-dispatch", result[:session_id]
+              ensure
+                finder.send(:remove_const, :DEFAULT_BASE)
+                finder.const_set(:DEFAULT_BASE, original_base)
               end
             end
 

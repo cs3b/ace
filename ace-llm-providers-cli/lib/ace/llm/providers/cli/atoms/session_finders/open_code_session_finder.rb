@@ -23,6 +23,9 @@ module Ace
               # @param max_candidates [Integer] max sessions to scan
               # @return [Hash, nil] { session_id:, session_path: } or nil
               def self.call(working_dir:, prompt:, base_path: DEFAULT_BASE, max_candidates: 5)
+                # Verify the working_dir is a known OpenCode project (nil-gate).
+                # OpenCode sessions don't store a project reference, so we can't filter
+                # sessions by project — prompt matching is the primary identification.
                 project_id = find_project_id(base_path, working_dir)
                 return nil unless project_id
 
