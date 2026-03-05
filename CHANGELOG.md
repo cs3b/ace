@@ -9,12 +9,19 @@ All notable changes to this project will be documented in this file.
 ### Technical
 
 - **ace-support-config v0.8.3**: Document `ProjectConfigScanner` in README — add to molecule list and add comparison table explaining when to use `ConfigFinder` vs `ProjectConfigScanner`
+- **ace-assign v0.19.3**: Extracted `STALL_REASON_MAX = 2000` constant in `ForkRun` to replace magic number; tightened truncation test assertion to pin exact expected output length (shine-cycle polish).
 
 ## [0.9.764] - 2026-03-05
 
 ### Fixed
 
 - **ace-support-config v0.8.2**: Narrow `Errno::EACCES` rescue in `ProjectConfigScanner#find_ace_dirs` to per-path scope so a permission error on one directory does not abort the entire scan; add test for graceful degradation when a subdirectory is permission-restricted.
+- **ace-assign v0.19.2**: Simplified Layer 1 last-message write in `ForkSessionLauncher` from check-then-write to a single read-based guard, reducing double file access and improving robustness.
+- **ace-assign v0.19.2**: Multiline `stall_reason` values in `ace-assign status` output now display with indented continuation lines for readable terminal formatting.
+
+### Technical
+- **ace-assign v0.19.2**: Added `test_stall_reason_cleared_after_successful_rerun` regression test verifying `stall_reason` is cleared across all subtree phases after a successful rerun.
+- **ace-llm-providers-cli v0.21.1**: Documented `--output-last-message` minimum version requirement for Codex CLI in README with verification command and graceful-degradation note.
 
 ## [0.9.763] - 2026-03-05
 
@@ -27,6 +34,10 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - **ace-support-config v0.8.0**: New `ProjectConfigScanner` molecule enables downward project tree traversal to discover all `.ace` config folders across a monorepo, complementing the existing `ConfigFinder` upward traversal.
+- **ace-assign v0.19.1**: `read_last_message` now rescues `SystemCallError` to prevent I/O errors from masking the stall error message; stale `stall_reason` is cleared from all subtree phases on successful fork-run completion to prevent misleading status after recovery.
+
+### Technical
+- **ace-assign v0.19.1**: Added comment in `ForkSessionLauncher` documenting the blocking assumption that makes the Layer 1 check-then-write pattern safe from concurrent writes.
 
 ### Changed
 
@@ -43,6 +54,13 @@ All notable changes to this project will be documented in this file.
 - **ace-task v0.20.4**: Restored task-aware worktree creation for legacy-formatted fixtures by ensuring `TaskFilePattern` is loaded before task loader resolution.
 - **ace-task v0.20.5**: Restored task-aware worktree discovery after task model load-order regression by requiring `Ace::Task::Models::Task` before lookup.
 - **ace-git-worktree v0.13.22**: Fixed command failure signaling so missing-task operations in `create` and `remove` now exit non-zero and include actionable guidance.
+
+## [0.9.762] - 2026-03-05
+
+### Added
+- **ace-assign v0.19.0**: Surface forked agent last message on stall — `fork-run` now captures the agent's final output and includes it in stall error messages; `stall_reason` is persisted to phase frontmatter and displayed in `ace-assign status`.
+- **ace-llm v0.25.0**: `QueryInterface.query` accepts `last_message_file:` to thread last-message capture path to provider clients.
+- **ace-llm-providers-cli v0.21.0**: `CodexClient` passes `--output-last-message <path>` to Codex CLI for progressive, timeout-resilient last-message capture.
 
 ## [0.9.761] - 2026-03-05
 
