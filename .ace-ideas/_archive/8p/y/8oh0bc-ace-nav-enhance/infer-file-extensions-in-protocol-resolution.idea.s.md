@@ -2,7 +2,6 @@
 title: Enhance ace-nav Protocol Resolution to Infer File Extensions
 filename_suggestion: fix-nav-extension-inference
 enhanced_at: 2026-01-18 00:12:36.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-22 13:31:20.000000000 +00:00

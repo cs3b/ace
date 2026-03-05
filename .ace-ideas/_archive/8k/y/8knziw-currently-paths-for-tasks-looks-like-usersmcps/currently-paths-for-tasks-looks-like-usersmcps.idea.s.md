@@ -13,7 +13,6 @@ created_at: '2025-09-24 23:40:59'
 title: Implement Descriptive Task Paths in ace-taskflow
 filename_suggestion: ace-taskflow-descriptive-task-paths
 enhanced_at: 2025-09-25 00:41:23
-location: done
 llm_model: gflash
 completed_by: [v.0.9.0+task.031]
 completed_at: 2025-09-25

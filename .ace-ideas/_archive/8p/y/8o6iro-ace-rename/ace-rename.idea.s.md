@@ -2,7 +2,6 @@
 title: Standardize Project Name to 'Agentic Coding Environment' Across All Gems
 filename_suggestion: chore-core-naming-consistency
 enhanced_at: 2026-01-07 12:30:45.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-07 12:58:01.000000000 +00:00

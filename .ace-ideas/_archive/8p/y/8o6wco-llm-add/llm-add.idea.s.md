@@ -2,7 +2,6 @@
 title: Fix incorrect file path resolution and reporting in ace-test suite execution
 filename_suggestion: fix-test-path-resolution
 enhanced_at: 2026-01-07 21:34:05.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-07 22:51:52.000000000 +00:00

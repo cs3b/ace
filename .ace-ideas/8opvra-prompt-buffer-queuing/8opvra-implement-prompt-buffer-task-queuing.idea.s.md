@@ -2,7 +2,6 @@
 title: Implement Prompt Buffer and Task Queuing in ace-prompt-prep
 filename_suggestion: feat-prompt-prep-task-queue
 enhanced_at: 2026-01-26 21:10:17.000000000 +00:00
-location: active
 llm_model: gflash
 source: taskflow:v.0.9.0
 id: 8opvra

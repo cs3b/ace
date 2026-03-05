@@ -2,7 +2,6 @@
 title: 'Secure Git History: Remove and Revoke Authentication Tokens'
 filename_suggestion: fix-git-security-token-history
 enhanced_at: 2025-11-27 23:26:48.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-09 00:35:02.000000000 +00:00

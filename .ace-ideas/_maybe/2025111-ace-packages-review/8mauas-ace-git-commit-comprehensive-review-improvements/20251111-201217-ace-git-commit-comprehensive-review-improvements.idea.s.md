@@ -2,7 +2,6 @@
 title: ace-git-commit - Comprehensive Review Improvements
 filename_suggestion: review-ace-git-commit
 enhanced_at: 2025-11-11 20:12:17.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mauas
 status: pending

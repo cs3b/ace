@@ -12,7 +12,6 @@ created_at: '2026-02-28 17:37:35'
 title: Fix ace-taskflow Project Root Detection
 filename_suggestion: fix-taskflow-root-detection
 enhanced_at: 2025-10-01 18:29:23
-location: active
 llm_model: gflash
 ---
 

@@ -3,7 +3,6 @@ title: 'ace-support-mac-clipboard: CRITICAL Test Coverage Issue - Comprehensive 
   Improvements'
 filename_suggestion: review-ace-support-mac-clipboard-critical-test-coverage-issue
 enhanced_at: 2025-11-11 21:35:17.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mawdi
 status: pending

@@ -2,7 +2,6 @@
 title: E2E Test Granularity and Parallelization Optimization
 filename_suggestion: feat-test-e2e-granularity
 enhanced_at: 2026-02-11 22:20:15.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8paxi8
 status: done

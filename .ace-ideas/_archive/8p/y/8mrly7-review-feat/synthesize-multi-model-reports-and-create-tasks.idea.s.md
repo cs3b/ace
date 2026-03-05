@@ -2,7 +2,6 @@
 title: Multi-Model Review Report Synthesis and Task Creation
 filename_suggestion: feat-review-multi-report-synthesis
 enhanced_at: 2025-11-28 14:38:29.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-01 18:26:44.000000000 +00:00

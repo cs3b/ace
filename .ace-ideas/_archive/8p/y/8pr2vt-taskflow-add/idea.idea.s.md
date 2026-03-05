@@ -2,7 +2,6 @@
 title: Add Multi-File Input Support to ace-sim via ace-bundle Integration
 filename_suggestion: feat-sim-multi-input-bundle
 enhanced_at: 2026-02-28 01:55:21.000000000 +00:00
-location: active
 llm_model: pi:glm
 simulation_verdict: READY_TO_DRAFT
 status: done

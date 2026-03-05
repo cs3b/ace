@@ -2,7 +2,6 @@
 title: Fix ace-test Runner for Single File/Line Execution
 filename_suggestion: fix-test-runner-file-filter
 enhanced_at: 2025-11-05 13:04:48.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-11-05 13:10:32.000000000 +00:00

@@ -2,7 +2,6 @@
 title: ACE Context Ruby Code Parsing and Compact Representation
 filename_suggestion: feat-context-ruby-code-parsing
 enhanced_at: 2025-11-03 17:03:01.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-09 00:55:25.000000000 +00:00

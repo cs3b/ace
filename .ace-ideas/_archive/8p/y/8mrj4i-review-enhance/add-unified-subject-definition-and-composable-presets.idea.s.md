@@ -2,7 +2,6 @@
 title: Enhance ace-review with Unified Subject Definition and Composable Subject Presets
 filename_suggestion: feat-review-subject-presets
 enhanced_at: 2025-11-28 12:45:09.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-09 01:00:19.000000000 +00:00

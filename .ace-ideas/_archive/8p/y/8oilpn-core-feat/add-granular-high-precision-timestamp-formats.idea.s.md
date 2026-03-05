@@ -2,7 +2,6 @@
 title: Enhance ace-support-timestamp with Granular and High-Precision Formats
 filename_suggestion: feat-timestamp-format-precision
 enhanced_at: 2026-01-18 01:12:17.000000000 +00:00
-location: done
 task_id: v.0.9.0+task.225
 llm_model: gflash
 id: 8oilpn

@@ -2,7 +2,6 @@
 title: Fix `ace-git-worktree` upstream branch configuration
 filename_suggestion: fix-git-worktree-upstream
 enhanced_at: 2025-12-02 01:10:50.000000000 +00:00
-location: done
 completed_by:
 - v.0.9.0+task.132
 completed_at: 2025-12-09

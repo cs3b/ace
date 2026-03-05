@@ -2,7 +2,6 @@
 title: Post-Assignment Reflection and Refactor Loop for ace-assign
 filename_suggestion: feat-assign-refactor-loop
 enhanced_at: 2026-02-15 22:49:37.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-02-18 18:18:42.000000000 +00:00

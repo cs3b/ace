@@ -2,7 +2,6 @@
 title: Enhanced Assignment Lifecycle with Verification and Retrospective Loops
 filename_suggestion: feat-assign-validation-reflection-loops
 enhanced_at: 2026-02-15 22:48:07.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-02-18 19:12:56.000000000 +00:00

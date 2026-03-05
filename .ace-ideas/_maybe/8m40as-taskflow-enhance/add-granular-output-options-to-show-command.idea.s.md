@@ -2,7 +2,6 @@
 title: Enhance ace-taskflow show command with granular output options
 filename_suggestion: feat-taskflow-output-options
 enhanced_at: 2025-11-05 00:12:50.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8m40as
 status: pending

@@ -15,7 +15,6 @@ created_at: "2025-09-30 07:57:59"
 title: Implement global -C (change directory) option for ace-* CLI commands
 filename_suggestion: feat-core-cli-cwd-option
 enhanced_at: 2025-09-30 08:58:12
-location: current
 llm_model: gflash
 ---
 

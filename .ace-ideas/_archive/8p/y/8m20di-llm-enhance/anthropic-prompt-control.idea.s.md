@@ -2,7 +2,6 @@
 title: Enhance ace-llm for Direct Anthropic Prompt Control
 filename_suggestion: feat-llm-anthropic-direct-prompts
 enhanced_at: 2025-11-03 00:15:55.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-11-13 10:27:59.000000000 +00:00

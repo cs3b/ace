@@ -2,7 +2,6 @@
 title: Migrate and Standardize dev-handbook Content into ace-handbook Gem
 filename_suggestion: chore-handbook-migration-cleanup
 enhanced_at: 2026-01-03 20:33:42.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-09 14:30:44.000000000 +00:00

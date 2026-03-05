@@ -2,7 +2,6 @@
 title: Standardize ace-taskflow Retrospective Naming using ace-timestamp Base36 IDs
 filename_suggestion: chore-taskflow-retro-timestamp-ids
 enhanced_at: 2026-01-07 14:33:31.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-07 22:08:30.000000000 +00:00

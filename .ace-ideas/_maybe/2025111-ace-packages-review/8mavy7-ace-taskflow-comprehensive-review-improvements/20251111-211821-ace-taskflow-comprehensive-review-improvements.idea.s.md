@@ -2,7 +2,6 @@
 title: ace-taskflow - Comprehensive Review Improvements
 filename_suggestion: review-ace-taskflow
 enhanced_at: 2025-11-11 21:18:21.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mavy7
 status: pending

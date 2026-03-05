@@ -2,7 +2,6 @@
 title: Automatic Diff Sharding for Large Context Reviews in ace-review
 filename_suggestion: feat-review-diff-sharding
 enhanced_at: 2026-01-15 11:02:34.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8oegkb
 status: done

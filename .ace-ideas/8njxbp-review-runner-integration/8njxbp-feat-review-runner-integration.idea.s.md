@@ -2,7 +2,6 @@
 title: Standardized Review Runner Integration for ace-review
 filename_suggestion: feat-review-runner-integration
 enhanced_at: 2025-12-20 22:13:04.000000000 +00:00
-location: active
 llm_model: gflash
 source: taskflow:v.0.9.0
 id: 8njxbp

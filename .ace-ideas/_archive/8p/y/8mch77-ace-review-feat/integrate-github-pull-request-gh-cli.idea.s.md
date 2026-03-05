@@ -2,7 +2,6 @@
 title: Enhance `ace-review` for GitHub Pull Request Integration with `gh` CLI
 filename_suggestion: feat-review-pr-gh-comments
 enhanced_at: 2025-11-13 11:28:55.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-11-16 14:07:04.000000000 +00:00

@@ -2,7 +2,6 @@
 title: 'Final Four Packages: Consolidated Review Summary - Comprehensive Review Improvements'
 filename_suggestion: review-final-four-packages-consolidated-review-summary
 enhanced_at: 2025-11-11 21:37:18.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mawfa
 status: pending

@@ -2,7 +2,6 @@
 title: Standardized Integration Modules (I10t) for Explicit External Dependencies
 filename_suggestion: feat-integration-atom-modules
 enhanced_at: 2025-11-28 11:06:37.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-09 01:00:02.000000000 +00:00

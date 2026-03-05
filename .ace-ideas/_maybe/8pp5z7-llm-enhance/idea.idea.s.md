@@ -3,7 +3,6 @@
 title: Integrate Native Client Review for ace-assign Subtree Pre-Commit
 filename_suggestion: feat-assign-subtree-review
 enhanced_at: 2026-02-26 03:59:07.000000000 +00:00
-location: active
 llm_model: pi:glm
 id: 8pp5z7
 status: pending

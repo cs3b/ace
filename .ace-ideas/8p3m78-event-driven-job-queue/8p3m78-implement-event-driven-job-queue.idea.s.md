@@ -2,7 +2,6 @@
 title: Implement Event-Driven Job Queue for Asynchronous Workflows
 filename_suggestion: feat-scheduler-event-queue
 enhanced_at: 2026-02-04 14:48:02.000000000 +00:00
-location: active
 llm_model: gflash
 source: taskflow:v.0.9.0
 id: 8p3m78

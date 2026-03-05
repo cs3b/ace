@@ -2,7 +2,6 @@
 title: Implement `ace-prompt` command for file-based prompt management and archiving
 filename_suggestion: feat-llm-prompt-file-management
 enhanced_at: 2025-11-06 13:56:54.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-11-16 15:57:10.000000000 +00:00

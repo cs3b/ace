@@ -2,7 +2,6 @@
 title: ace-handbook - Comprehensive Review Improvements
 filename_suggestion: review-ace-handbook
 enhanced_at: 2025-11-11 20:29:50.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mauq3
 status: pending

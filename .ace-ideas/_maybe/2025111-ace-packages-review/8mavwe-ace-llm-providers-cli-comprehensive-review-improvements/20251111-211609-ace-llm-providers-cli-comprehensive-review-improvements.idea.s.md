@@ -2,7 +2,6 @@
 title: ace-llm-providers-cli - Comprehensive Review Improvements
 filename_suggestion: review-ace-llm-providers-cli
 enhanced_at: 2025-11-11 21:16:09.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mavwe
 status: pending

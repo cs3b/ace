@@ -1,6 +1,5 @@
 ---
 title: 'Intent Engineering (Layer 3): Delegation Frameworks for Agent Workflows'
-location: _archive
 captured_at: '2026-02-24T12:00:00+00:00'
 completed_at: '2026-02-25T15:10:40+00:00'
 task_ref: v.0.9.0+task.281
