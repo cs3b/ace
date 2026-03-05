@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.765] - 2026-03-05
+
+### Technical
+
+- **ace-support-config v0.8.3**: Document `ProjectConfigScanner` in README — add to molecule list and add comparison table explaining when to use `ConfigFinder` vs `ProjectConfigScanner`
+
+## [0.9.764] - 2026-03-05
+
+### Fixed
+
+- **ace-support-config v0.8.2**: Narrow `Errno::EACCES` rescue in `ProjectConfigScanner#find_ace_dirs` to per-path scope so a permission error on one directory does not abort the entire scan; add test for graceful degradation when a subdirectory is permission-restricted.
+
+## [0.9.763] - 2026-03-05
+
+### Fixed
+
+- **ace-support-config v0.8.1**: `ProjectConfigScanner` now skips `.bundle`, `_legacy`, `.ace-local`, `.ace-tasks`, and `.ace-taskflow` directories to prevent false-positive config discovery; scan results are memoized for efficiency; symlinked directories are deduplicated via `File.realpath`; `Dir.glob` uses portable positional flags form.
+
 ## [0.9.762] - 2026-03-05
 
 ### Added
