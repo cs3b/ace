@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.3] - 2026-03-05
+
+### Changed
+- Updated E2E expectation wording for `ace-idea` move-to-next flow to match current root-scope behavior (no dedicated `_next` directory) and align verification output with `root` scope.
+
 ## [0.13.2] - 2026-03-05
 
 ### Changed
