@@ -8,8 +8,8 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 
 1. Idea remains under `.ace-ideas/` and does not require a dedicated `_next/` directory.
-2. The move result does not leave a duplicate in `_next/` (only the current `.ace-ideas/` path or expected `next` target).
-3. `ace-idea update` exit code is `0` and `stdout` includes `Idea updated:` with the ID and `next` folder reference.
+2. The move result does not leave a duplicate in `_next/` (only the current `.ace-ideas/` path or expected root scope target).
+3. `ace-idea update` exit code is `0` and `stdout` includes `Idea updated:` with the ID and `root` scope reference.
 4. `ace-idea list --in next` includes the moved idea.
 
 ## Verdict
