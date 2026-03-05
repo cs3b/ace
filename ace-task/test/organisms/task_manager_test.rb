@@ -198,6 +198,38 @@ class TaskManagerTest < AceTaskTestCase
     assert_nil result
   end
 
+  def test_update_subtask_move_to_archive_soft_blocks_when_siblings_not_terminal
+    parent = @manager.create("Parent task")
+    first = @manager.create_subtask(parent.id, "Subtask one", status: "done")
+    @manager.create_subtask(parent.id, "Subtask two", status: "pending")
+
+    updated = @manager.update(first.id, move_to: "archive")
+
+    assert_equal first.id, updated.id
+    assert_nil updated.special_folder
+    assert_match(/not archived because sibling subtasks are not all terminal/i, @manager.last_update_note)
+    refute Dir.exist?(File.join(@tmpdir, "_archive")), "Archive folder should not be created"
+  end
+
+  def test_update_subtask_move_to_archive_moves_parent_when_all_subtasks_terminal
+    parent = @manager.create("Parent task")
+    first = @manager.create_subtask(parent.id, "Subtask one", status: "done")
+    @manager.create_subtask(parent.id, "Subtask two", status: "skipped")
+
+    updated = @manager.update(first.id, move_to: "archive")
+
+    assert_equal first.id, updated.id
+    assert_equal "_archive", updated.special_folder
+    assert_match(/Archived parent task #{parent.id}/, @manager.last_update_note)
+
+    archived_parent_dirs = Dir.glob(File.join(@tmpdir, "_archive", "**", "#{parent.id}-*"))
+                              .select { |path| File.directory?(path) }
+    assert_equal 1, archived_parent_dirs.length
+
+    reloaded_parent = @manager.show(parent.id)
+    assert_equal "_archive", reloaded_parent.special_folder
+  end
+
   # --- create_subtask ---
 
   def test_create_subtask_allocates_char

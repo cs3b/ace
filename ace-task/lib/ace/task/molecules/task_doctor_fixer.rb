@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "fileutils"
+require "time"
 require "ace/support/markdown"
 require "ace/support/items"
 require_relative "../atoms/task_id_formatter"
@@ -210,28 +211,7 @@ module Ace
         def fix_move_to_archive(file_path)
           return false unless file_path && @root_dir
 
-          task_dir = File.directory?(file_path) ? file_path : File.dirname(file_path)
-          folder_name = File.basename(task_dir)
-          archive_dir = File.join(@root_dir, "_archive")
-          target = File.join(archive_dir, folder_name)
-
-          if @dry_run
-            log_fix(task_dir, "Would move to _archive/")
-            @fixed_count += 1
-            return true
-          end
-
-          FileUtils.mkdir_p(archive_dir)
-          return (@skipped_count += 1; false) if File.exist?(target)
-
-          FileUtils.mv(task_dir, target)
-          log_fix(task_dir, "Moved to _archive/")
-          @fixed_count += 1
-          true
-        rescue StandardError => e
-          log_fix(e.message, "Error: #{e.class}")
-          @skipped_count += 1
-          false
+          move_issue_to_archive(file_path, from_maybe: false)
         end
 
         def fix_archive_status(file_path)
@@ -241,28 +221,7 @@ module Ace
         def fix_maybe_terminal(file_path)
           return false unless file_path && @root_dir
 
-          task_dir = File.directory?(file_path) ? file_path : File.dirname(file_path)
-          folder_name = File.basename(task_dir)
-          archive_dir = File.join(@root_dir, "_archive")
-          target = File.join(archive_dir, folder_name)
-
-          if @dry_run
-            log_fix(task_dir, "Would move from _maybe/ to _archive/")
-            @fixed_count += 1
-            return true
-          end
-
-          FileUtils.mkdir_p(archive_dir)
-          return (@skipped_count += 1; false) if File.exist?(target)
-
-          FileUtils.mv(task_dir, target)
-          log_fix(task_dir, "Moved from _maybe/ to _archive/")
-          @fixed_count += 1
-          true
-        rescue StandardError => e
-          log_fix(e.message, "Error: #{e.class}")
-          @skipped_count += 1
-          false
+          move_issue_to_archive(file_path, from_maybe: true)
         end
 
         BACKUP_EXTENSIONS = /\.(backup\.\w+|tmp)$|~$/.freeze
@@ -462,6 +421,79 @@ module Ace
             description: description,
             timestamp: Time.now
           }
+        end
+
+        def move_issue_to_archive(file_path, from_maybe:)
+          task_file = File.directory?(file_path) ? find_primary_spec(file_path) : file_path
+          return (@skipped_count += 1; false) unless task_file && File.exist?(task_file)
+
+          task_dir = File.dirname(task_file)
+          content = File.read(task_file)
+          frontmatter, _body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+          parent_id = frontmatter.is_a?(Hash) ? frontmatter["parent"] : nil
+          archive_time = parse_archive_time(frontmatter)
+
+          source_dir = task_dir
+          description = from_maybe ? "Moved from _maybe/ to _archive/" : "Moved to _archive/"
+
+          if parent_id
+            parent_dir = File.dirname(task_dir)
+            unless all_siblings_terminal?(parent_dir, parent_id)
+              log_fix(task_dir, "Skipped archive move for subtask (siblings are not all terminal)")
+              @skipped_count += 1
+              return false
+            end
+            source_dir = parent_dir
+            description = "Moved parent task to _archive/ (all subtasks terminal)"
+          end
+
+          if @dry_run
+            log_fix(source_dir, "Would #{description.downcase}")
+            @fixed_count += 1
+            return true
+          end
+
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+          mover.move(Struct.new(:path).new(source_dir), to: "archive", date: archive_time)
+          log_fix(source_dir, description)
+          @fixed_count += 1
+          true
+        rescue StandardError => e
+          log_fix(e.message, "Error: #{e.class}")
+          @skipped_count += 1
+          false
+        end
+
+        def find_primary_spec(dir_path)
+          Dir.glob(File.join(dir_path, "*.s.md"))
+             .reject { |path| path.end_with?(".idea.s.md") }
+             .first
+        end
+
+        def parse_archive_time(frontmatter)
+          return nil unless frontmatter.is_a?(Hash)
+
+          raw = frontmatter["completed_at"] || frontmatter["created_at"]
+          return nil unless raw
+          return raw if raw.is_a?(Time)
+          return raw.to_time if raw.respond_to?(:to_time)
+
+          Time.parse(raw.to_s)
+        rescue ArgumentError
+          nil
+        end
+
+        def all_siblings_terminal?(parent_dir, parent_id)
+          scanner = TaskScanner.new(@root_dir)
+          subtasks = scanner.scan_subtasks(parent_dir, parent_id: parent_id)
+          return false if subtasks.empty?
+
+          subtasks.all? do |scan_result|
+            content = File.read(scan_result.file_path)
+            frontmatter, _body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+            status = frontmatter.is_a?(Hash) ? frontmatter["status"] : nil
+            Atoms::TaskValidationRules.terminal_status?(status.to_s.downcase)
+          end
         end
       end
     end
