@@ -205,7 +205,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * List all idea files referenced during behavioral specification
      * Note: Multiple idea files may be combined into one task
    * For EACH source idea file:
-     * Mark idea as done using ace-idea: `ace-idea move <id> --to archive` then `ace-idea update <id> --set status=done`
+     * Mark idea as done using ace-idea: `ace-idea update <id> --set status=done --move-to archive`
        * Use the idea ID (e.g., `8ppq7w`), not a file path
        * This moves the idea to the `_archive/` folder
        * Updates idea frontmatter with completion status
@@ -220,7 +220,7 @@ This prevents decomposing into subtasks that add concepts the spike later proves
      * [ ] Task references updated to new locations
      * [ ] Git movements committed
    * Error handling:
-     * If ace-idea move or update fails: Report error and manual intervention needed
+     * If ace-idea update fails: Report error and manual intervention needed
    * Success indicators:
      * Report each file movement: "Idea marked as done: idea-id"
      * Confirm all source ideas organized: "All X idea files marked as done"

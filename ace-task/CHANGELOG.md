@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.7] - 2026-03-05
+
+### Fixed
+- Fixed incorrect `ace-idea move` command in task/draft workflow; replaced non-existent `ace-idea move <id> --to archive` with correct `ace-idea update <id> --set status=done --move-to archive`
+
 ## [0.20.6] - 2026-03-05
 
 ### Added
