@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 - **ace-task v0.20.4**: Restored task-aware worktree creation for legacy-formatted fixtures by ensuring `TaskFilePattern` is loaded before task loader resolution.
+- **ace-task v0.20.5**: Restored task-aware worktree discovery after task model load-order regression by requiring `Ace::Task::Models::Task` before lookup.
+- **ace-git-worktree v0.13.22**: Fixed command failure signaling so missing-task operations in `create` and `remove` now exit non-zero and include actionable guidance.
 
 ## [0.9.761] - 2026-03-05
 
