@@ -205,7 +205,7 @@ module Ace
             puts response[:text]
           end
 
-          def provider_cli_args(provider_model, cli_args_map, config)
+          def provider_cli_args(provider_model, cli_args_map, config = {})
             return nil if cli_args_map.nil? || cli_args_map.empty?
             return nil if provider_model.nil? || provider_model.strip.empty?
 
