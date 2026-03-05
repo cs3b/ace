@@ -93,13 +93,15 @@ module Ace
               active_msg = active ? " Current phase: #{active.number} (#{active.name})." : ""
               last_msg = read_last_message(assignment.cache_dir, root_phase.number)
               stall_reason = build_stall_reason(last_msg)
+              session_meta = read_session_metadata(assignment.cache_dir, root_phase.number)
 
               if stall_reason && active
                 phase_writer = Molecules::PhaseWriter.new
                 phase_writer.update_frontmatter(active.file_path, { "stall_reason" => stall_reason })
               end
 
-              error_msg = "Fork subtree #{root_phase.number} did not complete within spawned session.#{active_msg}"
+              session_info = session_meta&.dig("session_id") ? " Session: #{session_meta["session_id"]}" : ""
+              error_msg = "Fork subtree #{root_phase.number} did not complete within spawned session.#{active_msg}#{session_info}"
               error_msg += "\n\nAgent's last message:\n#{stall_reason}" if stall_reason
               raise Error, error_msg
             end
@@ -116,6 +118,17 @@ module Ace
           private
 
           attr_reader :launcher
+
+          def read_session_metadata(cache_dir, fork_root)
+            return nil unless cache_dir
+
+            meta_file = File.join(cache_dir, "sessions", "#{fork_root}-session.yml")
+            return nil unless File.exist?(meta_file)
+
+            YAML.safe_load_file(meta_file)
+          rescue SystemCallError, Psych::SyntaxError
+            nil
+          end
 
           def read_last_message(cache_dir, fork_root)
             return nil unless cache_dir
