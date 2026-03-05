@@ -103,6 +103,54 @@ class CreateCommandTest < AceTaskTestCase
     refute commit_called, "Expected GitCommitter.commit NOT to be called"
   end
 
+  def test_create_with_status_sets_frontmatter
+    capture_io do
+      Ace::Task::TaskCLI.start(["create", "Draft task", "--status", "draft"])
+    end
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    task_dirs = Dir.entries(tasks_dir).reject { |e| e.start_with?(".") }
+    task_dir = File.join(tasks_dir, task_dirs.first)
+    spec_file = Dir.glob(File.join(task_dir, "*.s.md")).first
+    content = File.read(spec_file)
+
+    assert_match(/status: draft/, content)
+  end
+
+  def test_create_with_estimate_sets_frontmatter
+    capture_io do
+      Ace::Task::TaskCLI.start(["create", "Estimated task", "--estimate", "TBD"])
+    end
+
+    tasks_dir = File.join(@tmpdir, ".ace-tasks")
+    task_dirs = Dir.entries(tasks_dir).reject { |e| e.start_with?(".") }
+    task_dir = File.join(tasks_dir, task_dirs.first)
+    spec_file = Dir.glob(File.join(task_dir, "*.s.md")).first
+    content = File.read(spec_file)
+
+    assert_match(/estimate: TBD/, content)
+  end
+
+  def test_create_with_invalid_status_raises_error
+    err = assert_raises(Ace::Core::CLI::Error) do
+      capture_io do
+        Ace::Task::TaskCLI.start(["create", "Bad status", "--status", "bogus"])
+      end
+    end
+
+    assert_match(/Invalid status 'bogus'/, err.message)
+  end
+
+  def test_create_dry_run_shows_status_and_estimate
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["create", "Preview task", "--dry-run", "--status", "draft", "--estimate", "2h"])
+    end.first
+
+    assert_match(/Would create task/, output)
+    assert_match(/Status:.*draft/, output)
+    assert_match(/Estimate:.*2h/, output)
+  end
+
   def test_create_dry_run_with_git_commit_does_not_call_committer
     commit_called = false
     Ace::Support::Items::Molecules::GitCommitter.stub(:commit, ->(**_kwargs) { commit_called = true }) do
