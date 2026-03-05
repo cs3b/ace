@@ -97,6 +97,20 @@ describe "CodexClient" do
         refute_includes cmd, "--add-dir"
       end
     end
+
+    it "includes --output-last-message when last_message_file option provided" do
+      cmd = @client.send(:build_codex_command, "Test prompt", { last_message_file: "/tmp/last-msg.md" })
+
+      idx = cmd.index("--output-last-message")
+      refute_nil idx, "expected --output-last-message in command"
+      assert_equal "/tmp/last-msg.md", cmd[idx + 1]
+    end
+
+    it "omits --output-last-message when last_message_file option not provided" do
+      cmd = @client.send(:build_codex_command, "Test prompt", {})
+
+      refute_includes cmd, "--output-last-message"
+    end
   end
 
   describe "availability validation" do
