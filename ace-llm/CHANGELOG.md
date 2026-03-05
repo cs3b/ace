@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-05
+
+### Added
+- `last_message_file:` parameter in `QueryInterface.query` to thread last-message file path through to provider clients via `generation_opts`.
+
 ## [0.24.8] - 2026-03-04
 
 ### Fixed
