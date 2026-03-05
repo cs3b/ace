@@ -50,6 +50,8 @@ module Ace
             File.write(last_msg_file, result[:text]) if existing.empty?
           end
 
+          write_session_metadata(last_msg_file, result)
+
           result
         rescue Ace::LLM::Error => e
           raise Error, "Fork session execution failed via #{resolved_provider}: #{e.message}"
@@ -58,6 +60,19 @@ module Ace
         private
 
         attr_reader :config, :query_interface
+
+        def write_session_metadata(last_msg_file, result)
+          return unless last_msg_file
+
+          session_meta_file = last_msg_file.sub(/-last-message\.md$/, "-session.yml")
+          meta = {
+            "session_id" => result.dig(:metadata, :session_id),
+            "provider" => result[:provider],
+            "model" => result[:model],
+            "completed_at" => Time.now.utc.iso8601
+          }.compact
+          File.write(session_meta_file, meta.to_yaml) unless meta.empty?
+        end
 
         def build_last_message_file(cache_dir, fork_root)
           return nil unless cache_dir

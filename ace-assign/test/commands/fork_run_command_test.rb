@@ -380,6 +380,68 @@ class ForkRunCommandTest < AceAssignTestCase
     end
   end
 
+  def test_stall_error_includes_session_id_when_metadata_file_exists
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assignment = result[:assignment]
+      sessions_dir = File.join(assignment.cache_dir, "sessions")
+      FileUtils.mkdir_p(sessions_dir)
+      File.write(File.join(sessions_dir, "010-session.yml"), { "session_id" => "sess-xyz789", "provider" => "claude" }.to_yaml)
+
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "010", assignment: assignment.id, quiet: true)
+      end
+
+      assert_includes error.message, "Session: sess-xyz789"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_stall_error_omits_session_id_when_no_metadata_file
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "010", assignment: result[:assignment].id, quiet: true)
+      end
+
+      assert_includes error.message, "did not complete"
+      refute_includes error.message, "Session:"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
   def test_stall_error_omits_last_message_section_when_file_absent
     with_temp_cache do |cache_dir|
       phases = [
