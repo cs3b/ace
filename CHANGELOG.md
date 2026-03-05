@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.769] - 2026-03-05
+
+### Fixed
+- **ace-git v0.11.18**: Rebase workflow cherry-pick skip detection now uses commit subject matching instead of SHA comparison (cherry-pick produces new SHAs, so SHA-based skip never fired on resume).
+- **ace-git v0.11.18**: Rebase workflow Phase 3.3 now restores upstream tracking after `git branch -m` rename, which silently drops the upstream config.
+- **ace-git v0.11.18**: Rebase workflow Phase 5 push now uses `-u` flag to guarantee tracking is set after force-push.
+
 ## [0.9.768] - 2026-03-05
 
 ### Changed
