@@ -118,6 +118,29 @@ module Ace
                 end
               end
 
+              def test_matches_content_with_user_prefix
+                Dir.mktmpdir do |base|
+                  project_dir = File.join(base, "-home-mc-project")
+                  FileUtils.mkdir_p(project_dir)
+
+                  session_file = File.join(project_dir, "session1.jsonl")
+                  lines = [
+                    { "sessionId" => "sess-004", "type" => "system" }.to_json,
+                    { "type" => "user", "message" => { "content" => "User: #{PROMPT}" } }.to_json
+                  ]
+                  File.write(session_file, lines.join("\n") + "\n")
+
+                  result = ClaudeSessionFinder.call(
+                    working_dir: "/home/mc/project",
+                    prompt: PROMPT,
+                    base_path: base
+                  )
+
+                  assert result
+                  assert_equal "sess-004", result[:session_id]
+                end
+              end
+
               def test_encodes_path_correctly
                 assert_equal "-home-mc-ace-task-076",
                   ClaudeSessionFinder.send(:encode_path, "/home/mc/ace-task.076")

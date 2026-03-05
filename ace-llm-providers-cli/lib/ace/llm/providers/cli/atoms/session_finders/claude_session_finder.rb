@@ -56,7 +56,7 @@ module Ace
                   content = entry.dig("message", "content")
                   content = content.first["text"] if content.is_a?(Array)
 
-                  if content.is_a?(String) && content.strip == prompt.strip
+                  if content.is_a?(String) && content.include?(prompt.strip)
                     return { session_id: session_id, session_path: path }
                   end
                 rescue JSON::ParserError
