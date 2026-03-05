@@ -13,7 +13,7 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **JSON artifacts exist** — results/tc/06/ contains list-json.stdout and list-json.exit.
 2. **Valid JSON** — list-json.stdout contains well-formed JSON (parseable array or object).
-3. **Task entries have metadata** — Task-associated entries contain task_id fields with values "999" and "888" (or equivalent identifiers) and branch fields.
+3. **Task entries have metadata** — Task-associated entries contain task_id fields with values "8pp.t.q7w" and "8pp.t.r8x" (or equivalent identifiers) and branch fields.
 4. **Non-task entries differ** — The main worktree entry has null, missing, or empty task_id field.
 
 ## Verdict

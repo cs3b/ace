@@ -13,8 +13,8 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **All capture sets exist** — results/tc/03/ contains stdout/exit for show-tasks, task-associated, and no-task-associated.
 2. **Show-tasks includes task info** — show-tasks.stdout includes task-related metadata or identifiers alongside worktree entries.
-3. **Task-associated filter works** — task-associated.stdout shows only the task 999 worktree (not the main worktree).
-4. **No-task-associated filter works** — no-task-associated.stdout shows the main worktree but excludes the task 999 worktree.
+3. **Task-associated filter works** — task-associated.stdout shows only the task 8pp.t.q7w worktree (not the main worktree).
+4. **No-task-associated filter works** — no-task-associated.stdout shows the main worktree but excludes the task 8pp.t.q7w worktree.
 
 ## Verdict
 

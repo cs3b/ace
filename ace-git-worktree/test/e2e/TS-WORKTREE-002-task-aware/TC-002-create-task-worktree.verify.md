@@ -13,7 +13,7 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Creation artifacts exist** — results/tc/02/ contains stdout/exit for create-task.
 2. **Creation succeeds** — create-task.exit is 0.
-3. **Branch includes task ID** — branch-check.stdout shows a branch name containing "999".
+3. **Branch includes task ID** — branch-check.stdout shows a branch name containing "8pp.t.q7w".
 4. **Task worktree listed** — list-task.stdout shows the newly created task-associated worktree.
 
 ## Verdict
