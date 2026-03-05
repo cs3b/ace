@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.762] - 2026-03-05
+
+### Added
+
+- **ace-support-config v0.8.0**: New `ProjectConfigScanner` molecule enables downward project tree traversal to discover all `.ace` config folders across a monorepo, complementing the existing `ConfigFinder` upward traversal.
+
 ### Changed
 
 - **ace-task v0.20.4**: `ace-task` task loading now requires `TaskFilePattern` correctly to prevent `Task not found` errors during task-aware worktree creation.

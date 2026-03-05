@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-05
+
+### Added
+- `ProjectConfigScanner` molecule for downward project tree traversal to discover all `.ace` config folders across a monorepo
+
 ## [0.7.2] - 2026-02-23
 
 ### Technical
