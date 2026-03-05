@@ -76,7 +76,8 @@ module Ace
 
           return {success: false, error: result[:error]} unless result[:success]
 
-          matches = @result_parser.parse_ripgrep_output(result[:stdout])
+          parse_mode = options[:files_with_matches] ? :files_only : :text
+          matches = @result_parser.parse_ripgrep_output(result[:stdout], parse_mode)
 
           # Limit results
           matches = matches.first(options[:max_results]) if options[:max_results]
