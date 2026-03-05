@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.771] - 2026-03-05
+
+### Added
+- **ace-task v0.20.6**: `ace-task create` now accepts `--status` (`-s`) flag to set initial task status with validation, and `--estimate` (`-e`) flag to set effort estimate in frontmatter. Fixes workflow/CLI mismatch where `wfi://task/draft` instructed agents to use flags that didn't exist.
+
 ## [0.9.770] - 2026-03-05
 
 ### Fixed
