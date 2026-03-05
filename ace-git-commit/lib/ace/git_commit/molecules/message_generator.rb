@@ -9,6 +9,7 @@ module Ace
       # MessageGenerator generates commit messages using LLM
       class MessageGenerator
         DEFAULT_MODEL = "glite"
+        MAX_TOKENS = 8192
         SYSTEM_PROMPT_PATH = "ace-git-commit/handbook/prompts/git-commit.system.md"
 
         def initialize(config = nil)
@@ -32,7 +33,8 @@ module Ace
             user_prompt,
             system: system_prompt,
             temperature: 0.7,
-            timeout: 60
+            timeout: 60,
+            max_tokens: MAX_TOKENS
           )
 
           clean_commit_message(response[:text])
@@ -61,7 +63,8 @@ module Ace
             user_prompt,
             system: system_prompt,
             temperature: 0.7,
-            timeout: 120
+            timeout: 120,
+            max_tokens: MAX_TOKENS
           )
 
           parse_batch_response(response[:text], groups_context)
