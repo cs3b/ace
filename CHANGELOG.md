@@ -6,11 +6,17 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+- **ace-task v0.20.4**: `ace-task` task loading now requires `TaskFilePattern` correctly to prevent `Task not found` errors during task-aware worktree creation.
 - **ace-git v0.11.17**: `ace-git` now derives changed-file diff ranges using available refs only, preventing failures when `origin/main` is missing.
 - **ace-idea v0.13.2**: `ace-idea` E2E verification paths now align with default root-scope idea flow.
 - **ace-search v0.19.8**: `ace-search` now switches `rg` parsing mode based on `files_with_matches`, improving command consistency.
 - **ace-git-worktree v0.13.21**: `ace-git-worktree` task-aware fixtures now use `.ace-tasks` and non-legacy task IDs in E2E workflows.
 - **ace-overseer v0.4.20**: `ace-overseer` E2E fixtures now validate against non-legacy `.ace-tasks` identifiers for task workflows.
+- **ace-idea v0.13.3**: `ace-idea` move-to-next behavior expectations now match root-scope operation (no dedicated `_next` folder).
+
+### Fixed
+
+- **ace-task v0.20.4**: Restored task-aware worktree creation for legacy-formatted fixtures by ensuring `TaskFilePattern` is loaded before task loader resolution.
 
 ## [0.9.761] - 2026-03-05
 
