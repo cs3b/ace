@@ -2,13 +2,13 @@
 
 ## Goal
 
-Run `ace-overseer work-on --task 001` a second time (after Goal 2 already created the worktree). Verify the command reuses the existing worktree and tmux window rather than creating duplicates.
+Run `ace-overseer work-on --task 8pp.t.q7w` a second time (after Goal 2 already created the worktree). Verify the command reuses the existing worktree and tmux window rather than creating duplicates.
 
 ## Workspace
 
 Save all output to `results/tc/03/`. Capture:
 - The command's stdout, stderr, and exit code
-- Worktree count for task 001 (should be exactly 1)
+- Worktree count for task 8pp.t.q7w (should be exactly 1)
 - Tmux window count for task (should be exactly 1)
 
 ## Constraints
