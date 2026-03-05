@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.772] - 2026-03-05
+
+### Fixed
+- **ace-task v0.20.7**: Fixed incorrect `ace-idea move` command in task/draft workflow; replaced non-existent `ace-idea move <id> --to archive` with correct `ace-idea update <id> --set status=done --move-to archive`
+
 ## [0.9.771] - 2026-03-05
 
 ### Added
