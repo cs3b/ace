@@ -1,11 +1,11 @@
 ---
 status: pending
 priority: anyday
-source: taskflow:v.0.9.0
+source: "taskflow:v.0.9.0"
 id: 8ktby7
-title: Idea
+title: "Implement global -C (change directory) option for ace-* CLI commands"
 tags: []
-created_at: '2025-09-30 07:57:59'
+created_at: "2025-09-30 07:57:59"
 ---
 
 # Idea

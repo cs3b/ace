@@ -1,10 +1,10 @@
 ---
-source: taskflow:v.0.9.0
+source: "taskflow:v.0.9.0"
 id: 8pkys1
 status: pending
-title: Idea
+title: E2E container isolation with LXC
 tags: []
-created_at: '2026-02-21 23:11:08'
+created_at: "2026-02-21 23:11:08"
 ---
 
 # Idea
