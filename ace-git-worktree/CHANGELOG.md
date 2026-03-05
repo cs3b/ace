@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.21] - 2026-03-05
+
+### Changed
+- Worktree task-aware E2E scenarios were migrated to non-legacy `.ace-tasks` fixtures and modern task IDs.
+
 ## [0.13.20] - 2026-03-03
 
 ### Fixed
