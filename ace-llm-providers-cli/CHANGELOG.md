@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.1] - 2026-03-05
+
+### Fixed
+- `SessionFinder` dispatcher test now exercises the actual dispatch path instead of calling the Claude finder directly.
+
+### Changed
+- Added explanatory comment in `OpenCodeSessionFinder` documenting why `project_id` serves as a nil-gate only (OpenCode sessions lack project references).
+- Added explanatory comment in `ClaudeSessionFinder` documenting why substring matching (`include?`) is used instead of exact equality.
+
 ## [0.22.0] - 2026-03-05
 
 ### Added
