@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Session metadata file (`<root>-session.yml`) written for every fork run, capturing `session_id`, `provider`, `model`, and `completed_at` for traceability.
+- Stall error messages now include `Session: <id>` when session metadata is available, enabling direct trace to agent session.
+
 ## [0.19.3] - 2026-03-05
 
 ### Technical

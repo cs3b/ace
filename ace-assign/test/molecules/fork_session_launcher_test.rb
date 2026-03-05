@@ -137,6 +137,61 @@ class ForkSessionLauncherTest < AceAssignTestCase
     end
   end
 
+  def test_launch_writes_session_metadata_file
+    fake_with_metadata = Class.new do
+      define_method(:query) do |_provider, _prompt, **_opts|
+        { text: "Done.", provider: "claude", model: "sonnet", metadata: { session_id: "sess-abc123" } }
+      end
+    end.new
+
+    config = { "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 }, "providers" => {} }
+    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_with_metadata)
+
+    Dir.mktmpdir do |tmp_dir|
+      launcher.launch(assignment_id: "abc123", fork_root: "010.02", cache_dir: tmp_dir)
+
+      session_file = File.join(tmp_dir, "sessions", "010.02-session.yml")
+      assert File.exist?(session_file), "Session metadata file should be created"
+      meta = YAML.safe_load_file(session_file)
+      assert_equal "sess-abc123", meta["session_id"]
+      assert_equal "claude", meta["provider"]
+      assert_equal "sonnet", meta["model"]
+      assert meta["completed_at"], "completed_at should be present"
+    end
+  end
+
+  def test_launch_writes_session_metadata_without_session_id
+    fake_no_session = Class.new do
+      define_method(:query) do |_provider, _prompt, **_opts|
+        { text: "Done.", provider: "codex", model: "gpt-5", metadata: {} }
+      end
+    end.new
+
+    config = { "execution" => { "provider" => "codex:gpt-5", "timeout" => 900 }, "providers" => {} }
+    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake_no_session)
+
+    Dir.mktmpdir do |tmp_dir|
+      launcher.launch(assignment_id: "abc123", fork_root: "010", cache_dir: tmp_dir)
+
+      session_file = File.join(tmp_dir, "sessions", "010-session.yml")
+      assert File.exist?(session_file), "Session metadata file should still be created"
+      meta = YAML.safe_load_file(session_file)
+      refute meta.key?("session_id"), "session_id should be absent when not provided"
+      assert_equal "codex", meta["provider"]
+    end
+  end
+
+  def test_launch_skips_session_metadata_when_no_cache_dir
+    fake = FakeQueryInterface.new
+    config = { "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 }, "providers" => {} }
+    launcher = Ace::Assign::Molecules::ForkSessionLauncher.new(config: config, query_interface: fake)
+
+    launcher.launch(assignment_id: "abc123", fork_root: "010")
+
+    # No cache_dir means no sessions dir, so no file should be written — just verify no error
+    assert true
+  end
+
   def test_launch_omits_last_message_file_when_no_cache_dir
     fake = FakeQueryInterface.new
     config = { "execution" => { "provider" => "claude:sonnet", "timeout" => 1800 }, "providers" => {} }
