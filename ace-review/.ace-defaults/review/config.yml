@@ -38,7 +38,7 @@ defaults:
   max_concurrent_models: 3  # Max parallel LLM queries for multi-model execution
   auto_execute: false  # Set to true to auto-execute LLM query without confirmation
   auto_save: false  # Set to true to enable auto-save to task/release directories (opt-in)
-  auto_save_branch_patterns:
+  task_branch_patterns:
     - '^(\d+(?:\.\d+)?)-'  # Standard: 121-feature, 121.01-subtask
     - '^feature/(\d+)-'     # Feature branches: feature/123-name
   auto_save_release_fallback: true  # Save to release dir when no task detected

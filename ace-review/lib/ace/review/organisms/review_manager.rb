@@ -955,7 +955,7 @@ module Ace
             return nil unless branch_name
 
             # Extract task ID from branch using ace-git
-            patterns = Ace::Review.get("defaults", "auto_save_branch_patterns")
+            patterns = Ace::Review.get("defaults", "task_branch_patterns")
             task_id = Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(branch_name, patterns: patterns)
 
             if task_id
