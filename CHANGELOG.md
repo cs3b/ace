@@ -89,10 +89,26 @@ All notable changes to this project will be documented in this file.
 
 ## [0.9.762] - 2026-03-05
 
+### Fixed
+- **ace-demo v0.4.1**: Fixed tape override precedence consistency, removed redundant VHS preflight spawn, made dry-run attachment offline-safe, removed unsupported VHS `--format` argument emission, eliminated duplicate `Error:` prefixing in CLI errors, and added debug diagnostics for config load failures.
+- **ace-demo v0.4.2**: Aligned `ExecutionResult` with the models layer, optimized single-tape lookup in `TapeScanner#find`, and improved config-load failure diagnostics with explicit warning output.
+- **ace-demo v0.4.3**: Extracted shared tape search directory and attach-output printer atoms, tightened PR-not-found stderr matching in comment posting, and applied `vhs_bin`/`output_dir` runtime config defaults in recorder paths with test coverage.
+- **ace-demo v0.7.1**: Fixed command escaping in `TapeContentGenerator` for quotes/backslashes. Fixed path traversal in `TapeCreator` via `DemoNameSanitizer`. Fixed `--dry-run` in tape mode to skip recording. Narrowed auth error detection to specific patterns. Removed unused `format:` parameter from `VhsCommandBuilder`.
+- **ace-demo v0.7.2**: Fixed `AttachOutputPrinter` printing comment body in live mode. Fixed `--output` silently ignored in inline recording mode. Fixed `--pr` with non-GIF formats producing broken image markdown (now uses link format for MP4/WebM). Fixed dry-run with `--pr` not previewing attachment step. Fixed env var example syntax in `demo/record` workflow. Renamed `gif_path:` to `file_path:` in `GhAssetUploader` and updated error messages to be format-neutral. Fixed docs expected output for `list`/`show` commands. Removed redundant project-level WFI source registration.
+- **ace-git-commit v0.19.1**: Cap `max_tokens` at 8192 for commit message generation to prevent inflated thinking budgets from the provider's global 65536 default. Also fixed `glite` LLM alias resolving to `gemini-flash-latest` (thinking-enabled) instead of `gemini-flash-lite-latest`, restoring sub-second latency.
+
 ### Added
 - **ace-assign v0.19.0**: Surface forked agent last message on stall — `fork-run` now captures the agent's final output and includes it in stall error messages; `stall_reason` is persisted to phase frontmatter and displayed in `ace-assign status`.
 - **ace-llm v0.25.0**: `QueryInterface.query` accepts `last_message_file:` to thread last-message capture path to provider clients.
 - **ace-llm-providers-cli v0.21.0**: `CodexClient` passes `--output-last-message <path>` to Codex CLI for progressive, timeout-resilient last-message capture.
+- **ace-demo v0.2.0**: Added new package for VHS-based demo recording with tape preset resolution, record CLI command, execution pipeline, and full package test coverage.
+- **ace-demo v0.3.0**: Added PR demo attachment workflow with `attach` command, `record --pr` chaining, GitHub release asset upload, and PR comment posting (including dry-run previews).
+- **ace-demo v0.4.0**: Added demo tape library and discovery features with metadata parsing, cascade tape scanning, `list`/`show` CLI commands, and shipped default demo tapes.
+- **ace-demo v0.5.0**: Added `create` command for generating tape files from shell commands, with `TapeContentGenerator` atom, `TapeWriter` molecule, `TapeCreator` organism, stdin support, and `--dry-run` preview. Updated defaults to 960x480px at font size 16.
+- **ace-demo v0.6.0**: Added inline recording to `record` command (`ace-demo record <name> -- <commands...>`), with `InlineRecorder` molecule for session-scoped tape generation and VHS execution in timestamped directories, create-style options (`--timeout`, `--desc`, `--tags`, `--width`, `--height`, `--font-size`), stdin support, and dry-run preview.
+- **ace-demo v0.7.0**: Added `DemoNameSanitizer` atom for filesystem-safe slug normalization of user-supplied demo names. Added `ace-b36ts` runtime dependency. Inline recording now uses compact 6-character b36ts session IDs instead of `YYYYMMDD-HHMMSS` timestamps, and sanitizes the `<name>` argument before use in tape and output paths.
+- **ace-demo v0.7.1**: Added handbook workflow instructions (`demo/create`, `demo/record`) and skills integration (`ace-demo-create`, `ace-demo-record`) for agent workflow routing via `wfi://` protocol. Added WFI source registration for `ace-bundle wfi://demo/*` discovery.
+- **ace-demo v0.7.2**: Added dedicated `DemoNameSanitizer` unit tests for edge cases. Added escaping regression test for `TapeContentGenerator`. Added `DemoCommentFormatter` test for non-GIF format rendering.
 
 ## [0.9.761] - 2026-03-05
 
