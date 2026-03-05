@@ -39,13 +39,46 @@ module Ace
           "ace-git-worktree prune --dry-run      # Preview stale cleanup"
         ].freeze
 
+        # Captured command exit code from last run.
+        @captured_exit_code = nil
+
+        # Start the CLI.
+        #
+        # @param args [Array<String>] Command-line arguments
+        # @return [Integer] Exit code (0 for success, non-zero for failure)
+        def self.start(args)
+          @captured_exit_code = nil
+          Dry::CLI.new(self).call(arguments: args)
+          @captured_exit_code || 0
+        end
+
+        # Wrap a command to capture its exit code.
+        #
+        # @param command_class [Class] The command class to wrap
+        # @return [Class] Wrapped command class
+        def self.wrap_command(command_class)
+          wrapped = Class.new(Dry::CLI::Command) do
+            define_method(:call) do |**kwargs|
+              result = command_class.new.call(**kwargs)
+              Ace::Git::Worktree::CLI.instance_variable_set(:@captured_exit_code, result) if result.is_a?(Integer)
+              result
+            end
+          end
+
+          command_class.instance_variables.each do |ivar|
+            wrapped.instance_variable_set(ivar, command_class.instance_variable_get(ivar))
+          end
+
+          wrapped
+        end
+
         # Register commands (Hanami pattern: CLI::Commands::*)
-        register "create", CLI::Commands::Create, aliases: []
-        register "list", CLI::Commands::List, aliases: ["ls"]
-        register "switch", CLI::Commands::Switch, aliases: ["cd"]
-        register "remove", CLI::Commands::Remove, aliases: ["rm"]
-        register "prune", CLI::Commands::Prune, aliases: []
-        register "config", CLI::Commands::Config, aliases: []
+        register "create", wrap_command(CLI::Commands::Create), aliases: []
+        register "list", wrap_command(CLI::Commands::List), aliases: ["ls"]
+        register "switch", wrap_command(CLI::Commands::Switch), aliases: ["cd"]
+        register "remove", wrap_command(CLI::Commands::Remove), aliases: ["rm"]
+        register "prune", wrap_command(CLI::Commands::Prune), aliases: []
+        register "config", wrap_command(CLI::Commands::Config), aliases: []
 
         # Version command
         version_cmd = Ace::Core::CLI::DryCli::VersionCommand.build(

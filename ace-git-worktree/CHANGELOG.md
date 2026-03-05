@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.22] - 2026-03-05
+
+### Fixed
+- Fixed `ace-git-worktree` exit-code propagation for command failures so missing tasks and invalid remove/create operations now return a non-zero status from the executable.
+
 ## [0.13.21] - 2026-03-05
 
 ### Changed
