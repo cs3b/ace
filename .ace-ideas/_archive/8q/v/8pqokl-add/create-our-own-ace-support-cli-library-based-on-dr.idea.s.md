@@ -1,11 +1,10 @@
 ---
-
 id: 8pqokl
-status: pending
+status: done
 title: create our own ace support cli library based on dr
 tags: []
-created_at: "2026-02-28 17:37:36"
-source: "user"
+created_at: '2026-02-28 17:37:36'
+source: user
 ---
 
 # create our own ace support cli library based on dr

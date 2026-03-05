@@ -1,11 +1,11 @@
 ---
-status: pending
+status: done
 priority: anyday
-source: "taskflow:v.0.9.0"
+source: taskflow:v.0.9.0
 id: 8loi83
 title: Helpers for version bumping and changelog updates
 tags: []
-created_at: "2025-10-25 12:08:58"
+created_at: '2025-10-25 12:08:58'
 ---
 
 # Helpers for version bumping and changelog updates

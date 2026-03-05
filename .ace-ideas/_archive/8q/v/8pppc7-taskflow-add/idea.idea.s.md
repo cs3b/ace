@@ -4,7 +4,7 @@ filename_suggestion: feat-taskflow-pr-demo-section
 enhanced_at: 2026-02-26 16:53:34.000000000 +00:00
 llm_model: pi:glm
 id: 8pppc7
-status: pending
+status: done
 tags: []
 created_at: '2026-02-26 16:53:32'
 ---

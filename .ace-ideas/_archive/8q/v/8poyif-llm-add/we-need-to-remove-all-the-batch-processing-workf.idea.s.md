@@ -1,10 +1,11 @@
 ---
 id: 8poyif
-status: pending
+status: done
 title: we need to remove all the batch processing workf
 tags: []
-created_at: "2026-02-28 17:37:36"
+created_at: '2026-02-28 17:37:36'
 ---
+
 # we need to remove all the batch processing workf
 
 # we need to remove all the batch processing workflo...

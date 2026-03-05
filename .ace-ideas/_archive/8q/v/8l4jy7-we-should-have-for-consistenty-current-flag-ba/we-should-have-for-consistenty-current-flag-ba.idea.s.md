@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: maybe
 id: 8l4jy7
 title: we should have for consistenty current flag ba
