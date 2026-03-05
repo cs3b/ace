@@ -296,6 +296,32 @@ class CommandExecutorTest < AceGitTestCase
     end
   end
 
+  def test_changed_files_defaults_to_origin_main_when_origin_exists
+    execute_calls = []
+    stub_result = { success: true, output: "file.rb\n", error: "", exit_code: 0 }
+
+    @executor.stub :execute, ->(*args) { execute_calls << args; stub_result } do
+      @executor.stub :ref_exists?, ->(ref) { ref == "origin/main" } do
+        result = @executor.changed_files
+        assert_equal ["file.rb"], result
+        assert_includes execute_calls, ["git", "diff", "--name-only", "origin/main...HEAD"]
+      end
+    end
+  end
+
+  def test_changed_files_without_origin_uses_working_diff
+    execute_calls = []
+
+    @executor.stub :execute, ->(*args) { execute_calls << args; { success: true, output: "file.rb\n", error: "", exit_code: 0 } } do
+      @executor.stub :ref_exists?, ->(_ref) { false } do
+        result = @executor.changed_files
+
+        assert_equal ["file.rb"], result
+        assert_includes execute_calls, ["git", "diff", "--name-only"]
+      end
+    end
+  end
+
   def test_changed_files_stubbed_failure
     mock_result = { success: false, output: "", error: "error", exit_code: 1 }
 

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.17] - 2026-03-05
+
+### Changed
+- Diff generation now falls back safely when default git refs are unavailable, using tracking branch, `origin/main`, then `HEAD~1`.
+
+
 ## [0.11.16] - 2026-03-04
 
 ### Changed
