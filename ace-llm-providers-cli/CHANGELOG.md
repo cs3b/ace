@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-03-05
+
+### Added
+- Provider-specific session finders for Claude, Codex, Pi, Gemini, and OpenCode that detect fork sessions by scanning local session storage and matching by prompt.
+- `SessionFinder` molecule dispatcher that routes session detection to the correct provider-specific atom.
+
 ## [0.21.1] - 2026-03-05
 
 ### Technical
