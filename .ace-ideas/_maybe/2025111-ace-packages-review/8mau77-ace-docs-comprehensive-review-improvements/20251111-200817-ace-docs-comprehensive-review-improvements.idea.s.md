@@ -2,7 +2,6 @@
 title: ace-docs - Comprehensive Review Improvements
 filename_suggestion: review-ace-docs
 enhanced_at: 2025-11-11 20:08:17.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mau77
 status: pending

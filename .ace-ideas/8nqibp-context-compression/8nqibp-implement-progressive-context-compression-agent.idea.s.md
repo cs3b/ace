@@ -2,7 +2,6 @@
 title: Progressive Context Compression for Agent Sessions using LLMs
 filename_suggestion: feat-llm-progressive-compression
 enhanced_at: 2025-12-27 12:13:44.000000000 +00:00
-location: active
 llm_model: gflash
 source: taskflow:v.0.9.0
 id: 8nqibp

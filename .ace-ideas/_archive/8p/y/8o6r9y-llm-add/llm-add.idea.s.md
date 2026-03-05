@@ -2,7 +2,6 @@
 title: Improve Synthesis Report Readability in ace-review
 filename_suggestion: fix-review-report-readability
 enhanced_at: 2026-01-07 18:11:02.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-07 21:47:52.000000000 +00:00

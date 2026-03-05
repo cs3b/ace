@@ -2,7 +2,6 @@
 title: Integrate ace-review reports directly into ace-taskflow task directories
 filename_suggestion: feat-review-task-report-storage
 enhanced_at: 2025-11-07 12:54:56.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-11-16 14:03:56.000000000 +00:00

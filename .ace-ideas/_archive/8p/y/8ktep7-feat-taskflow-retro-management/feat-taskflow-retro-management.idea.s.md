@@ -14,7 +14,6 @@ created_at: '2025-09-30 09:47:59'
 title: Implement Retrospective Management in ace-taskflow
 filename_suggestion: feat-taskflow-retro-management
 enhanced_at: 2025-09-30 10:48:40
-location: current
 llm_model: gflash
 ---
 

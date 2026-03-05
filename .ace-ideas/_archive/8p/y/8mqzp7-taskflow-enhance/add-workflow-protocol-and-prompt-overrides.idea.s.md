@@ -2,7 +2,6 @@
 title: Enhance ace-taskflow with Workflow Protocol and Prompt Overrides
 filename_suggestion: feat-taskflow-protocol-overrides
 enhanced_at: 2025-11-27 23:48:15.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-09 01:00:09.000000000 +00:00

@@ -2,7 +2,6 @@
 title: Implement Descriptive Slugs for ace-taskflow Idea Paths
 filename_suggestion: feat-taskflow-idea-slugs
 enhanced_at: 2026-01-07 12:51:50.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-07 14:34:05.000000000 +00:00

@@ -2,7 +2,6 @@
 title: Add Skill Validation Linter to ace-lint for Agent Asset Consistency
 filename_suggestion: feat-lint-skill-validation
 enhanced_at: 2026-01-10 23:39:57.000000000 +00:00
-location: archived
 archived_at: 2026-01-22
 implemented_by: v.0.9.0+task.226
 llm_model: gflash

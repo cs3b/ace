@@ -12,7 +12,6 @@ created_at: '2025-09-26 14:20:59'
 title: Feature: Introduce ace-git-worktree Gem for Git Worktree and GitHub Pull Request Management
 filename_suggestion: feat-git-worktree-pr-management
 enhanced_at: 2025-09-26 15:21:56
-location: backlog
 llm_model: gflash
 ---
 

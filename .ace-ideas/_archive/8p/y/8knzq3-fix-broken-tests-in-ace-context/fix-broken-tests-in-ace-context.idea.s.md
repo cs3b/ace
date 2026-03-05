@@ -13,7 +13,6 @@ created_at: '2025-09-24 23:48:58'
 title: Fix Broken Tests in ace-context Gem
 filename_suggestion: fix-context-broken-tests
 enhanced_at: 2025-09-25 00:49:31
-location: active
 llm_model: gflash
 ---
 

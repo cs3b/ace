@@ -13,7 +13,6 @@ created_at: '2025-10-01 23:26:58'
 title: Enhance ace-taskflow to support 'v.X.Y.Z+task.NNN' as a valid task ID format
 filename_suggestion: feat-taskflow-task-id-parsing
 enhanced_at: 2025-10-02 00:27:25
-location: active
 llm_model: gflash
 ---
 

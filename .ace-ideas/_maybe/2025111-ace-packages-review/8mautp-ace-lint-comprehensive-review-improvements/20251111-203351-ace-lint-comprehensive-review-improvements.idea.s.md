@@ -2,7 +2,6 @@
 title: ace-lint - Comprehensive Review Improvements
 filename_suggestion: review-ace-lint
 enhanced_at: 2025-11-11 20:33:51.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8mautp
 status: pending

@@ -2,7 +2,6 @@
 title: Fix Staging of Git Ignored Files in ace-git-commit
 filename_suggestion: fix-git-commit-ignore-stage
 enhanced_at: 2025-12-17 00:48:34.000000000 +00:00
-location: active
 llm_model: gflash
 source: taskflow:v.0.9.0
 id: 8ng177

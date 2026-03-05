@@ -2,7 +2,6 @@
 title: Introduce ace-mq for querying Markdown documents
 filename_suggestion: feat-docs-markdown-query
 enhanced_at: 2025-11-28 00:15:44.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-09 00:53:15.000000000 +00:00

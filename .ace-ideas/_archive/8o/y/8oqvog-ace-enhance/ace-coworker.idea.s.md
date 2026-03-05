@@ -1,7 +1,6 @@
 ---
 title: Implement ace-coworker (single session workflow executor)
 enhanced_at: 2026-01-28 00:15
-location: backlog
 tags:
 - ace-coworker
 - workflow

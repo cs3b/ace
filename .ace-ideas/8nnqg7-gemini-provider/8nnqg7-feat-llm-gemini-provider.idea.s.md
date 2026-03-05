@@ -2,7 +2,6 @@
 title: Add Gemini Provider to ace-llm-providers-cli with System Prompt Emulation
 filename_suggestion: feat-llm-gemini-provider
 enhanced_at: 2025-12-24 17:38:38.000000000 +00:00
-location: active
 llm_model: gflash
 source: taskflow:v.0.9.0
 id: 8nnqg7

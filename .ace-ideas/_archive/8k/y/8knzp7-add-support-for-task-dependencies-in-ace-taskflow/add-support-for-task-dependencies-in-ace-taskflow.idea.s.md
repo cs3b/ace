@@ -12,7 +12,6 @@ created_at: '2025-09-24 23:47:59'
 title: Implement Task Dependency Management in ace-taskflow
 filename_suggestion: feat-taskflow-task-dependencies
 enhanced_at: 2025-09-25 00:48:14
-location: done
 llm_model: gflash
 completed_by: [v.0.9.0+task.034, v.0.9.0+task.040]
 completed_at: 2025-09-26

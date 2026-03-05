@@ -2,7 +2,6 @@
 title: Standardize CLI Parameter Configuration and Output Summary
 filename_suggestion: feat-config-cli-params-summary
 enhanced_at: 2025-12-02 11:59:53.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-09 00:57:40.000000000 +00:00

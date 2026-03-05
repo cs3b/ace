@@ -2,7 +2,6 @@
 title: Implement Hierarchical Workflow and Agent Namespacing via wfi:// Protocol
 filename_suggestion: feat-nav-workflow-namespacing
 enhanced_at: 2026-02-04 00:02:01.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-02-19 18:51:04.000000000 +00:00

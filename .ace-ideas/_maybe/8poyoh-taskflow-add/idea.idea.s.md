@@ -2,7 +2,6 @@
 title: Migrate Batch Processing Workflows to ace-assign
 filename_suggestion: refactor-taskflow-batch-to-assign
 enhanced_at: 2026-02-25 23:07:12.000000000 +00:00
-location: active
 llm_model: pi:glm
 id: 8poyoh
 status: pending

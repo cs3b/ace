@@ -2,7 +2,6 @@
 title: ace-integration-claude - Comprehensive Review Improvements
 filename_suggestion: review-ace-integration-claude
 enhanced_at: 2025-11-11 20:31:43.000000000 +00:00
-location: active
 llm_model: gflash
 id: 8maurw
 status: pending

@@ -2,7 +2,6 @@
 title: Standardize ace-context Preset Configuration Loading
 filename_suggestion: fix-context-config-loading
 enhanced_at: 2025-11-28 22:41:52.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-12-01 18:16:09.000000000 +00:00

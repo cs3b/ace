@@ -2,7 +2,6 @@
 title: Implementing Path-Based Configuration Splitting in ace-git-commit
 filename_suggestion: feat-git-commit-config-split
 enhanced_at: 2026-01-18 00:26:59.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2026-01-22 18:34:09.000000000 +00:00

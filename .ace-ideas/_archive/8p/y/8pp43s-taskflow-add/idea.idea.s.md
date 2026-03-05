@@ -2,7 +2,6 @@
 title: Simulation-Based Prototype for Workflow Review Dry Runs
 filename_suggestion: feat-taskflow-sim-proto
 enhanced_at: 2026-02-26 02:44:13.000000000 +00:00
-location: active
 llm_model: pi:glm
 status: done
 completed_at: 2026-02-26 15:32:38.000000000 +00:00

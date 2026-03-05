@@ -12,7 +12,6 @@ created_at: '2025-09-25 00:08:58'
 title: Add enhanced stats and summary display to ace-taskflow
 filename_suggestion: ace-taskflow-enhanced-stats-display
 enhanced_at: 2025-09-25 01:09:22
-location: done
 completed_by: [v.0.9.0+task.033]
 completed_at: 2025-09-26
 status: done

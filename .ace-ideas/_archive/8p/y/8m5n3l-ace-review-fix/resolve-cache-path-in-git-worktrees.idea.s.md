@@ -2,7 +2,6 @@
 title: Fix ace-review cache path resolution in git worktrees
 filename_suggestion: fix-review-worktree-path-resolution
 enhanced_at: 2025-11-06 15:24:40.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-11-15 10:33:43.000000000 +00:00

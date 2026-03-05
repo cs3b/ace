@@ -2,7 +2,6 @@
 title: Standardize and Cache System Prompt Management in ace-review
 filename_suggestion: feat-review-prompt-management
 enhanced_at: 2025-11-04 00:57:44.000000000 +00:00
-location: active
 llm_model: gflash
 status: done
 completed_at: 2025-11-15 10:55:43.000000000 +00:00
