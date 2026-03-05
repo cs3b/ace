@@ -13,7 +13,7 @@ defaults:
   # NOTE: Auto-save is enabled for this project's contributors.
   # The gem's user-facing default is `false` (opt-in).
   auto_save: true
-  auto_save_branch_patterns:
+  task_branch_patterns:
     - '^(\d+(?:\.\d+)?)-'  # Standard: 121-feature, 121.01-subtask
     - '^feature/(\d+)-'     # Feature branches: feature/123-name
   auto_save_release_fallback: true
