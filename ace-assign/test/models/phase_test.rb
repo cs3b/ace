@@ -213,4 +213,52 @@ class PhaseTest < AceAssignTestCase
     assert_equal "2026-02-25T19:00:00Z", fm["fork_pid_updated_at"]
     assert_equal "/tmp/010.pid.yml", fm["fork_pid_file"]
   end
+
+  def test_stall_reason_defaults_to_nil
+    phase = Ace::Assign::Models::Phase.new(
+      number: "010",
+      name: "init",
+      status: :pending,
+      instructions: "Test"
+    )
+
+    assert_nil phase.stall_reason
+  end
+
+  def test_stall_reason_stored_when_provided
+    phase = Ace::Assign::Models::Phase.new(
+      number: "010",
+      name: "init",
+      status: :in_progress,
+      instructions: "Test",
+      stall_reason: "I need direction before continuing."
+    )
+
+    assert_equal "I need direction before continuing.", phase.stall_reason
+  end
+
+  def test_to_frontmatter_includes_stall_reason_when_set
+    phase = Ace::Assign::Models::Phase.new(
+      number: "010",
+      name: "init",
+      status: :in_progress,
+      instructions: "Test",
+      stall_reason: "Unexpected state encountered."
+    )
+
+    fm = phase.to_frontmatter
+    assert_equal "Unexpected state encountered.", fm["stall_reason"]
+  end
+
+  def test_to_frontmatter_excludes_stall_reason_when_nil
+    phase = Ace::Assign::Models::Phase.new(
+      number: "010",
+      name: "init",
+      status: :pending,
+      instructions: "Test"
+    )
+
+    fm = phase.to_frontmatter
+    refute fm.key?("stall_reason")
+  end
 end

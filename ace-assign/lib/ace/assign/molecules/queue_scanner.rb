@@ -83,6 +83,7 @@ module Ace
             parent: fields[:parent],
             skill: fields[:skill],
             context: fields[:context],
+            stall_reason: fields[:stall_reason],
             file_path: file_path
           )
         rescue ArgumentError => e
