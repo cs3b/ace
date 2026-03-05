@@ -58,12 +58,16 @@ module Ace
           when /Missing required field: title/,
                /Missing recommended field: title/
             fix_missing_title(issue[:location])
+          when /Derived field 'location' should not be stored in frontmatter/
+            fix_remove_location(issue[:location])
           when /Field 'tags' is not an array/
             fix_tags_not_array(issue[:location])
           when /Missing recommended field: tags/
             fix_missing_tags(issue[:location])
           when /Missing recommended field: created_at/
             fix_missing_created_at(issue[:location])
+          when /Legacy status value: 'cancelled'/
+            fix_legacy_cancelled_status(issue[:location])
           when /terminal status.*not in _archive/
             fix_move_to_archive(issue[:location])
           when /in _archive\/ but status is/
@@ -103,7 +107,9 @@ module Ace
           /Missing recommended field: title/,
           /Missing recommended field: tags/,
           /Missing recommended field: created_at/,
+          /Derived field 'location' should not be stored in frontmatter/,
           /Field 'tags' is not an array/,
+          /Legacy status value: 'cancelled'/,
           /terminal status.*not in _archive/,
           /in _archive\/ but status is/,
           /in _maybe\/ with terminal status/,
@@ -177,6 +183,22 @@ module Ace
           update_frontmatter_field(file_path, "tags", [], "Coerced 'tags' field to empty array")
         end
 
+        def fix_remove_location(file_path)
+          return false unless file_path && File.exist?(file_path)
+
+          content = File.read(file_path)
+          frontmatter, body = Ace::Support::Items::Atoms::FrontmatterParser.parse(content)
+          return (@skipped_count += 1; false) unless frontmatter.is_a?(Hash)
+          return (@skipped_count += 1; false) unless frontmatter.key?("location")
+
+          updated = frontmatter.dup
+          updated.delete("location")
+          cleaned_body = body.to_s.sub(/\A\n/, "")
+          new_content = Ace::Support::Items::Atoms::FrontmatterSerializer.rebuild(updated, cleaned_body)
+
+          apply_file_fix(file_path, new_content, "Removed derived 'location' field from frontmatter")
+        end
+
         def fix_missing_tags(file_path)
           update_frontmatter_field(file_path, "tags", [], "Added missing 'tags' field with empty array")
         end
@@ -201,6 +223,15 @@ module Ace
                        end
 
           update_frontmatter_field(file_path, "created_at", created_at, "Added missing 'created_at' field decoded from ID")
+        end
+
+        def fix_legacy_cancelled_status(file_path)
+          update_frontmatter_field(
+            file_path,
+            "status",
+            "obsolete",
+            "Updated legacy status from 'cancelled' to 'obsolete'"
+          )
         end
 
         def fix_move_to_archive(file_path)

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.4] - 2026-03-05
+
+### Fixed
+- Legacy `cancelled` idea statuses are now normalized to `obsolete` in idea loading and display stats so `ace-idea list` no longer surfaces a non-canonical status bucket.
+
+### Changed
+- Frontmatter validation now emits a warning when derived `location` metadata is stored in idea frontmatter.
+- Doctor auto-fix now supports migrating legacy `cancelled` status to `obsolete`.
+- Doctor auto-fix now supports removing derived `location` from idea frontmatter.
+
+### Technical
+- Added regression tests for legacy status normalization in formatter output.
+- Added validator and fixer tests for `location` cleanup and `cancelled` migration paths.
+
 ## [0.13.3] - 2026-03-05
 
 ### Changed

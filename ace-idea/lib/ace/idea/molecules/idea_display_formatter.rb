@@ -21,12 +21,22 @@ module Ace
 
         # Return the status symbol with ANSI color applied.
         def self.colored_status_sym(status)
-          sym = STATUS_SYMBOLS[status] || "○"
-          color = STATUS_COLORS[status]
+          normalized = normalize_status(status)
+          sym = STATUS_SYMBOLS[normalized] || "○"
+          color = STATUS_COLORS[normalized]
           color ? Ace::Support::Items::Atoms::AnsiColors.colorize(sym, color) : sym
         end
 
         private_class_method :colored_status_sym
+
+        def self.normalize_status(status)
+          value = status.to_s
+          return "obsolete" if value == "cancelled"
+
+          value
+        end
+
+        private_class_method :normalize_status
 
         # Format a single idea for display
         # @param idea [Idea] Idea to format
@@ -102,8 +112,14 @@ module Ace
         # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
         # @return [String] e.g. "Ideas: ○ 3 | ▶ 1 | ✓ 2 • 3 of 8"
         def self.format_stats_line(ideas, total_count: nil, global_folder_stats: nil)
-          stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(ideas, :status)
-          folder_stats = Ace::Support::Items::Atoms::ItemStatistics.count_by(ideas, :special_folder)
+          stats = { total: ideas.size, by_field: Hash.new(0) }
+          folder_stats = { total: ideas.size, by_field: Hash.new(0) }
+
+          ideas.each do |idea|
+            stats[:by_field][normalize_status(idea.status)] += 1
+            folder_stats[:by_field][idea.special_folder] += 1
+          end
+
           Ace::Support::Items::Atoms::StatsLineFormatter.format(
             label: "Ideas",
             stats: stats,

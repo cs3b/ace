@@ -113,6 +113,23 @@ class IdeaFrontmatterValidatorTest < AceIdeaTestCase
     end
   end
 
+  def test_validates_legacy_cancelled_status_value
+    with_ideas_dir do |root|
+      file = write_idea_file(root, "legacy-cancelled", <<~CONTENT)
+        ---
+        id: abc123
+        status: cancelled
+        title: Test
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:message].include?("Legacy status value: 'cancelled'") }
+    end
+  end
+
   def test_validates_invalid_id_format
     with_ideas_dir do |root|
       file = write_idea_file(root, "bad-id", <<~CONTENT)
@@ -144,6 +161,24 @@ class IdeaFrontmatterValidatorTest < AceIdeaTestCase
 
       issues = Validator.validate(file)
       assert issues.any? { |i| i[:message].include?("not an array") }
+    end
+  end
+
+  def test_warns_when_location_present_in_frontmatter
+    with_ideas_dir do |root|
+      file = write_idea_file(root, "location-present", <<~CONTENT)
+        ---
+        id: abc123
+        status: pending
+        title: Test
+        location: archived
+        tags: []
+        created_at: 2026-02-28 12:00:00
+        ---
+      CONTENT
+
+      issues = Validator.validate(file)
+      assert issues.any? { |i| i[:message].include?("Derived field 'location' should not be stored in frontmatter") }
     end
   end
 

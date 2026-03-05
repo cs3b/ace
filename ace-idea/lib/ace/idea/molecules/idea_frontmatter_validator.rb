@@ -96,13 +96,19 @@ module Ace
             end
 
             # Validate status value
-            if frontmatter["status"] && !Atoms::IdeaValidationRules.valid_status?(frontmatter["status"])
+            if frontmatter["status"] == "cancelled"
+              issues << { type: :error, message: "Legacy status value: 'cancelled' (use 'obsolete')", location: file_path }
+            elsif frontmatter["status"] && !Atoms::IdeaValidationRules.valid_status?(frontmatter["status"])
               issues << { type: :error, message: "Invalid status value: '#{frontmatter["status"]}'", location: file_path }
             end
 
             # Validate tags is an array
             if frontmatter.key?("tags") && !frontmatter["tags"].is_a?(Array)
               issues << { type: :warning, message: "Field 'tags' is not an array", location: file_path }
+            end
+
+            if frontmatter.key?("location")
+              issues << { type: :warning, message: "Derived field 'location' should not be stored in frontmatter", location: file_path }
             end
           end
 
