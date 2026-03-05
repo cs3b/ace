@@ -127,9 +127,22 @@ This is equivalent to calling `resolve_file` with the appropriate patterns, but 
 ace-config follows the ATOM pattern:
 
 - **Atoms** - Pure functions (DeepMerger, YamlParser, PathExpander)
-- **Molecules** - Focused operations (ConfigFinder, ProjectRootFinder, YamlLoader)
+- **Molecules** - Focused operations (ConfigFinder, ProjectConfigScanner, ProjectRootFinder, YamlLoader)
 - **Organisms** - Business logic (ConfigResolver, VirtualConfigResolver)
 - **Models** - Data structures (Config, CascadePath)
+
+## ConfigFinder vs ProjectConfigScanner
+
+Two molecules handle config discovery with complementary traversal directions:
+
+| | `ConfigFinder` | `ProjectConfigScanner` |
+|---|---|---|
+| **Direction** | Upward (CWD → root) | Downward (root → packages) |
+| **Use case** | Resolve config for current context | Discover all configs across monorepo |
+| **Returns** | Ordered list of config file paths | Map of `location => files` |
+| **Typical caller** | `ConfigResolver` (cascade resolution) | Tooling that needs cross-package awareness |
+
+Use `ConfigFinder` when you need the effective config for a single invocation context. Use `ProjectConfigScanner` when you need to enumerate config across all packages (e.g., linting, reporting, migration tools).
 
 ## Directory Naming Conventions
 

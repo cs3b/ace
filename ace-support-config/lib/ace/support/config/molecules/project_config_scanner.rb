@@ -20,7 +20,8 @@ module Ace
         #   # => { "." => "/project/.ace/git/commit.yml" }
         class ProjectConfigScanner
           # Directories to skip during traversal
-          SKIP_DIRS = %w[.git .cache vendor node_modules tmp coverage].freeze
+          SKIP_DIRS = %w[.git .cache vendor node_modules tmp coverage
+                         .bundle _legacy .ace-local .ace-tasks .ace-taskflow].freeze
 
           # @param project_root [String, nil] Root directory to scan (default: Dir.pwd)
           # @param config_dir [String] Config folder name (default: ".ace")
@@ -31,18 +32,11 @@ module Ace
 
           # Scan project tree for all config folders and their files
           #
+          # Results are memoized so multiple calls reuse one traversal.
+          #
           # @return [Hash{String => Array<String>}] Map of relative location => config file list
           def scan
-            return {} unless Dir.exist?(@project_root)
-
-            result = {}
-
-            find_ace_dirs.each do |ace_dir_abs|
-              location = relative_location(ace_dir_abs)
-              result[location] = enumerate_config_files(ace_dir_abs)
-            end
-
-            result
+            @scan_result ||= perform_scan
           end
 
           # Find all instances of a specific config file across the project
@@ -74,25 +68,56 @@ module Ace
 
           private
 
+          # Perform the actual filesystem scan (called once; result memoized by scan)
+          def perform_scan
+            return {} unless Dir.exist?(@project_root)
+
+            result = {}
+
+            find_ace_dirs.each do |ace_dir_abs|
+              location = relative_location(ace_dir_abs)
+              result[location] = enumerate_config_files(ace_dir_abs)
+            end
+
+            result
+          end
+
           # Find all .ace directories in the project tree
           def find_ace_dirs
+            seen_real = {}
             dirs = []
 
             # Check root config dir first
             root_ace = File.join(@project_root, @config_dir)
-            dirs << root_ace if Dir.exist?(root_ace)
+            if Dir.exist?(root_ace)
+              real = File.realpath(root_ace)
+              seen_real[real] = true
+              dirs << root_ace
+            end
 
             # Find nested config dirs (Dir.glob with FNM_DOTMATCH to match hidden dirs)
-            begin
-              Dir.glob("**/#{@config_dir}", base: @project_root, flags: File::FNM_DOTMATCH).sort.each do |rel|
-                next if rel == @config_dir # already handled root
-                next if skip_path?(rel)
-
-                abs = File.join(@project_root, rel)
-                dirs << abs if Dir.exist?(abs)
-              end
+            glob_results = begin
+              Dir.glob("**/#{@config_dir}", File::FNM_DOTMATCH, base: @project_root).sort
             rescue Errno::EACCES
-              # Permission denied on some path - return what we have
+              []
+            end
+
+            glob_results.each do |rel|
+              next if rel == @config_dir # already handled root
+              next if skip_path?(rel)
+
+              begin
+                abs = File.join(@project_root, rel)
+                next unless Dir.exist?(abs)
+
+                real = File.realpath(abs)
+                next if seen_real[real]
+
+                seen_real[real] = true
+                dirs << abs
+              rescue Errno::EACCES
+                next # skip this one path, continue scanning
+              end
             end
 
             dirs
