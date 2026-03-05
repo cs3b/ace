@@ -50,7 +50,7 @@ module Ace
             File.write(last_msg_file, result[:text]) if existing.empty?
           end
 
-          write_session_metadata(last_msg_file, result)
+          write_session_metadata(last_msg_file, result, prompt: "/ace-assign-drive #{scoped_assignment}")
 
           result
         rescue Ace::LLM::Error => e
@@ -61,17 +61,33 @@ module Ace
 
         attr_reader :config, :query_interface
 
-        def write_session_metadata(last_msg_file, result)
+        def write_session_metadata(last_msg_file, result, prompt:)
           return unless last_msg_file
+
+          session_id = result.dig(:metadata, :session_id)
+
+          if session_id.nil? || session_id.to_s.strip.empty?
+            detected = detect_provider_session(result[:provider], prompt)
+            session_id = detected&.dig(:session_id)
+          end
 
           session_meta_file = last_msg_file.sub(/-last-message\.md$/, "-session.yml")
           meta = {
-            "session_id" => result.dig(:metadata, :session_id),
+            "session_id" => session_id,
             "provider" => result[:provider],
             "model" => result[:model],
             "completed_at" => Time.now.utc.iso8601
           }.compact
           File.write(session_meta_file, meta.to_yaml) unless meta.empty?
+        end
+
+        def detect_provider_session(provider, prompt)
+          require "ace/llm/providers/cli/molecules/session_finder"
+          Ace::LLM::Providers::CLI::Molecules::SessionFinder.call(
+            provider: provider, working_dir: Dir.pwd, prompt: prompt
+          )
+        rescue LoadError, StandardError
+          nil
         end
 
         def build_last_message_file(cache_dir, fork_root)
