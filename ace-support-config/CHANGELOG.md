@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-03-05
+
+### Technical
+- Document `ProjectConfigScanner` in README with molecule list and comparison table vs `ConfigFinder`
+
+## [0.8.2] - 2026-03-05
+
+### Fixed
+- Narrow `Errno::EACCES` rescue in `ProjectConfigScanner#find_ace_dirs` to per-path scope so a permission error on one directory does not abort the entire scan
+
+### Technical
+- Add test for graceful degradation when a subdirectory is permission-restricted
+
+## [0.8.1] - 2026-03-05
+
+### Fixed
+- Expand `SKIP_DIRS` in `ProjectConfigScanner` to include `.bundle`, `_legacy`, `.ace-local`, `.ace-tasks`, `.ace-taskflow` preventing false-positive config discovery in monorepo-ignored paths
+- Memoize `scan` results to avoid repeated full filesystem traversals on multiple calls
+- Deduplicate symlinked `.ace` directories using `File.realpath` tracking
+- Use portable positional flags form for `Dir.glob` (`File::FNM_DOTMATCH` as positional arg)
+
 ## [0.8.0] - 2026-03-05
 
 ### Added
