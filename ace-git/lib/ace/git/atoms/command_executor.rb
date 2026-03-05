@@ -206,8 +206,12 @@ module Ace
           # Get list of changed files
           # @param range [String] Git range to check
           # @return [Array<String>] List of changed file paths
-          def changed_files(range = "origin/main...HEAD")
-            result = execute("git", "diff", "--name-only", range)
+          def changed_files(range = nil)
+            range = "origin/main...HEAD" if range.nil? && ref_exists?("origin/main")
+            args = ["git", "diff", "--name-only"]
+            args << range if range && !range.empty?
+
+            result = execute(*args)
             return [] unless result[:success]
 
             result[:output].split("\n").map(&:strip).reject(&:empty?)
@@ -230,6 +234,17 @@ module Ace
           def has_untracked_changes?
             result = execute("git", "ls-files", "--others", "--exclude-standard")
             result[:success] && !result[:output].strip.empty?
+          end
+
+          # Check whether a git reference exists in the repository.
+          #
+          # @param ref [String] Git ref to validate
+          # @return [Boolean] True if ref resolves, false otherwise
+          def ref_exists?(ref)
+            return false if ref.nil? || ref.strip.empty?
+
+            result = execute("git", "rev-parse", "--verify", "#{ref}^{}")
+            result[:success]
           end
         end
       end

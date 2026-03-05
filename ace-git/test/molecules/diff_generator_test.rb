@@ -164,6 +164,108 @@ class DiffGeneratorTest < AceGitTestCase
     assert_includes executor.last_args, "-w"
   end
 
+  def test_generate_defaults_to_tracking_ref_when_tracking_exists
+    config = Ace::Git::Models::DiffConfig.new
+
+    executor = Object.new
+    def executor.has_unstaged_changes?
+      false
+    end
+
+    def executor.has_staged_changes?
+      false
+    end
+
+    def executor.tracking_branch
+      "feature/001"
+    end
+
+    def executor.ref_exists?(ref)
+      ref == "feature/001"
+    end
+
+    def executor.execute(*args, timeout: nil)
+      @last_args = args
+      { success: true, output: "diff output" }
+    end
+
+    def executor.last_args
+      @last_args
+    end
+
+    result = Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
+    assert_equal "diff output", result
+    assert_includes executor.last_args, "feature/001...HEAD"
+  end
+
+  def test_generate_falls_back_to_origin_main_when_tracking_missing
+    config = Ace::Git::Models::DiffConfig.new
+
+    executor = Object.new
+    def executor.has_unstaged_changes?
+      false
+    end
+
+    def executor.has_staged_changes?
+      false
+    end
+
+    def executor.tracking_branch
+      nil
+    end
+
+    def executor.ref_exists?(ref)
+      ref == "origin/main"
+    end
+
+    def executor.execute(*args, timeout: nil)
+      @last_args = args
+      { success: true, output: "diff output" }
+    end
+
+    def executor.last_args
+      @last_args
+    end
+
+    result = Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
+    assert_equal "diff output", result
+    assert_includes executor.last_args, "origin/main...HEAD"
+  end
+
+  def test_generate_falls_back_to_last_commit_when_no_remote_ref_exists
+    config = Ace::Git::Models::DiffConfig.new
+
+    executor = Object.new
+    def executor.has_unstaged_changes?
+      false
+    end
+
+    def executor.has_staged_changes?
+      false
+    end
+
+    def executor.tracking_branch
+      "origin/main"
+    end
+
+    def executor.ref_exists?(ref)
+      ref == "HEAD~1"
+    end
+
+    def executor.execute(*args, timeout: nil)
+      @last_args = args
+      { success: true, output: "diff output" }
+    end
+
+    def executor.last_args
+      @last_args
+    end
+
+    result = Ace::Git::Molecules::DiffGenerator.generate(config, executor: executor)
+    assert_equal "diff output", result
+    assert_includes executor.last_args, "HEAD~1..HEAD"
+  end
+
   def test_generate_smart_default_uses_unstaged_when_available
     config = Ace::Git::Models::DiffConfig.new
 

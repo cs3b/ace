@@ -122,11 +122,13 @@ module Ace
             # Default: branch diff against origin/main or tracking branch
             tracking = executor.tracking_branch
             if tracking
-              return "#{tracking}...HEAD"
+              return "#{tracking}...HEAD" if executor.respond_to?(:ref_exists?) && executor.ref_exists?(tracking)
             end
 
-            # Fallback: diff against origin/main
-            "origin/main...HEAD"
+            return "origin/main...HEAD" if executor.respond_to?(:ref_exists?) && executor.ref_exists?("origin/main")
+            return "HEAD~1..HEAD" if executor.respond_to?(:ref_exists?) && executor.ref_exists?("HEAD~1")
+
+            nil
           end
 
           # Build git diff command with configuration options
