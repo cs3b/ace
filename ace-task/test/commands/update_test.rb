@@ -157,4 +157,88 @@ class UpdateCommandTest < AceTaskTestCase
 
     refute commit_called, "Expected GitCommitter.commit NOT to be called"
   end
+
+  def test_update_subtask_move_to_archive_prints_soft_block_info
+    parent_dir = File.join(@tasks_dir, "8pp.t.abc-parent-task")
+    FileUtils.mkdir_p(parent_dir)
+    File.write(File.join(parent_dir, "8pp.t.abc-parent-task.s.md"), <<~CONTENT)
+      ---
+      id: 8pp.t.abc
+      status: pending
+      title: Parent Task
+      ---
+    CONTENT
+
+    sub_done = File.join(parent_dir, "0-first-subtask")
+    FileUtils.mkdir_p(sub_done)
+    File.write(File.join(sub_done, "8pp.t.abc.0-first-subtask.s.md"), <<~CONTENT)
+      ---
+      id: 8pp.t.abc.0
+      status: done
+      title: First subtask
+      parent: 8pp.t.abc
+      ---
+    CONTENT
+
+    sub_pending = File.join(parent_dir, "1-second-subtask")
+    FileUtils.mkdir_p(sub_pending)
+    File.write(File.join(sub_pending, "8pp.t.abc.1-second-subtask.s.md"), <<~CONTENT)
+      ---
+      id: 8pp.t.abc.1
+      status: pending
+      title: Second subtask
+      parent: 8pp.t.abc
+      ---
+    CONTENT
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["update", "abc.0", "--move-to", "archive"])
+    end.first
+
+    assert_match(/Task updated/, output)
+    assert_match(/Info: Subtask 8pp\.t\.abc\.0 was not archived/, output)
+    refute Dir.exist?(File.join(@tasks_dir, "_archive"))
+  end
+
+  def test_update_subtask_move_to_archive_prints_parent_archived_info
+    parent_dir = File.join(@tasks_dir, "8pp.t.zzz-parent-task")
+    FileUtils.mkdir_p(parent_dir)
+    File.write(File.join(parent_dir, "8pp.t.zzz-parent-task.s.md"), <<~CONTENT)
+      ---
+      id: 8pp.t.zzz
+      status: pending
+      title: Parent Task
+      ---
+    CONTENT
+
+    sub_done = File.join(parent_dir, "0-first-subtask")
+    FileUtils.mkdir_p(sub_done)
+    File.write(File.join(sub_done, "8pp.t.zzz.0-first-subtask.s.md"), <<~CONTENT)
+      ---
+      id: 8pp.t.zzz.0
+      status: done
+      title: First subtask
+      parent: 8pp.t.zzz
+      ---
+    CONTENT
+
+    sub_skipped = File.join(parent_dir, "1-second-subtask")
+    FileUtils.mkdir_p(sub_skipped)
+    File.write(File.join(sub_skipped, "8pp.t.zzz.1-second-subtask.s.md"), <<~CONTENT)
+      ---
+      id: 8pp.t.zzz.1
+      status: skipped
+      title: Second subtask
+      parent: 8pp.t.zzz
+      ---
+    CONTENT
+
+    output = capture_io do
+      Ace::Task::TaskCLI.start(["update", "zzz.0", "--move-to", "archive"])
+    end.first
+
+    assert_match(/Task updated.*_archive/, output)
+    assert_match(/Info: Archived parent task 8pp\.t\.zzz because all subtasks are terminal\./, output)
+    assert_equal 1, Dir.glob(File.join(@tasks_dir, "_archive", "**", "8pp.t.zzz-parent-task")).length
+  end
 end

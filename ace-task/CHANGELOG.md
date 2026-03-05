@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.3] - 2026-03-05
+
+### Fixed
+- `update --move-to archive` now handles subtasks safely: it soft-skips direct subtask archive when sibling subtasks are not all terminal, and archives the parent task folder when all subtasks are terminal.
+- `doctor --auto-fix` archive moves now use standard archive partition routing and no longer strand subtask folders at archive partition root.
+- `doctor --auto-fix` now skips unsafe subtask archive moves when sibling subtasks are not all terminal.
+
+### Changed
+- `update` command now prints informational notes for soft-skipped subtask archive requests and automatic parent archive behavior.
+- Added regression coverage for subtask archive workflow in `TaskManager`, `update` CLI command, and `TaskDoctorFixer`.
+
 ## [0.20.2] - 2026-03-04
 
 ### Fixed

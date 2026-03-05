@@ -203,6 +203,57 @@ class TaskDoctorFixerTest < AceTaskTestCase
     end
   end
 
+  def test_fix_move_to_archive_moves_into_partitioned_archive_path
+    with_tasks_dir do |root|
+      task_dir = create_task_fixture(root, id: "8pp.t.q7w", slug: "done-task", status: "done")
+      spec_file = File.join(task_dir, "8pp.t.q7w-done-task.s.md")
+
+      fixer = Fixer.new(dry_run: false, root_dir: root)
+      result = fixer.fix_issue({ message: "Task with terminal status 'done' not in _archive/", location: spec_file })
+      assert result
+
+      archived_dirs = Dir.glob(File.join(root, "_archive", "**", "8pp.t.q7w-done-task"))
+      assert_equal 1, archived_dirs.length
+      refute Dir.exist?(task_dir), "Original task directory should be moved"
+    end
+  end
+
+  def test_fix_move_to_archive_skips_subtask_when_siblings_not_terminal
+    with_tasks_dir do |root|
+      parent_dir = create_task_fixture(root, id: "8pp.t.abc", slug: "parent-task", status: "pending")
+
+      sub_done_dir = File.join(parent_dir, "0-first-subtask")
+      FileUtils.mkdir_p(sub_done_dir)
+      sub_done_file = File.join(sub_done_dir, "8pp.t.abc.0-first-subtask.s.md")
+      File.write(sub_done_file, <<~CONTENT)
+        ---
+        id: 8pp.t.abc.0
+        status: done
+        title: First subtask
+        parent: 8pp.t.abc
+        ---
+      CONTENT
+
+      sub_pending_dir = File.join(parent_dir, "1-second-subtask")
+      FileUtils.mkdir_p(sub_pending_dir)
+      File.write(File.join(sub_pending_dir, "8pp.t.abc.1-second-subtask.s.md"), <<~CONTENT)
+        ---
+        id: 8pp.t.abc.1
+        status: pending
+        title: Second subtask
+        parent: 8pp.t.abc
+        ---
+      CONTENT
+
+      fixer = Fixer.new(dry_run: false, root_dir: root)
+      result = fixer.fix_issue({ message: "Task with terminal status 'done' not in _archive/", location: sub_done_file })
+      refute result
+
+      assert Dir.exist?(parent_dir), "Parent should remain in place when siblings are not terminal"
+      assert_equal 0, Dir.glob(File.join(root, "_archive", "**", "8pp.t.abc-parent-task")).length
+    end
+  end
+
   private
 
   def create_task_spec(root, id, slug, content)

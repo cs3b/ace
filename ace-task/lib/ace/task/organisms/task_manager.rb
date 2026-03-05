@@ -7,6 +7,7 @@ require_relative "../molecules/task_loader"
 require_relative "../molecules/task_creator"
 require_relative "../molecules/subtask_creator"
 require_relative "../molecules/task_reparenter"
+require_relative "../atoms/task_validation_rules"
 
 module Ace
   module Task
@@ -21,7 +22,10 @@ module Ace
         def initialize(root_dir: nil, config: nil)
           @config = config || load_config
           @root_dir = root_dir || resolve_root_dir
+          @last_update_note = nil
         end
+
+        attr_reader :last_update_note
 
         # Create a new task.
         # @param title [String] Task title
@@ -93,6 +97,7 @@ module Ace
         # @param move_as_child_of [String, nil] Reparent: parent ref, "none" (promote), "self" (orchestrator)
         # @return [Models::Task, nil] Updated task or nil if not found
         def update(ref, set: {}, add: {}, remove: {}, move_to: nil, move_as_child_of: nil)
+          @last_update_note = nil
           scan_result = resolve_scan_result(ref)
           return nil unless scan_result
 
@@ -113,18 +118,26 @@ module Ace
           # Apply move if requested
           current_path = task.path
           current_special = task.special_folder
+          current_id = task.id
           if move_to
-            mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
-            new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
-              mover.move_to_root(task)
+            if archive_move_for_subtask?(task, move_to)
+              result = handle_subtask_archive_move(task, loader)
+              current_path = result[:path]
+              current_special = result[:special_folder]
+              current_id = result[:id]
             else
-              archive_date = parse_archive_date(task)
-              mover.move(task, to: move_to, date: archive_date)
+              mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+              new_path = if Ace::Support::Items::Atoms::SpecialFolderDetector.move_to_root?(move_to)
+                mover.move_to_root(task)
+              else
+                archive_date = parse_archive_date(task)
+                mover.move(task, to: move_to, date: archive_date)
+              end
+              current_path = new_path
+              current_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
+                new_path, root: @root_dir
+              )
             end
-            current_path = new_path
-            current_special = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
-              new_path, root: @root_dir
-            )
           end
 
           # Reparent if requested (mutually exclusive with move_to)
@@ -143,7 +156,7 @@ module Ace
           end
 
           # Reload and return updated task
-          loader.load(current_path, id: task.id, special_folder: current_special)
+          loader.load(current_path, id: current_id, special_folder: current_special)
         end
 
         # Create a subtask within a parent task.
@@ -265,6 +278,57 @@ module Ace
           when DateTime then raw.to_time
           else Time.parse(raw.to_s) rescue nil
           end
+        end
+
+        def archive_move_for_subtask?(task, move_to)
+          normalized = Ace::Support::Items::Atoms::SpecialFolderDetector.normalize(move_to)
+          task.subtask? && normalized == "_archive"
+        end
+
+        def handle_subtask_archive_move(task, loader)
+          parent = show(task.parent_id)
+          unless parent
+            @last_update_note = "Subtask #{task.id} was not archived because parent task '#{task.parent_id}' was not found."
+            return {
+              path: task.path,
+              special_folder: task.special_folder,
+              id: task.id
+            }
+          end
+
+          parent_with_subtasks = loader.load(parent.path, id: parent.id, special_folder: parent.special_folder)
+          subtasks = parent_with_subtasks&.subtasks || []
+          all_terminal = subtasks.any? &&
+            subtasks.all? { |st| Atoms::TaskValidationRules.terminal_status?(st.status.to_s.downcase) }
+
+          unless all_terminal
+            @last_update_note = "Subtask #{task.id} was not archived because sibling subtasks are not all terminal."
+            return {
+              path: task.path,
+              special_folder: task.special_folder,
+              id: task.id
+            }
+          end
+
+          unless Atoms::TaskValidationRules.terminal_status?(parent.status.to_s.downcase)
+            Ace::Support::Items::Molecules::FieldUpdater.update(
+              parent.file_path, set: { "status" => "done" }
+            )
+            parent = loader.load(parent.path, id: parent.id, special_folder: parent.special_folder)
+          end
+
+          mover = Ace::Support::Items::Molecules::FolderMover.new(@root_dir)
+          new_parent_path = mover.move(parent, to: "archive", date: parse_archive_date(parent))
+          new_special_folder = Ace::Support::Items::Atoms::SpecialFolderDetector.detect_in_path(
+            new_parent_path, root: @root_dir
+          )
+
+          @last_update_note = "Archived parent task #{parent.id} because all subtasks are terminal."
+          {
+            path: File.join(new_parent_path, File.basename(task.path)),
+            special_folder: new_special_folder,
+            id: task.id
+          }
         end
 
         # Value accessor for FilterApplier
