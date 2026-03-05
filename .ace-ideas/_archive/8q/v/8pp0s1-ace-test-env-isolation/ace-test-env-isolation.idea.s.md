@@ -1,11 +1,10 @@
 ---
-
 id: 8pp0s1
-status: pending
+status: done
 title: ace test env isolation
 tags: []
-created_at: "2026-02-28 17:37:36"
-source: "user"
+created_at: '2026-02-28 17:37:36'
+source: user
 ---
 
 # ace test env isolation

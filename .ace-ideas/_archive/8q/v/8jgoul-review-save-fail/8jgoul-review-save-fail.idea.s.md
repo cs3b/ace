@@ -1,7 +1,7 @@
 ---
 source: legacy
 id: 8jgoul
-status: pending
+status: done
 title: Bug in llm query gpt5 review persistence
 tags: []
 created_at: '2026-03-03 13:41:44'

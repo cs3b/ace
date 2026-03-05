@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: maybe
 id: 8l5i3l
 title: add frontmeta to each workflow instruction so w
