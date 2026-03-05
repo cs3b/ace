@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.766] - 2026-03-05
+
+### Added
+
+- **ace-llm-providers-cli v0.22.0**: Provider-specific session finders (atoms) for Claude, Codex, Pi, Gemini, and OpenCode that detect fork sessions by scanning each provider's local session storage and matching by prompt.
+- **ace-llm-providers-cli v0.22.0**: `SessionFinder` molecule dispatcher that routes session detection to the correct provider-specific atom.
+- **ace-assign v0.20.0**: Provider-specific session detection fallback in `ForkSessionLauncher` — when a provider doesn't return a native `session_id`, scans local session storage via `SessionFinder` to detect the forked session by prompt matching.
+- **ace-assign v0.20.0**: Session metadata file (`<root>-session.yml`) written for every fork run, capturing `session_id`, `provider`, `model`, and `completed_at` for traceability.
+- **ace-assign v0.20.0**: Stall error messages now include `Session: <id>` when session metadata is available, enabling direct trace to agent session.
+
 ## [0.9.765] - 2026-03-05
 
 ### Technical
