@@ -21,6 +21,7 @@ require_relative "config/models/config_group"
 require_relative "config/molecules/yaml_loader"
 require_relative "config/molecules/config_finder"
 require_relative "config/molecules/file_config_resolver"
+require_relative "config/molecules/project_config_scanner"
 
 # Load organisms (depend on molecules)
 require_relative "config/organisms/config_resolver"
