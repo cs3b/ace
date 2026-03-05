@@ -1,13 +1,13 @@
 ---
 title: Automated Task and Subtask Status Update based on Local Changes
 filename_suggestion: feat-taskflow-review-update-tasks
-enhanced_at: 2025-12-21 12:45:06.000000000 +00:00
+enhanced_at: 2025-12-21 12:45:06 +0000
 llm_model: gflash
-source: taskflow:v.0.9.0
+source: "taskflow:v.0.9.0"
 id: 8nkj4i
-status: pending
+status: obsolete
 tags: []
-created_at: '2025-12-21 12:45:00'
+created_at: "2025-12-21 12:45:00"
 ---
 
 # Automated Task and Subtask Status Update based on Local Changes
