@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.6] - 2026-03-05
+
+### Added
+- `create` command now accepts `--status` (`-s`) flag to set initial task status (draft, pending, blocked, etc.) with validation against allowed statuses.
+- `create` command now accepts `--estimate` (`-e`) flag to set effort estimate (e.g. TBD, 2h, 1d) in frontmatter.
+- `estimate:` parameter threaded through `TaskCreator`, `SubtaskCreator`, `TaskManager`, and `TaskFrontmatterDefaults`.
+
 ## [0.20.5] - 2026-03-05
 
 ### Fixed

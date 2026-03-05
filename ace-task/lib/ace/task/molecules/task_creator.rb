@@ -29,7 +29,7 @@ module Ace
         # @param time [Time] Creation time (default: now)
         # @param use_llm_slug [Boolean] Whether to attempt LLM slug generation
         # @return [Models::Task] Created task
-        def create(title, status: nil, priority: nil, tags: [], dependencies: [], time: Time.now.utc, use_llm_slug: false)
+        def create(title, status: nil, priority: nil, tags: [], dependencies: [], time: Time.now.utc, use_llm_slug: false, estimate: nil)
           raise ArgumentError, "Title is required" if title.nil? || title.strip.empty?
 
           # Generate task ID
@@ -58,7 +58,8 @@ module Ace
             priority: priority,
             tags: tags,
             dependencies: dependencies,
-            created_at: time
+            created_at: time,
+            estimate: estimate
           )
 
           # Write spec file with file_slug

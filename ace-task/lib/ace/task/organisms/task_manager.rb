@@ -35,11 +35,11 @@ module Ace
         # @param dependencies [Array<String>] Dependency task IDs
         # @param use_llm_slug [Boolean] Whether to attempt LLM slug generation
         # @return [Models::Task] Created task
-        def create(title, status: nil, priority: nil, tags: [], dependencies: [], use_llm_slug: false)
+        def create(title, status: nil, priority: nil, tags: [], dependencies: [], use_llm_slug: false, estimate: nil)
           ensure_root_dir
           creator = Molecules::TaskCreator.new(root_dir: @root_dir, config: @config)
           creator.create(title, status: status, priority: priority, tags: tags,
-                         dependencies: dependencies, use_llm_slug: use_llm_slug)
+                         dependencies: dependencies, use_llm_slug: use_llm_slug, estimate: estimate)
         end
 
         # Show (load) a single task by reference, including subtasks.
@@ -166,12 +166,12 @@ module Ace
         # @param priority [String, nil] Priority level
         # @param tags [Array<String>] Tags
         # @return [Models::Task, nil] Created subtask or nil if parent not found
-        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [])
+        def create_subtask(parent_ref, title, status: nil, priority: nil, tags: [], estimate: nil)
           parent = show(parent_ref)
           return nil unless parent
 
           subtask_creator = Molecules::SubtaskCreator.new(config: @config)
-          subtask_creator.create(parent, title, status: status, priority: priority, tags: tags)
+          subtask_creator.create(parent, title, status: status, priority: priority, tags: tags, estimate: estimate)
         end
 
         # Get the root directory.
