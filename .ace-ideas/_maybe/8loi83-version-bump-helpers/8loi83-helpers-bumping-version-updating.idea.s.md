@@ -8,7 +8,7 @@ tags: []
 created_at: "2025-10-25 12:08:58"
 ---
 
-# Idea
+# Helpers for version bumping and changelog updates
 
 # think about helpers for bumping version and updati...
 

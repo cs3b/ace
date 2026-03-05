@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8lelh3
-title: Idea
+title: agent that will take all my thoughs very louse an
 tags: []
 created_at: '2025-10-15 14:18:58'
 ---
 
-# Idea
+# agent that will take all my thoughs very louse an
 
 # agent that will take all my thoughs, very louse an...
 

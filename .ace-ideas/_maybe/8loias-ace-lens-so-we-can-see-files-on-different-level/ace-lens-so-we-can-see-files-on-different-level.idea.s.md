@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8loias
-title: Idea
+title: ace lens so we can see files on different level
 tags: []
 created_at: '2025-10-25 12:11:58'
 ---
 
-# Idea
+# ace lens so we can see files on different level
 
 # ace-lens -> so we can see files on different level...
 

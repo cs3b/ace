@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8ldjee
-title: Idea
+title: ace context think about composition layer we
 tags: []
 created_at: '2025-10-14 12:55:59'
 ---
 
-# Idea
+# ace context think about composition layer we
 
 # ace-context -> think about composition layer -> we...
 

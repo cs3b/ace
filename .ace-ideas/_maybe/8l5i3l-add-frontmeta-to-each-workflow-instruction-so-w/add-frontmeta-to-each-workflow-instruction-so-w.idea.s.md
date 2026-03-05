@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8l5i3l
-title: Idea
+title: add frontmeta to each workflow instruction so w
 tags: []
 created_at: '2025-10-06 12:03:58'
 ---
 
-# Idea
+# add frontmeta to each workflow instruction so w
 
 Add frontmeta to each workflow instruction -> so we can load insturctions and all the context automatically
 

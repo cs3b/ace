@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8l4k0w
-title: Idea
+title: we should check for all dependencies at the begin
 tags: []
 created_at: '2025-10-05 13:20:59'
 ---
 
-# Idea
+# we should check for all dependencies at the begin
 
  we should check for all dependencies at the beginning of tha process - if possible, eg.:│ │ Issue 2: Wrong Binary Check                                                                                  │ │
 │ │                                                                                                              │ │
