@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.18] - 2026-03-05
+
+### Fixed
+- Rebase workflow cherry-pick skip detection now uses commit subject matching instead of SHA comparison (cherry-pick produces new SHAs, so SHA-based skip never fired on resume).
+- Rebase workflow Phase 3.3 now restores upstream tracking after `git branch -m` rename, which silently drops the upstream config.
+- Rebase workflow Phase 5 push now uses `-u` flag to guarantee tracking is set after force-push.
+
 ## [0.11.17] - 2026-03-05
 
 ### Changed
