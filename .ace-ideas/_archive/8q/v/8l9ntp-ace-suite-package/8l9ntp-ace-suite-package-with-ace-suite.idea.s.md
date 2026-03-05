@@ -1,5 +1,5 @@
 ---
-status: pending
+status: cancelled
 priority: anyday
 source: "taskflow:v.0.9.0"
 id: 8l9ntp

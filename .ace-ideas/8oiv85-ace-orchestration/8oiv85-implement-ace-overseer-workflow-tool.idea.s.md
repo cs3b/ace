@@ -1,17 +1,16 @@
 ---
-title: 'ACE Overseer: Agentic Workflow Orchestration and Delegation Tool'
+title: "ACE Overseer: Agentic Workflow Orchestration and Delegation Tool"
 filename_suggestion: feat-orchestration-overseer
-enhanced_at: 2026-01-19 20:49:02.000000000 +00:00
+enhanced_at: 2026-01-19 20:49:02 +0000
 location: archived
-archived_reason: converted to task 235 (ace-overseer v0.1.0). Quality progression
-  modes (work/fast/beauty) handled by ace-assign presets. HIL deferred to backlog.
+archived_reason: converted to task 235 (ace-overseer v0.1.0). Quality progression modes (work/fast/beauty) handled by ace-assign presets. HIL deferred to backlog.
 task_ref: v.0.9.0+task.235
 llm_model: gflash
-source: taskflow:v.0.9.0
+source: "taskflow:v.0.9.0"
 id: 8oiv85
-status: pending
+status: cancelled
 tags: []
-created_at: '2026-01-19 20:49:02'
+created_at: "2026-01-19 20:49:02"
 ---
 
 # ACE Overseer: Agentic Workflow Orchestration and Delegation Tool

@@ -1,16 +1,16 @@
 ---
 title: Refactor ace-taskflow Primary Task File Naming Convention
 filename_suggestion: refactor-taskflow-naming-convention
-enhanced_at: 2025-12-20 21:29:33.000000000 +00:00
+enhanced_at: 2025-12-20 21:29:33 +0000
 location: archived
 archived_reason: converted to task 271
 task_ref: v.0.9.0+task.271
 llm_model: gflash
-source: taskflow:v.0.9.0
+source: "taskflow:v.0.9.0"
 id: 8njw83
-status: pending
+status: cancelled
 tags: []
-created_at: '2025-12-20 21:28:58'
+created_at: "2025-12-20 21:28:58"
 ---
 
 # Refactor ace-taskflow Primary Task File Naming Convention
