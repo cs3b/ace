@@ -1,11 +1,11 @@
 ---
 status: pending
 priority: anyday
-source: taskflow:v.0.9.0
+source: "taskflow:v.0.9.0"
 id: 8ldill
-title: Idea
+title: ace-git-commit should stash unrelated changes before committing
 tags: []
-created_at: '2025-10-14 12:23:58'
+created_at: "2025-10-14 12:23:58"
 ---
 
 # Idea
