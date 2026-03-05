@@ -1686,7 +1686,7 @@ class ReviewManagerTest < AceReviewTest
 
     Ace::Review.stub :get, ->(section, key) {
       return true if section == "defaults" && key == "auto_save"
-      return ['^(\d+)-'] if section == "defaults" && key == "auto_save_branch_patterns"
+      return ['^(\d+)-'] if section == "defaults" && key == "task_branch_patterns"
       nil
     } do
       Ace::Git::Molecules::BranchReader.stub :current_branch, "126-feature" do

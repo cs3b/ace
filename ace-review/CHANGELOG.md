@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.6] - 2026-03-05
+
+### Changed
+- Renamed config key `auto_save_branch_patterns` → `task_branch_patterns` to reflect broader usage (task spec resolution, not just auto-save)
+
 ## [0.43.5] - 2026-03-04
 
 ### Fixed
