@@ -1,7 +1,7 @@
 ---
 source: "taskflow:v.0.9.0"
 id: 8nrjmi
-status: pending
+status: obsolute
 title: "Track agent-modified files for ace:commit"
 tags: []
 created_at: "2025-12-28 13:05:00"

@@ -1,13 +1,13 @@
 ---
 title: Standardized Workflow Execution CLI for Claude Code Integration
 filename_suggestion: feat-integration-claude-workflow
-enhanced_at: 2025-12-21 00:05:24.000000000 +00:00
+enhanced_at: 2025-12-21 00:05:24 +0000
 llm_model: gflash
-source: taskflow:v.0.9.0
+source: "taskflow:v.0.9.0"
 id: 8nk04i
-status: pending
+status: obsolete
 tags: []
-created_at: '2025-12-21 00:05:00'
+created_at: "2025-12-21 00:05:00"
 ---
 
 # Standardized Workflow Execution CLI for Claude Code Integration
