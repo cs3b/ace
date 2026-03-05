@@ -1,0 +1,368 @@
+# frozen_string_literal: true
+
+require_relative "../test_helper"
+require "dry/cli"
+
+class CliTest < AceDemoTestCase
+  def invoke(args)
+    stdout, stderr = capture_io do
+      begin
+        @result = Dry::CLI.new(Ace::Demo::CLI).call(arguments: args)
+      rescue SystemExit => e
+        @result = e.status
+      rescue Ace::Core::CLI::Error => e
+        $stderr.puts e.message
+        @result = e.exit_code
+      end
+    end
+
+    { stdout: stdout, stderr: stderr, result: @result }
+  end
+
+  def test_help_lists_record_command
+    result = invoke(["--help"])
+    output = result[:stdout] + result[:stderr]
+
+    assert_includes output, "list"
+    assert_includes output, "show"
+    assert_includes output, "record"
+    assert_includes output, "attach"
+  end
+
+  def test_version_output
+    result = invoke(["--version"])
+    output = result[:stdout] + result[:stderr]
+
+    assert_includes output, "ace-demo"
+    assert_includes output, Ace::Demo::VERSION
+  end
+
+  def test_record_calls_recorder
+    fake_recorder = Class.new do
+      def record(tape_ref:, output:, format:)
+        raise "bad tape" unless tape_ref == "hello"
+        raise "bad output" unless output == "/tmp/x.gif"
+        raise "bad format" unless format == "gif"
+
+        "/tmp/x.gif"
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+      result = invoke(["record", "hello", "--output", "/tmp/x.gif"])
+      assert_includes result[:stdout], "Recorded: /tmp/x.gif"
+    end
+  end
+
+  def test_record_invalid_format_returns_error
+    result = invoke(["record", "hello", "--format", "avi"])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "Unsupported format"
+  end
+
+  def test_attach_calls_attacher
+    fake_attacher = Class.new do
+      def attach(file:, pr:, dry_run:)
+        raise "bad file" unless file == ".ace-local/demo/hello.gif"
+        raise "bad pr" unless pr == "123"
+        raise "bad dry_run" unless dry_run == false
+
+        {
+          dry_run: false,
+          pr: pr,
+          asset_name: "hello-1700.gif",
+          asset_url: "https://github.com/org/repo/releases/download/demo-assets/hello-1700.gif",
+          comment_body: "## Demo: hello"
+        }
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoAttacher.stub(:new, fake_attacher) do
+      result = invoke(["attach", ".ace-local/demo/hello.gif", "--pr", "123"])
+      assert_includes result[:stdout], "Uploaded: hello-1700.gif"
+      assert_includes result[:stdout], "Posted demo comment to PR #123"
+    end
+  end
+
+  def test_record_with_pr_attaches_after_recording
+    fake_recorder = Class.new do
+      def record(tape_ref:, output:, format:)
+        raise "bad tape" unless tape_ref == "hello"
+        raise "bad output" unless output.nil?
+        raise "bad format" unless format == "gif"
+        ".ace-local/demo/hello.gif"
+      end
+    end.new
+
+    fake_attacher = Class.new do
+      def attach(file:, pr:, dry_run:)
+        raise "bad file" unless file == ".ace-local/demo/hello.gif"
+        raise "bad pr" unless pr == "123"
+        raise "bad dry_run" unless dry_run == false
+
+        {
+          dry_run: false,
+          pr: pr,
+          asset_name: "hello-1700.gif",
+          asset_url: "https://github.com/org/repo/releases/download/demo-assets/hello-1700.gif",
+          comment_body: "## Demo: hello"
+        }
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+      Ace::Demo::Organisms::DemoAttacher.stub(:new, fake_attacher) do
+        result = invoke(["record", "hello", "--pr", "123"])
+        assert_includes result[:stdout], "Recorded: .ace-local/demo/hello.gif"
+        assert_includes result[:stdout], "Uploaded: hello-1700.gif"
+      end
+    end
+  end
+
+  def test_record_with_pr_dry_run_prints_preview
+    result = invoke(["record", "hello", "--pr", "123", "--dry-run"])
+    assert_includes result[:stdout], "[dry-run] Would record tape: hello (format: gif)"
+  end
+
+  def test_record_inline_with_commands
+    fake_inline = Class.new do
+      attr_reader :recorded_args
+
+      def record(**kwargs)
+        @recorded_args = kwargs
+        {
+          output_path: ".ace-local/demo/20260305-120000/my-demo.gif",
+          tape_path: ".ace-local/demo/20260305-120000/my-demo.tape",
+          session_dir: ".ace-local/demo/20260305-120000"
+        }
+      end
+    end.new
+
+    Ace::Demo::Molecules::InlineRecorder.stub(:new, fake_inline) do
+      result = invoke(["record", "my-demo", "--", "echo hello"])
+      assert_includes result[:stdout], "Recorded: .ace-local/demo/20260305-120000/my-demo.gif"
+      assert_includes result[:stdout], "Tape: .ace-local/demo/20260305-120000/my-demo.tape"
+      assert_equal "my-demo", fake_inline.recorded_args[:name]
+      assert_equal ["echo hello"], fake_inline.recorded_args[:commands]
+      assert_equal "gif", fake_inline.recorded_args[:format]
+    end
+  end
+
+  def test_record_inline_with_multiple_commands
+    fake_inline = Class.new do
+      attr_reader :recorded_args
+
+      def record(**kwargs)
+        @recorded_args = kwargs
+        {
+          output_path: ".ace-local/demo/20260305-120000/my-demo.gif",
+          tape_path: ".ace-local/demo/20260305-120000/my-demo.tape",
+          session_dir: ".ace-local/demo/20260305-120000"
+        }
+      end
+    end.new
+
+    Ace::Demo::Molecules::InlineRecorder.stub(:new, fake_inline) do
+      result = invoke(["record", "my-demo", "--", "git status", "make deploy"])
+      assert_includes result[:stdout], "Recorded:"
+      assert_equal ["git status", "make deploy"], fake_inline.recorded_args[:commands]
+    end
+  end
+
+  def test_record_inline_with_options
+    fake_inline = Class.new do
+      attr_reader :recorded_args
+
+      def record(**kwargs)
+        @recorded_args = kwargs
+        {
+          output_path: ".ace-local/demo/20260305-120000/my-demo.mp4",
+          tape_path: ".ace-local/demo/20260305-120000/my-demo.tape",
+          session_dir: ".ace-local/demo/20260305-120000"
+        }
+      end
+    end.new
+
+    Ace::Demo::Molecules::InlineRecorder.stub(:new, fake_inline) do
+      result = invoke(["record", "my-demo", "--format", "mp4", "--timeout", "3s",
+                       "--width", "1200", "--height", "600", "--font-size", "20",
+                       "--desc", "A test", "--tags", "ci,test",
+                       "--", "echo hello"])
+      assert_includes result[:stdout], "Recorded:"
+      assert_equal "mp4", fake_inline.recorded_args[:format]
+      assert_equal "3s", fake_inline.recorded_args[:timeout]
+      assert_equal 1200, fake_inline.recorded_args[:width].to_i
+      assert_equal 600, fake_inline.recorded_args[:height].to_i
+      assert_equal 20, fake_inline.recorded_args[:font_size].to_i
+      assert_equal "A test", fake_inline.recorded_args[:description]
+      assert_equal "ci,test", fake_inline.recorded_args[:tags]
+    end
+  end
+
+  def test_record_inline_dry_run_prints_tape_content
+    result = invoke(["record", "my-demo", "--dry-run", "--", "echo hello"])
+
+    assert_includes result[:stdout], 'Type "echo hello"'
+    assert_includes result[:stdout], "Output"
+  end
+
+  def test_record_inline_with_pr
+    fake_inline = Class.new do
+      def record(**_kwargs)
+        {
+          output_path: ".ace-local/demo/20260305-120000/my-demo.gif",
+          tape_path: ".ace-local/demo/20260305-120000/my-demo.tape",
+          session_dir: ".ace-local/demo/20260305-120000"
+        }
+      end
+    end.new
+
+    fake_attacher = Class.new do
+      def attach(file:, pr:, dry_run:)
+        raise "bad file" unless file == ".ace-local/demo/20260305-120000/my-demo.gif"
+        raise "bad pr" unless pr == "123"
+        raise "bad dry_run" unless dry_run == false
+
+        {
+          dry_run: false,
+          pr: pr,
+          asset_name: "my-demo-1700.gif",
+          asset_url: "https://github.com/org/repo/releases/download/demo-assets/my-demo-1700.gif",
+          comment_body: "## Demo: my-demo"
+        }
+      end
+    end.new
+
+    Ace::Demo::Molecules::InlineRecorder.stub(:new, fake_inline) do
+      Ace::Demo::Organisms::DemoAttacher.stub(:new, fake_attacher) do
+        result = invoke(["record", "my-demo", "--pr", "123", "--", "echo hello"])
+        assert_includes result[:stdout], "Recorded:"
+        assert_includes result[:stdout], "Uploaded: my-demo-1700.gif"
+      end
+    end
+  end
+
+  def test_record_without_args_uses_tape_path
+    fake_recorder = Class.new do
+      def record(tape_ref:, output:, format:)
+        raise "bad tape" unless tape_ref == "hello"
+        raise "bad format" unless format == "gif"
+        ".ace-local/demo/hello.gif"
+      end
+    end.new
+
+    Ace::Demo::Organisms::DemoRecorder.stub(:new, fake_recorder) do
+      result = invoke(["record", "hello"])
+      assert_includes result[:stdout], "Recorded: .ace-local/demo/hello.gif"
+    end
+  end
+
+  def test_record_inline_from_stdin
+    fake_inline = Class.new do
+      attr_reader :recorded_args
+
+      def record(**kwargs)
+        @recorded_args = kwargs
+        {
+          output_path: ".ace-local/demo/20260305-120000/stdin-demo.gif",
+          tape_path: ".ace-local/demo/20260305-120000/stdin-demo.tape",
+          session_dir: ".ace-local/demo/20260305-120000"
+        }
+      end
+    end.new
+
+    reader, writer = IO.pipe
+    writer.puts "git status"
+    writer.puts "make deploy"
+    writer.close
+
+    original_stdin = $stdin
+    $stdin = reader
+
+    Ace::Demo::Molecules::InlineRecorder.stub(:new, fake_inline) do
+      result = invoke(["record", "stdin-demo"])
+      assert_includes result[:stdout], "Recorded:"
+      assert_equal ["git status", "make deploy"], fake_inline.recorded_args[:commands]
+    end
+
+    $stdin = original_stdin
+    reader.close
+  end
+
+  def test_attach_requires_pr
+    result = invoke(["attach", ".ace-local/demo/hello.gif"])
+
+    assert_equal 1, result[:result]
+    assert_includes result[:stderr], "PR number is required"
+  end
+
+  def test_list_prints_discovered_tapes
+    fake_scanner = Class.new do
+      def list
+        [
+          { name: "ace-test", description: "Shows ace-test run", source: ".ace-defaults/demo/tapes/" },
+          { name: "hello", description: "Built-in echo demo", source: ".ace/demo/tapes/" }
+        ]
+      end
+    end.new
+
+    Ace::Demo::Molecules::TapeScanner.stub(:new, fake_scanner) do
+      result = invoke(["list"])
+
+      assert_equal "", result[:stderr]
+      assert_includes result[:stdout], "Available demo tapes:"
+      assert_includes result[:stdout], "ace-test"
+      assert_includes result[:stdout], "Built-in echo demo"
+      assert_includes result[:stdout], "(.ace-defaults/demo/tapes/)"
+    end
+  end
+
+  def test_show_prints_metadata_and_contents
+    fake_scanner = Class.new do
+      def find(name)
+        raise "bad name" unless name == "hello"
+
+        {
+          name: "hello",
+          display_path: ".ace-defaults/demo/tapes/hello.tape",
+          description: "Built-in echo demo",
+          metadata: {
+            "description" => "Built-in echo demo",
+            "tags" => "example, getting-started",
+            "author" => "ace"
+          },
+          content: "Output .ace-local/demo/hello.gif\n"
+        }
+      end
+    end.new
+
+    Ace::Demo::Molecules::TapeScanner.stub(:new, fake_scanner) do
+      result = invoke(["show", "hello"])
+
+      assert_equal "", result[:stderr]
+      assert_includes result[:stdout], "Tape: hello"
+      assert_includes result[:stdout], "Source: .ace-defaults/demo/tapes/hello.tape"
+      assert_includes result[:stdout], "Description: Built-in echo demo"
+      assert_includes result[:stdout], "Tags: example, getting-started"
+      assert_includes result[:stdout], "--- Contents ---"
+      assert_includes result[:stdout], "Output .ace-local/demo/hello.gif"
+    end
+  end
+
+  def test_show_not_found_returns_error
+    fake_scanner = Class.new do
+      def find(_name)
+        raise Ace::Demo::TapeNotFoundError, "Tape not found: missing\nAvailable tapes: ace-test, hello"
+      end
+    end.new
+
+    Ace::Demo::Molecules::TapeScanner.stub(:new, fake_scanner) do
+      result = invoke(["show", "missing"])
+
+      assert_equal 1, result[:result]
+      assert_includes result[:stderr], "Tape not found: missing"
+      assert_includes result[:stderr], "Available tapes: ace-test, hello"
+    end
+  end
+end

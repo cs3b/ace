@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require_relative "../lib/ace/demo"
+require "dry/cli"
+
+args = ARGV.empty? ? ["--help"] : ARGV
+
+begin
+  Dry::CLI.new(Ace::Demo::CLI).call(arguments: args)
+rescue Ace::Core::CLI::Error => e
+  warn e.message
+  exit(e.exit_code)
+end

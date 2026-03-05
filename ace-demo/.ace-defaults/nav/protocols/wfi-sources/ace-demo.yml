@@ -1,0 +1,19 @@
+---
+# WFI Sources Protocol Configuration for ace-demo gem
+# This enables workflow discovery from the installed ace-demo gem
+
+name: ace-demo
+type: gem
+description: Workflow instructions from ace-demo gem
+priority: 10
+
+# Configuration for workflow discovery within the gem
+config:
+  # Relative path within the gem (default: handbook/workflow-instructions)
+  relative_path: handbook/workflow-instructions
+
+  # Pattern for finding workflow files (default: *.wf.md)
+  pattern: "*.wf.md"
+
+  # Enable discovery
+  enabled: true
