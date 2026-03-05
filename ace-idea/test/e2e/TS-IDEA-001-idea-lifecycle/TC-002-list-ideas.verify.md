@@ -9,7 +9,7 @@ Validation order (impact-first):
 
 1. `ace-idea list` exit code is `0` and output includes the idea created in Goal 1 (by ID or title).
 2. `ace-idea list --status pending` exit code is `0` and output includes the same idea (default status is `pending`).
-3. `ace-idea list --in next` exit code is `0` and output does NOT include the idea (it was created in root, not `_next/`).
+3. `ace-idea list --in next` exit code is `0` and output includes the idea (default `next` scope is root).
 
 ## Verdict
 
