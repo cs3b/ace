@@ -98,6 +98,7 @@ module Ace
             else
               puts "Task updated: #{task.id} #{task.title}"
             end
+            puts "Info: #{manager.last_update_note}" if manager.last_update_note
 
             if options[:git_commit]
               commit_paths = (move_to || move_as_child) ? [manager.root_dir] : [task.path]
