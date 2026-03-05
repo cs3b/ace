@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.767] - 2026-03-05
+
+### Fixed
+
+- **ace-assign v0.20.1**: `fork-run` stall detection now targets the in-progress phase within the subtree instead of the global current phase, preventing `stall_reason` from being written to the wrong phase during parallel fork execution.
+- **ace-assign v0.20.1**: Stall-reason clearing on successful rerun now skips phases that never had a `stall_reason`, avoiding unnecessary file I/O.
+- **ace-llm-providers-cli v0.22.1**: `SessionFinder` dispatcher test now exercises the actual dispatch path instead of calling the Claude finder directly.
+
+### Technical
+
+- **ace-llm-providers-cli v0.22.1**: Added explanatory comments in `OpenCodeSessionFinder` (project_id nil-gate) and `ClaudeSessionFinder` (substring matching rationale).
+
 ## [0.9.766] - 2026-03-05
 
 ### Added
