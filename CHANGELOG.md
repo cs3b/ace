@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.768] - 2026-03-05
+
+### Changed
+
+- **ace-review v0.43.6**: Renamed config key `auto_save_branch_patterns` → `task_branch_patterns` to reflect broader usage (task spec resolution, not just auto-save)
+
+### Technical
+
+- Added `.ace-tasks/**/reviews/` to `.gitignore` for review symlinks (alongside existing `.ace-taskflow/**/reviews/` pattern)
+
 ## [0.9.767] - 2026-03-05
 
 ### Fixed
