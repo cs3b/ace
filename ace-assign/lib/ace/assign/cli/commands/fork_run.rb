@@ -89,7 +89,7 @@ module Ace
             end
 
             unless refreshed_state.subtree_complete?(root_phase.number)
-              active = refreshed_state.current
+              active = refreshed_state.in_progress_in_subtree(root_phase.number).first || refreshed_state.current
               active_msg = active ? " Current phase: #{active.number} (#{active.name})." : ""
               last_msg = read_last_message(assignment.cache_dir, root_phase.number)
               stall_reason = build_stall_reason(last_msg)
@@ -107,9 +107,12 @@ module Ace
             end
 
             # Clear any stale stall_reason left by a previous failed attempt.
-            phase_writer = Molecules::PhaseWriter.new
-            refreshed_state.subtree_phases(root_phase.number).each do |phase|
-              phase_writer.update_frontmatter(phase.file_path, { "stall_reason" => nil })
+            stale_phases = refreshed_state.subtree_phases(root_phase.number).select(&:stall_reason)
+            if stale_phases.any?
+              phase_writer = Molecules::PhaseWriter.new
+              stale_phases.each do |phase|
+                phase_writer.update_frontmatter(phase.file_path, { "stall_reason" => nil })
+              end
             end
 
             puts "Fork subtree #{root_phase.number} completed successfully." unless options[:quiet]

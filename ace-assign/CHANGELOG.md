@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1] - 2026-03-05
+
+### Fixed
+- `fork-run` stall detection now targets the in-progress phase within the subtree (`in_progress_in_subtree`) instead of the global current phase, preventing `stall_reason` from being written to the wrong phase during parallel fork execution.
+- Stall-reason clearing on successful rerun now skips phases that never had a `stall_reason`, avoiding unnecessary file I/O on every subtree phase.
+
 ## [0.20.0] - 2026-03-05
 
 ### Added
