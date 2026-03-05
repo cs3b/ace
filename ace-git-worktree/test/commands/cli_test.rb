@@ -199,6 +199,14 @@ class CliTest < Minitest::Test
     end
   end
 
+  def test_run_create_with_missing_task_returns_error_exit_code
+    stdout, stderr, status = run_exe("create", "--task", "8pp.t.zzz")
+
+    refute status.success?
+    combined_output = stdout + stderr
+    assert_match(/Failed to create worktree|Task not found|ace-task/i, combined_output)
+  end
+
   def test_security_validation_in_task_ids
     skip "Security validation for shell injection in task IDs not yet implemented - see task backlog"
 
