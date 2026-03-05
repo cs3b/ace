@@ -8,7 +8,7 @@ tags: []
 created_at: "2025-09-30 07:57:59"
 ---
 
-# Idea
+# Implement global -C (change directory) option for ace-* CLI commands
 
 ---
 

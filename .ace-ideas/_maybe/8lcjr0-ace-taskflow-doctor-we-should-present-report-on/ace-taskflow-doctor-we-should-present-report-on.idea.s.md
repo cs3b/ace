@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8lcjr0
-title: Idea
+title: ace taskflow doctor we should present report on
 tags: []
 created_at: '2025-10-13 13:10:00'
 ---
 
-# Idea
+# ace taskflow doctor we should present report on
 
 # ace-taskflow doctor :: we should present report on...
 

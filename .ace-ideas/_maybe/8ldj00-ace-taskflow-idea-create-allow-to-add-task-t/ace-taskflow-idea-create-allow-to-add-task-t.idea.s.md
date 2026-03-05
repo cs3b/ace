@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8ldj00
-title: Idea
+title: ace taskflow idea create allow to add task t
 tags: []
 created_at: '2025-10-14 12:40:00'
 ---
 
-# Idea
+# ace taskflow idea create allow to add task t
 
 # ace-idea create :: allow to add --task -t...
 

@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8lhnbp
-title: Idea
+title: there is huge overhead between ace docs and ace co
 tags: []
 created_at: '2025-10-18 15:32:59'
 ---
 
-# Idea
+# there is huge overhead between ace docs and ace co
 
 # there is huge overhead between ace-docs and ace-co
 

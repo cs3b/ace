@@ -2,12 +2,12 @@
 status: pending
 priority: maybe
 id: 8lklas
-title: Idea
+title: have a tool agent command to tailor the con
 tags: []
 created_at: '2025-10-21 14:11:58'
 ---
 
-# Idea
+# have a tool agent command to tailor the con
 
 # have a tool / agent / command -> to tailor the con...
 

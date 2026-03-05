@@ -2,13 +2,13 @@
 
 id: 8pp0s1
 status: pending
-title: Idea
+title: ace test env isolation
 tags: []
 created_at: "2026-02-28 17:37:36"
 source: "user"
 ---
 
-# Idea
+# ace test env isolation
 
 `ace-test` subprocess runners inherit the full parent process environment, including `ACE_ASSIGN_ID` and `ACE_ASSIGN_FORK_ROOT`. When tests run inside an active assignment fork session, these vars change assignment resolution behavior — causing tests that reference `Ace::Assign` to fail or behave differently than they would in a clean environment.
 
