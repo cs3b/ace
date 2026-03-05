@@ -2,9 +2,10 @@
 
 ## Goal
 
-Move the created idea to `_next/` with `ace-idea update {id} --move-to next`.
-Then verify filesystem relocation by confirming the file now exists under
-`.ace-ideas/_next/` and no longer in the root `.ace-ideas/` folder.
+Move the created idea to root scope with `ace-idea update {id} --move-to next`.
+Then verify filesystem state by confirming the idea remains under `.ace-ideas/`
+(root scope), does not create a dedicated `_next/` directory, and is visible in the
+`--in next` listing.
 Also run `ace-idea list --in next` to confirm the moved idea appears in
 the filtered listing.
 
