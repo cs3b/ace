@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.8] - 2026-03-05
+
+### Changed
+- Search result parsing now selects file-only mode when `files_with_matches` is requested, avoiding text-parse assumptions.
+
 ## [0.19.7] - 2026-02-23
 
 ### Technical
