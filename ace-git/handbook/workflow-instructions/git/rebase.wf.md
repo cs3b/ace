@@ -7,7 +7,7 @@ doc-type: workflow
 purpose: Safe rebase workflow with state capture for recovery and verification
 update:
   frequency: on-change
-  last-updated: '2026-01-30'
+  last-updated: '2026-03-05'
 ---
 
 # Rebase Workflow
@@ -210,9 +210,10 @@ git checkout --no-track -B "${original_branch}-rebase-${session_id}" "$target_br
 
 ```bash
 while IFS=' ' read -r sha msg; do
-  # Skip already-applied commits (handles resume after conflict)
-  if git log --format=%H HEAD | grep -q "^${sha}"; then
-    echo "Skipping: $sha $msg"
+  # Skip already-applied commits (use subject — cherry-pick creates new SHAs)
+  subject=$(git log -1 --format=%s "$sha")
+  if git log --format=%s HEAD | grep -qF "$subject"; then
+    echo "Skipping (already applied): $sha - $subject"
     continue
   fi
 
@@ -236,6 +237,8 @@ done < "$cache_dir/commits.txt"
 
 ```bash
 git branch -m "${original_branch}-rebase-${session_id}" "$original_branch"
+# Restore tracking — git branch -m drops upstream config
+git branch --set-upstream-to="origin/${original_branch}" "$original_branch"
 echo "Cherry-pick complete. Backup at: ${original_branch}-backup-${session_id}"
 ```
 
@@ -290,8 +293,8 @@ if ! ace-test; then
   exit 1
 fi
 
-# Force push with explicit refspec (safe regardless of tracking config)
-git push --force-with-lease origin "HEAD:refs/heads/$(git branch --show-current)"
+# Force push and set upstream tracking (-u ensures branch tracks remote after rename)
+git push --force-with-lease -u origin "$(git branch --show-current)"
 ```
 
 ---
