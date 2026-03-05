@@ -35,6 +35,7 @@ _current
 
 # ace-review generated reviews in task folders
 .ace-taskflow/**/reviews/
+.ace-tasks/**/reviews/
 
 # git - worktree 
 .ace-worktrees
