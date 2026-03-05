@@ -8,7 +8,7 @@ class ForkRunCommandTest < AceAssignTestCase
       @cache_base = cache_base
     end
 
-    def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil)
+    def launch(assignment_id:, fork_root:, provider: nil, cli_args: nil, timeout: nil, cache_dir: nil)
       manager = Ace::Assign::Molecules::AssignmentManager.new(cache_base: @cache_base)
       assignment = manager.load(assignment_id)
 
@@ -340,6 +340,192 @@ class ForkRunCommandTest < AceAssignTestCase
       assert state.find_by_number("020").complete?, "Scoped subtree phase should be done"
       refute state.find_by_number("010").complete?, "Outside phase 010 should stay incomplete"
       refute state.find_by_number("030").complete?, "Outside phase 030 should stay incomplete"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_stall_error_includes_last_message_when_file_exists
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assignment = result[:assignment]
+      sessions_dir = File.join(assignment.cache_dir, "sessions")
+      FileUtils.mkdir_p(sessions_dir)
+      File.write(File.join(sessions_dir, "010-last-message.md"), "I need your direction before I continue.")
+
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "010", assignment: assignment.id, quiet: true)
+      end
+
+      assert_includes error.message, "did not complete"
+      assert_includes error.message, "Agent's last message:"
+      assert_includes error.message, "I need your direction before I continue."
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_stall_error_omits_last_message_section_when_file_absent
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "010", assignment: result[:assignment].id, quiet: true)
+      end
+
+      assert_includes error.message, "did not complete"
+      refute_includes error.message, "Agent's last message:"
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_stall_writes_stall_reason_to_active_phase_frontmatter
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assignment = result[:assignment]
+      sessions_dir = File.join(assignment.cache_dir, "sessions")
+      FileUtils.mkdir_p(sessions_dir)
+      File.write(File.join(sessions_dir, "010-last-message.md"), "Unexpected state change encountered.")
+
+      assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "010", assignment: assignment.id, quiet: true)
+      end
+
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      state = scanner.scan(assignment.phases_dir, assignment: assignment)
+      active = state.current
+      assert_equal "Unexpected state change encountered.", active.stall_reason
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_stall_truncates_long_last_message_in_error
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+
+      assignment = result[:assignment]
+      sessions_dir = File.join(assignment.cache_dir, "sessions")
+      FileUtils.mkdir_p(sessions_dir)
+      long_message = "x" * 2500
+      File.write(File.join(sessions_dir, "010-last-message.md"), long_message)
+
+      error = assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "010", assignment: assignment.id, quiet: true)
+      end
+
+      assert_includes error.message, "... (truncated)"
+      last_msg_section = error.message.split("Agent's last message:\n").last
+      assert_equal Ace::Assign::CLI::Commands::ForkRun::STALL_REASON_MAX + "... (truncated)".length,
+                   last_msg_section.length
+
+      Ace::Assign.reset_config!
+    end
+  end
+
+  def test_stall_reason_cleared_after_successful_rerun
+    with_temp_cache do |cache_dir|
+      phases = [
+        {
+          "name" => "work-on-task",
+          "instructions" => "Implement task",
+          "context" => "fork",
+          "sub_phases" => %w[onboard plan-task]
+        }
+      ]
+      config_path = create_test_config(cache_dir, steps: phases)
+
+      Ace::Assign.config["cache_dir"] = cache_dir
+      executor = Ace::Assign::Organisms::AssignmentExecutor.new(cache_base: cache_dir)
+      result = executor.start(config_path)
+      assignment = result[:assignment]
+
+      # First run: stall with a last-message to set stall_reason
+      sessions_dir = File.join(assignment.cache_dir, "sessions")
+      FileUtils.mkdir_p(sessions_dir)
+      File.write(File.join(sessions_dir, "010-last-message.md"), "Something went wrong.")
+
+      assert_raises(Ace::Core::CLI::Error) do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: NoopLauncher.new
+        ).call(root: "010", assignment: assignment.id, quiet: true)
+      end
+
+      scanner = Ace::Assign::Molecules::QueueScanner.new
+      state = scanner.scan(assignment.phases_dir, assignment: assignment)
+      assert state.current.stall_reason, "expected stall_reason to be set after stall"
+
+      # Second run: complete successfully and verify stall_reason is cleared
+      capture_io do
+        Ace::Assign::CLI::Commands::ForkRun.new(
+          launcher: CompletingLauncher.new(cache_base: cache_dir)
+        ).call(root: "010", assignment: assignment.id, quiet: true)
+      end
+
+      state2 = scanner.scan(assignment.phases_dir, assignment: assignment)
+      state2.subtree_phases("010").each do |phase|
+        assert_nil phase.stall_reason,
+                   "expected stall_reason to be nil on phase #{phase.number} after successful rerun"
+      end
 
       Ace::Assign.reset_config!
     end

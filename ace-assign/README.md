@@ -248,6 +248,18 @@ phases:
 
 See [Fork Context Guide](handbook/guides/fork-context.g.md) for detailed documentation.
 
+### Stall Detection
+
+When a forked agent stalls (exits non-zero), the last message it produced is surfaced in the status output:
+
+```
+Current Phase: 020.04 - work-on-task
+Current Status: failed
+Stall Reason: Error: Cannot find module 'express'. Try running npm install first.
+```
+
+The stall reason (truncated to 2000 chars) is persisted in the phase frontmatter so it remains visible on subsequent `ace-assign status` calls.
+
 ## License
 
 MIT

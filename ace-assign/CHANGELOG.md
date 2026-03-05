@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.3] - 2026-03-05
+
+### Technical
+- Extracted `STALL_REASON_MAX = 2000` constant in `ForkRun` to replace magic number and serve as shared source of truth for production code and tests.
+- Tightened truncation test assertion to pin exact expected output length rather than a loose upper bound.
+
+## [0.19.2] - 2026-03-05
+
+### Fixed
+- Simplified Layer 1 last-message write in `ForkSessionLauncher` from check-then-write to a single read-based guard, reducing double file access and improving robustness.
+- Multiline `stall_reason` values in `ace-assign status` output now display with indented continuation lines for readable terminal formatting.
+
+### Technical
+- Added `test_stall_reason_cleared_after_successful_rerun` regression test verifying `stall_reason` is cleared across all subtree phases after a successful rerun.
+
+## [0.19.1] - 2026-03-05
+
+### Fixed
+- `read_last_message` now rescues `SystemCallError` to prevent I/O errors from masking the stall error message.
+- Clear stale `stall_reason` from all subtree phase files on successful fork-run completion, preventing misleading status after recovery.
+
+### Technical
+- Added comment in `ForkSessionLauncher` documenting the blocking assumption that makes the Layer 1 check-then-write pattern safe from concurrent writes.
+
+## [0.19.0] - 2026-03-05
+
+### Added
+- Surface forked agent last message on stall: `fork-run` now reads the agent's last message from `<cache_dir>/sessions/<fork_root>-last-message.md` and includes it in the stall error output.
+- `stall_reason` field added to Phase model and frontmatter: persisted when a fork stall is detected, visible via `ace-assign status`.
+- Two-layer last-message capture: `ForkSessionLauncher` writes `result[:text]` after session ends (Layer 1 for all providers); Codex gets timeout-resilient capture via `--output-last-message` (Layer 2).
+
 ## [0.18.2] - 2026-03-04
 
 ### Fixed

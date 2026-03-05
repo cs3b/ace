@@ -58,6 +58,7 @@ module Ace
             fork_pid_updated_at: parse_time(fm["fork_pid_updated_at"]),
             fork_pid_file: fm["fork_pid_file"],
             error: fm["error"],
+            stall_reason: fm["stall_reason"],
             added_by: fm["added_by"],
             parent: fm["parent"],
             instructions: body.strip,

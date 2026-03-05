@@ -171,4 +171,31 @@ class PhaseFileParserTest < AceAssignTestCase
     assert_match(/Invalid context 'frok'/, error.message)
     assert_match(/fork/, error.message)
   end
+
+  def test_extract_fields_parses_stall_reason
+    parsed = {
+      frontmatter: {
+        "name" => "release",
+        "status" => "in_progress",
+        "stall_reason" => "I encountered an unexpected state."
+      },
+      body: "Release instructions."
+    }
+
+    result = Ace::Assign::Atoms::PhaseFileParser.extract_fields(parsed)
+    assert_equal "I encountered an unexpected state.", result[:stall_reason]
+  end
+
+  def test_extract_fields_stall_reason_nil_when_absent
+    parsed = {
+      frontmatter: {
+        "name" => "release",
+        "status" => "in_progress"
+      },
+      body: "Release instructions."
+    }
+
+    result = Ace::Assign::Atoms::PhaseFileParser.extract_fields(parsed)
+    assert_nil result[:stall_reason]
+  end
 end
