@@ -13,7 +13,7 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Artifacts exist** — results/tc/03/ contains stdout/exit and count evidence.
 2. **Zero exit code** — Re-run succeeded.
-3. **No duplicates** — Exactly 1 worktree for task 001, exactly 1 tmux window.
+3. **No duplicates** — Exactly 1 worktree for task 8pp.t.q7w, exactly 1 tmux window.
 
 ## Verdict
 

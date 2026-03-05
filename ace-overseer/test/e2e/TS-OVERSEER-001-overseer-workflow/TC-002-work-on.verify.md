@@ -13,9 +13,9 @@ Validation order (impact-first):
 3. Use debug evidence (`stdout`, `stderr`, `.exit`) only as fallback.
 1. **Artifacts exist** — results/tc/02/ contains stdout/exit and verification outputs.
 2. **Zero exit code** — work-on command succeeded.
-3. **Worktree created** — Worktree list shows an entry for task 001.
+3. **Worktree created** — Worktree list shows an entry for task 8pp.t.q7w.
 4. **Tmux window created** — Tmux output shows a window was created or exists.
-5. **Assignment active (overseer oracle)** — `overseer-status.json` shows task 001 with active assignment state.
+5. **Assignment active (overseer oracle)** — `overseer-status.json` shows task 8pp.t.q7w with active assignment state.
 
 ## Verdict
 
