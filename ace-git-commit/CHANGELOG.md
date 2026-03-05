@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1] - 2026-03-05
+
+### Fixed
+- Cap `max_tokens` at 8192 for commit message generation to prevent inflated thinking budgets from the provider's global 65536 default.
+
 ## [0.19.0] - 2026-03-03
 
 ### Added
