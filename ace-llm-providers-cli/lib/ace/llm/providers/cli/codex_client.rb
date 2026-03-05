@@ -162,6 +162,11 @@ module Ace
               cmd << "--add-dir" << git_dir
             end
 
+            # Capture last message progressively for timeout resilience
+            if options[:last_message_file]
+              cmd << "--output-last-message" << options[:last_message_file]
+            end
+
             # User CLI args last so they take precedence (last-wins in most CLIs)
             cmd.concat(normalized_cli_args(options))
 

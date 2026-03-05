@@ -53,6 +53,17 @@ npm install -g @openai/codex
 codex login
 ```
 
+**Minimum version requirement**: The `--output-last-message <path>` flag is required for stall
+diagnosis (progressive last-message capture). Verify your installed version supports it:
+
+```bash
+codex --help | grep output-last-message
+```
+
+If the flag is absent, upgrade: `npm install -g @openai/codex@latest`. Without this flag the
+provider falls back to Layer 1 capture (text from the query response), so stall diagnostics still
+work but may lose partial output written mid-session.
+
 ### OpenCode (opencode)
 ```bash
 # Install OpenCode CLI
