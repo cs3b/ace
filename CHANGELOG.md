@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.761] - 2026-03-05
+
+### Fixed
+- **ace-task v0.20.3**: `update --move-to archive` now handles subtasks safely by soft-skipping direct subtask archive when sibling subtasks are not all terminal, while archiving the parent task folder when all subtasks are terminal.
+- **ace-task v0.20.3**: `doctor --auto-fix` archive moves now route through standard archive partitions and avoid stranding subtask folders at archive partition root.
+
+### Changed
+- **ace-task v0.20.3**: `update` command now prints informational notes for soft-skipped subtask archive requests and automatic parent archive behavior.
+
 ## [0.9.760] - 2026-03-04
 
 ### Changed
