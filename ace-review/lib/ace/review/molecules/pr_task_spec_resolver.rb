@@ -35,7 +35,7 @@ module Ace
         def self.extract_from_branch(branch_name)
           return nil unless branch_name && !branch_name.strip.empty?
 
-          patterns = Ace::Review.get("defaults", "auto_save_branch_patterns")
+          patterns = Ace::Review.get("defaults", "task_branch_patterns")
           Ace::Git::Atoms::TaskPatternExtractor.extract_from_branch(branch_name, patterns: patterns)
         end
 
