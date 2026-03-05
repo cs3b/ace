@@ -87,6 +87,75 @@ module Ace
             end
           end
 
+          def test_scan_skips_bundle_directory
+            with_temp_config(
+              ".git" => "",
+              ".bundle" => { "gems" => { ".ace" => { "settings.yml" => "key: val" } } },
+              ".ace" => { "settings.yml" => "key: root" }
+            ) do |tmpdir|
+              scanner = ProjectConfigScanner.new(project_root: tmpdir)
+              result = scanner.scan
+
+              refute result.any? { |k, _| k.include?(".bundle") }
+            end
+          end
+
+          def test_scan_skips_ace_local_directory
+            with_temp_config(
+              ".git" => "",
+              ".ace-local" => { "review" => { ".ace" => { "settings.yml" => "key: val" } } },
+              ".ace" => { "settings.yml" => "key: root" }
+            ) do |tmpdir|
+              scanner = ProjectConfigScanner.new(project_root: tmpdir)
+              result = scanner.scan
+
+              refute result.any? { |k, _| k.include?(".ace-local") }
+            end
+          end
+
+          def test_scan_skips_legacy_directory
+            with_temp_config(
+              ".git" => "",
+              "_legacy" => { "old-pkg" => { ".ace" => { "settings.yml" => "key: val" } } },
+              ".ace" => { "settings.yml" => "key: root" }
+            ) do |tmpdir|
+              scanner = ProjectConfigScanner.new(project_root: tmpdir)
+              result = scanner.scan
+
+              refute result.any? { |k, _| k.include?("_legacy") }
+            end
+          end
+
+          def test_scan_memoizes_results
+            with_temp_config(
+              ".git" => "",
+              ".ace" => { "settings.yml" => "key: val" }
+            ) do |tmpdir|
+              scanner = ProjectConfigScanner.new(project_root: tmpdir)
+              result1 = scanner.scan
+              result2 = scanner.scan
+
+              assert_same result1, result2
+            end
+          end
+
+          def test_scan_deduplicates_symlinked_directories
+            with_temp_config(
+              ".git" => "",
+              ".ace" => { "settings.yml" => "key: root" },
+              "real-pkg" => { ".ace" => { "settings.yml" => "key: pkg" } }
+            ) do |tmpdir|
+              # Create a symlink pointing to real-pkg
+              File.symlink(File.join(tmpdir, "real-pkg"), File.join(tmpdir, "linked-pkg"))
+              scanner = ProjectConfigScanner.new(project_root: tmpdir)
+              result = scanner.scan
+
+              # real-pkg and linked-pkg resolve to the same realpath; only one should appear
+              pkg_keys = result.keys.select { |k| k.include?("pkg") }
+              assert_equal 1, pkg_keys.size, "Expected 1 entry for symlinked dir, got: #{pkg_keys.inspect}"
+            end
+          end
+
           def test_scan_includes_empty_ace_folder_with_empty_list
             with_temp_config(
               ".git" => "",
@@ -240,6 +309,32 @@ module Ace
               result = scanner.find_all(namespace: "git", filename: "commit")
 
               assert result["."].end_with?("commit.yml")
+            end
+          end
+
+          def test_scan_handles_permission_denied_on_subdirectory
+            skip "Permission tests require non-root" if Process.uid.zero?
+
+            with_temp_config(
+              ".git" => "",
+              ".ace" => { "settings.yml" => "key: root" },
+              "accessible" => { ".ace" => { "settings.yml" => "key: accessible" } }
+            ) do |tmpdir|
+              # Create a restricted dir with .ace before locking it down
+              restricted_dir = File.join(tmpdir, "restricted")
+              FileUtils.mkdir_p(File.join(restricted_dir, ".ace"))
+              File.write(File.join(restricted_dir, ".ace", "settings.yml"), "key: restricted")
+              FileUtils.chmod(0o000, restricted_dir)
+
+              begin
+                scanner = ProjectConfigScanner.new(project_root: tmpdir)
+                result = scanner.scan
+
+                assert result.key?("."), "Root .ace should be found"
+                assert result.key?("accessible"), "Accessible package .ace should be found"
+              ensure
+                FileUtils.chmod(0o755, restricted_dir)
+              end
             end
           end
 
