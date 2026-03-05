@@ -2,6 +2,7 @@
 
 require "ace/support/items"
 require "ace/b36ts"
+require_relative "../atoms/task_file_pattern"
 
 module Ace
   module Task
