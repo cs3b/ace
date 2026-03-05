@@ -1,7 +1,7 @@
 ---
 source: "taskflow:v.0.9.0"
 id: 8pmnxi
-status: pending
+status: done
 title: ace-llm provider whitelisting for active providers
 tags: []
 created_at: "2026-02-23 15:57:13"
