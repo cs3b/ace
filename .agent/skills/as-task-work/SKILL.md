@@ -1,0 +1,25 @@
+---
+name: as-task-work
+description: Execute task implementation with context loading and change commits
+context: fork
+# agent: general-purpose
+user-invocable: true
+allowed-tools:
+  - Bash(ace-task:*)
+  - Bash(ace-bundle:*)
+  - Bash(ace-git-commit:*)
+  - Read
+  - Write
+  - Edit
+  - TodoWrite
+  - Task
+argument-hint: [task-id like 123]
+last_modified: 2026-02-17
+source: ace-task
+assign:
+  source: wfi://task/work
+---
+
+## Instructions
+
+- read and run `ace-bundle wfi://task/work`

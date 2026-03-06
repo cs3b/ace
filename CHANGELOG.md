@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.774] - 2026-03-06
+
+### Changed
+- Renamed all 89 skill directories and references from `ace-*` to `as-*` ("ace skill") prefix to eliminate namespace collision with CLI tool binaries. Non-Claude agents (Codex, Gemini) no longer confuse skill slash commands with terminal executables. CLI tools (`ace-bundle`, `ace-test`, etc.) remain unchanged.
+
 ## [0.9.773] - 2026-03-06
 
 ### Fixed
