@@ -4,38 +4,167 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.774] - 2026-03-06
+## [0.9.790] - 2026-03-06
+
+### Added
+- **ace-review v0.52.0**: Provider catalog entries are now multi-model arrays (first = default), enabling multiple lanes from a single group name with duplicate support.
+- **ace-review v0.52.0**: Configurable glob-based partition definitions loaded from `.ace/review/partitions/<name>.yml` with named groups, glob patterns, and optional catch-all for unmatched files.
 
 ### Changed
-- Renamed all 89 skill directories and references from `ace-*` to `as-*` ("ace skill") prefix to eliminate namespace collision with CLI tool binaries. Non-Claude agents (Codex, Gemini) no longer confuse skill slash commands with terminal executables. CLI tools (`ace-bundle`, `ace-test`, etc.) remain unchanged.
+- **ace-review v0.52.0**: Replaced hardcoded `by_package`/`by_concern` partition strategies with YAML-driven glob definitions loaded from config cascade.
+- **ace-review v0.52.0**: Presets `code-fit` and `code-shine` now reference `partition: by-concern`.
 
-## [0.9.773] - 2026-03-06
+## [0.9.789] - 2026-03-06
+
+### Added
+- **ace-review v0.51.2**: Added inline multi-provider lane expansion (`reviewers[].providers`) with normalized provider refs, per-entry runtime overrides (`timeout`, `sandbox`, `cli_args`), and strict all-lane report completion gating before synthesis.
+
+### Changed
+- **ace-review v0.51.2**: Removed shared review provider catalog loading in favor of providers-only reviewer definitions and updated review CLI provider override handling to repeatable/comma-separated `llm:<target>:<model>` refs.
+
+### Technical
+- **ace-review v0.51.2**: Updated defaults/tests/docs/workflows for providers-only reviewer config, deterministic lane/run-key identities, and lane-scoped timeout precedence.
+
+## [0.9.788] - 2026-03-06
+
+### Added
+- **ace-review v0.51.1**: Added per-reviewer runtime option forwarding for `ace-review` so provider metadata can set `timeout`, `sandbox`, and custom `cli_args` for each reviewer lane.
+
+### Changed
+- **ace-review v0.51.1**: Preserved reviewer lane identity through report collection and synthesis weighting via `run_key`, keeping duplicate reviewers from collapsing into one identity during confidence calculation.
 
 ### Fixed
-- **ace-idea v0.13.5**: `ace-idea list` now shows a stats summary line even when no ideas are found for the current scope.
+- **ace-review v0.51.1**: Improved feedback confidence/consensus behavior by mapping configured reviewer weights to lane identities when synthesis input includes run-key descriptors.
+
+## [0.9.787] - 2026-03-06
+
+### Added
+- **ace-llm**: Added provider-scoped execution preset overlay support so `provider:model@preset` and `--preset` resolve global defaults with optional provider-specific overrides from `.ace/llm/presets/<provider>/<preset>.yml`.
+
+### Technical
+- **ace-llm**: Added regression coverage and docs for preset-defined `cli_args` arrays.
+- **ace-llm**: Added default preset examples for provider-scoped overlays in `ace-llm/.ace-defaults/llm/presets/` including Codex full-auto with read-only sandbox CLI args.
+
+## [0.9.786] - 2026-03-06
+
+### Added
+- **ace-review v0.51.0**: Added `--provider KIND:NAME` so `ace-review` and `ace-review-pr` can keep preset reviewer lanes but rewrite every resolved LLM lane to a selected provider.
+
+### Changed
+- **ace-review v0.51.0**: Migrated review provider catalogs and reviewer references from flat provider names to typed refs and nested provider layout (`review/providers/<kind>/<name>.yml`), and updated runtime/docs to match the new override contract.
+
+### Technical
+- **ace-review v0.51.0**: Added regression coverage for typed provider validation, nested provider loading, and reviewer-lane provider override behavior across CLI and runtime layers.
+
+## [0.9.785] - 2026-03-06
+
+### Added
+- **ace-review v0.50.0**: Added explicit no-lane preset execution failures so legacy top-level `model`/`models` presets now stop with actionable errors unless CLI model overrides are provided.
+
+### Changed
+- **ace-review v0.50.0**: Removed preset/config model fallback from review execution, narrowed the public preset catalog to `code-valid`, `code-fit`, `code-shine`, `spec`, and `docs`, and updated help/docs to match the new reviewer-first preset contract.
+
+## [0.9.784] - 2026-03-06
+
+### Fixed
+- **ace-review v0.49.3**: Fixed malformed model validation so invalid `--model` values fail immediately with non-zero exit codes and actionable messages.
+
+### Technical
+- **ace-review v0.49.3**: Updated `TS-REVIEW-001` invalid-model E2E coverage to exercise CLI-level validation instead of provider-resolution behavior.
+
+## [0.9.783] - 2026-03-06
+
+### Changed
+- **ace-review v0.49.2**: Completed reviewer-owned prompt migration by normalizing legacy reviewer extras into prompt sections, removing dead global `--prompt-*` review flags, and making duplicate reviewer identities resolve to deterministic unique lane keys.
+
+## [0.9.782] - 2026-03-05
+
+### Changed
+- **ace-review v0.49.1**: Fixed reviewer-collision behavior by executing distinct lanes per reviewer run key (`name:model_slug`), generating unique prompt/output artifact names per lane, and preserving per-lane reviewer metadata in execution results.
+
+## [0.9.781] - 2026-03-05
+
+### Changed
+- **ace-review v0.49.0**: Reviewer prompt ownership moved to reviewer definitions (`reviewers[].prompt`) and preset-owned prompt keys were removed from preset resolution.
+
+## [0.9.780] - 2026-03-05
+
+### Fixed
+- **ace-review v0.48.2**: Preserved duplicate-model reviewer lanes by storing all reviewers per model in `MultiModelExecutor` and fanning per-lane reviewer descriptors in `ReviewManager#collect_report_paths`, keeping weighted synthesis provenance intact for shared-model lanes.
+
+## [0.9.779] - 2026-03-05
+
+### Fixed
+- **ace-review v0.48.1**: Single-model feedback extraction now carries reviewer metadata into synthesis so weighted fields (`confidence`, `focus`, `critical_source`) are retained in single-reviewer presets.
+- **ace-review v0.48.1**: `FeedbackSynthesizer` now resets memoized consensus-threshold state per synthesis call, preventing stale threshold reuse when config changes between runs.
+
+## [0.9.778] - 2026-03-05
+
+### Changed
+- **ace-assign v0.21.0**: Switched assignment review cycles from hardcoded `code-valid`/`code-fit`/`code-shine` to single `pr-risk-based` preset with always-on correctness+contracts lanes and conditional expansion from changed-surface signals.
+
+## [0.9.777] - 2026-03-05
+
+### Added
+- **ace-review v0.48.0**: Added phased preset pipeline catalogs (`phased-valid`, `phased-fit`, `phased-shine`) with aligned reviewer/provider definitions across project and gem defaults.
+- **ace-review v0.48.0**: Added preset-manager regression coverage for phased cutover shape to lock pipeline-based resolution for `code-valid`, `code-fit`, and `code-shine`.
+
+### Changed
+- **ace-review v0.48.0**: Cut over phased presets to thin `pipeline` compositions over narrow reviewer lanes, removing legacy preset-local instruction bundles as the runtime source of truth.
+
+## [0.9.776] - 2026-03-05
+
+### Added
+- **ace-review v0.47.0**: Introduced first-class narrow review configuration surfaces (`.ace/review/reviewers`, `.ace/review/providers`, `.ace/review/pipelines`) plus runnable `pr-risk-based` preset composition over those definitions.
+- **ace-review v0.47.0**: Added deterministic lint evidence lane collection (`LintEvidenceRunner`) and mixed LLM/tool lane execution integration while preserving feedback-item synthesis output flow.
+
+### Fixed
+- **ace-review v0.47.0**: Missing reviewer/provider references now fail with explicit actionable errors, and optional-lane resolution falls back to safe-minimal reviewer lanes when no optional selectors match.
+
+## [0.9.775] - 2026-03-05
+
+### Added
+- **ace-llm v0.26.0**: Added preset-qualified model targeting (`model@preset`) and CLI `--preset` support, with generic preset loading from `.ace/llm/presets/<name>.yml` and deterministic runtime-option precedence (explicit args override preset defaults).
+
+### Fixed
+- **ace-llm v0.26.0**: Empty preset suffix inputs (for example `model@`) now fail early with actionable parser errors before provider execution.
+- **ace-review v0.46.4**: Context-limit resolution now strips optional `@preset` suffixes before provider-config and pattern matching, preserving stable limits for preset-qualified model identifiers.
+
+## [0.9.774] - 2026-03-05
+
+### Fixed
+- **ace-review v0.46.3**: Zero-weight reviewers are no longer silently excluded from the confidence denominator; `read_reports` uses explicit `is_a?` branching for Reviewer type detection rather than duck-typing.
+
+## [0.9.773] - 2026-03-05
+
+### Fixed
+- **ace-review v0.46.2**: `FeedbackItem` equality and hash now include `confidence` and `consensus` to prevent false equality between items with different confidence values; `FeedbackSynthesizer#consensus_threshold` is memoized per synthesis run to eliminate repeated config lookups.
 
 ## [0.9.772] - 2026-03-05
 
 ### Fixed
+- **ace-review v0.46.1**: Applied post-review fixes — CLI `--models` now overrides preset `reviewers:`, confidence denominator uses all configured reviewers (not just those with reports), `merge_config` no longer double-wraps pre-resolved `Reviewer` objects, and duplicate reviewer model definitions emit a warning.
 - **ace-task v0.20.7**: Fixed incorrect `ace-idea move` command in task/draft workflow; replaced non-existent `ace-idea move <id> --to archive` with correct `ace-idea update <id> --set status=done --move-to archive`
 
 ## [0.9.771] - 2026-03-05
 
 ### Added
 - **ace-task v0.20.6**: `ace-task create` now accepts `--status` (`-s`) flag to set initial task status with validation, and `--estimate` (`-e`) flag to set effort estimate in frontmatter. Fixes workflow/CLI mismatch where `wfi://task/draft` instructed agents to use flags that didn't exist.
+- **ace-review v0.46.0**: Surfaced critical-source findings first and grouped non-critical findings by reviewer focus area; `FeedbackItem` now includes `critical_source` and `focus` metadata for synthesis output.
 
 ## [0.9.770] - 2026-03-05
 
-### Fixed
-- **ace-idea v0.13.4**: `ace-idea list` no longer leaks legacy `cancelled` as a separate status; legacy values are normalized to canonical `obsolete` during load/display.
+### Added
+- **ace-review v0.45.0**: Weight-aware consensus scoring — `FeedbackSynthesizer` now computes a `confidence` score (0.0–1.0) per finding based on reviewer weights; `FeedbackItem` exposes `confidence` attribute; configurable `feedback.consensus_threshold` (default 0.6); full fallback to count-based consensus when no weight metadata is present.
+- **ace-review v0.44.0**: Reviewer pipeline connected to execution chain — `Reviewer` objects (with `weight`, `critical`, `focus`) now flow from `PresetManager` through `ReviewOptions`, `ReviewManager`, `MultiModelExecutor`, and `FeedbackSynthesizer`, enabling weighted multi-dimensional synthesis in subsequent phases.
+- **ace-idea v0.13.4**: `ace-idea list` no longer leaks legacy `--cancelled` as a separate status; legacy values are normalized to canonical `obsolete` during load/display.
 
 ### Changed
 - **ace-idea v0.13.4**: Frontmatter checks now flag derived `location` metadata as warning-only (non-failing) and keep path-derived scope as source of truth.
-- **ace-idea v0.13.4**: `ace-idea doctor` auto-fix now supports removing `location` from idea frontmatter and migrating legacy `cancelled` values to `obsolete`.
+- **ace-idea v0.13.4**: `ace-idea doctor` auto-fix now supports removing `location` from idea frontmatter and migrating legacy `--cancelled` values to `obsolete`.
 
 ### Technical
 - **ace-idea v0.13.4**: Added regression tests for legacy status normalization and doctor validator/fixer migration paths.
-
 ## [0.9.769] - 2026-03-05
 
 ### Fixed
