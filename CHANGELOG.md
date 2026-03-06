@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.792] - 2026-03-06
+
+### Fixed
+- **ace-llm-providers-cli v0.22.3**: Removed `--max-tokens` flag forwarding from Claude Code and Claude OAI CLI clients; the Claude CLI does not support this option, causing review lane failures.
+
+### Changed
+- **ace-review v0.52.1**: Renamed review provider catalog groups from `ro`/`rw`/`yolo` to semantic `fast`/`deep` names across presets, source, and tests.
+
 ## [0.9.791] - 2026-03-06
 
 ### Changed
