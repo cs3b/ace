@@ -1,4 +1,4 @@
-# Fit — quality review: structure, performance, architecture, standards
+# Fit - quality review: structure, performance, architecture, standards
 
 description: "Quality review - is the code well-structured and maintainable?"
 
@@ -60,5 +60,5 @@ instructions:
 bundle: "project"
 
 models:
-  - claude:opus
-  - codex:max
+  - claude:opus@ro
+  - codex:max@ro
