@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.776] - 2026-03-06
+
+### Fixed
+- **ace-review v0.43.7**: `--dry-run` now suppresses model execution even when review defaults enable `auto_execute`.
+- **ace-review v0.43.7**: Review model validation now accepts `@ro`, `@rw`, and `@yolo` style suffixes.
+
+### Changed
+- **ace-review v0.43.7**: Simplified the default review catalog to five explicit presets (`code-valid`, `code-fit`, `code-shine`, `docs`, `spec`) and aligned the repo-level `.ace/review` overrides to the same model.
+
 ## [0.9.775] - 2026-03-06
 
 ### Added
