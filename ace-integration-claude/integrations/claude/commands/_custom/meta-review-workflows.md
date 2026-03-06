@@ -15,7 +15,7 @@ Review and validate workflow instructions for quality and consistency.
 
 ## Usage
 
-Type `/ace-handbook-review-workflows [workflow-name]` where:
+Type `/as-handbook-review-workflows [workflow-name]` where:
 - `workflow-name` is optional - if not provided, reviews all workflows
 
 ## What This Does
@@ -39,9 +39,9 @@ The workflow will:
 ## Examples
 
 ```
-/ace-handbook-review-workflows
-/ace-handbook-review-workflows commit
-/ace-handbook-review-workflows fix-tests
+/as-handbook-review-workflows
+/as-handbook-review-workflows commit
+/as-handbook-review-workflows fix-tests
 ```
 
 ## Full Workflow

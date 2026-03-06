@@ -15,7 +15,7 @@ Create, update, and maintain workflow instruction files (.wf.md).
 
 ## Usage
 
-Type `/ace-handbook-manage-workflows [workflow-name] [action]` where:
+Type `/as-handbook-manage-workflows [workflow-name] [action]` where:
 - `workflow-name` is the name of the workflow to manage
 - `action` is either "create", "update", or "review"
 
@@ -40,9 +40,9 @@ The workflow will:
 ## Examples
 
 ```
-/ace-handbook-manage-workflows deploy-feature create
-/ace-handbook-manage-workflows fix-bug update
-/ace-handbook-manage-workflows code-review review
+/as-handbook-manage-workflows deploy-feature create
+/as-handbook-manage-workflows fix-bug update
+/as-handbook-manage-workflows code-review review
 ```
 
 ## Full Workflow
