@@ -3,8 +3,7 @@
 
 # Default settings applied to all reviews unless overridden
 defaults:
-  preset: code-multi
-  model: codex:codex
+  preset: code-valid
   output_format: "markdown"
   bundle: "project"
   max_concurrent_models: 5  # Max parallel LLM queries for multi-model execution

@@ -1,0 +1,30 @@
+provider_class: llm
+focus: correctness
+weight: 1.0
+critical: true
+prompt:
+  base: "prompt://base/system"
+  sections:
+    review_focus:
+      title: "Correctness Focus"
+      description: "Logical correctness, regressions, and behavior coverage."
+      files:
+        - "prompt://focus/phase/correctness"
+        - "prompt://focus/languages/ruby"
+        - "prompt://focus/architecture/atom"
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Structured findings output"
+      files:
+        - "prompt://format/detailed"
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Tone and evidence expectations"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    reviewer_notes:
+      title: "Reviewer Notes"
+      description: "Additional reviewer-specific instructions"
+      content: |
+        Prioritize behavioral correctness, invalid states, and regression risks.

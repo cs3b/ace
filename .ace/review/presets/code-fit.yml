@@ -1,64 +1,8 @@
-# Fit — quality review: structure, performance, architecture, standards
+# Fit — quality/architecture review mapped to narrow reviewer lanes
 
 description: "Quality review - is the code well-structured and maintainable?"
-
-instructions:
-  base: "prompt://base/system"
-  bundle:
-    sections:
-      format:
-        title: "Format Guidelines"
-        description: "Detailed output formatting and structure guidelines"
-        files:
-          - "prompt://format/detailed"
-      quality_focus:
-        title: "Quality Review Focus"
-        description: "Structure, standards adherence, and test coverage"
-        files:
-          - "prompt://focus/phase/quality"
-      security_focus:
-        title: "Security Review Focus"
-        description: "Security vulnerability and risk analysis"
-        files:
-          - "prompt://focus/quality/security"
-      performance_focus:
-        title: "Performance Review Focus"
-        description: "Performance optimization and resource management"
-        files:
-          - "prompt://focus/quality/performance"
-      architecture_focus:
-        title: "Architecture Review Focus"
-        description: "ATOM architecture compliance and design patterns"
-        files:
-          - "prompt://focus/architecture/atom"
-      test_focus:
-        title: "Test Coverage Focus"
-        description: "Test coverage patterns and quality"
-        files:
-          - "prompt://focus/scope/tests"
-      ruby_focus:
-        title: "Ruby Language Focus"
-        description: "Ruby-specific idioms and conventions"
-        files:
-          - "prompt://focus/languages/ruby"
-      communication:
-        title: "Communication Style"
-        description: "Professional communication guidelines"
-        files:
-          - "prompt://guidelines/tone"
-      visual_indicators:
-        title: "Visual Indicators"
-        description: "Icons and visual markers for quick scanning"
-        files:
-          - "prompt://guidelines/icons"
-      project_context:
-        title: "Project Context"
-        description: "Project information and background"
-        presets:
-          - "project"
-
-bundle: "project"
-
-models:
-  - claude:opus
-  - codex:max
+partition: by-concern
+pipeline: phased-fit
+providers:
+  llm: [review-fast]
+  tools_lint: [lint]

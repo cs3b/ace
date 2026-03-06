@@ -1,0 +1,13 @@
+always:
+  - correctness
+  - contracts
+optional:
+  - reviewer: tests
+    when_any_changed:
+      - "test/**/*.rb"
+      - "**/*_test.rb"
+evidence:
+  - lint
+safe_minimal:
+  - correctness
+  - contracts

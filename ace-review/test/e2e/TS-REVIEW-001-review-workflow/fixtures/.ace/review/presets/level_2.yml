@@ -2,5 +2,12 @@ presets:
   - level_1
 description: "Level 2"
 context_2: "data_2"
-instructions:
-  description: "Level 2 instructions"
+reviewers:
+  - name: level-2-addon
+    model: google:gemini-2.5-flash
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_notes:
+          title: "Level 2 Notes"
+          description: "Level 2 instructions"

@@ -1,16 +1,18 @@
 description: "Base code review configuration"
-instructions:
-  description: "Code review instructions"
-  bundle:
-    base: "prompt://base/system"
-    sections:
-      review_focus:
-        title: "Files Under Review"
-        files:
-          - "prompt://focus/scope/tests"
-          - "prompt://focus/languages/ruby"
-      format_guidelines:
-        title: "Format Guidelines"
-        files:
-          - "prompt://format/detailed"
-model: gpro
+reviewers:
+  - name: base
+    model: gpro
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_focus:
+          title: "Files Under Review"
+          description: "Files and changes to focus on"
+          files:
+            - "prompt://focus/scope/tests"
+            - "prompt://focus/languages/ruby"
+        format_guidelines:
+          title: "Format Guidelines"
+          description: "Structure and formatting expectations"
+          files:
+            - "prompt://format/detailed"

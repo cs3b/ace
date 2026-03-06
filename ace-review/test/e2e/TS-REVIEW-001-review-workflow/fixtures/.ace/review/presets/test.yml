@@ -1,3 +1,10 @@
 description: "Test preset for multi-subject testing"
-instructions:
-  base: "prompt://base/system"
+reviewers:
+  - name: test
+    model: google:gemini-2.5-flash
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_focus:
+          title: "Test Subject Coverage"
+          description: "Focus on the files selected by test subjects."

@@ -1,0 +1,30 @@
+provider_class: llm
+focus: architecture-fit
+weight: 0.9
+critical: false
+prompt:
+  base: "prompt://base/system"
+  sections:
+    review_focus:
+      title: "Architecture Focus"
+      description: "Architecture and maintainability checks."
+      files:
+        - "prompt://focus/architecture/atom"
+        - "prompt://focus/architecture/reflection"
+        - "prompt://focus/phase/quality"
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Structured findings output"
+      files:
+        - "prompt://format/detailed"
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Tone and evidence expectations"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    reviewer_notes:
+      title: "Reviewer Notes"
+      description: "Additional reviewer-specific instructions"
+      content: |
+        Focus on architecture fit, maintainability, and consistency with established project patterns.

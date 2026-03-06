@@ -1,0 +1,14 @@
+catch_all: true
+
+groups:
+  code:
+    - "lib/**/*.rb"
+    - "test/**/*.rb"
+    - "app/**/*.rb"
+    - "exe/**/*.rb"
+  handbook:
+    - "handbook/**/*.md"
+    - "docs/**/*.md"
+  config:
+    - ".ace-defaults/**/*.yml"
+    - ".ace/**/*.yml"

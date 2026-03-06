@@ -7,32 +7,52 @@
 
 description: "Specification review - goal clarity, usage expectations, tests, completeness"
 
-instructions:
-  bundle:
-    base: "prompt://base/system"
-    sections:
-      project_context:
-        presets:
-          - project
-      format:
-        title: "Format Guidelines"
-        description: "Standard output formatting and structure guidelines"
-        files:
-          - "prompt://format/standard"
-      spec_focus:
-        title: "Specification Focus"
-        description: "Specification clarity, completeness, and feasibility review"
-        files:
-          - "prompt://focus/scope/spec"
-      guidelines:
-        title: "Communication Guidelines"
-        description: "Professional communication style"
-        files:
-          - "prompt://guidelines/tone"
-
-models:
-  - claude:opus              # Deep reasoning, architecture analysis
-  - codex:max  # Code-focused, implementation details
-  # - xai:fast
+reviewers:
+  - name: spec-architecture
+    model: "claude:opus"
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        project_context:
+          presets:
+            - project
+        format:
+          title: "Format Guidelines"
+          description: "Standard output formatting and structure guidelines"
+          files:
+            - "prompt://format/standard"
+        spec_focus:
+          title: "Specification Focus"
+          description: "Specification clarity, completeness, and feasibility review"
+          files:
+            - "prompt://focus/scope/spec"
+        guidelines:
+          title: "Communication Guidelines"
+          description: "Professional communication style"
+          files:
+            - "prompt://guidelines/tone"
+  - name: spec-implementation
+    model: "codex:max"
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        project_context:
+          presets:
+            - project
+        format:
+          title: "Format Guidelines"
+          description: "Standard output formatting and structure guidelines"
+          files:
+            - "prompt://format/standard"
+        spec_focus:
+          title: "Specification Focus"
+          description: "Specification clarity, completeness, and feasibility review"
+          files:
+            - "prompt://focus/scope/spec"
+        guidelines:
+          title: "Communication Guidelines"
+          description: "Professional communication style"
+          files:
+            - "prompt://guidelines/tone"
 
 # No subject section - uses CLI --subject parameter directly

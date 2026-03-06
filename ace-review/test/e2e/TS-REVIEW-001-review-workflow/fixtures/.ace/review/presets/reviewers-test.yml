@@ -2,8 +2,17 @@ description: "Reviewers format E2E test"
 reviewers:
   - name: "reviewer-1"
     model: "google:gemini-2.5-flash"
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_notes:
+          title: "Reviewer 1 Notes"
+          description: "Brief review."
   - name: "reviewer-2"
     model: "google:gemini-2.5-flash"
-instructions:
-  system: "Brief review."
-  user: "Review:"
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_notes:
+          title: "Reviewer 2 Notes"
+          description: "Review: list concrete issues."

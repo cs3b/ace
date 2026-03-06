@@ -2,34 +2,36 @@
 
 description: "Documentation review - completeness and clarity"
 
-instructions:
-  bundle:
-    base: "prompt://base/system"
-    sections:
-      format:
-        title: "Format Guidelines"
-        description: "Standard output formatting and structure guidelines"
-        files:
-          - "prompt://format/standard"
-      docs_focus:
-        title: "Documentation Review Focus"
-        description: "Focus areas for documentation completeness and clarity"
-        files:
-          - "prompt://focus/scope/docs"
-      communication:
-        title: "Communication Style"
-        description: "Professional communication guidelines"
-        files:
-          - "prompt://guidelines/tone"
-      context-project:
-        presets:
-          - "project"
-      context-package:
-        title: "Ace Review Codebase"
-        description: "All ruby files and config examples for Ace Context package"
-        files:
-          - "ace-review/lib/**/*.rb"
-          - "ace-review/.ace-defaults/**/*"
+reviewers:
+  - name: docs-review
+    model: "codex:codex"
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        format:
+          title: "Format Guidelines"
+          description: "Standard output formatting and structure guidelines"
+          files:
+            - "prompt://format/standard"
+        docs_focus:
+          title: "Documentation Review Focus"
+          description: "Focus areas for documentation completeness and clarity"
+          files:
+            - "prompt://focus/scope/docs"
+        communication:
+          title: "Communication Style"
+          description: "Professional communication guidelines"
+          files:
+            - "prompt://guidelines/tone"
+        context-project:
+          presets:
+            - "project"
+        context-package:
+          title: "Ace Review Codebase"
+          description: "All ruby files and config examples for Ace Context package"
+          files:
+            - "ace-review/lib/**/*.rb"
+            - "ace-review/.ace-defaults/**/*"
 
 subject:
   bundle:

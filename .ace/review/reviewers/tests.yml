@@ -1,0 +1,29 @@
+provider_class: llm
+focus: tests
+weight: 0.8
+critical: false
+prompt:
+  base: "prompt://base/system"
+  sections:
+    review_focus:
+      title: "Tests Focus"
+      description: "Test scope, quality, and coverage gaps."
+      files:
+        - "prompt://focus/scope/tests"
+        - "prompt://focus/phase/polish"
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Structured findings output"
+      files:
+        - "prompt://format/detailed"
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Tone and evidence expectations"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    reviewer_notes:
+      title: "Reviewer Notes"
+      description: "Additional reviewer-specific instructions"
+      content: |
+        Focus on test completeness, failure-path coverage, and assertion quality.

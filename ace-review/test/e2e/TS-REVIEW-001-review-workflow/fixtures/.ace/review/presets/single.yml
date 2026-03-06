@@ -1,5 +1,11 @@
 description: "Single model E2E test"
-model: google:gemini-2.5-flash
-instructions:
-  system: "Brief code review."
-  user: "List issues in 1-2 sentences."
+reviewers:
+  - name: single-reviewer
+    model: google:gemini-2.5-flash
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_notes:
+          title: "Single Reviewer Notes"
+          description: "Brief code review."
+          content: "List issues in 1-2 sentences."

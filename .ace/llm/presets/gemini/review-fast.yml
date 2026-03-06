@@ -1,0 +1,4 @@
+cli_args:
+  - --approval-mode
+  - plan
+  - --sandbox

@@ -1,0 +1,29 @@
+provider_class: llm
+focus: security
+weight: 0.9
+critical: true
+prompt:
+  base: "prompt://base/system"
+  sections:
+    review_focus:
+      title: "Security Focus"
+      description: "Security boundaries and threat-focused checks."
+      files:
+        - "prompt://focus/quality/security"
+        - "prompt://focus/architecture/atom"
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Structured findings output"
+      files:
+        - "prompt://format/detailed"
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Tone and evidence expectations"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    reviewer_notes:
+      title: "Reviewer Notes"
+      description: "Additional reviewer-specific instructions"
+      content: |
+        Focus on security boundaries, auth and secret handling, command execution, and untrusted input paths.

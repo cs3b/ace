@@ -1,0 +1,21 @@
+always:
+  - correctness
+  - contracts
+optional:
+  - reviewer: tests
+    when_any_changed:
+      - "test/**/*.rb"
+      - "**/*_test.rb"
+  - reviewer: security
+    when_any_changed:
+      - "**/*auth*"
+      - "**/*token*"
+      - "**/*secret*"
+      - "**/*credential*"
+      - "**/*oauth*"
+      - "**/*.sh"
+evidence:
+  - lint
+safe_minimal:
+  - correctness
+  - contracts

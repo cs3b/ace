@@ -1,0 +1,9 @@
+timeout: 300
+max_tokens: 8192
+temperature: 0.2
+cli_args:
+  - --full-auto
+  - -c
+  - 'sandbox_mode="read-only"'
+  - -c
+  - 'model_reasoning_effort="medium"'

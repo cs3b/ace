@@ -1,7 +1,18 @@
 description: "Multi-model E2E test"
-models:
-  - google:gemini-2.5-flash
-  - google:gemini-2.5-flash
-instructions:
-  system: "Brief code review."
-  user: "List issues only."
+reviewers:
+  - name: reviewer-1
+    model: google:gemini-2.5-flash
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_notes:
+          title: "Multi Review Notes"
+          description: "Reviewer 1: concise issue-only findings."
+  - name: reviewer-2
+    model: google:gemini-2.5-flash
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        review_notes:
+          title: "Multi Review Notes"
+          description: "Reviewer 2: concise issue-only findings."
