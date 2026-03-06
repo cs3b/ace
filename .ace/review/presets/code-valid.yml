@@ -1,4 +1,4 @@
-# Valid — correctness review: logic errors, bugs, missing functionality
+# Valid - correctness review: logic errors, bugs, missing functionality
 
 description: "Correctness review - does the code work correctly?"
 
@@ -35,5 +35,5 @@ instructions:
 bundle: "project"
 
 models:
-  - claude:opus
-  - codex:max
+  - claude:opus@ro
+  - codex:max@ro
