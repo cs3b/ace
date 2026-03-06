@@ -71,10 +71,17 @@ module Ace
         # @param global_folder_stats [Hash, nil] Folder name → count hash from full scan
         # @return [String] Formatted list output
         def self.format_list(ideas, total_count: nil, global_folder_stats: nil)
-          return "No ideas found." if ideas.empty?
+          stats_line = format_stats_line(
+            ideas,
+            total_count: total_count,
+            global_folder_stats: global_folder_stats
+          )
 
-          lines = ideas.map { |idea| format(idea) }.join("\n")
-          "#{lines}\n\n#{format_stats_line(ideas, total_count: total_count, global_folder_stats: global_folder_stats)}"
+          if ideas.empty?
+            "No ideas found.\n\n#{stats_line}"
+          else
+            "#{ideas.map { |idea| format(idea) }.join("\n")}\n\n#{stats_line}"
+          end
         end
 
         STATUS_ORDER = %w[pending in-progress done obsolete].freeze
