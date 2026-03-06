@@ -3,8 +3,8 @@
 #
 # Configuration Options:
 # ---------------------
-# preset          - Default preset when --preset not specified (default: "code")
-# model           - Default LLM model for reviews (default: "codex:codex")
+# preset          - Default preset when --preset not specified (default: "code-valid")
+# model           - Default LLM model for reviews (default: "codex:codex@ro")
 # output_format   - Output format for reviews (default: "markdown")
 # context         - Default context preset (default: "project")
 # max_concurrent_models - Max parallel LLM queries for multi-model execution (default: 3)
@@ -31,8 +31,8 @@ project_docs:
 
 # Default settings applied to all reviews unless overridden
 defaults:
-  preset: "code"  # Default preset when --preset not specified
-  model: "codex:codex"
+  preset: "code-valid"  # Default preset when --preset not specified
+  model: "codex:codex@ro"
   output_format: "markdown"
   bundle: "project"
   max_concurrent_models: 3  # Max parallel LLM queries for multi-model execution
@@ -76,7 +76,7 @@ defaults:
 # Feedback items are extracted from review reports for tracking and verification
 feedback:
   enabled: true                           # Enable feedback extraction (default: true)
-  synthesis_model: codex:codex  # Model for synthesizing feedback items
+  synthesis_model: codex:codex@ro        # Model for synthesizing feedback items
   fallback_models:                        # Fallback models if primary synthesis fails
     - claude:glm
 
