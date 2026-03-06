@@ -136,11 +136,7 @@ module Ace
             # (128KB per-argument limit). System content is already embedded in the
             # formatted prompt via format_messages_as_prompt.
 
-            # Add max tokens if provided
-            max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
-            if max_tokens
-              cmd << "--max-tokens" << max_tokens.to_s
-            end
+            # Note: Claude CLI does not support --max-tokens; omit it.
 
             # User CLI args last so they take precedence (last-wins in most CLIs)
             cmd.concat(normalized_cli_args(options))

@@ -66,6 +66,13 @@ describe "ClaudeCodeClient" do
     end
   end
 
+  describe "build_claude_command" do
+    it "does not include --max-tokens flag" do
+      cmd = @client.send(:build_claude_command, { max_tokens: 4096 })
+      refute_includes cmd, "--max-tokens"
+    end
+  end
+
   describe "generate passes subprocess_env through" do
     it "forwards subprocess_env from options to execute_claude_command" do
       captured_subprocess_env = :not_called

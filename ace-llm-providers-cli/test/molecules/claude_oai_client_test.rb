@@ -110,6 +110,11 @@ describe "ClaudeOaiClient" do
       assert_equal "haiku", cmd[m_index + 1]
     end
 
+    it "does not include --max-tokens flag" do
+      cmd = @client.send(:build_claude_command, { max_tokens: 4096 })
+      refute_includes cmd, "--max-tokens"
+    end
+
     it "falls back to sonnet for unknown model" do
       client = Ace::LLM::Providers::CLI::ClaudeOaiClient.new(model: "zai/glm-999", backends: @backends)
       cmd = client.send(:build_claude_command, {})

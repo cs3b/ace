@@ -132,11 +132,7 @@ module Ace
             tier = resolve_model_tier
             cmd << "--model" << tier if tier
 
-            # Add max tokens if provided
-            max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
-            if max_tokens
-              cmd << "--max-tokens" << max_tokens.to_s
-            end
+            # Note: Claude CLI does not support --max-tokens; omit it.
 
             # User CLI args last so they take precedence
             cmd.concat(normalized_cli_args(options))

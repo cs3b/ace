@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.3] - 2026-03-06
+
+### Fixed
+- Removed `--max-tokens` flag forwarding from Claude Code and Claude OAI CLI clients; the Claude CLI does not support this option.
+
 ## [0.22.2] - 2026-03-06
 
 ### Changed
