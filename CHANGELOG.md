@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.793] - 2026-03-06
+
+### Fixed
+- **ace-review v0.53.0**: Partition strategy from preset (`partition: by-concern`) was dropped during `resolve_preset()` — now correctly passed through to review execution.
+- **ace-review v0.53.0**: Synthesis model config updated from non-existent `codex:codex`/`claude:glm` to working `codex:spark`/`google:gemini-2.5-flash`.
+- **ace-review v0.53.0**: Truncated JSON responses from LLM synthesis are now repaired by closing unclosed braces/brackets.
+
+### Added
+- **ace-review v0.53.0**: Organized session directory layout (`_subject/`, `_prompts/`, `_reports/`, `_synthesis/`) with `SessionLayout` atom for structured path generation.
+- **ace-review v0.53.0**: System prompt deduplication — lanes sharing a reviewer name share one prompt file in `_prompts/`.
+- **ace-review v0.53.0**: Partition file collection now respects `--subject` diff range and path filters.
+
+### Changed
+- **ace-review v0.53.0**: Session files reorganized from flat layout to structured subdirectories; reports written to `_reports/{reviewer}/{provider-slug}.md`.
+
 ## [0.9.792] - 2026-03-06
 
 ### Fixed
