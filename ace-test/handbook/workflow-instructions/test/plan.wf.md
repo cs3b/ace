@@ -56,7 +56,7 @@ The **Test Writer** role (implementing tests) follows separately.
 - Before implementing a new feature
 - Before fixing a bug (plan regression test)
 - When reviewing existing test coverage
-- As part of `/ace-task-work` workflow
+- As part of `/as-task-work` workflow
 
 ## Input
 
@@ -311,17 +311,17 @@ The test plan should be saved to:
 
 ## Integration with Other Workflows
 
-### With /ace-task-work
+### With /as-task-work
 
 1. Load task specification
-2. **Run /ace-test-plan**
+2. **Run /as-test-plan**
 3. Implement feature
 4. Write tests according to plan
 5. Verify coverage
 
-### With /ace-test-create-cases
+### With /as-test-create-cases
 
-Use this workflow first to plan, then `/ace-test-create-cases` to generate test code.
+Use this workflow first to plan, then `/as-test-create-cases` to generate test code.
 
 ## See Also
 
