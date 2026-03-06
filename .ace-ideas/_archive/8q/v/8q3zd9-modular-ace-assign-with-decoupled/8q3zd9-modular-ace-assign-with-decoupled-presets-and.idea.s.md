@@ -1,6 +1,6 @@
 ---
 id: 8q3zd9
-status: pending
+status: done
 title: Modular ace-assign with Decoupled Presets and Sources
 tags: []
 created_at: "2026-03-04 23:34:44"
