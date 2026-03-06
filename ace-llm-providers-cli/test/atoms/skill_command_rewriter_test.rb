@@ -9,27 +9,27 @@ module Ace
       module CLI
         module Atoms
           class SkillCommandRewriterTest < Minitest::Test
-            SKILLS = %w[ace-onboard ace-git-commit ace-review-pr commit search].freeze
+            SKILLS = %w[as-onboard as-git-commit as-review-pr commit search].freeze
 
             def test_rewrites_simple_skill_at_start_of_line
-              result = SkillCommandRewriter.call("/ace-onboard", skill_names: SKILLS)
-              assert_equal "/skill:ace-onboard", result
+              result = SkillCommandRewriter.call("/as-onboard", skill_names: SKILLS)
+              assert_equal "/skill:as-onboard", result
             end
 
             def test_rewrites_skill_after_whitespace
-              result = SkillCommandRewriter.call("Please run /ace-onboard first", skill_names: SKILLS)
-              assert_equal "Please run /skill:ace-onboard first", result
+              result = SkillCommandRewriter.call("Please run /as-onboard first", skill_names: SKILLS)
+              assert_equal "Please run /skill:as-onboard first", result
             end
 
             def test_rewrites_underscore_skill_names
-              result = SkillCommandRewriter.call("/ace-git-commit", skill_names: SKILLS)
-              assert_equal "/skill:ace-git-commit", result
+              result = SkillCommandRewriter.call("/as-git-commit", skill_names: SKILLS)
+              assert_equal "/skill:as-git-commit", result
             end
 
             def test_rewrites_multiple_skills_in_same_prompt
-              input = "Run /ace-onboard then /ace-git-commit"
+              input = "Run /as-onboard then /as-git-commit"
               result = SkillCommandRewriter.call(input, skill_names: SKILLS)
-              assert_equal "Run /skill:ace-onboard then /skill:ace-git-commit", result
+              assert_equal "Run /skill:as-onboard then /skill:as-git-commit", result
             end
 
             def test_does_not_rewrite_unknown_names
@@ -39,44 +39,44 @@ module Ace
 
             def test_does_not_double_rewrite_skill_prefix
               # If prompt already has /skill:name, it should NOT become /skill:skill:name
-              result = SkillCommandRewriter.call("/skill:ace-onboard", skill_names: SKILLS)
-              assert_equal "/skill:ace-onboard", result
+              result = SkillCommandRewriter.call("/skill:as-onboard", skill_names: SKILLS)
+              assert_equal "/skill:as-onboard", result
             end
 
             def test_skips_fenced_code_blocks
               input = <<~TEXT
                 Run this:
                 ```
-                /ace-onboard
+                /as-onboard
                 ```
                 Then /commit
               TEXT
               result = SkillCommandRewriter.call(input, skill_names: SKILLS)
-              assert_includes result, "/ace-onboard"       # preserved inside code block
+              assert_includes result, "/as-onboard"       # preserved inside code block
               assert_includes result, "/skill:commit"  # rewritten outside code block
-              refute_includes result, "/skill:ace-onboard" # NOT rewritten inside code block
+              refute_includes result, "/skill:as-onboard" # NOT rewritten inside code block
             end
 
             def test_skips_inline_code_spans
-              input = "Use `/ace-onboard` to start, then run /commit"
+              input = "Use `/as-onboard` to start, then run /commit"
               result = SkillCommandRewriter.call(input, skill_names: SKILLS)
-              assert_includes result, "`/ace-onboard`"      # preserved inside backticks
+              assert_includes result, "`/as-onboard`"      # preserved inside backticks
               assert_includes result, "/skill:commit"    # rewritten outside backticks
             end
 
             def test_does_not_rewrite_urls
               # URLs have slash preceded by another slash or domain chars — not whitespace
-              input = "Visit https://example.com/ace-onboard for details"
+              input = "Visit https://example.com/as-onboard for details"
               result = SkillCommandRewriter.call(input, skill_names: SKILLS)
-              assert_equal "Visit https://example.com/ace-onboard for details", result
+              assert_equal "Visit https://example.com/as-onboard for details", result
             end
 
             def test_longest_match_first
-              # "ace-review-pr" should match before "ace_review" in partial overlaps
-              skills = %w[ace-review-pr ace_review]
-              input = "/ace-review-pr please"
+              # "as-review-pr" should match before "as_review" in partial overlaps
+              skills = %w[as-review-pr as_review]
+              input = "/as-review-pr please"
               result = SkillCommandRewriter.call(input, skill_names: skills)
-              assert_equal "/skill:ace-review-pr please", result
+              assert_equal "/skill:as-review-pr please", result
             end
 
             def test_returns_original_for_nil_prompt
@@ -90,34 +90,34 @@ module Ace
             end
 
             def test_returns_original_for_nil_skill_names
-              result = SkillCommandRewriter.call("/ace-onboard", skill_names: nil)
-              assert_equal "/ace-onboard", result
+              result = SkillCommandRewriter.call("/as-onboard", skill_names: nil)
+              assert_equal "/as-onboard", result
             end
 
             def test_returns_original_for_empty_skill_names
-              result = SkillCommandRewriter.call("/ace-onboard", skill_names: [])
-              assert_equal "/ace-onboard", result
+              result = SkillCommandRewriter.call("/as-onboard", skill_names: [])
+              assert_equal "/as-onboard", result
             end
 
             def test_skill_at_end_of_line
-              result = SkillCommandRewriter.call("Run /ace-onboard", skill_names: SKILLS)
-              assert_equal "Run /skill:ace-onboard", result
+              result = SkillCommandRewriter.call("Run /as-onboard", skill_names: SKILLS)
+              assert_equal "Run /skill:as-onboard", result
             end
 
             def test_multiline_prompt
-              input = "/ace-onboard\nThen /ace-git-commit\nDone"
+              input = "/as-onboard\nThen /as-git-commit\nDone"
               result = SkillCommandRewriter.call(input, skill_names: SKILLS)
-              assert_includes result, "/skill:ace-onboard"
-              assert_includes result, "/skill:ace-git-commit"
+              assert_includes result, "/skill:as-onboard"
+              assert_includes result, "/skill:as-git-commit"
             end
 
             def test_does_not_rewrite_file_paths
-              # File paths like /usr/bin/ace-onboard have slash before the name
-              input = "Check /usr/bin/ace-onboard"
+              # File paths like /usr/bin/as-onboard have slash before the name
+              input = "Check /usr/bin/as-onboard"
               result = SkillCommandRewriter.call(input, skill_names: SKILLS)
-              # "/usr/bin/ace-onboard" — the "/ace-onboard" part is preceded by "/bin"
+              # "/usr/bin/as-onboard" — the "/as-onboard" part is preceded by "/bin"
               # so it should not match (not preceded by whitespace)
-              refute_includes result, "/skill:ace-onboard"
+              refute_includes result, "/skill:as-onboard"
             end
           end
         end
