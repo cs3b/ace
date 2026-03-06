@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-03-05
+
+### Changed
+- Replaced hardcoded `code-valid`/`code-fit`/`code-shine` review cycles with single `pr-risk-based` preset in `work-on-task` and `work-on-tasks` assignment presets.
+- Review phase instructions now use always-on safe-minimal lane set (correctness + contracts) with conditional expansion from changed-surface and task-risk signals.
+
 ## [0.20.1] - 2026-03-05
 
 ### Fixed

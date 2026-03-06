@@ -1,8 +1,8 @@
-# Full task workflow: implement → release → PR → review cycles → reorganize → push
-# Usage: /as-assign-prepare work-on-task --taskref 123
+# Full task workflow: implement → release → PR → risk-based review → reorganize → push
+# Usage: /ace-assign-prepare work-on-task --taskref 123
 
 name: work-on-task
-description: Work on a task with PR, review cycles, release, and clean history
+description: Work on a task with PR, risk-based review, release, and clean history
 
 parameters:
   taskref:
@@ -11,16 +11,16 @@ parameters:
 
 steps:
   - name: onboard
-    skill: as-onboard
+    skill: ace-onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context and understand the project structure.
 
   - name: work-on-task
     context: fork
-    skill: as-task-work
+    skill: ace-task-work
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
+      - "First: onboard yourself using /ace-onboard skill to load project context."
       - "Work on task {{taskref}}."
       - Implement the required changes following project conventions.
 
@@ -30,7 +30,7 @@ steps:
       - "Run: ace-task update {{taskref}} --set status=done --move-to archive"
 
   - name: verify-test-suite
-    skill: as-test-verify-suite
+    skill: ace-test-verify-suite
     instructions:
       - "Identify packages modified in this task."
       - "For each modified package, run: cd <package> && ace-test --profile 6"
@@ -40,9 +40,9 @@ steps:
       - "Skip if changes are documentation-only (no .rb files modified)."
 
   - name: verify-e2e
-    skill: as-e2e-review
+    skill: ace-e2e-review
     instructions:
-      - "For each package heavily modified in this task, run /as-e2e-review <package>."
+      - "For each package heavily modified in this task, run /ace-e2e-review <package>."
       - "Review the coverage matrix — identify gaps and stale TCs."
       - "If TCs need updating, update them before running."
       - "Run ace-test-e2e-suite <package> for each heavily modified package (not full suite)."
@@ -50,60 +50,39 @@ steps:
 
   - name: release-minor
     instructions:
-      - Run /as-release.
+      - Run /ace-release.
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
 
   - name: update-docs
-    skill: as-docs-update
+    skill: ace-docs-update
     instructions:
       - "Identify packages where CLI commands, flags, or public contracts changed."
-      - "Run /as-docs-update-usage for each affected package."
+      - "Run /ace-docs-update-usage for each affected package."
       - "Verify updated docs with ace-docs validate."
       - "Skip if no public API/CLI changes (internal-only work)."
 
   - name: create-pr
-    skill: as-github-pr-create
+    skill: ace-github-pr-create
     instructions:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review steps.
 
-  - name: review-valid-1
+  - name: review-risk-based-1
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - Execute the valid review cycle via child phases.
-      - "Child review-pr: use preset code-valid."
-      - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
-      - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture valid-cycle fixes."
-
-  - name: review-fit-1
-    context: fork
-    sub_phases: [review-pr, apply-feedback, release]
-    instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - Execute the fit review cycle via child phases.
-      - "Child review-pr: use preset code-fit."
-      - "Focus: quality — performance, architecture, standards, test coverage."
-      - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture fit-cycle fixes."
-
-  - name: review-shine-1
-    context: fork
-    sub_phases: [review-pr, apply-feedback, release]
-    instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - Execute the shine review cycle via child phases.
-      - "Child review-pr: use preset code-shine."
-      - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
-      - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture shine-cycle fixes."
+      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - Execute one risk-based review cycle via child phases.
+      - "Child review-pr: use preset pr-risk-based."
+      - "Review lane policy: always run correctness + contracts; add optional lanes from changed-surface and task-risk signals."
+      - "Safe default: if no optional lanes match, keep the always-on minimal set and record that no optional lanes matched."
+      - "Child apply-feedback: apply medium+ priority findings and commit."
+      - "Child release: bump patch version and update CHANGELOGs to capture risk-based review fixes."
 
   - name: reorganize-commits
-    skill: as-git-reorganize-commits
+    skill: ace-git-reorganize-commits
     instructions:
       - Reorganize commits into logical groups.
       - Group by concern (structure, implementation, tests, release).
@@ -115,7 +94,7 @@ steps:
       - Force-with-lease needed because reorganize-commits rewrites history.
 
   - name: update-pr-desc
-    skill: as-github-pr-update
+    skill: ace-github-pr-update
     instructions:
       - Update PR description with final implementation summary.
       - Include released version numbers and key components.

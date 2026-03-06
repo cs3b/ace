@@ -1,10 +1,10 @@
-# Multi-task workflow: batch implement → release → PR → review cycles → reorganize → push
-# Usage: /as-assign-prepare work-on-tasks --taskrefs 148,149,150
-#        /as-assign-prepare work-on-tasks --taskrefs 148-152
-#        /as-assign-prepare work-on-tasks --taskrefs "240.*"
+# Multi-task workflow: batch implement → release → PR → risk-based review → reorganize → push
+# Usage: /ace-assign-prepare work-on-tasks --taskrefs 148,149,150
+#        /ace-assign-prepare work-on-tasks --taskrefs 148-152
+#        /ace-assign-prepare work-on-tasks --taskrefs "240.*"
 
 name: work-on-tasks
-description: Work on multiple tasks with PR, review cycles, release, and clean history
+description: Work on multiple tasks with PR, risk-based review, release, and clean history
 
 parameters:
   taskrefs:
@@ -15,7 +15,7 @@ parameters:
 steps:
   - name: onboard
     number: "000"
-    skill: as-onboard
+    skill: ace-onboard
     instructions:
       - Load project context.
       - Review task queue and priorities.
@@ -23,58 +23,36 @@ steps:
   - name: release-minor
     number: "020"
     instructions:
-      - Run /as-release.
+      - Run /ace-release.
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
 
   - name: create-pr
     number: "030"
-    skill: as-github-pr-create
+    skill: ace-github-pr-create
     instructions:
       - Create a pull request for the changes.
       - Include summary of all implemented tasks.
       - Capture the PR number for subsequent review steps.
 
-  - name: review-valid-1
+  - name: review-risk-based-1
     number: "040"
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - Execute the valid review cycle via child phases.
-      - "Child review-pr: use preset code-valid."
-      - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
-      - "Child apply-feedback: apply medium+ priority review findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture valid-cycle fixes."
-
-  - name: review-fit-1
-    number: "070"
-    context: fork
-    sub_phases: [review-pr, apply-feedback, release]
-    instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - Execute the fit review cycle via child phases.
-      - "Child review-pr: use preset code-fit."
-      - "Focus: quality — performance, architecture, standards, test coverage."
-      - "Child apply-feedback: apply fit-cycle findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture fit-cycle fixes."
-
-  - name: review-shine-1
-    number: "100"
-    context: fork
-    sub_phases: [review-pr, apply-feedback, release]
-    instructions:
-      - "First: onboard yourself using /as-onboard skill to load project context."
-      - Execute the shine review cycle via child phases.
-      - "Child review-pr: use preset code-shine."
-      - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
-      - "Child apply-feedback: apply worthwhile shine-cycle findings and commit."
-      - "Child release: bump patch version and update CHANGELOGs to capture shine-cycle fixes."
+      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - Execute one risk-based review cycle via child phases.
+      - "Child review-pr: use preset pr-risk-based."
+      - "Review lane policy: always run correctness + contracts; add optional lanes from changed-surface and task-risk signals."
+      - "Batch policy: if any task in the batch triggers a higher-risk optional lane, include that lane for the batch review set."
+      - "Safe default: if no optional lanes match, keep the always-on minimal set and record that no optional lanes matched."
+      - "Child apply-feedback: apply medium+ priority findings and commit."
+      - "Child release: bump patch version and update CHANGELOGs to capture risk-based review fixes."
 
   - name: reorganize-commits
     number: "130"
-    skill: as-git-reorganize-commits
+    skill: ace-git-reorganize-commits
     instructions:
       - Reorganize commits into logical groups.
       - Group by concern (structure, implementation, tests, release).
@@ -88,7 +66,7 @@ steps:
 
   - name: update-pr-desc
     number: "150"
-    skill: as-github-pr-update
+    skill: ace-github-pr-update
     instructions:
       - Update PR description with final implementation summary.
       - Include released version numbers and key components.
@@ -109,9 +87,9 @@ expansion:
     name: "work-on-{{item}}"
     parent: "010"
     context: fork
-    skill: as-task-work
+    skill: ace-task-work
     taskref: "{{item}}"
     instructions: |
-      First: onboard yourself using /as-onboard skill to load project context.
+      First: onboard yourself using /ace-onboard skill to load project context.
       Implement task {{item}}.
       When complete, mark the task as done: run `ace-taskflow task done {{item}}`
