@@ -8,31 +8,33 @@
 
 ## Usage Scenarios
 
-### Scenario 1: Compress one document exactly
+### Scenario 1: Compress one Markdown file exactly
 
-**Goal**: Preserve rules and numerics while reducing prompt size.
-
-```bash
-mise exec -- ace-compressor compress docs/architecture.md --mode exact
-
-# Expected output:
-FILE|id=docs/architecture.md|type=architecture
-RULE|id=rule:cli_framework|modality=must|action=use dry-cli
-FACT|id=fact:config_cascade|value=[cli,project,user,defaults]
-```
-
-### Scenario 2: Surface unresolved chart content without guessing
-
-**Goal**: Keep the command successful while making non-text gaps explicit.
+**Goal**: Run the first vertical slice of the package on a single source.
 
 ```bash
 mise exec -- ace-compressor compress docs/vision.md --mode exact
 
 # Expected output:
-C|id=chart:vision:01|status=unresolved|reason=image_only_reference
-P|id=chart:vision:01|src=docs/vision.md#chart-reference
+FILE|id=docs/vision.md|type=vision
+SECTION|id=sec:overview|title=Overview
+RULE|id=rule:cli_first|modality=must|action=be developer friendly
+```
+
+### Scenario 2: Compress a directory of docs exactly
+
+**Goal**: Produce one merged exact pack with per-source provenance.
+
+```bash
+mise exec -- ace-compressor compress docs/ --mode exact --verbose
+
+# Expected output:
+FILE|id=docs/vision.md|type=vision
+FILE|id=docs/architecture.md|type=architecture
+P|id=fact:config_cascade|src=docs/architecture.md#configuration-cascade
 ```
 
 ## Notes for Implementer
 - `exact` is the user-facing name for the lossless mode.
+- This phase targets stdio output only.
 - Full usage documentation gets completed during work-on-task using `wfi://docs/update-usage`.
