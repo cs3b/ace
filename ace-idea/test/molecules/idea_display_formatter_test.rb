@@ -54,7 +54,24 @@ class IdeaDisplayFormatterTest < AceIdeaTestCase
   def test_format_list_empty_returns_no_ideas_message
     output = Ace::Idea::Molecules::IdeaDisplayFormatter.format_list([])
 
-    assert_equal "No ideas found.", output
+    assert_includes output, "No ideas found."
+    assert_includes output, "Ideas:"
+    assert_includes output, "• 0 total"
+  end
+
+  def test_format_list_empty_includes_folder_summary_when_totals_exist
+    output = Ace::Idea::Molecules::IdeaDisplayFormatter.format_list(
+      [],
+      total_count: 10,
+      global_folder_stats: { nil => 2, "_maybe" => 3, "_archive" => 5 }
+    )
+
+    assert_includes output, "No ideas found."
+    assert_includes output, "Ideas:"
+    assert_includes output, "• 0 of 10"
+    assert_includes output, "next 2"
+    assert_includes output, "maybe 3"
+    assert_includes output, "archive 5"
   end
 
   # --- format_stats_line ---

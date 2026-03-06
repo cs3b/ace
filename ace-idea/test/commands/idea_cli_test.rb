@@ -183,6 +183,24 @@ class IdeaCliTest < AceIdeaTestCase
         result = run_cli(["list"])
         assert_equal 0, result[:exit_code], result[:stderr]
         assert_match(/No ideas found/, result[:stdout])
+        assert_match(/Ideas:/, result[:stdout])
+        assert_match(/• 0 total/, result[:stdout])
+      end
+    end
+  end
+
+  def test_list_empty_shows_summary_for_scoped_filter
+    with_ideas_dir do |root|
+      create_idea_fixture(root, id: "aaa111", slug: "root-idea")
+      create_idea_fixture(root, id: "bbb222", slug: "maybe-idea", special_folder: "_maybe")
+
+      with_cli_root(root) do
+        result = run_cli(["list", "--in", "archive"])
+        assert_equal 0, result[:exit_code], result[:stderr]
+        assert_match(/No ideas found/, result[:stdout])
+        assert_match(/Ideas:/, result[:stdout])
+        assert_match(/• 0 of 2/, result[:stdout])
+        refute_match(/Root idea/, result[:stdout])
       end
     end
   end

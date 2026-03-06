@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.773] - 2026-03-06
+
+### Fixed
+- **ace-idea v0.13.5**: `ace-idea list` now shows a stats summary line even when no ideas are found for the current scope.
+
 ## [0.9.772] - 2026-03-05
 
 ### Fixed
