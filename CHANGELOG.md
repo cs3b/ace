@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.775] - 2026-03-06
+
+### Added
+- **ace-llm v0.25.1**: Added explicit `:low|medium|high|xhigh` thinking-level suffix support for fully qualified model targets while preserving `@ro`, `@rw`, and `@yolo` execution presets.
+- **ace-llm v0.25.1**: Added provider-scoped thinking overlays for Codex and Claude so explicit thinking levels map to provider-native runtime controls.
+
+### Changed
+- **ace-llm v0.25.1**: Query resolution now applies explicit thinking overrides after preset loading and before direct CLI overrides.
+
 ## [0.9.774] - 2026-03-06
 
 ### Changed
