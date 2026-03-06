@@ -1,4 +1,0 @@
-description: "Minimal preset for testing"
-instructions:
-  base: "prompt://base/system"
-model: "test-model"

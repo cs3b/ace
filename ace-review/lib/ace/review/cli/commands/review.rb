@@ -178,7 +178,7 @@ module Ace
 
         def validate_model_names(models)
           models.each do |model|
-            unless model.match?(/\A[a-zA-Z0-9\-_:.]+\z/)
+            unless model.match?(/\A[a-zA-Z0-9\-_:.@]+\z/)
               raise ArgumentError, "Invalid model name '#{model}'. Model names can only contain alphanumeric characters, hyphens, underscores, colons, and dots."
             end
           end

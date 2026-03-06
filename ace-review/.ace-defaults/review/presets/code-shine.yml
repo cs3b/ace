@@ -1,4 +1,4 @@
-# Shine — polish review: simplification, clarity, readability (all non-blocking)
+# Shine - polish review: simplification, clarity, readability (all non-blocking)
 
 description: "Polish review - can we simplify and improve clarity?"
 
@@ -40,5 +40,5 @@ instructions:
 bundle: "project"
 
 models:
-  - claude:opus
-  - codex:max
+  - claude:opus@ro
+  - codex:max@ro

@@ -27,6 +27,11 @@ instructions:
         files:
           - "README.md"
 
+bundle: "project"
+
+models:
+  - codex:codex@ro
+
 subject:
   bundle:
     sections:
