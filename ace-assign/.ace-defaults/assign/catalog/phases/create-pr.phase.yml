@@ -1,5 +1,5 @@
 name: create-pr
-skill: ace-github-pr-create
+skill: as-github-pr-create
 description: Create a pull request for the implemented changes
 
 prerequisites:

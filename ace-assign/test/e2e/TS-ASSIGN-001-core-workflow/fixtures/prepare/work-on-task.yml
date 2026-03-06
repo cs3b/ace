@@ -1,5 +1,5 @@
 # Full task workflow: implement → release → PR → review cycles → reorganize → push
-# Usage: /ace-assign-prepare work-on-task --taskref 123
+# Usage: /as-assign-prepare work-on-task --taskref 123
 
 name: work-on-task
 description: Work on a task with PR, review cycles, release, and clean history
@@ -11,16 +11,16 @@ parameters:
 
 steps:
   - name: onboard
-    skill: ace-onboard
+    skill: as-onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context and understand the project structure.
 
   - name: work-on-task
     context: fork
-    skill: ace-task-work
+    skill: as-task-work
     instructions:
-      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - "First: onboard yourself using /as-onboard skill to load project context."
       - "Work on task {{taskref}}."
       - Implement the required changes following project conventions.
 
@@ -31,13 +31,13 @@ steps:
 
   - name: release-minor
     instructions:
-      - Run /ace-release.
+      - Run /as-release.
       - Bump version (minor or patch, usually minor) and update CHANGELOGs.
       - This is the initial release for new functionality.
       - Follow semantic versioning conventions.
 
   - name: create-pr
-    skill: ace-github-pr-create
+    skill: as-github-pr-create
     instructions:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review steps.
@@ -46,7 +46,7 @@ steps:
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the valid review cycle via child phases.
       - "Child review-pr: use preset code-valid."
       - "Focus: correctness — bugs, logic errors, missing functionality, broken contracts."
@@ -57,7 +57,7 @@ steps:
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the fit review cycle via child phases.
       - "Child review-pr: use preset code-fit."
       - "Focus: quality — performance, architecture, standards, test coverage."
@@ -68,7 +68,7 @@ steps:
     context: fork
     sub_phases: [review-pr, apply-feedback, release]
     instructions:
-      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - "First: onboard yourself using /as-onboard skill to load project context."
       - Execute the shine review cycle via child phases.
       - "Child review-pr: use preset code-shine."
       - "Focus: polish — simplification, naming, documentation (non-blocking suggestions)."
@@ -76,7 +76,7 @@ steps:
       - "Child release: bump patch version and update CHANGELOGs to capture shine-cycle fixes."
 
   - name: reorganize-commits
-    skill: ace-git-reorganize-commits
+    skill: as-git-reorganize-commits
     instructions:
       - Reorganize commits into logical groups.
       - Group by concern (structure, implementation, tests, release).
@@ -88,7 +88,7 @@ steps:
       - Force-with-lease needed because reorganize-commits rewrites history.
 
   - name: update-pr-desc
-    skill: ace-github-pr-update
+    skill: as-github-pr-update
     instructions:
       - Update PR description with final implementation summary.
       - Include released version numbers and key components.

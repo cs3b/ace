@@ -1,5 +1,5 @@
 name: verify-e2e
-skill: ace-e2e-review
+skill: as-e2e-review
 description: Review E2E coverage for modified packages and run targeted scenarios
 
 prerequisites:
@@ -26,7 +26,7 @@ tags: [testing, e2e, verification]
 
 steps:
   - name: review-coverage
-    description: "Run /ace-e2e-review for each heavily modified package to get coverage matrix"
+    description: "Run /as-e2e-review for each heavily modified package to get coverage matrix"
     tool: "ace-e2e-review <package>"
     note: "Identify gaps, overlaps, and which TCs need updating before running"
 

@@ -1,5 +1,5 @@
 name: apply-feedback
-skill: ace-review-apply-feedback
+skill: as-review-apply-feedback
 description: Apply review feedback and commit improvements
 
 prerequisites:

@@ -1,5 +1,5 @@
 name: update-pr-desc
-skill: ace-github-pr-update
+skill: as-github-pr-update
 description: Update PR description with implementation summary and final state
 
 prerequisites:

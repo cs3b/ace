@@ -1,5 +1,5 @@
 name: verify-test-suite
-skill: ace-test-verify-suite
+skill: as-test-verify-suite
 description: Run package test suites with profiling to verify correctness and performance
 
 prerequisites:

@@ -590,11 +590,11 @@ module Ace
               [
                 "Delegate this subtree into forked context:",
                 "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}",
-                "Inside the forked agent, run /ace-assign-drive for this subtree scope."
+                "Inside the forked agent, run /as-assign-drive for this subtree scope."
               ]
             )
           else
-            lines << "Run /ace-assign-drive and execute only child phases under this node."
+            lines << "Run /as-assign-drive and execute only child phases under this node."
           end
 
           lines
@@ -708,7 +708,7 @@ module Ace
 
           case sub_name
           when "onboard"
-            "- Run /ace-onboard to load project context#{task_hint}.\n- Confirm required files and workflow context are available."
+            "- Run /as-onboard to load project context#{task_hint}.\n- Confirm required files and workflow context are available."
           when "plan-task"
             "- Analyze requirements#{task_hint}.\n- Plan against the behavioral spec structure: cover Interface Contract, Error Handling, Edge Cases, and operating modes (dry-run, force, verbose, quiet) where relevant.\n- If the spec is missing details needed for implementation, include them in a \"Behavioral Gaps\" section instead of silently working around omissions.\n- Produce a concrete implementation plan with acceptance checks."
           when "work-on-task"
@@ -716,7 +716,7 @@ module Ace
           when "verify-test"
             "- Identify modified packages#{task_hint}.\n- For each modified package, run: cd <package> && ace-test --profile 6\n- If no package-level code changes are present, mark this phase skipped with a clear reason."
           when "release", "release-minor"
-            "- Run /ace-release to bump version and update both package and root changelogs."
+            "- Run /as-release to bump version and update both package and root changelogs."
           else
             "- Execute the #{sub_name} step."
           end
