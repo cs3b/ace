@@ -1,33 +1,38 @@
-# ace-compressor advanced architecture - Draft Usage
+# ace-compressor stable updates and patches - Draft Usage
 
 ## API Surface
-- [ ] CLI (user-facing commands)
-- [x] Developer API (modules, classes)
-- [x] Agent API (workflows, protocols, slash commands)
+- [x] CLI (user-facing commands)
+- [ ] Developer API (modules, classes)
+- [ ] Agent API (workflows, protocols, slash commands)
 - [ ] Configuration (config keys, env vars)
 
 ## Usage Scenarios
 
-### Scenario 1: Consume stable ContextPack records
+### Scenario 1: Emit stable IDs in exact output
 
-**Goal**: Give agents a deterministic, provenance-aware compressed document shape.
+**Goal**: Produce exact output that can be compared across runs.
 
-```text
-FILE|id=docs/vision.md|type=vision
+```bash
+mise exec -- ace-compressor compress docs/vision.md --mode exact --verbose
+
+# Expected output:
+FILE|id=file:docs/vision.md|type=vision
+SECTION|id=sec:core_principles|title=Core Principles
 RULE|id=rule:cli_first|modality=must|action=be developer friendly
-P|id=rule:cli_first|src=docs/vision.md#core-principles
 ```
 
-### Scenario 2: Apply incremental PatchPack updates
+### Scenario 2: Emit a delta patch for one changed file
 
-**Goal**: Refresh changed units without resending the entire pack.
+**Goal**: Refresh one changed source without resending the whole pack.
 
-```text
+```bash
+mise exec -- ace-compressor patch prev.contextpack docs/vision.md --mode exact
+
+# Expected output:
 PATCH|base=sha256:abc123
 R|id=rule:cli_first|value=tools must be developer friendly
-I|after=fact:config_cascade|id=fact:new_flag|value=env_override
 ```
 
 ## Notes for Implementer
-- This task is spec-only and defines contracts for later implementation.
+- This phase starts patching with exact-mode single-file updates.
 - Full usage documentation gets completed during work-on-task using `wfi://docs/update-usage`.
