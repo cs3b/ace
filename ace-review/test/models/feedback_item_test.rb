@@ -63,6 +63,21 @@ module Ace
           assert_equal "medium", item.priority
         end
 
+        def test_initialization_sets_metadata_defaults
+          item = FeedbackItem.new(@valid_attrs)
+
+          assert_equal false, item.critical_source
+          assert_nil item.focus
+        end
+
+        def test_initialization_accepts_metadata_fields
+          attrs = @valid_attrs.merge(critical_source: true, focus: "security")
+          item = FeedbackItem.new(attrs)
+
+          assert item.critical_source
+          assert_equal "security", item.focus
+        end
+
         def test_initialization_sets_created_timestamp
           item = FeedbackItem.new(@valid_attrs)
 
@@ -179,6 +194,21 @@ module Ace
           refute hash.key?("context")
           refute hash.key?("research")
           refute hash.key?("resolution")
+          refute hash.key?("focus")
+        end
+
+        def test_to_h_includes_critical_source_even_when_false
+          item = FeedbackItem.new(@valid_attrs)
+          hash = item.to_h
+
+          assert_equal false, hash["critical_source"]
+        end
+
+        def test_to_h_includes_focus_when_present
+          item = FeedbackItem.new(@valid_attrs.merge(focus: "quality"))
+          hash = item.to_h
+
+          assert_equal "quality", hash["focus"]
         end
 
         def test_to_h_returns_string_keys
@@ -329,6 +359,71 @@ module Ace
           assert_equal original.id, restored.id
           assert_equal original.title, restored.title
           assert_equal original.status, restored.status
+        end
+
+        # Confidence attribute tests
+
+        def test_confidence_defaults_to_nil_when_not_provided
+          item = FeedbackItem.new(@valid_attrs)
+          assert_nil item.confidence
+        end
+
+        def test_confidence_set_when_provided
+          item = FeedbackItem.new(@valid_attrs.merge(confidence: 0.75))
+          assert_in_delta 0.75, item.confidence, 0.001
+        end
+
+        def test_confidence_clamps_above_1
+          item = FeedbackItem.new(@valid_attrs.merge(confidence: 1.5))
+          assert_in_delta 1.0, item.confidence, 0.001
+        end
+
+        def test_confidence_clamps_below_0
+          item = FeedbackItem.new(@valid_attrs.merge(confidence: -0.5))
+          assert_in_delta 0.0, item.confidence, 0.001
+        end
+
+        def test_to_h_omits_confidence_when_nil
+          item = FeedbackItem.new(@valid_attrs)
+          refute item.to_h.key?("confidence"), "to_h should not include confidence key when nil"
+        end
+
+        def test_to_h_includes_confidence_when_set
+          item = FeedbackItem.new(@valid_attrs.merge(confidence: 0.8))
+          assert item.to_h.key?("confidence"), "to_h should include confidence key when set"
+          assert_in_delta 0.8, item.to_h["confidence"], 0.001
+        end
+
+        def test_roundtrip_preserves_confidence
+          original = FeedbackItem.new(@valid_attrs.merge(confidence: 0.6))
+          restored = FeedbackItem.new(original.to_h)
+          assert_in_delta 0.6, restored.confidence, 0.001
+        end
+
+        # Equality with confidence/consensus tests
+
+        def test_equality_with_same_confidence
+          item1 = FeedbackItem.new(@valid_attrs.merge(confidence: 0.75))
+          item2 = FeedbackItem.new(@valid_attrs.merge(confidence: 0.75))
+          assert_equal item1, item2
+        end
+
+        def test_inequality_with_different_confidence
+          item1 = FeedbackItem.new(@valid_attrs.merge(confidence: 0.75))
+          item2 = FeedbackItem.new(@valid_attrs.merge(confidence: 0.5))
+          refute_equal item1, item2
+        end
+
+        def test_inequality_with_nil_vs_set_confidence
+          item1 = FeedbackItem.new(@valid_attrs)
+          item2 = FeedbackItem.new(@valid_attrs.merge(confidence: 0.75))
+          refute_equal item1, item2
+        end
+
+        def test_hash_differs_for_different_confidence
+          item1 = FeedbackItem.new(@valid_attrs.merge(confidence: 0.75))
+          item2 = FeedbackItem.new(@valid_attrs.merge(confidence: 0.5))
+          refute_equal item1.hash, item2.hash
         end
       end
     end

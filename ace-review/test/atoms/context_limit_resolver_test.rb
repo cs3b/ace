@@ -164,6 +164,12 @@ class ContextLimitResolverTest < AceReviewTest
     assert_equal 1_000_000, result
   end
 
+  def test_google_prefix_with_preset_suffix
+    result = @resolver.resolve("google:gemini-2.5-pro@review-fast")
+
+    assert_equal 1_000_000, result
+  end
+
   def test_anthropic_prefix_stripped
     result = @resolver.resolve("anthropic:claude-3-sonnet")
 
@@ -242,6 +248,12 @@ class ContextLimitResolverTest < AceReviewTest
     result = @resolver.resolve("gpt-4o-2024-08-06")
 
     assert_equal 128_000, result
+  end
+
+  def test_model_name_with_preset_suffix
+    result = @resolver.resolve("claude-3-sonnet@review-deep")
+
+    assert_equal 200_000, result
   end
 
   # ace-llm integration tests

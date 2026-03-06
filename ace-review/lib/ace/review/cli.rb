@@ -31,6 +31,7 @@ module Ace
         i = 0
         accumulated_subject = []
         accumulated_model = []
+        accumulated_provider = []
 
         while i < args.length
           arg = args[i]
@@ -51,11 +52,20 @@ module Ace
             next
           end
 
+          # Track --provider occurrences for merging
+          if arg == "--provider" || arg.start_with?("--provider=")
+            value = extract_flag_value(arg, args, i)
+            accumulated_provider << value
+            i = skip_to_next_arg(args, i)
+            next
+          end
+
           result << arg
           i += 1
         end
 
         # Insert merged flags at position 0 (single-command mode, no command name to skip)
+        result.insert(0, "--provider", accumulated_provider.join(ARRAY_SEPARATOR)) unless accumulated_provider.empty?
         result.insert(0, "--model", accumulated_model.join(",")) unless accumulated_model.empty?
         # Subject uses ARRAY_SEPARATOR to preserve internal commas (e.g., files:a.rb,b.rb)
         result.insert(0, "--subject", accumulated_subject.join(ARRAY_SEPARATOR)) unless accumulated_subject.empty?

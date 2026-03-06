@@ -20,8 +20,9 @@ module Ace
         # @param model [String] the model to use
         # @param session_dir [String] the session directory for output
         # @param output_file [String, nil] optional custom output file path
+        # @param reviewer [Models::Reviewer, nil] optional reviewer for provider options
         # @return [Hash] result with success, response, output_file, metadata, and error keys
-        def execute(system_prompt:, user_prompt:, model: nil, session_dir:, output_file: nil)
+        def execute(system_prompt:, user_prompt:, model: nil, session_dir:, output_file: nil, reviewer: nil)
           model ||= @default_model
 
           # Warn if prompt is large
@@ -37,7 +38,7 @@ module Ace
           end
 
           # Use Ruby API directly for v0.13.0 architecture
-          execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, output_file)
+          execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, output_file, reviewer)
         rescue StandardError => e
           {
             success: false,
@@ -72,7 +73,7 @@ module Ace
         end
 
         # Execute using Ruby API with system/user prompts
-        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil)
+        def execute_with_ruby_api(system_prompt, user_prompt, model, session_dir, custom_output_file = nil, reviewer = nil)
           # Use custom output file if provided, otherwise generate default
           output_file = if custom_output_file
                          custom_output_file
@@ -87,20 +88,17 @@ module Ace
           system_file = File.join(session_dir, "system.prompt.md")
           prompt_file = File.join(session_dir, "user.prompt.md")
 
-          # Use Ruby API directly
-          result = Ace::LLM::QueryInterface.query(
-            model,
-            user_prompt,
-            system: system_prompt,
-            system_file: File.exist?(system_file) ? system_file : nil,
-            prompt_file: File.exist?(prompt_file) ? prompt_file : nil,
-            output: output_file,
-            format: "text",
-            timeout: 600,
-            force: true,
-            fallback: false,  # Disable ace-llm fallback - ace-review handles retries
-            sandbox: "read-only"
+          provider_options = extract_provider_options(reviewer)
+          query_options = build_query_options(
+            system_prompt: system_prompt,
+            output_file: output_file,
+            system_file: system_file,
+            prompt_file: prompt_file,
+            provider_options: provider_options
           )
+
+          # Use Ruby API directly
+          result = Ace::LLM::QueryInterface.query(model, user_prompt, **query_options)
 
           # Return structured result with rich metadata
           {
@@ -127,6 +125,82 @@ module Ace
             error: "Unexpected error: #{e.message}",
             error_type: e.class.name
           }
+        end
+
+        # Build QueryInterface options from fixed defaults and reviewer provider options.
+        #
+        # Provider options are currently intended to control runtime behavior such as
+        # timeout, sandbox mode and CLI args, and are defined per provider/reviewer.
+        def build_query_options(system_prompt:, output_file:, system_file:, prompt_file:, provider_options:)
+          query_options = {
+            system: system_prompt,
+            system_file: File.exist?(system_file) ? system_file : nil,
+            prompt_file: File.exist?(prompt_file) ? prompt_file : nil,
+            output: output_file,
+            format: "text",
+            force: true,
+            fallback: false # Disable ace-llm fallback - ace-review handles retries
+          }
+
+          sandbox = provider_options[:sandbox]
+          cli_args = provider_options[:cli_args]
+          cli_args = normalize_cli_args(Array(cli_args), sandbox) if cli_args
+          query_options[:cli_args] = cli_args if cli_args && !cli_args.empty?
+          query_options[:sandbox] = sandbox if sandbox
+          timeout = provider_options[:timeout] || Ace::Review.get("defaults", "llm_timeout")
+          query_options[:timeout] = timeout.to_i if timeout
+
+          query_options
+        end
+
+        # Extract provider options from reviewer while allowing nil reviewer.
+        # Keys are normalized to symbols to simplify downstream usage.
+        def extract_provider_options(reviewer)
+          return {} unless reviewer
+
+          provider_options = reviewer.respond_to?(:provider_options) ? reviewer.provider_options : nil
+          return {} unless provider_options
+
+          provider_options = provider_options.to_h if provider_options.respond_to?(:to_h)
+          return {} unless provider_options.is_a?(Hash)
+
+          provider_options.each_with_object({}) do |(key, value), acc|
+            symbolized_key = key.to_sym
+            next if symbolized_key.to_s.empty?
+            acc[symbolized_key] = value
+          end
+        end
+
+        # Remove duplicate sandbox flags from provider CLI args when sandbox is also
+        # passed explicitly as a query option.
+        def normalize_cli_args(cli_args, sandbox)
+          return cli_args unless sandbox
+
+          normalized = []
+          index = 0
+
+          while index < cli_args.length
+            current = cli_args[index].to_s
+            next_value = cli_args[index + 1]&.to_s
+
+            if current == "--sandbox" && next_value == sandbox.to_s
+              index += 2
+              next
+            end
+
+            if current.start_with?("--sandbox=")
+              value = current.sub("--sandbox=", "")
+              if value == sandbox.to_s
+                index += 1
+                next
+              end
+            end
+
+            normalized << cli_args[index]
+            index += 1
+          end
+
+          normalized
         end
       end
     end

@@ -1,0 +1,29 @@
+provider_class: llm
+focus: simplicity
+weight: 0.7
+critical: false
+prompt:
+  base: "prompt://base/system"
+  sections:
+    review_focus:
+      title: "Simplicity Focus"
+      description: "Simplicity, readability, and polish opportunities."
+      files:
+        - "prompt://focus/phase/polish"
+        - "prompt://focus/phase/quality"
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Structured findings output"
+      files:
+        - "prompt://format/detailed"
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Tone and evidence expectations"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    reviewer_notes:
+      title: "Reviewer Notes"
+      description: "Additional reviewer-specific instructions"
+      content: |
+        Focus on simplifying unnecessary indirection, clarifying naming, and improving readability.

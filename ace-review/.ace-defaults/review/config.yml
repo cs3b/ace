@@ -31,8 +31,7 @@ project_docs:
 
 # Default settings applied to all reviews unless overridden
 defaults:
-  preset: "code"  # Default preset when --preset not specified
-  model: "codex:codex"
+  preset: "code-valid"  # Default preset when --preset not specified
   output_format: "markdown"
   bundle: "project"
   max_concurrent_models: 3  # Max parallel LLM queries for multi-model execution
@@ -79,6 +78,7 @@ feedback:
   synthesis_model: codex:codex  # Model for synthesizing feedback items
   fallback_models:                        # Fallback models if primary synthesis fails
     - claude:glm
+  consensus_threshold: 0.6               # Weighted consensus threshold (0.0..1.0); applies when reviewer weights are available
 
 # Review presets - load from .ace/review/presets/*.yml
 # Individual preset files provide better organization and shareability

@@ -21,7 +21,7 @@ Key benefits:
 
 1. Run a review with feedback extraction:
    ```bash
-   ace-review --preset code-pr --pr 123 --auto-execute
+   ace-review --preset code-fit --pr 123 --auto-execute
    ```
 
 2. List feedback items:
@@ -239,13 +239,12 @@ feedback:
 
 - `--no-feedback` - Disable feedback extraction for this review
 - `--feedback-model MODEL` - Specify extraction model for this review
+- `--provider llm:<target>:<model>` - Override reviewer lanes only; this does not replace the feedback synthesis model
 
 ### Example Workflow Configuration
 
 ```yaml
-# .ace/review/presets/code-pr.yml
-presets:
-  - code
+# .ace/review/presets/code-fit.yml
 
 # Feedback settings for PR reviews
 feedback:
@@ -440,10 +439,10 @@ Each review execution creates a new session:
 
 ```bash
 # First review
-ace-review --pr 189 --preset code-pr
+ace-review --pr 189 --preset code-fit
 
 # Second review (different PR or updated code)
-ace-review --pr 190 --preset code-pr
+ace-review --pr 190 --preset code-fit
 
 # List all sessions
 ls -la .ace-local/review/sessions/

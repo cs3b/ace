@@ -31,6 +31,7 @@ module Ace
           assert_equal "google:gemini-2.5-pro", reviewer.model
           assert_equal "code_quality", reviewer.focus
           assert_equal "Focus on SOLID principles.", reviewer.system_prompt_additions
+          assert_equal "Focus on SOLID principles.", reviewer.prompt.dig("sections", "reviewer_notes", "content")
           assert_equal ["lib/**/*.rb", "src/**/*.ts"], reviewer.file_patterns["include"]
           assert_equal ["**/*_test.rb", "**/*.spec.ts"], reviewer.file_patterns["exclude"]
           assert_equal 1.0, reviewer.weight
@@ -58,6 +59,7 @@ module Ace
           assert_nil reviewer.name
           assert_nil reviewer.focus
           assert_nil reviewer.system_prompt_additions
+          assert_equal({}, reviewer.prompt)
           assert_equal Reviewer::DEFAULT_WEIGHT, reviewer.weight
           assert_equal false, reviewer.critical
         end
@@ -93,6 +95,13 @@ module Ace
           assert_includes error.message, "weight must be between 0 and 1"
         end
 
+        def test_initialization_raises_for_llm_reviewer_without_prompt
+          config = @valid_config.except(:system_prompt_additions).merge(reviewer_type: "llm")
+
+          error = assert_raises(ArgumentError) { Reviewer.new(config) }
+          assert_includes error.message, "must define a prompt"
+        end
+
         # Factory method tests
 
         def test_from_model_string
@@ -123,10 +132,17 @@ module Ace
         def test_from_preset_config_with_reviewers_array
           config = {
             "reviewers" => [
-              { "name" => "quality", "model" => "google:gemini-2.5-pro", "focus" => "code_quality" },
-              { "name" => "security", "model" => "openai:gpt-4o", "focus" => "security", "critical" => true }
+              { "name" => "quality", "providers" => ["llm:google:google:gemini-2.5-pro"], "focus" => "code_quality" },
+              {
+                "name" => "security",
+                "providers" => ["llm:openai:openai:gpt-4o"],
+                "focus" => "security",
+                "critical" => true,
+                "prompt" => { "base" => "prompt://base/system" }
+              }
             ]
           }
+          config["reviewers"][0]["prompt"] = { "base" => "prompt://base/system" }
           reviewers = Reviewer.from_preset_config(config)
 
           assert_equal 2, reviewers.length
@@ -136,22 +152,16 @@ module Ace
           assert_equal true, reviewers[1].critical
         end
 
-        def test_from_preset_config_with_legacy_models_array
+        def test_from_preset_config_with_legacy_models_array_raises
           config = { "models" => ["google:gemini-2.5-flash", "openai:gpt-4o"] }
-          reviewers = Reviewer.from_preset_config(config)
-
-          assert_equal 2, reviewers.length
-          assert_equal "reviewer-1", reviewers[0].name
-          assert_equal "google:gemini-2.5-flash", reviewers[0].model
+          error = assert_raises(ArgumentError) { Reviewer.from_preset_config(config) }
+          assert_match(/legacy top-level model\/models/i, error.message)
         end
 
-        def test_from_preset_config_with_legacy_single_model
+        def test_from_preset_config_with_legacy_single_model_raises
           config = { "model" => "google:gemini-2.5-flash" }
-          reviewers = Reviewer.from_preset_config(config)
-
-          assert_equal 1, reviewers.length
-          assert_equal "default", reviewers[0].name
-          assert_equal "google:gemini-2.5-flash", reviewers[0].model
+          error = assert_raises(ArgumentError) { Reviewer.from_preset_config(config) }
+          assert_match(/legacy top-level model\/models/i, error.message)
         end
 
         def test_from_preset_config_with_empty_config
@@ -161,51 +171,85 @@ module Ace
 
         def test_from_preset_config_prefers_reviewers_over_models
           config = {
-            "reviewers" => [{ "name" => "custom", "model" => "custom:model" }],
+            "reviewers" => [{
+              "name" => "custom",
+              "providers" => ["llm:custom:custom:model"],
+              "prompt" => { "base" => "prompt://base/system" }
+            }],
             "models" => ["google:gemini-2.5-flash"]
           }
           reviewers = Reviewer.from_preset_config(config)
 
           assert_equal 1, reviewers.length
           assert_equal "custom", reviewers[0].name
+          assert_equal "custom:model", reviewers[0].model
         end
 
-        # System prompt enhancement tests
+        def test_from_definition_expands_multiple_providers_into_lanes
+          lanes = Reviewer.from_definition(
+            {
+              "name" => "code-fit",
+              "focus" => "code_quality",
+              "prompt" => { "base" => "prompt://base/system" },
+              "providers" => [
+                "llm:codex:codex:codex@review-deep",
+                {
+                  "provider" => "llm:claude:anthropic:claude-3-7-sonnet",
+                  "timeout" => 180,
+                  "sandbox" => "read-only"
+                }
+              ]
+            },
+            default_provider_options: { "timeout" => 300 }
+          )
 
-        def test_enhance_system_prompt
+          assert_equal 2, lanes.length
+          assert_equal "codex:codex@review-deep", lanes[0].model
+          assert_equal "anthropic:claude-3-7-sonnet", lanes[1].model
+          assert_equal 300, lanes[0].provider_options["timeout"]
+          assert_equal 180, lanes[1].provider_options["timeout"]
+          assert_equal "read-only", lanes[1].provider_options["sandbox"]
+        end
+
+        def test_from_definition_rejects_removed_provider_field
+          error = assert_raises(ArgumentError) do
+            Reviewer.from_definition(
+              {
+                "name" => "lint",
+                "provider" => "tool:lint"
+              }
+            )
+          end
+
+          assert_match(/removed field 'provider'/i, error.message)
+        end
+
+        # Prompt normalization tests
+
+        def test_normalizes_system_prompt_additions_into_prompt_sections
           reviewer = Reviewer.new(@valid_config)
-          base_prompt = "You are a code reviewer."
 
-          enhanced = reviewer.enhance_system_prompt(base_prompt)
-
-          assert_includes enhanced, "You are a code reviewer."
-          assert_includes enhanced, "Focus on SOLID principles."
+          notes = reviewer.prompt.fetch("sections").fetch("reviewer_notes")
+          assert_equal "Reviewer Notes", notes["title"]
+          assert_equal "Additional reviewer-specific instructions", notes["description"]
+          assert_equal "Focus on SOLID principles.", notes["content"]
         end
 
-        def test_enhance_system_prompt_with_nil_base
-          reviewer = Reviewer.new(@valid_config)
+        def test_normalizes_into_existing_reviewer_notes_section
+          reviewer = Reviewer.new(
+            @valid_config.merge(
+              prompt: {
+                sections: {
+                  reviewer_notes: {
+                    content: "Existing note."
+                  }
+                }
+              }
+            )
+          )
 
-          enhanced = reviewer.enhance_system_prompt(nil)
-
-          assert_equal "Focus on SOLID principles.", enhanced
-        end
-
-        def test_enhance_system_prompt_with_empty_base
-          reviewer = Reviewer.new(@valid_config)
-
-          enhanced = reviewer.enhance_system_prompt("")
-
-          assert_equal "Focus on SOLID principles.", enhanced
-        end
-
-        def test_enhance_system_prompt_without_additions
-          config = @valid_config.except(:system_prompt_additions)
-          reviewer = Reviewer.new(config)
-          base_prompt = "You are a code reviewer."
-
-          enhanced = reviewer.enhance_system_prompt(base_prompt)
-
-          assert_equal "You are a code reviewer.", enhanced
+          assert_equal "Existing note.\n\nFocus on SOLID principles.",
+                       reviewer.prompt.dig("sections", "reviewer_notes", "content")
         end
 
         # File pattern matching tests
@@ -358,6 +402,121 @@ module Ace
           reviewer2 = Reviewer.new(@valid_config)
 
           assert_equal reviewer1.hash, reviewer2.hash
+        end
+
+        # provider_class / template tests
+
+        def test_template_from_definition_llm_creates_template
+          template = Reviewer.template_from_definition(
+            "name" => "correctness",
+            "focus" => "correctness",
+            "weight" => 1.0,
+            "critical" => true,
+            "provider_class" => "llm",
+            "prompt" => { "base" => "prompt://base/system" }
+          )
+
+          assert_equal "correctness", template.name
+          assert_equal "correctness", template.focus
+          assert_equal "llm", template.provider_class
+          assert_equal "llm", template.reviewer_type
+          assert_nil template.model
+          assert_nil template.provider_ref
+        end
+
+        def test_template_from_definition_tools_lint_creates_template
+          template = Reviewer.template_from_definition(
+            "name" => "lint",
+            "focus" => "lint",
+            "weight" => 0.6,
+            "provider_class" => "tools-lint"
+          )
+
+          assert_equal "lint", template.name
+          assert_equal "tools-lint", template.provider_class
+          assert_equal "tool", template.reviewer_type
+          assert_nil template.model
+        end
+
+        def test_template_from_definition_raises_for_unknown_class
+          error = assert_raises(ArgumentError) do
+            Reviewer.template_from_definition(
+              "name" => "bad",
+              "provider_class" => "unknown-class"
+            )
+          end
+          assert_includes error.message, "unknown-class"
+        end
+
+        def test_from_definition_with_provider_class_returns_single_template
+          results = Reviewer.from_definition({
+            "name" => "correctness",
+            "focus" => "correctness",
+            "provider_class" => "llm",
+            "prompt" => { "base" => "prompt://base/system" }
+          })
+
+          assert_equal 1, results.size
+          assert_equal "llm", results.first.provider_class
+          assert_nil results.first.model
+        end
+
+        def test_from_catalog_entry_llm_creates_resolved_reviewer
+          template = Reviewer.template_from_definition(
+            "name" => "correctness",
+            "focus" => "correctness",
+            "provider_class" => "llm",
+            "prompt" => { "base" => "prompt://base/system" }
+          )
+          catalog_entry = { "name" => "review-fast", "model" => "codex:spark@review-fast" }
+
+          resolved = Reviewer.from_catalog_entry(template, catalog_entry, index: 0)
+
+          assert_equal "correctness", resolved.name
+          assert_equal "codex:spark@review-fast", resolved.model
+          assert_equal "llm", resolved.provider_kind
+          assert_equal "llm", resolved.reviewer_type
+          refute_nil resolved.lane_id
+          refute_nil resolved.provider_ref
+        end
+
+        def test_from_catalog_entry_tools_lint_creates_resolved_reviewer
+          template = Reviewer.template_from_definition(
+            "name" => "lint",
+            "focus" => "lint",
+            "provider_class" => "tools-lint"
+          )
+          catalog_entry = { "name" => "lint", "tool" => "lint" }
+
+          resolved = Reviewer.from_catalog_entry(template, catalog_entry, index: 0)
+
+          assert_equal "lint", resolved.name
+          assert_equal "tool:lint", resolved.model
+          assert_equal "tool", resolved.provider_kind
+          assert_equal "tool", resolved.reviewer_type
+        end
+
+        def test_template_allows_nil_model
+          # Template reviewers with provider_class should not require model
+          template = Reviewer.new(
+            "name" => "correctness",
+            "provider_class" => "llm",
+            "reviewer_type" => "llm",
+            "prompt" => { "base" => "prompt://base/system" }
+          )
+          assert_nil template.model
+          assert_equal "llm", template.provider_class
+        end
+
+        def test_to_h_includes_provider_class
+          template = Reviewer.template_from_definition(
+            "name" => "correctness",
+            "focus" => "correctness",
+            "provider_class" => "llm",
+            "prompt" => { "base" => "prompt://base/system" }
+          )
+          hash = template.to_h
+          assert_equal "llm", hash["provider_class"]
         end
       end
     end

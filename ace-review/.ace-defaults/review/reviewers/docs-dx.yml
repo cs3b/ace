@@ -1,0 +1,29 @@
+provider_class: llm
+focus: docs-dx
+weight: 0.7
+critical: false
+prompt:
+  base: "prompt://base/system"
+  sections:
+    review_focus:
+      title: "Docs and DX Focus"
+      description: "Documentation quality and developer experience."
+      files:
+        - "prompt://focus/scope/docs"
+        - "prompt://focus/scope/spec"
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Structured findings output"
+      files:
+        - "prompt://format/detailed"
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Tone and evidence expectations"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    reviewer_notes:
+      title: "Reviewer Notes"
+      description: "Additional reviewer-specific instructions"
+      content: |
+        Focus on user-facing clarity, workflow guidance, and documentation developer experience.

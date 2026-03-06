@@ -78,13 +78,14 @@ module Ace
         #   #=> 128_000
         def self.resolve(model_name)
           return DEFAULT_LIMIT if model_name.nil? || model_name.empty?
+          model_key = strip_preset_suffix(model_name)
 
           # Try to get limit from ace-llm provider config first
-          limit = load_from_ace_llm(model_name)
+          limit = load_from_ace_llm(model_key)
           return limit if limit
 
           # Fall back to hardcoded pattern matching
-          normalized = strip_provider_prefix(model_name)
+          normalized = strip_provider_prefix(model_key)
           match = MODEL_LIMITS.find { |entry| normalized.match?(entry[:pattern]) }
           match ? match[:limit] : DEFAULT_LIMIT
         end
@@ -101,6 +102,8 @@ module Ace
         # @param model_name [String] Model identifier with provider prefix
         # @return [Integer, nil] Context limit from config, or nil if not found
         def self.load_from_ace_llm(model_name)
+          model_name = strip_preset_suffix(model_name)
+
           # Extract provider prefix (e.g., "google" from "google:gemini-2.5-pro")
           return nil unless model_name.include?(":")
 
@@ -154,6 +157,12 @@ module Ace
         end
 
         private_class_method :strip_provider_prefix
+
+        def self.strip_preset_suffix(model_name)
+          model_name.to_s.split("@", 2).first
+        end
+
+        private_class_method :strip_preset_suffix
       end
     end
   end

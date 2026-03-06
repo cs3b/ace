@@ -2,25 +2,27 @@
 
 description: "Specification review - goal clarity, usage expectations, tests, completeness"
 
-instructions:
-  base: "prompt://base/system"
-  bundle:
-    sections:
-      format:
-        title: "Format Guidelines"
-        description: "Standard output formatting and structure guidelines"
-        files:
-          - "prompt://format/standard"
-      spec_focus:
-        title: "Specification Focus"
-        description: "Specification clarity, completeness, and feasibility review"
-        files:
-          - "prompt://focus/scope/spec"
-      guidelines:
-        title: "Communication Guidelines"
-        description: "Professional communication style"
-        files:
-          - "prompt://guidelines/tone"
+reviewers:
+  - name: spec-review
+    model: "codex:codex"
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        format:
+          title: "Format Guidelines"
+          description: "Standard output formatting and structure guidelines"
+          files:
+            - "prompt://format/standard"
+        spec_focus:
+          title: "Specification Focus"
+          description: "Specification clarity, completeness, and feasibility review"
+          files:
+            - "prompt://focus/scope/spec"
+        guidelines:
+          title: "Communication Guidelines"
+          description: "Professional communication style"
+          files:
+            - "prompt://guidelines/tone"
 
 subject:
   bundle:

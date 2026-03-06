@@ -7,6 +7,187 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-03-06
+
+### Added
+- Provider catalog entries are now arrays (multi-model groups) — first item is default, enabling multiple lanes from a single group name.
+- Configurable glob-based partition definitions loaded from `.ace/review/partitions/<name>.yml` with named groups, glob patterns, and optional `catch_all` for unmatched files.
+- Default `by-concern` partition definition with code, handbook, and config groups.
+
+### Changed
+- `ProviderCatalog#resolve` returns N entries per group (one per array item) instead of one entry per name, using `FIELD_KEYS` lookup for provider class field mapping.
+- `PartitionBuilder` replaced hardcoded `by_package`/`by_concern` strategies with YAML-driven glob definitions loaded from config cascade.
+- Presets `code-fit` and `code-shine` now reference `partition: by-concern`.
+
+## [0.51.2] - 2026-03-06
+
+### Added
+- Added inline `providers` parsing via a normalized `ProviderRef` model, including scalar refs and per-entry override maps (`timeout`, `cli_args`, `sandbox`, etc.).
+- Added strict multi-lane completion control with `--require-all-reports` (default true) so synthesis is skipped when any requested lane report is missing.
+
+### Changed
+- Made `providers` the only supported reviewer provider field; reviewer `provider` is now rejected with a migration error.
+- Expanded reviewer execution to one deterministic lane per provider entry and updated lane/run-key identity to include lane metadata for stable report naming.
+- Removed dependency on external `.ace/review/providers/*` catalogs; provider resolution now comes directly from reviewer/CLI provider refs.
+- Updated `--provider` CLI handling to accept repeatable values (and comma-separated lists) and apply explicit override behavior across resolved LLM reviewer lanes.
+
+### Technical
+- Updated preset/runtime/tests/docs for providers-only reviewer definitions, lane-specific timeout precedence, strict report gating, and provider-aware run-key/report generation.
+
+## [0.51.1] - 2026-03-06
+
+### Added
+- Added per-reviewer provider option forwarding so review execution can consume `timeout`, `sandbox`, and `cli_args` from provider metadata instead of hardcoded LLM client defaults.
+
+### Changed
+- Preserved lane identity and metadata through report collection and synthesis by carrying `run_key` into report descriptors, preventing duplicate-name reviewer collision in weighted scoring.
+
+### Fixed
+- Kept feedback synthesis metadata alignment for multi-lane runs by mapping full-weight denominators to lane identity rather than plain reviewer name.
+- Continued support for `provider@preset` model inputs in CLI validation to match provider-specific execution targets.
+
+## [0.51.0] - 2026-03-06
+
+### Added
+- Added `--provider KIND:NAME` review CLI override so preset-based review execution can rewrite all resolved LLM reviewer lanes to a selected provider without replacing the reviewer set.
+
+### Changed
+- Migrated reviewer provider references and provider catalogs from flat names (`llm-review-fast`, `lint`) to typed references and nested layout (`llm:review-fast`, `tool:lint`, `review/providers/<kind>/<name>.yml`).
+- Updated `ace-review` runtime, workflow docs, and README guidance so `ace-review-pr` and direct `ace-review` usage document the typed provider override path and the separation between reviewer-lane overrides and `--feedback-model`.
+
+### Technical
+- Added validation and regression coverage for typed provider references, nested provider catalog loading, and reviewer-lane provider override behavior across CLI, preset manager, reviewer model, and review manager tests.
+
+## [0.50.0] - 2026-03-06
+
+### Added
+- Added explicit preset-resolution failures when a preset produces no reviewer lanes and no CLI `--model`/`--models` override is provided.
+
+### Changed
+- Removed preset/config `model` and `models` fallback from execution planning so runnable presets now derive execution metadata only from explicit `pipeline` or `reviewers` definitions.
+- Reduced the shipped and repo-local preset catalogs to the standalone core five (`code-valid`, `code-fit`, `code-shine`, `spec`, `docs`) and made the phased code presets runnable without inheriting from `code`.
+- Updated CLI help, README guidance, and feedback workflow docs to describe the new reviewer-first preset contract and retained preset surface.
+
+### Technical
+- Updated `ace-review` runtime tests and `TS-REVIEW-001` fixture presets to remove legacy top-level `model` fields and lock the new no-backward-compatibility execution path.
+
+## [0.49.3] - 2026-03-06
+
+### Fixed
+- Fixed malformed model validation to raise CLI errors directly for invalid `--model` values, so invalid model inputs fail immediately with non-zero exit and clear messages in dry-run and live paths.
+
+### Technical
+- Updated `TS-REVIEW-001` error-handling coverage to validate malformed model input and align invalid-model coverage with actual CLI validation behavior.
+
+## [0.49.2] - 2026-03-06
+
+### Fixed
+- Fixed duplicate reviewer-identity collisions by allocating deterministic unique lane keys even when two reviewers share the same name and model target.
+- Completed reviewer-owned prompt migration by normalizing legacy reviewer additions into prompt sections and keeping shipped and repo-local reviewer definitions aligned with the executed prompt contract.
+
+### Changed
+- Removed dead global `--prompt-*` CLI override flags and the associated stale documentation so prompt semantics now live only in reviewer definitions.
+- Added regression coverage for duplicate reviewer identities, prompt normalization, and removed prompt override CLI flags.
+
+## [0.49.1] - 2026-03-05
+
+### Fixed
+- Fixed multi-reviewer model collisions by keying execution lanes and outputs with reviewer run keys (`name:model_slug`) while preserving `model` as metadata.
+- Reviewer prompts now flow through run-keyed artifacts (`system-*.prompt.md` and `system-*.context.md`), preserving per-lane prompt/output identity when multiple reviewers share a model.
+- Added regression coverage for base-only prompts, missing-prompt validation, and same-model reviewer lane collision handling.
+
+## [0.49.0] - 2026-03-05
+
+### Added
+- Added reviewer-scoped prompt ownership by introducing first-class `reviewers[].prompt` configuration and removing preset-level prompt fields from runtime preset definitions.
+
+### Changed
+- Preset resolution now rejects legacy preset-owned prompt keys (`instructions`, `prompt_composition`, `system_prompt`) to enforce clearer ownership and reviewability boundaries.
+
+## [0.48.2] - 2026-03-05
+
+### Fixed
+- Preserved duplicate-model reviewer lanes by retaining all reviewer objects per model in `MultiModelExecutor`, while keeping backward-compatible single-reviewer metadata.
+- `ReviewManager#collect_report_paths` now fans out reviewer descriptors per lane when a model result carries multiple reviewers, preserving weighted synthesis provenance for shared-model lanes.
+- Added regression coverage for duplicate-model reviewer lane retention in both executor and report-path collection tests.
+
+## [0.48.1] - 2026-03-05
+
+### Fixed
+- Single-model feedback extraction now propagates matching reviewer metadata into synthesis inputs, preserving weighted metadata fields (`confidence`, `focus`, `critical_source`) for single-reviewer presets.
+- `FeedbackSynthesizer` now resets memoized consensus-threshold state at the start of each `synthesize` call, preventing stale threshold reuse across sequential runs with changed config.
+
+## [0.48.0] - 2026-03-05
+
+### Added
+- Added phased preset pipeline catalogs for cutover lanes (`phased-valid`, `phased-fit`, `phased-shine`) and aligned reviewer/provider definitions in both `.ace/review/*` and `.ace-defaults/review/*`.
+- Added regression coverage for phased-preset cutover shape in `PresetManager` pipeline resolution tests.
+
+### Changed
+- Converted `code-valid`, `code-fit`, and `code-shine` presets to thin composition wrappers (`presets: [code]` + `pipeline:`) so phased review behavior resolves through reviewer/provider/pipeline composition instead of preset-local instruction bundles.
+
+## [0.47.0] - 2026-03-05
+
+### Added
+- Added first-class narrow review configuration surfaces under `.ace/review/{reviewers,providers,pipelines}` and a thin runnable preset `pr-risk-based`.
+- Added pipeline-backed preset resolution that maps preset -> pipeline -> reviewer/provider definitions, including provider-kind metadata on reviewer runtime objects.
+- Added deterministic lint evidence lane support via `LintEvidenceRunner`, writing reviewer-tagged evidence reports into the existing feedback synthesis path.
+
+### Fixed
+- Missing reviewer/provider references now fail early with actionable messages naming the missing reference.
+- Optional-lane resolution now falls back to safe-minimal reviewer lanes when optional selectors produce no matches.
+
+### Changed
+- `ReviewManager` now executes mixed LLM/tool reviewer lanes through one multi-lane response path while preserving existing feedback-item output flow.
+- `ReviewOptions#merge_config` now treats only explicit CLI model flags as reviewer-override signals, allowing config-resolved reviewer plans to load correctly.
+
+## [0.46.4] - 2026-03-05
+
+### Fixed
+- `ContextLimitResolver` now strips optional `@preset` suffixes before provider-config lookup and pattern matching, preserving stable context-window resolution for preset-qualified model targets (for example `google:gemini-2.5-pro@review-fast`).
+
+## [0.46.3] - 2026-03-05
+
+### Fixed
+- `build_reviewer_weight_map` now uses key-presence check (`r.key?(:reviewer_weight)`) instead of truthiness, so zero-weight reviewers are preserved in weighted calculations rather than being silently excluded.
+- `build_full_reviewer_weight_map` applies the same fix: nil weight is the exclusion condition, not zero.
+- `read_reports` now uses explicit `is_a?(Models::Reviewer)` branching instead of duck-typing `respond_to?` checks for clearer, less error-prone reviewer type handling.
+
+## [0.46.2] - 2026-03-05
+
+### Fixed
+- `FeedbackItem#==` and `#hash` now include `confidence` and `consensus` so items with different confidence values no longer compare equal in hashed collections.
+- `FeedbackSynthesizer#consensus_threshold` is now memoized per synthesis run, eliminating repeated config-cascade lookups in the per-finding hot path.
+
+## [0.46.1] - 2026-03-05
+
+### Fixed
+- `ReviewOptions#merge_config` no longer double-wraps pre-resolved `Reviewer` objects when the resolved preset hash is passed as config, preventing "Reviewer model is required" errors.
+- CLI `--models` now takes full precedence over preset `reviewers:` — when explicit models are provided, preset reviewer objects are not loaded into `ReviewOptions`, preserving expected override semantics.
+- `FeedbackSynthesizer` now uses the full configured reviewer set as the confidence denominator; reviewers whose reports failed to load reduce confidence rather than being excluded from the calculation.
+- `MultiModelExecutor#build_reviewer_index` emits a warning when two reviewer definitions share the same model string (last-wins behavior is unchanged).
+
+## [0.46.0] - 2026-03-05
+
+### Added
+- Surface critical-source findings and focus-area grouping in feedback synthesis output.
+- `FeedbackItem` now carries `critical_source` (default `false`) and `focus` (nilable) metadata for downstream presentation.
+
+## [0.45.0] - 2026-03-05
+
+### Added
+- Weight-aware consensus scoring: `FeedbackSynthesizer` now computes a `confidence` score (0.0–1.0) per finding based on the sum of agreeing reviewer weights divided by total weight when reviewer weight metadata is available.
+- `FeedbackItem#confidence` reader: optional float (nil on legacy path); included in `to_h` only when non-nil.
+- Configurable consensus threshold (`feedback.consensus_threshold`, default `0.6`) — consensus is triggered when `confidence >= threshold`.
+- Backward-compatible fallback: when no weight metadata is available, `confidence` is nil and consensus falls back to the existing count-based threshold (`CONSENSUS_THRESHOLD = 3`).
+
+## [0.44.0] - 2026-03-05
+
+### Added
+- Connect reviewer pipeline to execution chain: `Reviewer` objects (with `weight`, `critical`, `focus`) are now threaded through `PresetManager` → `ReviewOptions` → `ReviewManager` → `MultiModelExecutor` → `FeedbackSynthesizer` while preserving full backward compatibility with legacy `models:` + string `report_paths:` flows.
+- `MultiModelExecutor#execute` accepts optional `reviewers:` keyword; derives model list from reviewer objects when provided and tags each result with `:reviewer` metadata.
+- `FeedbackSynthesizer#read_reports` accepts both plain string paths and `{path:, reviewer:}` hash descriptors; explicit reviewer metadata takes priority over filename inference.
+
 ## [0.43.6] - 2026-03-05
 
 ### Changed

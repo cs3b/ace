@@ -1,6 +1,0 @@
-# Deep code review - extends code.yml with detailed format (backward compatible)
-
-presets:
-  - code
-
-description: "Deep code review - comprehensive analysis with detailed format"

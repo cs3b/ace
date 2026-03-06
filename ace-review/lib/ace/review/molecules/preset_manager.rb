@@ -3,6 +3,7 @@
 require "yaml"
 require "pathname"
 require "set"
+require "open3"
 require_relative '../atoms/preset_validator'
 
 module Ace
@@ -71,12 +72,6 @@ module Ace
           available_presets.include?(preset_name.to_s)
         end
 
-        # Get the default model from configuration
-        def default_model
-          config&.dig("defaults", "model") ||
-            Ace::Review.get("defaults", "model")
-        end
-
         # Get the default context from configuration
         # Supports bundle: (new) and context: (old) keys for backward compatibility
         def default_context
@@ -98,25 +93,48 @@ module Ace
           preset = load_preset(preset_name)
           return nil unless preset
 
-          # Resolve models with backward compatibility
-          models_config = resolve_models_config(preset, overrides)
+          validate_no_preset_owned_prompt_keys!(preset, preset_name)
+
+          pipeline_resolution = resolve_pipeline_reviewers(preset, overrides)
 
           # Support both bundle: (new) and context: (old) keys
           preset_context = preset["bundle"] || preset["context"]
 
+          # Resolve reviewer objects from pipeline config or explicit reviewer config.
+          reviewers_config = if pipeline_resolution
+                               pipeline_resolution[:reviewers]
+                             else
+                               Models::Reviewer.from_preset_config(
+                                 preset,
+                                 default_provider_options: default_provider_options
+                               )
+                             end
+          models_config = resolved_llm_models(reviewers_config)
+
           {
             description: preset["description"],
-            # Extract prompt composition for ace-bundle frontmatter (but let ace-bundle process it)
-            system_prompt: preset["system_prompt"] || preset["prompt_composition"],
-            # Preserve instructions field for section-based context generation
-            instructions: preset["instructions"],
             context: resolve_context_config(preset_context, overrides[:context]),
             subject: resolve_subject_config(preset["subject"], overrides[:subject]),
             models: models_config,
-            # Keep model for backward compatibility (first model in array)
             model: models_config.first,
+            reviewers: reviewers_config,
+            pipeline: pipeline_resolution&.dig(:name),
             output_format: overrides[:output_format] || preset["output_format"] || default_output_format
           }
+        end
+
+        def validate_no_preset_owned_prompt_keys!(preset, preset_name)
+          banned_keys = {
+            "instructions" => "instructions",
+            "prompt_composition" => "prompt_composition",
+            "system_prompt" => "system_prompt"
+          }
+
+          conflict = banned_keys.keys.find { |key| preset.key?(key) }
+          return unless conflict
+
+          raise ArgumentError,
+                "Preset '#{preset_name}' defines legacy '#{banned_keys[conflict]}' at the preset level. "                 "Move prompt ownership to reviewer definitions."
         end
 
         # Get storage configuration (user config only, no defaults)
@@ -229,6 +247,214 @@ module Ace
         end
 
         private
+
+        # Resolve reviewer configuration from first-class pipeline/reviewer files.
+        # Returns nil when preset does not declare a pipeline.
+        def resolve_pipeline_reviewers(preset, overrides = {})
+          pipeline_name = preset["pipeline"]&.to_s&.strip
+          return nil if pipeline_name.nil? || pipeline_name.empty?
+
+          pipeline = load_named_review_definition("pipelines", pipeline_name)
+          raise ArgumentError, "Missing pipeline reference: #{pipeline_name}" unless pipeline
+
+          always_reviewers = normalize_lane_references(pipeline["always"])
+          optional_entries = normalize_optional_entries(pipeline["optional"])
+          optional_reviewers = select_optional_lanes(optional_entries)
+          evidence_reviewers = normalize_lane_references(pipeline["evidence"])
+
+          safe_minimal = normalize_lane_references(pipeline["safe_minimal"])
+          safe_minimal = always_reviewers if safe_minimal.empty?
+
+          if optional_entries.any? && optional_reviewers.empty?
+            optional_reviewers = safe_minimal.dup
+          end
+
+          primary_reviewers = (always_reviewers + optional_reviewers).uniq
+          primary_reviewers = safe_minimal.dup if primary_reviewers.empty? && safe_minimal.any?
+
+          if primary_reviewers.empty?
+            raise ArgumentError,
+                  "Pipeline '#{pipeline_name}' resolved no reviewers. Configure always or safe_minimal lanes."
+          end
+
+          # Deduplicate reviewer names (Task 3: each reviewer runs at most once per subject)
+          lane_names = (primary_reviewers + evidence_reviewers).uniq
+
+          # Build template reviewers from catalog definitions
+          templates = lane_names.map { |reviewer_name| build_reviewer_template(reviewer_name, pipeline_name) }
+
+          # Expand templates into resolved reviewers using provider catalog
+          reviewers = expand_reviewer_templates(templates, preset, overrides)
+
+          llm_models = reviewers
+            .reject { |reviewer| reviewer.provider_kind.to_s == "tool" }
+            .map(&:model)
+            .compact
+            .uniq
+
+          if llm_models.empty?
+            raise ArgumentError, "Pipeline '#{pipeline_name}' resolved no LLM reviewers"
+          end
+
+          {
+            name: pipeline_name,
+            reviewers: reviewers,
+            models: llm_models
+          }
+        end
+
+        # Load a named definition from .ace/review/{type}/<name>.yml.
+        # Type can be reviewers or pipelines.
+        def load_named_review_definition(definition_type, name)
+          validation = Atoms::PresetValidator.validate_preset_name(name)
+          unless validation[:success]
+            raise ArgumentError, validation[:error]
+          end
+
+          finder = Ace::Support::Config.finder
+          definition_file = finder.find_file("review/#{definition_type}/#{name}.yml")
+
+          unless definition_file && File.exist?(definition_file)
+            fallback_dir = File.join(project_root, ".ace/review/#{definition_type}")
+            fallback_file = File.join(fallback_dir, "#{name}.yml")
+            definition_file = fallback_file if File.exist?(fallback_file)
+          end
+
+          return nil unless definition_file && File.exist?(definition_file)
+
+          content = File.read(definition_file)
+          definition_data = YAML.safe_load(content, permitted_classes: [Symbol]) || {}
+          deep_stringify_keys(definition_data)
+        rescue ArgumentError
+          raise
+        rescue StandardError => e
+          warn "Failed to load #{definition_type}/#{name}: #{e.message}" if Ace::Review.debug?
+          nil
+        end
+
+        def normalize_lane_references(value)
+          Array(value).map { |entry| entry.to_s.strip }.reject(&:empty?).uniq
+        end
+
+        def normalize_optional_entries(value)
+          Array(value).filter_map do |entry|
+            case entry
+            when String
+              { "reviewer" => entry }
+            when Hash
+              deep_stringify_keys(entry)
+            else
+              nil
+            end
+          end
+        end
+
+        def select_optional_lanes(optional_entries)
+          optional_entries.filter_map do |entry|
+            reviewer_name = entry["reviewer"] || entry["name"] || entry["lane"]
+            next if reviewer_name.to_s.strip.empty?
+            next unless optional_lane_selected?(entry)
+
+            reviewer_name.to_s.strip
+          end.uniq
+        end
+
+        def optional_lane_selected?(entry)
+          patterns = Array(entry["when_any_changed"] || entry["when_files_match"] || entry.dig("when", "any_changed"))
+            .map { |pattern| pattern.to_s.strip }
+            .reject(&:empty?)
+          return true if patterns.empty?
+
+          changed_files = changed_files_for_optional_selection
+          return false if changed_files.empty?
+
+          flags = File::FNM_PATHNAME | File::FNM_DOTMATCH
+          changed_files.any? do |file|
+            patterns.any? { |pattern| File.fnmatch?(pattern, file, flags) }
+          end
+        end
+
+        def changed_files_for_optional_selection
+          @changed_files_for_optional_selection ||= begin
+            files = []
+            files.concat(read_changed_files_from_git("origin...HEAD"))
+            files.concat(read_changed_files_from_git("HEAD"))
+            files.uniq
+          end
+        end
+
+        def read_changed_files_from_git(range)
+          command = ["git", "diff", "--name-only", range]
+          stdout, _stderr, status = Open3.capture3(*command, chdir: project_root)
+          return [] unless status.success?
+
+          stdout.lines.map(&:strip).reject(&:empty?)
+        rescue StandardError
+          []
+        end
+
+        # Load a reviewer definition and return a template Reviewer (no model/provider_ref).
+        # Called during pipeline resolution before catalog expansion.
+        def build_reviewer_template(reviewer_name, pipeline_name)
+          reviewer_definition = load_named_review_definition("reviewers", reviewer_name)
+          raise ArgumentError, "Missing reviewer reference: #{reviewer_name}" unless reviewer_definition
+
+          definition_with_name = deep_stringify_keys(reviewer_definition).merge("name" => reviewer_name)
+          begin
+            reviewers = Models::Reviewer.from_definition(
+              definition_with_name,
+              default_provider_options: default_provider_options
+            )
+            # from_definition returns an array; for template path it's always one element
+            reviewers.first
+          rescue ArgumentError => e
+            raise ArgumentError, "Reviewer '#{reviewer_name}' in pipeline '#{pipeline_name}': #{e.message}"
+          end
+        end
+
+        # Expand template reviewers into resolved reviewers using the provider catalog.
+        # Templates with provider_class are expanded; fully-resolved reviewers pass through.
+        #
+        # @param templates [Array<Models::Reviewer>] template reviewers from pipeline
+        # @param preset [Hash] loaded preset (may contain providers: section)
+        # @param overrides [Hash] CLI/API overrides (may contain providers_llm, providers_tools_lint)
+        def expand_reviewer_templates(templates, preset, overrides = {})
+          preset_providers = (preset["providers"] || {}).transform_keys(&:to_s)
+
+          # Resolve provider name lists: CLI overrides > preset > default
+          llm_names = Array(
+            overrides[:providers_llm] || overrides["providers_llm"] ||
+            preset_providers["llm"] || ["review-fast"]
+          ).map(&:to_s).reject(&:empty?)
+
+          tools_lint_names = Array(
+            overrides[:providers_tools_lint] || overrides["providers_tools_lint"] ||
+            preset_providers["tools_lint"] || ["lint"]
+          ).map(&:to_s).reject(&:empty?)
+
+          catalog = Molecules::ProviderCatalog.new(project_root: project_root)
+
+          templates.flat_map do |template|
+            # Already resolved (inline model reviewers, e.g. docs/spec presets)
+            next [template] unless template.provider_class
+
+            provider_names = case template.provider_class
+                             when "llm" then llm_names
+                             when "tools-lint" then tools_lint_names
+                             else []
+                             end
+
+            catalog_entries = catalog.resolve(provider_class: template.provider_class, names: provider_names)
+
+            catalog_entries.each_with_index.map do |entry, index|
+              Models::Reviewer.from_catalog_entry(
+                template, entry,
+                index: index,
+                default_provider_options: default_provider_options
+              )
+            end
+          end
+        end
 
         # Strip composition metadata from a preset hash (deep recursive)
         # Removes internal keys used for composition tracking: success, composed, composed_from
@@ -408,30 +634,6 @@ module Ace
           end
         end
 
-        def resolve_system_prompt_composition(composition, overrides)
-          return {} unless composition
-
-          result = composition.dup
-
-          # Apply overrides
-          result["base"] = overrides[:prompt_base] if overrides[:prompt_base]
-          result["format"] = overrides[:prompt_format] if overrides[:prompt_format]
-
-          if overrides[:prompt_focus]
-            result["focus"] = overrides[:prompt_focus].split(",").map(&:strip)
-          elsif overrides[:add_focus]
-            result["focus"] ||= []
-            result["focus"].concat(overrides[:add_focus].split(",").map(&:strip))
-            result["focus"].uniq!
-          end
-
-          if overrides[:prompt_guidelines]
-            result["guidelines"] = overrides[:prompt_guidelines].split(",").map(&:strip)
-          end
-
-          result
-        end
-
         def resolve_context_config(preset_context, override_context)
           return override_context if override_context
           preset_context || default_context
@@ -442,31 +644,17 @@ module Ace
           preset_subject
         end
 
-        # Resolve models configuration with backward compatibility
-        # Priority: override models > override model > preset models > preset model > default
-        def resolve_models_config(preset, overrides)
-          # If override provides models array, use it
-          if overrides[:models].is_a?(Array) && overrides[:models].any?
-            return overrides[:models]
-          end
+        def resolved_llm_models(reviewers)
+          Array(reviewers)
+            .reject { |reviewer| reviewer.provider_kind.to_s == "tool" }
+            .map(&:model)
+            .compact
+            .uniq
+        end
 
-          # If override provides single model, wrap in array
-          if overrides[:model]
-            return [overrides[:model]]
-          end
-
-          # If preset has models array, use it
-          if preset["models"].is_a?(Array) && preset["models"].any?
-            return preset["models"]
-          end
-
-          # If preset has single model, wrap in array
-          if preset["model"]
-            return [preset["model"]]
-          end
-
-          # Fallback to default model
-          [default_model]
+        def default_provider_options
+          timeout = Ace::Review.get("defaults", "llm_timeout")
+          timeout.nil? ? {} : { "timeout" => timeout.to_i }
         end
 
         def current_release

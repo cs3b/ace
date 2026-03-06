@@ -47,7 +47,8 @@ module Ace
         CONSENSUS_THRESHOLD = 3
 
         attr_reader :id, :title, :files, :reviewers, :status, :priority,
-                    :created, :updated, :finding, :context, :research, :resolution, :consensus
+                    :created, :updated, :finding, :context, :research, :resolution, :consensus,
+                    :confidence, :critical_source, :focus
 
         # Initialize a new FeedbackItem from a hash of attributes
         #
@@ -90,6 +91,12 @@ module Ace
           # Consensus: true if 3+ models agree (can be explicitly set or computed)
           @consensus = attrs.key?(:consensus) ? attrs[:consensus] : (@reviewers.length >= CONSENSUS_THRESHOLD)
 
+          # Confidence: optional float 0.0..1.0; nil on legacy path without reviewer weights
+          raw_confidence = attrs[:confidence]
+          @confidence = raw_confidence.nil? ? nil : raw_confidence.to_f.clamp(0.0, 1.0)
+          @critical_source = attrs.fetch(:critical_source, false)
+          @focus = attrs[:focus]
+
           validate!
           freeze_arrays
         end
@@ -126,6 +133,11 @@ module Ace
             hash["reviewer"] = reviewer
           end
 
+          # Include confidence only when it has been computed (non-nil)
+          hash["confidence"] = confidence unless confidence.nil?
+          hash["critical_source"] = critical_source
+          hash["focus"] = focus unless focus.nil?
+
           hash.compact
         end
 
@@ -159,7 +171,11 @@ module Ace
             reviewers == other.reviewers &&
             status == other.status &&
             priority == other.priority &&
-            finding == other.finding
+            finding == other.finding &&
+            critical_source == other.critical_source &&
+            focus == other.focus &&
+            confidence == other.confidence &&
+            consensus == other.consensus
         end
 
         alias eql? ==
@@ -168,7 +184,7 @@ module Ace
         #
         # @return [Integer] Hash code
         def hash
-          [id, title, files, reviewers, status, priority, finding].hash
+          [id, title, files, reviewers, status, priority, finding, critical_source, focus, confidence, consensus].hash
         end
 
         private

@@ -16,11 +16,11 @@ module Ace
           Execute code review using presets or custom configuration
 
           Presets provide pre-configured review types with focused prompts:
-            code         → General code review
-            code-pr      → PR-focused code review
-            security     → Security-focused review
-            performance  → Performance-focused review
+            code-valid   → Correctness-focused code review
+            code-fit     → Architecture and maintainability review
+            code-shine   → Simplicity and clarity review
             docs         → Documentation review
+            spec         → Specification review
 
           Configuration:
             Global config:  ~/.ace/review/config.yml
@@ -31,11 +31,12 @@ module Ace
         DESC
 
         example [
-          '--preset code-pr             # PR code review',
-          '--preset security --auto-execute  # Run and apply fixes',
+          '--preset code-fit            # Architecture/maintainability review',
+          '--pr 234 --preset code-valid --provider llm:codex:codex@review-deep',
+          '--preset docs --auto-execute # Run documentation review',
           '--pr 123                      # Review by PR number',
-          '--preset code --subject diff:HEAD~3 --subject files:docs/**/*.md',
-          '--preset security --dry-run   # Preview without executing'
+          '--preset code-valid --subject diff:HEAD~3 --subject files:docs/**/*.md',
+          '--preset spec --dry-run       # Preview without executing'
         ]
 
         # Review configuration options
@@ -44,12 +45,12 @@ module Ace
         option :output, type: :string, desc: "Specific output file path"
         option :context, type: :string, desc: "Context configuration (preset name or YAML)"
         option :subject, type: :array, desc: "Subject configuration (can be specified multiple times)"
-        option :prompt_base, type: :string, desc: "Base prompt module"
-        option :prompt_format, type: :string, desc: "Format module"
-        option :prompt_focus, type: :string, desc: "Focus modules (comma-separated)"
-        option :add_focus, type: :string, desc: "Add focus modules to preset"
-        option :prompt_guidelines, type: :string, desc: "Guideline modules (comma-separated)"
         option :model, type: :array, desc: "LLM model(s) to use (can be specified multiple times)"
+        option :provider, type: :array, desc: "[Deprecated] Override LLM reviewer lanes with provider refs (repeatable). Use --providers-llm instead."
+        option :providers_llm, type: :array, desc: "Catalog name(s) or model ID(s) for LLM reviewers (e.g. review-fast, review-deep, codex:codex@review-deep)"
+        option :providers_tools_lint, type: :array, desc: "Catalog name(s) for tools-lint reviewers (e.g. lint)"
+        option :partition, type: :string, desc: "Split subject into partitions before review (by_package or by_concern)"
+        option :require_all_reports, type: :boolean, desc: "Require all requested lanes to produce reports before synthesis (default: true)"
         option :no_feedback, type: :boolean, desc: "Skip feedback extraction from review reports"
         option :feedback_model, type: :string, desc: "Model to use for feedback extraction"
         option :dry_run, type: :boolean, desc: "Prepare review without executing"
@@ -130,6 +131,9 @@ module Ace
           # Handle repeatable options
           process_subjects(options)
           process_models(options)
+          process_provider_overrides(options)
+          process_providers_llm(options)
+          process_providers_tools_lint(options)
 
           # Set defaults
           options[:save_session] = true unless options.key?(:save_session)
@@ -178,9 +182,68 @@ module Ace
 
         def validate_model_names(models)
           models.each do |model|
-            unless model.match?(/\A[a-zA-Z0-9\-_:.]+\z/)
-              raise ArgumentError, "Invalid model name '#{model}'. Model names can only contain alphanumeric characters, hyphens, underscores, colons, and dots."
+            unless model.match?(%r{\A[a-zA-Z0-9_.:\-]+(@[a-zA-Z0-9_.:\-]+)?\z})
+              raise Ace::Core::CLI::Error, "Invalid model name '#{model}'. Model names can only contain alphanumeric characters, hyphens, underscores, colons, dots, and optional @preset suffix."
             end
+          end
+        end
+
+        def process_provider_overrides(options)
+          return unless options[:provider]
+
+          providers = Array(options[:provider]).flat_map do |value|
+            value.to_s.split(CLI::ARRAY_SEPARATOR)
+          end.map(&:strip).reject(&:empty?)
+
+          providers = providers.flat_map { |value| value.split(",").map(&:strip).reject(&:empty?) }
+          providers.uniq!
+
+          if providers.empty?
+            options.delete(:provider)
+            return
+          end
+
+          if options[:models]&.any?
+            raise Ace::Core::CLI::Error, "--provider cannot be combined with --model/--models. Use one override path."
+          end
+
+          providers.each do |provider_ref|
+            begin
+              Models::ProviderRef.parse_ref(provider_ref)
+            rescue ArgumentError => e
+              raise Ace::Core::CLI::Error, e.message
+            end
+          end
+
+          options[:provider_overrides] = providers
+          options.delete(:provider)
+        end
+
+        def process_providers_llm(options)
+          return unless options[:providers_llm]
+
+          values = Array(options[:providers_llm]).flat_map do |v|
+            v.to_s.split(CLI::ARRAY_SEPARATOR)
+          end.flat_map { |v| v.split(",") }.map(&:strip).reject(&:empty?).uniq
+
+          if values.any?
+            options[:providers_llm] = values
+          else
+            options.delete(:providers_llm)
+          end
+        end
+
+        def process_providers_tools_lint(options)
+          return unless options[:providers_tools_lint]
+
+          values = Array(options[:providers_tools_lint]).flat_map do |v|
+            v.to_s.split(CLI::ARRAY_SEPARATOR)
+          end.flat_map { |v| v.split(",") }.map(&:strip).reject(&:empty?).uniq
+
+          if values.any?
+            options[:providers_tools_lint] = values
+          else
+            options.delete(:providers_tools_lint)
           end
         end
 

@@ -108,17 +108,17 @@ gem install ace-review
 ## Quick Start
 
 ```bash
-# Review with default preset (code)
+# Review with default preset (code-valid)
 ace-review
 
-# Security-focused review
-ace-review --preset security
+# Documentation-focused review
+ace-review --preset docs
 
 # Save review report to task directory
-ace-review --preset code-pr --task 114
+ace-review --preset code-fit --task 114
 
 # Auto-execute with task integration
-ace-review --preset security --task 114 --auto-execute
+ace-review --preset code-shine --task 114 --auto-execute
 
 # List available presets
 ace-review --list-presets
@@ -127,7 +127,10 @@ ace-review --list-presets
 ace-review --list-prompts
 
 # Execute review with LLM automatically
-ace-review --preset code-pr --auto-execute
+ace-review --preset code-valid --auto-execute
+
+# Override all LLM reviewer lanes with an explicit provider ref
+ace-review --pr 234 --preset code-valid --provider llm:codex:codex@review-deep
 ```
 
 ## Multi-Model Reviews
@@ -138,30 +141,40 @@ Run code reviews against multiple LLM models simultaneously for diverse perspect
 
 ```bash
 # Comma-separated models
-ace-review --preset code-pr --model "gemini,gpt-4,claude" --auto-execute
+ace-review --preset code-valid --model "gemini,gpt-4,claude" --auto-execute
 
 # Multiple --model flags
-ace-review --preset code-pr --model gemini --model gpt-4 --auto-execute
+ace-review --preset code-valid --model gemini --model gpt-4 --auto-execute
 
 # Full provider:model format
-ace-review --preset security --model "google:gemini-2.5-flash,openai:gpt-4" --auto-execute
+ace-review --preset docs --model "google:gemini-2.5-flash,openai:gpt-4" --auto-execute
+
+# Keep preset reviewers, but swap every LLM lane to one provider ref
+ace-review --preset code-valid --provider llm:codex:codex@review-deep --auto-execute
 ```
+
+`--model`/`--models` and `--provider` are separate override paths. `--model` replaces
+execution lanes; `--provider` preserves resolved reviewers and rewrites only their LLM provider/model target.
 
 ### Preset Configuration
 
-Configure multi-model in preset files:
+Executable presets must define `reviewers:` or `pipeline:`. Top-level `model` and `models`
+are not execution inputs.
 
 ```yaml
-# .ace/review/presets/code-multi.yml
-presets:
-  - code
-
-description: "Multi-model code review"
-
-models:
-  - claude:opus
-  - codex:gpt-5.1-codex-max
-  - gpro
+# .ace/review/presets/spec.yml
+description: "Specification review"
+reviewers:
+  - name: spec-architecture
+    providers:
+      - llm:claude:claude:opus
+    prompt:
+      base: "prompt://base/system"
+  - name: spec-implementation
+    providers:
+      - llm:codex:codex:max
+    prompt:
+      base: "prompt://base/system"
 ```
 
 ### Reviewers Format
@@ -174,9 +187,16 @@ The `reviewers` format provides fine-grained control over individual reviewers i
 # .ace/review/presets/my-preset.yml
 reviewers:
   - name: "code-fit"
-    model: "google:gemini-2.5-pro"
+    providers:
+      - llm:google:google:gemini-2.5-pro
     focus: "code_quality"
-    system_prompt_additions: "Focus on SOLID principles..."
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        reviewer_notes:
+          title: "Reviewer Notes"
+          content: |
+            Focus on SOLID principles...
     file_patterns:
       include: ["lib/**/*.rb"]
       exclude: ["**/*_test.rb"]
@@ -184,7 +204,8 @@ reviewers:
     critical: false
 
   - name: "security"
-    model: "openai:gpt-4o"
+    providers:
+      - llm:openai:openai:gpt-4o
     focus: "security"
     weight: 0.8
     critical: true
@@ -195,9 +216,9 @@ reviewers:
 | Attribute | Type | Description |
 |-----------|------|-------------|
 | `name` | String | Human-readable identifier for the reviewer |
-| `model` | String | LLM model identifier (e.g., "google:gemini-2.5-pro") |
+| `providers` | Array | Provider entries for lane expansion (strings or inline maps) |
 | `focus` | String | Review focus area (code_quality, security, etc.) |
-| `system_prompt_additions` | String | Additional text appended to system prompt |
+| `prompt` | Hash | Reviewer-owned prompt bundle rendered via ace-bundle |
 | `file_patterns` | Hash | Include/exclude patterns for file filtering |
 | `weight` | Float | Contribution weight 0.0-1.0 (default: 1.0) |
 | `critical` | Boolean | Always highlight findings (default: false) |
@@ -222,18 +243,38 @@ file_patterns:
 #### Migration from Legacy Format
 
 ```yaml
-# Legacy format (still supported)
-models:
-  - claude:opus
-  - codex:gpt-5.1-codex-max
+# Removed field (no longer supported)
+provider: "llm:review-fast"
 
-# New reviewers format
+# New reviewers format (recommended)
 reviewers:
   - name: "reviewer-1"
-    model: "claude:opus"
-  - name: "reviewer-2"
-    model: "codex:gpt-5.1-codex-max"
+    providers:
+      - "llm:claude:claude:opus"
 ```
+
+### Provider Entries
+
+Provider entries are defined inline per reviewer.
+
+```yaml
+# .ace/review/reviewers/correctness.yml
+providers:
+  - llm:codex:codex@review-deep
+  - provider: llm:claude:anthropic:claude-3-7-sonnet
+    timeout: 180
+    sandbox: read-only
+    cli_args:
+      - --thinking
+      - high
+focus: correctness
+prompt:
+  base: "prompt://base/system"
+```
+
+Provider string format:
+- `llm:<target>:<model>`
+- `tool:<target>`
 
 ### Configuration Options
 
@@ -241,13 +282,13 @@ Set defaults in `.ace/review/config.yml`:
 
 ```yaml
 defaults:
-  preset: code                       # Default preset (basic code review)
+  preset: code-valid                 # Default preset (correctness-focused code review)
   auto_execute: false                # Prompt for confirmation before LLM queries
   max_concurrent_models: 3           # Parallel model limit
   llm_timeout: 300                   # Per-model timeout (seconds)
 ```
 
-**Note**: The gem ships with conservative defaults (`code` preset, confirmation prompts). Override these in your project's `.ace/review/config.yml` for different behavior.
+**Note**: The gem ships with conservative defaults (`code-valid` preset, confirmation prompts). Override these in your project's `.ace/review/config.yml` for different behavior.
 
 ### Output Structure
 
@@ -288,7 +329,7 @@ Review GitHub Pull Requests directly from the command line using the integrated 
 ace-review --pr 123 --auto-execute
 
 # Review with specific preset
-ace-review --pr 456 --preset security --auto-execute
+ace-review --pr 456 --preset code-fit --auto-execute
 
 # Review PR from full GitHub URL
 ace-review --pr https://github.com/owner/repo/pull/789 --auto-execute
@@ -337,8 +378,8 @@ ace-review --pr 123 --post-comment --auto-execute
 # Preview comment without posting (dry run)
 ace-review --pr 123 --post-comment --dry-run --auto-execute
 
-# Security review with comment
-ace-review --pr 456 --preset security --post-comment --auto-execute
+# Docs review with comment
+ace-review --pr 456 --preset docs --post-comment --auto-execute
 ```
 
 ### Timeout Configuration
@@ -527,31 +568,31 @@ Clean, type-safe subject specification using `type:value` syntax:
 
 ```bash
 # Git diff ranges
-ace-review --subject diff:origin/main..HEAD --preset code
+ace-review --subject diff:origin/main..HEAD --preset code-valid
 
 # Commit hashes (review single commit)
-ace-review --subject commit:3cd9afbf --preset code
-ace-review --subject commit:abc123 --preset code  # short hash (6+ chars)
+ace-review --subject commit:3cd9afbf --preset code-valid
+ace-review --subject commit:abc123 --preset code-valid  # short hash (6+ chars)
 
 # GitHub pull requests (subject-only mode)
-ace-review --subject pr:123 --preset code
+ace-review --subject pr:123 --preset code-fit
 
 # Multiple GitHub pull requests (comma-separated)
-ace-review --subject pr:123,456,789 --preset code
+ace-review --subject pr:123,456,789 --preset code-fit
 
 # File patterns
-ace-review --subject files:lib/**/*.rb --preset code
+ace-review --subject files:lib/**/*.rb --preset code-valid
 
 # Multiple files (comma-separated)
-ace-review --subject files:lib/**/*.rb,test/**/* --preset code
+ace-review --subject files:lib/**/*.rb,test/**/* --preset code-valid
 
 # Task references
 ace-review --subject task:145 --preset spec
 ace-review --subject task:145.02 --preset spec
 
 # Keywords (existing shortcuts)
-ace-review --subject staged --preset code
-ace-review --subject working --preset code
+ace-review --subject staged --preset code-valid
+ace-review --subject working --preset code-valid
 ```
 
 ### Multiple --subject Flags (v0.25.0+)
@@ -560,13 +601,13 @@ Combine multiple subjects in a single review with multiple `--subject` flags:
 
 ```bash
 # Review both code changes and documentation
-ace-review --preset code --subject diff:HEAD~3 --subject files:docs/**/*.md
+ace-review --preset code-valid --subject diff:HEAD~3 --subject files:docs/**/*.md
 
 # Multiple file patterns
-ace-review --preset security --subject files:lib/**/*.rb --subject files:test/**/*_test.rb
+ace-review --preset code-fit --subject files:lib/**/*.rb --subject files:test/**/*_test.rb
 
 # PR with additional context files
-ace-review --preset code-pr --subject pr:123 --subject files:CHANGELOG.md
+ace-review --preset docs --subject pr:123 --subject files:CHANGELOG.md
 
 # Staged changes plus specific files
 ace-review --preset docs --subject staged --subject files:README.md
@@ -676,12 +717,12 @@ The `--task` flag enables saving review reports directly to ace-task directories
 
 ```bash
 # Save review to task directory (accepts multiple reference formats)
-ace-review --preset code-pr --task 114
-ace-review --preset security --task task.114
-ace-review --preset comprehensive --task v.0.9.0+114
+ace-review --preset code-fit --task 114
+ace-review --preset docs --task task.114
+ace-review --preset code-shine --task v.0.9.0+114
 
 # Combine with auto-execute
-ace-review --preset code-pr --task 114 --auto-execute
+ace-review --preset code-fit --task 114 --auto-execute
 ```
 
 ### Task Reference Formats
@@ -739,7 +780,7 @@ See `.ace-defaults/review/config.yml` for the full example configuration.
 
 ```bash
 # Disable for a single command
-ace-review --preset code-pr --no-auto-save
+ace-review --preset code-fit --no-auto-save
 
 # Or disable in config
 defaults:
@@ -899,9 +940,9 @@ model: gpro
 ```
 
 ```yaml
-# .ace/review/presets/code-pr.yml - Specialized for PRs
+# .ace/review/presets/pr-focused.yml - Specialized for PRs
 presets:
-  - code                    # Inherit from base preset
+  - review-foundation
 
 description: "Pull request review"
 subject:
@@ -945,7 +986,7 @@ ACE_REVIEW_DEBUG=1 ace-review --preset complex-nested
 
 # Example output:
 # [COMPOSITION] Composed 'base' in 1.23ms (depth: 1, refs: 0)
-# [COMPOSITION] Composed 'code-pr' in 2.45ms (depth: 2, refs: 1)
+# [COMPOSITION] Composed 'pr-focused' in 2.45ms (depth: 2, refs: 1)
 ```
 
 #### Migration Example
@@ -973,20 +1014,20 @@ subject:
 **After** (DRY with composition):
 
 ```yaml
-# code.yml - 40 lines (shared base)
-description: "Base code review"
+# review-foundation.yml - 40 lines (shared base)
+description: "Shared review foundation"
 instructions:
   bundle:
     # ... shared configuration ...
 
-# code-pr.yml - 10 lines
-presets: [code]
+# pr-focused.yml - 10 lines
+presets: [review-foundation]
 description: "PR review"
 subject:
   diffs: ["origin...HEAD"]
 
-# code-wip.yml - 10 lines
-presets: [code]
+# wip-focused.yml - 10 lines
+presets: [review-foundation]
 description: "WIP review"
 subject:
   commands: ["git diff HEAD"]
@@ -1025,11 +1066,11 @@ This allows you to:
 - Create project-specific presets that don't exist in the gem
 - See available presets with `ace-review --list-presets`
 
-**Example**: To customize the `code-pr` preset:
+**Example**: To customize the `code-valid` preset:
 ```bash
 # Copy and modify the default
-cp ace-review/.ace-defaults/review/presets/code-pr.yml .ace/review/presets/code-pr.yml
-# Edit .ace/review/presets/code-pr.yml with your changes
+cp ace-review/.ace-defaults/review/presets/code-valid.yml .ace/review/presets/code-valid.yml
+# Edit .ace/review/presets/code-valid.yml with your changes
 ```
 
 ## Prompt System
@@ -1100,12 +1141,13 @@ ace-review [options]
 ```
 
 Options:
-- `--preset <name>` - Use specific preset (default: code)
+- `--preset <name>` - Use specific preset (default: code-valid)
 - `--subject <config>` - What to review (YAML config, git range, keyword, or file pattern)
 - `--context <config>` - Background information (YAML config or preset name)
 - `--output-dir <path>` - Custom output directory
 - `--output <file>` - Specific output file path
 - `--model <model>` - Override LLM model
+- `--provider <llm:target:model>` - Override all resolved LLM reviewer lanes with one provider ref
 - `--auto-execute` - Execute LLM query automatically
 - `--dry-run` - Prepare review without executing
 - `--list-presets` - List available presets
@@ -1120,13 +1162,6 @@ GitHub Pull Request options:
 - `--[no-]pr-comments` - Include PR comments as developer feedback (default: true for --pr)
 - `--post-comment` - Post review as PR comment (requires --pr)
 - `--gh-timeout <seconds>` - Timeout for gh CLI operations in seconds (default: 30)
-
-Advanced options for prompt composition:
-- `--prompt-base <module>` - Override base prompt
-- `--prompt-format <module>` - Override format module
-- `--prompt-focus <modules>` - Set focus modules (comma-separated)
-- `--add-focus <modules>` - Add focus to preset
-- `--prompt-guidelines <modules>` - Set guideline modules
 
 ## Migration from code-review
 

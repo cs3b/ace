@@ -15,5 +15,11 @@ Save all output to `results/tc/05/`. Capture for each error case:
 ## Constraints
 
 - The sandbox has preset_a and preset_b (circular), broken (missing ref) presets.
-- For invalid model, use a nonexistent provider/model name.
+- For invalid model, pass a clearly malformed model token that fails CLI validation (for example `invalid/model`).
 - All artifacts must come from real tool execution, not fabricated.
+
+### Invalid-Model Simulation Requirement
+
+Because dry-run intentionally does not execute LLM calls, provider resolution does not happen there.
+Use a malformed model token so `ace-review` fails immediately during option validation.
+- Example command pattern: `ace-review --preset code --model invalid/model --subject "files:*.rb" --dry-run`

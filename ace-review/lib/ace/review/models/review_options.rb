@@ -6,15 +6,20 @@ module Ace
       # Options for code review execution
       class ReviewOptions
         attr_accessor :preset, :output_dir, :output, :context, :subject,
-                      :prompt_base, :prompt_format, :prompt_focus, :add_focus,
-                      :prompt_guidelines, :model, :models, :dry_run, :verbose,
+                      :model, :models, :reviewers, :dry_run, :verbose,
                       :auto_execute, :save_session, :session_dir,
                       :task, :pr, :post_comment, :pr_metadata, :gh_timeout,
                       :pr_comments, :pr_comment_data, :no_auto_save,
-                      :no_feedback, :feedback_model,
+                      :no_feedback, :feedback_model, :provider_overrides,
+                      :providers_llm, :providers_tools_lint,
+                      :partition,
+                      :require_all_reports,
                       :list_presets, :list_prompts, :help
 
         def initialize(hash = {})
+          @model_explicit = hash.key?(:model) && !hash[:model].nil?
+          @models_explicit = hash.key?(:models) && hash[:models].is_a?(Array) && hash[:models].any?
+
           # Core options
           @preset = hash[:preset] || Ace::Review.get("defaults", "preset")
           @output_dir = hash[:output_dir]
@@ -24,16 +29,15 @@ module Ace
           @context = hash[:context]
           @subject = hash[:subject]
 
-          # Prompt composition overrides
-          @prompt_base = hash[:prompt_base]
-          @prompt_format = hash[:prompt_format]
-          @prompt_focus = hash[:prompt_focus]
-          @add_focus = hash[:add_focus]
-          @prompt_guidelines = hash[:prompt_guidelines]
-
           # Execution options
           @model = hash[:model]
           @models = hash[:models]
+          @reviewers = hash[:reviewers]
+          @provider_overrides = hash[:provider_overrides]
+          @providers_llm = hash[:providers_llm]
+          @providers_tools_lint = hash[:providers_tools_lint]
+          @partition = hash[:partition]
+          @require_all_reports = hash.key?(:require_all_reports) ? hash[:require_all_reports] : true
           @dry_run = hash[:dry_run] || false
           @verbose = hash[:verbose] || false
           @auto_execute = hash.key?(:auto_execute) ? hash[:auto_execute] : (Ace::Review.get("defaults", "auto_execute") || false)
@@ -70,8 +74,10 @@ module Ace
 
         # Convert back to hash for compatibility
         def to_h
+          internal_keys = %i[model_explicit models_explicit]
           instance_variables.each_with_object({}) do |var, hash|
             key = var.to_s.delete_prefix('@').to_sym
+            next if internal_keys.include?(key)
             value = instance_variable_get(var)
             hash[key] = value unless value.nil?
           end
@@ -115,92 +121,46 @@ module Ace
           !@no_feedback
         end
 
-        # Get effective model (single model for backward compatibility)
-        # Priority: model scalar > first model in models array > config_model > default
-        def effective_model(config_model = nil)
+        # Get effective model from explicit CLI selection only.
+        def effective_model(_config_model = nil)
           return model if model
           return models.first if models&.any?
-          config_model || "google:gemini-2.5-flash"
+
+          nil
         end
 
-        # Get effective models array
-        # Returns array of models, handling both single model and multi-model cases
-        # Priority: models array > model scalar > config_models > default
-        def effective_models(config_models = nil)
-          # If models array is set (from CLI), use it
+        # Get effective models array from explicit CLI selection only.
+        def effective_models(_config_models = nil)
           return models if models&.any?
-
-          # If model scalar is set (backward compatibility), wrap in array
           return [model] if model
 
-          # If config provides models array, use it
-          if config_models.is_a?(Array) && config_models.any?
-            return config_models
-          end
-
-          # If config provides single model, wrap in array
-          if config_models.is_a?(String) && !config_models.empty?
-            return [config_models]
-          end
-
-          # Default to single model
-          ["google:gemini-2.5-flash"]
+          []
         end
 
         # Merge with config values
         def merge_config(config)
           return if config.nil?
 
-          # Merge system prompt configuration if not overridden
-          @prompt_base ||= config.dig("system_prompt", "base")
-          @prompt_format ||= config.dig("system_prompt", "format")
-
-          # Handle focus modules
-          if @add_focus && config.dig("system_prompt", "focus")
-            existing_focus = config.dig("system_prompt", "focus") || []
-            additional_focus = @add_focus.split(",").map(&:strip)
-            @prompt_focus = (existing_focus + additional_focus).uniq.join(",")
-          elsif !@prompt_focus && config.dig("system_prompt", "focus")
-            @prompt_focus = Array(config.dig("system_prompt", "focus")).join(",")
-          end
-
-          @prompt_guidelines ||= Array(config.dig("system_prompt", "guidelines")).join(",") if config.dig("system_prompt", "guidelines")
-
           # Merge other config values
-          @context ||= config["context"]
-          @subject ||= config["subject"]
+          @context ||= config[:context] || config["context"]
+          @subject ||= config[:subject] || config["subject"]
 
-          # Handle models from config (backward compatible)
-          # CLI models override preset models
-          unless @models&.any?
-            if config["models"].is_a?(Array) && config["models"].any?
-              @models = config["models"]
-            elsif config["model"]
-              @model ||= config["model"]
+          # Merge reviewer objects from preset config (only if not already set and
+          # no explicit CLI model overrides — explicit --models take full precedence)
+          cli_models_explicit = @models_explicit || @model_explicit
+          unless @reviewers&.any? || cli_models_explicit
+            raw = config[:reviewers] || config["reviewers"]
+            if raw.is_a?(Array) && raw.first.is_a?(Models::Reviewer)
+              @reviewers = raw
+            else
+              resolved = Models::Reviewer.from_preset_config(config)
+              @reviewers = resolved unless resolved.empty?
             end
           end
 
           @gh_timeout ||= config["gh_timeout"]
 
           self
-        end
-
-        # Build system prompt composition hash
-        def system_prompt_composition
-          composition = {}
-
-          composition["base"] = prompt_base if prompt_base
-          composition["format"] = prompt_format if prompt_format
-
-          if prompt_focus
-            composition["focus"] = prompt_focus.split(",").map(&:strip)
-          end
-
-          if prompt_guidelines
-            composition["guidelines"] = prompt_guidelines.split(",").map(&:strip)
-          end
-
-          composition.empty? ? nil : composition
         end
       end
     end

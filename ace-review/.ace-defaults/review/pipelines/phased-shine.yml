@@ -1,0 +1,7 @@
+always:
+  - simplicity
+  - docs-dx
+evidence:
+  - lint
+safe_minimal:
+  - simplicity

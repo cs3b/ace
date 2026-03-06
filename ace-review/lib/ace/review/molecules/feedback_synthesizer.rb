@@ -49,6 +49,9 @@ module Ace
           # Validate inputs
           return error_result("No report paths provided") if report_paths.nil? || report_paths.empty?
 
+          # Reset per-run memoized values to avoid stale config across calls.
+          @consensus_threshold = nil
+
           # Create session dir if needed
           session_dir ||= create_temp_session_dir
           FileUtils.mkdir_p(session_dir) unless Dir.exist?(session_dir)
@@ -58,7 +61,7 @@ module Ace
           return error_result("No valid reports found") if reports.empty?
 
           # Synthesize (handles both single and multiple reports uniformly)
-          synthesize_reports(reports, session_dir, model)
+          synthesize_reports(reports, session_dir, model, report_paths)
         rescue StandardError => e
           error_result("Synthesis failed: #{e.message}", backtrace: e.backtrace.first(5))
         end
@@ -67,21 +70,46 @@ module Ace
 
         # Read multiple report files
         #
-        # @param report_paths [Array<String>] Paths to report files
+        # Accepts both String paths and Hash descriptors ({path:, reviewer:, run_key:}).
+        # When a Hash descriptor includes a :reviewer or :run_key key, metadata is
+        # preserved directly; otherwise the reviewer is inferred from the filename.
+        #
+        # @param report_paths [Array<String, Hash>] Paths or {path:, reviewer:, run_key:} descriptors
         # @return [Array<Hash>] Array of report hashes with :path, :reviewer, :content
         def read_reports(report_paths)
           reports = []
 
-          report_paths.each do |path|
-            next unless File.exist?(path)
+          report_paths.each do |entry|
+            # Normalise: accept both String and {path:, reviewer:} Hash descriptors
+            if entry.is_a?(Hash)
+              path = entry[:path] || entry["path"]
+              explicit_reviewer = entry[:reviewer] || entry["reviewer"]
+              explicit_run_key = entry[:run_key] || entry["run_key"]
+            else
+              path = entry
+              explicit_reviewer = nil
+              explicit_run_key = nil
+            end
+
+            next unless path && File.exist?(path)
 
             content = File.read(path)
             next if content.strip.empty?
 
-            reviewer = extract_reviewer_from_filename(path)
+            # Prefer explicit reviewer metadata; fall back to filename inference
+            is_reviewer = explicit_reviewer.is_a?(Models::Reviewer)
+            reviewer = if explicit_reviewer
+                         is_reviewer ? explicit_reviewer.name : explicit_reviewer.to_s
+                       else
+                         extract_reviewer_from_filename(path)
+                       end
+            report_reviewer = explicit_run_key.to_s.empty? ? reviewer : explicit_run_key.to_s
+
             reports << {
               path: path,
-              reviewer: reviewer,
+              reviewer: report_reviewer,
+              reviewer_object: is_reviewer ? explicit_reviewer : nil,
+              reviewer_weight: is_reviewer ? explicit_reviewer.weight : nil,
               content: content,
               size: content.bytesize
             }
@@ -101,8 +129,9 @@ module Ace
         # @param reports [Array<Hash>] Array of report data
         # @param session_dir [String] Session directory
         # @param model [String, nil] Model to use
+        # @param all_descriptors [Array, nil] Original report_paths (for full weight denominator)
         # @return [Hash] Result with :success, :items, :metadata or :error
-        def synthesize_reports(reports, session_dir, model)
+        def synthesize_reports(reports, session_dir, model, all_descriptors = nil)
           system_prompt = load_system_prompt
           user_prompt = build_reports_prompt(reports)
 
@@ -125,7 +154,14 @@ module Ace
           # All reviewers for reference
           all_reviewers = reports.map { |r| r[:reviewer] }
 
-          parse_synthesis_response(result[:response], all_reviewers)
+          # Build reviewer -> weight map when at least one report carries weight metadata
+          reviewer_weight_map = build_reviewer_weight_map(reports)
+          # Full weight map includes configured reviewers that may not have returned reports,
+          # so consensus denominator reflects the complete configured reviewer set
+          full_weight_map = all_descriptors ? build_full_reviewer_weight_map(all_descriptors) : reviewer_weight_map
+          reviewer_metadata_map = build_reviewer_metadata_map(reports)
+
+          parse_synthesis_response(result[:response], all_reviewers, reviewer_weight_map, reviewer_metadata_map, full_weight_map)
         end
 
         # Load the synthesis system prompt
@@ -219,8 +255,11 @@ module Ace
         #
         # @param response [String] LLM response (should be JSON)
         # @param available_reviewers [Array<String>] List of available reviewers
+        # @param reviewer_weight_map [Hash<String, Float>] reviewer name -> weight (empty = legacy path)
+        # @param reviewer_metadata_map [Hash<String, Hash>] reviewer name -> {critical:, focus:}
+        # @param full_weight_map [Hash<String, Float>] weight map for all configured reviewers (denominator)
         # @return [Hash] Result with :success, :items, :metadata or :error
-        def parse_synthesis_response(response, available_reviewers)
+        def parse_synthesis_response(response, available_reviewers, reviewer_weight_map = {}, reviewer_metadata_map = {}, full_weight_map = nil)
           cleaned = extract_json_from_response(response)
           data = JSON.parse(cleaned)
           findings = data["findings"] || []
@@ -229,9 +268,18 @@ module Ace
           # This ensures uniqueness even when items are created in rapid succession
           ids = findings.empty? ? [] : Atoms::FeedbackIdGenerator.generate_sequence(findings.length)
 
+          effective_weight_map = full_weight_map || reviewer_weight_map
           items = findings.each_with_index.filter_map do |finding, idx|
-            create_feedback_item(finding, available_reviewers, id: ids[idx])
+            create_feedback_item(
+              finding,
+              available_reviewers,
+              id: ids[idx],
+              reviewer_weight_map: reviewer_weight_map,
+              reviewer_metadata_map: reviewer_metadata_map,
+              full_weight_map: effective_weight_map
+            )
           end
+          items = order_items(items, reviewer_metadata_map)
 
           metadata = {
             total_findings: items.length,
@@ -279,8 +327,11 @@ module Ace
         # @param finding [Hash] Synthesized finding data
         # @param available_reviewers [Array<String>] List of available reviewers
         # @param id [String, nil] Pre-generated ID (optional, generates new if nil)
+        # @param reviewer_weight_map [Hash<String, Float>] reviewer name -> weight for confidence
+        # @param reviewer_metadata_map [Hash<String, Hash>] reviewer name -> {critical:, focus:}
+        # @param full_weight_map [Hash<String, Float>] weight map for all configured reviewers
         # @return [FeedbackItem, nil] Created item or nil if invalid
-        def create_feedback_item(finding, available_reviewers, id: nil)
+        def create_feedback_item(finding, available_reviewers, id: nil, reviewer_weight_map: {}, reviewer_metadata_map: {}, full_weight_map: nil)
           # Skip findings without required fields
           return nil if finding["title"].nil? || finding["title"].to_s.strip.empty?
           return nil if finding["finding"].nil? || finding["finding"].to_s.strip.empty?
@@ -294,8 +345,11 @@ module Ace
           # Extract reviewers - either from finding or use all available
           reviewers = extract_reviewers(finding, available_reviewers)
 
-          # Determine consensus
-          consensus = finding["consensus"] == true || reviewers.length >= Models::FeedbackItem::CONSENSUS_THRESHOLD
+          # Compute confidence and consensus
+          confidence, consensus = compute_confidence_and_consensus(
+            reviewers, reviewer_weight_map, full_weight_map || reviewer_weight_map, finding["consensus"]
+          )
+          critical_source, focus = derive_metadata(reviewers, reviewer_metadata_map)
 
           Models::FeedbackItem.new(
             id: id,
@@ -305,6 +359,9 @@ module Ace
             status: "draft",
             priority: priority,
             consensus: consensus,
+            confidence: confidence,
+            critical_source: critical_source,
+            focus: focus,
             finding: finding["finding"].to_s.strip,
             context: finding["context"]&.to_s&.strip
           )
@@ -333,6 +390,142 @@ module Ace
           else
             # Unknown - use empty array
             []
+          end
+        end
+
+        # Build reviewer -> weight map from report data
+        #
+        # @param reports [Array<Hash>] Report data (may contain :reviewer_weight)
+        # @return [Hash<String, Float>] Empty hash when no weight data available
+        def build_reviewer_weight_map(reports)
+          map = {}
+          reports.each do |r|
+            # Use key presence so zero-weight reviewers are preserved in weighted calculations
+            next unless r.key?(:reviewer_weight) && !r[:reviewer_weight].nil?
+
+            map[r[:reviewer]] = r[:reviewer_weight].to_f
+          end
+          map
+        end
+
+        # Build weight map from all original descriptors, including those whose reports
+        # could not be read. Used as the denominator for confidence scoring so that
+        # missing-report reviewers reduce confidence rather than being excluded.
+        #
+        # @param descriptors [Array<String, Hash>] Original report_paths descriptors
+        # @return [Hash<String, Float>] reviewer identity -> weight (empty when no weight metadata)
+        def build_full_reviewer_weight_map(descriptors)
+          map = {}
+          descriptors.each do |entry|
+            next unless entry.is_a?(Hash)
+
+            reviewer = entry[:reviewer] || entry["reviewer"]
+            next unless reviewer.is_a?(Models::Reviewer) && !reviewer.weight.nil?
+
+            run_key = entry[:run_key] || entry["run_key"]
+            identity = run_key.to_s.empty? ? reviewer.name : run_key.to_s
+            map[identity] = reviewer.weight.to_f
+          end
+          map
+        end
+
+        # Build reviewer metadata map from report data (critical/focus).
+        #
+        # Metadata is available only when report descriptors include reviewer objects.
+        #
+        # @param reports [Array<Hash>] Report data
+        # @return [Hash<String, Hash>] reviewer name -> {critical: Boolean, focus: String|nil}
+        def build_reviewer_metadata_map(reports)
+          map = {}
+          reports.each do |r|
+            reviewer = r[:reviewer_object]
+            next unless reviewer
+
+            map[r[:reviewer]] = {
+              critical: reviewer.respond_to?(:critical) ? reviewer.critical : false,
+              focus: reviewer.respond_to?(:focus) ? reviewer.focus : nil
+            }
+          end
+          map
+        end
+
+        # Compute confidence score and consensus flag for a finding
+        #
+        # When reviewer_weight_map is non-empty (weight metadata available):
+        #   confidence = sum(weights of agreeing reviewers) / sum(all reviewer weights)
+        #   consensus = confidence >= consensus_threshold
+        #
+        # Fallback (no weight metadata):
+        #   confidence = nil
+        #   consensus = (explicit flag or count >= CONSENSUS_THRESHOLD)
+        #
+        # @param reviewers [Array<String>] Reviewers that found this issue
+        # @param reviewer_weight_map [Hash<String, Float>] Weights of reviewers with reports
+        # @param full_weight_map [Hash<String, Float>] Weights of all configured reviewers (denominator)
+        # @param explicit_consensus [Boolean, nil] LLM-provided consensus flag
+        # @return [Array(Float|nil, Boolean)] [confidence, consensus]
+        def compute_confidence_and_consensus(reviewers, reviewer_weight_map, full_weight_map, explicit_consensus)
+          # Weight-aware path
+          if reviewer_weight_map.any?
+            # Use full configured reviewer set as denominator so missing-report reviewers
+            # reduce confidence rather than being excluded from the calculation
+            total_weight = full_weight_map.values.sum
+
+            if total_weight > 0
+              agreeing_weight = reviewers.sum { |r| reviewer_weight_map.fetch(r, 0.0) }
+              confidence = (agreeing_weight / total_weight).clamp(0.0, 1.0)
+              threshold = consensus_threshold
+              return [confidence, confidence >= threshold]
+            end
+          end
+
+          # Legacy / no-weight fallback
+          consensus = explicit_consensus == true || reviewers.length >= Models::FeedbackItem::CONSENSUS_THRESHOLD
+          [nil, consensus]
+        end
+
+        # Derive critical/focus metadata from contributing reviewer definitions.
+        #
+        # @param reviewers [Array<String>] Reviewers attached to the finding
+        # @param reviewer_metadata_map [Hash<String, Hash>] reviewer metadata map
+        # @return [Array(Boolean, String|nil)] [critical_source, focus]
+        def derive_metadata(reviewers, reviewer_metadata_map)
+          return [false, nil] if reviewer_metadata_map.empty?
+
+          critical_source = reviewers.any? { |name| reviewer_metadata_map.dig(name, :critical) == true }
+          focus = reviewers.lazy.map { |name| reviewer_metadata_map.dig(name, :focus) }.find do |value|
+            !value.to_s.strip.empty?
+          end
+          [critical_source, focus]
+        end
+
+        # Order synthesized output when reviewer metadata is available.
+        #
+        # @param items [Array<Models::FeedbackItem>] Synthesized items
+        # @param reviewer_metadata_map [Hash<String, Hash>] reviewer metadata map
+        # @return [Array<Models::FeedbackItem>] Ordered items
+        def order_items(items, reviewer_metadata_map)
+          return items if reviewer_metadata_map.empty?
+
+          priority_rank = { "critical" => 0, "high" => 1, "medium" => 2, "low" => 3 }
+          items.each_with_index.sort_by do |item, idx|
+            if item.critical_source
+              [0, priority_rank.fetch(item.priority, 99), idx]
+            elsif item.focus && !item.focus.strip.empty?
+              [1, item.focus.downcase, idx]
+            else
+              [2, "", idx]
+            end
+          end.map(&:first)
+        end
+
+        # Get the weighted consensus threshold from config (memoized per synthesis run)
+        #
+        # @return [Float] Threshold value (0.0..1.0)
+        def consensus_threshold
+          @consensus_threshold ||= begin
+            raw = Ace::Review.get("feedback", "consensus_threshold")
+            raw.nil? ? 0.6 : raw.to_f.clamp(0.0, 1.0)
           end
         end
 

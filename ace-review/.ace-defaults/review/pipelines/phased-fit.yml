@@ -1,0 +1,9 @@
+always:
+  - architecture-fit
+  - performance
+  - tests
+evidence:
+  - lint
+safe_minimal:
+  - architecture-fit
+  - tests

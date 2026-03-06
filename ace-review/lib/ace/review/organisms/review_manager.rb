@@ -42,6 +42,12 @@ module Ace
           config_result = prepare_review_config(options)
           return config_result unless config_result[:success]
 
+          # Step 1b: Partition if requested
+          partition_strategy = options.partition || config_result[:config]["partition"] || config_result[:config][:partition]
+          if partition_strategy && !partition_strategy.to_s.strip.empty?
+            return execute_partitioned_review(options, config_result, partition_strategy.to_s.strip)
+          end
+
           # Step 2: Create session directory early (needed for ace-bundle)
           cache_dir = create_cache_directory
           session_dir = create_session_directory(options, cache_dir)
@@ -62,13 +68,17 @@ module Ace
           return prompt_result unless prompt_result[:success]
 
           # Step 5: Prepare review data structure
-          review_data = build_review_data(
-            options,
-            config_result[:config],
-            content_result,
-            prompt_result,  # Pass the entire prompt_result to handle both formats
-            cache_dir
-          )
+          review_data = begin
+            build_review_data(
+              options,
+              config_result[:config],
+              content_result,
+              prompt_result,  # Pass the entire prompt_result to handle both formats
+              cache_dir
+            )
+          rescue ArgumentError => e
+            return { success: false, error: e.message }
+          end
 
           # Step 6: Save session files
           save_session_files(session_dir, review_data)
@@ -77,10 +87,17 @@ module Ace
           if options.auto_execute
             execute_with_llm(review_data, session_dir, options)
           else
+            system_prompt_file = if prompt_result[:system_prompt_paths].is_a?(Hash) &&
+                                  !prompt_result[:system_prompt_paths].empty?
+                                  prompt_result[:system_prompt_paths].values.first
+                                else
+                                  prompt_result[:system_prompt_path]
+                                end
+
             {
               success: true,
               session_dir: session_dir,
-              system_prompt_file: File.join(session_dir, "system.prompt.md"),
+              system_prompt_file: system_prompt_file,
               user_prompt_file: File.join(session_dir, "user.prompt.md"),
               message: "Review session prepared in #{session_dir}"
             }
@@ -126,7 +143,14 @@ module Ace
           end
 
           # Resolve preset with options
-          config = @preset_manager.resolve_preset(preset_name, options.to_h)
+          config = begin
+            @preset_manager.resolve_preset(preset_name, options.to_h)
+          rescue ArgumentError => e
+            return {
+              success: false,
+              error: e.message
+            }
+          end
 
           # Check for composition failure (circular deps, missing refs return nil)
           unless config
@@ -138,6 +162,7 @@ module Ace
 
           # Merge options with config
           options.merge_config(config)
+          apply_provider_override!(options, config)
 
           { success: true, config: config }
         end
@@ -300,18 +325,18 @@ module Ace
         # Step 3: Generate system and user prompts via ace-bundle
         def compose_review_prompt(config, context, subject, session_dir, options = nil, typed_subject_config = nil)
           # Extract prompt composition and context config
-          system_prompt_config = config[:system_prompt] || config["system_prompt"] || {}
-          context_config = config[:context] || config["context"] || "project"
+          reviewers = Array(config[:reviewers] || config["reviewers"]).compact
+          llm_reviewers = reviewers.reject { |reviewer| tool_reviewer?(reviewer) }
+          reviewer_lanes = Ace::Review::Atoms::ReviewerRunKeyAllocator.allocate(llm_reviewers)
 
-          # Step 3a: Create system.context.md with instructions configuration
-          instructions_config = config["instructions"] || config[:instructions]
-          unless instructions_config
+          if llm_reviewers.empty?
             return {
               success: false,
-              error: "No instructions found in config. All presets must use instructions format."
+              error: "No LLM reviewers with prompts configured. Preset must define reviewer prompts."
             }
           end
-          system_context_path = create_context_file(session_dir, instructions_config, context_config, "system.context.md")
+
+          context_config = config[:context] || config["context"] || "project"
 
           # Step 3b: Create user.context.md with subject configuration
           subject_config = resolve_subject_config(
@@ -330,14 +355,6 @@ module Ace
           end
           user_context_path = create_context_file(session_dir, subject_config, nil, "user.context.md")
 
-          # Step 3c: Generate system.prompt.md via ace-bundle
-          system_prompt_path = File.join(session_dir, "system.prompt.md")
-          begin
-            execute_ace_context(system_context_path, system_prompt_path)
-          rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
-            return { success: false, error: "Failed to generate system prompt: #{e.message}" }
-          end
-
           # Step 3d: Generate user.prompt.md via ace-bundle
           user_prompt_path = File.join(session_dir, "user.prompt.md")
           begin
@@ -346,9 +363,63 @@ module Ace
             return { success: false, error: "Failed to generate user prompt: #{e.message}" }
           end
 
-          # Load the generated prompts
-          system_prompt = File.read(system_prompt_path) if File.exist?(system_prompt_path)
           user_prompt = File.read(user_prompt_path) if File.exist?(user_prompt_path)
+
+          if user_prompt.nil? || user_prompt.empty?
+            return { success: false, error: "Failed to generate user prompt" }
+          end
+
+          system_prompts = {}
+          system_prompt_paths = {}
+
+          reviewer_lanes.each do |lane|
+            reviewer = lane[:reviewer]
+            prompt_config = reviewer_prompt_config(reviewer)
+            unless prompt_config.is_a?(Hash) && prompt_config.any?
+              return {
+                success: false,
+                error: "LLM reviewer '#{reviewer_name(reviewer)}' must define a prompt."
+              }
+            end
+
+            model = reviewer_model(reviewer)
+            if model.nil? || model.to_s.empty?
+              return {
+                success: false,
+                error: "LLM reviewer '#{reviewer_name(reviewer) || "unknown"}' must define a model."
+              }
+            end
+
+            run_key = lane[:run_key]
+            system_slug = Ace::Review::Atoms::SlugGenerator.generate(run_key)
+            system_context_path = create_context_file(
+              session_dir,
+              prompt_config,
+              context_config,
+              "system-#{system_slug}.context.md"
+            )
+            system_prompt_path = File.join(session_dir, "system-#{system_slug}.prompt.md")
+
+            begin
+              execute_ace_context(system_context_path, system_prompt_path)
+            rescue Errors::MissingDependencyError, Errors::BundleProcessingError => e
+              return { success: false, error: "Failed to generate system prompt: #{e.message}" }
+            end
+
+            system_prompt_text = File.read(system_prompt_path) if File.exist?(system_prompt_path)
+            if system_prompt_text.nil? || system_prompt_text.empty?
+              return {
+                success: false,
+                error: "Failed to generate system prompt for reviewer '#{reviewer_name(reviewer)}'."
+              }
+            end
+
+            system_prompts[run_key] = system_prompt_text
+            system_prompt_paths[run_key] = system_prompt_path
+          end
+
+          system_prompt = system_prompts.values.first
+          system_prompt_path = system_prompt_paths.values.first
 
           if system_prompt.nil? || system_prompt.empty?
             return { success: false, error: "Failed to generate system prompt" }
@@ -356,9 +427,11 @@ module Ace
 
           {
             success: true,
-            system_prompt: system_prompt,
+            system_prompt: system_prompts.values.first,
             user_prompt: user_prompt || "Please review the provided code.",
+            system_prompts: system_prompts,
             system_prompt_path: system_prompt_path,
+            system_prompt_paths: system_prompt_paths,
             user_prompt_path: user_prompt_path
           }
         end
@@ -517,25 +590,243 @@ module Ace
 
         # Build the complete review data structure
         def build_review_data(options, config, content, prompt_result, cache_dir)
+          effective_reviewers = options.reviewers || config[:reviewers] || config["reviewers"]
+          effective_models = options.effective_models
+          effective_models = reviewer_models_for_execution(effective_reviewers) if effective_models.empty?
+          effective_model = options.effective_model || effective_models.first
+
+          if effective_models.empty? && Array(effective_reviewers).empty?
+            raise ArgumentError,
+                  "Preset '#{options.preset}' resolved no reviewer lanes. Define reviewers: or pipeline:, or pass --model/--models."
+          end
+
           # v0.13.0 architecture: only supports system/user prompt format
           review_data = {
             preset: options.preset,
             config: config,
+            pipeline: config[:pipeline],
             subject: content[:subject],
             context: content[:context],
-            model: options.effective_model(config[:model]),
-            models: options.effective_models(config[:models]),
+            model: effective_model,
+            models: effective_models,
             cache_dir: cache_dir,
             system_prompt: prompt_result[:system_prompt],
+            system_prompts: prompt_result[:system_prompts],
             user_prompt: prompt_result[:user_prompt],
             system_prompt_path: prompt_result[:system_prompt_path],
+            system_prompt_paths: prompt_result[:system_prompt_paths],
             user_prompt_path: prompt_result[:user_prompt_path]
           }
 
           # Include PR comment data if available
           review_data[:pr_comment_data] = options.pr_comment_data if options.pr_comment_data
 
+          # Include reviewer objects when available (pipeline/preset format)
+          review_data[:reviewers] = effective_reviewers if effective_reviewers&.any?
+
           review_data
+        end
+
+        # Execute review for each partition independently.
+        # Each partition gets its own session subdirectory and synthesis output.
+        #
+        # @param options [ReviewOptions] original review options
+        # @param config_result [Hash] prepared config (success: true, config: {...})
+        # @param strategy [String] "by_package" or "by_concern"
+        # @return [Hash] multi-partition result
+        def execute_partitioned_review(options, config_result, strategy)
+          # Collect changed files for partitioning
+          changed_files = collect_changed_files_for_partitioning
+
+          if changed_files.empty?
+            return { success: false, error: "Partition strategy '#{strategy}' found no changed files to partition." }
+          end
+
+          partitions = Molecules::PartitionBuilder.build(subject_files: changed_files, strategy: strategy)
+
+          if partitions.empty?
+            return { success: false, error: "Partition strategy '#{strategy}' produced no partitions." }
+          end
+
+          # Create a parent session directory
+          cache_dir = create_cache_directory
+          parent_session_dir = create_session_directory(options, cache_dir)
+
+          partition_results = partitions.map do |partition|
+            # Each partition gets its own subdirectory
+            partition_dir = File.join(parent_session_dir, partition.id)
+            FileUtils.mkdir_p(partition_dir)
+
+            # Build per-partition options: restrict subject to partition files
+            partition_options = build_partition_options(options, partition, partition_dir)
+
+            # Run content extraction, prompt composition, and execution for this partition
+            content_result = extract_review_content(config_result[:config], partition_options)
+            unless content_result[:success]
+              next { success: false, partition: partition.to_h, error: content_result[:error] }
+            end
+
+            prompt_result = compose_review_prompt(
+              config_result[:config],
+              content_result[:context],
+              content_result[:subject],
+              partition_dir,
+              partition_options,
+              content_result[:typed_subject_config]
+            )
+            unless prompt_result[:success]
+              next { success: false, partition: partition.to_h, error: prompt_result[:error] }
+            end
+
+            review_data = begin
+              build_review_data(partition_options, config_result[:config], content_result, prompt_result, cache_dir)
+            rescue ArgumentError => e
+              next { success: false, partition: partition.to_h, error: e.message }
+            end
+
+            save_session_files(partition_dir, review_data)
+
+            if partition_options.auto_execute
+              exec_result = execute_with_llm(review_data, partition_dir, partition_options)
+              exec_result.merge(partition: partition.to_h, session_dir: partition_dir)
+            else
+              {
+                success: true,
+                partition: partition.to_h,
+                session_dir: partition_dir,
+                message: "Partition '#{partition.label}' prepared in #{partition_dir}"
+              }
+            end
+          end.compact
+
+          successful = partition_results.count { |r| r[:success] }
+          {
+            success: successful > 0,
+            partitions: partition_results,
+            session_dir: parent_session_dir,
+            partition_count: partitions.size,
+            message: "Partitioned review complete: #{successful}/#{partitions.size} partitions succeeded"
+          }
+        end
+
+        # Build options restricted to a single partition's files.
+        def build_partition_options(base_options, partition, partition_dir)
+          partition_subject = if partition.files.any?
+                                partition.files.map { |f| "files:#{f}" }.join(Ace::Review::CLI::ARRAY_SEPARATOR)
+                              else
+                                base_options.subject
+                              end
+
+          new_opts = Models::ReviewOptions.new(base_options.to_h.merge(
+            session_dir: partition_dir,
+            subject: partition_subject
+          ))
+          new_opts
+        end
+
+        # Collect changed files for partition building.
+        # Uses git diff to determine which files have changed.
+        def collect_changed_files_for_partitioning
+          root = @project_root || Dir.pwd
+          files = []
+          ["origin...HEAD", "HEAD"].each do |range|
+            stdout, _, status = Open3.capture3("git", "diff", "--name-only", range, chdir: root)
+            files.concat(stdout.lines.map(&:strip).reject(&:empty?)) if status.success?
+          end
+          files.uniq
+        rescue StandardError
+          []
+        end
+
+        def apply_provider_override!(options, config)
+          refs = Array(options.provider_overrides).map { |value| value.to_s.strip }.reject(&:empty?).uniq
+          return if refs.empty?
+
+          parsed_refs = refs.map { |ref| Models::ProviderRef.from_ref(ref, default_options: default_provider_options) }
+          if parsed_refs.any?(&:tool?)
+            raise ArgumentError, "--provider override supports only llm:<target>:<model> refs"
+          end
+
+          reviewers = Array(options.reviewers || config[:reviewers] || config["reviewers"]).compact
+
+          if reviewers.empty?
+            generated_reviewers = parsed_refs.each_with_index.map do |provider_ref, index|
+              Models::Reviewer.new(
+                "name" => "reviewer-#{index + 1}",
+                "model" => provider_ref.model_target,
+                "prompt" => { "base" => "prompt://base/system" },
+                "provider" => provider_ref.raw_ref,
+                "provider_ref" => provider_ref.to_h,
+                "provider_index" => index,
+                "lane_id" => "reviewer-#{index + 1}-#{Ace::Review::Atoms::SlugGenerator.generate(provider_ref.raw_ref)}-#{index + 1}",
+                "provider_kind" => provider_ref.kind,
+                "provider_options" => provider_ref.options.merge(
+                  "raw_ref" => provider_ref.raw_ref,
+                  "kind" => provider_ref.kind,
+                  "target" => provider_ref.target,
+                  "model" => provider_ref.model
+                ).compact,
+                "reviewer_type" => "llm"
+              )
+            end
+
+            options.reviewers = generated_reviewers
+            sync_config_reviewers!(config, generated_reviewers)
+            return
+          end
+
+          grouped = reviewers.group_by { |reviewer| reviewer_name(reviewer).to_s }
+          overridden_reviewers = []
+
+          grouped.each_value do |reviewer_group|
+            template = reviewer_group.first
+            if tool_reviewer?(template)
+              overridden_reviewers.concat(reviewer_group)
+              next
+            end
+
+            reviewer_definition = {
+              "name" => reviewer_name(template),
+              "focus" => template.respond_to?(:focus) ? template.focus : nil,
+              "system_prompt_additions" => template.respond_to?(:system_prompt_additions) ? template.system_prompt_additions : nil,
+              "prompt" => reviewer_prompt_config(template),
+              "file_patterns" => template.respond_to?(:file_patterns) ? template.file_patterns : nil,
+              "weight" => template.respond_to?(:weight) ? template.weight : nil,
+              "critical" => template.respond_to?(:critical) ? template.critical : nil,
+              "providers" => refs
+            }.compact
+
+            overridden_reviewers.concat(
+              Models::Reviewer.from_definition(
+                reviewer_definition,
+                default_provider_options: default_provider_options
+              )
+            )
+          end
+
+          llm_reviewers = overridden_reviewers.reject { |reviewer| tool_reviewer?(reviewer) }
+          if llm_reviewers.empty?
+            raise ArgumentError,
+                  "Provider override '#{refs.join(', ')}' cannot be applied because preset '#{options.preset}' resolved no LLM reviewer lanes."
+          end
+
+          options.reviewers = overridden_reviewers
+          sync_config_reviewers!(config, overridden_reviewers)
+        end
+
+        def sync_config_reviewers!(config, reviewers)
+          llm_models = reviewer_models_for_execution(reviewers)
+          config[:reviewers] = reviewers
+          config[:models] = llm_models
+          config[:model] = llm_models.first
+        end
+
+        def reviewer_models_for_execution(reviewers)
+          Array(reviewers)
+            .reject { |reviewer| tool_reviewer?(reviewer) }
+            .map(&:model)
+            .compact
+            .uniq
         end
 
         # Resolve subject configuration from multiple sources
@@ -586,13 +877,25 @@ module Ace
 
         def execute_with_llm(review_data, session_dir, options = nil)
           models = review_data[:models]
+          reviewers = Array(review_data[:reviewers])
 
-          # Detect single vs multi-model execution
-          if models.size == 1
-            # Single model execution (existing path)
-            execute_single_model(review_data, session_dir, options, models.first)
+          # Narrow pipeline path can include deterministic tool lanes (e.g., lint).
+          # Execute mixed lanes through a dedicated path before legacy single/multi branching.
+          if reviewers.any? && reviewers.any? { |reviewer| tool_reviewer?(reviewer) }
+            return execute_mixed_review(review_data, session_dir, options, reviewers)
+          end
+
+          # Reviewers now execute as lanes, so route through multi-lane even for a single lane
+          # to preserve lane identity and metadata in multi-reviewer workflows.
+          if reviewers.empty?
+            if models.size == 1
+              # Single model execution (existing path)
+              execute_single_model(review_data, session_dir, options, models.first)
+            else
+              # Multi-model execution (new path)
+              execute_multi_model(review_data, session_dir, options, models)
+            end
           else
-            # Multi-model execution (new path)
             execute_multi_model(review_data, session_dir, options, models)
           end
         end
@@ -602,11 +905,16 @@ module Ace
           executor = Ace::Review::Molecules::LlmExecutor.new
 
           # v0.13.0 architecture: only supports system/user prompt format
+          system_prompt = system_prompt_for_model(review_data, model)
+
+          reviewer = find_reviewer_for_model(review_data, model)
+
           result = executor.execute(
-            system_prompt: review_data[:system_prompt],
+            system_prompt: system_prompt,
             user_prompt: review_data[:user_prompt],
             model: model,
-            session_dir: session_dir
+            session_dir: session_dir,
+            reviewer: reviewer
           )
 
           if result[:success]
@@ -662,45 +970,165 @@ module Ace
           require_relative '../molecules/multi_model_executor'
           executor = Ace::Review::Molecules::MultiModelExecutor.new
 
-          # Execute all models concurrently
+          # Execute all models concurrently (pass reviewers when available)
           result = executor.execute(
             models: models,
-            system_prompt: review_data[:system_prompt],
+            reviewers: review_data[:reviewers],
+            system_prompt: review_data[:system_prompts] || review_data[:system_prompt],
             user_prompt: review_data[:user_prompt],
             session_dir: session_dir
           )
 
-          if result[:success]
-            # Save metadata for all models
-            save_multi_model_metadata(session_dir, result)
+          return { success: false, error: "All models failed to execute" } unless result[:success]
 
-            # For multi-model, we don't copy to a single release location
-            # Each model has its own output file already in session_dir
+          handle_multi_lane_success(result, session_dir, review_data, options)
+        end
 
-            # Link session to task if --task flag provided (single symlink for entire session)
-            task_link = link_session_to_task_if_requested(session_dir)
+        # Execute mixed reviewer lanes (LLM reviewers + tool reviewers).
+        # Tool reviewers are executed after LLM batch and merged into the same result map.
+        def execute_mixed_review(review_data, session_dir, options, reviewers)
+          require_relative '../molecules/multi_model_executor'
+          require_relative '../molecules/lint_evidence_runner'
 
-            # Auto-link to task if enabled and no explicit --task
-            auto_link_path = auto_link_session_if_enabled(session_dir, options) unless task_link
+          llm_reviewers = reviewers.reject { |reviewer| tool_reviewer?(reviewer) }
+          tool_reviewers = reviewers.select { |reviewer| tool_reviewer?(reviewer) }
+          combined_results = {}
 
-            # Extract feedback (always runs if we have results)
-            feedback_result = nil
-            if should_extract_feedback?(result, options)
-              feedback_result = extract_feedback(result, session_dir, review_data, options)
-            end
+          if llm_reviewers.any?
+            executor = Ace::Review::Molecules::MultiModelExecutor.new
+            llm_result = executor.execute(
+              models: llm_reviewers.map(&:model),
+              reviewers: llm_reviewers,
+              system_prompt: review_data[:system_prompts] || review_data[:system_prompt],
+              user_prompt: review_data[:user_prompt],
+              session_dir: session_dir
+            )
+            combined_results.merge!(llm_result[:results]) if llm_result[:results].is_a?(Hash)
+          end
 
-            # Build task_paths for response (single link path if linked)
-            task_paths = [task_link || auto_link_path].compact
-            task_paths = nil if task_paths.empty?
+          tool_reviewers.each do |reviewer|
+            tool_result = execute_tool_reviewer(reviewer, session_dir)
+            key = reviewer.name.to_s.strip.empty? ? reviewer.model : reviewer.name
+            combined_results[key] = tool_result.merge(reviewer: reviewer)
+          end
 
-            # Build multi-model success response
-            build_multi_model_response(result, session_dir, task_paths, feedback_result)
+          success_count = combined_results.values.count { |entry| entry[:success] }
+          failure_count = combined_results.values.count { |entry| !entry[:success] }
+          result = {
+            success: success_count > 0,
+            results: combined_results,
+            summary: {
+              total_models: combined_results.size,
+              success_count: success_count,
+              failure_count: failure_count,
+              total_duration: combined_results.values.map { |entry| entry[:duration].to_f }.sum.round(2)
+            }
+          }
+
+          return { success: false, error: "All lanes failed to execute" } unless result[:success]
+
+          handle_multi_lane_success(result, session_dir, review_data, options)
+        end
+
+        def execute_tool_reviewer(reviewer, session_dir)
+          provider_options = reviewer.provider_options
+          provider_options = provider_options.to_h if provider_options.respond_to?(:to_h)
+          provider_options = {} unless provider_options.is_a?(Hash)
+          tool_name = provider_options["tool"] || provider_options[:tool] ||
+                      provider_options["target"] || provider_options[:target]
+
+          case tool_name.to_s
+          when "lint", "ace-lint"
+            runner = Molecules::LintEvidenceRunner.new(project_root: @project_root)
+            runner.run(reviewer: reviewer, session_dir: session_dir)
           else
             {
               success: false,
-              error: "All models failed to execute"
+              error: "Unsupported tool provider '#{tool_name}' for reviewer '#{reviewer.name}'",
+              duration: 0.0
             }
           end
+        rescue StandardError => e
+          {
+            success: false,
+            error: "Tool lane execution failed for reviewer '#{reviewer.name}': #{e.message}",
+            duration: 0.0
+          }
+        end
+
+        def tool_reviewer?(reviewer)
+          return false unless reviewer
+
+          kind = reviewer_provider_kind(reviewer)
+          model = reviewer_model(reviewer)
+          kind == "tool" || model.to_s.start_with?("tool:")
+        end
+
+        def reviewer_model(reviewer)
+          return reviewer.model if reviewer.respond_to?(:model)
+
+          reviewer[:model] || reviewer["model"] if reviewer.is_a?(Hash)
+        end
+
+        def reviewer_name(reviewer)
+          return reviewer.name if reviewer.respond_to?(:name)
+
+          reviewer[:name] || reviewer["name"] if reviewer.is_a?(Hash)
+        end
+
+        def reviewer_provider_kind(reviewer)
+          return reviewer.provider_kind if reviewer.respond_to?(:provider_kind)
+
+          reviewer[:provider_kind] || reviewer["provider_kind"] if reviewer.is_a?(Hash)
+        end
+
+        def reviewer_prompt_config(reviewer)
+          if reviewer.respond_to?(:prompt)
+            return reviewer.prompt
+          end
+
+          return unless reviewer.is_a?(Hash)
+
+          Models::Reviewer.normalize_prompt_config(
+            reviewer[:prompt] || reviewer["prompt"],
+            reviewer[:system_prompt_additions] || reviewer["system_prompt_additions"]
+          )
+        end
+
+        def handle_multi_lane_success(result, session_dir, review_data, options)
+          # Save metadata for all lanes
+          save_multi_model_metadata(session_dir, result)
+
+          report_status = evaluate_report_status(result)
+          require_all_reports = options.nil? || options.require_all_reports != false
+          if require_all_reports && report_status[:missing_lanes].any?
+            return {
+              success: false,
+              error: "Missing reports for lanes: #{report_status[:missing_lanes].join(', ')}",
+              session_dir: session_dir,
+              summary: result[:summary],
+              missing_reports: report_status[:missing_lanes],
+              output_files: report_status[:output_files]
+            }
+          end
+
+          # Link session to task if --task flag provided (single symlink for entire session)
+          task_link = link_session_to_task_if_requested(session_dir)
+
+          # Auto-link to task if enabled and no explicit --task
+          auto_link_path = auto_link_session_if_enabled(session_dir, options) unless task_link
+
+          # Extract feedback (always runs if we have results)
+          feedback_result = nil
+          if should_extract_feedback?(result, options)
+            feedback_result = extract_feedback(result, session_dir, review_data, options)
+          end
+
+          # Build task_paths for response (single link path if linked)
+          task_paths = [task_link || auto_link_path].compact
+          task_paths = nil if task_paths.empty?
+
+          build_multi_model_response(result, session_dir, task_paths, feedback_result, report_status)
         end
 
         # Post review comment to PR
@@ -868,15 +1296,41 @@ module Ace
 
 
         def create_metadata(review_data)
+          system_prompt_size = if review_data[:system_prompts].is_a?(Hash)
+                                 review_data[:system_prompts].values.sum { |value| value.to_s.length }
+                               else
+                                 review_data[:system_prompt]&.length || 0
+                               end
+
           {
             "timestamp" => Time.now.iso8601,
             "preset" => review_data[:preset],
             "model" => review_data[:model],
             "has_context" => !review_data[:context].to_s.empty?,
             "subject_size" => review_data[:subject]&.length || 0,
-            "system_prompt_size" => review_data[:system_prompt]&.length || 0,
+            "system_prompt_size" => system_prompt_size,
             "user_prompt_size" => review_data[:user_prompt]&.length || 0
           }
+        end
+
+        def system_prompt_for_model(review_data, model)
+          return review_data[:system_prompt] unless review_data[:system_prompts].is_a?(Hash)
+
+          prompts = review_data[:system_prompts]
+          return prompts[model] if prompts.key?(model)
+          return prompts[model.to_s] if prompts.key?(model.to_s)
+          return prompts[model.to_sym] if prompts.key?(model.to_sym)
+
+          review_data[:reviewers]&.each do |reviewer|
+            next unless reviewer.respond_to?(:model) && reviewer.model.to_s == model.to_s
+
+            run_key = reviewer_run_key(reviewer)
+            return prompts[run_key] if prompts.key?(run_key)
+            return prompts[run_key.to_s] if prompts.key?(run_key.to_s)
+            return prompts[run_key.to_sym] if prompts.key?(run_key.to_sym)
+          end
+
+          prompts.values.first
         end
 
         def save_ruby_api_metadata(session_dir, result)
@@ -1060,12 +1514,32 @@ module Ace
           # Check if feedback is disabled via CLI flag (--no-feedback)
           return nil if options&.no_feedback == true
 
+          single_model_entry = {
+            success: true,
+            output_file: result[:output_file]
+          }
+
+          reviewer = find_reviewer_for_model(review_data, model)
+          single_model_entry[:reviewer] = reviewer if reviewer
+
           # Build a result structure compatible with extract_feedback (multi-model format)
           single_model_result = {
-            results: { model => { success: true, output_file: result[:output_file] } }
+            results: { model => single_model_entry }
           }
 
           extract_feedback(single_model_result, session_dir, review_data, options)
+        end
+
+        # Find reviewer metadata that matches the selected single model.
+        # @param review_data [Hash] review metadata from preset resolution
+        # @param model [String] model name used for execution
+        # @return [Models::Reviewer, nil] matching reviewer definition
+        def find_reviewer_for_model(review_data, model)
+          return nil unless review_data && review_data[:reviewers]
+
+          Array(review_data[:reviewers]).find do |reviewer|
+            reviewer.respond_to?(:model) && reviewer.model.to_s == model.to_s
+          end
         end
 
         # Extract feedback items from review reports and save them
@@ -1131,22 +1605,42 @@ module Ace
         # Collect report paths for feedback synthesis
         #
         # Collects all successful model reports for FeedbackSynthesizer processing.
-        # The synthesizer produces deduplicated findings with reviewer arrays.
+        # Returns reviewer-tagged hashes ({path:, reviewer:}) when :reviewer metadata
+        # is present on a model result, otherwise returns plain path strings (legacy).
+        # The synthesizer accepts both formats and falls back to filename inference for strings.
         #
         # @param result [Hash] multi-model execution result
         # @param session_dir [String] session directory
-        # @return [Array<String>] list of report file paths
+        # @return [Array<String, Hash>] list of report descriptors
         def collect_report_paths(result, session_dir)
           report_paths = []
 
           # Add successful model reports
           result[:results].each do |_, model_result|
-            if model_result[:success] && model_result[:output_file]
+            next unless model_result[:success] && model_result[:output_file]
+
+            if model_result.key?(:reviewers) && model_result[:reviewers].is_a?(Array) && model_result[:reviewers].any?
+              # Enriched paths: preserve each reviewer lane, even when they share a model/output.
+              model_result[:reviewers].each do |reviewer|
+                report_paths << {
+                  path: model_result[:output_file],
+                  reviewer: reviewer,
+                  run_key: model_result[:run_key]
+                }
+              end
+            elsif model_result.key?(:reviewer) && model_result[:reviewer]
+              # Enriched path: carry single reviewer metadata for synthesizer
+              report_paths << {
+                path: model_result[:output_file],
+                reviewer: model_result[:reviewer],
+                run_key: model_result[:run_key]
+              }
+            else
               report_paths << model_result[:output_file]
             end
           end
 
-          # Add dev-feedback report if it exists (PR comments)
+          # Add dev-feedback report if it exists (PR comments) — always plain path
           dev_feedback_path = File.join(session_dir, "review-dev-feedback.md")
           report_paths << dev_feedback_path if File.exist?(dev_feedback_path)
 
@@ -1199,7 +1693,7 @@ module Ace
         # @param task_paths [Array<String>, nil] task file paths
         # @param feedback_result [Hash, nil] feedback extraction result
         # @return [Hash] response hash
-        def build_multi_model_response(result, session_dir, task_paths = nil, feedback_result = nil)
+        def build_multi_model_response(result, session_dir, task_paths = nil, feedback_result = nil, report_status = nil)
           successful_models = result[:results].select { |_, r| r[:success] }
           failed_models = result[:results].reject { |_, r| r[:success] }
 
@@ -1218,6 +1712,9 @@ module Ace
           # Add output files
           output_files = successful_models.values.map { |r| r[:output_file] }.compact
           response[:output_files] = output_files
+          if report_status && report_status[:missing_lanes].any?
+            response[:missing_reports] = report_status[:missing_lanes]
+          end
 
           # Add feedback info
           if feedback_result && feedback_result[:success]
@@ -1228,6 +1725,30 @@ module Ace
           end
 
           response
+        end
+
+        def evaluate_report_status(result)
+          output_files = []
+          missing_lanes = []
+
+          result.fetch(:results, {}).each do |lane_id, lane_result|
+            output_file = lane_result[:output_file]
+            if lane_result[:success] && output_file
+              output_files << output_file
+            else
+              missing_lanes << lane_id
+            end
+          end
+
+          {
+            output_files: output_files.uniq,
+            missing_lanes: missing_lanes.uniq
+          }
+        end
+
+        def default_provider_options
+          timeout = Ace::Review.get("defaults", "llm_timeout")
+          timeout.nil? ? {} : { "timeout" => timeout.to_i }
         end
       end
     end

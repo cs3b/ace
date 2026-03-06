@@ -12,14 +12,18 @@ class ReviewManagerTest < AceReviewTest
     # Create test fixture for "pr" preset - tests should not depend on .ace/ directory
     create_test_preset("pr", <<~YAML)
       description: "Test PR preset"
-      instructions:
-        base: "prompt://base/system"
-        bundle:
-          sections:
-            format:
-              title: "Format Guidelines"
-              files:
-                - "prompt://format/standard"
+      reviewers:
+        - name: correctness
+          providers:
+            - llm:google:google:gemini-2.5-flash
+          prompt:
+            base: "prompt://base/system"
+            bundle:
+              sections:
+                format:
+                  title: "Format Guidelines"
+                  files:
+                    - "prompt://format/standard"
       bundle: "project"
       subject:
         bundle:
@@ -64,9 +68,13 @@ class ReviewManagerTest < AceReviewTest
     assert Dir.exist?(result[:session_dir]), "Session directory should exist"
 
     # Check that session files are created with v0.14.0 architecture (ace-bundle workflow)
-    assert File.exist?(File.join(result[:session_dir], "system.prompt.md"))
+    system_prompt_files = Dir.glob(File.join(result[:session_dir], "system-*.prompt.md"))
+    system_context_files = Dir.glob(File.join(result[:session_dir], "system-*.context.md"))
+    assert_equal 1, system_prompt_files.size
+    assert_equal 1, system_context_files.size
+    assert File.exist?(system_prompt_files.first)
+    assert File.exist?(system_context_files.first)
     assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
-    assert File.exist?(File.join(result[:session_dir], "system.context.md"))
     assert File.exist?(File.join(result[:session_dir], "user.context.md"))
     assert File.exist?(File.join(result[:session_dir], "metadata.yml"))
   end
@@ -86,11 +94,12 @@ class ReviewManagerTest < AceReviewTest
 
     # Check that context is handled via ace-bundle workflow
     session_dir = result[:session_dir]
-    system_context_file = File.join(session_dir, "system.context.md")
+    system_context_file = Dir.glob(File.join(session_dir, "system-*.context.md")).first
     assert File.exist?(system_context_file), "system.context.md should be created"
 
     # Verify context files were created
-    assert File.exist?(File.join(session_dir, "system.prompt.md"))
+    system_prompt_file = Dir.glob(File.join(session_dir, "system-*.prompt.md")).first
+    assert File.exist?(system_prompt_file)
     assert File.exist?(File.join(session_dir, "user.prompt.md"))
   end
 
@@ -108,7 +117,7 @@ class ReviewManagerTest < AceReviewTest
     assert_equal File.join(@temp_dir, "custom_session"), result[:session_dir]
 
     # Verify files are created in custom session directory
-    assert File.exist?(File.join(result[:session_dir], "system.prompt.md"))
+    assert File.exist?(Dir.glob(File.join(result[:session_dir], "system-*.prompt.md")).first)
     assert File.exist?(File.join(result[:session_dir], "user.prompt.md"))
   end
 
@@ -128,15 +137,15 @@ class ReviewManagerTest < AceReviewTest
     session_dir = result[:session_dir]
 
     # Verify v0.14.0 session structure (ace-bundle workflow)
-    assert File.exist?(File.join(session_dir, "system.context.md")), "Should have system.context.md"
-    assert File.exist?(File.join(session_dir, "system.prompt.md")), "Should have system.prompt.md"
+    assert File.exist?(Dir.glob(File.join(session_dir, "system-*.context.md")).first), "Should have system.*.context.md"
+    assert File.exist?(Dir.glob(File.join(session_dir, "system-*.prompt.md")).first), "Should have system.*.prompt.md"
     assert File.exist?(File.join(session_dir, "user.context.md")), "Should have user.context.md"
     assert File.exist?(File.join(session_dir, "user.prompt.md")), "Should have user.prompt.md"
     assert File.exist?(File.join(session_dir, "metadata.yml")), "Should have metadata.yml"
     # Note: subject.md is no longer created - subject content is handled via ace-bundle workflow
 
     # Verify system prompt has proper structure
-    system_prompt_content = File.read(File.join(session_dir, "system.prompt.md"))
+    system_prompt_content = File.read(Dir.glob(File.join(session_dir, "system-*.prompt.md")).first)
     refute_empty system_prompt_content, "System prompt should not be empty"
 
     # Verify user prompt has proper structure
@@ -301,6 +310,149 @@ class ReviewManagerTest < AceReviewTest
 
     refute @manager.send(:uses_instructions_format?, config_empty),
            "Should not detect instructions format for empty config"
+  end
+
+  def test_compose_review_prompt_accepts_base_only_reviewer_prompt
+    config = {
+      "description" => "Base-only prompt acceptance",
+      "reviewers" => [
+        {
+          "name" => "contracts",
+          "model" => "google:gemini-2.5-pro",
+          "prompt" => {
+            "base" => "prompt://base/system"
+          }
+        }
+      ],
+      "subject" => {
+        "content" => "def test; end"
+      },
+      "bundle" => "project",
+      "model" => "google:gemini-2.5-flash"
+    }
+    session_dir = File.join(@temp_dir, "base_only_prompt")
+    FileUtils.mkdir_p(session_dir)
+
+    result = @manager.send(:compose_review_prompt, config, {}, {}, session_dir, nil, nil)
+
+    assert result[:success], "Base-only prompts should be valid for LLM reviewers"
+    assert_equal 1, result[:system_prompts].size
+    assert_equal 1, result[:system_prompt_paths].size
+  end
+
+  def test_compose_review_prompt_rejects_llm_reviewer_without_prompt
+    config = {
+      "description" => "Missing prompt invalid",
+      "reviewers" => [
+        {
+          "name" => "contracts",
+          "model" => "google:gemini-2.5-pro"
+        }
+      ],
+      "subject" => {
+        "content" => "def test; end"
+      },
+      "bundle" => "project",
+      "model" => "google:gemini-2.5-flash"
+    }
+    session_dir = File.join(@temp_dir, "missing_prompt")
+    FileUtils.mkdir_p(session_dir)
+
+    result = @manager.send(:compose_review_prompt, config, {}, {}, session_dir, nil, nil)
+
+    refute result[:success]
+    assert_match(/must define a prompt/, result[:error])
+  end
+
+  def test_compose_review_prompt_uses_run_keyed_system_prompt_files_for_same_model_reviewers
+    config = {
+      "description" => "Run-keyed prompt files",
+      "reviewers" => [
+        {
+          "name" => "clarity",
+          "model" => "google:gemini-2.5-pro",
+          "prompt" => {
+            "base" => "prompt://base/system"
+          }
+        },
+        {
+          "name" => "risk",
+          "model" => "google:gemini-2.5-pro",
+          "prompt" => {
+            "base" => "prompt://base/system",
+            "focus" => "prompt://focus/risk"
+          }
+        }
+      ],
+      "subject" => {
+        "content" => "def test; end"
+      },
+      "bundle" => "project",
+      "model" => "google:gemini-2.5-flash"
+    }
+    session_dir = File.join(@temp_dir, "run_keyed_prompts")
+    FileUtils.mkdir_p(session_dir)
+
+    result = @manager.send(:compose_review_prompt, config, {}, {}, session_dir, nil, nil)
+
+    assert result[:success], "Expected compose_review_prompt to succeed"
+    run_keys = config["reviewers"].map do |reviewer|
+      reviewer_run_key(reviewer)
+    end
+
+    assert_equal run_keys.sort, result[:system_prompts].keys.sort
+    assert_equal run_keys.sort, result[:system_prompt_paths].keys.sort
+
+    prompt_files = Dir.glob(File.join(session_dir, "system-*.prompt.md"))
+    assert_equal 2, prompt_files.size
+
+    run_keys.each do |run_key|
+      slug = Ace::Review::Atoms::SlugGenerator.generate(run_key)
+      assert result[:system_prompt_paths].key?(run_key)
+      assert File.exist?(result[:system_prompt_paths][run_key]), "Expected prompt path #{result[:system_prompt_paths][run_key]} to exist"
+      assert_includes(prompt_files, File.join(session_dir, "system-#{slug}.prompt.md"))
+    end
+  end
+
+  def test_compose_review_prompt_uses_unique_run_keys_for_duplicate_name_reviewers
+    config = {
+      "description" => "Duplicate reviewer identities",
+      "reviewers" => [
+        {
+          "name" => "correctness",
+          "model" => "google:gemini-2.5-pro",
+          "prompt" => {
+            "base" => "prompt://base/system"
+          }
+        },
+        {
+          "name" => "correctness",
+          "model" => "google:gemini-2.5-pro",
+          "prompt" => {
+            "base" => "prompt://base/system",
+            "sections" => {
+              "reviewer_notes" => {
+                "content" => "Second lane."
+              }
+            }
+          }
+        }
+      ],
+      "subject" => {
+        "content" => "def test; end"
+      },
+      "bundle" => "project",
+      "model" => "google:gemini-2.5-flash"
+    }
+    session_dir = File.join(@temp_dir, "duplicate_name_prompts")
+    FileUtils.mkdir_p(session_dir)
+
+    result = @manager.send(:compose_review_prompt, config, {}, {}, session_dir, nil, nil)
+
+    assert result[:success], "Expected compose_review_prompt to succeed"
+    run_keys = Ace::Review::Atoms::ReviewerRunKeyAllocator.allocate(config["reviewers"]).map { |lane| lane[:run_key] }
+    assert_equal 2, run_keys.uniq.size
+    assert_equal run_keys.sort, result[:system_prompts].keys.sort
   end
 
   def test_system_context_file_creation_with_instructions
@@ -526,6 +678,15 @@ class ReviewManagerTest < AceReviewTest
           }
         }
       },
+      "reviewers" => [
+        {
+          "name" => "code-fit",
+          "model" => "google:gemini-2.5-flash",
+          "prompt" => {
+            "base" => "prompt://base/system"
+          }
+        }
+      ],
       "subject" => {
         "bundle" => {
           "sections" => {
@@ -557,14 +718,17 @@ class ReviewManagerTest < AceReviewTest
 
     assert result[:success], "compose_review_prompt should succeed with new format"
 
-    # Verify system.context.md was created
-    system_context_file = File.join(session_dir, "system.context.md")
-    assert File.exist?(system_context_file), "system.context.md should exist"
+    # Verify per-reviewer system context and prompt files were created
+    system_context_file = Dir.glob(File.join(session_dir, "system-*.context.md")).first
+    system_prompt_file = Dir.glob(File.join(session_dir, "system-*.prompt.md")).first
+    assert system_context_file, "system context files should exist"
+    assert system_prompt_file, "system prompt files should exist"
 
-    content = File.read(system_context_file)
-    # Should use new format with sections
-    assert_match(/sections:/, content, "Should contain sections")
-    assert_match(/format:/, content, "Should contain format section")
+    assert File.exist?(system_context_file), "system context file should exist"
+    assert File.exist?(system_prompt_file), "system prompt file should exist"
+
+    content = File.read(system_prompt_file)
+    refute_empty content, "System prompt should not be empty"
 
     # Verify user.context.md was created
     user_context_file = File.join(session_dir, "user.context.md")
@@ -763,14 +927,18 @@ class ReviewManagerTest < AceReviewTest
     # Create preset that we'll use
     create_test_preset("array-test", <<~YAML)
       description: "Test array subjects preset"
-      instructions:
-        base: "prompt://base/system"
-        bundle:
-          sections:
-            format:
-              title: "Format Guidelines"
-              files:
-                - "prompt://format/standard"
+      reviewers:
+        - name: correctness
+          providers:
+            - llm:google:google:gemini-2.5-flash
+          prompt:
+            base: "prompt://base/system"
+            bundle:
+              sections:
+                format:
+                  title: "Format Guidelines"
+                  files:
+                    - "prompt://format/standard"
       bundle: "project"
       subject:
         bundle:
@@ -810,8 +978,12 @@ class ReviewManagerTest < AceReviewTest
   def test_extract_review_content_merges_same_type_subjects
     create_test_preset("merge-test", <<~YAML)
       description: "Test merge preset"
-      instructions:
-        base: "prompt://base/system"
+      reviewers:
+        - name: correctness
+          providers:
+            - llm:google:google:gemini-2.5-flash
+          prompt:
+            base: "prompt://base/system"
       bundle: "project"
       subject:
         bundle:
@@ -843,8 +1015,12 @@ class ReviewManagerTest < AceReviewTest
   def test_extract_review_content_preserves_context_override
     create_test_preset("context-test", <<~YAML)
       description: "Test context override preset"
-      instructions:
-        base: "prompt://base/system"
+      reviewers:
+        - name: correctness
+          providers:
+            - llm:google:google:gemini-2.5-flash
+          prompt:
+            base: "prompt://base/system"
       bundle: "minimal"
       subject:
         bundle:
@@ -1111,6 +1287,253 @@ class ReviewManagerTest < AceReviewTest
 
     assert_includes paths, "/path/to/report1.md"
     assert_includes paths, dev_feedback_path
+  end
+
+  def test_collect_report_paths_returns_hash_descriptor_when_reviewer_present
+    require "ace/review/models/reviewer"
+    session_dir = File.join(@temp_dir, "collect_reviewer_test")
+    FileUtils.mkdir_p(session_dir)
+
+    reviewer = Ace::Review::Models::Reviewer.new(name: "code-fit", model: "google:gemini-2.5-pro", weight: 1.0)
+    result = {
+      results: {
+        "google:gemini-2.5-pro" => { success: true, output_file: "/path/to/report.md", reviewer: reviewer }
+      }
+    }
+
+    paths = @manager.send(:collect_report_paths, result, session_dir)
+
+    assert_equal 1, paths.length
+    descriptor = paths.first
+    assert_kind_of Hash, descriptor
+    assert_equal "/path/to/report.md", descriptor[:path]
+    assert_equal reviewer, descriptor[:reviewer]
+  end
+
+  def test_collect_report_paths_fans_out_descriptors_for_reviewers_array
+    require "ace/review/models/reviewer"
+    session_dir = File.join(@temp_dir, "collect_reviewers_array_test")
+    FileUtils.mkdir_p(session_dir)
+
+    reviewer1 = Ace::Review::Models::Reviewer.new(name: "code-fit", model: "google:gemini-2.5-pro", weight: 1.0)
+    reviewer2 = Ace::Review::Models::Reviewer.new(name: "standards", model: "google:gemini-2.5-pro", weight: 0.8)
+    result = {
+      results: {
+        "google:gemini-2.5-pro" => {
+          success: true,
+          output_file: "/path/to/report.md",
+          run_key: "code-fit:google-gemini-2-5-pro-1",
+          reviewers: [reviewer1, reviewer2],
+          reviewer: reviewer1
+        }
+      }
+    }
+
+    paths = @manager.send(:collect_report_paths, result, session_dir)
+
+    assert_equal 2, paths.length
+    assert_equal({ path: "/path/to/report.md", reviewer: reviewer1, run_key: "code-fit:google-gemini-2-5-pro-1" }, paths[0])
+    assert_equal({ path: "/path/to/report.md", reviewer: reviewer2, run_key: "code-fit:google-gemini-2-5-pro-1" }, paths[1])
+  end
+
+  def test_collect_report_paths_includes_run_key_with_single_reviewer_descriptor
+    require "ace/review/models/reviewer"
+    session_dir = File.join(@temp_dir, "collect_reviewer_run_key_test")
+    FileUtils.mkdir_p(session_dir)
+
+    reviewer = Ace::Review::Models::Reviewer.new(name: "code-fit", model: "google:gemini-2.5-pro", weight: 1.0)
+    result = {
+      results: {
+        "google:gemini-2.5-pro" => { success: true, output_file: "/path/to/report.md", reviewer: reviewer, run_key: "code-fit:google-gemini-2-5-pro-1" }
+      }
+    }
+
+    paths = @manager.send(:collect_report_paths, result, session_dir)
+
+    assert_equal 1, paths.length
+    descriptor = paths.first
+    assert_kind_of Hash, descriptor
+    assert_equal "/path/to/report.md", descriptor[:path]
+    assert_equal reviewer, descriptor[:reviewer]
+    assert_equal "code-fit:google-gemini-2-5-pro-1", descriptor[:run_key]
+  end
+
+  def test_collect_report_paths_returns_string_when_no_reviewer
+    session_dir = File.join(@temp_dir, "collect_no_reviewer_test")
+    FileUtils.mkdir_p(session_dir)
+
+    result = {
+      results: {
+        "google:gemini-2.5-flash" => { success: true, output_file: "/path/to/report.md" }
+      }
+    }
+
+    paths = @manager.send(:collect_report_paths, result, session_dir)
+
+    assert_equal 1, paths.length
+    assert_kind_of String, paths.first
+    assert_equal "/path/to/report.md", paths.first
+  end
+
+  def test_build_review_data_includes_reviewers_when_options_has_reviewers
+    require "ace/review/models/reviewer"
+    reviewers = [
+      Ace::Review::Models::Reviewer.new(name: "r1", model: "google:gemini-2.5-pro", weight: 1.0)
+    ]
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "test",
+      reviewers: reviewers
+    )
+    config = { reviewers: reviewers }
+    content = { subject: nil, context: nil }
+    prompt_result = {
+      system_prompt: "sys",
+      system_prompts: { "google:gemini-2.5-flash" => "sys" },
+      system_prompt_path: "system-1.md",
+      system_prompt_paths: { "google:gemini-2.5-flash" => "system-1.md" },
+      user_prompt: "usr",
+      user_prompt_path: nil
+    }
+
+    review_data = @manager.send(:build_review_data, options, config, content, prompt_result, "/tmp")
+
+    assert review_data.key?(:reviewers)
+    assert_equal reviewers, review_data[:reviewers]
+    assert_equal ["google:gemini-2.5-pro"], review_data[:models]
+    assert_equal "google:gemini-2.5-pro", review_data[:model]
+    assert_equal prompt_result[:system_prompts], review_data[:system_prompts]
+    assert_equal prompt_result[:system_prompt_paths], review_data[:system_prompt_paths]
+  end
+
+  def test_build_review_data_raises_when_no_reviewers_or_cli_models
+    options = Ace::Review::Models::ReviewOptions.new(preset: "test")
+    config = {}
+    content = { subject: nil, context: nil }
+    prompt_result = {
+      system_prompt: "sys",
+      system_prompt_path: "system-1.md",
+      user_prompt: "usr",
+      user_prompt_path: nil
+    }
+
+    error = assert_raises(ArgumentError) do
+      @manager.send(:build_review_data, options, config, content, prompt_result, "/tmp")
+    end
+    assert_match(/resolved no reviewer lanes/i, error.message)
+  end
+
+  def test_build_review_data_uses_explicit_cli_models_without_reviewers
+    options = Ace::Review::Models::ReviewOptions.new(preset: "test", models: ["anthropic:claude-opus-4"])
+    config = {}
+    content = { subject: nil, context: nil }
+    prompt_result = {
+      system_prompt: "sys",
+      user_prompt: "usr",
+      user_prompt_path: nil
+    }
+
+    review_data = @manager.send(:build_review_data, options, config, content, prompt_result, "/tmp")
+
+    assert_equal ["anthropic:claude-opus-4"], review_data[:models]
+    assert_equal "anthropic:claude-opus-4", review_data[:model]
+  end
+
+  def test_apply_provider_override_rewrites_only_llm_reviewers
+    llm_reviewer = Ace::Review::Models::Reviewer.new(
+      name: "correctness",
+      model: "codex:codex@review-deep",
+      prompt: { "base" => "prompt://base/system" },
+      provider: "llm:review-deep",
+      provider_kind: "llm",
+      provider_options: { "kind" => "llm", "model" => "codex:codex@review-deep" },
+      reviewer_type: "llm"
+    )
+    tool_reviewer = Ace::Review::Models::Reviewer.new(
+      name: "lint",
+      model: "tool:lint",
+      provider: "tool:lint",
+      provider_kind: "tool",
+      provider_options: { "kind" => "tool", "tool" => "lint" },
+      reviewer_type: "tool"
+    )
+
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "test",
+      provider_overrides: ["llm:fast:codex:spark@code-fast"],
+      reviewers: [llm_reviewer, tool_reviewer]
+    )
+    config = { reviewers: [llm_reviewer, tool_reviewer] }
+
+    @manager.send(:apply_provider_override!, options, config)
+
+    assert_equal "codex:spark@code-fast", options.reviewers.first.model
+    assert_equal "llm:fast:codex:spark@code-fast", options.reviewers.first.provider
+    assert_equal "tool:lint", options.reviewers.last.model
+    assert_equal "tool:lint", options.reviewers.last.provider
+    assert_equal ["codex:spark@code-fast"], config[:models]
+    assert_equal "codex:spark@code-fast", config[:model]
+  end
+
+  def test_apply_provider_override_rejects_when_no_llm_reviewers_exist
+    tool_reviewer = Ace::Review::Models::Reviewer.new(
+      name: "lint",
+      model: "tool:lint",
+      provider: "tool:lint",
+      provider_kind: "tool",
+      provider_options: { "kind" => "tool", "tool" => "lint" },
+      reviewer_type: "tool"
+    )
+
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "test",
+      provider_overrides: ["llm:fast:codex:spark@code-fast"],
+      reviewers: [tool_reviewer]
+    )
+    config = { reviewers: [tool_reviewer] }
+
+    error = assert_raises(ArgumentError) do
+      @manager.send(:apply_provider_override!, options, config)
+    end
+
+    assert_match(/resolved no LLM reviewer lanes/i, error.message)
+  end
+
+  def test_prepare_review_config_applies_provider_override_to_inline_reviewers
+    create_test_preset("provider-override", <<~YAML)
+      description: "Provider override test"
+      reviewers:
+        - name: quality
+          providers:
+            - llm:google:google:gemini-2.5-pro
+          prompt:
+            base: "prompt://base/system"
+    YAML
+
+    options = Ace::Review::Models::ReviewOptions.new(
+      preset: "provider-override",
+      provider_overrides: ["llm:fast:codex:spark@code-fast"]
+    )
+
+    result = @manager.send(:prepare_review_config, options)
+
+    assert result[:success], "Expected provider override config to succeed: #{result[:error]}"
+    assert_equal ["codex:spark@code-fast"], result[:config][:models]
+    assert_equal "codex:spark@code-fast", options.reviewers.first.model
+    assert_equal "llm:fast:codex:spark@code-fast", options.reviewers.first.provider
+  end
+
+  def test_merge_config_skips_reviewers_when_cli_models_set
+    # When --models is provided via CLI, preset reviewers must not override it
+    require "ace/review/models/reviewer"
+    options = Ace::Review::Models::ReviewOptions.new(models: ["anthropic:claude-opus-4"])
+
+    preset_reviewer = Ace::Review::Models::Reviewer.new(name: "preset-r", model: "google:gemini-2.5-pro", weight: 1.0)
+    config = { "reviewers" => [preset_reviewer] }
+
+    options.merge_config(config)
+
+    assert_nil options.reviewers, "CLI --models should prevent preset reviewers from being loaded"
+    assert_equal ["anthropic:claude-opus-4"], options.models
   end
 
   def test_determine_feedback_path_always_returns_session_dir
@@ -1803,8 +2226,13 @@ class ReviewManagerTest < AceReviewTest
     report_path = File.join(session_dir, "review.md")
     File.write(report_path, "# Review")
 
+    reviewer = Ace::Review::Models::Reviewer.new(
+      name: "contracts",
+      model: "claude-3"
+    )
+
     result = { success: true, output_file: report_path }
-    review_data = { preset: "pr", model: "claude-3" }
+    review_data = { preset: "pr", model: "claude-3", reviewers: [reviewer] }
     options = Ace::Review::Models::ReviewOptions.new(preset: "pr")
 
     # Capture the arguments passed to extract_feedback
@@ -1832,6 +2260,7 @@ class ReviewManagerTest < AceReviewTest
     assert captured_result[:results]["claude-3"], "Should have model as key"
     assert captured_result[:results]["claude-3"][:success]
     assert_equal report_path, captured_result[:results]["claude-3"][:output_file]
+    assert_equal reviewer, captured_result[:results]["claude-3"][:reviewer]
   end
 
   def test_execute_single_model_extracts_feedback_when_enabled
@@ -1990,5 +2419,78 @@ class ReviewManagerTest < AceReviewTest
     end
 
     mock_executor.verify
+  end
+
+  def test_prepare_review_config_returns_actionable_error_for_pipeline_resolution_failures
+    options = Ace::Review::Models::ReviewOptions.new(preset: "pr-risk-based")
+
+    mock_preset_manager = Minitest::Mock.new
+    mock_preset_manager.expect(:preset_exists?, true, ["pr-risk-based"])
+    mock_preset_manager.expect(:resolve_preset, nil) do |preset_name, _overrides|
+      raise ArgumentError, "Missing reviewer reference: correctness" if preset_name == "pr-risk-based"
+      false
+    end
+
+    @manager.instance_variable_set(:@preset_manager, mock_preset_manager)
+    result = @manager.send(:prepare_review_config, options)
+
+    refute result[:success]
+    assert_match(/Missing reviewer reference: correctness/, result[:error])
+    mock_preset_manager.verify
+  end
+
+  def test_execute_with_llm_uses_mixed_lane_path_when_tool_reviewer_present
+    require "ace/review/models/reviewer"
+
+    tool_reviewer = Ace::Review::Models::Reviewer.new(
+      name: "lint",
+      model: "tool:lint",
+      provider_kind: "tool",
+      provider_options: { "tool" => "lint" }
+    )
+    review_data = {
+      models: ["google:gemini-2.5-flash"],
+      reviewers: [tool_reviewer]
+    }
+
+    called = false
+    @manager.stub :execute_mixed_review, ->(*_args) {
+      called = true
+      { success: true, summary: { total_models: 1, success_count: 1 } }
+    } do
+      result = @manager.send(:execute_with_llm, review_data, @temp_dir, nil)
+      assert called
+      assert result[:success]
+    end
+  end
+
+  def test_execute_tool_reviewer_dispatches_lint_provider
+    require "ace/review/models/reviewer"
+
+    reviewer = Ace::Review::Models::Reviewer.new(
+      name: "lint",
+      model: "tool:lint",
+      provider_kind: "tool",
+      provider_options: { "tool" => "lint" }
+    )
+
+    mock_runner = Minitest::Mock.new
+    mock_runner.expect(:run, { success: true, output_file: "/tmp/review-lint.md", duration: 0.3 }) do |reviewer:, session_dir:|
+      reviewer.name == "lint" && session_dir == @temp_dir
+    end
+
+    Ace::Review::Molecules::LintEvidenceRunner.stub :new, mock_runner do
+      result = @manager.send(:execute_tool_reviewer, reviewer, @temp_dir)
+      assert result[:success]
+      assert_equal "/tmp/review-lint.md", result[:output_file]
+    end
+
+    mock_runner.verify
+  end
+
+  private
+
+  def reviewer_run_key(reviewer)
+    Ace::Review::Atoms::ReviewerRunKeyAllocator.allocate([reviewer]).first[:run_key]
   end
 end

@@ -1,44 +1,8 @@
-# Shine — polish review: simplification, clarity, readability (all non-blocking)
+# Shine — advisory polish review mapped to narrow reviewer lanes
 
 description: "Polish review - can we simplify and improve clarity?"
-
-instructions:
-  base: "prompt://base/system"
-  bundle:
-    sections:
-      format:
-        title: "Format Guidelines"
-        description: "Standard output formatting for non-blocking suggestions"
-        files:
-          - "prompt://format/standard"
-      polish_focus:
-        title: "Polish Review Focus"
-        description: "Simplification, naming, dead code, and readability suggestions"
-        files:
-          - "prompt://focus/phase/polish"
-      docs_focus:
-        title: "Documentation Focus"
-        description: "Documentation completeness and standards"
-        files:
-          - "prompt://focus/scope/docs"
-      communication:
-        title: "Communication Style"
-        description: "Professional communication guidelines"
-        files:
-          - "prompt://guidelines/tone"
-      visual_indicators:
-        title: "Visual Indicators"
-        description: "Icons and visual markers for quick scanning"
-        files:
-          - "prompt://guidelines/icons"
-      project_context:
-        title: "Project Context"
-        description: "Project information and background"
-        presets:
-          - "project"
-
-bundle: "project"
-
-models:
-  - claude:opus
-  - codex:max
+partition: by-concern
+pipeline: phased-shine
+providers:
+  llm: [review-fast]
+  tools_lint: [lint]

@@ -81,6 +81,48 @@ class LlmExecutorTest < AceReviewTest
     assert_match(/200,000/, warning_output)
   end
 
+  def test_execute_forwards_provider_options_from_reviewer
+    require "ace/review/models/reviewer"
+    output_file = File.join(@test_dir, "review.md")
+    reviewer = Ace::Review::Models::Reviewer.new(
+      name: "correctness",
+      model: "google:gemini-2.5-pro",
+      provider_options: {
+        timeout: 90,
+        sandbox: "read-only",
+        cli_args: ["--experimental", "--sandbox", "read-only", "--foo", "bar"]
+      }
+    )
+
+    captured = nil
+    query_stub = lambda do |model, user_prompt, **query_options|
+      captured = { model: model, user_prompt: user_prompt, query_options: query_options }
+      {
+        text: "ok",
+        metadata: {},
+        usage: {},
+        model: model,
+        provider: "google"
+      }
+    end
+
+    Ace::LLM::QueryInterface.stub(:query, query_stub) do
+      result = @executor.execute(
+        system_prompt: "system",
+        user_prompt: "user",
+        model: "google:gemini-2.5-pro",
+        session_dir: @test_dir,
+        output_file: output_file,
+        reviewer: reviewer
+      )
+
+      assert result[:success], "Expected execute to succeed: #{result[:error]}"
+      assert_equal 90, captured[:query_options][:timeout]
+      assert_equal "read-only", captured[:query_options][:sandbox]
+      assert_equal ["--experimental", "--foo", "bar"], captured[:query_options][:cli_args]
+    end
+  end
+
   private
 
   def capture_stderr

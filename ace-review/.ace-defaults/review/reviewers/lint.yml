@@ -1,0 +1,4 @@
+provider_class: tools-lint
+focus: lint
+weight: 0.6
+critical: false

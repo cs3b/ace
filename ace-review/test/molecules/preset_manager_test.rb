@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "test_helper"
+require "yaml"
 
 class PresetManagerTest < AceReviewTest
   def setup
@@ -84,15 +85,17 @@ class PresetManagerTest < AceReviewTest
 
   def test_resolves_preset_with_overrides
     create_test_config(<<~YAML)
-      defaults:
-        model: "default-model"
       presets:
         base:
           description: "Base preset"
-          prompt_composition:
-            base: "prompt://base/system"
-            focus:
-              - "prompt://focus/quality/security"
+          reviewers:
+            - name: base
+              providers:
+                - llm:base:default-model
+              prompt:
+                base: "prompt://base/system"
+                focus:
+                  - "prompt://focus/quality/security"
     YAML
 
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
@@ -100,13 +103,16 @@ class PresetManagerTest < AceReviewTest
       model: "override-model"
     })
 
-    # Test that basic overrides work
-    assert_equal "override-model", resolved[:model]
+    # CLI model overrides are ignored during preset resolution.
+    assert_equal "default-model", resolved[:model]
+    assert_equal ["default-model"], resolved[:models]
     assert_equal "Base preset", resolved[:description]
 
-    # Test that prompt_composition is passed through (ace-bundle processes it)
-    assert_equal "prompt://base/system", resolved[:system_prompt]["base"]
-    assert_includes resolved[:system_prompt]["focus"], "prompt://focus/quality/security"
+    # Test that reviewer prompt is preserved for model migration.
+    reviewer = resolved[:reviewers].find { |item| item.respond_to?(:name) && item.name == "base" }
+    assert reviewer, "Expected base reviewer to be resolved"
+    assert_equal "prompt://base/system", reviewer.prompt["base"]
+    assert_includes reviewer.prompt["focus"], "prompt://focus/quality/security"
   end
 
   # Composition tests
@@ -433,5 +439,369 @@ class PresetManagerTest < AceReviewTest
     result = manager.send(:load_preset_from_file, "valid-preset")
     assert_instance_of Hash, result
     assert_equal "test", result["description"]
+  end
+
+  def test_resolve_preset_pipeline_loads_reviewer_providers_and_evidence_lanes
+    create_test_preset("narrow", <<~YAML)
+      description: "Narrow preset"
+      pipeline: narrow-risk-based
+    YAML
+
+    create_test_pipeline("narrow-risk-based", <<~YAML)
+      always:
+        - correctness
+        - contracts
+      evidence:
+        - lint
+    YAML
+
+    create_test_reviewer("correctness", <<~YAML)
+      providers:
+        - llm:fast:google:gemini-2.5-flash@review-fast
+      focus: correctness
+      weight: 1.0
+    YAML
+    create_test_reviewer("contracts", <<~YAML)
+      providers:
+        - llm:deep:codex:codex@review-deep
+      focus: contracts
+      weight: 1.0
+    YAML
+    create_test_reviewer("lint", <<~YAML)
+      providers:
+        - tool:lint
+      focus: lint
+      weight: 0.6
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("narrow")
+
+    assert_equal "narrow-risk-based", resolved[:pipeline]
+    assert_equal ["google:gemini-2.5-flash@review-fast", "codex:codex@review-deep"], resolved[:models]
+    assert_equal %w[correctness contracts lint], resolved[:reviewers].map(&:name)
+
+    lint_reviewer = resolved[:reviewers].find { |reviewer| reviewer.name == "lint" }
+    assert lint_reviewer
+    assert_equal "tool", lint_reviewer.provider_kind
+    assert_equal "tool:lint", lint_reviewer.model
+  end
+
+  def test_resolve_preset_pipeline_raises_for_missing_reviewer_reference
+    create_test_preset("narrow", <<~YAML)
+      description: "Narrow preset"
+      pipeline: narrow-risk-based
+    YAML
+
+    create_test_pipeline("narrow-risk-based", <<~YAML)
+      always:
+        - missing-reviewer
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    error = assert_raises(ArgumentError) { manager.resolve_preset("narrow") }
+    assert_match(/Missing reviewer reference: missing-reviewer/, error.message)
+  end
+
+  def test_resolve_preset_pipeline_raises_for_missing_providers_list
+    create_test_preset("narrow", <<~YAML)
+      description: "Narrow preset"
+      pipeline: narrow-risk-based
+    YAML
+
+    create_test_pipeline("narrow-risk-based", <<~YAML)
+      always:
+        - correctness
+    YAML
+
+    create_test_reviewer("correctness", <<~YAML)
+      focus: correctness
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    error = assert_raises(ArgumentError) { manager.resolve_preset("narrow") }
+    assert_match(/provider_class.*model.*providers/i, error.message)
+  end
+
+  def test_resolve_preset_pipeline_uses_safe_minimal_when_optional_lanes_do_not_match
+    create_test_preset("narrow", <<~YAML)
+      description: "Narrow preset"
+      pipeline: optional-only
+    YAML
+
+    create_test_pipeline("optional-only", <<~YAML)
+      optional:
+        - reviewer: tests
+          when_any_changed:
+            - test/**/*.rb
+      safe_minimal:
+        - correctness
+    YAML
+
+    create_test_reviewer("correctness", <<~YAML)
+      providers:
+        - llm:fast:google:gemini-2.5-flash@review-fast
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("narrow")
+    assert_equal ["correctness"], resolved[:reviewers].map(&:name)
+  end
+
+  def test_resolve_preset_pipeline_supports_phased_preset_cutover_shape
+    create_test_preset("code-valid", <<~YAML)
+      description: "Correctness review - does the code work correctly?"
+      pipeline: phased-valid
+    YAML
+    create_test_preset("code-fit", <<~YAML)
+      description: "Quality review - is the code well-structured and maintainable?"
+      pipeline: phased-fit
+    YAML
+    create_test_preset("code-shine", <<~YAML)
+      description: "Polish review - can we simplify and improve clarity?"
+      pipeline: phased-shine
+    YAML
+
+    create_test_pipeline("phased-valid", <<~YAML)
+      always:
+        - correctness
+        - contracts
+      evidence:
+        - lint
+    YAML
+    create_test_pipeline("phased-fit", <<~YAML)
+      always:
+        - architecture-fit
+        - performance
+        - tests
+      evidence:
+        - lint
+    YAML
+    create_test_pipeline("phased-shine", <<~YAML)
+      always:
+        - simplicity
+        - docs-dx
+      evidence:
+        - lint
+    YAML
+
+    create_test_reviewer("correctness", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
+    create_test_reviewer("contracts", "providers:\n  - llm:deep:codex:codex@review-deep\n")
+    create_test_reviewer("architecture-fit", "providers:\n  - llm:deep:codex:codex@review-deep\n")
+    create_test_reviewer("performance", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
+    create_test_reviewer("tests", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
+    create_test_reviewer("simplicity", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
+    create_test_reviewer("docs-dx", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
+    create_test_reviewer("lint", "providers:\n  - tool:lint\n")
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+
+    valid = manager.resolve_preset("code-valid")
+    fit = manager.resolve_preset("code-fit")
+    shine = manager.resolve_preset("code-shine")
+
+    assert_equal "phased-valid", valid[:pipeline]
+    assert_equal %w[correctness contracts lint], valid[:reviewers].map(&:name)
+
+    assert_equal "phased-fit", fit[:pipeline]
+    assert_equal %w[architecture-fit performance tests lint], fit[:reviewers].map(&:name)
+
+    assert_equal "phased-shine", shine[:pipeline]
+    assert_equal %w[simplicity docs-dx lint], shine[:reviewers].map(&:name)
+  end
+
+  def test_resolve_preset_rejects_legacy_top_level_model
+    create_test_preset("legacy", <<~YAML)
+      description: "Legacy preset"
+      model: "google:gemini-2.5-flash"
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    error = assert_raises(ArgumentError) { manager.resolve_preset("legacy") }
+    assert_match(/legacy top-level model\/models/i, error.message)
+  end
+
+  # Provider catalog resolution tests
+
+  def test_resolve_preset_pipeline_expands_provider_class_via_catalog
+    create_llm_catalog(<<~YAML)
+      review-fast:
+        - "codex:spark@review-fast"
+    YAML
+    create_tools_lint_catalog(<<~YAML)
+      lint:
+        - lint
+    YAML
+
+    create_test_preset("valid", <<~YAML)
+      description: "Correctness review"
+      pipeline: phased-valid
+      providers:
+        llm: [review-fast]
+        tools_lint: [lint]
+    YAML
+    create_test_pipeline("phased-valid", <<~YAML)
+      always:
+        - correctness
+        - contracts
+      evidence:
+        - lint
+    YAML
+    create_test_reviewer("correctness", <<~YAML)
+      provider_class: llm
+      focus: correctness
+      weight: 1.0
+    YAML
+    create_test_reviewer("contracts", <<~YAML)
+      provider_class: llm
+      focus: contracts
+      weight: 1.0
+    YAML
+    create_test_reviewer("lint", <<~YAML)
+      provider_class: tools-lint
+      focus: lint
+      weight: 0.6
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("valid")
+
+    assert_equal "phased-valid", resolved[:pipeline]
+    reviewers = resolved[:reviewers]
+    assert_equal %w[correctness contracts lint], reviewers.map(&:name)
+
+    # LLM reviewers should be resolved with model from catalog
+    llm_reviewers = reviewers.reject { |r| r.provider_kind.to_s == "tool" }
+    assert llm_reviewers.all? { |r| r.model == "codex:spark@review-fast" }
+
+    # Tool reviewer should be resolved
+    lint_reviewer = reviewers.find { |r| r.name == "lint" }
+    assert_equal "tool", lint_reviewer.provider_kind
+    assert_equal "tool:lint", lint_reviewer.model
+  end
+
+  def test_resolve_preset_providers_llm_override_replaces_default
+    create_llm_catalog(<<~YAML)
+      review-fast:
+        - "codex:spark@review-fast"
+      review-deep:
+        - "codex:codex@review-deep"
+    YAML
+
+    create_test_preset("valid", <<~YAML)
+      description: "Correctness review"
+      pipeline: simple-pipeline
+      providers:
+        llm: [review-fast]
+    YAML
+    create_test_pipeline("simple-pipeline", <<~YAML)
+      always:
+        - correctness
+    YAML
+    create_test_reviewer("correctness", <<~YAML)
+      provider_class: llm
+      focus: correctness
+      weight: 1.0
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("valid", { providers_llm: ["review-deep"] })
+
+    llm_reviewers = resolved[:reviewers].reject { |r| r.provider_kind.to_s == "tool" }
+    assert llm_reviewers.all? { |r| r.model == "codex:codex@review-deep" }
+  end
+
+  def test_resolve_preset_providers_llm_inline_model_id_override
+    create_llm_catalog("review-fast:\n  - \"codex:spark@review-fast\"\n")
+
+    create_test_preset("valid", <<~YAML)
+      description: "Review"
+      pipeline: simple-pipeline
+      providers:
+        llm: [review-fast]
+    YAML
+    create_test_pipeline("simple-pipeline", <<~YAML)
+      always:
+        - correctness
+    YAML
+    create_test_reviewer("correctness", <<~YAML)
+      provider_class: llm
+      focus: correctness
+      weight: 1.0
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("valid", { providers_llm: ["google:gemini-2.5-flash@custom"] })
+
+    llm_reviewers = resolved[:reviewers].reject { |r| r.provider_kind.to_s == "tool" }
+    assert llm_reviewers.all? { |r| r.model == "google:gemini-2.5-flash@custom" }
+  end
+
+  # Task 3: Deduplication rule
+
+  def test_resolve_preset_deduplicates_reviewers_when_optional_matches_always
+    create_llm_catalog("review-fast:\n  - \"codex:spark@review-fast\"\n")
+
+    create_test_preset("valid", <<~YAML)
+      description: "Review"
+      pipeline: dedup-pipeline
+      providers:
+        llm: [review-fast]
+    YAML
+    # Pipeline has correctness in always AND in optional — should run only once
+    create_test_pipeline("dedup-pipeline", <<~YAML)
+      always:
+        - correctness
+      optional:
+        - correctness
+    YAML
+    create_test_reviewer("correctness", <<~YAML)
+      provider_class: llm
+      focus: correctness
+      weight: 1.0
+    YAML
+
+    manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
+    resolved = manager.resolve_preset("valid")
+
+    # Correctness should appear exactly once, not twice
+    correctness_count = resolved[:reviewers].count { |r| r.name == "correctness" }
+    assert_equal 1, correctness_count, "Expected correctness reviewer to run only once, not #{correctness_count} times"
+  end
+
+  private
+
+  def create_test_reviewer(name, content)
+    FileUtils.mkdir_p(".ace/review/reviewers")
+    file_path = File.join(".ace/review/reviewers", "#{name}.yml")
+    parsed_content = begin
+      YAML.safe_load(content) || {}
+    rescue StandardError
+      {}
+    end
+
+    if parsed_content.is_a?(Hash) && !parsed_content.key?("prompt")
+      parsed_content["prompt"] ||= {
+        "base" => "prompt://base/system"
+      }
+      File.write(file_path, YAML.dump(parsed_content))
+    else
+      File.write(file_path, content)
+    end
+  end
+
+  def create_test_pipeline(name, content)
+    FileUtils.mkdir_p(".ace/review/pipelines")
+    File.write(".ace/review/pipelines/#{name}.yml", content)
+  end
+
+  def create_llm_catalog(content)
+    FileUtils.mkdir_p(".ace/review/providers")
+    File.write(".ace/review/providers/llm.yml", content)
+  end
+
+  def create_tools_lint_catalog(content)
+    FileUtils.mkdir_p(".ace/review/providers")
+    File.write(".ace/review/providers/tools-lint.yml", content)
   end
 end

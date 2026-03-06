@@ -2,30 +2,32 @@
 
 description: "Documentation review - completeness and clarity"
 
-instructions:
-  base: "prompt://base/system"
-  bundle:
-    sections:
-      format:
-        title: "Format Guidelines"
-        description: "Standard output formatting and structure guidelines"
-        files:
-          - "prompt://format/standard"
-      docs_focus:
-        title: "Documentation Focus"
-        description: "Documentation completeness and clarity review"
-        files:
-          - "prompt://focus/scope/docs"
-      guidelines:
-        title: "Communication Guidelines"
-        description: "Professional communication style"
-        files:
-          - "prompt://guidelines/tone"
-      project_docs:
-        title: "Project Documentation"
-        description: "Main project documentation for context"
-        files:
-          - "README.md"
+reviewers:
+  - name: docs-review
+    model: "codex:codex"
+    prompt:
+      base: "prompt://base/system"
+      sections:
+        format:
+          title: "Format Guidelines"
+          description: "Standard output formatting and structure guidelines"
+          files:
+            - "prompt://format/standard"
+        docs_focus:
+          title: "Documentation Focus"
+          description: "Documentation completeness and clarity review"
+          files:
+            - "prompt://focus/scope/docs"
+        guidelines:
+          title: "Communication Guidelines"
+          description: "Professional communication style"
+          files:
+            - "prompt://guidelines/tone"
+        project_docs:
+          title: "Project Documentation"
+          description: "Main project documentation for context"
+          files:
+            - "README.md"
 
 subject:
   bundle:

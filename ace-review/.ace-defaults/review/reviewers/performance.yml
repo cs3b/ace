@@ -1,0 +1,29 @@
+provider_class: llm
+focus: performance
+weight: 0.8
+critical: false
+prompt:
+  base: "prompt://base/system"
+  sections:
+    review_focus:
+      title: "Performance Focus"
+      description: "Performance and scalability risks."
+      files:
+        - "prompt://focus/quality/performance"
+        - "prompt://focus/quality/security"
+    format_guidelines:
+      title: "Format Guidelines"
+      description: "Structured findings output"
+      files:
+        - "prompt://format/detailed"
+    review_guidelines:
+      title: "Review Guidelines"
+      description: "Tone and evidence expectations"
+      files:
+        - "prompt://guidelines/tone"
+        - "prompt://guidelines/icons"
+    reviewer_notes:
+      title: "Reviewer Notes"
+      description: "Additional reviewer-specific instructions"
+      content: |
+        Focus on performance risks in loops, parsing, I/O paths, and avoidable algorithmic overhead.

@@ -1,39 +1,7 @@
-# Valid — correctness review: logic errors, bugs, missing functionality
+# Valid — correctness review mapped to narrow reviewer lanes
 
 description: "Correctness review - does the code work correctly?"
-
-instructions:
-  base: "prompt://base/system"
-  bundle:
-    sections:
-      format:
-        title: "Format Guidelines"
-        description: "Detailed output formatting and structure guidelines"
-        files:
-          - "prompt://format/detailed"
-      correctness_focus:
-        title: "Correctness Review Focus"
-        description: "Logic errors, missing functionality, and bug detection"
-        files:
-          - "prompt://focus/phase/correctness"
-      communication:
-        title: "Communication Style"
-        description: "Professional communication guidelines"
-        files:
-          - "prompt://guidelines/tone"
-      visual_indicators:
-        title: "Visual Indicators"
-        description: "Icons and visual markers for quick scanning"
-        files:
-          - "prompt://guidelines/icons"
-      project_context:
-        title: "Project Context"
-        description: "Project information and background"
-        presets:
-          - "project"
-
-bundle: "project"
-
-models:
-  - claude:opus
-  - codex:max
+pipeline: phased-valid
+providers:
+  llm: [review-fast]
+  tools_lint: [lint]

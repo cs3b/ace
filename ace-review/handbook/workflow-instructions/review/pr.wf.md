@@ -16,7 +16,7 @@ Review a GitHub Pull Request using ace-review, verify feedback items, and create
 
 ## Arguments
 
-- `$ARGUMENTS`: Optional PR number and/or additional flags (e.g., `123`, `--preset code-deep`, `123 --preset security`)
+- `$ARGUMENTS`: Optional PR number and/or additional flags (e.g., `123`, `--preset code-fit`, `123 --preset docs`)
 
 ## Instructions
 
@@ -41,9 +41,10 @@ ace-review --pr $(gh pr view --json number -q '.number') [additional-flags]
 ```
 
 **Examples:**
-- `/as-review-pr 123` → `ace-review --pr 123`
-- `/as-review-pr --preset code-deep` → `ace-review --pr <current-pr> --preset code-deep`
-- `/as-review-pr 123 --preset security` → `ace-review --pr 123 --preset security`
+- `/ace-review-pr 123` → `ace-review --pr 123`
+- `/ace-review-pr --preset code-fit` → `ace-review --pr <current-pr> --preset code-fit`
+- `/ace-review-pr 123 --preset docs` → `ace-review --pr 123 --preset docs`
+- `/ace-review-pr 234 --preset code-valid --provider llm:codex:codex@review-deep` → `ace-review --pr 234 --preset code-valid --provider llm:codex:codex@review-deep`
 
 **Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
