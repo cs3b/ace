@@ -23,5 +23,5 @@ Save all output to `results/tc/05/`. Capture:
 - Verify: old "Skip Assessment" section is removed (should NOT exist).
 - Verify: attempt-first external action section ("External Action Rule (Attempt-First)").
 - Verify: command evidence and exact error output requirements.
-- Verify: `.claude/skills/ace-assign-drive/SKILL.md` does NOT duplicate policy guardrails.
+- Verify: `.claude/skills/as-assign-drive/SKILL.md` does NOT duplicate policy guardrails.
 - All artifacts must come from real tool execution.

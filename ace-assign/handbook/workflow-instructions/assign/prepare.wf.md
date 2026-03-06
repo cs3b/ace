@@ -24,7 +24,7 @@ The workflow accepts three input types:
 ### 1. Preset Name Only
 
 ```
-/ace-assign-prepare work-on-task --taskref 123
+/as-assign-prepare work-on-task --taskref 123
 ```
 
 Loads the preset and injects parameter values.
@@ -32,7 +32,7 @@ Loads the preset and injects parameter values.
 ### 2. Informal Instructions Only
 
 ```
-/ace-assign-prepare "Work on task 123, create a PR, do 2 review cycles"
+/as-assign-prepare "Work on task 123, create a PR, do 2 review cycles"
 ```
 
 Transforms prose into structured phases.
@@ -40,7 +40,7 @@ Transforms prose into structured phases.
 ### 3. Preset + Customization
 
 ```
-/ace-assign-prepare work-on-task --taskref 123 "skip onboarding, add security review"
+/as-assign-prepare work-on-task --taskref 123 "skip onboarding, add security review"
 ```
 
 Loads preset then applies modifications.
@@ -350,19 +350,19 @@ session:
 
 steps:
   - name: onboard
-    skill: ace-onboard
+    skill: as-onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: ace-task-work
+    skill: as-task-work
     instructions:
       - Work on task 123.
       - Implement the required changes following project conventions.
 
   - name: create-pr
-    skill: ace-github-pr-create
+    skill: as-github-pr-create
     instructions:
       - Create a pull request for the changes.
       - Capture the PR number for subsequent review phases.
@@ -385,7 +385,7 @@ steps:
 ### Example 1: Full Workflow Preset
 
 ```
-/ace-assign-prepare work-on-task --taskref 148
+/as-assign-prepare work-on-task --taskref 148
 ```
 
 Creates job with 13 phases: onboard, work-on-task, release, create-pr, 2 review cycles (review + apply-feedback + release each), reorganize-commits, push-to-remote, update-pr-desc.
@@ -393,7 +393,7 @@ Creates job with 13 phases: onboard, work-on-task, release, create-pr, 2 review 
 ### Example 2: Informal Instructions
 
 ```
-/ace-assign-prepare "implement task 148, create pr, review twice"
+/as-assign-prepare "implement task 148, create pr, review twice"
 ```
 
 Parses instructions and creates job with:
@@ -407,7 +407,7 @@ Parses instructions and creates job with:
 ### Example 3: Custom Output Path
 
 ```
-/ace-assign-prepare work-on-task --taskref 148 --output .cache/my-job.yaml
+/as-assign-prepare work-on-task --taskref 148 --output .cache/my-job.yaml
 ```
 
 Writes configuration to specified path.
@@ -415,7 +415,7 @@ Writes configuration to specified path.
 ### Example 4: Multi-Task Batch (Comma-Separated)
 
 ```
-/ace-assign-prepare work-on-tasks --taskrefs 148,149,150
+/as-assign-prepare work-on-tasks --taskrefs 148,149,150
 ```
 
 Creates job with hierarchical structure:
@@ -429,7 +429,7 @@ Creates job with hierarchical structure:
 ### Example 5: Multi-Task Batch (Range)
 
 ```
-/ace-assign-prepare work-on-tasks --taskrefs 148-152
+/as-assign-prepare work-on-tasks --taskrefs 148-152
 ```
 
 Expands range to tasks 148, 149, 150, 151, 152.
@@ -437,7 +437,7 @@ Expands range to tasks 148, 149, 150, 151, 152.
 ### Example 6: Multi-Task Batch (Pattern)
 
 ```
-/ace-assign-prepare work-on-tasks --taskrefs "240.*"
+/as-assign-prepare work-on-tasks --taskrefs "240.*"
 ```
 
 Expands pattern to match subtasks (requires resolution at prepare time).
@@ -459,7 +459,7 @@ After job.yaml is created:
 
 ```bash
 # Start the assignment
-/ace-assign-create job.yaml
+/as-assign-create job.yaml
 
 # Or directly:
 ace-assign create job.yaml
@@ -468,7 +468,7 @@ ace-assign create job.yaml
 ace-assign status
 
 # Drive execution through the workflow
-/ace-assign-drive
+/as-assign-drive
 ```
 
 **Note:** Job files created in `<task>/jobs/` stay in place when `ace-assign create` runs. Files created elsewhere are moved to `<task>/jobs/<session_id>-job.yml` for provenance. Always use `ace-assign status` to query the current assignment state.

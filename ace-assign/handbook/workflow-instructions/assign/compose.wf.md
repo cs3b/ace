@@ -27,19 +27,19 @@ Boundary:
 ### 1. Natural Description
 
 ```
-/ace-assign-compose "implement task 148 with PR and 2 reviews"
+/as-assign-compose "implement task 148 with PR and 2 reviews"
 ```
 
 ### 2. Recipe Reference
 
 ```
-/ace-assign-compose implement-with-pr --taskref 148
+/as-assign-compose implement-with-pr --taskref 148
 ```
 
 ### 3. Description with Parameters
 
 ```
-/ace-assign-compose "fix the auth bug and review" --taskref 203
+/as-assign-compose "fix the auth bug and review" --taskref 203
 ```
 
 ## Process
@@ -123,7 +123,7 @@ Select phases from the catalog based on intent:
 #### Fork Context Onboarding
 
 When a phase has `context: fork`, automatically prepend this instruction:
-- "First: onboard yourself using /ace-onboard skill to load project context."
+- "First: onboard yourself using /as-onboard skill to load project context."
 
 This ensures forked agents have project context loaded before executing their primary task.
 
@@ -230,13 +230,13 @@ session:
 
 steps:
   - name: onboard
-    skill: ace-onboard
+    skill: as-onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: ace-task-work
+    skill: as-task-work
     context: fork
     instructions:
       - "Work on task 148."
@@ -274,7 +274,7 @@ expansion:
     name: "work-on-{{item}}"
     parent: "010"
     context: fork
-    skill: ace-task-work
+    skill: as-task-work
     instructions: "Implement task {{item}}"
 ```
 
@@ -299,7 +299,7 @@ Composed from: <recipe-name> recipe (or "custom composition")
 Composition validated: no ordering violations
 
 Start assignment with: ace-assign create <job.yaml>
-Or use: /ace-assign-create <job.yaml>
+Or use: /as-assign-create <job.yaml>
 ```
 
 ## Phase Metadata in Generated Steps
@@ -333,7 +333,7 @@ These extra fields pass through to phase files via `PhaseWriter.create`'s `extra
 ### Example 1: Full Workflow from Description
 
 ```
-/ace-assign-compose "implement task 148, create PR, review twice"
+/as-assign-compose "implement task 148, create PR, review twice"
 ```
 
 Matches `implement-with-pr` recipe. Generates:
@@ -342,7 +342,7 @@ Matches `implement-with-pr` recipe. Generates:
 ### Example 2: Simple Task
 
 ```
-/ace-assign-compose "quickly implement task 200"
+/as-assign-compose "quickly implement task 200"
 ```
 
 Matches `implement-simple` recipe. Generates:
@@ -351,7 +351,7 @@ Matches `implement-simple` recipe. Generates:
 ### Example 3: Custom Composition
 
 ```
-/ace-assign-compose "research auth patterns, then implement task 180 with security review"
+/as-assign-compose "research auth patterns, then implement task 180 with security review"
 ```
 
 No exact recipe match. Composed from catalog:
@@ -360,7 +360,7 @@ No exact recipe match. Composed from catalog:
 ### Example 4: Batch Tasks
 
 ```
-/ace-assign-compose "work on tasks 148,149,150" --taskrefs 148,149,150
+/as-assign-compose "work on tasks 148,149,150" --taskrefs 148,149,150
 ```
 
 Matches `batch-tasks` recipe. Generates hierarchical structure.
@@ -383,8 +383,8 @@ After job.yaml is created:
 
 ```bash
 # Create and start the assignment
-/ace-assign-create <job.yaml>
+/as-assign-create <job.yaml>
 
 # Or start driving immediately
-/ace-assign-drive
+/as-assign-drive
 ```

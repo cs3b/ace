@@ -1,5 +1,5 @@
 # Bug fix workflow: onboard → fix → verify → PR → review
-# Usage: /ace-assign-prepare fix-bug --taskref 123
+# Usage: /as-assign-prepare fix-bug --taskref 123
 
 name: fix-bug
 description: Fix an issue, verify tests, and create a reviewed PR
@@ -15,15 +15,15 @@ parameters:
 
 steps:
   - name: onboard
-    skill: ace-onboard
+    skill: as-onboard
     instructions:
       - Onboard yourself to the codebase.
       - Load context and understand the project structure.
 
   - name: work-on-task
-    skill: ace-task-work
+    skill: as-task-work
     instructions:
-      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - "First: onboard yourself using /as-onboard skill to load project context."
       - "Fix the issue described in task {{taskref}}."
       - Follow the bug fix workflow: analyze → reproduce → fix → test.
 
@@ -33,27 +33,27 @@ steps:
       - "Run: ace-task update {{taskref}} --set status=done --move-to archive"
 
   - name: verify-test-suite
-    skill: ace-test-verify-suite
+    skill: as-test-verify-suite
     instructions:
       - Run the test suite to verify the fix doesn't break anything.
       - Ensure all tests pass.
 
   - name: create-pr
-    skill: ace-github-pr-create
+    skill: as-github-pr-create
     instructions:
       - Create a pull request for the bug fix.
       - Include reference to the bug/task in the PR description.
 
   - name: review-cycle-1
-    skill: ace-review-pr
+    skill: as-review-pr
     context: fork
     instructions:
-      - "First: onboard yourself using /ace-onboard skill to load project context."
+      - "First: onboard yourself using /as-onboard skill to load project context."
       - Review the bug fix code.
       - Focus on correctness and edge cases.
 
   - name: apply-feedback-1
-    skill: ace-review-apply-feedback
+    skill: as-review-apply-feedback
     instructions:
       - Apply feedback from the review.
       - Commit changes with descriptive messages.

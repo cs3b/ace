@@ -1,5 +1,5 @@
 name: work-on-task
-skill: ace-task-work
+skill: as-task-work
 description: Implement task changes following project conventions
 
 produces: [code-changes, commits]

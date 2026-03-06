@@ -1,5 +1,5 @@
 name: update-docs
-skill: ace-docs-update
+skill: as-docs-update
 description: Update public-facing documentation when CLI contracts or public APIs change
 
 prerequisites:
@@ -30,7 +30,7 @@ steps:
     description: "Identify which packages had CLI/API contract changes by reviewing the diff"
 
   - name: update-usage-docs
-    description: "Run /ace-docs-update-usage for each affected package"
+    description: "Run /as-docs-update-usage for each affected package"
     tool: "ace-docs-update-usage <package>"
 
   - name: verify-docs

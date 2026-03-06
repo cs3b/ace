@@ -166,13 +166,13 @@ class PresetExpanderTest < AceAssignTestCase
   def test_expand_without_expansion_preserves_other_fields
     preset = {
       "steps" => [
-        { "name" => "step1", "skill" => "ace-git-commit", "instructions" => "Commit" }
+        { "name" => "step1", "skill" => "as-git-commit", "instructions" => "Commit" }
       ]
     }
 
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, {})
 
-    assert_equal "ace-git-commit", result[0]["skill"]
+    assert_equal "as-git-commit", result[0]["skill"]
   end
 
   # expand tests - with expansion section
@@ -310,7 +310,7 @@ class PresetExpanderTest < AceAssignTestCase
         "child-template" => {
           "name" => "work-on-{{item}}",
           "parent" => "010",
-          "skill" => "ace-task-work",
+          "skill" => "as-task-work",
           "instructions" => "Work on {{item}}"
         }
       },
@@ -321,7 +321,7 @@ class PresetExpanderTest < AceAssignTestCase
     result = Ace::Assign::Atoms::PresetExpander.expand(preset, params)
 
     assert_equal 1, result.length
-    assert_equal "ace-task-work", result[0]["skill"]
+    assert_equal "as-task-work", result[0]["skill"]
   end
 
   def test_expand_substitutes_placeholders_in_non_instruction_fields
@@ -331,7 +331,7 @@ class PresetExpanderTest < AceAssignTestCase
         "child-template" => {
           "name" => "work-on-{{item}}",
           "parent" => "010",
-          "skill" => "ace-task-work",
+          "skill" => "as-task-work",
           "taskref" => "{{item}}",
           "metadata" => {
             "label" => "task-{{item}}"

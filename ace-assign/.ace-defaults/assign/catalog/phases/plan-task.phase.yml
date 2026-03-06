@@ -1,5 +1,5 @@
 name: plan-task
-skill: ace-task-plan
+skill: as-task-plan
 description: Analyze task requirements and create an implementation plan
 
 produces: [implementation-plan]

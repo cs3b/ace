@@ -19,7 +19,7 @@ Drive agent execution through an active assignment by continuously checking stat
 
 ## Prerequisites
 
-- An active assignment exists (created via `ace-assign create` or `/ace-assign-create`)
+- An active assignment exists (created via `ace-assign create` or `/as-assign-create`)
 - Assignment has at least one pending or in_progress phase
 
 ## Assignment Context Propagation
@@ -31,7 +31,7 @@ When working with multiple concurrent assignments, the active assignment is reso
 3. `.latest` symlink (auto-updated on any activity)
 4. Scan all assignments (fallback)
 
-If this workflow is invoked with an argument (for example `/ace-assign-drive abc123@010.01`), treat that value as the assignment target for the entire loop and append `--assignment <target>` to all `ace-assign` commands.
+If this workflow is invoked with an argument (for example `/as-assign-drive abc123@010.01`), treat that value as the assignment target for the entire loop and append `--assignment <target>` to all `ace-assign` commands.
 
 ```bash
 # Set once from workflow argument (empty when not provided)
@@ -313,13 +313,13 @@ Invoke the referenced skill as the primary action, extracting parameters from th
 
 ```yaml
 - name: work-on-task
-  skill: ace-task-work
+  skill: as-task-work
   instructions: |
     Work on task 148.
     Follow project conventions.
 ```
 
-**Agent Action:** Run `/ace-task-work 148` then follow the skill workflow.
+**Agent Action:** Run `/as-task-work 148` then follow the skill workflow.
 
 #### If Phase Has No Skill
 
@@ -463,18 +463,18 @@ When executing a phase with a `skill:` field:
 
 | Skill | Invocation | Purpose |
 |-------|-----------|---------|
-| `onboard` | `/ace-onboard` | Load project context |
-| `ace:task-work` | `/ace-task-work <taskref>` | Implement task changes |
-| `ace:github-pr-create` | `/ace-github-pr-create` | Create pull request |
-| `ace:review-pr` | `/ace-review-pr [pr#]` | Review code changes |
-| `ace:git-commit` | `/ace-git-commit` | Generate commit message |
-| `ace:github-pr-update` | `/ace-github-pr-update` | Update PR description |
+| `onboard` | `/as-onboard` | Load project context |
+| `ace:task-work` | `/as-task-work <taskref>` | Implement task changes |
+| `ace:github-pr-create` | `/as-github-pr-create` | Create pull request |
+| `ace:review-pr` | `/as-review-pr [pr#]` | Review code changes |
+| `ace:git-commit` | `/as-git-commit` | Generate commit message |
+| `ace:github-pr-update` | `/as-github-pr-update` | Update PR description |
 
 ## Error Handling
 
 | Scenario | Action |
 |----------|--------|
-| No active assignment | Create an assignment first via `/ace-assign-create` |
+| No active assignment | Create an assignment first via `/as-assign-create` |
 | All phases done | Report completion to user |
 | Phase fails | Attempt first, then use `fail` with command/error evidence; decide retry/add/ask |
 | Skill not found | Execute instructions directly without skill |
@@ -551,7 +551,7 @@ $ ace-assign status
 Phase 010: onboard [in_progress]
 
 # 2. Execute phase (has skill: onboard)
-$ /ace-onboard
+$ /as-onboard
 [Onboarding workflow runs...]
 
 # 3. Write report
@@ -562,8 +562,8 @@ Phase 010 marked done, advancing to 020
 $ ace-assign status
 Phase 020: work-on-task [in_progress]
 
-# 5. Execute next phase (has skill: ace-task-work)
-$ /ace-task-work 148
+# 5. Execute next phase (has skill: as-task-work)
+$ /as-task-work 148
 [Task workflow runs...]
 
 # 6. Report and continue...

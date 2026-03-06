@@ -12,12 +12,12 @@ instructions:
   fork:
     - "Delegate this subtree into forked context:"
     - "- ace-assign fork-run --assignment <assignment-id>@{{parent_number}}"
-    - "Inside the forked agent, run /ace-assign-drive for this subtree scope."
+    - "Inside the forked agent, run /as-assign-drive for this subtree scope."
     - "Note: fork-run may take 10-30 minutes. If your environment has bash timeout limits, run in background and poll scoped status with stepped backoff (5m -> 3m -> 1m -> every 60s)."
     - "After fork-run completes: read all subtree report files before continuing. The driver is the guard — review reports to verify quality before advancing."
     - "For failed subtrees: recovery typically includes context refresh (onboard + report review) and verify-test-suite before retry."
   inline:
-    - "Run /ace-assign-drive and execute only child phases under this node."
+    - "Run /as-assign-drive and execute only child phases under this node."
 
 goal_header: "Goal to satisfy through child phases:"
 

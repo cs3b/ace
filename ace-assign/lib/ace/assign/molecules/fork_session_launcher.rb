@@ -34,7 +34,7 @@ module Ace
 
           result = query_interface.query(
             resolved_provider,
-            "/ace-assign-drive #{scoped_assignment}",
+            "/as-assign-drive #{scoped_assignment}",
             system: nil,
             cli_args: merged_cli_args,
             timeout: resolved_timeout,
@@ -50,7 +50,7 @@ module Ace
             File.write(last_msg_file, result[:text]) if existing.empty?
           end
 
-          write_session_metadata(last_msg_file, result, prompt: "/ace-assign-drive #{scoped_assignment}")
+          write_session_metadata(last_msg_file, result, prompt: "/as-assign-drive #{scoped_assignment}")
 
           result
         rescue Ace::LLM::Error => e
