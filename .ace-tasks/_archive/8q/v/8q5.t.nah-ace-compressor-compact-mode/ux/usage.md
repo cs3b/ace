@@ -57,6 +57,8 @@ mise exec -- ace-compressor compress docs/decisions.md --mode compact
 
 # Expected output:
 POLICY|source=docs/decisions.md|class=rule-heavy|action=refuse
+REFUSAL|source=docs/decisions.md|reason=fidelity_check_failed|failed_checks=[imperative_rules]
+GUIDANCE|retry_with=--mode exact
 Error: compact mode cannot safely compress rule-heavy input; retry with --mode exact
 ```
 
@@ -85,10 +87,37 @@ POLICY|source=docs/decisions.md|class=rule-heavy|action=refuse
 Error: compact mode cannot safely compress rule-heavy input; retry with --mode exact
 ```
 
+### Scenario 7: Mixed single-source success with exact policy preservation
+
+**Goal**: Permit compact output for mixed content only when critical policy sections are preserved exactly.
+
+```bash
+mise exec -- ace-compressor compress docs/blueprint.md --mode compact --verbose
+
+# Expected output:
+POLICY|source=docs/blueprint.md|class=mixed|action=compact_with_exact_rule_sections
+FIDELITY|source=docs/blueprint.md|checks=[imperative_rules,numeric_facts,table_structure]|status=pass
+SECTION|source=docs/blueprint.md|id=read_only_paths|mode=exact_preserve
+SUMMARY|source=docs/blueprint.md|mode=compact_for_narrative_sections
+```
+
+### Scenario 8: Quiet mode still surfaces refusal outcomes
+
+**Goal**: Keep quiet mode terse without hiding safety failures.
+
+```bash
+mise exec -- ace-compressor compress docs/decisions.md --mode compact --quiet
+
+# Expected output:
+POLICY|source=docs/decisions.md|class=rule-heavy|action=refuse
+Error: compact mode cannot safely compress rule-heavy input; retry with --mode exact
+```
+
 ## Notes for Implementer
 - `compact` is the user-facing name for the lossy mode.
 - `--verbose` should expose class and policy decisions per source.
 - `--quiet` should suppress verbose detail but never hide refusal/fallback outcomes.
+- Refusal output should identify failed fidelity checks when available (rules, facts, table structure).
 - When tables are summarized, emit explicit loss metadata instead of silently eliding rows.
 - `--dry-run` and `--force` are not defined by this slice and must not bypass refusal safety.
 - Full usage documentation gets completed during work-on-task using `wfi://docs/update-usage`.
