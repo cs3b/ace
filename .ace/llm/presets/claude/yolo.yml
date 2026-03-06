@@ -1,0 +1,4 @@
+timeout: 900
+max_tokens: 16000
+cli_args:
+  - dangerously-skip-permissions
