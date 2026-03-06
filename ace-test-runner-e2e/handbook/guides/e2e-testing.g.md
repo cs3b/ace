@@ -73,7 +73,7 @@ CLI providers (`ace-test-e2e`, `ace-test-e2e-suite`) use a deterministic 6-phase
 
 API providers use a single-prompt approach (runner and verifier in one pass).
 
-The verifier is always-on for standalone goal-mode TCs in the CLI pipeline. For procedural runs via `/ace-e2e-run`, the verifier is opt-in via `--verify`.
+The verifier is always-on for standalone goal-mode TCs in the CLI pipeline. For procedural runs via `/as-e2e-run`, the verifier is opt-in via `--verify`.
 
 ## Scenario Layout
 

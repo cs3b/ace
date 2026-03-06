@@ -17,7 +17,7 @@ During review, treat the runner/verifier split as a first-class quality check:
 **Pipeline position:** Stage 1 of 3 (Explore)
 
 ```
-/ace-e2e-review  →  /ace-e2e-plan-changes  →  /ace-e2e-rewrite
+/as-e2e-review  →  /as-e2e-plan-changes  →  /as-e2e-rewrite
    ▶ (explore) ◀               (decide)                  (execute)
 ```
 
@@ -237,19 +237,19 @@ TCs sharing the same CLI invocation that could be merged:
 
 ### Next Step
 
-Run `/ace-e2e-plan-changes {PACKAGE} --review-report {this-report-path}` to generate a concrete change plan.
+Run `/as-e2e-plan-changes {PACKAGE} --review-report {this-report-path}` to generate a concrete change plan.
 ```
 
 ## Example Invocations
 
 **Review a package:**
 ```
-/ace-e2e-review ace-lint
+/as-e2e-review ace-lint
 ```
 
 **Review a single scenario:**
 ```
-/ace-e2e-review ace-lint --scope TS-LINT-001
+/as-e2e-review ace-lint --scope TS-LINT-001
 ```
 
 ## Error Handling
@@ -263,7 +263,7 @@ No E2E tests found for {package}.
 Unit test inventory was still performed. The package has {n} unit test files
 with {n} assertions covering {n} features.
 
-To create the first E2E test: /ace-e2e-create {package} {AREA}
+To create the first E2E test: /as-e2e-create {package} {AREA}
 ```
 
 ### No Unit Tests Found

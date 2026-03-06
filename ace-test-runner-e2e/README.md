@@ -112,12 +112,12 @@ Where:
 ### Running a Single E2E Test
 
 ```
-/ace-e2e-run <package> <test-id>
+/as-e2e-run <package> <test-id>
 ```
 
 Example:
 ```
-/ace-e2e-run ace-lint MT-LINT-001
+/as-e2e-run ace-lint MT-LINT-001
 ```
 
 ### CLI Usage
@@ -134,7 +134,7 @@ ace-test-e2e-suite --affected             # Test changed packages only
 ### Running with Test Case Filtering
 
 ```
-/ace-e2e-run <package> <test-id> TC-001,TC-003
+/as-e2e-run <package> <test-id> TC-001,TC-003
 ```
 
 ### Running with Pre-Populated Sandbox
@@ -142,15 +142,15 @@ ace-test-e2e-suite --affected             # Test changed packages only
 When the sandbox is already set up (via Ruby `SetupExecutor`):
 
 ```
-/ace-e2e-run <package> <test-id> --sandbox <path> --run-id <id>
+/as-e2e-run <package> <test-id> --sandbox <path> --run-id <id>
 ```
 
 ### Running Multiple Tests (Parallel)
 
 ```
-/ace-e2e-runs <package>
-/ace-e2e-runs <package> --sequential
-/ace-e2e-runs --all
+/as-e2e-runs <package>
+/as-e2e-runs <package> --sequential
+/as-e2e-runs --all
 ```
 
 ### Creating a New Test Scenario
