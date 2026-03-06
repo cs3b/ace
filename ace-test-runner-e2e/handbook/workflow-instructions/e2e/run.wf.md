@@ -24,7 +24,7 @@ This workflow guides an agent through executing an E2E test scenario. It support
 
 ## Command Context
 
-- `/ace-e2e-run ...` is a chat slash command — invoke in agent chat, not bash.
+- `/as-e2e-run ...` is a chat slash command — invoke in agent chat, not bash.
 - If slash commands are unavailable, stop and report that limitation in the `Issues` field.
 
 ## Canonical Conventions
@@ -67,7 +67,7 @@ When this workflow is invoked directly (not via CLI pipeline), the agent perform
 
 ## Subagent Mode
 
-When invoked as a subagent (via Task tool from `/ace-e2e-runs` orchestrator):
+When invoked as a subagent (via Task tool from `/as-e2e-runs` orchestrator):
 
 - Each subagent runs in a clean context with no shared state
 - Timestamp IDs ensure unique report paths (no collisions)
@@ -334,21 +334,21 @@ verified-by: claude-{model}
 
 ```bash
 # Specific test
-/ace-e2e-run ace-lint TS-LINT-001
+/as-e2e-run ace-lint TS-LINT-001
 
 # Single TC within a test
-/ace-e2e-run ace-lint TS-LINT-003 TC-002
+/as-e2e-run ace-lint TS-LINT-003 TC-002
 
 # Multiple specific TCs
-/ace-e2e-run ace-lint TS-LINT-001 TC-001,tc-003,002
+/as-e2e-run ace-lint TS-LINT-001 TC-001,tc-003,002
 
 # All tests in a package
-/ace-e2e-run ace-lint
+/as-e2e-run ace-lint
 
 # Filter by tags
-/ace-e2e-run ace-lint --tags smoke
-/ace-e2e-run ace-lint --exclude-tags deep
+/as-e2e-run ace-lint --tags smoke
+/as-e2e-run ace-lint --exclude-tags deep
 
 # All tests in project root
-/ace-e2e-run
+/as-e2e-run
 ```

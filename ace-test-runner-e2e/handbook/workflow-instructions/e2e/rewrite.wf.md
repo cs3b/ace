@@ -13,11 +13,11 @@ This workflow executes an approved change plan by deleting old scenarios, creati
 **Pipeline position:** Stage 3 of 3 (Execute)
 
 ```
-/ace-e2e-review  →  /ace-e2e-plan-changes  →  /ace-e2e-rewrite
+/as-e2e-review  →  /as-e2e-plan-changes  →  /as-e2e-rewrite
      (explore)                  (decide)               ▶ (execute) ◀
 ```
 
-**Difference from `/ace-e2e-create`:** `create-e2e-test` is for standalone creation — "I need a new E2E test for feature X" with no prior analysis. `rewrite-e2e-tests` is plan-driven — it operates from a structured change plan, handles deletions and modifications, and can replace entire suites.
+**Difference from `/as-e2e-create`:** `create-e2e-test` is for standalone creation — "I need a new E2E test for feature X" with no prior analysis. `rewrite-e2e-tests` is plan-driven — it operates from a structured change plan, handles deletions and modifications, and can replace entire suites.
 
 ## Arguments
 
@@ -50,8 +50,8 @@ Read the file at the given path. Verify it contains the expected sections: REMOV
 
 **If no plan:**
 Run the full pipeline:
-1. Invoke `/ace-e2e-review {PACKAGE}` → capture review report
-2. Invoke `/ace-e2e-plan-changes {PACKAGE} --review-report {path}` → capture change plan
+1. Invoke `/as-e2e-review {PACKAGE}` → capture review report
+2. Invoke `/as-e2e-plan-changes {PACKAGE} --review-report {path}` → capture change plan
 3. Present the plan to the user for confirmation before proceeding
 
 Parse the plan into structured actions:
@@ -231,25 +231,25 @@ Present the execution summary:
 ### Next Steps
 
 1. Review the created/modified TC files
-2. Run `/ace-e2e-runs {PACKAGE}` to verify all tests pass
-3. Commit changes with `/ace-git-commit`
+2. Run `/as-e2e-runs {PACKAGE}` to verify all tests pass
+3. Commit changes with `/as-git-commit`
 ```
 
 ## Example Invocations
 
 **Execute a pre-approved plan:**
 ```
-/ace-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md
+/as-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md
 ```
 
 **Run full pipeline (review → plan → rewrite):**
 ```
-/ace-e2e-rewrite ace-lint
+/as-e2e-rewrite ace-lint
 ```
 
 **Dry-run to preview changes:**
 ```
-/ace-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md --dry-run
+/as-e2e-rewrite ace-lint --plan .ace-local/test-e2e/plan-ace-lint.md --dry-run
 ```
 
 ## Error Handling
@@ -261,7 +261,7 @@ If the plan file is missing required sections:
 Plan file is missing required sections: {missing sections}
 
 Expected sections: REMOVE, KEEP, MODIFY, CONSOLIDATE, ADD, Proposed Scenario Structure
-Re-run `/ace-e2e-plan-changes {PACKAGE}` to generate a valid plan.
+Re-run `/as-e2e-plan-changes {PACKAGE}` to generate a valid plan.
 ```
 
 ### File Conflicts
