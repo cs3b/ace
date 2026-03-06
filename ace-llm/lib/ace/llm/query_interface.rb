@@ -32,6 +32,7 @@ module Ace
       # @param prompt_file [String, nil] Path to user prompt file (for file-based providers)
       # @param cli_args [String, Array<String>, nil] Extra args for CLI providers (auto-prefixed with --)
       # @param system_append [String, nil] Additional system content appended by compatible providers
+      # @param preset [String, nil] Optional execution preset name (--preset or model@preset)
       #
       # @return [Hash] Response with :text, :model, :provider, and other metadata
       # @raise [Error] If provider/model invalid or request fails
@@ -52,6 +53,7 @@ module Ace
                     prompt_file: nil,
                     cli_args: nil,
                     system_append: nil,
+                    preset: nil,
                     sandbox: nil,
                     subprocess_env: nil,
                     last_message_file: nil)
@@ -63,6 +65,8 @@ module Ace
         # Parse model/alias
         parse_result = parser.parse(provider_model)
         raise Error, parse_result.error unless parse_result.valid?
+        resolved_preset = resolve_preset_name(parse_result.preset, preset)
+        preset_options = resolved_preset ? Ace::LLM.preset_for_provider(resolved_preset, parse_result.provider) : {}
 
         # Resolve final model: model parameter > positional :MODEL > provider default
         final_model = model || parse_result.model
@@ -87,30 +91,38 @@ module Ace
 
         # Build generation options
         generation_opts = {}
-        generation_opts[:temperature] = temperature if temperature
-        generation_opts[:max_tokens] = max_tokens if max_tokens
+        resolved_temperature = first_non_nil(temperature, preset_options["temperature"])
+        resolved_max_tokens = first_non_nil(max_tokens, preset_options["max_tokens"])
+        resolved_cli_args = first_non_nil(cli_args, preset_options["cli_args"])
+        resolved_system_append = first_non_empty(system_append, preset_options["system_append"])
+        resolved_subprocess_env = first_non_nil(subprocess_env, preset_options["subprocess_env"])
+
+        generation_opts[:temperature] = resolved_temperature unless resolved_temperature.nil?
+        generation_opts[:max_tokens] = resolved_max_tokens unless resolved_max_tokens.nil?
         generation_opts[:system_file] = system_file if system_file
         generation_opts[:prompt_file] = prompt_file if prompt_file
-        generation_opts[:cli_args] = cli_args if cli_args && !(cli_args.respond_to?(:empty?) && cli_args.empty?)
-        generation_opts[:system_append] = system_append if system_append && !system_append.empty?
+        generation_opts[:cli_args] = resolved_cli_args unless blank_value?(resolved_cli_args)
+        generation_opts[:system_append] = resolved_system_append unless blank_value?(resolved_system_append)
         generation_opts[:sandbox] = sandbox if sandbox
-        generation_opts[:subprocess_env] = subprocess_env if subprocess_env
+        generation_opts[:subprocess_env] = resolved_subprocess_env unless resolved_subprocess_env.nil?
         generation_opts[:last_message_file] = last_message_file if last_message_file
 
         # Debug output if requested
         if debug
           $stderr.puts "Provider: #{parse_result.provider}"
           $stderr.puts "Model: #{final_model}"
-          $stderr.puts "Temperature: #{temperature}" if temperature
-          $stderr.puts "Max tokens: #{max_tokens}" if max_tokens
+          $stderr.puts "Preset: #{resolved_preset}" if resolved_preset
+          $stderr.puts "Temperature: #{resolved_temperature}" unless resolved_temperature.nil?
+          $stderr.puts "Max tokens: #{resolved_max_tokens}" unless resolved_max_tokens.nil?
         end
 
         # Load fallback configuration
         fallback_config = load_fallback_config(fallback, fallback_providers, parser: parser)
 
         # Execute with or without fallback
-        # Resolve timeout from config cascade if not provided
-        resolved_timeout = normalize_timeout(timeout || Molecules::ConfigLoader.get("llm.timeout") || 120)
+        # Resolve timeout from explicit args > preset > config cascade
+        timeout_value = first_non_nil(timeout, preset_options["timeout"], Molecules::ConfigLoader.get("llm.timeout"), 120)
+        resolved_timeout = normalize_timeout(timeout_value)
 
         response = execute_with_fallback(
           provider: parse_result.provider,
@@ -131,6 +143,7 @@ module Ace
           text: text_content,
           model: final_model,
           provider: parse_result.provider,
+          preset: resolved_preset,
           usage: response[:usage],
           metadata: response[:metadata]
         }
@@ -162,6 +175,45 @@ module Ace
       end
 
       private
+
+      def self.resolve_preset_name(suffix_preset, explicit_preset)
+        suffix = suffix_preset&.to_s&.strip
+        explicit = explicit_preset&.to_s&.strip
+
+        suffix = nil if suffix&.empty?
+        explicit = nil if explicit&.empty?
+
+        if suffix && explicit
+          raise Error, "Preset specified twice: use either model@preset or --preset, not both"
+        end
+
+        suffix || explicit
+      end
+      private_class_method :resolve_preset_name
+
+      def self.first_non_nil(*values)
+        values.each { |value| return value unless value.nil? }
+        nil
+      end
+      private_class_method :first_non_nil
+
+      def self.first_non_empty(*values)
+        values.each do |value|
+          next if blank_value?(value)
+
+          return value
+        end
+        nil
+      end
+      private_class_method :first_non_empty
+
+      def self.blank_value?(value)
+        return true if value.nil?
+        return true if value.respond_to?(:empty?) && value.empty?
+
+        false
+      end
+      private_class_method :blank_value?
 
       # Load fallback configuration from parameters and environment
       # @param fallback [Boolean, nil] Explicit fallback enable/disable

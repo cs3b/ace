@@ -40,6 +40,7 @@ module Ace
         option :max_tokens, type: :integer, aliases: %w[m], desc: "Maximum output tokens"
         option :system, type: :string, aliases: %w[s], desc: "System instruction/prompt"
         option :system_append, type: :string, desc: "Append to system prompt"
+        option :preset, type: :string, desc: "Execution preset name (or use model@preset)"
         option :cli_args, type: :string, desc: "Extra args for CLI providers (auto-prefixed with --; use --flag value or flag=value for values)"
         option :timeout, type: :integer, desc: "Request timeout in seconds"
         option :model, type: :string, desc: "Model name (overrides PROVIDER[:MODEL])"
@@ -121,6 +122,7 @@ module Ace
           puts "  -m, --max-tokens INT           Maximum output tokens"
           puts "  -s, --system TEXT              System instruction/prompt"
           puts "      --system-append TEXT       Append to system prompt"
+          puts "      --preset NAME              Execution preset name (or use model@preset)"
           puts "      --cli-args TEXT            Extra args for CLI providers (auto-prefixed with --; use --flag value or flag=value)"
           puts "      --timeout SECONDS          Request timeout in seconds"
           puts "      --model MODEL              Model name (overrides PROVIDER[:MODEL])"
@@ -135,6 +137,8 @@ module Ace
           puts '  ace-llm gflash "Quick question" # using alias'
           puts '  ace-llm google --prompt "What is Ruby?" # using --prompt flag'
           puts '  ace-llm google "What is Ruby?" --model gemini-2.0-flash-lite'
+          puts '  ace-llm gflash@review-fast "Summarize this diff"'
+          puts '  ace-llm claude:sonnet "Summarize this diff" --preset review-deep'
           puts '  ace-llm claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
           puts '  ace-llm claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
           puts ""
@@ -178,7 +182,7 @@ module Ace
           require "ace/core"
           # Filter out sensitive keys (prompt, system) from config summary
           # These contain the full query text which should not be dumped to stderr
-          summary_keys = %w[provider_model temperature max_tokens format timeout system_append cli_args]
+          summary_keys = %w[provider_model preset temperature max_tokens format timeout system_append cli_args]
           Ace::Core::Atoms::ConfigSummary.display(
             command: "query",
             config: options.merge(provider_model: @provider_model),
@@ -212,7 +216,8 @@ module Ace
             debug: options[:debug],
             model: resolved_model_override,
             cli_args: options[:cli_args],
-            system_append: system_append_text
+            system_append: system_append_text,
+            preset: options[:preset]
           )
 
           # Format and output response

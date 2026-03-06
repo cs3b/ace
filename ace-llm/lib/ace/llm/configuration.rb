@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "molecules/config_loader"
+require_relative "molecules/preset_loader"
 
 module Ace
   module LLM
@@ -52,6 +53,16 @@ module Ace
       def configured?
         !config.empty?
       end
+
+      # Get execution preset config by name
+      def preset(name)
+        Molecules::PresetLoader.load(name)
+      end
+
+      # Get execution preset config by provider and name (provider scoped + global overlay)
+      def preset_for_provider(name, provider)
+        Molecules::PresetLoader.load_for_provider(provider, name)
+      end
     end
 
     # Module-level configuration accessor
@@ -77,6 +88,16 @@ module Ace
     # Get provider config by name (convenience method)
     def self.provider(name)
       configuration.provider(name)
+    end
+
+    # Get execution preset config by name (convenience method)
+    def self.preset(name)
+      configuration.preset(name)
+    end
+
+    # Get execution preset config by provider and name (convenience method)
+    def self.preset_for_provider(name, provider)
+      configuration.preset_for_provider(name, provider)
     end
   end
 end

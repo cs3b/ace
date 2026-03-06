@@ -166,6 +166,79 @@ providers:
     pro: "gemini-2.5-pro"
 ```
 
+### Execution Presets
+
+Execution presets can be selected with `--preset <name>` or `provider:model@<name>`.
+
+Preset resolution is provider-aware:
+1. Load global preset `.ace/llm/presets/<name>.yml`
+2. Overlay provider preset `.ace/llm/presets/<provider>/<name>.yml` (if present)
+
+This keeps shared defaults in one place and allows provider-specific overrides for the same preset name.
+
+Example:
+
+```yaml
+# .ace/llm/presets/review-deep.yml
+timeout: 600
+max_tokens: 16384
+temperature: 0.1
+cli_args:
+  - "--verbose"
+```
+
+```yaml
+# .ace/llm/presets/codex/review-deep.yml
+cli_args:
+  - "--full-auto"
+  - "-c"
+  - 'sandbox_mode="read-only"'
+  - "-c"
+  - 'model_reasoning_effort="high"'
+```
+
+```yaml
+# .ace/llm/presets/claude/review-fast.yml
+cli_args:
+  - "--effort"
+  - "medium"
+```
+
+```yaml
+# .ace/llm/presets/claude/review-deep.yml
+cli_args:
+  - "--effort"
+  - "high"
+```
+
+```yaml
+# .ace/llm/presets/gemini/review-fast.yml
+cli_args:
+  - "--approval-mode"
+  - "plan"
+  - "--sandbox"
+```
+
+```yaml
+# .ace/llm/presets/gemini/review-deep.yml
+cli_args:
+  - "--approval-mode"
+  - "plan"
+  - "--sandbox"
+```
+
+`cli_args` accepts either a string or an array of arguments in preset files.
+
+Built-in defaults ship the same pattern in:
+- `.ace-defaults/llm/presets/review-fast.yml`
+- `.ace-defaults/llm/presets/review-deep.yml`
+- `.ace-defaults/llm/presets/codex/review-fast.yml`
+- `.ace-defaults/llm/presets/codex/review-deep.yml`
+- `.ace-defaults/llm/presets/claude/review-fast.yml`
+- `.ace-defaults/llm/presets/claude/review-deep.yml`
+- `.ace-defaults/llm/presets/gemini/review-fast.yml`
+- `.ace-defaults/llm/presets/gemini/review-deep.yml`
+
 ### Provider Configuration
 
 Providers are now configured via YAML files in `.ace/llm/providers/`. You can add custom providers or override default configurations:

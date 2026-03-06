@@ -107,6 +107,52 @@ ace-llm/
 - Legacy support: `.coding-agent/llm-aliases.yml`
 - User: `~/.config/ace-llm/aliases.yml`
 
+### 3.1 Execution Preset Paths
+
+`ace-llm` supports provider-scoped preset overlays for both `--preset` and `provider:model@preset`:
+
+- Global preset: `.ace/llm/presets/<name>.yml`
+- Provider override: `.ace/llm/presets/<provider>/<name>.yml`
+
+Example (`review-deep` with Codex full-auto overrides):
+
+```yaml
+# .ace/llm/presets/review-deep.yml
+timeout: 600
+max_tokens: 16384
+temperature: 0.1
+cli_args:
+  - "--verbose"
+```
+
+```yaml
+# .ace/llm/presets/codex/review-deep.yml
+timeout: 900
+max_tokens: 16384
+temperature: 0.1
+cli_args:
+  - "--full-auto"
+  - "-c"
+  - 'sandbox_mode="read-only"'
+  - "-c"
+  - 'model_reasoning_effort="high"'
+```
+
+```yaml
+# .ace/llm/presets/claude/review-deep.yml
+cli_args:
+  - "--effort"
+  - "high"
+```
+
+```yaml
+# .ace/llm/presets/gemini/review-deep.yml
+cli_args:
+  - "--approval-mode"
+  - "plan"
+  - "--sandbox"
+```
+
 ### 4. Code Organization
 
 **Key Differences**:

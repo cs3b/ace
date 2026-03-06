@@ -87,6 +87,24 @@ class QueryCommandTest < AceLlmTestCase
     assert_equal 600.0, captured_timeout
   end
 
+  def test_preset_option_is_forwarded_to_query_interface
+    captured_preset = nil
+
+    Ace::LLM::QueryInterface.stub(
+      :query,
+      ->(*_args, **kwargs) do
+        captured_preset = kwargs[:preset]
+        { text: "ok", usage: {}, metadata: {} }
+      end
+    ) do
+      with_real_config do
+        invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?", "--preset", "review-fast"])
+      end
+    end
+
+    assert_equal "review-fast", captured_preset
+  end
+
   def test_model_flag_with_invalid_provider_shows_error
     with_real_config do
       # When positional arg "test" is present, it's interpreted as provider_model

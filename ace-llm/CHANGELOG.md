@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-03-06
+
+### Added
+- Provider-scoped preset resolution with overlay semantics for `model@preset` and `--preset` flows:
+  - loads global presets from `.ace/llm/presets/<name>.yml`
+  - overlays provider presets from `.ace/llm/presets/<provider>/<name>.yml` when present
+  - keeps global-only presets fully backward compatible
+
+### Technical
+- Added preset loader and query-interface regression coverage for provider-scoped preset resolution.
+- Added coverage for preset-defined `cli_args` arrays and documented array usage in README.
+- Added built-in default preset examples at `.ace-defaults/llm/presets/review-deep.yml` and `.ace-defaults/llm/presets/codex/review-deep.yml` (Codex full-auto + read-only sandbox sample).
+
+## [0.26.0] - 2026-03-05
+
+### Added
+- Generic preset-qualified model target support across `ace-llm` query flows:
+  - accepts `alias@preset`, `provider@preset`, and `provider:model@preset`
+  - adds `--preset` option to CLI query command
+  - exposes preset loading via `.ace/llm/presets/<name>.yml`
+  - applies preset defaults for runtime invocation options (`timeout`, `temperature`, `max_tokens`, `cli_args`, `system_append`, `subprocess_env`) while preserving explicit argument precedence
+  - returns resolved preset in query result metadata (`result[:preset]`)
+
+### Fixed
+- Empty preset suffix inputs (for example `model@`) now fail early with actionable parsing errors before provider execution.
+
 ## [0.25.0] - 2026-03-05
 
 ### Added

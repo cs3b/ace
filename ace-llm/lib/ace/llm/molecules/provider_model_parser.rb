@@ -12,7 +12,7 @@ module Ace
         # All provider information now comes from the registry
 
         # Result object for parsed provider:model combinations
-        ParseResult = Struct.new(:provider, :model, :valid, :error, :original_input) do
+        ParseResult = Struct.new(:provider, :model, :preset, :valid, :error, :original_input) do
           def valid?
             valid
           end
@@ -22,7 +22,8 @@ module Ace
           end
 
           def to_s
-            "#{provider}:#{model}"
+            suffix = preset ? "@#{preset}" : ""
+            "#{provider}:#{model}#{suffix}"
           end
         end
 
@@ -43,9 +44,12 @@ module Ace
           return create_error_result(input, "Input cannot be nil or empty") if input.nil? || input.strip.empty?
 
           original_input = input.strip
+          provider_target, preset_name, preset_error = split_preset_suffix(original_input)
+          return create_error_result(original_input, preset_error) if preset_error
+          return create_error_result(original_input, "Invalid target: provider/model portion cannot be empty") if provider_target.empty?
 
           # Try to resolve as an alias first
-          resolved_input = @alias_resolver.resolve(original_input)
+          resolved_input = @alias_resolver.resolve(provider_target)
 
           # Parse provider:model syntax or provider-only
           parts = resolved_input.split(":", 2)
@@ -62,7 +66,7 @@ module Ace
 
             # Use default model for provider
             model = default_model_for(provider)
-            ParseResult.new(provider, model, true, nil, original_input)
+            ParseResult.new(provider, model, preset_name, true, nil, original_input)
           else
             # Provider:model syntax
             provider = normalize_provider(parts[0])
@@ -75,7 +79,7 @@ module Ace
             end
 
             # Model validation happens at the client level
-            ParseResult.new(provider, model, true, nil, original_input)
+            ParseResult.new(provider, model, preset_name, true, nil, original_input)
           end
         end
 
@@ -125,12 +129,26 @@ module Ace
           provider.strip.downcase.gsub(/[-_]/, "")
         end
 
+        # Split optional @preset suffix from a provider target.
+        # Returns [provider_target, preset_name_or_nil, error_or_nil].
+        def split_preset_suffix(input)
+          provider_target, preset_name = input.split("@", 2)
+          return [input, nil, nil] unless input.include?("@")
+
+          trimmed_preset = preset_name.to_s.strip
+          if trimmed_preset.empty?
+            return [provider_target.to_s.strip, nil, "Invalid target: preset name cannot be empty (e.g., model@review-fast)"]
+          end
+
+          [provider_target.to_s.strip, trimmed_preset, nil]
+        end
+
         # Create an error result
         # @param input [String] Original input
         # @param error [String] Error message
         # @return [ParseResult] Error result
         def create_error_result(input, error)
-          ParseResult.new(nil, nil, false, error, input)
+          ParseResult.new(nil, nil, nil, false, error, input)
         end
       end
     end

@@ -210,6 +210,143 @@ module Ace
         assert_equal ["google:gemini-2.0-flash-lite", "openai:gpt-5"], config.providers
       end
 
+      def test_query_applies_preset_defaults_from_model_suffix
+        parse_result = Ace::LLM::Molecules::ProviderModelParser::ParseResult.new(
+          "google", "gemini-2.5-flash", "review-fast", true, nil, "google:gemini-2.5-flash@review-fast"
+        )
+        parser = SingleParseParser.new(parse_result)
+        captured = {}
+        captured_preset_call = {}
+
+        with_query_stubs(parser: parser, preset: {
+                           "temperature" => 0.2,
+                           "max_tokens" => 256,
+                           "timeout" => 450,
+                           "cli_args" => "--safe-mode",
+                           "system_append" => "preset guidance",
+                           "subprocess_env" => { "ACE_MODE" => "safe" }
+                         }, captured: captured, captured_preset_call: captured_preset_call) do
+          result = QueryInterface.query("google:gemini-2.5-flash@review-fast", "test prompt", fallback: false)
+
+          assert_equal "review-fast", result[:preset]
+        end
+
+        assert_equal "review-fast", captured_preset_call[:name]
+        assert_equal "google", captured_preset_call[:provider]
+        assert_equal 450.0, captured[:timeout]
+        assert_equal 0.2, captured[:generation_opts][:temperature]
+        assert_equal 256, captured[:generation_opts][:max_tokens]
+        assert_equal "--safe-mode", captured[:generation_opts][:cli_args]
+        assert_equal "preset guidance", captured[:generation_opts][:system_append]
+        assert_equal({ "ACE_MODE" => "safe" }, captured[:generation_opts][:subprocess_env])
+      end
+
+      def test_query_accepts_cli_args_array_from_provider_scoped_preset
+        parse_result = Ace::LLM::Molecules::ProviderModelParser::ParseResult.new(
+          "codex", "gpt-5.3-codex", "review-deep", true, nil, "codex:codex@review-deep"
+        )
+        parser = SingleParseParser.new(parse_result)
+        captured = {}
+
+        with_query_stubs(parser: parser, preset: {
+                           "timeout" => 900,
+                           "cli_args" => ["--full-auto", "-c", "sandbox_mode=\"read-only\"", "-c", "model_reasoning_effort=\"high\""]
+                         }, captured: captured) do
+          QueryInterface.query("codex:codex@review-deep", "test prompt", fallback: false)
+        end
+
+        assert_equal 900.0, captured[:timeout]
+        assert_equal ["--full-auto", "-c", "sandbox_mode=\"read-only\"", "-c", "model_reasoning_effort=\"high\""], captured[:generation_opts][:cli_args]
+      end
+
+      def test_query_applies_claude_provider_scoped_cli_args
+        parse_result = Ace::LLM::Molecules::ProviderModelParser::ParseResult.new(
+          "claude", "claude-sonnet-4-6", "review-fast", true, nil, "claude:sonnet@review-fast"
+        )
+        parser = SingleParseParser.new(parse_result)
+        captured = {}
+
+        with_query_stubs(parser: parser, preset: {
+                           "cli_args" => ["--effort", "medium"]
+                         }, captured: captured) do
+          QueryInterface.query("claude:sonnet@review-fast", "test prompt", fallback: false)
+        end
+
+        assert_equal ["--effort", "medium"], captured[:generation_opts][:cli_args]
+      end
+
+      def test_query_applies_gemini_provider_scoped_cli_args
+        parse_result = Ace::LLM::Molecules::ProviderModelParser::ParseResult.new(
+          "gemini", "gemini-2.5-pro", "review-deep", true, nil, "gemini:pro@review-deep"
+        )
+        parser = SingleParseParser.new(parse_result)
+        captured = {}
+
+        with_query_stubs(parser: parser, preset: {
+                           "cli_args" => ["--approval-mode", "plan", "--sandbox"]
+                         }, captured: captured) do
+          QueryInterface.query("gemini:pro@review-deep", "test prompt", fallback: false)
+        end
+
+        assert_equal ["--approval-mode", "plan", "--sandbox"], captured[:generation_opts][:cli_args]
+      end
+
+      def test_explicit_query_options_override_preset_defaults
+        parse_result = Ace::LLM::Molecules::ProviderModelParser::ParseResult.new(
+          "google", "gemini-2.5-flash", "review-fast", true, nil, "google:gemini-2.5-flash@review-fast"
+        )
+        parser = SingleParseParser.new(parse_result)
+        captured = {}
+
+        with_query_stubs(parser: parser, preset: {
+                           "temperature" => 0.2,
+                           "max_tokens" => 256,
+                           "timeout" => 450,
+                           "cli_args" => "--safe-mode",
+                           "system_append" => "preset guidance",
+                           "subprocess_env" => { "ACE_MODE" => "safe" }
+                         }, captured: captured) do
+          QueryInterface.query(
+            "google:gemini-2.5-flash@review-fast",
+            "test prompt",
+            temperature: 0.7,
+            max_tokens: 42,
+            timeout: 120,
+            cli_args: "--explicit-arg",
+            system_append: "explicit guidance",
+            subprocess_env: { "ACE_MODE" => "explicit" },
+            fallback: false
+          )
+        end
+
+        assert_equal 120.0, captured[:timeout]
+        assert_equal 0.7, captured[:generation_opts][:temperature]
+        assert_equal 42, captured[:generation_opts][:max_tokens]
+        assert_equal "--explicit-arg", captured[:generation_opts][:cli_args]
+        assert_equal "explicit guidance", captured[:generation_opts][:system_append]
+        assert_equal({ "ACE_MODE" => "explicit" }, captured[:generation_opts][:subprocess_env])
+      end
+
+      def test_query_rejects_suffix_and_flag_preset_combination
+        parse_result = Ace::LLM::Molecules::ProviderModelParser::ParseResult.new(
+          "google", "gemini-2.5-flash", "review-fast", true, nil, "google:gemini-2.5-flash@review-fast"
+        )
+        parser = SingleParseParser.new(parse_result)
+
+        Molecules::ClientRegistry.stub(:new, Object.new) do
+          Molecules::ProviderModelParser.stub(:new, parser) do
+            assert_raises(Ace::LLM::Error) do
+              QueryInterface.query(
+                "google:gemini-2.5-flash@review-fast",
+                "test prompt",
+                preset: "review-deep",
+                fallback: false
+              )
+            end
+          end
+        end
+      end
+
       private
 
       FakeParseResult = Struct.new(:provider, :model, :valid) do
@@ -228,9 +365,43 @@ module Ace
         end
       end
 
+      class SingleParseParser
+        def initialize(result)
+          @result = result
+        end
+
+        def parse(_input)
+          @result
+        end
+      end
+
       def with_config_fallback(config_hash)
         Ace::LLM::Molecules::ConfigLoader.stub(:get, ->(path) { path == "llm.fallback" ? config_hash : nil }) do
           yield
+        end
+      end
+
+      def with_query_stubs(parser:, preset:, captured:, captured_preset_call: nil)
+        Molecules::ClientRegistry.stub(:new, Object.new) do
+          Molecules::ProviderModelParser.stub(:new, parser) do
+            Ace::LLM.stub(:preset_for_provider, lambda { |name, provider|
+              if captured_preset_call
+                captured_preset_call[:name] = name
+                captured_preset_call[:provider] = provider
+              end
+              preset
+            }) do
+              QueryInterface.stub(:execute_with_fallback, ->(**kwargs) do
+                captured[:timeout] = kwargs[:timeout]
+                captured[:generation_opts] = kwargs[:generation_opts]
+                { text: "ok", usage: {}, metadata: {} }
+              end) do
+                Molecules::ConfigLoader.stub(:get, ->(path) { path == "llm.fallback" ? nil : nil }) do
+                  yield
+                end
+              end
+            end
+          end
         end
       end
     end
