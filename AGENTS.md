@@ -27,7 +27,7 @@ When user requests a scoped commit/release:
 
 ## Skill-First Planning and Execution (Hard Rule)
 
-If a user names a skill (for example `/ace-github-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
+If a user names a skill (for example `/as-github-pr-create`) or the task clearly matches an available skill, that skill is mandatory and takes precedence over ad-hoc/manual flow.
 
 ### Planning phase (mandatory load, optional run)
 
