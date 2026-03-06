@@ -405,12 +405,12 @@ See `sources.md` for detailed contribution breakdown.
 
 ### Basic Usage
 ```
-/ace-handbook-synthesize-research .ace-taskflow/v.0.9.0/tasks/253/research
+/as-handbook-synthesize-research .ace-taskflow/v.0.9.0/tasks/253/research
 ```
 
 ### With Custom Output
 ```
-/ace-handbook-synthesize-research ./research --output ./synthesis
+/as-handbook-synthesize-research ./research --output ./synthesis
 ```
 
 ## Related Resources
