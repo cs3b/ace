@@ -4,5 +4,5 @@ description: "Quality review - is the code well-structured and maintainable?"
 partition: by-concern
 pipeline: phased-fit
 providers:
-  llm: [review-fast]
+  llm: [ro]
   tools_lint: [lint]

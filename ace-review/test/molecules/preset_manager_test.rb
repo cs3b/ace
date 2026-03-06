@@ -457,13 +457,13 @@ class PresetManagerTest < AceReviewTest
 
     create_test_reviewer("correctness", <<~YAML)
       providers:
-        - llm:fast:google:gemini-2.5-flash@review-fast
+        - llm:fast:google:gemini-2.5-flash@ro
       focus: correctness
       weight: 1.0
     YAML
     create_test_reviewer("contracts", <<~YAML)
       providers:
-        - llm:deep:codex:codex@review-deep
+        - llm:deep:codex:codex@rw
       focus: contracts
       weight: 1.0
     YAML
@@ -478,7 +478,7 @@ class PresetManagerTest < AceReviewTest
     resolved = manager.resolve_preset("narrow")
 
     assert_equal "narrow-risk-based", resolved[:pipeline]
-    assert_equal ["google:gemini-2.5-flash@review-fast", "codex:codex@review-deep"], resolved[:models]
+    assert_equal ["google:gemini-2.5-flash@ro", "codex:codex@rw"], resolved[:models]
     assert_equal %w[correctness contracts lint], resolved[:reviewers].map(&:name)
 
     lint_reviewer = resolved[:reviewers].find { |reviewer| reviewer.name == "lint" }
@@ -540,7 +540,7 @@ class PresetManagerTest < AceReviewTest
 
     create_test_reviewer("correctness", <<~YAML)
       providers:
-        - llm:fast:google:gemini-2.5-flash@review-fast
+        - llm:fast:google:gemini-2.5-flash@ro
     YAML
 
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
@@ -585,13 +585,13 @@ class PresetManagerTest < AceReviewTest
         - lint
     YAML
 
-    create_test_reviewer("correctness", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
-    create_test_reviewer("contracts", "providers:\n  - llm:deep:codex:codex@review-deep\n")
-    create_test_reviewer("architecture-fit", "providers:\n  - llm:deep:codex:codex@review-deep\n")
-    create_test_reviewer("performance", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
-    create_test_reviewer("tests", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
-    create_test_reviewer("simplicity", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
-    create_test_reviewer("docs-dx", "providers:\n  - llm:fast:google:gemini-2.5-flash@review-fast\n")
+    create_test_reviewer("correctness", "providers:\n  - llm:fast:google:gemini-2.5-flash@ro\n")
+    create_test_reviewer("contracts", "providers:\n  - llm:deep:codex:codex@rw\n")
+    create_test_reviewer("architecture-fit", "providers:\n  - llm:deep:codex:codex@rw\n")
+    create_test_reviewer("performance", "providers:\n  - llm:fast:google:gemini-2.5-flash@ro\n")
+    create_test_reviewer("tests", "providers:\n  - llm:fast:google:gemini-2.5-flash@ro\n")
+    create_test_reviewer("simplicity", "providers:\n  - llm:fast:google:gemini-2.5-flash@ro\n")
+    create_test_reviewer("docs-dx", "providers:\n  - llm:fast:google:gemini-2.5-flash@ro\n")
     create_test_reviewer("lint", "providers:\n  - tool:lint\n")
 
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
@@ -625,8 +625,8 @@ class PresetManagerTest < AceReviewTest
 
   def test_resolve_preset_pipeline_expands_provider_class_via_catalog
     create_llm_catalog(<<~YAML)
-      review-fast:
-        - "codex:spark@review-fast"
+      ro:
+        - "codex:spark@ro"
     YAML
     create_tools_lint_catalog(<<~YAML)
       lint:
@@ -637,7 +637,7 @@ class PresetManagerTest < AceReviewTest
       description: "Correctness review"
       pipeline: phased-valid
       providers:
-        llm: [review-fast]
+        llm: [ro]
         tools_lint: [lint]
     YAML
     create_test_pipeline("phased-valid", <<~YAML)
@@ -672,7 +672,7 @@ class PresetManagerTest < AceReviewTest
 
     # LLM reviewers should be resolved with model from catalog
     llm_reviewers = reviewers.reject { |r| r.provider_kind.to_s == "tool" }
-    assert llm_reviewers.all? { |r| r.model == "codex:spark@review-fast" }
+    assert llm_reviewers.all? { |r| r.model == "codex:spark@ro" }
 
     # Tool reviewer should be resolved
     lint_reviewer = reviewers.find { |r| r.name == "lint" }
@@ -682,17 +682,17 @@ class PresetManagerTest < AceReviewTest
 
   def test_resolve_preset_providers_llm_override_replaces_default
     create_llm_catalog(<<~YAML)
-      review-fast:
-        - "codex:spark@review-fast"
-      review-deep:
-        - "codex:codex@review-deep"
+      ro:
+        - "codex:spark@ro"
+      rw:
+        - "codex:codex@rw"
     YAML
 
     create_test_preset("valid", <<~YAML)
       description: "Correctness review"
       pipeline: simple-pipeline
       providers:
-        llm: [review-fast]
+        llm: [ro]
     YAML
     create_test_pipeline("simple-pipeline", <<~YAML)
       always:
@@ -705,20 +705,20 @@ class PresetManagerTest < AceReviewTest
     YAML
 
     manager = Ace::Review::Molecules::PresetManager.new(project_root: @test_dir)
-    resolved = manager.resolve_preset("valid", { providers_llm: ["review-deep"] })
+    resolved = manager.resolve_preset("valid", { providers_llm: ["rw"] })
 
     llm_reviewers = resolved[:reviewers].reject { |r| r.provider_kind.to_s == "tool" }
-    assert llm_reviewers.all? { |r| r.model == "codex:codex@review-deep" }
+    assert llm_reviewers.all? { |r| r.model == "codex:codex@rw" }
   end
 
   def test_resolve_preset_providers_llm_inline_model_id_override
-    create_llm_catalog("review-fast:\n  - \"codex:spark@review-fast\"\n")
+    create_llm_catalog("ro:\n  - \"codex:spark@ro\"\n")
 
     create_test_preset("valid", <<~YAML)
       description: "Review"
       pipeline: simple-pipeline
       providers:
-        llm: [review-fast]
+        llm: [ro]
     YAML
     create_test_pipeline("simple-pipeline", <<~YAML)
       always:
@@ -740,13 +740,13 @@ class PresetManagerTest < AceReviewTest
   # Task 3: Deduplication rule
 
   def test_resolve_preset_deduplicates_reviewers_when_optional_matches_always
-    create_llm_catalog("review-fast:\n  - \"codex:spark@review-fast\"\n")
+    create_llm_catalog("ro:\n  - \"codex:spark@ro\"\n")
 
     create_test_preset("valid", <<~YAML)
       description: "Review"
       pipeline: dedup-pipeline
       providers:
-        llm: [review-fast]
+        llm: [ro]
     YAML
     # Pipeline has correctness in always AND in optional — should run only once
     create_test_pipeline("dedup-pipeline", <<~YAML)

@@ -15,8 +15,8 @@ module Ace
       #
       # @example Loading and resolving providers
       #   catalog = ProviderCatalog.new(project_root: "/my/project")
-      #   entries = catalog.resolve(provider_class: "llm", names: ["review-fast"])
-      #   # => [{"name" => "review-fast", "model" => "codex:spark@review-fast"}]
+      #   entries = catalog.resolve(provider_class: "llm", names: ["ro"])
+      #   # => [{"name" => "ro", "model" => "codex:spark@ro"}]
       #
       class ProviderCatalog
         SUPPORTED_CLASSES = %w[llm tools-lint].freeze
@@ -30,7 +30,7 @@ module Ace
         # Resolve catalog entries for a given provider class and list of names.
         #
         # For the "llm" class, names that don't match any catalog entry are treated
-        # as inline model IDs (e.g., "codex:codex@review-deep").
+        # as inline model IDs (e.g., "codex:codex@rw").
         #
         # Each catalog group may contain multiple provider IDs (multi-model groups).
         # Each ID produces a separate entry, all sharing the same group name.

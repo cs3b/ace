@@ -424,7 +424,7 @@ module Ace
           # Resolve provider name lists: CLI overrides > preset > default
           llm_names = Array(
             overrides[:providers_llm] || overrides["providers_llm"] ||
-            preset_providers["llm"] || ["review-fast"]
+            preset_providers["llm"] || ["ro"]
           ).map(&:to_s).reject(&:empty?)
 
           tools_lint_names = Array(

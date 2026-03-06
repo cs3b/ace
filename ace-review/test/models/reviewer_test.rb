@@ -192,7 +192,7 @@ module Ace
               "focus" => "code_quality",
               "prompt" => { "base" => "prompt://base/system" },
               "providers" => [
-                "llm:codex:codex:codex@review-deep",
+                "llm:codex:codex:codex@rw",
                 {
                   "provider" => "llm:claude:anthropic:claude-3-7-sonnet",
                   "timeout" => 180,
@@ -204,7 +204,7 @@ module Ace
           )
 
           assert_equal 2, lanes.length
-          assert_equal "codex:codex@review-deep", lanes[0].model
+          assert_equal "codex:codex@rw", lanes[0].model
           assert_equal "anthropic:claude-3-7-sonnet", lanes[1].model
           assert_equal 300, lanes[0].provider_options["timeout"]
           assert_equal 180, lanes[1].provider_options["timeout"]
@@ -468,12 +468,12 @@ module Ace
             "provider_class" => "llm",
             "prompt" => { "base" => "prompt://base/system" }
           )
-          catalog_entry = { "name" => "review-fast", "model" => "codex:spark@review-fast" }
+          catalog_entry = { "name" => "ro", "model" => "codex:spark@ro" }
 
           resolved = Reviewer.from_catalog_entry(template, catalog_entry, index: 0)
 
           assert_equal "correctness", resolved.name
-          assert_equal "codex:spark@review-fast", resolved.model
+          assert_equal "codex:spark@ro", resolved.model
           assert_equal "llm", resolved.provider_kind
           assert_equal "llm", resolved.reviewer_type
           refute_nil resolved.lane_id

@@ -1441,11 +1441,11 @@ class ReviewManagerTest < AceReviewTest
   def test_apply_provider_override_rewrites_only_llm_reviewers
     llm_reviewer = Ace::Review::Models::Reviewer.new(
       name: "correctness",
-      model: "codex:codex@review-deep",
+      model: "codex:codex@rw",
       prompt: { "base" => "prompt://base/system" },
-      provider: "llm:review-deep",
+      provider: "llm:rw",
       provider_kind: "llm",
-      provider_options: { "kind" => "llm", "model" => "codex:codex@review-deep" },
+      provider_options: { "kind" => "llm", "model" => "codex:codex@rw" },
       reviewer_type: "llm"
     )
     tool_reviewer = Ace::Review::Models::Reviewer.new(

@@ -7,12 +7,12 @@ module Ace
     module Models
       class ProviderRefTest < AceReviewTest
         def test_from_ref_parses_llm_reference
-          provider = ProviderRef.from_ref("llm:codex:codex@review-deep")
+          provider = ProviderRef.from_ref("llm:codex:codex@rw")
 
-          assert_equal "llm:codex:codex@review-deep", provider.raw_ref
+          assert_equal "llm:codex:codex@rw", provider.raw_ref
           assert_equal "llm", provider.kind
           assert_equal "codex", provider.target
-          assert_equal "codex@review-deep", provider.model
+          assert_equal "codex@rw", provider.model
           assert provider.llm?
         end
 
@@ -49,7 +49,7 @@ module Ace
 
         def test_from_entry_rejects_invalid_llm_shape
           error = assert_raises(ArgumentError) do
-            ProviderRef.from_ref("llm:review-fast")
+            ProviderRef.from_ref("llm:ro")
           end
 
           assert_match(/llm refs must use llm:<target>:<model>/i, error.message)

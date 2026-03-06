@@ -165,7 +165,7 @@ class ContextLimitResolverTest < AceReviewTest
   end
 
   def test_google_prefix_with_preset_suffix
-    result = @resolver.resolve("google:gemini-2.5-pro@review-fast")
+    result = @resolver.resolve("google:gemini-2.5-pro@ro")
 
     assert_equal 1_000_000, result
   end
@@ -251,7 +251,7 @@ class ContextLimitResolverTest < AceReviewTest
   end
 
   def test_model_name_with_preset_suffix
-    result = @resolver.resolve("claude-3-sonnet@review-deep")
+    result = @resolver.resolve("claude-3-sonnet@rw")
 
     assert_equal 200_000, result
   end

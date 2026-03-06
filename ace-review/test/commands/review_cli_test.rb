@@ -73,7 +73,7 @@ class ReviewCliTest < AceReviewTest
   end
 
   def test_model_name_with_preset_suffix_is_allowed
-    result = invoke_cli(["--preset", "code-valid", "--model", "codex:codex-review-deep@review-deep", "--dry-run"])
+    result = invoke_cli(["--preset", "code-valid", "--model", "codex:codex-rw@rw", "--dry-run"])
     output = result[:stdout] + result[:stderr]
 
     assert_includes [0, nil], result[:result]
@@ -98,7 +98,7 @@ class ReviewCliTest < AceReviewTest
   end
 
   def test_provider_override_conflicts_with_cli_models
-    result = invoke_cli(["--preset", "code-valid", "--provider", "llm:codex:codex@review-deep", "--model", "codex:codex", "--dry-run"])
+    result = invoke_cli(["--preset", "code-valid", "--provider", "llm:codex:codex@rw", "--model", "codex:codex", "--dry-run"])
     output = result[:stdout] + result[:stderr]
 
     assert_equal 1, result[:result]
@@ -108,7 +108,7 @@ class ReviewCliTest < AceReviewTest
   def test_provider_override_supports_repeated_flags
     result = invoke_cli([
       "--preset", "code-valid",
-      "--provider", "llm:codex:codex@review-deep",
+      "--provider", "llm:codex:codex@rw",
       "--provider", "llm:claude:anthropic:claude-3-7-sonnet",
       "--dry-run"
     ])

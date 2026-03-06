@@ -1,6 +1,9 @@
-review-fast:
-  - "codex:spark@review-fast"
-  - "claude:haiku@review-fast"
-review-deep:
-  - "codex:codex@review-deep"
-  - "google:gemini-2.5-pro@review-deep"
+ro:
+  - "codex:spark@ro"
+  - "claude:haiku@ro"
+rw:
+  - "codex:spark@rw"
+  - "claude:haiku@rw"
+yolo:
+  - "codex:codex@yolo"
+  - "google:gemini-2.5-pro@yolo"

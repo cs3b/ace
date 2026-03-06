@@ -3,5 +3,5 @@
 description: "Correctness review - does the code work correctly?"
 pipeline: phased-valid
 providers:
-  llm: [review-fast]
+  llm: [ro]
   tools_lint: [lint]

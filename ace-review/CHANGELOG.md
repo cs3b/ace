@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.1] - 2026-03-06
+
+### Changed
+- Renamed preset identifiers from `rosx`→`ro` and `rwsx`→`rw` in provider catalogs, review presets, and all source/test references.
+- Default LLM provider fallback in pipeline expansion changed from `rosx` to `ro`.
+
 ## [0.52.0] - 2026-03-06
 
 ### Added

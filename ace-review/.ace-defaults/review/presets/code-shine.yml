@@ -4,5 +4,5 @@ description: "Polish review - can we simplify and improve clarity?"
 partition: by-concern
 pipeline: phased-shine
 providers:
-  llm: [review-fast]
+  llm: [ro]
   tools_lint: [lint]
