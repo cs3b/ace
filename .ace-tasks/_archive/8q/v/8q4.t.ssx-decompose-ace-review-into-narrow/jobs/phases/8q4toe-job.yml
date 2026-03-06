@@ -1,0 +1,176 @@
+---
+session:
+  name: work-on-tasks-8q4-t-ssx
+  description: Work on 8q4.t.ssx child slices in dependency order
+steps:
+- number: '010'
+  name: batch-tasks
+  instructions: |
+    Batch container for multiple task implementations.
+    This step auto-completes when all child tasks are done.
+
+    Tasks to implement: 8q4.t.ssx.0, 8q4.t.ssx.4, 8q4.t.ssx.1, 8q4.t.ssx.2, 8q4.t.ssx.3
+- name: work-on-8q4.t.ssx.0
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: 8q4.t.ssx.0
+  instructions: |
+    Use existing base and task context loaded by the batch workflow.
+    Implement task 8q4.t.ssx.0.
+    When complete, mark the task as done: run `ace-task update 8q4.t.ssx.0 --set status=done --move-to archive`
+  number: '010.01'
+- name: work-on-8q4.t.ssx.4
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: 8q4.t.ssx.4
+  instructions: |
+    Use existing base and task context loaded by the batch workflow.
+    Implement task 8q4.t.ssx.4.
+    When complete, mark the task as done: run `ace-task update 8q4.t.ssx.4 --set status=done --move-to archive`
+  number: '010.02'
+- name: work-on-8q4.t.ssx.1
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: 8q4.t.ssx.1
+  instructions: |
+    Use existing base and task context loaded by the batch workflow.
+    Implement task 8q4.t.ssx.1.
+    When complete, mark the task as done: run `ace-task update 8q4.t.ssx.1 --set status=done --move-to archive`
+  number: '010.03'
+- name: work-on-8q4.t.ssx.2
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: 8q4.t.ssx.2
+  instructions: |
+    Use existing base and task context loaded by the batch workflow.
+    Implement task 8q4.t.ssx.2.
+    When complete, mark the task as done: run `ace-task update 8q4.t.ssx.2 --set status=done --move-to archive`
+  number: '010.04'
+- name: work-on-8q4.t.ssx.3
+  parent: '010'
+  context: fork
+  skill: ace-task-work
+  taskref: 8q4.t.ssx.3
+  instructions: |
+    Use existing base and task context loaded by the batch workflow.
+    Implement task 8q4.t.ssx.3.
+    When complete, mark the task as done: run `ace-task update 8q4.t.ssx.3 --set status=done --move-to archive`
+  number: '010.05'
+- name: onboard
+  number: '000'
+  skill: ace-onboard
+  instructions:
+  - Load project context.
+  - Review task queue and priorities.
+- name: verify-test-suite
+  number: '012'
+  skill: ace-test-verify-suite
+  instructions:
+  - Identify all packages modified across the batch of tasks.
+  - 'For each modified package, run: cd <package> && ace-test --profile 6'
+  - 'Check profile output against performance budgets: atoms <50ms, molecules <100ms,
+    integration <1s, full package suite <30s.'
+  - If any test exceeds thresholds, investigate and fix (stub I/O, mock network calls).
+  - Then run ace-test-suite to verify no cross-package regressions.
+  - Skip if changes are documentation-only (no .rb files modified).
+- name: verify-e2e
+  number: '015'
+  skill: ace-e2e-review
+  instructions:
+  - Identify all packages modified across the batch of tasks.
+  - For each heavily modified package, run /ace-e2e-review <package>.
+  - Review the coverage matrix — identify gaps and stale TCs.
+  - If TCs need updating, update them before running.
+  - Run ace-test-e2e-suite <package> for each affected package (not full suite).
+  - Skip if no public CLI API was changed across any of the batch tasks.
+- name: release-minor
+  number: '020'
+  instructions:
+  - Run /ace-release.
+  - Bump version (minor or patch, usually minor) and update CHANGELOGs.
+  - This is the initial release for new functionality.
+  - Follow semantic versioning conventions.
+- name: update-docs
+  number: '025'
+  skill: ace-docs-update
+  instructions:
+  - Identify packages across all batch tasks where CLI commands, flags, or public
+    contracts changed.
+  - Run /ace-docs-update-usage for each affected package.
+  - Verify updated docs with ace-docs validate.
+  - Skip if no public API/CLI changes across any of the batch tasks.
+- name: create-pr
+  number: '030'
+  skill: ace-github-pr-create
+  instructions:
+  - Create a pull request for the changes.
+  - Include summary of all implemented tasks.
+  - Capture the PR number for subsequent review steps.
+- name: review-valid-1
+  number: '040'
+  context: fork
+  sub_phases:
+  - review-pr
+  - apply-feedback
+  - release
+  instructions:
+  - 'First: onboard yourself using /ace-onboard skill to load project context.'
+  - Execute the valid review cycle via child phases.
+  - 'Child review-pr: use preset code-valid.'
+  - 'Focus: correctness — bugs, logic errors, missing functionality, broken contracts.'
+  - 'Child apply-feedback: apply medium+ priority review findings and commit.'
+  - 'Child release: bump patch version and update CHANGELOGs to capture valid-cycle
+    fixes.'
+- name: review-fit-1
+  number: '070'
+  context: fork
+  sub_phases:
+  - review-pr
+  - apply-feedback
+  - release
+  instructions:
+  - 'First: onboard yourself using /ace-onboard skill to load project context.'
+  - Execute the fit review cycle via child phases.
+  - 'Child review-pr: use preset code-fit.'
+  - 'Focus: quality — performance, architecture, standards, test coverage.'
+  - 'Child apply-feedback: apply fit-cycle findings and commit.'
+  - 'Child release: bump patch version and update CHANGELOGs to capture fit-cycle
+    fixes.'
+- name: review-shine-1
+  number: '100'
+  context: fork
+  sub_phases:
+  - review-pr
+  - apply-feedback
+  - release
+  instructions:
+  - 'First: onboard yourself using /ace-onboard skill to load project context.'
+  - Execute the shine review cycle via child phases.
+  - 'Child review-pr: use preset code-shine.'
+  - 'Focus: polish — simplification, naming, documentation (non-blocking suggestions).'
+  - 'Child apply-feedback: apply worthwhile shine-cycle findings and commit.'
+  - 'Child release: bump patch version and update CHANGELOGs to capture shine-cycle
+    fixes.'
+- name: reorganize-commits
+  number: '130'
+  skill: ace-git-reorganize-commits
+  instructions:
+  - Reorganize commits into logical groups.
+  - Group by concern (structure, implementation, tests, release).
+- name: push-to-remote
+  number: '140'
+  instructions:
+  - Push all changes to the remote repository.
+  - 'Run: git push --force-with-lease origin HEAD'
+  - Force-with-lease needed because reorganize-commits rewrites history.
+- name: update-pr-desc
+  number: '150'
+  skill: ace-github-pr-update
+  instructions:
+  - Update PR description with final implementation summary.
+  - Include released version numbers and key components.
+  - Ensure PR is ready for human review.
