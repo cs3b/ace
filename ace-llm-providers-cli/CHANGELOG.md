@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.2] - 2026-03-06
+
+### Changed
+- Removed `--temperature` flag forwarding from Claude Code and Claude OAI CLI clients; temperature is now controlled exclusively via preset configuration.
+
 ## [0.22.1] - 2026-03-05
 
 ### Fixed

@@ -136,12 +136,6 @@ module Ace
             # (128KB per-argument limit). System content is already embedded in the
             # formatted prompt via format_messages_as_prompt.
 
-            # Add temperature if provided
-            temp = options[:temperature] || @generation_config[:temperature]
-            if temp
-              cmd << "--temperature" << temp.to_s
-            end
-
             # Add max tokens if provided
             max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
             if max_tokens

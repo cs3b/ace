@@ -132,12 +132,6 @@ module Ace
             tier = resolve_model_tier
             cmd << "--model" << tier if tier
 
-            # Add temperature if provided
-            temp = options[:temperature] || @generation_config[:temperature]
-            if temp
-              cmd << "--temperature" << temp.to_s
-            end
-
             # Add max tokens if provided
             max_tokens = options[:max_tokens] || @generation_config[:max_tokens]
             if max_tokens
