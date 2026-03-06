@@ -1,6 +1,0 @@
-cli_args:
-  - --full-auto
-  - -c
-  - 'sandbox_mode="read-only"'
-  - -c
-  - 'model_reasoning_effort="medium"'

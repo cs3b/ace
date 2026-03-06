@@ -98,11 +98,11 @@ class QueryCommandTest < AceLlmTestCase
       end
     ) do
       with_real_config do
-        invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?", "--preset", "review-fast"])
+        invoke_llm_cli_result(["google:gemini-2.5-flash", "What is Ruby?", "--preset", "ro"])
       end
     end
 
-    assert_equal "review-fast", captured_preset
+    assert_equal "ro", captured_preset
   end
 
   def test_model_flag_with_invalid_provider_shows_error

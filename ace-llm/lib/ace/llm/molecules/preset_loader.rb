@@ -9,7 +9,7 @@ module Ace
       # Loads named execution presets from llm/presets/*.yml via config cascade.
       class PresetLoader
         class << self
-          # @param name [String] preset name (e.g. "review-fast")
+          # @param name [String] preset name (e.g. "ro")
           # @return [Hash] preset config hash with string keys
           # @raise [ConfigurationError] when preset is missing/invalid
           def load(name)
@@ -28,7 +28,7 @@ module Ace
           end
 
           # @param provider [String] normalized provider key (e.g. "codex")
-          # @param preset_name [String] preset name (e.g. "review-deep")
+          # @param preset_name [String] preset name (e.g. "rw")
           # @return [Hash] merged preset config (global base + provider overlay)
           # @raise [ConfigurationError] when both presets are missing or invalid
           def load_for_provider(provider, preset_name)

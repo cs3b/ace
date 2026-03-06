@@ -137,7 +137,7 @@ module Ace
 
           trimmed_preset = preset_name.to_s.strip
           if trimmed_preset.empty?
-            return [provider_target.to_s.strip, nil, "Invalid target: preset name cannot be empty (e.g., model@review-fast)"]
+            return [provider_target.to_s.strip, nil, "Invalid target: preset name cannot be empty (e.g., model@ro)"]
           end
 
           [provider_target.to_s.strip, trimmed_preset, nil]

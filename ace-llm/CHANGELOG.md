@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-03-06
+
+### Changed
+- Renamed preset identifiers from `rosx`→`ro` and `rwsx`→`rw` across all provider preset files and source references.
+- Normalized `max_tokens` to 16000 across all preset files (was 8192 for ro, 16384 for rw/yolo).
+- Removed legacy `review-deep` and `review-fast` preset defaults replaced by the new ro/rw/yolo scheme.
+
 ## [0.27.0] - 2026-03-06
 
 ### Added

@@ -51,30 +51,30 @@ module Ace
         end
 
         def test_parses_provider_model_with_preset_suffix
-          result = @parser.parse("google:gemini-2.5-flash@review-fast")
+          result = @parser.parse("google:gemini-2.5-flash@ro")
 
           assert result.valid?
           assert_equal "google", result.provider
           assert_equal "gemini-2.5-flash", result.model
-          assert_equal "review-fast", result.preset
+          assert_equal "ro", result.preset
         end
 
         def test_parses_provider_only_with_preset_suffix
-          result = @parser.parse("google@review-fast")
+          result = @parser.parse("google@ro")
 
           assert result.valid?
           assert_equal "google", result.provider
           assert_equal "gemini-2.5-flash", result.model
-          assert_equal "review-fast", result.preset
+          assert_equal "ro", result.preset
         end
 
         def test_parses_alias_with_preset_suffix
-          result = @parser.parse("gflash@review-fast")
+          result = @parser.parse("gflash@ro")
 
           assert result.valid?
           assert_equal "google", result.provider
           assert_equal "gemini-2.5-flash", result.model
-          assert_equal "review-fast", result.preset
+          assert_equal "ro", result.preset
         end
 
         def test_rejects_empty_preset_name

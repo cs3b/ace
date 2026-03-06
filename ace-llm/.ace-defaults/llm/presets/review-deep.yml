@@ -1,5 +1,0 @@
-timeout: 600
-max_tokens: 16384
-temperature: 0.1
-cli_args:
-  - "--verbose"

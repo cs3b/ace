@@ -137,8 +137,8 @@ module Ace
           puts '  ace-llm gflash "Quick question" # using alias'
           puts '  ace-llm google --prompt "What is Ruby?" # using --prompt flag'
           puts '  ace-llm google "What is Ruby?" --model gemini-2.0-flash-lite'
-          puts '  ace-llm gflash@review-fast "Summarize this diff"'
-          puts '  ace-llm claude:sonnet "Summarize this diff" --preset review-deep'
+          puts '  ace-llm gflash@ro "Summarize this diff"'
+          puts '  ace-llm claude:sonnet "Summarize this diff" --preset rw'
           puts '  ace-llm claude:sonnet "Hi" --cli-args "dangerously-skip-permissions"'
           puts '  ace-llm claude:sonnet "Hi" --cli-args "--model=claude-sonnet-4-0 --verbose"'
           puts ""
