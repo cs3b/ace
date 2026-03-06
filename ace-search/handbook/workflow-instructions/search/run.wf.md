@@ -36,7 +36,7 @@ ace-search "class TaskManager"
 ace-search "def initialize"
 
 # Hybrid searches
-ace-search "bin/ace-search"
+ace-search "bin/as-search"
 ace-search "TODO"
 ```
 
