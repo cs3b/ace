@@ -72,21 +72,21 @@ Analyze the loaded context and prepare a concise summary covering:
 ## Usage
 
 **Presets** - Standard project context, team-shared configurations:
-> `/ace-bundle`
+> `/as-bundle`
 > "Load default project context"
 
-> `/ace-bundle base`
+> `/as-bundle base`
 > "Load base preset"
 
 **Files** - Task-specific context, custom one-off requirements:
-> `/ace-bundle .ace-taskflow/v.0.9.0/context/task-084.md`
+> `/as-bundle .ace-taskflow/v.0.9.0/context/task-084.md`
 > "Load task-specific context file"
 
-> `/ace-bundle /path/to/your/project/context.yml`
+> `/as-bundle /path/to/your/project/context.yml`
 > "Load context from absolute path"
 
 **Protocols** - Workflow-embedded context, dynamic discovery:
-> `/ace-bundle wfi://workflow-name`
+> `/as-bundle wfi://workflow-name`
 > "Load context via protocol"
 
 ## Error Handling
