@@ -9,7 +9,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 * Task reference (e.g., `215.03`) OR detailed inline instructions
 * Clean git working directory (or staged changes ready for commit)
 * Understanding of the standard delivery workflow steps
-* Access to required skills (`/ace-task-work`, `/ace-git-commit`, `/ace-github-pr-create`, `/ace-review-pr`)
+* Access to required skills (`/as-task-work`, `/as-git-commit`, `/as-github-pr-create`, `/as-review-pr`)
 
 ## Project Context Loading
 
@@ -28,23 +28,23 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 1: Implementation
 
 * [ ] Enter plan mode if implementation required
-* [ ] Execute implementation via `/ace-task-work` or inline instructions
-* [ ] Commit all changes (`/ace-git-commit`)
-* [ ] Release modified packages (`/ace-release` if applicable)
+* [ ] Execute implementation via `/as-task-work` or inline instructions
+* [ ] Commit all changes (`/as-git-commit`)
+* [ ] Release modified packages (`/as-release` if applicable)
 * [ ] Mark task done and push to remote
 
 ### Phase 2: PR & Initial Review
 
-* [ ] Create or update PR (`/ace-github-pr-create`)
-* [ ] Run initial review (`/ace-review-pr`)
+* [ ] Create or update PR (`/as-github-pr-create`)
+* [ ] Run initial review (`/as-review-pr`)
 * [ ] Implement HIGH/CRITICAL feedback immediately
 
 ### Phase 3: Deep Review Cycle
 
-* [ ] Run deep code review (`/ace-review-pr preset: code-deep`)
+* [ ] Run deep code review (`/as-review-pr preset: code-deep`)
 * [ ] Implement MEDIUM+ severity feedback
 * [ ] Run test suite (`ace-test-suite`)
-* [ ] Commit fixes (`/ace-git-commit`)
+* [ ] Commit fixes (`/as-git-commit`)
 * [ ] Repeat review cycle if needed
 
 ## Process Steps
@@ -64,14 +64,14 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 
    **Standard Delivery Steps to Add:**
    ```
-   1. Implement task (via /ace-task-work or inline)
-   2. Commit all changes (/ace-git-commit)
-   3. Release modified packages (/ace-release)
+   1. Implement task (via /as-task-work or inline)
+   2. Commit all changes (/as-git-commit)
+   3. Release modified packages (/as-release)
    4. Mark task done and push to remote
-   5. Create/update PR (/ace-github-pr-create)
-   6. Initial review (/ace-review-pr)
+   5. Create/update PR (/as-github-pr-create)
+   6. Initial review (/as-review-pr)
    7. Implement HIGH/CRITICAL feedback
-   8. Deep review (/ace-review-pr preset: code-deep)
+   8. Deep review (/as-review-pr preset: code-deep)
    9. Implement MEDIUM+ feedback
    10. Run test suite and commit fixes
    ```
@@ -83,7 +83,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 1: Implementation
 
 1. **Load Task Context (if task reference provided):**
-   * Run `/ace-task-work <ref>` to load task context
+   * Run `/as-task-work <ref>` to load task context
    * If inline instructions provided, use those directly
 
 2. **Enter Plan Mode (if implementation required):**
@@ -95,11 +95,11 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Track progress using TodoWrite for sub-tasks
 
 4. **Commit Changes:**
-   * Run `/ace-git-commit` to commit all changes
+   * Run `/as-git-commit` to commit all changes
    * Use descriptive commit message
 
 5. **Release Packages (if applicable):**
-   * Run `/ace-release` to release modified packages
+   * Run `/as-release` to release modified packages
    * Follow versioning conventions
 
 6. **Complete Task:**
@@ -109,11 +109,11 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 2: PR & Initial Review
 
 1. **Create or Update PR:**
-   * Run `/ace-github-pr-create` to create pull request
+   * Run `/as-github-pr-create` to create pull request
    * Include task reference and summary
 
 2. **Run Initial Review:**
-   * Run `/ace-review-pr`
+   * Run `/as-review-pr`
    * Review the feedback output
 
 3. **Implement Critical Feedback:**
@@ -123,7 +123,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
 ### Phase 3: Deep Review Cycle
 
 1. **Run Deep Code Review:**
-   * Run `/ace-review-pr preset: code-deep`
+   * Run `/as-review-pr preset: code-deep`
    * This provides more thorough analysis
 
 2. **Implement Feedback:**
@@ -135,7 +135,7 @@ Execute complete delivery workflow for a task with automatic step tracking, ensu
    * Fix any failing tests
 
 4. **Commit Fixes:**
-   * Run `/ace-git-commit` to commit all fixes
+   * Run `/as-git-commit` to commit all fixes
 
 5. **Repeat Review Cycle (if needed):**
    * If significant changes were made, run another review
@@ -185,7 +185,7 @@ For all other transitions, immediately proceed to the next step after checkpoint
 All steps from implementation through review cycles.
 
 ```
-/ace-handbook-perform-delivery 215.03
+/as-handbook-perform-delivery 215.03
 ```
 
 ### Implementation Only
@@ -193,7 +193,7 @@ All steps from implementation through review cycles.
 Skip PR and review phases (useful for WIP branches).
 
 ```
-/ace-handbook-perform-delivery 215.03 --scope implementation
+/as-handbook-perform-delivery 215.03 --scope implementation
 ```
 
 ### Review Only
@@ -201,7 +201,7 @@ Skip PR and review phases (useful for WIP branches).
 Skip implementation, start from PR creation.
 
 ```
-/ace-handbook-perform-delivery 215.03 --scope review
+/as-handbook-perform-delivery 215.03 --scope review
 ```
 
 ### Custom Instructions
@@ -209,7 +209,7 @@ Skip implementation, start from PR creation.
 Provide inline instructions instead of task reference.
 
 ```
-/ace-handbook-perform-delivery "Implement the feature described below, then create PR and review"
+/as-handbook-perform-delivery "Implement the feature described below, then create PR and review"
 ```
 
 ## Success Criteria

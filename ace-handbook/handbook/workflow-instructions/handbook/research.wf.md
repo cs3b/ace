@@ -107,7 +107,7 @@ If multi-agent approach selected:
 
 1. **Invoke Parallel Research**
    ```
-   /ace-handbook-parallel-research [topic]
+   /as-handbook-parallel-research [topic]
    ```
    Or follow: `ace-bundle wfi://handbook/parallel-research`
 
@@ -120,7 +120,7 @@ If multi-agent approach selected:
 
 3. **Invoke Synthesis**
    ```
-   /ace-handbook-synthesize-research [research_folder]
+   /as-handbook-synthesize-research [research_folder]
    ```
    Or follow: `ace-bundle wfi://handbook/synthesize-research`
 
@@ -222,7 +222,7 @@ Evaluate these factors:
 ### How to Escalate
 
 1. Review: `ace-bundle guide://multi-agent-research`
-2. Invoke: `/ace-handbook-parallel-research [topic]`
+2. Invoke: `/as-handbook-parallel-research [topic]`
 3. Follow: Parallel Research → Synthesis workflows
 
 ### Expected Benefits
