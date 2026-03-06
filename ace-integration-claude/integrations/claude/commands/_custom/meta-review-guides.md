@@ -15,7 +15,7 @@ Review and validate development guides for quality and consistency.
 
 ## Usage
 
-Type `/ace-handbook-review-guides [guide-name]` where:
+Type `/as-handbook-review-guides [guide-name]` where:
 - `guide-name` is optional - if not provided, reviews all guides
 
 ## What This Does
@@ -39,9 +39,9 @@ The workflow will:
 ## Examples
 
 ```
-/ace-handbook-review-guides
-/ace-handbook-review-guides testing-strategy
-/ace-handbook-review-guides code-review
+/as-handbook-review-guides
+/as-handbook-review-guides testing-strategy
+/as-handbook-review-guides code-review
 ```
 
 ## Full Workflow
