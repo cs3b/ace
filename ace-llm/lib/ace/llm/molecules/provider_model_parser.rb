@@ -7,12 +7,12 @@ module Ace
   module LLM
     module Molecules
       # ProviderModelParser handles parsing and validation of provider:model syntax
-      # for the unified LLM query interface
+      # for the unified LLM query interface.
       class ProviderModelParser
-        # All provider information now comes from the registry
+        THINKING_LEVELS = %w[low medium high xhigh].freeze
 
-        # Result object for parsed provider:model combinations
-        ParseResult = Struct.new(:provider, :model, :valid, :error, :original_input) do
+        # Result object for parsed provider:model combinations.
+        ParseResult = Struct.new(:provider, :model, :preset, :thinking_level, :valid, :error, :original_input) do
           def valid?
             valid
           end
@@ -22,90 +22,71 @@ module Ace
           end
 
           def to_s
-            "#{provider}:#{model}"
+            thinking_suffix = thinking_level ? ":#{thinking_level}" : ""
+            preset_suffix = preset ? "@#{preset}" : ""
+            "#{provider}:#{model}#{thinking_suffix}#{preset_suffix}"
           end
         end
 
         attr_reader :alias_resolver, :registry
 
-        # Initialize parser
-        # @param alias_resolver [LlmAliasResolver, nil] Optional alias resolver
-        # @param registry [ClientRegistry, nil] Optional client registry
         def initialize(alias_resolver: nil, registry: nil)
           @alias_resolver = alias_resolver || LlmAliasResolver.new
           @registry = registry || ClientRegistry.new
         end
 
-        # Parse a provider:model string or alias
-        # @param input [String] The provider:model string or alias to parse
-        # @return [ParseResult] The parsed result with provider, model, and validation info
+        # Parse a provider:model string or alias.
         def parse(input)
           return create_error_result(input, "Input cannot be nil or empty") if input.nil? || input.strip.empty?
 
           original_input = input.strip
+          provider_target, preset_name, preset_error = split_preset_suffix(original_input)
+          return create_error_result(original_input, preset_error) if preset_error
+          return create_error_result(original_input, "Invalid target: provider/model portion cannot be empty") if provider_target.empty?
 
-          # Try to resolve as an alias first
-          resolved_input = @alias_resolver.resolve(original_input)
-
-          # Parse provider:model syntax or provider-only
+          resolved_input = @alias_resolver.resolve(provider_target)
           parts = resolved_input.split(":", 2)
 
           if parts.length == 1
-            # Provider-only syntax, use default model
             provider = normalize_provider(parts[0])
-
-            # Validate provider
             unless supported_providers.include?(provider)
               return create_error_result(original_input,
                 "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
             end
 
-            # Use default model for provider
             model = default_model_for(provider)
-            ParseResult.new(provider, model, true, nil, original_input)
-          else
-            # Provider:model syntax
-            provider = normalize_provider(parts[0])
-            model = parts[1].strip
-
-            # Validate provider
-            unless supported_providers.include?(provider)
-              return create_error_result(original_input,
-                "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
-            end
-
-            # Model validation happens at the client level
-            ParseResult.new(provider, model, true, nil, original_input)
+            return ParseResult.new(provider, model, preset_name, nil, true, nil, original_input)
           end
+
+          provider = normalize_provider(parts[0])
+          model_with_suffix = parts[1].strip
+          unless supported_providers.include?(provider)
+            return create_error_result(original_input,
+              "Unknown provider: #{provider}. Supported providers: #{supported_providers.join(", ")}")
+          end
+
+          model, thinking_level, thinking_error = split_thinking_suffix(model_with_suffix)
+          return create_error_result(original_input, thinking_error) if thinking_error
+          return create_error_result(original_input, "Invalid target: model cannot be empty") if model.to_s.strip.empty?
+
+          ParseResult.new(provider, model, preset_name, thinking_level, true, nil, original_input)
         end
 
-        # Get list of supported providers
-        # @return [Array<String>] List of provider names
         def supported_providers
           @registry.available_providers
         end
 
-        # Get default model for a provider
-        # @param provider [String] Provider name
-        # @return [String, nil] Default model name or nil if provider not found
         def default_model_for(provider)
-          # Get from registry only - no hardcoded fallbacks
           models = @registry.models_for_provider(provider)
           models&.first
         end
 
-        # Get all available aliases from the resolver
-        # @return [Hash] Available aliases
         def dynamic_aliases
           return {} unless @alias_resolver
 
-          # Get global aliases
           global = @alias_resolver.available_aliases[:global] || {}
-
-          # Merge with provider-specific aliases if needed
           providers = @alias_resolver.available_aliases[:providers] || {}
 
-          # Flatten provider aliases into global namespace with provider prefix
           flattened = {}
           providers.each do |provider, aliases|
             aliases.each do |alias_name, model|
@@ -118,19 +99,39 @@ module Ace
 
         private
 
-        # Normalize provider name
-        # @param provider [String] Provider name to normalize
-        # @return [String] Normalized provider name
         def normalize_provider(provider)
           provider.strip.downcase.gsub(/[-_]/, "")
         end
 
-        # Create an error result
-        # @param input [String] Original input
-        # @param error [String] Error message
-        # @return [ParseResult] Error result
+        def split_preset_suffix(input)
+          provider_target, preset_name = input.split("@", 2)
+          return [input, nil, nil] unless input.include?("@")
+
+          trimmed_preset = preset_name.to_s.strip
+          if trimmed_preset.empty?
+            return [provider_target.to_s.strip, nil, "Invalid target: preset name cannot be empty (e.g., model@ro)"]
+          end
+
+          [provider_target.to_s.strip, trimmed_preset, nil]
+        end
+
+        def split_thinking_suffix(model_input)
+          trimmed = model_input.to_s.strip
+          base, separator, suffix = trimmed.rpartition(":")
+          return [trimmed, nil, nil] if separator.empty?
+
+          normalized_level = suffix.to_s.strip.downcase
+          return [trimmed, nil, nil] unless THINKING_LEVELS.include?(normalized_level)
+
+          if base.to_s.strip.empty?
+            return [trimmed, nil, "Invalid target: model cannot be empty before thinking level"]
+          end
+
+          [base.strip, normalized_level, nil]
+        end
+
         def create_error_result(input, error)
-          ParseResult.new(nil, nil, false, error, input)
+          ParseResult.new(nil, nil, nil, nil, false, error, input)
         end
       end
     end

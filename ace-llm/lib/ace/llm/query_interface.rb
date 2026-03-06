@@ -2,6 +2,8 @@
 
 require_relative "molecules/client_registry"
 require_relative "molecules/provider_model_parser"
+require_relative "molecules/preset_loader"
+require_relative "molecules/thinking_level_loader"
 require_relative "molecules/format_handlers"
 require_relative "molecules/file_io_handler"
 require_relative "molecules/fallback_orchestrator"
@@ -10,31 +12,8 @@ require_relative "models/fallback_config"
 module Ace
   module LLM
     # QueryInterface provides a simple Ruby API with named parameters matching the CLI
-    # This allows direct Ruby calls to LLM providers without subprocess overhead
+    # This allows direct Ruby calls to LLM providers without subprocess overhead.
     class QueryInterface
-      # Query an LLM provider with named parameters matching CLI flags exactly
-      #
-      # @param provider_model [String] Provider:model or alias (e.g., "glite", "google:gemini-2.0-flash-lite")
-      # @param prompt [String] The user prompt to send to the LLM
-      # @param output [String, nil] Optional file path to write output (--output FILE)
-      # @param format [String] Output format: "text", "json", "yaml", "raw" (--format FORMAT)
-      # @param temperature [Float, nil] Optional temperature for generation (--temperature FLOAT)
-      # @param max_tokens [Integer, nil] Optional maximum tokens (--max-tokens INT)
-      # @param system [String, nil] Optional system prompt (--system TEXT)
-      # @param timeout [Integer] Request timeout in seconds (--timeout SECONDS)
-      # @param force [Boolean] Force overwrite output file (--force)
-      # @param debug [Boolean] Enable debug output (--debug)
-      # @param model [String, nil] Model name (overrides PROVIDER[:MODEL] if both present) (--model MODEL)
-      # @param prompt_override [String, nil] Prompt text (overrides positional prompt if both present) (--prompt PROMPT)
-      # @param fallback [Boolean, nil] Enable/disable fallback (nil = auto from env/config)
-      # @param fallback_providers [Array<String>, nil] Custom fallback provider list
-      # @param system_file [String, nil] Path to system prompt file (for file-based providers)
-      # @param prompt_file [String, nil] Path to user prompt file (for file-based providers)
-      # @param cli_args [String, Array<String>, nil] Extra args for CLI providers (auto-prefixed with --)
-      # @param system_append [String, nil] Additional system content appended by compatible providers
-      #
-      # @return [Hash] Response with :text, :model, :provider, and other metadata
-      # @raise [Error] If provider/model invalid or request fails
       def self.query(provider_model, prompt = nil,
                     output: nil,
                     format: "text",
@@ -52,65 +31,68 @@ module Ace
                     prompt_file: nil,
                     cli_args: nil,
                     system_append: nil,
+                    preset: nil,
                     sandbox: nil,
                     subprocess_env: nil,
                     last_message_file: nil)
 
-        # Initialize registry and parser
         registry = Molecules::ClientRegistry.new
         parser = Molecules::ProviderModelParser.new(registry: registry)
 
-        # Parse model/alias
         parse_result = parser.parse(provider_model)
         raise Error, parse_result.error unless parse_result.valid?
 
-        # Resolve final model: model parameter > positional :MODEL > provider default
-        final_model = model || parse_result.model
+        resolved_preset = resolve_preset_name(parse_result.preset, preset)
+        execution_overrides = load_execution_overrides(
+          provider: parse_result.provider,
+          preset: resolved_preset,
+          thinking_level: parse_result.thinking_level
+        )
 
-        # Validate that we have a model from some source
+        final_model = model || parse_result.model
         if final_model.nil? || final_model.empty?
           raise Error, "No model specified and no default available for #{parse_result.provider}"
         end
 
-        # Resolve final prompt: prompt_override parameter > positional prompt
         final_prompt = prompt_override || prompt
-
-        # Validate that we have a prompt from some source
         if final_prompt.nil? || final_prompt.empty?
           raise Error, "No prompt specified. Use positional prompt or prompt_override: parameter"
         end
 
-        # Build messages array
         messages = []
         messages << { role: "system", content: system } if system && !system.empty?
         messages << { role: "user", content: final_prompt }
 
-        # Build generation options
         generation_opts = {}
-        generation_opts[:temperature] = temperature if temperature
-        generation_opts[:max_tokens] = max_tokens if max_tokens
+        resolved_temperature = first_non_nil(temperature, execution_overrides["temperature"])
+        resolved_max_tokens = first_non_nil(max_tokens, execution_overrides["max_tokens"])
+        resolved_cli_args = first_non_nil(cli_args, execution_overrides["cli_args"])
+        resolved_system_append = first_non_empty(system_append, execution_overrides["system_append"])
+        resolved_sandbox = first_non_nil(sandbox, execution_overrides["sandbox"])
+        resolved_subprocess_env = merge_hash_values(execution_overrides["subprocess_env"], subprocess_env)
+
+        generation_opts[:temperature] = resolved_temperature unless resolved_temperature.nil?
+        generation_opts[:max_tokens] = resolved_max_tokens unless resolved_max_tokens.nil?
         generation_opts[:system_file] = system_file if system_file
         generation_opts[:prompt_file] = prompt_file if prompt_file
-        generation_opts[:cli_args] = cli_args if cli_args && !(cli_args.respond_to?(:empty?) && cli_args.empty?)
-        generation_opts[:system_append] = system_append if system_append && !system_append.empty?
-        generation_opts[:sandbox] = sandbox if sandbox
-        generation_opts[:subprocess_env] = subprocess_env if subprocess_env
+        generation_opts[:cli_args] = resolved_cli_args unless blank_value?(resolved_cli_args)
+        generation_opts[:system_append] = resolved_system_append unless blank_value?(resolved_system_append)
+        generation_opts[:sandbox] = resolved_sandbox if resolved_sandbox
+        generation_opts[:subprocess_env] = resolved_subprocess_env unless resolved_subprocess_env.nil?
         generation_opts[:last_message_file] = last_message_file if last_message_file
 
-        # Debug output if requested
         if debug
           $stderr.puts "Provider: #{parse_result.provider}"
           $stderr.puts "Model: #{final_model}"
-          $stderr.puts "Temperature: #{temperature}" if temperature
-          $stderr.puts "Max tokens: #{max_tokens}" if max_tokens
+          $stderr.puts "Preset: #{resolved_preset}" if resolved_preset
+          $stderr.puts "Thinking level: #{parse_result.thinking_level}" if parse_result.thinking_level
+          $stderr.puts "Temperature: #{resolved_temperature}" unless resolved_temperature.nil?
+          $stderr.puts "Max tokens: #{resolved_max_tokens}" unless resolved_max_tokens.nil?
         end
 
-        # Load fallback configuration
         fallback_config = load_fallback_config(fallback, fallback_providers, parser: parser)
-
-        # Execute with or without fallback
-        # Resolve timeout from config cascade if not provided
-        resolved_timeout = normalize_timeout(timeout || Molecules::ConfigLoader.get("llm.timeout") || 120)
+        timeout_value = first_non_nil(timeout, execution_overrides["timeout"], Molecules::ConfigLoader.get("llm.timeout"), 120)
+        resolved_timeout = normalize_timeout(timeout_value)
 
         response = execute_with_fallback(
           provider: parse_result.provider,
@@ -123,35 +105,32 @@ module Ace
           debug: debug
         )
 
-        # Extract text content based on response structure
         text_content = extract_text_content(response)
 
-        # Build result hash
         result = {
           text: text_content,
           model: final_model,
           provider: parse_result.provider,
+          preset: resolved_preset,
+          thinking_level: parse_result.thinking_level,
           usage: response[:usage],
           metadata: response[:metadata]
         }
 
-        # Handle output option if provided
         if output && !output.empty?
           handler = Molecules::FormatHandlers.get_handler(format)
 
-          # Format the content based on requested format
           formatted_content = case format
-          when "json"
-            handler.format(result)
-          when "yaml"
-            handler.format(result)
-          when "raw"
-            handler.format(response)
-          else # "text" or default
-            text_content
-          end
+                              when "json"
+                                handler.format(result)
+                              when "yaml"
+                                handler.format(result)
+                              when "raw"
+                                handler.format(response)
+                              else
+                                text_content
+                              end
 
-          # Write to file
           file_handler = Molecules::FileIoHandler.new
           file_handler.write_content(formatted_content, output, format: format, force: force)
 
@@ -163,29 +142,135 @@ module Ace
 
       private
 
-      # Load fallback configuration from parameters and environment
-      # @param fallback [Boolean, nil] Explicit fallback enable/disable
-      # @param fallback_providers [Array<String>, nil] Custom provider list
-      # @param parser [Molecules::ProviderModelParser, nil] Parser for alias/provider normalization
-      # @return [Models::FallbackConfig] Fallback configuration
+      def self.resolve_preset_name(suffix_preset, explicit_preset)
+        suffix = suffix_preset&.to_s&.strip
+        explicit = explicit_preset&.to_s&.strip
+
+        suffix = nil if suffix&.empty?
+        explicit = nil if explicit&.empty?
+
+        if suffix && explicit
+          raise Error, "Preset specified twice: use either model@preset or --preset, not both"
+        end
+
+        suffix || explicit
+      end
+      private_class_method :resolve_preset_name
+
+      def self.load_execution_overrides(provider:, preset:, thinking_level:)
+        merged = {}
+        if preset
+          preset_options = Molecules::PresetLoader.load_for_provider(provider, preset)
+          merged = merge_execution_overrides(merged, preset_options)
+        end
+        if thinking_level
+          thinking_options = Molecules::ThinkingLevelLoader.load_for_provider(provider, thinking_level)
+          merged = merge_execution_overrides(merged, thinking_options)
+        end
+        merged
+      end
+      private_class_method :load_execution_overrides
+
+      def self.merge_execution_overrides(base, overlay)
+        left = base.respond_to?(:to_h) ? deep_stringify_keys(base.to_h) : deep_stringify_keys(base || {})
+        right = overlay.respond_to?(:to_h) ? deep_stringify_keys(overlay.to_h) : deep_stringify_keys(overlay || {})
+        merged = left.dup
+
+        right.each do |key, value|
+          case key
+          when "cli_args"
+            merged[key] = append_cli_args(merged[key], value)
+          when "subprocess_env"
+            merged[key] = merge_hash_values(merged[key], value)
+          else
+            merged[key] = value
+          end
+        end
+
+        merged
+      end
+      private_class_method :merge_execution_overrides
+
+      def self.append_cli_args(base_value, override_value)
+        base_args = normalize_cli_args_value(base_value)
+        override_args = normalize_cli_args_value(override_value)
+        combined = base_args + override_args
+        return nil if combined.empty?
+
+        combined
+      end
+      private_class_method :append_cli_args
+
+      def self.normalize_cli_args_value(value)
+        case value
+        when nil
+          []
+        when Array
+          value.dup
+        else
+          [value]
+        end
+      end
+      private_class_method :normalize_cli_args_value
+
+      def self.merge_hash_values(base_value, override_value)
+        base_hash = base_value.respond_to?(:to_h) ? base_value.to_h : base_value
+        override_hash = override_value.respond_to?(:to_h) ? override_value.to_h : override_value
+        return override_hash unless base_hash.is_a?(Hash) && override_hash.is_a?(Hash)
+
+        deep_stringify_keys(base_hash).merge(deep_stringify_keys(override_hash))
+      end
+      private_class_method :merge_hash_values
+
+      def self.deep_stringify_keys(value)
+        case value
+        when Hash
+          value.each_with_object({}) do |(key, nested_value), acc|
+            acc[key.to_s] = deep_stringify_keys(nested_value)
+          end
+        when Array
+          value.map { |item| deep_stringify_keys(item) }
+        else
+          value
+        end
+      end
+      private_class_method :deep_stringify_keys
+
+      def self.first_non_nil(*values)
+        values.each { |value| return value unless value.nil? }
+        nil
+      end
+      private_class_method :first_non_nil
+
+      def self.first_non_empty(*values)
+        values.each do |value|
+          next if blank_value?(value)
+
+          return value
+        end
+        nil
+      end
+      private_class_method :first_non_empty
+
+      def self.blank_value?(value)
+        return true if value.nil?
+        return true if value.respond_to?(:empty?) && value.empty?
+
+        false
+      end
+      private_class_method :blank_value?
+
       def self.load_fallback_config(fallback, fallback_providers, parser: nil)
         parser ||= Molecules::ProviderModelParser.new
 
-        # Normalize at each merge layer to prevent FallbackConfig#validate_providers!
-        # from rejecting duplicates during intermediate merges (e.g., config + env both
-        # specifying the same provider). Final normalization deduplicates the merged result.
-
-        # Baseline from config cascade (project/user/defaults)
         config_fallback = Molecules::ConfigLoader.get("llm.fallback")
         normalized_config_fallback = normalize_fallback_provider_hash(config_fallback, parser)
         config = Models::FallbackConfig.from_hash(normalized_config_fallback)
 
-        # Keep legacy env overrides for backward compatibility
         env_overrides = load_fallback_env_overrides
         env_overrides = normalize_fallback_provider_hash(env_overrides, parser)
         config = config.merge(env_overrides) unless env_overrides.empty?
 
-        # Explicit call-site values always win
         explicit_overrides = {}
         explicit_overrides[:enabled] = fallback unless fallback.nil?
         explicit_overrides[:providers] = fallback_providers if fallback_providers
@@ -202,56 +287,34 @@ module Ace
         )
       end
 
-      # Execute query with fallback support
-      # @param provider [String] Provider name
-      # @param model [String] Model name
-      # @param messages [Array<Hash>] Messages array
-      # @param generation_opts [Hash] Generation options
-      # @param registry [Molecules::ClientRegistry] Client registry
-      # @param fallback_config [Models::FallbackConfig] Fallback configuration
-      # @param timeout [Integer] Request timeout
-      # @param debug [Boolean] Debug mode
-      # @return [Hash] Response from provider
       def self.execute_with_fallback(provider:, model:, messages:, generation_opts:,
                                      registry:, fallback_config:, timeout:, debug:)
-        # If fallback is disabled, execute directly
         if fallback_config.disabled?
           client = registry.get_client(provider, model: model, timeout: timeout)
           return client.generate(messages, **generation_opts)
         end
 
-        # Create status callback for user feedback
         status_callback = ->(msg) { $stderr.puts msg }
 
-        # Create orchestrator
         orchestrator = Molecules::FallbackOrchestrator.new(
           config: fallback_config,
           status_callback: status_callback,
           timeout: timeout
         )
 
-        # Build provider string with model if specified
         primary_provider_string = model ? "#{provider}:#{model}" : provider
 
-        # Execute with fallback
         orchestrator.execute(primary_provider: primary_provider_string, registry: registry) do |client|
           client.generate(messages, **generation_opts)
         end
       end
 
-      # Extract text content from various response formats
-      # @param response [Hash] The response from the LLM client
-      # @return [String] The extracted text content
       def self.extract_text_content(response)
-        # Handle different response structures
         if response[:text]
-          # Direct text field
           response[:text]
         elsif response[:content]
-          # Content field (some providers)
           response[:content]
         elsif response[:choices] && response[:choices].is_a?(Array) && !response[:choices].empty?
-          # OpenAI-style response
           choice = response[:choices].first
           if choice[:message] && choice[:message][:content]
             choice[:message][:content]
@@ -261,7 +324,6 @@ module Ace
             ""
           end
         elsif response[:candidates] && response[:candidates].is_a?(Array) && !response[:candidates].empty?
-          # Google-style response
           candidate = response[:candidates].first
           if candidate[:content] && candidate[:content][:parts] && !candidate[:content][:parts].empty?
             candidate[:content][:parts].first[:text] || ""
@@ -269,13 +331,10 @@ module Ace
             ""
           end
         else
-          # Fallback to string representation if structure unknown
           response.to_s
         end
       end
 
-      # Load fallback-related environment variables as overrides.
-      # Keeps compatibility with the previous fallback configuration contract.
       def self.load_fallback_env_overrides
         overrides = {}
 
