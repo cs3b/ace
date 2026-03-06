@@ -41,9 +41,9 @@ ace-review --pr $(gh pr view --json number -q '.number') [additional-flags]
 ```
 
 **Examples:**
-- `/ace-review-pr 123` → `ace-review --pr 123`
-- `/ace-review-pr --preset code-deep` → `ace-review --pr <current-pr> --preset code-deep`
-- `/ace-review-pr 123 --preset security` → `ace-review --pr 123 --preset security`
+- `/as-review-pr 123` → `ace-review --pr 123`
+- `/as-review-pr --preset code-deep` → `ace-review --pr <current-pr> --preset code-deep`
+- `/as-review-pr 123 --preset security` → `ace-review --pr 123 --preset security`
 
 **Important for Claude Code**: Run with 10-minute timeout (600000ms) and wait for completion inline (not background). Review typically takes 3-5 minutes.
 
