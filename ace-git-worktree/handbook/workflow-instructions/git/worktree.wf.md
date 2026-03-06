@@ -100,7 +100,7 @@ ace-git-worktree switch feature-branch
 ace-git-worktree switch task.081
 
 # By path
-ace-git-worktree switch ../ace-task.081
+ace-git-worktree switch ../as-task.081
 ```
 
 ### Remove Worktree
